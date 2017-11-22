@@ -26,13 +26,13 @@ public:
 
   bool GetIndice(size_t aIndex, Index::Indice& aIndice) const;
 
-  explicit IndiceWrapper(mp4parse_byte_data& aRustIndice);
+  explicit IndiceWrapper(Mp4parseByteData& aRustIndice);
 
 protected:
-  mp4parse_byte_data mIndice;
+  Mp4parseByteData mIndice;
 };
 
-struct FreeMP4Parser { void operator()(mp4parse_parser* aPtr) { mp4parse_free(aPtr); } };
+struct FreeMP4Parser { void operator()(Mp4parseParser* aPtr) { mp4parse_free(aPtr); } };
 
 // Wrap an Stream to remember the read offset.
 class StreamAdaptor {
@@ -110,7 +110,7 @@ private:
   CryptoFile mCrypto;
   RefPtr<ByteStream> mSource;
   StreamAdaptor mSourceAdaptor;
-  mozilla::UniquePtr<mp4parse_parser, FreeMP4Parser> mParser;
+  mozilla::UniquePtr<Mp4parseParser, FreeMP4Parser> mParser;
 };
 
 } // namespace mozilla

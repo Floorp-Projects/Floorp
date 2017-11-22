@@ -25,7 +25,7 @@ using mozilla::media::TimeUnit;
 namespace mozilla {
 LazyLogModule gMP4MetadataLog("MP4Metadata");
 
-IndiceWrapper::IndiceWrapper(mp4parse_byte_data& aIndice)
+IndiceWrapper::IndiceWrapper(Mp4parseByteData& aIndice)
 {
   mIndice.length = aIndice.length;
   mIndice.indices = aIndice.indices;
@@ -45,7 +45,7 @@ IndiceWrapper::GetIndice(size_t aIndex, Index::Indice& aIndice) const
    return false;
   }
 
-  const mp4parse_indice* indice = &mIndice.indices[aIndex];
+  const Mp4parseIndice* indice = &mIndice.indices[aIndex];
   aIndice.start_offset = indice->start_offset;
   aIndice.end_offset = indice->end_offset;
   aIndice.start_composition = indice->start_composition;
@@ -103,7 +103,7 @@ MP4Metadata::MP4Metadata(ByteStream* aSource)
   : mSource(aSource)
   , mSourceAdaptor(aSource)
 {
-  mp4parse_io io = { read_source, &mSourceAdaptor };
+  Mp4parseIo io = { read_source, &mSourceAdaptor };
   mParser.reset(mp4parse_new(&io));
   MOZ_ASSERT(mParser);
 
@@ -119,10 +119,10 @@ MP4Metadata::~MP4Metadata()
 nsresult
 MP4Metadata::Parse()
 {
-  mp4parse_status rv = mp4parse_read(mParser.get());
-  if (rv != mp4parse_status_OK) {
+  Mp4parseStatus rv = mp4parse_read(mParser.get());
+  if (rv != MP4PARSE_STATUS_OK) {
     MOZ_LOG(gMP4MetadataLog, LogLevel::Debug, ("Parse failed, return code %d\n", rv));
-    return rv == mp4parse_status_OOM ? NS_ERROR_OUT_OF_MEMORY
+    return rv == MP4PARSE_STATUS_OOM ? NS_ERROR_OUT_OF_MEMORY
                                      : NS_ERROR_DOM_MEDIA_METADATA_ERR;
   }
 
@@ -134,8 +134,8 @@ MP4Metadata::Parse()
 void
 MP4Metadata::UpdateCrypto()
 {
-  mp4parse_pssh_info info = {};
-  if (mp4parse_get_pssh_info(mParser.get(), &info) != mp4parse_status_OK) {
+  Mp4parsePsshInfo info = {};
+  if (mp4parse_get_pssh_info(mParser.get(), &info) != MP4PARSE_STATUS_OK) {
     return;
   }
 
@@ -147,13 +147,13 @@ MP4Metadata::UpdateCrypto()
 }
 
 bool
-TrackTypeEqual(TrackInfo::TrackType aLHS, mp4parse_track_type aRHS)
+TrackTypeEqual(TrackInfo::TrackType aLHS, Mp4parseTrackType aRHS)
 {
   switch (aLHS) {
   case TrackInfo::kAudioTrack:
-    return aRHS == mp4parse_track_type_AUDIO;
+    return aRHS == MP4PARSE_TRACK_TYPE_AUDIO;
   case TrackInfo::kVideoTrack:
-    return aRHS == mp4parse_track_type_VIDEO;
+    return aRHS == MP4PARSE_TRACK_TYPE_VIDEO;
   default:
     return false;
   }
@@ -164,7 +164,7 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
   uint32_t tracks;
   auto rv = mp4parse_get_track_count(mParser.get(), &tracks);
-  if (rv != mp4parse_status_OK) {
+  if (rv != MP4PARSE_STATUS_OK) {
     MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
         ("rust parser error %d counting tracks", rv));
     return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
@@ -174,12 +174,12 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 
   uint32_t total = 0;
   for (uint32_t i = 0; i < tracks; ++i) {
-    mp4parse_track_info track_info;
+    Mp4parseTrackInfo track_info;
     rv = mp4parse_get_track_info(mParser.get(), i, &track_info);
-    if (rv != mp4parse_status_OK) {
+    if (rv != MP4PARSE_STATUS_OK) {
       continue;
     }
-    if (track_info.codec == mp4parse_codec::mp4parse_codec_UNKNOWN) {
+    if (track_info.codec == MP4PARSE_CODEC_UNKNOWN) {
       continue;
     }
     if (TrackTypeEqual(aType, track_info.track_type)) {
@@ -199,7 +199,7 @@ MP4Metadata::TrackTypeToGlobalTrackIndex(mozilla::TrackInfo::TrackType aType, si
 {
   uint32_t tracks;
   auto rv = mp4parse_get_track_count(mParser.get(), &tracks);
-  if (rv != mp4parse_status_OK) {
+  if (rv != MP4PARSE_STATUS_OK) {
     return Nothing();
   }
 
@@ -209,9 +209,9 @@ MP4Metadata::TrackTypeToGlobalTrackIndex(mozilla::TrackInfo::TrackType aType, si
      track index when a match is found. */
   uint32_t perType = 0;
   for (uint32_t i = 0; i < tracks; ++i) {
-    mp4parse_track_info track_info;
+    Mp4parseTrackInfo track_info;
     rv = mp4parse_get_track_info(mParser.get(), i, &track_info);
-    if (rv != mp4parse_status_OK) {
+    if (rv != MP4PARSE_STATUS_OK) {
       continue;
     }
     if (TrackTypeEqual(aType, track_info.track_type)) {
@@ -237,9 +237,9 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
             nullptr};
   }
 
-  mp4parse_track_info info;
+  Mp4parseTrackInfo info;
   auto rv = mp4parse_get_track_info(mParser.get(), trackIndex.value(), &info);
-  if (rv != mp4parse_status_OK) {
+  if (rv != MP4PARSE_STATUS_OK) {
     MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("mp4parse_get_track_info returned %d", rv));
     return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                         RESULT_DETAIL("Cannot find %s track #%zu",
@@ -250,17 +250,17 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
 #ifdef DEBUG
   const char* codec_string = "unrecognized";
   switch (info.codec) {
-    case mp4parse_codec_UNKNOWN: codec_string = "unknown"; break;
-    case mp4parse_codec_AAC: codec_string = "aac"; break;
-    case mp4parse_codec_OPUS: codec_string = "opus"; break;
-    case mp4parse_codec_FLAC: codec_string = "flac"; break;
-    case mp4parse_codec_AVC: codec_string = "h.264"; break;
-    case mp4parse_codec_VP9: codec_string = "vp9"; break;
-    case mp4parse_codec_MP3: codec_string = "mp3"; break;
-    case mp4parse_codec_MP4V: codec_string = "mp4v"; break;
-    case mp4parse_codec_JPEG: codec_string = "jpeg"; break;
-    case mp4parse_codec_AC3: codec_string = "ac-3"; break;
-    case mp4parse_codec_EC3: codec_string = "ec-3"; break;
+    case MP4PARSE_CODEC_UNKNOWN: codec_string = "unknown"; break;
+    case MP4PARSE_CODEC_AAC: codec_string = "aac"; break;
+    case MP4PARSE_CODEC_OPUS: codec_string = "opus"; break;
+    case MP4PARSE_CODEC_FLAC: codec_string = "flac"; break;
+    case MP4PARSE_CODEC_AVC: codec_string = "h.264"; break;
+    case MP4PARSE_CODEC_VP9: codec_string = "vp9"; break;
+    case MP4PARSE_CODEC_MP3: codec_string = "mp3"; break;
+    case MP4PARSE_CODEC_MP4V: codec_string = "mp4v"; break;
+    case MP4PARSE_CODEC_JPEG: codec_string = "jpeg"; break;
+    case MP4PARSE_CODEC_AC3: codec_string = "ac-3"; break;
+    case MP4PARSE_CODEC_EC3: codec_string = "ec-3"; break;
   }
   MOZ_LOG(gMP4MetadataLog, LogLevel::Debug,
     ("track codec %s (%u)\n", codec_string, info.codec));
@@ -270,9 +270,9 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   UniquePtr<mozilla::TrackInfo> e;
   switch (aType) {
     case TrackInfo::TrackType::kAudioTrack: {
-      mp4parse_track_audio_info audio;
+      Mp4parseTrackAudioInfo audio;
       auto rv = mp4parse_get_track_audio_info(mParser.get(), trackIndex.value(), &audio);
-      if (rv != mp4parse_status_OK) {
+      if (rv != MP4PARSE_STATUS_OK) {
         MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("mp4parse_get_track_audio_info returned error %d", rv));
         return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                             RESULT_DETAIL("Cannot parse %s track #%zu",
@@ -286,9 +286,9 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     }
     break;
     case TrackInfo::TrackType::kVideoTrack: {
-      mp4parse_track_video_info video;
+      Mp4parseTrackVideoInfo video;
       auto rv = mp4parse_get_track_video_info(mParser.get(), trackIndex.value(), &video);
-      if (rv != mp4parse_status_OK) {
+      if (rv != MP4PARSE_STATUS_OK) {
         MOZ_LOG(gMP4MetadataLog, LogLevel::Warning, ("mp4parse_get_track_video_info returned error %d", rv));
         return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                             RESULT_DETAIL("Cannot parse %s track #%zu",
@@ -312,9 +312,9 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
 
   // No duration in track, use fragment_duration.
   if (e && !e->mDuration.IsPositive()) {
-    mp4parse_fragment_info info;
+    Mp4parseFragmentInfo info;
     auto rv = mp4parse_get_fragment_info(mParser.get(), &info);
-    if (rv == mp4parse_status_OK) {
+    if (rv == MP4PARSE_STATUS_OK) {
       e->mDuration = TimeUnit::FromMicroseconds(info.fragment_duration);
     }
   }
@@ -346,11 +346,11 @@ MP4Metadata::Crypto() const
 MP4Metadata::ResultAndIndice
 MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 {
-  mp4parse_byte_data indiceRawData = {};
+  Mp4parseByteData indiceRawData = {};
 
   uint8_t fragmented = false;
   auto rv = mp4parse_is_fragmented(mParser.get(), aTrackID, &fragmented);
-  if (rv != mp4parse_status_OK) {
+  if (rv != MP4PARSE_STATUS_OK) {
     return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                         RESULT_DETAIL("Cannot parse whether track id %d is "
                                       "fragmented, mp4parse_error=%d",
@@ -360,7 +360,7 @@ MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 
   if (!fragmented) {
     rv = mp4parse_get_indice_table(mParser.get(), aTrackID, &indiceRawData);
-    if (rv != mp4parse_status_OK) {
+    if (rv != MP4PARSE_STATUS_OK) {
       return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                           RESULT_DETAIL("Cannot parse index table in track id %d, "
                                         "mp4parse_error=%d",
