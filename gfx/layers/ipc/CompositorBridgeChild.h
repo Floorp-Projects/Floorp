@@ -47,6 +47,7 @@ class TextureClient;
 class TextureClientPool;
 class CapturedBufferState;
 class CapturedPaintState;
+class CapturedTiledPaintState;
 struct FrameMetrics;
 
 class CompositorBridgeChild final : public PCompositorBridgeChild,
@@ -239,6 +240,14 @@ public:
   // Must only be called from the paint thread. Notifies the CompositorBridge
   // that the paint thread has finished an asynchronous paint request.
   void NotifyFinishedAsyncPaint(CapturedPaintState* aState);
+
+  // Must only be called from the main thread. Notifies the CompositorBridge
+  // that the paint thread is going to begin painting asynchronously.
+  void NotifyBeginAsyncTiledPaint(CapturedTiledPaintState* aState);
+
+  // Must only be called from the paint thread. Notifies the CompositorBridge
+  // that the paint thread has finished an asynchronous paint request.
+  void NotifyFinishedAsyncTiledPaint(CapturedTiledPaintState* aState);
 
   // Must only be called from the main thread. Notifies the CompositorBridge
   // that the paint thread is going to perform texture synchronization at the
