@@ -22,6 +22,7 @@
 #include "mozilla/layers/CompositorBridgeChild.h" // for CompositorBridgeChild
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
+#include "mozilla/layers/PaintThread.h"  // for PaintThread
 #include "TextureClientPool.h"
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
@@ -476,14 +477,19 @@ TileClient::Flip()
 static bool
 CopyFrontToBack(TextureClient* aFront,
                 TextureClient* aBack,
-                const gfx::IntRect& aRectToCopy)
+                const gfx::IntRect& aRectToCopy,
+                TilePaintFlags aFlags)
 {
+  bool asyncPaint = !!(aFlags & TilePaintFlags::Async);
+  OpenMode lockMode = asyncPaint ? OpenMode::OPEN_READ_ASYNC_WRITE
+                                 : OpenMode::OPEN_READ_WRITE;
+
   TextureClientAutoLock frontLock(aFront, OpenMode::OPEN_READ);
   if (!frontLock.Succeeded()) {
     return false;
   }
 
-  if (!aBack->Lock(OpenMode::OPEN_READ_WRITE)) {
+  if (!aBack->Lock(lockMode)) {
     gfxCriticalError() << "[Tiling:Client] Failed to lock the tile's back buffer";
     return false;
   }
@@ -495,7 +501,8 @@ CopyFrontToBack(TextureClient* aFront,
 
 void
 TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
-                                        nsIntRegion& aAddPaintedRegion)
+                                        nsIntRegion& aAddPaintedRegion,
+                                        TilePaintFlags aFlags)
 {
   if (mBackBuffer && mFrontBuffer) {
     gfx::IntSize tileSize = mFrontBuffer->GetSize();
@@ -523,10 +530,10 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
       // region, but we can reevaluate this if it becomes an issue.
       const IntRect rectToCopy = regionToCopy.GetBounds();
       gfx::IntRect gfxRectToCopy(rectToCopy.x, rectToCopy.y, rectToCopy.Width(), rectToCopy.Height());
-      if (CopyFrontToBack(mFrontBuffer, mBackBuffer, gfxRectToCopy)) {
+      if (CopyFrontToBack(mFrontBuffer, mBackBuffer, gfxRectToCopy, aFlags)) {
         if (mBackBufferOnWhite) {
           MOZ_ASSERT(mFrontBufferOnWhite);
-          if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy)) {
+          if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy, aFlags)) {
             mInvalidBack.SetEmpty();
           }
         }
@@ -626,6 +633,7 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
                           gfxContentType aContent,
                           SurfaceMode aMode,
                           nsIntRegion& aAddPaintedRegion,
+                          TilePaintFlags aFlags,
                           RefPtr<TextureClient>* aBackBufferOnWhite)
 {
   if (!mAllocator) {
@@ -681,11 +689,14 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
       mInvalidBack = IntRect(IntPoint(), mBackBufferOnWhite->GetSize());
     }
 
-    ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion);
+    ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion, aFlags);
   }
 
+  OpenMode lockMode = aFlags & TilePaintFlags::Async ? OpenMode::OPEN_READ_ASYNC_WRITE
+                                                     : OpenMode::OPEN_READ_WRITE;
+
   if (!mBackBuffer->IsLocked()) {
-    if (!mBackBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
+    if (!mBackBuffer->Lock(lockMode)) {
       gfxCriticalError() << "[Tiling:Client] Failed to lock a tile (B)";
       DiscardBackBuffer();
       DiscardFrontBuffer();
@@ -694,7 +705,7 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
   }
 
   if (mBackBufferOnWhite && !mBackBufferOnWhite->IsLocked()) {
-    if (!mBackBufferOnWhite->Lock(OpenMode::OPEN_READ_WRITE)) {
+    if (!mBackBufferOnWhite->Lock(lockMode)) {
       gfxCriticalError() << "[Tiling:Client] Failed to lock a tile (W)";
       DiscardBackBuffer();
       DiscardFrontBuffer();
@@ -766,14 +777,14 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                          const nsIntRegion& aDirtyRegion,
                                          LayerManager::DrawPaintedLayerCallback aCallback,
                                          void* aCallbackData,
-                                         bool aIsProgressive)
+                                         TilePaintFlags aFlags)
 {
   TILING_LOG("TILING %p: PaintThebes painting region %s\n", &mPaintedLayer, Stringify(aPaintRegion).c_str());
   TILING_LOG("TILING %p: PaintThebes new valid region %s\n", &mPaintedLayer, Stringify(aNewValidRegion).c_str());
 
   mCallback = aCallback;
   mCallbackData = aCallbackData;
-  mWasLastPaintProgressive = aIsProgressive;
+  mWasLastPaintProgressive = !!(aFlags & TilePaintFlags::Progressive);
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   long start = PR_IntervalNow();
@@ -798,7 +809,7 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   AUTO_PROFILER_LABEL("ClientMultiTiledLayerBuffer::PaintThebes", GRAPHICS);
 
   mNewValidRegion = aNewValidRegion;
-  Update(aNewValidRegion, aPaintRegion, aDirtyRegion);
+  Update(aNewValidRegion, aPaintRegion, aDirtyRegion, aFlags);
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (PR_IntervalNow() - start > 10) {
@@ -914,7 +925,8 @@ ClientTiledLayerBuffer::UnlockTile(TileClient& aTile)
 
 void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
                                          const nsIntRegion& aPaintRegion,
-                                         const nsIntRegion& aDirtyRegion)
+                                         const nsIntRegion& aDirtyRegion,
+                                         TilePaintFlags aFlags)
 {
   const IntSize scaledTileSize = GetScaledTileSize();
   const gfx::IntRect newBounds = newValidRegion.GetBounds();
@@ -965,7 +977,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       }
 
       TileClient& tile = mRetainedTiles[i];
-      if (!ValidateTile(tile, GetTileOffset(tilePosition), tileDrawRegion)) {
+      if (!ValidateTile(tile, GetTileOffset(tilePosition), tileDrawRegion, aFlags)) {
         gfxCriticalError() << "ValidateTile failed";
       }
 
@@ -974,13 +986,14 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       dirtyRegion.OrWith(tileDrawRegion);
     }
 
-    if (!mMoz2DTiles.empty()) {
+    if (!mPaintTiles.empty()) {
+      // Create a tiled draw target
       gfx::TileSet tileset;
-      for (size_t i = 0; i < mMoz2DTiles.size(); ++i) {
-        mMoz2DTiles[i].mTileOrigin -= mTilingOrigin;
+      for (size_t i = 0; i < mPaintTiles.size(); ++i) {
+        mPaintTiles[i].mTileOrigin -= mTilingOrigin;
       }
-      tileset.mTiles = &mMoz2DTiles[0];
-      tileset.mTileCount = mMoz2DTiles.size();
+      tileset.mTiles = &mPaintTiles[0];
+      tileset.mTileCount = mPaintTiles.size();
       RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
       if (!drawTarget || !drawTarget->IsValid()) {
         gfxDevCrash(LogReason::InvalidContext) << "Invalid tiled draw target";
@@ -988,15 +1001,45 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       }
       drawTarget->SetTransform(Matrix());
 
-      RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(drawTarget);
-      MOZ_ASSERT(ctx); // already checked the draw target above
-      ctx->SetMatrix(
-        ctx->CurrentMatrix().PreScale(mResolution, mResolution).PreTranslate(-mTilingOrigin));
+      if (aFlags & TilePaintFlags::Async) {
+        // Create a capture draw target
+        RefPtr<DrawTargetCapture> captureDT =
+          Factory::CreateCaptureDrawTarget(drawTarget->GetBackendType(),
+                                           drawTarget->GetSize(),
+                                           drawTarget->GetFormat());
 
-      mCallback(&mPaintedLayer, ctx, paintRegion, dirtyRegion,
-                DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
-      mMoz2DTiles.clear();
-      // Reset:
+        // Draw into the capture target
+        RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(captureDT);
+        MOZ_ASSERT(ctx); // already checked the draw target above
+        ctx->SetMatrix(
+          ctx->CurrentMatrix().PreScale(mResolution, mResolution).PreTranslate(-mTilingOrigin));
+
+        mCallback(&mPaintedLayer, ctx, paintRegion, dirtyRegion,
+                  DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+        ctx = nullptr;
+
+        // Replay on the paint thread
+        RefPtr<CapturedTiledPaintState> capturedState =
+          new CapturedTiledPaintState(drawTarget,
+                                      captureDT);
+        capturedState->mClients = std::move(mPaintTilesTextureClients);
+
+        PaintThread::Get()->PaintTiledContents(capturedState);
+        mManager->SetQueuedAsyncPaints();
+      } else {
+        // Draw into the tiled draw target
+        RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(drawTarget);
+        MOZ_ASSERT(ctx); // already checked the draw target above
+        ctx->SetMatrix(
+          ctx->CurrentMatrix().PreScale(mResolution, mResolution).PreTranslate(-mTilingOrigin));
+
+        mCallback(&mPaintedLayer, ctx, paintRegion, dirtyRegion,
+                  DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+      }
+
+      // Reset
+      mPaintTiles.clear();
+      mPaintTilesTextureClients.clear();
       mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
                                std::numeric_limits<int32_t>::max());
     }
@@ -1046,7 +1089,8 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 bool
 ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
                                           const nsIntPoint& aTileOrigin,
-                                          nsIntRegion& aDirtyRegion)
+                                          nsIntRegion& aDirtyRegion,
+                                          TilePaintFlags aFlags)
 {
   AUTO_PROFILER_LABEL("ClientMultiTiledLayerBuffer::ValidateTile", GRAPHICS);
 
@@ -1077,6 +1121,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
                         offsetScaledDirtyRegion,
                         content, mode,
                         extraPainted,
+                        aFlags,
                         &backBufferOnWhite);
 
   // Mark the area we need to paint in the back buffer as invalid in the
@@ -1102,24 +1147,31 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     return false;
   }
 
-  gfx::Tile moz2DTile;
+  gfx::Tile paintTile;
   RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
   RefPtr<DrawTarget> dtOnWhite;
   if (backBufferOnWhite) {
     dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
-    moz2DTile.mDrawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
+    paintTile.mDrawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
   } else {
-    moz2DTile.mDrawTarget = dt;
+    paintTile.mDrawTarget = dt;
   }
-  moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
+  paintTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
   if (!dt || (backBufferOnWhite && !dtOnWhite)) {
     aTile.DiscardBuffers();
     return false;
   }
 
-  mMoz2DTiles.push_back(moz2DTile);
-  mTilingOrigin.x = std::min(mTilingOrigin.x, moz2DTile.mTileOrigin.x);
-  mTilingOrigin.y = std::min(mTilingOrigin.y, moz2DTile.mTileOrigin.y);
+  mPaintTiles.push_back(paintTile);
+  mTilingOrigin.x = std::min(mTilingOrigin.x, paintTile.mTileOrigin.x);
+  mTilingOrigin.y = std::min(mTilingOrigin.y, paintTile.mTileOrigin.y);
+
+  if (aFlags & TilePaintFlags::Async) {
+    mPaintTilesTextureClients.push_back(backBuffer);
+    if (backBufferOnWhite) {
+      mPaintTilesTextureClients.push_back(backBufferOnWhite);
+    }
+  }
 
   for (auto iter = offsetScaledDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
     const gfx::Rect drawRect(iter.Get().x, iter.Get().y,
@@ -1394,7 +1446,7 @@ ClientMultiTiledLayerBuffer::ProgressiveUpdate(const nsIntRegion& aValidRegion,
 
     // Paint the computed region and subtract it from the invalid region.
     PaintThebes(validOrStale, regionToPaint, remainingInvalidRegion,
-                aCallback, aCallbackData, true);
+                aCallback, aCallbackData, TilePaintFlags::Progressive);
     remainingInvalidRegion.SubOut(regionToPaint);
   } while (repeat);
 

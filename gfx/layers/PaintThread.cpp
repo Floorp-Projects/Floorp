@@ -341,6 +341,64 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
 }
 
 void
+PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aState);
+
+  RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
+  RefPtr<CapturedTiledPaintState> state(aState);
+
+  cbc->NotifyBeginAsyncTiledPaint(state);
+
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintTiledContents",
+    [self, cbc, state]() -> void
+  {
+    self->AsyncPaintTiledContents(cbc,
+                                  state);
+  });
+
+#ifndef OMTP_FORCE_SYNC
+  sThread->Dispatch(task.forget());
+#else
+  SyncRunnable::DispatchToThread(sThread, task);
+#endif
+}
+
+void
+PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
+                                     CapturedTiledPaintState* aState)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(aState);
+
+  if (!mInAsyncPaintGroup) {
+    mInAsyncPaintGroup = true;
+    PROFILER_TRACING("Paint", "Rasterize", TRACING_INTERVAL_START);
+  }
+
+  DrawTarget* target = aState->mTargetTiled;
+  DrawTargetCapture* capture = aState->mCapture;
+
+  // Draw all the things into the actual dest target.
+  target->DrawCapturedDT(capture, Matrix());
+
+  if (!mDrawTargetsToFlush.Contains(target)) {
+    mDrawTargetsToFlush.AppendElement(target);
+  }
+
+  if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
+    // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,
+    // gets destroyed on the main thread (See bug 1404742). This assumes (unflushed) target
+    // DrawTargets do not themselves hold on to UnscaledFonts.
+    NS_ReleaseOnMainThreadSystemGroup("CapturePaintState::DrawTargetCapture", aState->mCapture.forget());
+  }
+
+  aBridge->NotifyFinishedAsyncTiledPaint(aState);
+}
+
+void
 PaintThread::EndLayer()
 {
   MOZ_ASSERT(NS_IsMainThread());

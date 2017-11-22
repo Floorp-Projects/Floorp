@@ -112,6 +112,25 @@ protected:
 
 typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintState);
 
+// Holds the key operations needed to update a tiled content client on the
+// paint thread.
+class CapturedTiledPaintState {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
+public:
+  CapturedTiledPaintState(gfx::DrawTarget* aTargetTiled,
+                          gfx::DrawTargetCapture* aCapture)
+  : mTargetTiled(aTargetTiled)
+  , mCapture(aCapture)
+  {}
+
+  RefPtr<gfx::DrawTarget> mTargetTiled;
+  RefPtr<gfx::DrawTargetCapture> mCapture;
+  std::vector<RefPtr<TextureClient>> mClients;
+
+protected:
+  virtual ~CapturedTiledPaintState() {}
+};
+
 class CompositorBridgeChild;
 
 class PaintThread final
@@ -136,6 +155,8 @@ public:
 
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
+
+  void PaintTiledContents(CapturedTiledPaintState* aState);
 
   // Must be called on the main thread. Signifies that the current
   // batch of CapturedPaintStates* for PaintContents have been recorded
@@ -172,6 +193,8 @@ private:
   void AsyncPaintContents(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
+  void AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
+                               CapturedTiledPaintState* aState);
   void AsyncEndLayer();
   void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
                                 SyncObjectClient* aSyncObject);
