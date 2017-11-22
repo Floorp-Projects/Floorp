@@ -74,7 +74,7 @@ public:
   }
 
   const IntSize& Size() const { return mSize; }
-  Maybe<SVGImageContext> SVGContext() const { return mSVGContext; }
+  const Maybe<SVGImageContext>& SVGContext() const { return mSVGContext; }
   PlaybackType Playback() const { return mPlayback; }
   SurfaceFlags Flags() const { return mFlags; }
 
