@@ -23,6 +23,7 @@ extern crate audioipc_server;
 extern crate u2fhid;
 extern crate log;
 extern crate syn;
+extern crate cosec;
 
 use std::boxed::Box;
 use std::ffi::CStr;

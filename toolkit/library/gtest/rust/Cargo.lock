@@ -268,6 +268,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cose"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "cose-c"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cose 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "cssparser"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -554,6 +567,7 @@ version = "0.1.0"
 dependencies = [
  "audioipc-client 0.1.0",
  "audioipc-server 0.1.0",
+ "cose-c 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb 0.3.0",
  "cubeb-backend 0.2.0",
  "cubeb-core 0.1.0",
@@ -1601,6 +1615,8 @@ dependencies = [
 "checksum core-foundation-sys 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "bc9fb3d6cb663e6fd7cf1c63f9b144ee2b1e4a78595a0451dd34bff85b9a3387"
 "checksum core-graphics 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)" = "5dc0a78ab2ac23b6ea7b3fe5fe93b227900dc0956979735b8f68032417976dd4"
 "checksum core-text 8.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bcad23756dd1dc4b47bf6a914ace27aadb8fa68889db5837af2308d018d0467c"
+"checksum cose 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "ec10816629f38fa557f08e199a3474fab954f4c8d2645550367235afa6e5646b"
+"checksum cose-c 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "07cc8bb85ec2e93541ef9369b85a4b6fb7732bc7f4854d317eab20e726b0fc2f"
 "checksum cssparser 0.22.0 (registry+https://github.com/rust-lang/crates.io-index)" = "44313341610282488e1156ad1fedebca51c54766c87a041d0287b10499c04ba1"
 "checksum cssparser-macros 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "079adec4af52bb5275eadd004292028c79eb3c5f5b4ee8086a36d4197032f6df"
 "checksum darling 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9861a8495606435477df581bc858ccf15a3469747edf175b94a4704fd9aaedac"
