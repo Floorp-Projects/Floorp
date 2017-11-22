@@ -662,39 +662,69 @@ function ICEStats(report) {
 
 ICEStats.prototype = {
   render() {
-    let tbody = [];
-    for (let stat of this.generateICEStats()) {
-      tbody.push([
-        stat["local-candidate"] || "",
-        stat["remote-candidate"] || "",
-        stat.state || "",
-        stat.priority || "",
-        stat.nominated || "",
-        stat.selected || "",
-        stat.bytesSent || "",
-        stat.bytesReceived || ""
-      ]);
-    }
-
-    let statsTable = new SimpleTable(
-      [getString("local_candidate"), getString("remote_candidate"), getString("ice_state"),
-       getString("priority"), getString("nominated"), getString("selected"),
-       getString("ice_pair_bytes_sent"), getString("ice_pair_bytes_received")],
-      tbody);
-
     let div = document.createElement("div");
     let heading = document.createElement("h4");
 
     heading.textContent = getString("ice_stats_heading");
     div.appendChild(heading);
 
-    div.appendChild(statsTable.render());
+    div.appendChild(this.renderICECandidateTable());
+    // add just a bit of vertical space between the restart/rollback
+    // counts and the ICE candidate pair table above.
+    div.appendChild(document.createElement("br"));
     div.appendChild(this.renderIceMetric("ice_restart_count_label",
                                          this._report.iceRestarts));
     div.appendChild(this.renderIceMetric("ice_rollback_count_label",
                                          this._report.iceRollbacks));
 
     return div;
+  },
+
+  renderICECandidateTable() {
+    let caption = document.createElement("caption");
+    let captionSpan1 = document.createElement("span");
+    captionSpan1.textContent = `${getString("trickle_caption_msg")} `;
+    let captionSpan2 = document.createElement("span");
+    captionSpan2.textContent = getString("trickle_highlight_color_name");
+    captionSpan2.className = "trickled";
+    caption.appendChild(captionSpan1);
+    caption.appendChild(captionSpan2);
+    caption.className = "no-print";
+
+    let stats = this.generateICEStats();
+    // don't use |stat.x || ""| here because it hides 0 values
+    let tbody = stats.map(stat => [
+      stat["local-candidate"],
+      stat["remote-candidate"],
+      stat.state,
+      stat.priority,
+      stat.nominated,
+      stat.selected,
+      stat.bytesSent,
+      stat.bytesReceived
+    ].map(entry => Object.is(entry, undefined) ? "" : entry));
+
+    let statsTable = new SimpleTable(
+      ["local_candidate", "remote_candidate", "ice_state",
+       "priority", "nominated", "selected",
+       "ice_pair_bytes_sent", "ice_pair_bytes_received"
+      ].map(columnName => getString(columnName)),
+      tbody, caption).render();
+
+    // after rendering the table, we need to change the class name for each
+    // candidate pair's local or remote candidate if it was trickled.
+    stats.forEach((stat, index) => {
+      // look at statsTable row index + 1 to skip column headers
+      let rowIndex = index + 1;
+      if (stat["remote-trickled"]) {
+        statsTable.rows[rowIndex].cells[1].className = "trickled";
+      }
+      if (stat["local-trickled"]) {
+        statsTable.rows[rowIndex].cells[0].className = "trickled";
+      }
+    });
+
+    return statsTable;
   },
 
   renderIceMetric(labelName, value) {
@@ -721,6 +751,11 @@ ICEStats.prototype = {
       candidates.set(candidate.id, candidate);
     }
 
+    // a method to see if a given candidate id is in the array of tickled
+    // candidates.
+    let isTrickled = id => [...this._report.trickledIceCandidateStats].some(
+      candidate => candidate.id == id);
+
     // A component may have a remote or local candidate address or both.
     // Combine those with both; these will be the peer candidates.
     let matched = {};
@@ -742,10 +777,16 @@ ICEStats.prototype = {
           bytesReceived: pair.bytesReceived
         };
         matched[local.id] = true;
+        if (isTrickled(local.id)) {
+            stat["local-trickled"] = true;
+        }
 
         if (remote) {
           stat["remote-candidate"] = this.candidateToString(remote);
           matched[remote.id] = true;
+          if (isTrickled(remote.id)) {
+            stat["remote-trickled"] = true;
+          }
         }
         stats.push(stat);
       }
