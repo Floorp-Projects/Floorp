@@ -32,7 +32,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/FileCreatorHelper.h"
-#include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MemoryReportRequest.h"
@@ -1890,22 +1889,6 @@ bool
 ContentChild::DeallocPPresentationChild(PPresentationChild* aActor)
 {
   delete aActor;
-  return true;
-}
-
-PFlyWebPublishedServerChild*
-ContentChild::AllocPFlyWebPublishedServerChild(const nsString& name,
-                                               const FlyWebPublishOptions& params)
-{
-  MOZ_CRASH("We should never be manually allocating PFlyWebPublishedServerChild actors");
-  return nullptr;
-}
-
-bool
-ContentChild::DeallocPFlyWebPublishedServerChild(PFlyWebPublishedServerChild* aActor)
-{
-  RefPtr<FlyWebPublishedServerChild> actor =
-    dont_AddRef(static_cast<FlyWebPublishedServerChild*>(aActor));
   return true;
 }
 
