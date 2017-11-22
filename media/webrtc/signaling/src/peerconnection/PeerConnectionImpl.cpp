@@ -1969,6 +1969,7 @@ public:
     mIceCandidateStats.Construct();
     mCodecStats.Construct();
     mTimestamp.Construct(now);
+    mTrickledIceCandidateStats.Construct();
   }
 };
 
@@ -3380,6 +3381,9 @@ static void ToRTCIceCandidateStats(
           NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
     }
     report->mIceCandidateStats.Value().AppendElement(cand, fallible);
+    if (candidate.trickled) {
+      report->mTrickledIceCandidateStats.Value().AppendElement(cand, fallible);
+    }
   }
 }
 
