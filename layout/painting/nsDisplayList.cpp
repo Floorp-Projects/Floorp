@@ -994,6 +994,7 @@ nsDisplayListBuilder::BeginFrame()
 void
 nsDisplayListBuilder::EndFrame()
 {
+  NS_ASSERTION(!mInInvalidSubtree, "Someone forgot to cleanup mInInvalidSubtree!");
   mFrameToAnimatedGeometryRootMap.Clear();
   mActiveScrolledRoots.Clear();
   FreeClipChains();
