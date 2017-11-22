@@ -275,6 +275,11 @@ New_MaybeImageOrToolbarButtonAccessible(nsIContent* aContent,
 
   return new ImageAccessibleWrap(aContent, aContext->Document());
 }
+
+static Accessible*
+New_MenuSeparator(nsIContent* aContent, Accessible* aContext)
+  { return new XULMenuSeparatorAccessible(aContent, aContext->Document()); }
+
 #endif
 
 /**
@@ -1534,9 +1539,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 #endif
 
     accessible = new XULMenupopupAccessible(aContent, aDoc);
-
-  } else if(role.EqualsLiteral("xul:menuseparator")) {
-    accessible = new XULMenuSeparatorAccessible(aContent, aDoc);
 
   } else if(role.EqualsLiteral("xul:pane")) {
     accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
