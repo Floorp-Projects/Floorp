@@ -460,6 +460,18 @@ private:
     explicit Allocation(const RefPtr<AllocationHandle>& aHandle);
     ~Allocation();
 
+#ifdef DEBUG
+    /**
+     * We call this every time we append data to the track for this Allocation.
+     * It asserts that we only append once per iteration at most.
+     */
+    void RegisterLastAppendTime(MediaStreamGraphImpl* aGraph);
+
+    // The MSGImpl::IterationEnd() of the last time we appended data.
+    // Graph thread only.
+    GraphTime mLastAppendTime = 0;
+#endif
+
     const RefPtr<AllocationHandle> mHandle;
     RefPtr<SourceMediaStream> mStream;
     TrackID mTrackID = TRACK_NONE;

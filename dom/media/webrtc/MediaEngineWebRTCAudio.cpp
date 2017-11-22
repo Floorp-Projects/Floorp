@@ -104,6 +104,19 @@ MediaEngineWebRTCMicrophoneSource::Allocation::Allocation(
 
 MediaEngineWebRTCMicrophoneSource::Allocation::~Allocation() = default;
 
+#ifdef DEBUG
+void
+MediaEngineWebRTCMicrophoneSource::Allocation::RegisterLastAppendTime(
+    MediaStreamGraphImpl* aGraph)
+{
+  aGraph->AssertOnGraphThreadOrNotRunning();
+  MOZ_ASSERT((aGraph->IterationEnd() == 0 && mLastAppendTime == 0) ||
+             aGraph->IterationEnd() > mLastAppendTime,
+             "Iteration time didn't advance since last append");
+  mLastAppendTime = aGraph->IterationEnd();
+}
+#endif
+
 MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
     mozilla::AudioInput* aAudioInput,
     int aIndex,
@@ -746,6 +759,21 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
 {
   LOG_FRAMES(("NotifyPull, desired = %" PRId64, (int64_t) aDesiredTime));
 
+  {
+    MutexAutoLock lock(mMutex);
+    size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
+    if (i == mAllocations.NoIndex) {
+      // This handle must have been deallocated. That's fine, and its track
+      // will already be ended. No need to do anything.
+      return;
+    }
+
+#ifdef DEBUG
+    mAllocations[i].RegisterLastAppendTime(
+      static_cast<MediaStreamGraphImpl*>(aStream->Graph()));
+#endif
+  }
+
   StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
   if (delta <= 0) {
     return;
@@ -1000,6 +1028,10 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     if (!allocation.mStream) {
       continue;
     }
+
+#ifdef DEBUG
+    allocation.RegisterLastAppendTime(allocation.mStream->GraphImpl());
+#endif
 
     TimeStamp insertTime;
     // Make sure we include the stream and the track.
