@@ -1177,6 +1177,7 @@ body #output-container {
   grid-template-columns: 1fr auto;
   grid-template-rows: auto 1fr;
   height: 100%;
+  width: 100vw;
 }
 
 /* Object Inspector */
@@ -1202,6 +1203,10 @@ body #output-container {
   display: flex;
   grid-row: 1 / -1;
   grid-column: -1 / -2;
-  min-width: 200px;
   background-color: var(--theme-sidebar-background);
+}
+
+.split-box.vert.sidebar {
+  /* Set to prevent the sidebar from extending past the right edge of the page */
+  width: unset;
 }
