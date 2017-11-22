@@ -196,8 +196,7 @@ function MockPluginTag(name, version, start, appBlocks, toolkitBlocks) {
 }
 Object.defineProperty(MockPluginTag.prototype, "blocklisted", {
   get: function MockPluginTag_getBlocklisted() {
-    let bls = AM_Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsIBlocklistService);
-    return bls.getPluginBlocklistState(this) == bls.STATE_BLOCKED;
+    return Services.blocklist.getPluginBlocklistState(this) == Services.blocklist.STATE_BLOCKED;
   }
 });
 

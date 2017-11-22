@@ -12,9 +12,7 @@
 // we only need EventUtils.js for a few files which is why we are using loadSubScript.
 var gManagerWindow;
 var EventUtils = {};
-this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                     getService(Ci.mozIJSSubScriptLoader);
-this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 function checkInstallConfirmation(...urls) {
   let nurls = urls.length;
@@ -68,9 +66,7 @@ function checkInstallConfirmation(...urls) {
         return;
       }
 
-      let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                           .getService(Ci.nsIWindowMediator);
-      wm.removeListener(listener);
+      Services.wm.removeListener(listener);
 
       is(notificationCount, nurls, `Saw ${nurls} addon-install-started notifications`);
       Services.obs.removeObserver(observer, "addon-install-started");
@@ -79,9 +75,7 @@ function checkInstallConfirmation(...urls) {
     }
   };
 
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Ci.nsIWindowMediator);
-  wm.addListener(listener);
+  Services.wm.addListener(listener);
 }
 
 function test() {
