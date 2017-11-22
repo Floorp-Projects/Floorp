@@ -850,27 +850,27 @@ void AssertValidStringPtr(JSContext* cx, JSString* str);
 void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym);
 void AssertValidValue(JSContext* cx, Value* v);
 
-void MarkValueFromIon(JSRuntime* rt, Value* vp);
-void MarkStringFromIon(JSRuntime* rt, JSString** stringp);
-void MarkObjectFromIon(JSRuntime* rt, JSObject** objp);
-void MarkShapeFromIon(JSRuntime* rt, Shape** shapep);
-void MarkObjectGroupFromIon(JSRuntime* rt, ObjectGroup** groupp);
+void MarkValueFromJit(JSRuntime* rt, Value* vp);
+void MarkStringFromJit(JSRuntime* rt, JSString** stringp);
+void MarkObjectFromJit(JSRuntime* rt, JSObject** objp);
+void MarkShapeFromJit(JSRuntime* rt, Shape** shapep);
+void MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp);
 
 // Helper for generatePreBarrier.
 inline void*
-IonMarkFunction(MIRType type)
+JitMarkFunction(MIRType type)
 {
     switch (type) {
       case MIRType::Value:
-        return JS_FUNC_TO_DATA_PTR(void*, MarkValueFromIon);
+        return JS_FUNC_TO_DATA_PTR(void*, MarkValueFromJit);
       case MIRType::String:
-        return JS_FUNC_TO_DATA_PTR(void*, MarkStringFromIon);
+        return JS_FUNC_TO_DATA_PTR(void*, MarkStringFromJit);
       case MIRType::Object:
-        return JS_FUNC_TO_DATA_PTR(void*, MarkObjectFromIon);
+        return JS_FUNC_TO_DATA_PTR(void*, MarkObjectFromJit);
       case MIRType::Shape:
-        return JS_FUNC_TO_DATA_PTR(void*, MarkShapeFromIon);
+        return JS_FUNC_TO_DATA_PTR(void*, MarkShapeFromJit);
       case MIRType::ObjectGroup:
-        return JS_FUNC_TO_DATA_PTR(void*, MarkObjectGroupFromIon);
+        return JS_FUNC_TO_DATA_PTR(void*, MarkObjectGroupFromJit);
       default: MOZ_CRASH();
     }
 }
