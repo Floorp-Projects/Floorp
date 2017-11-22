@@ -500,7 +500,7 @@ add_task(async function test_stderr() {
 });
 
 // Test that calling connectNative() multiple times works
-// (bug 1313980 was a previous regression in this area)
+// (see bug 1313980 for a previous regression in this area)
 add_task(async function test_multiple_connects() {
   async function background() {
     function once() {
