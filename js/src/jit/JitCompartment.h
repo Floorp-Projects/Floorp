@@ -134,7 +134,6 @@ class JitRuntime
 
     // Thunk called to finish compilation of an IonScript.
     ExclusiveAccessLockWriteOnceData<uint32_t> lazyLinkStubOffset_;
-    ExclusiveAccessLockWriteOnceData<uint32_t> lazyLinkStubEndOffset_;
 
     // Thunk to enter the interpreter from JIT code.
     ExclusiveAccessLockWriteOnceData<uint32_t> interpreterStubOffset_;
@@ -314,9 +313,6 @@ class JitRuntime
 
     TrampolinePtr lazyLinkStub() const {
         return trampolineCode(lazyLinkStubOffset_);
-    }
-    TrampolinePtr lazyLinkStubEnd() const {
-        return trampolineCode(lazyLinkStubEndOffset_);
     }
     TrampolinePtr interpreterStub() const {
         return trampolineCode(interpreterStubOffset_);

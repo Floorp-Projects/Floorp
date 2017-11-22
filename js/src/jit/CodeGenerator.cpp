@@ -8029,8 +8029,6 @@ JitRuntime::generateLazyLinkStub(MacroAssembler& masm)
     masm.popReturnAddress();
 #endif
     masm.jump(ReturnReg);
-
-    lazyLinkStubEndOffset_ = masm.currentOffset();
 }
 
 void
