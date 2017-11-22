@@ -68,7 +68,7 @@ window.dialog {
   list-style-image: url("chrome://global/skin/icons/info.svg");
 }
 
-.alert-dialog #info\.icon,
+.alert-dialog #infoIcon,
 .alert-icon {
   list-style-image: url("chrome://global/skin/icons/warning-64.png");
 }

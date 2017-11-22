@@ -44,6 +44,7 @@ type WrIdNamespace = IdNamespace;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrPipelineId = PipelineId;
 /// cbindgen:field-names=[mNamespace, mHandle]
+/// cbindgen:derive-neq=true
 type WrImageKey = ImageKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 pub type WrFontKey = FontKey;

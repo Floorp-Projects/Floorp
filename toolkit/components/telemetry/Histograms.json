@@ -4427,7 +4427,7 @@
     "alert_emails": ["necko@mozilla.com", "junior@mozilla.com"],
     "description": "Old schema version of the cookie database. 0 for having legacy cookies.txt."
   },
-  "MOZ_SQLITE_COOKIES_BLOCK_MAIN_THREAD_MS": {
+  "MOZ_SQLITE_COOKIES_BLOCK_MAIN_THREAD_MS_V2": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4435,7 +4435,17 @@
     "bug_numbers": [870460],
     "high": 3000,
     "n_buckets": 10,
-    "description": "Time spent on blocking main thread by startup cookie database read (ms)"
+    "description": "Time spent on blocking main thread by startup cookie database read (ms), only for blocking case"
+  },
+  "MOZ_SQLITE_COOKIES_TIME_TO_BLOCK_MAIN_THREAD_MS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "alert_emails": ["necko@mozilla.com", "junior@mozilla.com"],
+    "bug_numbers": [1413839],
+    "high": 10000,
+    "n_buckets": 30,
+    "description": "How long (ms) after we finished reading the cookie db until the first cookie request came in (0 implies we blocked the main thread)"
   },
   "MOZ_SQLITE_COOKIES_READ_MAIN_THREAD_MS": {
     "record_in_processes": ["main", "content"],

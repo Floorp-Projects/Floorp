@@ -813,6 +813,15 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
 
     MOZ_RELEASE_ASSERT(instance.isAsmJS());
 
+    // Asm.JS memory cannot grow or shrink - only wasm can grow or shrink it,
+    // and asm.js is not allowed to use wasm memory.  On this Asm.JS-only path
+    // we therefore need not worry about memory growing or shrinking while the
+    // signal handler is executing, and we can read the length without locking
+    // the memory.  Indeed, the buffer's byteLength always holds the correct
+    // value.
+
+    uint32_t memoryLength = instance.memory()->buffer().byteLength();
+
     // Disassemble the instruction which caused the trap so that we can extract
     // information about it and decide what to do.
     Disassembler::HeapAccess access;
@@ -853,7 +862,7 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
                        instance.memoryMappedSize(),
                        "Access extends beyond the asm.js heap guard region");
     MOZ_RELEASE_ASSERT(accessAddress + access.size() > instance.memoryBase() +
-                       instance.memoryLength(),
+                       memoryLength,
                        "Computed access address is not actually out of bounds");
 
     // The basic sandbox model is that all heap accesses are a heap base
@@ -874,7 +883,7 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
     uint32_t wrappedOffset = uint32_t(unwrappedOffset);
     size_t size = access.size();
     MOZ_RELEASE_ASSERT(wrappedOffset + size > wrappedOffset);
-    bool inBounds = wrappedOffset + size < instance.memoryLength();
+    bool inBounds = wrappedOffset + size < memoryLength;
 
     if (inBounds) {
         // We now know that this is an access that is actually in bounds when
@@ -883,7 +892,7 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
         SharedMem<uint8_t*> wrappedAddress = instance.memoryBase() + wrappedOffset;
         MOZ_RELEASE_ASSERT(wrappedAddress >= instance.memoryBase());
         MOZ_RELEASE_ASSERT(wrappedAddress + size > wrappedAddress);
-        MOZ_RELEASE_ASSERT(wrappedAddress + size <= instance.memoryBase() + instance.memoryLength());
+        MOZ_RELEASE_ASSERT(wrappedAddress + size <= instance.memoryBase() + memoryLength);
         switch (access.kind()) {
           case Disassembler::HeapAccess::Load:
             SetRegisterToLoadedValue(context, wrappedAddress.cast<void*>(), size, access.otherOperand());

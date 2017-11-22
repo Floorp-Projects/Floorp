@@ -47,6 +47,8 @@
 #include "mozilla/LoadContext.h"
 #include "mozilla/Move.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ClientManager.h"
+#include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ErrorEvent.h"
@@ -598,6 +600,8 @@ private:
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
 
+    aWorkerPrivate->EnsureClientSource();
+
     ErrorResult rv;
     scriptloader::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript, rv);
     rv.WouldReportJSException();
@@ -667,6 +671,8 @@ private:
       NS_WARNING("Failed to make global!");
       return false;
     }
+
+    aWorkerPrivate->EnsureClientSource();
 
     JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
 
@@ -5128,6 +5134,8 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
         // waiting for a next tick.
         PromiseDebugging::FlushUncaughtRejections();
 
+        mClientSource = nullptr;
+
         ShutdownGCTimers();
 
         DisableMemoryReporter();
@@ -5287,6 +5295,53 @@ nsISerialEventTarget*
 WorkerPrivate::HybridEventTarget()
 {
   return mWorkerHybridEventTarget;
+}
+
+void
+WorkerPrivate::EnsureClientSource()
+{
+  AssertIsOnWorkerThread();
+
+  if (mClientSource) {
+    return;
+  }
+
+  ClientType type;
+  switch(Type()) {
+    case WorkerTypeDedicated:
+      type = ClientType::Worker;
+      break;
+    case WorkerTypeShared:
+      type = ClientType::Sharedworker;
+      break;
+    case WorkerTypeService:
+      type = ClientType::Serviceworker;
+      break;
+    default:
+      MOZ_CRASH("unknown worker type!");
+  }
+
+  mClientSource = ClientManager::CreateSource(type, mWorkerHybridEventTarget,
+                                              GetPrincipalInfo());
+  if (mFrozen) {
+    mClientSource->Freeze();
+  }
+}
+
+const ClientInfo&
+WorkerPrivate::GetClientInfo() const
+{
+  AssertIsOnWorkerThread();
+  MOZ_DIAGNOSTIC_ASSERT(mClientSource);
+  return mClientSource->Info();
+}
+
+void
+WorkerPrivate::ExecutionReady()
+{
+  AssertIsOnWorkerThread();
+  MOZ_DIAGNOSTIC_ASSERT(mClientSource);
+  mClientSource->WorkerExecutionReady(this);
 }
 
 void
@@ -5628,6 +5683,10 @@ WorkerPrivate::FreezeInternal()
 
   NS_ASSERTION(!mFrozen, "Already frozen!");
 
+  if (mClientSource) {
+    mClientSource->Freeze();
+  }
+
   mFrozen = true;
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
@@ -5649,6 +5708,11 @@ WorkerPrivate::ThawInternal()
   }
 
   mFrozen = false;
+
+  if (mClientSource) {
+    mClientSource->Thaw();
+  }
+
   return true;
 }
 

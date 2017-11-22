@@ -2192,7 +2192,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
 
-    if (fun->hasScript()) {
+    if (fun->isInterpreted()) {
         // Never attach optimized scripted call stubs for JSOP_FUNAPPLY.
         // MagicArguments may escape the frame through them.
         if (op == JSOP_FUNAPPLY)
@@ -2205,6 +2205,13 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
         // Likewise, if the callee is a class constructor, we have to throw.
         if (!constructing && fun->isClassConstructor())
             return true;
+
+        if (!fun->hasScript()) {
+            // Don't treat this as an unoptimizable case, as we'll add a stub
+            // when the callee is delazified.
+            *handled = true;
+            return true;
+        }
 
         // Check if this stub chain has already generalized scripted calls.
         if (stub->scriptedStubsAreGeneralized()) {

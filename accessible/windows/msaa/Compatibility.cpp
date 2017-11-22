@@ -161,11 +161,12 @@ DetectInSendMessageExCompat(PEXCEPTION_POINTERS aExceptionInfo)
 
 uint32_t Compatibility::sConsumers = Compatibility::UNKNOWN;
 
-void
-Compatibility::Init()
+/**
+ * This function is safe to call multiple times.
+ */
+/* static */ void
+Compatibility::InitConsumers()
 {
-  // Note we collect some AT statistics/telemetry here for convenience.
-
   HMODULE jawsHandle = ::GetModuleHandleW(L"jhook");
   if (jawsHandle)
     sConsumers |= (IsModuleVersionLessThan(jawsHandle, 19, 0)) ?
@@ -202,7 +203,21 @@ Compatibility::Init()
 
   // If we have a known consumer remove the unknown bit.
   if (sConsumers != Compatibility::UNKNOWN)
-    sConsumers ^= Compatibility::UNKNOWN;
+    sConsumers &= ~Compatibility::UNKNOWN;
+}
+
+/* static */ bool
+Compatibility::HasKnownNonUiaConsumer()
+{
+  InitConsumers();
+  return sConsumers & ~(Compatibility::UNKNOWN | UIAUTOMATION);
+}
+
+void
+Compatibility::Init()
+{
+  // Note we collect some AT statistics/telemetry here for convenience.
+  InitConsumers();
 
 #ifdef MOZ_CRASHREPORTER
   CrashReporter::

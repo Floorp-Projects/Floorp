@@ -1367,7 +1367,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
 
         rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
                                       aLoadData->mURI,
-                                      stream,
+                                      stream.forget(),
                                       nsContentUtils::GetSystemPrincipal(),
                                       securityFlags,
                                       contentPolicyType);

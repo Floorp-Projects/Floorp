@@ -14,7 +14,7 @@ assertEq(anon.name, "anon");
 
 if (typeof Reflect !== "undefined" && Reflect.parse) {
   var tree = Reflect.parse("export default async function() {}", { target: "module" });
-  assertEq(tree.body[0].declaration.id.name, "*default*");
+  assertEq(tree.body[0].declaration.id.name, "default");
 }
 
 if (typeof reportCompare === "function")

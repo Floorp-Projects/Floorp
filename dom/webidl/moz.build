@@ -705,7 +705,6 @@ WEBIDL_FILES = [
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',
     'MozTimeManager.webidl',
-    'MozWakeLock.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
     'NamedNodeMap.webidl',

@@ -4419,7 +4419,7 @@ CodeGeneratorX86Shared::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arr
 template<typename S, typename T>
 void
 CodeGeneratorX86Shared::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
-                                                    const T& mem)
+                                                   const T& mem)
 {
     switch (arrayType) {
       case Scalar::Int8:

@@ -80,7 +80,7 @@ nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
     rv = NS_NewInputStreamChannelInternal(getter_AddRefs(mChannel),
                                           aURI,
-                                          inputStream,
+                                          inputStream.forget(),
                                           NS_LITERAL_CSTRING("text/html"),
                                           NS_LITERAL_CSTRING("utf-8"),
                                           aLoadInfo);

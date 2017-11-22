@@ -50,6 +50,18 @@ class BaseAssemblerX86 : public BaseAssembler
         m_formatter.oneByteOp(OP_ADC_GvEv, src, dst);
     }
 
+    void adcl_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("adcl       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_ADC_GvEv, offset, base, dst);
+    }
+
+    void adcl_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("adcl       " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_ADC_GvEv, offset, base, index, scale, dst);
+    }
+
     void sbbl_ir(int32_t imm, RegisterID dst)
     {
         spew("sbbl       $%d, %s", imm, GPReg32Name(dst));
@@ -66,6 +78,18 @@ class BaseAssemblerX86 : public BaseAssembler
     {
         spew("sbbl       %s, %s", GPReg32Name(src), GPReg32Name(dst));
         m_formatter.oneByteOp(OP_SBB_GvEv, src, dst);
+    }
+
+    void sbbl_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("sbbl       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_SBB_GvEv, offset, base, dst);
+    }
+
+    void sbbl_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("sbbl       " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_SBB_GvEv, offset, base, index, scale, dst);
     }
 
     using BaseAssembler::andl_im;

@@ -62,6 +62,7 @@ private:
   SurfaceFormat mFormat;
   IntSize mSize;
   DrawTargetD2D1* mDrawTarget;
+  std::shared_ptr<Mutex> mSnapshotLock;
 };
 
 class DataSourceSurfaceD2D1 : public DataSourceSurface

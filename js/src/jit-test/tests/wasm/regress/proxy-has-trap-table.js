@@ -1,6 +1,7 @@
 assertErrorMessage(() => {
     var desc = {
         element: "anyfunc",
+        initial: 1
     };
     var proxy = new Proxy({}, {
         has: true
