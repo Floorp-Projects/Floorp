@@ -188,6 +188,19 @@ var gASanOptions;
 // run_test function.
 var DEBUG_AUS_TEST = true;
 
+// Setting gDebugTestLog to true will create log files for the tests in
+// <objdir>/_tests/xpcshell/toolkit/mozapps/update/tests/<testdir>/ except for
+// the service tests since they run sequentially. This can help when debugging
+// failures for the tests that intermittently fail when they run in parallel.
+// Never set gDebugTestLog to true except when running tests locally.
+var gDebugTestLog = false;
+// An empty array for gTestsToLog will log most of the output of all of the
+// update tests except for the service tests. To only log specific tests add the
+// test file name without the file extension to the array below.
+var gTestsToLog = [];
+var gRealDump;
+var gFOS;
+
 const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("../data", false)).spec;
 /* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
@@ -765,6 +778,21 @@ function setupTestCommon() {
   let caller = Components.stack.caller;
   gTestID = caller.filename.toString().split("/").pop().split(".")[0];
 
+  if (gDebugTestLog && !IS_SERVICE_TEST) {
+    if (gTestsToLog.length == 0 || gTestsToLog.includes(gTestID)) {
+      let logFile = do_get_file(gTestID + ".log", true);
+      if (!logFile.exists()) {
+        logFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+      }
+      gFOS = Cc["@mozilla.org/network/file-output-stream;1"].
+             createInstance(Ci.nsIFileOutputStream);
+      gFOS.init(logFile, MODE_WRONLY | MODE_APPEND, PERMS_FILE, 0);
+
+      gRealDump = dump;
+      dump = dumpOverride;
+    }
+  }
+
   createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
 
   if (IS_SERVICE_TEST && !shouldRunServiceTest()) {
@@ -956,6 +984,25 @@ function cleanupTestCommon() {
   resetEnvironment();
 
   debugDump("finish - general test cleanup");
+
+  if (gRealDump) {
+    dump = gRealDump;
+    gRealDump = null;
+  }
+
+  if (gFOS) {
+    gFOS.close();
+  }
+}
+
+/**
+ * Helper function to store the log output of calls to dump in a variable so the
+ * values can be written to a file for a parallel run of a test and printed to
+ * the log file when the test runs synchronously.
+ */
+function dumpOverride(aText) {
+  gFOS.write(aText, aText.length);
+  gRealDump(aText);
 }
 
 /**
@@ -964,14 +1011,6 @@ function cleanupTestCommon() {
  * inspected.
  */
 function doTestFinish() {
-  // Create empty update xml files and force the update manager to reload the
-  // update data. This will prevent the update manager from writing the test
-  // update data to the files when the test ends.
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), true);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  reloadUpdateManagerData();
-  gUpdateManager.saveUpdates();
-
   if (DEBUG_AUS_TEST) {
     // This prevents do_print errors from being printed by the xpcshell test
     // harness due to nsUpdateService.js logging to the console when the
@@ -983,46 +1022,89 @@ function doTestFinish() {
 }
 
 /**
- * Waits until the active-update.xml and updates.xml files don't exist and then
- * calls do_test_finished to end the test. This is necessary due to these files
- * being written asynchronously by nsIUpdateManager.
+ * Waits until the update files don't exist and then calls do_test_finished to
+ * end the test. This is necessary due to the update xml files being written
+ * asynchronously by nsIUpdateManager. Uses do_timeout instead of
+ * do_execute_soon to lessen log spew.
  */
 function testFinishWaitForUpdateXMLFiles() {
-  let tmpActiveUpdateXML = getUpdatesRootDir();
-  tmpActiveUpdateXML.append(FILE_ACTIVE_UPDATE_XML + ".tmp");
-  if (tmpActiveUpdateXML.exists()) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, testFinishWaitForUpdateXMLFiles);
-    return;
+  /**
+   * Waits until the update tmp files don't exist and then calls
+   * testFinishReloadUpdateXMLFiles.
+   */
+  function testFinishWaitForUpdateTmpXMLFiles() {
+    let tmpActiveUpdateXML = getUpdatesRootDir();
+    tmpActiveUpdateXML.append(FILE_ACTIVE_UPDATE_XML + ".tmp");
+    if (tmpActiveUpdateXML.exists()) {
+      // The xml files are written asynchronously so wait until it has been
+      // removed.
+      do_timeout(10, testFinishWaitForUpdateTmpXMLFiles);
+      return;
+    }
+
+    let tmpUpdatesXML = getUpdatesRootDir();
+    tmpUpdatesXML.append(FILE_UPDATES_XML + ".tmp");
+    if (tmpUpdatesXML.exists()) {
+      // The xml files are written asynchronously so wait until it has been
+      // removed.
+      do_timeout(10, testFinishWaitForUpdateTmpXMLFiles);
+      return;
+    }
+
+    do_timeout(10, testFinishReloadUpdateXMLFiles);
   }
 
-  let tmpUpdatesXML = getUpdatesRootDir();
-  tmpUpdatesXML.append(FILE_UPDATES_XML + ".tmp");
-  if (tmpUpdatesXML.exists()) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, testFinishWaitForUpdateXMLFiles);
-    return;
+  /**
+   * Creates empty update xml files, reloads / saves the update data, and then
+   * calls testFinishWaitForUpdateXMLFiles.
+   */
+  function testFinishReloadUpdateXMLFiles() {
+    try {
+      // Wrapped in a try catch since the file can be in the middle of a write.
+      writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), true);
+    } catch (e) {
+      do_timeout(10, testFinishReloadUpdateXMLFiles);
+      return;
+    }
+    try {
+      // Wrapped in a try catch since the file can be in the middle of a write.
+      writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
+    } catch (e) {
+      do_timeout(10, testFinishReloadUpdateXMLFiles);
+      return;
+    }
+
+    reloadUpdateManagerData();
+    gUpdateManager.saveUpdates();
+    do_timeout(10, testFinishWaitForUpdateXMLFilesDelete);
   }
 
-  let activeUpdateXML = getUpdatesXMLFile(true);
-  if (activeUpdateXML.exists()) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, testFinishWaitForUpdateXMLFiles);
-    return;
+  /**
+   * Waits until the active-update.xml and updates.xml files don't exist and
+   * then calls do_test_finished to end the test. This is necessary due to the
+   * update xml files being written asynchronously by nsIUpdateManager.
+   */
+  function testFinishWaitForUpdateXMLFilesDelete() {
+    let activeUpdateXML = getUpdatesXMLFile(true);
+    if (activeUpdateXML.exists()) {
+      // Since the file is removed asynchronously wait until it has been
+      // removed. Uses do_timeout instead of do_execute_soon to lessen log spew.
+      do_timeout(10, testFinishWaitForUpdateXMLFilesDelete);
+      return;
+    }
+
+    let updatesXML = getUpdatesXMLFile(false);
+    if (updatesXML.exists()) {
+      // Since the file is removed asynchronously wait until it has been
+      // removed. Uses do_timeout instead of do_execute_soon to lessen log spew.
+      do_timeout(10, testFinishWaitForUpdateXMLFilesDelete);
+      return;
+    }
+
+    do_timeout(10, do_test_finished);
   }
 
-  let updatesXML = getUpdatesXMLFile(false);
-  if (updatesXML.exists()) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, testFinishWaitForUpdateXMLFiles);
-    return;
-  }
-
-  do_execute_soon(do_test_finished);
+  do_timeout(10, testFinishWaitForUpdateTmpXMLFiles);
 }
 
 /**
@@ -1150,11 +1232,12 @@ function checkUpdateManager(aStatusFileState, aHasActiveUpdate,
 }
 
 /**
- * Waits until the active-update.xml and updates.xml files exists or not based
- * on the parameters specified when calling this function or the default values
- * if the parameters are not specified. After these conditions are met the
- * waitForUpdateXMLFilesFinished function is called. This is necessary due to
- * these files being written asynchronously by nsIUpdateManager.
+ * Waits until the update files exist or not based on the parameters specified
+ * when calling this function or the default values if the parameters are not
+ * specified. After these conditions are met the waitForUpdateXMLFilesFinished
+ * function is called.  This is necessary due to the update xml files being
+ * written asynchronously by nsIUpdateManager. Uses do_timeout instead of
+ * do_execute_soon to lessen log spew.
  *
  * @param   aActiveUpdateExists (optional)
  *          Whether the active-update.xml file should exist (default is false).
@@ -1162,41 +1245,67 @@ function checkUpdateManager(aStatusFileState, aHasActiveUpdate,
  *          Whether the updates.xml file should exist (default is true).
  */
 function waitForUpdateXMLFiles(aActiveUpdateExists = false, aUpdatesExists = true) {
-  let tmpActiveUpdateXML = getUpdatesRootDir();
-  tmpActiveUpdateXML.append(FILE_ACTIVE_UPDATE_XML + ".tmp");
-  if (tmpActiveUpdateXML.exists()) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
-    return;
+  /**
+   * Waits until the update tmp files don't exist and then calls
+   * testFinishReloadUpdateXMLFiles.
+   *
+   * @param   aActiveUpdateExists (optional)
+   *          Whether the active-update.xml file should exist (default is false).
+   * @param   aUpdatesExists (optional)
+   *          Whether the updates.xml file should exist (default is true).
+   */
+  function waitForUpdateTmpXMLFiles(aActiveUpdateExists = false, aUpdatesExists = true) {
+    let tmpActiveUpdateXML = getUpdatesRootDir();
+    tmpActiveUpdateXML.append(FILE_ACTIVE_UPDATE_XML + ".tmp");
+    if (tmpActiveUpdateXML.exists()) {
+      // The xml files are written asynchronously so wait until it has been
+      // removed.
+      do_timeout(10, () => waitForUpdateTmpXMLFiles(aActiveUpdateExists, aUpdatesExists));
+      return;
+    }
+
+    let tmpUpdatesXML = getUpdatesRootDir();
+    tmpUpdatesXML.append(FILE_UPDATES_XML + ".tmp");
+    if (tmpUpdatesXML.exists()) {
+      // The xml files are written asynchronously so wait until it has been
+      // removed.
+      do_timeout(10, () => waitForUpdateTmpXMLFiles(aActiveUpdateExists, aUpdatesExists));
+      return;
+    }
+
+    do_timeout(10, () => waitForUpdateXMLFilesExist(aActiveUpdateExists, aUpdatesExists));
   }
 
-  let tmpUpdatesXML = getUpdatesRootDir();
-  tmpUpdatesXML.append(FILE_UPDATES_XML + ".tmp");
-  if (tmpUpdatesXML.exists()) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
-    return;
+  /**
+   * Waits until the update files exist or not based on the parameters specified
+   * when calling this function or the default values if the parameters are not
+   * specified. After these conditions are met the waitForUpdateXMLFilesFinished
+   * function is called.
+   *
+   * @param   aActiveUpdateExists (optional)
+   *          Whether the active-update.xml file should exist (default is false).
+   * @param   aUpdatesExists (optional)
+   *          Whether the updates.xml file should exist (default is true).
+   */
+  function waitForUpdateXMLFilesExist(aActiveUpdateExists = false, aUpdatesExists = true) {
+    let activeUpdateXML = getUpdatesXMLFile(true);
+    if (activeUpdateXML.exists() != aActiveUpdateExists) {
+      // Since the file is removed asynchronously wait until it has been removed.
+      do_timeout(10, () => waitForUpdateXMLFilesExist(aActiveUpdateExists, aUpdatesExists));
+      return;
+    }
+
+    let updatesXML = getUpdatesXMLFile(false);
+    if (updatesXML.exists() != aUpdatesExists) {
+      // Since the file is removed asynchronously wait until it has been removed.
+      do_timeout(10, () => waitForUpdateXMLFilesExist(aActiveUpdateExists, aUpdatesExists));
+      return;
+    }
+
+    do_timeout(10, waitForUpdateXMLFilesFinished);
   }
 
-  let activeUpdateXML = getUpdatesXMLFile(true);
-  if (activeUpdateXML.exists() != aActiveUpdateExists) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
-    return;
-  }
-
-  let updatesXML = getUpdatesXMLFile(false);
-  if (updatesXML.exists() != aUpdatesExists) {
-    // Since the file is removed asynchronously wait until it has been removed.
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
-    return;
-  }
-
-  do_execute_soon(waitForUpdateXMLFilesFinished);
+  do_timeout(10, () => waitForUpdateTmpXMLFiles(aActiveUpdateExists, aUpdatesExists));
 }
 
 /**
