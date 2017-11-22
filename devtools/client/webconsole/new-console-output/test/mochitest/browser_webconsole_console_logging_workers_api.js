@@ -9,14 +9,31 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "new-console-output/test/mochitest/test-console-workers.html";
+                 "test/test-console-workers.html";
 
-add_task(async function () {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const message = await waitFor(() => findMessage(hud, "foo-bar-shared-worker"));
-  is(
-    message.querySelector(".message-body").textContent,
-    `foo-bar-shared-worker Object { foo: "bar" }`,
-    "log from SharedWorker is displayed as expected"
-  );
+add_task(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "foo-bar-shared-worker"
+    }],
+  });
+
+  hud.setFilterState("sharedworkers", false);
+
+  is(hud.outputNode.querySelectorAll(".filtered-by-type").length, 1,
+     "1 message hidden for sharedworkers (logging turned off)");
+
+  hud.setFilterState("sharedworkers", true);
+
+  is(hud.outputNode.querySelectorAll(".filtered-by-type").length, 0,
+     "1 message shown for sharedworkers (logging turned on)");
+
+  hud.setFilterState("sharedworkers", false);
+
+  hud.jsterm.clearOutput(true);
 });
