@@ -131,11 +131,7 @@ public:
   // For most principal types, this returns the principal itself. For expanded
   // principals, it returns the first sub-principal which subsumes the given URI
   // (or, if no URI is given, the last whitelist principal).
-  //
-  // The aAllowIfInheritsPrincipal argument is passed through to CheckMayLoad()
-  // to determine which consistituent principals may load the requested URI.
-  nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr,
-                                   bool aAllowIfInheritsPrincipal = true);
+  nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr);
 
   /**
    * Returns true if this principal's CSP should override a document's CSP for
