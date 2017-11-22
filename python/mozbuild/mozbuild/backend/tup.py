@@ -172,22 +172,6 @@ class TupOnly(CommonBackend, PartialBackend):
     def _init(self):
         CommonBackend._init(self)
 
-        self._supported_dirs = (
-            'services',
-            'servo',
-            'startupcache',
-            'storage',
-            'taskcluster',
-            'testing',
-            'third_party',
-            'toolkit',
-            'tools',
-            'uriloader',
-            'view',
-            'widget',
-            'xpcom',
-            'xpfe',
-        )
         self._backend_files = {}
         self._cmd = MozbuildObject.from_environment()
         self._manifest_entries = OrderedDefaultDict(set)
@@ -281,8 +265,7 @@ class TupOnly(CommonBackend, PartialBackend):
         elif isinstance(obj, ComputedFlags):
             self._process_computed_flags(obj, backend_file)
         elif isinstance(obj, (Sources, GeneratedSources)):
-            if obj.relobjdir.startswith(self._supported_dirs):
-                backend_file.sources[obj.canonical_suffix].extend(obj.files)
+            backend_file.sources[obj.canonical_suffix].extend(obj.files)
         elif isinstance(obj, HostSources):
             backend_file.host_sources[obj.canonical_suffix].extend(obj.files)
         elif isinstance(obj, VariablePassthru):
@@ -456,9 +439,8 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def _process_unified_sources(self, obj):
         backend_file = self._get_backend_file_for(obj)
-        if obj.relobjdir.startswith(self._supported_dirs):
-            files = [f[0] for f in obj.unified_source_mapping]
-            backend_file.sources[obj.canonical_suffix].extend(files)
+        files = [f[0] for f in obj.unified_source_mapping]
+        backend_file.sources[obj.canonical_suffix].extend(files)
 
     def _handle_idl_manager(self, manager):
         if self.environment.is_artifact_build:
