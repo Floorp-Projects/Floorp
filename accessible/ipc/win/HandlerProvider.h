@@ -55,6 +55,11 @@ public:
   // IGeckoBackChannel
   STDMETHODIMP put_HandlerControl(long aPid, IHandlerControl* aCtrl) override;
   STDMETHODIMP Refresh(DynamicIA2Data* aOutData) override;
+  STDMETHODIMP get_AllTextInfo(BSTR* aText,
+                               IAccessibleHyperlink*** aHyperlinks,
+                               long* aNHyperlinks,
+                               IA2TextSegment** aAttribRuns,
+                               long* aNAttribRuns) override;
 
 private:
   ~HandlerProvider() = default;
@@ -72,6 +77,18 @@ private:
   static void CleanupStaticIA2Data(StaticIA2Data& aData);
   static void CleanupDynamicIA2Data(DynamicIA2Data& aData);
   bool IsTargetInterfaceCacheable();
+  // Replace a raw object from the main thread with a wrapped, intercepted
+  // object suitable for calling from the MTA.
+  // The reference to the original object is adopted; i.e. you should not
+  // separately release it.
+  // This is intended for objects returned from method calls on the main thread.
+  template<typename Interface> HRESULT ToWrappedObject(Interface** aObj);
+  void GetAllTextInfoMainThread(BSTR* aText,
+                                IAccessibleHyperlink*** aHyperlinks,
+                                long* aNHyperlinks,
+                                IA2TextSegment** aAttribRuns,
+                                long* aNAttribRuns,
+                                HRESULT* result);
 
   Atomic<uint32_t>                  mRefCnt;
   Mutex                             mMutex; // Protects mSerializer
