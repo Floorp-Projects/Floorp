@@ -111,6 +111,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
             CFLAGS += ['-fsanitize-coverage=trace-pc-guard']
             CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard']
 
-        TEST_DIRS += [
-            'signaling/fuzztest'
-        ]
+        if CONFIG['FUZZING_INTERFACES']:
+            TEST_DIRS += [
+                'signaling/fuzztest'
+            ]
