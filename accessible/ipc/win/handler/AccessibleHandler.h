@@ -252,6 +252,8 @@ private:
   HRESULT ResolveIAHypertext();
   HRESULT ResolveIATableCell();
   HRESULT MaybeUpdateCachedData();
+  HRESULT GetAllTextInfo(BSTR* aText);
+  void ClearTextCache();
 
   RefPtr<IUnknown>                  mDispatchUnk;
   /**
@@ -282,6 +284,10 @@ private:
   IA2Payload                        mCachedData;
   UniquePtr<mscom::StructToStream>  mSerializer;
   uint32_t                          mCacheGen;
+  IAccessibleHyperlink**            mCachedHyperlinks;
+  long                              mCachedNHyperlinks;
+  IA2TextSegment*                   mCachedTextAttribRuns;
+  long                              mCachedNTextAttribRuns;
 };
 
 } // namespace a11y
