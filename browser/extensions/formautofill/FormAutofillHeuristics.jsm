@@ -21,6 +21,7 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
 const PREF_SECTION_ENABLED = "extensions.formautofill.section.enabled";
+const DEFAULT_SECTION_NAME = "-moz-section-default";
 
 /**
  * A scanner for traversing all elements in a form and retrieving the field
@@ -35,11 +36,13 @@ class FieldScanner {
    * @param {Array.DOMElement} elements
    *        The elements from a form for each parser.
    */
-  constructor(elements) {
+  constructor(elements, {allowDuplicates = false, sectionEnabled = true}) {
     this._elementsWeakRef = Cu.getWeakReference(elements);
     this.fieldDetails = [];
     this._parsingIndex = 0;
     this._sections = [];
+    this._allowDuplicates = allowDuplicates;
+    this._sectionEnabled = sectionEnabled;
   }
 
   get _elements() {
@@ -112,22 +115,63 @@ class FieldScanner {
     });
   }
 
-  getSectionFieldDetails(allowDuplicates) {
-    // TODO: [Bug 1416664] If there is only one section which is not defined by
-    // `autocomplete` attribute, the sections should be classified by the
-    // heuristics.
-    return this._sections.map(section => {
-      if (allowDuplicates) {
-        return section.fieldDetails;
+  _classifySections() {
+    let fieldDetails = this._sections[0].fieldDetails;
+    this._sections = [];
+    let seenTypes = new Set();
+    let previousType;
+    let sectionCount = 0;
+
+    for (let fieldDetail of fieldDetails) {
+      if (!fieldDetail.fieldName) {
+        continue;
       }
-      return this._trimFieldDetails(section.fieldDetails);
-    });
+      if (seenTypes.has(fieldDetail.fieldName) &&
+          previousType != fieldDetail.fieldName) {
+        seenTypes.clear();
+        sectionCount++;
+      }
+      previousType = fieldDetail.fieldName;
+      seenTypes.add(fieldDetail.fieldName);
+      delete fieldDetail._duplicated;
+      this._pushToSection(DEFAULT_SECTION_NAME + "-" + sectionCount, fieldDetail);
+    }
+  }
+
+  /**
+   * The result is an array contains the sections with its belonging field
+   * details. If `this._sections` contains one section only with the default
+   * section name (DEFAULT_SECTION_NAME), `this._classifySections` should be
+   * able to identify all sections in the heuristic way.
+   *
+   * @returns {Array<Object>}
+   *          The array with the sections, and the belonging fieldDetails are in
+   *          each section.
+   */
+  getSectionFieldDetails() {
+    // When the section feature is disabled, `getSectionFieldDetails` should
+    // provide a single section result.
+    if (!this._sectionEnabled) {
+      return [this._getFinalDetails(this.fieldDetails)];
+    }
+    if (this._sections.length == 0) {
+      return [];
+    }
+    if (this._sections.length == 1 && this._sections[0].name == DEFAULT_SECTION_NAME) {
+      this._classifySections();
+    }
+
+    return this._sections.map(section =>
+      this._getFinalDetails(section.fieldDetails)
+    );
   }
 
   /**
    * This function will prepare an autocomplete info object with getInfo
    * function and push the detail to fieldDetails property. Any duplicated
    * detail will be marked as _duplicated = true for the parser.
+   * Any field will be pushed into `this._sections` based on the section name
+   * in `autocomplete` attribute.
    *
    * Any element without the related detail will be used for adding the detail
    * to the end of field details.
@@ -173,7 +217,7 @@ class FieldScanner {
     if (info.addressType) {
       names.push(info.addressType);
     }
-    return names.length ? names.join(" ") : "-moz-section-default";
+    return names.length ? names.join(" ") : DEFAULT_SECTION_NAME;
   }
 
   /**
@@ -205,7 +249,10 @@ class FieldScanner {
   }
 
   /**
-   * Provide the field details without invalid field name and duplicated fields.
+   * Provide the final field details without invalid field name, and the
+   * duplicated fields will be removed as well. For the debugging purpose,
+   * the final `fieldDetails` will include the duplicated fields if
+   * `_allowDuplicates` is true.
    *
    * @param   {Array<Object>} fieldDetails
    *          The field details for trimming.
@@ -213,12 +260,11 @@ class FieldScanner {
    *          The array with the field details without invalid field name and
    *          duplicated fields.
    */
-  _trimFieldDetails(fieldDetails) {
+  _getFinalDetails(fieldDetails) {
+    if (this._allowDuplicates) {
+      return fieldDetails.filter(f => f.fieldName);
+    }
     return fieldDetails.filter(f => f.fieldName && !f._duplicated);
-  }
-
-  getFieldDetails(allowDuplicates) {
-    return allowDuplicates ? this.fieldDetails : this._trimFieldDetails(this.fieldDetails);
   }
 
   elementExisting(index) {
@@ -651,7 +697,8 @@ this.FormAutofillHeuristics = {
       return [];
     }
 
-    let fieldScanner = new FieldScanner(eligibleFields);
+    let fieldScanner = new FieldScanner(eligibleFields,
+      {allowDuplicates, sectionEnabled: this._sectionEnabled});
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
@@ -666,13 +713,7 @@ this.FormAutofillHeuristics = {
 
     LabelUtils.clearLabelMap();
 
-    if (!this._sectionEnabled) {
-      // When the section feature is disabled, `getFormInfo` should provide a
-      // single section result.
-      return [fieldScanner.getFieldDetails(allowDuplicates)];
-    }
-
-    return fieldScanner.getSectionFieldDetails(allowDuplicates);
+    return fieldScanner.getSectionFieldDetails();
   },
 
   _regExpTableHashValue(...signBits) {
