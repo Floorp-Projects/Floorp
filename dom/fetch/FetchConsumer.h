@@ -103,7 +103,9 @@ private:
   RefPtr<FetchBody<Derived>> mBody;
 #endif
 
+  // This is nullified when the consuming of the body starts.
   nsCOMPtr<nsIInputStream> mBodyStream;
+
   MutableBlobStorage::MutableBlobStorageType mBlobStorageType;
   nsCString mBodyMimeType;
 

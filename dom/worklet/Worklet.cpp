@@ -130,7 +130,7 @@ public:
     }
 
     nsCOMPtr<nsIInputStreamPump> pump;
-    rv = NS_NewInputStreamPump(getter_AddRefs(pump), inputStream);
+    rv = NS_NewInputStreamPump(getter_AddRefs(pump), inputStream.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       RejectPromises(rv);
       return;
