@@ -4,9 +4,7 @@
 #include ../../toolkit/components/telemetry/datareporting-prefs.js
 #endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
-#if MOZ_WIDGET_TOOLKIT == android
-#include ../../mobile/android/chrome/content/healthreport-prefs.js
-#else
+#if MOZ_WIDGET_TOOLKIT != android
 #include ../../toolkit/components/telemetry/healthreport-prefs.js
 #endif
 #endif
