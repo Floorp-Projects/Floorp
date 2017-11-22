@@ -56,7 +56,6 @@
 #include "mozilla/dom/PresentationParent.h"
 #include "mozilla/dom/PPresentationParent.h"
 #include "mozilla/dom/PushNotifier.h"
-#include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/dom/URLClassifierParent.h"
@@ -3454,23 +3453,6 @@ ContentParent::RecvPPresentationConstructor(PPresentationParent* aActor)
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-}
-
-PFlyWebPublishedServerParent*
-ContentParent::AllocPFlyWebPublishedServerParent(const nsString& name,
-                                                 const FlyWebPublishOptions& params)
-{
-  RefPtr<FlyWebPublishedServerParent> actor =
-    new FlyWebPublishedServerParent(name, params);
-  return actor.forget().take();
-}
-
-bool
-ContentParent::DeallocPFlyWebPublishedServerParent(PFlyWebPublishedServerParent* aActor)
-{
-  RefPtr<FlyWebPublishedServerParent> actor =
-    dont_AddRef(static_cast<FlyWebPublishedServerParent*>(aActor));
-  return true;
 }
 
 PSpeechSynthesisParent*
