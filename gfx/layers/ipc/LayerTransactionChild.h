@@ -60,7 +60,7 @@ protected:
   {}
   ~LayerTransactionChild() { }
 
-  virtual void ActorDestroy(ActorDestroyReason why) override;
+  void ActorDestroy(ActorDestroyReason why) override;
 
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);
