@@ -47,9 +47,13 @@ public:
     return mLines;
   }
 
-  void SetLines(double aLines)
+  void SetLines(double aLines, ErrorResult& aRv)
   {
-    mLines = aLines;
+    if (aLines < 0) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    } else {
+      mLines = aLines;
+    }
   }
 
   double Width() const
