@@ -78,14 +78,14 @@ function isValidCCNumber(value) {
 
 // For a comprehensive list of all available <INPUT> types see
 // https://dxr.mozilla.org/mozilla-central/search?q=kInputTypeTable&redirect=false
-const IGNORE_ATTRIBUTES = [
+const IGNORE_PROPERTIES = [
   ["type", new Set(["password", "hidden", "button", "image", "submit", "reset"])],
   ["autocomplete", new Set(["off"])]
 ];
 function shouldIgnoreNode(node) {
-  for (let i = 0; i < IGNORE_ATTRIBUTES.length; ++i) {
-    let [attrName, attrValues] = IGNORE_ATTRIBUTES[i];
-    if (node.hasAttribute(attrName) && attrValues.has(node.getAttribute(attrName).toLowerCase())) {
+  for (let i = 0; i < IGNORE_PROPERTIES.length; ++i) {
+    let [propName, propValues] = IGNORE_PROPERTIES[i];
+    if (node[propName] && propValues.has(node[propName])) {
       return true;
     }
   }
