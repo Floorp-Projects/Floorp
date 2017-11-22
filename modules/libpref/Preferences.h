@@ -51,7 +51,7 @@ class nsPrefBranch;
 namespace mozilla {
 
 namespace dom {
-class PrefSetting;
+class Pref;
 class PrefValue;
 } // namespace dom
 
@@ -72,8 +72,6 @@ class Preferences final
   friend class ::nsPrefBranch;
 
 public:
-  typedef mozilla::dom::PrefSetting PrefSetting;
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
   NS_FORWARD_NSIPREFBRANCH(mRootBranch->)
@@ -342,13 +340,13 @@ public:
 
   // When a content process is created these methods are used to pass prefs in
   // bulk from the parent process.
-  static void GetPreferences(InfallibleTArray<PrefSetting>* aSettings);
-  static void SetInitPreferences(nsTArray<PrefSetting>* aSettings);
+  static void GetPreferences(InfallibleTArray<dom::Pref>* aSettings);
+  static void SetInitPreferences(nsTArray<dom::Pref>* aSettings);
 
   // When a pref is changed in the parent process, these methods are used to
   // pass the update to content processes.
-  static void GetPreference(PrefSetting* aPref);
-  static void SetPreference(const PrefSetting& aPref);
+  static void GetPreference(dom::Pref* aPref);
+  static void SetPreference(const dom::Pref& aPref);
 
 #ifdef DEBUG
   static void SetInitPhase(pref_initPhase phase);
