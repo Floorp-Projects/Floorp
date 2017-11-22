@@ -73,6 +73,9 @@ emitted:
     where the test list is not known upfront an empty dict or list may
     be passed (dict).
 
+  ``name``
+    An optional string to identify the suite by.
+
   ``run_info``
     An optional dictionary describing the properties of the
     build and test environment. This contains the information provided

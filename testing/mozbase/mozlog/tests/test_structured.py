@@ -111,8 +111,9 @@ class TestStatusHandler(BaseStructuredTest):
 class TestStructuredLog(BaseStructuredTest):
 
     def test_suite_start(self):
-        self.logger.suite_start(["test"])
+        self.logger.suite_start(["test"], "logtest")
         self.assert_log_equals({"action": "suite_start",
+                                "name": "logtest",
                                 "tests": {"default": ["test"]}})
         self.logger.suite_end()
 
@@ -447,7 +448,7 @@ class TestTypeConversions(BaseStructuredTest):
                                 "message": "test",
                                 "level": "INFO"})
 
-        self.logger.suite_start([], {})
+        self.logger.suite_start([], run_info={})
         self.assert_log_equals({"action": "suite_start",
                                 "tests": {"default": []},
                                 "run_info": {}})

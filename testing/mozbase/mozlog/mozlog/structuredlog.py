@@ -19,6 +19,7 @@ from .logtypes import log_action, convertor_registry
 Allowed actions, and subfields:
   suite_start
       tests  - List of test names
+      name - Name for the suite
 
   suite_end
 
@@ -269,6 +270,7 @@ class StructuredLogger(object):
         return True
 
     @log_action(TestList("tests"),
+                Unicode("name", default=None, optional=True),
                 Dict(Any, "run_info", default=None, optional=True),
                 Dict(Any, "version_info", default=None, optional=True),
                 Dict(Any, "device_info", default=None, optional=True),
@@ -277,6 +279,7 @@ class StructuredLogger(object):
         """Log a suite_start message
 
         :param dict tests: Test identifiers that will be run in the suite, keyed by group name.
+        :param str name: Optional name to identify the suite.
         :param dict run_info: Optional information typically provided by mozinfo.
         :param dict version_info: Optional target application version information provided
           by mozversion.
