@@ -542,7 +542,7 @@ base_alloc(size_t aSize);
 struct Mutex
 {
 #if defined(XP_WIN)
-  SRWLOCK mMutex;
+  CRITICAL_SECTION mMutex;
 #elif defined(XP_DARWIN)
   OSSpinLock mMutex;
 #else
@@ -556,34 +556,66 @@ struct Mutex
   inline void Unlock();
 };
 
-struct MOZ_RAII MutexAutoLock
+// Mutex that can be used for static initialization.
+// On Windows, CRITICAL_SECTION requires a function call to be initialized,
+// but for the initialization lock, a static initializer calling the
+// function would be called too late. We need no-function-call
+// initialization, which SRWLock provides.
+// Ideally, we'd use the same type of locks everywhere, but SRWLocks
+// everywhere incur a performance penalty. See bug 1418389.
+#if defined(XP_WIN)
+struct StaticMutex
 {
-  explicit MutexAutoLock(Mutex& aMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  SRWLOCK mMutex;
+
+  constexpr StaticMutex()
+    : mMutex(SRWLOCK_INIT)
+  {
+  }
+
+  inline void Lock();
+
+  inline void Unlock();
+};
+#else
+struct StaticMutex : public Mutex
+{
+  constexpr StaticMutex()
+#if defined(XP_DARWIN)
+    : Mutex{ OS_SPINLOCK_INIT }
+#elif defined(XP_LINUX) && !defined(ANDROID)
+    : Mutex{ PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP }
+#else
+    : Mutex{ PTHREAD_MUTEX_INITIALIZER }
+#endif
+  {
+  }
+};
+#endif
+
+template<typename T>
+struct MOZ_RAII AutoLock
+{
+  explicit AutoLock(T& aMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mMutex(aMutex)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     mMutex.Lock();
   }
 
-  ~MutexAutoLock() { mMutex.Unlock(); }
+  ~AutoLock() { mMutex.Unlock(); }
 
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
-  Mutex& mMutex;
+  T& mMutex;
 };
+
+using MutexAutoLock = AutoLock<Mutex>;
 
 // Set to true once the allocator has been initialized.
 static Atomic<bool> malloc_initialized(false);
 
-#if defined(XP_WIN)
-static Mutex gInitLock = { SRWLOCK_INIT };
-#elif defined(XP_DARWIN)
-static Mutex gInitLock = { OS_SPINLOCK_INIT };
-#elif defined(XP_LINUX) && !defined(ANDROID)
-static Mutex gInitLock = { PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP };
-#else
-static Mutex gInitLock = { PTHREAD_MUTEX_INITIALIZER };
-#endif
+static StaticMutex gInitLock;
 
 // ***************************************************************************
 // Statistics data structures.
@@ -1341,7 +1373,9 @@ bool
 Mutex::Init()
 {
 #if defined(XP_WIN)
-  InitializeSRWLock(&mMutex);
+  if (!InitializeCriticalSectionAndSpinCount(&mMutex, 5000)) {
+    return false;
+  }
 #elif defined(XP_DARWIN)
   mMutex = OS_SPINLOCK_INIT;
 #elif defined(XP_LINUX) && !defined(ANDROID)
@@ -1367,7 +1401,7 @@ void
 Mutex::Lock()
 {
 #if defined(XP_WIN)
-  AcquireSRWLockExclusive(&mMutex);
+  EnterCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
   OSSpinLockLock(&mMutex);
 #else
@@ -1379,13 +1413,27 @@ void
 Mutex::Unlock()
 {
 #if defined(XP_WIN)
-  ReleaseSRWLockExclusive(&mMutex);
+  LeaveCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
   OSSpinLockUnlock(&mMutex);
 #else
   pthread_mutex_unlock(&mMutex);
 #endif
 }
+
+#if defined(XP_WIN)
+void
+StaticMutex::Lock()
+{
+  AcquireSRWLockExclusive(&mMutex);
+}
+
+void
+StaticMutex::Unlock()
+{
+  ReleaseSRWLockExclusive(&mMutex);
+}
+#endif
 
 // End mutex.
 // ***************************************************************************
@@ -4032,7 +4080,7 @@ malloc_init_hard()
   const char* opts;
   long result;
 
-  MutexAutoLock lock(gInitLock);
+  AutoLock<StaticMutex> lock(gInitLock);
 
   if (malloc_initialized) {
     // Another thread initialized the allocator before this one
