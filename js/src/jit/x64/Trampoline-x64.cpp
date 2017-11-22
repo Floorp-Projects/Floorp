@@ -789,7 +789,7 @@ JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm, MIRType type
     masm.setupUnalignedABICall(rax);
     masm.passABIArg(rcx);
     masm.passABIArg(rdx);
-    masm.callWithABI(IonMarkFunction(type));
+    masm.callWithABI(JitMarkFunction(type));
 
     masm.PopRegsInMask(regs);
     masm.ret();
