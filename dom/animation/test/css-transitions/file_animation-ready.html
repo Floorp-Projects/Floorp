@@ -38,7 +38,7 @@ async_test(function(t) {
   getComputedStyle(div).transform;
 
   var animation = div.getAnimations()[0];
-  assert_equals(animation.playState, 'pending', 'Animation is initially pending');
+  assert_true(animation.pending, 'Animation is initially pending');
 
   // Set up listeners on ready promise
   animation.ready.then(t.step_func(function() {
@@ -70,7 +70,7 @@ async_test(function(t) {
   getComputedStyle(div).marginLeft;
 
   var animation = div.getAnimations()[0];
-  assert_equals(animation.playState, 'pending', 'Animation is initially pending');
+  assert_true(animation.pending, 'Animation is initially pending');
 
   // Set up listeners on ready promise
   animation.ready.then(t.step_func(function() {
