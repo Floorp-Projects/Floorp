@@ -109,6 +109,8 @@ private:
   // Duration, mirrored from the state machine task queue.
   Mirror<media::NullableTimeUnit> mDuration;
 
+  // To prevent seamless looping while seeking.
+  bool mSeamlessLoopingBlocked;
   // Indicates whether we should loop the media.
   bool mSeamlessLoopingEnabled;
 };

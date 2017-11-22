@@ -19,6 +19,7 @@ ReaderProxy::ReaderProxy(AbstractThread* aOwnerThread,
   , mDuration(aReader->OwnerThread(),
               media::NullableTimeUnit(),
               "ReaderProxy::mDuration (Mirror)")
+  , mSeamlessLoopingBlocked(false)
   , mSeamlessLoopingEnabled(false)
 {
   // Must support either heuristic buffering or WaitForData().
@@ -67,7 +68,33 @@ ReaderProxy::OnAudioDataRequestFailed(const MediaResult& aError)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  return AudioDataPromise::CreateAndReject(aError, __func__);
+  if (mSeamlessLoopingBlocked || !mSeamlessLoopingEnabled ||
+      aError.Code() != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    return AudioDataPromise::CreateAndReject(aError, __func__);
+  }
+
+  // For seamless looping, the demuxer is sought to the beginning and then
+  // keep requesting decoded data in advance, upon receiving EOS.
+  // The MDSM will not be aware of the EOS and keep receiving decoded data
+  // as usual while looping is on.
+  RefPtr<ReaderProxy> self = this;
+  RefPtr<MediaFormatReader> reader = mReader;
+  ResetDecode(TrackInfo::kAudioTrack);
+  return Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Accurate))
+    ->Then(mReader->OwnerThread(),
+           __func__,
+           [reader]() { return reader->RequestAudioData(); },
+           [](const SeekRejectValue& aReject) {
+             return AudioDataPromise::CreateAndReject(aReject.mError, __func__);
+           })
+    ->Then(mOwnerThread,
+           __func__,
+           [self](RefPtr<AudioData> aAudio) {
+             return self->OnAudioDataRequestCompleted(aAudio.forget());
+           },
+           [](const MediaResult& aError) {
+             return AudioDataPromise::CreateAndReject(aError, __func__);
+           });
 }
 
 RefPtr<ReaderProxy::AudioDataPromise>
@@ -76,6 +103,7 @@ ReaderProxy::RequestAudioData()
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
+  mSeamlessLoopingBlocked = false;
   return InvokeAsync(mReader->OwnerThread(),
                      mReader.get(),
                      __func__,
@@ -93,6 +121,7 @@ ReaderProxy::RequestVideoData(const media::TimeUnit& aTimeThreshold)
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
+  mSeamlessLoopingBlocked = false;
   const auto threshold = aTimeThreshold > media::TimeUnit::Zero()
                          ? aTimeThreshold + StartTime()
                          : aTimeThreshold;
@@ -119,6 +148,7 @@ RefPtr<ReaderProxy::SeekPromise>
 ReaderProxy::Seek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  mSeamlessLoopingBlocked = true;
   SeekTarget adjustedTarget = aTarget;
   adjustedTarget.SetTime(adjustedTarget.GetTime() + StartTime());
   return InvokeAsync(mReader->OwnerThread(),
