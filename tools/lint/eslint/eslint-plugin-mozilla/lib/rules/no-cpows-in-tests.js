@@ -14,16 +14,20 @@
 
 var helpers = require("../helpers");
 
-// Note: we match to the end of the string as well as the beginning, to avoid
-// multiple reports from MemberExpression statements.
 var cpows = [
-  /^gBrowser\.contentWindow$/,
-  /^gBrowser\.contentDocument$/,
-  /^gBrowser\.selectedBrowser\.contentWindow$/,
-  /^browser\.contentDocument$/,
-  /^window\.content$/
+  /^gBrowser\.contentWindow/,
+  /^gBrowser\.contentDocument/,
+  /^gBrowser\.selectedBrowser\.contentWindow/,
+  /^browser\.contentDocument/,
+  /^window\.content/
 ];
 
+// Keep track of where the last error is reported so to avoid reporting the same
+// expression (e.g., window.content.X vs window.content). Resets for each file.
+var lastErrorStart;
+
+// Keep track of whether we've entered a ContentTask.spawn call where accesses
+// to "content" are *not* CPOW. Resets when exiting the call.
 var isInContentTask = false;
 
 module.exports = function(context) {
@@ -36,11 +40,43 @@ module.exports = function(context) {
       return;
     }
 
+    // Avoid showing partial expressions errors when one already errored.
+    if (node.start === lastErrorStart) {
+      return;
+    }
+    lastErrorStart = node.start;
+
     context.report({
       node,
       message: identifier +
                " is a possible Cross Process Object Wrapper (CPOW)."
     });
+  }
+
+  function hasLocalContentVariable(node) {
+    // Walk up the parents, see if we can find if "content" is a local variable.
+    let parent = node;
+    do {
+      parent = parent.parent;
+
+      // Don't error if 'content' is one of the function parameters.
+      if (helpers.getIsFunctionNode(parent) &&
+          context.getDeclaredVariables(parent).some(variable => variable.name === "content")) {
+        return true;
+      } else if (parent.type === "BlockStatement" || parent.type === "Program") {
+        // Don't error if the block or program includes their own definition of content.
+        for (let item of parent.body) {
+          if (item.type === "VariableDeclaration" && item.declarations.length) {
+            for (let declaration of item.declarations) {
+              if (declaration.id && declaration.id.name === "content") {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    } while (parent.parent);
+    return false;
   }
 
   function isContentTask(node) {
@@ -69,6 +105,10 @@ module.exports = function(context) {
       }
     },
 
+    Program() {
+      lastErrorStart = undefined;
+    },
+
     MemberExpression(node) {
       if (helpers.getTestType(context) != "browser") {
         return;
@@ -85,10 +125,27 @@ module.exports = function(context) {
         }
         return false;
       });
-      if (!someCpowFound && helpers.getIsGlobalScope(context.getAncestors())) {
-        if (/^content\./.test(expression)) {
-          showError(node, expression);
+
+      // Specially scope checks for "context." to avoid false positives.
+      if (!someCpowFound && /^content\./.test(expression)) {
+        // Don't error if we're multiple scopes deep. For now we only care about
+        // 2 scopes: global (length = 0) or immediately called by add_task.
+        // Ideally, we would care about any scope, but figuring out whether
+        // "context" is CPOW-or-not depends on how functions are defined and
+        // called -- both aspects are especially complex with head.js helpers.
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1417017#c9
+        const scopes = context.getAncestors().filter(helpers.getIsFunctionNode);
+        if (scopes.length > 1 || scopes.length === 1 &&
+            (!scopes[0].parent.callee || scopes[0].parent.callee.name !== "add_task")) {
+          return;
         }
+
+        // Don't error if there's a locally scoped "content"
+        if (hasLocalContentVariable(node)) {
+          return;
+        }
+
+        showError(node, expression);
       }
     },
 
@@ -112,28 +169,10 @@ module.exports = function(context) {
         return;
       }
 
-      // Walk up the parents, see if we can find if this is a local variable.
-      let parent = node;
-      do {
-        parent = parent.parent;
-
-        // Don't error if 'content' is one of the function parameters.
-        if (parent.type === "FunctionDeclaration" &&
-            context.getDeclaredVariables(parent).some(variable => variable.name === "content")) {
-          return;
-        } else if (parent.type === "BlockStatement" || parent.type === "Program") {
-          // Don't error if the block or program includes their own definition of content.
-          for (let item of parent.body) {
-            if (item.type === "VariableDeclaration" && item.declarations.length) {
-              for (let declaration of item.declarations) {
-                if (declaration.id && declaration.id.name === "content") {
-                  return;
-                }
-              }
-            }
-          }
-        }
-      } while (parent.parent);
+      // Don't error if there's a locally scoped "content"
+      if (hasLocalContentVariable(node)) {
+        return;
+      }
 
       var expression = context.getSource(node);
       showError(node, expression);
