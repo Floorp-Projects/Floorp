@@ -473,7 +473,7 @@ FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread()
 
   nsCOMPtr<nsIInputStreamPump> pump;
   nsresult rv = NS_NewInputStreamPump(getter_AddRefs(pump),
-                                      mBodyStream, 0, 0, false,
+                                      mBodyStream.forget(), 0, 0, false,
                                       mMainThreadEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;

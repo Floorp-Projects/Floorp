@@ -301,12 +301,13 @@ nsresult NS_NewInputStreamChannel(nsIChannel        **outChannel,
                                   nsContentPolicyType aContentPolicyType,
                                   bool                aIsSrcdocChannel = false);
 
-nsresult NS_NewInputStreamPump(nsIInputStreamPump **result,
-                               nsIInputStream      *stream,
-                               uint32_t             segsize = 0,
-                               uint32_t             segcount = 0,
-                               bool                 closeWhenDone = false,
-                               nsIEventTarget      *mainThreadTarget = nullptr);
+nsresult
+NS_NewInputStreamPump(nsIInputStreamPump** aResult,
+                      already_AddRefed<nsIInputStream> aStream,
+                      uint32_t aSegsize = 0,
+                      uint32_t aSegcount = 0,
+                      bool aCloseWhenDone = false,
+                      nsIEventTarget *aMainThreadTarget = nullptr);
 
 // NOTE: you will need to specify whether or not your streams are buffered
 // (i.e., do they implement ReadSegments/WriteSegments).  the default

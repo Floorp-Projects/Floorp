@@ -473,7 +473,6 @@ nsWyciwygChannel::CloseCacheEntry(nsresult reason)
   if (mCacheEntry) {
     LOG(("nsWyciwygChannel::CloseCacheEntry [this=%p ]", this));
     mCacheOutputStream = nullptr;
-    mCacheInputStream = nullptr;
 
     if (NS_FAILED(reason)) {
       mCacheEntry->AsyncDoom(nullptr);
@@ -769,12 +768,13 @@ nsWyciwygChannel::ReadFromCache()
     mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
   // Get a transport to the cached data...
-  rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(mCacheInputStream));
+  nsCOMPtr<nsIInputStream> inputStream;
+  rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
   if (NS_FAILED(rv))
     return rv;
-  NS_ENSURE_TRUE(mCacheInputStream, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(inputStream, NS_ERROR_UNEXPECTED);
 
-  rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mCacheInputStream);
+  rv = NS_NewInputStreamPump(getter_AddRefs(mPump), inputStream.forget());
   if (NS_FAILED(rv)) return rv;
 
   // Pump the cache data downstream

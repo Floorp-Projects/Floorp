@@ -988,8 +988,9 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
 
         if (aItem->mStream) {
             nsCOMPtr<nsIInputStreamPump> pump;
-            rv = NS_NewInputStreamPump(getter_AddRefs(pump), aItem->mStream,
-                                       0, 0, true);
+            nsCOMPtr<nsIInputStream> tmpStream = aItem->mStream;
+            rv = NS_NewInputStreamPump(getter_AddRefs(pump),
+                                       tmpStream.forget(), 0, 0, true);
             NS_ENSURE_SUCCESS(rv, rv);
 
             rv = pump->AsyncRead(stream, nullptr);
@@ -1017,7 +1018,9 @@ inline nsresult nsZipWriter::BeginProcessingRemoval(int32_t aPos)
                                              mFile);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIInputStreamPump> pump;
-    rv = NS_NewInputStreamPump(getter_AddRefs(pump), inputStream, 0, 0, true);
+    nsCOMPtr<nsIInputStream> tmpStream = inputStream;
+    rv = NS_NewInputStreamPump(getter_AddRefs(pump), tmpStream.forget(), 0, 0,
+                               true);
     if (NS_FAILED(rv)) {
         inputStream->Close();
         return rv;
