@@ -12,7 +12,7 @@ from shared_telemetry_utils import ParserError
 import sys
 import parse_events
 
-banner = """/* This file is auto-generated, see gen-event-enum.py.  */
+banner = """/* This file is auto-generated, see gen_event_enum.py.  */
 """
 
 file_header = """\
