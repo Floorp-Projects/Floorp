@@ -848,7 +848,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
                                         uri,
-                                        stream,
+                                        stream.forget(),
                                         NS_ConvertUTF16toUTF8(contentType),
                                         EmptyCString(), // aContentCharset
                                         aLoadInfo);

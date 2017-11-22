@@ -24,7 +24,7 @@ nsAboutBlank::NewChannel(nsIURI* aURI,
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
                                           aURI,
-                                          in,
+                                          in.forget(),
                                           NS_LITERAL_CSTRING("text/html"),
                                           NS_LITERAL_CSTRING("utf-8"),
                                           aLoadInfo);
