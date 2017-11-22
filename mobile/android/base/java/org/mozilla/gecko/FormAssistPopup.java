@@ -254,7 +254,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
     }
 
     private void positionAndShowPopup() {
-        positionAndShowPopup(mGeckoView.getViewportMetrics());
+        positionAndShowPopup(mGeckoView.getSession().getViewportMetrics());
     }
 
     private void positionAndShowPopup(ImmutableViewportMetrics aMetrics) {
@@ -288,7 +288,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
         // display the FormAssistPopup.
         int left = (int) (mX * zoom - aMetrics.viewportRectLeft);
         int top = (int) (mY * zoom - aMetrics.viewportRectTop + mGeckoView.getTop() +
-                         mGeckoView.getCurrentToolbarHeight());
+                         mGeckoView.getDynamicToolbarAnimator().getCurrentToolbarHeight());
         int width = (int) (mW * zoom);
         int height = (int) (mH * zoom);
 

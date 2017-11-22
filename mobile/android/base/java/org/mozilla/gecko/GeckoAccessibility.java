@@ -176,7 +176,7 @@ public class GeckoAccessibility {
                 sVirtualCursorNode.setBoundsInParent(relativeBounds);
                 int[] locationOnScreen = new int[2];
                 view.getLocationOnScreen(locationOnScreen);
-                locationOnScreen[1] += view.getCurrentToolbarHeight();
+                locationOnScreen[1] += view.getDynamicToolbarAnimator().getCurrentToolbarHeight();
                 Rect screenBounds = new Rect(relativeBounds);
                 screenBounds.offset(locationOnScreen[0], locationOnScreen[1]);
                 sVirtualCursorNode.setBoundsInScreen(screenBounds);

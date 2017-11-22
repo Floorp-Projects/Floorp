@@ -235,7 +235,7 @@ class GeckoInputConnection
                     v.requestFocus();
                 }
                 final GeckoView view = getView();
-                if (view != null) {
+                if (view != null && view.getSession() != null) {
                     if (showToolbar) {
                         view.getDynamicToolbarAnimator().showToolbar(/*immediately*/ true);
                     }
@@ -364,12 +364,12 @@ class GeckoInputConnection
 
         // Calculate Gecko logical coords to screen coords
         final GeckoView view = getView();
-        if (view == null) {
+        if (view == null || view.getSession() == null) {
             return;
         }
 
         // First aRects element is the widget bounds in device units.
-        final float zoom = view.getZoomFactor();
+        final float zoom = view.getSession().getViewportMetrics().zoomFactor;
         final Matrix matrix = new Matrix();
         matrix.postScale(zoom, zoom);
         matrix.postTranslate(aRects[0].left, aRects[0].top);
