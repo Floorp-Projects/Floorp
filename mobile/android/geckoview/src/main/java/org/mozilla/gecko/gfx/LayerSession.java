@@ -11,6 +11,10 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Surface;
 
@@ -144,18 +148,25 @@ public class LayerSession {
 
     protected final Compositor mCompositor = new Compositor();
 
-    // Following fields are accessed on UI thread.
+    // All fields are accessed on UI thread only.
     private GeckoDisplay mDisplay;
     private DynamicToolbarAnimator mToolbar;
-    private ImmutableViewportMetrics mViewportMetrics = new ImmutableViewportMetrics();
+
     private boolean mAttachedCompositor;
     private boolean mCalledCreateCompositor;
     private boolean mCompositorReady;
     private Surface mSurface;
+
+    // All fields of coordinates are in screen units.
     private int mLeft;
-    private int mTop;
+    private int mTop; // Top of the surface (including toolbar);
+    private int mClientTop; // Top of the client area (i.e. excluding toolbar);
     private int mWidth;
-    private int mHeight;
+    private int mHeight; // Height of the surface (including toolbar);
+    private int mClientHeight; // Height of the client area (i.e. excluding toolbar);
+    private float mViewportLeft;
+    private float mViewportTop;
+    private float mViewportZoom = 1.0f;
 
     /* package */ GeckoDisplay getDisplay() {
         if (DEBUG) {
@@ -178,9 +189,96 @@ public class LayerSession {
         return mToolbar;
     }
 
-    public ImmutableViewportMetrics getViewportMetrics() {
+    /**
+     * Get a matrix for transforming from client coordinates to screen coordinates. The
+     * client coordinates are in CSS pixels and are relative to the viewport origin; their
+     * relation to screen coordinates does not depend on the current scroll position.
+     *
+     * @param matrix Matrix to be replaced by the transformation matrix.
+     * @see #getClientToSurfaceMatrix(Matrix)
+     * @see #getPageToScreenMatrix(Matrix)
+     */
+    public void getClientToScreenMatrix(@NonNull final Matrix matrix) {
         ThreadUtils.assertOnUiThread();
-        return mViewportMetrics;
+
+        getClientToSurfaceMatrix(matrix);
+        matrix.postTranslate(mLeft, mTop);
+    }
+
+    /**
+     * Get a matrix for transforming from client coordinates to surface coordinates.
+     *
+     * @param matrix Matrix to be replaced by the transformation matrix.
+     * @see #getClientToScreenMatrix(Matrix)
+     * @see #getPageToSurfaceMatrix(Matrix)
+     */
+    public void getClientToSurfaceMatrix(@NonNull final Matrix matrix) {
+        ThreadUtils.assertOnUiThread();
+
+        matrix.setScale(mViewportZoom, mViewportZoom);
+        if (mClientTop != mTop) {
+            matrix.postTranslate(0, mClientTop - mTop);
+        }
+    }
+
+    /**
+     * Get a matrix for transforming from page coordinates to screen coordinates. The page
+     * coordinates are in CSS pixels and are relative to the page origin; their relation
+     * to screen coordinates depends on the current scroll position of the outermost
+     * frame.
+     *
+     * @param matrix Matrix to be replaced by the transformation matrix.
+     * @see #getPageToSurfaceMatrix(Matrix)
+     * @see #getClientToScreenMatrix(Matrix)
+     */
+    public void getPageToScreenMatrix(@NonNull final Matrix matrix) {
+        ThreadUtils.assertOnUiThread();
+
+        getPageToSurfaceMatrix(matrix);
+        matrix.postTranslate(mLeft, mTop);
+    }
+
+    /**
+     * Get a matrix for transforming from page coordinates to surface coordinates.
+     *
+     * @param matrix Matrix to be replaced by the transformation matrix.
+     * @see #getPageToScreenMatrix(Matrix)
+     * @see #getClientToSurfaceMatrix(Matrix)
+     */
+    public void getPageToSurfaceMatrix(@NonNull final Matrix matrix) {
+        ThreadUtils.assertOnUiThread();
+
+        getClientToSurfaceMatrix(matrix);
+        matrix.postTranslate(-mViewportLeft, -mViewportTop);
+    }
+
+    /**
+     * Get the bounds of the client area in client coordinates. The returned top-left
+     * coordinates are always (0, 0). Use the matrix from
+     * #getClientToSurfaceMatrix(Matrix) or #getClientToScreenMatrix(Matrix) to map
+     * these bounds to surface or screen coordinates, respectively.
+     *
+     * @param rect RectF to be replaced by the client bounds in client coordinates.
+     * @see getSurfaceBounds(Rect)
+     */
+    public void getClientBounds(@NonNull final RectF rect) {
+        ThreadUtils.assertOnUiThread();
+
+        rect.set(0.0f, 0.0f, (float) mWidth / mViewportZoom,
+                             (float) mClientHeight / mViewportZoom);
+    }
+
+    /**
+     * Get the bounds of the client area in surface coordinates. This is equivalent to
+     * mapping the bounds returned by #getClientBounds(RectF) with the matrix returned by
+     * #getClientToSurfaceMatrix(Matrix).
+     *
+     * @param rect Rect to be replaced by the client bounds in surface coordinates.
+     */
+    public void getSurfaceBounds(@NonNull final Rect rect) {
+        ThreadUtils.assertOnUiThread();
+
+        rect.set(0, mClientTop - mTop, mWidth, mHeight);
     }
 
     /* package */ void onCompositorAttached() {
@@ -296,14 +394,9 @@ public class LayerSession {
             ThreadUtils.assertOnUiThread();
         }
 
-        if (mViewportMetrics.viewportRectLeft != scrollX ||
-            mViewportMetrics.viewportRectTop != scrollY) {
-            mViewportMetrics = mViewportMetrics.setViewportOrigin(scrollX, scrollY);
-        }
-
-        if (mViewportMetrics.zoomFactor != zoom) {
-            mViewportMetrics = mViewportMetrics.setZoomFactor(zoom);
-        }
+        mViewportLeft = scrollX;
+        mViewportTop = scrollY;
+        mViewportZoom = zoom;
     }
 
     /* protected */ void onWindowBoundsChanged() {
@@ -318,15 +411,11 @@ public class LayerSession {
             toolbarHeight = 0;
         }
 
-        if (mAttachedCompositor) {
-            mCompositor.onBoundsChanged(mLeft, mTop + toolbarHeight,
-                                        mWidth, mHeight - toolbarHeight);
-        }
+        mClientTop = mTop + toolbarHeight;
+        mClientHeight = mHeight - toolbarHeight;
 
-        if (mViewportMetrics.viewportRectWidth != mWidth ||
-            mViewportMetrics.viewportRectHeight != (mHeight - toolbarHeight)) {
-            mViewportMetrics = mViewportMetrics.setViewportSize(mWidth,
-                                                                mHeight - toolbarHeight);
+        if (mAttachedCompositor) {
+            mCompositor.onBoundsChanged(mLeft, mClientTop, mWidth, mClientHeight);
         }
 
         if (mCompositor.layerView != null) {
@@ -340,11 +429,6 @@ public class LayerSession {
 
         mWidth = width;
         mHeight = height;
-
-        if (mViewportMetrics.viewportRectWidth == 0 ||
-            mViewportMetrics.viewportRectHeight == 0) {
-            mViewportMetrics = mViewportMetrics.setViewportSize(width, height);
-        }
 
         if (mCompositorReady) {
             mCompositor.syncResumeResizeCompositor(width, height, surface);
@@ -361,6 +445,9 @@ public class LayerSession {
         // We have a valid surface but we're not attached or the compositor
         // is not ready; save the surface for later when we're ready.
         mSurface = surface;
+
+        // Adjust bounds as the last step.
+        onWindowBoundsChanged();
     }
 
     /* package */ void onSurfaceDestroyed() {
