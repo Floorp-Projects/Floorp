@@ -12,9 +12,8 @@ interface VTTRegion {
            attribute DOMString id;
            [SetterThrows]
            attribute double width;
-
+           [SetterThrows]
            attribute long lines;
-
            [SetterThrows]
            attribute double regionAnchorX;
            [SetterThrows]
