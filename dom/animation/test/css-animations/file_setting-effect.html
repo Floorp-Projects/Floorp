@@ -68,15 +68,15 @@ promise_test(function(t) {
   div.style.animation = 'anim 100s';
 
   var animation = div.getAnimations()[0];
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending);
 
   animation.effect = new KeyframeEffect(div,
                                         { left: [ '0px' , '100px'] },
                                         100 * MS_PER_SEC);
-  assert_equals(animation.playState, 'pending');
+  assert_true(animation.pending);
 
   return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+    assert_false(animation.pending);
   });
 }, 'A play-pending animation\'s effect whose effect is replaced still exits ' +
    'the pending state');
