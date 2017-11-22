@@ -35,6 +35,7 @@ from ..frontend.data import (
     ObjdirFiles,
     PerSourceFlag,
     Sources,
+    VariablePassthru,
 )
 from ..util import (
     FileAvoidWrite,
@@ -65,6 +66,7 @@ class BackendTupfile(object):
         self.local_flags = defaultdict(list)
         self.sources = defaultdict(list)
         self.host_sources = defaultdict(list)
+        self.variables = {}
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -121,21 +123,24 @@ class BackendTupfile(object):
     def gen_sources_rules(self, extra_inputs):
         sources = self.sources
         host_sources = self.host_sources
+        as_dash_c = self.variables.get('AS_DASH_C_FLAG', self.environment.substs['AS_DASH_C_FLAG'])
         compilers = [
-            (sources['.S'], 'AS', 'ASFLAGS', ''),
-            (sources['.cpp'], 'CXX', 'CXXFLAGS', ''),
-            (sources['.c'], 'CC', 'CFLAGS', ''),
-            (host_sources['.cpp'], 'HOST_CXX', 'HOST_CXXFLAGS', 'host_'),
-            (host_sources['.c'], 'HOST_CC', 'HOST_CFLAGS', 'host_'),
+            (sources['.S'], 'AS', 'SFLAGS', '-c', ''),
+            (sources['.s'], 'AS', 'ASFLAGS', as_dash_c, ''),
+            (sources['.cpp'], 'CXX', 'CXXFLAGS', '-c', ''),
+            (sources['.c'], 'CC', 'CFLAGS', '-c', ''),
+            (host_sources['.cpp'], 'HOST_CXX', 'HOST_CXXFLAGS', '-c', 'host_'),
+            (host_sources['.c'], 'HOST_CC', 'HOST_CFLAGS', '-c', 'host_'),
         ]
-        for srcs, compiler, flags, prefix in compilers:
+        for srcs, compiler, flags, dash_c, prefix in compilers:
             for src in sorted(srcs):
                 # AS can be set to $(CC), so we need to call expand_variables on
                 # the compiler to get the real value.
-                cmd = [expand_variables(self.environment.substs[compiler], self.environment.substs)]
+                compiler_value = self.variables.get(compiler, self.environment.substs[compiler])
+                cmd = [expand_variables(compiler_value, self.environment.substs)]
                 cmd.extend(shell_quote(f) for f in self.local_flags[flags])
                 cmd.extend(shell_quote(f) for f in self.per_source_flags[src])
-                cmd.extend(['-c', '%f', '-o', '%o'])
+                cmd.extend([dash_c, '%f', '-o', '%o'])
                 self.rule(
                     cmd=cmd,
                     inputs=[src],
@@ -280,6 +285,8 @@ class TupOnly(CommonBackend, PartialBackend):
                 backend_file.sources[obj.canonical_suffix].extend(obj.files)
         elif isinstance(obj, HostSources):
             backend_file.host_sources[obj.canonical_suffix].extend(obj.files)
+        elif isinstance(obj, VariablePassthru):
+            backend_file.variables = obj.variables
 
         return True
 
