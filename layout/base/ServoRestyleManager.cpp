@@ -1448,10 +1448,6 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 {
   MOZ_ASSERT(!mInStyleRefresh);
 
-  if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {
-    primaryFrame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
-  }
-
   auto changeHint = nsChangeHint(0);
   auto restyleHint = nsRestyleHint(0);
 
@@ -1463,6 +1459,25 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
     restyleHint |= eRestyle_Subtree;
   } else if (aElement->IsAttributeMapped(aAttribute)) {
     restyleHint |= eRestyle_Self;
+  }
+
+  if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {
+    // See if we have appearance information for a theme.
+    const nsStyleDisplay* disp = primaryFrame->StyleDisplay();
+    if (disp->mAppearance) {
+      nsITheme* theme = PresContext()->GetTheme();
+      if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame,
+                                              disp->mAppearance)) {
+        bool repaint = false;
+        theme->WidgetStateChanged(primaryFrame, disp->mAppearance,
+                                  aAttribute, &repaint, aOldValue);
+        if (repaint) {
+          changeHint |= nsChangeHint_RepaintFrame;
+        }
+      }
+    }
+
+    primaryFrame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
 
   if (restyleHint || changeHint) {
