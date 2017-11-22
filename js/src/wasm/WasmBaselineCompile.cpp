@@ -302,7 +302,8 @@ BaseLocalIter::operator++(int)
 }
 
 // The strongly typed register wrappers are especially useful to distinguish
-// float registers from double registers.
+// float registers from double registers, but they also clearly distinguish
+// 32-bit registers from 64-bit register pairs on 32-bit systems.
 
 struct RegI32 : public Register
 {
@@ -734,35 +735,52 @@ class BaseRegAlloc
 // ScratchRegister abstractions.  We define our own, deferring to the platform's
 // when possible.
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-typedef ScratchDoubleScope ScratchF64;
-#else
-class ScratchF64
+#if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_NONE)
+class ScratchDoubleScope
 {
   public:
-    ScratchF64(BaseRegAlloc&) {}
+    explicit ScratchDoubleScope(MacroAssembler& m) {}
     operator FloatRegister() const {
-        MOZ_CRASH("BaseCompiler platform hook - ScratchF64");
+        MOZ_CRASH("BaseCompiler platform hook - ScratchDoubleScope");
+    }
+};
+
+class ScratchFloat32Scope
+{
+  public:
+    explicit ScratchFloat32Scope(MacroAssembler& m) {}
+    operator FloatRegister() const {
+        MOZ_CRASH("BaseCompiler platform hook - ScratchFloat32Scope");
+    }
+};
+
+class ScratchRegisterScope
+{
+  public:
+    explicit ScratchRegisterScope(MacroAssembler& m) {}
+    operator Register() const {
+        MOZ_CRASH("BaseCompiler platform hook - ScratchRegisterScope");
     }
 };
 #endif
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-typedef ScratchFloat32Scope ScratchF32;
-#else
-class ScratchF32
+class ScratchF64 : public ScratchDoubleScope
 {
   public:
-    ScratchF32(BaseRegAlloc&) {}
-    operator FloatRegister() const {
-        MOZ_CRASH("BaseCompiler platform hook - ScratchF32");
-    }
+    explicit ScratchF64(MacroAssembler& m) : ScratchDoubleScope(m) {}
+    operator RegF64() const { return RegF64(FloatRegister(*this)); }
 };
-#endif
 
-#if defined(JS_CODEGEN_X64)
-typedef ScratchRegisterScope ScratchI32;
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+class ScratchF32 : public ScratchFloat32Scope
+{
+  public:
+    explicit ScratchF32(MacroAssembler& m) : ScratchFloat32Scope(m) {}
+    operator RegF32() const { return RegF32(FloatRegister(*this)); }
+};
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+// On x86 we do not have a dedicated masm scratch register; on ARM, we need one
+// in addition to the one defined by masm because masm uses it too often.
 class ScratchI32
 {
 # ifdef DEBUG
@@ -780,22 +798,21 @@ class ScratchI32
   public:
     explicit ScratchI32(BaseRegAlloc&) {}
 # endif
-    operator Register() const {
+
+    operator RegI32() const {
 # ifdef JS_CODEGEN_X86
-        return ScratchRegX86;
+        return RegI32(ScratchRegX86);
 # else
-        return ScratchRegARM;
+        return RegI32(ScratchRegARM);
 # endif
     }
 };
 #else
-class ScratchI32
+class ScratchI32 : public ScratchRegisterScope
 {
-public:
-    ScratchI32(BaseRegAlloc&) {}
-    operator Register() const {
-        MOZ_CRASH("BaseCompiler platform hook - ScratchI32");
-    }
+  public:
+    explicit ScratchI32(MacroAssembler& m) : ScratchRegisterScope(m) {}
+    operator RegI32() const { return RegI32(Register(*this)); }
 };
 #endif
 
