@@ -516,6 +516,7 @@ protected:
 
 #ifdef DEBUG
   nsStyleSet* CloneStyleSet(nsStyleSet* aSet);
+  ServoStyleSet* CloneStyleSet(ServoStyleSet* aSet);
   bool VerifyIncrementalReflow();
   bool mInVerifyReflow;
   void ShowEventTargetDebug();

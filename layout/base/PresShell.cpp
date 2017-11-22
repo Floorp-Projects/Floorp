@@ -9754,41 +9754,56 @@ FindTopFrame(nsIFrame* aRoot)
 
 #ifdef DEBUG
 
-nsStyleSet*
-PresShell::CloneStyleSet(nsStyleSet* aSet)
+static void
+CopySheetsIntoClone(StyleSetHandle aSet, StyleSetHandle aClone)
 {
-  nsStyleSet* clone = new nsStyleSet();
-
   int32_t i, n = aSet->SheetCount(SheetType::Override);
   for (i = 0; i < n; i++) {
-    CSSStyleSheet* ss = aSet->StyleSheetAt(SheetType::Override, i);
+    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Override, i);
     if (ss)
-      clone->AppendStyleSheet(SheetType::Override, ss);
+      aClone->AppendStyleSheet(SheetType::Override, ss);
   }
 
   // The document expects to insert document stylesheets itself
 #if 0
   n = aSet->SheetCount(SheetType::Doc);
   for (i = 0; i < n; i++) {
-    CSSStyleSheet* ss = aSet->StyleSheetAt(SheetType::Doc, i);
+    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Doc, i);
     if (ss)
-      clone->AddDocStyleSheet(ss, mDocument);
+      aClone->AddDocStyleSheet(ss, mDocument);
   }
 #endif
 
   n = aSet->SheetCount(SheetType::User);
   for (i = 0; i < n; i++) {
-    CSSStyleSheet* ss = aSet->StyleSheetAt(SheetType::User, i);
+    StyleSheet* ss = aSet->StyleSheetAt(SheetType::User, i);
     if (ss)
-      clone->AppendStyleSheet(SheetType::User, ss);
+      aClone->AppendStyleSheet(SheetType::User, ss);
   }
 
   n = aSet->SheetCount(SheetType::Agent);
   for (i = 0; i < n; i++) {
-    CSSStyleSheet* ss = aSet->StyleSheetAt(SheetType::Agent, i);
+    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Agent, i);
     if (ss)
-      clone->AppendStyleSheet(SheetType::Agent, ss);
+      aClone->AppendStyleSheet(SheetType::Agent, ss);
   }
+}
+
+nsStyleSet*
+PresShell::CloneStyleSet(nsStyleSet* aSet)
+{
+  nsStyleSet* clone = new nsStyleSet();
+  CopySheetsIntoClone(aSet, clone);
+  return clone;
+}
+
+ServoStyleSet*
+PresShell::CloneStyleSet(ServoStyleSet* aSet)
+{
+  MOZ_ASSERT(aSet->IsMaster());
+
+  ServoStyleSet* clone = new ServoStyleSet(ServoStyleSet::Kind::Master);
+  CopySheetsIntoClone(aSet, clone);
   return clone;
 }
 
@@ -9843,14 +9858,20 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
+  nsAutoPtr<nsStyleSet> newGeckoSet;
+  nsAutoPtr<ServoStyleSet> newServoSet;
+  StyleSetHandle newSet;
   if (mStyleSet->IsServo()) {
-    NS_WARNING("VerifyIncrementalReflow cannot handle ServoStyleSets");
-    return true;
+    newServoSet = CloneStyleSet(mStyleSet->AsServo());
+    newSet = newServoSet;
+  } else {
+    newGeckoSet = CloneStyleSet(mStyleSet->AsGecko());
+    newSet = newGeckoSet;
   }
-  nsAutoPtr<nsStyleSet> newSet(CloneStyleSet(mStyleSet->AsGecko()));
-  nsCOMPtr<nsIPresShell> sh = mDocument->CreateShell(cx, vm, newSet.get());
+  nsCOMPtr<nsIPresShell> sh = mDocument->CreateShell(cx, vm, newSet);
   NS_ENSURE_TRUE(sh, false);
-  newSet.forget();
+  newGeckoSet.forget();
+  newServoSet.forget();
   // Note that after we create the shell, we must make sure to destroy it
   sh->SetVerifyReflowEnable(false); // turn off verify reflow while we're reflowing the test frame tree
   vm->SetPresShell(sh);
