@@ -4,8 +4,10 @@
 from __future__ import absolute_import
 
 import pprint
+import signal
 import time
 import traceback
+import subprocess
 from threading import Event
 
 import mozcrash
@@ -78,7 +80,7 @@ class Reader(object):
 
 
 def run_browser(command, minidump_dir, timeout=None, on_started=None,
-                **kwargs):
+                debug=None, debugger=None, debugger_args=None, **kwargs):
     """
     Run the browser using the given `command`.
 
@@ -102,6 +104,12 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
 
     Returns a ProcessContext instance, with available output and pid used.
     """
+
+    debugger_info = find_debugger_info(debug, debugger, debugger_args)
+    if debugger_info is not None:
+        return run_in_debug_mode(command, debugger_info,
+                                 on_started=on_started, env=kwargs.get('env'))
+
     context = ProcessContext()
     first_time = int(time.time()) * 1000
     wait_for_quit_timeout = 5
@@ -116,6 +124,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     proc = ProcessHandler(command, **kwargs)
     reader.proc = proc
     proc.run()
+
     LOG.process_start(proc.pid, ' '.join(command))
     try:
         context.process = psutil.Process(proc.pid)
@@ -164,4 +173,45 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     else:
         LOG.debug("Unable to detect exit code of the process %s." % proc.pid)
     context.output = reader.output
+    return context
+
+
+def find_debugger_info(debug, debugger, debugger_args):
+    debuggerInfo = None
+    if debug or debugger or debugger_args:
+        import mozdebug
+
+        if not debugger:
+            # No debugger name was provided. Look for the default ones on
+            # current OS.
+            debugger = mozdebug.get_default_debugger_name(mozdebug.DebuggerSearch.KeepLooking)
+
+        debuggerInfo = None
+        if debugger:
+            debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+
+        if debuggerInfo is None:
+            raise TalosError('Could not find a suitable debugger in your PATH.')
+
+    return debuggerInfo
+
+
+def run_in_debug_mode(command, debugger_info, on_started=None, env=None):
+    signal.signal(signal.SIGINT, lambda sigid, frame: None)
+    context = ProcessContext()
+    command_under_dbg = [debugger_info.path] + debugger_info.args + command
+
+    ttest_process = subprocess.Popen(command_under_dbg, env=env)
+
+    context.process = psutil.Process(ttest_process.pid)
+    if on_started:
+        on_started(context.process)
+
+    return_code = ttest_process.wait()
+
+    if return_code is not None:
+        LOG.process_exit(ttest_process.pid, return_code)
+    else:
+        LOG.debug("Unable to detect exit code of the process %s." % ttest_process.pid)
+
     return context
