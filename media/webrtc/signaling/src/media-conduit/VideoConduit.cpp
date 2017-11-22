@@ -830,6 +830,11 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     mSendStreamConfig.rtp.ulpfec.ulpfec_payload_type = codecConfig->mULPFECPayloadType;
     mSendStreamConfig.rtp.ulpfec.red_payload_type = codecConfig->mREDPayloadType;
     mSendStreamConfig.rtp.ulpfec.red_rtx_payload_type = codecConfig->mREDRTXPayloadType;
+  } else {
+    // Reset to defaults
+    mSendStreamConfig.rtp.ulpfec.ulpfec_payload_type = -1;
+    mSendStreamConfig.rtp.ulpfec.red_payload_type = -1;
+    mSendStreamConfig.rtp.ulpfec.red_rtx_payload_type = -1;
   }
 
   mSendStreamConfig.rtp.nack.rtp_history_ms =
