@@ -30,6 +30,7 @@ from ..frontend.data import (
     GeneratedFile,
     GeneratedSources,
     HostDefines,
+    HostSources,
     JARManifest,
     ObjdirFiles,
     PerSourceFlag,
@@ -63,6 +64,7 @@ class BackendTupfile(object):
         self.per_source_flags = defaultdict(list)
         self.local_flags = defaultdict(list)
         self.sources = defaultdict(list)
+        self.host_sources = defaultdict(list)
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -117,14 +119,17 @@ class BackendTupfile(object):
         )
 
     def gen_sources_rules(self, extra_inputs):
+        sources = self.sources
+        host_sources = self.host_sources
         compilers = [
-            ('.S', 'AS', 'ASFLAGS'),
-            ('.cpp', 'CXX', 'CXXFLAGS'),
-            ('.c', 'CC', 'CFLAGS'),
+            (sources['.S'], 'AS', 'ASFLAGS', ''),
+            (sources['.cpp'], 'CXX', 'CXXFLAGS', ''),
+            (sources['.c'], 'CC', 'CFLAGS', ''),
+            (host_sources['.cpp'], 'HOST_CXX', 'HOST_CXXFLAGS', 'host_'),
+            (host_sources['.c'], 'HOST_CC', 'HOST_CFLAGS', 'host_'),
         ]
-        for extension, compiler, flags in compilers:
-            srcs = sorted(self.sources[extension])
-            for src in srcs:
+        for srcs, compiler, flags, prefix in compilers:
+            for src in sorted(srcs):
                 # AS can be set to $(CC), so we need to call expand_variables on
                 # the compiler to get the real value.
                 cmd = [expand_variables(self.environment.substs[compiler], self.environment.substs)]
@@ -135,7 +140,7 @@ class BackendTupfile(object):
                     cmd=cmd,
                     inputs=[src],
                     extra_inputs=extra_inputs,
-                    outputs=['%B.o'],
+                    outputs=[prefix + '%B.o'],
                     display='%s %%f' % compiler,
                 )
 
@@ -273,6 +278,8 @@ class TupOnly(CommonBackend, PartialBackend):
         elif isinstance(obj, (Sources, GeneratedSources)):
             if obj.relobjdir.startswith(self._supported_dirs):
                 backend_file.sources[obj.canonical_suffix].extend(obj.files)
+        elif isinstance(obj, HostSources):
+            backend_file.host_sources[obj.canonical_suffix].extend(obj.files)
 
         return True
 
