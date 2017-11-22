@@ -12,7 +12,6 @@
 
 #include "AccessibleHandler.h"
 #include "AccessibleHandlerControl.h"
-#include "AccessibleTextTearoff.h"
 
 #include "Factory.h"
 #include "HandlerData.h"
@@ -31,9 +30,12 @@
 #include "Accessible2_3_i.c"
 #include "AccessibleAction_i.c"
 #include "AccessibleHyperlink_i.c"
+#include "AccessibleHypertext_i.c"
+#include "AccessibleHypertext2_i.c"
 #include "AccessibleTable_i.c"
 #include "AccessibleTable2_i.c"
 #include "AccessibleTableCell_i.c"
+#include "AccessibleText_i.c"
 
 namespace mozilla {
 namespace a11y {
@@ -68,6 +70,7 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
   , mServProvPassThru(nullptr)
   , mIAHyperlinkPassThru(nullptr)
   , mIATableCellPassThru(nullptr)
+  , mIAHypertextPassThru(nullptr)
   , mCachedData()
   , mCacheGen(0)
 {
@@ -153,6 +156,29 @@ AccessibleHandler::ResolveIATableCell()
     // mIATableCellPassThru is a weak reference
     // (see comments in AccesssibleHandler.h)
     mIATableCellPassThru->Release();
+  }
+
+  return hr;
+}
+
+HRESULT
+AccessibleHandler::ResolveIAHypertext()
+{
+  if (mIAHypertextPassThru) {
+    return S_OK;
+  }
+
+  RefPtr<IUnknown> proxy(GetProxy());
+  if (!proxy) {
+    return E_UNEXPECTED;
+  }
+
+  HRESULT hr = proxy->QueryInterface(IID_IAccessibleHypertext,
+    reinterpret_cast<void**>(&mIAHypertextPassThru));
+  if (SUCCEEDED(hr)) {
+    // mIAHypertextPassThru is a weak reference
+    // (see comments in AccessibleHandler.h)
+    mIAHypertextPassThru->Release();
   }
 
   return hr;
@@ -280,8 +306,9 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
 
   if (aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
       aIid == IID_IAccessibleHypertext2) {
-    RefPtr<IAccessibleHypertext2> textTearoff(new AccessibleTextTearoff(this));
-    textTearoff.forget(aOutInterface);
+    RefPtr<IAccessibleHypertext2> iaHt(
+      static_cast<IAccessibleHypertext2*>(this));
+    iaHt.forget(aOutInterface);
     return S_OK;
   }
 
@@ -1531,6 +1558,320 @@ AccessibleHandler::get_table(IUnknown** table)
   }
 
   return mIATableCellPassThru->get_table(table);
+}
+
+/*** IAccessibleText ***/
+
+HRESULT
+AccessibleHandler::addSelection(long startOffset, long endOffset)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->addSelection(startOffset, endOffset);
+}
+
+HRESULT
+AccessibleHandler::get_attributes(long offset, long *startOffset,
+                                  long *endOffset, BSTR *textAttributes)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_attributes(offset, startOffset, endOffset,
+                                              textAttributes);
+}
+
+HRESULT
+AccessibleHandler::get_caretOffset(long *offset)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_caretOffset(offset);
+}
+
+HRESULT
+AccessibleHandler::get_characterExtents(long offset,
+                                        enum IA2CoordinateType coordType,
+                                        long *x, long *y, long *width,
+                                        long *height)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_characterExtents(offset, coordType, x, y,
+                                                    width, height);
+}
+
+HRESULT
+AccessibleHandler::get_nSelections(long *nSelections)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_nSelections(nSelections);
+}
+
+HRESULT
+AccessibleHandler::get_offsetAtPoint(long x, long y,
+                                     enum IA2CoordinateType coordType,
+                                     long *offset)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_offsetAtPoint(x, y, coordType, offset);
+}
+
+HRESULT
+AccessibleHandler::get_selection(long selectionIndex, long *startOffset,
+                                 long *endOffset)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_selection(selectionIndex, startOffset,
+                                             endOffset);
+}
+
+HRESULT
+AccessibleHandler::get_text(long startOffset, long endOffset, BSTR *text)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_text(startOffset, endOffset, text);
+}
+
+HRESULT
+AccessibleHandler::get_textBeforeOffset(long offset,
+                                        enum IA2TextBoundaryType boundaryType,
+                                        long *startOffset, long *endOffset,
+                                        BSTR *text)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_textBeforeOffset(offset, boundaryType,
+                                                    startOffset, endOffset,
+                                                    text);
+}
+
+HRESULT
+AccessibleHandler::get_textAfterOffset(long offset,
+                                       enum IA2TextBoundaryType boundaryType,
+                                       long *startOffset, long *endOffset,
+                                       BSTR *text)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_textAfterOffset(offset, boundaryType,
+                                                   startOffset, endOffset,
+                                                   text);
+}
+
+HRESULT
+AccessibleHandler::get_textAtOffset(long offset,
+                                    enum IA2TextBoundaryType boundaryType,
+                                    long *startOffset, long *endOffset,
+                                    BSTR *text)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_textAtOffset(offset, boundaryType,
+                                                 startOffset, endOffset, text);
+}
+
+HRESULT
+AccessibleHandler::removeSelection(long selectionIndex)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->removeSelection(selectionIndex);
+}
+
+HRESULT
+AccessibleHandler::setCaretOffset(long offset)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->setCaretOffset(offset);
+}
+
+HRESULT
+AccessibleHandler::setSelection(long selectionIndex, long startOffset,
+                                long endOffset)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->setSelection(selectionIndex, startOffset,
+                                            endOffset);
+}
+
+HRESULT
+AccessibleHandler::get_nCharacters(long *nCharacters)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_nCharacters(nCharacters);
+}
+
+HRESULT
+AccessibleHandler::scrollSubstringTo(long startIndex, long endIndex,
+                                     enum IA2ScrollType scrollType)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->scrollSubstringTo(startIndex, endIndex,
+                                                 scrollType);
+}
+
+HRESULT
+AccessibleHandler::scrollSubstringToPoint(long startIndex, long endIndex,
+                                          enum IA2CoordinateType coordinateType,
+                                          long x, long y)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->scrollSubstringToPoint(startIndex, endIndex,
+                                                      coordinateType, x, y);
+}
+
+HRESULT
+AccessibleHandler::get_newText(IA2TextSegment *newText)
+{
+  if (!newText) {
+    return E_INVALIDARG;
+  }
+
+  RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetSingleton());
+  MOZ_ASSERT(ctl);
+  if (!ctl) {
+    return S_OK;
+  }
+
+  long id;
+  HRESULT hr = this->get_uniqueID(&id);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return ctl->GetNewText(id, WrapNotNull(newText));
+}
+
+HRESULT
+AccessibleHandler::get_oldText(IA2TextSegment *oldText)
+{
+  if (!oldText) {
+    return E_INVALIDARG;
+  }
+
+  RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetSingleton());
+  MOZ_ASSERT(ctl);
+  if (!ctl) {
+    return S_OK;
+  }
+
+  long id;
+  HRESULT hr = this->get_uniqueID(&id);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return ctl->GetOldText(id, WrapNotNull(oldText));
+}
+
+/*** IAccessibleHypertext ***/
+
+HRESULT
+AccessibleHandler::get_nHyperlinks(long *hyperlinkCount)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_nHyperlinks(hyperlinkCount);
+}
+
+HRESULT
+AccessibleHandler::get_hyperlink(long index,
+                                 IAccessibleHyperlink **hyperlink)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_hyperlink(index, hyperlink);
+}
+
+HRESULT
+AccessibleHandler::get_hyperlinkIndex(long charIndex, long *hyperlinkIndex)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_hyperlinkIndex(charIndex, hyperlinkIndex);
+}
+
+/*** IAccessibleHypertext2 ***/
+
+HRESULT
+AccessibleHandler::get_hyperlinks(IAccessibleHyperlink*** hyperlinks,
+                                  long* nHyperlinks)
+{
+  HRESULT hr = ResolveIAHypertext();
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  return mIAHypertextPassThru->get_hyperlinks(hyperlinks, nHyperlinks);
 }
 
 } // namespace a11y
