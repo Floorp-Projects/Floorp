@@ -548,7 +548,7 @@ pref("media.getusermedia.screensharing.enabled", true);
 pref("media.getusermedia.audiocapture.enabled", false);
 
 // TextTrack WebVTT Region extension support.
-pref("media.webvtt.regions.enabled", false);
+pref("media.webvtt.regions.enabled", true);
 
 // WebVTT pseudo element and class support.
 pref("media.webvtt.pseudo.enabled", true);
