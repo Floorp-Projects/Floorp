@@ -1167,8 +1167,11 @@ HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 
   // Loop over the contents of the fragment and move into the document
   while (nsCOMPtr<nsIContent> child = docfrag->GetFirstChild()) {
-    nsresult rv = InsertNode(*child, *headNode, offsetOfNewNode++);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+      InsertNode(*child, EditorRawDOMPoint(headNode, offsetOfNewNode++));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -1612,7 +1615,7 @@ HTMLEditor::InsertNodeAtPoint(nsIDOMNode* aNode,
     }
   }
   // Now we can insert the new node
-  nsresult rv = InsertNode(*node, *parent, *ioOffset);
+  nsresult rv = InsertNode(*node, EditorRawDOMPoint(parent, *ioOffset));
   if (isDocumentFragment) {
     *ioChildAtOffset = do_QueryInterface(parent->GetChildAt(*ioOffset));
   }
