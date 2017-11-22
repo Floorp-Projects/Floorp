@@ -3812,25 +3812,6 @@ public:
                 mozilla::jni::DispatchTarget::GECKO;
     };
 
-    struct ContentDocumentChanged_t {
-        typedef Compositor Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "contentDocumentChanged";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto ContentDocumentChanged() const -> void;
-
     struct CreateCompositor_t {
         typedef Compositor Owner;
         typedef void ReturnType;
@@ -3885,25 +3866,6 @@ public:
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::CURRENT;
     };
-
-    struct IsContentDocumentDisplayed_t {
-        typedef Compositor Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "isContentDocumentDisplayed";
-        static constexpr char signature[] =
-                "()Z";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto IsContentDocumentDisplayed() const -> bool;
 
     struct OnBoundsChanged_t {
         typedef Compositor Owner;
