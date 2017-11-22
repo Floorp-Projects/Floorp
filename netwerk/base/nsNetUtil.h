@@ -309,19 +309,6 @@ NS_NewInputStreamPump(nsIInputStreamPump** aResult,
                       bool aCloseWhenDone = false,
                       nsIEventTarget *aMainThreadTarget = nullptr);
 
-// NOTE: you will need to specify whether or not your streams are buffered
-// (i.e., do they implement ReadSegments/WriteSegments).  the default
-// assumption of TRUE for both streams might not be right for you!
-nsresult NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
-                                 nsIInputStream        *source,
-                                 nsIOutputStream       *sink,
-                                 nsIEventTarget        *target,
-                                 bool                   sourceBuffered = true,
-                                 bool                   sinkBuffered = true,
-                                 uint32_t               chunkSize = 0,
-                                 bool                   closeSource = true,
-                                 bool                   closeSink = true);
-
 nsresult NS_NewLoadGroup(nsILoadGroup      **result,
                          nsIRequestObserver *obs);
 
