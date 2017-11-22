@@ -5,7 +5,9 @@
 package org.mozilla.focus.autocomplete
 
 import android.os.Bundle
+import android.preference.Preference
 import android.preference.PreferenceFragment
+import android.preference.PreferenceScreen
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
 
@@ -22,6 +24,18 @@ class AutocompleteSettingsFragment : PreferenceFragment() {
         val updater = activity as SettingsFragment.ActionBarUpdater
         updater.updateTitle(R.string.preference_subitem_autocomplete)
         updater.updateIcon(R.drawable.ic_back)
+    }
 
+    override fun onPreferenceTreeClick(preferenceScreen: PreferenceScreen?, preference: Preference?): Boolean {
+        preference?.let {
+            if (it.key == getString(R.string.pref_key_screen_custom_domains)) {
+                fragmentManager.beginTransaction()
+                        .replace(R.id.container, AutocompleteCustomDomainsFragment())
+                        .addToBackStack(null)
+                        .commit()
+            }
+        }
+
+        return super.onPreferenceTreeClick(preferenceScreen, preference)
     }
 }

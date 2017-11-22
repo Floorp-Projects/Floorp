@@ -22,8 +22,8 @@
             android:title="@string/preference_switch_autocomplete" />
 
         <Preference
-            android:title="@string/preference_autocomplete_subitem_customlist"
-            android:enabled="false" />
+            android:key="@string/pref_key_screen_custom_domains"
+            android:title="@string/preference_autocomplete_subitem_customlist" />
 
     </PreferenceCategory>
 

@@ -29,4 +29,5 @@
     <string name="pref_key_screen_autocomplete" translatable="false"><xliff:g id="preference_key">pref_screen_autocomplete</xliff:g></string>
     <string name="pref_key_autocomplete_preinstalled" translatable="false"><xliff:g id="preference_key">pref_autocomplete_preinstalled</xliff:g></string>
     <string name="pref_key_autocomplete_custom" translatable="false"><xliff:g id="preference_key">pref_autocomplete_custom</xliff:g></string>
+    <string name="pref_key_screen_custom_domains" translatable="false"><xliff:g id="preference_key">pref_screen_custom_domains</xliff:g></string>
 </resources>
