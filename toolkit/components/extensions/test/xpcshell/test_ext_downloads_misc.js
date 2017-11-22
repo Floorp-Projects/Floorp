@@ -313,7 +313,7 @@ add_task(async function test_cancel() {
   msg = await runInExtension("cancel", id);
   equal(msg.status, "success", "cancel() succeeded");
 
-  // This sequence of events is bogus (bug 1256243)
+  // TODO bug 1256243: This sequence of events is bogus
   msg = await runInExtension("waitForEvents", [
     {
       type: "onChanged",

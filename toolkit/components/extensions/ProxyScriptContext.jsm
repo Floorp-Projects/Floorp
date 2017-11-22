@@ -137,7 +137,7 @@ const ProxyInfoData = {
       return defaultProxyInfo;
     }
     let failoverProxy = this.createProxyInfoFromData(proxyDataList, defaultProxyInfo, proxyDataListIndex + 1);
-    // When Bug 1360404 is fixed use ProxyService.newProxyInfoWithAuth() for all types.
+    // TODO When Bug 1360404 is fixed use ProxyService.newProxyInfoWithAuth() for all types.
     if (type === PROXY_TYPES.SOCKS || type === PROXY_TYPES.SOCKS4) {
       return ProxyService.newProxyInfoWithAuth(
               type, host, port, username, password, proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
@@ -291,7 +291,7 @@ class ProxyScriptContext extends BaseContext {
    */
   applyFilter(service, uri, defaultProxyInfo) {
     try {
-      // Bug 1337001 - provide path and query components to non-https URLs.
+      // TODO Bug 1337001 - provide path and query components to non-https URLs.
       let ret = this.FindProxyForURL(uri.prePath, uri.host, this.contextInfo);
       return this.proxyInfoFromProxyData(ret, defaultProxyInfo);
     } catch (e) {

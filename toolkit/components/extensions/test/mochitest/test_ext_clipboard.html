@@ -50,7 +50,7 @@ add_task(async function test_background_clipboard_permissions() {
   await extension.unload();
 });
 
-/** Selecting text in a bg page is not possible, bug 1272869.
+/** TODO Bug 1272869 Selecting text in a bg page is not possible.
 add_task(function* test_background_clipboard_copy() {
   function backgroundScript() {
     browser.test.onMessage.addListener(txt => {
