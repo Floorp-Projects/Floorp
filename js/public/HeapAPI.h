@@ -329,6 +329,8 @@ namespace detail {
 static MOZ_ALWAYS_INLINE uintptr_t*
 GetGCThingMarkBitmap(const uintptr_t addr)
 {
+    // Note: the JIT pre-barrier trampolines inline this code. Update that
+    // code too when making changes here!
     MOZ_ASSERT(addr);
     const uintptr_t bmap_addr = (addr & ~ChunkMask) | ChunkMarkBitmapOffset;
     return reinterpret_cast<uintptr_t*>(bmap_addr);
@@ -338,6 +340,8 @@ static MOZ_ALWAYS_INLINE void
 GetGCThingMarkWordAndMask(const uintptr_t addr, ColorBit colorBit,
                           uintptr_t** wordp, uintptr_t* maskp)
 {
+    // Note: the JIT pre-barrier trampolines inline this code. Update that
+    // code too when making changes here!
     MOZ_ASSERT(addr);
     const size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
                        static_cast<uint32_t>(colorBit);

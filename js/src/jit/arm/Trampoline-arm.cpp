@@ -891,6 +891,24 @@ JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm, MIRType type
 {
     uint32_t offset = startTrampolineCode(masm);
 
+    masm.pushReturnAddress();
+
+    MOZ_ASSERT(PreBarrierReg == r1);
+    Register temp1 = r2;
+    Register temp2 = r3;
+    Register temp3 = r4;
+    masm.push(temp1);
+    masm.push(temp2);
+    masm.push(temp3);
+
+    Label noBarrier;
+    masm.emitPreBarrierFastPath(cx->runtime(), type, temp1, temp2, temp3, &noBarrier);
+
+    // Call into C++ to mark this GC thing.
+    masm.pop(temp3);
+    masm.pop(temp2);
+    masm.pop(temp1);
+
     LiveRegisterSet save;
     if (cx->runtime()->jitSupportsFloatingPoint) {
         save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
@@ -899,19 +917,22 @@ JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm, MIRType type
         save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
                                  FloatRegisterSet());
     }
-    save.add(lr);
     masm.PushRegsInMask(save);
 
-    MOZ_ASSERT(PreBarrierReg == r1);
     masm.movePtr(ImmPtr(cx->runtime()), r0);
 
     masm.setupUnalignedABICall(r2);
     masm.passABIArg(r0);
     masm.passABIArg(r1);
     masm.callWithABI(JitMarkFunction(type));
-    save.take(AnyRegister(lr));
-    save.add(pc);
     masm.PopRegsInMask(save);
+    masm.ret();
+
+    masm.bind(&noBarrier);
+    masm.pop(temp3);
+    masm.pop(temp2);
+    masm.pop(temp1);
+    masm.ret();
 
     return offset;
 }
