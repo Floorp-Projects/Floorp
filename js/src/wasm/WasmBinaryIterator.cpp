@@ -240,8 +240,90 @@ wasm::Classify(OpBytes op)
         return OpKind::CurrentMemory;
       case Op::GrowMemory:
         return OpKind::GrowMemory;
-      case Op::AtomicPrefix:
+      case Op::ThreadPrefix: {
+#ifdef ENABLE_WASM_THREAD_OPS
+          switch (ThreadOp(op.b1)) {
+            case ThreadOp::Limit:
+              // Reject Limit for ThreadPrefix encoding
+              break;
+            case ThreadOp::Wake:
+              return OpKind::Wake;
+            case ThreadOp::I32Wait:
+            case ThreadOp::I64Wait:
+              return OpKind::Wait;
+            case ThreadOp::I32AtomicLoad:
+            case ThreadOp::I64AtomicLoad:
+            case ThreadOp::I32AtomicLoad8U:
+            case ThreadOp::I32AtomicLoad16U:
+            case ThreadOp::I64AtomicLoad8U:
+            case ThreadOp::I64AtomicLoad16U:
+            case ThreadOp::I64AtomicLoad32U:
+              return OpKind::AtomicLoad;
+            case ThreadOp::I32AtomicStore:
+            case ThreadOp::I64AtomicStore:
+            case ThreadOp::I32AtomicStore8U:
+            case ThreadOp::I32AtomicStore16U:
+            case ThreadOp::I64AtomicStore8U:
+            case ThreadOp::I64AtomicStore16U:
+            case ThreadOp::I64AtomicStore32U:
+              return OpKind::AtomicStore;
+            case ThreadOp::I32AtomicAdd:
+            case ThreadOp::I64AtomicAdd:
+            case ThreadOp::I32AtomicAdd8U:
+            case ThreadOp::I32AtomicAdd16U:
+            case ThreadOp::I64AtomicAdd8U:
+            case ThreadOp::I64AtomicAdd16U:
+            case ThreadOp::I64AtomicAdd32U:
+            case ThreadOp::I32AtomicSub:
+            case ThreadOp::I64AtomicSub:
+            case ThreadOp::I32AtomicSub8U:
+            case ThreadOp::I32AtomicSub16U:
+            case ThreadOp::I64AtomicSub8U:
+            case ThreadOp::I64AtomicSub16U:
+            case ThreadOp::I64AtomicSub32U:
+            case ThreadOp::I32AtomicAnd:
+            case ThreadOp::I64AtomicAnd:
+            case ThreadOp::I32AtomicAnd8U:
+            case ThreadOp::I32AtomicAnd16U:
+            case ThreadOp::I64AtomicAnd8U:
+            case ThreadOp::I64AtomicAnd16U:
+            case ThreadOp::I64AtomicAnd32U:
+            case ThreadOp::I32AtomicOr:
+            case ThreadOp::I64AtomicOr:
+            case ThreadOp::I32AtomicOr8U:
+            case ThreadOp::I32AtomicOr16U:
+            case ThreadOp::I64AtomicOr8U:
+            case ThreadOp::I64AtomicOr16U:
+            case ThreadOp::I64AtomicOr32U:
+            case ThreadOp::I32AtomicXor:
+            case ThreadOp::I64AtomicXor:
+            case ThreadOp::I32AtomicXor8U:
+            case ThreadOp::I32AtomicXor16U:
+            case ThreadOp::I64AtomicXor8U:
+            case ThreadOp::I64AtomicXor16U:
+            case ThreadOp::I64AtomicXor32U:
+            case ThreadOp::I32AtomicXchg:
+            case ThreadOp::I64AtomicXchg:
+            case ThreadOp::I32AtomicXchg8U:
+            case ThreadOp::I32AtomicXchg16U:
+            case ThreadOp::I64AtomicXchg8U:
+            case ThreadOp::I64AtomicXchg16U:
+            case ThreadOp::I64AtomicXchg32U:
+              return OpKind::AtomicBinOp;
+            case ThreadOp::I32AtomicCmpXchg:
+            case ThreadOp::I64AtomicCmpXchg:
+            case ThreadOp::I32AtomicCmpXchg8U:
+            case ThreadOp::I32AtomicCmpXchg16U:
+            case ThreadOp::I64AtomicCmpXchg8U:
+            case ThreadOp::I64AtomicCmpXchg16U:
+            case ThreadOp::I64AtomicCmpXchg32U:
+              return OpKind::AtomicCompareExchange;
+            default:
+              break;
+          }
+#endif // ENABLE_WASM_THREAD_OPS
           break;
+      }
       case Op::MozPrefix: {
           switch (MozOp(op.b1)) {
             case MozOp::Limit:
@@ -395,15 +477,15 @@ wasm::Classify(OpBytes op)
             case MozOp::OldCallIndirect:
               return OpKind::OldCallIndirect;
             case MozOp::I32AtomicsLoad:
-              return OpKind::AtomicLoad;
+              return OpKind::OldAtomicLoad;
             case MozOp::I32AtomicsStore:
-              return OpKind::AtomicStore;
+              return OpKind::OldAtomicStore;
             case MozOp::I32AtomicsBinOp:
-              return OpKind::AtomicBinOp;
+              return OpKind::OldAtomicBinOp;
             case MozOp::I32AtomicsCompareExchange:
-              return OpKind::AtomicCompareExchange;
+              return OpKind::OldAtomicCompareExchange;
             case MozOp::I32AtomicsExchange:
-              return OpKind::AtomicExchange;
+              return OpKind::OldAtomicExchange;
             case MozOp::I8x16extractLane:
             case MozOp::I8x16extractLaneU:
             case MozOp::I16x8extractLane:

@@ -3125,6 +3125,118 @@ MacroAssembler::wasmEmitStackCheck(Register sp, Register scratch, Label* onOverf
               onOverflow);
 }
 
+void
+MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register temp1, Register temp2,
+                                       Register temp3, Label* noBarrier)
+{
+    MOZ_ASSERT(temp1 != PreBarrierReg);
+    MOZ_ASSERT(temp2 != PreBarrierReg);
+    MOZ_ASSERT(temp3 != PreBarrierReg);
+
+    // Load the GC thing in temp1.
+    if (type == MIRType::Value) {
+        unboxNonDouble(Address(PreBarrierReg, 0), temp1);
+    } else {
+        MOZ_ASSERT(type == MIRType::Object ||
+                   type == MIRType::String ||
+                   type == MIRType::Shape ||
+                   type == MIRType::ObjectGroup);
+        loadPtr(Address(PreBarrierReg, 0), temp1);
+    }
+
+#ifdef DEBUG
+    // The caller should have checked for null pointers.
+    Label nonZero;
+    branchTestPtr(Assembler::NonZero, temp1, temp1, &nonZero);
+    assumeUnreachable("JIT pre-barrier: unexpected nullptr");
+    bind(&nonZero);
+#endif
+
+    // Load the chunk address in temp2.
+    movePtr(ImmWord(~gc::ChunkMask), temp2);
+    andPtr(temp1, temp2);
+
+    // If the GC thing is in the nursery, we don't need to barrier it.
+    if (type == MIRType::Value || type == MIRType::Object) {
+        branch32(Assembler::Equal, Address(temp2, gc::ChunkLocationOffset),
+                 Imm32(int32_t(gc::ChunkLocation::Nursery)), noBarrier);
+    } else {
+#ifdef DEBUG
+        Label isTenured;
+        branch32(Assembler::NotEqual, Address(temp2, gc::ChunkLocationOffset),
+                 Imm32(int32_t(gc::ChunkLocation::Nursery)), &isTenured);
+        assumeUnreachable("JIT pre-barrier: unexpected nursery pointer");
+        bind(&isTenured);
+#endif
+    }
+
+    // If it's a permanent atom or symbol from a parent runtime we don't
+    // need to barrier it.
+    if (type == MIRType::Value || type == MIRType::String) {
+        branchPtr(Assembler::NotEqual, Address(temp2, gc::ChunkRuntimeOffset),
+                  ImmPtr(rt), noBarrier);
+    } else {
+#ifdef DEBUG
+        Label thisRuntime;
+        branchPtr(Assembler::Equal, Address(temp2, gc::ChunkRuntimeOffset),
+                  ImmPtr(rt), &thisRuntime);
+        assumeUnreachable("JIT pre-barrier: unexpected runtime");
+        bind(&thisRuntime);
+#endif
+    }
+
+    // Determine the bit index and store in temp1.
+    //
+    // bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
+    //        static_cast<uint32_t>(colorBit);
+    static_assert(gc::CellBytesPerMarkBit == 8,
+                  "Calculation below relies on this");
+    static_assert(size_t(gc::ColorBit::BlackBit) == 0,
+                  "Calculation below relies on this");
+    andPtr(Imm32(gc::ChunkMask), temp1);
+    rshiftPtr(Imm32(3), temp1);
+
+    static const size_t nbits = sizeof(uintptr_t) * CHAR_BIT;
+    static_assert(nbits == JS_BITS_PER_WORD,
+                  "Calculation below relies on this");
+
+    // Load the bitmap word in temp2.
+    //
+    // word = chunk.bitmap[bit / nbits];
+    movePtr(temp1, temp3);
+#if JS_BITS_PER_WORD == 64
+    rshiftPtr(Imm32(6), temp1);
+    loadPtr(BaseIndex(temp2, temp1, TimesEight, gc::ChunkMarkBitmapOffset), temp2);
+#else
+    rshiftPtr(Imm32(5), temp1);
+    loadPtr(BaseIndex(temp2, temp1, TimesFour, gc::ChunkMarkBitmapOffset), temp2);
+#endif
+
+    // Load the mask in temp1.
+    //
+    // mask = uintptr_t(1) << (bit % nbits);
+    andPtr(Imm32(nbits - 1), temp3);
+    move32(Imm32(1), temp1);
+#ifdef JS_CODEGEN_X64
+    MOZ_ASSERT(temp3 == rcx);
+    shlq_cl(temp1);
+#elif JS_CODEGEN_X86
+    MOZ_ASSERT(temp3 == ecx);
+    shll_cl(temp1);
+#elif JS_CODEGEN_ARM
+    ma_lsl(temp3, temp1, temp1);
+#elif JS_CODEGEN_ARM64
+    Lsl(ARMRegister(temp1, 64), ARMRegister(temp1, 64), ARMRegister(temp3, 64));
+#elif JS_CODEGEN_NONE
+    MOZ_CRASH();
+#else
+# error "Unknown architecture"
+#endif
+
+    // No barrier is needed if the bit is set, |word & mask != 0|.
+    branchTestPtr(Assembler::NonZero, temp2, temp1, noBarrier);
+}
+
 //}}} check_macroassembler_style
 
 void

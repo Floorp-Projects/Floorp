@@ -874,7 +874,7 @@ case "$target" in
     ;;
 
 *-solaris*)
-    MOZ_FIX_LINK_PATHS=
+    MOZ_FIX_LINK_PATHS="-L${DIST}/bin"
     ;;
 
 esac

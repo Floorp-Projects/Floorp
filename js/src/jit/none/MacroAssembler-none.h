@@ -361,6 +361,14 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void atomicXor16(const T& value, const S& mem) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicXor32(const T& value, const S& mem) { MOZ_CRASH(); }
 
+    template <typename T> void atomicFetchAdd64(Register64 value, const T& mem, Register64 temp, Register64 output) { MOZ_CRASH(); }
+    template <typename T> void atomicFetchSub64(Register64 value, const T& mem, Register64 temp, Register64 output) { MOZ_CRASH(); }
+    template <typename T> void atomicFetchAnd64(Register64 value, const T& mem, Register64 temp, Register64 output) { MOZ_CRASH(); }
+    template <typename T> void atomicFetchOr64(Register64 value, const T& mem, Register64 temp, Register64 output) { MOZ_CRASH(); }
+    template <typename T> void atomicFetchXor64(Register64 value, const T& mem, Register64 temp, Register64 output) { MOZ_CRASH(); }
+    template <typename T> void atomicExchange64(const T& mem, Register64 src, Register64 output) { MOZ_CRASH(); }
+    template <typename T> void compareExchange64(const T& mem, Register64 expect, Register64 replace, Register64 output) { MOZ_CRASH(); }
+
     Register splitTagForTest(ValueOperand) { MOZ_CRASH(); }
 
     void boxDouble(FloatRegister, ValueOperand, FloatRegister) { MOZ_CRASH(); }

@@ -80,16 +80,15 @@ int nsNSSComponent::mInstanceCount = 0;
 // to ensure that NSS is initialized.
 bool EnsureNSSInitializedChromeOrContent()
 {
+  static Atomic<bool> initialized(false);
+
+  if (initialized) {
+    return true;
+  }
+
   // If this is not the main thread (i.e. probably a worker) then forward this
   // call to the main thread.
   if (!NS_IsMainThread()) {
-    static Atomic<bool> initialized(false);
-
-    // Cache the result to dispatch to the main thread only once per worker.
-    if (initialized) {
-      return true;
-    }
-
     nsCOMPtr<nsIThread> mainThread;
     nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
     if (NS_FAILED(rv)) {
@@ -101,7 +100,7 @@ bool EnsureNSSInitializedChromeOrContent()
       mainThread,
       new SyncRunnable(
         NS_NewRunnableFunction("EnsureNSSInitializedChromeOrContent", []() {
-          initialized = EnsureNSSInitializedChromeOrContent();
+          EnsureNSSInitializedChromeOrContent();
         })));
 
     return initialized;
@@ -112,10 +111,12 @@ bool EnsureNSSInitializedChromeOrContent()
     if (!nss) {
       return false;
     }
+    initialized = true;
     return true;
   }
 
   if (NSS_IsInitialized()) {
+    initialized = true;
     return true;
   }
 
@@ -128,6 +129,7 @@ bool EnsureNSSInitializedChromeOrContent()
   }
 
   mozilla::psm::DisableMD5();
+  initialized = true;
   return true;
 }
 

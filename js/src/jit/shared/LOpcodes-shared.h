@@ -424,10 +424,10 @@
     _(GetPrototypeOf)               \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
-    _(AsmJSCompareExchangeHeap)     \
-    _(AsmJSAtomicExchangeHeap)      \
-    _(AsmJSAtomicBinopHeap)         \
-    _(AsmJSAtomicBinopHeapForEffect)\
+    _(WasmCompareExchangeHeap)      \
+    _(WasmAtomicExchangeHeap)       \
+    _(WasmAtomicBinopHeap)          \
+    _(WasmAtomicBinopHeapForEffect) \
     _(WasmTruncateToInt32)          \
     _(WasmTrap)                     \
     _(WasmReinterpret)              \
@@ -436,6 +436,7 @@
     _(WasmSelect)                   \
     _(WasmSelectI64)                \
     _(WasmBoundsCheck)              \
+    _(WasmAlignmentCheck)           \
     _(WasmLoadTls)                  \
     _(WasmAddOffset)                \
     _(WasmLoad)                     \
