@@ -1056,6 +1056,7 @@ class GeneratedFile(ContextDerived):
         'outputs',
         'inputs',
         'flags',
+        'required_for_compile',
     )
 
     def __init__(self, context, script, method, outputs, inputs, flags=()):
@@ -1065,6 +1066,17 @@ class GeneratedFile(ContextDerived):
         self.outputs = outputs if isinstance(outputs, tuple) else (outputs,)
         self.inputs = inputs
         self.flags = flags
+
+        suffixes = (
+            '.c',
+            '.cpp',
+            '.h',
+            '.inc',
+            '.py',
+            '.rs',
+            'new', # 'new' is an output from make-stl-wrappers.py
+        )
+        self.required_for_compile = any(f.endswith(suffixes) for f in self.outputs)
 
 
 class AndroidResDirs(ContextDerived):
