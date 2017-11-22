@@ -2484,10 +2484,9 @@ FindTitlebarBottom(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
                    int32_t aWindowWidth)
 {
   int32_t titlebarBottom = 0;
-  for (auto& g : aThemeGeometries) {
-    if ((g.mType == nsNativeThemeCocoa::eThemeGeometryTypeTitlebar ||
-         g.mType == nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarLight ||
-         g.mType == nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarDark) &&
+  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
+    const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
+    if ((g.mType == nsNativeThemeCocoa::eThemeGeometryTypeTitlebar) &&
         g.mRect.X() <= 0 &&
         g.mRect.XMost() >= aWindowWidth &&
         g.mRect.Y() <= 0) {
@@ -2561,43 +2560,15 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   [win placeFullScreenButton:[mView convertRect:DevPixelsToCocoaPoints(fullScreenButtonRect) toView:nil]];
 }
 
-static Maybe<VibrancyType>
-ThemeGeometryTypeToVibrancyType(nsITheme::ThemeGeometryType aThemeGeometryType)
-{
-  switch (aThemeGeometryType) {
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyLight:
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarLight:
-      return Some(VibrancyType::LIGHT);
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyDark:
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarDark:
-      return Some(VibrancyType::DARK);
-    case nsNativeThemeCocoa::eThemeGeometryTypeSheet:
-      return Some(VibrancyType::SHEET);
-    case nsNativeThemeCocoa::eThemeGeometryTypeTooltip:
-      return Some(VibrancyType::TOOLTIP);
-    case nsNativeThemeCocoa::eThemeGeometryTypeMenu:
-      return Some(VibrancyType::MENU);
-    case nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem:
-      return Some(VibrancyType::HIGHLIGHTED_MENUITEM);
-    case nsNativeThemeCocoa::eThemeGeometryTypeSourceList:
-      return Some(VibrancyType::SOURCE_LIST);
-    case nsNativeThemeCocoa::eThemeGeometryTypeSourceListSelection:
-      return Some(VibrancyType::SOURCE_LIST_SELECTION);
-    case nsNativeThemeCocoa::eThemeGeometryTypeActiveSourceListSelection:
-      return Some(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION);
-    default:
-      return Nothing();
-  }
-}
-
 static LayoutDeviceIntRegion
-GatherVibrantRegion(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
-                    VibrancyType aVibrancyType)
+GatherThemeGeometryRegion(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
+                          nsITheme::ThemeGeometryType aThemeGeometryType)
 {
   LayoutDeviceIntRegion region;
-  for (auto& geometry : aThemeGeometries) {
-    if (ThemeGeometryTypeToVibrancyType(geometry.mType) == Some(aVibrancyType)) {
-      region.OrWith(geometry.mRect);
+  for (size_t i = 0; i < aThemeGeometries.Length(); ++i) {
+    const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
+    if (g.mType == aThemeGeometryType) {
+      region.OrWith(g.mRect);
     }
   }
   return region;
@@ -2633,23 +2604,23 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
   }
 
   LayoutDeviceIntRegion sheetRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::SHEET);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeSheet);
   LayoutDeviceIntRegion vibrantLightRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::LIGHT);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeVibrancyLight);
   LayoutDeviceIntRegion vibrantDarkRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::DARK);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeVibrancyDark);
   LayoutDeviceIntRegion menuRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::MENU);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeMenu);
   LayoutDeviceIntRegion tooltipRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::TOOLTIP);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeTooltip);
   LayoutDeviceIntRegion highlightedMenuItemRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::HIGHLIGHTED_MENUITEM);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem);
   LayoutDeviceIntRegion sourceListRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::SOURCE_LIST);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeSourceList);
   LayoutDeviceIntRegion sourceListSelectionRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::SOURCE_LIST_SELECTION);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeSourceListSelection);
   LayoutDeviceIntRegion activeSourceListSelectionRegion =
-    GatherVibrantRegion(aThemeGeometries, VibrancyType::ACTIVE_SOURCE_LIST_SELECTION);
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeActiveSourceListSelection);
 
   MakeRegionsNonOverlapping(sheetRegion, vibrantLightRegion, vibrantDarkRegion,
                             menuRegion, tooltipRegion, highlightedMenuItemRegion,
@@ -2658,14 +2629,14 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
 
   auto& vm = EnsureVibrancyManager();
   vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
-  vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
-  vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
   vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
+  vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
   vm.UpdateVibrantRegion(VibrancyType::HIGHLIGHTED_MENUITEM, highlightedMenuItemRegion);
   vm.UpdateVibrantRegion(VibrancyType::SHEET, sheetRegion);
   vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST, sourceListRegion);
   vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST_SELECTION, sourceListSelectionRegion);
   vm.UpdateVibrantRegion(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION, activeSourceListSelectionRegion);
+  vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
 }
 
 void
@@ -2676,14 +2647,39 @@ nsChildView::ClearVibrantAreas()
   }
 }
 
+static VibrancyType
+ThemeGeometryTypeToVibrancyType(nsITheme::ThemeGeometryType aThemeGeometryType)
+{
+  switch (aThemeGeometryType) {
+    case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyLight:
+      return VibrancyType::LIGHT;
+    case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyDark:
+      return VibrancyType::DARK;
+    case nsNativeThemeCocoa::eThemeGeometryTypeTooltip:
+      return VibrancyType::TOOLTIP;
+    case nsNativeThemeCocoa::eThemeGeometryTypeMenu:
+      return VibrancyType::MENU;
+    case nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem:
+      return VibrancyType::HIGHLIGHTED_MENUITEM;
+    case nsNativeThemeCocoa::eThemeGeometryTypeSheet:
+      return VibrancyType::SHEET;
+    case nsNativeThemeCocoa::eThemeGeometryTypeSourceList:
+      return VibrancyType::SOURCE_LIST;
+    case nsNativeThemeCocoa::eThemeGeometryTypeSourceListSelection:
+      return VibrancyType::SOURCE_LIST_SELECTION;
+    case nsNativeThemeCocoa::eThemeGeometryTypeActiveSourceListSelection:
+      return VibrancyType::ACTIVE_SOURCE_LIST_SELECTION;
+    default:
+      MOZ_CRASH();
+  }
+}
+
 NSColor*
 nsChildView::VibrancyFillColorForThemeGeometryType(nsITheme::ThemeGeometryType aThemeGeometryType)
 {
   if (VibrancyManager::SystemSupportsVibrancy()) {
-    Maybe<VibrancyType> vibrancyType =
-      ThemeGeometryTypeToVibrancyType(aThemeGeometryType);
-    MOZ_RELEASE_ASSERT(vibrancyType, "should only encounter vibrant theme geometry types here");
-    return EnsureVibrancyManager().VibrancyFillColorForType(*vibrancyType);
+    return EnsureVibrancyManager().VibrancyFillColorForType(
+      ThemeGeometryTypeToVibrancyType(aThemeGeometryType));
   }
   return [NSColor whiteColor];
 }
