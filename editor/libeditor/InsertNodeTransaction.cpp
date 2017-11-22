@@ -6,6 +6,7 @@
 #include "InsertNodeTransaction.h"
 
 #include "mozilla/EditorBase.h"         // for EditorBase
+#include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 
 #include "mozilla/dom/Selection.h"      // for Selection
 
@@ -21,15 +22,17 @@ namespace mozilla {
 
 using namespace dom;
 
-InsertNodeTransaction::InsertNodeTransaction(nsIContent& aNode,
-                                             nsINode& aParent,
-                                             int32_t aOffset,
-                                             EditorBase& aEditorBase)
-  : mNode(&aNode)
-  , mParent(&aParent)
-  , mOffset(aOffset)
+InsertNodeTransaction::InsertNodeTransaction(
+                         EditorBase& aEditorBase,
+                         nsIContent& aContentToInsert,
+                         const EditorRawDOMPoint& aPointToInsert)
+  : mContentToInsert(&aContentToInsert)
+  , mPointToInsert(aPointToInsert)
   , mEditorBase(&aEditorBase)
 {
+  MOZ_ASSERT(mPointToInsert.IsSetAndValid());
+  // Ensure mPointToInsert stores child at offset.
+  Unused << mPointToInsert.GetChildAtOffset();
 }
 
 InsertNodeTransaction::~InsertNodeTransaction()
@@ -38,8 +41,8 @@ InsertNodeTransaction::~InsertNodeTransaction()
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTransaction, EditTransactionBase,
                                    mEditorBase,
-                                   mNode,
-                                   mParent)
+                                   mContentToInsert,
+                                   mPointToInsert)
 
 NS_IMPL_ADDREF_INHERITED(InsertNodeTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(InsertNodeTransaction, EditTransactionBase)
@@ -49,34 +52,62 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP
 InsertNodeTransaction::DoTransaction()
 {
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mNode) || NS_WARN_IF(!mParent)) {
+  if (NS_WARN_IF(!mEditorBase) ||
+      NS_WARN_IF(!mContentToInsert) ||
+      NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  uint32_t count = mParent->GetChildCount();
-  if (mOffset > static_cast<int32_t>(count) || mOffset == -1) {
-    // -1 is sentinel value meaning "append at end"
-    mOffset = count;
+  if (!mPointToInsert.IsSetAndValid()) {
+    // It seems that DOM tree has been changed after first DoTransaction()
+    // and current RedoTranaction() call.
+    if (mPointToInsert.GetChildAtOffset()) {
+      EditorDOMPoint newPointToInsert(mPointToInsert.GetChildAtOffset());
+      if (!newPointToInsert.IsSet()) {
+        // The insertion point has been removed from the DOM tree.
+        // In this case, we should append the node to the container instead.
+        newPointToInsert.Set(mPointToInsert.Container(),
+                             mPointToInsert.Container()->Length());
+        if (NS_WARN_IF(!newPointToInsert.IsSet())) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+      mPointToInsert = newPointToInsert;
+    } else {
+      mPointToInsert.Set(mPointToInsert.Container(),
+                         mPointToInsert.Container()->Length());
+      if (NS_WARN_IF(!mPointToInsert.IsSet())) {
+        return NS_ERROR_FAILURE;
+      }
+    }
   }
 
-  // Note, it's ok for ref to be null. That means append.
-  nsCOMPtr<nsIContent> ref = mParent->GetChildAt(mOffset);
+  mEditorBase->MarkNodeDirty(GetAsDOMNode(mContentToInsert));
 
-  mEditorBase->MarkNodeDirty(GetAsDOMNode(mNode));
-
-  ErrorResult rv;
-  mParent->InsertBefore(*mNode, ref, rv);
-  rv.WouldReportJSException();
-  NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+  ErrorResult error;
+  mPointToInsert.Container()->InsertBefore(*mContentToInsert,
+                                           mPointToInsert.GetChildAtOffset(),
+                                           error);
+  error.WouldReportJSException();
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
 
   // Only set selection to insertion point if editor gives permission
   if (mEditorBase->GetShouldTxnSetSelection()) {
     RefPtr<Selection> selection = mEditorBase->GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
     // Place the selection just after the inserted element
-    selection->Collapse(mParent, mOffset + 1);
-  } else {
-    // Do nothing - DOM Range gravity will adjust selection
+    EditorRawDOMPoint afterInsertedNode(mContentToInsert);
+    DebugOnly<bool> advanced = afterInsertedNode.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+      "Failed to advance offset after the inserted node");
+    selection->Collapse(afterInsertedNode, error);
+    if (NS_WARN_IF(error.Failed())) {
+      error.SuppressException();
+    }
   }
   return NS_OK;
 }
@@ -84,12 +115,18 @@ InsertNodeTransaction::DoTransaction()
 NS_IMETHODIMP
 InsertNodeTransaction::UndoTransaction()
 {
-  if (NS_WARN_IF(!mNode) || NS_WARN_IF(!mParent)) {
+  if (NS_WARN_IF(!mContentToInsert) ||
+      NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  ErrorResult rv;
-  mParent->RemoveChild(*mNode, rv);
-  return rv.StealNSResult();
+  // XXX If the inserted node has been moved to different container node or
+  //     just removed from the DOM tree, this always fails.
+  ErrorResult error;
+  mPointToInsert.Container()->RemoveChild(*mContentToInsert, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

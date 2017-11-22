@@ -7,6 +7,7 @@
 #define InsertNodeTransaction_h
 
 #include "mozilla/EditTransactionBase.h" // for EditTransactionBase, etc.
+#include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"                 // for nsIContent
@@ -24,12 +25,15 @@ class InsertNodeTransaction final : public EditTransactionBase
 public:
   /**
    * Initialize the transaction.
-   * @param aNode       The node to insert.
-   * @param aParent     The node to insert into.
-   * @param aOffset     The offset in aParent to insert aNode.
+   *
+   * @param aEditorBase         The editor.
+   * @param aContentToInsert    The node to insert.
+   * @param aPointToInsert      The node to insert into.  I.e., aContentToInsert
+   *                            will be inserted before the child at offset.
    */
-  InsertNodeTransaction(nsIContent& aNode, nsINode& aParent, int32_t aOffset,
-                        EditorBase& aEditorBase);
+  InsertNodeTransaction(EditorBase& aEditorBase,
+                        nsIContent& aContentToInsert,
+                        const EditorRawDOMPoint& aPointToInsert);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTransaction,
@@ -41,13 +45,10 @@ protected:
   virtual ~InsertNodeTransaction();
 
   // The element to insert.
-  nsCOMPtr<nsIContent> mNode;
+  nsCOMPtr<nsIContent> mContentToInsert;
 
-  // The node into which the new node will be inserted.
-  nsCOMPtr<nsINode> mParent;
-
-  // The index in mParent for the new node.
-  int32_t mOffset;
+  // The DOM point we will insert mContentToInsert.
+  EditorDOMPoint mPointToInsert;
 
   // The editor for this transaction.
   RefPtr<EditorBase> mEditorBase;
