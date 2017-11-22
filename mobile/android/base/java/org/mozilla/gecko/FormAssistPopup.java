@@ -385,19 +385,6 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
         positionAndShowPopup();
     }
 
-    void onMetricsChanged(final ImmutableViewportMetrics aMetrics) {
-        if (!isShown()) {
-            return;
-        }
-
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                positionAndShowPopup(aMetrics);
-            }
-        });
-    }
-
     private static final class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {
         private final LayoutInflater mInflater;
         private final int mTextViewResourceId;
