@@ -1528,13 +1528,14 @@ nsFtpState::R_pasv() {
             if (!stEventTarget)
                 return FTP_ERROR;
 
-            nsCOMPtr<nsIAsyncStreamCopier> copier;
-            rv = NS_NewAsyncStreamCopier(getter_AddRefs(copier),
-                                         mChannel->UploadStream(),
-                                         output,
-                                         stEventTarget,
-                                         true,   // upload stream is buffered
-                                         false); // output is NOT buffered
+            nsCOMPtr<nsIAsyncStreamCopier> copier =
+                do_CreateInstance(NS_ASYNCSTREAMCOPIER_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv)) {
+                rv = copier->Init(mChannel->UploadStream(), output,
+                                  stEventTarget, true,
+                                  false /* output is NOT buffered */,
+                                  0, true, true);
+            }
             if (NS_FAILED(rv))
                 return FTP_ERROR;
 

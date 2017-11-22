@@ -6,10 +6,10 @@
 # Sandbox executes some of its code before the ASan RTL gets initialized and
 # maps shadow memory.  As a result, instrumented code tries to access unavailable
 # shadow memory and faults.
-fun:*TargetNtSetInformationThread@20
-fun:*TargetNtOpenThreadToken@20
-fun:*TargetNtOpenThreadTokenEx@24
-fun:*TargetNtMapViewOfSection@44
+fun:*TargetNtSetInformationThread*
+fun:*TargetNtOpenThreadToken*
+fun:*TargetNtOpenThreadTokenEx*
+fun:*TargetNtMapViewOfSection*
 fun:*AutoProtectMemory*sandbox*
 fun:*EatResolverThunk*sandbox*
 fun:*InterceptionAgent*sandbox*

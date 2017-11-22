@@ -1441,14 +1441,14 @@ ObjectIsConstructor(JSObject* obj)
 }
 
 void
-MarkValueFromIon(JSRuntime* rt, Value* vp)
+MarkValueFromJit(JSRuntime* rt, Value* vp)
 {
     AutoUnsafeCallWithABI unsafe;
     TraceManuallyBarrieredEdge(&rt->gc.marker, vp, "write barrier");
 }
 
 void
-MarkStringFromIon(JSRuntime* rt, JSString** stringp)
+MarkStringFromJit(JSRuntime* rt, JSString** stringp)
 {
     AutoUnsafeCallWithABI unsafe;
     MOZ_ASSERT(*stringp);
@@ -1456,7 +1456,7 @@ MarkStringFromIon(JSRuntime* rt, JSString** stringp)
 }
 
 void
-MarkObjectFromIon(JSRuntime* rt, JSObject** objp)
+MarkObjectFromJit(JSRuntime* rt, JSObject** objp)
 {
     AutoUnsafeCallWithABI unsafe;
     MOZ_ASSERT(*objp);
@@ -1464,14 +1464,14 @@ MarkObjectFromIon(JSRuntime* rt, JSObject** objp)
 }
 
 void
-MarkShapeFromIon(JSRuntime* rt, Shape** shapep)
+MarkShapeFromJit(JSRuntime* rt, Shape** shapep)
 {
     AutoUnsafeCallWithABI unsafe;
     TraceManuallyBarrieredEdge(&rt->gc.marker, shapep, "write barrier");
 }
 
 void
-MarkObjectGroupFromIon(JSRuntime* rt, ObjectGroup** groupp)
+MarkObjectGroupFromJit(JSRuntime* rt, ObjectGroup** groupp)
 {
     AutoUnsafeCallWithABI unsafe;
     TraceManuallyBarrieredEdge(&rt->gc.marker, groupp, "write barrier");

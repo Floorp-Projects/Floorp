@@ -49,6 +49,7 @@
   _(WasmCodeStreamEnd,           500) \
   _(WasmTailBytesPtr,            500) \
   _(WasmStreamStatus,            500) \
+  _(SharedArrayGrow,             500)    \
                                       \
   _(ThreadId,                    600) \
   _(WasmCodeSegmentMap,          600) \

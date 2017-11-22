@@ -1353,8 +1353,8 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
 
     if (isDefault && pn->pn_right) {
         // This is an export default containing an expression.
-        RootedAtom localName(cx_, cx_->names().starDefaultStar);
-        RootedAtom exportName(cx_, cx_->names().default_);
+        HandlePropertyName localName = cx_->names().default_;
+        HandlePropertyName exportName = cx_->names().default_;
         return appendExportEntry(exportName, localName);
     }
 

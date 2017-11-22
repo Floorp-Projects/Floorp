@@ -20,6 +20,17 @@ nsTArray<gfxPrefs::Pref*>* gfxPrefs::sGfxPrefList = nullptr;
 gfxPrefs* gfxPrefs::sInstance = nullptr;
 bool gfxPrefs::sInstanceHasBeenDestroyed = false;
 
+gfxPrefs&
+gfxPrefs::CreateAndInitializeSingleton() {
+  MOZ_ASSERT(!sInstanceHasBeenDestroyed,
+             "Should never recreate a gfxPrefs instance!");
+  sGfxPrefList = new nsTArray<Pref*>();
+  sInstance = new gfxPrefs;
+  sInstance->Init();
+  MOZ_ASSERT(SingletonExists());
+  return *sInstance;
+}
+
 void
 gfxPrefs::DestroySingleton()
 {

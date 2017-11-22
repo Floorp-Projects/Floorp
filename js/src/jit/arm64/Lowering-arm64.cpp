@@ -264,21 +264,21 @@ LIRGeneratorARM64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 }
 
 void
-LIRGeneratorARM64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
+LIRGeneratorARM64::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
-    MOZ_CRASH("visitAsmJSCompareExchangeHeap");
+    MOZ_CRASH("visitWasmCompareExchangeHeap");
 }
 
 void
-LIRGeneratorARM64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+LIRGeneratorARM64::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 {
-    MOZ_CRASH("visitAsmJSAtomicExchangeHeap");
+    MOZ_CRASH("visitWasmAtomicExchangeHeap");
 }
 
 void
-LIRGeneratorARM64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
+LIRGeneratorARM64::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 {
-    MOZ_CRASH("visitAsmJSAtomicBinopHeap");
+    MOZ_CRASH("visitWasmAtomicBinopHeap");
 }
 
 void

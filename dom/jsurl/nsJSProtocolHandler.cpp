@@ -410,9 +410,10 @@ nsresult nsJSChannel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     // Remember, until AsyncOpen is called, the script will not be evaluated
     // and the underlying Input Stream will not be created...
     nsCOMPtr<nsIChannel> channel;
+    RefPtr<nsJSThunk> thunk = mIOThunk;
     rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
                                           aURI,
-                                          mIOThunk,
+                                          thunk.forget(),
                                           NS_LITERAL_CSTRING("text/html"),
                                           EmptyCString(),
                                           aLoadInfo);

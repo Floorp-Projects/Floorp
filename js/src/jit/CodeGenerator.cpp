@@ -8008,12 +8008,16 @@ JitRuntime::generateLazyLinkStub(MacroAssembler& masm)
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
     Register temp0 = regs.takeAny();
+    Register temp1 = regs.takeAny();
+    Register temp2 = regs.takeAny();
 
     masm.loadJSContext(temp0);
-    masm.enterFakeExitFrame(temp0, temp0, ExitFrameType::LazyLink);
+    masm.enterFakeExitFrame(temp0, temp2, ExitFrameType::LazyLink);
+    masm.moveStackPtrTo(temp1);
 
-    masm.setupUnalignedABICall(temp0);
+    masm.setupUnalignedABICall(temp2);
     masm.passABIArg(temp0);
+    masm.passABIArg(temp1);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, LazyLinkTopActivation), MoveOp::GENERAL,
                      CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
@@ -8025,8 +8029,6 @@ JitRuntime::generateLazyLinkStub(MacroAssembler& masm)
     masm.popReturnAddress();
 #endif
     masm.jump(ReturnReg);
-
-    lazyLinkStubEndOffset_ = masm.currentOffset();
 }
 
 void
@@ -12369,6 +12371,15 @@ CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
     masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
                          trap(mir, wasm::Trap::OutOfBounds));
 #endif
+}
+
+void
+CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins)
+{
+    const MWasmAlignmentCheck* mir = ins->mir();
+    Register ptr = ToRegister(ins->ptr());
+    masm.branchTest32(Assembler::NonZero, ptr, Imm32(mir->byteSize() - 1),
+                      trap(mir, wasm::Trap::UnalignedAccess));
 }
 
 void

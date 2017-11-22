@@ -109,7 +109,7 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
   nsCOMPtr<nsIPrincipal> nullPrincipal = NullPrincipal::Create();
   return NS_NewInputStreamChannel(aChannel,
                                   aURI,
-                                  stream,
+                                  stream.forget(),
                                   nullPrincipal,
                                   nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                                   nsIContentPolicy::TYPE_INTERNAL_IMAGE,

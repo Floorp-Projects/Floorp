@@ -386,6 +386,17 @@
   text-anchor: end;
 }
 
+:-moz-native-anonymous .rulers-highlighter-viewport-infobar-container {
+  shape-rendering: crispEdges;
+  background-color: rgba(255, 255, 255, 0.7);
+  font: var(--highlighter-font-family);
+  position: fixed;
+  top: 30px;
+  right: 0px;
+  font-size: 12px;
+  padding: 4px;
+}
+
 /* Measuring Tool Highlighter */
 
 :-moz-native-anonymous .measuring-tool-highlighter-root {

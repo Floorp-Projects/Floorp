@@ -139,11 +139,17 @@ enum class OpKind {
     If,
     Else,
     End,
+    Wait,
+    Wake,
     AtomicLoad,
     AtomicStore,
     AtomicBinOp,
     AtomicCompareExchange,
-    AtomicExchange,
+    OldAtomicLoad,
+    OldAtomicStore,
+    OldAtomicBinOp,
+    OldAtomicCompareExchange,
+    OldAtomicExchange,
     ExtractLane,
     ReplaceLane,
     Swizzle,
@@ -382,6 +388,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
     }
 
     MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
+    MOZ_MUST_USE bool readLinearMemoryAddressAligned(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
     MOZ_MUST_USE bool readBlockType(ExprType* expr);
     MOZ_MUST_USE bool popCallArgs(const ValTypeVector& expectedTypes, Vector<Value, 8, SystemAllocPolicy>* values);
 
@@ -533,22 +540,44 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readOldCallDirect(uint32_t numFuncImports, uint32_t* funcIndex,
                                         ValueVector* argValues);
     MOZ_MUST_USE bool readOldCallIndirect(uint32_t* sigIndex, Value* callee, ValueVector* argValues);
+    MOZ_MUST_USE bool readWake(LinearMemoryAddress<Value>* addr, Value* count);
+    MOZ_MUST_USE bool readWait(LinearMemoryAddress<Value>* addr,
+                               ValType resultType,
+                               uint32_t byteSize,
+                               Value* value,
+                               Value* timeout);
     MOZ_MUST_USE bool readAtomicLoad(LinearMemoryAddress<Value>* addr,
-                                     Scalar::Type* viewType);
+                                     ValType resultType,
+                                     uint32_t byteSize);
     MOZ_MUST_USE bool readAtomicStore(LinearMemoryAddress<Value>* addr,
-                                      Scalar::Type* viewType,
+                                      ValType resultType,
+                                      uint32_t byteSize,
                                       Value* value);
-    MOZ_MUST_USE bool readAtomicBinOp(LinearMemoryAddress<Value>* addr,
-                                      Scalar::Type* viewType,
-                                      jit::AtomicOp* op,
-                                      Value* value);
-    MOZ_MUST_USE bool readAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
-                                                Scalar::Type* viewType,
-                                                Value* oldValue,
-                                                Value* newValue);
-    MOZ_MUST_USE bool readAtomicExchange(LinearMemoryAddress<Value>* addr,
+    MOZ_MUST_USE bool readAtomicRMW(LinearMemoryAddress<Value>* addr,
+                                    ValType resultType,
+                                    uint32_t byteSize,
+                                    Value* value);
+    MOZ_MUST_USE bool readAtomicCmpXchg(LinearMemoryAddress<Value>* addr,
+                                        ValType resultType,
+                                        uint32_t byteSize,
+                                        Value* oldValue,
+                                        Value* newValue);
+    MOZ_MUST_USE bool readOldAtomicLoad(LinearMemoryAddress<Value>* addr,
+                                        Scalar::Type* viewType);
+    MOZ_MUST_USE bool readOldAtomicStore(LinearMemoryAddress<Value>* addr,
                                          Scalar::Type* viewType,
-                                         Value* newValue);
+                                         Value* value);
+    MOZ_MUST_USE bool readOldAtomicBinOp(LinearMemoryAddress<Value>* addr,
+                                         Scalar::Type* viewType,
+                                         jit::AtomicOp* op,
+                                         Value* value);
+    MOZ_MUST_USE bool readOldAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
+                                                   Scalar::Type* viewType,
+                                                   Value* oldValue,
+                                                   Value* newValue);
+    MOZ_MUST_USE bool readOldAtomicExchange(LinearMemoryAddress<Value>* addr,
+                                            Scalar::Type* viewType,
+                                            Value* newValue);
     MOZ_MUST_USE bool readSimdComparison(ValType simdType, Value* lhs,
                                          Value* rhs);
     MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType, Value* lhs,
@@ -1227,6 +1256,19 @@ OpIter<Policy>::readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<V
 
 template <typename Policy>
 inline bool
+OpIter<Policy>::readLinearMemoryAddressAligned(uint32_t byteSize, LinearMemoryAddress<Value>* addr)
+{
+    if (!readLinearMemoryAddress(byteSize, addr))
+        return false;
+
+    if (addr->align != byteSize)
+        return fail("not natural alignment");
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
 OpIter<Policy>::readLoad(ValType resultType, uint32_t byteSize, LinearMemoryAddress<Value>* addr)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Load);
@@ -1680,9 +1722,135 @@ OpIter<Policy>::readOldCallIndirect(uint32_t* sigIndex, Value* callee, ValueVect
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType)
+OpIter<Policy>::readWake(LinearMemoryAddress<Value>* addr, Value* count)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::Wake);
+
+    if (!env_.usesSharedMemory())
+        return fail("can't touch memory with atomic operations without shared memory");
+
+    if (!popWithType(ValType::I32, count))
+        return false;
+
+    uint32_t byteSize = 4;      // Per spec; smallest WAIT is i32.
+
+    if (!readLinearMemoryAddressAligned(byteSize, addr))
+        return false;
+
+    infalliblePush(ValType::I32);
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readWait(LinearMemoryAddress<Value>* addr,
+                         ValType valueType,
+                         uint32_t byteSize,
+                         Value* value,
+                         Value* timeout)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::Wait);
+
+    if (!env_.usesSharedMemory())
+        return fail("can't touch memory with atomic operations without shared memory");
+
+    if (!popWithType(ValType::I64, timeout))
+        return false;
+
+    if (!popWithType(valueType, value))
+        return false;
+
+    if (!readLinearMemoryAddressAligned(byteSize, addr))
+        return false;
+
+    infalliblePush(ValType::I32);
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, ValType resultType,
+                               uint32_t byteSize)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::AtomicLoad);
+
+    if (!env_.usesSharedMemory())
+        return fail("can't touch memory with atomic operations without shared memory");
+
+    if (!readLinearMemoryAddressAligned(byteSize, addr))
+        return false;
+
+    infalliblePush(resultType);
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr, ValType resultType,
+                                uint32_t byteSize, Value* value)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicStore);
+
+    if (!env_.usesSharedMemory())
+        return fail("can't touch memory with atomic operations without shared memory");
+
+    if (!popWithType(resultType, value))
+        return false;
+
+    if (!readLinearMemoryAddressAligned(byteSize, addr))
+        return false;
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readAtomicRMW(LinearMemoryAddress<Value>* addr, ValType resultType,
+                              uint32_t byteSize, Value* value)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicBinOp);
+
+    if (!env_.usesSharedMemory())
+        return fail("can't touch memory with atomic operations without shared memory");
+
+    if (!popWithType(resultType, value))
+        return false;
+
+    if (!readLinearMemoryAddressAligned(byteSize, addr))
+        return false;
+
+    infalliblePush(resultType);
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readAtomicCmpXchg(LinearMemoryAddress<Value>* addr, ValType resultType,
+                                  uint32_t byteSize, Value* oldValue, Value* newValue)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicCompareExchange);
+
+    if (!env_.usesSharedMemory())
+        return fail("can't touch memory with atomic operations without shared memory");
+
+    if (!popWithType(resultType, newValue))
+        return false;
+
+    if (!popWithType(resultType, oldValue))
+        return false;
+
+    if (!readLinearMemoryAddressAligned(byteSize, addr))
+        return false;
+
+    infalliblePush(resultType);
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readOldAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicLoad);
 
     if (!readAtomicViewType(viewType))
         return false;
@@ -1697,10 +1865,10 @@ OpIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type* v
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                Value* value)
+OpIter<Policy>::readOldAtomicStore(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
+                                   Value* value)
 {
-    MOZ_ASSERT(Classify(op_) == OpKind::AtomicStore);
+    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicStore);
 
     if (!readAtomicViewType(viewType))
         return false;
@@ -1718,10 +1886,10 @@ OpIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr, Scalar::Type* 
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                jit::AtomicOp* op, Value* value)
+OpIter<Policy>::readOldAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
+                                   jit::AtomicOp* op, Value* value)
 {
-    MOZ_ASSERT(Classify(op_) == OpKind::AtomicBinOp);
+    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicBinOp);
 
     if (!readAtomicViewType(viewType))
         return false;
@@ -1742,10 +1910,11 @@ OpIter<Policy>::readAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type* 
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readAtomicCompareExchange(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                          Value* oldValue, Value* newValue)
+OpIter<Policy>::readOldAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
+                                             Scalar::Type* viewType, Value* oldValue,
+                                             Value* newValue)
 {
-    MOZ_ASSERT(Classify(op_) == OpKind::AtomicCompareExchange);
+    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicCompareExchange);
 
     if (!readAtomicViewType(viewType))
         return false;
@@ -1766,10 +1935,10 @@ OpIter<Policy>::readAtomicCompareExchange(LinearMemoryAddress<Value>* addr, Scal
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readAtomicExchange(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                   Value* value)
+OpIter<Policy>::readOldAtomicExchange(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
+                                      Value* value)
 {
-    MOZ_ASSERT(Classify(op_) == OpKind::AtomicExchange);
+    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicExchange);
 
     if (!readAtomicViewType(viewType))
         return false;

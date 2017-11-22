@@ -202,6 +202,7 @@ JS_ShutDown(void)
     if (!JSRuntime::hasLiveRuntimes()) {
         js::wasm::ReleaseBuiltinThunks();
         js::jit::ReleaseProcessExecutableMemory();
+        MOZ_ASSERT(!js::LiveMappedBufferCount());
     }
 
     js::ShutDownMallocAllocator();

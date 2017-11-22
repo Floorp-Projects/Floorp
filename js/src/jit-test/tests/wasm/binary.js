@@ -444,13 +444,31 @@ for (let i = FirstInvalidOpcode; i <= LastInvalidOpcode; i++) {
 }
 
 // Prefixed opcodes
-for (let prefix of [AtomicPrefix, MozPrefix]) {
-    for (let i = 0; i <= 255; i++) {
-        let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix, i]})])]);
-        assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
-        assertEq(WebAssembly.validate(binary), false);
-    }
 
+function checkIllegalPrefixed(prefix, opcode) {
+    let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix, opcode]})])]);
+    assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
+    assertEq(WebAssembly.validate(binary), false);
+}
+
+// Illegal AtomicPrefix opcodes
+//
+// June 2017 threads draft:
+//
+//  0x00 .. 0x02 are wait/wake ops
+//  0x10 .. 0x4f are primitive atomic ops
+
+for (let i = 3; i < 0x10; i++)
+    checkIllegalPrefixed(AtomicPrefix, i);
+
+for (let i = 0x4f; i < 0x100; i++)
+    checkIllegalPrefixed(AtomicPrefix, i);
+
+// Illegal MozPrefix opcodes (all of them)
+for (let i = 0; i < 256; i++)
+    checkIllegalPrefixed(MozPrefix, i);
+
+for (let prefix of [AtomicPrefix, MozPrefix]) {
     // Prefix without a subsequent opcode
     let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix]})])]);
     assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);

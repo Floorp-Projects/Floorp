@@ -192,6 +192,16 @@ RulersHighlighter.prototype = {
     createRuler("x", RULERS_MAX_X_AXIS);
     createRuler("y", RULERS_MAX_Y_AXIS);
 
+    createNode(window, {
+      parent: container,
+      attributes: {
+        "class": "viewport-infobar-container",
+        "id": "viewport-infobar-container",
+        "position": "top"
+      },
+      prefix
+    });
+
     return container;
   },
 
@@ -237,6 +247,8 @@ RulersHighlighter.prototype = {
       this.updateViewport();
     }
 
+    this.updateViewportInfobar();
+
     setIgnoreLayoutChanges(false, window.document.documentElement);
 
     this._rafID = window.requestAnimationFrame(() => this._update());
@@ -263,6 +275,14 @@ RulersHighlighter.prototype = {
 
     this.markup.getElement(this.ID_CLASS_PREFIX + "root").setAttribute("style",
       `stroke-width:${strokeWidth};`);
+  },
+
+  updateViewportInfobar: function () {
+    let { window } = this.env;
+    let { innerHeight, innerWidth } = window;
+    let infobarId = this.ID_CLASS_PREFIX + "viewport-infobar-container";
+    let textContent = innerHeight + "px \u00D7 " + innerWidth + "px";
+    this.markup.getElement(infobarId).setTextContent(textContent);
   },
 
   destroy: function () {
