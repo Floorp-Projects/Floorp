@@ -18,7 +18,7 @@ from mozprocess import ProcessHandlerMixin
 from mozprofile.profile import Profile
 from talos import utils
 from talos.gecko_profile import GeckoProfile
-from talos.utils import TalosError
+from talos.utils import TalosError, run_in_debug_mode
 from talos import heavy
 
 LOG = get_proxy_logger()
@@ -56,6 +56,7 @@ class FFSetup(object):
         # (in etlparser.py). TODO fix that ?
         self.profile_dir = os.path.join(self._tmp_dir, 'profile')
         self.gecko_profile = None
+        self.debug_mode = run_in_debug_mode(browser_config)
 
     def _init_env(self):
         self.env = dict(os.environ)
@@ -196,7 +197,8 @@ class FFSetup(object):
         self._init_env()
         self._init_profile()
         try:
-            self._run_profile()
+            if not self.debug_mode:
+                self._run_profile()
         except:
             self.clean()
             raise

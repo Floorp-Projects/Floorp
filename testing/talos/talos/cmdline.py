@@ -171,6 +171,15 @@ def create_parser(mach_interface=False):
             help='If given, run Stylo with a certain number of threads')
     add_arg('--profile', type=str, default=None,
             help="Downloads a profile from TaskCluster and uses it")
+    debug_options = parser.add_argument_group('Command Arguments for debugging')
+    debug_options.add_argument('--debug', action='store_true',
+                               help='Enable the debugger. Not specifying a --debugger option will'
+                                    'result in the default debugger being used.')
+    debug_options.add_argument('--debugger', default=None,
+                               help='Name of debugger to use.')
+    debug_options.add_argument('--debugger-args', default=None, metavar='params',
+                               help='Command-line arguments to pass to the debugger itself; split'
+                                    'as the Bourne shell would.')
     add_logging_group(parser)
     return parser
 
