@@ -48,7 +48,6 @@ treeherder:
         'TMW': 'Toolchain builds for Windows MinGW'
         'TW32': 'Toolchain builds for Windows 32-bits'
         'TW64': 'Toolchain builds for Windows 64-bits'
-        'Searchfox': 'Searchfox builds'
         'SM-tc': 'Spidermonkey builds'
         'pub': 'APK publishing'
         'p': 'Partial generation'
