@@ -414,7 +414,6 @@ class BuildOptionParser(object):
         'fuzzing-asan-tc': 'builds/releng_sub_%s_configs/%s_fuzzing_asan_tc.py',
         'tsan': 'builds/releng_sub_%s_configs/%s_tsan.py',
         'cross-debug': 'builds/releng_sub_%s_configs/%s_cross_debug.py',
-        'cross-debug-searchfox': 'builds/releng_sub_%s_configs/%s_cross_debug_searchfox.py',
         'cross-debug-artifact': 'builds/releng_sub_%s_configs/%s_cross_debug_artifact.py',
         'cross-noopt-debug': 'builds/releng_sub_%s_configs/%s_cross_noopt_debug.py',
         'cross-artifact': 'builds/releng_sub_%s_configs/%s_cross_artifact.py',
