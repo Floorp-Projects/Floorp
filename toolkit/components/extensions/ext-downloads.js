@@ -153,7 +153,7 @@ class DownloadItem {
 
 // DownloadMap maps back and forth betwen the numeric identifiers used in
 // the downloads WebExtension API and a Download object from the Downloads jsm.
-// todo: make id and extension info persistent (bug 1247794)
+// TODO Bug 1247794: make id and extension info persistent
 const DownloadMap = new class extends EventEmitter {
   constructor() {
     super();
@@ -238,8 +238,8 @@ const DownloadMap = new class extends EventEmitter {
   }
 
   erase(item) {
-    // This will need to get more complicated for bug 1255507 but for now we
-    // only work with downloads in the DownloadList from getAll()
+    // TODO Bug 1255507: for now we only work with downloads in the DownloadList
+    // from getAll()
     return this.getDownloadList().then(list => {
       list.remove(item.download);
     });

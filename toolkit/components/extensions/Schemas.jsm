@@ -2278,7 +2278,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
 
 // Represents an "event" defined in a schema namespace.
 //
-// TODO(rpl): we should be able to remove the eslint-disable-line that follows
+// TODO Bug 1369722: we should be able to remove the eslint-disable-line that follows
 // once Bug 1369722 has been fixed.
 Event = class Event extends CallEntry { // eslint-disable-line no-native-reassign
   static parseSchema(event, path) {

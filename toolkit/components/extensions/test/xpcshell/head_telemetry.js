@@ -25,10 +25,9 @@ function getSnapshots(process) {
                                                false /* clear */)[process];
 }
 
-// There is no good way to make sure that the parent received the histogram
-// entries from the extension and content processes.
-// Let's stick to the ugly, spinning the event loop until we have a good
-// approach (Bug 1357509).
+// TODO Bug 1357509: There is no good way to make sure that the parent received
+// the histogram entries from the extension and content processes.  Let's stick
+// to the ugly, spinning the event loop until we have a good approach.
 function promiseTelemetryRecorded(id, process, expectedCount) {
   let condition = () => {
     let snapshot = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
