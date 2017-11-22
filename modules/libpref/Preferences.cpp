@@ -2806,9 +2806,6 @@ Preferences::HandleDirty()
 static nsresult
 openPrefFile(nsIFile* aFile);
 
-static nsresult
-pref_LoadPrefsInDirList(const char* aListId);
-
 static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
 static const char kChannelPref[] = "app.update.channel";
 
@@ -4053,42 +4050,6 @@ pref_LoadPrefsInDir(nsIFile* aDir,
 }
 
 static nsresult
-pref_LoadPrefsInDirList(const char* aListId)
-{
-  nsresult rv;
-  nsCOMPtr<nsIProperties> dirSvc(
-    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> list;
-  dirSvc->Get(aListId, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(list));
-  if (!list) {
-    return NS_OK;
-  }
-
-  bool hasMore;
-  while (NS_SUCCEEDED(list->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> elem;
-    list->GetNext(getter_AddRefs(elem));
-    if (!elem) {
-      continue;
-    }
-
-    nsCOMPtr<nsIFile> path = do_QueryInterface(elem);
-    if (!path) {
-      continue;
-    }
-
-    // Do we care if a file provided by this process fails to load?
-    pref_LoadPrefsInDir(path, nullptr, 0);
-  }
-
-  return NS_OK;
-}
-
-static nsresult
 pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
 {
   nsCString manifest;
@@ -4240,9 +4201,33 @@ Preferences::InitInitialObjects()
     }
   }
 
-  rv = pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST);
+  nsCOMPtr<nsIProperties> dirSvc(
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(
-    rv, Err("pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST) failed"));
+    rv, Err("do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID) failed"));
+
+  nsCOMPtr<nsISimpleEnumerator> list;
+  dirSvc->Get(NS_APP_PREFS_DEFAULTS_DIR_LIST,
+              NS_GET_IID(nsISimpleEnumerator),
+              getter_AddRefs(list));
+  if (list) {
+    bool hasMore;
+    while (NS_SUCCEEDED(list->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> elem;
+      list->GetNext(getter_AddRefs(elem));
+      if (!elem) {
+        continue;
+      }
+
+      nsCOMPtr<nsIFile> path = do_QueryInterface(elem);
+      if (!path) {
+        continue;
+      }
+
+      // Do we care if a file provided by this process fails to load?
+      pref_LoadPrefsInDir(path, nullptr, 0);
+    }
+  }
 
 #ifdef MOZ_WIDGET_ANDROID
   // Set up the correct default for toolkit.telemetry.enabled. If this build
