@@ -35,7 +35,7 @@ function* spawnTest() {
       exec: {
         output: [/The following/, /Mochitest/, /Special Powers/],
         notinoutput: [
-          /Web Compat/, /FlyWeb/, /Pocket/, /Multi-process staged rollout/,
+          /Web Compat/, /Pocket/, /Multi-process staged rollout/,
           /Form Autofill/, /Application Update Service Helper/, /Presentation/,
           /Shield Recipe Client/]
       }

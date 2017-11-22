@@ -20,7 +20,6 @@ DIRS += [
 # Only include the following system add-ons if building Aurora or Nightly
 if not CONFIG['RELEASE_OR_BETA']:
     DIRS += [
-        'flyweb',
         'presentation',
     ]
 
