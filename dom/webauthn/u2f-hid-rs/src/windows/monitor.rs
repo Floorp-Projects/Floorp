@@ -2,85 +2,88 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::collections::HashSet;
-use std::error::Error;
+use platform::winapi::DeviceInfoSet;
+use runloop::RunLoop;
+use std::collections::{HashMap, HashSet};
 use std::io;
 use std::iter::FromIterator;
-use std::sync::mpsc::{channel, Receiver, TryIter};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use runloop::RunLoop;
-use super::winapi::DeviceInfoSet;
-
-pub fn io_err(msg: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::Other, msg)
+pub struct Monitor<F>
+where
+    F: Fn(String, &Fn() -> bool) + Sync,
+{
+    runloops: HashMap<String, RunLoop>,
+    new_device_cb: Arc<F>,
 }
 
-pub fn to_io_err<T: Error>(err: T) -> io::Error {
-    io_err(err.description())
-}
+impl<F> Monitor<F>
+where
+    F: Fn(String, &Fn() -> bool) + Send + Sync + 'static,
+{
+    pub fn new(new_device_cb: F) -> Self {
+        Self {
+            runloops: HashMap::new(),
+            new_device_cb: Arc::new(new_device_cb),
+        }
+    }
 
-pub enum Event {
-    Add(String),
-    Remove(String),
-}
+    pub fn run(&mut self, alive: &Fn() -> bool) -> io::Result<()> {
+        let mut stored = HashSet::new();
 
-pub struct Monitor {
-    // Receive events from the thread.
-    rx: Receiver<Event>,
-    // Handle to the thread loop.
-    thread: RunLoop,
-}
+        while alive() {
+            let device_info_set = DeviceInfoSet::new()?;
+            let devices = HashSet::from_iter(device_info_set.devices());
 
-impl Monitor {
-    pub fn new() -> io::Result<Self> {
-        let (tx, rx) = channel();
-
-        let thread = RunLoop::new(move |alive| -> io::Result<()> {
-            let mut stored = HashSet::new();
-
-            while alive() {
-                let device_info_set = DeviceInfoSet::new()?;
-                let devices = HashSet::from_iter(device_info_set.devices());
-
-                // Remove devices that are gone.
-                for path in stored.difference(&devices) {
-                    tx.send(Event::Remove(path.clone())).map_err(to_io_err)?;
-                }
-
-                // Add devices that were plugged in.
-                for path in devices.difference(&stored) {
-                    tx.send(Event::Add(path.clone())).map_err(to_io_err)?;
-                }
-
-                // Remember the new set.
-                stored = devices;
-
-                // Wait a little before looking for devices again.
-                thread::sleep(Duration::from_millis(100));
+            // Remove devices that are gone.
+            for path in stored.difference(&devices) {
+                self.remove_device(path);
             }
 
-            Ok(())
-        })?;
+            // Add devices that were plugged in.
+            for path in devices.difference(&stored) {
+                self.add_device(path);
+            }
 
-        Ok(Self {
-            rx: rx,
-            thread: thread,
-        })
+            // Remember the new set.
+            stored = devices;
+
+            // Wait a little before looking for devices again.
+            thread::sleep(Duration::from_millis(100));
+        }
+
+        // Remove all tracked devices.
+        self.remove_all_devices();
+
+        Ok(())
     }
 
-    pub fn events<'a>(&'a self) -> TryIter<'a, Event> {
-        self.rx.try_iter()
+    fn add_device(&mut self, path: &String) {
+        let f = self.new_device_cb.clone();
+        let path = path.clone();
+        let key = path.clone();
+
+        let runloop = RunLoop::new(move |alive| if alive() {
+            f(path, alive);
+        });
+
+        if let Ok(runloop) = runloop {
+            self.runloops.insert(key, runloop);
+        }
     }
 
-    pub fn alive(&self) -> bool {
-        self.thread.alive()
+    fn remove_device(&mut self, path: &String) {
+        if let Some(runloop) = self.runloops.remove(path) {
+            runloop.cancel();
+        }
     }
-}
 
-impl Drop for Monitor {
-    fn drop(&mut self) {
-        self.thread.cancel();
+    fn remove_all_devices(&mut self) {
+        while !self.runloops.is_empty() {
+            let path = self.runloops.keys().next().unwrap().clone();
+            self.remove_device(&path);
+        }
     }
 }
