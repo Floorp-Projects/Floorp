@@ -374,6 +374,18 @@ public:
     virtual bool WidgetTypeSupportsAcceleration() override;
 
     bool DoDrawTitlebar() const;
+
+    typedef enum { CSD_SUPPORT_FULL,    // CSD including shadows
+                   CSD_SUPPORT_FLAT,    // CSD without shadows
+                   CSD_SUPPORT_NONE,    // WM does not support CSD at all
+                   CSD_SUPPORT_UNKNOWN
+    } CSDSupportLevel;
+    /**
+     * Get the support of Client Side Decoration by checking
+     * the XDG_CURRENT_DESKTOP environment variable.
+     */
+    static CSDSupportLevel GetCSDSupportLevel();
+
 protected:
     virtual ~nsWindow();
 
@@ -578,16 +590,6 @@ private:
     RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
     mozilla::UniquePtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
-    typedef enum { CSD_SUPPORT_FULL,    // CSD including shadows
-                   CSD_SUPPORT_FLAT,    // CSD without shadows
-                   CSD_SUPPORT_NONE,    // WM does not support CSD at all
-                   CSD_SUPPORT_UNKNOWN
-    } CSDSupportLevel;
-    /**
-     * Get the support of Client Side Decoration by checking
-     * the XDG_CURRENT_DESKTOP environment variable.
-     */
-    static CSDSupportLevel GetCSDSupportLevel();
     static CSDSupportLevel sCSDSupportLevel;
 };
 

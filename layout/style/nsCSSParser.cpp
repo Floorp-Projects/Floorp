@@ -359,7 +359,7 @@ public:
     return mParsingMode == css::eAgentSheetFeatures;
   }
   bool ChromeRulesEnabled() const {
-    return mIsChrome;
+    return mIsChrome || mParsingMode == css::eUserSheetFeatures;
   }
 
   CSSEnabledState EnabledState() const {

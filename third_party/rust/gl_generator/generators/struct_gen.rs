@@ -149,6 +149,7 @@ fn write_struct<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
         }
         try!(writeln!(dest, "pub {name}: FnPtr,", name = cmd.proto.ident));
     }
+    try!(writeln!(dest, "_priv: ()"));
 
     writeln!(dest, "}}")
 }
@@ -202,6 +203,8 @@ fn write_impl<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
             },
         ))
     }
+
+    try!(writeln!(dest, "_priv: ()"));
 
     try!(writeln!(dest,
                   "}}

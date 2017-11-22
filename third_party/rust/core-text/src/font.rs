@@ -18,14 +18,20 @@ use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::dictionary::CFDictionaryRef;
 use core_foundation::string::{CFString, CFStringRef, UniChar};
 use core_foundation::url::{CFURL, CFURLRef};
-use core_graphics::base::{CGAffineTransform, CGFloat};
-use core_graphics::context::{CGContext, CGContextRef};
-use core_graphics::font::{CGGlyph, CGFont, CGFontRef};
-use core_graphics::geometry::{CGPoint, CGRect, CGSize};
+use core_graphics::base::CGFloat;
+use core_graphics::context::CGContext;
+use core_graphics::font::{CGGlyph, CGFont};
+use core_graphics::geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
+use core_graphics::path::CGPath;
 
+use foreign_types::ForeignType;
 use libc::{self, size_t, c_void};
 use std::mem;
 use std::ptr;
+
+type CGContextRef = *mut <CGContext as ForeignType>::CType;
+type CGFontRef = *mut <CGFont as ForeignType>::CType;
+type CGPathRef = *mut <CGPath as ForeignType>::CType;
 
 pub type CTFontUIFontType = u32;
 // kCTFontNoFontType: CTFontUIFontType = -1;
@@ -132,7 +138,7 @@ impl TCFType<CTFontRef> for CTFont {
 
 pub fn new_from_CGFont(cgfont: &CGFont, pt_size: f64) -> CTFont {
     unsafe {
-        let font_ref = CTFontCreateWithGraphicsFont(cgfont.as_concrete_TypeRef(),
+        let font_ref = CTFontCreateWithGraphicsFont(cgfont.as_ptr() as *mut _,
                                                     pt_size as CGFloat,
                                                     ptr::null(),
                                                     ptr::null());
@@ -177,7 +183,7 @@ impl CTFont {
     pub fn copy_to_CGFont(&self) -> CGFont {
         unsafe {
             let cgfont_ref = CTFontCopyGraphicsFont(self.obj, ptr::null_mut());
-            TCFType::wrap_under_create_rule(cgfont_ref)
+            CGFont::from_ptr(cgfont_ref as *mut _)
         }
     }
 
@@ -331,7 +337,7 @@ impl CTFont {
                              glyphs.as_ptr(),
                              positions.as_ptr(),
                              glyphs.len() as size_t,
-                             context.as_concrete_TypeRef())
+                             context.as_ptr())
         }
     }
 
@@ -342,6 +348,18 @@ impl CTFont {
                 None
             } else {
                 Some(TCFType::wrap_under_create_rule(result as CFURLRef))
+            }
+        }
+    }
+
+    pub fn create_path_for_glyph(&self, glyph: CGGlyph, matrix: &CGAffineTransform)
+                                 -> Result<CGPath, ()> {
+        unsafe {
+            let path = CTFontCreatePathForGlyph(self.obj, glyph, matrix);
+            if path.is_null() {
+                Err(())
+            } else {
+                Ok(CGPath::from_ptr(path))
             }
         }
     }
@@ -399,7 +417,7 @@ pub fn cascade_list_for_languages(font: &CTFont, language_pref_list: &CFArray) -
     }
 }
 
-#[link(name = "ApplicationServices", kind = "framework")]
+#[link(name = "CoreText", kind = "framework")]
 extern {
     /*
      * CTFont.h
@@ -497,7 +515,8 @@ extern {
     fn CTFontGetXHeight(font: CTFontRef) -> CGFloat;
 
     /* Getting Glyph Data */
-    //fn CTFontCreatePathForGlyph
+    fn CTFontCreatePathForGlyph(font: CTFontRef, glyph: CGGlyph, matrix: *const CGAffineTransform)
+                                -> CGPathRef;
     //fn CTFontGetGlyphWithName
     fn CTFontGetBoundingRectsForGlyphs(font: CTFontRef,
                                        orientation: CTFontOrientation,
@@ -526,7 +545,8 @@ extern {
     //fn CTFontGetLigatureCaretPositions
 
     /* Converting Fonts */
-    fn CTFontCopyGraphicsFont(font: CTFontRef, attributes: *mut CTFontDescriptorRef) -> CGFontRef;
+    fn CTFontCopyGraphicsFont(font: CTFontRef, attributes: *mut CTFontDescriptorRef)
+                              -> CGFontRef;
     fn CTFontCreateWithGraphicsFont(graphicsFont: CGFontRef, size: CGFloat, 
                                     matrix: *const CGAffineTransform, 
                                     attributes: CTFontDescriptorRef) -> CTFontRef;

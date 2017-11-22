@@ -120,6 +120,9 @@ impl PullParser {
             pop_namespace: false
         }
     }
+
+    /// Checks if this parser ignores the end of stream errors.
+    pub fn is_ignoring_end_of_stream(&self) -> bool { self.config.ignore_end_of_stream }
 }
 
 impl Position for PullParser {
@@ -297,7 +300,13 @@ impl PullParser {
                 self_error!(self; "Unexpected end of stream")  // TODO: add expected hint?
             }
         } else {
-            self_error!(self; "Unexpected end of stream: still inside the root element")
+            if self.config.ignore_end_of_stream {
+                self.final_result = None;
+                self.lexer.reset_eof_handled();
+                return self_error!(self; "Unexpected end of stream: still inside the root element");
+            } else {
+                self_error!(self; "Unexpected end of stream: still inside the root element")
+            }
         };
         self.set_final_result(ev)
     }
@@ -582,6 +591,19 @@ mod tests {
              namespace.is_essentially_empty()
         );
         expect_event!(r, p, Ok(XmlEvent::EndElement { ref name }) => *name == OwnedName::local("a"));
+        expect_event!(r, p, Ok(XmlEvent::EndDocument));
+    }
+
+    #[test]
+    fn issue_140_entity_reference_inside_tag() {
+        let (mut r, mut p) = test_data!(r#"
+            <bla>&#9835;</bla>
+        "#);
+
+        expect_event!(r, p, Ok(XmlEvent::StartDocument { .. }));
+        expect_event!(r, p, Ok(XmlEvent::StartElement { ref name, .. }) => *name == OwnedName::local("bla"));
+        expect_event!(r, p, Ok(XmlEvent::Characters(ref s)) => s == "\u{266b}");
+        expect_event!(r, p, Ok(XmlEvent::EndElement { ref name, .. }) => *name == OwnedName::local("bla"));
         expect_event!(r, p, Ok(XmlEvent::EndDocument));
     }
 

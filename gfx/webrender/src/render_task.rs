@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ClipId, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{LayerPoint, LayerRect};
-use api::{PipelineId, PremultipliedColorF};
+use api::{LayerPoint, LayerRect, PremultipliedColorF};
 use clip::{ClipSource, ClipSourcesWeakHandle, ClipStore};
 use clip_scroll_tree::CoordinateSystemId;
 use gpu_types::{ClipScrollNodeIndex};
+use picture::RasterizationSpace;
 use prim_store::{PrimitiveIndex};
 use std::{cmp, usize, f32, i32};
 use std::rc::Rc;
@@ -150,15 +150,6 @@ pub enum RenderTaskLocation {
     Dynamic(Option<(DeviceIntPoint, RenderTargetIndex)>, DeviceIntSize),
 }
 
-#[derive(Debug)]
-pub struct AlphaRenderTask {
-    pub screen_origin: DeviceIntPoint,
-    pub prim_index: PrimitiveIndex,
-    // If this render task is a registered frame output, this
-    // contains the pipeline ID it maps to.
-    pub frame_output_pipeline_id: Option<PipelineId>,
-}
-
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub enum MaskSegment {
@@ -240,6 +231,7 @@ pub struct PictureTask {
     pub target_kind: RenderTargetKind,
     pub content_origin: LayerPoint,
     pub color: PremultipliedColorF,
+    pub rasterization_kind: RasterizationSpace,
 }
 
 #[derive(Debug)]
@@ -258,7 +250,6 @@ pub struct RenderTaskData {
 
 #[derive(Debug)]
 pub enum RenderTaskKind {
-    Alpha(AlphaRenderTask),
     Picture(PictureTask),
     CacheMask(CacheMaskTask),
     VerticalBlur(BlurTask),
@@ -288,62 +279,32 @@ pub struct RenderTask {
 }
 
 impl RenderTask {
-    // TODO(gw): In the future we'll remove this
-    //           completely and convert everything
-    //           that is an alpha task to a Picture.
-    pub fn new_alpha_batch(
-        screen_origin: DeviceIntPoint,
-        location: RenderTaskLocation,
-        prim_index: PrimitiveIndex,
-        frame_output_pipeline_id: Option<PipelineId>,
-        children: Vec<RenderTaskId>,
-    ) -> Self {
-        RenderTask {
-            cache_key: None,
-            children,
-            location,
-            kind: RenderTaskKind::Alpha(AlphaRenderTask {
-                screen_origin,
-                prim_index,
-                frame_output_pipeline_id,
-            }),
-            clear_mode: ClearMode::Transparent,
-        }
-    }
-
-    pub fn new_dynamic_alpha_batch(
-        rect: &DeviceIntRect,
-        prim_index: PrimitiveIndex,
-        frame_output_pipeline_id: Option<PipelineId>,
-        children: Vec<RenderTaskId>,
-    ) -> Self {
-        let location = RenderTaskLocation::Dynamic(None, rect.size);
-        Self::new_alpha_batch(
-            rect.origin,
-            location,
-            prim_index,
-            frame_output_pipeline_id,
-            children,
-        )
-    }
-
     pub fn new_picture(
-        size: DeviceIntSize,
+        size: Option<DeviceIntSize>,
         prim_index: PrimitiveIndex,
         target_kind: RenderTargetKind,
-        content_origin: LayerPoint,
+        content_origin_x: f32,
+        content_origin_y: f32,
         color: PremultipliedColorF,
         clear_mode: ClearMode,
+        rasterization_kind: RasterizationSpace,
+        children: Vec<RenderTaskId>,
     ) -> Self {
+        let location = match size {
+            Some(size) => RenderTaskLocation::Dynamic(None, size),
+            None => RenderTaskLocation::Fixed,
+        };
+
         RenderTask {
             cache_key: None,
-            children: Vec::new(),
-            location: RenderTaskLocation::Dynamic(None, size),
+            children,
+            location,
             kind: RenderTaskKind::Picture(PictureTask {
                 prim_index,
                 target_kind,
-                content_origin,
+                content_origin: LayerPoint::new(content_origin_x, content_origin_y),
                 color,
+                rasterization_kind,
             }),
             clear_mode,
         }
@@ -542,19 +503,6 @@ impl RenderTask {
         }
     }
 
-    pub fn as_alpha_batch<'a>(&'a self) -> &'a AlphaRenderTask {
-        match self.kind {
-            RenderTaskKind::Alpha(ref task) => task,
-            RenderTaskKind::Picture(..) |
-            RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::VerticalBlur(..) |
-            RenderTaskKind::Readback(..) |
-            RenderTaskKind::HorizontalBlur(..) |
-            RenderTaskKind::Alias(..) |
-            RenderTaskKind::Scaling(..) => unreachable!(),
-        }
-    }
-
     // Write (up to) 8 floats of data specific to the type
     // of render task that is provided to the GPU shaders
     // via a vertex texture.
@@ -567,105 +515,70 @@ impl RenderTask {
         //           more type-safe. Although, it will always need
         //           to be kept in sync with the GLSL code anyway.
 
-        match self.kind {
-            RenderTaskKind::Alpha(ref task) => {
-                let (target_rect, target_index) = self.get_target_rect();
-                RenderTaskData {
-                    data: [
-                        target_rect.origin.x as f32,
-                        target_rect.origin.y as f32,
-                        target_rect.size.width as f32,
-                        target_rect.size.height as f32,
-                        task.screen_origin.x as f32,
-                        task.screen_origin.y as f32,
-                        target_index.0 as f32,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                    ],
-                }
-            }
+        let (data1, data2) = match self.kind {
             RenderTaskKind::Picture(ref task) => {
-                let (target_rect, target_index) = self.get_target_rect();
-                RenderTaskData {
-                    data: [
-                        target_rect.origin.x as f32,
-                        target_rect.origin.y as f32,
-                        target_rect.size.width as f32,
-                        target_rect.size.height as f32,
-                        target_index.0 as f32,
+                (
+                    [
                         task.content_origin.x,
                         task.content_origin.y,
-                        0.0,
-                        task.color.r,
-                        task.color.g,
-                        task.color.b,
-                        task.color.a,
+                        task.rasterization_kind as u32 as f32,
                     ],
-                }
+                    task.color.to_array()
+                )
             }
             RenderTaskKind::CacheMask(ref task) => {
-                let (target_rect, target_index) = self.get_target_rect();
-                RenderTaskData {
-                    data: [
-                        target_rect.origin.x as f32,
-                        target_rect.origin.y as f32,
-                        (target_rect.origin.x + target_rect.size.width) as f32,
-                        (target_rect.origin.y + target_rect.size.height) as f32,
+                (
+                    [
                         task.actual_rect.origin.x as f32,
                         task.actual_rect.origin.y as f32,
-                        target_index.0 as f32,
                         0.0,
+                    ],
+                    [
                         task.inner_rect.origin.x as f32,
                         task.inner_rect.origin.y as f32,
                         (task.inner_rect.origin.x + task.inner_rect.size.width) as f32,
                         (task.inner_rect.origin.y + task.inner_rect.size.height) as f32,
                     ],
-                }
+                )
             }
             RenderTaskKind::VerticalBlur(ref task) |
             RenderTaskKind::HorizontalBlur(ref task) => {
-                let (target_rect, target_index) = self.get_target_rect();
-                RenderTaskData {
-                    data: [
-                        target_rect.origin.x as f32,
-                        target_rect.origin.y as f32,
-                        target_rect.size.width as f32,
-                        target_rect.size.height as f32,
-                        target_index.0 as f32,
+                (
+                    [
                         task.blur_std_deviation,
                         task.scale_factor,
                         0.0,
-                        task.color.r,
-                        task.color.g,
-                        task.color.b,
-                        task.color.a,
                     ],
-                }
+                    task.color.to_array()
+                )
             }
             RenderTaskKind::Readback(..) |
-            RenderTaskKind::Scaling(..) => {
-                let (target_rect, target_index) = self.get_target_rect();
-                RenderTaskData {
-                    data: [
-                        target_rect.origin.x as f32,
-                        target_rect.origin.y as f32,
-                        target_rect.size.width as f32,
-                        target_rect.size.height as f32,
-                        target_index.0 as f32,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                    ],
-                }
+            RenderTaskKind::Scaling(..) |
+            RenderTaskKind::Alias(..) => {
+                (
+                    [0.0; 3],
+                    [0.0; 4],
+                )
             }
-            RenderTaskKind::Alias(..) => RenderTaskData { data: [0.0; 12] },
+        };
+
+        let (target_rect, target_index) = self.get_target_rect();
+
+        RenderTaskData {
+            data: [
+                target_rect.origin.x as f32,
+                target_rect.origin.y as f32,
+                target_rect.size.width as f32,
+                target_rect.size.height as f32,
+                target_index.0 as f32,
+                data1[0],
+                data1[1],
+                data1[2],
+                data2[0],
+                data2[1],
+                data2[2],
+                data2[3],
+            ]
         }
     }
 
@@ -706,7 +619,6 @@ impl RenderTask {
 
     pub fn target_kind(&self) -> RenderTargetKind {
         match self.kind {
-            RenderTaskKind::Alpha(..) |
             RenderTaskKind::Readback(..) => RenderTargetKind::Color,
 
             RenderTaskKind::CacheMask(..) => {
@@ -740,7 +652,6 @@ impl RenderTask {
     // if we decide that is useful.
     pub fn is_shared(&self) -> bool {
         match self.kind {
-            RenderTaskKind::Alpha(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |

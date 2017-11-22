@@ -13,12 +13,17 @@ fn main() {
     let mut file_gles = File::create(&Path::new(&dest).join("gles_bindings.rs")).unwrap();
 
     // OpenGL 3.3 bindings
-    let gl_extensions = ["GL_ARB_texture_rectangle", "GL_EXT_debug_marker"];
+    let gl_extensions = ["GL_ARB_texture_rectangle",
+                         "GL_EXT_debug_marker",
+                         "GL_APPLE_client_storage",
+                         "GL_APPLE_texture_range",
+                         "GL_APPLE_fence",
+                         "GL_ARB_get_program_binary"];
     let gl_reg = Registry::new(Api::Gl, (3, 3), Profile::Core, Fallbacks::All, gl_extensions);
     gl_reg.write_bindings(gl_generator::StructGenerator, &mut file_gl)
           .unwrap();
 
-    // GLES 2.0 bindings
+    // GLES 3.0 bindings
     let gles_extensions = [
         "GL_EXT_texture_format_BGRA8888",
         "GL_OES_EGL_image",
@@ -28,7 +33,7 @@ fn main() {
     gles_reg.write_bindings(gl_generator::StructGenerator, &mut file_gles)
             .unwrap();
 
-    // OpenGL 3.3 + GLES 2.0 bindings. Used to get all enums
+    // OpenGL 3.3 + GLES 3.0 bindings. Used to get all enums
     let gl_reg = gl_reg + gles_reg;
     gl_reg.write_bindings(gl_generator::StructGenerator, &mut file_gl_and_gles)
           .unwrap();

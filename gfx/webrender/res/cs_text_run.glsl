@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define PRIMITIVE_HAS_PICTURE_TASK
-
 #include shared,prim_shared
 
 varying vec3 vUv;
@@ -32,7 +30,7 @@ void main(void) {
     // the glyph offset, relative to its primitive bounding rect.
     vec2 size = (res.uv_rect.zw - res.uv_rect.xy) * res.scale;
     vec2 local_pos = glyph.offset + vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
-    vec2 origin = prim.task.target_rect.p0 +
+    vec2 origin = prim.task.common_data.task_rect.p0 +
                   uDevicePixelRatio * (local_pos - prim.task.content_origin);
     vec4 local_rect = vec4(origin, size);
 

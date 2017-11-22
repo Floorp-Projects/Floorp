@@ -924,7 +924,6 @@ public:
    * @param aNewFrame the frame to add
    * @param aFrameItems the list to add in-flow frames to
    * @param aContent the content pointer for aNewFrame
-   * @param aStyleContext the style context resolved for aContent
    * @param aParentFrame the parent frame for the content if it were in-flow
    * @param aCanBePositioned pass false if the frame isn't allowed to be
    *        positioned
@@ -936,7 +935,6 @@ public:
   void AddChild(nsIFrame* aNewFrame,
                 nsFrameItems& aFrameItems,
                 nsIContent* aContent,
-                nsStyleContext* aStyleContext,
                 nsContainerFrame* aParentFrame,
                 bool aCanBePositioned = true,
                 bool aCanBeFloated = true,
@@ -1320,7 +1318,6 @@ void
 nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                   nsFrameItems& aFrameItems,
                                   nsIContent* aContent,
-                                  nsStyleContext* aStyleContext,
                                   nsContainerFrame* aParentFrame,
                                   bool aCanBePositioned,
                                   bool aCanBeFloated,
@@ -2212,7 +2209,7 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   // Put the newly created frames into the right child list
   SetInitialSingleChild(newFrame, innerFrame);
 
-  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
+  aState.AddChild(newFrame, aFrameItems, content, aParentFrame);
 
   if (!mRootElementFrame) {
     // The frame we're constructing will be the root element frame.
@@ -3227,8 +3224,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
     comboboxFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
-    aState.AddChild(comboboxFrame, aFrameItems, content, styleContext,
-                    aParentFrame);
+    aState.AddChild(comboboxFrame, aFrameItems, content, aParentFrame);
 
     // Resolve pseudo element style for the dropdown list
     RefPtr<nsStyleContext> listStyle;
@@ -3352,8 +3348,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   scrollFrame->Init(aContent, geometricParent, nullptr);
 
   if (!aBuildCombobox) {
-    aState.AddChild(scrollFrame, aFrameItems, aContent,
-                    aStyleContext, aParentFrame);
+    aState.AddChild(scrollFrame, aFrameItems, aContent, aParentFrame);
   }
 
   BuildScrollFrame(aState, aContent, aStyleContext, scrolledFrame,
@@ -3462,7 +3457,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
     }
   }
 
-  aState.AddChild(fieldsetFrame, aFrameItems, content, styleContext, aParentFrame);
+  aState.AddChild(fieldsetFrame, aFrameItems, content, aParentFrame);
 
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
@@ -4127,8 +4122,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       newFrame = innerFrame;
     }
 
-    aState.AddChild(frameToAddToList, aFrameItems, content, styleContext,
-                    aParentFrame, allowOutOfFlow, allowOutOfFlow, isPopup);
+    aState.AddChild(frameToAddToList, aFrameItems, content, aParentFrame,
+                    allowOutOfFlow, allowOutOfFlow, isPopup);
 
     nsContainerFrame* newFrameAsContainer = do_QueryFrame(newFrame);
     if (newFrameAsContainer) {
@@ -5038,7 +5033,7 @@ nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
 
   // Make sure to AddChild before we call ConstructBlock so that we
   // end up before our descendants in fixed-pos lists as needed.
-  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
+  aState.AddChild(newFrame, aFrameItems, content, aParentFrame);
 
   nsFrameItems blockItem;
   ConstructBlock(aState, content, newFrame, newFrame, scrolledContentStyle,
@@ -5416,7 +5411,7 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
   // Put the newly created frames into the right child list
   SetInitialSingleChild(newFrame, innerFrame);
 
-  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame,
+  aState.AddChild(newFrame, aFrameItems, content, aParentFrame,
                   aCandidateRootFrame, aCandidateRootFrame);
 
   if (!mRootElementFrame && aCandidateRootFrame) {
@@ -11547,9 +11542,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     link.Next();
   }
 
-  aState.AddChild(letterFrame, aResult, letterContent, aStyleContext,
-                  aParentFrame, false, true, false, true,
-                  link.PrevFrame());
+  aState.AddChild(letterFrame, aResult, letterContent, aParentFrame,
+                  false, true, false, true, link.PrevFrame());
 
   if (nextTextFrame) {
     aResult.AddChild(nextTextFrame);
@@ -12111,7 +12105,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   blockFrame->SetStyleContextWithoutNotification(blockStyle);
   InitAndRestoreFrame(aState, aContent, parent, blockFrame);
 
-  aState.AddChild(*aNewFrame, aFrameItems, aContent, aStyleContext,
+  aState.AddChild(*aNewFrame, aFrameItems, aContent,
                   aContentParentFrame ? aContentParentFrame :
                                         aParentFrame);
   if (!mRootElementFrame) {
@@ -12253,7 +12247,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     // constructed).  Just put all the kids into the single inline frame and
     // bail.
     newFrame->SetInitialChildList(kPrincipalList, childItems);
-    aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
+    aState.AddChild(newFrame, aFrameItems, content, aParentFrame);
     return newFrame;
   }
 

@@ -31,12 +31,6 @@ var global = this;
  */
 var ViewSourceContent = {
   /**
-   * We'll act as an nsISelectionListener as well so that we can send
-   * updates to the view source window's status bar.
-   */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISelectionListener]),
-
-  /**
    * These are the messages that ViewSourceContent is prepared to listen
    * for. If you need ViewSourceContent to handle more messages, add them
    * here.
@@ -57,16 +51,6 @@ var ViewSourceContent = {
    * set true when there is a pending request to draw selection.
    */
   needsDrawSelection: false,
-
-  /**
-   * ViewSourceContent is attached as an nsISelectionListener on pageshow,
-   * and removed on pagehide. When the initial about:blank is transitioned
-   * away from, a pagehide is fired without us having attached ourselves
-   * first. We use this boolean to keep track of whether or not we're
-   * attached, so we don't attempt to remove our listener when it's not
-   * yet there (which throws).
-   */
-  selectionListenerAttached: false,
 
   get isViewSource() {
     let uri = content.document.documentURI;
@@ -109,11 +93,6 @@ var ViewSourceContent = {
     removeEventListener("unload", this);
 
     Services.els.removeSystemEventListener(global, "contextmenu", this, false);
-
-    // Cancel any pending toolbar updates.
-    if (this.updateStatusTask) {
-      this.updateStatusTask.disarm();
-    }
   },
 
   /**
@@ -394,12 +373,6 @@ var ViewSourceContent = {
    *        The pageshow event being handled.
    */
   onPageShow(event) {
-    let selection = content.getSelection();
-    if (selection) {
-      selection.QueryInterface(Ci.nsISelectionPrivate)
-               .addSelectionListener(this);
-      this.selectionListenerAttached = true;
-    }
     content.focus();
 
     // If we need to draw the selection, wait until an actual view source page
@@ -424,15 +397,6 @@ var ViewSourceContent = {
    *        The pagehide event being handled.
    */
   onPageHide(event) {
-    // The initial about:blank will fire pagehide before we
-    // ever set a selectionListener, so we have a boolean around
-    // to keep track of when the listener is attached.
-    if (this.selectionListenerAttached) {
-      content.getSelection()
-             .QueryInterface(Ci.nsISelectionPrivate)
-             .removeSelectionListener(this);
-      this.selectionListenerAttached = false;
-    }
     sendAsyncMessage("ViewSource:SourceUnloaded");
   },
 
@@ -702,43 +666,6 @@ var ViewSourceContent = {
   },
 
   /**
-   * A reference to a DeferredTask that is armed every time the
-   * selection changes.
-   */
-  updateStatusTask: null,
-
-  /**
-   * Called once the DeferredTask fires. Sends a message up to the
-   * parent to update the status bar text.
-   */
-  updateStatus() {
-    let selection = content.getSelection();
-
-    if (!selection.focusNode) {
-      sendAsyncMessage("ViewSource:UpdateStatus", { label: "" });
-      return;
-    }
-    if (selection.focusNode.nodeType != Ci.nsIDOMNode.TEXT_NODE) {
-      return;
-    }
-
-    let selCon = this.selectionController;
-    selCon.setDisplaySelection(Ci.nsISelectionController.SELECTION_ON);
-    selCon.setCaretVisibilityDuringSelection(true);
-
-    let interlinePosition = selection.QueryInterface(Ci.nsISelectionPrivate)
-                                     .interlinePosition;
-
-    let result = {};
-    this.findLocation(null, -1,
-        selection.focusNode, selection.focusOffset, interlinePosition, result);
-
-    let label = this.bundle.formatStringFromName("statusBarLineCol",
-                                                 [result.line, result.col], 2);
-    sendAsyncMessage("ViewSource:UpdateStatus", { label });
-  },
-
-  /**
    * Loads a view source selection showing the given view-source url and
    * highlight the selection.
    *
@@ -757,25 +684,6 @@ var ViewSourceContent = {
                               null, referrerPolicy, // referrer
                               null, null, // postData, headers
                               Services.io.newURI(baseURI));
-  },
-
-  /**
-   * nsISelectionListener
-   */
-
-  /**
-   * Gets called every time the selection is changed. Coalesces frequent
-   * changes, and calls updateStatus after 100ms of no selection change
-   * activity.
-   */
-  notifySelectionChanged(doc, sel, reason) {
-    if (!this.updateStatusTask) {
-      this.updateStatusTask = new DeferredTask(() => {
-        this.updateStatus();
-      }, 100);
-    }
-
-    this.updateStatusTask.arm();
   },
 
   /**

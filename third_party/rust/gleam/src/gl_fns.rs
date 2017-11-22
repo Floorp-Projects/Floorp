@@ -300,9 +300,29 @@ impl Gl for GlFns {
         }
     }
 
+    fn get_uniform_indices(&self,  program: GLuint, names: &[&str]) -> Vec<GLuint> {
+        let c_strings: Vec<CString> = names.iter().map(|n| CString::new(*n).unwrap()).collect();
+        let pointers: Vec<*const GLchar> = c_strings.iter().map(|string| string.as_ptr()).collect();
+        let mut result = Vec::with_capacity(c_strings.len());
+        unsafe {
+            result.set_len(c_strings.len());
+            self.ffi_gl_.GetUniformIndices(program,
+                                           pointers.len() as GLsizei,
+                                           pointers.as_ptr(),
+                                           result.as_mut_ptr());
+        }
+        result
+    }
+
     fn bind_buffer_base(&self, target: GLenum, index: GLuint, buffer: GLuint) {
         unsafe {
             self.ffi_gl_.BindBufferBase(target, index, buffer);
+        }
+    }
+
+    fn bind_buffer_range(&self, target: GLenum, index: GLuint, buffer: GLuint, offset: GLintptr, size: GLsizeiptr) {
+        unsafe {
+            self.ffi_gl_.BindBufferRange(target, index, buffer, offset, size);
         }
     }
 
@@ -578,9 +598,33 @@ impl Gl for GlFns {
     }
 
     fn get_integer_v(&self, name: GLenum) -> GLint {
-        let mut result: GLint = 0 as GLint;
+        let mut result = 0;
         unsafe {
             self.ffi_gl_.GetIntegerv(name, &mut result);
+        }
+        result
+    }
+
+    fn get_integer_64v(&self, name: GLenum) -> GLint64 {
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetInteger64v(name, &mut result);
+        }
+        result
+    }
+
+    fn get_integer_iv(&self, name: GLenum, index: GLuint) -> GLint {
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetIntegeri_v(name, index, &mut result);
+        }
+        result
+    }
+
+    fn get_integer_64iv(&self, name: GLenum, index: GLuint) -> GLint64 {
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetInteger64i_v(name, index, &mut result);
         }
         result
     }
@@ -1107,6 +1151,53 @@ impl Gl for GlFns {
         (size, type_, String::from_utf8(name).unwrap())
     }
 
+    fn get_active_uniforms_iv(&self, program: GLuint, indices: Vec<GLuint>, pname: GLenum) -> Vec<GLint> {
+        let mut result = Vec::with_capacity(indices.len());
+        unsafe {
+            result.set_len(indices.len());
+            self.ffi_gl_.GetActiveUniformsiv(program,
+                                             indices.len() as GLsizei,
+                                             indices.as_ptr(),
+                                             pname,
+                                             result.as_mut_ptr());
+        }
+        result
+    }
+
+    fn get_active_uniform_block_i(&self, program: GLuint, index: GLuint, pname: GLenum) -> GLint {
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetActiveUniformBlockiv(program, index, pname, &mut result);
+        }
+        result
+    }
+
+    fn get_active_uniform_block_iv(&self, program: GLuint, index: GLuint, pname: GLenum) -> Vec<GLint> {
+        let count = self.get_active_uniform_block_i(program, index, ffi::UNIFORM_BLOCK_ACTIVE_UNIFORMS);
+        let mut result = Vec::with_capacity(count as usize);
+        unsafe {
+            result.set_len(count as usize);
+            self.ffi_gl_.GetActiveUniformBlockiv(program, index, pname, result.as_mut_ptr());
+        }
+        result
+    }
+
+    fn get_active_uniform_block_name(&self, program: GLuint, index: GLuint) -> String {
+        let buf_size = self.get_active_uniform_block_i(program, index, ffi::UNIFORM_BLOCK_NAME_LENGTH);
+        let mut name = vec![0 as u8; buf_size as usize];
+        let mut length: GLsizei = 0;
+        unsafe {
+            self.ffi_gl_.GetActiveUniformBlockName(program,
+                                                   index,
+                                                   buf_size,
+                                                   &mut length,
+                                                   name.as_mut_ptr() as *mut GLchar);
+        }
+        name.truncate(if length > 0 { length as usize } else { 0 });
+
+        String::from_utf8(name).unwrap()
+    }
+
     fn get_attrib_location(&self, program: GLuint, name: &str) -> c_int {
         let name = CString::new(name).unwrap();
         unsafe {
@@ -1146,6 +1237,53 @@ impl Gl for GlFns {
             let mut result: GLint = 0 as GLint;
             self.ffi_gl_.GetProgramiv(program, pname, &mut result);
             return result;
+        }
+    }
+
+    fn get_program_binary(&self, program: GLuint) -> (Vec<u8>, GLenum) {
+        if !self.ffi_gl_.GetProgramBinary.is_loaded() {
+            return (Vec::new(), NONE);
+        }
+        let len = self.get_program_iv(program, ffi::PROGRAM_BINARY_LENGTH);
+        if len <= 0 {
+            return (Vec::new(), NONE);
+        }
+        let mut binary: Vec<u8> = Vec::with_capacity(len as usize);
+        let mut format = NONE;
+        let mut out_len = 0;
+        unsafe {
+            binary.set_len(len as usize);
+            self.ffi_gl_.GetProgramBinary(program,
+                                          len,
+                                          &mut out_len as *mut GLsizei,
+                                          &mut format,
+                                          binary.as_mut_ptr() as *mut c_void);
+        }
+        if len != out_len {
+            return (Vec::new(), NONE);
+        }
+
+        (binary, format)
+    }
+
+    fn program_binary(&self, program: GLuint, format: GLenum, binary: &[u8]) {
+        if !self.ffi_gl_.ProgramBinary.is_loaded() {
+            return;
+        }
+        unsafe {
+            self.ffi_gl_.ProgramBinary(program,
+                                       format,
+                                       binary.as_ptr() as *const c_void,
+                                       binary.len() as GLsizei);
+        }
+    }
+
+    fn program_parameter_i(&self, program: GLuint, pname: GLenum, value: GLint) {
+        if !self.ffi_gl_.ProgramParameteri.is_loaded() {
+            return;
+        }
+        unsafe {
+            self.ffi_gl_.ProgramParameteri(program, pname, value);
         }
     }
 
@@ -1201,6 +1339,17 @@ impl Gl for GlFns {
                 return str::from_utf8_unchecked(CStr::from_ptr(llstr as *const c_char).to_bytes()).to_string();
             } else {
                 return "".to_string();
+            }
+        }
+    }
+
+    fn get_string_i(&self, which: GLenum, index: GLuint) -> String {
+        unsafe {
+            let llstr = self.ffi_gl_.GetStringi(which, index);
+            if !llstr.is_null() {
+                str::from_utf8_unchecked(CStr::from_ptr(llstr as *const c_char).to_bytes()).to_string()
+            } else {
+                "".to_string()
             }
         }
     }

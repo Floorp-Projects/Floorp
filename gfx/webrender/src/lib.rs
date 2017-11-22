@@ -150,7 +150,7 @@ extern crate ws;
 pub extern crate webrender_api;
 
 #[doc(hidden)]
-pub use device::build_shader_strings;
+pub use device::{build_shader_strings, ProgramCache};
 pub use renderer::{CpuProfile, DebugFlags, GpuProfile, OutputImageHandler, RendererKind};
 pub use renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 pub use renderer::{GraphicsApi, GraphicsApiInfo, ReadPixelsFormat, Renderer, RendererOptions};

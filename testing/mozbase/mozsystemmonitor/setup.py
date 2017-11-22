@@ -19,7 +19,7 @@ except:
 setup(
     name='mozsystemmonitor',
     description='Monitor system resource usage.',
-    long_description=description,
+    long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
     license='MPL 2.0',
     keywords='mozilla',
     author='Mozilla Automation and Tools Team',

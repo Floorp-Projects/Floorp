@@ -52,8 +52,8 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Layer layer,
                                       ClipArea area,
                                       int segment) {
-    vec2 outer_p0 = area.screen_origin_target_index.xy;
-    vec2 outer_p1 = outer_p0 + area.task_bounds.zw - area.task_bounds.xy;
+    vec2 outer_p0 = area.screen_origin;
+    vec2 outer_p1 = outer_p0 + area.common_data.task_rect.size;
     vec2 inner_p0 = area.inner_rect.xy;
     vec2 inner_p1 = area.inner_rect.zw;
 
@@ -86,7 +86,9 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     vec4 layer_pos = get_layer_pos(actual_pos / uDevicePixelRatio, layer);
 
     // compute the point position in side the layer, in CSS space
-    vec2 vertex_pos = actual_pos + area.task_bounds.xy - area.screen_origin_target_index.xy;
+    vec2 vertex_pos = actual_pos +
+                      area.common_data.task_rect.p0 -
+                      area.screen_origin;
 
     gl_Position = uTransform * vec4(vertex_pos, 0.0, 1);
 

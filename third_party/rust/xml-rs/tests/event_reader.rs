@@ -147,6 +147,24 @@ fn sample_4_full() {
 }
 
 #[test]
+fn sample_5_short() {
+    test(
+        include_bytes!("documents/sample_5.xml"),
+        include_bytes!("documents/sample_5_short.txt"),
+        ParserConfig::new()
+            .ignore_comments(true)
+            .whitespace_to_characters(true)
+            .cdata_to_characters(true)
+            .trim_whitespace(true)
+            .coalesce_characters(true)
+            .add_entity("nbsp", " ")
+            .add_entity("copy", "©")
+            .add_entity("NotEqualTilde", "≂̸"),
+        false
+    );
+}
+
+#[test]
 fn eof_1() {
     test(
         br#"<?xml"#,

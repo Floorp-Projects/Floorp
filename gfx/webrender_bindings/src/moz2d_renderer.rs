@@ -14,7 +14,7 @@ use std::sync::Arc;
 use dwrote;
 
 #[cfg(target_os = "macos")]
-use core_foundation::base::TCFType;
+use foreign_types::ForeignType;
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use std::ffi::CString;
@@ -124,7 +124,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
 
         #[cfg(target_os = "macos")]
         fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
-            unsafe { AddNativeFontHandle(key, handle.0.as_concrete_TypeRef() as *mut c_void, 0) };
+            unsafe { AddNativeFontHandle(key, handle.0.as_ptr() as *mut c_void, 0) };
         }
 
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]

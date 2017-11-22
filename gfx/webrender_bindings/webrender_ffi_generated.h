@@ -533,6 +533,10 @@ struct ImageKey {
     return mNamespace == aOther.mNamespace &&
            mHandle == aOther.mHandle;
   }
+  bool operator!=(const ImageKey& aOther) const {
+    return mNamespace != aOther.mNamespace ||
+           mHandle != aOther.mHandle;
+  }
 };
 
 typedef ImageKey WrImageKey;

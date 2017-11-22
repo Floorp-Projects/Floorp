@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+@keyframes anim {
+  to { transform: rotate(360deg); }
+}
+.document-ready div::after {
+  display: none;
+}
+div::after {
+  content: "";
+}
+.animation::after {
+  animation: anim 1s infinite;
+}
+</style>
+<div id="target"></div>
+<script>
+window.addEventListener('load', () => {
+  target.classList.add('animation');
+  const psuedo = document.getAnimations()[0].effect.target;
+  target.classList.remove('animation');
+
+  psuedo.animate([ { transform: 'rotate(360deg)' } ], 1000);
+  requestAnimationFrame(() => {
+    document.documentElement.classList.add('document-ready');
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  });
+});
+</script>
+</html>

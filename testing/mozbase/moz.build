@@ -48,5 +48,7 @@ TEST_HARNESS_FILES.mozbase += [
     'setup_development.py',
 ]
 
+SPHINX_TREES['/mozbase'] = 'docs'
+
 with Files('**'):
     BUG_COMPONENT = ('Testing', 'Mozbase')

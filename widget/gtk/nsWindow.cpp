@@ -3768,13 +3768,11 @@ nsWindow::Create(nsIWidget* aParent,
             gtk_window_group_add_window(group, GTK_WINDOW(mShell));
             g_object_unref(group);
 
-            if (GetCSDSupportLevel() != CSD_SUPPORT_NONE) {
-                int32_t isCSDAvailable = false;
-                nsresult rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable,
-                                                &isCSDAvailable);
-                if (NS_SUCCEEDED(rv)) {
-                   mIsCSDAvailable = isCSDAvailable;
-                }
+            int32_t isCSDAvailable = false;
+            nsresult rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable,
+                                              &isCSDAvailable);
+            if (NS_SUCCEEDED(rv)) {
+               mIsCSDAvailable = isCSDAvailable;
             }
         }
 
@@ -6648,7 +6646,12 @@ nsWindow::SetDrawsInTitlebar(bool aState)
       return;
 
   if (mShell) {
-      gint wmd = aState ? GDK_DECOR_BORDER : ConvertBorderStyles(mBorderStyle);
+      gint wmd;
+      if (aState) {
+          wmd = GetCSDSupportLevel() == CSD_SUPPORT_FULL ? GDK_DECOR_BORDER : 0;
+      } else {
+          wmd = ConvertBorderStyles(mBorderStyle);
+      }
       gdk_window_set_decorations(gtk_widget_get_window(mShell),
                                  (GdkWMDecoration) wmd);
   }
@@ -6937,7 +6940,6 @@ nsWindow::GetCSDSupportLevel() {
     if (sCSDSupportLevel != CSD_SUPPORT_UNKNOWN) {
         return sCSDSupportLevel;
     }
-    // TODO: MATE
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
     if (currentDesktop) {
         if (strcmp(currentDesktop, "GNOME") == 0) {
@@ -6954,6 +6956,8 @@ nsWindow::GetCSDSupportLevel() {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
         } else if (strcmp(currentDesktop, "i3") == 0) {
             sCSDSupportLevel = CSD_SUPPORT_NONE;
+        } else if (strcmp(currentDesktop, "MATE") == 0) {
+            sCSDSupportLevel = CSD_SUPPORT_FLAT;
         } else {
             sCSDSupportLevel = CSD_SUPPORT_NONE;
         }

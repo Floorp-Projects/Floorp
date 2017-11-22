@@ -15,7 +15,7 @@ Consult [open][] [bugs][] and feel free to file [new bugs][].
 
 
 [project page]: https://wiki.mozilla.org/Auto-tools/Projects/Mozbase
-[detailed docs]: http://mozbase.readthedocs.org/
+[detailed docs]: https://firefox-source-docs.mozilla.org/mozbase/index.html
 [open]: https://bugzilla.mozilla.org/buglist.cgi?resolution=---&component=Mozbase&product=Testing
 [bugs]: https://bugzilla.mozilla.org/buglist.cgi?resolution=---&status_whiteboard_type=allwordssubstr&query_format=advanced&status_whiteboard=mozbase
 [new bugs]: https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Mozbase

@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import importlib
 import os
 import sys
 
@@ -27,20 +28,13 @@ and try again.
 '''.lstrip()
 
 
-def syntax_parser():
-    from tryselect.selectors.syntax import SyntaxParser
-    parser = SyntaxParser()
-    return parser
+class get_parser(object):
+    def __init__(self, selector):
+        self.selector = selector
 
-
-def fuzzy_parser():
-    from tryselect.selectors.fuzzy import FuzzyParser
-    return FuzzyParser()
-
-
-def empty_parser():
-    from tryselect.selectors.empty import EmptyParser
-    return EmptyParser()
+    def __call__(self):
+        mod = importlib.import_module('tryselect.selectors.{}'.format(self.selector))
+        return getattr(mod, '{}Parser'.format(self.selector.capitalize()))()
 
 
 def generic_parser():
@@ -100,7 +94,7 @@ class TrySelect(MachCommandBase):
     @SubCommand('try',
                 'fuzzy',
                 description='Select tasks on try using a fuzzy finder',
-                parser=fuzzy_parser)
+                parser=get_parser('fuzzy'))
     def try_fuzzy(self, **kwargs):
         """Select which tasks to use with fzf.
 
@@ -150,7 +144,7 @@ class TrySelect(MachCommandBase):
     @SubCommand('try',
                 'empty',
                 description='Push to try without scheduling any tasks.',
-                parser=empty_parser)
+                parser=get_parser('empty'))
     def try_empty(self, **kwargs):
         """Push to try, running no builds or tests
 
@@ -166,7 +160,7 @@ class TrySelect(MachCommandBase):
     @SubCommand('try',
                 'syntax',
                 description='Select tasks on try using try syntax',
-                parser=syntax_parser)
+                parser=get_parser('syntax'))
     def try_syntax(self, **kwargs):
         """Push the current tree to try, with the specified syntax.
 

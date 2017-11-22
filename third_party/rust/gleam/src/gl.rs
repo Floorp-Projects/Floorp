@@ -30,11 +30,11 @@ pub enum GlType {
 }
 
 impl Default for GlType {
-    #[cfg(target_os="android")]
+    #[cfg(any(target_os="android", target_os="ios"))]
     fn default() -> GlType {
         GlType::Gles
     }
-    #[cfg(not(target_os="android"))]
+    #[cfg(not(any(target_os="android", target_os="ios")))]
     fn default() -> GlType {
         GlType::Gl
     }
@@ -50,10 +50,12 @@ fn calculate_length(width: GLsizei, height: GLsizei, format: GLenum, pixel_type:
 
         ffi::ALPHA => 1,
         ffi::LUMINANCE => 1,
+        ffi::DEPTH_COMPONENT => 1,
         _ => panic!("unsupported format for read_pixels"),
     };
     let depth = match pixel_type {
         ffi::UNSIGNED_BYTE => 1,
+        ffi::FLOAT=> 4,
         _ => panic!("unsupported pixel_type for read_pixels"),
     };
 
@@ -128,7 +130,9 @@ pub trait Gl {
     fn attach_shader(&self, program: GLuint, shader: GLuint);
     fn bind_attrib_location(&self, program: GLuint, index: GLuint, name: &str);
     fn get_uniform_block_index(&self, program: GLuint, name: &str) -> GLuint;
+    fn get_uniform_indices(&self,  program: GLuint, names: &[&str]) -> Vec<GLuint>;
     fn bind_buffer_base(&self, target: GLenum, index: GLuint, buffer: GLuint);
+    fn bind_buffer_range(&self, target: GLenum, index: GLuint, buffer: GLuint, offset: GLintptr, size: GLsizeiptr);
     fn uniform_block_binding(&self,
                              program: GLuint,
                              uniform_block_index: GLuint,
@@ -249,6 +253,9 @@ pub trait Gl {
                             ty: GLenum,
                             offset: usize);
     fn get_integer_v(&self, name: GLenum) -> GLint;
+    fn get_integer_64v(&self, name: GLenum) -> GLint64;
+    fn get_integer_iv(&self, name: GLenum, index: GLuint) -> GLint;
+    fn get_integer_64iv(&self, name: GLenum, index: GLuint) -> GLint64;
     fn get_boolean_v(&self, name: GLenum) -> GLboolean;
     fn get_float_v(&self, name: GLenum) -> GLfloat;
     fn tex_parameter_i(&self, target: GLenum, pname: GLenum, param: GLint);
@@ -369,17 +376,25 @@ pub trait Gl {
     fn depth_range(&self, near: f64, far: f64);
     fn get_active_attrib(&self, program: GLuint, index: GLuint) -> (i32, u32, String);
     fn get_active_uniform(&self, program: GLuint, index: GLuint) -> (i32, u32, String);
+    fn get_active_uniforms_iv(&self, program: GLuint, indices: Vec<GLuint>, pname: GLenum) -> Vec<GLint>;
+    fn get_active_uniform_block_i(&self, program: GLuint, index: GLuint, pname: GLenum) -> GLint;
+    fn get_active_uniform_block_iv(&self, program: GLuint, index: GLuint, pname: GLenum) -> Vec<GLint>;
+    fn get_active_uniform_block_name(&self, program: GLuint, index: GLuint) -> String;
     fn get_attrib_location(&self, program: GLuint, name: &str) -> c_int;
     fn get_frag_data_location(&self, program: GLuint, name: &str) -> c_int;
     fn get_uniform_location(&self, program: GLuint, name: &str) -> c_int;
     fn get_program_info_log(&self, program: GLuint) -> String;
     fn get_program_iv(&self, program: GLuint, pname: GLenum) -> GLint;
+    fn get_program_binary(&self, program: GLuint) -> (Vec<u8>, GLenum);
+    fn program_binary(&self, program: GLuint, format: GLenum, binary: &[u8]);
+    fn program_parameter_i(&self, program: GLuint, pname: GLenum, value: GLint);
     fn get_vertex_attrib_iv(&self, index: GLuint, pname: GLenum) -> GLint;
     fn get_vertex_attrib_fv(&self, index: GLuint, pname: GLenum) -> Vec<GLfloat>;
     fn get_vertex_attrib_pointer_v(&self, index: GLuint, pname: GLenum) -> GLsizeiptr;
     fn get_buffer_parameter_iv(&self, target: GLuint, pname: GLenum) -> GLint;
     fn get_shader_info_log(&self, shader: GLuint) -> String;
     fn get_string(&self, which: GLenum) -> String;
+    fn get_string_i(&self, which: GLenum, index: GLuint) -> String;
     fn get_shader_iv(&self, shader: GLuint, pname: GLenum) -> GLint;
     fn get_shader_precision_format(&self,
                                    shader_type: GLuint,

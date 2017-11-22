@@ -64,10 +64,11 @@ function resetState() {
 }
 
 /**
- * testing if anchor and area referrer attributes are honoured (1174913)
+ * testing if referrer header is sent correctly
  */
 var tests = (function*() {
 
+  yield SpecialPowers.pushPrefEnv({"set": [['network.preload', true]]}, advance);
   yield SpecialPowers.pushPrefEnv({"set": [['security.mixed_content.block_active_content', false]]}, advance);
   yield SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], advance);
 

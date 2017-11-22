@@ -637,11 +637,11 @@ html|span.ac-emphasize-text-url {
   }
 
   .ac-url:not([selected=true]) {
-    color: hsl(210, 77%, 47%);
+    color: #0a84ff;
   }
 
   .ac-action:not([selected=true]) {
-    color: hsl(178, 100%, 28%);
+    color: #12bc00;
   }
 
   html|span.ac-tag {

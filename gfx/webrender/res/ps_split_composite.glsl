@@ -37,11 +37,11 @@ vec3 bilerp(vec3 a, vec3 b, vec3 c, vec3 d, float s, float t) {
 void main(void) {
     CompositeInstance ci = fetch_composite_instance();
     SplitGeometry geometry = fetch_split_geometry(ci.user_data0);
-    AlphaBatchTask src_task = fetch_alpha_batch_task(ci.src_task_index);
-    AlphaBatchTask dest_task = fetch_alpha_batch_task(ci.render_task_index);
+    PictureTask src_task = fetch_picture_task(ci.src_task_index);
+    PictureTask dest_task = fetch_picture_task(ci.render_task_index);
 
-    vec2 dest_origin = dest_task.render_target_origin -
-                       dest_task.screen_space_origin;
+    vec2 dest_origin = dest_task.common_data.task_rect.p0 -
+                       dest_task.content_origin;
 
     vec3 world_pos = bilerp(geometry.points[0], geometry.points[1],
                             geometry.points[3], geometry.points[2],
@@ -50,12 +50,12 @@ void main(void) {
 
     gl_Position = uTransform * final_pos;
 
-    vec2 uv_origin = src_task.render_target_origin;
-    vec2 uv_pos = uv_origin + world_pos.xy - src_task.screen_space_origin;
+    vec2 uv_origin = src_task.common_data.task_rect.p0;
+    vec2 uv_pos = uv_origin + world_pos.xy - src_task.content_origin;
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
-    vUv = vec3(uv_pos / texture_size, src_task.render_target_layer_index);
-    vUvTaskBounds = vec4(uv_origin, uv_origin + src_task.size) / texture_size.xyxy;
-    vUvSampleBounds = vec4(uv_origin + 0.5, uv_origin + src_task.size - 0.5) / texture_size.xyxy;
+    vUv = vec3(uv_pos / texture_size, src_task.common_data.texture_layer_index);
+    vUvTaskBounds = vec4(uv_origin, uv_origin + src_task.common_data.task_rect.size) / texture_size.xyxy;
+    vUvSampleBounds = vec4(uv_origin + 0.5, uv_origin + src_task.common_data.task_rect.size - 0.5) / texture_size.xyxy;
 }
 #endif
 

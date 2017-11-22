@@ -2248,7 +2248,7 @@ PreviousExperimentAddon.prototype = Object.freeze({
   },
 
   get blocklistState() {
-    Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
 
   get creator() {
