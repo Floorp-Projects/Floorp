@@ -243,7 +243,9 @@ void
 XRE_SetAndroidChildFds (JNIEnv* env, int crashFd, int ipcFd)
 {
   mozilla::jni::SetGeckoThreadEnv(env);
+#if defined(MOZ_CRASHREPORTER)
   CrashReporter::SetNotificationPipeForChild(crashFd);
+#endif // defined(MOZ_CRASHREPORTER)
   IPC::Channel::SetClientChannelFd(ipcFd);
 }
 #endif // defined(MOZ_WIDGET_ANDROID)
@@ -268,6 +270,7 @@ XRE_SetProcessType(const char* aProcessTypeString)
   }
 }
 
+#if defined(MOZ_CRASHREPORTER)
 // FIXME/bug 539522: this out-of-place function is stuck here because
 // IPDL wants access to this crashreporter interface, and
 // crashreporter is built in such a way to make that awkward
@@ -289,6 +292,7 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 #  error "OOP crash reporter unsupported on this platform"
 #endif
 }
+#endif // if defined(MOZ_CRASHREPORTER)
 
 #if defined(XP_WIN)
 void
@@ -300,6 +304,7 @@ SetTaskbarGroupId(const nsString& aId)
 }
 #endif
 
+#if defined(MOZ_CRASHREPORTER)
 #if defined(MOZ_CONTENT_SANDBOX)
 void
 AddContentSandboxLevelAnnotation()
@@ -313,6 +318,7 @@ AddContentSandboxLevelAnnotation()
   }
 }
 #endif /* MOZ_CONTENT_SANDBOX */
+#endif /* MOZ_CRASHREPORTER */
 
 namespace {
 
@@ -477,37 +483,35 @@ XRE_InitChildProcess(int aArgc,
 
   SetupErrorHandling(aArgv[0]);
 
-  if (!CrashReporter::IsDummy()) {
-    if (aArgc < 1) {
-      return NS_ERROR_FAILURE;
-    }
+#if defined(MOZ_CRASHREPORTER)
+  if (aArgc < 1)
+    return NS_ERROR_FAILURE;
+  const char* const crashReporterArg = aArgv[--aArgc];
 
-    const char* const crashReporterArg = aArgv[--aArgc];
-
-#if defined(XP_WIN) || defined(XP_MACOSX)
-    // on windows and mac, |crashReporterArg| is the named pipe on which the
-    // server is listening for requests, or "-" if crash reporting is
-    // disabled.
-    if (0 != strcmp("-", crashReporterArg) &&
-        !XRE_SetRemoteExceptionHandler(crashReporterArg)) {
-      // Bug 684322 will add better visibility into this condition
-      NS_WARNING("Could not setup crash reporting\n");
-    }
-#elif defined(OS_LINUX)
-    // on POSIX, |crashReporterArg| is "true" if crash reporting is
-    // enabled, false otherwise
-    if (0 != strcmp("false", crashReporterArg) &&
-        !XRE_SetRemoteExceptionHandler(nullptr)) {
-      // Bug 684322 will add better visibility into this condition
-      NS_WARNING("Could not setup crash reporting\n");
-    }
-#else
-#  error "OOP crash reporting unsupported on this platform"
-#endif
+#  if defined(XP_WIN) || defined(XP_MACOSX)
+  // on windows and mac, |crashReporterArg| is the named pipe on which the
+  // server is listening for requests, or "-" if crash reporting is
+  // disabled.
+  if (0 != strcmp("-", crashReporterArg) &&
+      !XRE_SetRemoteExceptionHandler(crashReporterArg)) {
+    // Bug 684322 will add better visibility into this condition
+    NS_WARNING("Could not setup crash reporting\n");
   }
+#  elif defined(OS_LINUX)
+  // on POSIX, |crashReporterArg| is "true" if crash reporting is
+  // enabled, false otherwise
+  if (0 != strcmp("false", crashReporterArg) &&
+      !XRE_SetRemoteExceptionHandler(nullptr)) {
+    // Bug 684322 will add better visibility into this condition
+    NS_WARNING("Could not setup crash reporting\n");
+  }
+#  else
+#    error "OOP crash reporting unsupported on this platform"
+#  endif
 
   // For Init/Shutdown thread name annotations in the crash reporter.
   CrashReporter::InitThreadAnnotationRAII annotation;
+#endif // if defined(MOZ_CRASHREPORTER)
 
   gArgv = aArgv;
   gArgc = aArgc;
@@ -668,8 +672,10 @@ XRE_InitChildProcess(int aArgc,
         return NS_ERROR_FAILURE;
       }
 
+#ifdef MOZ_CRASHREPORTER
 #if defined(XP_WIN) || defined(XP_MACOSX)
       CrashReporter::InitChildProcessTmpDir(crashReportTmpDir);
+#endif
 #endif
 
 #if defined(XP_WIN)
@@ -687,8 +693,10 @@ XRE_InitChildProcess(int aArgc,
 
       OverrideDefaultLocaleIfNeeded();
 
+#if defined(MOZ_CRASHREPORTER)
 #if defined(MOZ_CONTENT_SANDBOX)
       AddContentSandboxLevelAnnotation();
+#endif
 #endif
 
       // Run the UI event loop on the main thread.

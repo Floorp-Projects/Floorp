@@ -40,7 +40,6 @@ const MAX_TIME_DIFFERENCE = 3000;
 const MAKE_FILE_OLD_DIFFERENCE = 10 * 3600 * 1000;
 
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -371,9 +370,8 @@ function isNightlyChannel() {
  *         The version of the add-on
  */
 function do_check_in_crash_annotation(aId, aVersion) {
-  if (!AppConstants.MOZ_CRASHREPORTER) {
+  if (!("nsICrashReporter" in AM_Ci))
     return;
-  }
 
   if (!("Add-ons" in gAppInfo.annotations)) {
     do_check_false(true);
@@ -394,9 +392,8 @@ function do_check_in_crash_annotation(aId, aVersion) {
  *         The version of the add-on
  */
 function do_check_not_in_crash_annotation(aId, aVersion) {
-  if (!AppConstants.MOZ_CRASHREPORTER) {
+  if (!("nsICrashReporter" in AM_Ci))
     return;
-  }
 
   if (!("Add-ons" in gAppInfo.annotations)) {
     do_check_true(true);

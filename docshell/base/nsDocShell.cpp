@@ -2424,10 +2424,12 @@ nsDocShell::GetUseRemoteTabs(bool* aUseRemoteTabs)
 NS_IMETHODIMP
 nsDocShell::SetRemoteTabs(bool aUseRemoteTabs)
 {
+#ifdef MOZ_CRASHREPORTER
   if (aUseRemoteTabs) {
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("DOMIPCEnabled"),
                                        NS_LITERAL_CSTRING("1"));
   }
+#endif
 
   mUseRemoteTabs = aUseRemoteTabs;
   return NS_OK;

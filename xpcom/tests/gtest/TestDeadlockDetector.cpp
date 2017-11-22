@@ -8,16 +8,19 @@
 
 #include "prthread.h"
 
-#include "nsCOMPtr.h"
-#include "nsICrashReporter.h"
-#include "nsMemory.h"
-#include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
+#include "nsMemory.h"
 
 #include "mozilla/CondVar.h"
 #include "mozilla/RecursiveMutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsCOMPtr.h"
+#include "nsICrashReporter.h"
+#include "nsServiceManagerUtils.h"
+#endif
 
 #include "gtest/gtest.h"
 
@@ -71,11 +74,13 @@ private:
 
 void DisableCrashReporter()
 {
+#ifdef MOZ_CRASHREPORTER
     nsCOMPtr<nsICrashReporter> crashreporter =
         do_GetService("@mozilla.org/toolkit/crash-reporter;1");
     if (crashreporter) {
       crashreporter->SetEnabled(false);
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

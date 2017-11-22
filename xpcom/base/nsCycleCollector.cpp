@@ -167,7 +167,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsDeque.h"
-#include "nsExceptionHandler.h"
 #include "nsCycleCollector.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -191,6 +190,10 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 
 using namespace mozilla;
 
@@ -665,12 +668,14 @@ PtrInfo::AnnotatedReleaseAssert(bool aCondition, const char* aMessage)
     return;
   }
 
+#ifdef MOZ_CRASHREPORTER
   const char* piName = "Unknown";
   if (mParticipant) {
     piName = mParticipant->ClassName();
   }
   nsPrintfCString msg("%s, for class %s", aMessage, piName);
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("CycleCollector"), msg);
+#endif
 
   MOZ_CRASH();
 }

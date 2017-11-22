@@ -18,7 +18,9 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 #include "mozilla/StackWalk.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -104,8 +106,11 @@ static void
 SandboxCrash(int nr, siginfo_t *info, void *void_context)
 {
   pid_t pid = getpid(), tid = syscall(__NR_gettid);
-  bool dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
+  bool dumped = false;
 
+#ifdef MOZ_CRASHREPORTER
+  dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
+#endif
   if (!dumped) {
     SANDBOX_LOG_ERROR("crash reporter is disabled (or failed);"
                       " trying stack trace:");
