@@ -246,7 +246,9 @@ GMPChild::Init(const nsAString& aPluginPath,
     return false;
   }
 
+#ifdef MOZ_CRASHREPORTER
   CrashReporterClient::InitSingleton(this);
+#endif
 
   mPluginPath = aPluginPath;
 
@@ -615,8 +617,9 @@ GMPChild::ActorDestroy(ActorDestroyReason aWhy)
     ProcessChild::QuickExit();
   }
 
+#ifdef MOZ_CRASHREPORTER
   CrashReporterClient::DestroySingleton();
-
+#endif
   XRE_ShutdownChildProcess();
 }
 

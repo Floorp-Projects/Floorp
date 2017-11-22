@@ -81,6 +81,10 @@
 #include "plstr.h"
 #include "prlink.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#endif
+
 #ifdef XP_WIN
 #include "windows.h"
 #endif

@@ -27,8 +27,6 @@
 # include "nsX11ErrorHandler.h"
 # include "mozilla/X11Util.h"
 #endif
-
-#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
@@ -48,6 +46,10 @@
 #ifdef MOZ_WIDGET_COCOA
 #include "PluginInterposeOSX.h"
 #include "PluginUtilsOSX.h"
+#endif
+
+#ifdef MOZ_CRASHREPORTER
+#include "mozilla/ipc/CrashReporterClient.h"
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
@@ -748,9 +750,10 @@ PluginModuleChild::RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& aEnd
 mozilla::ipc::IPCResult
 PluginModuleChild::AnswerInitCrashReporter(Shmem&& aShmem, mozilla::dom::NativeThreadId* aOutId)
 {
+#ifdef MOZ_CRASHREPORTER
     CrashReporterClient::InitSingletonWithShmem(aShmem);
     *aOutId = CrashReporter::CurrentThreadId();
-
+#endif
     return IPC_OK();
 }
 
@@ -789,8 +792,9 @@ PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 
     // doesn't matter why we're being destroyed; it's up to us to
     // initiate (clean) shutdown
+#ifdef MOZ_CRASHREPORTER
     CrashReporterClient::DestroySingleton();
-
+#endif
     XRE_ShutdownChildProcess();
 }
 

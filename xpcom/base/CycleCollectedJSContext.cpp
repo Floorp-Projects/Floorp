@@ -37,6 +37,10 @@
 #include "nsWrapperCache.h"
 #include "nsStringBuffer.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 #include "nsIException.h"
 #include "nsIPlatformInfo.h"
 #include "nsThread.h"

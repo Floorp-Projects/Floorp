@@ -10,8 +10,9 @@
 #include "mozilla/TimeStamp.h"
 #include "LeakRefPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsExceptionHandler.h"
 #include "nsITimer.h"
+
+#include "nsComponentManagerUtils.h"
 
 #ifdef MOZILLA_INTERNAL_API
 # include "nsThreadManager.h"
@@ -25,6 +26,10 @@
 #include <windows.h>
 #elif defined(XP_MACOSX)
 #include <sys/resource.h>
+#endif
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
 #endif
 
 using namespace mozilla;
@@ -512,7 +517,9 @@ void
 NS_SetCurrentThreadName(const char* aName)
 {
   PR_SetCurrentThreadName(aName);
+#ifdef MOZ_CRASHREPORTER
   CrashReporter::SetCurrentThreadName(aName);
+#endif
 }
 
 #ifdef MOZILLA_INTERNAL_API

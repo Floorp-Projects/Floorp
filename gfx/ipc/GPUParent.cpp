@@ -100,8 +100,10 @@ GPUParent::Init(base::ProcessId aParentPid,
   // versions.
   GetIPCChannel()->SendBuildID();
 
+#ifdef MOZ_CRASHREPORTER
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
+#endif
 
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
@@ -469,7 +471,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();
+#ifdef MOZ_CRASHREPORTER
   CrashReporterClient::DestroySingleton();
+#endif
   XRE_ShutdownChildProcess();
 }
 

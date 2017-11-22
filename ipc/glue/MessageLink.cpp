@@ -14,7 +14,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 #include "nsISupportsImpl.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
@@ -159,8 +161,10 @@ void
 ProcessLink::SendMessage(Message *msg)
 {
     if (msg->size() > IPC::Channel::kMaximumMessageSize) {
+#ifdef MOZ_CRASHREPORTER
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCMessageName"), nsDependentCString(msg->name()));
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCMessageSize"), nsPrintfCString("%d", msg->size()));
+#endif
       MOZ_CRASH("IPC message size is too large");
     }
 

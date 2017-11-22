@@ -214,7 +214,6 @@
 #include "DomainPolicy.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
-#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/widget/PuppetBidiKeyboard.h"
 #include "mozilla/RemoteSpellCheckEngineChild.h"
@@ -228,6 +227,9 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include "nsAppRunner.h"
+#endif
+#ifdef MOZ_CRASHREPORTER
+#include "mozilla/ipc/CrashReporterClient.h"
 #endif
 
 #ifdef MOZ_CODE_COVERAGE
@@ -647,7 +649,9 @@ ContentChild::Init(MessageLoop* aIOLoop,
   }
 #endif
 
+#ifdef MOZ_CRASHREPORTER
   CrashReporterClient::InitSingleton(this);
+#endif
 
   mID = aChildID;
   mIsForBrowser = aIsForBrowser;
@@ -1697,6 +1701,7 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
   sandboxEnabled = StartMacOSContentSandbox();
 #endif
 
+#if defined(MOZ_CRASHREPORTER)
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("ContentSandboxEnabled"),
     sandboxEnabled? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0"));
@@ -1709,6 +1714,7 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 #endif /* XP_LINUX && !OS_ANDROID */
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("RemoteType"),
                                      NS_ConvertUTF16toUTF8(GetRemoteType()));
+#endif /* MOZ_CRASHREPORTER */
 #endif /* MOZ_CONTENT_SANDBOX */
 
   return IPC_OK();
@@ -2343,8 +2349,9 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
   }
   mIsAlive = false;
 
+# ifdef MOZ_CRASHREPORTER
   CrashReporterClient::DestroySingleton();
-
+# endif
   XRE_ShutdownChildProcess();
 #endif // NS_FREE_PERMANENT_DATA
 }
@@ -2369,9 +2376,10 @@ ContentChild::ProcessingError(Result aCode, const char* aReason)
       MOZ_CRASH("not reached");
   }
 
+#if defined(MOZ_CRASHREPORTER)
   nsDependentCString reason(aReason);
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ipc_channel_error"), reason);
-
+#endif
   MOZ_CRASH("Content child abort due to IPC error");
 }
 
@@ -2952,9 +2960,10 @@ ContentChild::RecvShutdown()
   // to wait for that event loop to finish. Otherwise we could prematurely
   // terminate an "unload" or "pagehide" event handler (which might be doing a
   // sync XHR, for example).
+#if defined(MOZ_CRASHREPORTER)
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
                                      NS_LITERAL_CSTRING("RecvShutdown"));
-
+#endif
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<nsThread> mainThread = nsThreadManager::get().GetCurrentThread();
   // Note that we only have to check the recursion count for the current
@@ -3010,13 +3019,18 @@ ContentChild::RecvShutdown()
   // parent closes.
   StartForceKillTimer();
 
+#if defined(MOZ_CRASHREPORTER)
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
                                      NS_LITERAL_CSTRING("SendFinishShutdown (sending)"));
   bool sent = SendFinishShutdown();
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
                                      sent ? NS_LITERAL_CSTRING("SendFinishShutdown (sent)")
                                           : NS_LITERAL_CSTRING("SendFinishShutdown (failed)"));
-
+#else
+  // Ignore errors here. If this fails, the parent will kill us after a
+  // timeout.
+  Unused << SendFinishShutdown();
+#endif
   return IPC_OK();
 }
 

@@ -208,6 +208,7 @@ private:
   EntryType mEntryType;
 };
 
+#ifdef MOZ_CRASHREPORTER
 void
 CrashReporterMetadataShmem::ReadAppNotes(const Shmem& aShmem, CrashReporter::AnnotationTable* aNotes)
 {
@@ -228,6 +229,7 @@ CrashReporterMetadataShmem::ReadAppNotes(const Shmem& aShmem, CrashReporter::Ann
     }
   }
 }
+#endif
 
 } // namespace ipc
 } // namespace mozilla
