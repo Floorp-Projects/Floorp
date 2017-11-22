@@ -42,6 +42,13 @@ namespace layers {
 class ClientTiledPaintedLayer;
 class ClientLayerManager;
 
+enum class TilePaintFlags : uint8_t {
+  None = 0x0,
+  Async = 0x1,
+  Progressive = 0x2,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TilePaintFlags)
+
 /**
  * Represent a single tile in tiled buffer. The buffer keeps tiles,
  * each tile keeps a reference to a texture client and a read-lock. This
@@ -122,6 +129,7 @@ struct TileClient
                                const nsIntRegion& aDirtyRegion,
                                gfxContentType aContent, SurfaceMode aMode,
                                nsIntRegion& aAddPaintedRegion,
+                               TilePaintFlags aFlags,
                                RefPtr<TextureClient>* aTextureClientOnWhite);
 
   void DiscardFrontBuffer();
@@ -159,7 +167,8 @@ private:
   // Copies dirty pixels from the front buffer into the back buffer,
   // and records the copied region in aAddPaintedRegion.
   void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
-                                   nsIntRegion& aAddPaintedRegion);
+                                   nsIntRegion& aAddPaintedRegion,
+                                   TilePaintFlags aFlags);
 };
 
 /**
@@ -294,7 +303,7 @@ public:
                    const nsIntRegion& aDirtyRegion,
                    LayerManager::DrawPaintedLayerCallback aCallback,
                    void* aCallbackData,
-                   bool aIsProgressive = false) = 0;
+                   TilePaintFlags aFlags) = 0;
 
   virtual bool SupportsProgressiveUpdate() = 0;
   virtual bool ProgressiveUpdate(const nsIntRegion& aValidRegion,
@@ -350,7 +359,7 @@ public:
                    const nsIntRegion& aDirtyRegion,
                    LayerManager::DrawPaintedLayerCallback aCallback,
                    void* aCallbackData,
-                   bool aIsProgressive = false) override;
+                   TilePaintFlags aFlags = TilePaintFlags::None) override;
 
   virtual bool SupportsProgressiveUpdate() override { return true; }
   /**
@@ -405,18 +414,20 @@ public:
       return;
     }
 
-    Update(nsIntRegion(), nsIntRegion(), nsIntRegion());
+    Update(nsIntRegion(), nsIntRegion(), nsIntRegion(), TilePaintFlags::None);
     mResolution = aResolution;
   }
 
 protected:
   bool ValidateTile(TileClient& aTile,
                     const nsIntPoint& aTileRect,
-                    nsIntRegion& aDirtyRegion);
+                    nsIntRegion& aDirtyRegion,
+                    TilePaintFlags aFlags);
 
   void Update(const nsIntRegion& aNewValidRegion,
               const nsIntRegion& aPaintRegion,
-              const nsIntRegion& aDirtyRegion);
+              const nsIntRegion& aDirtyRegion,
+              TilePaintFlags aFlags);
 
   TileClient GetPlaceholderTile() const { return TileClient(); }
 
@@ -430,8 +441,12 @@ private:
   nsIntRegion mNewValidRegion;
 
   SharedFrameMetricsHelper*  mSharedFrameMetricsHelper;
-  // When using Moz2D's CreateTiledDrawTarget we maintain a list of gfx::Tiles
-  std::vector<gfx::Tile> mMoz2DTiles;
+
+  // Parameters that are collected during Update for a paint before they
+  // are either executed or replayed on the paint thread.
+  std::vector<gfx::Tile> mPaintTiles;
+  std::vector<RefPtr<TextureClient>> mPaintTilesTextureClients;
+
   /**
    * While we're adding tiles, this is used to keep track of the position of
    * the top-left of the top-left-most tile.  When we come to wrap the tiles in
