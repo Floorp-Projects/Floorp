@@ -49,6 +49,10 @@ function downloadListenerStop() {
   Assert.equal(gStatusResult, Cr.NS_ERROR_UNEXPECTED,
                "the download status result" + MSG_SHOULD_EQUAL);
   gAUS.removeDownloadListener(downloadListener);
+
+  // Cleaning up the active update along with reloading the update manager
+  // in doTestFinish will prevent writing the update xml files during shutdown.
+  gUpdateManager.cleanupActiveUpdate();
   do_execute_soon(waitForUpdateXMLFiles);
 }
 
