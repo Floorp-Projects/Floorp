@@ -354,13 +354,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               Maybe<const ActiveScrolledRoot*>& aOutContainerASR)
 {
   nsDisplayList merged(&mBuilder);
-<<<<<<< local
-  const ActiveScrolledRoot* containerASR = nullptr;
-
-  const auto ReuseItem = [&](nsDisplayItem* aItem) {
-=======
   const auto UseItem = [&](nsDisplayItem* aItem) {
->>>>>>> graft
     const ActiveScrolledRoot* itemClipASR =
       aItem->GetClipChain() ? aItem->GetClipChain()->mASR : nullptr;
 
