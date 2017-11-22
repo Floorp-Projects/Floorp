@@ -181,13 +181,17 @@ ExpandedPrincipal::AddonHasPermission(const nsAtom* aPerm)
 }
 
 nsIPrincipal*
-ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI,
-                                      bool aAllowIfInheritsPrincipal)
+ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI)
 {
   if (aRequestedURI) {
+    // If a given sub-principal subsumes the given URI, use that principal for
+    // inheritance. In general, this only happens with certain CORS modes, loads
+    // with forced principal inheritance, and creation of XML documents from
+    // XMLHttpRequests or fetch requests. For URIs that normally inherit a
+    // principal (such as data: URIs), we fall back to the last principal in the
+    // whitelist.
     for (const auto& principal : mPrincipals) {
-      if (NS_SUCCEEDED(principal->CheckMayLoad(aRequestedURI, false,
-                                               aAllowIfInheritsPrincipal))) {
+      if (Cast(principal)->MayLoadInternal(aRequestedURI)) {
         return principal;
       }
     }
