@@ -166,7 +166,7 @@ static const Register StackPointer = RealStackPointer;
 // fact ebx.
 static const Register ScratchRegX86 = ebx;
 
-# define INT_DIV_I64_CALLOUT
+# define RABALDR_INT_DIV_I64_CALLOUT
 #endif
 
 #ifdef JS_CODEGEN_ARM
@@ -181,9 +181,9 @@ static const Register FuncPtrCallTemp = CallTempReg1;
 // worth it yet.  CallTempReg2 seems safe.
 static const Register ScratchRegARM = CallTempReg2;
 
-# define INT_DIV_I64_CALLOUT
-# define I64_TO_FLOAT_CALLOUT
-# define FLOAT_TO_I64_CALLOUT
+# define RABALDR_INT_DIV_I64_CALLOUT
+# define RABALDR_I64_TO_FLOAT_CALLOUT
+# define RABALDR_FLOAT_TO_I64_CALLOUT
 #endif
 
 template<MIRType t>
@@ -3051,7 +3051,7 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.bind(&notmin);
     }
 
-#ifndef INT_DIV_I64_CALLOUT
+#ifndef RABALDR_INT_DIV_I64_CALLOUT
     void quotientI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned,
                      bool isConst, int64_t c)
     {
@@ -3109,7 +3109,7 @@ class BaseCompiler final : public BaseCompilerInterface
 # endif
         masm.bind(&done);
     }
-#endif // INT_DIV_I64_CALLOUT
+#endif // RABALDR_INT_DIV_I64_CALLOUT
 
     void pop2xI32ForShiftOrRotate(RegI32* r0, RegI32* r1) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
@@ -3307,7 +3307,7 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     };
 
-#ifndef FLOAT_TO_I64_CALLOUT
+#ifndef RABALDR_FLOAT_TO_I64_CALLOUT
     MOZ_MUST_USE bool truncateF32ToI64(RegF32 src, RegI64 dest, bool isUnsigned, RegF64 temp) {
 # if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
@@ -3347,9 +3347,9 @@ class BaseCompiler final : public BaseCompilerInterface
 # endif
         return true;
     }
-#endif // FLOAT_TO_I64_CALLOUT
+#endif // RABALDR_FLOAT_TO_I64_CALLOUT
 
-#ifndef I64_TO_FLOAT_CALLOUT
+#ifndef RABALDR_I64_TO_FLOAT_CALLOUT
     bool convertI64ToFloatNeedsTemp(ValType to, bool isUnsigned) const {
 # if defined(JS_CODEGEN_X86)
         return isUnsigned &&
@@ -3381,7 +3381,7 @@ class BaseCompiler final : public BaseCompilerInterface
         MOZ_CRASH("BaseCompiler platform hook: convertI64ToF64");
 # endif
     }
-#endif // I64_TO_FLOAT_CALLOUT
+#endif // RABALDR_I64_TO_FLOAT_CALLOUT
 
     void cmp64Set(Assembler::Condition cond, RegI64 lhs, RegI64 rhs, RegI32 dest) {
 #if defined(JS_CODEGEN_X64)
@@ -4271,7 +4271,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void emitQuotientU32();
     void emitRemainderI32();
     void emitRemainderU32();
-#ifdef INT_DIV_I64_CALLOUT
+#ifdef RABALDR_INT_DIV_I64_CALLOUT
     void emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType);
 #else
     void emitQuotientI64();
@@ -4319,7 +4319,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void emitSqrtF64();
     template<bool isUnsigned> MOZ_MUST_USE bool emitTruncateF32ToI32();
     template<bool isUnsigned> MOZ_MUST_USE bool emitTruncateF64ToI32();
-#ifdef FLOAT_TO_I64_CALLOUT
+#ifdef RABALDR_FLOAT_TO_I64_CALLOUT
     MOZ_MUST_USE bool emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType operandType,
                                                         ValType resultType);
 #else
@@ -4342,7 +4342,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void emitConvertF32ToF64();
     void emitConvertI32ToF64();
     void emitConvertU32ToF64();
-#ifdef I64_TO_FLOAT_CALLOUT
+#ifdef RABALDR_I64_TO_FLOAT_CALLOUT
     MOZ_MUST_USE bool emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType operandType,
                                                         ValType resultType);
 #else
@@ -4657,7 +4657,7 @@ BaseCompiler::emitRemainderU32()
     }
 }
 
-#ifndef INT_DIV_I64_CALLOUT
+#ifndef RABALDR_INT_DIV_I64_CALLOUT
 void
 BaseCompiler::emitQuotientI64()
 {
@@ -4772,7 +4772,7 @@ BaseCompiler::emitRemainderU64()
     MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
 # endif
 }
-#endif // INT_DIV_I64_CALLOUT
+#endif // RABALDR_INT_DIV_I64_CALLOUT
 
 void
 BaseCompiler::emitDivideF32()
@@ -5344,7 +5344,7 @@ BaseCompiler::emitTruncateF64ToI32()
     return true;
 }
 
-#ifndef FLOAT_TO_I64_CALLOUT
+#ifndef RABALDR_FLOAT_TO_I64_CALLOUT
 template<bool isUnsigned>
 bool
 BaseCompiler::emitTruncateF32ToI64()
@@ -5384,7 +5384,7 @@ BaseCompiler::emitTruncateF64ToI64()
     pushI64(x0);
     return true;
 }
-#endif // FLOAT_TO_I64_CALLOUT
+#endif // RABALDR_FLOAT_TO_I64_CALLOUT
 
 void
 BaseCompiler::emitWrapI64ToI32()
@@ -5503,7 +5503,7 @@ BaseCompiler::emitConvertU32ToF32()
     pushF32(f0);
 }
 
-#ifndef I64_TO_FLOAT_CALLOUT
+#ifndef RABALDR_I64_TO_FLOAT_CALLOUT
 void
 BaseCompiler::emitConvertI64ToF32()
 {
@@ -5559,7 +5559,7 @@ BaseCompiler::emitConvertU32ToF64()
     pushF64(d0);
 }
 
-#ifndef I64_TO_FLOAT_CALLOUT
+#ifndef RABALDR_I64_TO_FLOAT_CALLOUT
 void
 BaseCompiler::emitConvertI64ToF64()
 {
@@ -5583,7 +5583,7 @@ BaseCompiler::emitConvertU64ToF64()
     freeI64(r0);
     pushF64(d0);
 }
-#endif // I64_TO_FLOAT_CALLOUT
+#endif // RABALDR_I64_TO_FLOAT_CALLOUT
 
 void
 BaseCompiler::emitReinterpretI32AsF32()
@@ -6437,7 +6437,7 @@ BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandTy
     return true;
 }
 
-#ifdef INT_DIV_I64_CALLOUT
+#ifdef RABALDR_INT_DIV_I64_CALLOUT
 void
 BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType)
 {
@@ -6472,9 +6472,9 @@ BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operand
     freeI64(rhs);
     pushI64(srcDest);
 }
-#endif // INT_DIV_I64_CALLOUT
+#endif // RABALDR_INT_DIV_I64_CALLOUT
 
-#ifdef I64_TO_FLOAT_CALLOUT
+#ifdef RABALDR_I64_TO_FLOAT_CALLOUT
 bool
 BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType operandType,
                                                 ValType resultType)
@@ -6504,9 +6504,9 @@ BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType 
 
     return true;
 }
-#endif // I64_TO_FLOAT_CALLOUT
+#endif // RABALDR_I64_TO_FLOAT_CALLOUT
 
-#ifdef FLOAT_TO_I64_CALLOUT
+#ifdef RABALDR_FLOAT_TO_I64_CALLOUT
 // `Callee` always takes a double, so a float32 input must be converted.
 bool
 BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType operandType,
@@ -6559,7 +6559,7 @@ BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType 
 
     return true;
 }
-#endif // FLOAT_TO_I64_CALLOUT
+#endif // RABALDR_FLOAT_TO_I64_CALLOUT
 
 bool
 BaseCompiler::emitGetLocal()
@@ -7974,35 +7974,35 @@ BaseCompiler::emitBody()
           case uint16_t(Op::I64Mul):
             CHECK_NEXT(emitBinary(emitMultiplyI64, ValType::I64));
           case uint16_t(Op::I64DivS):
-#ifdef INT_DIV_I64_CALLOUT
+#ifdef RABALDR_INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::DivI64,
                                          ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientI64, ValType::I64));
 #endif
           case uint16_t(Op::I64DivU):
-#ifdef INT_DIV_I64_CALLOUT
+#ifdef RABALDR_INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::UDivI64,
                                          ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientU64, ValType::I64));
 #endif
           case uint16_t(Op::I64RemS):
-#ifdef INT_DIV_I64_CALLOUT
+#ifdef RABALDR_INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::ModI64,
                                          ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderI64, ValType::I64));
 #endif
           case uint16_t(Op::I64RemU):
-#ifdef INT_DIV_I64_CALLOUT
+#ifdef RABALDR_INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::UModI64,
                                          ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderU64, ValType::I64));
 #endif
           case uint16_t(Op::I64TruncSF32):
-#ifdef FLOAT_TO_I64_CALLOUT
+#ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToInt64,
                                                 ValType::F32, ValType::I64));
@@ -8010,7 +8010,7 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI64<false>, ValType::F32, ValType::I64));
 #endif
           case uint16_t(Op::I64TruncUF32):
-#ifdef FLOAT_TO_I64_CALLOUT
+#ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToUint64,
                                                 ValType::F32, ValType::I64));
@@ -8018,7 +8018,7 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI64<true>, ValType::F32, ValType::I64));
 #endif
           case uint16_t(Op::I64TruncSF64):
-#ifdef FLOAT_TO_I64_CALLOUT
+#ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToInt64,
                                                 ValType::F64, ValType::I64));
@@ -8026,7 +8026,7 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitConversionOOM(emitTruncateF64ToI64<false>, ValType::F64, ValType::I64));
 #endif
           case uint16_t(Op::I64TruncUF64):
-#ifdef FLOAT_TO_I64_CALLOUT
+#ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToUint64,
                                                 ValType::F64, ValType::I64));
@@ -8123,7 +8123,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F32ConvertUI32):
             CHECK_NEXT(emitConversion(emitConvertU32ToF32, ValType::I32, ValType::F32));
           case uint16_t(Op::F32ConvertSI64):
-#ifdef I64_TO_FLOAT_CALLOUT
+#ifdef RABALDR_I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Int64ToFloat32,
                                                 ValType::I64, ValType::F32));
@@ -8131,7 +8131,7 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitConversion(emitConvertI64ToF32, ValType::I64, ValType::F32));
 #endif
           case uint16_t(Op::F32ConvertUI64):
-#ifdef I64_TO_FLOAT_CALLOUT
+#ifdef RABALDR_I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Uint64ToFloat32,
                                                 ValType::I64, ValType::F32));
@@ -8188,7 +8188,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F64ConvertUI32):
             CHECK_NEXT(emitConversion(emitConvertU32ToF64, ValType::I32, ValType::F64));
           case uint16_t(Op::F64ConvertSI64):
-#ifdef I64_TO_FLOAT_CALLOUT
+#ifdef RABALDR_I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Int64ToDouble,
                                                 ValType::I64, ValType::F64));
@@ -8196,7 +8196,7 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitConversion(emitConvertI64ToF64, ValType::I64, ValType::F64));
 #endif
           case uint16_t(Op::F64ConvertUI64):
-#ifdef I64_TO_FLOAT_CALLOUT
+#ifdef RABALDR_I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Uint64ToDouble,
                                                 ValType::I64, ValType::F64));
@@ -8798,7 +8798,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
     return code->swap(masm);
 }
 
-#undef INT_DIV_I64_CALLOUT
-#undef I64_TO_FLOAT_CALLOUT
-#undef FLOAT_TO_I64_CALLOUT
+#undef RABALDR_INT_DIV_I64_CALLOUT
+#undef RABALDR_I64_TO_FLOAT_CALLOUT
+#undef RABALDR_FLOAT_TO_I64_CALLOUT
 #undef ATOMIC_PTR
