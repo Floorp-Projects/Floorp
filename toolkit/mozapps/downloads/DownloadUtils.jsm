@@ -94,9 +94,7 @@ Object.defineProperty(this, "gBundle", {
   enumerable: true,
   get() {
     delete this.gBundle;
-    return this.gBundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                          getService(Ci.nsIStringBundleService).
-                          createBundle(kDownloadProperties);
+    return this.gBundle = Services.strings.createBundle(kDownloadProperties);
   },
 });
 
@@ -385,17 +383,13 @@ this.DownloadUtils = {
    * @return A pair: [display host for the URI string, full host name]
    */
   getURIHost: function DU_getURIHost(aURIString) {
-    let ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-    let eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
-                      getService(Ci.nsIEffectiveTLDService);
     let idnService = Cc["@mozilla.org/network/idn-service;1"].
                      getService(Ci.nsIIDNService);
 
     // Get a URI that knows about its components
     let uri;
     try {
-      uri = ioService.newURI(aURIString);
+      uri = Services.io.newURI(aURIString);
     } catch (ex) {
       return ["", ""];
     }
@@ -415,7 +409,7 @@ this.DownloadUtils = {
     let displayHost;
     try {
       // This might fail if it's an IP address or doesn't have more than 1 part
-      let baseDomain = eTLDService.getBaseDomain(uri);
+      let baseDomain = Services.eTLD.getBaseDomain(uri);
 
       // Convert base domain for display; ignore the isAscii out param
       displayHost = idnService.convertToDisplayIDN(baseDomain, {});
@@ -555,7 +549,6 @@ function convertTimeUnitsUnits(aTime, aIndex) {
  */
 function log(aMsg) {
   let msg = "DownloadUtils.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
-    logStringMessage(msg);
+  Services.console.logStringMessage(msg);
   dump(msg + "\n");
 }
