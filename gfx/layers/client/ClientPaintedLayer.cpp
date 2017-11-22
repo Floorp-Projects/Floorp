@@ -66,13 +66,7 @@ ClientPaintedLayer::CanRecordLayer(ReadbackProcessor* aReadback)
     return false;
   }
 
-  // If we have mask layers, we have to render those first
-  // In this case, don't record for now.
-  if (GetMaskLayer()) {
-    return false;
-  }
-
-  return GetAncestorMaskLayerCount() == 0;
+  return true;
 }
 
 void
