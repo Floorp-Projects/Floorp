@@ -9,11 +9,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-XPCOMUtils.defineLazyGetter(this, "gPref", function bls_gPref() {
-  return Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).
-         QueryInterface(Ci.nsIPrefBranch);
-});
-
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 var testserver = new HttpServer();
@@ -104,10 +99,10 @@ function run_test() {
   }, profileDir);
 
   // Pre-set the preferences that we expect to get reset.
-  gPref.setIntPref("test.blocklist.pref1", 15);
-  gPref.setIntPref("test.blocklist.pref2", 15);
-  gPref.setBoolPref("test.blocklist.pref3", true);
-  gPref.setBoolPref("test.blocklist.pref4", true);
+  Services.prefs.setIntPref("test.blocklist.pref1", 15);
+  Services.prefs.setIntPref("test.blocklist.pref2", 15);
+  Services.prefs.setBoolPref("test.blocklist.pref3", true);
+  Services.prefs.setBoolPref("test.blocklist.pref4", true);
 
   startupManager();
 
@@ -117,10 +112,10 @@ function run_test() {
     do_check_eq(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
     do_check_eq(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
-    do_check_eq(gPref.getIntPref("test.blocklist.pref1"), 15);
-    do_check_eq(gPref.getIntPref("test.blocklist.pref2"), 15);
-    do_check_eq(gPref.getBoolPref("test.blocklist.pref3"), true);
-    do_check_eq(gPref.getBoolPref("test.blocklist.pref4"), true);
+    do_check_eq(Services.prefs.getIntPref("test.blocklist.pref1"), 15);
+    do_check_eq(Services.prefs.getIntPref("test.blocklist.pref2"), 15);
+    do_check_eq(Services.prefs.getBoolPref("test.blocklist.pref3"), true);
+    do_check_eq(Services.prefs.getBoolPref("test.blocklist.pref4"), true);
     run_test_1();
   });
 }
@@ -138,10 +133,10 @@ function run_test_1() {
       do_check_eq(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
 
       // All these prefs must be reset to defaults.
-      do_check_eq(gPref.prefHasUserValue("test.blocklist.pref1"), false);
-      do_check_eq(gPref.prefHasUserValue("test.blocklist.pref2"), false);
-      do_check_eq(gPref.prefHasUserValue("test.blocklist.pref3"), false);
-      do_check_eq(gPref.prefHasUserValue("test.blocklist.pref4"), false);
+      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref1"), false);
+      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref2"), false);
+      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref3"), false);
+      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref4"), false);
       end_test();
     });
   });

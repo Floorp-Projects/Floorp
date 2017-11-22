@@ -64,9 +64,7 @@ function checkInstallConfirmation(...urls) {
 
         is(urls.length, 0, "Saw install dialogs for all expected urls");
 
-        let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                             .getService(Ci.nsIWindowMediator);
-        wm.removeListener(listener);
+        Services.wm.removeListener(listener);
 
         is(notificationCount, nurls, `Saw ${nurls} addon-install-started notifications`);
         Services.obs.removeObserver(observer, "addon-install-started");
@@ -75,9 +73,7 @@ function checkInstallConfirmation(...urls) {
       }
     };
 
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                         .getService(Ci.nsIWindowMediator);
-    wm.addListener(listener);
+    Services.wm.addListener(listener);
   });
 }
 
