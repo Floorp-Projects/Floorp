@@ -173,8 +173,8 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
         final double width = (int) message.getDouble("width");
         final double height = (int) message.getDouble("height");
 
-        final float toolbarOffset = geckoView.getCurrentToolbarHeight();
-        final float zoomFactor = geckoView.getZoomFactor();
+        final float toolbarOffset = geckoView.getDynamicToolbarAnimator().getCurrentToolbarHeight();
+        final float zoomFactor = geckoView.getSession().getViewportMetrics().zoomFactor;
         geckoView.getLocationInWindow(locationInWindow);
 
         contentRect = new Rect(
