@@ -40,7 +40,7 @@ class AutocompleteCustomDomainsFragment : Fragment() {
         (domainList.adapter as DomainListAdapter).refresh(activity)
     }
 
-    private class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private inner class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val domains: MutableList<String> = mutableListOf()
 
         fun refresh(context: Context) {
@@ -64,6 +64,7 @@ class AutocompleteCustomDomainsFragment : Fragment() {
                 when (viewType) {
                     AddActionViewHolder.LAYOUT_ID ->
                             AddActionViewHolder(
+                                    this@AutocompleteCustomDomainsFragment,
                                     LayoutInflater.from(parent!!.context).inflate(viewType, parent, false))
                     DomainViewHolder.LAYOUT_ID ->
                             DomainViewHolder(
@@ -90,7 +91,17 @@ class AutocompleteCustomDomainsFragment : Fragment() {
         }
     }
 
-    private class AddActionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private class AddActionViewHolder(val fragment: AutocompleteCustomDomainsFragment, itemView: View) : RecyclerView.ViewHolder(itemView) {
+        init {
+            itemView.setOnClickListener {
+                fragment.fragmentManager
+                        .beginTransaction()
+                        .replace(R.id.container, AutocompleteAddDomainFragment())
+                        .addToBackStack(null)
+                        .commit()
+            }
+        }
+
         companion object {
             val LAYOUT_ID = R.layout.item_add_custom_domain
         }

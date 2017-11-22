@@ -5,4 +5,4 @@
 <Button xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="@string/preference_autocomplete_add" />
+    android:text="@string/preference_autocomplete_action_add" />
