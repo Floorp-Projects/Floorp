@@ -263,15 +263,15 @@ NS_NewInputStreamChannelInternal(nsIChannel** outChannel,
                                  nsContentPolicyType aContentPolicyType);
 
 
-nsresult /* NS_NewInputStreamChannelPrincipal */
-NS_NewInputStreamChannel(nsIChannel        **outChannel,
-                         nsIURI             *aUri,
-                         nsIInputStream     *aStream,
-                         nsIPrincipal       *aLoadingPrincipal,
-                         nsSecurityFlags     aSecurityFlags,
+nsresult
+NS_NewInputStreamChannel(nsIChannel* *outChannel,
+                         nsIURI* aUri,
+                         already_AddRefed<nsIInputStream> aStream,
+                         nsIPrincipal* aLoadingPrincipal,
+                         nsSecurityFlags aSecurityFlags,
                          nsContentPolicyType aContentPolicyType,
-                         const nsACString   &aContentType    = EmptyCString(),
-                         const nsACString   &aContentCharset = EmptyCString());
+                         const nsACString& aContentType    = EmptyCString(),
+                         const nsACString& aContentCharset = EmptyCString());
 
 nsresult NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
                                           nsIURI             *aUri,

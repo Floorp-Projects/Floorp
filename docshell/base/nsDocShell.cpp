@@ -1695,9 +1695,10 @@ nsDocShell::LoadStream(nsIInputStream* aStream, nsIURI* aURI,
 
   // build up a channel for this stream.
   nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsIInputStream> stream = aStream;
   nsresult rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
                                          uri,
-                                         aStream,
+                                         stream.forget(),
                                          triggeringPrincipal,
                                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                          nsIContentPolicy::TYPE_OTHER,
