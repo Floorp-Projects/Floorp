@@ -783,7 +783,7 @@ private:
   bool mPreserveLayers;
 
   // Holds the most recent value passed to the RenderLayers function.
-  bool mRenderingLayers;
+  bool mRenderLayers;
 
   // True if this TabParent has had its layer tree sent to the compositor
   // at least once.
