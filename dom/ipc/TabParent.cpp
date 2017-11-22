@@ -173,7 +173,7 @@ TabParent::TabParent(nsIContentParent* aManager,
 #endif
   , mLayerTreeEpoch(0)
   , mPreserveLayers(false)
-  , mRenderingLayers(false)
+  , mRenderLayers(false)
   , mHasPresented(false)
   , mHasBeforeUnload(false)
   , mIsMouseEnterIntoWidgetEventSuppressed(false)
@@ -2950,7 +2950,7 @@ TabParent::GetIsPrerendered(bool* aIsPrerendered)
 NS_IMETHODIMP
 TabParent::RenderLayers(bool aEnabled)
 {
-  if (aEnabled == mRenderingLayers) {
+  if (aEnabled == mRenderLayers) {
     return NS_OK;
   }
 
@@ -2960,7 +2960,7 @@ TabParent::RenderLayers(bool aEnabled)
     return NS_OK;
   }
 
-  mRenderingLayers = aEnabled;
+  mRenderLayers = aEnabled;
 
   // Increment the epoch so that layer tree updates from previous
   // RenderLayers requests are ignored.
