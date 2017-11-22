@@ -348,9 +348,12 @@ class AsmFlags(BaseCompileFlags):
     def __init__(self, context):
         self._context = context
         self.flag_variables = (
-            ('OS', context.config.substs.get('ASFLAGS'), ('ASFLAGS',)),
-            ('DEBUG', self._debug_flags(), ('ASFLAGS',)),
-            ('MOZBUILD', None, ('ASFLAGS',)),
+            ('DEFINES', None, ('SFLAGS',)),
+            ('LIBRARY_DEFINES', None, ('SFLAGS',)),
+            ('OS', context.config.substs.get('ASFLAGS'), ('ASFLAGS', 'SFLAGS')),
+            ('DEBUG', self._debug_flags(), ('ASFLAGS', 'SFLAGS')),
+            ('LOCAL_INCLUDES', None, ('SFLAGS',)),
+            ('MOZBUILD', None, ('ASFLAGS', 'SFLAGS')),
         )
         BaseCompileFlags.__init__(self, context)
 
