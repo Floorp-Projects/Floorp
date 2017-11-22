@@ -283,21 +283,17 @@ RetainedDisplayListBuilder::IncrementSubDocPresShellPaintCount(nsDisplayItem* aI
 }
 
 void UpdateASR(nsDisplayItem* aItem,
-               Maybe<const ActiveScrolledRoot*>& aContainerASR)
+               const ActiveScrolledRoot* aContainerASR)
 {
-  if (!aContainerASR) {
-    return;
-  }
-
   nsDisplayWrapList* wrapList = aItem->AsDisplayWrapList();
   if (!wrapList) {
-    aItem->SetActiveScrolledRoot(aContainerASR.value());
+    aItem->SetActiveScrolledRoot(aContainerASR);
     return;
   }
 
   wrapList->SetActiveScrolledRoot(
     ActiveScrolledRoot::PickAncestor(wrapList->GetFrameActiveScrolledRoot(),
-                                     aContainerASR.value()));
+                                     aContainerASR));
 }
 
 /**
@@ -351,20 +347,22 @@ void
 RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               nsDisplayList* aOldList,
                                               nsDisplayList* aOutList,
-                                              Maybe<const ActiveScrolledRoot*>& aOutContainerASR)
+                                              const ActiveScrolledRoot** aOutContainerASR)
 {
   nsDisplayList merged(&mBuilder);
-  const auto UseItem = [&](nsDisplayItem* aItem) {
+  const ActiveScrolledRoot* containerASR = nullptr;
+
+  const auto ReuseItem = [&](nsDisplayItem* aItem) {
     const ActiveScrolledRoot* itemClipASR =
       aItem->GetClipChain() ? aItem->GetClipChain()->mASR : nullptr;
 
     const ActiveScrolledRoot* finiteBoundsASR = ActiveScrolledRoot::PickDescendant(
       itemClipASR, aItem->GetActiveScrolledRoot());
-    if (!aOutContainerASR) {
-      aOutContainerASR = Some(finiteBoundsASR);
+    if (merged.IsEmpty()) {
+      containerASR = finiteBoundsASR;
     } else {
-      aOutContainerASR =
-        Some(ActiveScrolledRoot::PickAncestor(aOutContainerASR.value(), finiteBoundsASR));
+      containerASR =
+        ActiveScrolledRoot::PickAncestor(containerASR, finiteBoundsASR);
     }
 
     merged.AppendToTop(aItem);
@@ -410,9 +408,9 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
 
         if (oldItem->GetChildren()) {
           MOZ_ASSERT(newItem->GetChildren());
-          Maybe<const ActiveScrolledRoot*> containerASRForChildren;
+          const ActiveScrolledRoot* containerASRForChildren;
           MergeDisplayLists(newItem->GetChildren(), oldItem->GetChildren(),
-                            oldItem->GetChildren(), containerASRForChildren);
+                            oldItem->GetChildren(), &containerASRForChildren);
           UpdateASR(oldItem, containerASRForChildren);
           oldItem->UpdateBounds(&mBuilder);
         }
@@ -430,9 +428,9 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
             // ensure that we find and remove any invalidated items.
             if (old->GetChildren()) {
               nsDisplayList empty(&mBuilder);
-              Maybe<const ActiveScrolledRoot*> containerASRForChildren;
+              const ActiveScrolledRoot* containerASRForChildren;
               MergeDisplayLists(&empty, old->GetChildren(),
-                                old->GetChildren(), containerASRForChildren);
+                                old->GetChildren(), &containerASRForChildren);
               UpdateASR(old, containerASRForChildren);
               old->UpdateBounds(&mBuilder);
             }
@@ -460,9 +458,9 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
           if (!IsAnyAncestorModified(old->FrameForInvalidation()) &&
               old->GetChildren()) {
             MOZ_ASSERT(newItem->GetChildren());
-            Maybe<const ActiveScrolledRoot*> containerASRForChildren;
+            const ActiveScrolledRoot* containerASRForChildren;
             MergeDisplayLists(newItem->GetChildren(), old->GetChildren(),
-                              newItem->GetChildren(), containerASRForChildren);
+                              newItem->GetChildren(), &containerASRForChildren);
             UpdateASR(newItem, containerASRForChildren);
             newItem->UpdateBounds(&mBuilder);
           }
@@ -487,10 +485,10 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
         // Passing an empty new display list as an argument skips the merging
         // loop above and jumps back here.
         nsDisplayList empty(&mBuilder);
-        Maybe<const ActiveScrolledRoot*> containerASRForChildren;
+        const ActiveScrolledRoot* containerASRForChildren;
 
         MergeDisplayLists(&empty, old->GetChildren(),
-                          old->GetChildren(), containerASRForChildren);
+                          old->GetChildren(), &containerASRForChildren);
         UpdateASR(old, containerASRForChildren);
         old->UpdateBounds(&mBuilder);
       }
@@ -504,6 +502,9 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
   }
 
   aOutList->AppendToTop(&merged);
+  if (aOutContainerASR) {
+    *aOutContainerASR = containerASR;
+  }
 }
 
 static void
@@ -860,8 +861,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
     // are not visible anymore) from the old list.
     // TODO: Optimization opportunity. In this case, MergeDisplayLists()
     // unnecessarily creates a hashtable of the old items.
-    Maybe<const ActiveScrolledRoot*> dummy;
-    MergeDisplayLists(&modifiedDL, &mList, &mList, dummy);
+    MergeDisplayLists(&modifiedDL, &mList, &mList, nullptr);
 
     //printf_stderr("Painting --- Merged list:\n");
     //nsFrame::PrintDisplayList(&mBuilder, mList);
