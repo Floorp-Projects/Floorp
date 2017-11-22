@@ -204,7 +204,7 @@ class TupOnly(CommonBackend, PartialBackend):
         return self._backend_files[objdir]
 
     def _get_backend_file_for(self, obj):
-        return self._get_backend_file(obj.relativedir)
+        return self._get_backend_file(obj.relobjdir)
 
     def _py_action(self, action):
         cmd = [
