@@ -560,11 +560,13 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
   }
 
   if (!aBaseStyleContext) {
+    Element* animatingElement =
+      EffectCompositor::GetElementToRestyle(mTarget->mElement,
+                                            mTarget->mPseudoType);
     aBaseStyleContext =
       aPresContext->StyleSet()->AsServo()->GetBaseContextForElement(
-          mTarget->mElement,
+          animatingElement,
           aPresContext,
-          mTarget->mPseudoType,
           aComputedStyle);
   }
   RefPtr<RawServoAnimationValue> baseValue =
