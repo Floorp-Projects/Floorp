@@ -820,6 +820,7 @@ a.learn-more-link.webconsole-learn-more-link {
 */
 .webconsole-filteringbar-wrapper {
   display: flex;
+  grid-row: 1 / 2;
   /* Wrap so the "Hidden messages" bar can go to its own row if needed */
   flex-wrap: wrap;
   --primary-toolbar-height: 29px;
@@ -1137,6 +1138,7 @@ a.learn-more-link.webconsole-learn-more-link {
   overflow: auto;
   -moz-user-select: text;
   position: relative;
+  grid-row: 2 / 3;
 }
 
 html,
@@ -1162,8 +1164,9 @@ body #output-container {
 }
 
 .webconsole-output-wrapper {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr;
   height: 100%;
 }
 
@@ -1184,4 +1187,12 @@ body #output-container {
 
 .theme-dark .webconsole-output-wrapper .object-inspector.tree {
   --arrow-fill-color: #7F7E81;
+}
+
+.sidebar {
+  display: flex;
+  grid-row: 1 / -1;
+  grid-column: -1 / -2;
+  min-width: 200px;
+  background-color: var(--theme-sidebar-background);
 }

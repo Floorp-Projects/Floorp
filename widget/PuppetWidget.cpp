@@ -652,6 +652,10 @@ PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
     return NS_OK;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(composition->IsRequestingCommitOrCancelComposition(),
+    "Requesting commit or cancel composition should be requested via "
+    "TextComposition instance");
+
   bool isCommitted = false;
   nsAutoString committedString;
   if (NS_WARN_IF(!mTabChild->SendRequestIMEToCommitComposition(
