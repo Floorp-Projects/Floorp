@@ -56,17 +56,17 @@ public class TypicalUseScenarioTest {
 
         UiObject blockAdTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(2));
+                .instance(3));
         UiObject blockAdTrackerValue = blockAdTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
         UiObject blockAnalyticTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(4));
+                .instance(5));
         UiObject blockAnalyticTrackerValue = blockAnalyticTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
         UiObject blockSocialTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(6));
+                .instance(7));
         UiObject blockSocialTrackerValue = blockSocialTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
 
