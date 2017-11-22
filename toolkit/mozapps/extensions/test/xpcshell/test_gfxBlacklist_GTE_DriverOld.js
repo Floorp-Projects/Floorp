@@ -16,12 +16,6 @@ gTestserver.start(-1);
 gPort = gTestserver.identity.primaryPort;
 mapFile("/data/test_gfxBlacklist.xml", gTestserver);
 
-function get_platform() {
-  var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]
-                             .getService(Ci.nsIXULRuntime);
-  return xulRuntime.OS;
-}
-
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
                              gPort + "/data/" + file);
@@ -43,7 +37,7 @@ function run_test() {
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
 
   // Set the vendor/device ID, etc, to match the test file.
-  switch (get_platform()) {
+  switch (Services.appinfo.OS) {
     case "WINNT":
       gfxInfo.spoofVendorID("0xabab");
       gfxInfo.spoofDeviceID("0x1234");

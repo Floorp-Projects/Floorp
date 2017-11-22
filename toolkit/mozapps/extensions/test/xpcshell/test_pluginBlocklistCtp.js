@@ -5,7 +5,6 @@
 const nsIBLS = Components.interfaces.nsIBlocklistService;
 Components.utils.import("resource://testing-common/httpd.js");
 
-var gBlocklistService = null;
 var gNotifier = null;
 var gNextTest = null;
 var gPluginHost = null;
@@ -92,7 +91,7 @@ function get_test_plugin() {
 // so it shouldn't be click-to-play.
 function test_is_not_clicktoplay() {
   var plugin = get_test_plugin();
-  var blocklistState = gBlocklistService.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   do_check_neq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   do_check_neq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
@@ -105,7 +104,7 @@ function test_is_not_clicktoplay() {
 // so it should be click-to-play.
 function test_is_clicktoplay() {
   var plugin = get_test_plugin();
-  var blocklistState = gBlocklistService.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   do_check_eq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtp.xml");
@@ -117,7 +116,7 @@ function test_is_clicktoplay() {
 // to the old one), so the plugin shouldn't be click-to-play any more.
 function test_is_not_clicktoplay2() {
   var plugin = get_test_plugin();
-  var blocklistState = gBlocklistService.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   do_check_neq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   do_check_neq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
@@ -130,12 +129,12 @@ function test_is_not_clicktoplay2() {
 // result in the plugin not being click-to-play.
 function test_disable_blocklist() {
   var plugin = get_test_plugin();
-  var blocklistState = gBlocklistService.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   do_check_eq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
   gNextTest = null;
   Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
-  blocklistState = gBlocklistService.getPluginBlocklistState(plugin, "1", "1.9");
+  blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   do_check_neq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
   do_check_neq(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
 
@@ -165,7 +164,6 @@ function run_test() {
   startupManager();
 
   gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
-  gBlocklistService = Components.classes["@mozilla.org/extensions/blocklist;1"].getService(Components.interfaces.nsIBlocklistService);
   gNotifier = Components.classes["@mozilla.org/extensions/blocklist;1"].getService(Components.interfaces.nsITimerCallback);
   Services.obs.addObserver(observer, "blocklist-updated");
 
