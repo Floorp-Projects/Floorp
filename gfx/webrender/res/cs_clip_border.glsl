@@ -128,8 +128,8 @@ void main(void) {
 
     // Position vertex within the render task area.
     vec2 final_pos = device_pos -
-                     area.screen_origin_target_index.xy +
-                     area.task_bounds.xy;
+                     area.screen_origin +
+                     area.common_data.task_rect.p0;
 
     // Calculate the local space position for this vertex.
     vec4 layer_pos = get_layer_pos(world_pos.xy, layer);

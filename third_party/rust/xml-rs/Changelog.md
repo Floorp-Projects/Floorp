@@ -1,3 +1,42 @@
+## Version 0.7.0
+
+* Same as 0.6.2, with 0.6.2 being yanked because of the incompatible bump of minimum required version of rustc.
+
+## Version 0.6.2
+
+* Bumped `bitflags` to 1.0.
+
+## Version 0.6.1
+
+* Fixed the writer to escape some special characters when writing attribute values.
+
+## Version 0.6.0
+
+* Changed the target type of extra entities from `char` to `String`. This is an incompatible
+  change.
+
+## Version 0.5.0
+
+* Added support for ignoring EOF errors in order to read documents from streams incrementally.
+* Bumped `bitflags` to 0.9.
+
+## Version 0.4.1
+
+* Added missing `Debug` implementation to `xml::writer::XmlEvent`.
+
+## Version 0.4.0
+
+* Bumped version number, since changes introduced in 0.3.7 break backwards compatibility.
+
+## Version 0.3.8
+
+* Fixed a problem introduced in 0.3.7 with entities in attributes causing parsing errors.
+
+## Version 0.3.7
+
+* Fixed the problem with parsing non-whitespace character entities as whitespace (issue #140).
+* Added support for configuring custom entities in the parser configuration.
+
 ## Version 0.3.6
 
 * Added an `Error` implementation for `EmitterError`.

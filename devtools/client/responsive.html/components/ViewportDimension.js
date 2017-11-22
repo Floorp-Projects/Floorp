@@ -4,31 +4,40 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const Constants = require("../constants");
 const Types = require("../types");
 
-module.exports = createClass({
-  displayName: "ViewportDimension",
-
-  propTypes: {
-    viewport: PropTypes.shape(Types.viewport).isRequired,
-    onChangeSize: PropTypes.func.isRequired,
-    onRemoveDeviceAssociation: PropTypes.func.isRequired,
-  },
-
-  getInitialState() {
-    let { width, height } = this.props.viewport;
-
+class ViewportDimension extends Component {
+  static get propTypes() {
     return {
+      viewport: PropTypes.shape(Types.viewport).isRequired,
+      onChangeSize: PropTypes.func.isRequired,
+      onRemoveDeviceAssociation: PropTypes.func.isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    let { width, height } = props.viewport;
+
+    this.state = {
       width,
       height,
       isEditing: false,
       isInvalid: false,
     };
-  },
+
+    this.validateInput = this.validateInput.bind(this);
+    this.onInputBlur = this.onInputBlur.bind(this);
+    this.onInputChange = this.onInputChange.bind(this);
+    this.onInputFocus = this.onInputFocus.bind(this);
+    this.onInputKeyUp = this.onInputKeyUp.bind(this);
+    this.onInputSubmit = this.onInputSubmit.bind(this);
+  }
 
   componentWillReceiveProps(nextProps) {
     let { width, height } = nextProps.viewport;
@@ -37,7 +46,7 @@ module.exports = createClass({
       width,
       height,
     });
-  },
+  }
 
   validateInput(value) {
     let isInvalid = true;
@@ -51,7 +60,7 @@ module.exports = createClass({
     this.setState({
       isInvalid,
     });
-  },
+  }
 
   onInputBlur() {
     let { width, height } = this.props.viewport;
@@ -64,7 +73,7 @@ module.exports = createClass({
       isEditing: false,
       inInvalid: false,
     });
-  },
+  }
 
   onInputChange({ target }) {
     if (target.value.length > 4) {
@@ -80,13 +89,13 @@ module.exports = createClass({
       this.setState({ height: target.value });
       this.validateInput(target.value);
     }
-  },
+  }
 
   onInputFocus() {
     this.setState({
       isEditing: true,
     });
-  },
+  }
 
   onInputKeyUp({ target, keyCode }) {
     // On Enter, submit the input
@@ -98,7 +107,7 @@ module.exports = createClass({
     if (keyCode == 27) {
       target.blur();
     }
-  },
+  }
 
   onInputSubmit() {
     if (this.state.isInvalid) {
@@ -120,7 +129,7 @@ module.exports = createClass({
     }
     this.props.onChangeSize(parseInt(this.state.width, 10),
                             parseInt(this.state.height, 10));
-  },
+  }
 
   render() {
     let editableClass = "viewport-dimension-editable";
@@ -168,6 +177,7 @@ module.exports = createClass({
         })
       )
     );
-  },
+  }
+}
 
-});
+module.exports = ViewportDimension;

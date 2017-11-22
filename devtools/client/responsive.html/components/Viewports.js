@@ -4,28 +4,28 @@
 
 "use strict";
 
-const { DOM: dom, createClass, createFactory, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const Types = require("../types");
 const Viewport = createFactory(require("./Viewport"));
 
-module.exports = createClass({
-
-  displayName: "Viewports",
-
-  propTypes: {
-    devices: PropTypes.shape(Types.devices).isRequired,
-    screenshot: PropTypes.shape(Types.screenshot).isRequired,
-    viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
-    onBrowserMounted: PropTypes.func.isRequired,
-    onChangeDevice: PropTypes.func.isRequired,
-    onContentResize: PropTypes.func.isRequired,
-    onRemoveDeviceAssociation: PropTypes.func.isRequired,
-    onResizeViewport: PropTypes.func.isRequired,
-    onRotateViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModal: PropTypes.func.isRequired,
-  },
+class Viewports extends Component {
+  static get propTypes() {
+    return {
+      devices: PropTypes.shape(Types.devices).isRequired,
+      screenshot: PropTypes.shape(Types.screenshot).isRequired,
+      viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
+      onBrowserMounted: PropTypes.func.isRequired,
+      onChangeDevice: PropTypes.func.isRequired,
+      onContentResize: PropTypes.func.isRequired,
+      onRemoveDeviceAssociation: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
+      onRotateViewport: PropTypes.func.isRequired,
+      onUpdateDeviceModal: PropTypes.func.isRequired,
+    };
+  }
 
   render() {
     let {
@@ -62,6 +62,7 @@ module.exports = createClass({
         });
       })
     );
-  },
+  }
+}
 
-});
+module.exports = Viewports;

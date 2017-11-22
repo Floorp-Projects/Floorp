@@ -115,7 +115,7 @@ LivemarkService.prototype = {
       }
       return func(this._livemarksMap);
     });
-    this._promiseLivemarksMapReady = promise.catch(Cu.reportError);
+    this._promiseLivemarksMapReady = promise.catch(_ => {});
     return promise;
   },
 
@@ -320,7 +320,7 @@ LivemarkService.prototype = {
         }
       }
     });
-    this._promiseLivemarksMapReady = promise.catch(Cu.reportError);
+    this._promiseLivemarksMapReady = promise.catch(_ => {});
 
     // Restart the timer if we were reloading before invalidating.
     if (keepReloading) {
@@ -330,6 +330,8 @@ LivemarkService.prototype = {
     } else {
       delete this._reloadTimer;
     }
+
+    return promise;
   },
 
   invalidateCachedLivemarks() {

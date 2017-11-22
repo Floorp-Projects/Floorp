@@ -382,7 +382,6 @@ protected:
   // Stylo version of the above function that also first checks for an additive
   // value in |aProperty|'s list of segments.
   void EnsureBaseStyle(const AnimationProperty& aProperty,
-                       CSSPseudoElementType aPseudoType,
                        nsPresContext* aPresContext,
                        const ServoStyleContext* aComputedValues,
                        RefPtr<mozilla::ServoStyleContext>& aBaseComputedValues);

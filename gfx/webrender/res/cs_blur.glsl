@@ -23,20 +23,20 @@ in int aBlurDirection;
 in vec4 aBlurRegion;
 
 void main(void) {
-    RenderTaskData task = fetch_render_task(aBlurRenderTaskAddress);
-    RenderTaskData src_task = fetch_render_task(aBlurSourceTaskAddress);
+    BlurTask blur_task = fetch_blur_task(aBlurRenderTaskAddress);
+    RenderTaskCommonData src_task = fetch_render_task_common_data(aBlurSourceTaskAddress);
 
-    vec4 src_rect = src_task.data0;
-    vec4 target_rect = task.data0;
+    RectWithSize src_rect = src_task.task_rect;
+    RectWithSize target_rect = blur_task.common_data.task_rect;
 
 #if defined WR_FEATURE_COLOR_TARGET
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0).xy);
 #else
     vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
 #endif
-    vUv.z = src_task.data1.x;
-    vBlurRadius = int(3.0 * task.data1.y);
-    vSigma = task.data1.y;
+    vUv.z = src_task.texture_layer_index;
+    vBlurRadius = int(3.0 * blur_task.blur_radius);
+    vSigma = blur_task.blur_radius;
 
     switch (aBlurDirection) {
         case DIR_HORIZONTAL:
@@ -47,20 +47,21 @@ void main(void) {
             break;
     }
 
-    vUvRect = vec4(src_rect.xy + vec2(0.5),
-                   src_rect.xy + src_rect.zw - vec2(0.5));
+    vUvRect = vec4(src_rect.p0 + vec2(0.5),
+                   src_rect.p0 + src_rect.size - vec2(0.5));
     vUvRect /= texture_size.xyxy;
 
     if (aBlurRegion.z > 0.0) {
         vec4 blur_region = aBlurRegion * uDevicePixelRatio;
-        src_rect = vec4(src_rect.xy + blur_region.xy, blur_region.zw);
-        target_rect = vec4(target_rect.xy + blur_region.xy, blur_region.zw);
+        src_rect = RectWithSize(src_rect.p0 + blur_region.xy, blur_region.zw);
+        target_rect.p0 = target_rect.p0 + blur_region.xy;
+        target_rect.size = blur_region.zw;
     }
 
-    vec2 pos = target_rect.xy + target_rect.zw * aPosition.xy;
+    vec2 pos = target_rect.p0 + target_rect.size * aPosition.xy;
 
-    vec2 uv0 = src_rect.xy / texture_size;
-    vec2 uv1 = (src_rect.xy + src_rect.zw) / texture_size;
+    vec2 uv0 = src_rect.p0 / texture_size;
+    vec2 uv1 = (src_rect.p0 + src_rect.size) / texture_size;
     vUv.xy = mix(uv0, uv1, aPosition.xy);
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);

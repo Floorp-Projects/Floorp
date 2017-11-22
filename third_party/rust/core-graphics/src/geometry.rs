@@ -16,8 +16,24 @@ pub const CG_ZERO_POINT: CGPoint = CGPoint {
     y: 0.0,
 };
 
+pub const CG_ZERO_SIZE: CGSize = CGSize {
+    width: 0.0,
+    height: 0.0,
+};
+
+pub const CG_ZERO_RECT: CGRect = CGRect {
+    origin: CG_ZERO_POINT,
+    size: CG_ZERO_SIZE,
+};
+
+pub const CG_AFFINE_TRANSFORM_IDENTITY: CGAffineTransform = CGAffineTransform {
+    a: 1.0, b: 0.0,
+    c: 0.0, d: 1.0,
+    tx: 0.0, ty: 0.0,
+};
+
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct CGSize {
     pub width: CGFloat,
     pub height: CGFloat,
@@ -31,10 +47,17 @@ impl CGSize {
             height: height,
         }
     }
+
+    #[inline]
+    pub fn apply_transform(&self, t: &CGAffineTransform) -> CGSize {
+        unsafe {
+            ffi::CGSizeApplyAffineTransform(*self, *t)
+        }
+    }
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct CGPoint {
     pub x: CGFloat,
     pub y: CGFloat,
@@ -48,10 +71,17 @@ impl CGPoint {
             y: y,
         }
     }
+
+    #[inline]
+    pub fn apply_transform(&self, t: &CGAffineTransform) -> CGPoint {
+        unsafe {
+            ffi::CGPointApplyAffineTransform(*self, *t)
+        }
+    }
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct CGRect {
     pub origin: CGPoint,
     pub size: CGSize
@@ -101,20 +131,65 @@ impl CGRect {
             ffi::CGRectIntersectsRect(*self, *other) == 1
         }
     }
+
+    #[inline]
+    pub fn apply_transform(&self, t: &CGAffineTransform) -> CGRect {
+        unsafe {
+            ffi::CGRectApplyAffineTransform(*self, *t)
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct CGAffineTransform {
+    pub a: CGFloat,
+    pub b: CGFloat,
+    pub c: CGFloat,
+    pub d: CGFloat,
+    pub tx: CGFloat,
+    pub ty: CGFloat,
+}
+
+impl CGAffineTransform {
+    #[inline]
+    pub fn new(
+        a: CGFloat,
+        b: CGFloat,
+        c: CGFloat,
+        d: CGFloat,
+        tx: CGFloat,
+        ty: CGFloat,
+    ) -> CGAffineTransform {
+        CGAffineTransform { a, b, c, d, tx, ty }
+    }
+
+    #[inline]
+    pub fn invert(&self) -> CGAffineTransform {
+        unsafe {
+            ffi::CGAffineTransformInvert(*self)
+        }
+    }
 }
 
 mod ffi {
     use base::{CGFloat, boolean_t};
-    use geometry::CGRect;
+    use geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
     use core_foundation::dictionary::CFDictionaryRef;
 
-    #[link(name = "ApplicationServices", kind = "framework")]
+    #[link(name = "CoreGraphics", kind = "framework")]
     extern {
         pub fn CGRectInset(rect: CGRect, dx: CGFloat, dy: CGFloat) -> CGRect;
         pub fn CGRectMakeWithDictionaryRepresentation(dict: CFDictionaryRef,
                                                       rect: *mut CGRect) -> boolean_t;
         pub fn CGRectIsEmpty(rect: CGRect) -> boolean_t;
         pub fn CGRectIntersectsRect(rect1: CGRect, rect2: CGRect) -> boolean_t;
+
+        pub fn CGAffineTransformInvert(t: CGAffineTransform) -> CGAffineTransform;
+
+        pub fn CGPointApplyAffineTransform(point: CGPoint, t: CGAffineTransform) -> CGPoint;
+        pub fn CGRectApplyAffineTransform(rect: CGRect, t: CGAffineTransform) -> CGRect;
+        pub fn CGSizeApplyAffineTransform(size: CGSize, t: CGAffineTransform) -> CGSize;
     }
 }
 

@@ -6,8 +6,9 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes, addons } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent} = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const Types = require("../types");
 const { getStr, getFormatStr } = require("../utils/l10n");
@@ -34,34 +35,37 @@ const createHiddenOption = value => {
   }, label);
 };
 
-module.exports = createClass({
-  displayName: "DevicePixelRatioSelector",
-
-  propTypes: {
-    devices: PropTypes.shape(Types.devices).isRequired,
-    displayPixelRatio: Types.pixelRatio.value.isRequired,
-    selectedDevice: PropTypes.string.isRequired,
-    selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
-    onChangePixelRatio: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
-
-  getInitialState() {
+class DevicePixelRatioSelector extends PureComponent {
+  static get propTypes() {
     return {
+      devices: PropTypes.shape(Types.devices).isRequired,
+      displayPixelRatio: Types.pixelRatio.value.isRequired,
+      selectedDevice: PropTypes.string.isRequired,
+      selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
+      onChangePixelRatio: PropTypes.func.isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       isFocused: false
     };
-  },
+
+    this.onFocusChange = this.onFocusChange.bind(this);
+    this.onSelectChange = this.onSelectChange.bind(this);
+  }
 
   onFocusChange({type}) {
     this.setState({
       isFocused: type === "focus"
     });
-  },
+  }
 
   onSelectChange({ target }) {
     this.props.onChangePixelRatio(+target.value);
-  },
+  }
 
   render() {
     let {
@@ -126,6 +130,7 @@ module.exports = createClass({
       },
       ...listContent
     );
-  },
+  }
+}
 
-});
+module.exports = DevicePixelRatioSelector;

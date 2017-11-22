@@ -158,32 +158,28 @@ function createLinkPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttribut
   if (aMetaPolicy) {
     metaString = `<meta name="referrer" content="${aMetaPolicy}">`;
   }
-  var relString = "";
-  if (aRel) {
-    relString = `rel=${aRel}`;
-  }
 
   var changeString = "";
   var policy = aAttributePolicy ? aAttributePolicy : aMetaPolicy;
-  var elementString = aStringBuilder(policy, aName, relString, aSchemeFrom, aSchemeTo, aTestType);
+  var elementString = aStringBuilder(policy, aName, aRel, aSchemeFrom, aSchemeTo, aTestType);
 
   if (aTestType === "setAttribute") {
     changeString = `var link = document.getElementById("test_link");
                     link.setAttribute("referrerpolicy", "${aNewAttributePolicy}");
-                    link.href = "${createTestUrl(policy, "test", aName, "link_element", aSchemeFrom, aSchemeTo)}";`;
+                    link.href = "${createTestUrl(policy, "test", aName, "link_element_" + aRel, aSchemeFrom, aSchemeTo)}";`;
   } else if (aTestType === "property") {
     changeString = `var link = document.getElementById("test_link");
                     link.referrerPolicy = "${aNewAttributePolicy}";
-                    link.href = "${createTestUrl(policy, "test", aName, "link_element", aSchemeFrom, aSchemeTo)}";`;
+                    link.href = "${createTestUrl(policy, "test", aName, "link_element_" + aRel, aSchemeFrom, aSchemeTo)}";`;
   }
 
   return `<!DOCTYPE HTML>
            <html>
              <head>
                ${metaString}
-               ${elementString}
              </head>
              <body>
+                ${elementString}
                 <script>
                   ${changeString}
                 </script>
@@ -210,20 +206,30 @@ function createFetchUserControlRPTestCase(aName, aSchemeFrom, aSchemeTo) {
           </html>`;
 }
 
-function buildLinkString(aPolicy, aName, aRelString, aSchemeFrom, aSchemeTo, aTestType) {
-  var result;
+function buildLinkString(aPolicy, aName, aRel, aSchemeFrom, aSchemeTo, aTestType) {
   var href = '';
   var onChildComplete = `window.parent.postMessage("childLoadComplete", "http://mochi.test:8888");`
-  if (!aTestType) {
-    href = `href=${createTestUrl(aPolicy, "test", aName, "link_element", aSchemeFrom, aSchemeTo)}`;
-  }
-  if (!aPolicy) {
-    result = `<link ${aRelString} ${href} id="test_link" onload='${onChildComplete}' onerror='${onChildComplete}'>`;
-  } else {
-    result = `<link ${aRelString} ${href} referrerpolicy=${aPolicy} id="test_link" onload='${onChildComplete}' onerror='${onChildComplete}'>`;
+  var policy = '';
+  var asString = '';
+  var relString = '';
+
+  if (aRel) {
+    relString = `rel="${aRel}"`;
   }
 
-  return result;
+  if (aPolicy) {
+    policy = `referrerpolicy=${aPolicy}`;
+  }
+
+  if (aRel == "preload") {
+    asString = 'as="image"';
+  }
+
+  if (!aTestType) {
+    href = `href=${createTestUrl(aPolicy, "test", aName, "link_element_" + aRel, aSchemeFrom, aSchemeTo)}`;
+  }
+
+  return `<link ${relString} ${href} ${policy} ${asString} id="test_link" onload='${onChildComplete}' onerror='${onChildComplete}'>`;
 }
 
 function handleRequest(request, response) {
@@ -300,7 +306,7 @@ function handleRequest(request, response) {
 
     setSharedState(SHARED_KEY, JSON.stringify(result));
 
-    if (type === "img") {
+    if (type === "img" || type == "link_element_preload") {
       // return image
       response.setHeader("Content-Type", "image/png");
       response.write(IMG_BYTES);

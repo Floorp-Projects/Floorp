@@ -15,6 +15,8 @@ impl Value {
             '"'  => Value::Str("&quot;"),
             '\'' => Value::Str("&apos;"),
             '&'  => Value::Str("&amp;"),
+            '\n' => Value::Str("&#xA;"),
+            '\r' => Value::Str("&#xD;"),
             _    => Value::Char(c)
         }
     }

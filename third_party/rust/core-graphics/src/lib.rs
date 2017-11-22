@@ -11,16 +11,26 @@ extern crate libc;
 extern crate core_foundation;
 
 #[macro_use]
+#[cfg(target_os = "macos")]
 extern crate bitflags;
+
+#[macro_use]
+extern crate foreign_types;
 
 pub mod base;
 pub mod color_space;
 pub mod context;
 pub mod data_provider;
+#[cfg(target_os = "macos")]
 pub mod display;
+#[cfg(target_os = "macos")]
 pub mod event;
+#[cfg(target_os = "macos")]
 pub mod event_source;
 pub mod font;
 pub mod geometry;
+#[cfg(target_os = "macos")]
 pub mod private;
 pub mod image;
+pub mod path;
+mod sys;

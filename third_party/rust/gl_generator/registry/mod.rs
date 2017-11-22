@@ -34,6 +34,7 @@ pub enum Api {
     GlCore,
     Gles1,
     Gles2,
+    Glsc2,
 }
 
 impl fmt::Display for Api {
@@ -46,6 +47,7 @@ impl fmt::Display for Api {
             Api::GlCore => write!(fmt, "glcore"),
             Api::Gles1 => write!(fmt, "gles1"),
             Api::Gles2 => write!(fmt, "gles2"),
+            Api::Glsc2 => write!(fmt, "glsc2"),
         }
     }
 }
@@ -137,7 +139,7 @@ impl Registry {
         };
 
         let src = match api {
-            Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 => khronos_api::GL_XML,
+            Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 | Api::Glsc2 => khronos_api::GL_XML,
             Api::Glx => khronos_api::GLX_XML,
             Api::Wgl => khronos_api::WGL_XML,
             Api::Egl => khronos_api::EGL_XML,

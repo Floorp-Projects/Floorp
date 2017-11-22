@@ -4,23 +4,26 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes, addons } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
 const throttlingProfiles = require("devtools/client/shared/network-throttling-profiles");
 
-module.exports = createClass({
+class NetworkThrottlingSelector extends PureComponent {
+  static get propTypes() {
+    return {
+      networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
+      onChangeNetworkThrottling: PropTypes.func.isRequired,
+    };
+  }
 
-  displayName: "NetworkThrottlingSelector",
-
-  propTypes: {
-    networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
-    onChangeNetworkThrottling: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+  constructor(props) {
+    super(props);
+    this.onSelectChange = this.onSelectChange.bind(this);
+  }
 
   onSelectChange({ target }) {
     let {
@@ -38,7 +41,7 @@ module.exports = createClass({
         return;
       }
     }
-  },
+  }
 
   render() {
     let {
@@ -87,6 +90,7 @@ module.exports = createClass({
       },
       ...listContent
     );
-  },
+  }
+}
 
-});
+module.exports = NetworkThrottlingSelector;

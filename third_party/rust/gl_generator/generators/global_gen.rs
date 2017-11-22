@@ -57,7 +57,7 @@ fn write_metaloadfn<W>(dest: &mut W) -> io::Result<()>
     writeln!(dest,
              r#"
         #[inline(never)]
-        fn metaloadfn(mut loadfn: &mut FnMut(&str) -> *const __gl_imports::raw::c_void,
+        fn metaloadfn(loadfn: &mut FnMut(&str) -> *const __gl_imports::raw::c_void,
                       symbol: &str,
                       fallbacks: &[&str]) -> *const __gl_imports::raw::c_void {{
             let mut ptr = loadfn(symbol);
@@ -264,7 +264,7 @@ fn write_load_fn<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
 
     for c in &registry.cmds {
         try!(writeln!(dest,
-                      "{cmd_name}::load_with(|s| loadfn(s));",
+                      "{cmd_name}::load_with(&mut loadfn);",
                       cmd_name = &c.proto.ident[..]));
     }
 

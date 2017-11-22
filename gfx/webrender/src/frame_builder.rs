@@ -11,7 +11,7 @@ use api::{ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerPrimiti
 use api::{LayerSize, LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation};
 use api::{LineStyle, LocalClip, PipelineId, RepeatMode};
 use api::{ScrollSensitivity, Shadow, TileOffset, TransformStyle};
-use api::{WorldPoint, YuvColorSpace, YuvData};
+use api::{PremultipliedColorF, WorldPoint, YuvColorSpace, YuvData};
 use app_units::Au;
 use border::ImageBorderSegment;
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains, MAX_CLIP};
@@ -22,20 +22,19 @@ use frame::FrameId;
 use glyph_rasterizer::FontInstance;
 use gpu_cache::GpuCache;
 use internal_types::{FastHashMap, FastHashSet};
-use picture::{PictureCompositeMode, PictureKind, PicturePrimitive};
+use picture::{PictureCompositeMode, PictureKind, PicturePrimitive, RasterizationSpace};
 use prim_store::{TexelRect, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
 use prim_store::{PrimitiveContainer, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
 use prim_store::{RectangleContent, RectanglePrimitive, TextRunPrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_task::{RenderTask, RenderTaskLocation};
-use render_task::RenderTaskTree;
+use render_task::{ClearMode, RenderTask, RenderTaskTree};
 use resource_cache::ResourceCache;
 use scene::{ScenePipeline, SceneProperties};
 use std::{mem, usize, f32, i32};
 use tiling::{CompositeOps, Frame};
-use tiling::{RenderPass};
+use tiling::{RenderPass, RenderTargetKind};
 use tiling::{RenderTargetContext, ScrollbarPrimitive};
 use util::{self, pack_as_float, RectHelpers, recycle_vec};
 
@@ -1579,11 +1578,15 @@ impl FrameBuilder {
         let pic = &mut self.prim_store.cpu_pictures[0];
         pic.runs = prim_run_cmds;
 
-        let root_render_task = RenderTask::new_alpha_batch(
-            DeviceIntPoint::zero(),
-            RenderTaskLocation::Fixed,
-            PrimitiveIndex(0),
+        let root_render_task = RenderTask::new_picture(
             None,
+            PrimitiveIndex(0),
+            RenderTargetKind::Color,
+            0.0,
+            0.0,
+            PremultipliedColorF::TRANSPARENT,
+            ClearMode::Transparent,
+            RasterizationSpace::Screen,
             child_tasks,
         );
 

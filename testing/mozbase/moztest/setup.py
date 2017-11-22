@@ -14,7 +14,7 @@ deps = ['mozinfo']
 setup(name='moztest',
       version=PACKAGE_VERSION,
       description="Package for storing and outputting Mozilla test results",
-      long_description="see http://mozbase.readthedocs.org/",
+      long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
       classifiers=['Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 2 :: Only'],
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers

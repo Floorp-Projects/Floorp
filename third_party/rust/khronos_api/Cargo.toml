@@ -12,12 +12,14 @@
 
 [package]
 name = "khronos_api"
-version = "1.0.1"
+version = "2.0.0"
 authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>", "Corey Richardson", "Arseny Kapoulkine", "Pierre Krieger <pierre.krieger1708@gmail.com>"]
+include = ["/README.md", "/src/**/*", "/Cargo.toml", "/api/xml/**/*.xml", "/api_egl/api/**/*.xml"]
 description = "The Khronos XML API Registry, exposed as byte string constants."
 homepage = "https://github.com/brendanzab/gl-rs/khronos_api/"
 documentation = "https://docs.rs/khronos_api"
 readme = "README.md"
-keywords = ["opengl", "khronos"]
+keywords = ["gl", "egl", "opengl", "khronos"]
+categories = ["rendering::graphics-api"]
 license = "Apache-2.0"
 repository = "https://github.com/brendanzab/gl-rs/"

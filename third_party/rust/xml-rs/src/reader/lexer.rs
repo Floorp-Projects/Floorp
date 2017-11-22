@@ -264,6 +264,10 @@ impl Lexer {
     #[inline]
     pub fn outside_comment(&mut self) { self.inside_comment = false; }
 
+    /// Reset the eof handled flag of the lexer.
+    #[inline]
+    pub fn reset_eof_handled(&mut self) { self.eof_handled = false; }
+
     /// Tries to read the next token from the buffer.
     ///
     /// It is possible to pass different instaces of `BufReader` each time

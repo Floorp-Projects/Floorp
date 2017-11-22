@@ -1109,14 +1109,12 @@ already_AddRefed<ServoStyleContext>
 ServoStyleSet::GetBaseContextForElement(
   Element* aElement,
   nsPresContext* aPresContext,
-  CSSPseudoElementType aPseudoType,
   const ServoStyleContext* aStyle)
 {
   return Servo_StyleSet_GetBaseComputedValuesForElement(mRawSet.get(),
                                                         aElement,
                                                         aStyle,
-                                                        &Snapshots(),
-                                                        aPseudoType).Consume();
+                                                        &Snapshots()).Consume();
 }
 
 already_AddRefed<ServoStyleContext>

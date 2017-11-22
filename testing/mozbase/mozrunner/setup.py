@@ -28,7 +28,7 @@ assert sys.version_info[0] == 2
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
       description=desc,
-      long_description="see http://mozbase.readthedocs.org/",
+      long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
       classifiers=['Environment :: Console',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',

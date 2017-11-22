@@ -251,14 +251,21 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
     }
     parent = destInsertionPoints->LastElement()->GetParent();
     MOZ_ASSERT(parent);
-  } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+  } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) ||
+             parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    // We need to check `parent` to properly handle the unassigned child case
+    // below, since if we were never assigned we would never have the flag set.
+    //
+    // Note that unassigned child nodes _could_ have the flag set, if they were
+    // ever assigned, or if they have a binding themselves.
     if (nsIContent* insertionPoint = GetXBLInsertionPoint()) {
       parent = insertionPoint->GetParent();
       MOZ_ASSERT(parent);
+    } else if (parent->OwnerDoc()->BindingManager()->GetBindingWithContent(parent)) {
+      // This is an unassigned node child of the bound element, so it isn't part
+      // of the flat tree.
+      return nullptr;
     }
-  } else if (parent->OwnerDoc()->BindingManager()->GetBindingWithContent(parent)) {
-    // This is fallback content not assigned to any insertion point.
-    return nullptr;
   }
 
   // Shadow roots never shows up in the flattened tree. Return the host

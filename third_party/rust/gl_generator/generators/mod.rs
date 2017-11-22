@@ -37,6 +37,7 @@ pub fn gen_struct_name(api: Api) -> &'static str {
         Api::GlCore => "GlCore",
         Api::Gles1 => "Gles1",
         Api::Gles2 => "Gles2",
+        Api::Glsc2 => "Glsc2",
     }
 }
 
@@ -100,7 +101,7 @@ pub fn gen_parameters(cmd: &Cmd, with_idents: bool, with_types: bool) -> Vec<Str
 /// Example results: `"glClear"`, `"wglCreateContext"`, etc.
 pub fn gen_symbol_name(api: Api, cmd: &str) -> String {
     match api {
-        Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 => format!("gl{}", cmd),
+        Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 | Api::Glsc2 => format!("gl{}", cmd),
         Api::Glx => format!("glX{}", cmd),
         Api::Wgl => format!("wgl{}", cmd),
         Api::Egl => format!("egl{}", cmd),

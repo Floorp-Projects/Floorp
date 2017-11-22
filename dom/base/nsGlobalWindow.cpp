@@ -338,8 +338,10 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mMayHavePointerEnterLeaveEventListener(false),
   mInnerObjectsFreed(false),
   mIsActive(false), mIsBackground(false),
-  mMediaSuspend(Preferences::GetBool("media.block-autoplay-until-in-foreground", true) ?
-    nsISuspendedTypes::SUSPENDED_BLOCK : nsISuspendedTypes::NONE_SUSPENDED),
+  mMediaSuspend(
+    Preferences::GetBool("media.block-autoplay-until-in-foreground", true) &&
+    Preferences::GetBool("media.autoplay.enabled", true) ?
+      nsISuspendedTypes::SUSPENDED_BLOCK : nsISuspendedTypes::NONE_SUSPENDED),
   mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
   mDesktopModeViewport(false), mIsRootOuterWindow(false), mInnerWindow(nullptr),
   mOuterWindow(aOuterWindow),
