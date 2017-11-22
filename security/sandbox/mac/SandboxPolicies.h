@@ -192,6 +192,12 @@ static const char contentSandboxRules[] = R"(
   (if (= macosMinorVersion 9)
      (allow mach-lookup (global-name "com.apple.xpcd")))
 
+  ; File content processes need access to iconservices to draw file icons in
+  ; directory listings
+  (if (string=? hasFilePrivileges "TRUE")
+    (allow mach-lookup
+      (global-name "com.apple.iconservices")))
+
   (allow iokit-open
      (iokit-user-client-class "IOHIDParamUserClient")
      (iokit-user-client-class "IOAudioEngineUserClient"))
