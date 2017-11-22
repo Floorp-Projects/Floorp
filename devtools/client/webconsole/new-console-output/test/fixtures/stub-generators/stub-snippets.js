@@ -135,6 +135,28 @@ consoleApi.set("console.dir({C, M, Y, K})", {
   code: "console.dir({cyan: 'C', magenta: 'M', yellow: 'Y', black: 'K'});"
 });
 
+consoleApi.set("console.count", {
+  keys: [
+    "console.count | default: 1",
+    "console.count | default: 2",
+    "console.count | test counter: 1",
+    "console.count | test counter: 2",
+    "console.count | default: 3",
+    "console.count | clear",
+    "console.count | default: 4",
+    "console.count | test counter: 3",
+  ],
+  code: `
+    console.count();
+    console.count();
+    console.count("test counter");
+    console.count("test counter");
+    console.count();
+    console.clear();
+    console.count();
+    console.count("test counter");
+`});
+
 // CSS messages
 const cssMessage = new Map();
 
