@@ -394,7 +394,7 @@ nsJARChannel::OpenLocalFile()
                                  getter_AddRefs(input));
     if (NS_SUCCEEDED(rv)) {
         // Create input stream pump and call AsyncRead as a block.
-        rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input);
+        rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input.forget());
         if (NS_SUCCEEDED(rv))
             rv = mPump->AsyncRead(this, nullptr);
     }
@@ -1070,7 +1070,7 @@ nsJARChannel::OnDownloadComplete(MemoryDownloader* aDownloader,
         rv = CreateJarInput(nullptr, getter_AddRefs(input));
         if (NS_SUCCEEDED(rv)) {
             // create input stream pump
-            rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input);
+            rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input.forget());
             if (NS_SUCCEEDED(rv))
                 rv = mPump->AsyncRead(this, nullptr);
         }

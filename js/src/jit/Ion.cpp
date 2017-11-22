@@ -59,6 +59,7 @@
 
 #include "gc/Iteration-inl.h"
 #include "jit/JitFrames-inl.h"
+#include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -203,7 +204,6 @@ JitRuntime::JitRuntime(JSRuntime* rt)
     argumentsRectifierReturnOffset_(0),
     invalidatorOffset_(0),
     lazyLinkStubOffset_(0),
-    lazyLinkStubEndOffset_(0),
     interpreterStubOffset_(0),
     debugTrapHandler_(nullptr),
     baselineDebugModeOSRHandler_(nullptr),
@@ -229,6 +229,7 @@ JitRuntime::startTrampolineCode(MacroAssembler& masm)
     masm.assumeUnreachable("Shouldn't get here");
     masm.flushBuffer();
     masm.haltingAlign(CodeAlignment);
+    masm.setFramePushed(0);
     return masm.currentOffset();
 }
 
@@ -593,13 +594,9 @@ jit::LinkIonScript(JSContext* cx, HandleScript calleeScript)
 }
 
 uint8_t*
-jit::LazyLinkTopActivation()
+jit::LazyLinkTopActivation(JSContext* cx, LazyLinkExitFrameLayout* frame)
 {
-    // First frame should be an exit frame.
-    JSContext* cx = TlsContext.get();
-    JSJitFrameIter frame(cx);
-    LazyLinkExitFrameLayout* ll = frame.exitFrame()->as<LazyLinkExitFrameLayout>();
-    RootedScript calleeScript(cx, ScriptFromCalleeToken(ll->jsFrame()->calleeToken()));
+    RootedScript calleeScript(cx, ScriptFromCalleeToken(frame->jsFrame()->calleeToken()));
 
     LinkIonScript(cx, calleeScript);
 
@@ -2803,17 +2800,8 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         if (!frame.isIonScripted())
             continue;
 
-        JitRuntime* jrt = fop->runtime()->jitRuntime();
-
-        bool calledFromLinkStub = false;
-        if (frame.returnAddressToFp() >= jrt->lazyLinkStub().value &&
-            frame.returnAddressToFp() < jrt->lazyLinkStubEnd().value)
-        {
-            calledFromLinkStub = true;
-        }
-
         // See if the frame has already been invalidated.
-        if (!calledFromLinkStub && frame.checkInvalidation())
+        if (frame.checkInvalidation())
             continue;
 
         JSScript* script = frame.script();
@@ -2870,9 +2858,8 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         }
         ionCode->setInvalidated();
 
-        // Don't adjust OSI points in the linkStub (which don't exist), or in a
-        // bailout path.
-        if (calledFromLinkStub || frame.isBailoutJS())
+        // Don't adjust OSI points in a bailout path.
+        if (frame.isBailoutJS())
             continue;
 
         // Write the delta (from the return address offset to the

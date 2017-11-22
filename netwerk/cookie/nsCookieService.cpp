@@ -610,7 +610,6 @@ nsCookieService::nsCookieService()
  , mMonitor("CookieThread")
  , mInitializedDBStates(false)
  , mInitializedDBConn(false)
- , mAccumulatedWaitTelemetry(false)
 {
 }
 
@@ -1449,10 +1448,6 @@ nsCookieService::InitDBConn()
     return;
   }
 
-  if (!mAccumulatedWaitTelemetry) {
-    mAccumulatedWaitTelemetry = true;
-    Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_BLOCK_MAIN_THREAD_MS, 0);
-  }
   for (uint32_t i = 0; i < mReadArray.Length(); ++i) {
     CookieDomainTuple& tuple = mReadArray[i];
     RefPtr<nsCookie> cookie = nsCookie::Create(tuple.cookie->name,
@@ -1487,6 +1482,7 @@ nsCookieService::InitDBConn()
   mInitializedDBConn = true;
 
   COOKIE_LOGSTRING(LogLevel::Debug, ("InitDBConn(): mInitializedDBConn = true"));
+  mEndInitDBConn = mozilla::TimeStamp::Now();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os && !mReadArray.IsEmpty()) {
@@ -2760,6 +2756,8 @@ nsCookieService::EnsureReadComplete(bool aInitDBConn)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  bool isAccumulated = false;
+
   if (!mInitializedDBStates) {
     TimeStamp startBlockTime = TimeStamp::Now();
     MonitorAutoLock lock(mMonitor);
@@ -2767,12 +2765,32 @@ nsCookieService::EnsureReadComplete(bool aInitDBConn)
     while (!mInitializedDBStates) {
       mMonitor.Wait();
     }
-    Telemetry::AccumulateTimeDelta(Telemetry::MOZ_SQLITE_COOKIES_BLOCK_MAIN_THREAD_MS,
+    Telemetry::AccumulateTimeDelta(Telemetry::MOZ_SQLITE_COOKIES_BLOCK_MAIN_THREAD_MS_V2,
                                    startBlockTime);
-    mAccumulatedWaitTelemetry = true;
+    Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_TIME_TO_BLOCK_MAIN_THREAD_MS, 0);
+    isAccumulated = true;
+  } else if (!mEndInitDBConn.IsNull()) {
+    // We didn't block main thread, and here comes the first cookie request.
+    // Collect how close we're going to block main thread.
+    Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_TIME_TO_BLOCK_MAIN_THREAD_MS,
+                          (TimeStamp::Now() - mEndInitDBConn).ToMilliseconds());
+    // Nullify the timestamp so wo don't accumulate this telemetry probe again.
+    mEndInitDBConn = TimeStamp();
+    isAccumulated = true;
+  } else if (!mInitializedDBConn && aInitDBConn) {
+    // A request comes while we finished cookie thread task and InitDBConn is
+    // on the way from cookie thread to main thread. We're very close to block
+    // main thread.
+    Telemetry::Accumulate(Telemetry::MOZ_SQLITE_COOKIES_TIME_TO_BLOCK_MAIN_THREAD_MS, 0);
+    isAccumulated = true;
   }
+
   if (!mInitializedDBConn && aInitDBConn && mDefaultDBState) {
     InitDBConn();
+    if (isAccumulated) {
+      // Nullify the timestamp so wo don't accumulate this telemetry probe again.
+      mEndInitDBConn = TimeStamp();
+    }
   }
 }
 

@@ -267,9 +267,15 @@ WasmReportTrap(int32_t trapIndex)
       case Trap::OutOfBounds:
         errorNumber = JSMSG_WASM_OUT_OF_BOUNDS;
         break;
+      case Trap::UnalignedAccess:
+        errorNumber = JSMSG_WASM_UNALIGNED_ACCESS;
+        break;
       case Trap::StackOverflow:
         errorNumber = JSMSG_OVER_RECURSED;
         break;
+      case Trap::ThrowReported:
+        // Error was already reported under another name.
+        return;
       default:
         MOZ_CRASH("unexpected trap");
     }
@@ -585,6 +591,15 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::CurrentMemory:
         *abiType = Args_General1;
         return FuncCast(Instance::currentMemory_i32, *abiType);
+      case SymbolicAddress::WaitI32:
+        *abiType = Args_Int_GeneralGeneralGeneralInt64;
+        return FuncCast(Instance::wait_i32, *abiType);
+      case SymbolicAddress::WaitI64:
+        *abiType = Args_Int_GeneralGeneralInt64Int64;
+        return FuncCast(Instance::wait_i64, *abiType);
+      case SymbolicAddress::Wake:
+        *abiType = Args_General2;
+        return FuncCast(Instance::wake, *abiType);
       case SymbolicAddress::Limit:
         break;
     }
@@ -654,6 +669,9 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::ATan2D:
       case SymbolicAddress::GrowMemory:
       case SymbolicAddress::CurrentMemory:
+      case SymbolicAddress::WaitI32:
+      case SymbolicAddress::WaitI64:
+      case SymbolicAddress::Wake:
         return true;
       case SymbolicAddress::Limit:
         break;

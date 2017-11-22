@@ -1134,7 +1134,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleService)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWakeLock)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleRequestExecutor)
   for (IdleRequest* request : tmp->mIdleRequestCallbacks) {
@@ -1219,7 +1218,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleService)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWakeLock)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleObservers)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGamepads)
@@ -1932,6 +1930,11 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
         newInnerWindow->mSessionStorage = nullptr;
 
         newInnerWindow->ClearDocumentDependentSlots(cx);
+
+        // When replacing an initial about:blank document we call
+        // ExecutionReady again to update the client creation URL.
+        rv = newInnerWindow->ExecutionReady();
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     } else {
       newInnerWindow->InnerSetNewDocument(cx, aDocument);
@@ -1939,6 +1942,9 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
       // Initialize DOM classes etc on the inner window.
       JS::Rooted<JSObject*> obj(cx, newInnerGlobal);
       rv = kungFuDeathGrip->InitClasses(obj);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = newInnerWindow->ExecutionReady();
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

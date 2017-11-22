@@ -2495,6 +2495,10 @@ typedef int64_t (*Prototype_General7)(int32_t arg0, int32_t arg1, int32_t arg2, 
                                       int32_t arg4, int32_t arg5, int32_t arg6);
 typedef int64_t (*Prototype_General8)(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3,
                                       int32_t arg4, int32_t arg5, int32_t arg6, int32_t arg7);
+typedef int64_t (*Prototype_GeneralGeneralGeneralInt64)(int32_t arg0, int32_t arg1, int32_t arg2,
+                                                        int64_t arg3);
+typedef int64_t (*Prototype_GeneralGeneralInt64Int64)(int32_t arg0, int32_t arg1, int64_t arg2,
+                                                      int64_t arg3);
 
 typedef double (*Prototype_Double_None)();
 typedef double (*Prototype_Double_Double)(double arg0);
@@ -2544,6 +2548,13 @@ Simulator::scratchVolatileRegisters(bool scratchFloat)
         for (uint32_t i = d16; i < FloatRegisters::TotalPhys; i++)
             set_d_register(i, &scratch_value_d);
     }
+}
+
+static int64_t
+MakeInt64(int32_t first, int32_t second)
+{
+    // Little-endian order.
+    return ((int64_t)second << 32) | (uint32_t)first;
 }
 
 // Software interrupt instructions are used by the simulator to call into C++.
@@ -2642,6 +2653,23 @@ Simulator::softwareInterrupt(SimInstruction* instr)
             int32_t arg6 = stack_pointer[2];
             int32_t arg7 = stack_pointer[3];
             int64_t result = target(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+            scratchVolatileRegisters(/* scratchFloat = true */);
+            setCallResult(result);
+            break;
+          }
+          case Args_Int_GeneralGeneralGeneralInt64: {
+            Prototype_GeneralGeneralGeneralInt64 target =
+                reinterpret_cast<Prototype_GeneralGeneralGeneralInt64>(external);
+            // The int64 arg is not split across register and stack
+            int64_t result = target(arg0, arg1, arg2, MakeInt64(arg4, arg5));
+            scratchVolatileRegisters(/* scratchFloat = true */);
+            setCallResult(result);
+            break;
+          }
+          case Args_Int_GeneralGeneralInt64Int64: {
+            Prototype_GeneralGeneralInt64Int64 target =
+                reinterpret_cast<Prototype_GeneralGeneralInt64Int64>(external);
+            int64_t result = target(arg0, arg1, MakeInt64(arg2, arg3), MakeInt64(arg4, arg5));
             scratchVolatileRegisters(/* scratchFloat = true */);
             setCallResult(result);
             break;

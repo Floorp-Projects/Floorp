@@ -138,7 +138,7 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localInclu
     """
 
     # Find all includes from parent directories.
-    def findParentIncludes(relPath, includesMap):
+    def findParentIncludes():
         parentIncludes = set()
         current = relPath
         while current:
@@ -149,10 +149,9 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localInclu
         return parentIncludes
 
     # Find all includes, skipping includes already present in parent directories.
-    def findIncludes(includesMap, relPath):
-        includeSet = includesMap[relPath]
-        parentIncludes = findParentIncludes(relPath, includesMap)
-        for include in includeSet:
+    def findIncludes():
+        parentIncludes = findParentIncludes()
+        for include in includesMap[relPath]:
             if include not in parentIncludes:
                 yield include
 
@@ -165,10 +164,10 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localInclu
     # Concatenate all includes files.
     includeSource = "\n".join(imap(readIncludeFile, chain(
         # The requested include files.
-        imap(partial(os.path.join, harnessDir), findIncludes(includesMap, relPath)),
+        imap(partial(os.path.join, harnessDir), sorted(findIncludes())),
 
         # And additional local include files.
-        imap(partial(os.path.join, os.getcwd()), localIncludes)
+        imap(partial(os.path.join, os.getcwd()), sorted(localIncludes))
     )))
 
     # Write the concatenated include sources to shell.js.
@@ -319,6 +318,8 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     # code duplication in shell.js files.
     explicitIncludes = {}
     explicitIncludes["intl402"] = ["testBuiltInObject.js"]
+    explicitIncludes[os.path.join("built-ins", "Atomics")] = ["testAtomics.js",
+        "testTypedArray.js"]
     explicitIncludes[os.path.join("built-ins", "DataView")] = ["byteConversionValues.js"]
     explicitIncludes[os.path.join("built-ins", "Promise")] = ["promiseHelper.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",

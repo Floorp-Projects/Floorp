@@ -15,6 +15,7 @@
 #include "js/GCHashTable.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
+#include "wasm/WasmTypes.h"
 
 typedef struct JSProperty JSProperty;
 
@@ -22,6 +23,34 @@ namespace js {
 
 class ArrayBufferViewObject;
 class WasmArrayRawBuffer;
+
+// Create a new mapping of size `mappedSize` with an initially committed prefix
+// of size `initialCommittedSize`.  Both arguments denote bytes and must be
+// multiples of the page size, with `initialCommittedSize` <= `mappedSize`.
+// Returns nullptr on failure.
+void* MapBufferMemory(size_t mappedSize, size_t initialCommittedSize);
+
+// Commit additional memory in an existing mapping.  `dataEnd` must be the
+// correct value for the end of the existing committed area, and `delta` must be
+// a byte amount to grow the mapping by, and must be a multiple of the page
+// size.  Returns false on failure.
+bool CommitBufferMemory(void* dataEnd, uint32_t delta);
+
+#ifndef WASM_HUGE_MEMORY
+// Extend an existing mapping by adding uncommited pages to it.  `dataStart`
+// must be the pointer to the start of the existing mapping, `mappedSize` the
+// size of the existing mapping, and `newMappedSize` the size of the extended
+// mapping (sizes in bytes), with `mappedSize` <= `newMappedSize`.  Both sizes
+// must be divisible by the page size.  Returns false on failure.
+bool ExtendBufferMapping(void* dataStart, size_t mappedSize, size_t newMappedSize);
+#endif
+
+// Remove an existing mapping.  `dataStart` must be the pointer to the start of
+// the mapping, and `mappedSize` the size of that mapping.
+void UnmapBufferMemory(void* dataStart, size_t mappedSize);
+
+// Return the number of currently live mapped buffers.
+int32_t LiveMappedBufferCount();
 
 // The inheritance hierarchy for the various classes relating to typed arrays
 // is as follows.
@@ -78,6 +107,7 @@ mozilla::Maybe<uint32_t> WasmArrayBufferMaxSize(const ArrayBufferObjectMaybeShar
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 bool WasmArrayBufferGrowForWasm(ArrayBufferObjectMaybeShared* buf, uint32_t delta);
 bool AnyArrayBufferIsPreparedForAsmJS(const ArrayBufferObjectMaybeShared* buf);
+bool AnyArrayBufferIsWasm(const ArrayBufferObjectMaybeShared* buf);
 ArrayBufferObjectMaybeShared& AsAnyArrayBuffer(HandleValue val);
 
 class ArrayBufferObjectMaybeShared : public NativeObject
@@ -107,6 +137,10 @@ class ArrayBufferObjectMaybeShared : public NativeObject
 
     bool isPreparedForAsmJS() const {
         return AnyArrayBufferIsPreparedForAsmJS(this);
+    }
+
+    bool isWasm() const {
+        return AnyArrayBufferIsWasm(this);
     }
 };
 
@@ -144,6 +178,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static_assert(FLAGS_SLOT == JS_ARRAYBUFFER_FLAGS_SLOT,
                   "self-hosted code with burned-in constants must get the "
                   "right flags slot");
+
+    // The length of an ArrayBuffer or SharedArrayBuffer can be at most
+    // INT32_MAX, and much code must change if this changes.
+
+    static const size_t MaxBufferByteLength = INT32_MAX;
 
   public:
 
@@ -330,10 +369,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
 
     // WebAssembly support:
-    static ArrayBufferObject* createForWasm(JSContext* cx, uint32_t initialSize,
-                                            const mozilla::Maybe<uint32_t>& maxSize);
     static MOZ_MUST_USE bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                                              bool needGuard);
+    void initializeRawBuffer(JSContext* cx, WasmArrayRawBuffer* buffer, uint32_t byteLength);
     size_t wasmMappedSize() const;
     mozilla::Maybe<uint32_t> wasmMaxSize() const;
     static MOZ_MUST_USE bool wasmGrowToSizeInPlace(uint32_t newSize,
@@ -405,6 +443,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 typedef Rooted<ArrayBufferObject*> RootedArrayBufferObject;
 typedef Handle<ArrayBufferObject*> HandleArrayBufferObject;
 typedef MutableHandle<ArrayBufferObject*> MutableHandleArrayBufferObject;
+
+bool CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
+                      MutableHandleArrayBufferObjectMaybeShared buffer);
 
 /*
  * ArrayBufferViewObject

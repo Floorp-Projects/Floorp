@@ -82,6 +82,12 @@ public:
   nsresult
   DocShellExecutionReady(nsIDocShell* aDocShell);
 
+  void
+  Freeze();
+
+  void
+  Thaw();
+
   const ClientInfo&
   Info() const;
 

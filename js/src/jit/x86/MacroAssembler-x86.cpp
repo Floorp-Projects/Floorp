@@ -722,9 +722,12 @@ MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, 
 void
 MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAddr, Register64 out)
 {
-    MOZ_ASSERT(!access.isAtomic());
+    // Atomic i64 load must use lock_cmpxchg8b.
+    MOZ_ASSERT_IF(access.isAtomic(), access.byteSize() <= 4);
     MOZ_ASSERT(!access.isSimd());
     MOZ_ASSERT(srcAddr.kind() == Operand::MEM_REG_DISP || srcAddr.kind() == Operand::MEM_SCALE);
+
+    memoryBarrier(access.barrierBefore());
 
     size_t loadOffset = size();
     switch (access.type()) {
@@ -795,6 +798,8 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
+
+    memoryBarrier(access.barrierAfter());
 }
 
 void
@@ -866,6 +871,7 @@ MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister valu
 void
 MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Operand dstAddr)
 {
+    // Atomic i64 store must use lock_cmpxchg8b.
     MOZ_ASSERT(!access.isAtomic());
     MOZ_ASSERT(!access.isSimd());
     MOZ_ASSERT(dstAddr.kind() == Operand::MEM_REG_DISP || dstAddr.kind() == Operand::MEM_SCALE);
@@ -878,6 +884,95 @@ MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 va
     movl(value.high, HighWord(dstAddr));
     append(access, storeOffset, framePushed());
 }
+
+// We don't have enough registers for all the operands on x86, so the rhs
+// operand is in memory.
+
+#define ATOMIC_OP_BODY(OPERATE)                   \
+    MOZ_ASSERT(output.low == eax);                \
+    MOZ_ASSERT(output.high == edx);               \
+    MOZ_ASSERT(temp.low == ebx);                  \
+    MOZ_ASSERT(temp.high == ecx);                 \
+    load64(address, output);                      \
+    Label again;                                  \
+    bind(&again);                                 \
+    asMasm().move64(output, temp);                \
+    OPERATE(value, temp);                         \
+    lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(address));     \
+    j(NonZero, &again);
+
+template <typename T, typename U>
+void
+MacroAssemblerX86::atomicFetchAdd64(const T& value, const U& address, Register64 temp,
+                                    Register64 output)
+{
+    ATOMIC_OP_BODY(add64)
+}
+
+template <typename T, typename U>
+void
+MacroAssemblerX86::atomicFetchSub64(const T& value, const U& address, Register64 temp,
+                                    Register64 output)
+{
+    ATOMIC_OP_BODY(sub64)
+}
+
+template <typename T, typename U>
+void
+MacroAssemblerX86::atomicFetchAnd64(const T& value, const U& address, Register64 temp,
+                                    Register64 output)
+{
+    ATOMIC_OP_BODY(and64)
+}
+
+template <typename T, typename U>
+void
+MacroAssemblerX86::atomicFetchOr64(const T& value, const U& address, Register64 temp,
+                                   Register64 output)
+{
+    ATOMIC_OP_BODY(or64)
+}
+
+template <typename T, typename U>
+void
+MacroAssemblerX86::atomicFetchXor64(const T& value, const U& address, Register64 temp,
+                                    Register64 output)
+{
+    ATOMIC_OP_BODY(xor64)
+}
+
+#undef ATOMIC_OP_BODY
+
+template void
+js::jit::MacroAssemblerX86::atomicFetchAdd64(const Address& value, const Address& address,
+                                             Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchAdd64(const Address& value, const BaseIndex& address,
+                                             Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchSub64(const Address& value, const Address& address,
+                                             Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchSub64(const Address& value, const BaseIndex& address,
+                                             Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchAnd64(const Address& value, const Address& address,
+                                             Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchAnd64(const Address& value, const BaseIndex& address,
+                                             Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchOr64(const Address& value, const Address& address,
+                                            Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchOr64(const Address& value, const BaseIndex& address,
+                                            Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchXor64(const Address& value, const Address& address,
+                                             Register64 temp, Register64 output);
+template void
+js::jit::MacroAssemblerX86::atomicFetchXor64(const Address& value, const BaseIndex& address,
+                                             Register64 temp, Register64 output);
 
 void
 MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)

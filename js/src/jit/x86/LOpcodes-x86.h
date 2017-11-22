@@ -19,6 +19,11 @@
     _(UDivOrModI64)             \
     _(DivOrModI64)              \
     _(WasmTruncateToInt64)      \
+    _(WasmAtomicLoadI64)        \
+    _(WasmAtomicStoreI64)       \
+    _(WasmCompareExchangeI64)   \
+    _(WasmAtomicExchangeI64)    \
+    _(WasmAtomicBinopI64)       \
     _(Int64ToFloatingPoint)
 
 #endif /* jit_x86_LOpcodes_x86_h */

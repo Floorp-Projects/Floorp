@@ -248,13 +248,13 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
-    void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);
-    void visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout* ins);
-    void visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins);
-    void visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* ins);
-    void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
-    void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
-    void visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins);
+    void visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins);
+    void visitWasmCompareExchangeCallout(LWasmCompareExchangeCallout* ins);
+    void visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins);
+    void visitWasmAtomicExchangeCallout(LWasmAtomicExchangeCallout* ins);
+    void visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins);
+    void visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* ins);
+    void visitWasmAtomicBinopCallout(LWasmAtomicBinopCallout* ins);
     void visitWasmStackArg(LWasmStackArg* ins);
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);
     void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
@@ -277,6 +277,12 @@ class CodeGeneratorARM : public CodeGeneratorShared
     template<typename S, typename T>
     void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
                                     const T& mem, Register flagTemp);
+
+    void visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir);
+    void visitWasmAtomicStoreI64(LWasmAtomicStoreI64* lir);
+    void visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir);
+    void visitWasmAtomicBinopI64(LWasmAtomicBinopI64* lir);
+    void visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* lir);
 
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);

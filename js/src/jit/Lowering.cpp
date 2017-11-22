@@ -4457,6 +4457,16 @@ LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
 }
 
 void
+LIRGenerator::visitWasmAlignmentCheck(MWasmAlignmentCheck* ins)
+{
+    MDefinition* index = ins->index();
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+
+    auto* lir = new(alloc()) LWasmAlignmentCheck(useRegisterAtStart(index));
+    add(lir, ins);
+}
+
+void
 LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins)
 {
     if (ins->type() == MIRType::Int64) {

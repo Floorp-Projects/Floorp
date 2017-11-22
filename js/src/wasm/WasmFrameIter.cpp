@@ -1039,6 +1039,12 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "call to native grow_memory (in wasm)";
       case SymbolicAddress::CurrentMemory:
         return "call to native current_memory (in wasm)";
+      case SymbolicAddress::WaitI32:
+        return "call to native i32.wait (in wasm)";
+      case SymbolicAddress::WaitI64:
+        return "call to native i64.wait (in wasm)";
+      case SymbolicAddress::Wake:
+        return "call to native wake (in wasm)";
       case SymbolicAddress::Limit:
         break;
     }
