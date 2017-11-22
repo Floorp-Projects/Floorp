@@ -1663,6 +1663,7 @@ WebrtcVideoConduit::SelectBitrates(
   }
   // If we try to set a minimum bitrate that is too low, ViE will reject it.
   out_min = std::max(kViEMinCodecBitrate_bps, out_min);
+  out_max = std::max(kViEMinCodecBitrate_bps, out_max);
   if (mStartBitrate && mStartBitrate > out_start) {
     out_start = mStartBitrate;
   }
