@@ -10,12 +10,8 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.util.Log;
-import android.view.MotionEvent;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 public class DynamicToolbarAnimator {
@@ -31,13 +27,10 @@ public class DynamicToolbarAnimator {
         CUSTOM_TAB(6);
 
         public final int value;
+
         PinReason(final int aValue) {
             value = aValue;
         }
-    }
-
-    public interface MetricsListener {
-        public void onMetricsChanged(ImmutableViewportMetrics viewport);
     }
 
     public interface ToolbarChromeProxy {
@@ -46,52 +39,42 @@ public class DynamicToolbarAnimator {
         public void toggleToolbarChrome(boolean aShow);
     }
 
-    private final Set<PinReason> mPinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
+    private final Set<PinReason> mPinFlags = EnumSet.noneOf(PinReason.class);
 
-    private final LayerView mTarget;
-    private LayerSession.Compositor mCompositor;
-    private final List<MetricsListener> mListeners;
+    private final LayerSession mTarget;
+    private final LayerSession.Compositor mCompositor;
     private ToolbarChromeProxy mToolbarChromeProxy;
     private int mMaxToolbarHeight;
 
-    public DynamicToolbarAnimator(final LayerView aTarget) {
+    /* package */ DynamicToolbarAnimator(final LayerSession aTarget) {
         mTarget = aTarget;
-        mListeners = new ArrayList<MetricsListener>();
+        mCompositor = aTarget.mCompositor;
     }
 
-    public void addMetricsListener(MetricsListener aListener) {
-        mListeners.add(aListener);
-    }
-
-    public void removeMetricsListener(MetricsListener aListener) {
-        mListeners.remove(aListener);
+    public ToolbarChromeProxy getToolbarChromeProxy() {
+        ThreadUtils.assertOnUiThread();
+        return mToolbarChromeProxy;
     }
 
     public void setToolbarChromeProxy(ToolbarChromeProxy aToolbarChromeProxy) {
+        ThreadUtils.assertOnUiThread();
         mToolbarChromeProxy = aToolbarChromeProxy;
-    }
-
-    /* package-private */ void onToggleChrome(boolean aShow) {
-        if (mToolbarChromeProxy != null) {
-            mToolbarChromeProxy.toggleToolbarChrome(aShow);
-        }
-    }
-
-    /* package-private */ void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
-        for (MetricsListener listener : mListeners) {
-            listener.onMetricsChanged(aMetrics);
-        }
     }
 
     public void setMaxToolbarHeight(int maxToolbarHeight) {
         ThreadUtils.assertOnUiThread();
+
         mMaxToolbarHeight = maxToolbarHeight;
-        if (isCompositorReady()) {
+        if (mCompositor.isReady()) {
             mCompositor.setMaxToolbarHeight(mMaxToolbarHeight);
         }
     }
 
-    public int getCurrentToolbarHeight() {
+    // Keep this package-private because applications should use one of LayerSession's
+    // coordinates APIs instead of dealing with the dynamic toolbar manually.
+    /* package */ int getCurrentToolbarHeight() {
+        ThreadUtils.assertOnUiThread();
+
         if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
             return mMaxToolbarHeight;
         }
@@ -102,32 +85,22 @@ public class DynamicToolbarAnimator {
      * If true, scroll changes will not affect translation.
      */
     public boolean isPinned() {
+        ThreadUtils.assertOnUiThread();
+
         return !mPinFlags.isEmpty();
     }
 
     public boolean isPinnedBy(PinReason reason) {
+        ThreadUtils.assertOnUiThread();
+
         return mPinFlags.contains(reason);
     }
 
-    /* package */ void sendPinValueToCompositor(final boolean pinned, final PinReason reason) {
-        if (isCompositorReady()) {
-             mCompositor.setPinned(pinned, reason.value);
-        }
-    }
-
     public void setPinned(final boolean pinned, final PinReason reason) {
-        // setPinned may be called from the main thread but compositor can only be accessed on UI thread
-        if (pinned != mPinFlags.contains(reason)) {
-            if (ThreadUtils.isOnUiThread() == true) {
-                sendPinValueToCompositor(pinned, reason);
-            } else {
-                ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                    public void run() {
-                        sendPinValueToCompositor(pinned, reason);
-                    }
-                });
-            }
+        ThreadUtils.assertOnUiThread();
+
+        if (pinned != mPinFlags.contains(reason) && mCompositor.isReady()) {
+            mCompositor.setPinned(pinned, reason.value);
         }
 
         if (pinned) {
@@ -138,62 +111,86 @@ public class DynamicToolbarAnimator {
     }
 
     public void showToolbar(boolean immediately) {
-        if (isCompositorReady()) {
-            mCompositor.sendToolbarAnimatorMessage(immediately ?
-                LayerView.REQUEST_SHOW_TOOLBAR_IMMEDIATELY : LayerView.REQUEST_SHOW_TOOLBAR_ANIMATED);
+        ThreadUtils.assertOnUiThread();
+
+        if (mCompositor.isReady()) {
+            mCompositor.sendToolbarAnimatorMessage(
+                    immediately ? LayerSession.REQUEST_SHOW_TOOLBAR_IMMEDIATELY
+                                : LayerSession.REQUEST_SHOW_TOOLBAR_ANIMATED);
         }
     }
 
     public void hideToolbar(boolean immediately) {
-        if (isCompositorReady()) {
-            mCompositor.sendToolbarAnimatorMessage(immediately ?
-                LayerView.REQUEST_HIDE_TOOLBAR_IMMEDIATELY : LayerView.REQUEST_HIDE_TOOLBAR_ANIMATED);
+        ThreadUtils.assertOnUiThread();
+
+        if (mCompositor.isReady()) {
+            mCompositor.sendToolbarAnimatorMessage(
+                    immediately ? LayerSession.REQUEST_HIDE_TOOLBAR_IMMEDIATELY
+                                : LayerSession.REQUEST_HIDE_TOOLBAR_ANIMATED);
         }
     }
 
-    /* package-private */ IntSize getViewportSize() {
-        ThreadUtils.assertOnUiThread();
+    /* package */ void onCompositorReady() {
+        mCompositor.setMaxToolbarHeight(mMaxToolbarHeight);
 
-        int viewWidth = mTarget.getWidth();
-        int viewHeight = mTarget.getHeight();
         if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
-          viewHeight -= mMaxToolbarHeight;
+            mCompositor.sendToolbarAnimatorMessage(
+                    LayerSession.REQUEST_SHOW_TOOLBAR_IMMEDIATELY);
+        } else {
+            mCompositor.sendToolbarAnimatorMessage(
+                    LayerSession.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
         }
-        return new IntSize(viewWidth, viewHeight);
+
+        for (final PinReason reason : PinReason.values()) {
+            mCompositor.setPinned(mPinFlags.contains(reason), reason.value);
+        }
     }
 
-    public PointF getVisibleEndOfLayerView() {
-        return new PointF(mTarget.getWidth(), mTarget.getHeight());
-    }
+    /* package */ void handleToolbarAnimatorMessage(final int message) {
+        if (mToolbarChromeProxy == null || !mCompositor.isReady()) {
+            return;
+        }
 
-    /* package-private */ void updateCompositor() {
-        if (isCompositorReady()) {
-            mCompositor.setMaxToolbarHeight(mMaxToolbarHeight);
-            if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
-                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_SHOW_TOOLBAR_IMMEDIATELY);
-            } else {
-                mCompositor.sendToolbarAnimatorMessage(LayerView.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
+        switch (message) {
+            case LayerSession.STATIC_TOOLBAR_NEEDS_UPDATE: {
+                // Send updated toolbar image to compositor.
+                final Bitmap bm = mToolbarChromeProxy.getBitmapOfToolbarChrome();
+                if (bm == null) {
+                    mCompositor.sendToolbarAnimatorMessage(
+                            LayerSession.TOOLBAR_SNAPSHOT_FAILED);
+                    break;
+                }
+
+                final int width = bm.getWidth();
+                final int height = bm.getHeight();
+                final int[] pixels = new int[bm.getByteCount() / 4];
+                try {
+                    bm.getPixels(pixels, /* offset */ 0, /* stride */ width,
+                                 /* x */ 0, /* y */ 0, width, height);
+                    mCompositor.sendToolbarPixelsToCompositor(width, height, pixels);
+                } catch (final Exception e) {
+                    Log.e(LOGTAG, "Cannot get toolbar pixels", e);
+                }
+                break;
             }
-            for (PinReason reason : PinReason.values()) {
-                mCompositor.setPinned(mPinFlags.contains(reason), reason.value);
+
+            case LayerSession.STATIC_TOOLBAR_READY: {
+                // Hide toolbar and send TOOLBAR_HIDDEN message to compositor
+                mToolbarChromeProxy.toggleToolbarChrome(false);
+                mCompositor.sendToolbarAnimatorMessage(LayerSession.TOOLBAR_HIDDEN);
+                break;
             }
+
+            case LayerSession.TOOLBAR_SHOW: {
+                // Show toolbar.
+                mToolbarChromeProxy.toggleToolbarChrome(true);
+                mCompositor.sendToolbarAnimatorMessage(LayerSession.TOOLBAR_VISIBLE);
+                break;
+            }
+
+            default:
+                Log.e(LOGTAG, "Unhandled Toolbar Animator Message: " + message);
+                break;
         }
-    }
-
-    /* package-private */ void notifyCompositorCreated(LayerSession.Compositor aCompositor) {
-        ThreadUtils.assertOnUiThread();
-        mCompositor = aCompositor;
-    }
-
-    private boolean isCompositorReady() {
-        return ((mCompositor != null) && (mCompositor.isReady()));
-    }
-
-
-    /* package-private */ Bitmap getBitmapOfToolbarChrome() {
-        if (mToolbarChromeProxy != null) {
-            return mToolbarChromeProxy.getBitmapOfToolbarChrome();
-        }
-        return null;
     }
 }
