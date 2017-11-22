@@ -22,7 +22,7 @@ struct DeviceData {
 
 pub struct Monitor<F>
 where
-    F: Fn(IOHIDDeviceRef, Receiver<Vec<u8>>, &Fn() -> bool) + Sync,
+    F: Fn((IOHIDDeviceRef, Receiver<Vec<u8>>), &Fn() -> bool) + Sync,
 {
     manager: IOHIDManagerRef,
     // Keep alive until the monitor goes away.
@@ -33,7 +33,7 @@ where
 
 impl<F> Monitor<F>
 where
-    F: Fn(IOHIDDeviceRef, Receiver<Vec<u8>>, &Fn() -> bool) + Sync + 'static,
+    F: Fn((IOHIDDeviceRef, Receiver<Vec<u8>>), &Fn() -> bool) + Sync + 'static,
 {
     pub fn new(new_device_cb: F) -> Self {
         let manager = unsafe { IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDManagerOptionNone) };
@@ -145,7 +145,7 @@ where
         let runloop = RunLoop::new(move |alive| {
             // Ensure that the runloop is still alive.
             if alive() {
-                f(device_ref, rx, alive);
+                f((device_ref, rx), alive);
             }
         });
 
@@ -167,7 +167,7 @@ where
 
 impl<F> Drop for Monitor<F>
 where
-    F: Fn(IOHIDDeviceRef, Receiver<Vec<u8>>, &Fn() -> bool) + Sync,
+    F: Fn((IOHIDDeviceRef, Receiver<Vec<u8>>), &Fn() -> bool) + Sync,
 {
     fn drop(&mut self) {
         unsafe { CFRelease(self.manager as *mut libc::c_void) };
