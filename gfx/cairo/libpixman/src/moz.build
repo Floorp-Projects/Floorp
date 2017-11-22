@@ -110,8 +110,8 @@ if use_mmx:
     if CONFIG['GNU_CC']:
         SOURCES['pixman-mmx.c'].flags += [
             '-Winline',
-            '--param inline-unit-growth=10000',
-            '--param large-function-growth=10000',
+            '--param', 'inline-unit-growth=10000',
+            '--param', 'large-function-growth=10000',
         ]
 
 if use_sse2:
