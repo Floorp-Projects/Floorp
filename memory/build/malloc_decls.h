@@ -38,7 +38,7 @@
 
 #ifdef MALLOC_DECL
 #if MALLOC_FUNCS & MALLOC_FUNCS_INIT
-MALLOC_DECL(init, void, const malloc_table_t*)
+MALLOC_DECL(init, void, malloc_table_t*)
 #endif
 #if MALLOC_FUNCS & MALLOC_FUNCS_BRIDGE
 MALLOC_DECL(get_bridge, struct ReplaceMallocBridge*)
