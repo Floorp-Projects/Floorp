@@ -10,43 +10,40 @@
 
 const TEST_URI = "http://example.com/";
 
-var good = true;
-var listener = {
-  QueryInterface: XPCOMUtils.generateQI([ Ci.nsIObserver ]),
-  observe: function (subject) {
-    if (subject instanceof Ci.nsIScriptError &&
-        subject.category === "XPConnect JavaScript" &&
-        subject.sourceName.includes("webconsole")) {
-      good = false;
+add_task(async function () {
+  // Start a listener on the console service.
+  let good = true;
+  const listener = {
+    QueryInterface: XPCOMUtils.generateQI([ Ci.nsIObserver ]),
+    observe: function (subject) {
+      if (subject instanceof Ci.nsIScriptError &&
+          subject.category === "XPConnect JavaScript" &&
+          subject.sourceName.includes("webconsole")) {
+        good = false;
+      }
     }
-  }
-};
-
-var xhr;
-
-function test() {
+  };
   Services.console.registerListener(listener);
 
   // trigger a lazy-load of the HUD Service
   HUDService;
 
-  xhr = new XMLHttpRequest();
-  xhr.addEventListener("load", xhrComplete);
-  xhr.open("GET", TEST_URI, true);
-  xhr.send(null);
-}
+  await sendRequestFromChrome();
 
-function xhrComplete() {
-  xhr.removeEventListener("load", xhrComplete);
-  window.setTimeout(checkForException, 0);
-}
-
-function checkForException() {
-  ok(good, "no exception was thrown when sending a network request from a " +
-     "chrome window");
+  ok(good, "No exception was thrown when sending a network request from a chrome window");
 
   Services.console.unregisterListener(listener);
-  listener = xhr = null;
+});
 
-  finishTest();
+function sendRequestFromChrome() {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.addEventListener("load", () => {
+      window.setTimeout(resolve, 0);
+    }, { once: true });
+
+    xhr.open("GET", TEST_URI, true);
+    xhr.send(null);
+  });
 }
