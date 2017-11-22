@@ -2145,11 +2145,25 @@ MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
   // cases where we don't need to reopen are when *we* closed the stream.
   // But don't reopen if we need to seek and we don't think we can... that would
   // cause us to just re-read the stream, which would be really bad.
+  /*
+   * | length |    offset |   reopen |
+   * +--------+-----------+----------+
+   * |     -1 |         0 |      yes |
+   * +--------+-----------+----------+
+   * |     -1 |       > 0 | seekable |
+   * +--------+-----------+----------+
+   * |      0 |         X |       no |
+   * +--------+-----------+----------+
+   * |    > 0 |         0 |      yes |
+   * +--------+-----------+----------+
+   * |    > 0 | != length | seekable |
+   * +--------+-----------+----------+
+   * |    > 0 | == length |       no |
+   */
   if (aReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
       aStatus != NS_BINDING_ABORTED &&
-      (mChannelOffset == 0 ||
-       (mStreamLength > 0 && mChannelOffset != mStreamLength &&
-        mIsTransportSeekable))) {
+      (mChannelOffset == 0 || mIsTransportSeekable) &&
+      mChannelOffset != mStreamLength) {
     // If the stream did close normally, restart the channel if we're either
     // at the start of the resource, or if the server is seekable and we're
     // not at the end of stream. We don't restart the stream if we're at the
