@@ -5,7 +5,6 @@
 """Utility functions for Talos"""
 from __future__ import absolute_import
 
-import json
 import os
 import platform
 import re
@@ -121,7 +120,6 @@ def parse_pref(value):
 def GenerateBrowserCommandLine(browser_path, extra_args, profile_dir,
                                url, profiling_info=None):
     # TODO: allow for spaces in file names on Windows
-
     command_args = [browser_path.strip()]
     if platform.system() == "Darwin":
         command_args.extend(['-foreground'])
@@ -135,19 +133,21 @@ def GenerateBrowserCommandLine(browser_path, extra_args, profile_dir,
     command_args.extend(['-profile', profile_dir])
 
     if profiling_info:
-        # For pageloader, buildCommandLine() puts the -tp* command line
-        # options into the url argument.
-        # It would be better to assemble all -tp arguments in one place,
-        # but we don't have the profiling information in buildCommandLine().
-        if url.find(' -tp') != -1:
-            command_args.extend(['-tpprofilinginfo',
-                                 json.dumps(profiling_info)])
-        elif url.find('?') != -1:
-            url += '&' + urllib.urlencode(profiling_info)
-        else:
-            url += '?' + urllib.urlencode(profiling_info)
+        # pageloader tests use a tpmanifest browser pref instead of passing in a manifest url
+        # profiling info is handled differently for pageloader vs non-pageloader (startup) tests
+        # for pageloader the profiling info was mirrored already in an env var; so here just
+        # need to setup profiling info for startup / non-pageloader tests
+        if url is not None:
+            # for non-pageloader/non-manifest tests the profiling info is added to the test url
+            if url.find('?') != -1:
+                url += '&' + urllib.urlencode(profiling_info)
+            else:
+                url += '?' + urllib.urlencode(profiling_info)
+            command_args.extend(url.split(' '))
 
-    command_args.extend(url.split(' '))
+    # if there's a url i.e. startup test / non-manifest test, add it to the cmd line args
+    if url is not None:
+        command_args.extend(url.split(' '))
 
     return command_args
 

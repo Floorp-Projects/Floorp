@@ -22,11 +22,8 @@ var numRetries = 0;
 var maxRetries = 3;
 
 var pageFilterRegexp = null;
-var useBrowser = true;
 var winWidth = 1024;
 var winHeight = 768;
-
-var doRenderTest = false;
 
 var pages;
 var pageIndex;
@@ -34,7 +31,6 @@ var start_time;
 var cycle;
 var pageCycle;
 var report;
-var noisy = false;
 var timeout = -1;
 var delay = 250;
 var running = false;
@@ -48,6 +44,7 @@ var loadNoCache = false;
 var scrollTest = false;
 var profilingInfo = false;
 var baseVsRef = false;
+var useBrowserChrome = false;
 
 var isIdleCallbackPending = false;
 
@@ -110,7 +107,6 @@ SingleTimeout.prototype.clear = function() {
 };
 
 var failTimeout = new SingleTimeout();
-var renderReport;
 
 function plInit() {
   if (running) {
@@ -122,8 +118,6 @@ function plInit() {
   pageCycle = 1;
 
   try {
-    var args;
-
     /*
      * Desktop firefox:
      * non-chrome talos runs - tp-cmdline will create and load pageloader
@@ -132,34 +126,32 @@ function plInit() {
      * creates a new chromed browser window below for content.
      */
 
-    // cmdline arguments are on window
-    args = window.arguments[0].wrappedJSObject;
-
-    var manifestURI = args.manifest;
-    var startIndex = 0;
-    var endIndex = -1;
-    if (args.startIndex) startIndex = parseInt(args.startIndex);
-    if (args.endIndex) endIndex = parseInt(args.endIndex);
-    if (args.numCycles) NUM_CYCLES = parseInt(args.numCycles);
-    if (args.numPageCycles) numPageCycles = parseInt(args.numPageCycles);
-    if (args.width) winWidth = parseInt(args.width);
-    if (args.height) winHeight = parseInt(args.height);
-    if (args.filter) pageFilterRegexp = new RegExp(args.filter);
-    if (args.noisy) noisy = true;
-    if (args.timeout) timeout = parseInt(args.timeout);
-    if (args.delay) delay = parseInt(args.delay);
-    if (args.mozafterpaint) useMozAfterPaint = true;
-    if (args.fnbpaint) useFNBPaint = true;
-    if (args.loadnocache) loadNoCache = true;
-    if (args.scrolltest) scrollTest = true;
-    if (args.profilinginfo) profilingInfo = JSON.parse(args.profilinginfo);
-
-    if (profilingInfo) {
-      TalosParentProfiler.initFromObject(profilingInfo);
+    var manifestURI = Services.prefs.getCharPref("talos.tpmanifest", null);
+    if (manifestURI.length == null) {
+      dumpLine("tp abort: talos.tpmanifest browser pref is not set");
+      plStop(true);
     }
 
-    forceCC = !args.noForceCC;
-    doRenderTest = args.doRender;
+    NUM_CYCLES = Services.prefs.getIntPref("talos.tpcycles", 1);
+    numPageCycles = Services.prefs.getIntPref("talos.tppagecycles", 1);
+    timeout = Services.prefs.getIntPref("talos.tptimeout", -1);
+    useMozAfterPaint = Services.prefs.getBoolPref("talos.tpmozafterpaint", false);
+    useFNBPaint = Services.prefs.getBoolPref("talos.fnbpaint", false);
+    loadNoCache = Services.prefs.getBoolPref("talos.tploadnocache", false);
+    scrollTest = Services.prefs.getBoolPref("talos.tpscrolltest", false);
+    useBrowserChrome = Services.prefs.getBoolPref("talos.tpchrome", false);
+
+    // for pageloader tests the profiling info is found in an env variable
+    // because it is not available early enough to set it as a browser pref
+    var env = Components.classes["@mozilla.org/process/environment;1"].
+              getService(Components.interfaces.nsIEnvironment);
+
+    if (env.exists("TPPROFILINGINFO")) {
+      profilingInfo = env.get("TPPROFILINGINFO");
+      if (profilingInfo !== null) {
+        TalosParentProfiler.initFromObject(JSON.parse(profilingInfo));
+      }
+    }
 
     if (forceCC &&
         !window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -170,8 +162,7 @@ function plInit() {
 
     gIOS = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService);
-    if (args.offline)
-      gIOS.offline = true;
+
     var fileURI = gIOS.newURI(manifestURI);
     pages = plLoadURLsFromURI(fileURI);
 
@@ -185,20 +176,8 @@ function plInit() {
       plStop(true);
     }
 
-    if (startIndex < 0)
-      startIndex = 0;
-    if (endIndex == -1 || endIndex >= pages.length)
-      endIndex = pages.length - 1;
-    if (startIndex > endIndex) {
-      dumpLine("tp: error: startIndex >= endIndex");
-      plStop(true);
-    }
-
-    pages = pages.slice(startIndex, endIndex + 1);
     pageUrls = pages.map(function(p) { return p.url.spec.toString(); });
     report = new Report();
-    if (doRenderTest)
-      renderReport = new Report();
 
     pageIndex = 0;
     if (profilingInfo) {
@@ -213,7 +192,7 @@ function plInit() {
     blank.data = "about:blank";
 
     let toolbars = "all";
-    if (!args.useBrowserChrome) {
+    if (!useBrowserChrome) {
       toolbars = "titlebar,resizable";
     }
 
@@ -564,9 +543,7 @@ function plRecordTime(time) {
   } else {
     report.recordTime(recordedName, time);
   }
-  if (noisy) {
-    dumpLine("Cycle " + (cycle + 1) + "(" + pageCycle + "): loaded " + pageName + " (next: " + nextName + ")");
-  }
+  dumpLine("Cycle " + (cycle + 1) + "(" + pageCycle + "): loaded " + pageName + " (next: " + nextName + ")");
 }
 
 function plLoadHandlerCapturing(evt) {
@@ -709,10 +686,6 @@ function _loadHandler(fnbpaint = 0) {
   }
 
   plRecordTime(duration);
-
-  if (doRenderTest)
-    runRenderTest();
-
   plNextPage();
 }
 
@@ -744,8 +717,6 @@ function plLoadHandlerMessage(message) {
 
     if (time !== undefined) {
       plRecordTime(time);
-      if (doRenderTest)
-        runRenderTest();
       plNextPage();
     }
   } else {
@@ -769,28 +740,6 @@ function plRecordTimeMessage(message) {
 function plFNBPaintErrorMessage(message) {
   dumpLine("Abort: firstNonBlankPaint value is not available after loading the page");
   plStop(true);
-}
-
-function runRenderTest() {
-  const redrawsPerSample = 500;
-
-  if (!Ci.nsIDOMWindowUtils)
-    return;
-
-  var win;
-
-  if (browserWindow)
-    win = content.contentWindow;
-  else
-    win = window;
-  var wu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-
-  var start = Date.now();
-  for (var j = 0; j < redrawsPerSample; j++)
-    wu.redraw();
-  var end = Date.now();
-
-  renderReport.recordTime(pageIndex, end - start);
 }
 
 function plStop(force) {
@@ -990,3 +939,4 @@ function dumpLine(str) {
   dump(str);
   dump("\n");
 }
+

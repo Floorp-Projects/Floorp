@@ -240,14 +240,6 @@ class Test_get_config(object):
         cls.argv_perf_reftest = '--activeTests perf_reftest -e /some/random/path'.split()
         cls.argv_perf_reftest_singletons = \
             '--activeTests perf_reftest_singletons -e /some/random/path'.split()
-        cls.argv_quantum_pageload_google = \
-            '--activeTests quantum_pageload_google -e /some/random/path'.split()
-        cls.argv_quantum_pageload_youtube = \
-            '--activeTests quantum_pageload_youtube -e /some/random/path'.split()
-        cls.argv_quantum_pageload_amazon = \
-            '--activeTests quantum_pageload_amazon -e /some/random/path'.split()
-        cls.argv_quantum_pageload_facebook = \
-            '--activeTests quantum_pageload_facebook -e /some/random/path'.split()
         cls.argv_tp6_google = '--activeTests tp6_google -e /some/random/path'.split()
         cls.argv_tp6_google_heavy = '--activeTests tp6_google_heavy -e /some/random/path'.split()
         cls.argv_tp6_youtube = '--activeTests tp6_youtube -e /some/random/path'.split()
@@ -985,70 +977,6 @@ class Test_get_config(object):
         assert test_config['unit'] == 'ms'
         assert test_config['lower_is_better'] is True
         assert test_config['alert_threshold'] == 5.0
-
-    def test_quantum_pageload_google_has_expected_attributes(self):
-        config = get_config(self.argv_quantum_pageload_google)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'quantum_pageload_google'
-        assert test_config['tpcycles'] == 1
-        assert test_config['tppagecycles'] == 25
-        assert test_config['gecko_profile_interval'] == 1
-        assert test_config['gecko_profile_entries'] == 2000000
-        assert test_config['filters'] is not None
-        assert test_config['unit'] == 'ms'
-        assert test_config['lower_is_better'] is True
-        assert test_config['fnbpaint'] is True
-        assert test_config['tpmanifest'] != \
-            '${talos}/tests/quantum_pageload/quantum_pageload_google.manifest'
-
-    def test_quantum_pageload_youtube_has_expected_attributes(self):
-        config = get_config(self.argv_quantum_pageload_youtube)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'quantum_pageload_youtube'
-        assert test_config['tpcycles'] == 1
-        assert test_config['tppagecycles'] == 25
-        assert test_config['gecko_profile_interval'] == 1
-        assert test_config['gecko_profile_entries'] == 2000000
-        assert test_config['filters'] is not None
-        assert test_config['unit'] == 'ms'
-        assert test_config['lower_is_better'] is True
-        assert test_config['fnbpaint'] is True
-        assert test_config['tpmanifest'] != \
-            '${talos}/tests/quantum_pageload/quantum_pageload_youtube.manifest'
-
-    def test_quantum_pageload_amazon_has_expected_attributes(self):
-        config = get_config(self.argv_quantum_pageload_amazon)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'quantum_pageload_amazon'
-        assert test_config['tpcycles'] == 1
-        assert test_config['tppagecycles'] == 25
-        assert test_config['gecko_profile_interval'] == 1
-        assert test_config['gecko_profile_entries'] == 2000000
-        assert test_config['filters'] is not None
-        assert test_config['unit'] == 'ms'
-        assert test_config['lower_is_better'] is True
-        assert test_config['fnbpaint'] is True
-        assert test_config['tpmanifest'] != \
-            '${talos}/tests/quantum_pageload/quantum_pageload_amazon.manifest'
-
-    def test_quantum_pageload_facebook_has_expected_attributes(self):
-        config = get_config(self.argv_quantum_pageload_facebook)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'quantum_pageload_facebook'
-        assert test_config['tpcycles'] == 1
-        assert test_config['tppagecycles'] == 25
-        assert test_config['gecko_profile_interval'] == 1
-        assert test_config['gecko_profile_entries'] == 2000000
-        assert test_config['filters'] is not None
-        assert test_config['unit'] == 'ms'
-        assert test_config['lower_is_better'] is True
-        assert test_config['fnbpaint'] is True
-        assert test_config['tpmanifest'] != \
-            '${talos}/tests/quantum_pageload/quantum_pageload_facebook.manifest'
 
     def test_tp6_google_has_expected_attributes(self):
         config = get_config(self.argv_tp6_google)

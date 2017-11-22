@@ -78,3 +78,20 @@ This script is called by the build system to generate:
 
 - the ``PropertyUseCounterMap.inc`` C++ header for the CSS properties;
 - the ``UseCounterList.h`` header for the WebIDL, out of the definition files.
+
+Interpreting the data
+=====================
+The histogram as accumulated on the client only puts values into the 1 bucket, meaning that
+the use counter directly reports if a feature was used but it does not directly report if
+it isn't used.
+The values accumulated within a use counter should be considered proportional to
+``CONTENT_DOCUMENTS_DESTROYED`` and ``TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED`` (see
+`here <https://dxr.mozilla.org/mozilla-central/rev/b056526be38e96b3e381b7e90cd8254ad1d96d9d/dom/base/nsDocument.cpp#13209-13231>`__). The difference between the values of these two histograms
+and the related use counters below tell us how many pages did *not* use the feature in question.
+For instance, if we see that a given session has destroyed 30 content documents, but a
+particular use counter shows only a count of 5, we can infer that the use counter was *not*
+used in 25 of those 30 documents.
+
+Things are done this way, rather than accumulating a boolean flag for each use counter,
+to avoid sending histograms for features that don't get widely used. Doing things in this
+fashion means smaller telemetry payloads and faster processing on the server side.

@@ -19,5 +19,6 @@ DevToolsModules(
     'MessageContainer.js',
     'MessageIcon.js',
     'MessageIndent.js',
-    'MessageRepeat.js'
+    'MessageRepeat.js',
+    'SideBar.js'
 )
