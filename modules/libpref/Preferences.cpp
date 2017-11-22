@@ -389,31 +389,31 @@ private:
   }
 
 public:
-  void ToSetting(dom::PrefSetting* aSetting)
+  void ToDomPref(dom::Pref* aDomPref)
   {
-    aSetting->name() = mName;
+    aDomPref->name() = mName;
 
     if (mHasDefaultValue) {
-      aSetting->defaultValue() = dom::PrefValue();
+      aDomPref->defaultValue() = dom::PrefValue();
       AssignPrefValueToDomPrefValue(
-        Type(), &mDefaultValue, &aSetting->defaultValue().get_PrefValue());
+        Type(), &mDefaultValue, &aDomPref->defaultValue().get_PrefValue());
     } else {
-      aSetting->defaultValue() = null_t();
+      aDomPref->defaultValue() = null_t();
     }
 
     if (mHasUserValue) {
-      aSetting->userValue() = dom::PrefValue();
+      aDomPref->userValue() = dom::PrefValue();
       AssignPrefValueToDomPrefValue(
-        Type(), &mUserValue, &aSetting->userValue().get_PrefValue());
+        Type(), &mUserValue, &aDomPref->userValue().get_PrefValue());
     } else {
-      aSetting->userValue() = null_t();
+      aDomPref->userValue() = null_t();
     }
 
-    MOZ_ASSERT(aSetting->defaultValue().type() ==
+    MOZ_ASSERT(aDomPref->defaultValue().type() ==
                  dom::MaybePrefValue::Tnull_t ||
-               aSetting->userValue().type() == dom::MaybePrefValue::Tnull_t ||
-               (aSetting->defaultValue().get_PrefValue().type() ==
-                aSetting->userValue().get_PrefValue().type()));
+               aDomPref->userValue().type() == dom::MaybePrefValue::Tnull_t ||
+               (aDomPref->defaultValue().get_PrefValue().type() ==
+                aDomPref->userValue().get_PrefValue().type()));
   }
 
   bool HasAdvisablySizedValues()
@@ -3234,7 +3234,7 @@ public:
 
 } // namespace
 
-static InfallibleTArray<Preferences::PrefSetting>* gInitSettings;
+static InfallibleTArray<dom::Pref>* gInitDomPrefs;
 
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
@@ -3262,12 +3262,12 @@ Preferences::GetInstanceForService()
   }
 
   if (!XRE_IsParentProcess()) {
-    MOZ_ASSERT(gInitSettings);
-    for (unsigned int i = 0; i < gInitSettings->Length(); i++) {
-      Preferences::SetPreference(gInitSettings->ElementAt(i));
+    MOZ_ASSERT(gInitDomPrefs);
+    for (unsigned int i = 0; i < gInitDomPrefs->Length(); i++) {
+      Preferences::SetPreference(gInitDomPrefs->ElementAt(i));
     }
-    delete gInitSettings;
-    gInitSettings = nullptr;
+    delete gInitDomPrefs;
+    gInitDomPrefs = nullptr;
 
   } else {
     // Check if there is a deployment configuration file. If so, set up the
@@ -3407,9 +3407,9 @@ NS_INTERFACE_MAP_END
 //
 
 /* static */ void
-Preferences::SetInitPreferences(nsTArray<PrefSetting>* aSettings)
+Preferences::SetInitPreferences(nsTArray<dom::Pref>* aDomPrefs)
 {
-  gInitSettings = new InfallibleTArray<PrefSetting>(mozilla::Move(*aSettings));
+  gInitDomPrefs = new InfallibleTArray<dom::Pref>(mozilla::Move(*aDomPrefs));
 }
 
 /* static */ void
@@ -3608,11 +3608,11 @@ Preferences::SetValueFromDom(const char* aPrefName,
 }
 
 void
-Preferences::SetPreference(const PrefSetting& aSetting)
+Preferences::SetPreference(const dom::Pref& aDomPref)
 {
-  const char* prefName = aSetting.name().get();
-  const dom::MaybePrefValue& defaultValue = aSetting.defaultValue();
-  const dom::MaybePrefValue& userValue = aSetting.userValue();
+  const char* prefName = aDomPref.name().get();
+  const dom::MaybePrefValue& defaultValue = aDomPref.defaultValue();
+  const dom::MaybePrefValue& userValue = aDomPref.userValue();
 
   if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
     nsresult rv = SetValueFromDom(
@@ -3633,24 +3633,24 @@ Preferences::SetPreference(const PrefSetting& aSetting)
 }
 
 void
-Preferences::GetPreference(PrefSetting* aSetting)
+Preferences::GetPreference(dom::Pref* aDomPref)
 {
-  PrefHashEntry* pref = pref_HashTableLookup(aSetting->name().get());
+  PrefHashEntry* pref = pref_HashTableLookup(aDomPref->name().get());
   if (pref && pref->HasAdvisablySizedValues()) {
-    pref->ToSetting(aSetting);
+    pref->ToDomPref(aDomPref);
   }
 }
 
 void
-Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aSettings)
+Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 {
-  aSettings->SetCapacity(gHashTable->Capacity());
+  aDomPrefs->SetCapacity(gHashTable->Capacity());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
     if (pref->HasAdvisablySizedValues()) {
-      dom::PrefSetting* setting = aSettings->AppendElement();
-      pref->ToSetting(setting);
+      dom::Pref* setting = aDomPrefs->AppendElement();
+      pref->ToDomPref(setting);
     }
   }
 }

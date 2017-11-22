@@ -115,7 +115,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
 #endif
 
   char* schedulerPrefs = nullptr;
-  InfallibleTArray<PrefSetting> prefsArray;
+  InfallibleTArray<Pref> prefsArray;
   for (int idx = aArgc; idx > 0; idx--) {
     if (!aArgv[idx]) {
       continue;
@@ -156,7 +156,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MaybePrefValue value(PrefValue(static_cast<int32_t>(strtol(str, &str, 10))));
         MOZ_ASSERT(str[0] == '|');
         str++;
-        PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        Pref pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
         prefsArray.AppendElement(pref);
       }
       SET_PREF_PHASE(END_INIT_PREFS);
@@ -171,7 +171,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MaybePrefValue value(PrefValue(!!strtol(str, &str, 10)));
         MOZ_ASSERT(str[0] == '|');
         str++;
-        PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        Pref pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
         prefsArray.AppendElement(pref);
       }
       SET_PREF_PHASE(END_INIT_PREFS);
@@ -187,7 +187,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MOZ_ASSERT(str[0] == ';');
         str++;
         MaybePrefValue value(PrefValue(nsCString(str, length)));
-        PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        Pref pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
         prefsArray.AppendElement(pref);
         str += length + 1;
         MOZ_ASSERT(*(str - 1) == '|');
