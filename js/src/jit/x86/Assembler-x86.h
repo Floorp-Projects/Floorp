@@ -421,12 +421,36 @@ class Assembler : public AssemblerX86Shared
     void adcl(Register src, Register dest) {
         masm.adcl_rr(src.encoding(), dest.encoding());
     }
+    void adcl(Operand src, Register dest) {
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.adcl_mr(src.disp(), src.base(), dest.encoding());
+            break;
+          case Operand::MEM_SCALE:
+            masm.adcl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
 
     void sbbl(Imm32 imm, Register dest) {
         masm.sbbl_ir(imm.value, dest.encoding());
     }
     void sbbl(Register src, Register dest) {
         masm.sbbl_rr(src.encoding(), dest.encoding());
+    }
+    void sbbl(Operand src, Register dest) {
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.sbbl_mr(src.disp(), src.base(), dest.encoding());
+            break;
+          case Operand::MEM_SCALE:
+            masm.sbbl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
     }
 
     void mull(Register multiplier) {

@@ -1000,6 +1000,8 @@ public:
                                                mMessage != eLoadEnd &&
                                                mMessage != eLoadError;
   }
+
+  bool IsUserAction() const;
 };
 
 /******************************************************************************

@@ -57,13 +57,6 @@
     </implementation>      
   </binding>
 
-  <binding id="control-item" extends="chrome://global/content/bindings/general.xml#basetext">
-    <implementation>
-      <property name="value"      onset="this.setAttribute('value', val); return val;"
-                                  onget="return this.getAttribute('value');"/>
-    </implementation>
-  </binding>
-
   <binding id="root-element">
     <implementation>
       <field name="_lightweightTheme">null</field>

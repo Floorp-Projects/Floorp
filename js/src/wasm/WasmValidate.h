@@ -59,6 +59,7 @@ struct ModuleEnvironment
     const DebugEnabled        debug;
     const ModuleKind          kind;
     const CompileMode         mode;
+    const Shareable           sharedMemoryEnabled;
     const Tier                tier;
 
     // Module fields decoded from the module environment (or initialized while
@@ -86,10 +87,12 @@ struct ModuleEnvironment
     explicit ModuleEnvironment(CompileMode mode = CompileMode::Once,
                                Tier tier = Tier::Ion,
                                DebugEnabled debug = DebugEnabled::False,
+                               Shareable sharedMemoryEnabled = Shareable::False,
                                ModuleKind kind = ModuleKind::Wasm)
       : debug(debug),
         kind(kind),
         mode(mode),
+        sharedMemoryEnabled(sharedMemoryEnabled),
         tier(tier),
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0)
@@ -111,7 +114,10 @@ struct ModuleEnvironment
         return funcSigs.length() - funcImportGlobalDataOffsets.length();
     }
     bool usesMemory() const {
-        return UsesMemory(memoryUsage);
+        return memoryUsage != MemoryUsage::None;
+    }
+    bool usesSharedMemory() const {
+        return memoryUsage == MemoryUsage::Shared;
     }
     bool isAsmJS() const {
         return kind == ModuleKind::AsmJS;
@@ -276,6 +282,12 @@ class Encoder
         static_assert(size_t(MozOp::Limit) <= 256, "fits");
         MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
         return writeFixedU8(uint8_t(Op::MozPrefix)) &&
+               writeFixedU8(uint8_t(op));
+    }
+    MOZ_MUST_USE bool writeOp(ThreadOp op) {
+        static_assert(size_t(ThreadOp::Limit) <= 256, "fits");
+        MOZ_ASSERT(size_t(op) < size_t(ThreadOp::Limit));
+        return writeFixedU8(uint8_t(Op::ThreadPrefix)) &&
                writeFixedU8(uint8_t(op));
     }
 
@@ -712,7 +724,7 @@ DecodeModuleTail(Decoder& d, ModuleEnvironment* env);
 //  - otherwise, there was a legitimate error described by *error
 
 MOZ_MUST_USE bool
-Validate(const ShareableBytes& bytecode, UniqueChars* error);
+Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

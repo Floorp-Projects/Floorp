@@ -763,19 +763,14 @@ public:
   // Manage the singleton:
   static gfxPrefs& GetSingleton()
   {
-    MOZ_ASSERT(!sInstanceHasBeenDestroyed, "Should never recreate a gfxPrefs instance!");
-    if (!sInstance) {
-      sGfxPrefList = new nsTArray<Pref*>();
-      sInstance = new gfxPrefs;
-      sInstance->Init();
-    }
-    MOZ_ASSERT(SingletonExists());
-    return *sInstance;
+    return sInstance ? *sInstance : CreateAndInitializeSingleton();
   }
   static void DestroySingleton();
   static bool SingletonExists();
 
 private:
+  static gfxPrefs& CreateAndInitializeSingleton();
+
   static gfxPrefs* sInstance;
   static bool sInstanceHasBeenDestroyed;
   static nsTArray<Pref*>* sGfxPrefList;

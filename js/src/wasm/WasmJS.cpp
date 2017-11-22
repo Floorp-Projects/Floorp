@@ -25,6 +25,7 @@
 #include "jsprf.h"
 
 #include "builtin/Promise.h"
+#include "jit/AtomicOperations.h"
 #include "jit/JitOptions.h"
 #include "vm/Interpreter.h"
 #include "vm/String.h"
@@ -66,6 +67,12 @@ wasm::HasCompilerSupport(JSContext* cx)
 
     if (!wasm::HaveSignalHandlers())
         return false;
+
+#ifdef ENABLE_WASM_THREAD_OPS
+    // Wasm threads require 8-byte lock-free atomics.
+    if (!jit::AtomicOperations::isLockfree8())
+        return false;
+#endif
 
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
@@ -284,27 +291,45 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
 // ============================================================================
 // Common functions
 
+// '[EnforceRange] unsigned long' types are coerced with
+//    ConvertToInt(v, 32, 'unsigned')
+// defined in Web IDL Section 3.2.4.9.
 static bool
-ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, const char* noun,
-                    uint32_t* u32)
+EnforceRangeU32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, const char* noun,
+                uint32_t* u32)
 {
-    double dbl;
-    if (!ToInteger(cx, v, &dbl))
+    // Step 4.
+    double x;
+    if (!ToNumber(cx, v, &x))
         return false;
 
-    if (dbl < 0 || dbl > max) {
+    // Step 5.
+    if (mozilla::IsNegativeZero(x))
+        x = 0.0;
+
+    // Step 6.1.
+    if (!mozilla::IsFinite(x)) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
         return false;
     }
 
-    *u32 = uint32_t(dbl);
-    MOZ_ASSERT(double(*u32) == dbl);
+    // Step 6.2.
+    x = JS::ToInteger(x);
+
+    // Step 6.3, allowing caller to supply a more restrictive uint32_t max.
+    if (x < 0 || x > double(max)) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
+        return false;
+    }
+
+    *u32 = uint32_t(x);
+    MOZ_ASSERT(double(*u32) == x);
     return true;
 }
 
 static bool
 GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaximum,
-          const char* kind, Limits* limits)
+          const char* kind, Limits* limits, Shareable allowShared)
 {
     JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
     if (!initialAtom)
@@ -315,7 +340,7 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
     if (!GetProperty(cx, obj, obj, initialId, &initialVal))
         return false;
 
-    if (!ToNonWrappingUint32(cx, initialVal, maxInitial, kind, "initial size", &limits->initial))
+    if (!EnforceRangeU32(cx, initialVal, maxInitial, kind, "initial size", &limits->initial))
         return false;
 
     JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
@@ -323,17 +348,17 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
         return false;
     RootedId maximumId(cx, AtomToId(maximumAtom));
 
-    bool found;
-    if (!HasProperty(cx, obj, maximumId, &found))
+    bool foundMaximum;
+    if (!HasProperty(cx, obj, maximumId, &foundMaximum))
         return false;
 
-    if (found) {
+    if (foundMaximum) {
         RootedValue maxVal(cx);
         if (!GetProperty(cx, obj, obj, maximumId, &maxVal))
             return false;
 
         limits->maximum.emplace();
-        if (!ToNonWrappingUint32(cx, maxVal, maxMaximum, kind, "maximum size", limits->maximum.ptr()))
+        if (!EnforceRangeU32(cx, maxVal, maxMaximum, kind, "maximum size", limits->maximum.ptr()))
             return false;
 
         if (limits->initial > *limits->maximum) {
@@ -342,6 +367,43 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
             return false;
         }
     }
+
+    limits->shared = Shareable::False;
+
+#ifdef ENABLE_WASM_THREAD_OPS
+    if (allowShared == Shareable::True) {
+        JSAtom* sharedAtom = Atomize(cx, "shared", strlen("shared"));
+        if (!sharedAtom)
+            return false;
+        RootedId sharedId(cx, AtomToId(sharedAtom));
+
+        bool foundShared;
+        if (!HasProperty(cx, obj, sharedId, &foundShared))
+            return false;
+
+        if (foundShared) {
+            RootedValue sharedVal(cx);
+            if (!GetProperty(cx, obj, obj, sharedId, &sharedVal))
+                return false;
+
+            limits->shared = ToBoolean(sharedVal) ? Shareable::True : Shareable::False;
+
+            if (limits->shared == Shareable::True) {
+                if (!foundMaximum) {
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_MISSING_MAXIMUM,
+                                              kind);
+                    return false;
+                }
+
+                if (!cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                              JSMSG_WASM_NO_SHMEM_LINK);
+                    return false;
+                }
+            }
+        }
+    }
+#endif
 
     return true;
 }
@@ -1232,16 +1294,18 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject obj(cx, &args[0].toObject());
     Limits limits;
-    if (!GetLimits(cx, obj, MaxMemoryInitialPages, MaxMemoryMaximumPages, "Memory", &limits))
+    if (!GetLimits(cx, obj, MaxMemoryInitialPages, MaxMemoryMaximumPages, "Memory", &limits,
+                   Shareable::True))
+    {
         return false;
+    }
 
     limits.initial *= PageSize;
     if (limits.maximum)
         limits.maximum = Some(*limits.maximum * PageSize);
 
-    RootedArrayBufferObject buffer(cx,
-        ArrayBufferObject::createForWasm(cx, limits.initial, limits.maximum));
-    if (!buffer)
+    RootedArrayBufferObjectMaybeShared buffer(cx);
+    if (!CreateWasmBuffer(cx, limits, &buffer))
         return false;
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
@@ -1262,7 +1326,30 @@ IsMemory(HandleValue v)
 /* static */ bool
 WasmMemoryObject::bufferGetterImpl(JSContext* cx, const CallArgs& args)
 {
-    args.rval().setObject(args.thisv().toObject().as<WasmMemoryObject>().buffer());
+    RootedWasmMemoryObject memoryObj(cx, &args.thisv().toObject().as<WasmMemoryObject>());
+    RootedArrayBufferObjectMaybeShared buffer(cx, &memoryObj->buffer());
+
+    if (memoryObj->isShared()) {
+        uint32_t memoryLength = memoryObj->volatileMemoryLength();
+        MOZ_ASSERT(memoryLength >= buffer->byteLength());
+
+        if (memoryLength > buffer->byteLength()) {
+            RootedSharedArrayBufferObject newBuffer(
+                cx, SharedArrayBufferObject::New(cx, memoryObj->sharedArrayRawBuffer(), memoryLength));
+            if (!newBuffer)
+                return false;
+            // OK to addReference after we try to allocate because the memoryObj
+            // keeps the rawBuffer alive.
+            if (!memoryObj->sharedArrayRawBuffer()->addReference()) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_SAB_REFCNT_OFLO);
+                return false;
+            }
+            buffer = newBuffer;
+            memoryObj->setReservedSlot(BUFFER_SLOT, ObjectValue(*newBuffer));
+        }
+    }
+
+    args.rval().setObject(*buffer);
     return true;
 }
 
@@ -1285,7 +1372,7 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
     RootedWasmMemoryObject memory(cx, &args.thisv().toObject().as<WasmMemoryObject>());
 
     uint32_t delta;
-    if (!ToNonWrappingUint32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta))
+    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta))
         return false;
 
     uint32_t ret = grow(memory, delta, cx);
@@ -1319,6 +1406,29 @@ ArrayBufferObjectMaybeShared&
 WasmMemoryObject::buffer() const
 {
     return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObjectMaybeShared>();
+}
+
+SharedArrayRawBuffer*
+WasmMemoryObject::sharedArrayRawBuffer() const
+{
+    MOZ_ASSERT(isShared());
+    return buffer().as<SharedArrayBufferObject>().rawBufferObject();
+}
+
+uint32_t
+WasmMemoryObject::volatileMemoryLength() const
+{
+    if (isShared()) {
+        SharedArrayRawBuffer::Lock lock(sharedArrayRawBuffer());
+        return sharedArrayRawBuffer()->byteLength(lock);
+    }
+    return buffer().byteLength();
+}
+
+bool
+WasmMemoryObject::isShared() const
+{
+    return buffer().is<SharedArrayBufferObject>();
 }
 
 bool
@@ -1378,8 +1488,38 @@ WasmMemoryObject::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* insta
 }
 
 /* static */ uint32_t
+WasmMemoryObject::growShared(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx)
+{
+    SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
+    SharedArrayRawBuffer::Lock lock(rawBuf);
+
+    MOZ_ASSERT(rawBuf->byteLength(lock) % PageSize == 0);
+    uint32_t oldNumPages = rawBuf->byteLength(lock) / PageSize;
+
+    CheckedInt<uint32_t> newSize = oldNumPages;
+    newSize += delta;
+    newSize *= PageSize;
+    if (!newSize.isValid())
+        return -1;
+
+    if (newSize.value() > rawBuf->maxSize())
+        return -1;
+
+    if (!rawBuf->wasmGrowToSizeInPlace(lock, newSize.value()))
+        return -1;
+
+    // New buffer objects will be created lazily in all agents (including in
+    // this agent) by bufferGetterImpl, above, so no more work to do here.
+
+    return oldNumPages;
+}
+
+/* static */ uint32_t
 WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx)
 {
+    if (memory->isShared())
+        return growShared(memory, delta, cx);
+
     RootedArrayBufferObject oldBuf(cx, &memory->buffer().as<ArrayBufferObject>());
 
     MOZ_ASSERT(oldBuf->byteLength() % PageSize == 0);
@@ -1423,6 +1563,13 @@ WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext*
     }
 
     return oldNumPages;
+}
+
+bool
+js::wasm::IsSharedWasmMemoryObject(JSObject* obj)
+{
+    obj = CheckedUnwrap(obj);
+    return obj && obj->is<WasmMemoryObject>() && obj->as<WasmMemoryObject>().isShared();
 }
 
 // ============================================================================
@@ -1542,8 +1689,11 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Limits limits;
-    if (!GetLimits(cx, obj, MaxTableInitialLength, UINT32_MAX, "Table", &limits))
+    if (!GetLimits(cx, obj, MaxTableInitialLength, UINT32_MAX, "Table", &limits,
+                   Shareable::False))
+    {
         return false;
+    }
 
     RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits));
     if (!table)
@@ -1586,7 +1736,7 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     const Table& table = tableObj->table();
 
     uint32_t index;
-    if (!ToNonWrappingUint32(cx, args.get(0), table.length() - 1, "Table", "get index", &index))
+    if (!EnforceRangeU32(cx, args.get(0), table.length() - 1, "Table", "get index", &index))
         return false;
 
     ExternalTableElem& elem = table.externalArray()[index];
@@ -1625,7 +1775,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     uint32_t index;
-    if (!ToNonWrappingUint32(cx, args.get(0), table.length() - 1, "Table", "set index", &index))
+    if (!EnforceRangeU32(cx, args.get(0), table.length() - 1, "Table", "set index", &index))
         return false;
 
     RootedFunction value(cx);
@@ -1671,7 +1821,7 @@ WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
     RootedWasmTableObject table(cx, &args.thisv().toObject().as<WasmTableObject>());
 
     uint32_t delta;
-    if (!ToNonWrappingUint32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta))
+    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta))
         return false;
 
     uint32_t ret = table->table().grow(delta, cx);
@@ -1977,7 +2127,7 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    bool validated = Validate(*bytecode, &error);
+    bool validated = Validate(cx, *bytecode, &error);
 
     // If the reason for validation failure was OOM (signalled by null error
     // message), report out-of-memory so that validate's return is always

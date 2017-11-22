@@ -357,12 +357,16 @@ MSG_DEF(JSMSG_USE_ASM_TYPE_OK,         1, JSEXN_WARN,    "Successfully compiled 
 
 // wasm
 MSG_DEF(JSMSG_WASM_COMPILE_ERROR,      1, JSEXN_WASMCOMPILEERROR, "{0}")
+MSG_DEF(JSMSG_WASM_NO_SHMEM_COMPILE,   0, JSEXN_WASMCOMPILEERROR, "shared memory is disabled")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_TYPE,    2, JSEXN_WASMLINKERROR, "import object field '{0}' is not a {1}")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_SIG,     2, JSEXN_WASMLINKERROR, "imported function '{0}.{1}' signature mismatch")
 MSG_DEF(JSMSG_WASM_BAD_IMP_SIZE,       1, JSEXN_WASMLINKERROR, "imported {0} with incompatible size")
 MSG_DEF(JSMSG_WASM_BAD_IMP_MAX,        1, JSEXN_WASMLINKERROR, "imported {0} with incompatible maximum size")
+MSG_DEF(JSMSG_WASM_IMP_SHARED_REQD,    0, JSEXN_WASMLINKERROR, "imported unshared memory but shared required")
+MSG_DEF(JSMSG_WASM_IMP_SHARED_BANNED,  0, JSEXN_WASMLINKERROR, "imported shared memory but unshared required")
 MSG_DEF(JSMSG_WASM_BAD_FIT,            2, JSEXN_WASMLINKERROR, "{0} segment does not fit in {1}")
 MSG_DEF(JSMSG_WASM_BAD_I64_LINK,       0, JSEXN_WASMLINKERROR, "cannot pass i64 to or from JS")
+MSG_DEF(JSMSG_WASM_NO_SHMEM_LINK,      0, JSEXN_WASMLINKERROR, "shared memory is disabled")
 MSG_DEF(JSMSG_WASM_IND_CALL_TO_NULL,   0, JSEXN_WASMRUNTIMEERROR, "indirect call to null")
 MSG_DEF(JSMSG_WASM_IND_CALL_BAD_SIG,   0, JSEXN_WASMRUNTIMEERROR, "indirect call signature mismatch")
 MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_WASMRUNTIMEERROR, "unreachable executed")
@@ -371,6 +375,7 @@ MSG_DEF(JSMSG_WASM_INVALID_CONVERSION, 0, JSEXN_WASMRUNTIMEERROR, "invalid conve
 MSG_DEF(JSMSG_WASM_INT_DIVIDE_BY_ZERO, 0, JSEXN_WASMRUNTIMEERROR, "integer divide by zero")
 MSG_DEF(JSMSG_WASM_OUT_OF_BOUNDS,      0, JSEXN_WASMRUNTIMEERROR, "index out of bounds")
 MSG_DEF(JSMSG_WASM_UNALIGNED_ACCESS,   0, JSEXN_WASMRUNTIMEERROR, "unaligned memory access")
+MSG_DEF(JSMSG_WASM_WAKE_OVERFLOW,      0, JSEXN_WASMRUNTIMEERROR, "too many woken agents")
 MSG_DEF(JSMSG_WASM_BAD_UINT32,         2, JSEXN_RANGEERR,    "bad {0} {1}")
 MSG_DEF(JSMSG_WASM_BAD_GROW,           1, JSEXN_RANGEERR,    "failed to grow {0}")
 MSG_DEF(JSMSG_WASM_BAD_BUF_ARG,        0, JSEXN_TYPEERR,     "first argument must be an ArrayBuffer or typed array object")
@@ -385,6 +390,7 @@ MSG_DEF(JSMSG_WASM_BAD_I64_TYPE,       0, JSEXN_TYPEERR,     "cannot pass i64 to
 MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_TYPEERR,     "cannot transfer WebAssembly/asm.js ArrayBuffer")
 MSG_DEF(JSMSG_WASM_STREAM_ERROR,       0, JSEXN_TYPEERR,     "stream error during WebAssembly compilation")
 MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR,   "wasm text error: {0}")
+MSG_DEF(JSMSG_WASM_MISSING_MAXIMUM,    0, JSEXN_TYPEERR,     "'shared' is true but maximum is not specified")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")
@@ -429,9 +435,9 @@ MSG_DEF(JSMSG_SC_DUP_TRANSFERABLE,     0, JSEXN_TYPEERR, "duplicate transferable
 MSG_DEF(JSMSG_SC_NOT_TRANSFERABLE,     0, JSEXN_TYPEERR, "invalid transferable array for structured clone")
 MSG_DEF(JSMSG_SC_UNSUPPORTED_TYPE,     0, JSEXN_TYPEERR, "unsupported type for structured data")
 MSG_DEF(JSMSG_SC_NOT_CLONABLE,         1, JSEXN_TYPEERR, "{0} cannot be cloned in this context")
-MSG_DEF(JSMSG_SC_SAB_TRANSFERABLE,     0, JSEXN_TYPEERR, "SharedArrayBuffer must not be in the transfer list")
 MSG_DEF(JSMSG_SC_SAB_DISABLED,         0, JSEXN_TYPEERR, "SharedArrayBuffer not cloned - shared memory disabled in receiver")
 MSG_DEF(JSMSG_SC_SAB_REFCNT_OFLO,      0, JSEXN_TYPEERR, "SharedArrayBuffer has too many references")
+MSG_DEF(JSMSG_SC_SHMEM_TRANSFERABLE,   0, JSEXN_TYPEERR, "Shared memory objects must not be in the transfer list")
 
 // Debugger
 MSG_DEF(JSMSG_ASSIGN_FUNCTION_OR_NULL, 1, JSEXN_TYPEERR, "value assigned to {0} must be a function or null")

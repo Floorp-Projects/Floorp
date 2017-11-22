@@ -23,6 +23,9 @@ SourceSurfaceD2D1::SourceSurfaceD2D1(ID2D1Image *aImage, ID2D1DeviceContext *aDC
 
   mFormat = aFormat;
   mSize = aSize;
+  if (aDT) {
+    mSnapshotLock = aDT->mSnapshotLock;
+  }
 }
 
 SourceSurfaceD2D1::~SourceSurfaceD2D1()
@@ -109,6 +112,9 @@ SourceSurfaceD2D1::EnsureRealizedBitmap()
 void
 SourceSurfaceD2D1::DrawTargetWillChange()
 {
+  MOZ_ASSERT(mSnapshotLock);
+  mSnapshotLock->AssertCurrentThreadOwns();
+
   // At this point in time this should always be true here.
   MOZ_ASSERT(mRealizedBitmap);
 

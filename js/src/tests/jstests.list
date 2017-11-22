@@ -381,14 +381,6 @@ skip script test262/built-ins/Simd/float_operators.js
 skip script test262/built-ins/Simd/all_true.js
 skip script test262/built-ins/Simd/any_true.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1340147
-skip script test262/language/module-code/eval-export-dflt-cls-anon.js
-skip script test262/language/module-code/eval-export-dflt-expr-cls-anon.js
-skip script test262/language/module-code/eval-export-dflt-expr-fn-anon.js
-skip script test262/language/module-code/eval-export-dflt-expr-gen-anon.js
-skip script test262/language/module-code/instn-named-bndng-dflt-fun-anon.js
-skip script test262/language/module-code/instn-named-bndng-dflt-gen-anon.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1340307
 skip script test262/language/module-code/instn-resolve-empty-export.js
 skip script test262/language/module-code/instn-resolve-empty-import.js

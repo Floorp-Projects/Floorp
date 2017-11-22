@@ -1659,6 +1659,7 @@ public:
 
     void prefix_16_for_32()
     {
+        spew("[16-bit operands next]");
         m_formatter.prefix(PRE_OPERAND_SIZE);
     }
 
@@ -1710,6 +1711,23 @@ public:
     {
         spew("cmpxchgl   %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
         m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, offset, base, index, scale, src);
+    }
+
+    void cmpxchg8b(RegisterID srcHi, RegisterID srcLo, RegisterID newHi, RegisterID newLo,
+                   int32_t offset, RegisterID base)
+    {
+        MOZ_ASSERT(srcHi == edx.code() && srcLo == eax.code());
+        MOZ_ASSERT(newHi == ecx.code() && newLo == ebx.code());
+        spew("cmpxchg8b  %s, " MEM_ob, "edx:eax", ADDR_ob(offset, base));
+        m_formatter.twoByteOp(OP2_CMPXCHGNB, offset, base, 1);
+    }
+    void cmpxchg8b(RegisterID srcHi, RegisterID srcLo, RegisterID newHi, RegisterID newLo,
+                   int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        MOZ_ASSERT(srcHi == edx.code() && srcLo == eax.code());
+        MOZ_ASSERT(newHi == ecx.code() && newLo == ebx.code());
+        spew("cmpxchg8b  %s, " MEM_obs, "edx:eax", ADDR_obs(offset, base, index, scale));
+        m_formatter.twoByteOp(OP2_CMPXCHGNB, offset, base, index, scale, 1);
     }
 
 

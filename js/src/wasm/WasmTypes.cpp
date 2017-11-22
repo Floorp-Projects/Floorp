@@ -18,6 +18,7 @@
 
 #include "wasm/WasmTypes.h"
 
+#include "vm/ArrayBufferObject.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmSerialize.h"
@@ -36,6 +37,11 @@ using mozilla::IsPowerOfTwo;
 #if defined(WASM_HUGE_MEMORY) != defined(JS_CODEGEN_X64)
 #  error "Not an expected configuration"
 #endif
+
+// Another sanity check.
+
+static_assert(MaxMemoryInitialPages <= ArrayBufferObject::MaxBufferByteLength / PageSize,
+              "Memory sizing constraint");
 
 void
 Val::writePayload(uint8_t* dst) const

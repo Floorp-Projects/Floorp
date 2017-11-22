@@ -18,6 +18,7 @@
 
 #include "wasm/WasmInstance.h"
 
+#include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitCommon.h"
@@ -304,9 +305,79 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta)
 /* static */ uint32_t
 Instance::currentMemory_i32(Instance* instance)
 {
-    uint32_t byteLength = instance->memoryLength();
+    uint32_t byteLength = instance->memory()->volatileMemoryLength();
     MOZ_ASSERT(byteLength % wasm::PageSize == 0);
     return byteLength / wasm::PageSize;
+}
+
+template<typename T>
+static int32_t
+PerformWait(Instance* instance, uint32_t byteOffset, T value, int64_t timeout_ns)
+{
+    JSContext* cx = TlsContext.get();
+
+    if (byteOffset & (sizeof(T) - 1)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
+        return -1;
+    }
+
+    if (byteOffset + sizeof(T) > instance->memory()->volatileMemoryLength()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
+        return -1;
+    }
+
+    mozilla::Maybe<mozilla::TimeDuration> timeout;
+    if (timeout_ns >= 0)
+        timeout = mozilla::Some(mozilla::TimeDuration::FromMicroseconds(timeout_ns / 1000));
+
+    switch (atomics_wait_impl(cx, instance->sharedMemoryBuffer(), byteOffset, value, timeout)) {
+      case FutexThread::WaitResult::OK:       return 0;
+      case FutexThread::WaitResult::NotEqual: return 1;
+      case FutexThread::WaitResult::TimedOut: return 2;
+      case FutexThread::WaitResult::Error:    return -1;
+      default: MOZ_CRASH();
+    }
+}
+
+/* static */ int32_t
+Instance::wait_i32(Instance* instance, uint32_t byteOffset, int32_t value, int64_t timeout_ns)
+{
+    return PerformWait<int32_t>(instance, byteOffset, value, timeout_ns);
+}
+
+/* static */ int32_t
+Instance::wait_i64(Instance* instance, uint32_t byteOffset, int64_t value, int64_t timeout_ns)
+{
+    return PerformWait<int64_t>(instance, byteOffset, value, timeout_ns);
+}
+
+/* static */ int32_t
+Instance::wake(Instance* instance, uint32_t byteOffset, int32_t count)
+{
+    JSContext* cx = TlsContext.get();
+
+    // The alignment guard is not in the wasm spec as of 2017-11-02, but is
+    // considered likely to appear, as 4-byte alignment is required for WAKE by
+    // the spec's validation algorithm.
+
+    if (byteOffset & 3) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
+        return -1;
+    }
+
+    if (byteOffset >= instance->memory()->volatileMemoryLength()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
+        return -1;
+    }
+
+    int64_t woken = atomics_wake_impl(instance->sharedMemoryBuffer(), byteOffset, int64_t(count));
+
+    if (woken > INT32_MAX) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_WAKE_OVERFLOW);
+        return -1;
+    }
+
+    return int32_t(woken);
 }
 
 Instance::Instance(JSContext* cx,
@@ -476,6 +547,7 @@ Instance::memoryMappedSize() const
     return memory_->buffer().wasmMappedSize();
 }
 
+#ifdef JS_SIMULATOR
 bool
 Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
 {
@@ -489,8 +561,9 @@ Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
         return false;
 
     size_t lastByteOffset = addr - base + (numBytes - 1);
-    return lastByteOffset >= memoryLength() && lastByteOffset < memoryMappedSize();
+    return lastByteOffset >= memory()->volatileMemoryLength() && lastByteOffset < memoryMappedSize();
 }
+#endif
 
 void
 Instance::tracePrivate(JSTracer* trc)
@@ -538,10 +611,11 @@ Instance::memoryBase() const
     return memory_->buffer().dataPointerEither();
 }
 
-size_t
-Instance::memoryLength() const
+SharedArrayRawBuffer*
+Instance::sharedMemoryBuffer() const
 {
-    return memory_->buffer().byteLength();
+    MOZ_ASSERT(memory_->isShared());
+    return memory_->sharedArrayRawBuffer();
 }
 
 WasmInstanceObject*
@@ -765,6 +839,8 @@ void
 Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
 {
     MOZ_ASSERT(!isAsmJS());
+    MOZ_ASSERT(!memory_->isShared());
+
     ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
     tlsData()->memoryBase = buffer.dataPointer();
 #ifndef WASM_HUGE_MEMORY

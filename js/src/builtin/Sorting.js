@@ -262,14 +262,6 @@ function MoveHoles(sparse, sparseLen, dense, denseLen) {
 
 // Iterative, bottom up, mergesort.
 function MergeSort(array, len, comparefn) {
-    // Until recently typed arrays had no sort method. To work around that
-    // many users passed them to Array.prototype.sort. Now that we have a
-    // typed array specific sorting method it makes sense to divert to it
-    // when possible.
-    if (IsPossiblyWrappedTypedArray(array)) {
-        return callFunction(TypedArraySort, array, comparefn);
-    }
-
     // To save effort we will do all of our work on a dense list,
     // then create holes at the end.
     var denseList = [];

@@ -92,6 +92,7 @@
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
 #include "threading/ConditionVariable.h"
+#include "threading/ExclusiveData.h"
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
 #include "vm/ArgumentsObject.h"
@@ -5559,23 +5560,39 @@ DisableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
 // decrements will be on a garbage object.  We could implement this
 // with atomics and a CAS loop but it's not worth the bother.
 
-static Mutex* sharedArrayBufferMailboxLock;
-static SharedArrayRawBuffer* sharedArrayBufferMailbox;
+struct SharedArrayBufferMailbox
+{
+    SharedArrayBufferMailbox() : buffer(nullptr), length(0) {}
+
+    SharedArrayRawBuffer* buffer;
+    uint32_t              length;
+};
+
+typedef ExclusiveData<SharedArrayBufferMailbox> SABMailbox;
+
+// Never null after successful initialization.
+static SABMailbox* sharedArrayBufferMailbox;
 
 static bool
 InitSharedArrayBufferMailbox()
 {
-    sharedArrayBufferMailboxLock = js_new<Mutex>(mutexid::ShellArrayBufferMailbox);
-    return sharedArrayBufferMailboxLock != nullptr;
+    sharedArrayBufferMailbox = js_new<SABMailbox>(mutexid::ShellArrayBufferMailbox);
+    return sharedArrayBufferMailbox != nullptr;
 }
 
 static void
 DestructSharedArrayBufferMailbox()
 {
     // All workers need to have terminated at this point.
-    if (sharedArrayBufferMailbox)
-        sharedArrayBufferMailbox->dropReference();
-    js_delete(sharedArrayBufferMailboxLock);
+
+    {
+        auto mbx = sharedArrayBufferMailbox->lock();
+        if (mbx->buffer)
+            mbx->buffer->dropReference();
+    }
+
+    js_delete(sharedArrayBufferMailbox);
+    sharedArrayBufferMailbox = nullptr;
 }
 
 static bool
@@ -5585,11 +5602,9 @@ GetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     JSObject* newObj = nullptr;
 
     {
-        sharedArrayBufferMailboxLock->lock();
-        auto unlockMailbox = MakeScopeExit([]() { sharedArrayBufferMailboxLock->unlock(); });
+        auto mbx = sharedArrayBufferMailbox->lock();
 
-        SharedArrayRawBuffer* buf = sharedArrayBufferMailbox;
-        if (buf) {
+        if (SharedArrayRawBuffer* buf = mbx->buffer) {
             if (!buf->addReference()) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_SAB_REFCNT_OFLO);
                 return false;
@@ -5598,7 +5613,8 @@ GetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
             // Shared memory is enabled globally in the shell: there can't be a worker
             // that does not enable it if the main thread has it.
             MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
-            newObj = SharedArrayBufferObject::New(cx, buf);
+
+            newObj = SharedArrayBufferObject::New(cx, buf, mbx->length);
             if (!newObj) {
                 buf->dropReference();
                 return false;
@@ -5615,12 +5631,14 @@ SetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     SharedArrayRawBuffer* newBuffer = nullptr;
+    uint32_t newLength = 0;
 
-    if (argc == 0 || args.get(0).isNullOrUndefined()) {
+    if (args.get(0).isNullOrUndefined()) {
         // Clear out the mailbox
     }
     else if (args.get(0).isObject() && args[0].toObject().is<SharedArrayBufferObject>()) {
         newBuffer = args[0].toObject().as<SharedArrayBufferObject>().rawBufferObject();
+        newLength = args[0].toObject().as<SharedArrayBufferObject>().byteLength();
         if (!newBuffer->addReference()) {
             JS_ReportErrorASCII(cx, "Reference count overflow on SharedArrayBuffer");
             return false;
@@ -5631,13 +5649,13 @@ SetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     }
 
     {
-        sharedArrayBufferMailboxLock->lock();
-        auto unlockMailbox = MakeScopeExit([]() { sharedArrayBufferMailboxLock->unlock(); });
+        auto mbx = sharedArrayBufferMailbox->lock();
 
-        SharedArrayRawBuffer* oldBuffer = sharedArrayBufferMailbox;
-        if (oldBuffer)
+        if (SharedArrayRawBuffer* oldBuffer = mbx->buffer)
             oldBuffer->dropReference();
-        sharedArrayBufferMailbox = newBuffer;
+
+        mbx->buffer = newBuffer;
+        mbx->length = newLength;
     }
 
     args.rval().setUndefined();

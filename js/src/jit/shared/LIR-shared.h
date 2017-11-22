@@ -8267,6 +8267,21 @@ class LWasmBoundsCheck : public LInstructionHelper<0, 2, 0>
     }
 };
 
+class LWasmAlignmentCheck : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmAlignmentCheck);
+    explicit LWasmAlignmentCheck(const LAllocation& ptr) {
+        setOperand(0, ptr);
+    }
+    MWasmAlignmentCheck* mir() const {
+        return mir_->toWasmAlignmentCheck();
+    }
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+};
+
 class LWasmLoadTls : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -8462,14 +8477,14 @@ class LAsmJSStoreHeap : public LInstructionHelper<0, 4, 0>
     }
 };
 
-class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
+class LWasmCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
 {
   public:
-    LIR_HEADER(AsmJSCompareExchangeHeap);
+    LIR_HEADER(WasmCompareExchangeHeap);
 
     // ARM, ARM64, x86, x64
-    LAsmJSCompareExchangeHeap(const LAllocation& ptr, const LAllocation& oldValue,
-                              const LAllocation& newValue, const LAllocation& memoryBase = LAllocation())
+    LWasmCompareExchangeHeap(const LAllocation& ptr, const LAllocation& oldValue,
+                             const LAllocation& newValue, const LAllocation& memoryBase = LAllocation())
     {
         setOperand(0, ptr);
         setOperand(1, oldValue);
@@ -8478,9 +8493,9 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
         setTemp(0, LDefinition::BogusTemp());
     }
     // MIPS32, MIPS64
-    LAsmJSCompareExchangeHeap(const LAllocation& ptr, const LAllocation& oldValue,
-                              const LAllocation& newValue, const LDefinition& valueTemp,
-                              const LDefinition& offsetTemp, const LDefinition& maskTemp)
+    LWasmCompareExchangeHeap(const LAllocation& ptr, const LAllocation& oldValue,
+                             const LAllocation& newValue, const LDefinition& valueTemp,
+                             const LDefinition& offsetTemp, const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, oldValue);
@@ -8523,19 +8538,19 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
         return getTemp(3);
     }
 
-    MAsmJSCompareExchangeHeap* mir() const {
-        return mir_->toAsmJSCompareExchangeHeap();
+    MWasmCompareExchangeHeap* mir() const {
+        return mir_->toWasmCompareExchangeHeap();
     }
 };
 
-class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 3, 4>
+class LWasmAtomicExchangeHeap : public LInstructionHelper<1, 3, 4>
 {
   public:
-    LIR_HEADER(AsmJSAtomicExchangeHeap);
+    LIR_HEADER(WasmAtomicExchangeHeap);
 
     // ARM, ARM64, x86, x64
-    LAsmJSAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value,
-                             const LAllocation& memoryBase = LAllocation())
+    LWasmAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value,
+                            const LAllocation& memoryBase = LAllocation())
     {
         setOperand(0, ptr);
         setOperand(1, value);
@@ -8543,9 +8558,9 @@ class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 3, 4>
         setTemp(0, LDefinition::BogusTemp());
     }
     // MIPS32, MIPS64
-    LAsmJSAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value,
-                             const LDefinition& valueTemp, const LDefinition& offsetTemp,
-                             const LDefinition& maskTemp)
+    LWasmAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value,
+                            const LDefinition& valueTemp, const LDefinition& offsetTemp,
+                            const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, value);
@@ -8584,23 +8599,23 @@ class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 3, 4>
         return getTemp(3);
     }
 
-    MAsmJSAtomicExchangeHeap* mir() const {
-        return mir_->toAsmJSAtomicExchangeHeap();
+    MWasmAtomicExchangeHeap* mir() const {
+        return mir_->toWasmAtomicExchangeHeap();
     }
 };
 
-class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
+class LWasmAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
 {
   public:
-    LIR_HEADER(AsmJSAtomicBinopHeap);
+    LIR_HEADER(WasmAtomicBinopHeap);
 
     static const int32_t valueOp = 1;
 
     // ARM, ARM64, x86, x64
-    LAsmJSAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
-                          const LDefinition& temp,
-                          const LDefinition& flagTemp = LDefinition::BogusTemp(),
-                          const LAllocation& memoryBase = LAllocation())
+    LWasmAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
+                         const LDefinition& temp,
+                         const LDefinition& flagTemp = LDefinition::BogusTemp(),
+                         const LAllocation& memoryBase = LAllocation())
     {
         setOperand(0, ptr);
         setOperand(1, value);
@@ -8610,10 +8625,10 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
         setTemp(2, flagTemp);
     }
     // MIPS32, MIPS64
-    LAsmJSAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
-                          const LDefinition& temp, const LDefinition& flagTemp,
-                          const LDefinition& valueTemp, const LDefinition& offsetTemp,
-                          const LDefinition& maskTemp)
+    LWasmAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
+                         const LDefinition& temp, const LDefinition& flagTemp,
+                         const LDefinition& valueTemp, const LDefinition& offsetTemp,
+                         const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, value);
@@ -8662,20 +8677,20 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
         return getTemp(5);
     }
 
-    MAsmJSAtomicBinopHeap* mir() const {
-        return mir_->toAsmJSAtomicBinopHeap();
+    MWasmAtomicBinopHeap* mir() const {
+        return mir_->toWasmAtomicBinopHeap();
     }
 };
 
 // Atomic binary operation where the result is discarded.
-class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5>
+class LWasmAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5>
 {
   public:
-    LIR_HEADER(AsmJSAtomicBinopHeapForEffect);
+    LIR_HEADER(WasmAtomicBinopHeapForEffect);
     // ARM, ARM64, x86, x64
-    LAsmJSAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
-                                   const LDefinition& flagTemp = LDefinition::BogusTemp(),
-                                   const LAllocation& memoryBase = LAllocation())
+    LWasmAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
+                                  const LDefinition& flagTemp = LDefinition::BogusTemp(),
+                                  const LAllocation& memoryBase = LAllocation())
     {
         setOperand(0, ptr);
         setOperand(1, value);
@@ -8684,9 +8699,9 @@ class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5>
         setTemp(1, flagTemp);
     }
     // MIPS32, MIPS64
-    LAsmJSAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
-                                   const LDefinition& flagTemp, const LDefinition& valueTemp,
-                                   const LDefinition& offsetTemp, const LDefinition& maskTemp)
+    LWasmAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
+                                  const LDefinition& flagTemp, const LDefinition& valueTemp,
+                                  const LDefinition& offsetTemp, const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, value);
@@ -8730,8 +8745,8 @@ class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5>
         return getTemp(4);
     }
 
-    MAsmJSAtomicBinopHeap* mir() const {
-        return mir_->toAsmJSAtomicBinopHeap();
+    MWasmAtomicBinopHeap* mir() const {
+        return mir_->toWasmAtomicBinopHeap();
     }
 };
 

@@ -16,12 +16,12 @@ tabmodalprompt {
   -moz-user-focus: normal;
 }
 
-.info\.title {
+.infoTitle {
   margin-bottom: 1em !important;
   font-weight: bold;
 }
 
-.info\.body {
+.infoBody {
   margin: 0 !important;
   -moz-user-focus: normal;
   -moz-user-select: text;

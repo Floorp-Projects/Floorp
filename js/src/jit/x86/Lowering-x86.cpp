@@ -281,6 +281,16 @@ LIRGeneratorX86::visitWasmLoad(MWasmLoad* ins)
     MDefinition* memoryBase = ins->memoryBase();
     MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
 
+    if (ins->access().type() == Scalar::Int64 && ins->access().isAtomic()) {
+        auto* lir = new(alloc()) LWasmAtomicLoadI64(useRegister(memoryBase),
+                                                    useRegister(base),
+                                                    tempFixed(ecx),
+                                                    tempFixed(ebx));
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                    LAllocation(AnyRegister(eax))));
+        return;
+    }
+
     // If the base is a constant, and it is zero or its offset is zero, then
     // code generation will fold the values into the access.  Allocate the
     // pointer to a register only if that can't happen.
@@ -318,6 +328,20 @@ LIRGeneratorX86::visitWasmStore(MWasmStore* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
+    MDefinition* memoryBase = ins->memoryBase();
+    MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
+
+    if (ins->access().type() == Scalar::Int64 && ins->access().isAtomic()) {
+        auto* lir = new(alloc()) LWasmAtomicStoreI64(useRegister(memoryBase),
+                                                     useRegister(base),
+                                                     useInt64Fixed(ins->value(),
+                                                                   Register64(ecx, ebx)),
+                                                     tempFixed(edx),
+                                                     tempFixed(eax));
+        add(lir, ins);
+        return;
+    }
+
     // If the base is a constant, and it is zero or its offset is zero, then
     // code generation will fold the values into the access.  Allocate the
     // pointer to a register only if that can't happen.
@@ -325,9 +349,6 @@ LIRGeneratorX86::visitWasmStore(MWasmStore* ins)
     LAllocation baseAlloc;
     if (!base->isConstant() || !(base->toConstant()->isInt32(0) || ins->access().offset() == 0))
         baseAlloc = useRegisterAtStart(base);
-
-    MDefinition* memoryBase = ins->memoryBase();
-    MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
 
     LAllocation valueAlloc;
     switch (ins->access().type()) {
@@ -461,15 +482,27 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
 }
 
 void
-LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
+LIRGeneratorX86::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     MDefinition* memoryBase = ins->memoryBase();
     MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
+
+    if (ins->access().type() == Scalar::Int64) {
+        auto* lir = new(alloc()) LWasmCompareExchangeI64(useRegister(memoryBase),
+                                                         useRegister(base),
+                                                         useInt64Fixed(ins->oldValue(),
+                                                                       Register64(edx, eax)),
+                                                         useInt64Fixed(ins->newValue(),
+                                                                       Register64(ecx, ebx)));
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                    LAllocation(AnyRegister(eax))));
+        return;
+    }
+
+    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
 
     bool byteArray = byteSize(ins->access().type()) == 1;
 
@@ -489,26 +522,36 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     const LAllocation oldval = useRegister(ins->oldValue());
     const LAllocation newval = byteArray ? useFixed(ins->newValue(), ebx) : useRegister(ins->newValue());
 
-    LAsmJSCompareExchangeHeap* lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(base), oldval, newval, useRegister(memoryBase));
+    LWasmCompareExchangeHeap* lir =
+        new(alloc()) LWasmCompareExchangeHeap(useRegister(base), oldval, newval, useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
 void
-LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+LIRGeneratorX86::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
+    MDefinition* memoryBase = ins->memoryBase();
+    MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
+
+    if (ins->access().type() == Scalar::Int64) {
+        MDefinition* base = ins->base();
+        auto* lir = new(alloc()) LWasmAtomicExchangeI64(useRegister(memoryBase),
+                                                        useRegister(base),
+                                                        useInt64Fixed(ins->value(),
+                                                                      Register64(ecx, ebx)),
+                                                        ins->access());
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                    LAllocation(AnyRegister(eax))));
+        return;
+    }
 
     const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
 
-    MDefinition* memoryBase = ins->memoryBase();
-    MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
-
-    LAsmJSAtomicExchangeHeap* lir =
-        new(alloc()) LAsmJSAtomicExchangeHeap(base, value, useRegister(memoryBase));
+    LWasmAtomicExchangeHeap* lir =
+        new(alloc()) LWasmAtomicExchangeHeap(base, value, useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
     if (byteSize(ins->access().type()) == 1)
@@ -518,15 +561,27 @@ LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 }
 
 void
-LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
+LIRGeneratorX86::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 {
-    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     MDefinition* memoryBase = ins->memoryBase();
     MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
+
+    if (ins->access().type() == Scalar::Int64) {
+        auto* lir = new(alloc()) LWasmAtomicBinopI64(useRegister(memoryBase),
+                                                     useRegister(base),
+                                                     useInt64Fixed(ins->value(),
+                                                                   Register64(ecx, ebx)),
+                                                     ins->access(),
+                                                     ins->operation());
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
+                                                    LAllocation(AnyRegister(eax))));
+        return;
+    }
+
+    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
 
     bool byteArray = byteSize(ins->access().type()) == 1;
 
@@ -541,9 +596,9 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
             value = useFixed(ins->value(), ebx);
         else
             value = useRegisterOrConstant(ins->value());
-        LAsmJSAtomicBinopHeapForEffect* lir =
-            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(base), value, LDefinition::BogusTemp(),
-                                                        useRegister(memoryBase));
+        LWasmAtomicBinopHeapForEffect* lir =
+            new(alloc()) LWasmAtomicBinopHeapForEffect(useRegister(base), value, LDefinition::BogusTemp(),
+                                                       useRegister(memoryBase));
         lir->setAddrTemp(temp());
         add(lir, ins);
         return;
@@ -597,9 +652,9 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
         value = useRegisterAtStart(ins->value());
     }
 
-    LAsmJSAtomicBinopHeap* lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(base), value, tempDef, LDefinition::BogusTemp(),
-                                           useRegister(memoryBase));
+    LWasmAtomicBinopHeap* lir =
+        new(alloc()) LWasmAtomicBinopHeap(useRegister(base), value, tempDef, LDefinition::BogusTemp(),
+                                          useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
     if (byteArray || bitOp)
@@ -607,7 +662,7 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     else if (ins->value()->isConstant())
         define(lir, ins);
     else
-        defineReuseInput(lir, ins, LAsmJSAtomicBinopHeap::valueOp);
+        defineReuseInput(lir, ins, LWasmAtomicBinopHeap::valueOp);
 }
 
 void
