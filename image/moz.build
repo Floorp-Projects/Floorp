@@ -8,7 +8,7 @@ DIRS += ['build', 'decoders', 'encoders']
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['test/gtest']
 
-if CONFIG['FUZZING']:
+if CONFIG['FUZZING_INTERFACES']:
     DIRS += ['test/fuzzing']
 
 with Files('**'):
