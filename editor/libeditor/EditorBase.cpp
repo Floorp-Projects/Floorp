@@ -4625,8 +4625,12 @@ EditorBase::CreateTxnForInsertNode(nsIContent& aNode,
                                    nsINode& aParent,
                                    int32_t aPosition)
 {
+  int32_t offset =
+    aPosition < 0 ? static_cast<int32_t>(aParent.Length()) :
+                    std::min(aPosition, static_cast<int32_t>(aParent.Length()));
   RefPtr<InsertNodeTransaction> transaction =
-    new InsertNodeTransaction(aNode, aParent, aPosition, *this);
+    new InsertNodeTransaction(*this, aNode,
+                              EditorRawDOMPoint(&aParent, offset));
   return transaction.forget();
 }
 
