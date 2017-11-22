@@ -3008,6 +3008,9 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
   RefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetUnanimatedStyleContextNoFlush(element,
                                                          pseudo, shell);
+  if (!styleContext) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (styleContext->IsServo()) {
     RefPtr<RawServoAnimationValue> value =
