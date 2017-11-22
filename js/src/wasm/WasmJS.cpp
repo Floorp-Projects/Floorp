@@ -25,6 +25,7 @@
 #include "jsprf.h"
 
 #include "builtin/Promise.h"
+#include "jit/AtomicOperations.h"
 #include "jit/JitOptions.h"
 #include "vm/Interpreter.h"
 #include "vm/String.h"
@@ -66,6 +67,12 @@ wasm::HasCompilerSupport(JSContext* cx)
 
     if (!wasm::HaveSignalHandlers())
         return false;
+
+#ifdef ENABLE_WASM_THREAD_OPS
+    // Wasm threads require 8-byte lock-free atomics.
+    if (!jit::AtomicOperations::isLockfree8())
+        return false;
+#endif
 
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
