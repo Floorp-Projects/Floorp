@@ -14,7 +14,7 @@ deps = ['mozfile >= 0.12']
 setup(name='mozinfo',
       version=PACKAGE_VERSION,
       description="Library to get system information for use in Mozilla testing",
-      long_description="see http://mozbase.readthedocs.org",
+      long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
       classifiers=['Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 2 :: Only'],
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers

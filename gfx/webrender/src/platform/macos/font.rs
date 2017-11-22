@@ -16,7 +16,7 @@ use core_graphics::base::kCGBitmapByteOrder32Little;
 use core_graphics::color_space::CGColorSpace;
 use core_graphics::context::{CGContext, CGTextDrawingMode};
 use core_graphics::data_provider::CGDataProvider;
-use core_graphics::font::{CGFont, CGFontRef, CGGlyph};
+use core_graphics::font::{CGFont, CGGlyph};
 use core_graphics::geometry::{CGPoint, CGRect, CGSize};
 use core_text;
 use core_text::font::{CTFont, CTFontRef};
@@ -148,8 +148,6 @@ extern {
     static kCTFontVariationAxisDefaultValueKey: CFStringRef;
 
     fn CTFontCopyVariationAxes(font: CTFontRef) -> CFArrayRef;
-
-    fn CGFontCreateCopyWithVariations(font: CGFontRef, vars: CFDictionaryRef) -> CGFontRef;
 }
 
 fn new_ct_font_with_variations(cg_font: &CGFont, size: Au, variations: &[FontVariation]) -> CTFont {
@@ -244,8 +242,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: Au, variations: &[FontVar
             return ct_font;
         }
         let vals_dict = CFDictionary::from_CFType_pairs(&vals);
-        let cg_var_font_ref = CGFontCreateCopyWithVariations(cg_font.as_concrete_TypeRef(), vals_dict.as_concrete_TypeRef());
-        let cg_var_font: CGFont = TCFType::wrap_under_create_rule(cg_var_font_ref);
+        let cg_var_font = cg_font.create_copy_from_variations(&vals_dict).unwrap();
         core_text::font::new_from_CGFont(&cg_var_font, size.to_f64_px())
     }
 }
@@ -275,7 +272,7 @@ impl FontContext {
         }
 
         assert_eq!(index, 0);
-        let data_provider = CGDataProvider::from_buffer(&**bytes);
+        let data_provider = CGDataProvider::from_buffer(bytes);
         let cg_font = match CGFont::from_data_provider(data_provider) {
             Err(_) => return,
             Ok(cg_font) => cg_font,

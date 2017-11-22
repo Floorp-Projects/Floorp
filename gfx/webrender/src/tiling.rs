@@ -17,7 +17,7 @@ use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuCacheUpdateList};
 use gpu_types::{BlurDirection, BlurInstance, BrushInstance, BrushImageKind, ClipMaskInstance};
 use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
-use gpu_types::{BRUSH_FLAG_USES_PICTURE, ClipScrollNodeIndex, ClipScrollNodeData};
+use gpu_types::{ClipScrollNodeIndex, ClipScrollNodeData};
 use internal_types::{FastHashMap, SourceTexture};
 use internal_types::BatchTextures;
 use picture::{PictureCompositeMode, PictureKind, PicturePrimitive};
@@ -1021,17 +1021,25 @@ impl AlphaBatcher {
     ) {
         for task_id in &self.tasks {
             let task_id = *task_id;
-            let task = render_tasks.get(task_id).as_alpha_batch();
-            let pic = &ctx.prim_store.cpu_pictures[ctx.prim_store.cpu_metadata[task.prim_index.0].cpu_prim_index.0];
-            pic.add_to_batch(
-                task_id,
-                ctx,
-                gpu_cache,
-                render_tasks,
-                deferred_resolves,
-                &mut self.batch_list,
-                &mut self.glyph_fetch_buffer
-            );
+            let task = render_tasks.get(task_id);
+            match task.kind {
+                RenderTaskKind::Picture(ref pic_task) => {
+                    let pic_index = ctx.prim_store.cpu_metadata[pic_task.prim_index.0].cpu_prim_index;
+                    let pic = &ctx.prim_store.cpu_pictures[pic_index.0];
+                    pic.add_to_batch(
+                        task_id,
+                        ctx,
+                        gpu_cache,
+                        render_tasks,
+                        deferred_resolves,
+                        &mut self.batch_list,
+                        &mut self.glyph_fetch_buffer
+                    );
+                }
+                _ => {
+                    unreachable!();
+                }
+            }
         }
 
         self.batch_list.finalize();
@@ -1413,18 +1421,6 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::Alias(..) => {
                 panic!("BUG: add_task() called on invalidated task");
             }
-            RenderTaskKind::Alpha(ref info) => {
-                self.alpha_batcher.add_task(task_id);
-
-                // If this pipeline is registered as a frame output
-                // store the information necessary to do the copy.
-                if let Some(pipeline_id) = info.frame_output_pipeline_id {
-                    self.outputs.push(FrameOutput {
-                        pipeline_id,
-                        task_id,
-                    });
-                }
-            }
             RenderTaskKind::VerticalBlur(ref info) => {
                 info.add_instances(
                     &mut self.vertical_blurs,
@@ -1449,61 +1445,78 @@ impl RenderTarget for ColorRenderTarget {
                     PrimitiveKind::Picture => {
                         let prim = &ctx.prim_store.cpu_pictures[prim_metadata.cpu_prim_index.0];
 
-                        let task_index = render_tasks.get_task_address(task_id);
+                        match prim.kind {
+                            PictureKind::Image { frame_output_pipeline_id, .. } => {
+                                self.alpha_batcher.add_task(task_id);
 
-                        for run in &prim.runs {
-                            for i in 0 .. run.count {
-                                let sub_prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
+                                // If this pipeline is registered as a frame output
+                                // store the information necessary to do the copy.
+                                if let Some(pipeline_id) = frame_output_pipeline_id {
+                                    self.outputs.push(FrameOutput {
+                                        pipeline_id,
+                                        task_id,
+                                    });
+                                }
+                            }
+                            PictureKind::TextShadow { .. } |
+                            PictureKind::BoxShadow { .. } => {
+                                let task_index = render_tasks.get_task_address(task_id);
 
-                                let sub_metadata = ctx.prim_store.get_metadata(sub_prim_index);
-                                let sub_prim_address =
-                                    gpu_cache.get_address(&sub_metadata.gpu_location);
-                                let instance = SimplePrimitiveInstance::new(
-                                    sub_prim_address,
-                                    task_index,
-                                    RenderTaskAddress(0),
-                                    ClipScrollNodeIndex(0),
-                                    ClipScrollNodeIndex(0),
-                                    0,
-                                ); // z is disabled for rendering cache primitives
+                                for run in &prim.runs {
+                                    for i in 0 .. run.count {
+                                        let sub_prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
 
-                                match sub_metadata.prim_kind {
-                                    PrimitiveKind::TextRun => {
-                                        // Add instances that reference the text run GPU location. Also supply
-                                        // the parent shadow prim address as a user data field, allowing
-                                        // the shader to fetch the shadow parameters.
-                                        let text = &ctx.prim_store.cpu_text_runs
-                                            [sub_metadata.cpu_prim_index.0];
-                                        let text_run_cache_prims = &mut self.text_run_cache_prims;
+                                        let sub_metadata = ctx.prim_store.get_metadata(sub_prim_index);
+                                        let sub_prim_address =
+                                            gpu_cache.get_address(&sub_metadata.gpu_location);
+                                        let instance = SimplePrimitiveInstance::new(
+                                            sub_prim_address,
+                                            task_index,
+                                            RenderTaskAddress(0),
+                                            ClipScrollNodeIndex(0),
+                                            ClipScrollNodeIndex(0),
+                                            0,
+                                        ); // z is disabled for rendering cache primitives
 
-                                        let font = text.get_font(ctx.device_pixel_ratio);
+                                        match sub_metadata.prim_kind {
+                                            PrimitiveKind::TextRun => {
+                                                // Add instances that reference the text run GPU location. Also supply
+                                                // the parent shadow prim address as a user data field, allowing
+                                                // the shader to fetch the shadow parameters.
+                                                let text = &ctx.prim_store.cpu_text_runs
+                                                    [sub_metadata.cpu_prim_index.0];
+                                                let text_run_cache_prims = &mut self.text_run_cache_prims;
 
-                                        ctx.resource_cache.fetch_glyphs(
-                                            font,
-                                            &text.glyph_keys,
-                                            &mut self.glyph_fetch_buffer,
-                                            gpu_cache,
-                                            |texture_id, _glyph_format, glyphs| {
-                                                let batch = text_run_cache_prims
-                                                    .entry(texture_id)
-                                                    .or_insert(Vec::new());
+                                                let font = text.get_font(ctx.device_pixel_ratio);
 
-                                                for glyph in glyphs {
-                                                    batch.push(instance.build(
-                                                        glyph.index_in_text_run,
-                                                        glyph.uv_rect_address.as_int(),
-                                                        0
-                                                    ));
-                                                }
-                                            },
-                                        );
-                                    }
-                                    PrimitiveKind::Line => {
-                                        self.line_cache_prims
-                                            .push(instance.build(0, 0, 0));
-                                    }
-                                    _ => {
-                                        unreachable!("Unexpected sub primitive type");
+                                                ctx.resource_cache.fetch_glyphs(
+                                                    font,
+                                                    &text.glyph_keys,
+                                                    &mut self.glyph_fetch_buffer,
+                                                    gpu_cache,
+                                                    |texture_id, _glyph_format, glyphs| {
+                                                        let batch = text_run_cache_prims
+                                                            .entry(texture_id)
+                                                            .or_insert(Vec::new());
+
+                                                        for glyph in glyphs {
+                                                            batch.push(instance.build(
+                                                                glyph.index_in_text_run,
+                                                                glyph.uv_rect_address.as_int(),
+                                                                0
+                                                            ));
+                                                        }
+                                                    },
+                                                );
+                                            }
+                                            PrimitiveKind::Line => {
+                                                self.line_cache_prims
+                                                    .push(instance.build(0, 0, 0));
+                                            }
+                                            _ => {
+                                                unreachable!("Unexpected sub primitive type");
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1592,7 +1605,6 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::Alias(..) => {
                 panic!("BUG: add_task() called on invalidated task");
             }
-            RenderTaskKind::Alpha(..) |
             RenderTaskKind::Readback(..) => {
                 panic!("Should not be added to alpha target!");
             }
@@ -1645,7 +1657,7 @@ impl RenderTarget for AlphaRenderTarget {
                                             scroll_id: ClipScrollNodeIndex(0),
                                             clip_task_address: RenderTaskAddress(0),
                                             z: 0,
-                                            flags: BRUSH_FLAG_USES_PICTURE,
+                                            flags: 0,
                                             user_data0: 0,
                                             user_data1: 0,
                                         };

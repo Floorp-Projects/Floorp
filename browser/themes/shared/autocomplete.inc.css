@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+/* General popup rules */
+
 #PopupAutoComplete > richlistbox > richlistitem {
   height: 20px;
   min-height: 20px;
@@ -26,6 +28,18 @@
   padding: 0;
 }
 
+/* Popup states */
+
+.autocomplete-richlistitem:hover,
+treechildren.searchbar-treebody::-moz-tree-row(hover) {
+  background-color: var(--arrowpanel-dimmed);
+}
+
+.autocomplete-richlistitem[selected],
+treechildren.searchbar-treebody::-moz-tree-row(selected) {
+  background-color: Highlight;
+  color: HighlightText;
+}
 
 /* Login form autocompletion */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {

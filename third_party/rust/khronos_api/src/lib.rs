@@ -14,14 +14,14 @@
 
 //! This crates contains the sources of the official OpenGL repository.
 
-/// The contents of [`gl.xml`](https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/gl.xml)
-pub const GL_XML: &'static [u8] = include_bytes!("../api/gl.xml");
+/// The contents of [`gl.xml`](https://github.com/KhronosGroup/OpenGL-Registry/blob/master/xml/gl.xml)
+pub const GL_XML: &'static [u8] = include_bytes!("../api/xml/gl.xml");
 
-/// The contents of [`egl.xml`](https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/egl.xml)
-pub const EGL_XML: &'static [u8] = include_bytes!("../api/egl.xml");
+/// The contents of [`egl.xml`](https://github.com/KhronosGroup/EGL-Registry/blob/master/api/egl.xml)
+pub const EGL_XML: &'static [u8] = include_bytes!("../api_egl/api/egl.xml");
 
-/// The contents of [`wgl.xml`](https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/wgl.xml)
-pub const WGL_XML: &'static [u8] = include_bytes!("../api/wgl.xml");
+/// The contents of [`wgl.xml`](https://github.com/KhronosGroup/OpenGL-Registry/blob/master/xml/wgl.xml)
+pub const WGL_XML: &'static [u8] = include_bytes!("../api/xml/wgl.xml");
 
-/// The contents of [`glx.xml`](https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/glx.xml)
-pub const GLX_XML: &'static [u8] = include_bytes!("../api/glx.xml");
+/// The contents of [`glx.xml`](https://github.com/KhronosGroup/OpenGL-Registry/blob/master/xml/glx.xml)
+pub const GLX_XML: &'static [u8] = include_bytes!("../api/xml/glx.xml");

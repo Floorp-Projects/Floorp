@@ -30,6 +30,7 @@ use device::{get_gl_format_bgra, ExternalTexture, FBOId, TextureSlot, VertexAttr
              VertexAttributeKind};
 use device::{FileWatcherHandler, ShaderError, TextureFilter, TextureTarget,
              VertexUsageHint, VAO};
+use device::ProgramCache;
 use euclid::{rect, Transform3D};
 use frame_builder::FrameBuilderConfig;
 use gleam::gl;
@@ -46,7 +47,7 @@ use rayon::Configuration as ThreadPoolConfig;
 use rayon::ThreadPool;
 use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
-use render_task::RenderTaskTree;
+use render_task::{RenderTaskKind, RenderTaskTree};
 #[cfg(feature = "debugger")]
 use serde_json;
 use std;
@@ -171,36 +172,65 @@ const GPU_SAMPLER_TAG_TRANSPARENT: GpuProfileTag = GpuProfileTag {
     color: debug_colors::BLACK,
 };
 
-#[cfg(feature = "debugger")]
+impl TransformBatchKind {
+    #[cfg(feature = "debugger")]
+    fn debug_name(&self) -> &'static str {
+        match *self {
+            TransformBatchKind::Rectangle(..) => "Rectangle",
+            TransformBatchKind::TextRun(..) => "TextRun",
+            TransformBatchKind::Image(image_buffer_kind, ..) => match image_buffer_kind {
+                ImageBufferKind::Texture2D => "Image (2D)",
+                ImageBufferKind::TextureRect => "Image (Rect)",
+                ImageBufferKind::TextureExternal => "Image (External)",
+                ImageBufferKind::Texture2DArray => "Image (Array)",
+            },
+            TransformBatchKind::YuvImage(..) => "YuvImage",
+            TransformBatchKind::AlignedGradient => "AlignedGradient",
+            TransformBatchKind::AngleGradient => "AngleGradient",
+            TransformBatchKind::RadialGradient => "RadialGradient",
+            TransformBatchKind::BorderCorner => "BorderCorner",
+            TransformBatchKind::BorderEdge => "BorderEdge",
+            TransformBatchKind::Line => "Line",
+        }
+    }
+
+    fn gpu_sampler_tag(&self) -> GpuProfileTag {
+        match *self {
+            TransformBatchKind::Rectangle(_) => GPU_TAG_PRIM_RECT,
+            TransformBatchKind::Line => GPU_TAG_PRIM_LINE,
+            TransformBatchKind::TextRun(..) => GPU_TAG_PRIM_TEXT_RUN,
+            TransformBatchKind::Image(..) => GPU_TAG_PRIM_IMAGE,
+            TransformBatchKind::YuvImage(..) => GPU_TAG_PRIM_YUV_IMAGE,
+            TransformBatchKind::BorderCorner => GPU_TAG_PRIM_BORDER_CORNER,
+            TransformBatchKind::BorderEdge => GPU_TAG_PRIM_BORDER_EDGE,
+            TransformBatchKind::AlignedGradient => GPU_TAG_PRIM_GRADIENT,
+            TransformBatchKind::AngleGradient => GPU_TAG_PRIM_ANGLE_GRADIENT,
+            TransformBatchKind::RadialGradient => GPU_TAG_PRIM_RADIAL_GRADIENT,
+        }
+    }
+}
+
 impl BatchKind {
+    #[cfg(feature = "debugger")]
     fn debug_name(&self) -> &'static str {
         match *self {
             BatchKind::Composite { .. } => "Composite",
             BatchKind::HardwareComposite => "HardwareComposite",
             BatchKind::SplitComposite => "SplitComposite",
             BatchKind::Blend => "Blend",
-            BatchKind::Brush(kind) => {
-                match kind {
-                    BrushBatchKind::Image(..) => "Brush (Image)",
-                }
-            }
-            BatchKind::Transformable(_, kind) => match kind {
-                TransformBatchKind::Rectangle(..) => "Rectangle",
-                TransformBatchKind::TextRun(..) => "TextRun",
-                TransformBatchKind::Image(image_buffer_kind, ..) => match image_buffer_kind {
-                    ImageBufferKind::Texture2D => "Image (2D)",
-                    ImageBufferKind::TextureRect => "Image (Rect)",
-                    ImageBufferKind::TextureExternal => "Image (External)",
-                    ImageBufferKind::Texture2DArray => "Image (Array)",
-                },
-                TransformBatchKind::YuvImage(..) => "YuvImage",
-                TransformBatchKind::AlignedGradient => "AlignedGradient",
-                TransformBatchKind::AngleGradient => "AngleGradient",
-                TransformBatchKind::RadialGradient => "RadialGradient",
-                TransformBatchKind::BorderCorner => "BorderCorner",
-                TransformBatchKind::BorderEdge => "BorderEdge",
-                TransformBatchKind::Line => "Line",
-            },
+            BatchKind::Brush(BrushBatchKind::Image(..)) => "Brush (Image)",
+            BatchKind::Transformable(_, batch_kind) => batch_kind.debug_name(),
+        }
+    }
+
+    fn gpu_sampler_tag(&self) -> GpuProfileTag {
+        match *self {
+            BatchKind::Composite { .. } => GPU_TAG_PRIM_COMPOSITE,
+            BatchKind::HardwareComposite => GPU_TAG_PRIM_HW_COMPOSITE,
+            BatchKind::SplitComposite => GPU_TAG_PRIM_SPLIT_COMPOSITE,
+            BatchKind::Blend => GPU_TAG_PRIM_BLEND,
+            BatchKind::Brush(BrushBatchKind::Image(_)) => GPU_TAG_BRUSH_IMAGE,
+            BatchKind::Transformable(_, batch_kind) => batch_kind.gpu_sampler_tag(),
         }
     }
 }
@@ -1175,10 +1205,10 @@ struct FrameOutput {
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
-pub struct Renderer {
+pub struct Renderer<'a> {
     result_rx: Receiver<ResultMsg>,
     debug_server: DebugServer,
-    device: Device,
+    device: Device<'a>,
     pending_texture_updates: Vec<TextureUpdateList>,
     pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
     pending_shader_updates: Vec<PathBuf>,
@@ -1305,7 +1335,7 @@ impl From<std::io::Error> for RendererError {
     }
 }
 
-impl Renderer {
+impl<'a> Renderer<'a> {
     /// Initializes webrender and creates a `Renderer` and `RenderApiSender`.
     ///
     /// # Examples
@@ -1344,6 +1374,7 @@ impl Renderer {
             gl,
             options.resource_override_path.clone(),
             Box::new(file_watch_handler),
+            options.cached_programs,
         );
 
         let device_max_size = device.max_texture_size();
@@ -1940,6 +1971,12 @@ impl Renderer {
         mem::replace(&mut self.pipeline_epoch_map, FastHashMap::default())
     }
 
+    // update the program cache with new binaries, e.g. when some of the lazy loaded
+    // shader programs got activated in the mean time
+    pub fn update_program_cache(&mut self, cached_programs: &'a mut ProgramCache) {
+        self.device.update_program_cache(cached_programs);
+    }
+
     /// Processes the result queue.
     ///
     /// Should be called before `render()`, as texture cache updates are done here.
@@ -2477,16 +2514,13 @@ impl Renderer {
         render_target: Option<(&Texture, i32)>,
         target_dimensions: DeviceUintSize,
     ) {
-        let marker = match key.kind {
+        match key.kind {
             BatchKind::Composite { .. } => {
-                self.ps_composite
-                    .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-                GPU_TAG_PRIM_COMPOSITE
+                self.ps_composite.bind(&mut self.device, projection, 0, &mut self.renderer_errors);
             }
             BatchKind::HardwareComposite => {
                 self.ps_hw_composite
                     .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-                GPU_TAG_PRIM_HW_COMPOSITE
             }
             BatchKind::SplitComposite => {
                 self.ps_split_composite.bind(
@@ -2495,12 +2529,9 @@ impl Renderer {
                     0,
                     &mut self.renderer_errors,
                 );
-                GPU_TAG_PRIM_SPLIT_COMPOSITE
             }
             BatchKind::Blend => {
-                self.ps_blend
-                    .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-                GPU_TAG_PRIM_BLEND
+                self.ps_blend.bind(&mut self.device, projection, 0, &mut self.renderer_errors);
             }
             BatchKind::Brush(brush_kind) => {
                 match brush_kind {
@@ -2516,7 +2547,6 @@ impl Renderer {
                             0,
                             &mut self.renderer_errors,
                         );
-                        GPU_TAG_BRUSH_IMAGE
                     }
                 }
             }
@@ -2550,7 +2580,6 @@ impl Renderer {
                             &mut self.renderer_errors,
                         );
                     }
-                    GPU_TAG_PRIM_RECT
                 }
                 TransformBatchKind::Line => {
                     self.ps_line.bind(
@@ -2560,7 +2589,6 @@ impl Renderer {
                         0,
                         &mut self.renderer_errors,
                     );
-                    GPU_TAG_PRIM_LINE
                 }
                 TransformBatchKind::TextRun(..) => {
                     unreachable!("bug: text batches are special cased");
@@ -2576,7 +2604,6 @@ impl Renderer {
                             0,
                             &mut self.renderer_errors,
                         );
-                    GPU_TAG_PRIM_IMAGE
                 }
                 TransformBatchKind::YuvImage(image_buffer_kind, format, color_space) => {
                     let shader_index =
@@ -2591,7 +2618,6 @@ impl Renderer {
                             0,
                             &mut self.renderer_errors,
                         );
-                    GPU_TAG_PRIM_YUV_IMAGE
                 }
                 TransformBatchKind::BorderCorner => {
                     self.ps_border_corner.bind(
@@ -2601,7 +2627,6 @@ impl Renderer {
                         0,
                         &mut self.renderer_errors,
                     );
-                    GPU_TAG_PRIM_BORDER_CORNER
                 }
                 TransformBatchKind::BorderEdge => {
                     self.ps_border_edge.bind(
@@ -2611,7 +2636,6 @@ impl Renderer {
                         0,
                         &mut self.renderer_errors,
                     );
-                    GPU_TAG_PRIM_BORDER_EDGE
                 }
                 TransformBatchKind::AlignedGradient => {
                     self.ps_gradient.bind(
@@ -2621,7 +2645,6 @@ impl Renderer {
                         0,
                         &mut self.renderer_errors,
                     );
-                    GPU_TAG_PRIM_GRADIENT
                 }
                 TransformBatchKind::AngleGradient => {
                     self.ps_angle_gradient.bind(
@@ -2631,7 +2654,6 @@ impl Renderer {
                         0,
                         &mut self.renderer_errors,
                     );
-                    GPU_TAG_PRIM_ANGLE_GRADIENT
                 }
                 TransformBatchKind::RadialGradient => {
                     self.ps_radial_gradient.bind(
@@ -2641,7 +2663,6 @@ impl Renderer {
                         0,
                         &mut self.renderer_errors,
                     );
-                    GPU_TAG_PRIM_RADIAL_GRADIENT
                 }
             },
         };
@@ -2671,8 +2692,14 @@ impl Renderer {
 
                 let (readback_rect, readback_layer) = readback.get_target_rect();
                 let (backdrop_rect, _) = backdrop.get_target_rect();
-                let backdrop_screen_origin = backdrop.as_alpha_batch().screen_origin;
-                let source_screen_origin = source.as_alpha_batch().screen_origin;
+                let backdrop_screen_origin = match backdrop.kind {
+                    RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
+                    _ => panic!("bug: composite on non-picture?"),
+                };
+                let source_screen_origin = match source.kind {
+                    RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
+                    _ => panic!("bug: composite on non-picture?"),
+                };
 
                 // Bind the FBO to blit the backdrop to.
                 // Called per-instance in case the layer (and therefore FBO)
@@ -2682,10 +2709,12 @@ impl Renderer {
                 self.device
                     .bind_draw_target(Some(cache_draw_target), Some(cache_texture_dimensions));
 
-                let src_x =
-                    backdrop_rect.origin.x - backdrop_screen_origin.x + source_screen_origin.x;
-                let src_y =
-                    backdrop_rect.origin.y - backdrop_screen_origin.y + source_screen_origin.y;
+                let src_x = backdrop_rect.origin.x -
+                            backdrop_screen_origin.x as i32 +
+                            source_screen_origin.x as i32;
+                let src_y = backdrop_rect.origin.y -
+                            backdrop_screen_origin.y as i32 +
+                            source_screen_origin.y as i32;
 
                 let dest_x = readback_rect.origin.x;
                 let dest_y = readback_rect.origin.y;
@@ -2720,7 +2749,7 @@ impl Renderer {
             _ => {}
         }
 
-        let _timer = self.gpu_profile.start_timer(marker);
+        let _timer = self.gpu_profile.start_timer(key.kind.gpu_sampler_tag());
         self.draw_instanced_batch(instances, VertexArrayKind::Primitive, &key.textures);
     }
 
@@ -3600,7 +3629,7 @@ impl Renderer {
         self.unlock_external_images();
     }
 
-    pub fn debug_renderer<'a>(&'a mut self) -> &'a mut DebugRenderer {
+    pub fn debug_renderer<'b>(&'b mut self) -> &'b mut DebugRenderer {
         &mut self.debug
     }
 
@@ -3859,7 +3888,7 @@ pub trait ThreadListener {
     fn thread_stopped(&self, thread_name: &str);
 }
 
-pub struct RendererOptions {
+pub struct RendererOptions<'a> {
     pub device_pixel_ratio: f32,
     pub resource_override_path: Option<PathBuf>,
     pub enable_aa: bool,
@@ -3880,12 +3909,13 @@ pub struct RendererOptions {
     pub recorder: Option<Box<ApiRecordingReceiver>>,
     pub thread_listener: Option<Box<ThreadListener + Send + Sync>>,
     pub enable_render_on_scroll: bool,
+    pub cached_programs: Option<&'a mut ProgramCache>,
     pub debug_flags: DebugFlags,
     pub renderer_id: Option<u64>,
 }
 
-impl Default for RendererOptions {
-    fn default() -> RendererOptions {
+impl<'a> Default for RendererOptions<'a> {
+    fn default() -> RendererOptions<'a> {
         RendererOptions {
             device_pixel_ratio: 1.0,
             resource_override_path: None,
@@ -3909,6 +3939,7 @@ impl Default for RendererOptions {
             thread_listener: None,
             enable_render_on_scroll: true,
             renderer_id: None,
+            cached_programs: None,
         }
     }
 }

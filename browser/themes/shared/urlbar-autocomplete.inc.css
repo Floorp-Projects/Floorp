@@ -4,15 +4,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+:root {
+  --urlbar-popup-background: -moz-field;
+  --urlbar-popup-color: -moz-fieldtext;
+  --urlbar-popup-highlight-background: Highlight;
+  --urlbar-popup-highlight-color: HighlightText;
+}
+
 #treecolAutoCompleteImage {
   max-width: 36px;
 }
 
-.autocomplete-richlistbox {
-  padding: 4px 3px;
+#PopupAutoCompleteRichResult {
+  background: var(--urlbar-popup-background);
+  color: var(--urlbar-popup-color);
 }
 
-.autocomplete-richlistitem {
+#PopupAutoCompleteRichResult .autocomplete-richlistbox {
+  padding: 4px 3px;
+  background: transparent;
+  color: inherit;
+}
+
+#PopupAutoCompleteRichResult .autocomplete-richlistitem {
   min-height: 30px;
   font: message-box;
   border-radius: 2px;
@@ -24,18 +38,15 @@
   border-inline-end: var(--item-padding-end) solid transparent;
 }
 
-:root[uidensity=touch] .autocomplete-richlistitem {
+#PopupAutoCompleteRichResult .autocomplete-richlistitem[selected] {
+  background: var(--urlbar-popup-highlight-background);
+  color: var(--urlbar-popup-highlight-color);
+}
+
+:root[uidensity=touch] #PopupAutoCompleteRichResult .autocomplete-richlistitem {
   min-height: 40px;
 }
 
-.autocomplete-richlistitem:hover,
-treechildren.searchbar-treebody::-moz-tree-row(hover) {
-  background-color: var(--arrowpanel-dimmed);
+#PopupAutoCompleteRichResult .search-panel-input-value {
+  color: var(--urlbar-popup-color);
 }
-
-.autocomplete-richlistitem[selected],
-treechildren.searchbar-treebody::-moz-tree-row(selected) {
-  background-color: Highlight;
-  color: HighlightText;
-}
-

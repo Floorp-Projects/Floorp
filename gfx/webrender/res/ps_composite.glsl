@@ -9,46 +9,29 @@ varying vec3 vUv1;
 flat varying int vOp;
 
 #ifdef WR_VERTEX_SHADER
-struct ReadbackTask {
-    vec2 render_target_origin;
-    vec2 size;
-    float render_target_layer_index;
-};
-
-ReadbackTask fetch_readback_task(int index) {
-    RenderTaskData data = fetch_render_task(index);
-
-    ReadbackTask task;
-    task.render_target_origin = data.data0.xy;
-    task.size = data.data0.zw;
-    task.render_target_layer_index = data.data1.x;
-
-    return task;
-}
-
 void main(void) {
     CompositeInstance ci = fetch_composite_instance();
-    AlphaBatchTask dest_task = fetch_alpha_batch_task(ci.render_task_index);
-    ReadbackTask backdrop_task = fetch_readback_task(ci.backdrop_task_index);
-    AlphaBatchTask src_task = fetch_alpha_batch_task(ci.src_task_index);
+    PictureTask dest_task = fetch_picture_task(ci.render_task_index);
+    RenderTaskCommonData backdrop_task = fetch_render_task_common_data(ci.backdrop_task_index);
+    PictureTask src_task = fetch_picture_task(ci.src_task_index);
 
-    vec2 dest_origin = dest_task.render_target_origin -
-                       dest_task.screen_space_origin +
-                       src_task.screen_space_origin;
+    vec2 dest_origin = dest_task.common_data.task_rect.p0 -
+                       dest_task.content_origin +
+                       src_task.content_origin;
 
     vec2 local_pos = mix(dest_origin,
-                         dest_origin + src_task.size,
+                         dest_origin + src_task.common_data.task_rect.size,
                          aPosition.xy);
 
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
 
-    vec2 st0 = backdrop_task.render_target_origin / texture_size;
-    vec2 st1 = (backdrop_task.render_target_origin + backdrop_task.size) / texture_size;
-    vUv0 = vec3(mix(st0, st1, aPosition.xy), backdrop_task.render_target_layer_index);
+    vec2 st0 = backdrop_task.task_rect.p0 / texture_size;
+    vec2 st1 = (backdrop_task.task_rect.p0 + backdrop_task.task_rect.size) / texture_size;
+    vUv0 = vec3(mix(st0, st1, aPosition.xy), backdrop_task.texture_layer_index);
 
-    st0 = src_task.render_target_origin / texture_size;
-    st1 = (src_task.render_target_origin + src_task.size) / texture_size;
-    vUv1 = vec3(mix(st0, st1, aPosition.xy), src_task.render_target_layer_index);
+    st0 = src_task.common_data.task_rect.p0 / texture_size;
+    st1 = (src_task.common_data.task_rect.p0 + src_task.common_data.task_rect.size) / texture_size;
+    vUv1 = vec3(mix(st0, st1, aPosition.xy), src_task.common_data.texture_layer_index);
 
     vOp = ci.user_data0;
 

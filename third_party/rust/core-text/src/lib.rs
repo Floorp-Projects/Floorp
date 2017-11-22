@@ -12,6 +12,7 @@
 
 #![allow(non_snake_case)]
 
+extern crate foreign_types;
 extern crate libc;
 
 extern crate core_foundation;

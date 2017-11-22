@@ -120,7 +120,7 @@ but otherwise fails:
             FAIL
 
 The available variables for the conditions are those provided by
-[mozinfo](http://mozbase.readthedocs.org/en/latest/mozinfo.html).
+[mozinfo](https://firefox-source-docs.mozilla.org/mozbase/mozinfo.html).
 
 For more information on manifest files, see the
 [wptrunner documentation](http://wptrunner.readthedocs.org/en/latest/expectation.html).

@@ -743,9 +743,15 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                      aElement, result->AsGecko(),
                      eRestyle_AllHintsWithAnimations);
           } else {
+            Element* elementOrPseudoElement =
+              EffectCompositor::GetElementToRestyle(aElement, pseudoType);
+            if (!elementOrPseudoElement) {
+              return nullptr;
+            }
             return presContext->StyleSet()->AsServo()->
-              GetBaseContextForElement(aElement, presContext,
-                                       pseudoType, result->AsServo());
+              GetBaseContextForElement(elementOrPseudoElement,
+                                       presContext,
+                                       result->AsServo());
           }
         }
 
@@ -777,8 +783,14 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
       return result.forget();
     }
 
-    return servoSet->GetBaseContextForElement(aElement, presContext,
-                                              pseudoType, result);
+    Element* elementOrPseudoElement =
+      EffectCompositor::GetElementToRestyle(aElement, pseudoType);
+    if (!elementOrPseudoElement) {
+      return nullptr;
+    }
+    return servoSet->GetBaseContextForElement(elementOrPseudoElement,
+                                              presContext,
+                                              result);
   }
 
   RefPtr<GeckoStyleContext> parentContext;

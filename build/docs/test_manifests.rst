@@ -39,7 +39,7 @@ ManifestParser Manifests
 ManifestParser manifests are essentially ini files that conform to a basic
 set of assumptions.
 
-The `reference documentation <http://mozbase.readthedocs.org/en/latest/manifestparser.html>`_
+The :doc:`reference documentation </mozbase/manifestparser>`
 for manifestparser manifests describes the basic format of test manifests.
 
 In summary, manifests are ini files with section names describing test files::

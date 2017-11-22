@@ -1,4 +1,5 @@
 "use strict";
+/* global PanelUI */
 
 /**
  * WHOA THERE: We should never be adding new things to
@@ -28,18 +29,18 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
   {
     stack: [
       "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "_calculateMaxHeight@resource:///modules/PanelMultiView.jsm",
       "handleEvent@resource:///modules/PanelMultiView.jsm",
-      "openPopup@chrome://global/content/bindings/popup.xml",
     ],
   },
 
   {
     stack: [
+      "_calculateMaxHeight@resource:///modules/PanelMultiView.jsm",
       "handleEvent@resource:///modules/PanelMultiView.jsm",
-      "openPopup@chrome://global/content/bindings/popup.xml",
     ],
 
-    times: 7, // This number should only ever go down - never up.
+    times: 6, // This number should only ever go down - never up.
   },
 ];
 
@@ -82,10 +83,10 @@ add_task(async function() {
 
   // First, open the appmenu.
   await withReflowObserver(async function() {
-    let popupPositioned =
-      BrowserTestUtils.waitForEvent(PanelUI.panel, "popuppositioned");
+    let popupShown =
+      BrowserTestUtils.waitForEvent(PanelUI.panel, "popupshown");
     await PanelUI.show();
-    await popupPositioned;
+    await popupShown;
   }, EXPECTED_APPMENU_OPEN_REFLOWS);
 
   // Now open a series of subviews, and then close the appmenu. We

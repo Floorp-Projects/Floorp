@@ -32,10 +32,9 @@ const layoutSpec = generateActorSpec({
       }
     },
 
-    getAllGrids: {
+    getGrids: {
       request: {
-        rootNode: Arg(0, "domnode"),
-        traverseFrames: Arg(1, "nullable:boolean")
+        rootNode: Arg(0, "domnode")
       },
       response: {
         grids: RetVal("array:grid")

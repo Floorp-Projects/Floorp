@@ -1,15 +1,14 @@
-use core_foundation::base::{CFRetain, CFTypeID, CFTypeRef, TCFType};
+use core_foundation::base::{CFRetain, CFTypeID};
 use core_foundation::data::CFData;
-use color_space::{CGColorSpace, CGColorSpaceRef};
-use data_provider::{CGDataProvider, CGDataProviderRef};
+use color_space::CGColorSpace;
+use data_provider::CGDataProviderRef;
 use libc::size_t;
-use std::ops::Deref;
-use std::mem;
+use foreign_types::{ForeignType, ForeignTypeRef};
 
 #[repr(C)]
 pub enum CGImageAlphaInfo {
     CGImageAlphaNone, /* For example, RGB. */
-    CGImageAlphaPremultipliedLast, /* For example, premultiplied RGBA */ 
+    CGImageAlphaPremultipliedLast, /* For example, premultiplied RGBA */
     CGImageAlphaPremultipliedFirst, /* For example, premultiplied ARGB */
     CGImageAlphaLast, /* For example, non-premultiplied RGBA */
     CGImageAlphaFirst, /* For example, non-premultiplied ARGB */
@@ -27,102 +26,59 @@ pub enum CGImageByteOrderInfo {
     CGImageByteOrder32Big = (4 << 12)
 }
 
-// This is an enum due to zero-sized types warnings.
-// For more details see https://github.com/rust-lang/rust/issues/27303
-pub enum __CGImage {}
-
-pub type CGImageRef = *const __CGImage;
-
-pub struct CGImage {
-    obj: CGImageRef,
+foreign_type! {
+    #[doc(hidden)]
+    type CType = ::sys::CGImage;
+    fn drop = CGImageRelease;
+    fn clone = |p| CFRetain(p as *const _) as *mut _;
+    pub struct CGImage;
+    pub struct CGImageRef;
 }
 
-impl Drop for CGImage {
-    fn drop(&mut self) {
-        unsafe {
-            CGImageRelease(self.as_concrete_TypeRef())
-        }
-    }
-}
-
-impl Clone for CGImage {
-    fn clone(&self) -> CGImage {
-        unsafe {
-            TCFType::wrap_under_get_rule(self.as_concrete_TypeRef())
-        }
-    }
-}
-
-// TODO: Replace all this stuff by simply using:
-// impl_TCFType!(CGImage, CGImageRef, CGImageGetTypeID);
-impl TCFType<CGImageRef> for CGImage {
-    #[inline]
-    fn as_concrete_TypeRef(&self) -> CGImageRef {
-        self.obj
-    }
-
-    #[inline]
-    unsafe fn wrap_under_get_rule(reference: CGImageRef) -> CGImage {
-        let reference: CGImageRef = mem::transmute(CFRetain(mem::transmute(reference)));
-        TCFType::wrap_under_create_rule(reference)
-    }
-
-    #[inline]
-    fn as_CFTypeRef(&self) -> CFTypeRef {
-        unsafe {
-            mem::transmute(self.as_concrete_TypeRef())
-        }
-    }
-
-    #[inline]
-    unsafe fn wrap_under_create_rule(obj: CGImageRef) -> CGImage {
-        CGImage {
-            obj: obj,
-        }
-    }
-
-    #[inline]
-    fn type_id() -> CFTypeID {
+impl CGImage {
+    pub fn type_id() -> CFTypeID {
         unsafe {
             CGImageGetTypeID()
         }
     }
 }
 
-impl CGImage {
+impl CGImageRef {
     pub fn width(&self) -> size_t {
         unsafe {
-            CGImageGetWidth(self.as_concrete_TypeRef())
+            CGImageGetWidth(self.as_ptr())
         }
     }
 
     pub fn height(&self) -> size_t {
         unsafe {
-            CGImageGetHeight(self.as_concrete_TypeRef())
+            CGImageGetHeight(self.as_ptr())
         }
     }
 
     pub fn bits_per_component(&self) -> size_t {
         unsafe {
-            CGImageGetBitsPerComponent(self.as_concrete_TypeRef())
+            CGImageGetBitsPerComponent(self.as_ptr())
         }
     }
 
     pub fn bits_per_pixel(&self) -> size_t {
         unsafe {
-            CGImageGetBitsPerPixel(self.as_concrete_TypeRef())
+            CGImageGetBitsPerPixel(self.as_ptr())
         }
     }
 
     pub fn bytes_per_row(&self) -> size_t {
         unsafe {
-            CGImageGetBytesPerRow(self.as_concrete_TypeRef())
+            CGImageGetBytesPerRow(self.as_ptr())
         }
     }
 
     pub fn color_space(&self) -> CGColorSpace {
         unsafe {
-            TCFType::wrap_under_get_rule(CGImageGetColorSpace(self.as_concrete_TypeRef()))
+            let cs = CGImageGetColorSpace(self.as_ptr());
+            CFRetain(cs as *mut _);
+            CGColorSpace::from_ptr(cs)
         }
     }
 
@@ -130,33 +86,24 @@ impl CGImage {
     /// underlying buffer.
     pub fn data(&self) -> CFData {
         let data_provider = unsafe {
-            CGDataProvider::wrap_under_get_rule(CGImageGetDataProvider(self.as_concrete_TypeRef()))
+            CGDataProviderRef::from_ptr(CGImageGetDataProvider(self.as_ptr()))
         };
         data_provider.copy_data()
     }
 }
 
-impl Deref for CGImage {
-    type Target = CGImageRef;
-
-    #[inline]
-    fn deref(&self) -> &CGImageRef {
-        &self.obj
-    }
-}
-
-#[link(name = "ApplicationServices", kind = "framework")]
+#[link(name = "CoreGraphics", kind = "framework")]
 extern {
     fn CGImageGetTypeID() -> CFTypeID;
-    fn CGImageGetWidth(image: CGImageRef) -> size_t;
-    fn CGImageGetHeight(image: CGImageRef) -> size_t;
-    fn CGImageGetBitsPerComponent(image: CGImageRef) -> size_t;
-    fn CGImageGetBitsPerPixel(image: CGImageRef) -> size_t;
-    fn CGImageGetBytesPerRow(image: CGImageRef) -> size_t;
-    fn CGImageGetColorSpace(image: CGImageRef) -> CGColorSpaceRef;
-    fn CGImageGetDataProvider(image: CGImageRef) -> CGDataProviderRef;
-    fn CGImageRelease(image: CGImageRef);
+    fn CGImageGetWidth(image: ::sys::CGImageRef) -> size_t;
+    fn CGImageGetHeight(image: ::sys::CGImageRef) -> size_t;
+    fn CGImageGetBitsPerComponent(image: ::sys::CGImageRef) -> size_t;
+    fn CGImageGetBitsPerPixel(image: ::sys::CGImageRef) -> size_t;
+    fn CGImageGetBytesPerRow(image: ::sys::CGImageRef) -> size_t;
+    fn CGImageGetColorSpace(image: ::sys::CGImageRef) -> ::sys::CGColorSpaceRef;
+    fn CGImageGetDataProvider(image: ::sys::CGImageRef) -> ::sys::CGDataProviderRef;
+    fn CGImageRelease(image: ::sys::CGImageRef);
 
-    //fn CGImageGetAlphaInfo(image: CGImageRef) -> CGImageAlphaInfo;
-    //fn CGImageCreateCopyWithColorSpace(image: CGImageRef, space: CGColorSpaceRef) -> CGImageRef
+    //fn CGImageGetAlphaInfo(image: ::sys::CGImageRef) -> CGImageAlphaInfo;
+    //fn CGImageCreateCopyWithColorSpace(image: ::sys::CGImageRef, space: ::sys::CGColorSpaceRef) -> ::sys::CGImageRef
 }

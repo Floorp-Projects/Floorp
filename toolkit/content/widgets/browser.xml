@@ -784,7 +784,8 @@
       <property name="mediaBlocked" readonly="true">
         <getter>
           <![CDATA[
-            if (this.mPrefs.getBoolPref("media.block-autoplay-until-in-foreground", true)) {
+            if (this.mPrefs.getBoolPref("media.block-autoplay-until-in-foreground", true) &&
+                this.mPrefs.getBoolPref("media.autoplay.enabled", true)) {
               return this._mediaBlocked;
             }
             return false;

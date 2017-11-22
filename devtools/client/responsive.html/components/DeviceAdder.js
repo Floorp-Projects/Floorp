@@ -6,27 +6,30 @@
 
 "use strict";
 
-const { DOM: dom, createClass, createFactory, PropTypes, addons } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { getFormatStr, getStr } = require("../utils/l10n");
 const Types = require("../types");
 const ViewportDimension = createFactory(require("./ViewportDimension.js"));
 
-module.exports = createClass({
-  displayName: "DeviceAdder",
+class DeviceAdder extends PureComponent {
+  static get propTypes() {
+    return {
+      devices: PropTypes.shape(Types.devices).isRequired,
+      viewportTemplate: PropTypes.shape(Types.viewport).isRequired,
+      onAddCustomDevice: PropTypes.func.isRequired,
+    };
+  }
 
-  propTypes: {
-    devices: PropTypes.shape(Types.devices).isRequired,
-    viewportTemplate: PropTypes.shape(Types.viewport).isRequired,
-    onAddCustomDevice: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
-
-  getInitialState() {
-    return {};
-  },
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.onChangeSize = this.onChangeSize.bind(this);
+    this.onDeviceAdderShow = this.onDeviceAdderShow.bind(this);
+    this.onDeviceAdderSave = this.onDeviceAdderSave.bind(this);
+  }
 
   componentWillReceiveProps(nextProps) {
     let {
@@ -38,20 +41,20 @@ module.exports = createClass({
       width,
       height,
     });
-  },
+  }
 
   onChangeSize(width, height) {
     this.setState({
       width,
       height,
     });
-  },
+  }
 
   onDeviceAdderShow() {
     this.setState({
       deviceAdderDisplayed: true,
     });
-  },
+  }
 
   onDeviceAdderSave() {
     let {
@@ -78,7 +81,7 @@ module.exports = createClass({
       userAgent: this.userAgentInput.value,
       touch: this.touchInput.checked,
     });
-  },
+  }
 
   render() {
     let {
@@ -248,5 +251,7 @@ module.exports = createClass({
         getStr("responsive.deviceAdderSave")
       )
     );
-  },
-});
+  }
+}
+
+module.exports = DeviceAdder;

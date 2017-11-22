@@ -17,7 +17,7 @@ setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
       description="Library for printing stack traces from minidumps "
       "left behind by crashed processes",
-      long_description="see http://mozbase.readthedocs.org/",
+      long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
       classifiers=['Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 2 :: Only'],
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers

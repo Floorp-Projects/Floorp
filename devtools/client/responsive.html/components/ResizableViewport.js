@@ -6,8 +6,9 @@
 
 "use strict";
 
-const { DOM: dom, createClass, createFactory, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const Constants = require("../constants");
 const Types = require("../types");
@@ -17,33 +18,38 @@ const ViewportToolbar = createFactory(require("./ViewportToolbar"));
 const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
 
-module.exports = createClass({
-
-  displayName: "ResizableViewport",
-
-  propTypes: {
-    devices: PropTypes.shape(Types.devices).isRequired,
-    screenshot: PropTypes.shape(Types.screenshot).isRequired,
-    swapAfterMount: PropTypes.bool.isRequired,
-    viewport: PropTypes.shape(Types.viewport).isRequired,
-    onBrowserMounted: PropTypes.func.isRequired,
-    onChangeDevice: PropTypes.func.isRequired,
-    onContentResize: PropTypes.func.isRequired,
-    onRemoveDeviceAssociation: PropTypes.func.isRequired,
-    onResizeViewport: PropTypes.func.isRequired,
-    onRotateViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModal: PropTypes.func.isRequired,
-  },
-
-  getInitialState() {
+class ResizableViewport extends Component {
+  static get propTypes() {
     return {
+      devices: PropTypes.shape(Types.devices).isRequired,
+      screenshot: PropTypes.shape(Types.screenshot).isRequired,
+      swapAfterMount: PropTypes.bool.isRequired,
+      viewport: PropTypes.shape(Types.viewport).isRequired,
+      onBrowserMounted: PropTypes.func.isRequired,
+      onChangeDevice: PropTypes.func.isRequired,
+      onContentResize: PropTypes.func.isRequired,
+      onRemoveDeviceAssociation: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
+      onRotateViewport: PropTypes.func.isRequired,
+      onUpdateDeviceModal: PropTypes.func.isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       isResizing: false,
       lastClientX: 0,
       lastClientY: 0,
       ignoreX: false,
       ignoreY: false,
     };
-  },
+
+    this.onResizeStart = this.onResizeStart.bind(this);
+    this.onResizeStop = this.onResizeStop.bind(this);
+    this.onResizeDrag = this.onResizeDrag.bind(this);
+  }
 
   onResizeStart({ target, clientX, clientY }) {
     window.addEventListener("mousemove", this.onResizeDrag, true);
@@ -56,7 +62,7 @@ module.exports = createClass({
       ignoreX: target === this.refs.resizeBarY,
       ignoreY: target === this.refs.resizeBarX,
     });
-  },
+  }
 
   onResizeStop() {
     window.removeEventListener("mousemove", this.onResizeDrag, true);
@@ -69,7 +75,7 @@ module.exports = createClass({
       ignoreX: false,
       ignoreY: false,
     });
-  },
+  }
 
   onResizeDrag({ clientX, clientY }) {
     if (!this.state.isResizing) {
@@ -120,7 +126,7 @@ module.exports = createClass({
       lastClientX,
       lastClientY
     });
-  },
+  }
 
   render() {
     let {
@@ -187,6 +193,7 @@ module.exports = createClass({
         onMouseDown: this.onResizeStart,
       })
     );
-  },
+  }
+}
 
-});
+module.exports = ResizableViewport;

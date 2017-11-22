@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   SimpleTest.is(aliasedPointSizeRange[1],  63, "ALIASED_POINT_SIZE_RANGE[1]");
   let aliasedLineWIdthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
   SimpleTest.is(aliasedLineWIdthRange[0],  1, "ALIASED_LINE_WIDTH_RANGE[0]");
-  SimpleTest.is(aliasedLineWIdthRange[1],  5, "ALIASED_LINE_WIDTH_RANGE[1]");
+  SimpleTest.is(aliasedLineWIdthRange[1],  1, "ALIASED_LINE_WIDTH_RANGE[1]");
   SimpleTest.finish();
 });
 </script>

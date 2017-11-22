@@ -158,6 +158,16 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   return mKey;
 }
 
+void
+WebRenderImageData::SetKey(const wr::ImageKey& aKey)
+{
+  if (mKey) {
+    MOZ_ASSERT(mKey.value() != aKey);
+    mWRManager->AddImageKeyForDiscard(mKey.value());
+  }
+  mKey = Some(aKey);
+}
+
 already_AddRefed<ImageClient>
 WebRenderImageData::GetImageClient()
 {

@@ -97,6 +97,10 @@ impl<R: Read> Events<R> {
     pub fn into_inner(self) -> EventReader<R> {
         self.reader
     }
+
+    pub fn source(&self) -> &R { &self.reader.source }
+    pub fn source_mut(&mut self) -> &mut R { &mut self.reader.source }
+
 }
 
 impl<R: Read> Iterator for Events<R> {
@@ -104,7 +108,7 @@ impl<R: Read> Iterator for Events<R> {
 
     #[inline]
     fn next(&mut self) -> Option<Result<XmlEvent>> {
-        if self.finished { None }
+        if self.finished && !self.reader.parser.is_ignoring_end_of_stream() { None }
         else {
             let ev = self.reader.next();
             match ev {

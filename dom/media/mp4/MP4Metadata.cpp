@@ -25,43 +25,27 @@ using mozilla::media::TimeUnit;
 namespace mozilla {
 LazyLogModule gMP4MetadataLog("MP4Metadata");
 
-// the owner of mIndice is rust mp4 paser, so lifetime of this class
-// SHOULD NOT longer than rust parser.
-class IndiceWrapperRust : public IndiceWrapper
+IndiceWrapper::IndiceWrapper(mp4parse_byte_data& aIndice)
 {
-public:
-  size_t Length() const override;
-
-  bool GetIndice(size_t aIndex, Index::Indice& aIndice) const override;
-
-  explicit IndiceWrapperRust(mp4parse_byte_data& aRustIndice);
-
-protected:
-  UniquePtr<mp4parse_byte_data> mIndice;
-};
-
-IndiceWrapperRust::IndiceWrapperRust(mp4parse_byte_data& aRustIndice)
-  : mIndice(mozilla::MakeUnique<mp4parse_byte_data>())
-{
-  mIndice->length = aRustIndice.length;
-  mIndice->indices = aRustIndice.indices;
+  mIndice.length = aIndice.length;
+  mIndice.indices = aIndice.indices;
 }
 
 size_t
-IndiceWrapperRust::Length() const
+IndiceWrapper::Length() const
 {
-  return mIndice->length;
+  return mIndice.length;
 }
 
 bool
-IndiceWrapperRust::GetIndice(size_t aIndex, Index::Indice& aIndice) const
+IndiceWrapper::GetIndice(size_t aIndex, Index::Indice& aIndice) const
 {
-  if (aIndex >= mIndice->length) {
+  if (aIndex >= mIndice.length) {
     MOZ_LOG(gMP4MetadataLog, LogLevel::Error, ("Index overflow in indice"));
    return false;
   }
 
-  const mp4parse_indice* indice = &mIndice->indices[aIndex];
+  const mp4parse_indice* indice = &mIndice.indices[aIndex];
   aIndice.start_offset = indice->start_offset;
   aIndice.end_offset = indice->end_offset;
   aIndice.start_composition = indice->start_composition;
@@ -386,7 +370,7 @@ MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
   }
 
   UniquePtr<IndiceWrapper> indice;
-  indice = mozilla::MakeUnique<IndiceWrapperRust>(indiceRawData);
+  indice = mozilla::MakeUnique<IndiceWrapper>(indiceRawData);
 
   return {NS_OK, Move(indice)};
 }

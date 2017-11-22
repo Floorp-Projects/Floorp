@@ -590,6 +590,9 @@ pref("media.recorder.video.frame_drops", true);
 
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
+// If "media.autoplay.enabled" is off, and this pref is on, then autoplay could
+// be executed after website has been activated by specific user gestures.
+pref("media.autoplay.enabled.user-gestures-needed", false);
 
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
@@ -4799,7 +4802,6 @@ pref("gfx.apitrace.enabled",false);
 pref("gfx.xrender.enabled",false);
 pref("widget.chrome.allow-gtk-dark-theme", false);
 pref("widget.content.allow-gtk-dark-theme", false);
-pref("widget.allow-client-side-decoration", false);
 #endif
 #endif
 

@@ -104,6 +104,13 @@ pub fn is_whitespace_char(c: char) -> bool {
     }
 }
 
+/// Checks whether the given string is compound only by white space
+/// characters (`S`) using the previous is_whitespace_char to check
+/// all characters of this string
+pub fn is_whitespace_str(s: &str) -> bool {
+    s.chars().all(is_whitespace_char)
+}
+
 /// Checks whether the given character is a name start character (`NameStartChar`)
 /// as is defined by XML 1.1 specification, [section 2.3][1].
 ///

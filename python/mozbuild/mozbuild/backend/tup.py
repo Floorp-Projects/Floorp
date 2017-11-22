@@ -129,8 +129,8 @@ class BackendTupfile(object):
                 # AS can be set to $(CC), so we need to call expand_variables on
                 # the compiler to get the real value.
                 cmd = [expand_variables(self.environment.substs[compiler], self.environment.substs)]
-                cmd.extend(self.local_flags[flags])
-                cmd.extend(self.per_source_flags[src])
+                cmd.extend(shell_quote(f) for f in self.local_flags[flags])
+                cmd.extend(shell_quote(f) for f in self.per_source_flags[src])
                 cmd.extend(['-c', '%f', '-o', '%o'])
                 self.rule(
                     cmd=cmd,
@@ -163,6 +163,22 @@ class TupOnly(CommonBackend, PartialBackend):
     def _init(self):
         CommonBackend._init(self)
 
+        self._supported_dirs = (
+            'services',
+            'servo',
+            'startupcache',
+            'storage',
+            'taskcluster',
+            'testing',
+            'third_party',
+            'toolkit',
+            'tools',
+            'uriloader',
+            'view',
+            'widget',
+            'xpcom',
+            'xpfe',
+        )
         self._backend_files = {}
         self._cmd = MozbuildObject.from_environment()
         self._manifest_entries = OrderedDefaultDict(set)
@@ -257,7 +273,7 @@ class TupOnly(CommonBackend, PartialBackend):
         elif isinstance(obj, ComputedFlags):
             self._process_computed_flags(obj, backend_file)
         elif isinstance(obj, (Sources, GeneratedSources)):
-            if obj.relobjdir.startswith('xpcom'):
+            if obj.relobjdir.startswith(self._supported_dirs):
                 backend_file.sources[obj.canonical_suffix].extend(obj.files)
 
         return True
@@ -433,7 +449,7 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def _process_unified_sources(self, obj):
         backend_file = self._get_backend_file_for(obj)
-        if obj.relobjdir.startswith('xpcom'):
+        if obj.relobjdir.startswith(self._supported_dirs):
             files = [f[0] for f in obj.unified_source_mapping]
             backend_file.sources[obj.canonical_suffix].extend(files)
 

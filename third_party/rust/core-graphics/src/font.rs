@@ -7,88 +7,42 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core_foundation::base::{CFRelease, CFRetain, CFTypeID, CFTypeRef, TCFType};
+use core_foundation::base::{CFRelease, CFRetain, CFTypeID, TCFType};
 use core_foundation::string::{CFString, CFStringRef};
-use data_provider::{CGDataProvider, CGDataProviderRef};
+use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
+use data_provider::CGDataProvider;
+use geometry::CGRect;
 
-use libc;
-use std::mem;
-use std::ptr;
+use foreign_types::ForeignType;
+
+use libc::{self, c_int, size_t};
 
 pub type CGGlyph = libc::c_ushort;
 
-// This is an enum due to zero-sized types warnings.
-// For more details see https://github.com/rust-lang/rust/issues/27303
-pub enum __CGFont {}
-
-pub type CGFontRef = *const __CGFont;
-
-pub struct CGFont {
-    obj: CGFontRef,
+foreign_type! {
+    #[doc(hidden)]
+    type CType = ::sys::CGFont;
+    fn drop = |p| CFRelease(p as *mut _);
+    fn clone = |p| CFRetain(p as *const _) as *mut _;
+    pub struct CGFont;
+    pub struct CGFontRef;
 }
 
 unsafe impl Send for CGFont {}
 unsafe impl Sync for CGFont {}
 
-impl Clone for CGFont {
-    #[inline]
-    fn clone(&self) -> CGFont {
-        unsafe {
-            TCFType::wrap_under_get_rule(self.obj)
-        }
-    }
-}
-
-impl Drop for CGFont {
-    fn drop(&mut self) {
-        unsafe {
-            let ptr = self.as_CFTypeRef();
-            assert!(ptr != ptr::null());
-            CFRelease(ptr);
-        }
-    }
-}
-
-impl TCFType<CGFontRef> for CGFont {
-    #[inline]
-    fn as_concrete_TypeRef(&self) -> CGFontRef {
-        self.obj
-    }
-
-    #[inline]
-    unsafe fn wrap_under_get_rule(reference: CGFontRef) -> CGFont {
-        let reference: CGFontRef = mem::transmute(CFRetain(mem::transmute(reference)));
-        TCFType::wrap_under_create_rule(reference)
-    }
-
-    #[inline]
-    fn as_CFTypeRef(&self) -> CFTypeRef {
-        unsafe {
-            mem::transmute(self.as_concrete_TypeRef())
-        }
-    }
-
-    #[inline]
-    unsafe fn wrap_under_create_rule(obj: CGFontRef) -> CGFont {
-        CGFont {
-            obj: obj,
-        }
-    }
-
-    #[inline]
-    fn type_id() -> CFTypeID {
+impl CGFont {
+    pub fn type_id() -> CFTypeID {
         unsafe {
             CGFontGetTypeID()
         }
     }
-}
 
-impl CGFont {
     pub fn from_data_provider(provider: CGDataProvider) -> Result<CGFont, ()> {
         unsafe {
-            let font_ref = CGFontCreateWithDataProvider(provider.as_concrete_TypeRef());
-            if font_ref != ptr::null() {
-                Ok(TCFType::wrap_under_create_rule(font_ref))
+            let font_ref = CGFontCreateWithDataProvider(provider.as_ptr());
+            if !font_ref.is_null() {
+                Ok(CGFont::from_ptr(font_ref))
             } else {
                 Err(())
             }
@@ -98,8 +52,20 @@ impl CGFont {
     pub fn from_name(name: &CFString) -> Result<CGFont, ()> {
         unsafe {
             let font_ref = CGFontCreateWithFontName(name.as_concrete_TypeRef());
-            if font_ref != ptr::null() {
-                Ok(TCFType::wrap_under_create_rule(font_ref))
+            if !font_ref.is_null() {
+                Ok(CGFont::from_ptr(font_ref))
+            } else {
+                Err(())
+            }
+        }
+    }
+
+    pub fn create_copy_from_variations(&self, vars: &CFDictionary) -> Result<CGFont, ()> {
+        unsafe {
+            let font_ref = CGFontCreateCopyWithVariations(self.as_ptr(),
+                                                          vars.as_concrete_TypeRef());
+            if !font_ref.is_null() {
+                Ok(CGFont::from_ptr(font_ref))
             } else {
                 Err(())
             }
@@ -108,23 +74,62 @@ impl CGFont {
 
     pub fn postscript_name(&self) -> CFString {
         unsafe {
-            let string_ref = CGFontCopyPostScriptName(self.obj);
+            let string_ref = CGFontCopyPostScriptName(self.as_ptr());
             TCFType::wrap_under_create_rule(string_ref)
+        }
+    }
+
+    pub fn get_glyph_b_boxes(&self, glyphs: &[CGGlyph], bboxes: &mut [CGRect]) -> bool {
+        unsafe {
+            assert!(bboxes.len() >= glyphs.len());
+            CGFontGetGlyphBBoxes(self.as_ptr(),
+                                 glyphs.as_ptr(),
+                                 glyphs.len(),
+                                 bboxes.as_mut_ptr())
+        }
+    }
+
+    pub fn get_glyph_advances(&self, glyphs: &[CGGlyph], advances: &mut [c_int]) -> bool {
+        unsafe {
+            assert!(advances.len() >= glyphs.len());
+            CGFontGetGlyphAdvances(self.as_ptr(),
+                                   glyphs.as_ptr(),
+                                   glyphs.len(),
+                                   advances.as_mut_ptr())
+        }
+    }
+
+    pub fn get_units_per_em(&self) -> c_int {
+        unsafe {
+            CGFontGetUnitsPerEm(self.as_ptr())
         }
     }
 }
 
-#[link(name = "ApplicationServices", kind = "framework")]
+#[link(name = "CoreGraphics", kind = "framework")]
 extern {
     // TODO: basically nothing has bindings (even commented-out) besides what we use.
-    fn CGFontCreateWithDataProvider(provider: CGDataProviderRef) -> CGFontRef;
-    fn CGFontCreateWithFontName(name: CFStringRef) -> CGFontRef;
+    fn CGFontCreateWithDataProvider(provider: ::sys::CGDataProviderRef) -> ::sys::CGFontRef;
+    fn CGFontCreateWithFontName(name: CFStringRef) -> ::sys::CGFontRef;
+    fn CGFontCreateCopyWithVariations(font: ::sys::CGFontRef, vars: CFDictionaryRef) -> ::sys::CGFontRef;
     fn CGFontGetTypeID() -> CFTypeID;
 
-    fn CGFontCopyPostScriptName(font: CGFontRef) -> CFStringRef;
+    fn CGFontCopyPostScriptName(font: ::sys::CGFontRef) -> CFStringRef;
 
     // These do the same thing as CFRetain/CFRelease, except
     // gracefully handle a NULL argument. We don't use them.
-    //fn CGFontRetain(font: CGFontRef);
-    //fn CGFontRelease(font: CGFontRef);
+    //fn CGFontRetain(font: ::sys::CGFontRef);
+    //fn CGFontRelease(font: ::sys::CGFontRef);
+
+    fn CGFontGetGlyphBBoxes(font: ::sys::CGFontRef,
+                            glyphs: *const CGGlyph,
+                            count: size_t,
+                            bboxes: *mut CGRect)
+                            -> bool;
+    fn CGFontGetGlyphAdvances(font: ::sys::CGFontRef,
+                              glyphs: *const CGGlyph,
+                              count: size_t,
+                              advances: *mut c_int)
+                              -> bool;
+    fn CGFontGetUnitsPerEm(font: ::sys::CGFontRef) -> c_int;
 }

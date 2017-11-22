@@ -4,26 +4,25 @@
 
 "use strict";
 
-const { DOM: dom, createClass, createFactory, PropTypes, addons } =
-  require("devtools/client/shared/vendor/react");
+const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 const DeviceSelector = createFactory(require("./DeviceSelector"));
 
-module.exports = createClass({
-  displayName: "ViewportToolbar",
-
-  propTypes: {
-    devices: PropTypes.shape(Types.devices).isRequired,
-    viewport: PropTypes.shape(Types.viewport).isRequired,
-    onChangeDevice: PropTypes.func.isRequired,
-    onResizeViewport: PropTypes.func.isRequired,
-    onRotateViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModal: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+class ViewportToolbar extends PureComponent {
+  static get propTypes() {
+    return {
+      devices: PropTypes.shape(Types.devices).isRequired,
+      viewport: PropTypes.shape(Types.viewport).isRequired,
+      onChangeDevice: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
+      onRotateViewport: PropTypes.func.isRequired,
+      onUpdateDeviceModal: PropTypes.func.isRequired,
+    };
+  }
 
   render() {
     let {
@@ -53,6 +52,7 @@ module.exports = createClass({
         title: getStr("responsive.rotate"),
       })
     );
-  },
+  }
+}
 
-});
+module.exports = ViewportToolbar;

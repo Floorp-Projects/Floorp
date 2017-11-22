@@ -139,11 +139,6 @@ impl From<CompositePrimitiveInstance> for PrimitiveInstance {
     }
 }
 
-// Whether this brush is being drawn on a Picture
-// task (new) or an alpha batch task (legacy).
-// Can be removed once everything uses pictures.
-pub const BRUSH_FLAG_USES_PICTURE: i32 = (1 << 0);
-
 // TODO(gw): While we are comverting things over, we
 //           need to have the instance be the same
 //           size as an old PrimitiveInstance. In the
