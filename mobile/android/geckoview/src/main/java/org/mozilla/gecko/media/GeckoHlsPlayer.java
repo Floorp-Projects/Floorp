@@ -714,8 +714,8 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             //        complete timeline, and seekTime should be inside the duration.
             Long startTime = Long.MAX_VALUE;
             for (GeckoHlsRendererBase r : mRenderers) {
-                if (r == mVRenderer && mRendererController.isVideoRendererEnabled() ||
-                    r == mARenderer && mRendererController.isAudioRendererEnabled()) {
+                if (r == mVRenderer && mRendererController.isVideoRendererEnabled() && mTracksInfo.hasVideo() ||
+                    r == mARenderer && mRendererController.isAudioRendererEnabled() && mTracksInfo.hasAudio()) {
                 // Find the min value of the start time
                     startTime = Math.min(startTime, r.getFirstSamplePTS());
                 }
@@ -724,7 +724,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 Log.d(LOGTAG, "seeking  : " + positionUs / 1000 +
                               " (ms); startTime : " + startTime / 1000 + " (ms)");
             }
-            assertTrue(startTime != Long.MAX_VALUE);
+            assertTrue(startTime != Long.MAX_VALUE && startTime != Long.MIN_VALUE);
             mPlayer.seekTo(positionUs / 1000 - startTime / 1000);
         } catch (Exception e) {
             if (mDemuxerCallbacks != null) {
