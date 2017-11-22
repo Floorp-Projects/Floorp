@@ -30,8 +30,7 @@ promise_test(function(t) {
   // Set up pending animation
   div.style.animation = 'abc 100s';
   var animation = div.getAnimations()[0];
-  assert_equals(animation.playState, 'pending',
-               'Animation is initially pending');
+  assert_true(animation.pending, 'Animation is initially pending');
 
   // Set up listeners on ready promise
   var retPromise = animation.ready.then(function() {
@@ -46,7 +45,7 @@ promise_test(function(t) {
   getComputedStyle(div).animation;
 
   return retPromise;
-}, 'ready promise is rejected when an animation is cancelled by resetting'
+}, 'ready promise is rejected when an animation is canceled by resetting'
    + ' the animation property');
 
 promise_test(function(t) {
@@ -59,8 +58,7 @@ promise_test(function(t) {
   // Set up pending animation
   div.style.animation = 'abc 100s';
   var animation = div.getAnimations()[0];
-  assert_equals(animation.playState, 'pending',
-                'Animation is initially pending');
+  assert_true(animation.pending, 'Animation is initially pending');
 
   // Set up listeners on ready promise
   var retPromise = animation.ready.then(function() {
@@ -112,20 +110,20 @@ promise_test(function(t) {
     div.style.animationPlayState = 'paused';
 
     // Flush style and verify we're pending at the same time
-    assert_equals(animation.playState, 'pending', 'Animation is pending');
+    assert_true(animation.pending, 'Animation is pending');
     var pauseReadyPromise = animation.ready;
 
     // Now play again immediately
     div.style.animationPlayState = 'running';
-    assert_equals(animation.playState, 'pending', 'Animation is still pending');
+    assert_true(animation.pending, 'Animation is still pending');
     assert_equals(animation.ready, pauseReadyPromise,
                   'The pause Promise is re-used when playing while waiting'
                   + ' to pause');
 
     return animation.ready;
   }).then(function() {
-    assert_equals(animation.playState, 'running',
-                  'Animation is running after aborting a pause');
+    assert_true(!animation.pending && animation.playState === 'running',
+                'Animation is running after aborting a pause');
   });
 }, 'If a pause operation is interrupted, the ready promise is reused');
 
