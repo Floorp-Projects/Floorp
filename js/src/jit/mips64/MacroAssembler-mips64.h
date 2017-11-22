@@ -339,6 +339,14 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         ma_b(target);
     }
 
+    void jump(TrampolinePtr code)
+    {
+        auto target = ImmPtr(code.value);
+        BufferOffset bo = m_buffer.nextOffset();
+        addPendingJump(bo, target, Relocation::HARDCODED);
+        ma_jump(target);
+    }
+
     void splitTag(Register src, Register dest) {
         ma_dsrl(dest, src, Imm32(JSVAL_TAG_SHIFT));
     }
