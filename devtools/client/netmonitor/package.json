@@ -21,6 +21,7 @@
     "reselect": "^3.0.1"
   },
   "devDependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-register": "^6.24.0",
     "file-loader": "^0.10.1"
   },

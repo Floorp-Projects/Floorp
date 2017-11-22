@@ -1934,53 +1934,31 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function PseudoArray({obj, hooks}, grip, rawObj) {
-    let length;
+    // An object is considered a pseudo-array if all the following apply:
+    // - All its properties are array indices except, optionally, a "length" property.
+    // - At least it has the "0" array index.
+    // - The array indices are consecutive.
+    // - The value of "length", if present, is the number of array indices.
 
     let keys = obj.getOwnPropertyNames();
-    if (keys.length == 0) {
+    let {length} = keys;
+    if (length === 0) {
       return false;
     }
 
-    // We don't want to represent Objects as sparse arrays, so every property
-    // should match its index, or be the length property.
-    if (keys.some((key, i) => parseInt(key, 10) !== i && key !== "length")) {
-      return false;
-    }
-
-    // Pseudo-arrays should only have array indices and, optionally, a "length" property.
-    // Since integer indices are sorted first, check if the last property is "length".
-    if (keys[keys.length - 1] === "length") {
-      keys.pop();
-      length = DevToolsUtils.getProperty(obj, "length");
-    } else {
-      // Otherwise, let length be the (presumably) greatest array index plus 1.
-      length = +keys[keys.length - 1] + 1;
-    }
-
-    // If they are no numeric keys, or if the length does not represent the actual
-    // object length, or is not a valid array length, i.e. is a Uint32 number,
-    // do not label the object as ArrayLike.
-    if (
-      keys.length === 0 ||
-      keys.length !== length ||
-      typeof length !== "number" ||
-      length >>> 0 !== length
-    ) {
-      return false;
-    }
-
-    // Ensure all keys are increasing array indices smaller than length. The order is not
-    // guaranteed for exotic objects but, in most cases, big array indices and properties
-    // which are not integer indices should be at the end. Then, iterating backwards
-    // allows us to return earlier when the object is not completely a pseudo-array.
-    let prev = length;
-    for (let i = keys.length - 1; i >= 0; --i) {
-      let key = keys[i];
-      let numKey = key >>> 0; // ToUint32(key)
-      if (numKey + "" !== key || numKey >= prev) {
+    // Array indices should be sorted at the beginning, from smallest to largest.
+    // Other properties should be at the end, so check if the last one is "length".
+    if (keys[length - 1] === "length") {
+      --length;
+      if (length === 0 || length !== DevToolsUtils.getProperty(obj, "length")) {
         return false;
       }
-      prev = numKey;
+    }
+
+    // Check that the last key is the array index expected at that position.
+    let lastKey = keys[length - 1];
+    if (!isArrayIndex(lastKey) || +lastKey !== length - 1) {
+      return false;
     }
 
     grip.preview = {

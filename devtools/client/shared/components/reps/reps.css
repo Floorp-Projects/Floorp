@@ -256,7 +256,7 @@
 }
 
 .tree .tree-node[data-expandable="true"] {
-  cursor: pointer;
+  cursor: default;
 }
 
 .tree .tree-node:not(.focused):hover {

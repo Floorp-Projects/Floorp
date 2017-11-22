@@ -442,7 +442,7 @@ function translateTreeTypes(node) {
       }
       break;
     default:
-      // TODO We should handle this in a more robust fashion, see bug 1373610.
+      // No need to throw/reject here, insertTree will remove this node automatically.
       Cu.reportError(`Unexpected bookmark type ${node.type}`);
       break;
   }

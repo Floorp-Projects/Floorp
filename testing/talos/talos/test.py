@@ -887,38 +887,6 @@ class perf_reftest_singletons(PageloaderTest):
 
 
 @register_test()
-class quantum_pageload_google(QuantumPageloadTest):
-    """
-    Quantum Pageload Test - Google
-    """
-    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_google.manifest'
-
-
-@register_test()
-class quantum_pageload_youtube(QuantumPageloadTest):
-    """
-    Quantum Pageload Test - YouTube
-    """
-    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_youtube.manifest'
-
-
-@register_test()
-class quantum_pageload_amazon(QuantumPageloadTest):
-    """
-    Quantum Pageload Test - Amazon
-    """
-    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_amazon.manifest'
-
-
-@register_test()
-class quantum_pageload_facebook(QuantumPageloadTest):
-    """
-    Quantum Pageload Test - Facebook
-    """
-    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_facebook.manifest'
-
-
-@register_test()
 class tp6_google(QuantumPageloadTest):
     """
     Quantum Pageload Test - Google

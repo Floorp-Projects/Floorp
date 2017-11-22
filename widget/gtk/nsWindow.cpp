@@ -6945,7 +6945,7 @@ nsWindow::GetCSDSupportLevel() {
         if (strcmp(currentDesktop, "GNOME") == 0) {
             sCSDSupportLevel = CSD_SUPPORT_FULL;
         } else if (strcmp(currentDesktop, "XFCE") == 0) {
-            sCSDSupportLevel = CSD_SUPPORT_FULL;
+            sCSDSupportLevel = CSD_SUPPORT_FLAT;
         } else if (strcmp(currentDesktop, "X-Cinnamon") == 0) {
             sCSDSupportLevel = CSD_SUPPORT_FULL;
         } else if (strcmp(currentDesktop, "KDE") == 0) {

@@ -7,7 +7,8 @@
 
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const PrefState = Immutable.Record({
-  logLimit: 1000
+  logLimit: 1000,
+  sidebarToggle: false
 });
 
 function prefs(state = new PrefState(), action) {
