@@ -29,7 +29,9 @@
 
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
+#if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
+#endif
 #include "GeckoProfiler.h"
 #include "nsThreadUtils.h"
 
@@ -163,8 +165,9 @@ RunWatchdog(void* arg)
     }
 
     // Shutdown is apparently dead. Crash the process.
+#if defined(MOZ_CRASHREPORTER)
     CrashReporter::SetMinidumpAnalysisAllThreads();
-
+#endif
     MOZ_CRASH("Shutdown too long, probably frozen, causing a crash.");
   }
 }
@@ -552,11 +555,13 @@ nsTerminator::UpdateTelemetry()
 void
 nsTerminator::UpdateCrashReport(const char* aTopic)
 {
+#if defined(MOZ_CRASHREPORTER)
   // In case of crash, we wish to know where in shutdown we are
   nsAutoCString report(aTopic);
 
   Unused << CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ShutdownProgress"),
                                                report);
+#endif // defined(MOZ_CRASHREPORTER)
 }
 
 

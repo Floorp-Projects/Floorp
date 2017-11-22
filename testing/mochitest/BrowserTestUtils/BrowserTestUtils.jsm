@@ -1088,7 +1088,7 @@ this.BrowserTestUtils = {
         }
 
         let dumpID;
-        if (AppConstants.MOZ_CRASHREPORTER) {
+        if ('nsICrashReporter' in Ci) {
           dumpID = subject.getPropertyAsAString('dumpID');
           if (!dumpID) {
             return reject("dumpID was not present despite crash reporting " +

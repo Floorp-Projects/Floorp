@@ -12,7 +12,9 @@
 #include "mozilla/TextEvents.h"
 
 #include "nsAlgorithm.h"
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 #include "nsGkAtoms.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsIWindowsRegKey.h"
@@ -2694,6 +2696,8 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
   return mIsPrintableKey;
 }
 
+#ifdef MOZ_CRASHREPORTER
+
 static nsCString
 GetResultOfInSendMessageEx()
 {
@@ -2725,6 +2729,8 @@ GetResultOfInSendMessageEx()
   }
   return result;
 }
+
+#endif // #ifdef MOZ_CRASHREPORTER
 
 bool
 NativeKey::MayBeSameCharMessage(const MSG& aCharMsg1,
@@ -2969,6 +2975,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
     }
 
     if (doCrash) {
+#ifdef MOZ_CRASHREPORTER
       nsPrintfCString info("\nPeekMessage() failed to remove char message! "
                            "\nActive keyboard layout=0x%08X (%s), "
                            "\nHandling message: %s, InSendMessageEx()=%s, "
@@ -2994,7 +3001,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
         CrashReporter::AppendAppNotesToCrashReport(
           NS_LITERAL_CSTRING("\nThere is no message in any window"));
       }
-
+#endif // #ifdef MOZ_CRASHREPORTER
       MOZ_CRASH("We lost the following char message");
     }
 
@@ -3113,6 +3120,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
        "nextKeyMsg=%s, kFoundCharMsg=%s",
        this, ToString(removedMsg).get(), ToString(nextKeyMsg).get(),
        ToString(kFoundCharMsg).get()));
+#ifdef MOZ_CRASHREPORTER
     nsPrintfCString info("\nPeekMessage() removed unexpcted char message! "
                          "\nActive keyboard layout=0x%08X (%s), "
                          "\nHandling message: %s, InSendMessageEx()=%s, "
@@ -3150,13 +3158,14 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
       CrashReporter::AppendAppNotesToCrashReport(
         NS_LITERAL_CSTRING("\nThere is no key message in any windows."));
     }
-
+#endif // #ifdef MOZ_CRASHREPORTER
     MOZ_CRASH("PeekMessage() removed unexpected message");
   }
   MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
     ("%p   NativeKey::GetFollowingCharMessage(), FAILED, removed messages "
      "are all WM_NULL, nextKeyMsg=%s",
      this, ToString(nextKeyMsg).get()));
+#ifdef MOZ_CRASHREPORTER
   nsPrintfCString info("\nWe lost following char message! "
                        "\nActive keyboard layout=0x%08X (%s), "
                        "\nHandling message: %s, InSendMessageEx()=%s, \n"
@@ -3167,6 +3176,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
                        GetResultOfInSendMessageEx().get(),
                        ToString(kFoundCharMsg).get());
   CrashReporter::AppendAppNotesToCrashReport(info);
+#endif // #ifdef MOZ_CRASHREPORTER
   MOZ_CRASH("We lost the following char message");
   return false;
 }

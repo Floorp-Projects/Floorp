@@ -86,9 +86,8 @@ add_task(async function navigate() {
 });
 
 add_task(async function crash() {
-  if (!gMultiProcessBrowser || !AppConstants.MOZ_CRASHREPORTER) {
+  if (!gMultiProcessBrowser || !("nsICrashReporter" in Ci))
     return;
-  }
 
   let tab = BrowserTestUtils.addTab(gBrowser, DUMMY);
   let browser = tab.linkedBrowser;

@@ -8,6 +8,7 @@
 #include "CrashReporterMetadataShmem.h"
 #include "nsISupportsImpl.h"
 
+#ifdef MOZ_CRASHREPORTER
 namespace mozilla {
 namespace ipc {
 
@@ -64,3 +65,4 @@ CrashReporterClient::GetSingleton()
 
 } // namespace ipc
 } // namespace mozilla
+#endif // MOZ_CRASHREPORTER

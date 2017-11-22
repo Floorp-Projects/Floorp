@@ -42,7 +42,6 @@ UNIFIED_SOURCES += [
     'InProcessWinCompositorWidget.cpp',
     'JumpListItem.cpp',
     'KeyboardLayout.cpp',
-    'LSPAnnotator.cpp',
     'nsAppShell.cpp',
     'nsClipboard.cpp',
     'nsColorPicker.cpp',
@@ -87,6 +86,11 @@ SOURCES += [
     'WindowsUIUtils.cpp',
     'WinMouseScrollHandler.cpp',
 ]
+
+if CONFIG['MOZ_CRASHREPORTER']:
+    UNIFIED_SOURCES += [
+        'LSPAnnotator.cpp',
+    ]
 
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [

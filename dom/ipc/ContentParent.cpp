@@ -67,7 +67,6 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
@@ -151,7 +150,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
-#include "nsThread.h"
 #include "nsWindowWatcher.h"
 #include "nsIXULRuntime.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
@@ -250,6 +248,11 @@
 #include "mozilla/widget/AudioSession.h"
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsThread.h"
+#include "mozilla/ipc/CrashReporterHost.h"
+#endif
+
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -270,7 +273,9 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 using base::KillProcess;
 
+#ifdef MOZ_CRASHREPORTER
 using namespace CrashReporter;
+#endif
 using namespace mozilla::dom::power;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
@@ -1725,6 +1730,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 
       props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), true);
 
+#ifdef MOZ_CRASHREPORTER
       // There's a window in which child processes can crash
       // after IPC is established, but before a crash reporter
       // is created.
@@ -1741,6 +1747,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         }
         props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
       }
+#endif
     }
     nsAutoString cpId;
     cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
@@ -3053,6 +3060,7 @@ ContentParent::KillHard(const char* aReason)
   mCalledKillHard = true;
   mForceKillTimer = nullptr;
 
+#if defined(MOZ_CRASHREPORTER)
   // We're about to kill the child process associated with this content.
   // Something has gone wrong to get us here, so we generate a minidump
   // of the parent and child for submission to the crash server.
@@ -3085,17 +3093,19 @@ ContentParent::KillHard(const char* aReason)
                                             true);
     return;
   }
-
+#endif
   OnGenerateMinidumpComplete(false);
 }
 
 void
 ContentParent::OnGenerateMinidumpComplete(bool aDumpResult)
 {
+#if defined(MOZ_CRASHREPORTER)
   if (mCrashReporter && aDumpResult) {
     // CrashReporterHost::GenerateMinidumpAndPair() is successful.
     mCreatedPairedMinidumps = mCrashReporter->FinalizeCrashReport();
   }
+#endif
 
   Unused << aDumpResult; // Don't care about result if no minidump was requested.
 
@@ -3136,11 +3146,12 @@ ContentParent::FriendlyName(nsAString& aName, bool aAnonymize)
 mozilla::ipc::IPCResult
 ContentParent::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
 {
+#ifdef MOZ_CRASHREPORTER
   mCrashReporter = MakeUnique<CrashReporterHost>(
     GeckoProcessType_Content,
     aShmem,
     aThreadId);
-
+#endif
   return IPC_OK();
 }
 
@@ -4936,7 +4947,9 @@ ContentParent::RecvNotifyLowMemory()
 
   Telemetry::ScalarAdd(Telemetry::ScalarID::DOM_CONTENTPROCESS_TROUBLED_DUE_TO_MEMORY, 1);
 
+#ifdef MOZ_CRASHREPORTER
   nsThread::SaveMemoryReportNearOOM(nsThread::ShouldSaveMemoryReport::kForceReport);
+#endif
 
   return IPC_OK();
 }

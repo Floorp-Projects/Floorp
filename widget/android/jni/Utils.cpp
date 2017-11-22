@@ -9,7 +9,10 @@
 #include "GeneratedJNIWrappers.h"
 #include "AndroidBuild.h"
 #include "nsAppShell.h"
+
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 
 namespace mozilla {
 namespace jni {
@@ -203,6 +206,7 @@ bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack)
 {
     bool result = true;
 
+#ifdef MOZ_CRASHREPORTER
     result &= NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
             NS_LITERAL_CSTRING("JavaStackTrace"),
             String::Ref::From(aStack)->ToCString()));
@@ -215,6 +219,7 @@ bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack)
         CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\n") +
                                                    appNotes->ToCString());
     }
+#endif // MOZ_CRASHREPORTER
 
     if (sOOMErrorClass && aEnv->IsInstanceOf(aExc, sOOMErrorClass)) {
         NS_ABORT_OOM(0); // Unknown OOM size
