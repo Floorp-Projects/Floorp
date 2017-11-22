@@ -43,10 +43,6 @@ chrome.jar:
   content/Linkify.js                   (content/Linkify.js)
   content/CastingApps.js               (content/CastingApps.js)
   content/RemoteDebugger.js            (content/RemoteDebugger.js)
-#ifdef MOZ_SERVICES_HEALTHREPORT
-  content/aboutHealthReport.xhtml      (content/aboutHealthReport.xhtml)
-  content/aboutHealthReport.js         (content/aboutHealthReport.js)
-#endif
   content/aboutAccounts.xhtml          (content/aboutAccounts.xhtml)
   content/aboutAccounts.js             (content/aboutAccounts.js)
   content/aboutLogins.xhtml            (content/aboutLogins.xhtml)
