@@ -235,10 +235,10 @@ enum
 
 static ArenaAllocator<8192, 1> gPrefNameArena;
 
-class PrefHashEntry : public PLDHashEntryHdr
+class Pref : public PLDHashEntryHdr
 {
 public:
-  PrefHashEntry(const char* aName, PrefType aType)
+  Pref(const char* aName, PrefType aType)
   {
     mName = ArenaStrdup(aName, gPrefNameArena);
     SetType(aType);
@@ -246,7 +246,7 @@ public:
     // entries.
   }
 
-  ~PrefHashEntry()
+  ~Pref()
   {
     // There's no need to free mName because it's allocated in memory owned by
     // gPrefNameArena.
@@ -281,7 +281,7 @@ public:
 
   static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
   {
-    auto pref = static_cast<const PrefHashEntry*>(aEntry);
+    auto pref = static_cast<const Pref*>(aEntry);
     auto key = static_cast<const char*>(aKey);
 
     if (pref->mName == aKey) {
@@ -297,9 +297,9 @@ public:
 
   static void ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   {
-    auto pref = static_cast<PrefHashEntry*>(aEntry);
-    pref->~PrefHashEntry();
-    memset(pref, 0, sizeof(PrefHashEntry)); // zero just to be extra safe
+    auto pref = static_cast<Pref*>(aEntry);
+    pref->~Pref();
+    memset(pref, 0, sizeof(Pref)); // zero just to be extra safe
   }
 
   nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
@@ -641,15 +641,15 @@ static bool gShouldCleanupDeadNodes = false;
 
 static PLDHashTableOps pref_HashTableOps = {
   PLDHashTable::HashStringKey,
-  PrefHashEntry::MatchEntry,
+  Pref::MatchEntry,
   PLDHashTable::MoveEntryStub,
-  PrefHashEntry::ClearEntry,
+  Pref::ClearEntry,
   nullptr,
 };
 
 //---------------------------------------------------------------------------
 
-static PrefHashEntry*
+static Pref*
 pref_HashTableLookup(const char* aPrefName);
 
 static void
@@ -663,7 +663,7 @@ pref_savePrefs()
   PrefSaveData savedPrefs(gHashTable->EntryCount());
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     nsAutoCString prefValueStr;
     if (!pref->UserValueToStringForSaving(prefValueStr)) {
@@ -731,7 +731,7 @@ public:
 
 #endif // DEBUG
 
-static PrefHashEntry*
+static Pref*
 pref_HashTableLookup(const char* aKey)
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
@@ -754,7 +754,7 @@ pref_HashTableLookup(const char* aKey)
   }
 #endif
 
-  return static_cast<PrefHashEntry*>(gHashTable->Search(aKey));
+  return static_cast<Pref*>(gHashTable->Search(aKey));
 }
 
 static nsresult
@@ -769,14 +769,14 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto pref = static_cast<PrefHashEntry*>(gHashTable->Add(aPrefName, fallible));
+  auto pref = static_cast<Pref*>(gHashTable->Add(aPrefName, fallible));
   if (!pref) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (!pref->Name()) {
     // New (zeroed) entry. Initialize it.
-    new (pref) PrefHashEntry(aPrefName, aType);
+    new (pref) Pref(aPrefName, aType);
   }
 
   bool valueChanged = false, handleDirty = false;
@@ -1828,7 +1828,7 @@ nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& prefName = GetPrefName(aPrefName);
-  PrefHashEntry* pref;
+  Pref* pref;
   if (gHashTable && (pref = pref_HashTableLookup(prefName.get()))) {
     switch (pref->Type()) {
       case PrefType::String:
@@ -2373,7 +2373,7 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
     Substring(branchName, 0, branchName.Length() - 1);
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     // The first disjunct matches branches: e.g. a branch name "foo.bar."
     // matches a name "foo.bar.baz" (but it won't match "foo.barrel.baz").
@@ -2412,7 +2412,7 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
     if (strncmp(pref->Name(), parent.get(), parentLen) == 0) {
       prefArray.AppendElement(pref->Name());
     }
@@ -3065,7 +3065,7 @@ PreferenceServiceReporter::CollectReports(
   if (gHashTable) {
     sizes.mHashTable += gHashTable->ShallowSizeOfIncludingThis(mallocSizeOf);
     for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-      auto pref = static_cast<PrefHashEntry*>(iter.Get());
+      auto pref = static_cast<Pref*>(iter.Get());
       sizes.mStringValues += pref->SizeOfExcludingThis(mallocSizeOf);
     }
   }
@@ -3252,7 +3252,7 @@ Preferences::GetInstanceForService()
 
   MOZ_ASSERT(!gHashTable);
   gHashTable = new PLDHashTable(
-    &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
+    &pref_HashTableOps, sizeof(Pref), PREF_HASHTABLE_INITIAL_LENGTH);
 
   Result<Ok, const char*> res = InitInitialObjects();
   if (res.isErr()) {
@@ -3515,7 +3515,7 @@ Preferences::ResetUserPrefs()
 
   Vector<const char*> prefNames;
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     if (pref->HasUserValue()) {
       if (!prefNames.append(pref->Name())) {
@@ -3635,7 +3635,7 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
 void
 Preferences::GetPreference(dom::Pref* aDomPref)
 {
-  PrefHashEntry* pref = pref_HashTableLookup(aDomPref->name().get());
+  Pref* pref = pref_HashTableLookup(aDomPref->name().get());
   if (pref && pref->HasAdvisablySizedValues()) {
     pref->ToDomPref(aDomPref);
   }
@@ -3646,7 +3646,7 @@ Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 {
   aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     if (pref->HasAdvisablySizedValues()) {
       dom::Pref* setting = aDomPrefs->AppendElement();
@@ -4302,7 +4302,7 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref ? pref->GetBoolValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
@@ -4314,7 +4314,7 @@ Preferences::GetInt(const char* aPrefName,
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref ? pref->GetIntValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
@@ -4342,7 +4342,7 @@ Preferences::GetCString(const char* aPrefName,
 
   aResult.SetIsVoid(true);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref ? pref->GetCStringValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
@@ -4490,7 +4490,7 @@ Preferences::LockInAnyProcess(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   if (!pref) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -4517,7 +4517,7 @@ Preferences::Unlock(const char* aPrefName)
   ENSURE_PARENT_PROCESS("Unlock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   if (!pref) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -4536,7 +4536,7 @@ Preferences::IsLocked(const char* aPrefName)
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
   if (gIsAnyPrefLocked) {
-    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+    Pref* pref = pref_HashTableLookup(aPrefName);
     if (pref && pref->IsLocked()) {
       return true;
     }
@@ -4550,7 +4550,7 @@ Preferences::ClearUserInAnyProcess(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   if (pref && pref->HasUserValue()) {
     pref->ClearUserValue();
 
@@ -4576,7 +4576,7 @@ Preferences::HasUserValue(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref && pref->HasUserValue();
 }
 
