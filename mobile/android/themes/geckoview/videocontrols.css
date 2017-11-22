@@ -176,7 +176,7 @@
   color: white;
 }
 
-.statusOverlay {
+.statusOverlay[error] {
   -moz-box-align: center;
   -moz-box-pack: center;
   background-color: rgb(50,50,50);
