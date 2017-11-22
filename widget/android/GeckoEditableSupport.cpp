@@ -536,26 +536,19 @@ ConvertAndroidColor(uint32_t aArgb)
 
 static jni::ObjectArray::LocalRef
 ConvertRectArrayToJavaRectFArray(const nsTArray<LayoutDeviceIntRect>& aRects,
-                                 const LayoutDeviceIntRect& aWidgetBounds,
                                  const CSSToLayoutDeviceScale aScale)
 {
     const size_t length = aRects.Length();
-    auto rects = jni::ObjectArray::New<sdk::RectF>(length + 1);
-
-    // First element is the widget bounds in device units.
-    auto widgetRect = sdk::RectF::New(aWidgetBounds.x, aWidgetBounds.y,
-                                      aWidgetBounds.x + aWidgetBounds.width,
-                                      aWidgetBounds.y + aWidgetBounds.height);
-    rects->SetElement(0, widgetRect);
+    auto rects = jni::ObjectArray::New<sdk::RectF>(length);
 
     for (size_t i = 0; i < length; i++) {
-        LayoutDeviceIntRect tmp = aRects[i];
+        const LayoutDeviceIntRect& tmp = aRects[i];
 
-        // Subsequent elements are character bounds in CSS units.
+        // Character bounds in CSS units.
         auto rect = sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
                                     (tmp.x + tmp.width) / aScale.scale,
                                     (tmp.y + tmp.height) / aScale.scale);
-        rects->SetElement(i + 1, rect);
+        rects->SetElement(i, rect);
     }
     return rects;
 }
@@ -922,7 +915,6 @@ GeckoEditableSupport::UpdateCompositionRects()
 
     auto rects = ConvertRectArrayToJavaRectFArray(
             textRects.mReply.mRectArray,
-            widget->GetScreenBounds(),
             widget->GetDefaultScale());
 
     mEditable->UpdateCompositionRects(rects);

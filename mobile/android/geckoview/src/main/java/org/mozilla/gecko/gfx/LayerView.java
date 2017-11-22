@@ -133,7 +133,7 @@ public class LayerView extends FrameLayout {
 
         // We must have a layer client to get valid viewport metrics
         if (mOverscroll != null) {
-            mOverscroll.draw(canvas, mSession.getViewportMetrics());
+            mOverscroll.draw(canvas);
         }
     }
 

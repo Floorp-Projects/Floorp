@@ -8,9 +8,9 @@ package org.mozilla.gecko.gfx;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.os.Build;
 import android.widget.EdgeEffect;
 
@@ -118,32 +118,30 @@ public class OverscrollEdgeEffect implements Overscroll {
     }
 
     @Override
-    public void draw(final Canvas canvas, final ImmutableViewportMetrics metrics) {
-        if (metrics == null || mView.mSession == null) {
+    public void draw(final Canvas canvas) {
+        if (mView.mSession == null) {
             return;
         }
 
-        final float width = mView.getWidth();
-        final float height = mView.getHeight();
-        final float toolbarEnd = mView.mSession.getDynamicToolbarAnimator()
-                                               .getCurrentToolbarHeight();
+        final Rect pageRect = new Rect();
+        mView.mSession.getSurfaceBounds(pageRect);
 
         // If we're pulling an edge, or fading it out, draw!
         boolean invalidate = false;
         if (!mEdges[TOP].isFinished()) {
-            invalidate |= draw(mEdges[TOP], canvas, 0, toolbarEnd, 0);
+            invalidate |= draw(mEdges[TOP], canvas, pageRect.left, pageRect.top, 0);
         }
 
         if (!mEdges[BOTTOM].isFinished()) {
-            invalidate |= draw(mEdges[BOTTOM], canvas, width, height, 180);
+            invalidate |= draw(mEdges[BOTTOM], canvas, pageRect.right, pageRect.bottom, 180);
         }
 
         if (!mEdges[LEFT].isFinished()) {
-            invalidate |= draw(mEdges[LEFT], canvas, 0, height, 270);
+            invalidate |= draw(mEdges[LEFT], canvas, pageRect.left, pageRect.bottom, 270);
         }
 
         if (!mEdges[RIGHT].isFinished()) {
-            invalidate |= draw(mEdges[RIGHT], canvas, width, 0, 90);
+            invalidate |= draw(mEdges[RIGHT], canvas, pageRect.right, pageRect.top, 90);
         }
 
         // If the edge effect is animating off screen, invalidate.
