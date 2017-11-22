@@ -12,6 +12,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 class nsPresContext;
@@ -19,6 +20,9 @@ class nsIPresShell;
 namespace mozilla {
 class Encoding;
 class HTMLEditor;
+namespace dom {
+class ClientSource;
+} // namespace dom
 }
 %}
 
@@ -30,6 +34,7 @@ class HTMLEditor;
 [ptr] native nsIPresShell(nsIPresShell);
 [ref] native MaybeURI(mozilla::Maybe<nsCOMPtr<nsIURI>>);
 [ref] native Encoding(const mozilla::Encoding*);
+      native UniqueClientSource(mozilla::UniquePtr<mozilla::dom::ClientSource>);
 
 interface nsIURI;
 interface nsIChannel;
@@ -1171,6 +1176,17 @@ interface nsIDocShell : nsIDocShellTreeItem
   * Fire a dummy location change event asynchronously.
   */
   [noscript] void dispatchLocationChangeEvent();
+
+  /**
+   * Take ownership of the ClientSource representing an initial about:blank
+   * document that was never needed.  As an optimization we avoid creating
+   * this document if no code calls GetDocument(), but we still need a
+   * ClientSource object to represent the about:blank window.  This may return
+   * nullptr; for example if the docshell has created a real window and document
+   * already.
+   */
+  [noscript, nostdcall, notxpcom]
+  UniqueClientSource TakeInitialClientSource();
 
 %{C++
   /**

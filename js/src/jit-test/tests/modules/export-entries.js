@@ -40,11 +40,11 @@ testLocalExportEntries(
 
 testLocalExportEntries(
     'export default function() {};',
-    [{exportName: 'default', moduleRequest: null, importName: null, localName: '*default*'}]);
+    [{exportName: 'default', moduleRequest: null, importName: null, localName: 'default'}]);
 
 testLocalExportEntries(
     'export default 42;',
-    [{exportName: 'default', moduleRequest: null, importName: null, localName: '*default*'}]);
+    [{exportName: 'default', moduleRequest: null, importName: null, localName: 'default'}]);
 
 testLocalExportEntries(
     'let x = 1; export {x};',

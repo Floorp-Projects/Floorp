@@ -538,13 +538,13 @@ NS_GetRealPort(nsIURI *aURI)
     return NS_GetDefaultPort(scheme.get());
 }
 
-nsresult /* NS_NewInputStreamChannelWithLoadInfo */
-NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
-                                 nsIURI             *aUri,
-                                 nsIInputStream     *aStream,
-                                 const nsACString   &aContentType,
-                                 const nsACString   &aContentCharset,
-                                 nsILoadInfo        *aLoadInfo)
+nsresult
+NS_NewInputStreamChannelInternal(nsIChannel** outChannel,
+                                 nsIURI* aUri,
+                                 already_AddRefed<nsIInputStream> aStream,
+                                 const nsACString& aContentType,
+                                 const nsACString& aContentCharset,
+                                 nsILoadInfo* aLoadInfo)
 {
   nsresult rv;
   nsCOMPtr<nsIInputStreamChannel> isc =
@@ -552,7 +552,9 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = isc->SetURI(aUri);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = isc->SetContentStream(aStream);
+
+  nsCOMPtr<nsIInputStream> stream = Move(aStream);
+  rv = isc->SetContentStream(stream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(isc, &rv);
@@ -581,15 +583,15 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
 }
 
 nsresult
-NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
-                                 nsIURI             *aUri,
-                                 nsIInputStream     *aStream,
-                                 const nsACString   &aContentType,
-                                 const nsACString   &aContentCharset,
-                                 nsINode            *aLoadingNode,
-                                 nsIPrincipal       *aLoadingPrincipal,
-                                 nsIPrincipal       *aTriggeringPrincipal,
-                                 nsSecurityFlags     aSecurityFlags,
+NS_NewInputStreamChannelInternal(nsIChannel** outChannel,
+                                 nsIURI* aUri,
+                                 already_AddRefed<nsIInputStream> aStream,
+                                 const nsACString& aContentType,
+                                 const nsACString& aContentCharset,
+                                 nsINode* aLoadingNode,
+                                 nsIPrincipal* aLoadingPrincipal,
+                                 nsIPrincipal* aTriggeringPrincipal,
+                                 nsSecurityFlags aSecurityFlags,
                                  nsContentPolicyType aContentPolicyType)
 {
   nsCOMPtr<nsILoadInfo> loadInfo =
@@ -601,27 +603,31 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
   if (!loadInfo) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  nsCOMPtr<nsIInputStream> stream = Move(aStream);
+
   return NS_NewInputStreamChannelInternal(outChannel,
                                           aUri,
-                                          aStream,
+                                          stream.forget(),
                                           aContentType,
                                           aContentCharset,
                                           loadInfo);
 }
 
-nsresult /* NS_NewInputStreamChannelPrincipal */
-NS_NewInputStreamChannel(nsIChannel        **outChannel,
-                         nsIURI             *aUri,
-                         nsIInputStream     *aStream,
-                         nsIPrincipal       *aLoadingPrincipal,
-                         nsSecurityFlags     aSecurityFlags,
+nsresult
+NS_NewInputStreamChannel(nsIChannel** outChannel,
+                         nsIURI* aUri,
+                         already_AddRefed<nsIInputStream> aStream,
+                         nsIPrincipal* aLoadingPrincipal,
+                         nsSecurityFlags aSecurityFlags,
                          nsContentPolicyType aContentPolicyType,
-                         const nsACString   &aContentType    /* = EmptyCString() */,
-                         const nsACString   &aContentCharset /* = EmptyCString() */)
+                         const nsACString& aContentType    /* = EmptyCString() */,
+                         const nsACString& aContentCharset /* = EmptyCString() */)
 {
+  nsCOMPtr<nsIInputStream> stream = aStream;
   return NS_NewInputStreamChannelInternal(outChannel,
                                           aUri,
-                                          aStream,
+                                          stream.forget(),
                                           aContentType,
                                           aContentCharset,
                                           nullptr, // aLoadingNode
@@ -651,7 +657,7 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
                                         aUri,
-                                        stream,
+                                        stream.forget(),
                                         aContentType,
                                         NS_LITERAL_CSTRING("UTF-8"),
                                         aLoadInfo);
@@ -709,47 +715,24 @@ NS_NewInputStreamChannel(nsIChannel        **outChannel,
 }
 
 nsresult
-NS_NewInputStreamPump(nsIInputStreamPump **result,
-                      nsIInputStream      *stream,
-                      uint32_t             segsize /* = 0 */,
-                      uint32_t             segcount /* = 0 */,
-                      bool                 closeWhenDone /* = false */,
-                      nsIEventTarget      *mainThreadTarget /* = nullptr */)
+NS_NewInputStreamPump(nsIInputStreamPump** aResult,
+                      already_AddRefed<nsIInputStream> aStream,
+                      uint32_t aSegsize /* = 0 */,
+                      uint32_t aSegcount /* = 0 */,
+                      bool aCloseWhenDone /* = false */,
+                      nsIEventTarget* aMainThreadTarget /* = nullptr */)
 {
+    nsCOMPtr<nsIInputStream> stream = Move(aStream);
+
     nsresult rv;
     nsCOMPtr<nsIInputStreamPump> pump =
         do_CreateInstance(NS_INPUTSTREAMPUMP_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = pump->Init(stream, segsize, segcount, closeWhenDone,
-                        mainThreadTarget);
+        rv = pump->Init(stream, aSegsize, aSegcount, aCloseWhenDone,
+                        aMainThreadTarget);
         if (NS_SUCCEEDED(rv)) {
-            *result = nullptr;
-            pump.swap(*result);
-        }
-    }
-    return rv;
-}
-
-nsresult
-NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
-                        nsIInputStream        *source,
-                        nsIOutputStream       *sink,
-                        nsIEventTarget        *target,
-                        bool                   sourceBuffered /* = true */,
-                        bool                   sinkBuffered /* = true */,
-                        uint32_t               chunkSize /* = 0 */,
-                        bool                   closeSource /* = true */,
-                        bool                   closeSink /* = true */)
-{
-    nsresult rv;
-    nsCOMPtr<nsIAsyncStreamCopier> copier =
-        do_CreateInstance(NS_ASYNCSTREAMCOPIER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = copier->Init(source, sink, target, sourceBuffered, sinkBuffered,
-                          chunkSize, closeSource, closeSink);
-        if (NS_SUCCEEDED(rv)) {
-            *result = nullptr;
-            copier.swap(*result);
+            *aResult = nullptr;
+            pump.swap(*aResult);
         }
     }
     return rv;

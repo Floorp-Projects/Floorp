@@ -182,9 +182,11 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
 
         if (code_ == JSMSG_SET_NON_OBJECT_RECEIVER) {
             // We know that the original receiver was a primitive, so unbox it.
-            RootedValue val(cx);
-            if (!Unbox(cx, obj, &val))
-                return false;
+            RootedValue val(cx, ObjectValue(*obj));
+            if (!obj->is<ProxyObject>()) {
+                if (!Unbox(cx, obj, &val))
+                    return false;
+            }
             return ReportValueErrorFlags(cx, flags, code_, JSDVG_IGNORE_STACK, val,
                                          nullptr, propName.ptr(), nullptr);
         }

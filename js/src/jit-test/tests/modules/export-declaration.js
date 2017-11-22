@@ -316,7 +316,7 @@ program([
 program([
     exportDeclaration(
         functionDeclaration(
-            ident("*default*"),
+            ident("default"),
             [],
             blockStatement([])
         ),
@@ -342,7 +342,7 @@ program([
 program([
     exportDeclaration(
         classDeclaration(
-            ident("*default*")
+            ident("default")
         ),
         null,
         null,

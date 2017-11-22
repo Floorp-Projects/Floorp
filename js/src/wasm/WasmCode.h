@@ -273,12 +273,6 @@ enum class MemoryUsage
     Shared = 2
 };
 
-static inline bool
-UsesMemory(MemoryUsage memoryUsage)
-{
-    return bool(memoryUsage);
-}
-
 // NameInBytecode represents a name that is embedded in the wasm bytecode.
 // The presence of NameInBytecode implies that bytecode has been kept.
 
@@ -418,8 +412,8 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
     FuncReturnTypesVector debugFuncReturnTypes;
     ModuleHash            debugHash;
 
-    bool usesMemory() const { return UsesMemory(memoryUsage); }
-    bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
+    bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
+    bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
 
     // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
     // encapsulated within AsmJS.cpp, but the additional virtual functions allow

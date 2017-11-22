@@ -47,6 +47,7 @@
 
 #if MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
+#include "GeneratedJNIWrappers.h"
 #endif
 
 #include "GeckoProfiler.h"
@@ -674,6 +675,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
 #ifdef MOZ_WIDGET_ANDROID
   TexturePoolOGL::Fill(gl());
+  java::GeckoSurfaceTexture::DestroyUnused((int64_t)mGLContext.get());
 #endif
 
   // Default blend function implements "OVER"

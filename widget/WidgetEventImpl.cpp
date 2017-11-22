@@ -541,6 +541,35 @@ WidgetEvent::PreventDefault(bool aCalledByDefaultHandler,
   mFlags.PreventDefault(aCalledByDefaultHandler);
 }
 
+bool
+WidgetEvent::IsUserAction() const
+{
+  if (!IsTrusted()) {
+    return false;
+  }
+  // FYI: eMouseScrollEventClass and ePointerEventClass represent
+  //      user action but they are synthesized events.
+  switch (mClass) {
+    case eKeyboardEventClass:
+    case eCompositionEventClass:
+    case eMouseScrollEventClass:
+    case eWheelEventClass:
+    case eGestureNotifyEventClass:
+    case eSimpleGestureEventClass:
+    case eTouchEventClass:
+    case eCommandEventClass:
+    case eContentCommandEventClass:
+    case ePluginEventClass:
+      return true;
+    case eMouseEventClass:
+    case eDragEventClass:
+    case ePointerEventClass:
+      return AsMouseEvent()->IsReal();
+    default:
+      return false;
+  }
+}
+
 /******************************************************************************
  * mozilla::WidgetInputEvent
  ******************************************************************************/

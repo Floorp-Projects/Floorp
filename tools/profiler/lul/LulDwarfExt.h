@@ -1107,6 +1107,12 @@ class CallFrameInfo::Reporter {
   virtual void UnrecognizedAugmentation(uint64 offset,
                                         const std::string &augmentation);
 
+  // The FDE at OFFSET contains an invalid or otherwise unusable Dwarf4
+  // specific field (currently, only "address_size" or "segment_size").
+  // Parsing DWARF CFI with unexpected values here seems dubious at best,
+  // so we stop.  WHAT gives a little more information about what is wrong.
+  virtual void InvalidDwarf4Artefact(uint64 offset, const char* what);
+
   // The pointer encoding ENCODING, specified by the CIE at OFFSET, is not
   // a valid encoding.
   virtual void InvalidPointerEncoding(uint64 offset, uint8 encoding);

@@ -27,9 +27,6 @@ pub mod platform;
 #[path = "stub/mod.rs"]
 pub mod platform;
 
-#[cfg(target_os = "windows")]
-mod khmatcher;
-
 #[macro_use]
 extern crate log;
 extern crate rand;

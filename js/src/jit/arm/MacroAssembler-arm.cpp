@@ -12,6 +12,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/arm/Simulator-arm.h"
+#include "jit/AtomicOperations.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitFrames.h"
@@ -4236,7 +4237,8 @@ MacroAssemblerARMCompat::compareExchangeARMv7(int nbytes, bool signExtend, const
 {
     Label again;
     Label done;
-    ma_dmb(BarrierST);
+
+    asMasm().memoryBarrier(MembarFull);
 
     SecondScratchRegisterScope scratch2(asMasm());
     Register ptr = computePointer(mem, scratch2);
@@ -4287,7 +4289,8 @@ MacroAssemblerARMCompat::compareExchangeARMv7(int nbytes, bool signExtend, const
     as_cmp(scratch, Imm8(1));
     as_b(&again, Equal);
     bind(&done);
-    ma_dmb();
+
+    asMasm().memoryBarrier(MembarFull);
 }
 
 template<typename T>
@@ -4332,7 +4335,8 @@ MacroAssemblerARMCompat::atomicExchangeARMv7(int nbytes, bool signExtend, const 
 {
     Label again;
     Label done;
-    ma_dmb(BarrierST);
+
+    asMasm().memoryBarrier(MembarFull);
 
     SecondScratchRegisterScope scratch2(asMasm());
     Register ptr = computePointer(mem, scratch2);
@@ -4364,7 +4368,8 @@ MacroAssemblerARMCompat::atomicExchangeARMv7(int nbytes, bool signExtend, const 
     as_cmp(scratch, Imm8(1));
     as_b(&again, Equal);
     bind(&done);
-    ma_dmb();
+
+    asMasm().memoryBarrier(MembarFull);
 }
 
 template<typename T>
@@ -4440,13 +4445,14 @@ MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicO
                                             Register output)
 {
     MOZ_ASSERT(flagTemp != InvalidReg);
+    MOZ_ASSERT(output != value);
 
     Label again;
 
     SecondScratchRegisterScope scratch2(asMasm());
     Register ptr = computePointer(mem, scratch2);
 
-    ma_dmb();
+    asMasm().memoryBarrier(MembarFull);
 
     ScratchRegisterScope scratch(asMasm());
 
@@ -4498,7 +4504,8 @@ MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicO
     }
     as_cmp(flagTemp, Imm8(1));
     as_b(&again, Equal);
-    ma_dmb();
+
+    asMasm().memoryBarrier(MembarFull);
 }
 
 template<typename T>
@@ -4511,7 +4518,6 @@ MacroAssemblerARMCompat::atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicO
     MOZ_ASSERT(nbytes == 1 || nbytes == 2);
     MOZ_CRASH("NYI");
 }
-
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
@@ -4563,7 +4569,7 @@ MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Regi
     SecondScratchRegisterScope scratch2(asMasm());
     Register ptr = computePointer(mem, scratch2);
 
-    ma_dmb();
+    asMasm().memoryBarrier(MembarFull);
 
     ScratchRegisterScope scratch(asMasm());
 
@@ -4610,7 +4616,8 @@ MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Regi
     }
     as_cmp(flagTemp, Imm8(1));
     as_b(&again, Equal);
-    ma_dmb();
+
+    asMasm().memoryBarrier(MembarFull);
 }
 
 template<typename T>
@@ -4735,6 +4742,180 @@ MacroAssemblerARMCompat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, c
 template void
 MacroAssemblerARMCompat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const BaseIndex& mem,
                                                        Register value, Register temp, AnyRegister output);
+
+template<typename T>
+void
+MacroAssemblerARMCompat::atomicLoad64(const T& mem, Register64 temp, Register64 output)
+{
+    MOZ_ASSERT(temp.low == InvalidReg && temp.high == InvalidReg);
+    MOZ_ASSERT((output.low.code() & 1) == 0);
+    MOZ_ASSERT(output.low.code() + 1 == output.high.code());
+
+    asMasm().memoryBarrier(MembarFull);
+
+    SecondScratchRegisterScope scratch2(asMasm());
+    Register ptr = computePointer(mem, scratch2);
+
+    as_ldrexd(output.low, output.high, ptr);
+    as_clrex();
+
+    asMasm().memoryBarrier(MembarFull);
+}
+
+template void
+MacroAssemblerARMCompat::atomicLoad64(const Address& mem, Register64 temp, Register64 output);
+template void
+MacroAssemblerARMCompat::atomicLoad64(const BaseIndex& mem, Register64 temp, Register64 output);
+
+template<typename T>
+void
+MacroAssemblerARMCompat::atomicFetchOp64(AtomicOp op, Register64 value, const T& mem,
+                                         Register64 temp, Register64 output)
+{
+    MOZ_ASSERT(temp.low != InvalidReg && temp.high != InvalidReg);
+    MOZ_ASSERT(output != value);
+
+    MOZ_ASSERT((temp.low.code() & 1) == 0);
+    MOZ_ASSERT(temp.low.code() + 1 == temp.high.code());
+
+    // We could avoid this pair requirement but in that case we would end up
+    // with two moves in the loop to preserve the loaded value in output.  The
+    // prize would be less register spilling around this op since the pair
+    // requirement will tend to force more spilling.
+
+    MOZ_ASSERT((output.low.code() & 1) == 0);
+    MOZ_ASSERT(output.low.code() + 1 == output.high.code());
+
+    Label again;
+
+    SecondScratchRegisterScope scratch2(asMasm());
+    Register ptr = computePointer(mem, scratch2);
+
+    asMasm().memoryBarrier(MembarFull);
+
+    bind(&again);
+    as_ldrexd(output.low, output.high, ptr);
+    switch (op) {
+      case AtomicFetchAddOp:
+        as_add(temp.low, output.low, O2Reg(value.low), SetCC);
+        as_adc(temp.high, output.high, O2Reg(value.high));
+        break;
+      case AtomicFetchSubOp:
+        as_sub(temp.low, output.low, O2Reg(value.low), SetCC);
+        as_sbc(temp.high, output.high, O2Reg(value.high));
+        break;
+      case AtomicFetchAndOp:
+        as_and(temp.low, output.low, O2Reg(value.low));
+        as_and(temp.high, output.high, O2Reg(value.high));
+        break;
+      case AtomicFetchOrOp:
+        as_orr(temp.low, output.low, O2Reg(value.low));
+        as_orr(temp.high, output.high, O2Reg(value.high));
+        break;
+      case AtomicFetchXorOp:
+        as_eor(temp.low, output.low, O2Reg(value.low));
+        as_eor(temp.high, output.high, O2Reg(value.high));
+        break;
+    }
+
+    ScratchRegisterScope scratch(asMasm());
+
+    // Rd (temp) must differ from the two other arguments to strex.
+    as_strexd(scratch, temp.low, temp.high, ptr);
+    as_cmp(scratch, Imm8(1));
+    as_b(&again, Equal);
+
+    asMasm().memoryBarrier(MembarFull);
+}
+
+template void
+MacroAssemblerARMCompat::atomicFetchOp64(AtomicOp op, Register64 value, const Address& mem,
+                                         Register64 temp, Register64 output);
+template void
+MacroAssemblerARMCompat::atomicFetchOp64(AtomicOp op, Register64 value, const BaseIndex& mem,
+                                         Register64 temp, Register64 output);
+
+template<typename T>
+void
+MacroAssemblerARMCompat::atomicExchange64(const T& mem, Register64 value, Register64 output)
+{
+    MOZ_ASSERT(output != value);
+
+    MOZ_ASSERT((value.low.code() & 1) == 0);
+    MOZ_ASSERT(value.low.code() + 1 == value.high.code());
+
+    MOZ_ASSERT((output.low.code() & 1) == 0);
+    MOZ_ASSERT(output.low.code() + 1 == output.high.code());
+
+    Label again;
+
+    SecondScratchRegisterScope scratch2(asMasm());
+    Register ptr = computePointer(mem, scratch2);
+
+    asMasm().memoryBarrier(MembarFull);
+
+    bind(&again);
+    as_ldrexd(output.low, output.high, ptr);
+
+    ScratchRegisterScope scratch(asMasm());
+
+    as_strexd(scratch, value.low, value.high, ptr);
+    as_cmp(scratch, Imm8(1));
+    as_b(&again, Equal);
+
+    asMasm().memoryBarrier(MembarFull);
+}
+
+template void
+MacroAssemblerARMCompat::atomicExchange64(const Address& mem, Register64 value, Register64 output);
+template void
+MacroAssemblerARMCompat::atomicExchange64(const BaseIndex& mem, Register64 value, Register64 output);
+
+template<typename T>
+void
+MacroAssemblerARMCompat::compareExchange64(const T& mem, Register64 expect,
+                                           Register64 replace, Register64 output)
+{
+    MOZ_ASSERT(expect != replace && replace != output && output != expect);
+
+    MOZ_ASSERT((replace.low.code() & 1) == 0);
+    MOZ_ASSERT(replace.low.code() + 1 == replace.high.code());
+
+    MOZ_ASSERT((output.low.code() & 1) == 0);
+    MOZ_ASSERT(output.low.code() + 1 == output.high.code());
+
+    Label again;
+    Label done;
+
+    SecondScratchRegisterScope scratch2(asMasm());
+    Register ptr = computePointer(mem, scratch2);
+
+    asMasm().memoryBarrier(MembarFull);
+
+    bind(&again);
+    as_ldrexd(output.low, output.high, ptr);
+
+    as_cmp(output.low, O2Reg(expect.low));
+    as_cmp(output.high, O2Reg(expect.high), Equal);
+    as_b(&done, NotEqual);
+
+    ScratchRegisterScope scratch(asMasm());
+
+    // Rd (temp) must differ from the two other arguments to strex.
+    as_strexd(scratch, replace.low, replace.high, ptr);
+    as_cmp(scratch, Imm8(1));
+    as_b(&again, Equal);
+    bind(&done);
+
+    asMasm().memoryBarrier(MembarFull);
+}
+
+template void
+MacroAssemblerARMCompat::compareExchange64(const Address& mem, Register64 expect,
+                                           Register64 replace, Register64 output);
+template void
+MacroAssemblerARMCompat::compareExchange64(const BaseIndex& mem, Register64 expect,
+                                           Register64 replace, Register64 output);
 
 void
 MacroAssemblerARMCompat::profilerEnterFrame(Register framePtr, Register scratch)
@@ -5523,6 +5704,7 @@ void
 MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                             Register ptrScratch, Register64 output)
 {
+    MOZ_ASSERT_IF(access.isAtomic(), access.byteSize() <= 4);
     wasmLoadImpl(access, memoryBase, ptr, ptrScratch, AnyRegister(), output);
 }
 
@@ -5537,6 +5719,7 @@ void
 MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value,
                              Register memoryBase, Register ptr, Register ptrScratch)
 {
+    MOZ_ASSERT(!access.isAtomic());
     wasmStoreImpl(access, AnyRegister(), value, memoryBase, ptr, ptrScratch);
 }
 
