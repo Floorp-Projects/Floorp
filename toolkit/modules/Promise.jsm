@@ -96,6 +96,7 @@ this.Ci = Components.interfaces;
 this.Cu = Components.utils;
 this.Cr = Components.results;
 
+// eslint-disable-next-line mozilla/use-services
 this.Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(this.Ci.mozIJSSubScriptLoader)
     .loadSubScript("resource://gre/modules/Promise-backend.js", this);

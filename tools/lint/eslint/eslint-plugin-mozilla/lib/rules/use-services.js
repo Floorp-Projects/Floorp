@@ -109,6 +109,10 @@ function getInterfacesFromServicesFile() {
     }
   });
 
+  // nsIPropertyBag2 is used for system-info, but it is also used for other
+  // services and items as well, so we can't really warn for it.
+  delete servicesASTParser.result.nsIPropertyBag2;
+
   return servicesASTParser.result;
 }
 
