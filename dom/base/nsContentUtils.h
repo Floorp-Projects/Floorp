@@ -3032,11 +3032,6 @@ public:
   static void RegisterUnresolvedElement(Element* aElement, nsAtom* aTypeName);
   static void UnregisterUnresolvedElement(Element* aElement);
 
-  static mozilla::dom::CustomElementDefinition*
-  GetElementDefinitionIfObservingAttr(Element* aCustomElement,
-                                      nsAtom* aExtensionType,
-                                      nsAtom* aAttrName);
-
   static void EnqueueUpgradeReaction(Element* aElement,
                                      mozilla::dom::CustomElementDefinition* aDefinition);
 
