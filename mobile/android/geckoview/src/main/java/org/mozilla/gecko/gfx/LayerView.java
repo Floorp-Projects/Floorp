@@ -319,10 +319,6 @@ public class LayerView extends FrameLayout {
         mCompositor = session.mCompositor;
         mCompositor.layerView = this;
 
-        // Reset the content-document-is-displayed flag.
-        mCompositor.updateRootFrameMetrics(/* scroolX */ 0, /* scrollY */ 0,
-                                           /* zoom */ 1.0f);
-
         mToolbarAnimator.notifyCompositorCreated(mCompositor);
 
         final NativePanZoomController npzc = (NativePanZoomController) mPanZoomController;
