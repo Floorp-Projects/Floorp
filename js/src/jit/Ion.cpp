@@ -59,6 +59,7 @@
 
 #include "gc/Iteration-inl.h"
 #include "jit/JitFrames-inl.h"
+#include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -228,6 +229,7 @@ JitRuntime::startTrampolineCode(MacroAssembler& masm)
     masm.assumeUnreachable("Shouldn't get here");
     masm.flushBuffer();
     masm.haltingAlign(CodeAlignment);
+    masm.setFramePushed(0);
     return masm.currentOffset();
 }
 
