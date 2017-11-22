@@ -77,6 +77,7 @@ CustomElementConstructor::Construct(const char* aExecutionReason,
   JS::Rooted<JSObject*> result(cx);
   JS::Rooted<JS::Value> constructor(cx, JS::ObjectValue(*mCallback));
   if (!JS::Construct(cx, constructor, JS::HandleValueArray::empty(), &result)) {
+    aRv.NoteJSContextException(cx);
     return nullptr;
   }
 
