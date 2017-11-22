@@ -242,24 +242,25 @@ bool NS_StringToACE(const nsACString &idn, nsACString &result);
  */
 int32_t NS_GetRealPort(nsIURI *aURI);
 
-nsresult /* NS_NewInputStreamChannelWithLoadInfo */
-NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
-                                 nsIURI             *aUri,
-                                 nsIInputStream     *aStream,
-                                 const nsACString   &aContentType,
-                                 const nsACString   &aContentCharset,
-                                 nsILoadInfo        *aLoadInfo);
+nsresult
+NS_NewInputStreamChannelInternal(nsIChannel** outChannel,
+                                 nsIURI* aUri,
+                                 already_AddRefed<nsIInputStream> aStream,
+                                 const nsACString& aContentType,
+                                 const nsACString& aContentCharset,
+                                 nsILoadInfo* aLoadInfo);
 
-nsresult NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
-                                          nsIURI             *aUri,
-                                          nsIInputStream     *aStream,
-                                          const nsACString   &aContentType,
-                                          const nsACString   &aContentCharset,
-                                          nsINode            *aLoadingNode,
-                                          nsIPrincipal       *aLoadingPrincipal,
-                                          nsIPrincipal       *aTriggeringPrincipal,
-                                          nsSecurityFlags     aSecurityFlags,
-                                          nsContentPolicyType aContentPolicyType);
+nsresult
+NS_NewInputStreamChannelInternal(nsIChannel** outChannel,
+                                 nsIURI* aUri,
+                                 already_AddRefed<nsIInputStream> aStream,
+                                 const nsACString& aContentType,
+                                 const nsACString& aContentCharset,
+                                 nsINode* aLoadingNode,
+                                 nsIPrincipal* aLoadingPrincipal,
+                                 nsIPrincipal* aTriggeringPrincipal,
+                                 nsSecurityFlags aSecurityFlags,
+                                 nsContentPolicyType aContentPolicyType);
 
 
 nsresult /* NS_NewInputStreamChannelPrincipal */

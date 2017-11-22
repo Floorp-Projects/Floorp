@@ -1058,9 +1058,10 @@ nsGIOProtocolHandler::NewChannel2(nsIURI* aURI,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  RefPtr<nsGIOInputStream> tmpStream = stream;
   rv = NS_NewInputStreamChannelInternal(aResult,
                                         aURI,
-                                        stream,
+                                        tmpStream.forget(),
                                         NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE),
                                         EmptyCString(), // aContentCharset
                                         aLoadInfo);
