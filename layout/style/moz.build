@@ -92,7 +92,6 @@ EXPORTS.mozilla += [
     'GeckoStyleContext.h',
     'GenericSpecifiedValues.h',
     'GenericSpecifiedValuesInlines.h',
-    'HandleRefPtr.h',
     'IncrementalClearCOMRuleArray.h',
     'LayerAnimationInfo.h',
     'PostTraversalTask.h',
