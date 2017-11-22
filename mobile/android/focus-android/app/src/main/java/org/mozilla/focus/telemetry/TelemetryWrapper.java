@@ -52,6 +52,7 @@ public final class TelemetryWrapper {
         private static final String TYPE_QUERY = "type_query";
         private static final String TYPE_SELECT_QUERY = "select_query";
         private static final String CLICK = "click";
+        private static final String SWIPE = "swipe";
         private static final String CANCEL = "cancel";
         private static final String LONG_PRESS = "long_press";
         private static final String CHANGE = "change";
@@ -116,6 +117,7 @@ public final class TelemetryWrapper {
         private static final String TAB = "tab";
         private static final String WHATS_NEW = "whats_new";
         private static final String RESUME = "resume";
+        private static final String RELOAD = "refresh";
     }
 
     private static class Extra {
@@ -332,6 +334,14 @@ public final class TelemetryWrapper {
                 telemetry.getConfiguration().getContext());
 
         telemetry.recordSearch(SearchesMeasurement.LOCATION_SUGGESTION, searchEngine.getIdentifier());
+    }
+
+    public static void swipeReloadEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SWIPE, Object.BROWSER, Value.RELOAD).queue();
+    }
+
+    public static void menuReloadEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.RELOAD).queue();
     }
 
     public static void eraseEvent() {
