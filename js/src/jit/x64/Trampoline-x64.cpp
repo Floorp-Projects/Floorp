@@ -778,12 +778,27 @@ JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm, MIRType type
 {
     uint32_t offset = startTrampolineCode(masm);
 
+    MOZ_ASSERT(PreBarrierReg == rdx);
+    Register temp1 = rax;
+    Register temp2 = rbx;
+    Register temp3 = rcx;
+    masm.push(temp1);
+    masm.push(temp2);
+    masm.push(temp3);
+
+    Label noBarrier;
+    masm.emitPreBarrierFastPath(cx->runtime(), type, temp1, temp2, temp3, &noBarrier);
+
+    // Call into C++ to mark this GC thing.
+    masm.pop(temp3);
+    masm.pop(temp2);
+    masm.pop(temp1);
+
     LiveRegisterSet regs =
         LiveRegisterSet(GeneralRegisterSet(Registers::VolatileMask),
                         FloatRegisterSet(FloatRegisters::VolatileMask));
     masm.PushRegsInMask(regs);
 
-    MOZ_ASSERT(PreBarrierReg == rdx);
     masm.mov(ImmPtr(cx->runtime()), rcx);
 
     masm.setupUnalignedABICall(rax);
@@ -792,6 +807,12 @@ JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm, MIRType type
     masm.callWithABI(JitMarkFunction(type));
 
     masm.PopRegsInMask(regs);
+    masm.ret();
+
+    masm.bind(&noBarrier);
+    masm.pop(temp3);
+    masm.pop(temp2);
+    masm.pop(temp1);
     masm.ret();
 
     return offset;

@@ -1760,7 +1760,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
                 fprintf(stderr,
                         "processMarkStackTop found ObjectValue(nullptr) "
                         "at %zu Values from end of array in object:\n",
-                        end - (vp - 1));
+                        size_t(end - (vp - 1)));
                 DumpObject(obj);
             }
 #endif
