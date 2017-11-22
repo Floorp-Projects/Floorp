@@ -124,22 +124,40 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
     RefPtr<nsRange> range = selection->GetRangeAt(0);
     NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
-    // create fragment for pasted html
-    nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-    rv = range->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // put the fragment into the document
-    nsCOMPtr<nsINode> parent = range->GetStartContainer();
-    NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-    uint32_t childOffset = range->StartOffset();
+    // Create fragment for pasted HTML.
+    ErrorResult error;
+    RefPtr<DocumentFragment> documentFragment =
+      range->CreateContextualFragment(aInputString, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
 
-    nsCOMPtr<nsIDOMNode> nodeToInsert;
-    docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
-    while (nodeToInsert) {
-      rv = InsertNode(nodeToInsert, GetAsDOMNode(parent),
-                      static_cast<int32_t>(childOffset++));
-      NS_ENSURE_SUCCESS(rv, rv);
-      docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
+    // Put the fragment into the document at start of selection.
+    EditorDOMPoint pointToInsert(range->StartRef());
+    // XXX We need to make pointToInsert store offset for keeping traditional
+    //     behavior since using only child node to pointing insertion point
+    //     changes the behavior when inserted child is moved by mutation
+    //     observer.  We need to investigate what we should do here.
+    Unused << pointToInsert.Offset();
+    for (nsCOMPtr<nsIContent> contentToInsert =
+           documentFragment->GetFirstChild();
+         contentToInsert;
+         contentToInsert = documentFragment->GetFirstChild()) {
+      rv = InsertNode(*contentToInsert, pointToInsert.AsRaw());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      // XXX If the inserted node has been moved by mutation observer,
+      //     incrementing offset will cause odd result.  Next new node
+      //     will be inserted after existing node and the offset will be
+      //     overflown from the container node.
+      pointToInsert.Set(pointToInsert.Container(), pointToInsert.Offset() + 1);
+      if (NS_WARN_IF(!pointToInsert.Offset())) {
+        // Append the remaining children to the container if offset is
+        // overflown.
+        pointToInsert.Set(pointToInsert.Container(),
+                          pointToInsert.Container()->Length());
+      }
     }
   }
 

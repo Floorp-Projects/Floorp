@@ -346,7 +346,21 @@ public:
    * Helper routines for node/parent manipulations.
    */
   nsresult DeleteNode(nsINode* aNode);
-  nsresult InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition);
+
+  /**
+   * InsertNode() inserts aContentToInsert before the child specified by
+   * aPointToInsert.
+   *
+   * @param aContentToInsert    The node to be inserted.
+   * @param aPointToInsert      The insertion point of aContentToInsert.
+   *                            If this refers end of the container, the
+   *                            transaction will append the node to the
+   *                            container.  Otherwise, will insert the node
+   *                            before child node referred by this.
+   */
+  nsresult InsertNode(nsIContent& aContentToInsert,
+                      const EditorRawDOMPoint& aPointToInsert);
+
   enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
   already_AddRefed<Element> ReplaceContainer(Element* aOldContainer,
                                              nsAtom* aNodeType,
@@ -512,7 +526,7 @@ protected:
    *                        will append the element to the container.
    *                        Otherwise, will insert the element before the
    *                        child node referred by this.
-   * @return                A CreateElementTransaction which are initialized
+   * @return                A CreateElementTransaction which was initialized
    *                        with the arguments.
    */
   already_AddRefed<CreateElementTransaction>
@@ -538,11 +552,21 @@ protected:
                                        const EditorRawDOMPoint& aPointToInsert);
 
   /**
-   * Create a transaction for inserting aNode as a child of aParent.
+   * Create a transaction for inserting aContentToInsert before the child
+   * at aPointToInsert.
+   *
+   * @param aContentToInsert    The node to be inserted.
+   * @param aPointToInsert      The insertion point of aContentToInsert.
+   *                            If this refers end of the container, the
+   *                            transaction will append the node to the
+   *                            container.  Otherwise, will insert the node
+   *                            before child node referred by this.
+   * @return                    A InsertNodeTranaction which was initialized
+   *                            with the arguments.
    */
   already_AddRefed<InsertNodeTransaction>
-    CreateTxnForInsertNode(nsIContent& aNode, nsINode& aParent,
-                           int32_t aOffset);
+    CreateTxnForInsertNode(nsIContent& aContentToInsert,
+                           const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * Create a transaction for removing aNode from its parent.

@@ -871,7 +871,8 @@ TextEditRules::WillSetText(Selection& aSelection,
     if (NS_WARN_IF(!newNode)) {
       return NS_OK;
     }
-    nsresult rv = textEditor->InsertNode(*newNode, *rootElement, 0);
+    nsresult rv =
+      textEditor->InsertNode(*newNode, EditorRawDOMPoint(rootElement, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1448,11 +1449,18 @@ TextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
                       kMOZEditorBogusNodeValue, false);
 
   // Put the node in the document.
-  nsresult rv = mTextEditor->InsertNode(*mBogusNode, *body, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv =
+    mTextEditor->InsertNode(*mBogusNode, EditorRawDOMPoint(body, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Set selection.
-  aSelection->Collapse(body, 0);
+  ErrorResult error;
+  aSelection->Collapse(EditorRawDOMPoint(body, 0), error);
+  if (NS_WARN_IF(error.Failed())) {
+    error.SuppressException();
+  }
   return NS_OK;
 }
 
