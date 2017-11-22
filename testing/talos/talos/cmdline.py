@@ -70,8 +70,6 @@ def create_parser(mach_interface=False):
             help="Suite to use (instead of --activeTests)")
     add_arg('--subtests',
             help="Name of the subtest(s) to run (works only on DAMP)")
-    add_arg('--noChrome', action='store_true',
-            help="do not run tests as chrome")
     add_arg('--mainthread', action='store_true',
             help="Collect mainthread IO data from the browser by setting"
                  " an environment variable")
@@ -142,8 +140,6 @@ def create_parser(mach_interface=False):
     add_arg('--tppagecycles', type=int,
             help='number of pageloader cycles to run for each page in'
                  ' the manifest')
-    add_arg('--tpdelay', type=int,
-            help="length of the pageloader delay")
     add_arg('--no-download', action="store_true", dest="no_download",
             help="Do not download the talos test pagesets")
     add_arg('--sourcestamp',

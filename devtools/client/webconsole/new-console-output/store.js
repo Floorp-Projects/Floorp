@@ -42,8 +42,10 @@ function configureStore(hud, options = {}) {
   const logLimit = options.logLimit
     || Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1);
 
+  const sidebarToggle = Services.prefs.getBoolPref(PREFS.UI.SIDEBAR_TOGGLE);
+
   const initialState = {
-    prefs: new PrefState({ logLimit }),
+    prefs: new PrefState({ logLimit, sidebarToggle }),
     filters: new FilterState({
       error: Services.prefs.getBoolPref(PREFS.FILTER.ERROR),
       warn: Services.prefs.getBoolPref(PREFS.FILTER.WARN),

@@ -30,6 +30,10 @@ var gExceptionPaths = [
 
   // browser/extensions/pdfjs/content/build/pdf.js#1999
   "resource://pdf.js/web/images/",
+
+  // Exclude all the metadata paths under the country metadata folder because these
+  // paths will be concatenated in FormAutofillUtils.jsm based on different country/region.
+  "resource://formautofill/addressmetadata/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

@@ -32,6 +32,7 @@ class FilterBar extends Component {
       filterBarVisible: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
+      sidebarToggle: PropTypes.bool,
     };
   }
 
@@ -39,6 +40,7 @@ class FilterBar extends Component {
     super(props);
     this.onClickMessagesClear = this.onClickMessagesClear.bind(this);
     this.onClickFilterBarToggle = this.onClickFilterBarToggle.bind(this);
+    this.onClickSidebarToggle = this.onClickSidebarToggle.bind(this);
     this.onClickRemoveAllFilters = this.onClickRemoveAllFilters.bind(this);
     this.onClickRemoveTextFilter = this.onClickRemoveTextFilter.bind(this);
     this.onSearchInput = this.onSearchInput.bind(this);
@@ -83,6 +85,10 @@ class FilterBar extends Component {
 
   onClickFilterBarToggle() {
     this.props.dispatch(actions.filterBarToggle());
+  }
+
+  onClickSidebarToggle() {
+    this.props.dispatch(actions.sidebarToggle());
   }
 
   onClickRemoveAllFilters() {
@@ -220,6 +226,7 @@ class FilterBar extends Component {
       filterBarVisible,
       persistLogs,
       filteredMessagesCount,
+      sidebarToggle,
     } = this.props;
 
     let children = [
@@ -253,7 +260,14 @@ class FilterBar extends Component {
           title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),
           onChange: this.onChangePersistToggle,
           checked: persistLogs,
-        })
+        }),
+        sidebarToggle ?
+          dom.button({
+            className: "devtools-button",
+            title: l10n.getStr("webconsole.toggleFilterButton.tooltip"),
+            onClick: this.onClickSidebarToggle
+          }, "Toggle Sidebar")
+          : null,
       )
     ];
 
@@ -284,6 +298,7 @@ function mapStateToProps(state) {
     filterBarVisible: uiState.filterBarVisible,
     persistLogs: uiState.persistLogs,
     filteredMessagesCount: getFilteredMessagesCount(state),
+    sidebarToggle: state.prefs.sidebarToggle,
   };
 }
 

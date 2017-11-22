@@ -139,7 +139,9 @@ class FirefoxConnector {
   }
 
   onReloaded() {
-    this.panel.emit("reloaded");
+    if (this.panel) {
+      this.panel.emit("reloaded");
+    }
   }
 
   /**

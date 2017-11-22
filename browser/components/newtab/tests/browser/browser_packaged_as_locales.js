@@ -38,6 +38,7 @@ add_task(async function test_default_locale() {
  * Tests that all activity stream packaged locales can be referenced / accessed
  */
 add_task(async function test_all_packaged_locales() {
+  let gotID = false;
   const listing = await (await fetch("resource://activity-stream/prerendered/")).text();
   for (const line of listing.split("\n").slice(2)) {
     const [file, , , type] = line.split(" ").slice(1);
@@ -46,7 +47,13 @@ add_task(async function test_all_packaged_locales() {
       if (locale !== "static") {
         const url = await getUrlForLocale(locale);
         Assert[locale === "en-US" ? "equal" : "notEqual"](url, DEFAULT_URL, `can reference "${locale}" files`);
+
+        // Specially remember if we saw an ID locale packaged as it can be
+        // easily ignored by source control, e.g., .gitignore
+        gotID |= locale === "id";
       }
     }
   }
+
+  Assert.ok(gotID, `"id" locale packaged and not ignored`);
 });

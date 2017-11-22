@@ -147,6 +147,7 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatedPromise;
   await openSiteDataSettingsDialog();
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let dialog = content.gSubDialog._topDialog;
   let dialogFrame = dialog._frame;
   let frameDoc = dialogFrame.contentDocument;
