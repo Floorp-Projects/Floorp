@@ -302,6 +302,9 @@ pref("devtools.webconsole.autoMultiline", true);
 // Enable the new webconsole frontend
 pref("devtools.webconsole.new-frontend-enabled", true);
 
+// Enable the webconsole sidebar toggle
+pref("devtools.webconsole.sidebarToggle", false);
+
 // Enable client-side mapping service for source maps
 pref("devtools.source-map.client-service.enabled", true);
 

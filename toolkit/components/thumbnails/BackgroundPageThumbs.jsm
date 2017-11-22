@@ -399,7 +399,7 @@ function Capture(url, captureCallback, options) {
   this.id = Capture.nextID++;
   this.creationDate = new Date();
   this.doneCallbacks = [];
-  this.doneReason;
+  this.doneReason = -1;
   if (options.onDone)
     this.doneCallbacks.push(options.onDone);
 }
