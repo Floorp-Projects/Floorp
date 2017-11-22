@@ -8,7 +8,6 @@
 #define RETAINEDDISPLAYLISTBUILDER_H_
 
 #include "nsDisplayList.h"
-#include "mozilla/Maybe.h"
 
 struct RetainedDisplayListBuilder {
   RetainedDisplayListBuilder(nsIFrame* aReferenceFrame,
@@ -36,7 +35,7 @@ private:
   void MergeDisplayLists(nsDisplayList* aNewList,
                          nsDisplayList* aOldList,
                          nsDisplayList* aOutList,
-                         mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR);
+                         const mozilla::ActiveScrolledRoot** aOutContainerASR = nullptr);
 
   bool ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedFrames,
                             nsRect* aOutDirty,
