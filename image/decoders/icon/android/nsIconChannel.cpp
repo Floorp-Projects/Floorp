@@ -118,7 +118,7 @@ moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
   nsCOMPtr<nsIPrincipal> nullPrincipal = NullPrincipal::Create();
   return NS_NewInputStreamChannel(aChannel,
                                   aURI,
-                                  stream,
+                                  stream.forget(),
                                   nullPrincipal,
                                   nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                                   nsIContentPolicy::TYPE_INTERNAL_IMAGE,
