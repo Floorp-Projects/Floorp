@@ -196,6 +196,8 @@ private:
     // Class that implements native PresentationMediaPlayerManager calls.
     class PMPMSupport;
 
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> mContentDocumentDisplayed;
+
 public:
     static nsWindow* TopWindow();
 
@@ -300,7 +302,8 @@ public:
 
     mozilla::layers::CompositorBridgeChild* GetCompositorBridgeChild() const;
 
-    mozilla::jni::DependentRef<mozilla::java::LayerSession::Compositor> GetJavaCompositor();
+    void SetContentDocumentDisplayed(bool aDisplayed);
+    bool IsContentDocumentDisplayed();
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
