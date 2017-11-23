@@ -11,9 +11,6 @@
 
   <binding id="menuitem-base" role="xul:menuitem"
            extends="chrome://global/content/bindings/general.xml#basetext">
-    <resources>
-      <stylesheet src="chrome://global/skin/menu.css"/>
-    </resources>
     <implementation implements="nsIDOMXULSelectControlItemElement, nsIDOMXULContainerItemElement">
       <property name="value" onset="this.setAttribute('value', val); return val;"
                              onget="return this.getAttribute('value');"/>
@@ -278,9 +275,4 @@
       <children includes="menupopup"/>
     </content>
   </binding>
-
-  <binding id="menuseparator" role="xul:menuseparator"
-           extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-  </binding>
-
 </bindings>

@@ -30,12 +30,10 @@ diff --git a/media/libstagefright/binding/mp4parse_capi/Cargo.toml b/media/libst
 index a30e045..a965f06 100644
 --- a/media/libstagefright/binding/mp4parse_capi/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-@@ -18,22 +18,13 @@ exclude = [
+@@ -18,20 +18,13 @@ exclude = [
    "*.mp4",
  ]
 
--build = "build.rs"
--
 -[badges]
 -travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 +build = false
@@ -45,12 +43,12 @@ index a30e045..a965f06 100644
 
  # To enable fallible memory allocation, add 'features = ["mp4parse_fallible"]'
  # in mp4parse brace.
--mp4parse = {version = "0.8.0", path = "../mp4parse"}
-+mp4parse = {version = "0.8.0", path = "../mp4parse", features = ["mp4parse_fallible"]}
+-mp4parse = {version = "0.9.0", path = "../mp4parse"}
++mp4parse = {version = "0.9.0", path = "../mp4parse", features = ["mp4parse_fallible"]}
  num-traits = "0.1.37"
 
 -[build-dependencies]
--moz-cheddar = "0.4.0"
+-cbindgen = "0.1.30"
 -
 -[features]
 -fuzz = ["mp4parse/fuzz"]

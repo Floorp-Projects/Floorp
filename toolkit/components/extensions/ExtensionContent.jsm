@@ -492,7 +492,7 @@ class ContentScriptContextChild extends BaseContext {
       throw new Error("Cannot inject extension API into non-extension window");
     }
 
-    // This is an iframe with content script API enabled (bug 1214658)
+    // This is an iframe with content script API enabled (See Bug 1214658)
     Schemas.exportLazyGetter(this.contentWindow,
                              "browser", () => this.chromeObj);
     Schemas.exportLazyGetter(this.contentWindow,
@@ -518,7 +518,7 @@ class ContentScriptContextChild extends BaseContext {
       }
 
       // Overwrite the content script APIs with an empty object if the APIs objects are still
-      // defined in the content window (bug 1214658).
+      // defined in the content window (See Bug 1214658).
       if (this.isExtensionPage) {
         Cu.createObjectIn(this.contentWindow, {defineAs: "browser"});
         Cu.createObjectIn(this.contentWindow, {defineAs: "chrome"});

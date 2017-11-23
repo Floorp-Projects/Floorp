@@ -6,7 +6,9 @@ package org.mozilla.gecko.text;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
@@ -168,20 +170,23 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     }
 
     private void updateRect(final GeckoBundle message) {
-        final double x = message.getDouble("x");
-        final double y = (int) message.getDouble("y");
-        final double width = (int) message.getDouble("width");
-        final double height = (int) message.getDouble("height");
+        final float x = (float) message.getDouble("x");
+        final float y = (float) message.getDouble("y");
+        final float width = (float) message.getDouble("width");
+        final float height = (float) message.getDouble("height");
 
-        final float toolbarOffset = geckoView.getCurrentToolbarHeight();
-        final float zoomFactor = geckoView.getZoomFactor();
-        geckoView.getLocationInWindow(locationInWindow);
+        final Matrix matrix = new Matrix();
+        final RectF rect = new RectF(x, y, x + width, y + height);
+        geckoView.getSession().getClientToScreenMatrix(matrix);
+        matrix.mapRect(rect);
 
-        contentRect = new Rect(
-                (int) (x * zoomFactor + locationInWindow[0]),
-                (int) (y * zoomFactor + locationInWindow[1] + toolbarOffset),
-                (int) ((x + width) * zoomFactor + locationInWindow[0]),
-                (int) ((y + height) * zoomFactor + locationInWindow[1] +
-                       (height > 0 ? handlesOffset : 0)));
+        if ((int) height > 0) {
+            rect.bottom += handlesOffset;
+        }
+
+        if (contentRect == null) {
+            contentRect = new Rect();
+        }
+        rect.round(contentRect);
     }
 }

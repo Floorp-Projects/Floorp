@@ -4662,12 +4662,17 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
   MOZ_ASSERT(aElement->IsInComposedDoc());
   MOZ_ASSERT(aElement->IsStyledByServo());
 
-  Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
-  if (MOZ_LIKELY(parent)) {
+  nsINode* parent = aElement->GetFlattenedTreeParentNodeForStyle();
+  if (!parent) {
+    // The element is not in the flattened tree, bail.
+    return;
+  }
+
+  if (MOZ_LIKELY(parent->IsElement())) {
     // If our parent is unstyled, we can inductively assume that it will be
     // traversed when the time is right, and that the traversal will reach us
     // when it happens. Nothing left to do.
-    if (!parent->HasServoData()) {
+    if (!parent->AsElement()->HasServoData()) {
       return;
     }
 
@@ -4690,7 +4695,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     // order to avoid work here, because since the style system keeps style data
     // in, e.g., subtrees under a leaf frame, missing restyles and such in there
     // has observable behavior via getComputedStyle, for example.
-    if (Servo_Element_IsDisplayNone(parent)) {
+    if (Servo_Element_IsDisplayNone(parent->AsElement())) {
       return;
     }
   }
@@ -4699,6 +4704,8 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
   if (nsIPresShell* shell = doc->GetShell()) {
     shell->EnsureStyleFlush();
   }
+
+  MOZ_ASSERT(parent->IsElement() || parent == doc);
 
   nsINode* existingRoot = doc->GetServoRestyleRoot();
   uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
@@ -4716,7 +4723,9 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
 
   // There is an existing restyle root - walk up the tree from our element,
   // propagating bits as we go.
-  const bool reachedDocRoot = !parent || !PropagateBits(parent, aBits, existingRoot);
+  const bool reachedDocRoot =
+    !parent->IsElement() ||
+    !PropagateBits(parent->AsElement(), aBits, existingRoot);
 
   if (!reachedDocRoot || existingRoot == doc) {
       // We're a descendant of the existing root. All that's left to do is to
@@ -4755,7 +4764,8 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
                aElement, doc->GetServoRestyleRoot()));
   MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||
              !doc->GetServoRestyleRoot()->IsElement() ||
-             BitsArePropagated(parent, aBits, doc->GetServoRestyleRoot()));
+             !parent->IsElement() ||
+             BitsArePropagated(parent->AsElement(), aBits, doc->GetServoRestyleRoot()));
   MOZ_ASSERT(doc->GetServoRestyleRootDirtyBits() & aBits);
 }
 

@@ -112,7 +112,9 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         event.getPointerCoords(0, coords);
         final float x = coords.x;
         // Scroll events are not adjusted by the AndroidDyanmicToolbarAnimator so adjust the offset here.
-        final float y = coords.y - mView.getCurrentToolbarHeight();
+        final int toolbarHeight = (mView.mSession != null) ?
+            mView.mSession.getDynamicToolbarAnimator().getCurrentToolbarHeight() : 0;
+        final float y = coords.y - toolbarHeight;
 
         final float hScroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL) *
                               mPointerScrollFactor;
@@ -138,7 +140,9 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         final float x = coords.x;
         // Mouse events are not adjusted by the AndroidDyanmicToolbarAnimator so adjust the offset
         // here.
-        final float y = coords.y - mView.getCurrentToolbarHeight();
+        final int toolbarHeight = (mView.mSession != null) ?
+            mView.mSession.getDynamicToolbarAnimator().getCurrentToolbarHeight() : 0;
+        final float y = coords.y - toolbarHeight;
 
         return handleMouseEvent(event.getActionMasked(), event.getEventTime(), event.getMetaState(), x, y, event.getButtonState());
     }
@@ -260,8 +264,17 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
      * to avoid unwanted scroll interactions.
      */
     @WrapForJNI(calledFrom = "gecko")
-    private void onSelectionDragState(boolean state) {
-        mView.getDynamicToolbarAnimator().setPinned(state, PinReason.CARET_DRAG);
+    private void onSelectionDragState(final boolean state) {
+        final LayerView view = mView;
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (view.mSession != null) {
+                    view.mSession.getDynamicToolbarAnimator()
+                                 .setPinned(state, PinReason.CARET_DRAG);
+                }
+            }
+        });
     }
 
     private static class PointerInfo {

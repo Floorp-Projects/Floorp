@@ -174,7 +174,6 @@ public:
     NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
     void Revoke();
-    void SetReopenOnError() { mReopenOnError = true; }
 
   private:
     Mutex mMutex;
@@ -182,9 +181,6 @@ public:
     // So it can be read without lock on the main thread or on other threads
     // with the lock.
     RefPtr<ChannelMediaResource> mResource;
-    // When this flag is set, if we get a network error we should silently
-    // reopen the stream. Main thread only.
-    bool mReopenOnError = false;
 
     const int64_t mOffset;
     const uint32_t mLoadID;
@@ -199,9 +195,7 @@ protected:
   bool IsSuspendedByCache();
   // These are called on the main thread by Listener.
   nsresult OnStartRequest(nsIRequest* aRequest, int64_t aRequestOffset);
-  nsresult OnStopRequest(nsIRequest* aRequest,
-                         nsresult aStatus,
-                         bool aReopenOnError);
+  nsresult OnStopRequest(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnDataAvailable(uint32_t aLoadID,
                            nsIInputStream* aStream,
                            uint32_t aCount);

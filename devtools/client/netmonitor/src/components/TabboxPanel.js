@@ -96,7 +96,11 @@ function TabboxPanel({
         id: PANELS.SECURITY,
         title: SECURITY_TITLE,
       },
-        SecurityPanel({ request, openLink }),
+        SecurityPanel({
+          connector,
+          openLink,
+          request,
+        }),
       ),
     )
   );

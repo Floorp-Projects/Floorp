@@ -197,7 +197,7 @@ public:
    * because it was stored conditionally on the rule node.
    */
   bool HasCachedDependentStyleData(nsStyleStructID aSID) {
-    return mBits & nsCachedStyleData::GetBitForSID(aSID);
+    return mBits & GetBitForSID(aSID);
   }
 
   inline nsRuleNode* RuleNode();
@@ -292,6 +292,14 @@ public:
    */
   inline void StartBackgroundImageLoads();
 
+  static bool IsReset(const nsStyleStructID aSID) {
+    MOZ_ASSERT(0 <= aSID && aSID < nsStyleStructID_Length,
+               "must be an inherited or reset SID");
+    return nsStyleStructID_Reset_Start <= aSID;
+  }
+  static bool IsInherited(const nsStyleStructID aSID) { return !IsReset(aSID); }
+  static uint32_t GetBitForSID(const nsStyleStructID aSID) { return 1 << aSID; }
+
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent, bool aListDescendants = true);
   static const char* StructName(nsStyleStructID aSID);
@@ -334,8 +342,7 @@ protected:
   static bool DependencyAllowed(nsStyleStructID aOuterSID,
                                 nsStyleStructID aInnerSID)
   {
-    return !!(sDependencyTable[aOuterSID] &
-              nsCachedStyleData::GetBitForSID(aInnerSID));
+    return !!(sDependencyTable[aOuterSID] & GetBitForSID(aInnerSID));
   }
 
   static const uint32_t sDependencyTable[];

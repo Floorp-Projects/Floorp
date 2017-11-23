@@ -12,6 +12,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
@@ -174,12 +175,14 @@ public class GeckoAccessibility {
                 Rect relativeBounds = new Rect(bounds.getInt("left"), bounds.getInt("top"),
                                                bounds.getInt("right"), bounds.getInt("bottom"));
                 sVirtualCursorNode.setBoundsInParent(relativeBounds);
-                int[] locationOnScreen = new int[2];
-                view.getLocationOnScreen(locationOnScreen);
-                locationOnScreen[1] += view.getCurrentToolbarHeight();
-                Rect screenBounds = new Rect(relativeBounds);
-                screenBounds.offset(locationOnScreen[0], locationOnScreen[1]);
-                sVirtualCursorNode.setBoundsInScreen(screenBounds);
+
+                final Matrix matrix = new Matrix();
+                final float[] origin = new float[2];
+                view.getSession().getClientToScreenMatrix(matrix);
+                matrix.mapPoints(origin);
+
+                relativeBounds.offset((int) origin[0], (int) origin[1]);
+                sVirtualCursorNode.setBoundsInScreen(relativeBounds);
             }
 
             final GeckoBundle braille = message.getBundle("brailleOutput");
@@ -192,23 +195,17 @@ public class GeckoAccessibility {
                 sHoverEnter = message;
             }
 
-            ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
-                        event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
-                        event.setClassName(GeckoAccessibility.class.getName());
-                        if (eventType == AccessibilityEvent.TYPE_ANNOUNCEMENT ||
-                            eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-                            event.setSource(view, View.NO_ID);
-                        } else {
-                            event.setSource(view, VIRTUAL_CURSOR_POSITION);
-                        }
-                        populateEventFromJSON(event, message);
-                        ((ViewParent) view).requestSendAccessibilityEvent(view, event);
-                    }
-                });
-
+            final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
+            event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
+            event.setClassName(GeckoAccessibility.class.getName());
+            if (eventType == AccessibilityEvent.TYPE_ANNOUNCEMENT ||
+                eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+                event.setSource(view, View.NO_ID);
+            } else {
+                event.setSource(view, VIRTUAL_CURSOR_POSITION);
+            }
+            populateEventFromJSON(event, message);
+            ((ViewParent) view).requestSendAccessibilityEvent(view, event);
         }
     }
 

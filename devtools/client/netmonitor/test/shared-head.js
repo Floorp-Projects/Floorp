@@ -24,7 +24,6 @@ async function waitForExistingRequests(monitor) {
       // in order to ensure there is no more pending payload requests to be done.
       if (!request.requestHeaders || !request.requestCookies ||
           !request.eventTimings ||
-          (!request.securityInfo && !request.fromServiceWorker) ||
           ((!request.responseHeaders || !request.responseCookies) &&
             request.securityState != "broken" &&
             (!request.responseContentAvailable || request.status))) {

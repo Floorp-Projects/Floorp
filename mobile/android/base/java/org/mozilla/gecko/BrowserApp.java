@@ -96,7 +96,6 @@ import org.mozilla.gecko.extensions.ExtensionPermissionsHelper;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
 import org.mozilla.gecko.home.HomeConfig;
@@ -195,7 +194,6 @@ public class BrowserApp extends GeckoApp
                                    BookmarkEditFragment.Callbacks,
                                    BrowserSearch.OnEditSuggestionListener,
                                    BrowserSearch.OnSearchListener,
-                                   DynamicToolbarAnimator.MetricsListener,
                                    DynamicToolbarAnimator.ToolbarChromeProxy,
                                    LayoutInflater.Factory,
                                    LightweightTheme.OnChangeListener,
@@ -1669,7 +1667,6 @@ public class BrowserApp extends GeckoApp
         mDoorHangerPopup.setOnVisibilityChangeListener(this);
 
         if (mLayerView != null) {
-            mLayerView.getDynamicToolbarAnimator().addMetricsListener(this);
             mLayerView.getDynamicToolbarAnimator().setToolbarChromeProxy(this);
         }
         setDynamicToolbarEnabled(mDynamicToolbar.isEnabled());
@@ -1688,17 +1685,6 @@ public class BrowserApp extends GeckoApp
     public void onDoorHangerShow() {
         mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
         super.onDoorHangerShow();
-    }
-
-    @Override
-    public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
-        if (isHomePagerVisible() || mBrowserChrome == null) {
-            return;
-        }
-
-        if (mFormAssistPopup != null) {
-            mFormAssistPopup.onMetricsChanged(aMetrics);
-        }
     }
 
     // ToolbarChromeProxy inteface
@@ -1751,7 +1737,7 @@ public class BrowserApp extends GeckoApp
 
         if (mLayerView != null && height != mToolbarHeight) {
             mToolbarHeight = height;
-            mLayerView.setMaxToolbarHeight(height);
+            mLayerView.getDynamicToolbarAnimator().setMaxToolbarHeight(height);
             mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
         }
     }
@@ -4371,7 +4357,7 @@ public class BrowserApp extends GeckoApp
 
             // If the toolbar is dynamic and not currently showing, just show the real toolbar
             // and keep the animated snapshot hidden
-            if (mDynamicToolbar.isEnabled() && toolbar.getCurrentToolbarHeight() == 0) {
+            if (mDynamicToolbar.isEnabled() && !isToolbarChromeVisible()) {
                 toggleToolbarChrome(true);
                 mShowingToolbarChromeForActionBar = true;
             }

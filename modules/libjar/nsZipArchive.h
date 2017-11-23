@@ -81,10 +81,6 @@ public:
   const uint8_t* GetExtraField(uint16_t aTag, uint16_t *aBlockSize);
   PRTime   LastModTime();
 
-#ifdef XP_UNIX
-  bool     IsSymlink();
-#endif
-
   nsZipItem*         next;
   const ZipCentral*  central;
   uint16_t           nameLength;

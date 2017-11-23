@@ -575,7 +575,7 @@ dependencies = [
  "encoding_glue 0.1.0",
  "geckoservo 0.0.1",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "mp4parse_capi 0.8.0",
+ "mp4parse_capi 0.9.0",
  "netwerk_helper 0.0.1",
  "nserror 0.1.0",
  "nsstring 0.1.0",
@@ -819,7 +819,7 @@ dependencies = [
 
 [[package]]
 name = "mp4parse"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "bitreader 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -829,10 +829,10 @@ dependencies = [
 
 [[package]]
 name = "mp4parse_capi"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mp4parse 0.8.0",
+ "mp4parse 0.9.0",
  "num-traits 0.1.39 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

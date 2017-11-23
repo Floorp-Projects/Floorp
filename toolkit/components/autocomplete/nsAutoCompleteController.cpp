@@ -502,6 +502,11 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
       bool completeSelection;
       input->GetCompleteSelectedIndex(&completeSelection);
 
+      // The user has keyed up or down to change the selection.  Stop the search
+      // (if there is one) now so that the results do not change while the user
+      // is making a selection.
+      Unused << StopSearch();
+
       // Instruct the result view to scroll by the given amount and direction
       popup->SelectBy(reverse, page);
 

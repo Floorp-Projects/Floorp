@@ -1320,7 +1320,7 @@ TabChild::RecvUpdateDimensions(const DimensionInfo& aDimensionInfo)
 
     mUnscaledOuterRect = aDimensionInfo.rect();
     mClientOffset = aDimensionInfo.clientOffset();
-    mChromeDisp = aDimensionInfo.chromeDisp();
+    mChromeOffset = aDimensionInfo.chromeOffset();
 
     mOrientation = aDimensionInfo.orientation();
     SetUnscaledInnerSize(aDimensionInfo.size());
@@ -1340,8 +1340,8 @@ TabChild::RecvUpdateDimensions(const DimensionInfo& aDimensionInfo)
     baseWin->SetPositionAndSize(0, 0, screenSize.width, screenSize.height,
                                 nsIBaseWindow::eRepaint);
 
-    mPuppetWidget->Resize(screenRect.x + mClientOffset.x + mChromeDisp.x,
-                          screenRect.y + mClientOffset.y + mChromeDisp.y,
+    mPuppetWidget->Resize(screenRect.x + mClientOffset.x + mChromeOffset.x,
+                          screenRect.y + mClientOffset.y + mChromeOffset.y,
                           screenSize.width, screenSize.height, true);
 
     return IPC_OK();
@@ -3395,8 +3395,8 @@ TabChild::RecvUIResolutionChanged(const float& aDpi,
   ScreenIntSize screenSize = GetInnerSize();
   if (mHasValidInnerSize && oldScreenSize != screenSize) {
     ScreenIntRect screenRect = GetOuterRect();
-    mPuppetWidget->Resize(screenRect.x + mClientOffset.x + mChromeDisp.x,
-                          screenRect.y + mClientOffset.y + mChromeDisp.y,
+    mPuppetWidget->Resize(screenRect.x + mClientOffset.x + mChromeOffset.x,
+                          screenRect.y + mClientOffset.y + mChromeOffset.y,
                           screenSize.width, screenSize.height, true);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(WebNavigation());
