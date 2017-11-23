@@ -625,14 +625,23 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
     }
     case eStyleImageType_Image:
     {
-      // XXX(aosmond): We will support downscale-on-decode in bug 1368776. Until
-      // then, don't pass FLAG_HIGH_QUALITY_SCALING.
-      uint32_t containerFlags = imgIContainer::FLAG_NONE;
+      uint32_t containerFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
+      if (mFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {
+        containerFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+      }
       if (mFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
         containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
       }
+
+      const int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
+      LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
+          aDest, appUnitsPerDevPixel);
+      Maybe<SVGImageContext> svgContext;
+      gfx::IntSize decodeSize =
+        nsLayoutUtils::ComputeImageContainerDrawingParameters(mImageContainer, mForFrame, destRect,
+                                                              aSc, containerFlags, svgContext);
       RefPtr<layers::ImageContainer> container =
-        mImageContainer->GetImageContainer(aManager, containerFlags);
+        mImageContainer->GetImageContainerAtSize(aManager, decodeSize, svgContext, containerFlags);
       if (!container) {
         NS_WARNING("Failed to get image container");
         return DrawResult::NOT_READY;
@@ -645,10 +654,6 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
       if (key.isNothing()) {
         return DrawResult::BAD_IMAGE;
       }
-
-      const int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
-      LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
-          aDest, appUnitsPerDevPixel);
 
       nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(aDest.TopLeft(),
                                                                       aFill.TopLeft(),
