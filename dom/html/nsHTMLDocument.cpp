@@ -3665,6 +3665,9 @@ nsHTMLDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
 bool
 nsHTMLDocument::WillIgnoreCharsetOverride()
 {
+  if (mEncodingMenuDisabled) {
+    return true;
+  }
   if (mType != eHTML) {
     MOZ_ASSERT(mType == eXHTML);
     return true;
