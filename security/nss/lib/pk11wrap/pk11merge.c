@@ -68,8 +68,11 @@ pk11_copyAttributes(PLArenaPool *arena,
                              copyTemplate, copyTemplateCount);
     /* if we have missing attributes, just skip them and create the object */
     if (crv == CKR_ATTRIBUTE_TYPE_INVALID) {
-        int i, j;
+        CK_ULONG i, j;
         newTemplate = PORT_NewArray(CK_ATTRIBUTE, copyTemplateCount);
+        if (!newTemplate) {
+            return SECFailure;
+        }
         /* remove the unknown attributes. If we don't have enough attributes
 	 * PK11_CreateNewObject() will fail */
         for (i = 0, j = 0; i < copyTemplateCount; i++) {

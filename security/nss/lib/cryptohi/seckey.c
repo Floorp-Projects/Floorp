@@ -2056,9 +2056,13 @@ sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
         mech->mgf = CKG_MGF1_SHA1; /* default, MGF1 with SHA-1 */
     }
 
-    rv = SEC_ASN1DecodeInteger((SECItem *)&params->saltLength, &saltLength);
-    if (rv != SECSuccess) {
-        return rv;
+    if (params->saltLength.data) {
+        rv = SEC_ASN1DecodeInteger((SECItem *)&params->saltLength, &saltLength);
+        if (rv != SECSuccess) {
+            return rv;
+        }
+    } else {
+        saltLength = 20; /* default, 20 */
     }
     mech->sLen = saltLength;
 

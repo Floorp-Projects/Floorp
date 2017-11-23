@@ -2549,6 +2549,14 @@ main(int argc, char **argv)
         tmp = PR_GetEnvSecure("TMPDIR");
     if (!tmp)
         tmp = PR_GetEnvSecure("TEMP");
+
+    /* Call the NSS initialization routines */
+    rv = NSS_Initialize(dir, certPrefix, certPrefix, SECMOD_DB, NSS_INIT_READONLY);
+    if (rv != SECSuccess) {
+        fputs("NSS_Init failed.\n", stderr);
+        exit(8);
+    }
+
     if (envString) {
         /* we're one of the children in a multi-process server. */
         listen_sock = PR_GetInheritedFD(inheritableSockName);
@@ -2602,13 +2610,6 @@ main(int argc, char **argv)
 
     /* set our password function */
     PK11_SetPasswordFunc(SECU_GetModulePassword);
-
-    /* Call the NSS initialization routines */
-    rv = NSS_Initialize(dir, certPrefix, certPrefix, SECMOD_DB, NSS_INIT_READONLY);
-    if (rv != SECSuccess) {
-        fputs("NSS_Init failed.\n", stderr);
-        exit(8);
-    }
 
     /* all SSL3 cipher suites are enabled by default. */
     if (cipherString) {
