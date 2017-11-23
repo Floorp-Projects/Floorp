@@ -870,6 +870,9 @@ pref("gfx.webrender.debug.texture-cache", false);
 pref("gfx.webrender.debug.render-targets", false);
 pref("gfx.webrender.debug.alpha-primitives", false);
 pref("gfx.webrender.debug.profiler", false);
+pref("gfx.webrender.debug.gpu-time-queries", false);
+pref("gfx.webrender.debug.gpu-sample-queries", false);
+pref("gfx.webrender.debug.disable-batching", false);
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
