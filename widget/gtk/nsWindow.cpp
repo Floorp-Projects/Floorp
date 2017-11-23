@@ -6942,21 +6942,21 @@ nsWindow::GetCSDSupportLevel() {
     }
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
     if (currentDesktop) {
-        if (strcmp(currentDesktop, "GNOME") == 0) {
+        if (strstr(currentDesktop, "GNOME") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FULL;
-        } else if (strcmp(currentDesktop, "XFCE") == 0) {
+        } else if (strstr(currentDesktop, "XFCE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strcmp(currentDesktop, "X-Cinnamon") == 0) {
+        } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FULL;
-        } else if (strcmp(currentDesktop, "KDE") == 0) {
+        } else if (strstr(currentDesktop, "KDE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strcmp(currentDesktop, "LXDE") == 0) {
+        } else if (strstr(currentDesktop, "LXDE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strcmp(currentDesktop, "openbox") == 0) {
+        } else if (strstr(currentDesktop, "openbox") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strcmp(currentDesktop, "i3") == 0) {
+        } else if (strstr(currentDesktop, "i3") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_NONE;
-        } else if (strcmp(currentDesktop, "MATE") == 0) {
+        } else if (strstr(currentDesktop, "MATE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
         } else {
             sCSDSupportLevel = CSD_SUPPORT_NONE;
