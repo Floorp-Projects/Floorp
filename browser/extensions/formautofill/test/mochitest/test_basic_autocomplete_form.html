@@ -142,7 +142,7 @@ add_task(async function check_search_result_for_pref_off() {
 
 // Autofill the address from dropdown menu.
 add_task(async function check_fields_after_form_autofill() {
-  await setInput("#organization", "Moz");
+  const focusedInput = await setInput("#organization", "Moz");
   doKey("down");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
@@ -153,6 +153,8 @@ add_task(async function check_fields_after_form_autofill() {
   ).slice(1));
   doKey("down");
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
+  doKey("escape");
+  is(focusedInput.value, "Mozilla", "Filled field shouldn't be reverted by ESC key");
 });
 
 // Fallback to history search after autofill address.
