@@ -1806,11 +1806,7 @@ var CustomizableUIInternal = {
       let panel = this._getPanelForNode(target);
       let multiview = panel.querySelector("panelmultiview");
       if (multiview.showingSubView) {
-        if (multiview.instance.panelViews) {
-          multiview.goBack();
-        } else {
-          multiview.showMainView();
-        }
+        multiview.goBack();
         return;
       }
     }
