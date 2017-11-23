@@ -393,11 +393,8 @@ class FormAutofillSection {
             (element != focusedInput && !element.value)) {
           element.setUserInput(value);
           this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
-          continue;
         }
-      }
-
-      if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+      } else if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
         let cache = this._cacheValue.matchingSelectOption.get(element) || {};
         let option = cache[value] && cache[value].get();
         if (!option) {
@@ -412,6 +409,9 @@ class FormAutofillSection {
         }
         // Autofill highlight appears regardless if value is changed or not
         this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
+      }
+      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
+        element.addEventListener("input", this);
       }
     }
   }
@@ -554,18 +554,10 @@ class FormAutofillSection {
     fieldDetail.state = nextState;
   }
 
-  clearFieldState(focusedInput) {
-    let fieldDetail = this.getFieldDetailByElement(focusedInput);
-    this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
-    let targetSet = this._getTargetSet(focusedInput);
-
-    if (!targetSet.fieldDetails.some(detail => detail.state == FIELD_STATES.AUTO_FILLED)) {
-      targetSet.filledRecordGUID = null;
-    }
-  }
-
   resetFieldStates() {
     for (let fieldDetail of this._validDetails) {
+      const element = fieldDetail.elementWeakRef.get();
+      element.removeEventListener("input", this);
       this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
     this.address.filledRecordGUID = null;
@@ -742,6 +734,26 @@ class FormAutofillSection {
 
       Services.cpmm.sendAsyncMessage("FormAutofill:GetDecryptedString", {cipherText, reauth});
     });
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "input": {
+        if (!event.isTrusted) {
+          return;
+        }
+        const target = event.target;
+        const fieldDetail = this.getFieldDetailByElement(target);
+        const targetSet = this._getTargetSet(target);
+        this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+
+        if (!targetSet.fieldDetails.some(detail => detail.state == FIELD_STATES.AUTO_FILLED)) {
+          targetSet.filledRecordGUID = null;
+        }
+        target.removeEventListener("input", this);
+        break;
+      }
+    }
   }
 }
 
@@ -928,25 +940,18 @@ class FormAutofillHandler {
    *        card field.
    */
   async autofillFormFields(profile, focusedInput) {
-    let noFilledSections = !this.hasFilledSection();
+    let noFilledSectionsPreviously = !this.hasFilledSection();
     await this.getSectionByElement(focusedInput).autofillFields(profile, focusedInput);
 
-    // Handle the highlight style resetting caused by user's correction afterward.
-    log.debug("register change handler for filled form:", this.form);
     const onChangeHandler = e => {
       if (!e.isTrusted) {
         return;
       }
-
-      if (e.type == "input") {
-        let section = this.getSectionByElement(e.target);
-        section.clearFieldState(e.target);
-      } else if (e.type == "reset") {
+      if (e.type == "reset") {
         for (let section of this.sections) {
           section.resetFieldStates();
         }
       }
-
       // Unregister listeners once no field is in AUTO_FILLED state.
       if (!this.hasFilledSection()) {
         this.form.rootElement.removeEventListener("input", onChangeHandler);
@@ -954,7 +959,9 @@ class FormAutofillHandler {
       }
     };
 
-    if (noFilledSections) {
+    if (noFilledSectionsPreviously) {
+      // Handle the highlight style resetting caused by user's correction afterward.
+      log.debug("register change handler for filled form:", this.form);
       this.form.rootElement.addEventListener("input", onChangeHandler);
       this.form.rootElement.addEventListener("reset", onChangeHandler);
     }
