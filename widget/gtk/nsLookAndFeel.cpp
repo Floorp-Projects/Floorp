@@ -1080,11 +1080,6 @@ nsLookAndFeel::EnsureInit()
     // Require GTK 3.10 for GtkHeaderBar support and compatible window manager.
     mCSDAvailable = (gtk_check_version(3, 10, 0) == nullptr &&
         nsWindow::GetCSDSupportLevel() != nsWindow::CSD_SUPPORT_NONE);
-    if (mCSDAvailable) {
-        mCSDAvailable =
-            mozilla::Preferences::GetBool("browser.tabs.drawInTitlebar",
-                                          false);
-    }
 
     // We need to initialize whole CSD config explicitly because it's queried
     // as -moz-gtk* media features.
