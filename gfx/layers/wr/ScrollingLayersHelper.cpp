@@ -109,7 +109,7 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
 
   FrameMetrics::ViewID leafmostId = ids.first.valueOr(FrameMetrics::NULL_SCROLL_ID);
   FrameMetrics::ViewID scrollId = aItem->GetActiveScrolledRoot()
-      ? nsLayoutUtils::ViewIDForASR(aItem->GetActiveScrolledRoot())
+      ? aItem->GetActiveScrolledRoot()->GetViewId()
       : FrameMetrics::NULL_SCROLL_ID;
   // If the leafmost ASR is not the same as the item's ASR then we are dealing
   // with a case where the item's clip chain is scrolled by something other than
@@ -237,7 +237,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   if (ids.second) {
     // If we've already got an id for this clip, we can early-exit
     if (aAsr) {
-      FrameMetrics::ViewID scrollId = nsLayoutUtils::ViewIDForASR(aAsr);
+      FrameMetrics::ViewID scrollId = aAsr->GetViewId();
       MOZ_ASSERT(mBuilder->IsScrollLayerDefined(scrollId));
       ids.first = Some(scrollId);
     }
@@ -276,7 +276,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
     }
   } else {
     MOZ_ASSERT(!ancestorIds.second);
-    FrameMetrics::ViewID scrollId = aChain->mASR ? nsLayoutUtils::ViewIDForASR(aChain->mASR) : FrameMetrics::NULL_SCROLL_ID;
+    FrameMetrics::ViewID scrollId = aChain->mASR ? aChain->mASR->GetViewId() : FrameMetrics::NULL_SCROLL_ID;
     if (mBuilder->TopmostScrollId() == scrollId) {
       if (mBuilder->TopmostIsClip()) {
         // If aChain->mASR is already the topmost scroll layer on the stack, but
@@ -344,7 +344,7 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   // This will hold our return value
   std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>> ids;
 
-  FrameMetrics::ViewID scrollId = nsLayoutUtils::ViewIDForASR(aAsr);
+  FrameMetrics::ViewID scrollId = aAsr->GetViewId();
   if (mBuilder->IsScrollLayerDefined(scrollId)) {
     // If we've already defined this scroll layer before, we can early-exit
     ids.first = Some(scrollId);

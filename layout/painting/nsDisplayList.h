@@ -262,6 +262,7 @@ struct ActiveScrolledRoot {
     }
     asr->mParent = aParent;
     asr->mScrollableFrame = aScrollableFrame;
+    asr->mViewId = Nothing();
     asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
     asr->mRetained = aIsRetained;
 
@@ -289,6 +290,18 @@ struct ActiveScrolledRoot {
 
   // Call this when inserting an ancestor.
   void IncrementDepth() { mDepth++; }
+
+  /**
+   * Find the view ID (or generate a new one) for the content element
+   * corresponding to the ASR.
+   */
+  mozilla::layers::FrameMetrics::ViewID GetViewId() const {
+    if (!mViewId.isSome()) {
+      nsIContent* content = mScrollableFrame->GetScrolledFrame()->GetContent();
+      mViewId = Some(nsLayoutUtils::FindOrCreateIDFor(content));
+    }
+    return *mViewId;
+  }
 
   RefPtr<const ActiveScrolledRoot> mParent;
   nsIScrollableFrame* mScrollableFrame;
@@ -318,6 +331,11 @@ private:
   static uint32_t Depth(const ActiveScrolledRoot* aActiveScrolledRoot) {
     return aActiveScrolledRoot ? aActiveScrolledRoot->mDepth : 0;
   }
+
+  // This field is lazily populated in GetViewId(). We don't want to do the
+  // work of populating if webrender is disabled, because it is often not
+  // needed.
+  mutable Maybe<mozilla::layers::FrameMetrics::ViewID> mViewId;
 
   uint32_t mDepth;
   bool mRetained;
