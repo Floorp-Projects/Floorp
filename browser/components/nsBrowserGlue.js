@@ -2206,7 +2206,7 @@ BrowserGlue.prototype = {
           let defaultEngine = Services.search.originalDefaultEngine;
           defaultEngine.hidden = false;
           Services.search.currentEngine = defaultEngine;
-          Services.prefs.setIntPref("browser.search.reset.status", "silent");
+          Services.prefs.setCharPref("browser.search.reset.status", "silent");
         }
       });
     }
