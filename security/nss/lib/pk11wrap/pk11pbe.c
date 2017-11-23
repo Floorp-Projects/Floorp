@@ -367,7 +367,24 @@ sec_pkcs5v2_key_length(SECAlgorithmID *algid, SECAlgorithmID *cipherAlgId)
         cipherAlg = SECOID_GetAlgorithmTag(cipherAlgId);
 
     if (sec_pkcs5_is_algorithm_v2_aes_algorithm(cipherAlg)) {
-        length = sec_pkcs5v2_aes_key_length(cipherAlg);
+        /* Previously, the PKCS#12 files created with the old NSS
+         * releases encoded the maximum key size of AES (that is 32)
+         * in the keyLength field of PBKDF2-params. That resulted in
+         * always performing AES-256 even if AES-128-CBC or
+         * AES-192-CBC is specified in the encryptionScheme field of
+         * PBES2-params. This is wrong, but for compatibility reasons,
+         * check the keyLength field and use the value if it is 32.
+         */
+        if (p5_param.keyLength.data != NULL) {
+            length = DER_GetInteger(&p5_param.keyLength);
+        }
+        /* If the keyLength field is present and contains a value
+         * other than 32, that means the file is created outside of
+         * NSS, which we don't care about. Note that the following
+         * also handles the case when the field is absent. */
+        if (length != 32) {
+            length = sec_pkcs5v2_aes_key_length(cipherAlg);
+        }
     } else if (p5_param.keyLength.data != NULL) {
         length = DER_GetInteger(&p5_param.keyLength);
     } else {

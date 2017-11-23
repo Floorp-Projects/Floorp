@@ -28,14 +28,6 @@
 #define MP_LOGTAB 1 /* use table of logs instead of log()? */
 #endif
 
-#ifndef MP_MEMSET
-#define MP_MEMSET 1 /* use memset() to zero buffers?       */
-#endif
-
-#ifndef MP_MEMCPY
-#define MP_MEMCPY 1 /* use memcpy() to copy buffers?       */
-#endif
-
 #ifndef MP_ARGCHK
 /*
   0 = no parameter checks
