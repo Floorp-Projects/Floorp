@@ -567,6 +567,24 @@ WebConsoleClient.prototype = {
   },
 
   /**
+   * Retrieve the stack-trace information for the given NetworkEventActor.
+   *
+   * @param string actor
+   *        The NetworkEventActor ID.
+   * @param function onResponse
+   *        The function invoked when the stack-trace is received.
+   * @return request
+   *         Request object that implements both Promise and EventEmitter interfaces
+   */
+  getStackTrace: function (actor, onResponse) {
+    let packet = {
+      to: actor,
+      type: "getStackTrace",
+    };
+    return this._client.request(packet, onResponse);
+  },
+
+  /**
    * Send a HTTP request with the given data.
    *
    * @param string data

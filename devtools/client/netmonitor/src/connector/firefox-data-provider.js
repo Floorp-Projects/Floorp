@@ -66,6 +66,12 @@ class FirefoxDataProvider {
         url,
         isXHR,
         cause,
+
+        // Compatibility code to support Firefox 58 and earlier that always
+        // send stack-trace immediately on networkEvent message.
+        // FF59+ supports fetching the traces lazily via requestData.
+        stacktrace: cause.stacktrace,
+
         fromCache,
         fromServiceWorker},
         true,
@@ -659,6 +665,19 @@ class FirefoxDataProvider {
       eventTimings: response
     }).then(() => {
       emit(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);
+    });
+  }
+
+  /**
+   * Handles information received for a "stackTrace" packet.
+   *
+   * @param {object} response the message received from the server.
+   */
+  onStackTrace(response) {
+    return this.updateRequest(response.from, {
+      stacktrace: response.stacktrace
+    }).then(() => {
+      emit(EVENTS.RECEIVED_EVENT_STACKTRACE, response.from);
     });
   }
 }
