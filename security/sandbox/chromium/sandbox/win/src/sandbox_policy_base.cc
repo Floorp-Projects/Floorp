@@ -207,9 +207,6 @@ JobLevel PolicyBase::GetJobLevel() const {
 }
 
 ResultCode PolicyBase::SetJobMemoryLimit(size_t memory_limit) {
-  if (memory_limit && job_level_ == JOB_NONE) {
-    return SBOX_ERROR_BAD_PARAMS;
-  }
   memory_limit_ = memory_limit;
   return SBOX_ALL_OK;
 }
@@ -602,11 +599,15 @@ bool PolicyBase::OnJobEmpty(HANDLE job) {
   return true;
 }
 
-void PolicyBase::SetDisconnectCsrss() {
-  if (base::win::GetVersion() >= base::win::VERSION_WIN8) {
+ResultCode PolicyBase::SetDisconnectCsrss() {
+// Does not work on 32-bit.
+#if defined(_WIN64)
+  if (base::win::GetVersion() >= base::win::VERSION_WIN10) {
     is_csrss_connected_ = false;
-    AddKernelObjectToClose(L"ALPC Port", NULL);
+    return AddKernelObjectToClose(L"ALPC Port", NULL);
   }
+#endif  // !defined(_WIN64)
+  return SBOX_ALL_OK;
 }
 
 EvalResult PolicyBase::EvalPolicy(int service,

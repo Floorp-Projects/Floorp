@@ -870,6 +870,9 @@ pref("gfx.webrender.debug.texture-cache", false);
 pref("gfx.webrender.debug.render-targets", false);
 pref("gfx.webrender.debug.alpha-primitives", false);
 pref("gfx.webrender.debug.profiler", false);
+pref("gfx.webrender.debug.gpu-time-queries", false);
+pref("gfx.webrender.debug.gpu-sample-queries", false);
+pref("gfx.webrender.debug.disable-batching", false);
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
@@ -3120,9 +3123,6 @@ pref("dom.max_ext_content_script_run_time", 5);
 
 // Stop all scripts in a compartment when the "stop script" dialog is used.
 pref("dom.global_stop_script", true);
-
-// Time (milliseconds) between throttled idle callbacks.
-pref("dom.idle_period.throttled_length", 10000);
 
 // Support the input event queue on the main thread of content process
 pref("input_event_queue.supported", true);

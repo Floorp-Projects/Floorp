@@ -27,7 +27,7 @@ VREventObserver::VREventObserver(nsGlobalWindowInner* aGlobalWindow)
   , mIs2DView(true)
   , mHasReset(false)
 {
-  MOZ_ASSERT(aGlobalWindow && aGlobalWindow->IsInnerWindow());
+  MOZ_ASSERT(aGlobalWindow);
 
   UpdateSpentTimeIn2DTelemetry(false);
   VRManagerChild* vmc = VRManagerChild::Get();

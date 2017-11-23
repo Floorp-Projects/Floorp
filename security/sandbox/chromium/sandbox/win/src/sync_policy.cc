@@ -195,7 +195,7 @@ NTSTATUS SyncPolicy::CreateEventAction(EvalResult eval_result,
   HANDLE local_handle = NULL;
   status = NtCreateEvent(&local_handle, EVENT_ALL_ACCESS, &object_attributes,
                          static_cast<EVENT_TYPE>(event_type),
-                         static_cast<BOOLEAN>(initial_state));
+                         static_cast<BOOLEAN>(initial_state != 0));
   if (NULL == local_handle)
     return status;
 

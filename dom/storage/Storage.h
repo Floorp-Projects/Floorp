@@ -32,6 +32,8 @@ public:
 
   Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
 
+  static bool StoragePrefIsEnabled();
+
   enum StorageType {
     eSessionStorage,
     eLocalStorage,

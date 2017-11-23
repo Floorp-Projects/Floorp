@@ -21,7 +21,6 @@ namespace dom {
 BarProp::BarProp(nsGlobalWindowInner* aWindow)
   : mDOMWindow(aWindow)
 {
-  MOZ_ASSERT(aWindow->IsInnerWindow());
 }
 
 BarProp::~BarProp()

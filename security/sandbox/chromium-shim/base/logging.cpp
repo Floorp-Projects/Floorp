@@ -46,6 +46,11 @@ LogMessageHandlerFunction log_message_handler = nullptr;
 
 }  // namespace
 
+// This is never instantiated, it's just used for EAT_STREAM_PARAMETERS to have
+// an object of the correct type on the LHS of the unused part of the ternary
+// operator.
+std::ostream* g_swallow_stream;
+
 void SetMinLogLevel(int level) {
   g_min_log_level = std::min(LOG_FATAL, level);
 }

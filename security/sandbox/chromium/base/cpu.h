@@ -12,9 +12,8 @@
 namespace base {
 
 // Query information about the processor.
-class BASE_EXPORT CPU {
+class BASE_EXPORT CPU final {
  public:
-  // Constructor
   CPU();
 
   enum IntelMicroArchitecture {

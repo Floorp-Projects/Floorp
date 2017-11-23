@@ -267,7 +267,7 @@ DWORD RestrictedToken::AddDenyOnlySids(const std::vector<Sid>& deny_only_sids) {
 
   DWORD error;
   std::unique_ptr<BYTE[]> buffer =
-      GetTokenInfo(effective_token_, TokenGroups, &error);
+    GetTokenInfo(effective_token_, TokenGroups, &error);
 
   if (!buffer) {
     return error;

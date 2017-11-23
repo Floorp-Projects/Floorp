@@ -35,12 +35,13 @@ bool ThreadRestrictions::SetIOAllowed(bool allowed) {
 // static
 void ThreadRestrictions::AssertIOAllowed() {
   if (g_io_disallowed.Get().Get()) {
-    NOTREACHED() <<
-        "Function marked as IO-only was called from a thread that "
-        "disallows IO!  If this thread really should be allowed to "
-        "make IO calls, adjust the call to "
-        "base::ThreadRestrictions::SetIOAllowed() in this thread's "
-        "startup.";
+    NOTREACHED() << "Function marked as IO-only was called from a thread that "
+                    "disallows IO!  If this thread really should be allowed to "
+                    "make IO calls, adjust the call to "
+                    "base::ThreadRestrictions::SetIOAllowed() in this thread's "
+                    "startup.  If this task is running inside the "
+                    "TaskScheduler, the TaskRunner used to post it needs to "
+                    "have MayBlock() in its TaskTraits.";
   }
 }
 
@@ -74,7 +75,9 @@ void ThreadRestrictions::DisallowWaiting() {
 void ThreadRestrictions::AssertWaitAllowed() {
   if (g_wait_disallowed.Get().Get()) {
     NOTREACHED() << "Waiting is not allowed to be used on this thread to "
-                 << "prevent jank and deadlock.";
+                 << "prevent jank and deadlock.  If this task is running "
+                    "inside the TaskScheduler, the TaskRunner used to post it "
+                    "needs to have WithBaseSyncPrimitives() in its TaskTraits.";
   }
 }
 

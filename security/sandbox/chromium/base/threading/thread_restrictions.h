@@ -12,11 +12,12 @@
 class BrowserProcessImpl;
 class HistogramSynchronizer;
 class NativeBackendKWallet;
-class ScopedAllowWaitForLegacyWebViewApi;
 
-namespace blimp {
-class BlimpBrowserTest;
+namespace android_webview {
+class AwFormDatabaseService;
+class CookieManager;
 }
+
 namespace cc {
 class CompletionEvent;
 class SingleThreadTaskGraphRunner;
@@ -33,15 +34,19 @@ class Predictor;
 namespace content {
 class BrowserGpuChannelHostFactory;
 class BrowserGpuMemoryBufferManager;
+class BrowserMainLoop;
 class BrowserShutdownProfileDumper;
 class BrowserSurfaceViewManager;
 class BrowserTestBase;
+class CategorizedWorkerPool;
 class NestedMessagePumpAndroid;
 class ScopedAllowWaitForAndroidLayoutTests;
 class ScopedAllowWaitForDebugURL;
 class SoftwareOutputDeviceMus;
+class SynchronousCompositor;
+class SynchronousCompositorBrowserFilter;
+class SynchronousCompositorHost;
 class TextInputClientMac;
-class CategorizedWorkerPool;
 }  // namespace content
 namespace dbus {
 class Bus;
@@ -55,6 +60,9 @@ class GpuChannelHost;
 }
 namespace mojo {
 class SyncCallRestrictions;
+namespace edk {
+class ScopedIPCSupport;
+}
 }
 namespace ui {
 class CommandBufferClientImpl;
@@ -80,6 +88,10 @@ namespace views {
 class ScreenMus;
 }
 
+namespace viz {
+class ServerGpuMemoryBufferManager;
+}
+
 namespace base {
 
 namespace android {
@@ -92,6 +104,7 @@ class TaskTracker;
 
 class SequencedWorkerPool;
 class SimpleThread;
+class StackSamplingProfiler;
 class Thread;
 class ThreadTestHelper;
 
@@ -106,7 +119,8 @@ class ThreadTestHelper;
 // 1) If a thread should not be allowed to make IO calls, mark it:
 //      base::ThreadRestrictions::SetIOAllowed(false);
 //    By default, threads *are* allowed to make IO calls.
-//    In Chrome browser code, IO calls should be proxied to the File thread.
+//    In Chrome browser code, IO calls should be proxied to a TaskRunner with
+//    the base::MayBlock() trait.
 //
 // 2) If a function makes a call that will go out to disk, check whether the
 //    current thread is allowed:
@@ -133,20 +147,6 @@ class BASE_EXPORT ThreadRestrictions {
     bool previous_value_;
 
     DISALLOW_COPY_AND_ASSIGN(ScopedAllowIO);
-  };
-
-  // Constructing a ScopedAllowSingleton temporarily allows accessing for the
-  // current thread.  Doing this is almost always incorrect.
-  class BASE_EXPORT ScopedAllowSingleton {
-   public:
-    ScopedAllowSingleton() { previous_value_ = SetSingletonAllowed(true); }
-    ~ScopedAllowSingleton() { SetSingletonAllowed(previous_value_); }
-   private:
-    // Whether singleton use is allowed when the ScopedAllowSingleton was
-    // constructed.
-    bool previous_value_;
-
-    DISALLOW_COPY_AND_ASSIGN(ScopedAllowSingleton);
   };
 
 #if DCHECK_IS_ON()
@@ -188,16 +188,21 @@ class BASE_EXPORT ThreadRestrictions {
  private:
   // DO NOT ADD ANY OTHER FRIEND STATEMENTS, talk to jam or brettw first.
   // BEGIN ALLOWED USAGE.
-  friend class blimp::BlimpBrowserTest;
+  friend class android_webview::AwFormDatabaseService;
+  friend class android_webview::CookieManager;
+  friend class base::StackSamplingProfiler;
+  friend class content::BrowserMainLoop;
   friend class content::BrowserShutdownProfileDumper;
   friend class content::BrowserSurfaceViewManager;
   friend class content::BrowserTestBase;
   friend class content::NestedMessagePumpAndroid;
   friend class content::ScopedAllowWaitForAndroidLayoutTests;
   friend class content::ScopedAllowWaitForDebugURL;
+  friend class content::SynchronousCompositor;
+  friend class content::SynchronousCompositorBrowserFilter;
+  friend class content::SynchronousCompositorHost;
   friend class ::HistogramSynchronizer;
   friend class internal::TaskTracker;
-  friend class ::ScopedAllowWaitForLegacyWebViewApi;
   friend class cc::CompletionEvent;
   friend class cc::SingleThreadTaskGraphRunner;
   friend class content::CategorizedWorkerPool;
@@ -211,6 +216,7 @@ class BASE_EXPORT ThreadRestrictions {
   friend class PlatformThread;
   friend class android::JavaHandlerThread;
   friend class mojo::SyncCallRestrictions;
+  friend class mojo::edk::ScopedIPCSupport;
   friend class ui::CommandBufferClientImpl;
   friend class ui::CommandBufferLocal;
   friend class ui::GpuState;
@@ -237,6 +243,7 @@ class BASE_EXPORT ThreadRestrictions {
   friend class content::SoftwareOutputDeviceMus;  // Interim non-production code
 #endif
   friend class views::ScreenMus;
+  friend class viz::ServerGpuMemoryBufferManager;
 // END USAGE THAT NEEDS TO BE FIXED.
 
 #if DCHECK_IS_ON()

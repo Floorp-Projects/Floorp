@@ -3890,12 +3890,21 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
   switch (mImageRenderer.GetType()) {
     case eStyleImageType_Image:
     {
-      uint32_t flags = aDisplayListBuilder->ShouldSyncDecodeImages() ?
-                       imgIContainer::FLAG_SYNC_DECODE :
-                       imgIContainer::FLAG_NONE;
+      uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
+      if (aDisplayListBuilder->IsPaintingToWindow()) {
+        flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+      }
+      if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
+        flags |= imgIContainer::FLAG_SYNC_DECODE;
+      }
 
       RefPtr<imgIContainer> img = mImageRenderer.GetImage();
-      RefPtr<layers::ImageContainer> container = img->GetImageContainer(aManager, flags);
+      Maybe<SVGImageContext> svgContext;
+      gfx::IntSize decodeSize =
+        nsLayoutUtils::ComputeImageContainerDrawingParameters(img, aForFrame, destRect,
+                                                              aSc, flags, svgContext);
+      RefPtr<layers::ImageContainer> container =
+        img->GetImageContainerAtSize(aManager, decodeSize, svgContext, flags);
       if (!container) {
         return;
       }
