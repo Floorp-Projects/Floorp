@@ -7,7 +7,7 @@
 varying vec4 vColor;
 
 #ifdef WR_FEATURE_TRANSFORM
-varying vec3 vLocalPos;
+varying vec2 vLocalPos;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -16,12 +16,12 @@ void main(void) {
     Rectangle rect = fetch_rectangle(prim.specific_prim_address);
     vColor = rect.color;
 #ifdef WR_FEATURE_TRANSFORM
-    TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
-                                                    prim.local_clip_rect,
-                                                    rect.edge_aa_segment_mask,
-                                                    prim.z,
-                                                    prim.layer,
-                                                    prim.task);
+    VertexInfo vi = write_transform_vertex(prim.local_rect,
+                                           prim.local_clip_rect,
+                                           rect.edge_aa_segment_mask,
+                                           prim.z,
+                                           prim.layer,
+                                           prim.task);
     vLocalPos = vi.local_pos;
 #else
     VertexInfo vi = write_vertex(prim.local_rect,
@@ -42,8 +42,7 @@ void main(void) {
 void main(void) {
     float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
-    alpha = 0.0;
-    init_transform_fs(vLocalPos, alpha);
+    alpha = init_transform_fs(vLocalPos);
 #endif
 
 #ifdef WR_FEATURE_CLIP
