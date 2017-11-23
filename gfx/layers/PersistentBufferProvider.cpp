@@ -27,6 +27,7 @@ PersistentBufferProviderBasic::PersistentBufferProviderBasic(DrawTarget* aDt)
 PersistentBufferProviderBasic::~PersistentBufferProviderBasic()
 {
   MOZ_COUNT_DTOR(PersistentBufferProviderBasic);
+  Destroy();
 }
 
 already_AddRefed<gfx::DrawTarget>
@@ -64,6 +65,13 @@ PersistentBufferProviderBasic::ReturnSnapshot(already_AddRefed<gfx::SourceSurfac
   RefPtr<SourceSurface> snapshot = aSnapshot;
   MOZ_ASSERT(!snapshot || snapshot == mSnapshot);
   mSnapshot = nullptr;
+}
+
+void
+PersistentBufferProviderBasic::Destroy()
+{
+  mSnapshot = nullptr;
+  mDrawTarget = nullptr;
 }
 
 //static

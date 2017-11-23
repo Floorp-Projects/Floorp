@@ -105,6 +105,7 @@ CopyableCanvasRenderer::Destroy()
     mBufferProvider->ClearCachedResources();
   }
 
+  mBufferProvider = nullptr;
   mCachedTempSurface = nullptr;
 }
 
