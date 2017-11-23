@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
@@ -12,10 +10,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "nsIAboutNewTabService");
 
 Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
-
-var {
-  ExtensionError,
-} = ExtensionUtils;
 
 const HOMEPAGE_OVERRIDE_SETTING = "homepage_override";
 const HOMEPAGE_URL_PREF = "browser.startup.homepage";
@@ -88,16 +82,6 @@ ExtensionPreferencesManager.addSetting("imageAnimationBehavior", {
   },
 });
 
-ExtensionPreferencesManager.addSetting("contextMenuShowEvent", {
-  prefNames: [
-    "ui.context_menus.after_mouseup",
-  ],
-
-  setCallback(value) {
-    return {[this.prefNames[0]]: value === "mouseup"};
-  },
-});
-
 ExtensionPreferencesManager.addSetting("webNotificationsDisabled", {
   prefNames: [
     "permissions.default.desktop-notification",
@@ -140,35 +124,6 @@ this.browserSettings = class extends ExtensionAPI {
           () => {
             return aboutNewTabService.newTabURL;
           }, URL_STORE_TYPE, true),
-        contextMenuShowEvent: Object.assign(
-          getSettingsAPI(
-            extension,
-            "contextMenuShowEvent",
-            () => {
-              if (AppConstants.platform === "win") {
-                return "mouseup";
-              }
-              let prefValue = Services.prefs.getBoolPref(
-                "ui.context_menus.after_mouseup", null);
-              return prefValue ? "mouseup" : "mousedown";
-            }
-          ),
-          {
-            set: details => {
-              if (!["mouseup", "mousedown"].includes(details.value)) {
-                throw new ExtensionError(
-                  `${details.value} is not a valid value for contextMenuShowEvent.`);
-              }
-              if (AppConstants.platform === "android" ||
-                  (AppConstants.platform === "win" &&
-                   details.value === "mousedown")) {
-                return false;
-              }
-              return ExtensionPreferencesManager.setSetting(
-                extension.id, "contextMenuShowEvent", details.value);
-            },
-          }
-        ),
         webNotificationsDisabled: getSettingsAPI(extension,
           "webNotificationsDisabled",
           () => {
