@@ -39,7 +39,7 @@
 
 namespace mozilla {
 
-const int kVideoMtu = 1200;
+const unsigned int kVideoMtu = 1200;
 const int kQpMax = 56;
 
 class WebrtcAudioConduit;

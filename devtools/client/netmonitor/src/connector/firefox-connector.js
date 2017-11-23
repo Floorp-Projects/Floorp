@@ -83,6 +83,7 @@ class FirefoxConnector {
     this.webConsoleClient = null;
     this.timelineFront = null;
     this.dataProvider = null;
+    this.panel = null;
   }
 
   pause() {
@@ -129,11 +130,15 @@ class FirefoxConnector {
       return;
     }
     let listener = () => {
-      if (!this.dataProvider.isPayloadQueueEmpty()) {
+      if (this.dataProvider && !this.dataProvider.isPayloadQueueEmpty()) {
         return;
       }
       window.off(EVENTS.PAYLOAD_READY, listener);
-      this.onReloaded();
+      // Netmonitor may already be destroyed,
+      // so do not try to notify the listeners
+      if (this.dataProvider) {
+        this.onReloaded();
+      }
     };
     window.on(EVENTS.PAYLOAD_READY, listener);
   }

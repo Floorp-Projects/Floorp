@@ -63,10 +63,8 @@ function runTools(target) {
 function getClient() {
   let deferred = defer();
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);

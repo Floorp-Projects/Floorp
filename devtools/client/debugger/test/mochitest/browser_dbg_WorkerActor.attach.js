@@ -11,7 +11,7 @@ function test() {
     SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
 
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerAllActors();
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
     yield connect(client);

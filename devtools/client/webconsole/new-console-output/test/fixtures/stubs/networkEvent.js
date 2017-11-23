@@ -45,29 +45,7 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "cause": {
     "type": "img",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 3,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
+    "stacktraceAvailable": true
   }
 }));
 
@@ -145,29 +123,7 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "cause": {
     "type": "xhr",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 4,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
+    "stacktraceAvailable": true
   }
 }));
 
@@ -245,29 +201,7 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "cause": {
     "type": "xhr",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 4,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
+    "stacktraceAvailable": true
   }
 }));
 
@@ -329,29 +263,7 @@ stubPackets.set("GET request", {
   "cause": {
     "type": "img",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 3,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
+    "stacktraceAvailable": true
   },
   "response": {},
   "timings": {},
@@ -402,29 +314,7 @@ stubPackets.set("XHR GET request", {
   "cause": {
     "type": "xhr",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 4,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
+    "stacktraceAvailable": true
   },
   "response": {},
   "timings": {},
@@ -475,29 +365,7 @@ stubPackets.set("XHR POST request", {
   "cause": {
     "type": "xhr",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 4,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
+    "stacktraceAvailable": true
   },
   "response": {},
   "timings": {},

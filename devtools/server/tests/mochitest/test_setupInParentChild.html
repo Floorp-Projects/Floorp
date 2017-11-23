@@ -42,11 +42,9 @@ function runTests() {
   document.body.appendChild(iframe);
 
   // Instantiate a minimal server
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-  }
+  DebuggerServer.init();
   if (!DebuggerServer.createRootActor) {
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerAllActors();
   }
 
   // Fake a connection to an iframe

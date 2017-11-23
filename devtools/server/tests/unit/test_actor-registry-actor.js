@@ -18,7 +18,7 @@ function run_test() {
   gOldPref = Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
   Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", false);
   initTestDebuggerServer();
-  DebuggerServer.addBrowserActors();
+  DebuggerServer.registerAllActors();
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(getRegistry);
   do_test_pending();

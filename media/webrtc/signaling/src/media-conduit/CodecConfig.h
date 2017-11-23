@@ -143,6 +143,7 @@ public:
                    const struct VideoCodecConfigH264 *h264 = nullptr) :
     mType(type),
     mName(name),
+    mRembFbSet(false),
     mFECFbSet(false),
     mULPFECPayloadType(123),
     mREDPayloadType(122),

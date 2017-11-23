@@ -132,10 +132,8 @@ function* createClient(params) {
     transport = yield DebuggerClient.socketConnect({ host, port, webSocket });
   } else {
     // Setup a server if we don't have one already running
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
+    DebuggerServer.init();
+    DebuggerServer.registerAllActors();
     transport = DebuggerServer.connectPipe();
   }
   return new DebuggerClient(transport);

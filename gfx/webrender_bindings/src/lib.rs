@@ -5,7 +5,6 @@
 #![deny(warnings)]
 
 extern crate webrender;
-extern crate webrender_api;
 extern crate euclid;
 extern crate app_units;
 extern crate gleam;

@@ -2186,10 +2186,8 @@ ScratchpadWindow.prototype = Heritage.extend(ScratchpadTab.prototype, {
    */
   _attach: function SW__attach()
   {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
+    DebuggerServer.init();
+    DebuggerServer.registerAllActors();
     DebuggerServer.allowChromeProcess = true;
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
