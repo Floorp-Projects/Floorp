@@ -16,7 +16,7 @@ use glyph_rasterizer::{FontInstance, FontTransform};
 use internal_types::FastHashMap;
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
-use picture::{PictureKind, PicturePrimitive};
+use picture::{PictureKind, PicturePrimitive, RasterizationSpace};
 use profiler::FrameProfileCounters;
 use render_task::{ClipWorkItem, ClipChainNode};
 use render_task::{RenderTask, RenderTaskId, RenderTaskTree};
@@ -595,15 +595,19 @@ impl TextRunPrimitiveCpu {
         &self,
         device_pixel_ratio: f32,
         transform: &LayerToWorldTransform,
+        rasterization_kind: RasterizationSpace,
     ) -> FontInstance {
         let mut font = self.font.clone();
         font.size = font.size.scale_by(device_pixel_ratio);
-        if font.render_mode == FontRenderMode::Subpixel {
-            if transform.has_perspective_component() || !transform.has_2d_inverse() {
-                font.render_mode = FontRenderMode::Alpha;
-            } else {
-                font.transform = FontTransform::from(transform).quantize();
+        match (font.render_mode, rasterization_kind) {
+            (FontRenderMode::Subpixel, RasterizationSpace::Screen) => {
+                if transform.has_perspective_component() || !transform.has_2d_inverse() {
+                    font.render_mode = FontRenderMode::Alpha;
+                } else {
+                    font.transform = FontTransform::from(transform).quantize();
+                }
             }
+            _ => {}
         }
         font
     }
@@ -615,8 +619,9 @@ impl TextRunPrimitiveCpu {
         transform: &LayerToWorldTransform,
         display_list: &BuiltDisplayList,
         gpu_cache: &mut GpuCache,
+        rasterization_kind: RasterizationSpace,
     ) {
-        let font = self.get_font(device_pixel_ratio, transform);
+        let font = self.get_font(device_pixel_ratio, transform, rasterization_kind);
 
         // Cache the glyph positions, if not in the cache already.
         // TODO(gw): In the future, remove `glyph_instances`
@@ -1102,6 +1107,7 @@ impl PrimitiveStore {
         render_tasks: &mut RenderTaskTree,
         child_tasks: Vec<RenderTaskId>,
         parent_tasks: &mut Vec<RenderTaskId>,
+        pic_index: SpecificPrimitiveIndex,
     ) {
         let metadata = &mut self.cpu_metadata[prim_index.0];
         match metadata.prim_kind {
@@ -1118,6 +1124,7 @@ impl PrimitiveStore {
                     );
             }
             PrimitiveKind::TextRun => {
+                let pic = &self.cpu_pictures[pic_index.0];
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
                 text.prepare_for_render(
                     resource_cache,
@@ -1125,6 +1132,7 @@ impl PrimitiveStore {
                     &prim_context.scroll_node.world_content_transform,
                     prim_context.display_list,
                     gpu_cache,
+                    pic.rasterization_kind,
                 );
             }
             PrimitiveKind::Image => {
@@ -1315,6 +1323,7 @@ impl PrimitiveStore {
         parent_tasks: &mut Vec<RenderTaskId>,
         scene_properties: &SceneProperties,
         profile_counters: &mut FrameProfileCounters,
+        pic_index: SpecificPrimitiveIndex,
     ) -> Option<LayerRect> {
         // Reset the visibility of this primitive.
         // Do some basic checks first, that can early out
@@ -1373,6 +1382,7 @@ impl PrimitiveStore {
                 profile_counters,
                 rfid,
                 scene_properties,
+                cpu_prim_index,
             );
 
             let metadata = &mut self.cpu_metadata[prim_index.0];
@@ -1450,6 +1460,7 @@ impl PrimitiveStore {
             render_tasks,
             child_tasks,
             parent_tasks,
+            pic_index,
         );
 
         Some(local_rect)
@@ -1479,6 +1490,7 @@ impl PrimitiveStore {
         profile_counters: &mut FrameProfileCounters,
         original_reference_frame_id: Option<ClipId>,
         scene_properties: &SceneProperties,
+        pic_index: SpecificPrimitiveIndex,
     ) -> PrimitiveRunLocalRect {
         let mut result = PrimitiveRunLocalRect {
             local_rect_in_actual_parent_space: LayerRect::zero(),
@@ -1544,6 +1556,7 @@ impl PrimitiveStore {
                     parent_tasks,
                     scene_properties,
                     profile_counters,
+                    pic_index,
                 ) {
                     profile_counters.visible_primitives.inc();
 
