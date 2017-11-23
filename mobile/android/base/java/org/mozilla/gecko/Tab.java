@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
@@ -20,10 +19,10 @@ import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequestBuilder;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.pwa.PwaUtils;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
-import org.mozilla.gecko.toolbar.PageActionLayout;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -38,7 +37,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
 
 import static org.mozilla.gecko.toolbar.PageActionLayout.PageAction.UUID_PAGE_ACTION_PWA;
 
@@ -486,7 +484,7 @@ public class Tab {
         }
 
         if (mManifestUrl != null) {
-            showPwaPageAction();
+            showPwaBadge();
 
         } else {
             clearPwaPageAction();
@@ -868,14 +866,16 @@ public class Tab {
         return mShouldShowToolbarWithoutAnimationOnFirstSelection;
     }
 
+
     private void clearPwaPageAction() {
         GeckoBundle bundle = new GeckoBundle();
         bundle.putString("id", UUID_PAGE_ACTION_PWA);
         EventDispatcher.getInstance().dispatch("PageActions:Remove", bundle);
     }
 
-    private void showPwaPageAction() {
-        if (!isPrivate()) {
+
+    private void showPwaBadge() {
+        if (PwaUtils.shouldAddPwaShortcut(this)) {
             GeckoBundle bundle = new GeckoBundle();
             bundle.putString("id", UUID_PAGE_ACTION_PWA);
             bundle.putString("title", mAppContext.getString(R.string.pwa_add_to_launcher_badge));
