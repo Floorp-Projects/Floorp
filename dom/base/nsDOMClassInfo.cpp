@@ -229,7 +229,6 @@ static inline nsresult
 SetParentToWindow(nsGlobalWindowInner *win, JSObject **parent)
 {
   MOZ_ASSERT(win);
-  MOZ_ASSERT(win->IsInnerWindow());
   *parent = win->FastGetGlobalJSObject();
 
   if (MOZ_UNLIKELY(!*parent)) {
@@ -1029,11 +1028,12 @@ nsDOMConstructor::Create(const char16_t* aName,
   nsPIDOMWindowOuter* outerWindow = aOwner->GetOuterWindow();
   nsPIDOMWindowInner* currentInner =
     outerWindow ? outerWindow->GetCurrentInnerWindow() : aOwner;
-  if (!currentInner ||
-      (aOwner != currentInner &&
-       !nsContentUtils::CanCallerAccess(currentInner) &&
-       !(currentInner = aOwner)->IsInnerWindow())) {
+  if (!currentInner) {
     return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  if (aOwner != currentInner &&
+      !nsContentUtils::CanCallerAccess(currentInner)) {
+    currentInner = aOwner;
   }
 
   bool constructable = aNameStruct && IsConstructable(aNameStruct);

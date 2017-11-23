@@ -920,7 +920,6 @@ nsDocLoader::GetDOMWindowID(uint64_t *aResult)
   nsCOMPtr<nsPIDOMWindowOuter> piwindow = nsPIDOMWindowOuter::From(window);
   NS_ENSURE_STATE(piwindow);
 
-  MOZ_ASSERT(piwindow->IsOuterWindow());
   *aResult = piwindow->WindowID();
   return NS_OK;
 }
@@ -943,7 +942,6 @@ nsDocLoader::GetInnerDOMWindowID(uint64_t *aResult)
     return NS_OK;
   }
 
-  MOZ_ASSERT(inner->IsInnerWindow());
   *aResult = inner->WindowID();
   return NS_OK;
 }

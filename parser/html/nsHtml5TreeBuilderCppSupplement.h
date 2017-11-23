@@ -1253,6 +1253,19 @@ nsHtml5TreeBuilder::MaybeComplainAboutCharset(const char* aMsgId,
 }
 
 void
+nsHtml5TreeBuilder::TryToDisableEncodingMenu()
+{
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSERT_UNREACHABLE("Must never disable encoding menu with builder.");
+    return;
+  }
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(eTreeOpDisableEncodingMenu);
+}
+
+
+void
 nsHtml5TreeBuilder::AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine)
 {
   if (MOZ_UNLIKELY(mBuilder)) {

@@ -26,32 +26,34 @@ add_task(async function() {
 
   let checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
   let initialEncoding = checkedButtons[0];
-  is(initialEncoding.getAttribute("label"), "Unicode", "The unicode encoding is initially selected");
+  is(initialEncoding.getAttribute("label"), "Western", "The western encoding is initially selected");
 
   // change the encoding
   let encodings = characterEncodingView.querySelectorAll("toolbarbutton");
   let newEncoding = encodings[0].hasAttribute("checked") ? encodings[1] : encodings[0];
-  let tabLoadPromise = promiseTabLoadEvent(gBrowser.selectedTab, TEST_PAGE);
+  let browserStopPromise = BrowserTestUtils.browserStopped(gBrowser, TEST_PAGE);
   newEncoding.click();
-  await tabLoadPromise;
+  await browserStopPromise;
+  is(gBrowser.selectedBrowser.characterSet, "UTF-8", "The encoding should be changed to UTF-8");
+  ok(!gBrowser.selectedBrowser.mayEnableCharacterEncodingMenu, "The encoding menu should be disabled");
 
   // check that the new encodng is applied
   await document.getElementById("nav-bar").overflowable.show();
   charEncodingButton.click();
   checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
   let selectedEncodingName = checkedButtons[0].getAttribute("label");
-  ok(selectedEncodingName != "Unicode", "The encoding was changed to " + selectedEncodingName);
+  ok(selectedEncodingName == "Unicode", "The encoding was changed to " + selectedEncodingName);
 
-  // reset the initial encoding
+  CustomizableUI.removeWidgetFromArea("characterencoding-button");
+  CustomizableUI.addWidgetToArea("characterencoding-button",
+                                  CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  await waitForOverflowButtonShown();
   await document.getElementById("nav-bar").overflowable.show();
-  charEncodingButton.click();
-  tabLoadPromise = promiseTabLoadEvent(gBrowser.selectedTab, TEST_PAGE);
-  initialEncoding.click();
-  await tabLoadPromise;
-  await document.getElementById("nav-bar").overflowable.show();
-  charEncodingButton.click();
-  checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
-  is(checkedButtons[0].getAttribute("label"), "Unicode", "The encoding was reset to Unicode");
+  charEncodingButton = document.getElementById("characterencoding-button");
+
+  // check the encoding menu again
+  is(charEncodingButton.getAttribute("disabled"), "true", "We should disable the encoding menu");
+
   await BrowserTestUtils.removeTab(newTab);
 });
 

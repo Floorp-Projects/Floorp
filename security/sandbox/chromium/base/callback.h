@@ -19,104 +19,89 @@
 
 namespace base {
 
-namespace internal {
-
-// RunMixin provides different variants of `Run()` function to `Callback<>`
-// based on the type of callback.
-template <typename CallbackType>
-class RunMixin;
-
-// Specialization for OnceCallback.
 template <typename R, typename... Args>
-class RunMixin<Callback<R(Args...), CopyMode::MoveOnly, RepeatMode::Once>> {
- private:
-  using CallbackType =
-      Callback<R(Args...), CopyMode::MoveOnly, RepeatMode::Once>;
-
+class OnceCallback<R(Args...)> : public internal::CallbackBase {
  public:
-  using PolymorphicInvoke = R(*)(internal::BindStateBase*, Args&&...);
+  using RunType = R(Args...);
+  using PolymorphicInvoke = R (*)(internal::BindStateBase*, Args&&...);
+
+  OnceCallback() : internal::CallbackBase(nullptr) {}
+
+  explicit OnceCallback(internal::BindStateBase* bind_state)
+      : internal::CallbackBase(bind_state) {}
+
+  OnceCallback(const OnceCallback&) = delete;
+  OnceCallback& operator=(const OnceCallback&) = delete;
+
+  OnceCallback(OnceCallback&&) = default;
+  OnceCallback& operator=(OnceCallback&&) = default;
+
+  OnceCallback(RepeatingCallback<RunType> other)
+      : internal::CallbackBase(std::move(other)) {}
+
+  OnceCallback& operator=(RepeatingCallback<RunType> other) {
+    static_cast<internal::CallbackBase&>(*this) = std::move(other);
+    return *this;
+  }
+
+  bool Equals(const OnceCallback& other) const { return EqualsInternal(other); }
+
+  R Run(Args... args) const & {
+    static_assert(!sizeof(*this),
+                  "OnceCallback::Run() may only be invoked on a non-const "
+                  "rvalue, i.e. std::move(callback).Run().");
+    NOTREACHED();
+  }
 
   R Run(Args... args) && {
     // Move the callback instance into a local variable before the invocation,
     // that ensures the internal state is cleared after the invocation.
     // It's not safe to touch |this| after the invocation, since running the
     // bound function may destroy |this|.
-    CallbackType cb = static_cast<CallbackType&&>(*this);
+    OnceCallback cb = std::move(*this);
     PolymorphicInvoke f =
         reinterpret_cast<PolymorphicInvoke>(cb.polymorphic_invoke());
     return f(cb.bind_state_.get(), std::forward<Args>(args)...);
   }
 };
 
-// Specialization for RepeatingCallback.
-template <typename R, typename... Args, CopyMode copy_mode>
-class RunMixin<Callback<R(Args...), copy_mode, RepeatMode::Repeating>> {
- private:
-  using CallbackType = Callback<R(Args...), copy_mode, RepeatMode::Repeating>;
-
+template <typename R, typename... Args>
+class RepeatingCallback<R(Args...)> : public internal::CallbackBaseCopyable {
  public:
-  using PolymorphicInvoke = R(*)(internal::BindStateBase*, Args&&...);
-
-  R Run(Args... args) const {
-    const CallbackType& cb = static_cast<const CallbackType&>(*this);
-    PolymorphicInvoke f =
-        reinterpret_cast<PolymorphicInvoke>(cb.polymorphic_invoke());
-    return f(cb.bind_state_.get(), std::forward<Args>(args)...);
-  }
-};
-
-template <typename From, typename To>
-struct IsCallbackConvertible : std::false_type {};
-
-template <typename Signature>
-struct IsCallbackConvertible<
-  Callback<Signature, CopyMode::Copyable, RepeatMode::Repeating>,
-  Callback<Signature, CopyMode::MoveOnly, RepeatMode::Once>> : std::true_type {
-};
-
-}  // namespace internal
-
-template <typename R,
-          typename... Args,
-          internal::CopyMode copy_mode,
-          internal::RepeatMode repeat_mode>
-class Callback<R(Args...), copy_mode, repeat_mode>
-    : public internal::CallbackBase<copy_mode>,
-      public internal::RunMixin<Callback<R(Args...), copy_mode, repeat_mode>> {
- public:
-  static_assert(repeat_mode != internal::RepeatMode::Once ||
-                copy_mode == internal::CopyMode::MoveOnly,
-                "OnceCallback must be MoveOnly.");
-
   using RunType = R(Args...);
+  using PolymorphicInvoke = R (*)(internal::BindStateBase*, Args&&...);
 
-  Callback() : internal::CallbackBase<copy_mode>(nullptr) {}
+  RepeatingCallback() : internal::CallbackBaseCopyable(nullptr) {}
 
-  explicit Callback(internal::BindStateBase* bind_state)
-      : internal::CallbackBase<copy_mode>(bind_state) {
+  explicit RepeatingCallback(internal::BindStateBase* bind_state)
+      : internal::CallbackBaseCopyable(bind_state) {}
+
+  // Copyable and movabl.
+  RepeatingCallback(const RepeatingCallback&) = default;
+  RepeatingCallback& operator=(const RepeatingCallback&) = default;
+  RepeatingCallback(RepeatingCallback&&) = default;
+  RepeatingCallback& operator=(RepeatingCallback&&) = default;
+
+  bool Equals(const RepeatingCallback& other) const {
+    return EqualsInternal(other);
   }
 
-  template <typename OtherCallback,
-            typename = typename std::enable_if<
-                internal::IsCallbackConvertible<OtherCallback, Callback>::value
-            >::type>
-  Callback(OtherCallback other)
-      : internal::CallbackBase<copy_mode>(std::move(other)) {}
-
-  template <typename OtherCallback,
-            typename = typename std::enable_if<
-                internal::IsCallbackConvertible<OtherCallback, Callback>::value
-            >::type>
-  Callback& operator=(OtherCallback other) {
-    static_cast<internal::CallbackBase<copy_mode>&>(*this) = std::move(other);
-    return *this;
+  R Run(Args... args) const & {
+    PolymorphicInvoke f =
+        reinterpret_cast<PolymorphicInvoke>(this->polymorphic_invoke());
+    return f(this->bind_state_.get(), std::forward<Args>(args)...);
   }
 
-  bool Equals(const Callback& other) const {
-    return this->EqualsInternal(other);
+  R Run(Args... args) && {
+    // Move the callback instance into a local variable before the invocation,
+    // that ensures the internal state is cleared after the invocation.
+    // It's not safe to touch |this| after the invocation, since running the
+    // bound function may destroy |this|.
+    RepeatingCallback cb = std::move(*this);
+    PolymorphicInvoke f =
+        reinterpret_cast<PolymorphicInvoke>(cb.polymorphic_invoke());
+    return f(cb.bind_state_.get(), std::forward<Args>(args)...);
   }
-
-  friend class internal::RunMixin<Callback>;
 };
 
 }  // namespace base

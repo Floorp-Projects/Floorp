@@ -71,32 +71,17 @@ panelmultiview {
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
 }
 
-photonpanelmultiview {
-  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#photonpanelmultiview");
-}
-
 panelview {
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelview");
   -moz-box-orient: vertical;
 }
 
 panel[hidden] panelmultiview,
-panel[hidden] photonpanelmultiview,
 panel[hidden] panelview {
   -moz-binding: none;
 }
 
-.panel-mainview {
-  transition: transform var(--panelui-subview-transition-duration);
-}
-
-panelview:not([mainview]):not([current]):not([in-transition]) {
-  transition: visibility 0s linear var(--panelui-subview-transition-duration);
-  visibility: collapse;
-}
-
-photonpanelmultiview panelview:not([current]):not([in-transition]) {
-  transition: none;
+panelview:not([current]):not([in-transition]) {
   visibility: collapse;
 }
 
@@ -1068,12 +1053,6 @@ html|*#gcli-output-frame,
 /* Translation */
 notification[value="translation"] {
   -moz-binding: url("chrome://browser/content/translation-infobar.xml#translationbar");
-}
-
-/** See bug 872317 for why the following rule is necessary. */
-
-#downloads-button {
-  -moz-binding: url("chrome://browser/content/downloads/download.xml#download-toolbarbutton");
 }
 
 /*** Visibility of downloads indicator controls ***/

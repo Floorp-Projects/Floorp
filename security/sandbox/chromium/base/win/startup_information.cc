@@ -5,7 +5,6 @@
 #include "base/win/startup_information.h"
 
 #include "base/logging.h"
-#include "base/win/windows_version.h"
 
 namespace {
 
@@ -38,13 +37,6 @@ namespace win {
 
 StartupInformation::StartupInformation() {
   memset(&startup_info_, 0, sizeof(startup_info_));
-
-  // Pre Windows Vista doesn't support STARTUPINFOEX.
-  if (base::win::GetVersion() < base::win::VERSION_VISTA) {
-    startup_info_.StartupInfo.cb = sizeof(STARTUPINFO);
-    return;
-  }
-
   startup_info_.StartupInfo.cb = sizeof(startup_info_);
 
   // Load the attribute API functions.

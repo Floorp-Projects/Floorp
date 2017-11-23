@@ -191,7 +191,9 @@ class FormatProvider(MachCommandBase):
                       ". Supported platforms are Windows/*, Linux/x86_64 and Darwin/x86_64")
                 return 1
 
-        path = self.conv_to_abspath(path)
+        if path is not None:
+            path = self.conv_to_abspath(path)
+
         os.chdir(self.topsrcdir)
         self.prompt = True
 

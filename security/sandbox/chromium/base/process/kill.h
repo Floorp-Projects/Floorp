@@ -70,16 +70,15 @@ BASE_EXPORT bool KillProcessGroup(ProcessHandle process_group_id);
 
 // Get the termination status of the process by interpreting the
 // circumstances of the child process' death. |exit_code| is set to
-// the status returned by waitpid() on POSIX, and from
-// GetExitCodeProcess() on Windows.  |exit_code| may be NULL if the
-// caller is not interested in it.  Note that on Linux, this function
+// the status returned by waitpid() on POSIX, and from GetExitCodeProcess() on
+// Windows, and may not be null.  Note that on Linux, this function
 // will only return a useful result the first time it is called after
 // the child exits (because it will reap the child and the information
 // will no longer be available).
 BASE_EXPORT TerminationStatus GetTerminationStatus(ProcessHandle handle,
                                                    int* exit_code);
 
-#if defined(OS_POSIX)
+#if defined(OS_POSIX) && !defined(OS_FUCHSIA)
 // Send a kill signal to the process and then wait for the process to exit
 // and get the termination status.
 //
@@ -97,8 +96,11 @@ BASE_EXPORT TerminationStatus GetTerminationStatus(ProcessHandle handle,
 //
 BASE_EXPORT TerminationStatus GetKnownDeadTerminationStatus(
     ProcessHandle handle, int* exit_code);
-#endif  // defined(OS_POSIX)
+#endif  // defined(OS_POSIX) && !defined(OS_FUCHSIA)
 
+// These are only sparingly used, and not needed on Fuchsia. They could be
+// implemented if necessary.
+#if !defined(OS_FUCHSIA)
 // Wait for all the processes based on the named executable to exit.  If filter
 // is non-null, then only processes selected by the filter are waited on.
 // Returns after all processes have exited or wait_milliseconds have expired.
@@ -118,6 +120,7 @@ BASE_EXPORT bool CleanupProcesses(const FilePath::StringType& executable_name,
                                   base::TimeDelta wait,
                                   int exit_code,
                                   const ProcessFilter* filter);
+#endif  // !defined(OS_FUCHSIA)
 
 // This method ensures that the specified process eventually terminates, and
 // then it closes the given process handle.
@@ -128,14 +131,14 @@ BASE_EXPORT bool CleanupProcesses(const FilePath::StringType& executable_name,
 // aggressive about ensuring that the process terminates.
 //
 // On Linux this method does not block the calling thread.
-// On OS X this method may block for up to 2 seconds.
+// On OS X and Fuchsia, this method may block for up to 2 seconds.
 //
 // NOTE: The process must have been opened with the PROCESS_TERMINATE and
 // SYNCHRONIZE permissions.
 //
 BASE_EXPORT void EnsureProcessTerminated(Process process);
 
-#if defined(OS_POSIX) && !defined(OS_MACOSX)
+#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_FUCHSIA)
 // The nicer version of EnsureProcessTerminated() that is patient and will
 // wait for |pid| to finish and then reap it.
 BASE_EXPORT void EnsureProcessGetsReaped(ProcessId pid);

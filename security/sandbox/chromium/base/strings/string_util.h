@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <initializer_list>
 #include <string>
 #include <vector>
 
@@ -284,8 +285,6 @@ BASE_EXPORT bool ContainsOnlyChars(const StringPiece16& input,
 BASE_EXPORT bool IsStringUTF8(const StringPiece& str);
 BASE_EXPORT bool IsStringASCII(const StringPiece& str);
 BASE_EXPORT bool IsStringASCII(const StringPiece16& str);
-// A convenience adaptor for WebStrings, as they don't convert into
-// StringPieces directly.
 BASE_EXPORT bool IsStringASCII(const string16& str);
 #if defined(WCHAR_T_IS_UTF32)
 BASE_EXPORT bool IsStringASCII(const std::wstring& str);
@@ -431,10 +430,29 @@ BASE_EXPORT char16* WriteInto(string16* str, size_t length_with_null);
 BASE_EXPORT wchar_t* WriteInto(std::wstring* str, size_t length_with_null);
 #endif
 
-// Does the opposite of SplitString().
+// Does the opposite of SplitString()/SplitStringPiece(). Joins a vector or list
+// of strings into a single string, inserting |separator| (which may be empty)
+// in between all elements.
+//
+// If possible, callers should build a vector of StringPieces and use the
+// StringPiece variant, so that they do not create unnecessary copies of
+// strings. For example, instead of using SplitString, modifying the vector,
+// then using JoinString, use SplitStringPiece followed by JoinString so that no
+// copies of those strings are created until the final join operation.
 BASE_EXPORT std::string JoinString(const std::vector<std::string>& parts,
                                    StringPiece separator);
 BASE_EXPORT string16 JoinString(const std::vector<string16>& parts,
+                                StringPiece16 separator);
+BASE_EXPORT std::string JoinString(const std::vector<StringPiece>& parts,
+                                   StringPiece separator);
+BASE_EXPORT string16 JoinString(const std::vector<StringPiece16>& parts,
+                                StringPiece16 separator);
+// Explicit initializer_list overloads are required to break ambiguity when used
+// with a literal initializer list (otherwise the compiler would not be able to
+// decide between the string and StringPiece overloads).
+BASE_EXPORT std::string JoinString(std::initializer_list<StringPiece> parts,
+                                   StringPiece separator);
+BASE_EXPORT string16 JoinString(std::initializer_list<StringPiece16> parts,
                                 StringPiece16 separator);
 
 // Replace $1-$2-$3..$9 in the format string with values from |subst|.

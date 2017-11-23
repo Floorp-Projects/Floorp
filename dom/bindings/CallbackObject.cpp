@@ -186,7 +186,6 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
                             ? xpc::WindowGlobalOrNull(realCallback)
                             : nullptr;
     if (win) {
-      MOZ_ASSERT(win->IsInnerWindow());
       // We don't want to run script in windows that have been navigated away
       // from.
       if (!win->AsInner()->HasActiveDocument()) {

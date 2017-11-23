@@ -53,7 +53,7 @@ BASE_EXPORT void RandBytes(void* output, size_t output_length);
 // See crypto/ for cryptographically secure random number generation APIs.
 BASE_EXPORT std::string RandBytesAsString(size_t length);
 
-#if defined(OS_POSIX)
+#if defined(OS_POSIX) && !defined(OS_FUCHSIA)
 BASE_EXPORT int GetUrandomFD();
 #endif
 

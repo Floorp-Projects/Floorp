@@ -380,7 +380,6 @@ protected:
       return;
     }
 
-    MOZ_ASSERT(aWindow->IsInnerWindow());
     nsPIDOMWindowOuter* outerWindow = aWindow->GetOuterWindow();
     if (NS_WARN_IF(!outerWindow)) {
       return;
@@ -822,7 +821,6 @@ Console::Console(nsPIDOMWindowInner* aWindow)
   MOZ_ASSERT_IF(NS_IsMainThread(), aWindow);
 
   if (mWindow) {
-    MOZ_ASSERT(mWindow->IsInnerWindow());
     mInnerID = mWindow->WindowID();
 
     // Without outerwindow any console message coming from this object will not

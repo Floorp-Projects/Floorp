@@ -5,53 +5,26 @@
 #ifndef BASE_ATOMIC_SEQUENCE_NUM_H_
 #define BASE_ATOMIC_SEQUENCE_NUM_H_
 
-#include "base/atomicops.h"
+#include <atomic>
+
 #include "base/macros.h"
 
 namespace base {
 
-class AtomicSequenceNumber;
-
-// Static (POD) AtomicSequenceNumber that MUST be used in global scope (or
-// non-function scope) ONLY. This implementation does not generate any static
-// initializer.  Note that it does not implement any constructor which means
-// that its fields are not initialized except when it is stored in the global
-// data section (.data in ELF). If you want to allocate an atomic sequence
-// number on the stack (or heap), please use the AtomicSequenceNumber class
-// declared below.
-class StaticAtomicSequenceNumber {
- public:
-  inline int GetNext() {
-    return static_cast<int>(
-        base::subtle::NoBarrier_AtomicIncrement(&seq_, 1) - 1);
-  }
-
- private:
-  friend class AtomicSequenceNumber;
-
-  inline void Reset() {
-    base::subtle::Release_Store(&seq_, 0);
-  }
-
-  base::subtle::Atomic32 seq_;
-};
-
-// AtomicSequenceNumber that can be stored and used safely (i.e. its fields are
-// always initialized as opposed to StaticAtomicSequenceNumber declared above).
-// Please use StaticAtomicSequenceNumber if you want to declare an atomic
-// sequence number in the global scope.
+// AtomicSequenceNumber is a thread safe increasing sequence number generator.
+// Its constructor doesn't emit a static initializer, so it's safe to use as a
+// global variable or static member.
 class AtomicSequenceNumber {
  public:
-  AtomicSequenceNumber() {
-    seq_.Reset();
-  }
+  constexpr AtomicSequenceNumber() {}
 
-  inline int GetNext() {
-    return seq_.GetNext();
-  }
+  // Returns an increasing sequence number starts from 0 for each call.
+  // This function can be called from any thread without data race.
+  inline int GetNext() { return seq_.fetch_add(1, std::memory_order_relaxed); }
 
  private:
-  StaticAtomicSequenceNumber seq_;
+  std::atomic_int seq_{0};
+
   DISALLOW_COPY_AND_ASSIGN(AtomicSequenceNumber);
 };
 

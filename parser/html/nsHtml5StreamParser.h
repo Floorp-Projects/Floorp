@@ -554,6 +554,8 @@ public:
      */
     bool                          mInitialEncodingWasFromParentFrame;
 
+    bool                          mHasHadErrors;
+
     /**
      * Timer for flushing tree ops once in a while when not speculating.
      */
@@ -594,6 +596,7 @@ public:
      * timer has already fired previously in this parse.
      */
     static int32_t                sTimerSubsequentDelay;
+
 };
 
 #endif // nsHtml5StreamParser_h

@@ -34,14 +34,6 @@ namespace sandbox {
 
 namespace {
 
-// Different platforms use different symbols for the six-argument version
-// of the mmap() system call. Test for the correct symbol at compile time.
-#ifdef __NR_mmap2
-const int kMMapNr = __NR_mmap2;
-#else
-const int kMMapNr = __NR_mmap;
-#endif
-
 TEST(Syscall, InvalidCallReturnsENOSYS) {
   EXPECT_EQ(-ENOSYS, Syscall::InvalidCall());
 }

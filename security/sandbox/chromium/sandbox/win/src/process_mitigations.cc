@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+#include "base/files/file_path.h"
+#include "base/scoped_native_library.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/restricted_token_utils.h"
@@ -24,8 +26,11 @@ typedef BOOL (WINAPI *SetProcessMitigationPolicyFunction)(
     PVOID buffer,
     SIZE_T length);
 
-typedef BOOL (WINAPI *SetDefaultDllDirectoriesFunction)(
-    DWORD DirectoryFlags);
+// API defined in libloaderapi.h >= Win8.
+using SetDefaultDllDirectoriesFunction = decltype(&SetDefaultDllDirectories);
+
+// API defined in processthreadsapi.h >= Win8.
+using SetThreadInformationFunction = decltype(&SetThreadInformation);
 
 }  // namespace
 
@@ -149,6 +154,28 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
     }
   }
 
+  if (version < base::win::VERSION_WIN8_1)
+    return true;
+
+  // Enable dynamic code policies.
+  if (flags & MITIGATION_DYNAMIC_CODE_DISABLE ||
+      flags & MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT) {
+    PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
+    policy.ProhibitDynamicCode = true;
+
+    // Per-thread opt-out is only supported on >= Anniversary.
+    if (version >= base::win::VERSION_WIN10_RS1 &&
+        flags & MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT) {
+      policy.AllowThreadOptOut = true;
+    }
+
+    if (!set_process_mitigation_policy(ProcessDynamicCodePolicy, &policy,
+                                       sizeof(policy)) &&
+        ERROR_ACCESS_DENIED != ::GetLastError()) {
+      return false;
+    }
+  }
+
   if (version < base::win::VERSION_WIN10)
     return true;
 
@@ -167,14 +194,36 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
   if (version < base::win::VERSION_WIN10_TH2)
     return true;
 
+  // Enable binary signing policies.
+  if (flags & MITIGATION_FORCE_MS_SIGNED_BINS) {
+    PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY policy = {};
+    // Allow only MS signed binaries.
+    policy.MicrosoftSignedOnly = true;
+    // NOTE: there are two other flags available to allow
+    // 1) Only Windows Store signed.
+    // 2) MS-signed, Win Store signed, and WHQL signed binaries.
+    // Support not added at the moment.
+    if (!set_process_mitigation_policy(ProcessSignaturePolicy, &policy,
+                                       sizeof(policy)) &&
+        ERROR_ACCESS_DENIED != ::GetLastError()) {
+      return false;
+    }
+  }
+
   // Enable image load policies.
   if (flags & MITIGATION_IMAGE_LOAD_NO_REMOTE ||
-      flags & MITIGATION_IMAGE_LOAD_NO_LOW_LABEL) {
+      flags & MITIGATION_IMAGE_LOAD_NO_LOW_LABEL ||
+      flags & MITIGATION_IMAGE_LOAD_PREFER_SYS32) {
     PROCESS_MITIGATION_IMAGE_LOAD_POLICY policy = {};
     if (flags & MITIGATION_IMAGE_LOAD_NO_REMOTE)
       policy.NoRemoteImages = true;
     if (flags & MITIGATION_IMAGE_LOAD_NO_LOW_LABEL)
       policy.NoLowMandatoryLabelImages = true;
+    // PreferSystem32 is only supported on >= Anniversary.
+    if (version >= base::win::VERSION_WIN10_RS1 &&
+        flags & MITIGATION_IMAGE_LOAD_PREFER_SYS32) {
+      policy.PreferSystem32Images = true;
+    }
 
     if (!set_process_mitigation_policy(ProcessImageLoadPolicy, &policy,
                                        sizeof(policy)) &&
@@ -185,6 +234,44 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
 
   return true;
 }
+
+// This function isn't used yet and adds dependencies for FilePath and
+// ScopedNativeLibrary.
+#if !defined(MOZ_SANDBOX)
+bool ApplyMitigationsToCurrentThread(MitigationFlags flags) {
+  if (!CanSetMitigationsPerThread(flags))
+    return false;
+
+  base::win::Version version = base::win::GetVersion();
+
+  if (version < base::win::VERSION_WIN10_RS1)
+    return true;
+
+  // Enable dynamic code per-thread policies.
+  if (flags & MITIGATION_DYNAMIC_CODE_OPT_OUT_THIS_THREAD) {
+    DWORD thread_policy = THREAD_DYNAMIC_CODE_ALLOW;
+
+    // NOTE: SetThreadInformation API only exists on >= Win8.  Dynamically
+    //       get function handle.
+    base::ScopedNativeLibrary dll(base::FilePath(L"kernel32.dll"));
+    if (!dll.is_valid())
+      return false;
+    SetThreadInformationFunction set_thread_info_function =
+        reinterpret_cast<SetThreadInformationFunction>(
+            dll.GetFunctionPointer("SetThreadInformation"));
+    if (set_thread_info_function == nullptr)
+      return false;
+
+    // NOTE: Must use the pseudo-handle here, a thread HANDLE won't work.
+    if (!set_thread_info_function(::GetCurrentThread(), ThreadDynamicCodePolicy,
+                                  &thread_policy, sizeof(thread_policy))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+#endif
 
 void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
                                        DWORD64* policy_flags,
@@ -259,6 +346,14 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
         PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON;
   }
 
+  if (version < base::win::VERSION_WIN8_1)
+    return;
+
+  if (flags & MITIGATION_DYNAMIC_CODE_DISABLE) {
+    *policy_flags |=
+        PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON;
+  }
+
   if (version < base::win::VERSION_WIN10)
     return;
 
@@ -266,8 +361,14 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
     *policy_flags |= PROCESS_CREATION_MITIGATION_POLICY_FONT_DISABLE_ALWAYS_ON;
   }
 
+  // Threshold 2
   if (version < base::win::VERSION_WIN10_TH2)
     return;
+
+  if (flags & MITIGATION_FORCE_MS_SIGNED_BINS) {
+    *policy_flags |=
+        PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON;
+  }
 
   if (flags & MITIGATION_IMAGE_LOAD_NO_REMOTE) {
     *policy_flags |=
@@ -277,6 +378,20 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
   if (flags & MITIGATION_IMAGE_LOAD_NO_LOW_LABEL) {
     *policy_flags |=
         PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_NO_LOW_LABEL_ALWAYS_ON;
+  }
+
+  // Anniversary
+  if (version < base::win::VERSION_WIN10_RS1)
+    return;
+
+  if (flags & MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT) {
+    *policy_flags |=
+        PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON_ALLOW_OPT_OUT;
+  }
+
+  if (flags & MITIGATION_IMAGE_LOAD_PREFER_SYS32) {
+    *policy_flags |=
+        PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON;
   }
 }
 
@@ -326,26 +441,30 @@ bool CanSetProcessMitigationsPostStartup(MitigationFlags flags) {
   // All of these mitigations can be enabled after startup.
   return !(
       flags &
-      ~(MITIGATION_HEAP_TERMINATE |
-        MITIGATION_DEP |
-        MITIGATION_DEP_NO_ATL_THUNK |
-        MITIGATION_RELOCATE_IMAGE |
-        MITIGATION_RELOCATE_IMAGE_REQUIRED |
-        MITIGATION_BOTTOM_UP_ASLR |
-        MITIGATION_STRICT_HANDLE_CHECKS |
-        MITIGATION_EXTENSION_POINT_DISABLE |
-        MITIGATION_DLL_SEARCH_ORDER |
-        MITIGATION_HARDEN_TOKEN_IL_POLICY |
-        MITIGATION_WIN32K_DISABLE |
-        MITIGATION_NONSYSTEM_FONT_DISABLE |
-        MITIGATION_IMAGE_LOAD_NO_REMOTE |
-        MITIGATION_IMAGE_LOAD_NO_LOW_LABEL));
+      ~(MITIGATION_HEAP_TERMINATE | MITIGATION_DEP |
+        MITIGATION_DEP_NO_ATL_THUNK | MITIGATION_RELOCATE_IMAGE |
+        MITIGATION_RELOCATE_IMAGE_REQUIRED | MITIGATION_BOTTOM_UP_ASLR |
+        MITIGATION_STRICT_HANDLE_CHECKS | MITIGATION_EXTENSION_POINT_DISABLE |
+        MITIGATION_DLL_SEARCH_ORDER | MITIGATION_HARDEN_TOKEN_IL_POLICY |
+        MITIGATION_WIN32K_DISABLE | MITIGATION_DYNAMIC_CODE_DISABLE |
+        MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT |
+        MITIGATION_FORCE_MS_SIGNED_BINS | MITIGATION_NONSYSTEM_FONT_DISABLE |
+        MITIGATION_IMAGE_LOAD_NO_REMOTE | MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
+        MITIGATION_IMAGE_LOAD_PREFER_SYS32));
 }
 
 bool CanSetProcessMitigationsPreStartup(MitigationFlags flags) {
   // These mitigations cannot be enabled prior to startup.
   return !(flags & (MITIGATION_STRICT_HANDLE_CHECKS |
                     MITIGATION_DLL_SEARCH_ORDER));
+}
+
+bool CanSetMitigationsPerThread(MitigationFlags flags) {
+  // If any flags EXCEPT these are set, fail.
+  if (flags & ~(MITIGATION_DYNAMIC_CODE_OPT_OUT_THIS_THREAD))
+    return false;
+
+  return true;
 }
 
 }  // namespace sandbox

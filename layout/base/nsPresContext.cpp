@@ -2471,7 +2471,7 @@ nsPresContext::FireDOMPaintEvent(nsTArray<nsRect>* aList, uint64_t aTransactionI
     aTimeStamp = mozilla::TimeStamp::Now();
   }
   DOMHighResTimeStamp timeStamp = 0;
-  if (ourWindow && ourWindow->IsInnerWindow()) {
+  if (ourWindow) {
     mozilla::dom::Performance* perf = ourWindow->GetPerformance();
     if (perf) {
       timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aTimeStamp);

@@ -181,6 +181,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mLoadFlusher(new nsHtml5LoadFlusher(aExecutor))
   , mFeedChardet(false)
   , mInitialEncodingWasFromParentFrame(false)
+  , mHasHadErrors(false)
   , mFlushTimer(NS_NewTimer())
   , mFlushTimerMutex("nsHtml5StreamParser mFlushTimerMutex")
   , mFlushTimerArmed(false)
@@ -846,7 +847,7 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     bool hadErrors;
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, false);
-    Unused << hadErrors;
+    mHasHadErrors |= hadErrors;
     src = src.From(read);
     totalRead += read;
     mLastBuffer->AdvanceEnd(written);
@@ -1094,7 +1095,7 @@ nsHtml5StreamParser::DoStopRequest()
     bool hadErrors;
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, true);
-    Unused << hadErrors;
+    mHasHadErrors |= hadErrors;
     MOZ_ASSERT(read == 0, "How come an empty span was read form?");
     mLastBuffer->AdvanceEnd(written);
     if (result == kOutputFull) {
@@ -1454,6 +1455,9 @@ nsHtml5StreamParser::ParseAvailableData()
               return;
             }
             mAtEOF = true;
+            if (mEncoding == UTF_8_ENCODING && !mHasHadErrors) {
+              mTreeBuilder->TryToDisableEncodingMenu();
+            }
             if (mCharsetSource < kCharsetFromMetaTag) {
               if (mInitialEncodingWasFromParentFrame) {
                 // Unfortunately, this check doesn't take effect for

@@ -24,7 +24,6 @@
 #include "base/base_export.h"
 #include "base/logging.h"
 #include "base/macros.h"
-#include "base/memory/aligned_memory.h"
 #include "base/threading/thread_restrictions.h"
 
 namespace base {
@@ -115,7 +114,7 @@ struct StaticMemorySingletonTraits {
     if (subtle::NoBarrier_AtomicExchange(&dead_, 1))
       return NULL;
 
-    return new(buffer_.void_data()) Type();
+    return new (buffer_) Type();
   }
 
   static void Delete(Type* p) {
@@ -130,14 +129,13 @@ struct StaticMemorySingletonTraits {
   static void Resurrect() { subtle::NoBarrier_Store(&dead_, 0); }
 
  private:
-  static AlignedMemory<sizeof(Type), ALIGNOF(Type)> buffer_;
+  alignas(Type) static char buffer_[sizeof(Type)];
   // Signal the object was already deleted, so it is not revived.
   static subtle::Atomic32 dead_;
 };
 
 template <typename Type>
-AlignedMemory<sizeof(Type), ALIGNOF(Type)>
-    StaticMemorySingletonTraits<Type>::buffer_;
+alignas(Type) char StaticMemorySingletonTraits<Type>::buffer_[sizeof(Type)];
 template <typename Type>
 subtle::Atomic32 StaticMemorySingletonTraits<Type>::dead_ = 0;
 
@@ -153,14 +151,17 @@ subtle::Atomic32 StaticMemorySingletonTraits<Type>::dead_ = 0;
 // Example usage:
 //
 // In your header:
-//   template <typename T> struct DefaultSingletonTraits;
+//   namespace base {
+//   template <typename T>
+//   struct DefaultSingletonTraits;
+//   }
 //   class FooClass {
 //    public:
 //     static FooClass* GetInstance();  <-- See comment below on this.
 //     void Bar() { ... }
 //    private:
 //     FooClass() { ... }
-//     friend struct DefaultSingletonTraits<FooClass>;
+//     friend struct base::DefaultSingletonTraits<FooClass>;
 //
 //     DISALLOW_COPY_AND_ASSIGN(FooClass);
 //   };
@@ -168,7 +169,14 @@ subtle::Atomic32 StaticMemorySingletonTraits<Type>::dead_ = 0;
 // In your source file:
 //  #include "base/memory/singleton.h"
 //  FooClass* FooClass::GetInstance() {
-//    return Singleton<FooClass>::get();
+//    return base::Singleton<FooClass>::get();
+//  }
+//
+// Or for leaky singletons:
+//  #include "base/memory/singleton.h"
+//  FooClass* FooClass::GetInstance() {
+//    return base::Singleton<
+//        FooClass, base::LeakySingletonTraits<FooClass>>::get();
 //  }
 //
 // And to call methods on FooClass:
