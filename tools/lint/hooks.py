@@ -35,6 +35,8 @@ def hg(ui, repo, **kwargs):
 
 def git():
     hooktype = os.path.basename(__file__)
+    if hooktype == 'hooks.py':
+        hooktype = 'pre-push'
     return run_mozlint(hooktype, [])
 
 

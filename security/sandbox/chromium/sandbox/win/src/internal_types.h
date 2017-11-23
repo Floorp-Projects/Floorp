@@ -13,7 +13,7 @@ const wchar_t kNtdllName[] = L"ntdll.dll";
 const wchar_t kKerneldllName[] = L"kernel32.dll";
 const wchar_t kKernelBasedllName[] = L"kernelbase.dll";
 
-// Defines the supported C++ types encoding to numeric id. Like a poor's man
+// Defines the supported C++ types encoding to numeric id. Like a simplified
 // RTTI. Note that true C++ RTTI will not work because the types are not
 // polymorphic anyway.
 enum ArgType {

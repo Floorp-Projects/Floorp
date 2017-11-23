@@ -98,6 +98,18 @@ jobs:
               mozilla-central: [{hour: 10, minute: 0}]
               # No default
 
+    - name: searchfox-index
+      job:
+          type: decision-task
+          treeherder-symbol: Searchfox
+          target-tasks-method: searchfox_index
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 10, minute: 30}]
+              # No default
+
     - name: periodic-update
       job:
           type: decision-task

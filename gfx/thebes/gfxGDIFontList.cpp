@@ -117,12 +117,10 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
                            gfxWindowsFontType aFontType,
                            uint8_t aStyle, uint16_t aWeight,
                            int16_t aStretch,
-                           gfxUserFontData *aUserFontData,
-                           bool aFamilyHasItalicFace)
+                           gfxUserFontData *aUserFontData)
     : gfxFontEntry(aFaceName),
       mFontType(aFontType),
       mForceGDI(false),
-      mFamilyHasItalicFace(aFamilyHasItalicFace),
       mUnicodeRanges()
 {
     mUserFontData.reset(aUserFontData);
@@ -141,7 +139,7 @@ GDIFontEntry::Clone() const
 {
     MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
     return new GDIFontEntry(Name(), mFontType, mStyle, mWeight, mStretch,
-                            nullptr, mFamilyHasItalicFace);
+                            nullptr);
 }
 
 nsresult
@@ -396,14 +394,12 @@ GDIFontEntry::CreateFontEntry(const nsAString& aName,
                               gfxWindowsFontType aFontType,
                               uint8_t aStyle,
                               uint16_t aWeight, int16_t aStretch,
-                              gfxUserFontData* aUserFontData,
-                              bool aFamilyHasItalicFace)
+                              gfxUserFontData* aUserFontData)
 {
     // jtdfix - need to set charset, unicode ranges, pitch/family
 
     GDIFontEntry *fe = new GDIFontEntry(aName, aFontType, aStyle,
-                                        aWeight, aStretch, aUserFontData,
-                                        aFamilyHasItalicFace);
+                                        aWeight, aStretch, aUserFontData);
 
     return fe;
 }
@@ -486,7 +482,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     fe = GDIFontEntry::CreateFontEntry(nsDependentString(lpelfe->elfFullName),
                                        feType, italicStyle,
                                        (uint16_t) (logFont.lfWeight), 0,
-                                       nullptr, false);
+                                       nullptr);
     if (!fe)
         return 1;
 
@@ -547,29 +543,6 @@ GDIFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
     if (mIsBadUnderlineFamily) {
         SetBadUnderlineFonts();
-    }
-
-    // check for existence of italic face(s); if present, set the
-    // FamilyHasItalic flag on all faces so that we'll know *not*
-    // to use GDI's fake-italic effect with them
-
-    // If we ignored italic face(s), we should mark this has italic face.
-    bool hasItalicFace = ShouldIgnoreItalicStyle(mName);
-
-    if (!hasItalicFace) {
-        for (RefPtr<gfxFontEntry>& fontEntry : mAvailableFonts) {
-            if (fontEntry->IsItalic()) {
-                hasItalicFace = true;
-                break;
-            }
-        }
-    }
-
-    if (hasItalicFace) {
-        for (RefPtr<gfxFontEntry>& fontEntry : mAvailableFonts) {
-            static_cast<GDIFontEntry*>(fontEntry.get())->
-                mFamilyHasItalicFace = true;
-        }
     }
 }
 
@@ -753,8 +726,7 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
     // 'Arial Vet' which can be used as a key in GDI font lookups).
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(), 
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
-        lookup->mStyle, lookup->mWeight, aStretch, nullptr,
-        static_cast<GDIFontEntry*>(lookup)->mFamilyHasItalicFace);
+        lookup->mStyle, lookup->mWeight, aStretch, nullptr);
 
     if (!fe)
         return nullptr;
@@ -896,7 +868,7 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
 
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(uniqueName,
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/,
-        aStyle, w, aStretch, winUserFontData, false);
+        aStyle, w, aStretch, winUserFontData);
 
     if (fe) {
       fe->mIsDataUserFont = true;

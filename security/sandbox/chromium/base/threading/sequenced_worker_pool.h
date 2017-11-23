@@ -12,7 +12,7 @@
 #include <string>
 
 #include "base/base_export.h"
-#include "base/callback_forward.h"
+#include "base/callback.h"
 #include "base/compiler_specific.h"
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
@@ -58,6 +58,10 @@ template <class T> class DeleteHelper;
 // You can also post tasks to the pool without ordering using PostWorkerTask.
 // These will be executed in an unspecified order. The order of execution
 // between tasks with different sequence tokens is also unspecified.
+//
+// You must call EnableForProcess() or
+// EnableWithRedirectionToTaskSchedulerForProcess() before starting to post
+// tasks to a process' SequencedWorkerPools.
 //
 // This class may be leaked on shutdown to facilitate fast shutdown. The
 // expected usage, however, is to call Shutdown(), which correctly accounts
@@ -178,25 +182,26 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   // PostSequencedWorkerTask(). Valid tokens are always nonzero.
   static SequenceToken GetSequenceToken();
 
-  // Starts redirecting tasks posted to this process' SequencedWorkerPools to
-  // the registered TaskScheduler. This cannot be called after a task has been
-  // posted to a SequencedWorkerPool. This is not thread-safe; proper
-  // synchronization is required to use any SequencedWorkerPool method after
-  // calling this. There must be a registered TaskScheduler when this is called.
-  // Ideally, call this on the main thread of a process, before any other
-  // threads are created and before any tasks are posted to that process'
-  // SequencedWorkerPools.
-  // TODO(gab): Remove this if http://crbug.com/622400 fails
-  // (SequencedWorkerPool will be phased out completely otherwise).
-  static void RedirectToTaskSchedulerForProcess();
+  // Enables posting tasks to this process' SequencedWorkerPools. Cannot be
+  // called if already enabled. This is not thread-safe; proper synchronization
+  // is required to use any SequencedWorkerPool method after calling this.
+  static void EnableForProcess();
 
-  // Stops redirecting tasks posted to this process' SequencedWorkerPools to the
-  // registered TaskScheduler and allows RedirectToTaskSchedulerForProcess() to
-  // be called even if tasks have already posted to a SequencedWorkerPool in
-  // this process. Calling this while there are active SequencedWorkerPools is
-  // not supported. This is not thread-safe; proper synchronization is required
-  // to use any SequencedWorkerPool method after calling this.
-  static void ResetRedirectToTaskSchedulerForProcessForTesting();
+  // Same as EnableForProcess(), but tasks are redirected to the registered
+  // TaskScheduler. There must be a registered TaskScheduler when this is
+  // called. TODO(gab): Phase out SequencedWorkerPool entirely:
+  // http://crbug.com/533920.
+  static void EnableWithRedirectionToTaskSchedulerForProcess();
+
+  // Disables posting tasks to this process' SequencedWorkerPools. Calling this
+  // while there are active SequencedWorkerPools is not supported. This is not
+  // thread-safe; proper synchronization is required to use any
+  // SequencedWorkerPool method after calling this.
+  static void DisableForProcessForTesting();
+
+  // Returns true if posting tasks to this process' SequencedWorkerPool is
+  // enabled (with or without redirection to TaskScheduler).
+  static bool IsEnabled();
 
   // When constructing a SequencedWorkerPool, there must be a
   // ThreadTaskRunnerHandle on the current thread unless you plan to
@@ -268,25 +273,12 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   // Returns true if the task was posted successfully. This may fail during
   // shutdown regardless of the specified ShutdownBehavior.
   bool PostWorkerTask(const tracked_objects::Location& from_here,
-                      const Closure& task);
-
-  // Same as PostWorkerTask but allows a delay to be specified (although doing
-  // so changes the shutdown behavior). The task will be run after the given
-  // delay has elapsed.
-  //
-  // If the delay is nonzero, the task won't be guaranteed to run to completion
-  // before shutdown (SKIP_ON_SHUTDOWN semantics) to avoid shutdown hangs.
-  // If the delay is zero, this behaves exactly like PostWorkerTask, i.e. the
-  // task will be guaranteed to run to completion before shutdown
-  // (BLOCK_SHUTDOWN semantics).
-  bool PostDelayedWorkerTask(const tracked_objects::Location& from_here,
-                             const Closure& task,
-                             TimeDelta delay);
+                      OnceClosure task);
 
   // Same as PostWorkerTask but allows specification of the shutdown behavior.
   bool PostWorkerTaskWithShutdownBehavior(
       const tracked_objects::Location& from_here,
-      const Closure& task,
+      OnceClosure task,
       WorkerShutdown shutdown_behavior);
 
   // Like PostWorkerTask above, but provides sequencing semantics. This means
@@ -302,13 +294,13 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   // shutdown regardless of the specified ShutdownBehavior.
   bool PostSequencedWorkerTask(SequenceToken sequence_token,
                                const tracked_objects::Location& from_here,
-                               const Closure& task);
+                               OnceClosure task);
 
   // Like PostSequencedWorkerTask above, but allows you to specify a named
   // token, which saves an extra call to GetNamedSequenceToken.
   bool PostNamedSequencedWorkerTask(const std::string& token_name,
                                     const tracked_objects::Location& from_here,
-                                    const Closure& task);
+                                    OnceClosure task);
 
   // Same as PostSequencedWorkerTask but allows a delay to be specified
   // (although doing so changes the shutdown behavior). The task will be run
@@ -322,7 +314,7 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   bool PostDelayedSequencedWorkerTask(
       SequenceToken sequence_token,
       const tracked_objects::Location& from_here,
-      const Closure& task,
+      OnceClosure task,
       TimeDelta delay);
 
   // Same as PostSequencedWorkerTask but allows specification of the shutdown
@@ -330,14 +322,14 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   bool PostSequencedWorkerTaskWithShutdownBehavior(
       SequenceToken sequence_token,
       const tracked_objects::Location& from_here,
-      const Closure& task,
+      OnceClosure task,
       WorkerShutdown shutdown_behavior);
 
   // TaskRunner implementation. Forwards to PostDelayedWorkerTask().
   bool PostDelayedTask(const tracked_objects::Location& from_here,
-                       const Closure& task,
+                       OnceClosure task,
                        TimeDelta delay) override;
-  bool RunsTasksOnCurrentThread() const override;
+  bool RunsTasksInCurrentSequence() const override;
 
   // Blocks until all pending tasks are complete. This should only be called in
   // unit tests when you want to validate something that should have happened.
@@ -372,12 +364,6 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   // the limit is reached, subsequent calls to post task fail in all cases.
   // Must be called from the same thread this object was constructed on.
   void Shutdown(int max_new_blocking_tasks_after_shutdown);
-
-  // Check if Shutdown was called for given threading pool. This method is used
-  // for aborting time consuming operation to avoid blocking shutdown.
-  //
-  // Can be called from any thread.
-  bool IsShutdownInProgress();
 
  protected:
   ~SequencedWorkerPool() override;

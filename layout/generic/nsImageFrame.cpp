@@ -1706,25 +1706,39 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
                                         WebRenderLayerManager* aManager,
                                         nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (!CanOptimizeToImageLayer(aManager, aDisplayListBuilder)) {
+  if (!mImage) {
     return false;
   }
 
+  if (mFrame->IsImageFrame()) {
+    // Image layer doesn't support draw focus ring for image map.
+    nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
+    if (f->HasImageMap()) {
+      return false;
+    }
+  }
+
   uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
+  if (aDisplayListBuilder->IsPaintingToWindow()) {
+    flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+  }
   if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
 
+  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  const LayoutDeviceRect destRect(
+    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor));
+  Maybe<SVGImageContext> svgContext;
+  IntSize decodeSize =
+    nsLayoutUtils::ComputeImageContainerDrawingParameters(mImage, mFrame, destRect,
+                                                          aSc, flags, svgContext);
   RefPtr<ImageContainer> container =
-    mImage->GetImageContainer(aManager, flags);
+    mImage->GetImageContainerAtSize(aManager, decodeSize, svgContext, flags);
   if (!container) {
     return false;
   }
 
-
-  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  const LayoutDeviceRect destRect(
-    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor));
   return aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, destRect);
 }
 

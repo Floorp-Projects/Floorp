@@ -82,7 +82,6 @@ PerformanceObserver::Constructor(const GlobalObject& aGlobal,
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
-    MOZ_ASSERT(ownerWindow->IsInnerWindow());
 
     RefPtr<PerformanceObserver> observer =
       new PerformanceObserver(ownerWindow, aCb);

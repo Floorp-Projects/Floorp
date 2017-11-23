@@ -45,9 +45,9 @@ class BASE_EXPORT ThreadCheckerImpl {
   // TaskToken for which CalledOnValidThread() always returns true. This allows
   // CalledOnValidThread() to return true when called multiple times from the
   // same task, even if it's not running in a single-threaded context itself
-  // (allowing usage of ThreadChecker/NonThreadSafe objects on the stack in the
-  // scope of one-off tasks). Note: CalledOnValidThread() may return true even
-  // if the current TaskToken is not equal to this.
+  // (allowing usage of ThreadChecker objects on the stack in the scope of one-
+  // off tasks). Note: CalledOnValidThread() may return true even if the current
+  // TaskToken is not equal to this.
   mutable TaskToken task_token_;
 
   // SequenceToken for which CalledOnValidThread() may return true. Used to

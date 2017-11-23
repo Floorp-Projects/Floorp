@@ -14,8 +14,6 @@
 
 namespace sandbox {
 
-enum EvalResult;
-
 // This class centralizes most of the knowledge related to named pipe creation.
 class NamedPipePolicy {
  public:

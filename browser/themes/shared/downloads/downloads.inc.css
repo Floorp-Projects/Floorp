@@ -15,10 +15,6 @@
 
 #downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
-}
-
-#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent,
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
   padding: 0;
 }
 

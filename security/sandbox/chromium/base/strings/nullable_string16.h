@@ -8,30 +8,39 @@
 #include <iosfwd>
 
 #include "base/base_export.h"
+#include "base/optional.h"
 #include "base/strings/string16.h"
+#include "base/strings/string_util.h"
 
 namespace base {
 
 // This class is a simple wrapper for string16 which also contains a null
 // state.  This should be used only where the difference between null and
 // empty is meaningful.
-class NullableString16 {
+class BASE_EXPORT NullableString16 {
  public:
-  NullableString16() : is_null_(true) { }
-  NullableString16(const string16& string, bool is_null)
-      : string_(string), is_null_(is_null) {
-  }
+  NullableString16();
+  NullableString16(const NullableString16& other);
+  NullableString16(NullableString16&& other);
+  NullableString16(const string16& string, bool is_null);
+  explicit NullableString16(Optional<string16> optional_string16);
+  ~NullableString16();
 
-  const string16& string() const { return string_; }
-  bool is_null() const { return is_null_; }
+  NullableString16& operator=(const NullableString16& other);
+  NullableString16& operator=(NullableString16&& other);
+
+  const string16& string() const {
+    return string_ ? *string_ : EmptyString16();
+  }
+  bool is_null() const { return !string_; }
+  const Optional<string16>& as_optional_string16() const { return string_; }
 
  private:
-  string16 string_;
-  bool is_null_;
+  Optional<string16> string_;
 };
 
 inline bool operator==(const NullableString16& a, const NullableString16& b) {
-  return a.is_null() == b.is_null() && a.string() == b.string();
+  return a.as_optional_string16() == b.as_optional_string16();
 }
 
 inline bool operator!=(const NullableString16& a, const NullableString16& b) {

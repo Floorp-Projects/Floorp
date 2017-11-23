@@ -158,7 +158,9 @@ SandboxBroker::CacheRulesDirectories()
 SandboxBroker::SandboxBroker()
 {
   if (sBrokerService) {
-    mPolicy = sBrokerService->CreatePolicy();
+    scoped_refptr<sandbox::TargetPolicy> policy = sBrokerService->CreatePolicy();
+    mPolicy = policy.get();
+    mPolicy->AddRef();
     if (sRunningFromNetworkDrive) {
       mPolicy->SetDoNotUseRestrictingSIDs();
     }

@@ -343,6 +343,11 @@ bool nsContentUtils::sDoNotTrackEnabled = false;
 
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
+PopupControlState nsContentUtils::sPopupControlState = openAbused;
+
+int32_t nsContentUtils::sInnerOrOuterWindowCount = 0;
+uint32_t nsContentUtils::sInnerOrOuterWindowSerialCounter = 0;
+
 // Subset of http://www.whatwg.org/specs/web-apps/current-work/#autofill-field-name
 enum AutocompleteUnsupportedFieldName : uint8_t
 {
@@ -9017,8 +9022,6 @@ nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel)
 nsContentUtils::StorageAccess
 nsContentUtils::StorageAllowedForWindow(nsPIDOMWindowInner* aWindow)
 {
-  MOZ_ASSERT(aWindow->IsInnerWindow());
-
   if (nsIDocument* document = aWindow->GetExtantDoc()) {
     nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
     return InternalStorageAllowedForPrincipal(principal, aWindow);
@@ -9107,7 +9110,6 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
                                                    nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(!aWindow || aWindow->IsInnerWindow());
 
   StorageAccess access = StorageAccess::eAllow;
 
@@ -10973,4 +10975,45 @@ nsContentUtils::DevToolsEnabled(JSContext* aCx)
   }
 
   return workerPrivate->DevToolsEnabled();
+}
+
+/* static */ bool
+nsContentUtils::ContentIsLink(nsIContent* aContent)
+{
+  return aContent && (aContent->IsHTMLElement(nsGkAtoms::a) ||
+                      aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                                            nsGkAtoms::simple, eCaseMatters));
+}
+
+/* static */ already_AddRefed<EventTarget>
+nsContentUtils::TryGetTabChildGlobalAsEventTarget(nsISupports* aFrom)
+{
+  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(aFrom);
+  if (!frameLoaderOwner) {
+    return nullptr;
+  }
+
+  RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+  if (!frameLoader) {
+    return nullptr;
+  }
+
+  nsCOMPtr<EventTarget> target = frameLoader->GetTabChildGlobalAsEventTarget();
+  return target.forget();
+}
+
+/* static */ uint32_t
+nsContentUtils::InnerOrOuterWindowCreated()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ++sInnerOrOuterWindowCount;
+  return ++sInnerOrOuterWindowSerialCounter;
+}
+
+/* static */ void
+nsContentUtils::InnerOrOuterWindowDestroyed()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sInnerOrOuterWindowCount > 0);
+  --sInnerOrOuterWindowCount;
 }

@@ -277,12 +277,13 @@ static const unsigned SetFP = 28;
 static const unsigned PoppedFP = 16;
 static const unsigned PoppedTLSReg = 8;
 #elif defined(JS_CODEGEN_NONE)
+// Synthetic values to satisfy asserts and avoid compiler warnings.
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedTLS = 1;
-static const unsigned PushedFP = 0;
-static const unsigned SetFP = 0;
-static const unsigned PoppedFP = 0;
-static const unsigned PoppedTLSReg = 0;
+static const unsigned PushedFP = 2;
+static const unsigned SetFP = 3;
+static const unsigned PoppedFP = 4;
+static const unsigned PoppedTLSReg = 5;
 #else
 # error "Unknown architecture!"
 #endif

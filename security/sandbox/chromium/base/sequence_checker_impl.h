@@ -5,13 +5,12 @@
 #ifndef BASE_SEQUENCE_CHECKER_IMPL_H_
 #define BASE_SEQUENCE_CHECKER_IMPL_H_
 
+#include <memory>
+
 #include "base/base_export.h"
 #include "base/compiler_specific.h"
 #include "base/macros.h"
-#include "base/sequence_token.h"
 #include "base/synchronization/lock.h"
-#include "base/threading/sequenced_worker_pool.h"
-#include "base/threading/thread_checker_impl.h"
 
 namespace base {
 
@@ -35,22 +34,11 @@ class BASE_EXPORT SequenceCheckerImpl {
   void DetachFromSequence();
 
  private:
-  void EnsureSequenceTokenAssigned() const;
+  class Core;
 
   // Guards all variables below.
   mutable Lock lock_;
-
-  // True when the SequenceChecker is bound to a sequence or a thread.
-  mutable bool is_assigned_ = false;
-
-  mutable SequenceToken sequence_token_;
-
-  // TODO(gab): Remove this when SequencedWorkerPool is deprecated in favor of
-  // TaskScheduler. crbug.com/622400
-  mutable SequencedWorkerPool::SequenceToken sequenced_worker_pool_token_;
-
-  // Used when |sequenced_worker_pool_token_| and |sequence_token_| are invalid.
-  ThreadCheckerImpl thread_checker_;
+  mutable std::unique_ptr<Core> core_;
 
   DISALLOW_COPY_AND_ASSIGN(SequenceCheckerImpl);
 };

@@ -3,21 +3,22 @@
 // found in the LICENSE file.
 
 #include "base/memory/ref_counted.h"
+
 #include "base/threading/thread_collision_warner.h"
 
 namespace base {
+namespace {
+
+#if DCHECK_IS_ON()
+std::atomic_int g_cross_thread_ref_count_access_allow_count(0);
+#endif
+
+}  // namespace
 
 namespace subtle {
 
 bool RefCountedThreadSafeBase::HasOneRef() const {
-  return AtomicRefCountIsOne(
-      &const_cast<RefCountedThreadSafeBase*>(this)->ref_count_);
-}
-
-RefCountedThreadSafeBase::RefCountedThreadSafeBase() : ref_count_(0) {
-#if DCHECK_IS_ON()
-  in_dtor_ = false;
-#endif
+  return ref_count_.IsOne();
 }
 
 RefCountedThreadSafeBase::~RefCountedThreadSafeBase() {
@@ -27,27 +28,36 @@ RefCountedThreadSafeBase::~RefCountedThreadSafeBase() {
 #endif
 }
 
-void RefCountedThreadSafeBase::AddRef() const {
-#if DCHECK_IS_ON()
-  DCHECK(!in_dtor_);
-#endif
-  AtomicRefCountInc(&ref_count_);
-}
-
+#if !defined(ARCH_CPU_X86_FAMILY)
 bool RefCountedThreadSafeBase::Release() const {
-#if DCHECK_IS_ON()
-  DCHECK(!in_dtor_);
-  DCHECK(!AtomicRefCountIsZero(&ref_count_));
-#endif
-  if (!AtomicRefCountDec(&ref_count_)) {
-#if DCHECK_IS_ON()
-    in_dtor_ = true;
-#endif
-    return true;
-  }
-  return false;
+  return ReleaseImpl();
 }
+void RefCountedThreadSafeBase::AddRef() const {
+  AddRefImpl();
+}
+#endif
+
+#if DCHECK_IS_ON()
+bool RefCountedBase::CalledOnValidSequence() const {
+#if defined(MOZ_SANDBOX)
+  return true;
+#else
+  return sequence_checker_.CalledOnValidSequence() ||
+         g_cross_thread_ref_count_access_allow_count.load() != 0;
+#endif
+}
+#endif
 
 }  // namespace subtle
+
+#if DCHECK_IS_ON()
+ScopedAllowCrossThreadRefCountAccess::ScopedAllowCrossThreadRefCountAccess() {
+  ++g_cross_thread_ref_count_access_allow_count;
+}
+
+ScopedAllowCrossThreadRefCountAccess::~ScopedAllowCrossThreadRefCountAccess() {
+  --g_cross_thread_ref_count_access_allow_count;
+}
+#endif
 
 }  // namespace base

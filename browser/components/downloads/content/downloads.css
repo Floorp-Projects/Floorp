@@ -198,8 +198,7 @@ richlistitem.download button {
 /* Make the panel wide enough to show the download list items without improperly
    truncating them. */
 #downloadsPanel-multiView > .panel-viewcontainer,
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack,
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack > .panel-mainview {
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack {
   max-width: unset;
 }
 

@@ -123,7 +123,6 @@ UDPSocket::UDPSocket(nsPIDOMWindowInner* aOwner,
   , mReadyState(SocketReadyState::Opening)
 {
   MOZ_ASSERT(aOwner);
-  MOZ_ASSERT(aOwner->IsInnerWindow());
 
   nsIDocument* aDoc = aOwner->GetExtantDoc();
   if (aDoc) {

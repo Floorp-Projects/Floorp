@@ -1038,7 +1038,6 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow)
     // not happen if nsIAppStartup::eForceQuit is used to quit, and can cause
     // a leak. So if the active window is being destroyed, call WindowLowered
     // directly.
-    NS_ASSERTION(mFocusedWindow->IsOuterWindow(), "outer window expected");
     if (mActiveWindow == mFocusedWindow || mActiveWindow == window)
       WindowLowered(mActiveWindow);
     else

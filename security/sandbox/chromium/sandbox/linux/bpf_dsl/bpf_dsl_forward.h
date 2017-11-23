@@ -24,14 +24,6 @@ class BoolExprImpl;
 using ResultExpr = std::shared_ptr<const internal::ResultExprImpl>;
 using BoolExpr = std::shared_ptr<const internal::BoolExprImpl>;
 
-template <typename T>
-class Arg;
-
-class Elser;
-
-template <typename T>
-class Caser;
-
 }  // namespace bpf_dsl
 }  // namespace sandbox
 

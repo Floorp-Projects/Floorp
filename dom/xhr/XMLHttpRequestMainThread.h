@@ -203,7 +203,6 @@ public:
     MOZ_ASSERT(aPrincipal);
     nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobalObject);
     if (win) {
-      MOZ_ASSERT(win->IsInnerWindow());
       if (win->GetExtantDoc()) {
         mStyleBackend = win->GetExtantDoc()->GetStyleBackendType();
       }
