@@ -176,7 +176,7 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*>
 }
 
 static bool
-CheckPatternSyntax(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
+CheckPatternSyntaxSlow(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
 {
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
@@ -184,10 +184,30 @@ CheckPatternSyntax(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
                                         flags & UnicodeFlag);
 }
 
-enum RegExpSharedUse {
-    UseRegExpShared,
-    DontUseRegExpShared
-};
+static RegExpShared*
+CheckPatternSyntax(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
+{
+    // If we already have a RegExpShared for this pattern/flags, we can
+    // avoid the much slower CheckPatternSyntaxSlow call.
+
+    if (RegExpShared* shared = cx->zone()->regExps.maybeGet(pattern, flags)) {
+#ifdef DEBUG
+        // Assert the pattern is valid.
+        if (!CheckPatternSyntaxSlow(cx, pattern, flags)) {
+            MOZ_ASSERT(cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed());
+            return nullptr;
+        }
+#endif
+        return shared;
+    }
+
+    if (!CheckPatternSyntaxSlow(cx, pattern, flags))
+        return nullptr;
+
+    // Allocate and return a new RegExpShared so we will hit the fast path
+    // next time.
+    return cx->zone()->regExps.get(cx, pattern, flags);
+}
 
 /*
  * ES 2016 draft Mar 25, 2016 21.2.3.2.2.
@@ -206,8 +226,7 @@ enum RegExpSharedUse {
  */
 static bool
 RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
-                                  HandleValue patternValue, HandleValue flagsValue,
-                                  RegExpSharedUse sharedUse = DontUseRegExpShared)
+                                  HandleValue patternValue, HandleValue flagsValue)
 {
     RootedAtom pattern(cx);
     if (patternValue.isUndefined()) {
@@ -233,24 +252,15 @@ RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
             return false;
     }
 
-    if (sharedUse == UseRegExpShared) {
-        /* Steps 7-8. */
-        RegExpShared* re = cx->zone()->regExps.get(cx, pattern, flags);
-        if (!re)
-            return false;
+    /* Steps 7-8. */
+    RegExpShared* shared = CheckPatternSyntax(cx, pattern, flags);
+    if (!shared)
+        return false;
 
-        /* Steps 9-12. */
-        obj->initIgnoringLastIndex(pattern, flags);
+    /* Steps 9-12. */
+    obj->initIgnoringLastIndex(pattern, flags);
 
-        obj->setShared(*re);
-    } else {
-        /* Steps 7-8. */
-        if (!CheckPatternSyntax(cx, pattern, flags))
-            return false;
-
-        /* Steps 9-12. */
-        obj->initIgnoringLastIndex(pattern, flags);
-    }
+    obj->setShared(*shared);
 
     return true;
 }
@@ -266,7 +276,7 @@ js::RegExpCreate(JSContext* cx, HandleValue patternValue, HandleValue flagsValue
          return false;
 
     /* Step 2. */
-    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, patternValue, flagsValue, UseRegExpShared))
+    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, patternValue, flagsValue))
         return false;
     regexp->zeroLastIndex(cx);
 
@@ -428,15 +438,15 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     if (cls == ESClass::RegExp) {
         // Beware!  |patternObj| might be a proxy into another compartment, so
-        // don't assume |patternObj.is<RegExpObject>()|.  For the same reason,
-        // don't reuse the RegExpShared below.
+        // don't assume |patternObj.is<RegExpObject>()|.
         RootedObject patternObj(cx, &patternValue.toObject());
 
         RootedAtom sourceAtom(cx);
         RegExpFlag flags;
+        RootedRegExpShared shared(cx);
         {
             // Step 4.a.
-            RegExpShared* shared = RegExpToShared(cx, patternObj);
+            shared = RegExpToShared(cx, patternObj);
             if (!shared)
                 return false;
             sourceAtom = shared->getSource();
@@ -444,6 +454,10 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
             // Step 4.b.
             // Get original flags in all cases, to compare with passed flags.
             flags = shared->getFlags();
+
+            // If the RegExpShared is in another Zone, don't reuse it.
+            if (cx->zone() != shared->zone())
+                shared = nullptr;
         }
 
         // Step 7.
@@ -465,18 +479,26 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
             if (!ParseRegExpFlags(cx, flagStr, &flagsArg))
                 return false;
 
+            // Don't reuse the RegExpShared if we have different flags.
+            if (flags != flagsArg)
+                shared = nullptr;
+
             if (!(flags & UnicodeFlag) && flagsArg & UnicodeFlag) {
                 // Have to check syntax again when adding 'u' flag.
 
                 // ES 2017 draft rev 9b49a888e9dfe2667008a01b2754c3662059ae56
                 // 21.2.3.2.2 step 7.
-                if (!CheckPatternSyntax(cx, sourceAtom, flagsArg))
+                shared = CheckPatternSyntax(cx, sourceAtom, flagsArg);
+                if (!shared)
                     return false;
             }
             flags = flagsArg;
         }
 
         regexp->initAndZeroLastIndex(sourceAtom, flags, cx);
+
+        if (shared)
+            regexp->setShared(*shared);
 
         args.rval().setObject(*regexp);
         return true;

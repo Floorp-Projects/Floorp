@@ -1452,8 +1452,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     }];
     const geometryTypes = ["margin", "border", "padding", "content"];
 
-    // default to border
-    let referenceBox = "border";
+    // default to border for clip-path, and margin for shape-outside
+    let referenceBox = this.property === "clip-path" ? "border" : "margin";
     for (let geometry of geometryTypes) {
       if (definition.includes(geometry)) {
         referenceBox = geometry;

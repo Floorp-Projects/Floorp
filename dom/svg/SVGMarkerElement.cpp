@@ -211,6 +211,7 @@ SVGMarkerElement::IsAttributeMapped(const nsAtom* name) const
 bool
 SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
                                  const nsAString& aValue,
+                                 nsIPrincipal* aMaybeScriptedPrincipal,
                                  nsAttrValue& aResult)
 {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::orient) {
@@ -230,7 +231,9 @@ SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
     mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
   }
   return SVGMarkerElementBase::ParseAttribute(aNameSpaceID, aName,
-                                              aValue, aResult);
+                                              aValue,
+                                              aMaybeScriptedPrincipal,
+                                              aResult);
 }
 
 nsresult

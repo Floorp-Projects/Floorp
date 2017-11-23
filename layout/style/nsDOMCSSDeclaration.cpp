@@ -54,7 +54,8 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
-                                      const nsAString& aValue)
+                                      const nsAString& aValue,
+                                      nsIPrincipal* aSubjectPrincipal)
 {
   switch (aPropID) {
     case eCSSProperty_background_position:
@@ -86,7 +87,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
     return RemovePropertyInternal(aPropID);
   }
 
-  return ParsePropertyValue(aPropID, aValue, false);
+  return ParsePropertyValue(aPropID, aValue, false, aSubjectPrincipal);
 }
 
 
@@ -104,7 +105,8 @@ nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
+nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
+                                nsIPrincipal* aSubjectPrincipal)
 {
   // We don't need to *do* anything with the old declaration, but we need
   // to ensure that it exists, or else SetCSSDeclaration may crash.
@@ -122,7 +124,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 
   RefPtr<DeclarationBlock> newdecl;
   if (olddecl->IsServo()) {
-    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment();
+    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment(
+        aSubjectPrincipal);
     if (!servoEnv.mUrlExtraData) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -131,7 +134,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
                                                  servoEnv.mCompatMode, servoEnv.mLoader);
   } else {
     CSSParsingEnvironment geckoEnv;
-    GetCSSParsingEnvironment(geckoEnv);
+    GetCSSParsingEnvironment(geckoEnv, aSubjectPrincipal);
     if (!geckoEnv.mPrincipal) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -209,7 +212,8 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
                                  const nsAString& aValue,
-                                 const nsAString& aPriority)
+                                 const nsAString& aPriority,
+                                 nsIPrincipal* aSubjectPrincipal)
 {
   if (aValue.IsEmpty()) {
     // If the new value of the property is an empty string we remove the
@@ -236,9 +240,10 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
   }
 
   if (propID == eCSSPropertyExtra_variable) {
-    return ParseCustomPropertyValue(aPropertyName, aValue, important);
+    return ParseCustomPropertyValue(aPropertyName, aValue, important,
+                                    aSubjectPrincipal);
   }
-  return ParsePropertyValue(propID, aValue, important);
+  return ParsePropertyValue(propID, aValue, important, aSubjectPrincipal);
 }
 
 NS_IMETHODIMP
@@ -292,7 +297,8 @@ nsDOMCSSDeclaration::GetServoCSSParsingEnvironmentForRule(const css::Rule* aRule
 
 template<typename GeckoFunc, typename ServoFunc>
 nsresult
-nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
+nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
+                                       GeckoFunc aGeckoFunc,
                                        ServoFunc aServoFunc)
 {
   DeclarationBlock* olddecl = GetCSSDeclaration(eOperation_Modify);
@@ -311,14 +317,15 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
   bool changed;
   if (decl->IsGecko()) {
     CSSParsingEnvironment geckoEnv;
-    GetCSSParsingEnvironment(geckoEnv);
+    GetCSSParsingEnvironment(geckoEnv, aSubjectPrincipal);
     if (!geckoEnv.mPrincipal) {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
     aGeckoFunc(decl->AsGecko(), geckoEnv, &changed);
   } else {
-    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment();
+    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment(
+        aSubjectPrincipal);
     if (!servoEnv.mUrlExtraData) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -336,9 +343,11 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
 nsresult
 nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
                                         const nsAString& aPropValue,
-                                        bool aIsImportant)
+                                        bool aIsImportant,
+                                        nsIPrincipal* aSubjectPrincipal)
 {
   return ModifyDeclaration(
+    aSubjectPrincipal,
     [&](css::Declaration* decl, CSSParsingEnvironment& env, bool* changed) {
       nsCSSParser cssParser(env.mCSSLoader);
       cssParser.ParseProperty(aPropID, aPropValue,
@@ -356,10 +365,12 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
 nsresult
 nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
                                               const nsAString& aPropValue,
-                                              bool aIsImportant)
+                                              bool aIsImportant,
+                                              nsIPrincipal* aSubjectPrincipal)
 {
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
   return ModifyDeclaration(
+    aSubjectPrincipal,
     [&](css::Declaration* decl, CSSParsingEnvironment& env, bool* changed) {
       nsCSSParser cssParser(env.mCSSLoader);
       auto propName = Substring(aPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);

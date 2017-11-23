@@ -1,0 +1,5 @@
+issuer:root-rsa
+subject:int-rsa
+extension:basicConstraints:cA,
+extension:keyUsage:cRLSign,keyCertSign
+validity:3650

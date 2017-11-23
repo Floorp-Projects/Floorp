@@ -13,21 +13,31 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
+interface nsIPrincipal;
+
 [uuid(a6cf90be-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSStyleDeclaration : nsISupports
 {
-           attribute DOMString        cssText;
-                                        // raises(DOMException) on setting
+  // We declare these in C++, so that we can declare default argument values,
+  // since those are unsupported by XPIDL and this is not a scriptable
+  // interface.
+  %{C++
+  NS_IMETHOD GetCssText(nsAString& aCssText) = 0;
+  NS_IMETHOD SetCssText(const nsAString& aCssText,
+                        nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
+
+  NS_IMETHOD SetProperty(const nsAString& aPropertyName,
+                         const nsAString& aValue,
+                         const nsAString& aPriority,
+                         nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
+  %}
 
   DOMString          getPropertyValue(in DOMString propertyName);
   nsIDOMCSSValue     getPropertyCSSValue(in DOMString propertyName);
   DOMString          removeProperty(in DOMString propertyName)
                                         raises(DOMException);
   DOMString          getPropertyPriority(in DOMString propertyName);
-  void               setProperty(in DOMString propertyName, 
-                                 in DOMString value, 
-                                 [optional] in DOMString priority)
-                                        raises(DOMException);
+
   readonly attribute unsigned long    length;
   DOMString          item(in unsigned long index);
   readonly attribute nsIDOMCSSRule    parentRule;

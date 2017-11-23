@@ -39,6 +39,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsStringStream.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/CSPReportBinding.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/net/ReferrerPolicy.h"
@@ -271,12 +272,22 @@ NS_IMPL_ISUPPORTS_CI(nsCSPContext,
                      nsIContentSecurityPolicy,
                      nsISerializable)
 
+int32_t nsCSPContext::sScriptSampleMaxLength;
+
 nsCSPContext::nsCSPContext()
   : mInnerWindowID(0)
   , mLoadingContext(nullptr)
   , mLoadingPrincipal(nullptr)
   , mQueueUpMessages(true)
 {
+  static bool sInitialized = false;
+  if (!sInitialized) {
+    Preferences::AddIntVarCache(&sScriptSampleMaxLength,
+                                "security.csp.reporting.script-sample.max-length",
+                                40);
+    sInitialized = true;
+  }
+
   CSPCONTEXTLOG(("nsCSPContext::nsCSPContext"));
 }
 
@@ -479,9 +490,9 @@ nsCSPContext::reportInlineViolation(nsContentPolicyType aContentType,
   }
 
   nsAutoString codeSample(aContent);
-  // cap the length of the script sample at 40 chars
-  if (codeSample.Length() > 40) {
-    codeSample.Truncate(40);
+  // cap the length of the script sample
+  if (codeSample.Length() > ScriptSampleMaxLength()) {
+    codeSample.Truncate(ScriptSampleMaxLength());
     codeSample.AppendLiteral("...");
   }
   AsyncReportViolation(selfISupports,                      // aBlockedContentSource

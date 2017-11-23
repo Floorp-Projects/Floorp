@@ -29,6 +29,7 @@ public:
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
+                            nsIPrincipal& aSubjectPrincipal,
                             mozilla::ErrorResult& aError) override;
 
   // nsIScriptElement
@@ -45,6 +46,7 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsAtom* aAttribute,
                               const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,

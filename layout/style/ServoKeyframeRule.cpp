@@ -56,13 +56,15 @@ public:
     });
     return NS_OK;
   }
-  void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) final
+  void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                nsIPrincipal* aSubjectPrincipal) final
   {
     MOZ_ASSERT_UNREACHABLE("GetCSSParsingEnvironment "
                            "shouldn't be calling for a Servo rule");
     GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
   }
-  ServoCSSParsingEnvironment GetServoCSSParsingEnvironment() const final
+  ServoCSSParsingEnvironment GetServoCSSParsingEnvironment(
+      nsIPrincipal* aSubjectPrincipal) const final
   {
     return GetServoCSSParsingEnvironmentForRule(mRule);
   }
