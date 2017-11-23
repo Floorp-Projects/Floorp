@@ -3657,6 +3657,32 @@ CSS_PROP_DISPLAY(
     kScrollBehaviorKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
+CSS_PROP_SHORTHAND(
+    overscroll-behavior,
+    overscroll_behavior,
+    OverscrollBehavior,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.overscroll-behavior.enabled")
+CSS_PROP_DISPLAY(
+    overscroll-behavior-x,
+    overscroll_behavior_x,
+    OverscrollBehaviorX,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.overscroll-behavior.enabled",
+    VARIANT_HK,
+    kOverscrollBehaviorKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Discrete)
+CSS_PROP_DISPLAY(
+    overscroll-behavior-y,
+    overscroll_behavior_y,
+    OverscrollBehaviorY,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.overscroll-behavior.enabled",
+    VARIANT_HK,
+    kOverscrollBehaviorKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     scroll-snap-coordinate,
     scroll_snap_coordinate,

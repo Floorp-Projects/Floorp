@@ -3568,6 +3568,8 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   , mWillChangeBitField(0)
   , mTouchAction(NS_STYLE_TOUCH_ACTION_AUTO)
   , mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO)
+  , mOverscrollBehaviorX(StyleOverscrollBehavior::Auto)
+  , mOverscrollBehaviorY(StyleOverscrollBehavior::Auto)
   , mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
   , mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
   , mScrollSnapPointsX(eStyleUnit_None)
@@ -3631,6 +3633,8 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mWillChange(aSource.mWillChange)
   , mTouchAction(aSource.mTouchAction)
   , mScrollBehavior(aSource.mScrollBehavior)
+  , mOverscrollBehaviorX(aSource.mOverscrollBehaviorX)
+  , mOverscrollBehaviorY(aSource.mOverscrollBehaviorY)
   , mScrollSnapTypeX(aSource.mScrollSnapTypeX)
   , mScrollSnapTypeY(aSource.mScrollSnapTypeY)
   , mScrollSnapPointsX(aSource.mScrollSnapPointsX)
@@ -3705,6 +3709,8 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       || mContain != aNewData.mContain
       || (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None)
       || mScrollBehavior != aNewData.mScrollBehavior
+      || mOverscrollBehaviorX != aNewData.mOverscrollBehaviorX
+      || mOverscrollBehaviorY != aNewData.mOverscrollBehaviorY
       || mScrollSnapTypeX != aNewData.mScrollSnapTypeX
       || mScrollSnapTypeY != aNewData.mScrollSnapTypeY
       || mScrollSnapPointsX != aNewData.mScrollSnapPointsX
