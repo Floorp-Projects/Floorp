@@ -190,19 +190,7 @@ impl PassList {
 
 #[derive(Serialize)]
 pub struct Pass {
-    targets: Vec<Target>,
-}
-
-impl Pass {
-    pub fn new() -> Pass {
-        Pass {
-            targets: Vec::new(),
-        }
-    }
-
-    pub fn add(&mut self, target: Target) {
-        self.targets.push(target);
-    }
+    pub targets: Vec<Target>,
 }
 
 #[derive(Serialize)]

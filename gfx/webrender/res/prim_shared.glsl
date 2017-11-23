@@ -552,7 +552,6 @@ vec4 get_layer_pos(vec2 pos, Layer layer) {
 // Compute a snapping offset in world space (adjusted to pixel ratio),
 // given local position on the layer and a snap rectangle.
 vec2 compute_snap_offset(vec2 local_pos,
-                         RectWithSize local_clip_rect,
                          Layer layer,
                          RectWithSize snap_rect) {
     // Ensure that the snap rect is at *least* one device pixel in size.
@@ -597,9 +596,9 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec2 clamped_local_pos = clamp_rect(clamp_rect(local_pos, local_clip_rect), layer.local_clip_rect);
 
     /// Compute the snapping offset.
-    vec2 snap_offset = compute_snap_offset(clamped_local_pos, local_clip_rect, layer, snap_rect);
+    vec2 snap_offset = compute_snap_offset(clamped_local_pos, layer, snap_rect);
 
-    // Transform the current vertex to the world cpace.
+    // Transform the current vertex to world space.
     vec4 world_pos = layer.transform * vec4(clamped_local_pos, 0.0, 1.0);
 
     // Convert the world positions to device pixel space.
@@ -617,11 +616,6 @@ VertexInfo write_vertex(RectWithSize instance_rect,
 }
 
 #ifdef WR_FEATURE_TRANSFORM
-
-struct TransformVertexInfo {
-    vec3 local_pos;
-    vec2 screen_pos;
-};
 
 float cross2(vec2 v0, vec2 v1) {
     return v0.x * v1.y - v0.y * v1.x;
@@ -642,101 +636,67 @@ vec2 intersect_lines(vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
     return vec2(nx / d, ny / d);
 }
 
-TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
-                                           RectWithSize local_clip_rect,
-                                           vec4 clip_edge_mask,
-                                           float z,
-                                           Layer layer,
-                                           PictureTask task) {
+VertexInfo write_transform_vertex(RectWithSize instance_rect,
+                                  RectWithSize local_clip_rect,
+                                  vec4 clip_edge_mask,
+                                  float z,
+                                  Layer layer,
+                                  PictureTask task) {
+    // Calculate a clip rect from local clip + layer clip.
+    RectWithEndpoint clip_rect = to_rect_with_endpoint(local_clip_rect);
+    clip_rect.p0 = clamp_rect(clip_rect.p0, layer.local_clip_rect);
+    clip_rect.p1 = clamp_rect(clip_rect.p1, layer.local_clip_rect);
+
+    // Calculate a clip rect from local_rect + local clip + layer clip.
     RectWithEndpoint local_rect = to_rect_with_endpoint(instance_rect);
-    RectWithSize clip_rect;
-    clip_rect.p0 = clamp_rect(local_clip_rect.p0, layer.local_clip_rect);
-    clip_rect.size = clamp_rect(local_clip_rect.p0 + local_clip_rect.size, layer.local_clip_rect) - clip_rect.p0;
+    local_rect.p0 = clamp(local_rect.p0, clip_rect.p0, clip_rect.p1);
+    local_rect.p1 = clamp(local_rect.p1, clip_rect.p0, clip_rect.p1);
 
-    vec2 current_local_pos, prev_local_pos, next_local_pos;
+    // As this is a transform shader, extrude by 2 (local space) pixels
+    // in each direction. This gives enough space around the edge to
+    // apply distance anti-aliasing. Technically, it:
+    // (a) slightly over-estimates the number of required pixels in the simple case.
+    // (b) might not provide enough edge in edge case perspective projections.
+    // However, it's fast and simple. If / when we ever run into issues, we
+    // can do some math on the projection matrix to work out a variable
+    // amount to extrude.
+    float extrude_distance = 2.0;
+    instance_rect.p0 -= vec2(extrude_distance);
+    instance_rect.size += vec2(2.0 * extrude_distance);
 
-    // Clamp to the two local clip rects.
-    local_rect.p0 = clamp_rect(local_rect.p0, clip_rect);
-    local_rect.p1 = clamp_rect(local_rect.p1, clip_rect);
+    // Select the corner of the local rect that we are processing.
+    vec2 local_pos = instance_rect.p0 + instance_rect.size * aPosition.xy;
 
-    // Select the current vertex and the previous/next vertices,
-    // based on the vertex ID that is known based on the instance rect.
-    switch (gl_VertexID) {
-        case 0:
-            current_local_pos = vec2(local_rect.p0.x, local_rect.p0.y);
-            next_local_pos = vec2(local_rect.p0.x, local_rect.p1.y);
-            prev_local_pos = vec2(local_rect.p1.x, local_rect.p0.y);
-            break;
-        case 1:
-            current_local_pos = vec2(local_rect.p1.x, local_rect.p0.y);
-            next_local_pos = vec2(local_rect.p0.x, local_rect.p0.y);
-            prev_local_pos = vec2(local_rect.p1.x, local_rect.p1.y);
-            break;
-        case 2:
-            current_local_pos = vec2(local_rect.p0.x, local_rect.p1.y);
-            prev_local_pos = vec2(local_rect.p0.x, local_rect.p0.y);
-            next_local_pos = vec2(local_rect.p1.x, local_rect.p1.y);
-            break;
-        case 3:
-            current_local_pos = vec2(local_rect.p1.x, local_rect.p1.y);
-            prev_local_pos = vec2(local_rect.p0.x, local_rect.p1.y);
-            next_local_pos = vec2(local_rect.p1.x, local_rect.p0.y);
-            break;
-    }
+    // Transform the current vertex to the world cpace.
+    vec4 world_pos = layer.transform * vec4(local_pos, 0.0, 1.0);
 
-    // Transform them to world space
-    vec4 current_world_pos = layer.transform * vec4(current_local_pos, 0.0, 1.0);
-    vec4 prev_world_pos = layer.transform * vec4(prev_local_pos, 0.0, 1.0);
-    vec4 next_world_pos = layer.transform * vec4(next_local_pos, 0.0, 1.0);
+    // Convert the world positions to device pixel space.
+    vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
 
-    // Convert to device space
-    vec2 current_device_pos = uDevicePixelRatio * current_world_pos.xy / current_world_pos.w;
-    vec2 prev_device_pos = uDevicePixelRatio * prev_world_pos.xy / prev_world_pos.w;
-    vec2 next_device_pos = uDevicePixelRatio * next_world_pos.xy / next_world_pos.w;
-
-    // Get the normals of each of the vectors between the current and next/prev vertices.
-    const float amount = 2.0;
-    vec2 dir_prev = normalize(current_device_pos - prev_device_pos);
-    vec2 dir_next = normalize(current_device_pos - next_device_pos);
-    vec2 norm_prev = vec2(-dir_prev.y,  dir_prev.x);
-    vec2 norm_next = vec2( dir_next.y, -dir_next.x);
-
-    // Push those lines out along the normal by a specific amount of device pixels.
-    vec2 adjusted_prev_p0 = current_device_pos + norm_prev * amount;
-    vec2 adjusted_prev_p1 = prev_device_pos + norm_prev * amount;
-    vec2 adjusted_next_p0 = current_device_pos + norm_next * amount;
-    vec2 adjusted_next_p1 = next_device_pos + norm_next * amount;
-
-    // Intersect those adjusted lines to find the actual vertex position.
-    vec2 device_pos = intersect_lines(adjusted_prev_p0,
-                                      adjusted_prev_p1,
-                                      adjusted_next_p0,
-                                      adjusted_next_p1);
-
-    vec4 layer_pos = get_layer_pos(device_pos / uDevicePixelRatio, layer);
-
-    // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_pos - //Note: `snap_rect` is not used
-                     task.content_origin +
-                     task.common_data.task_rect.p0;
-
-
-    gl_Position = uTransform * vec4(final_pos, z, 1.0);
+    // We want the world space coords to be perspective divided by W.
+    // We also want that to apply to any interpolators. However, we
+    // want a constant Z across the primitive, since we're using it
+    // for draw ordering - so scale by the W coord to ensure this.
+    vec4 final_pos = vec4(world_pos.xy + task.common_data.task_rect.p0 - task.content_origin,
+                          z * world_pos.w,
+                          world_pos.w);
+    gl_Position = uTransform * final_pos;
 
     vLocalBounds = mix(
-        vec4(clip_rect.p0, clip_rect.p0 + clip_rect.size),
+        vec4(clip_rect.p0, clip_rect.p1),
         vec4(local_rect.p0, local_rect.p1),
         clip_edge_mask
     );
 
-    return TransformVertexInfo(layer_pos.xyw, device_pos);
+    VertexInfo vi = VertexInfo(local_pos, device_pos);
+    return vi;
 }
 
-TransformVertexInfo write_transform_vertex_primitive(Primitive prim) {
+VertexInfo write_transform_vertex_primitive(Primitive prim) {
     return write_transform_vertex(
         prim.local_rect,
         prim.local_clip_rect,
-        vec4(0.0),
+        vec4(1.0),
         prim.z,
         prim.layer,
         prim.task
@@ -855,20 +815,19 @@ float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
     return length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y));
 }
 
-vec2 init_transform_fs(vec3 local_pos, out float fragment_alpha) {
-    fragment_alpha = 1.0;
-    vec2 pos = local_pos.xy / local_pos.z;
-
-    // Now get the actual signed distance.
-    float d = signed_distance_rect(pos, vLocalBounds.xy, vLocalBounds.zw);
+float init_transform_fs(vec2 local_pos) {
+    // Get signed distance from local rect bounds.
+    float d = signed_distance_rect(
+        local_pos,
+        vLocalBounds.xy,
+        vLocalBounds.zw
+    );
 
     // Find the appropriate distance to apply the AA smoothstep over.
-    float aa_range = compute_aa_range(pos.xy);
+    float aa_range = compute_aa_range(local_pos);
 
     // Only apply AA to fragments outside the signed distance field.
-    fragment_alpha = distance_aa(aa_range, d);
-
-    return pos;
+    return distance_aa(aa_range, d);
 }
 #endif //WR_FEATURE_TRANSFORM
 

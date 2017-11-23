@@ -24,11 +24,13 @@ impl Example for App {
         _api: &RenderApi,
         builder: &mut DisplayListBuilder,
         _resources: &mut ResourceUpdates,
-        layout_size: LayoutSize,
+        _framebuffer_size: DeviceUintSize,
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(), layout_size));
+        let info = LayoutPrimitiveInfo::new(
+            LayoutRect::new(LayoutPoint::zero(), builder.content_size())
+        );
         builder.push_stacking_context(
             &info,
             ScrollPolicy::Scrollable,

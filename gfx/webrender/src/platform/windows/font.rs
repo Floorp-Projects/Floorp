@@ -6,7 +6,7 @@ use api::{FontInstancePlatformOptions, FontKey, FontRenderMode};
 use api::{ColorU, GlyphDimensions, GlyphKey, SubpixelDirection};
 use dwrote;
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::sync::Arc;
 
@@ -161,9 +161,12 @@ impl FontContext {
             ascenderOffset: 0.0,
         };
 
+        let (.., minor) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+        let size = (font.size.to_f64_px() * minor) as f32;
+
         let glyph_run = dwrote::DWRITE_GLYPH_RUN {
             fontFace: unsafe { face.as_ptr() },
-            fontEmSize: font.size.to_f32_px(), // size in DIPs (1/96", same as CSS pixels)
+            fontEmSize: size, // size in DIPs (1/96", same as CSS pixels)
             glyphCount: 1,
             glyphIndices: &glyph,
             glyphAdvances: &advance,
@@ -176,25 +179,26 @@ impl FontContext {
         let dwrite_render_mode = dwrite_render_mode(
             face,
             font.render_mode,
-            font.size.to_f32_px(),
+            size,
             dwrite_measure_mode,
             font.platform_options,
         );
 
         let (x_offset, y_offset) = font.get_subpx_offset(key);
-        let transform = Some(dwrote::DWRITE_MATRIX {
-            m11: 1.0,
-            m12: 0.0,
-            m21: 0.0,
-            m22: 1.0,
+        let shape = font.transform.pre_scale(minor.recip() as f32, minor.recip() as f32);
+        let transform = dwrote::DWRITE_MATRIX {
+            m11: shape.scale_x,
+            m12: shape.skew_y,
+            m21: shape.skew_x,
+            m22: shape.scale_y,
             dx: x_offset as f32,
             dy: y_offset as f32,
-        });
+        };
 
         dwrote::GlyphRunAnalysis::create(
             &glyph_run,
             1.0,
-            transform,
+            Some(transform),
             dwrite_render_mode,
             dwrite_measure_mode,
             0.0,
@@ -359,7 +363,7 @@ impl FontContext {
             width,
             height,
             scale: 1.0,
-            format: GlyphFormat::from(font.render_mode),
+            format: font.get_glyph_format(),
             bytes: bgra_pixels,
         })
     }
