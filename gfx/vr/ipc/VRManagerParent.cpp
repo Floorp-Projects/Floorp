@@ -20,7 +20,8 @@ using namespace layers;
 namespace gfx {
 
 VRManagerParent::VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild)
-  : mControllerTestID(1)
+  : mDisplayTestID(0)
+  , mControllerTestID(0)
   , mHaveEventListener(false)
   , mHaveControllerListener(false)
   , mIsContentChild(aIsContentChild)
@@ -246,19 +247,37 @@ VRManagerParent::RecvCreateVRTestSystem()
 {
   VRManager* vm = VRManager::Get();
   vm->CreateVRTestSystem();
-  // The mControllerTestID is 1 based
-  mControllerTestID = 1;
+  mDisplayTestID = 0;
+  mControllerTestID = 0;
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 VRManagerParent::RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint32_t& aPromiseID)
 {
+  nsTArray<VRDisplayInfo> displayInfoArray;
+  impl::VRDisplayPuppet* displayPuppet = nullptr;
   VRManager* vm = VRManager::Get();
-  VRSystemManagerPuppet* puppetManager = vm->GetPuppetManager();
-  uint32_t deviceID = puppetManager->CreateTestDisplay();
+  vm->RefreshVRDisplays();
 
-  if (SendReplyCreateVRServiceTestDisplay(aID, aPromiseID, deviceID)) {
+  // Get VRDisplayPuppet from VRManager
+  vm->GetVRDisplayInfo(displayInfoArray);
+  for (auto& displayInfo : displayInfoArray) {
+    if (displayInfo.GetType() == VRDeviceType::Puppet) {
+        displayPuppet = static_cast<impl::VRDisplayPuppet*>(
+                        vm->GetDisplay(displayInfo.GetDisplayID()).get());
+        break;
+    }
+  }
+
+  MOZ_ASSERT(displayPuppet);
+  MOZ_ASSERT(!mDisplayTestID); // We have only one display in VRSystemManagerPuppet.
+
+  if (!mVRDisplayTests.Get(mDisplayTestID, nullptr)) {
+    mVRDisplayTests.Put(mDisplayTestID, displayPuppet);
+  }
+
+  if (SendReplyCreateVRServiceTestDisplay(aID, aPromiseID, mDisplayTestID)) {
     return IPC_OK();
   }
 
@@ -268,20 +287,14 @@ VRManagerParent::RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint
 mozilla::ipc::IPCResult
 VRManagerParent::RecvCreateVRServiceTestController(const nsCString& aID, const uint32_t& aPromiseID)
 {
-  uint32_t controllerIdx = 1; // ID's are 1 based
+  uint32_t controllerIdx = 0;
   nsTArray<VRControllerInfo> controllerInfoArray;
   impl::VRControllerPuppet* controllerPuppet = nullptr;
   VRManager* vm = VRManager::Get();
 
-  /**
-   * When running headless mochitests on some of our automated test
-   * infrastructure, 2d display vsyncs are not always generated.
-   * In this case, the test controllers can't be created immediately
-   * after the VR display was created as the state of the VR displays
-   * are updated during vsync.
-   * To workaround, we produce a vsync manually.
-   */
-  vm->NotifyVsync(TimeStamp::Now());
+  if (mHaveControllerListener) {
+    vm->RefreshVRControllers();
+  }
 
   // Get VRControllerPuppet from VRManager
   vm->GetVRControllerInfo(controllerInfoArray);
@@ -296,22 +309,16 @@ VRManagerParent::RecvCreateVRServiceTestController(const nsCString& aID, const u
     }
   }
 
-  // We might not have a controllerPuppet if the test did
-  // not create a VR display first.
-  if (!controllerPuppet) {
-    // We send a device ID of "0" to indicate failure
-    if (SendReplyCreateVRServiceTestController(aID, aPromiseID, 0)) {
-      return IPC_OK();
-    }
-  } else {
-    if (!mVRControllerTests.Get(mControllerTestID, nullptr)) {
-      mVRControllerTests.Put(mControllerTestID, controllerPuppet);
-    }
+  MOZ_ASSERT(controllerPuppet);
+  MOZ_ASSERT(mControllerTestID < 2); // We have only two controllers in VRSystemManagerPuppet.
 
-    if (SendReplyCreateVRServiceTestController(aID, aPromiseID, mControllerTestID)) {
-      ++mControllerTestID;
-      return IPC_OK();
-    }
+  if (!mVRControllerTests.Get(mControllerTestID, nullptr)) {
+    mVRControllerTests.Put(mControllerTestID, controllerPuppet);
+  }
+
+  if (SendReplyCreateVRServiceTestController(aID, aPromiseID, mControllerTestID)) {
+    ++mControllerTestID;
+    return IPC_OK();
   }
 
   return IPC_FAIL(this, "SendReplyCreateVRServiceTestController fail");
@@ -321,9 +328,11 @@ mozilla::ipc::IPCResult
 VRManagerParent::RecvSetDisplayInfoToMockDisplay(const uint32_t& aDeviceID,
                                                  const VRDisplayInfo& aDisplayInfo)
 {
-  VRManager* vm = VRManager::Get();
-  VRSystemManagerPuppet* puppetManager = vm->GetPuppetManager();
-  puppetManager->SetPuppetDisplayInfo(aDeviceID, aDisplayInfo);
+  RefPtr<impl::VRDisplayPuppet> displayPuppet;
+  mVRDisplayTests.Get(aDeviceID,
+                      getter_AddRefs(displayPuppet));
+  MOZ_ASSERT(displayPuppet);
+  displayPuppet->SetDisplayInfo(aDisplayInfo);
   return IPC_OK();
 }
 
@@ -331,33 +340,23 @@ mozilla::ipc::IPCResult
 VRManagerParent::RecvSetSensorStateToMockDisplay(const uint32_t& aDeviceID,
                                                  const VRHMDSensorState& aSensorState)
 {
-  VRManager* vm = VRManager::Get();
-  VRSystemManagerPuppet* puppetManager = vm->GetPuppetManager();
-  puppetManager->SetPuppetDisplaySensorState(aDeviceID, aSensorState);
+  RefPtr<impl::VRDisplayPuppet> displayPuppet;
+  mVRDisplayTests.Get(aDeviceID,
+                      getter_AddRefs(displayPuppet));
+  MOZ_ASSERT(displayPuppet);
+  displayPuppet->SetSensorState(aSensorState);
   return IPC_OK();
-}
-
-already_AddRefed<impl::VRControllerPuppet>
-VRManagerParent::GetControllerPuppet(uint32_t aDeviceID)
-{
-  // aDeviceID for controllers start at 1 and are
-  // used as a key to mVRControllerTests
-  MOZ_ASSERT(aDeviceID > 0);
-  RefPtr<impl::VRControllerPuppet> controllerPuppet;
-  mVRControllerTests.Get(aDeviceID,
-                         getter_AddRefs(controllerPuppet));
-  MOZ_ASSERT(controllerPuppet);
-  return controllerPuppet.forget();
 }
 
 mozilla::ipc::IPCResult
 VRManagerParent::RecvNewButtonEventToMockController(const uint32_t& aDeviceID, const long& aButton,
                                                     const bool& aPressed)
 {
-  RefPtr<impl::VRControllerPuppet> controllerPuppet = GetControllerPuppet(aDeviceID);
-  if (controllerPuppet) {
-    controllerPuppet->SetButtonPressState(aButton, aPressed);
-  }
+  RefPtr<impl::VRControllerPuppet> controllerPuppet;
+  mVRControllerTests.Get(aDeviceID,
+                         getter_AddRefs(controllerPuppet));
+  MOZ_ASSERT(controllerPuppet);
+  controllerPuppet->SetButtonPressState(aButton, aPressed);
   return IPC_OK();
 }
 
@@ -365,10 +364,11 @@ mozilla::ipc::IPCResult
 VRManagerParent::RecvNewAxisMoveEventToMockController(const uint32_t& aDeviceID, const long& aAxis,
                                                       const double& aValue)
 {
-  RefPtr<impl::VRControllerPuppet> controllerPuppet = GetControllerPuppet(aDeviceID);
-  if (controllerPuppet) {
-    controllerPuppet->SetAxisMoveState(aAxis, aValue);
-  }
+  RefPtr<impl::VRControllerPuppet> controllerPuppet;
+  mVRControllerTests.Get(aDeviceID,
+                         getter_AddRefs(controllerPuppet));
+  MOZ_ASSERT(controllerPuppet);
+  controllerPuppet->SetAxisMoveState(aAxis, aValue);
   return IPC_OK();
 }
 
@@ -376,10 +376,11 @@ mozilla::ipc::IPCResult
 VRManagerParent::RecvNewPoseMoveToMockController(const uint32_t& aDeviceID,
                                                  const GamepadPoseState& pose)
 {
-  RefPtr<impl::VRControllerPuppet> controllerPuppet = GetControllerPuppet(aDeviceID);
-  if (controllerPuppet) {
-    controllerPuppet->SetPoseMoveState(pose);
-  }
+  RefPtr<impl::VRControllerPuppet> controllerPuppet;
+  mVRControllerTests.Get(aDeviceID,
+                         getter_AddRefs(controllerPuppet));
+  MOZ_ASSERT(controllerPuppet);
+  controllerPuppet->SetPoseMoveState(pose);
   return IPC_OK();
 }
 

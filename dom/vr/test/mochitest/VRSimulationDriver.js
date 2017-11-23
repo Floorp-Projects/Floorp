@@ -6,10 +6,6 @@ var VRSimulationDriver = (function() {
 "use strict";
 
 var AttachWebVRDisplay = function() {
-  if (vrMockDisplay) {
-    // Avoid creating multiple displays
-    return Promise.resolve(vrMockDisplay);
-  }
   var promise = VRServiceTest.attachVRDisplay("VRDisplayTest");
   promise.then(function (display) {
     assert_true(display != null, "AttachWebVRDisplay should success.");

@@ -41,7 +41,7 @@ public:
   virtual void ZeroSensor() = 0;
   virtual void StartPresentation() = 0;
   virtual void StopPresentation() = 0;
-  void NotifyVSync();
+  virtual void NotifyVSync();
 
   void StartFrame();
   void SubmitFrame(VRLayerParent* aLayer,
