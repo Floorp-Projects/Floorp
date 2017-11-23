@@ -90,7 +90,7 @@ describe("FilterBar component:", () => {
     // Toolbar is now hidden
     const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
     expect(toolbar.exists()).toBeFalsy();
-    expect(getAllFilters(store.getState()).get(FILTERS.LOG)).toBeTruthy();
+    expect(getAllFilters(store.getState())[FILTERS.LOG]).toBeTruthy();
   });
 
   it("displays the number of hidden messages when a search hide messages", () => {
@@ -185,9 +185,9 @@ describe("FilterBar component:", () => {
 
     // Let's make sure those non-default filters are off.
     const filters = getAllFilters(store.getState());
-    expect(filters.get(FILTERS.CSS)).toBe(false);
-    expect(filters.get(FILTERS.NET)).toBe(false);
-    expect(filters.get(FILTERS.NETXHR)).toBe(false);
+    expect(filters[FILTERS.CSS]).toBe(false);
+    expect(filters[FILTERS.NET]).toBe(false);
+    expect(filters[FILTERS.NETXHR]).toBe(false);
 
     const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
     expect(toolbar.exists()).toBeFalsy();
