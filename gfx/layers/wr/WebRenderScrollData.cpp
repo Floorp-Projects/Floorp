@@ -54,7 +54,7 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
        asr && asr != aStopAtAsr;
        asr = asr->mParent) {
     MOZ_ASSERT(aOwner.GetManager());
-    FrameMetrics::ViewID scrollId = nsLayoutUtils::ViewIDForASR(asr);
+    FrameMetrics::ViewID scrollId = asr->GetViewId();
     if (Maybe<size_t> index = aOwner.HasMetadataFor(scrollId)) {
       mScrollIds.AppendElement(index.ref());
     } else {
