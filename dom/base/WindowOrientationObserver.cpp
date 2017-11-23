@@ -21,7 +21,7 @@ WindowOrientationObserver::WindowOrientationObserver(
   nsGlobalWindowInner* aGlobalWindow)
   : mWindow(aGlobalWindow)
 {
-  MOZ_ASSERT(aGlobalWindow && aGlobalWindow->IsInnerWindow());
+  MOZ_ASSERT(aGlobalWindow);
   hal::RegisterScreenConfigurationObserver(this);
 
   hal::ScreenConfiguration config;

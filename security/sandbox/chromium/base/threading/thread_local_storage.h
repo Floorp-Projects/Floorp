@@ -56,7 +56,13 @@ class BASE_EXPORT PlatformThreadLocalStorage {
   // SetTLSValue().
   static void FreeTLS(TLSKey key);
   static void SetTLSValue(TLSKey key, void* value);
-  static void* GetTLSValue(TLSKey key);
+  static void* GetTLSValue(TLSKey key) {
+#if defined(OS_WIN)
+    return TlsGetValue(key);
+#elif defined(OS_POSIX)
+    return pthread_getspecific(key);
+#endif
+  }
 
   // Each platform (OS implementation) is required to call this method on each
   // terminating thread when the thread is about to terminate.  This method

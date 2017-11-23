@@ -1278,8 +1278,6 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
     }
   }
 
-  MOZ_ASSERT_IF(ownerWindow, ownerWindow->IsInnerWindow());
-
   nsTArray<nsString> protocolArray;
 
   for (uint32_t index = 0, len = aProtocols.Length(); index < len; ++index) {

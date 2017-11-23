@@ -129,9 +129,6 @@ nsGenericHTMLFrameElement::GetContentWindow()
     return nullptr;
   }
 
-  NS_ASSERTION(win->IsOuterWindow(),
-               "Uh, this window should always be an outer window!");
-
   return win.forget();
 }
 

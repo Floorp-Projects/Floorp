@@ -4,11 +4,9 @@
 
 #include "base/synchronization/lock_impl.h"
 
-#include <errno.h>
 #include <string.h>
 
 #include "base/debug/activity_tracker.h"
-#include "base/logging.h"
 #include "base/synchronization/lock.h"
 
 namespace base {
@@ -62,11 +60,6 @@ bool LockImpl::Try() {
 void LockImpl::Lock() {
   base::debug::ScopedLockAcquireActivity lock_activity(this);
   int rv = pthread_mutex_lock(&native_handle_);
-  DCHECK_EQ(rv, 0) << ". " << strerror(rv);
-}
-
-void LockImpl::Unlock() {
-  int rv = pthread_mutex_unlock(&native_handle_);
   DCHECK_EQ(rv, 0) << ". " << strerror(rv);
 }
 

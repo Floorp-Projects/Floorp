@@ -14,7 +14,7 @@ parts it can be useful to know about:
     to communicate with, instrument, and control Gecko.  It is
     built in to Firefox and written in [XPCOM] flavoured JavaScript.
 
-  * [_libwebdriver_] is a Rust crate providing interfaces, traits
+  * [_webdriver_] is a Rust crate providing interfaces, traits
     and types, errors, type- and bounds checks, and JSON marshaling
     for correctly parsing and emitting the [WebDriver protocol].
 
@@ -24,7 +24,7 @@ for contributing high-quality and actionable bugs and code.
 
 [_geckodriver_]: ./README.md
 [_Marionette_]: ../marionette/README.md
-[_libwebdriver_]: ../webdriver/README.md
+[_webdriver_]: ../webdriver/README.md
 [WebDriver protocol]: https://w3c.github.io/webdriver/webdriver-spec.html#protocol
 [XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Guide
 [Community Participation Guidelines]: https://www.mozilla.org/en-US/about/governance/policies/participation/
@@ -89,7 +89,7 @@ where to start.  Please don’t hesitate to [ask questions]!
 The canonical source code repository of geckodriver is now
 [mozilla-central].  We continue to use the [GitHub issue tracker] as
 a triage ground before actual, actionable bugs and tasks are filed
-in the [`Testing :: geckodriver`] component in Bugzilla.  We also
+in the [`Testing :: geckodriver`] component on Bugzilla.  We also
 have a curated set of [good first bugs] you may consider attempting first.
 
 The purpose of this guide _is not_ to make sure you have a basic

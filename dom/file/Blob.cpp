@@ -98,15 +98,6 @@ Blob::Blob(nsISupports* aParent, BlobImpl* aImpl)
   , mParent(aParent)
 {
   MOZ_ASSERT(mImpl);
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aParent);
-    if (win) {
-      MOZ_ASSERT(win->IsInnerWindow());
-    }
-  }
-#endif
 }
 
 Blob::~Blob()

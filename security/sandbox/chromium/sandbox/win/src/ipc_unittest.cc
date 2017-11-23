@@ -564,7 +564,7 @@ class UnitTestIPCDispatcher : public Dispatcher {
   };
 
   UnitTestIPCDispatcher();
-  ~UnitTestIPCDispatcher() override{};
+  ~UnitTestIPCDispatcher() override {}
 
   bool SetupService(InterceptionManager* manager, int service) override {
     return true;

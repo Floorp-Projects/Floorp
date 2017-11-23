@@ -32,18 +32,23 @@ enum Version {
   VERSION_WIN7 = 4,         // Also includes Windows Server 2008 R2.
   VERSION_WIN8 = 5,         // Also includes Windows Server 2012.
   VERSION_WIN8_1 = 6,       // Also includes Windows Server 2012 R2.
-  VERSION_WIN10 = 7,        // Also includes Windows 10 Server.
+  VERSION_WIN10 = 7,        // Threshold 1: Version 1507, Build 10240.
   VERSION_WIN10_TH2 = 8,    // Threshold 2: Version 1511, Build 10586.
+  VERSION_WIN10_RS1 = 9,    // Redstone 1: Version 1607, Build 14393.
+  VERSION_WIN10_RS2 = 10,   // Redstone 2: Version 1703, Build 15063.
   VERSION_WIN_LAST,         // Indicates error condition.
 };
 
 // A rough bucketing of the available types of versions of Windows. This is used
 // to distinguish enterprise enabled versions from home versions and potentially
-// server versions.
+// server versions. Keep these values in the same order, since they are used as
+// is for metrics histogram ids.
 enum VersionType {
-  SUITE_HOME,
+  SUITE_HOME = 0,
   SUITE_PROFESSIONAL,
   SUITE_SERVER,
+  SUITE_ENTERPRISE,
+  SUITE_EDUCATION,
   SUITE_LAST,
 };
 

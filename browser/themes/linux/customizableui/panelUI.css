@@ -4,10 +4,6 @@
 
 %include ../../shared/customizableui/panelUI.inc.css
 
-.panel-subviews {
-  background-color: var(--arrowpanel-background);
-}
-
 #BMB_bookmarksPopup > menuitem[type="checkbox"] {
   -moz-appearance: none !important; /* important, to override toolkit rule */
 }

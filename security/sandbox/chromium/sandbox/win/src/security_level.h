@@ -10,8 +10,8 @@
 namespace sandbox {
 
 // List of all the integrity levels supported in the sandbox. This is used
-// only on Windows Vista. You can't set the integrity level of the process
-// in the sandbox to a level higher than yours.
+// only on Windows Vista and newer. You can't set the integrity level of the
+// process in the sandbox to a level higher than yours.
 enum IntegrityLevel {
   INTEGRITY_LEVEL_SYSTEM,
   INTEGRITY_LEVEL_HIGH,
@@ -142,48 +142,59 @@ typedef uint64_t MitigationFlags;
 
 // Permanently enables DEP for the target process. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE.
-const MitigationFlags MITIGATION_DEP                              = 0x00000001;
+const MitigationFlags MITIGATION_DEP = 0x00000001;
 
 // Permanently Disables ATL thunk emulation when DEP is enabled. Valid
 // only when MITIGATION_DEP is passed. Corresponds to not passing
 // PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE.
-const MitigationFlags MITIGATION_DEP_NO_ATL_THUNK                 = 0x00000002;
+const MitigationFlags MITIGATION_DEP_NO_ATL_THUNK = 0x00000002;
 
 // Enables Structured exception handling override prevention. Must be
 // enabled prior to process start. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_SEHOP_ENABLE.
-const MitigationFlags MITIGATION_SEHOP                            = 0x00000004;
+const MitigationFlags MITIGATION_SEHOP = 0x00000004;
 
 // Forces ASLR on all images in the child process. In debug builds, must be
 // enabled after startup. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_ON .
-const MitigationFlags MITIGATION_RELOCATE_IMAGE                   = 0x00000008;
+const MitigationFlags MITIGATION_RELOCATE_IMAGE = 0x00000008;
 
 // Refuses to load DLLs that cannot support ASLR. In debug builds, must be
 // enabled after startup. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_ON_REQ_RELOCS.
-const MitigationFlags MITIGATION_RELOCATE_IMAGE_REQUIRED          = 0x00000010;
+const MitigationFlags MITIGATION_RELOCATE_IMAGE_REQUIRED = 0x00000010;
 
 // Terminates the process on Windows heap corruption. Coresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_ALWAYS_ON.
-const MitigationFlags MITIGATION_HEAP_TERMINATE                   = 0x00000020;
+const MitigationFlags MITIGATION_HEAP_TERMINATE = 0x00000020;
 
 // Sets a random lower bound as the minimum user address. Must be
 // enabled prior to process start. On 32-bit processes this is
 // emulated to a much smaller degree. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_ALWAYS_ON.
-const MitigationFlags MITIGATION_BOTTOM_UP_ASLR                   = 0x00000040;
+const MitigationFlags MITIGATION_BOTTOM_UP_ASLR = 0x00000040;
 
 // Increases the randomness range of bottom-up ASLR to up to 1TB. Must be
 // enabled prior to process start and with MITIGATION_BOTTOM_UP_ASLR.
 // Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_ON
-const MitigationFlags MITIGATION_HIGH_ENTROPY_ASLR                = 0x00000080;
+const MitigationFlags MITIGATION_HIGH_ENTROPY_ASLR = 0x00000080;
 
 // Immediately raises an exception on a bad handle reference. Must be
 // enabled after startup. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_ON.
-const MitigationFlags MITIGATION_STRICT_HANDLE_CHECKS             = 0x00000100;
+const MitigationFlags MITIGATION_STRICT_HANDLE_CHECKS = 0x00000100;
+
+// Sets the DLL search order to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS. Additional
+// directories can be added via the Windows AddDllDirectory() function.
+// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515
+// Must be enabled after startup.
+const MitigationFlags MITIGATION_DLL_SEARCH_ORDER = 0x00000200;
+
+// Changes the mandatory integrity level policy on the current process' token
+// to enable no-read and no-execute up. This prevents a lower IL process from
+// opening the process token for impersonate/duplicate/assignment.
+const MitigationFlags MITIGATION_HARDEN_TOKEN_IL_POLICY = 0x00000400;
 
 // Prevents the process from making Win32k calls. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_ON.
@@ -192,40 +203,57 @@ const MitigationFlags MITIGATION_STRICT_HANDLE_CHECKS             = 0x00000100;
 // setup, even if Win32k is not otherwise used. So they also need to add a rule
 // with SUBSYS_WIN32K_LOCKDOWN and semantics FAKE_USER_GDI_INIT to allow the
 // initialization to succeed.
-const MitigationFlags MITIGATION_WIN32K_DISABLE                   = 0x00000200;
+const MitigationFlags MITIGATION_WIN32K_DISABLE = 0x00000800;
 
 // Prevents certain built-in third party extension points from being used.
 // - App_Init DLLs
 // - Winsock Layered Service Providers (LSPs)
 // - Global Windows Hooks (NOT thread-targeted hooks)
-// - Legacy Input Method Editors (IMEs).
+// - Legacy Input Method Editors (IMEs)
 // I.e.: Disable legacy hooking mechanisms.  Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON.
-const MitigationFlags MITIGATION_EXTENSION_POINT_DISABLE = 0x00000400;
+const MitigationFlags MITIGATION_EXTENSION_POINT_DISABLE = 0x00001000;
+
+// Prevents the process from generating dynamic code or modifying executable
+// code. Second option to allow thread-specific opt-out.
+// - VirtualAlloc with PAGE_EXECUTE_*
+// - VirtualProtect with PAGE_EXECUTE_*
+// - MapViewOfFile with FILE_MAP_EXECUTE | FILE_MAP_WRITE
+// - SetProcessValidCallTargets for CFG
+// Corresponds to
+// PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON and
+// PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON_ALLOW_OPT_OUT.
+const MitigationFlags MITIGATION_DYNAMIC_CODE_DISABLE = 0x00002000;
+const MitigationFlags MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT = 0x00004000;
+// The following per-thread flag can be used with the
+// ApplyMitigationsToCurrentThread API.  Requires the above process mitigation
+// to be set on the current process.
+const MitigationFlags MITIGATION_DYNAMIC_CODE_OPT_OUT_THIS_THREAD = 0x00008000;
 
 // Prevents the process from loading non-system fonts into GDI.
 // Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_FONT_DISABLE_ALWAYS_ON
-const MitigationFlags MITIGATION_NONSYSTEM_FONT_DISABLE = 0x00000800;
+const MitigationFlags MITIGATION_NONSYSTEM_FONT_DISABLE = 0x00010000;
 
-// Sets the DLL search order to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS. Additional
-// directories can be added via the Windows AddDllDirectory() function.
-// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515
-// Must be enabled after startup.
-const MitigationFlags MITIGATION_DLL_SEARCH_ORDER        = 0x00000001ULL << 32;
-
-// Changes the mandatory integrity level policy on the current process' token
-// to enable no-read and no-execute up. This prevents a lower IL process from
-// opening the process token for impersonate/duplicate/assignment.
-const MitigationFlags MITIGATION_HARDEN_TOKEN_IL_POLICY  = 0x00000001ULL << 33;
+// Prevents the process from loading binaries NOT signed by MS.
+// Corresponds to
+// PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON
+const MitigationFlags MITIGATION_FORCE_MS_SIGNED_BINS = 0x00020000;
 
 // Blocks mapping of images from remote devices. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_NO_REMOTE_ALWAYS_ON.
-const MitigationFlags MITIGATION_IMAGE_LOAD_NO_REMOTE = 0x00000001ULL << 52;
+const MitigationFlags MITIGATION_IMAGE_LOAD_NO_REMOTE = 0x00040000;
 
 // Blocks mapping of images that have the low manditory label. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_NO_LOW_LABEL_ALWAYS_ON.
-const MitigationFlags MITIGATION_IMAGE_LOAD_NO_LOW_LABEL = 0x00000001ULL << 56;
+const MitigationFlags MITIGATION_IMAGE_LOAD_NO_LOW_LABEL = 0x00080000;
+
+// Forces image load preference to prioritize the Windows install System32
+// folder before dll load dir, application dir and any user dirs set.
+// - Affects IAT resolution standard search path only, NOT direct LoadLibrary or
+//   executable search path.
+// PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON.
+const MitigationFlags MITIGATION_IMAGE_LOAD_PREFER_SYS32 = 0x00100000;
 
 }  // namespace sandbox
 

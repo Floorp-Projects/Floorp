@@ -399,7 +399,7 @@ const PanelUI = {
 
     this.ensureLibraryInitialized(viewNode);
 
-    let container = aAnchor.closest("panelmultiview,photonpanelmultiview");
+    let container = aAnchor.closest("panelmultiview");
     if (container) {
       container.showSubView(aViewId, aAnchor);
     } else if (!aAnchor.open) {
@@ -434,7 +434,7 @@ const PanelUI = {
       let listener = () => viewShown = true;
       viewNode.addEventListener("ViewShown", listener, {once: true});
 
-      let multiView = document.createElement("photonpanelmultiview");
+      let multiView = document.createElement("panelmultiview");
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
       multiView.setAttribute("mainViewId", viewNode.id);
