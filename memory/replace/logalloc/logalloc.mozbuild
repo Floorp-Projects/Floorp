@@ -29,7 +29,7 @@ else:
 include('/ipc/chromium/chromium-config.mozbuild')
 
 # Android doesn't have pthread_atfork, but we have our own in mozglue.
-if CONFIG['OS_TARGET'] == 'Android':
+if CONFIG['OS_TARGET'] == 'Android' and FORCE_SHARED_LIB:
     USE_LIBS += [
         'mozglue',
     ]
