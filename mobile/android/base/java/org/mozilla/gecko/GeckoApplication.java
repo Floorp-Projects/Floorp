@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Process;
@@ -39,12 +38,11 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mdns.MulticastDNSManager;
 import org.mozilla.gecko.media.AudioFocusAgent;
-import org.mozilla.gecko.media.RemoteManager;
 import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
-import org.mozilla.gecko.util.ActivityUtils;
+import org.mozilla.gecko.pwa.PwaUtils;
 import org.mozilla.gecko.telemetry.TelemetryBackgroundReceiver;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -54,7 +52,6 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PRNGFixes;
 import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UIAsyncTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -569,7 +566,15 @@ public class GeckoApplication extends Application
         final String manifestUrl = selectedTab.getManifestUrl();
 
         if (manifestUrl != null) {
-            // If a page has associated manifest, lets install it
+            // If a page has associated manifest, lets install it (PWA A2HS)
+            // At this time, this page must be a secure page.
+            // Please hide PWA badge UI in front end side.
+            // Otherwise we'll throw an exception here.
+            final boolean safeForPwa = PwaUtils.shouldAddPwaShortcut(selectedTab);
+            if (!safeForPwa) {
+                throw new IllegalStateException("This page is not safe for PWA");
+            }
+
             final GeckoBundle message = new GeckoBundle();
             message.putInt("iconSize", GeckoAppShell.getPreferredIconSize());
             message.putString("manifestUrl", manifestUrl);

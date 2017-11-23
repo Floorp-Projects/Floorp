@@ -835,6 +835,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'prompts/PromptListItem.java',
     'prompts/PromptService.java',
     'prompts/TabInput.java',
+    'pwa/PwaUtils.java',
     'reader/ReaderModeUtils.java',
     'reader/ReadingListHelper.java',
     'reader/SavedReaderViewHelper.java',
