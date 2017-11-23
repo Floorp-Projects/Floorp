@@ -1659,8 +1659,13 @@ class CreditCards extends AutofillRecords {
         if (!clonedTargetCreditCard[field]) {
           return !creditCard[field];
         }
-        if (field == "cc-number") {
-          return this._getMaskedCCNumber(clonedTargetCreditCard[field]) == creditCard[field];
+        if (field == "cc-number" && creditCard[field]) {
+          if (MasterPassword.isEnabled) {
+            // Compare the masked numbers instead when the master password is
+            // enabled because we don't want to leak the credit card number.
+            return this._getMaskedCCNumber(clonedTargetCreditCard[field]) == creditCard[field];
+          }
+          return clonedTargetCreditCard[field] == MasterPassword.decryptSync(creditCard["cc-number-encrypted"]);
         }
         return clonedTargetCreditCard[field] == creditCard[field];
       });

@@ -520,3 +520,45 @@ add_task(async function test_mergeToStorage() {
   // Empty computed fields shouldn't cause any problem.
   do_check_eq(profileStorage.creditCards.mergeToStorage(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD).length, 0);
 });
+
+add_task(async function test_getDuplicateGuid() {
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_CREDIT_CARD_3],
+                                                "creditCards");
+  let guid = profileStorage.creditCards._data[0].guid;
+
+  // Absolutely a duplicate.
+  do_check_eq(profileStorage.creditCards.getDuplicateGuid(TEST_CREDIT_CARD_3), guid);
+
+  // Absolutely not a duplicate.
+  do_check_eq(profileStorage.creditCards.getDuplicateGuid(TEST_CREDIT_CARD_1), null);
+
+  // Subset shouldn't be treated as a duplicate.
+  let record = Object.assign({}, TEST_CREDIT_CARD_3);
+  delete record["cc-exp-month"];
+  do_check_eq(profileStorage.creditCards.getDuplicateGuid(record), null);
+
+  // Superset shouldn't be treated as a duplicate.
+  record = Object.assign({}, TEST_CREDIT_CARD_3);
+  record["cc-name"] = "John Doe";
+  do_check_eq(profileStorage.creditCards.getDuplicateGuid(record), null);
+
+  // Numbers with the same last 4 digits shouldn't be treated as a duplicate.
+  record = Object.assign({}, TEST_CREDIT_CARD_3);
+  let last4Digits = record["cc-number"].substr(-4);
+  record["cc-number"] = "000000000000" + last4Digits;
+  do_check_eq(profileStorage.creditCards.getDuplicateGuid(record), null);
+
+  // ... However, we treat numbers with the same last 4 digits as a duplicate if
+  // the master password is enabled.
+  let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(Ci.nsIPK11TokenDB);
+  let token = tokendb.getInternalKeyToken();
+  token.reset();
+  token.initPassword("password");
+  do_check_eq(profileStorage.creditCards.getDuplicateGuid(record), guid);
+
+  // ... Even though the master password is enabled and the last 4 digits are the
+  // same, an invalid credit card number should never be treated as a duplicate.
+  record["cc-number"] = "************" + last4Digits;
+  do_check_eq(profileStorage.creditCards.getDuplicateGuid(record), null);
+});
