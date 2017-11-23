@@ -197,24 +197,36 @@ struct RegI32 : public Register
 {
     RegI32() : Register(Register::Invalid()) {}
     explicit RegI32(Register reg) : Register(reg) {}
+    bool isValid() const { return *this != Invalid(); }
+    bool isInvalid() const { return !isValid(); }
+    static RegI32 Invalid() { return RegI32(Register::Invalid()); }
 };
 
 struct RegI64 : public Register64
 {
     RegI64() : Register64(Register64::Invalid()) {}
     explicit RegI64(Register64 reg) : Register64(reg) {}
+    bool isValid() const { return *this != Invalid(); }
+    bool isInvalid() const { return !isValid(); }
+    static RegI64 Invalid() { return RegI64(Register64::Invalid()); }
 };
 
 struct RegF32 : public FloatRegister
 {
     RegF32() : FloatRegister() {}
     explicit RegF32(FloatRegister reg) : FloatRegister(reg) {}
+    bool isValid() const { return *this != Invalid(); }
+    bool isInvalid() const { return !isValid(); }
+    static RegF32 Invalid() { return RegF32(InvalidFloatReg); }
 };
 
 struct RegF64 : public FloatRegister
 {
     RegF64() : FloatRegister() {}
     explicit RegF64(FloatRegister reg) : FloatRegister(reg) {}
+    bool isValid() const { return *this != Invalid(); }
+    bool isInvalid() const { return !isValid(); }
+    static RegF64 Invalid() { return RegF64(InvalidFloatReg); }
 };
 
 struct AnyReg
@@ -1545,7 +1557,196 @@ class BaseCompiler final : public BaseCompilerInterface
 
     ////////////////////////////////////////////////////////////
     //
-    // Value stack and high-level register allocation.
+    // High-level register management.
+
+    bool isAvailableI32(RegI32 r) { return ra.isAvailableI32(r); }
+    bool isAvailableI64(RegI64 r) { return ra.isAvailableI64(r); }
+    bool isAvailableF32(RegF32 r) { return ra.isAvailableF32(r); }
+    bool isAvailableF64(RegF64 r) { return ra.isAvailableF64(r); }
+
+    MOZ_MUST_USE RegI32 needI32() { return ra.needI32(); }
+    MOZ_MUST_USE RegI64 needI64() { return ra.needI64(); }
+    MOZ_MUST_USE RegF32 needF32() { return ra.needF32(); }
+    MOZ_MUST_USE RegF64 needF64() { return ra.needF64(); }
+
+    void needI32(RegI32 specific) { ra.needI32(specific); }
+    void needI64(RegI64 specific) { ra.needI64(specific); }
+    void needF32(RegF32 specific) { ra.needF32(specific); }
+    void needF64(RegF64 specific) { ra.needF64(specific); }
+
+#if defined(JS_CODEGEN_ARM)
+    MOZ_MUST_USE RegI64 needI64Pair() { return ra.needI64Pair(); }
+#endif
+
+    void freeI32(RegI32 r) { ra.freeI32(r); }
+    void freeI64(RegI64 r) { ra.freeI64(r); }
+    void freeF32(RegF32 r) { ra.freeF32(r); }
+    void freeF64(RegF64 r) { ra.freeF64(r); }
+
+    void freeI64Except(RegI64 r, RegI32 except) {
+#ifdef JS_PUNBOX64
+        MOZ_ASSERT(r.reg == except);
+#else
+        MOZ_ASSERT(r.high == except || r.low == except);
+        freeI64(r);
+        needI32(except);
+#endif
+    }
+
+    void maybeFreeI32(RegI32 r) {
+        if (r.isValid())
+            freeI32(r);
+    }
+
+    void maybeFreeI64(RegI64 r) {
+        if (r.isValid())
+            freeI64(r);
+    }
+
+    void needI32NoSync(RegI32 r) {
+        MOZ_ASSERT(isAvailableI32(r));
+        needI32(r);
+    }
+
+    // TODO / OPTIMIZE: need2xI32() can be optimized along with needI32()
+    // to avoid sync(). (Bug 1316802)
+
+    void need2xI32(RegI32 r0, RegI32 r1) {
+        needI32(r0);
+        needI32(r1);
+    }
+
+    void need2xI64(RegI64 r0, RegI64 r1) {
+        needI64(r0);
+        needI64(r1);
+    }
+
+    RegI32 fromI64(RegI64 r) {
+        return RegI32(lowPart(r));
+    }
+
+#ifdef JS_64BIT
+    RegI64 fromI32(RegI32 r) {
+        return RegI64(Register64(r));
+    }
+#endif
+
+    RegI64 widenI32(RegI32 r) {
+        MOZ_ASSERT(!isAvailableI32(r));
+#ifdef JS_PUNBOX64
+        return fromI32(r);
+#else
+        RegI32 high = needI32();
+        return RegI64(Register64(high, r));
+#endif
+    }
+
+    RegI32 narrowI64(RegI64 r) {
+#if defined(JS_PUNBOX64)
+        return RegI32(r.reg);
+#else
+        freeI32(RegI32(r.high));
+        return RegI32(r.low);
+#endif
+    }
+
+    RegI32 lowPart(RegI64 r) {
+#ifdef JS_PUNBOX64
+        return RegI32(r.reg);
+#else
+        return RegI32(r.low);
+#endif
+    }
+
+    RegI32 maybeHighPart(RegI64 r) {
+#ifdef JS_PUNBOX64
+        return RegI32::Invalid();
+#else
+        return RegI32(r.high);
+#endif
+    }
+
+    void maybeClearHighPart(RegI64 r) {
+#if !defined(JS_PUNBOX64)
+        moveImm32(0, RegI32(r.high));
+#endif
+    }
+
+    void moveI32(RegI32 src, RegI32 dest) {
+        if (src != dest)
+            masm.move32(src, dest);
+    }
+
+    void moveI64(RegI64 src, RegI64 dest) {
+        if (src != dest)
+            masm.move64(src, dest);
+    }
+
+    void moveF64(RegF64 src, RegF64 dest) {
+        if (src != dest)
+            masm.moveDouble(src, dest);
+    }
+
+    void moveF32(RegF32 src, RegF32 dest) {
+        if (src != dest)
+            masm.moveFloat32(src, dest);
+    }
+
+    void maybeReserveJoinRegI(ExprType type) {
+        if (type == ExprType::I32)
+            needI32(joinRegI32);
+        else if (type == ExprType::I64)
+            needI64(joinRegI64);
+    }
+
+    void maybeUnreserveJoinRegI(ExprType type) {
+        if (type == ExprType::I32)
+            freeI32(joinRegI32);
+        else if (type == ExprType::I64)
+            freeI64(joinRegI64);
+    }
+
+    void maybeReserveJoinReg(ExprType type) {
+        switch (type) {
+          case ExprType::I32:
+            needI32(joinRegI32);
+            break;
+          case ExprType::I64:
+            needI64(joinRegI64);
+            break;
+          case ExprType::F32:
+            needF32(joinRegF32);
+            break;
+          case ExprType::F64:
+            needF64(joinRegF64);
+            break;
+          default:
+            break;
+        }
+    }
+
+    void maybeUnreserveJoinReg(ExprType type) {
+        switch (type) {
+          case ExprType::I32:
+            freeI32(joinRegI32);
+            break;
+          case ExprType::I64:
+            freeI64(joinRegI64);
+            break;
+          case ExprType::F32:
+            freeF32(joinRegF32);
+            break;
+          case ExprType::F64:
+            freeF64(joinRegF64);
+            break;
+          default:
+            break;
+        }
+    }
+
+    ////////////////////////////////////////////////////////////
+    //
+    // Value stack and spilling.
     //
     // The value stack facilitates some on-the-fly register allocation
     // and immediate-constant use.  It tracks constants, latent
@@ -1643,161 +1844,8 @@ class BaseCompiler final : public BaseCompilerInterface
         return stk_.back();
     }
 
-    RegI32 invalidI32() {
-        return RegI32(Register::Invalid());
-    }
-
-    RegI64 invalidI64() {
-        return RegI64(Register64::Invalid());
-    }
-
-    RegF64 invalidF64() {
-        return RegF64(InvalidFloatReg);
-    }
-
-    RegI32 fromI64(RegI64 r) {
-        return RegI32(lowPart(r));
-    }
-
-#ifdef JS_64BIT
-    RegI64 fromI32(RegI32 r) {
-        return RegI64(Register64(r));
-    }
-#endif
-
-    RegI64 widenI32(RegI32 r) {
-        MOZ_ASSERT(!isAvailableI32(r));
-#ifdef JS_PUNBOX64
-        return fromI32(r);
-#else
-        RegI32 high = needI32();
-        return RegI64(Register64(high, r));
-#endif
-    }
-
-    RegI32 narrowI64(RegI64 r) {
-#if defined(JS_PUNBOX64)
-        return RegI32(r.reg);
-#else
-        freeI32(RegI32(r.high));
-        return RegI32(r.low);
-#endif
-    }
-
-    Register lowPart(RegI64 r) {
-#ifdef JS_PUNBOX64
-        return r.reg;
-#else
-        return r.low;
-#endif
-    }
-
-    Register maybeHighPart(RegI64 r) {
-#ifdef JS_PUNBOX64
-        return Register::Invalid();
-#else
-        return r.high;
-#endif
-    }
-
-    void maybeClearHighPart(RegI64 r) {
-#if !defined(JS_PUNBOX64)
-        masm.move32(Imm32(0), r.high);
-#endif
-    }
-
-    bool isAvailableI32(RegI32 r) { return ra.isAvailableI32(r); }
-    bool isAvailableI64(RegI64 r) { return ra.isAvailableI64(r); }
-    bool isAvailableF32(RegF32 r) { return ra.isAvailableF32(r); }
-    bool isAvailableF64(RegF64 r) { return ra.isAvailableF64(r); }
-
-    MOZ_MUST_USE RegI32 needI32() { return ra.needI32(); }
-    MOZ_MUST_USE RegI64 needI64() { return ra.needI64(); }
-    MOZ_MUST_USE RegF32 needF32() { return ra.needF32(); }
-    MOZ_MUST_USE RegF64 needF64() { return ra.needF64(); }
-
-    void needI32(RegI32 specific) { ra.needI32(specific); }
-    void needI64(RegI64 specific) { ra.needI64(specific); }
-    void needF32(RegF32 specific) { ra.needF32(specific); }
-    void needF64(RegF64 specific) { ra.needF64(specific); }
-
-#if defined(JS_CODEGEN_ARM)
-    MOZ_MUST_USE RegI64 needI64Pair() { return ra.needI64Pair(); }
-#endif
-
-    void freeI32(RegI32 r) { ra.freeI32(r); }
-    void freeI64(RegI64 r) { ra.freeI64(r); }
-    void freeF32(RegF32 r) { ra.freeF32(r); }
-    void freeF64(RegF64 r) { ra.freeF64(r); }
-
-    void freeI64Except(RegI64 r, RegI32 except) {
-#ifdef JS_PUNBOX64
-        MOZ_ASSERT(r.reg == except);
-#else
-        MOZ_ASSERT(r.high == except || r.low == except);
-        freeI64(r);
-        needI32(except);
-#endif
-    }
-
-    void maybeFreeI32(RegI32 r) {
-        if (r != invalidI32())
-            freeI32(r);
-    }
-
-    void maybeFreeI64(RegI64 r) {
-        if (r != invalidI64())
-            freeI64(r);
-    }
-
-    void needI32NoSync(RegI32 r) {
-        MOZ_ASSERT(isAvailableI32(r));
-        needI32(r);
-    }
-
-    // TODO / OPTIMIZE: need2xI32() can be optimized along with needI32()
-    // to avoid sync(). (Bug 1316802)
-
-    void need2xI32(RegI32 r0, RegI32 r1) {
-        needI32(r0);
-        needI32(r1);
-    }
-
-    void need2xI64(RegI64 r0, RegI64 r1) {
-        needI64(r0);
-        needI64(r1);
-    }
-
-    void moveI32(RegI32 src, RegI32 dest) {
-        if (src != dest)
-            masm.move32(src, dest);
-    }
-
-    void moveI64(RegI64 src, RegI64 dest) {
-        if (src != dest)
-            masm.move64(src, dest);
-    }
-
-    void moveF64(RegF64 src, RegF64 dest) {
-        if (src != dest)
-            masm.moveDouble(src, dest);
-    }
-
-    void moveF32(RegF32 src, RegF32 dest) {
-        if (src != dest)
-            masm.moveFloat32(src, dest);
-    }
-
-    void setI64(int64_t v, RegI64 r) {
-        masm.move64(Imm64(v), r);
-    }
-
     void loadConstI32(RegI32 r, Stk& src) {
-        masm.mov(ImmWord(uint32_t(src.i32val())), r);
-    }
-
-    void loadConstI32(RegI32 r, int32_t v) {
-        masm.mov(ImmWord(uint32_t(v)), r);
+        moveImm32(src.i32val(), r);
     }
 
     void loadMemI32(RegI32 r, Stk& src) {
@@ -1809,12 +1857,11 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadRegisterI32(RegI32 r, Stk& src) {
-        if (src.i32reg() != r)
-            masm.move32(src.i32reg(), r);
+        moveI32(src.i32reg(), r);
     }
 
     void loadConstI64(RegI64 r, Stk &src) {
-        masm.move64(Imm64(src.i64val()), r);
+        moveImm64(src.i64val(), r);
     }
 
     void loadMemI64(RegI64 r, Stk& src) {
@@ -1826,8 +1873,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadRegisterI64(RegI64 r, Stk& src) {
-        if (src.i64reg() != r)
-            masm.move64(src.i64reg(), r);
+        moveI64(src.i64reg(), r);
     }
 
     void loadConstF64(RegF64 r, Stk &src) {
@@ -1845,8 +1891,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadRegisterF64(RegF64 r, Stk& src) {
-        if (src.f64reg() != r)
-            masm.moveDouble(src.f64reg(), r);
+        moveF64(src.f64reg(), r);
     }
 
     void loadConstF32(RegF32 r, Stk &src) {
@@ -1864,8 +1909,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadRegisterF32(RegF32 r, Stk& src) {
-        if (src.f32reg() != r)
-            masm.moveFloat32(src.f32reg(), r);
+        moveF32(src.f32reg(), r);
     }
 
     void loadI32(RegI32 r, Stk& src) {
@@ -1912,7 +1956,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void loadI64Low(RegI32 r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstI64:
-            masm.move32(Imm64(src.i64val()).low(), r);
+            moveImm32(int32_t(src.i64val()), r);
             break;
           case Stk::MemI64:
             fr.loadStackI64Low(r, src.offs());
@@ -1921,8 +1965,7 @@ class BaseCompiler final : public BaseCompilerInterface
             fr.loadLocalI64Low(r, localFromSlot(src.slot(), MIRType::Int64));
             break;
           case Stk::RegisterI64:
-            if (src.i64reg().low != r)
-                masm.move32(src.i64reg().low, r);
+            moveI32(RegI32(src.i64reg().low), r);
             break;
           case Stk::None:
           default:
@@ -1933,7 +1976,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void loadI64High(RegI32 r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstI64:
-            masm.move32(Imm64(src.i64val()).hi(), r);
+            moveImm32(int32_t(src.i64val() >> 32), r);
             break;
           case Stk::MemI64:
             fr.loadStackI64High(r, src.offs());
@@ -1942,8 +1985,7 @@ class BaseCompiler final : public BaseCompilerInterface
             fr.loadLocalI64High(r, localFromSlot(src.slot(), MIRType::Int64));
             break;
           case Stk::RegisterI64:
-            if (src.i64reg().high != r)
-                masm.move32(src.i64reg().high, r);
+            moveI32(RegI32(src.i64reg().high), r);
             break;
           case Stk::None:
           default:
@@ -2594,58 +2636,6 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     }
 
-    void maybeReserveJoinRegI(ExprType type) {
-        if (type == ExprType::I32)
-            needI32(joinRegI32);
-        else if (type == ExprType::I64)
-            needI64(joinRegI64);
-    }
-
-    void maybeUnreserveJoinRegI(ExprType type) {
-        if (type == ExprType::I32)
-            freeI32(joinRegI32);
-        else if (type == ExprType::I64)
-            freeI64(joinRegI64);
-    }
-
-    void maybeReserveJoinReg(ExprType type) {
-        switch (type) {
-          case ExprType::I32:
-            needI32(joinRegI32);
-            break;
-          case ExprType::I64:
-            needI64(joinRegI64);
-            break;
-          case ExprType::F32:
-            needF32(joinRegF32);
-            break;
-          case ExprType::F64:
-            needF64(joinRegF64);
-            break;
-          default:
-            break;
-        }
-    }
-
-    void maybeUnreserveJoinReg(ExprType type) {
-        switch (type) {
-          case ExprType::I32:
-            freeI32(joinRegI32);
-            break;
-          case ExprType::I64:
-            freeI64(joinRegI64);
-            break;
-          case ExprType::F32:
-            freeF32(joinRegF32);
-            break;
-          case ExprType::F64:
-            freeF64(joinRegF64);
-            break;
-          default:
-            break;
-        }
-    }
-
     // Return the amount of execution stack consumed by the top numval
     // values on the value stack.
 
@@ -3214,6 +3204,25 @@ class BaseCompiler final : public BaseCompilerInterface
     //
     // Sundry low-level code generators.
 
+    // The compiler depends on moveImm32() clearing the high bits of a 64-bit
+    // register on 64-bit systems.
+
+    void moveImm32(int32_t v, RegI32 dest) {
+        masm.mov(ImmWord(uint32_t(v)), dest);
+    }
+
+    void moveImm64(int64_t v, RegI64 dest) {
+        masm.move64(Imm64(v), dest);
+    }
+
+    void moveImmF32(float f, RegF32 dest) {
+        masm.loadConstantFloat32(f, dest);
+    }
+
+    void moveImmF64(double d, RegF64 dest) {
+        masm.loadConstantDouble(d, dest);
+    }
+
     void addInterruptCheck()
     {
         // Always use signals for interrupts with Asm.JS/Wasm
@@ -3363,7 +3372,7 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.branch32(Assembler::NotEqual, srcDest, Imm32(INT32_MIN), &notMin);
         if (zeroOnOverflow) {
             masm.branch32(Assembler::NotEqual, rhs, Imm32(-1), &notMin);
-            masm.move32(Imm32(0), srcDest);
+            moveImm32(0, srcDest);
             masm.jump(done);
         } else {
             masm.branch32(Assembler::Equal, rhs, Imm32(-1), trap(Trap::IntegerOverflow));
@@ -3725,10 +3734,10 @@ class BaseCompiler final : public BaseCompilerInterface
         // able to do better.
         Label done, condTrue;
         masm.branch64(cond, lhs, rhs, &condTrue);
-        masm.move32(Imm32(0), dest);
+        moveImm32(0, dest);
         masm.jump(&done);
         masm.bind(&condTrue);
-        masm.move32(Imm32(1), dest);
+        moveImm32(1, dest);
         masm.bind(&done);
 #else
         MOZ_CRASH("BaseCompiler platform hook: cmp64Set");
@@ -3900,11 +3909,11 @@ class BaseCompiler final : public BaseCompilerInterface
 #ifdef WASM_HUGE_MEMORY
         // We have HeapReg and no bounds checking and need load neither
         // memoryBase nor boundsCheckLimit from tls.
-        MOZ_ASSERT_IF(check->omitBoundsCheck, tls == invalidI32());
+        MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
 #endif
 #ifdef JS_CODEGEN_ARM
         // We have HeapReg on ARM and don't need to load the memoryBase from tls.
-        MOZ_ASSERT_IF(check->omitBoundsCheck, tls == invalidI32());
+        MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
 #endif
 
         // Bounds check if required.
@@ -3984,7 +3993,7 @@ class BaseCompiler final : public BaseCompilerInterface
                 break;
               case AnyReg::F32:
                 masm.wasmUnalignedLoadFP(*access, HeapReg, ptr, ptr, dest.f32(), tmp1, tmp2,
-                                         Register::Invalid());
+                                         RegI32::Invalid());
                 break;
               case AnyReg::F64:
                 masm.wasmUnalignedLoadFP(*access, HeapReg, ptr, ptr, dest.f64(), tmp1, tmp2, tmp3);
@@ -4022,12 +4031,12 @@ class BaseCompiler final : public BaseCompilerInterface
 
         // Emit the store
 #if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(tmp == invalidI32());
+        MOZ_ASSERT(tmp.isInvalid());
         Operand dstAddr(HeapReg, ptr, TimesOne, access->offset());
 
         masm.wasmStore(*access, src.any(), dstAddr);
 #elif defined(JS_CODEGEN_X86)
-        MOZ_ASSERT(tmp == invalidI32());
+        MOZ_ASSERT(tmp.isInvalid());
         masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
         Operand dstAddr(ptr, access->offset());
 
@@ -4064,12 +4073,12 @@ class BaseCompiler final : public BaseCompilerInterface
                 masm.wasmUnalignedStoreFP(*access, src.f64(), HeapReg, ptr, ptr, tmp);
                 break;
               default:
-                MOZ_ASSERT(tmp == invalidI32());
+                MOZ_ASSERT(tmp.isInvalid());
                 masm.wasmUnalignedStore(*access, src.i32(), HeapReg, ptr, ptr);
                 break;
             }
         } else {
-            MOZ_ASSERT(tmp == invalidI32());
+            MOZ_ASSERT(tmp.isInvalid());
             if (access->type() == Scalar::Int64)
                 masm.wasmStoreI64(*access, src.i64(), HeapReg, ptr, ptr);
             else if (src.tag == AnyReg::I64)
@@ -4092,7 +4101,7 @@ class BaseCompiler final : public BaseCompilerInterface
 #elif defined(JS_CODEGEN_X86)
 
 # define ATOMIC_PTR(name, access, tls, ptr)                             \
-    MOZ_ASSERT((tls) != invalidI32());                                  \
+    MOZ_ASSERT((tls).isValid());                                        \
     masm.addPtr(Address((tls), offsetof(TlsData, memoryBase)), (ptr));  \
     Address name((ptr), (access)->offset())
 
@@ -4178,7 +4187,7 @@ class BaseCompiler final : public BaseCompilerInterface
             RegI32 d = rd;
 #ifdef JS_CODEGEN_X86
             // The temp, if used, must be a byte register.
-            MOZ_ASSERT(tmp == invalidI32());
+            MOZ_ASSERT(tmp.isInvalid());
             ScratchEBX scratch(*this);
             if (op != AtomicFetchAddOp && op != AtomicFetchSubOp)
                 tmp = scratch;
@@ -5004,7 +5013,7 @@ BaseCompiler::emitQuotientI64()
         if (power != 0) {
             RegI64 r = popI64();
             Label positive;
-            masm.branchTest64(Assembler::NotSigned, r, r, Register::Invalid(),
+            masm.branchTest64(Assembler::NotSigned, r, r, RegI32::Invalid(),
                               &positive);
             masm.add64(Imm64(c-1), r);
             masm.bind(&positive);
@@ -5062,8 +5071,7 @@ BaseCompiler::emitRemainderI64()
         moveI64(r, temp);
 
         Label positive;
-        masm.branchTest64(Assembler::NotSigned, temp, temp,
-                          Register::Invalid(), &positive);
+        masm.branchTest64(Assembler::NotSigned, temp, temp, RegI32::Invalid(), &positive);
         masm.add64(Imm64(c-1), temp);
         masm.bind(&positive);
 
@@ -5140,7 +5148,7 @@ BaseCompiler::emitMinF32()
     // TODO / OPTIMIZE (bug 1316824): Don't do this if one of the operands
     // is known to be a constant.
     ScratchF32 zero(*this);
-    masm.loadConstantFloat32(0.f, zero);
+    moveImmF32(0.f, zero);
     masm.subFloat32(zero, r0);
     masm.subFloat32(zero, r1);
     masm.minFloat32(r1, r0, HandleNaNSpecially(true));
@@ -5157,7 +5165,7 @@ BaseCompiler::emitMaxF32()
     //
     // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
     ScratchF32 zero(*this);
-    masm.loadConstantFloat32(0.f, zero);
+    moveImmF32(0.f, zero);
     masm.subFloat32(zero, r0);
     masm.subFloat32(zero, r1);
     masm.maxFloat32(r1, r0, HandleNaNSpecially(true));
@@ -5174,7 +5182,7 @@ BaseCompiler::emitMinF64()
     //
     // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
     ScratchF64 zero(*this);
-    masm.loadConstantDouble(0, zero);
+    moveImmF64(0, zero);
     masm.subDouble(zero, r0);
     masm.subDouble(zero, r1);
     masm.minDouble(r1, r0, HandleNaNSpecially(true));
@@ -5191,7 +5199,7 @@ BaseCompiler::emitMaxF64()
     //
     // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
     ScratchF64 zero(*this);
-    masm.loadConstantDouble(0, zero);
+    moveImmF64(0, zero);
     masm.subDouble(zero, r0);
     masm.subDouble(zero, r1);
     masm.maxDouble(r1, r0, HandleNaNSpecially(true));
@@ -5587,7 +5595,7 @@ BaseCompiler::emitPopcntI32()
         masm.popcnt32(r0, r0, tmp);
         freeI32(tmp);
     } else {
-        masm.popcnt32(r0, r0, invalidI32());
+        masm.popcnt32(r0, r0, RegI32::Invalid());
     }
     pushI32(r0);
 }
@@ -5601,7 +5609,7 @@ BaseCompiler::emitPopcntI64()
         masm.popcnt64(r0, r0, tmp);
         freeI32(tmp);
     } else {
-        masm.popcnt64(r0, r0, invalidI32());
+        masm.popcnt64(r0, r0, RegI32::Invalid());
     }
     pushI64(r0);
 }
@@ -5693,7 +5701,7 @@ BaseCompiler::emitTruncateF32ToI64()
             return false;
         freeF64(tmp);
     } else {
-        if (!truncateF32ToI64(r0, x0, isUnsigned, invalidF64()))
+        if (!truncateF32ToI64(r0, x0, isUnsigned, RegF64::Invalid()))
             return false;
     }
     freeF32(r0);
@@ -5713,7 +5721,7 @@ BaseCompiler::emitTruncateF64ToI64()
             return false;
         freeF64(tmp);
     } else {
-        if (!truncateF64ToI64(r0, x0, isUnsigned, invalidF64()))
+        if (!truncateF64ToI64(r0, x0, isUnsigned, RegF64::Invalid()))
             return false;
     }
     freeF64(r0);
@@ -7206,7 +7214,7 @@ BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check)
         }
 
         RegI32 r = needI32();
-        loadConstI32(r, int32_t(addr));
+        moveImm32(int32_t(addr), r);
         return r;
     }
 
@@ -7436,9 +7444,9 @@ BaseCompiler::emitSelect()
         // their evaluation stack and regalloc state.  To simplify further, we
         // use a double branch and a temporary boolean value for now.
         RegI32 tmp = needI32();
-        loadConstI32(tmp, 0);
+        moveImm32(0, tmp);
         emitBranchPerform(&b);
-        loadConstI32(tmp, 1);
+        moveImm32(1, tmp);
         masm.bind(&done);
 
         Label trueValue;
@@ -7540,9 +7548,9 @@ BaseCompiler::emitCompareF32(Assembler::DoubleCondition compareOp, ValType compa
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
     RegI32 i0 = needI32();
-    masm.mov(ImmWord(1), i0);
+    moveImm32(1, i0);
     masm.branchFloat(compareOp, r0, r1, &across);
-    masm.mov(ImmWord(0), i0);
+    moveImm32(0, i0);
     masm.bind(&across);
     freeF32(r0);
     freeF32(r1);
@@ -7561,9 +7569,9 @@ BaseCompiler::emitCompareF64(Assembler::DoubleCondition compareOp, ValType compa
     RegF64 r0, r1;
     pop2xF64(&r0, &r1);
     RegI32 i0 = needI32();
-    masm.mov(ImmWord(1), i0);
+    moveImm32(1, i0);
     masm.branchDouble(compareOp, r0, r1, &across);
-    masm.mov(ImmWord(0), i0);
+    moveImm32(0, i0);
     masm.bind(&across);
     freeF64(r0);
     freeF64(r1);
