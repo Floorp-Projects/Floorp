@@ -466,7 +466,8 @@ function openLinkIn(url, where, params) {
     loadInBackground = !loadInBackground;
     // fall through
   case "tab":
-    focusUrlBar = !loadInBackground && w.isBlankPageURL(url);
+    focusUrlBar = !loadInBackground && w.isBlankPageURL(url)
+      && !aboutNewTabService.willNotifyUser;
 
     let tabUsedForLoad = w.gBrowser.loadOneTab(url, {
       referrerURI: aReferrerURI,
