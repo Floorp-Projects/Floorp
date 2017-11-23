@@ -397,6 +397,45 @@ class TestStructuredLog(BaseStructuredTest):
                                 "level": "INFO",
                                 "message": "line 4"})
 
+    def test_shutdown(self):
+        # explicit shutdown
+        log = structuredlog.StructuredLogger("test 1")
+        log.add_handler(self.handler)
+        log.info("line 1")
+        self.assert_log_equals({"action": "log",
+                                "level": "INFO",
+                                "message": "line 1",
+                                "source": "test 1"})
+        log.shutdown()
+        self.assert_log_equals({"action": "shutdown", "source": "test 1"})
+        with self.assertRaises(structuredlog.LoggerShutdownError):
+            log.info("bad log")
+        with self.assertRaises(structuredlog.LoggerShutdownError):
+            log.log_raw({"action": "log", "level": "info", "message": "bad log"})
+
+        # shutdown still applies to new instances
+        del log
+        log = structuredlog.StructuredLogger("test 1")
+        with self.assertRaises(structuredlog.LoggerShutdownError):
+            log.info("bad log")
+
+        # context manager shutdown
+        with structuredlog.StructuredLogger("test 2") as log:
+            log.add_handler(self.handler)
+            log.info("line 2")
+            self.assert_log_equals({"action": "log",
+                                    "level": "INFO",
+                                    "message": "line 2",
+                                    "source": "test 2"})
+        self.assert_log_equals({"action": "shutdown", "source": "test 2"})
+
+        # shutdown prevents logging across instances
+        log1 = structuredlog.StructuredLogger("test 3")
+        log2 = structuredlog.StructuredLogger("test 3", component="bar")
+        log1.shutdown()
+        with self.assertRaises(structuredlog.LoggerShutdownError):
+            log2.info("line 3")
+
 
 class TestTypeConversions(BaseStructuredTest):
 
