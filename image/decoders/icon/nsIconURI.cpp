@@ -63,7 +63,16 @@ nsMozIconURI::nsMozIconURI()
 nsMozIconURI::~nsMozIconURI()
 { }
 
-NS_IMPL_ISUPPORTS(nsMozIconURI, nsIMozIconURI, nsIURI, nsIIPCSerializableURI)
+NS_IMPL_ADDREF(nsMozIconURI)
+NS_IMPL_RELEASE(nsMozIconURI)
+
+NS_INTERFACE_MAP_BEGIN(nsMozIconURI)
+  NS_INTERFACE_MAP_ENTRY(nsIMozIconURI)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURI)
+  NS_INTERFACE_MAP_ENTRY(nsIURI)
+  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINestedURI, mIconURL)
+NS_INTERFACE_MAP_END
 
 #define MOZICON_SCHEME "moz-icon:"
 #define MOZICON_SCHEME_LEN (sizeof(MOZICON_SCHEME) - 1)
@@ -732,32 +741,21 @@ nsMozIconURI::Deserialize(const URIParams& aParams)
   return true;
 }
 
-////////////////////////////////////////////////////////////
-// Nested version of nsIconURI
-
-nsNestedMozIconURI::nsNestedMozIconURI()
-{ }
-
-nsNestedMozIconURI::~nsNestedMozIconURI()
-{ }
-
-NS_IMPL_ISUPPORTS_INHERITED(nsNestedMozIconURI, nsMozIconURI, nsINestedURI)
-
 NS_IMETHODIMP
-nsNestedMozIconURI::GetInnerURI(nsIURI** aURI)
+nsMozIconURI::GetInnerURI(nsIURI** aURI)
 {
   nsCOMPtr<nsIURI> iconURL = do_QueryInterface(mIconURL);
-  if (iconURL) {
-    iconURL.forget(aURI);
-  } else {
+  if (!iconURL) {
     *aURI = nullptr;
+    return NS_ERROR_FAILURE;
   }
+
+  iconURL.forget(aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNestedMozIconURI::GetInnermostURI(nsIURI** aURI)
+nsMozIconURI::GetInnermostURI(nsIURI** aURI)
 {
   return NS_ImplGetInnermostURI(this, aURI);
 }
-
