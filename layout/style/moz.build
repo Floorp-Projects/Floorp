@@ -214,6 +214,7 @@ UNIFIED_SOURCES += [
     'nsCSSAnonBoxes.cpp',
     'nsCSSCounterStyleRule.cpp',
     'nsCSSDataBlock.cpp',
+    'nsCSSFontFaceRule.cpp',
     'nsCSSKeywords.cpp',
     'nsCSSParser.cpp',
     'nsCSSProps.cpp',
