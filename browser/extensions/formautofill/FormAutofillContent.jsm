@@ -32,6 +32,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
 
 const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
                              .getService(Ci.nsIFormFillController);
+const autocompleteController = Cc["@mozilla.org/autocomplete/controller;1"]
+                             .getService(Ci.nsIAutoCompleteController);
+
 const {ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME, FIELD_STATES} = FormAutofillUtils;
 
 // Register/unregister a constructor as a factory.
@@ -293,9 +296,12 @@ let ProfileAutocomplete = {
     }
 
     let profile = JSON.parse(this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex));
+    let {fieldName} = FormAutofillContent.getInputDetails(focusedInput);
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
-    formHandler.autofillFormFields(profile, focusedInput);
+    formHandler.autofillFormFields(profile, focusedInput).then(() => {
+      autocompleteController.searchString = profile[fieldName];
+    });
   },
 
   _clearProfilePreview() {
@@ -521,6 +527,7 @@ var FormAutofillContent = {
 
     let formHandler = this.getFormHandler(focusedInput);
     formHandler.clearPopulatedForm(focusedInput);
+    autocompleteController.searchString = "";
   },
 
   previewProfile(doc) {
