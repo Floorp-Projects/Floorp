@@ -185,52 +185,6 @@ replace_jemalloc_stats(jemalloc_stats_t* aStats)
 void
 replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
 {
-  static LogAllocBridge bridge;
-  sFuncs = *aTable;
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
-#define MALLOC_DECL(name, ...) aTable->name = replace_ ## name;
-#include "malloc_decls.h"
-  aTable->jemalloc_stats = replace_jemalloc_stats;
-#ifndef LOGALLOC_MINIMAL
-  aTable->posix_memalign = replace_posix_memalign;
-  aTable->aligned_alloc = replace_aligned_alloc;
-  aTable->valloc = replace_valloc;
-#endif
-  *aBridge = &bridge;
-
-#ifndef _WIN32
-  /* When another thread has acquired a lock before forking, the child
-   * process will inherit the lock state but the thread, being nonexistent
-   * in the child process, will never release it, leading to a dead-lock
-   * whenever the child process gets the lock. We thus need to ensure no
-   * other thread is holding the lock before forking, by acquiring it
-   * ourselves, and releasing it after forking, both in the parent and child
-   * processes.
-   * Windows doesn't have this problem since there is no fork().
-   * The real allocator, however, might be doing the same thing (jemalloc
-   * does). But pthread_atfork `prepare` handlers (first argument) are
-   * processed in reverse order they were established. But replace_init
-   * runs before the real allocator has had any chance to initialize and
-   * call pthread_atfork itself. This leads to its prefork running before
-   * ours. This leads to a race condition that can lead to a deadlock like
-   * the following:
-   *   - thread A forks.
-   *   - libc calls real allocator's prefork, so thread A holds the real
-   *     allocator lock.
-   *   - thread B calls malloc, which calls our replace_malloc.
-   *   - consequently, thread B holds our lock.
-   *   - thread B then proceeds to call the real allocator's malloc, and
-   *     waits for the real allocator's lock, which thread A holds.
-   *   - libc calls our prefork, so thread A waits for our lock, which
-   *     thread B holds.
-   * To avoid this race condition, the real allocator's prefork must be
-   * called after ours, which means it needs to be registered before ours.
-   * So trick the real allocator into initializing itself without more side
-   * effects by calling malloc with a size it can't possibly allocate. */
-  sFuncs.malloc(-1);
-  pthread_atfork(prefork, postfork, postfork);
-#endif
-
   /* Initialize output file descriptor from the MALLOC_LOG environment
    * variable. Numbers up to 9999 are considered as a preopened file
    * descriptor number. Other values are considered as a file name. */
@@ -277,4 +231,55 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
     }
 #endif
   }
+
+  // Don't initialize if we weren't passed a valid MALLOC_LOG.
+  if (sFd == 0) {
+    return;
+  }
+
+  static LogAllocBridge bridge;
+  sFuncs = *aTable;
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
+#define MALLOC_DECL(name, ...) aTable->name = replace_ ## name;
+#include "malloc_decls.h"
+  aTable->jemalloc_stats = replace_jemalloc_stats;
+#ifndef LOGALLOC_MINIMAL
+  aTable->posix_memalign = replace_posix_memalign;
+  aTable->aligned_alloc = replace_aligned_alloc;
+  aTable->valloc = replace_valloc;
+#endif
+  *aBridge = &bridge;
+
+#ifndef _WIN32
+  /* When another thread has acquired a lock before forking, the child
+   * process will inherit the lock state but the thread, being nonexistent
+   * in the child process, will never release it, leading to a dead-lock
+   * whenever the child process gets the lock. We thus need to ensure no
+   * other thread is holding the lock before forking, by acquiring it
+   * ourselves, and releasing it after forking, both in the parent and child
+   * processes.
+   * Windows doesn't have this problem since there is no fork().
+   * The real allocator, however, might be doing the same thing (jemalloc
+   * does). But pthread_atfork `prepare` handlers (first argument) are
+   * processed in reverse order they were established. But replace_init
+   * runs before the real allocator has had any chance to initialize and
+   * call pthread_atfork itself. This leads to its prefork running before
+   * ours. This leads to a race condition that can lead to a deadlock like
+   * the following:
+   *   - thread A forks.
+   *   - libc calls real allocator's prefork, so thread A holds the real
+   *     allocator lock.
+   *   - thread B calls malloc, which calls our replace_malloc.
+   *   - consequently, thread B holds our lock.
+   *   - thread B then proceeds to call the real allocator's malloc, and
+   *     waits for the real allocator's lock, which thread A holds.
+   *   - libc calls our prefork, so thread A waits for our lock, which
+   *     thread B holds.
+   * To avoid this race condition, the real allocator's prefork must be
+   * called after ours, which means it needs to be registered before ours.
+   * So trick the real allocator into initializing itself without more side
+   * effects by calling malloc with a size it can't possibly allocate. */
+  sFuncs.malloc(-1);
+  pthread_atfork(prefork, postfork, postfork);
+#endif
 }
