@@ -73,9 +73,6 @@ emitted:
     where the test list is not known upfront an empty dict or list may
     be passed (dict).
 
-  ``name``
-    An optional string to identify the suite by.
-
   ``run_info``
     An optional dictionary describing the properties of the
     build and test environment. This contains the information provided
@@ -154,17 +151,6 @@ emitted:
   ``message``
     Text of the log message.
 
-``logger_shutdown``
-  This is a special action that gets implicitly logged from the logger's
-  destructor, when exiting the context manager or by calling
-  :meth:`StructuredLogger.shutdown`.
-
-  ``name``
-    Name of the logger being shutdown.
-
-  ``component``
-    Component name of the logger being shutdown.
-
 Testsuite Protocol
 ------------------
 
@@ -218,13 +204,12 @@ StructuredLogger Objects
 ------------------------
 
 .. automodule:: mozlog.structuredlog
-  :members: set_default_logger, get_default_logger, LoggerShutdownError
+  :members: set_default_logger, get_default_logger
 
 .. autoclass:: StructuredLogger
    :members: add_handler, remove_handler, handlers, suite_start,
              suite_end, test_start, test_status, test_end,
-             process_output, critical, error, warning, info, debug,
-             shutdown
+             process_output, critical, error, warning, info, debug
 
 .. autoclass:: StructuredLogFileLike
   :members:
@@ -362,16 +347,6 @@ Log to stdout::
     logger.test_end("test-id-1", "OK")
     logger.suite_end()
 
-Log with a context manager::
-
-    from mozlog.structuredlog import StructuredLogger
-    from mozlog.handlers import StreamHandler
-    from mozlog.formatters import JSONFormatter
-
-    with StructuredLogger("my-test-suite") as logger:
-        logger.add_handler(StreamHandler(sys.stdout,
-                                         JSONFormatter()))
-        logger.info("This is an info message")
 
 Populate an ``argparse.ArgumentParser`` with logging options, and
 create a logger based on the value of those options, defaulting to
