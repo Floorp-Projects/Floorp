@@ -138,13 +138,21 @@ add_task(async function test_ignoring_window_opener() {
 
   await BrowserTestUtils.withNewTab(url, async function(browser) {
     // Clicking the link will spawn a new tab.
-    let loaded = BrowserTestUtils.waitForNewTab(gBrowser, newTabURL);
+    let stateChangePromise;
+    let tabOpenPromise = new Promise(resolve => {
+      gBrowser.tabContainer.addEventListener("TabOpen", event => {
+        let tab = event.target;
+        let newTabBrowser = tab.linkedBrowser;
+        stateChangePromise = waitForInsecureLoginFormsStateChange(newTabBrowser, 2);
+        resolve(tab);
+      }, { once: true });
+    });
+
     await ContentTask.spawn(browser, {}, function() {
       content.document.getElementById("link").click();
     });
-    let tab = await loaded;
-    browser = tab.linkedBrowser;
-    await waitForInsecureLoginFormsStateChange(browser, 2);
+    let tab = await tabOpenPromise;
+    await stateChangePromise;
 
     // Open the identity popup.
     let { gIdentityHandler } = gBrowser.ownerGlobal;

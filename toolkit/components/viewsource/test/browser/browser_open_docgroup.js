@@ -30,7 +30,6 @@ add_task(async function test_view_source_in_tab() {
   }, async function(browser) {
     let sourceTab = await openViewSource(browser);
     let sourceBrowser = sourceTab.linkedBrowser;
-    await waitForSourceLoaded(sourceBrowser);
 
     await ContentTask.spawn(sourceBrowser, null, async function() {
       Assert.equal(content.document.body.id, "viewsource",
@@ -58,7 +57,6 @@ add_task(async function test_view_source_in_window() {
     url: "http://example.com",
   }, async function(browser) {
     let sourceWin = await openViewSource(browser);
-    await waitForSourceLoaded(sourceWin);
     await ContentTask.spawn(sourceWin.gBrowser, null, async function() {
       Assert.equal(content.document.body.id, "viewsource",
                    "View source mode enabled");
