@@ -49,7 +49,7 @@ static Atomic<PRThread*, Relaxed> gSocketThread;
 #define KEEPALIVE_PROBE_COUNT_PREF "network.tcp.keepalive.probe_count"
 #define SOCKET_LIMIT_TARGET 1000U
 #define SOCKET_LIMIT_MIN      50U
-#define BLIP_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
+#define INTERVAL_PREF "network.activity.intervalMilliseconds"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
 #define TELEMETRY_PREF "toolkit.telemetry.enabled"
 #define MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN "network.sts.max_time_for_pr_close_during_shutdown"
@@ -1353,12 +1353,12 @@ nsSocketTransportService::Observe(nsISupports *subject,
     }
 
     if (!strcmp(topic, "profile-initial-state")) {
-        int32_t blipInterval = Preferences::GetInt(BLIP_INTERVAL_PREF, 0);
-        if (blipInterval <= 0) {
+        int32_t interval = Preferences::GetInt(INTERVAL_PREF, 0);
+        if (interval <= 0) {
             return NS_OK;
         }
 
-        return net::NetworkActivityMonitor::Init(blipInterval);
+        return net::NetworkActivityMonitor::Init(interval);
     }
 
     if (!strcmp(topic, "last-pb-context-exited")) {
