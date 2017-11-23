@@ -139,23 +139,6 @@ function setupVisibleHint() {
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
 }
 
-function suggestionsPresent() {
-  let controller = gURLBar.popup.input.controller;
-  let matchCount = controller.matchCount;
-  for (let i = 0; i < matchCount; i++) {
-    let url = controller.getValueAt(i);
-    let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);
-    if (mozActionMatch) {
-      let [, type, paramStr] = mozActionMatch;
-      let params = JSON.parse(paramStr);
-      if (type == "searchengine" && "searchSuggestion" in params) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 function assertVisible(visible, win = window) {
   let style =
     win.getComputedStyle(win.gURLBar.popup.searchSuggestionsNotification);
