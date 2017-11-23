@@ -55,8 +55,7 @@ VRManager::ManagerInit()
 
 VRManager::VRManager()
   : mInitialized(false)
-  , mVRDisplaysRequested(false)
-  , mVRControllersRequested(false)
+  , mVRTestSystemCreated(false)
 {
   MOZ_COUNT_CTOR(VRManager);
   MOZ_ASSERT(sVRManagerSingleton == nullptr);
@@ -175,8 +174,12 @@ VRManager::RemoveVRManagerParent(VRManagerParent* aVRManagerParent)
 }
 
 void
-VRManager::UpdateRequestedDevices()
+VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 {
+  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
+  const double kVRDisplayRefreshMaxDuration = 5000; // milliseconds
+  const double kVRDisplayInactiveMaxDuration = 30000; // milliseconds
+
   bool bHaveEventListener = false;
   bool bHaveControllerListener = false;
 
@@ -186,55 +189,61 @@ VRManager::UpdateRequestedDevices()
     bHaveControllerListener |= vmp->HaveControllerListener();
   }
 
-  mVRDisplaysRequested = bHaveEventListener;
-  // We only currently allow controllers to be used when
-  // also activating a VR display
-  mVRControllersRequested = mVRDisplaysRequested && bHaveControllerListener;
-}
-
-/**
- * VRManager::NotifyVsync must be called on every 2d vsync (usually at 60hz).
- * This must be called even when no WebVR site is active.
- * If we don't have a 2d display attached to the system, we can call this
- * at the VR display's native refresh rate.
- **/
-void
-VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
-{
-  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
-  UpdateRequestedDevices();
-
-  for (const auto& manager : mManagers) {
-    manager->NotifyVSync();
+  // VRDisplayHost::NotifyVSync may modify mVRDisplays, so we iterate
+  // through a local copy here.
+  nsTArray<RefPtr<VRDisplayHost>> displays;
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
+    displays.AppendElement(iter.UserData());
+  }
+  for (const auto& display: displays) {
+    display->NotifyVSync();
   }
 
-  // We must continually refresh the VR display enumeration to check
-  // for events that we must fire such as Window.onvrdisplayconnect
-  // Note that enumeration itself may activate display hardware, such
-  // as Oculus, so we only do this when we know we are displaying content
-  // that is looking for VR displays.
-  RefreshVRDisplays();
+  if (bHaveEventListener) {
+    // If content has set an EventHandler to be notified of VR display events
+    // we must continually refresh the VR display enumeration to check
+    // for events that we must fire such as Window.onvrdisplayconnect
+    // Note that enumeration itself may activate display hardware, such
+    // as Oculus, so we only do this when we know we are displaying content
+    // that is looking for VR displays.
+    if (mLastRefreshTime.IsNull()) {
+      // This is the first vsync, must refresh VR displays
+      RefreshVRDisplays();
+      if (bHaveControllerListener) {
+        RefreshVRControllers();
+      }
+      mLastRefreshTime = TimeStamp::Now();
+    } else {
+      // We don't have to do this every frame, so check if we
+      // have refreshed recently.
+      TimeDuration duration = TimeStamp::Now() - mLastRefreshTime;
+      if (duration.ToMilliseconds() > kVRDisplayRefreshMaxDuration) {
+        RefreshVRDisplays();
+        if (bHaveControllerListener) {
+          RefreshVRControllers();
+        }
+        mLastRefreshTime = TimeStamp::Now();
+      }
+    }
 
-  // Update state and enumeration of VR controllers
-  RefreshVRControllers();
+    if (bHaveControllerListener) {
+      for (const auto& manager: mManagers) {
+        if (!manager->GetIsPresenting()) {
+          manager->HandleInput();
+        }
+      }
+    }
+  }
 
-  CheckForInactiveTimeout();
-}
-
-void
-VRManager::CheckForInactiveTimeout()
-{
   // Shut down the VR devices when not in use
-  if (mVRDisplaysRequested || mVRControllersRequested) {
+  if (bHaveEventListener || bHaveControllerListener) {
     // We are using a VR device, keep it alive
     mLastActiveTime = TimeStamp::Now();
-  }
-  else if (mLastActiveTime.IsNull()) {
+  } else if (mLastActiveTime.IsNull()) {
     Shutdown();
-  }
-  else {
+  } else {
     TimeDuration duration = TimeStamp::Now() - mLastActiveTime;
-    if (duration.ToMilliseconds() > gfxPrefs::VRInactiveTimeout()) {
+    if (duration.ToMilliseconds() > kVRDisplayInactiveMaxDuration) {
       Shutdown();
     }
   }
@@ -259,79 +268,25 @@ VRManager::NotifyVRVsync(const uint32_t& aDisplayID)
 }
 
 void
-VRManager::EnumerateVRDisplays()
-{
-  /**
-   * Throttle the rate of enumeration to the interval set in
-   * VRDisplayEnumerateInterval
-   */
-  if (!mLastDisplayEnumerationTime.IsNull()) {
-    TimeDuration duration = TimeStamp::Now() - mLastDisplayEnumerationTime;
-    if (duration.ToMilliseconds() < gfxPrefs::VRDisplayEnumerateInterval()) {
-      return;
-    }
-  }
-
-  /**
-   * Any VRSystemManager instance may request that no enumeration
-   * should occur, including enumeration from other VRSystemManager
-   * instances.
-   */
-  for (const auto& manager : mManagers) {
-    if (manager->ShouldInhibitEnumeration()) {
-      return;
-    }
-  }
-
-  /**
-   * If we get this far, don't try again until
-   * the VRDisplayEnumerateInterval elapses
-   */
-  mLastDisplayEnumerationTime = TimeStamp::Now();
-
-  /**
-   * VRSystemManagers are inserted into mManagers in
-   * a strict order of priority.  The managers for the
-   * most device-specialized API's will have a chance
-   * to enumerate devices before the more generic
-   * device-agnostic APIs.
-   */
-  for (const auto& manager : mManagers) {
-    manager->Enumerate();
-    /**
-     * After a VRSystemManager::Enumerate is called, it may request
-     * that further enumeration should stop.  This can be used to prevent
-     * erraneous redundant enumeration of the same HMD by multiple managers.
-     * XXX - Perhaps there will be a better way to detect duplicate displays
-     * in the future.
-     */
-    if (manager->ShouldInhibitEnumeration()) {
-      return;
-    }
-  }
-}
-
-void
 VRManager::RefreshVRDisplays(bool aMustDispatch)
 {
-  /**
-  * If we aren't viewing WebVR content, don't enumerate
-  * new hardware, as it will cause some devices to power on
-  * or interrupt other VR activities.
-  */
-  if (mVRDisplaysRequested || aMustDispatch) {
-    EnumerateVRDisplays();
-  }
-
-  /**
-   * VRSystemManager::GetHMDs will not activate new hardware
-   * or result in interruption of other VR activities.
-   * We can call it even when suppressing enumeration to get
-   * the already-enumerated displays.
-   */
   nsTArray<RefPtr<gfx::VRDisplayHost> > displays;
-  for (const auto& manager: mManagers) {
-    manager->GetHMDs(displays);
+
+  /** We don't wish to enumerate the same display from multiple managers,
+   * so stop as soon as we get a display.
+   * It is still possible to get multiple displays from a single manager,
+   * but do not wish to mix-and-match for risk of reporting a duplicate.
+   *
+   * XXX - Perhaps there will be a better way to detect duplicate displays
+   *       in the future.
+   */
+  for (uint32_t i = 0; i < mManagers.Length() && displays.Length() == 0; ++i) {
+    if (mManagers[i]->GetHMDs(displays)) {
+      // GetHMDs returns true to indicate that no further enumeration from
+      // other managers should be performed.  This prevents erraneous
+      // redundant enumeration of the same HMD by multiple managers.
+      break;
+    }
   }
 
   bool displayInfoChanged = false;
@@ -428,9 +383,9 @@ VRManager::GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo)
 void
 VRManager::RefreshVRControllers()
 {
-  ScanForControllers();
-
   nsTArray<RefPtr<gfx::VRControllerHost>> controllers;
+
+  ScanForControllers();
 
   for (uint32_t i = 0; i < mManagers.Length()
       && controllers.Length() == 0; ++i) {
@@ -464,25 +419,9 @@ VRManager::RefreshVRControllers()
 void
 VRManager::ScanForControllers()
 {
-  // We don't have to do this every frame, so check if we
-  // have enumerated recently
-  if (!mLastControllerEnumerationTime.IsNull()) {
-    TimeDuration duration = TimeStamp::Now() - mLastControllerEnumerationTime;
-    if (duration.ToMilliseconds() < gfxPrefs::VRControllerEnumerateInterval()) {
-      return;
-    }
-  }
-
-  // Only enumerate controllers once we need them
-  if (!mVRControllersRequested) {
-    return;
-  }
-
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->ScanForControllers();
   }
-
-  mLastControllerEnumerationTime = TimeStamp::Now();
 }
 
 void
@@ -497,20 +436,15 @@ VRManager::RemoveControllers()
 void
 VRManager::CreateVRTestSystem()
 {
-  if (mPuppetManager) {
-    mPuppetManager->ClearTestDisplays();
+  if (mVRTestSystemCreated) {
     return;
   }
 
-  mPuppetManager = VRSystemManagerPuppet::Create();
-  mManagers.AppendElement(mPuppetManager);
-}
-
-VRSystemManagerPuppet*
-VRManager::GetPuppetManager()
-{
-  MOZ_ASSERT(mPuppetManager);
-  return mPuppetManager;
+  RefPtr<VRSystemManager> mgr = VRSystemManagerPuppet::Create();
+  if (mgr) {
+    mManagers.AppendElement(mgr);
+    mVRTestSystemCreated = true;
+  }
 }
 
 template<class T>

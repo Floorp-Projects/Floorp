@@ -550,49 +550,23 @@ VRSystemManagerOSVR::Shutdown()
   osvr_ClientShutdown(m_ctx);
 }
 
-void
-VRSystemManagerOSVR::NotifyVSync()
-{
-  VRSystemManager::NotifyVSync();
-
-  // TODO - Check for device disconnection or other OSVR events
-}
-
-void
-VRSystemManagerOSVR::Enumerate()
+bool
+VRSystemManagerOSVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
   // make sure context, interface and display are initialized
   CheckOSVRStatus();
 
   if (!Init()) {
-    return;
+    return false;
   }
 
   mHMDInfo = new VRDisplayOSVR(&m_ctx, &m_iface, &m_display);
-}
 
-bool
-VRSystemManagerOSVR::ShouldInhibitEnumeration()
-{
-  if (VRSystemManager::ShouldInhibitEnumeration()) {
-    return true;
-  }
   if (mHMDInfo) {
-    // When we find an a VR device, don't
-    // allow any further enumeration as it
-    // may get picked up redundantly by other
-    // API's.
+    aHMDResult.AppendElement(mHMDInfo);
     return true;
   }
   return false;
-}
-
-void
-VRSystemManagerOSVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
-{
-  if (mHMDInfo) {
-    aHMDResult.AppendElement(mHMDInfo);
-  }
 }
 
 bool

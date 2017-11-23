@@ -60,6 +60,7 @@ public:
   bool SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor,
                    const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect) override;
+  void NotifyVSync() override;
 protected:
   virtual VRHMDSensorState GetSensorState() override;
   // END VRDisplayHost interface
@@ -104,9 +105,7 @@ public:
 
   void Destroy() override;
   void Shutdown() override;
-  void Enumerate() override;
-  bool ShouldInhibitEnumeration() override;
-  void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
+  bool GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
   bool GetIsPresenting() override;
   void HandleInput() override;
   void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
