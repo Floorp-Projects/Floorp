@@ -37,7 +37,7 @@ public:
    * This function will take the memory ownership of the parameters and
    * delete them when done.
    */
-  static void Write(Host_8* aHost,
+  static void Write(Host_9* aHost,
                     string& aRecordName,
                     const vector<uint8_t>& aData,
                     function<void()>&& aOnSuccess,
@@ -82,7 +82,7 @@ private:
     , mOnFailure(move(aOnFailure))
     , mData(aData) {}
 
-  void Do(const string& aName, Host_8* aHost)
+  void Do(const string& aName, Host_9* aHost)
   {
     // Initialize the FileIO.
     mFileIO = aHost->CreateFileIO(this);
@@ -118,7 +118,7 @@ private:
 };
 
 void
-WriteData(Host_8* aHost,
+WriteData(Host_9* aHost,
           string& aRecordName,
           const vector<uint8_t>& aData,
           function<void()>&& aOnSuccess,
@@ -138,7 +138,7 @@ public:
    * This function will take the memory ownership of the parameters and
    * delete them when done.
    */
-  static void Read(Host_8* aHost,
+  static void Read(Host_9* aHost,
                    string& aRecordName,
                    function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
                    function<void()>&& aOnFailure)
@@ -179,7 +179,7 @@ private:
     , mOnFailure(move(aOnFailure))
   {}
 
-  void Do(const string& aName, Host_8* aHost)
+  void Do(const string& aName, Host_9* aHost)
   {
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
@@ -214,7 +214,7 @@ private:
 };
 
 void
-ReadData(Host_8* mHost,
+ReadData(Host_9* mHost,
          string& aRecordName,
          function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
          function<void()>&& aOnFailure)
