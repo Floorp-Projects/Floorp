@@ -1745,7 +1745,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 58;
+    const UI_VERSION = 59;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2175,6 +2175,40 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref("browser.search.countryCode");
       Services.prefs.clearUserPref("browser.search.region");
       Services.prefs.clearUserPref("browser.search.isUS");
+    }
+
+    if (currentUIVersion < 59) {
+      let searchInitializedPromise = new Promise(resolve => {
+        if (Services.search.isInitialized) {
+          resolve();
+        }
+        const SEARCH_SERVICE_TOPIC = "browser-search-service";
+        Services.obs.addObserver(function observer(subject, topic, data) {
+          if (data != "init-complete") {
+            return;
+          }
+          Services.obs.removeObserver(observer, SEARCH_SERVICE_TOPIC);
+          resolve();
+        }, SEARCH_SERVICE_TOPIC);
+      });
+      searchInitializedPromise.then(() => {
+        let currentEngine = Services.search.currentEngine.wrappedJSObject;
+        // Only reset the current engine if it wasn't set by a WebExtension
+        // and it is not one of the default engines.
+        if (currentEngine._extensionID || currentEngine._isDefault)
+          return;
+
+        if (currentEngine._loadPath.startsWith("[https]")) {
+          Services.prefs.setCharPref("browser.search.reset.status", "pending");
+        } else {
+          // Can't call resetToOriginalDefaultEngine because it doesn't
+          // unhide the engine.
+          let defaultEngine = Services.search.originalDefaultEngine;
+          defaultEngine.hidden = false;
+          Services.search.currentEngine = defaultEngine;
+          Services.prefs.setIntPref("browser.search.reset.status", "silent");
+        }
+      });
     }
 
     // Update the migration version.

@@ -61,6 +61,24 @@ add_task(async function test_no_prompt_when_valid_loadPathHash() {
               "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");
 });
 
+add_task(async function test_pending() {
+  let checkWithPrefValue = (value, expectPrompt = false) => {
+    Services.prefs.setCharPref(BROWSER_SEARCH_PREF + "reset.status", value);
+    let submission =
+      Services.search.currentEngine.getSubmission("foo", null, "searchbar");
+    do_check_eq(submission.uri.spec,
+                expectPrompt ? "about:searchreset?data=foo&purpose=searchbar" :
+                  "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");
+  };
+
+  // Should show the reset prompt only if the reset status is 'pending'.
+  checkWithPrefValue("pending", true);
+  checkWithPrefValue("accepted");
+  checkWithPrefValue("declined");
+  checkWithPrefValue("customized");
+  checkWithPrefValue("");
+});
+
 add_task(async function test_promptURLs() {
   await removeLoadPathHash();
 
