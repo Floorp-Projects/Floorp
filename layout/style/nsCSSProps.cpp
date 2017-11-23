@@ -1939,6 +1939,13 @@ const KTableEntry nsCSSProps::kScrollBehaviorKTable[] = {
   { eCSSKeyword_UNKNOWN,    -1 }
 };
 
+const KTableEntry nsCSSProps::kOverscrollBehaviorKTable[] = {
+  { eCSSKeyword_auto,       StyleOverscrollBehavior::Auto },
+  { eCSSKeyword_contain,    StyleOverscrollBehavior::Contain },
+  { eCSSKeyword_none,       StyleOverscrollBehavior::None },
+  { eCSSKeyword_UNKNOWN,    -1 }
+};
+
 const KTableEntry nsCSSProps::kScrollSnapTypeKTable[] = {
   { eCSSKeyword_none,      NS_STYLE_SCROLL_SNAP_TYPE_NONE },
   { eCSSKeyword_mandatory, NS_STYLE_SCROLL_SNAP_TYPE_MANDATORY },
@@ -3000,6 +3007,12 @@ static const nsCSSPropertyID gPlaceSelfSubpropTable[] = {
 // different parsing rules.
 static const nsCSSPropertyID gMozTransformSubpropTable[] = {
   eCSSProperty_transform,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSPropertyID gOverscrollBehaviorSubpropTable[] = {
+  eCSSProperty_overscroll_behavior_x,
+  eCSSProperty_overscroll_behavior_y,
   eCSSProperty_UNKNOWN
 };
 

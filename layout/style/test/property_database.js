@@ -7452,6 +7452,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-behavior.property-enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.overscroll-behavior.enabled")) {
+  gCSSProperties["overscroll-behavior-x"] = {
+    domProp: "overscrollBehaviorX",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "contain", "none" ],
+    invalid_values: [ "left", "1px" ]
+  };
+  gCSSProperties["overscroll-behavior-y"] = {
+    domProp: "overscrollBehaviorY",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "contain", "none" ],
+    invalid_values: [ "left", "1px" ]
+  };
+  gCSSProperties["overscroll-behavior"] = {
+    domProp: "overscrollBehavior",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "overscroll-behavior-x", "overscroll-behavior-y" ],
+    initial_values: [ "auto" ],
+    other_values: [ "contain", "none", "contain contain", "contain auto", "none contain" ],
+    invalid_values: [ "left", "1px", "contain auto none", "contain nonsense" ]
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap.enabled")) {
   gCSSProperties["scroll-snap-coordinate"] = {
     domProp: "scrollSnapCoordinate",

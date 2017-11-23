@@ -1437,6 +1437,7 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleFloat, None, InlineEnd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
   DEFINE_ENUM_CLASS_SETTER(StyleHyphens, None, Auto)
+  DEFINE_ENUM_CLASS_SETTER(StyleOverscrollBehavior, Auto, None)
   DEFINE_ENUM_CLASS_SETTER(StyleStackSizing, Ignore, IgnoreVertical)
   DEFINE_ENUM_CLASS_SETTER(StyleTextJustify, None, InterCharacter)
   DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None, SelectMenu)
@@ -5810,6 +5811,22 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mScrollBehavior, NS_STYLE_SCROLL_BEHAVIOR_AUTO);
+
+  // overscroll-behavior-x: none, enum, inherit, initial
+  SetValue(*aRuleData->ValueForOverscrollBehaviorX(),
+           display->mOverscrollBehaviorX,
+           conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parentDisplay->mOverscrollBehaviorX,
+           StyleOverscrollBehavior::Auto);
+
+  // overscroll-behavior-y: none, enum, inherit, initial
+  SetValue(*aRuleData->ValueForOverscrollBehaviorY(),
+           display->mOverscrollBehaviorY,
+           conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parentDisplay->mOverscrollBehaviorY,
+           StyleOverscrollBehavior::Auto);
 
   // scroll-snap-type-x: none, enum, inherit, initial
   SetValue(*aRuleData->ValueForScrollSnapTypeX(), display->mScrollSnapTypeX,

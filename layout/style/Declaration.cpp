@@ -1468,6 +1468,18 @@ Declaration::GetPropertyValueInternal(
       AppendValueToString(subprops[0], aValue);
       break;
     }
+    case eCSSProperty_overscroll_behavior: {
+      const nsCSSValue& xValue =
+        *data->ValueFor(eCSSProperty_overscroll_behavior_x);
+      const nsCSSValue& yValue =
+        *data->ValueFor(eCSSProperty_overscroll_behavior_y);
+      AppendValueToString(eCSSProperty_overscroll_behavior_x, aValue);
+      if (yValue != xValue) {
+        aValue.Append(char16_t(' '));
+        AppendValueToString(eCSSProperty_overscroll_behavior_y, aValue);
+      }
+      break;
+    }
     case eCSSProperty_scroll_snap_type: {
       const nsCSSValue& xValue =
         *data->ValueFor(eCSSProperty_scroll_snap_type_x);

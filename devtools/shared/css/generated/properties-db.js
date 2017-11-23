@@ -3133,6 +3133,8 @@ exports.CSS_PROPERTIES = {
       "ruby-align",
       "ruby-position",
       "scroll-behavior",
+      "overscroll-behavior-x",
+      "overscroll-behavior-y",
       "scroll-snap-coordinate",
       "scroll-snap-destination",
       "scroll-snap-points-x",
@@ -8313,6 +8315,52 @@ exports.CSS_PROPERTIES = {
       "visible"
     ]
   },
+  "overscroll-behavior": {
+    "isInherited": false,
+    "subproperties": [
+      "overscroll-behavior-x",
+      "overscroll-behavior-y"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "contain",
+      "inherit",
+      "initial",
+      "none",
+      "unset"
+    ]
+  },
+  "overscroll-behavior-x": {
+    "isInherited": false,
+    "subproperties": [
+      "overscroll-behavior-x"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "contain",
+      "inherit",
+      "initial",
+      "none",
+      "unset"
+    ]
+  },
+  "overscroll-behavior-y": {
+    "isInherited": false,
+    "subproperties": [
+      "overscroll-behavior-y"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "contain",
+      "inherit",
+      "initial",
+      "none",
+      "unset"
+    ]
+  },
   "padding": {
     "isInherited": false,
     "subproperties": [
@@ -9969,6 +10017,18 @@ exports.PREFERENCES = [
   [
     "scroll-behavior",
     "layout.css.scroll-behavior.property-enabled"
+  ],
+  [
+    "overscroll-behavior",
+    "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "overscroll-behavior-x",
+    "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "overscroll-behavior-y",
+    "layout.css.overscroll-behavior.enabled"
   ],
   [
     "scroll-snap-coordinate",
