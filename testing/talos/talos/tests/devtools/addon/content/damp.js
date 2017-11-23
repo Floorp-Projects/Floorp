@@ -1,5 +1,6 @@
 const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const gMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
   let { require } =
@@ -34,6 +35,26 @@ function getMostRecentBrowserWindow() {
 
 function getActiveTab(window) {
   return window.gBrowser.selectedTab;
+}
+
+async function garbageCollect() {
+  dump("Garbage collect\n");
+
+  // Minimize memory usage
+  // mimic miminizeMemoryUsage, by only flushing JS objects via GC.
+  // We don't want to flush all the cache like minimizeMemoryUsage,
+  // as it slow down next executions almost like a cold start.
+
+  // See minimizeMemoryUsage code to justify the 3 iterations and the setTimeout:
+  // https://searchfox.org/mozilla-central/source/xpcom/base/nsMemoryReporterManager.cpp#2574-2585
+  for (let i = 0; i < 3; i++) {
+    // See minimizeMemoryUsage code here to justify the GC+CC+GC:
+    // https://searchfox.org/mozilla-central/rev/be78e6ea9b10b1f5b2b3b013f01d86e1062abb2b/dom/base/nsJSEnvironment.cpp#341-349
+    Cu.forceGC();
+    Cu.forceCC();
+    Cu.forceGC();
+    await new Promise(done => setTimeout(done, 0));
+  }
 }
 
 /* globals res:true */
@@ -464,6 +485,11 @@ async _consoleOpenWithCachedMessagesTest() {
     let test = this.runTest(name + ".open.DAMP");
     let toolbox = await this.openToolbox(tool, onLoad);
     test.done();
+
+    // Force freeing memory after toolbox open as it creates a lot of objects
+    // and for complex documents, it introduces a GC that runs during 'reload' test.
+    await garbageCollect();
+
     return toolbox;
   },
 
@@ -656,6 +682,10 @@ async _consoleOpenWithCachedMessagesTest() {
 
   async testTeardown(url) {
     this.closeCurrentTab();
+
+    // Force freeing memory now so that it doesn't happen during the next test
+    await garbageCollect();
+
     this._nextCommand();
   },
 
@@ -861,6 +891,10 @@ async _consoleOpenWithCachedMessagesTest() {
       }
     }
 
-    this._doSequence(sequenceArray, this._doneInternal);
+    // Free memory before running the first test, otherwise we may have a GC
+    // related to Firefox startup or DAMP setup during the first test.
+    garbageCollect().then(() => {
+      this._doSequence(sequenceArray, this._doneInternal);
+    });
   }
 };
