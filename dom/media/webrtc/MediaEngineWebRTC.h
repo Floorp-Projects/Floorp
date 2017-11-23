@@ -566,6 +566,7 @@ private:
   nsresult
   UpdateSingleSource(const AllocationHandle* aHandle,
                      const NormalizedConstraints& aNetConstraints,
+                     const NormalizedConstraints& aNewConstraint,
                      const MediaEnginePrefs& aPrefs,
                      const nsString& aDeviceId,
                      const char** aOutBadConstraint) override;
