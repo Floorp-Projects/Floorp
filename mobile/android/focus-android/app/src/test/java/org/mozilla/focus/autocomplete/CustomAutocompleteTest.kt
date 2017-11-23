@@ -14,7 +14,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-class CustomAutoCompleteTest {
+class CustomAutocompleteTest {
     @Before
     fun setUp() {
         RuntimeEnvironment.application
@@ -27,7 +27,7 @@ class CustomAutoCompleteTest {
     @Test
     fun testCustomListIsEmptyByDefault() {
         val domains = runBlocking {
-            CustomAutoComplete.loadCustomAutoCompleteDomains(RuntimeEnvironment.application)
+            CustomAutocomplete.loadCustomAutoCompleteDomains(RuntimeEnvironment.application)
         }
 
         assertEquals(0, domains.size)
@@ -35,13 +35,13 @@ class CustomAutoCompleteTest {
 
     @Test
     fun testSavingAndLoadingDomains() = runBlocking {
-        CustomAutoComplete.saveDomains(RuntimeEnvironment.application, setOf(
+        CustomAutocomplete.saveDomains(RuntimeEnvironment.application, setOf(
                 "mozilla.org",
                 "example.org",
                 "example.com"
         ))
 
-        val domains = CustomAutoComplete.loadCustomAutoCompleteDomains(RuntimeEnvironment.application)
+        val domains = CustomAutocomplete.loadCustomAutoCompleteDomains(RuntimeEnvironment.application)
 
         assertEquals(3, domains.size)
         assertEquals("mozilla.org", domains.elementAt(0))

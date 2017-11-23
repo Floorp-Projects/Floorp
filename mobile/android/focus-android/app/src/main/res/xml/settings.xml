@@ -20,6 +20,7 @@
         <org.mozilla.focus.autocomplete.AutocompletePreference
             android:layout="@layout/focus_preference"
             android:key="@string/pref_key_screen_autocomplete"
+            android:summary="WHAT?"
             android:title="@string/preference_subitem_autocomplete" />
 
     </PreferenceCategory>

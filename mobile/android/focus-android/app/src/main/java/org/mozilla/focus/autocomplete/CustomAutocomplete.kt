@@ -9,7 +9,7 @@ import android.content.SharedPreferences
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
 @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD") // That's just how Kotlin singletons work...
-object CustomAutoComplete {
+object CustomAutocomplete {
     private const val PREFERENCE_NAME = "custom_autocomplete"
     private const val KEY_DOMAINS = "domains"
 
@@ -21,6 +21,22 @@ object CustomAutoComplete {
                 .edit()
                 .putStringSet(KEY_DOMAINS, domains)
                 .apply()
+    }
+
+    suspend fun addDomain(context: Context, domain: String) {
+        val domains = mutableSetOf<String>()
+        domains.addAll(loadCustomAutoCompleteDomains(context))
+        domains.add(domain)
+
+        saveDomains(context, domains)
+    }
+
+    fun subscribe(context: Context, listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        preferences(context).registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unsubscribe(context: Context, listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        preferences(context).unregisterOnSharedPreferenceChangeListener(listener)
     }
 
     private fun preferences(context: Context): SharedPreferences =

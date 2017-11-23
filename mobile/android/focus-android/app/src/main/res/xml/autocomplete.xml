@@ -2,12 +2,13 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
         android:title="@string/preference_category_autocomplete_preinstalled">
 
-        <SwitchPreference
+        <org.mozilla.focus.autocomplete.AutocompleteDefaultPreference
             android:key="@string/pref_key_autocomplete_preinstalled"
             android:title="@string/preference_switch_autocomplete"
             android:defaultValue="true" />
@@ -17,13 +18,15 @@
     <PreferenceCategory
         android:title="@string/preference_category_autocomplete_custom">
 
-        <SwitchPreference
+        <org.mozilla.focus.autocomplete.AutocompleteCustomPreference
             android:key="@string/pref_key_autocomplete_custom"
-            android:title="@string/preference_switch_autocomplete" />
+            android:title="@string/preference_switch_autocomplete"
+            android:summary="@string/preference_autocomplete_custom_summary" />
 
         <Preference
             android:key="@string/pref_key_screen_custom_domains"
-            android:title="@string/preference_autocomplete_subitem_customlist" />
+            android:title="@string/preference_autocomplete_subitem_customlist"
+            android:dependency="@string/pref_key_autocomplete_custom" />
 
     </PreferenceCategory>
 

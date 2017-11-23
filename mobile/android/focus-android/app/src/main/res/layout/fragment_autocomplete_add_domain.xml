@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="?android:attr/listSeparatorTextViewStyle"
+        android:text="@string/preference_autocomplete_add_title" />
+
+    <EditText
+        android:id="@+id/domainView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
+        android:inputType="textUri"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:lines="1"
+        android:hint="@string/preference_autocomplete_add_hint" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/preference_autocomplete_add_example" />
+
+</LinearLayout>

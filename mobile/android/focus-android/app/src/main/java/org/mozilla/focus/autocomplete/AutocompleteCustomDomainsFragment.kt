@@ -45,7 +45,7 @@ class AutocompleteCustomDomainsFragment : Fragment() {
 
         fun refresh(context: Context) {
             launch(UI) {
-                val updatedDomains = async { CustomAutoComplete.loadCustomAutoCompleteDomains(context) }.await()
+                val updatedDomains = async { CustomAutocomplete.loadCustomAutoCompleteDomains(context) }.await()
 
                 domains.clear()
                 domains.addAll(updatedDomains)

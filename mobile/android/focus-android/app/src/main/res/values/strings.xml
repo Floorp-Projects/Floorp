@@ -8,6 +8,8 @@
     <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_ok">OK</string>
 
+    <string name="action_save">Save</string>
+
     <!-- This text is shown in the URL bar when it's empty -->
     <string name="urlbar_hint">Search or enter address</string>
 
@@ -100,14 +102,68 @@
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Default</string>
 
-    <string name="preference_subitem_autocomplete">Autocomplete</string>
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">On</string>
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Off</string>
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_enabled">Enabled</string>
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_disabled">Disabled</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL Autocomplete</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete -->
     <string name="preference_switch_autocomplete">Autocomplete</string>
-    <string name="preference_category_autocomplete_preinstalled">Pre-installed</string>
+
+    <!-- Preference title: URL autocomplete list that ships with Focus/Klar. -->
+    <string name="preference_category_autocomplete_preinstalled">Default URL List</string>
+
+    <!-- Preference summary: URL autocomplete list that ships with Focus/Klar. -->
+    <string name="preference_autocomplete_preinstalled_summary">Enable to have %1$s autocomplete over 450 popular URLs in the address bar.</string>
+
+    <!-- Preference category: Custom (user-defined) autocomplete URLs. -->
     <string name="preference_category_autocomplete_custom">Custom URL</string>
-    <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>"
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing custom autocomplete URLs -->
+    <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Add custom URL</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Add custom URL</string>
 
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Learn more</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Add and manage custom autocomplete URLs.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL to add</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Paste or enter URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example">Example: example.com</string>
+
+    <!-- Content description (not visible, for screen readers etc.): A "handle" that allows the user to reorder custom autocomplete URLs -->
+    <string name="preference_autocomplete_handle_content_description">-</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">New custom URL added.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Remove</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Remove</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Double-check the URL you entered.</string>
 
     <string name="preference_language">Language</string>
     <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
@@ -212,6 +268,12 @@
 
     <string name="search_add_confirmation">New search engine added.</string>
     <string name="search_add_error">Check the search string and try again</string>
+
+    <string name="search_add_error_empty_name">Enter search engine name</string>
+
+    <string name="search_add_error_empty_search">Enter search string</string>
+
+    <string name="search_add_error_format">Check that search string matches Example format</string>
 
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">Clear input</string>
