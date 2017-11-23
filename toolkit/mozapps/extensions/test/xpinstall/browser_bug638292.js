@@ -6,14 +6,12 @@ add_task(async function() {
   async function verify(link, button) {
     info("Clicking " + link);
 
-    let waitForNewTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+    let loadedPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
     await BrowserTestUtils.synthesizeMouseAtCenter("#" + link, { button },
                                                    gBrowser.selectedBrowser);
 
-    let newtab = await waitForNewTabPromise;
-
-    await BrowserTestUtils.browserLoaded(newtab.linkedBrowser);
+    let newtab = await loadedPromise;
 
     let result = await ContentTask.spawn(newtab.linkedBrowser, { }, async function() {
       return (content.document.getElementById("enabled").textContent == "true");
