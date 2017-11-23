@@ -22,11 +22,11 @@
 
 NS_IMPL_ISUPPORTS(MobileViewportManager, nsIDOMEventListener, nsIObserver)
 
-static const nsLiteralString DOM_META_ADDED = NS_LITERAL_STRING("DOMMetaAdded");
-static const nsLiteralString DOM_META_CHANGED = NS_LITERAL_STRING("DOMMetaChanged");
-static const nsLiteralString FULL_ZOOM_CHANGE = NS_LITERAL_STRING("FullZoomChange");
-static const nsLiteralString LOAD = NS_LITERAL_STRING("load");
-static const nsLiteralCString BEFORE_FIRST_PAINT = NS_LITERAL_CSTRING("before-first-paint");
+#define DOM_META_ADDED NS_LITERAL_STRING("DOMMetaAdded")
+#define DOM_META_CHANGED NS_LITERAL_STRING("DOMMetaChanged")
+#define FULL_ZOOM_CHANGE NS_LITERAL_STRING("FullZoomChange")
+#define LOAD NS_LITERAL_STRING("load")
+#define BEFORE_FIRST_PAINT NS_LITERAL_CSTRING("before-first-paint")
 
 using namespace mozilla;
 using namespace mozilla::layers;
