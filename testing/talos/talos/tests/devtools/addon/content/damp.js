@@ -714,7 +714,7 @@ async _consoleOpenWithCachedMessagesTest() {
         requests.set(id, false);
       }
 
-      function onTimings(_, id) {
+      function onPayloadReady(_, id) {
         requests.set(id, true);
         maybeResolve();
       }
@@ -727,12 +727,12 @@ async _consoleOpenWithCachedMessagesTest() {
 
         // All requests are done - unsubscribe from events and resolve!
         window.off(EVENTS.NETWORK_EVENT, onRequest);
-        window.off(EVENTS.RECEIVED_EVENT_TIMINGS, onTimings);
+        window.off(EVENTS.PAYLOAD_READY, onPayloadReady);
         resolve();
       }
 
       window.on(EVENTS.NETWORK_EVENT, onRequest);
-      window.on(EVENTS.RECEIVED_EVENT_TIMINGS, onTimings);
+      window.on(EVENTS.PAYLOAD_READY, onPayloadReady);
     });
   },
 
