@@ -274,6 +274,11 @@ class RegExpZone
 
     bool empty() const { return set_.empty(); }
 
+    RegExpShared* maybeGet(JSAtom* source, RegExpFlag flags) const {
+        Set::Ptr p = set_.lookup(Key(source, flags));
+        return p ? *p : nullptr;
+    }
+
     RegExpShared* get(JSContext* cx, HandleAtom source, RegExpFlag flags);
 
     /* Like 'get', but compile 'maybeOpt' (if non-null). */

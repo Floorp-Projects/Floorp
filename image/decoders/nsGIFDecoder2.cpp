@@ -960,8 +960,11 @@ nsGIFDecoder2::ReadImageDataBlock(const char* aData)
 
   // Initialize the LZW decoder.
   mGIFStruct.datasize = uint8_t(aData[0]);
+  if (mGIFStruct.datasize > MAX_LZW_BITS) {
+    return Transition::TerminateFailure();
+  }
   const int clearCode = ClearCode();
-  if (mGIFStruct.datasize > MAX_LZW_BITS || clearCode >= MAX_BITS) {
+  if (clearCode >= MAX_BITS) {
     return Transition::TerminateFailure();
   }
 

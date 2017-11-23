@@ -7,7 +7,7 @@ extern crate log;
 use consts::{CID_BROADCAST, HID_RPT_SIZE};
 use core_foundation_sys::base::*;
 use platform::iokit::*;
-use std::{fmt, io};
+use std::io;
 use std::io::{Read, Write};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Duration;
@@ -22,26 +22,17 @@ pub struct Device {
 }
 
 impl Device {
-    pub fn new(device_ref: IOHIDDeviceRef, report_rx: Receiver<Vec<u8>>) -> Self {
-        Self {
+    pub fn new(dev_info: (IOHIDDeviceRef, Receiver<Vec<u8>>)) -> io::Result<Self> {
+        let (device_ref, report_rx) = dev_info;
+        Ok(Self {
             device_ref,
             cid: CID_BROADCAST,
             report_rx,
-        }
+        })
     }
-}
 
-impl fmt::Display for Device {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "InternalDevice(ref:{:?}, cid: {:02x}{:02x}{:02x}{:02x})",
-            self.device_ref,
-            self.cid[0],
-            self.cid[1],
-            self.cid[2],
-            self.cid[3]
-        )
+    pub fn is_u2f(&self) -> bool {
+        true
     }
 }
 

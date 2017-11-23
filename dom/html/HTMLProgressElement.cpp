@@ -45,8 +45,11 @@ HTMLProgressElement::IntrinsicState() const
 }
 
 bool
-HTMLProgressElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                                    const nsAString& aValue, nsAttrValue& aResult)
+HTMLProgressElement::ParseAttribute(int32_t aNamespaceID,
+                                    nsAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsIPrincipal* aMaybeScriptedPrincipal,
+                                    nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::max) {
@@ -55,7 +58,9 @@ HTMLProgressElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute,
-                                              aValue, aResult);
+                                              aValue,
+                                              aMaybeScriptedPrincipal,
+                                              aResult);
 }
 
 double
