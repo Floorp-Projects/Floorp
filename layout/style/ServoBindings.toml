@@ -76,7 +76,6 @@ headers = [
     "nsCSSCounterStyleRule.h",
     "nsCSSFontFaceRule.h",
     "nsMediaFeatures.h",
-    "nsMediaList.h",
     "nsXBLBinding.h",
 ]
 raw-lines = [
@@ -133,7 +132,6 @@ rusty-enums = [
     "nsCSSUnit",
     "nsCSSPropertyID",
     "nsCSSCounterDesc",
-    "nsMediaExpression_Range",
     "nsMediaFeature_RangeType",
     "nsMediaFeature_ValueType",
     "nsresult",
@@ -295,7 +293,6 @@ whitelist-types = [
     "nsMainThreadPtrHandle",
     "nsMainThreadPtrHolder",
     "nsMargin",
-    "nsMediaExpression",
     "nsMediaFeature",
     "nsMediaFeatures",
     "nsMediaList",
