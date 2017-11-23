@@ -111,9 +111,8 @@ class TestStatusHandler(BaseStructuredTest):
 class TestStructuredLog(BaseStructuredTest):
 
     def test_suite_start(self):
-        self.logger.suite_start(["test"], "logtest")
+        self.logger.suite_start(["test"])
         self.assert_log_equals({"action": "suite_start",
-                                "name": "logtest",
                                 "tests": {"default": ["test"]}})
         self.logger.suite_end()
 
@@ -397,47 +396,6 @@ class TestStructuredLog(BaseStructuredTest):
                                 "level": "INFO",
                                 "message": "line 4"})
 
-    def test_logger_shutdown(self):
-        with self.assertRaises(KeyError):
-            self.logger.log_raw({"action": "logger_shutdown", "name": "test", "component": None})
-
-        # explicit shutdown
-        self.logger.info("line 1")
-        self.assert_log_equals({"action": "log",
-                                "level": "INFO",
-                                "message": "line 1"})
-        self.logger.shutdown()
-        self.assert_log_equals({"action": "logger_shutdown",
-                                "name": "test",
-                                "component": None})
-        with self.assertRaises(structuredlog.LoggerShutdownError):
-            self.logger.info("bad log")
-        with self.assertRaises(structuredlog.LoggerShutdownError):
-            self.logger.log_raw({"action": "log", "level": "info", "message": "bad log"})
-
-        # context manager shutdown
-        with structuredlog.StructuredLogger("test") as log:
-            log.add_handler(self.handler)
-            log.info("line 2")
-            self.assert_log_equals({"action": "log",
-                                    "level": "INFO",
-                                    "message": "line 2"})
-        self.assert_log_equals({"action": "logger_shutdown",
-                                "name": "test",
-                                "component": None})
-
-        # destructor shutdown
-        self.logger = structuredlog.StructuredLogger("test")
-        self.logger.add_handler(self.handler)
-        self.logger.info("line 3")
-        self.assert_log_equals({"action": "log",
-                                "level": "INFO",
-                                "message": "line 3"})
-        del self.logger
-        self.assert_log_equals({"action": "logger_shutdown",
-                                "name": "test",
-                                "component": None})
-
 
 class TestTypeConversions(BaseStructuredTest):
 
@@ -489,7 +447,7 @@ class TestTypeConversions(BaseStructuredTest):
                                 "message": "test",
                                 "level": "INFO"})
 
-        self.logger.suite_start([], run_info={})
+        self.logger.suite_start([], {})
         self.assert_log_equals({"action": "suite_start",
                                 "tests": {"default": []},
                                 "run_info": {}})
