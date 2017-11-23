@@ -278,7 +278,7 @@ class nsIScriptTimeoutHandler;
 #else
 #include <unistd.h> // for getpid()
 #endif
->>>>>>> 17303795bff5... Bug 1419597 - Part 10: Move includes into nsGlobalWindow{Inner,Outer}.cpp, r=smaug
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
