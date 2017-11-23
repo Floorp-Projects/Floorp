@@ -1,0 +1,15 @@
+<style id='style_1'>
+  :first-child { display: table-column-group; }
+</style>
+<script>
+  try { o1 = document.createElement('isindex') } catch(e) { }
+  try { o2 = document.createElement('input') } catch(e) { }
+  try { o3 = document.createElement('optgroup') } catch(e) { }
+  try { o4 = document.createElement('col') } catch(e) { }
+  try { document.documentElement.appendChild(o1) } catch(e) { }
+  try { o1.appendChild(o2) } catch(e) { }
+  try { o1.appendChild(o3) } catch(e) { }
+  try { document.documentElement.offsetTop; } catch (e) { }
+  try { document.documentElement.appendChild(o4) } catch(e) { }
+  try { document.styleSheets[0].insertRule('optgroup::first-line { list-style-type: japanese-formal; }', 0); } catch(e) { }
+</script>
