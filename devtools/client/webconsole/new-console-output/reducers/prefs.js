@@ -5,13 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Immutable = require("devtools/client/shared/vendor/immutable");
-const PrefState = Immutable.Record({
+const PrefState = (overrides) => Object.freeze(Object.assign({
   logLimit: 1000,
   sidebarToggle: false
-});
+}, overrides));
 
-function prefs(state = new PrefState(), action) {
+function prefs(state = PrefState(), action) {
   return state;
 }
 
