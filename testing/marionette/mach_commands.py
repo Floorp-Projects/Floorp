@@ -57,9 +57,11 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
 
     parser.verify_usage(args)
 
-    args.logger = commandline.setup_logging("Marionette Unit Tests",
-                                            args,
-                                            {"mach": sys.stdout})
+    args.logger = kwargs.get('log')
+    if not args.logger:
+        args.logger = commandline.setup_logging("Marionette Unit Tests",
+                                                args,
+                                                {"mach": sys.stdout})
     failed = MarionetteHarness(MarionetteTestRunner, args=vars(args)).run()
     if failed > 0:
         return 1

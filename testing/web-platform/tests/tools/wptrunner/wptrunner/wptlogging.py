@@ -4,10 +4,16 @@ import threading
 from StringIO import StringIO
 from multiprocessing import Queue
 
-from mozlog import commandline, stdadapter
+from mozlog import commandline, stdadapter, set_default_logger
+from mozlog.structuredlog import StructuredLogger
 
 def setup(args, defaults):
-    logger = commandline.setup_logging("web-platform-tests", args, defaults)
+    logger = args.pop('log', None)
+    if logger:
+        set_default_logger(logger)
+        StructuredLogger._logger_states["web-platform-tests"] = logger._state
+    else:
+        logger = commandline.setup_logging("web-platform-tests", args, defaults)
     setup_stdlib_logger()
 
     for name in args.keys():

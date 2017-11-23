@@ -248,10 +248,11 @@ class MachCommands(MachCommandBase):
         # case the tree wasn't built with mach).
         self._ensure_state_subdir_exists('.')
 
-        params['log'] = structured.commandline.setup_logging("XPCShellTests",
-                                                             params,
-                                                             {"mach": sys.stdout},
-                                                             {"verbose": True})
+        if not params.get('log'):
+            params['log'] = structured.commandline.setup_logging("XPCShellTests",
+                                                                 params,
+                                                                 {"mach": sys.stdout},
+                                                                 {"verbose": True})
 
         if not params['threadCount']:
             params['threadCount'] = int((cpu_count() * 3) / 2)

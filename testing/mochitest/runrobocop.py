@@ -42,7 +42,7 @@ class RobocopTestRunner(MochitestDesktop):
         """
            Simple one-time initialization.
         """
-        MochitestDesktop.__init__(self, options.flavor, options)
+        MochitestDesktop.__init__(self, options.flavor, vars(options))
 
         self.auto = automation
         self.dm = devmgr

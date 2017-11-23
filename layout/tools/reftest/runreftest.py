@@ -241,6 +241,10 @@ class RefTest(object):
         if self.log:
             return
 
+        self.log = getattr(options, 'log', None)
+        if self.log:
+            return
+
         mozlog.commandline.log_formatters["tbpl"] = (ReftestFormatter,
                                                      "Reftest specific formatter for the"
                                                      "benefit of legacy log parsers and"
