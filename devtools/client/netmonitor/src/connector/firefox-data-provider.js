@@ -673,12 +673,12 @@ class FirefoxDataProvider {
    *
    * @param {object} response the message received from the server.
    */
-  onStackTrace(response) {
-    return this.updateRequest(response.from, {
+  async onStackTrace(response) {
+    let payload = await this.updateRequest(response.from, {
       stacktrace: response.stacktrace
-    }).then(() => {
-      emit(EVENTS.RECEIVED_EVENT_STACKTRACE, response.from);
     });
+    emit(EVENTS.RECEIVED_EVENT_STACKTRACE, response.from);
+    return payload.stacktrace;
   }
 }
 

@@ -19,7 +19,7 @@ add_task(function* () {
   ];
 
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { store, windowRequire } = monitor.panelWin;
+  let { store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getSortedRequests,
@@ -31,12 +31,18 @@ add_task(function* () {
   yield performRequests(2, HSTS_SJS);
   yield wait;
 
+  // Fetch stack-trace data from the backend and wait till
+  // all packets are received.
+  let requests = getSortedRequests(store.getState());
+  yield Promise.all(requests.map(requestItem =>
+    connector.requestData(requestItem.id, "stackTrace")));
+
   EXPECTED_REQUESTS.forEach(({status, hasStack}, i) => {
     let item = getSortedRequests(store.getState()).get(i);
 
     is(item.status, status, `Request #${i} has the expected status`);
 
-    let { stacktrace } = item.cause;
+    let { stacktrace } = item;
     let stackLen = stacktrace ? stacktrace.length : 0;
 
     if (hasStack) {
