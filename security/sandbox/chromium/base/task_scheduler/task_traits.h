@@ -8,8 +8,10 @@
 #include <stdint.h>
 
 #include <iosfwd>
+#include <type_traits>
 
 #include "base/base_export.h"
+#include "base/task_scheduler/task_traits_details.h"
 #include "build/build_config.h"
 
 namespace base {
@@ -75,42 +77,153 @@ enum class TaskShutdownBehavior {
   BLOCK_SHUTDOWN,
 };
 
-// Describes metadata for a single task or a group of tasks.
+// Tasks with this trait may block. This includes but is not limited to tasks
+// that wait on synchronous file I/O operations: read or write a file from disk,
+// interact with a pipe or a socket, rename or delete a file, enumerate files in
+// a directory, etc. This trait isn't required for the mere use of locks. For
+// tasks that block on base/ synchronization primitives, see the
+// WithBaseSyncPrimitives trait.
+struct MayBlock {};
+
+// Tasks with this trait will pass base::AssertWaitAllowed(), i.e. will be
+// allowed on the following methods :
+// - base::WaitableEvent::Wait
+// - base::ConditionVariable::Wait
+// - base::PlatformThread::Join
+// - base::PlatformThread::Sleep
+// - base::Process::WaitForExit
+// - base::Process::WaitForExitWithTimeout
+//
+// Tasks should generally not use these methods.
+//
+// Instead of waiting on a WaitableEvent or a ConditionVariable, put the work
+// that should happen after the wait in a callback and post that callback from
+// where the WaitableEvent or ConditionVariable would have been signaled. If
+// something needs to be scheduled after many tasks have executed, use
+// base::BarrierClosure.
+//
+// On Windows, join processes asynchronously using base::win::ObjectWatcher.
+//
+// MayBlock() must be specified in conjunction with this trait if and only if
+// removing usage of methods listed above in the labeled tasks would still
+// result in tasks that may block (per MayBlock()'s definition).
+//
+// In doubt, consult with //base/task_scheduler/OWNERS.
+struct WithBaseSyncPrimitives {};
+
+// Describes immutable metadata for a single task or a group of tasks.
 class BASE_EXPORT TaskTraits {
+ private:
+  // ValidTrait ensures TaskTraits' constructor only accepts appropriate types.
+  struct ValidTrait {
+    ValidTrait(TaskPriority) {}
+    ValidTrait(TaskShutdownBehavior) {}
+    ValidTrait(MayBlock) {}
+    ValidTrait(WithBaseSyncPrimitives) {}
+  };
+
  public:
-  // Constructs a default TaskTraits for tasks with
-  //     (1) no I/O,
-  //     (2) low priority, and
-  //     (3) may block shutdown or be skipped on shutdown.
-  // Tasks that require stricter guarantees should highlight those by requesting
-  // explicit traits below.
-  TaskTraits();
-  TaskTraits(const TaskTraits& other) = default;
+  // Invoking this constructor without arguments produces TaskTraits that are
+  // appropriate for tasks that
+  //     (1) don't block (ref. MayBlock() and WithBaseSyncPrimitives()),
+  //     (2) prefer inheriting the current priority to specifying their own, and
+  //     (3) can either block shutdown or be skipped on shutdown
+  //         (TaskScheduler implementation is free to choose a fitting default).
+  //
+  // To get TaskTraits for tasks that require stricter guarantees and/or know
+  // the specific TaskPriority appropriate for them, provide arguments of type
+  // TaskPriority, TaskShutdownBehavior, MayBlock, and/or WithBaseSyncPrimitives
+  // in any order to the constructor.
+  //
+  // E.g.
+  // constexpr base::TaskTraits default_traits = {};
+  // constexpr base::TaskTraits user_visible_traits =
+  //     {base::TaskPriority::USER_VISIBLE};
+  // constexpr base::TaskTraits user_visible_may_block_traits = {
+  //     base::TaskPriority::USER_VISIBLE, base::MayBlock()};
+  // constexpr base::TaskTraits other_user_visible_may_block_traits = {
+  //     base::MayBlock(), base::TaskPriority::USER_VISIBLE};
+  template <class... ArgTypes,
+            class CheckArgumentsAreValid = internal::InitTypes<
+                decltype(ValidTrait(std::declval<ArgTypes>()))...>>
+  constexpr TaskTraits(ArgTypes... args)
+      : priority_set_explicitly_(
+            internal::HasArgOfType<TaskPriority, ArgTypes...>::value),
+        priority_(internal::GetValueFromArgList(
+            internal::EnumArgGetter<TaskPriority, TaskPriority::USER_VISIBLE>(),
+            args...)),
+        shutdown_behavior_set_explicitly_(
+            internal::HasArgOfType<TaskShutdownBehavior, ArgTypes...>::value),
+        shutdown_behavior_(internal::GetValueFromArgList(
+            internal::EnumArgGetter<TaskShutdownBehavior,
+                                    TaskShutdownBehavior::SKIP_ON_SHUTDOWN>(),
+            args...)),
+        may_block_(internal::GetValueFromArgList(
+            internal::BooleanArgGetter<MayBlock>(),
+            args...)),
+        with_base_sync_primitives_(internal::GetValueFromArgList(
+            internal::BooleanArgGetter<WithBaseSyncPrimitives>(),
+            args...)) {}
+
+  constexpr TaskTraits(const TaskTraits& other) = default;
   TaskTraits& operator=(const TaskTraits& other) = default;
-  ~TaskTraits();
 
-  // Allows tasks with these traits to do file I/O.
-  TaskTraits& WithFileIO();
+  // Returns TaskTraits constructed by combining |left| and |right|. If a trait
+  // is specified in both |left| and |right|, the returned TaskTraits will have
+  // the value from |right|.
+  static constexpr TaskTraits Override(const TaskTraits& left,
+                                       const TaskTraits& right) {
+    return TaskTraits(left, right);
+  }
 
-  // Applies |priority| to tasks with these traits.
-  TaskTraits& WithPriority(TaskPriority priority);
-
-  // Applies |shutdown_behavior| to tasks with these traits.
-  TaskTraits& WithShutdownBehavior(TaskShutdownBehavior shutdown_behavior);
-
-  // Returns true if file I/O is allowed by these traits.
-  bool with_file_io() const { return with_file_io_; }
+  // Returns true if the priority was set explicitly.
+  constexpr bool priority_set_explicitly() const {
+    return priority_set_explicitly_;
+  }
 
   // Returns the priority of tasks with these traits.
-  TaskPriority priority() const { return priority_; }
+  constexpr TaskPriority priority() const { return priority_; }
+
+  // Returns true if the shutdown behavior was set explicitly.
+  constexpr bool shutdown_behavior_set_explicitly() const {
+    return shutdown_behavior_set_explicitly_;
+  }
 
   // Returns the shutdown behavior of tasks with these traits.
-  TaskShutdownBehavior shutdown_behavior() const { return shutdown_behavior_; }
+  constexpr TaskShutdownBehavior shutdown_behavior() const {
+    return shutdown_behavior_;
+  }
+
+  // Returns true if tasks with these traits may block.
+  constexpr bool may_block() const { return may_block_; }
+
+  // Returns true if tasks with these traits may use base/ sync primitives.
+  constexpr bool with_base_sync_primitives() const {
+    return with_base_sync_primitives_;
+  }
 
  private:
-  bool with_file_io_;
+  constexpr TaskTraits(const TaskTraits& left, const TaskTraits& right)
+      : priority_set_explicitly_(left.priority_set_explicitly_ ||
+                                 right.priority_set_explicitly_),
+        priority_(right.priority_set_explicitly_ ? right.priority_
+                                                 : left.priority_),
+        shutdown_behavior_set_explicitly_(
+            left.shutdown_behavior_set_explicitly_ ||
+            right.shutdown_behavior_set_explicitly_),
+        shutdown_behavior_(right.shutdown_behavior_set_explicitly_
+                               ? right.shutdown_behavior_
+                               : left.shutdown_behavior_),
+        may_block_(left.may_block_ || right.may_block_),
+        with_base_sync_primitives_(left.with_base_sync_primitives_ ||
+                                   right.with_base_sync_primitives_) {}
+
+  bool priority_set_explicitly_;
   TaskPriority priority_;
+  bool shutdown_behavior_set_explicitly_;
   TaskShutdownBehavior shutdown_behavior_;
+  bool may_block_;
+  bool with_base_sync_primitives_;
 };
 
 // Returns string literals for the enums defined in this file. These methods

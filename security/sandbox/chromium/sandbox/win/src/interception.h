@@ -17,12 +17,12 @@
 #include "base/gtest_prod_util.h"
 #include "base/macros.h"
 #include "base/strings/string16.h"
+#include "sandbox/win/src/interceptors.h"
 #include "sandbox/win/src/sandbox_types.h"
 
 namespace sandbox {
 
 class TargetProcess;
-enum InterceptorId;
 
 // Internal structures used for communication between the broker and the target.
 struct DllPatchInfo;

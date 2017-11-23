@@ -64,6 +64,21 @@ static bool CompareParameter(const ReplacementOffset& elem1,
   return elem1.parameter < elem2.parameter;
 }
 
+// Overloaded function to append one string onto the end of another. Having a
+// separate overload for |source| as both string and StringPiece allows for more
+// efficient usage from functions templated to work with either type (avoiding a
+// redundant call to the BasicStringPiece constructor in both cases).
+template <typename string_type>
+inline void AppendToString(string_type* target, const string_type& source) {
+  target->append(source);
+}
+
+template <typename string_type>
+inline void AppendToString(string_type* target,
+                           const BasicStringPiece<string_type>& source) {
+  source.AppendToString(target);
+}
+
 // Assuming that a pointer is the size of a "machine word", then
 // uintptr_t is an integer type that is also a machine word.
 typedef uintptr_t MachineWord;
@@ -697,111 +712,148 @@ string16 FormatBytesUnlocalized(int64_t bytes) {
 }
 
 // Runs in O(n) time in the length of |str|.
-template<class StringType>
+template <class StringType>
 void DoReplaceSubstringsAfterOffset(StringType* str,
-                                    size_t offset,
+                                    size_t initial_offset,
                                     BasicStringPiece<StringType> find_this,
                                     BasicStringPiece<StringType> replace_with,
                                     bool replace_all) {
+  using CharTraits = typename StringType::traits_type;
   DCHECK(!find_this.empty());
 
   // If the find string doesn't appear, there's nothing to do.
-  offset = str->find(find_this.data(), offset, find_this.size());
-  if (offset == StringType::npos)
+  const size_t find_length = find_this.length();
+  size_t first_match = str->find(find_this.data(), initial_offset, find_length);
+  if (first_match == StringType::npos)
     return;
 
   // If we're only replacing one instance, there's no need to do anything
   // complicated.
-  size_t find_length = find_this.length();
+  const size_t replace_length = replace_with.length();
   if (!replace_all) {
-    str->replace(offset, find_length, replace_with.data(), replace_with.size());
+    str->replace(first_match, find_length, replace_with.data(), replace_length);
     return;
   }
 
   // If the find and replace strings are the same length, we can simply use
   // replace() on each instance, and finish the entire operation in O(n) time.
-  size_t replace_length = replace_with.length();
   if (find_length == replace_length) {
-    do {
-      str->replace(offset, find_length,
-                   replace_with.data(), replace_with.size());
-      offset = str->find(find_this.data(), offset + replace_length,
-                         find_this.size());
-    } while (offset != StringType::npos);
+    auto* buffer = &((*str)[0]);
+    for (size_t offset = first_match; offset != StringType::npos;
+         offset = str->find(find_this.data(), offset + replace_length,
+                            find_length)) {
+      CharTraits::copy(buffer + offset, replace_with.data(), replace_length);
+    }
     return;
   }
 
   // Since the find and replace strings aren't the same length, a loop like the
   // one above would be O(n^2) in the worst case, as replace() will shift the
-  // entire remaining string each time.  We need to be more clever to keep
-  // things O(n).
+  // entire remaining string each time. We need to be more clever to keep things
+  // O(n).
   //
-  // If we're shortening the string, we can alternate replacements with shifting
-  // forward the intervening characters using memmove().
+  // When the string is being shortened, it's possible to just shift the matches
+  // down in one pass while finding, and truncate the length at the end of the
+  // search.
+  //
+  // If the string is being lengthened, more work is required. The strategy used
+  // here is to make two find() passes through the string. The first pass counts
+  // the number of matches to determine the new size. The second pass will
+  // either construct the new string into a new buffer (if the existing buffer
+  // lacked capacity), or else -- if there is room -- create a region of scratch
+  // space after |first_match| by shifting the tail of the string to a higher
+  // index, and doing in-place moves from the tail to lower indices thereafter.
   size_t str_length = str->length();
-  if (find_length > replace_length) {
-    size_t write_offset = offset;
-    do {
-      if (replace_length) {
-        str->replace(write_offset, replace_length,
-                     replace_with.data(), replace_with.size());
-        write_offset += replace_length;
-      }
-      size_t read_offset = offset + find_length;
-      offset = std::min(
-          str->find(find_this.data(), read_offset, find_this.size()),
-          str_length);
-      size_t length = offset - read_offset;
-      if (length) {
-        memmove(&(*str)[write_offset], &(*str)[read_offset],
-                length * sizeof(typename StringType::value_type));
-        write_offset += length;
-      }
-    } while (offset < str_length);
-    str->resize(write_offset);
-    return;
-  }
-
-  // We're lengthening the string.  We can use alternating replacements and
-  // memmove() calls like above, but we need to precalculate the final string
-  // length and then expand from back-to-front to avoid overwriting the string
-  // as we're reading it, needing to shift, or having to copy to a second string
-  // temporarily.
-  size_t first_match = offset;
-
-  // First, calculate the final length and resize the string.
-  size_t final_length = str_length;
-  size_t expansion = replace_length - find_length;
-  size_t current_match;
-  do {
-    final_length += expansion;
-    // Minor optimization: save this offset into |current_match|, so that on
-    // exit from the loop, |current_match| will point at the last instance of
-    // the find string, and we won't need to find() it again immediately.
-    current_match = offset;
-    offset = str->find(find_this.data(), offset + find_length,
-                       find_this.size());
-  } while (offset != StringType::npos);
-  str->resize(final_length);
-
-  // Now do the replacement loop, working backwards through the string.
-  for (size_t prev_match = str_length, write_offset = final_length; ;
-       current_match = str->rfind(find_this.data(), current_match - 1,
-                                  find_this.size())) {
-    size_t read_offset = current_match + find_length;
-    size_t length = prev_match - read_offset;
-    if (length) {
-      write_offset -= length;
-      memmove(&(*str)[write_offset], &(*str)[read_offset],
-              length * sizeof(typename StringType::value_type));
+  size_t expansion = 0;
+  if (replace_length > find_length) {
+    // This operation lengthens the string; determine the new length by counting
+    // matches.
+    const size_t expansion_per_match = (replace_length - find_length);
+    size_t num_matches = 0;
+    for (size_t match = first_match; match != StringType::npos;
+         match =
+             str->find(find_this.data(), match + find_length, find_length)) {
+      expansion += expansion_per_match;
+      ++num_matches;
     }
-    write_offset -= replace_length;
-    str->replace(write_offset, replace_length,
-                 replace_with.data(), replace_with.size());
-    if (current_match == first_match)
+    const size_t final_length = str_length + expansion;
+
+    if (str->capacity() < final_length) {
+      // If we'd have to allocate a new buffer to grow the string, build the
+      // result directly into the new allocation via append().
+      StringType src(str->get_allocator());
+      str->swap(src);
+      str->reserve(final_length);
+
+      size_t pos = 0;
+      for (size_t match = first_match;;
+           match = src.find(find_this.data(), pos, find_length)) {
+        str->append(src, pos, match - pos);
+        str->append(replace_with.data(), replace_length);
+        pos = match + find_length;
+
+        // A mid-loop test/break enables skipping the final find() call; the
+        // number of matches is known, so don't search past the last one.
+        if (!--num_matches)
+          break;
+      }
+
+      // Handle substring after the final match.
+      str->append(src, pos, str_length - pos);
       return;
-    prev_match = current_match;
+    }
+
+    // Prepare for the copy/move loop below -- expand the string to its final
+    // size by shifting the data after the first match to the end of the resized
+    // string.
+    size_t shift_src = first_match + find_length;
+    size_t shift_dst = shift_src + expansion;
+
+    // Big |expansion| factors (relative to |str_length|) require padding up to
+    // |shift_dst|.
+    if (shift_dst > str_length)
+      str->resize(shift_dst);
+
+    str->replace(shift_dst, str_length - shift_src, *str, shift_src,
+                 str_length - shift_src);
+    str_length = final_length;
   }
+
+  // We can alternate replacement and move operations. This won't overwrite the
+  // unsearched region of the string so long as |write_offset| <= |read_offset|;
+  // that condition is always satisfied because:
+  //
+  //   (a) If the string is being shortened, |expansion| is zero and
+  //       |write_offset| grows slower than |read_offset|.
+  //
+  //   (b) If the string is being lengthened, |write_offset| grows faster than
+  //       |read_offset|, but |expansion| is big enough so that |write_offset|
+  //       will only catch up to |read_offset| at the point of the last match.
+  auto* buffer = &((*str)[0]);
+  size_t write_offset = first_match;
+  size_t read_offset = first_match + expansion;
+  do {
+    if (replace_length) {
+      CharTraits::copy(buffer + write_offset, replace_with.data(),
+                       replace_length);
+      write_offset += replace_length;
+    }
+    read_offset += find_length;
+
+    // min() clamps StringType::npos (the largest unsigned value) to str_length.
+    size_t match = std::min(
+        str->find(find_this.data(), read_offset, find_length), str_length);
+
+    size_t length = match - read_offset;
+    if (length) {
+      CharTraits::move(buffer + write_offset, buffer + read_offset, length);
+      write_offset += length;
+      read_offset += length;
+    }
+  } while (read_offset < str_length);
+
+  // If we're shortening the string, truncate it now.
+  str->resize(write_offset);
 }
 
 void ReplaceFirstSubstringAfterOffset(string16* str,
@@ -853,20 +905,39 @@ char16* WriteInto(string16* str, size_t length_with_null) {
   return WriteIntoT(str, length_with_null);
 }
 
-template<typename STR>
-static STR JoinStringT(const std::vector<STR>& parts,
-                       BasicStringPiece<STR> sep) {
-  if (parts.empty())
-    return STR();
+// Generic version for all JoinString overloads. |list_type| must be a sequence
+// (std::vector or std::initializer_list) of strings/StringPieces (std::string,
+// string16, StringPiece or StringPiece16). |string_type| is either std::string
+// or string16.
+template <typename list_type, typename string_type>
+static string_type JoinStringT(const list_type& parts,
+                               BasicStringPiece<string_type> sep) {
+  if (parts.size() == 0)
+    return string_type();
 
-  STR result(parts[0]);
+  // Pre-allocate the eventual size of the string. Start with the size of all of
+  // the separators (note that this *assumes* parts.size() > 0).
+  size_t total_size = (parts.size() - 1) * sep.size();
+  for (const auto& part : parts)
+    total_size += part.size();
+  string_type result;
+  result.reserve(total_size);
+
   auto iter = parts.begin();
+  DCHECK(iter != parts.end());
+  AppendToString(&result, *iter);
   ++iter;
 
   for (; iter != parts.end(); ++iter) {
     sep.AppendToString(&result);
-    result += *iter;
+    // Using the overloaded AppendToString allows this template function to work
+    // on both strings and StringPieces without creating an intermediate
+    // StringPiece object.
+    AppendToString(&result, *iter);
   }
+
+  // Sanity-check that we pre-allocated correctly.
+  DCHECK_EQ(total_size, result.size());
 
   return result;
 }
@@ -877,6 +948,26 @@ std::string JoinString(const std::vector<std::string>& parts,
 }
 
 string16 JoinString(const std::vector<string16>& parts,
+                    StringPiece16 separator) {
+  return JoinStringT(parts, separator);
+}
+
+std::string JoinString(const std::vector<StringPiece>& parts,
+                       StringPiece separator) {
+  return JoinStringT(parts, separator);
+}
+
+string16 JoinString(const std::vector<StringPiece16>& parts,
+                    StringPiece16 separator) {
+  return JoinStringT(parts, separator);
+}
+
+std::string JoinString(std::initializer_list<StringPiece> parts,
+                       StringPiece separator) {
+  return JoinStringT(parts, separator);
+}
+
+string16 JoinString(std::initializer_list<StringPiece16> parts,
                     StringPiece16 separator) {
   return JoinStringT(parts, separator);
 }

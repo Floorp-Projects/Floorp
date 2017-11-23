@@ -38,11 +38,17 @@ Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
 Storage::~Storage()
 {}
 
+/* static */ bool
+Storage::StoragePrefIsEnabled()
+{
+  return mozilla::Preferences::GetBool(kStorageEnabled);
+}
+
 bool
 Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
-  if (!mozilla::Preferences::GetBool(kStorageEnabled)) {
+  if (!StoragePrefIsEnabled()) {
     return false;
   }
 

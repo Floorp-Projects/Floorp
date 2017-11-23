@@ -20,10 +20,6 @@ void PlatformThreadLocalStorage::FreeTLS(TLSKey key) {
   DCHECK_EQ(ret, 0);
 }
 
-void* PlatformThreadLocalStorage::GetTLSValue(TLSKey key) {
-  return pthread_getspecific(key);
-}
-
 void PlatformThreadLocalStorage::SetTLSValue(TLSKey key, void* value) {
   int ret = pthread_setspecific(key, value);
   DCHECK_EQ(ret, 0);

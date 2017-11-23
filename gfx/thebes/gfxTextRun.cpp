@@ -29,8 +29,6 @@
 #include "gfxWindowsPlatform.h"
 #endif
 
-#include "cairo.h"
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
@@ -1688,7 +1686,6 @@ gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget)
         uint32_t start = run.mCharacterOffset;
         uint32_t end = i + 1 < runCount ?
             glyphRuns[i + 1].mCharacterOffset : GetLength();
-        bool fontIsSetup = false;
         uint32_t j;
         gfxGlyphExtents *extents = font->GetOrCreateGlyphExtents(mAppUnitsPerDevUnit);
 
@@ -1700,13 +1697,6 @@ gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget)
                 if (needsGlyphExtents) {
                     uint32_t glyphIndex = glyphData->GetSimpleGlyph();
                     if (!extents->IsGlyphKnown(glyphIndex)) {
-                        if (!fontIsSetup) {
-                            if (!font->SetupCairoFont(aRefDrawTarget)) {
-                                NS_WARNING("failed to set up font for glyph extents");
-                                break;
-                            }
-                            fontIsSetup = true;
-                        }
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerSimple;
 #endif
@@ -1726,13 +1716,6 @@ gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget)
                 for (uint32_t k = 0; k < glyphCount; ++k, ++details) {
                     uint32_t glyphIndex = details->mGlyphID;
                     if (!extents->IsGlyphKnownWithTightExtents(glyphIndex)) {
-                        if (!fontIsSetup) {
-                            if (!font->SetupCairoFont(aRefDrawTarget)) {
-                                NS_WARNING("failed to set up font for glyph extents");
-                                break;
-                            }
-                            fontIsSetup = true;
-                        }
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerTight;
 #endif

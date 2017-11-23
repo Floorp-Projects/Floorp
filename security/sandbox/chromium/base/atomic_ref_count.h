@@ -8,58 +8,59 @@
 #ifndef BASE_ATOMIC_REF_COUNT_H_
 #define BASE_ATOMIC_REF_COUNT_H_
 
-#include "base/atomicops.h"
+#include <atomic>
 
 namespace base {
 
-typedef subtle::AtomicWord AtomicRefCount;
+class AtomicRefCount {
+ public:
+  constexpr AtomicRefCount() : ref_count_(0) {}
+  explicit constexpr AtomicRefCount(int initial_value)
+      : ref_count_(initial_value) {}
 
-// Increment a reference count by "increment", which must exceed 0.
-inline void AtomicRefCountIncN(volatile AtomicRefCount *ptr,
-                               AtomicRefCount increment) {
-  subtle::NoBarrier_AtomicIncrement(ptr, increment);
-}
+  // Increment a reference count.
+  void Increment() { Increment(1); }
 
-// Decrement a reference count by "decrement", which must exceed 0,
-// and return whether the result is non-zero.
-// Insert barriers to ensure that state written before the reference count
-// became zero will be visible to a thread that has just made the count zero.
-inline bool AtomicRefCountDecN(volatile AtomicRefCount *ptr,
-                               AtomicRefCount decrement) {
-  bool res = (subtle::Barrier_AtomicIncrement(ptr, -decrement) != 0);
-  return res;
-}
+  // Increment a reference count by "increment", which must exceed 0.
+  void Increment(int increment) {
+    ref_count_.fetch_add(increment, std::memory_order_relaxed);
+  }
 
-// Increment a reference count by 1.
-inline void AtomicRefCountInc(volatile AtomicRefCount *ptr) {
-  base::AtomicRefCountIncN(ptr, 1);
-}
+  // Decrement a reference count, and return whether the result is non-zero.
+  // Insert barriers to ensure that state written before the reference count
+  // became zero will be visible to a thread that has just made the count zero.
+  bool Decrement() {
+    // TODO(jbroman): Technically this doesn't need to be an acquire operation
+    // unless the result is 1 (i.e., the ref count did indeed reach zero).
+    // However, there are toolchain issues that make that not work as well at
+    // present (notably TSAN doesn't like it).
+    return ref_count_.fetch_sub(1, std::memory_order_acq_rel) != 1;
+  }
 
-// Decrement a reference count by 1 and return whether the result is non-zero.
-// Insert barriers to ensure that state written before the reference count
-// became zero will be visible to a thread that has just made the count zero.
-inline bool AtomicRefCountDec(volatile AtomicRefCount *ptr) {
-  return base::AtomicRefCountDecN(ptr, 1);
-}
+  // Return whether the reference count is one.  If the reference count is used
+  // in the conventional way, a refrerence count of 1 implies that the current
+  // thread owns the reference and no other thread shares it.  This call
+  // performs the test for a reference count of one, and performs the memory
+  // barrier needed for the owning thread to act on the object, knowing that it
+  // has exclusive access to the object.
+  bool IsOne() const { return ref_count_.load(std::memory_order_acquire) == 1; }
 
-// Return whether the reference count is one.  If the reference count is used
-// in the conventional way, a refrerence count of 1 implies that the current
-// thread owns the reference and no other thread shares it.  This call performs
-// the test for a reference count of one, and performs the memory barrier
-// needed for the owning thread to act on the object, knowing that it has
-// exclusive access to the object.
-inline bool AtomicRefCountIsOne(volatile AtomicRefCount *ptr) {
-  bool res = (subtle::Acquire_Load(ptr) == 1);
-  return res;
-}
+  // Return whether the reference count is zero.  With conventional object
+  // referencing counting, the object will be destroyed, so the reference count
+  // should never be zero.  Hence this is generally used for a debug check.
+  bool IsZero() const {
+    return ref_count_.load(std::memory_order_acquire) == 0;
+  }
 
-// Return whether the reference count is zero.  With conventional object
-// referencing counting, the object will be destroyed, so the reference count
-// should never be zero.  Hence this is generally used for a debug check.
-inline bool AtomicRefCountIsZero(volatile AtomicRefCount *ptr) {
-  bool res = (subtle::Acquire_Load(ptr) == 0);
-  return res;
-}
+  // Returns the current reference count (with no barriers). This is subtle, and
+  // should be used only for debugging.
+  int SubtleRefCountForDebug() const {
+    return ref_count_.load(std::memory_order_relaxed);
+  }
+
+ private:
+  std::atomic_int ref_count_;
+};
 
 }  // namespace base
 

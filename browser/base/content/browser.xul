@@ -417,15 +417,15 @@
            emailLink-title="&emailPageCmd.label;"
            sendToDevice-title="&pageAction.sendTabToDevice.label;"
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;">
-      <photonpanelmultiview id="pageActionPanelMultiView"
-                            mainViewId="pageActionPanelMainView"
-                            viewCacheId="appMenu-viewCache">
+      <panelmultiview id="pageActionPanelMultiView"
+                      mainViewId="pageActionPanelMainView"
+                      viewCacheId="appMenu-viewCache">
         <panelview id="pageActionPanelMainView"
                    context="pageActionContextMenu"
                    class="PanelUI-subView">
           <vbox class="panel-subview-body"/>
         </panelview>
-      </photonpanelmultiview>
+      </panelmultiview>
     </panel>
     <panel id="pageActionFeedback"
            role="alert"

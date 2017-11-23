@@ -3481,7 +3481,8 @@ gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
 {
     gfxRect svgBounds;
     if (mFontEntry->TryGetSVGData(this) && mFontEntry->HasSVGGlyph(aGlyphID) &&
-        mFontEntry->GetSVGGlyphExtents(aDrawTarget, aGlyphID, &svgBounds)) {
+        mFontEntry->GetSVGGlyphExtents(aDrawTarget, aGlyphID,
+                                       GetAdjustedSize(), &svgBounds)) {
         gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
         aExtents->SetTightGlyphExtents(aGlyphID,
                                        gfxRect(svgBounds.x * d2a,
@@ -3491,20 +3492,22 @@ gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
         return;
     }
 
-    cairo_glyph_t glyph;
-    glyph.index = aGlyphID;
-    glyph.x = 0;
-    glyph.y = 0;
-    cairo_text_extents_t extents;
-    cairo_glyph_extents(gfxFont::RefCairo(aDrawTarget), &glyph, 1, &extents);
+    RefPtr<ScaledFont> sf = GetScaledFont(aDrawTarget);
+    uint16_t glyphIndex = aGlyphID;
+    GlyphMetrics metrics;
+    if (mAntialiasOption == kAntialiasNone) {
+        sf->GetGlyphDesignMetrics(&glyphIndex, 1, &metrics);
+    } else {
+        aDrawTarget->GetGlyphRasterizationMetrics(sf, &glyphIndex, 1, &metrics);
+    }
 
     const Metrics& fontMetrics = GetMetrics(eHorizontal);
     int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
-    if (!aNeedTight && extents.x_bearing >= 0 &&
-        extents.y_bearing >= -fontMetrics.maxAscent &&
-        extents.height + extents.y_bearing <= fontMetrics.maxDescent) {
+    if (!aNeedTight && metrics.mXBearing >= 0.0 &&
+        metrics.mYBearing >= -fontMetrics.maxAscent &&
+        metrics.mHeight + metrics.mYBearing <= fontMetrics.maxDescent) {
         uint32_t appUnitsWidth =
-            uint32_t(ceil((extents.x_bearing + extents.width)*appUnitsPerDevUnit));
+            uint32_t(ceil((metrics.mXBearing + metrics.mWidth)*appUnitsPerDevUnit));
         if (appUnitsWidth < gfxGlyphExtents::INVALID_WIDTH) {
             aExtents->SetContainedGlyphWidthAppUnits(aGlyphID, uint16_t(appUnitsWidth));
             return;
@@ -3517,8 +3520,8 @@ gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
 #endif
 
     gfxFloat d2a = appUnitsPerDevUnit;
-    gfxRect bounds(extents.x_bearing*d2a, extents.y_bearing*d2a,
-                   extents.width*d2a, extents.height*d2a);
+    gfxRect bounds(metrics.mXBearing * d2a, metrics.mYBearing * d2a,
+                   metrics.mWidth * d2a, metrics.mHeight * d2a);
     aExtents->SetTightGlyphExtents(aGlyphID, bounds);
 }
 

@@ -289,10 +289,9 @@ TEST(HandleCloserTest, RunThreadPool) {
   TestRunner runner;
   runner.SetTimeout(2000);
   runner.SetTestState(AFTER_REVERT);
-  sandbox::TargetPolicy* policy = runner.GetPolicy();
 
-  // Sever the CSRSS connection by closing ALPC ports inside the sandbox.
-  CHECK_EQ(policy->AddKernelObjectToClose(L"ALPC Port", NULL), SBOX_ALL_OK);
+  // Sandbox policy will determine which platforms to disconnect CSRSS and when
+  // to close the CSRSS handle.
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"RunThreadPool"));
 }

@@ -28,7 +28,6 @@ class StartupInformation;
 
 namespace sandbox {
 
-class AttributeList;
 class SharedMemIPCServer;
 class ThreadProvider;
 
