@@ -19,9 +19,6 @@ def jemalloc(value, target, build_project, c_compiler):
     if value.origin != 'default':
         return bool(value) or None
 
-    if build_project == 'js':
-        return True
-
     if target.kernel in ('Darwin', 'Linux'):
         return True
 
