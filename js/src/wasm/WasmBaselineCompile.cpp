@@ -1844,87 +1844,87 @@ class BaseCompiler final : public BaseCompilerInterface
         return stk_.back();
     }
 
-    void loadConstI32(RegI32 r, Stk& src) {
-        moveImm32(src.i32val(), r);
+    void loadConstI32(Stk& src, RegI32 dest) {
+        moveImm32(src.i32val(), dest);
     }
 
-    void loadMemI32(RegI32 r, Stk& src) {
-        fr.loadStackI32(r, src.offs());
+    void loadMemI32(Stk& src, RegI32 dest) {
+        fr.loadStackI32(dest, src.offs());
     }
 
-    void loadLocalI32(RegI32 r, Stk& src) {
-        fr.loadLocalI32(r, localFromSlot(src.slot(), MIRType::Int32));
+    void loadLocalI32(Stk& src, RegI32 dest) {
+        fr.loadLocalI32(dest, localFromSlot(src.slot(), MIRType::Int32));
     }
 
-    void loadRegisterI32(RegI32 r, Stk& src) {
-        moveI32(src.i32reg(), r);
+    void loadRegisterI32(Stk& src, RegI32 dest) {
+        moveI32(src.i32reg(), dest);
     }
 
-    void loadConstI64(RegI64 r, Stk &src) {
-        moveImm64(src.i64val(), r);
+    void loadConstI64(Stk &src, RegI64 dest) {
+        moveImm64(src.i64val(), dest);
     }
 
-    void loadMemI64(RegI64 r, Stk& src) {
-        fr.loadStackI64(r, src.offs());
+    void loadMemI64(Stk& src, RegI64 dest) {
+        fr.loadStackI64(dest, src.offs());
     }
 
-    void loadLocalI64(RegI64 r, Stk& src) {
-        fr.loadLocalI64(r, localFromSlot(src.slot(), MIRType::Int64));
+    void loadLocalI64(Stk& src, RegI64 dest) {
+        fr.loadLocalI64(dest, localFromSlot(src.slot(), MIRType::Int64));
     }
 
-    void loadRegisterI64(RegI64 r, Stk& src) {
-        moveI64(src.i64reg(), r);
+    void loadRegisterI64(Stk& src, RegI64 dest) {
+        moveI64(src.i64reg(), dest);
     }
 
-    void loadConstF64(RegF64 r, Stk &src) {
+    void loadConstF64(Stk &src, RegF64 dest) {
         double d;
         src.f64val(&d);
-        masm.loadConstantDouble(d, r);
+        masm.loadConstantDouble(d, dest);
     }
 
-    void loadMemF64(RegF64 r, Stk& src) {
-        fr.loadStackF64(r, src.offs());
+    void loadMemF64(Stk& src, RegF64 dest) {
+        fr.loadStackF64(dest, src.offs());
     }
 
-    void loadLocalF64(RegF64 r, Stk& src) {
-        fr.loadLocalF64(r, localFromSlot(src.slot(), MIRType::Double));
+    void loadLocalF64(Stk& src, RegF64 dest) {
+        fr.loadLocalF64(dest, localFromSlot(src.slot(), MIRType::Double));
     }
 
-    void loadRegisterF64(RegF64 r, Stk& src) {
-        moveF64(src.f64reg(), r);
+    void loadRegisterF64(Stk& src, RegF64 dest) {
+        moveF64(src.f64reg(), dest);
     }
 
-    void loadConstF32(RegF32 r, Stk &src) {
+    void loadConstF32(Stk &src, RegF32 dest) {
         float f;
         src.f32val(&f);
-        masm.loadConstantFloat32(f, r);
+        masm.loadConstantFloat32(f, dest);
     }
 
-    void loadMemF32(RegF32 r, Stk& src) {
-        fr.loadStackF32(r, src.offs());
+    void loadMemF32(Stk& src, RegF32 dest) {
+        fr.loadStackF32(dest, src.offs());
     }
 
-    void loadLocalF32(RegF32 r, Stk& src) {
-        fr.loadLocalF32(r, localFromSlot(src.slot(), MIRType::Float32));
+    void loadLocalF32(Stk& src, RegF32 dest) {
+        fr.loadLocalF32(dest, localFromSlot(src.slot(), MIRType::Float32));
     }
 
-    void loadRegisterF32(RegF32 r, Stk& src) {
-        moveF32(src.f32reg(), r);
+    void loadRegisterF32(Stk& src, RegF32 dest) {
+        moveF32(src.f32reg(), dest);
     }
 
-    void loadI32(RegI32 r, Stk& src) {
+    void loadI32(Stk& src, RegI32 dest) {
         switch (src.kind()) {
           case Stk::ConstI32:
-            loadConstI32(r, src);
+            loadConstI32(src, dest);
             break;
           case Stk::MemI32:
-            loadMemI32(r, src);
+            loadMemI32(src, dest);
             break;
           case Stk::LocalI32:
-            loadLocalI32(r, src);
+            loadLocalI32(src, dest);
             break;
           case Stk::RegisterI32:
-            loadRegisterI32(r, src);
+            loadRegisterI32(src, dest);
             break;
           case Stk::None:
           default:
@@ -1932,19 +1932,19 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     }
 
-    void loadI64(RegI64 r, Stk& src) {
+    void loadI64(Stk& src, RegI64 dest) {
         switch (src.kind()) {
           case Stk::ConstI64:
-            loadConstI64(r, src);
+            loadConstI64(src, dest);
             break;
           case Stk::MemI64:
-            loadMemI64(r, src);
+            loadMemI64(src, dest);
             break;
           case Stk::LocalI64:
-            loadLocalI64(r, src);
+            loadLocalI64(src, dest);
             break;
           case Stk::RegisterI64:
-            loadRegisterI64(r, src);
+            loadRegisterI64(src, dest);
             break;
           case Stk::None:
           default:
@@ -1953,19 +1953,19 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
 #if !defined(JS_PUNBOX64)
-    void loadI64Low(RegI32 r, Stk& src) {
+    void loadI64Low(Stk& src, RegI32 dest) {
         switch (src.kind()) {
           case Stk::ConstI64:
-            moveImm32(int32_t(src.i64val()), r);
+            moveImm32(int32_t(src.i64val()), dest);
             break;
           case Stk::MemI64:
-            fr.loadStackI64Low(r, src.offs());
+            fr.loadStackI64Low(dest, src.offs());
             break;
           case Stk::LocalI64:
-            fr.loadLocalI64Low(r, localFromSlot(src.slot(), MIRType::Int64));
+            fr.loadLocalI64Low(dest, localFromSlot(src.slot(), MIRType::Int64));
             break;
           case Stk::RegisterI64:
-            moveI32(RegI32(src.i64reg().low), r);
+            moveI32(RegI32(src.i64reg().low), dest);
             break;
           case Stk::None:
           default:
@@ -1973,19 +1973,19 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     }
 
-    void loadI64High(RegI32 r, Stk& src) {
+    void loadI64High(Stk& src, RegI32 dest) {
         switch (src.kind()) {
           case Stk::ConstI64:
-            moveImm32(int32_t(src.i64val() >> 32), r);
+            moveImm32(int32_t(src.i64val() >> 32), dest);
             break;
           case Stk::MemI64:
-            fr.loadStackI64High(r, src.offs());
+            fr.loadStackI64High(dest, src.offs());
             break;
           case Stk::LocalI64:
-            fr.loadLocalI64High(r, localFromSlot(src.slot(), MIRType::Int64));
+            fr.loadLocalI64High(dest, localFromSlot(src.slot(), MIRType::Int64));
             break;
           case Stk::RegisterI64:
-            moveI32(RegI32(src.i64reg().high), r);
+            moveI32(RegI32(src.i64reg().high), dest);
             break;
           case Stk::None:
           default:
@@ -1994,19 +1994,19 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 #endif
 
-    void loadF64(RegF64 r, Stk& src) {
+    void loadF64(Stk& src, RegF64 dest) {
         switch (src.kind()) {
           case Stk::ConstF64:
-            loadConstF64(r, src);
+            loadConstF64(src, dest);
             break;
           case Stk::MemF64:
-            loadMemF64(r, src);
+            loadMemF64(src, dest);
             break;
           case Stk::LocalF64:
-            loadLocalF64(r, src);
+            loadLocalF64(src, dest);
             break;
           case Stk::RegisterF64:
-            loadRegisterF64(r, src);
+            loadRegisterF64(src, dest);
             break;
           case Stk::None:
           default:
@@ -2014,19 +2014,19 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     }
 
-    void loadF32(RegF32 r, Stk& src) {
+    void loadF32(Stk& src, RegF32 dest) {
         switch (src.kind()) {
           case Stk::ConstF32:
-            loadConstF32(r, src);
+            loadConstF32(src, dest);
             break;
           case Stk::MemF32:
-            loadMemF32(r, src);
+            loadMemF32(src, dest);
             break;
           case Stk::LocalF32:
-            loadLocalF32(r, src);
+            loadLocalF32(src, dest);
             break;
           case Stk::RegisterF32:
-            loadRegisterF32(r, src);
+            loadRegisterF32(src, dest);
             break;
           case Stk::None:
           default:
@@ -2073,7 +2073,7 @@ class BaseCompiler final : public BaseCompilerInterface
             switch (v.kind()) {
               case Stk::LocalI32: {
                 ScratchI32 scratch(*this);
-                loadLocalI32(scratch, v);
+                loadLocalI32(v, scratch);
                 uint32_t offs = fr.pushPtr(scratch);
                 v.setOffs(Stk::MemI32, offs);
                 break;
@@ -2087,7 +2087,7 @@ class BaseCompiler final : public BaseCompilerInterface
               case Stk::LocalI64: {
                 ScratchI32 scratch(*this);
 #ifdef JS_PUNBOX64
-                loadI64(fromI32(scratch), v);
+                loadI64(v, fromI32(scratch));
                 uint32_t offs = fr.pushPtr(scratch);
 #else
                 fr.loadLocalI64High(scratch, localFromSlot(v.slot(), MIRType::Int64));
@@ -2112,7 +2112,7 @@ class BaseCompiler final : public BaseCompilerInterface
               }
               case Stk::LocalF64: {
                 ScratchF64 scratch(*this);
-                loadF64(scratch, v);
+                loadF64(v, scratch);
                 uint32_t offs = fr.pushDouble(scratch);
                 v.setOffs(Stk::MemF64, offs);
                 break;
@@ -2125,7 +2125,7 @@ class BaseCompiler final : public BaseCompilerInterface
               }
               case Stk::LocalF32: {
                 ScratchF32 scratch(*this);
-                loadF32(scratch, v);
+                loadF32(v, scratch);
                 uint32_t offs = fr.pushFloat32(scratch);
                 v.setOffs(Stk::MemF32, offs);
                 break;
@@ -2239,22 +2239,23 @@ class BaseCompiler final : public BaseCompilerInterface
         x.setSlot(Stk::LocalF32, slot);
     }
 
-    // PRIVATE.  Call only from other popI32() variants.
-    // v must be the stack top.
+    // Call only from other popI32() variants.
+    // v must be the stack top.  May pop the CPU stack.
 
-    void popI32(Stk& v, RegI32 r) {
+    void popI32(Stk& v, RegI32 dest) {
+        MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstI32:
-            loadConstI32(r, v);
+            loadConstI32(v, dest);
             break;
           case Stk::LocalI32:
-            loadLocalI32(r, v);
+            loadLocalI32(v, dest);
             break;
           case Stk::MemI32:
-            fr.popPtr(r);
+            fr.popPtr(dest);
             break;
           case Stk::RegisterI32:
-            loadRegisterI32(r, v);
+            loadRegisterI32(v, dest);
             break;
           case Stk::None:
           default:
@@ -2287,27 +2288,28 @@ class BaseCompiler final : public BaseCompilerInterface
         return specific;
     }
 
-    // PRIVATE.  Call only from other popI64() variants.
-    // v must be the stack top.
+    // Call only from other popI64() variants.
+    // v must be the stack top.  May pop the CPU stack.
 
-    void popI64(Stk& v, RegI64 r) {
+    void popI64(Stk& v, RegI64 dest) {
+        MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstI64:
-            loadConstI64(r, v);
+            loadConstI64(v, dest);
             break;
           case Stk::LocalI64:
-            loadLocalI64(r, v);
+            loadLocalI64(v, dest);
             break;
           case Stk::MemI64:
 #ifdef JS_PUNBOX64
-            fr.popPtr(r.reg);
+            fr.popPtr(dest.reg);
 #else
-            fr.popPtr(r.low);
-            fr.popPtr(r.high);
+            fr.popPtr(dest.low);
+            fr.popPtr(dest.high);
 #endif
             break;
           case Stk::RegisterI64:
-            loadRegisterI64(r, v);
+            loadRegisterI64(v, dest);
             break;
           case Stk::None:
           default:
@@ -2345,22 +2347,23 @@ class BaseCompiler final : public BaseCompilerInterface
         return specific;
     }
 
-    // PRIVATE.  Call only from other popF64() variants.
-    // v must be the stack top.
+    // Call only from other popF64() variants.
+    // v must be the stack top.  May pop the CPU stack.
 
-    void popF64(Stk& v, RegF64 r) {
+    void popF64(Stk& v, RegF64 dest) {
+        MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstF64:
-            loadConstF64(r, v);
+            loadConstF64(v, dest);
             break;
           case Stk::LocalF64:
-            loadLocalF64(r, v);
+            loadLocalF64(v, dest);
             break;
           case Stk::MemF64:
-            fr.popDouble(r);
+            fr.popDouble(dest);
             break;
           case Stk::RegisterF64:
-            loadRegisterF64(r, v);
+            loadRegisterF64(v, dest);
             break;
           case Stk::None:
           default:
@@ -2393,22 +2396,23 @@ class BaseCompiler final : public BaseCompilerInterface
         return specific;
     }
 
-    // PRIVATE.  Call only from other popF32() variants.
-    // v must be the stack top.
+    // Call only from other popF32() variants.
+    // v must be the stack top.  May pop the CPU stack.
 
-    void popF32(Stk& v, RegF32 r) {
+    void popF32(Stk& v, RegF32 dest) {
+        MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstF32:
-            loadConstF32(r, v);
+            loadConstF32(v, dest);
             break;
           case Stk::LocalF32:
-            loadLocalF32(r, v);
+            loadLocalF32(v, dest);
             break;
           case Stk::MemF32:
-            fr.popFloat32(r);
+            fr.popFloat32(dest);
             break;
           case Stk::RegisterF32:
-            loadRegisterF32(r, v);
+            loadRegisterF32(v, dest);
             break;
           case Stk::None:
           default:
@@ -3054,10 +3058,10 @@ class BaseCompiler final : public BaseCompilerInterface
             ABIArg argLoc = call.abi.next(MIRType::Int32);
             if (argLoc.kind() == ABIArg::Stack) {
                 ScratchI32 scratch(*this);
-                loadI32(scratch, arg);
+                loadI32(arg, scratch);
                 masm.store32(scratch, Address(masm.getStackPointer(), argLoc.offsetFromArgBase()));
             } else {
-                loadI32(RegI32(argLoc.gpr()), arg);
+                loadI32(arg, RegI32(argLoc.gpr()));
             }
             break;
           }
@@ -3066,18 +3070,18 @@ class BaseCompiler final : public BaseCompilerInterface
             if (argLoc.kind() == ABIArg::Stack) {
                 ScratchI32 scratch(*this);
 #if defined(JS_CODEGEN_X64)
-                loadI64(fromI32(scratch), arg);
+                loadI64(arg, fromI32(scratch));
                 masm.movq(scratch, Operand(masm.getStackPointer(), argLoc.offsetFromArgBase()));
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-                loadI64Low(scratch, arg);
+                loadI64Low(arg, scratch);
                 masm.store32(scratch, LowWord(Address(masm.getStackPointer(), argLoc.offsetFromArgBase())));
-                loadI64High(scratch, arg);
+                loadI64High(arg, scratch);
                 masm.store32(scratch, HighWord(Address(masm.getStackPointer(), argLoc.offsetFromArgBase())));
 #else
                 MOZ_CRASH("BaseCompiler platform hook: passArg I64");
 #endif
             } else {
-                loadI64(RegI64(argLoc.gpr64()), arg);
+                loadI64(arg, RegI64(argLoc.gpr64()));
             }
             break;
           }
@@ -3086,7 +3090,7 @@ class BaseCompiler final : public BaseCompilerInterface
             switch (argLoc.kind()) {
               case ABIArg::Stack: {
                 ScratchF64 scratch(*this);
-                loadF64(scratch, arg);
+                loadF64(arg, scratch);
                 masm.storeDouble(scratch, Address(masm.getStackPointer(), argLoc.offsetFromArgBase()));
                 break;
               }
@@ -3094,7 +3098,7 @@ class BaseCompiler final : public BaseCompilerInterface
               case ABIArg::GPR_PAIR: {
 # ifdef JS_CODEGEN_ARM
                 ScratchF64 scratch(*this);
-                loadF64(scratch, arg);
+                loadF64(arg, scratch);
                 masm.ma_vxfer(scratch, argLoc.evenGpr(), argLoc.oddGpr());
                 break;
 # else
@@ -3103,7 +3107,7 @@ class BaseCompiler final : public BaseCompilerInterface
               }
 #endif
               case ABIArg::FPU: {
-                loadF64(RegF64(argLoc.fpu()), arg);
+                loadF64(arg, RegF64(argLoc.fpu()));
                 break;
               }
               case ABIArg::GPR: {
@@ -3119,18 +3123,18 @@ class BaseCompiler final : public BaseCompilerInterface
             switch (argLoc.kind()) {
               case ABIArg::Stack: {
                 ScratchF32 scratch(*this);
-                loadF32(scratch, arg);
+                loadF32(arg, scratch);
                 masm.storeFloat32(scratch, Address(masm.getStackPointer(), argLoc.offsetFromArgBase()));
                 break;
               }
               case ABIArg::GPR: {
                 ScratchF32 scratch(*this);
-                loadF32(scratch, arg);
+                loadF32(arg, scratch);
                 masm.moveFloat32ToGPR(scratch, argLoc.gpr());
                 break;
               }
               case ABIArg::FPU: {
-                loadF32(RegF32(argLoc.fpu()), arg);
+                loadF32(arg, RegF32(argLoc.fpu()));
                 break;
               }
 #if defined(JS_CODEGEN_REGISTER_PAIR)
@@ -3169,7 +3173,7 @@ class BaseCompiler final : public BaseCompilerInterface
         MOZ_ASSERT(env_.tables.length() == 1);
         const TableDesc& table = env_.tables[0];
 
-        loadI32(RegI32(WasmTableCallIndexReg), indexVal);
+        loadI32(indexVal, RegI32(WasmTableCallIndexReg));
 
         CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
         CalleeDesc callee = CalleeDesc::wasmTable(table, sig.id);
@@ -3229,7 +3233,7 @@ class BaseCompiler final : public BaseCompilerInterface
         MOZ_RELEASE_ASSERT(HaveSignalHandlers());
     }
 
-    void jumpTable(LabelVector& labels, Label* theTable) {
+    void jumpTable(const LabelVector& labels, Label* theTable) {
         // Flush constant pools to ensure that the table is never interrupted by
         // constant pool entries.
         masm.flush();
