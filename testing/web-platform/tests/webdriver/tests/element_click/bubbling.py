@@ -9,6 +9,41 @@ def click(session, element):
             element_id=element.id))
 
 
+def test_click_event_bubbles_to_parents(session):
+    session.url = inline("""
+        <style>
+        body * {
+          margin: 10px;
+          padding: 10px;
+          border: 1px solid blue;
+        }
+        </style>
+
+        <div id=three>THREE
+          <div id=two>TWO
+            <div id=one>ONE</div>
+          </div>
+        </div>
+
+        <script>
+        window.clicks = [];
+
+        for (let level of document.querySelectorAll("div")) {
+          level.addEventListener("click", ({currentTarget}) => {
+            window.clicks.push(currentTarget);
+          });
+        }
+        </script>
+        """)
+    three, two, one = session.find.css("div")
+    one.click()
+
+    clicks = session.execute_script("return window.clicks")
+    assert one in clicks
+    assert two in clicks
+    assert three in clicks
+
+
 def test_element_disappears_during_click(session):
     """
     When an element in the event bubbling order disappears (its CSS
