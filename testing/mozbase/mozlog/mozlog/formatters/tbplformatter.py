@@ -45,9 +45,6 @@ class TbplFormatter(BaseFormatter):
         else:
             self.buffer = None
 
-    def __call__(self, data):
-        return getattr(self, data["action"])(data)
-
     def _format_subtests(self, component, subtract_context=False):
         count = self.subtests_count
         if subtract_context:
