@@ -634,6 +634,12 @@ class FullParseHandler
         return new_<CodeNode>(PNK_FUNCTION, JSOP_LAMBDA_ARROW, pos);
     }
 
+    bool isExpressionClosure(ParseNode* node) const {
+        return node->isKind(PNK_FUNCTION) &&
+               node->pn_funbox->isExprBody() &&
+               !node->pn_funbox->isArrow();
+    }
+
     void setFunctionFormalParametersAndBody(ParseNode* pn, ParseNode* kid) {
         MOZ_ASSERT_IF(kid, kid->isKind(PNK_PARAMSBODY));
         pn->pn_body = kid;

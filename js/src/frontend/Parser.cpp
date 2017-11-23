@@ -3723,7 +3723,7 @@ Parser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling inHandli
         if (kind != Arrow) {
             if (funbox->isGenerator() || funbox->isAsync() || kind == Method ||
                 kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
-                IsConstructorKind(kind))
+                IsConstructorKind(kind) || kind == PrimaryExpression)
             {
                 error(JSMSG_CURLY_BEFORE_BODY);
                 return false;
@@ -3950,9 +3950,9 @@ Parser<ParseHandler, CharT>::functionExpr(uint32_t toStringStart,
     if (invoked)
         pn = handler.setLikelyIIFE(pn);
 
-    // This is PrimaryExpression for now because the parser hasn't been changed
-    // to use AssignmentExpression yet.
-    FunctionSyntaxKind kind = PrimaryExpression;
+    FunctionSyntaxKind kind = expressionClosureHandling == ExpressionClosure::Allowed
+                              ? AssignmentExpression
+                              : PrimaryExpression;
 
     return functionDefinition(pn, toStringStart, InAllowed, yieldHandling, name, kind,
                               generatorKind, asyncKind);
@@ -7866,6 +7866,9 @@ Parser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling yieldHa
         if (!pn)
             return null();
 
+        if (handler.isExpressionClosure(pn))
+            return pn;
+
         expressionClosureHandling = ExpressionClosure::Forbidden;
 
         // If a binary operator follows, consume it and compute the
@@ -7940,6 +7943,9 @@ Parser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandling yield
                             expressionClosureHandling, possibleError, invoked);
     if (!condition)
         return null();
+
+    if (handler.isExpressionClosure(condition))
+        return condition;
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TOK_HOOK))
@@ -8370,6 +8376,9 @@ Parser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         if (!expr)
             return null();
 
+        if (handler.isExpressionClosure(expr))
+            return expr;
+
         /* Don't look across a newline boundary for a postfix incop. */
         if (!tokenStream.peekTokenSameLine(&tt))
             return null();
@@ -8534,6 +8543,9 @@ Parser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                           possibleError, invoked);
         if (!lhs)
             return null();
+
+        if (handler.isExpressionClosure(lhs))
+            return lhs;
     }
 
     MOZ_ASSERT_IF(handler.isSuperBase(lhs), tokenStream.isCurrentTokenType(TOK_SUPER));
