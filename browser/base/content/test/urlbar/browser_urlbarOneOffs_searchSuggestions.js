@@ -27,8 +27,7 @@ add_task(async function oneOffReturnAfterSuggestion() {
 
   let typedValue = "foo";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-  await BrowserTestUtils.waitForCondition(suggestionsPresent,
-                                          "waiting for suggestions");
+  await promiseSuggestionsPresent();
   assertState(0, -1, typedValue);
 
   // Down to select the first search suggestion.
@@ -59,8 +58,7 @@ add_task(async function oneOffClickAfterSuggestion() {
 
   let typedValue = "foo";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-  await BrowserTestUtils.waitForCondition(suggestionsPresent,
-                                          "waiting for suggestions");
+  await promiseSuggestionsPresent();
   assertState(0, -1, typedValue);
 
   // Down to select the first search suggestion.
@@ -87,8 +85,7 @@ add_task(async function overridden_engine_not_reused() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     let typedValue = "foo";
     await promiseAutocompleteResultPopup(typedValue, window, true);
-    await BrowserTestUtils.waitForCondition(suggestionsPresent,
-                                            "waiting for suggestions");
+    await promiseSuggestionsPresent();
     // Down to select the first search suggestion.
     EventUtils.synthesizeKey("VK_DOWN", {});
     assertState(1, -1, "foofoo");
@@ -100,8 +97,7 @@ add_task(async function overridden_engine_not_reused() {
     let label = gURLBar.popup.richlistbox.children[gURLBar.popup.richlistbox.selectedIndex].label;
     // Run again the query, check the label has been replaced.
     await promiseAutocompleteResultPopup(typedValue, window, true);
-    await BrowserTestUtils.waitForCondition(suggestionsPresent,
-                                            "waiting for suggestions");
+    await promiseSuggestionsPresent();
     assertState(0, -1, "foo");
     let newLabel = gURLBar.popup.richlistbox.children[1].label;
     Assert.notEqual(newLabel, label, "The label should have been updated");
@@ -122,21 +118,4 @@ function assertState(result, oneOff, textValue = undefined) {
 async function hidePopup() {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   await promisePopupHidden(gURLBar.popup);
-}
-
-function suggestionsPresent() {
-  let controller = gURLBar.popup.input.controller;
-  let matchCount = controller.matchCount;
-  for (let i = 0; i < matchCount; i++) {
-    let url = controller.getValueAt(i);
-    let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);
-    if (mozActionMatch) {
-      let [, type, paramStr] = mozActionMatch;
-      let params = JSON.parse(paramStr);
-      if (type == "searchengine" && "searchSuggestion" in params) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
