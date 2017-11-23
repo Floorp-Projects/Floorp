@@ -410,7 +410,7 @@ private:
   IMENotification mPendingLayoutChange;
   IMENotification mPendingCompositionUpdate;
 
-#if defined(MOZ_CRASHREPORTER) && MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // Log of event messages to be output to crash report.
   nsTArray<EventMessage> mDispatchedEventMessages;
   nsTArray<EventMessage> mReceivedEventMessages;
@@ -450,7 +450,7 @@ private:
   }
   nsTArray<RequestIMEToCommitCompositionResult>
     mRequestIMEToCommitCompositionResults;
-#endif // #if defined(MOZ_CRASHREPORTER) && MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   // mTabParent is owner of the instance.
   dom::TabParent& MOZ_NON_OWNING_REF mTabParent;
@@ -507,7 +507,7 @@ private:
 
   void FlushPendingNotifications(nsIWidget* aWidget);
 
-#if defined(MOZ_CRASHREPORTER) && MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   /**
    * Remove unnecessary messages from mDispatchedEventMessages and
    * mReceivedEventMessages.
@@ -518,7 +518,7 @@ private:
    * Append event message log to aLog.
    */
   void AppendEventMessageLog(nsACString& aLog) const;
-#endif // #if defined(MOZ_CRASHREPORTER) && MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#endif // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
 };
 
 } // namespace mozilla
