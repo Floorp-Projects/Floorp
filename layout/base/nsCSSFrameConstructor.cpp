@@ -7034,10 +7034,11 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
       *aIsAppend = true;
       if (IsFramePartOfIBSplit(aInsertion->mParentFrame)) {
         // Since we're appending, we'll walk to the last anonymous frame
-        // that was created for the broken inline frame.  But don't walk
-        // to the trailing inline if it's empty; stop at the block.
+        // that was created for the broken inline frame. We can walk to the
+        // trailing inline, since we know this is a real append, and not an
+        // insert (that would've been handled by `FindNextSibling`).
         aInsertion->mParentFrame =
-          GetLastIBSplitSibling(aInsertion->mParentFrame, false);
+          GetLastIBSplitSibling(aInsertion->mParentFrame, true);
       }
       // Get continuation that parents the last child.
       aInsertion->mParentFrame =
