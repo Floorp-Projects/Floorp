@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Task} = require("devtools/shared/task");
+const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   createNode,
@@ -15,9 +15,9 @@ const {
   TimeScale,
   getCssPropertyName
 } = require("devtools/client/animationinspector/utils");
-const {AnimationDetails} = require("devtools/client/animationinspector/components/animation-details");
-const {AnimationTargetNode} = require("devtools/client/animationinspector/components/animation-target-node");
-const {AnimationTimeBlock} = require("devtools/client/animationinspector/components/animation-time-block");
+const { AnimationDetails } = require("devtools/client/animationinspector/components/animation-details");
+const { AnimationTargetNode } = require("devtools/client/animationinspector/components/animation-target-node");
+const { AnimationTimeBlock } = require("devtools/client/animationinspector/components/animation-time-block");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =
@@ -85,10 +85,11 @@ AnimationsTimeline.prototype = {
       useOnlyShared: true
     }).require;
 
-    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const dom = require("devtools/client/shared/vendor/react-dom-factories");
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 
-    const SplitBox = React.createFactory(
+    const SplitBox = createFactory(
       browserRequire("devtools/client/shared/components/splitter/SplitBox"));
 
     const splitter = SplitBox({
@@ -96,10 +97,10 @@ AnimationsTimeline.prototype = {
       splitterSize: 1,
       initialHeight: "50%",
       endPanelControl: true,
-      startPanel: React.DOM.div({
+      startPanel: dom.div({
         className: "animation-timeline"
       }),
-      endPanel: React.DOM.div({
+      endPanel: dom.div({
         className: "animation-detail"
       }),
       vert: false

@@ -27,10 +27,8 @@ window.onload = function () {
 
   const {getDeviceFront} = require("devtools/shared/fronts/device");
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {

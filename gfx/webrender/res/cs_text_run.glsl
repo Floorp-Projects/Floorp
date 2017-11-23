@@ -25,27 +25,21 @@ void main(void) {
 
     GlyphResource res = fetch_glyph_resource(resource_address);
 
-    // Glyphs size is already in device-pixels.
+    // Glyph size is already in device-pixels.
     // The render task origin is in device-pixels. Offset that by
     // the glyph offset, relative to its primitive bounding rect.
-    vec2 size = (res.uv_rect.zw - res.uv_rect.xy) * res.scale;
-    vec2 local_pos = glyph.offset + vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
-    vec2 origin = prim.task.common_data.task_rect.p0 +
-                  uDevicePixelRatio * (local_pos - prim.task.content_origin);
-    vec4 local_rect = vec4(origin, size);
+    vec2 glyph_size = res.uv_rect.zw - res.uv_rect.xy;
+    vec2 glyph_pos = res.offset + glyph_size * aPosition.xy;
+    vec2 local_pos = prim.task.common_data.task_rect.p0 + glyph_pos * res.scale +
+                     uDevicePixelRatio * (glyph.offset - prim.task.content_origin);
+    gl_Position = uTransform * vec4(local_pos, 0.0, 1.0);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vec2 st0 = res.uv_rect.xy / texture_size;
     vec2 st1 = res.uv_rect.zw / texture_size;
 
-    vec2 pos = mix(local_rect.xy,
-                   local_rect.xy + local_rect.zw,
-                   aPosition.xy);
-
     vUv = vec3(mix(st0, st1, aPosition.xy), res.layer);
     vColor = prim.task.color;
-
-    gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }
 #endif
 

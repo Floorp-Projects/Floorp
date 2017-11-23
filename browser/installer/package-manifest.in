@@ -376,6 +376,8 @@
 @RESPATH@/browser/components/aboutdebugging.manifest
 @RESPATH@/browser/components/aboutdevtools-registration.js
 @RESPATH@/browser/components/aboutdevtools.manifest
+@RESPATH@/browser/components/aboutdevtoolstoolbox-registration.js
+@RESPATH@/browser/components/aboutdevtoolstoolbox.manifest
 @RESPATH@/browser/components/Experiments.manifest
 @RESPATH@/browser/components/ExperimentsService.js
 @RESPATH@/browser/components/browser-newtab.xpt

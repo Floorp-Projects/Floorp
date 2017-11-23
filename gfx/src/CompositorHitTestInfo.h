@@ -17,7 +17,7 @@ namespace gfx {
 // intentionally set up so that if all of them are 0 the item is effectively
 // invisible to hit-testing, and no information for this frame needs to be
 // sent to the compositor.
-enum class CompositorHitTestInfo : uint8_t {
+enum class CompositorHitTestInfo : uint16_t {
   // Shortcut for checking that none of the flags are set
   eInvisibleToHitTest = 0,
 

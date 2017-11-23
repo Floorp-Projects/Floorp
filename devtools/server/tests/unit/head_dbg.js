@@ -420,7 +420,7 @@ function initTestDebuggerServer(server = DebuggerServer) {
 function startTestDebuggerServer(title, server = DebuggerServer) {
   initTestDebuggerServer(server);
   addTestGlobal(title);
-  DebuggerServer.addTabActors();
+  DebuggerServer.registerActors({ tab: true });
 
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);
@@ -438,10 +438,8 @@ function finishClient(client) {
 // Create a server, connect to it and fetch tab actors for the parent process;
 // pass |callback| the debugger client and tab actor form with all actor IDs.
 function get_chrome_actors(callback) {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());

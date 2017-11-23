@@ -176,14 +176,10 @@ var RemoteDebugger = {
   },
 
   initServer: function() {
-    if (DebuggerServer.initialized) {
-      return;
-    }
-
     DebuggerServer.init();
 
     // Add browser and Fennec specific actors
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerAllActors();
     DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
 
     // Allow debugging of chrome for any process

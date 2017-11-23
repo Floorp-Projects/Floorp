@@ -227,10 +227,10 @@ WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
                       layers::FrameMetrics::ViewID& aOutScrollId,
                       gfx::CompositorHitTestInfo& aOutHitInfo)
 {
-  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint8_t),
-                "CompositorHitTestInfo should be u8-sized");
+  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint16_t),
+                "CompositorHitTestInfo should be u16-sized");
   return wr_api_hit_test(mDocHandle, aPoint,
-          &aOutPipelineId, &aOutScrollId, (uint8_t*)&aOutHitInfo);
+          &aOutPipelineId, &aOutScrollId, (uint16_t*)&aOutHitInfo);
 }
 
 void
@@ -1263,9 +1263,9 @@ void
 DisplayListBuilder::SetHitTestInfo(const layers::FrameMetrics::ViewID& aScrollId,
                                    gfx::CompositorHitTestInfo aHitInfo)
 {
-  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint8_t),
-                "CompositorHitTestInfo should be u8-sized");
-  wr_set_item_tag(mWrState, aScrollId, static_cast<uint8_t>(aHitInfo));
+  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint16_t),
+                "CompositorHitTestInfo should be u16-sized");
+  wr_set_item_tag(mWrState, aScrollId, static_cast<uint16_t>(aHitInfo));
 }
 
 void

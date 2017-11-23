@@ -191,10 +191,8 @@ function reload(aTarget, aWaitForTargetEvent = "navigate") {
 }
 
 function initServer() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 }
 
 function initCallWatcherBackend(aUrl) {

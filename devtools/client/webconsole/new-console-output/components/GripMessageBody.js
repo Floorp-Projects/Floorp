@@ -37,6 +37,7 @@ GripMessageBody.propTypes = {
   serviceContainer: PropTypes.shape({
     createElement: PropTypes.func.isRequired,
     hudProxy: PropTypes.object.isRequired,
+    onViewSourceInDebugger: PropTypes.func.isRequired,
   }),
   userProvidedStyle: PropTypes.string,
   useQuotes: PropTypes.bool,
@@ -102,6 +103,7 @@ function GripMessageBody(props) {
       }
       serviceContainer.hudProxy.releaseActor(actor);
     },
+    onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     openLink: serviceContainer.openLink,
   };
 

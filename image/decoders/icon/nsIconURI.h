@@ -15,14 +15,17 @@
 #include "nsIURIMutator.h"
 
 
-class nsMozIconURI : public nsIMozIconURI
-                   , public nsIIPCSerializableURI
+class nsMozIconURI final
+  : public nsIMozIconURI
+  , public nsIIPCSerializableURI
+  , public nsINestedURI
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSIMOZICONURI
   NS_DECL_NSIIPCSERIALIZABLEURI
+  NS_DECL_NSINESTEDURI
 
   // nsMozIconURI
   nsMozIconURI();
@@ -76,25 +79,6 @@ public:
 
     friend class nsMozIconURI;
   };
-};
-
-// For moz-icon URIs that point to an actual file on disk and are
-// therefore nested URIs
-class nsNestedMozIconURI final : public nsMozIconURI
-                               , public nsINestedURI
-{
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIURI(nsMozIconURI::)
-  NS_FORWARD_NSIMOZICONURI(nsMozIconURI::)
-  NS_FORWARD_NSIIPCSERIALIZABLEURI(nsMozIconURI::)
-
-  NS_DECL_NSINESTEDURI
-
-  nsNestedMozIconURI();
-
-protected:
-  virtual ~nsNestedMozIconURI();
-
 };
 
 #endif // mozilla_image_decoders_icon_nsIconURI_h

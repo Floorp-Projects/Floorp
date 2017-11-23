@@ -2818,37 +2818,32 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
   }
 
   if (CustomElementRegistry::IsCustomElementEnabled()) {
-    if (CustomElementData* data = GetCustomElementData()) {
-      if (CustomElementDefinition* definition =
-            nsContentUtils::GetElementDefinitionIfObservingAttr(this,
-                                                                data->GetCustomElementType(),
-                                                                aName)) {
-        MOZ_ASSERT(data->mState == CustomElementData::State::eCustom,
-                   "AttributeChanged callback should fire only if "
-                   "custom element state is custom");
-        RefPtr<nsAtom> oldValueAtom;
-        if (oldValue) {
-          oldValueAtom = oldValue->GetAsAtom();
-        } else {
-          // If there is no old value, get the value of the uninitialized
-          // attribute that was swapped with aParsedValue.
-          oldValueAtom = aParsedValue.GetAsAtom();
-        }
-        RefPtr<nsAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
-        nsAutoString ns;
-        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
-
-        LifecycleCallbackArgs args = {
-          nsDependentAtomString(aName),
-          aModType == nsIDOMMutationEvent::ADDITION ?
-            VoidString() : nsDependentAtomString(oldValueAtom),
-          nsDependentAtomString(newValueAtom),
-          (ns.IsEmpty() ? VoidString() : ns)
-        };
-
-        nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAttributeChanged,
-          this, &args, nullptr, definition);
+    CustomElementDefinition* definition = GetCustomElementDefinition();
+    // Only custom element which is in `custom` state could get the
+    // CustomElementDefinition.
+    if (definition && definition->IsInObservedAttributeList(aName)) {
+      RefPtr<nsAtom> oldValueAtom;
+      if (oldValue) {
+        oldValueAtom = oldValue->GetAsAtom();
+      } else {
+        // If there is no old value, get the value of the uninitialized
+        // attribute that was swapped with aParsedValue.
+        oldValueAtom = aParsedValue.GetAsAtom();
       }
+      RefPtr<nsAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
+      nsAutoString ns;
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+
+      LifecycleCallbackArgs args = {
+        nsDependentAtomString(aName),
+        aModType == nsIDOMMutationEvent::ADDITION ?
+          VoidString() : nsDependentAtomString(oldValueAtom),
+        nsDependentAtomString(newValueAtom),
+        (ns.IsEmpty() ? VoidString() : ns)
+      };
+
+      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAttributeChanged,
+        this, &args, nullptr, definition);
     }
   }
 
@@ -2991,6 +2986,35 @@ Element::PostIdMaybeChange(int32_t aNamespaceID, nsAtom* aName,
   }
 }
 
+nsresult
+Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
+                                const nsAttrValueOrString& aValue,
+                                bool aNotify)
+{
+  if (CustomElementRegistry::IsCustomElementEnabled()) {
+    // Only custom element which is in `custom` state could get the
+    // CustomElementDefinition.
+    CustomElementDefinition* definition = GetCustomElementDefinition();
+    if (definition && definition->IsInObservedAttributeList(aName)) {
+      nsAutoString ns;
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+
+      nsAutoString value(aValue.String());
+      LifecycleCallbackArgs args = {
+        nsDependentAtomString(aName),
+        value,
+        value,
+        (ns.IsEmpty() ? VoidString() : ns)
+      };
+
+      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAttributeChanged,
+        this, &args, nullptr, definition);
+    }
+  }
+
+  return NS_OK;
+}
+
 EventListenerManager*
 Element::GetEventListenerManagerForAttr(nsAtom* aAttrName,
                                         bool* aDefer)
@@ -3126,28 +3150,23 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
   if (CustomElementRegistry::IsCustomElementEnabled()) {
-    if (CustomElementData* data = GetCustomElementData()) {
-      if (CustomElementDefinition* definition =
-            nsContentUtils::GetElementDefinitionIfObservingAttr(this,
-                                                                data->GetCustomElementType(),
-                                                                aName)) {
-        MOZ_ASSERT(data->mState == CustomElementData::State::eCustom,
-                   "AttributeChanged callback should fire only if "
-                   "custom element state is custom");
-        nsAutoString ns;
-        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
+    CustomElementDefinition* definition = GetCustomElementDefinition();
+    // Only custom element which is in `custom` state could get the
+    // CustomElementDefinition.
+    if (definition && definition->IsInObservedAttributeList(aName)) {
+      nsAutoString ns;
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
 
-        RefPtr<nsAtom> oldValueAtom = oldValue.GetAsAtom();
-        LifecycleCallbackArgs args = {
-          nsDependentAtomString(aName),
-          nsDependentAtomString(oldValueAtom),
-          VoidString(),
-          (ns.IsEmpty() ? VoidString() : ns)
-        };
+      RefPtr<nsAtom> oldValueAtom = oldValue.GetAsAtom();
+      LifecycleCallbackArgs args = {
+        nsDependentAtomString(aName),
+        nsDependentAtomString(oldValueAtom),
+        VoidString(),
+        (ns.IsEmpty() ? VoidString() : ns)
+      };
 
-        nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAttributeChanged,
-          this, &args, nullptr, definition);
-      }
+      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAttributeChanged,
+        this, &args, nullptr, definition);
     }
   }
 
