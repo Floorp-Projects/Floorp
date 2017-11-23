@@ -212,4 +212,4 @@ TextProperty.prototype = {
   }
 };
 
-exports.TextProperty = TextProperty;
+module.exports = TextProperty;
