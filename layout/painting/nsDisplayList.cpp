@@ -4905,7 +4905,7 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
   // this display item).
   FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
   if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
-    scrollId = nsLayoutUtils::ViewIDForASR(asr);
+    scrollId = asr->GetViewId();
   }
 
   // Insert a transparent rectangle with the hit-test info
