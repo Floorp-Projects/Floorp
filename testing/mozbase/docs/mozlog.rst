@@ -154,6 +154,11 @@ emitted:
   ``message``
     Text of the log message.
 
+``shutdown``
+  This is a special action that can only be logged once per logger state.
+  It is sent when calling :meth:`StructuredLogger.shutdown` or implicitly
+  when exiting the context manager.
+
 Testsuite Protocol
 ------------------
 
@@ -207,12 +212,13 @@ StructuredLogger Objects
 ------------------------
 
 .. automodule:: mozlog.structuredlog
-  :members: set_default_logger, get_default_logger
+  :members: set_default_logger, get_default_logger, LoggerShutdownError
 
 .. autoclass:: StructuredLogger
    :members: add_handler, remove_handler, handlers, suite_start,
              suite_end, test_start, test_status, test_end,
-             process_output, critical, error, warning, info, debug
+             process_output, critical, error, warning, info, debug,
+             shutdown
 
 .. autoclass:: StructuredLogFileLike
   :members:
@@ -350,6 +356,16 @@ Log to stdout::
     logger.test_end("test-id-1", "OK")
     logger.suite_end()
 
+Log with a context manager::
+
+    from mozlog.structuredlog import StructuredLogger
+    from mozlog.handlers import StreamHandler
+    from mozlog.formatters import JSONFormatter
+
+    with StructuredLogger("my-test-suite") as logger:
+        logger.add_handler(StreamHandler(sys.stdout,
+                                         JSONFormatter()))
+        logger.info("This is an info message")
 
 Populate an ``argparse.ArgumentParser`` with logging options, and
 create a logger based on the value of those options, defaulting to

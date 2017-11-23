@@ -110,6 +110,10 @@ def log_actions():
     return set(convertor_registry.keys())
 
 
+class LoggerShutdownError(Exception):
+    """Raised when attempting to log after logger.shutdown() has been called."""
+
+
 class LoggerState(object):
 
     def __init__(self):
@@ -120,6 +124,7 @@ class LoggerState(object):
         self.running_tests = set()
         self.suite_started = False
         self.component_states = {}
+        self.has_shutdown = False
 
 
 class ComponentState(object):
@@ -227,6 +232,9 @@ class StructuredLogger(object):
         self._handle_log(log_data)
 
     def _handle_log(self, data):
+        if self._state.has_shutdown:
+            raise LoggerShutdownError("{} action received after shutdown.".format(data['action']))
+
         with self._lock:
             if self.component_filter:
                 data = self.component_filter(data)
@@ -454,6 +462,25 @@ class StructuredLogger(object):
         :param max_expected: - Maximum expected number of assertions
         """
         self._log_data("assertion_count", data)
+
+    @log_action()
+    def shutdown(self, data):
+        """Shutdown the logger.
+
+        This logs a 'shutdown' action after which any further attempts to use
+        the logger will raise a :exc:`LoggerShutdownError`.
+
+        This is also called implicitly from the destructor or
+        when exiting the context manager.
+        """
+        self._log_data('shutdown', data)
+        self._state.has_shutdown = True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc, val, tb):
+        self.shutdown()
 
 
 def _log_func(level_name):
