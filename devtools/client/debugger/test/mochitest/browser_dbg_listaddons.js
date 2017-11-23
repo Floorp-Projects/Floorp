@@ -14,10 +14,8 @@ const ADDON2_PATH = "addon2.xpi";
 var gAddon1, gAddon1Actor, gAddon2, gAddon2Actor, gClient;
 
 function test() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);

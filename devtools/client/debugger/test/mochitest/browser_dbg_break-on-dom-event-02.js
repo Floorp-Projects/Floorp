@@ -13,10 +13,8 @@ const TAB_URL = EXAMPLE_URL + "doc_event-listeners-03.html";
 var gClient, gThreadClient;
 
 function test() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);

@@ -10,6 +10,7 @@ extern crate webrender;
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
+use gleam::gl;
 use std::mem;
 use webrender::api::*;
 
@@ -86,7 +87,7 @@ impl Example for App {
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
         resources: &mut ResourceUpdates,
-        _layout_size: LayoutSize,
+        _framebuffer_size: DeviceUintSize,
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
@@ -283,8 +284,12 @@ impl Example for App {
         false
     }
 
-    fn get_external_image_handler(&self) -> Option<Box<webrender::ExternalImageHandler>> {
-        Some(Box::new(ImageGenerator::new()))
+    fn get_image_handlers(
+        &mut self,
+        _gl: &gl::Gl,
+    ) -> (Option<Box<webrender::ExternalImageHandler>>, 
+          Option<Box<webrender::OutputImageHandler>>) {
+        (Some(Box::new(ImageGenerator::new())), None)
     }
 }
 

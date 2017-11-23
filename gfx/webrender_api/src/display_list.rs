@@ -533,7 +533,7 @@ impl<'a> Write for SizeCounter {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
-/// Serializes a value assuming the Serialize impl has a stable size across two 
+/// Serializes a value assuming the Serialize impl has a stable size across two
 /// invocations.
 ///
 /// If this assumption is incorrect, the result will be Undefined Behaviour. This
@@ -557,7 +557,7 @@ fn serialize_fast<T: Serialize>(vec: &mut Vec<u8>, e: &T) {
     debug_assert_eq!(((w.0 as usize) - (vec.as_ptr() as usize)), vec.len());
 }
 
-/// Serializes an iterator, assuming: 
+/// Serializes an iterator, assuming:
 ///
 /// * The Clone impl is trivial (e.g. we're just memcopying a slice iterator)
 /// * The ExactSizeIterator impl is stable and correct across a Clone
@@ -719,6 +719,11 @@ impl DisplayListBuilder {
             content_size,
             save_state: None,
         }
+    }
+
+    /// Return the content size for this display list
+    pub fn content_size(&self) -> LayoutSize {
+        self.content_size
     }
 
     /// Saves the current display list state, so it may be `restore()`'d.

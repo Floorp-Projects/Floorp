@@ -6,11 +6,7 @@
 
 varying vec4 vColor;
 
-#ifdef WR_FEATURE_TRANSFORM
-varying vec3 vLocalPos;
-#else
-varying vec2 vPos;
-#endif
+varying vec2 vLocalPos;
 
 #ifdef WR_VERTEX_SHADER
 void main(void) {
@@ -71,12 +67,12 @@ void main(void) {
     }
 
 #ifdef WR_FEATURE_TRANSFORM
-    TransformVertexInfo vi = write_transform_vertex(segment_rect,
-                                                    prim.local_clip_rect,
-                                                    vec4(1.0),
-                                                    prim.z,
-                                                    prim.layer,
-                                                    prim.task);
+    VertexInfo vi = write_transform_vertex(segment_rect,
+                                           prim.local_clip_rect,
+                                           vec4(1.0),
+                                           prim.z,
+                                           prim.layer,
+                                           prim.task);
     vLocalPos = vi.local_pos;
     vec2 f = (vi.local_pos.xy - prim.local_rect.p0) / prim.local_rect.size;
 #else
@@ -88,7 +84,7 @@ void main(void) {
                                  prim.local_rect);
 
     vec2 f = (vi.local_pos - segment_rect.p0) / segment_rect.size;
-    vPos = vi.local_pos;
+    vLocalPos = vi.local_pos;
 #endif
 
     write_clip(vi.screen_pos, prim.clip_area);
@@ -100,11 +96,9 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
-    float alpha = 0.0;
-    vec2 local_pos = init_transform_fs(vLocalPos, alpha);
+    float alpha = init_transform_fs(vLocalPos);
 #else
     float alpha = 1.0;
-    vec2 local_pos = vPos;
 #endif
 
     alpha *= do_clip();

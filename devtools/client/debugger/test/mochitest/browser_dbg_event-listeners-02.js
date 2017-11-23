@@ -14,10 +14,8 @@ var gClient;
 var gTab;
 
 function test() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);

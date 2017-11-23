@@ -56,9 +56,9 @@ function doTest() {
   testCollapsed("3", -1, 0, 400);
   testCollapsed("3", 0, 1000, 400);
   testCollapsed("3", 100, 1000, 500);
-  // If the element can't be completely visible, we make the top edge
-  // visible.
-  testCollapsed("3", -1, 1000, 400);
+  // If the element can't be completely visible, show as much as possible,
+  // and don't hide anything which was initially visible.
+  testCollapsed("3", -1, 1000, 500);
 
   // Test scrolling an element larger than the scrollport
   testCollapsed("4", 0, 0, 400);
@@ -66,9 +66,9 @@ function doTest() {
   testCollapsed("4", -1, 0, 400);
   testCollapsed("4", 0, 1000, 400);
   testCollapsed("4", 100, 1000, 500);
-  // If the element can't be completely visible, we make the top edge
-  // visible.
-  testCollapsed("4", -1, 1000, 400);
+  // If the element can't be completely visible, show as much as possible,
+  // and don't hide anything which was initially visible.
+  testCollapsed("4", -1, 1000, 500);
 
   // Test that scrolling a translated element into view takes
   // account of the transform.

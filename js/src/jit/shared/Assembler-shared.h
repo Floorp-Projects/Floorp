@@ -314,7 +314,8 @@ struct Address
     Address(Register base, int32_t offset) : base(base), offset(offset)
     { }
 
-    Address() { mozilla::PodZero(this); }
+    Address() : base(Registers::Invalid), offset(0)
+    { }
 };
 
 #if JS_BITS_PER_WORD == 32
@@ -348,7 +349,12 @@ struct BaseIndex
       : base(base), index(index), scale(scale), offset(offset)
     { }
 
-    BaseIndex() { mozilla::PodZero(this); }
+    BaseIndex()
+      : base(Registers::Invalid)
+      , index(Registers::Invalid)
+      , scale(TimesOne)
+      , offset(0)
+    {}
 };
 
 #if JS_BITS_PER_WORD == 32

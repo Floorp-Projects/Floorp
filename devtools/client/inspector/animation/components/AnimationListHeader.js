@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { createFactory, DOM: dom, PropTypes, PureComponent } =
+const { createFactory, PureComponent } =
   require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const AnimationTimelineTickList = createFactory(require("./AnimationTimelineTickList"));
 

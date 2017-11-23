@@ -12,11 +12,7 @@ flat varying float vAlphaSelect;
 flat varying vec4 vClipParams;
 flat varying float vClipSelect;
 
-#ifdef WR_FEATURE_TRANSFORM
-varying vec3 vLocalPos;
-#else
 varying vec2 vLocalPos;
-#endif
 
 #ifdef WR_VERTEX_SHADER
 void write_edge_distance(float p0,
@@ -220,12 +216,12 @@ void main(void) {
     write_color1(color, style, color_flip);
 
 #ifdef WR_FEATURE_TRANSFORM
-    TransformVertexInfo vi = write_transform_vertex(segment_rect,
-                                                    prim.local_clip_rect,
-                                                    vec4(1.0),
-                                                    prim.z,
-                                                    prim.layer,
-                                                    prim.task);
+    VertexInfo vi = write_transform_vertex(segment_rect,
+                                           prim.local_clip_rect,
+                                           vec4(1.0),
+                                           prim.z,
+                                           prim.layer,
+                                           prim.task);
 #else
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
@@ -244,16 +240,13 @@ void main(void) {
 void main(void) {
     float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
-    alpha = 0.0;
-    vec2 local_pos = init_transform_fs(vLocalPos, alpha);
-#else
-    vec2 local_pos = vLocalPos;
+    alpha = init_transform_fs(vLocalPos);
 #endif
 
     alpha *= do_clip();
 
     // Find the appropriate distance to apply the step over.
-    float aa_range = compute_aa_range(local_pos);
+    float aa_range = compute_aa_range(vLocalPos);
 
     // Applies the math necessary to draw a style: double
     // border. In the case of a solid border, the vertex
@@ -261,7 +254,7 @@ void main(void) {
     // no effect.
 
     // Select the x/y coord, depending on which axis this edge is.
-    vec2 pos = mix(local_pos.xy, local_pos.yx, vAxisSelect);
+    vec2 pos = mix(vLocalPos.xy, vLocalPos.yx, vAxisSelect);
 
     // Get signed distance from each of the inner edges.
     float d0 = pos.x - vEdgeDistance.x;

@@ -17,6 +17,10 @@ use render_task::MAX_BLUR_STD_DEVIATION;
 // The blur shader samples BLUR_SAMPLE_SCALE * blur_radius surrounding texels.
 pub const BLUR_SAMPLE_SCALE: f32 = 3.0;
 
+// Maximum blur radius.
+// Taken from https://searchfox.org/mozilla-central/rev/c633ffa4c4611f202ca11270dcddb7b29edddff8/layout/painting/nsCSSRendering.cpp#4412
+pub const MAX_BLUR_RADIUS : f32 = 300.;
+
 // The amount of padding added to the border corner drawn in the box shadow
 // mask. This ensures that we get a few pixels past the corner that can be
 // blurred without being affected by the border radius.
@@ -30,7 +34,7 @@ impl FrameBuilder {
         prim_info: &LayerPrimitiveInfo,
         box_offset: &LayerVector2D,
         color: &ColorF,
-        blur_radius: f32,
+        mut blur_radius: f32,
         spread_radius: f32,
         border_radius: BorderRadius,
         clip_mode: BoxShadowClipMode,
@@ -48,6 +52,7 @@ impl FrameBuilder {
             }
         };
 
+        blur_radius = f32::min(blur_radius, MAX_BLUR_RADIUS);
         let shadow_radius = adjust_border_radius_for_box_shadow(
             border_radius,
             spread_amount,

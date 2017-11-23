@@ -13,12 +13,14 @@ import collections
 
 # The banner/text at the top of the generated file.
 banner = """/* This file is auto-generated from Telemetry build scripts,
-   see gen-processes-enum.py. */
+   see gen_process_data.py. */
 """
 
 file_header = """\
-#ifndef mozilla_TelemetryProcessEnums_h
-#define mozilla_TelemetryProcessEnums_h
+#ifndef mozilla_TelemetryProcessData_h
+#define mozilla_TelemetryProcessData_h
+
+#include "mozilla/TelemetryProcessEnums.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -27,22 +29,26 @@ namespace Telemetry {
 file_footer = """
 } // namespace Telemetry
 } // namespace mozilla
-#endif // mozilla_TelemetryProcessEnums_h"""
+#endif // mozilla_TelemetryProcessData_h"""
 
 
 def to_enum_label(name):
     return name.title().replace('_', '')
 
 
-def write_processes_enum(processes, output):
+def write_processes_data(processes, output):
     def p(line):
         print(line, file=output)
     processes = collections.OrderedDict(processes)
 
-    p("enum class ProcessID : uint32_t {")
-    for i, (name, _) in enumerate(processes.iteritems()):
-        p("  %s = %d," % (to_enum_label(name), i))
-    p("  Count = %d" % len(processes))
+    p("static GeckoProcessType ProcessIDToGeckoProcessType[%d] = {" % len(processes))
+    for i, (name, value) in enumerate(processes.iteritems()):
+        p("  /* %d: ProcessID::%s = */ %s," % (i, to_enum_label(name), value['gecko_enum']))
+    p("};")
+    p("")
+    p("static const char* const ProcessIDToString[%d] = {" % len(processes))
+    for i, (name, value) in enumerate(processes.iteritems()):
+        p("  /* %d: ProcessID::%s = */ \"%s\"," % (i, to_enum_label(name), name))
     p("};")
 
 
@@ -56,10 +62,10 @@ def main(output, *filenames):
         # Write the process data file.
         print(banner, file=output)
         print(file_header, file=output)
-        write_processes_enum(processes, output)
+        write_processes_data(processes, output)
         print(file_footer, file=output)
     except ParserError as ex:
-        print("\nError generating processes enums:\n" + str(ex) + "\n")
+        print("\nError generating processes data:\n" + str(ex) + "\n")
         sys.exit(1)
 
 

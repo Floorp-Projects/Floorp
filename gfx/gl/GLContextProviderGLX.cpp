@@ -937,14 +937,13 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
     printf("[GLX] window %lx has VisualID 0x%lx\n", window, windowVisualID);
 #endif
 
-    if (aWebRender) {
-        for (int i = 0; i < numConfigs; i++) {
-            int visid = X11None;
-            sGLXLibrary.fGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
-            if (!visid) {
-                continue;
-            }
-
+    for (int i = 0; i < numConfigs; i++) {
+        int visid = X11None;
+        sGLXLibrary.fGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
+        if (!visid) {
+            continue;
+        }
+        if (aWebRender || sGLXLibrary.IsATI()) {
             int depth;
             Visual* visual;
             FindVisualAndDepth(display, visid, &visual, &depth);
@@ -954,30 +953,11 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                 *out_visid = visid;
                 return true;
             }
-        }
-    } else {
-        for (int i = 0; i < numConfigs; i++) {
-            int visid = X11None;
-            sGLXLibrary.fGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
-            if (!visid) {
-                continue;
-            }
-            if (sGLXLibrary.IsATI()) {
-                int depth;
-                Visual* visual;
-                FindVisualAndDepth(display, visid, &visual, &depth);
-                if (depth == windowAttrs.depth &&
-                    AreCompatibleVisuals(windowAttrs.visual, visual)) {
-                    *out_config = cfgs[i];
-                    *out_visid = visid;
-                    return true;
-                }
-            } else {
-                if (windowVisualID == static_cast<VisualID>(visid)) {
-                    *out_config = cfgs[i];
-                    *out_visid = visid;
-                    return true;
-                }
+        } else {
+            if (windowVisualID == static_cast<VisualID>(visid)) {
+                *out_config = cfgs[i];
+                *out_visid = visid;
+                return true;
             }
         }
     }
