@@ -927,6 +927,7 @@ bool
 nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
                                      nsAtom* aAttribute,
                                      const nsAString& aValue,
+                                     nsIPrincipal* aMaybeScriptedPrincipal,
                                      nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
@@ -964,7 +965,8 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
   }
 
   return nsGenericHTMLElementBase::ParseAttribute(aNamespaceID, aAttribute,
-                                                  aValue, aResult);
+                                                  aValue, aMaybeScriptedPrincipal,
+                                                  aResult);
 }
 
 bool

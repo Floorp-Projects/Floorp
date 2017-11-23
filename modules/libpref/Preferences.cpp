@@ -662,101 +662,6 @@ pref_savePrefs()
   return savedPrefs;
 }
 
-static bool
-PREF_HasUserPref(const char* aPrefName)
-{
-  if (!gHashTable) {
-    return false;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  return pref && pref->HasUserValue();
-}
-
-// Clears the given pref (reverts it to its default value).
-static nsresult
-PREF_ClearUserPref(const char* aPrefName)
-{
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (pref && pref->HasUserValue()) {
-    pref->ClearUserValue();
-
-    if (!pref->HasDefaultValue()) {
-      gHashTable->RemoveEntry(pref);
-    }
-
-    NotifyCallbacks(aPrefName);
-    Preferences::HandleDirty();
-  }
-  return NS_OK;
-}
-
-// Clears all user prefs.
-static nsresult
-PREF_ClearAllUserPrefs()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  Vector<const char*> prefNames;
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
-
-    if (pref->HasUserValue()) {
-      if (!prefNames.append(pref->Name())) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      pref->ClearUserValue();
-      if (!pref->HasDefaultValue()) {
-        iter.Remove();
-      }
-    }
-  }
-
-  for (const char* prefName : prefNames) {
-    NotifyCallbacks(prefName);
-  }
-
-  Preferences::HandleDirty();
-  return NS_OK;
-}
-
-// Function that sets whether or not the preference is locked and therefore
-// cannot be changed.
-static nsresult
-PREF_LockPref(const char* aPrefName, bool aLockIt)
-{
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (!pref) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aLockIt) {
-    if (!pref->IsLocked()) {
-      pref->SetIsLocked(true);
-      gIsAnyPrefLocked = true;
-      NotifyCallbacks(aPrefName);
-    }
-  } else if (pref->IsLocked()) {
-    pref->SetIsLocked(false);
-    NotifyCallbacks(aPrefName);
-  }
-
-  return NS_OK;
-}
-
   //
   // Hash table functions
   //
@@ -879,55 +784,6 @@ pref_SetPref(const char* aPrefName,
   return NS_OK;
 }
 
-// Bool function that returns whether or not the preference is locked and
-// therefore cannot be changed.
-static bool
-PREF_PrefIsLocked(const char* aPrefName)
-{
-  bool result = false;
-  if (gIsAnyPrefLocked && gHashTable) {
-    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-    if (pref && pref->IsLocked()) {
-      result = true;
-    }
-  }
-
-  return result;
-}
-
-// Adds a node to the callback list; the position depends on aIsPriority. The
-// callback function will be called if anything below that node is modified.
-static void
-PREF_RegisterCallback(const char* aPrefNode,
-                      PrefChangedFunc aCallback,
-                      void* aData,
-                      Preferences::MatchKind aMatchKind,
-                      bool aIsPriority)
-{
-  NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
-  NS_PRECONDITION(aCallback, "aCallback must not be nullptr");
-
-  auto node = new CallbackNode(aPrefNode, aCallback, aData, aMatchKind);
-
-  if (aIsPriority) {
-    // Add to the start of the list.
-    node->mNext = gFirstCallback;
-    gFirstCallback = node;
-    if (!gLastPriorityNode) {
-      gLastPriorityNode = node;
-    }
-  } else {
-    // Add to the start of the non-priority part of the list.
-    if (gLastPriorityNode) {
-      node->mNext = gLastPriorityNode->mNext;
-      gLastPriorityNode->mNext = node;
-    } else {
-      node->mNext = gFirstCallback;
-      gFirstCallback = node;
-    }
-  }
-}
-
 // Removes |node| from callback list. Returns the node after the deleted one.
 static CallbackNode*
 pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
@@ -950,41 +806,6 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
   }
   delete aNode;
   return next_node;
-}
-
-// Deletes a node from the callback list or marks it for deletion. Succeeds if
-// a callback was found that matched all the parameters.
-static nsresult
-PREF_UnregisterCallback(const char* aPrefNode,
-                        PrefChangedFunc aCallback,
-                        void* aData,
-                        Preferences::MatchKind aMatchKind)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  CallbackNode* node = gFirstCallback;
-  CallbackNode* prev_node = nullptr;
-
-  while (node != nullptr) {
-    if (node->mFunc == aCallback && node->mData == aData &&
-        node->mMatchKind == aMatchKind &&
-        strcmp(node->mDomain.get(), aPrefNode) == 0) {
-      if (gCallbacksInProgress) {
-        // postpone the node removal until after
-        // callbacks enumeration is finished.
-        node->mFunc = nullptr;
-        gShouldCleanupDeadNodes = true;
-        prev_node = node;
-        node = node->mNext;
-      } else {
-        node = pref_RemoveCallbackNode(node, prev_node);
-      }
-      rv = NS_OK;
-    } else {
-      prev_node = node;
-      node = node->mNext;
-    }
-  }
-  return rv;
 }
 
 static void
@@ -2208,7 +2029,8 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
       bNeedDefault = true;
     } else {
       // if there is no user (or locked) value
-      if (!PREF_HasUserPref(pref.get()) && !PREF_PrefIsLocked(pref.get())) {
+      if (!Preferences::HasUserValue(pref.get()) &&
+          !Preferences::IsLocked(pref.get())) {
         bNeedDefault = true;
       }
     }
@@ -2453,11 +2275,10 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
 NS_IMETHODIMP
 nsPrefBranch::ClearUserPref(const char* aPrefName)
 {
-  ENSURE_PARENT_PROCESS("ClearUserPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_ClearUserPref(pref.get());
+  return Preferences::ClearUser(pref.get());
 }
 
 NS_IMETHODIMP
@@ -2467,40 +2288,37 @@ nsPrefBranch::PrefHasUserValue(const char* aPrefName, bool* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  *aRetVal = PREF_HasUserPref(pref.get());
+  *aRetVal = Preferences::HasUserValue(pref.get());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrefBranch::LockPref(const char* aPrefName)
 {
-  ENSURE_PARENT_PROCESS("LockPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_LockPref(pref.get(), true);
+  return Preferences::Lock(pref.get());
 }
 
 NS_IMETHODIMP
 nsPrefBranch::PrefIsLocked(const char* aPrefName, bool* aRetVal)
 {
-  ENSURE_PARENT_PROCESS("PrefIsLocked", aPrefName);
   NS_ENSURE_ARG_POINTER(aRetVal);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  *aRetVal = PREF_PrefIsLocked(pref.get());
+  *aRetVal = Preferences::IsLocked(pref.get());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrefBranch::UnlockPref(const char* aPrefName)
 {
-  ENSURE_PARENT_PROCESS("UnlockPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_LockPref(pref.get(), false);
+  return Preferences::Unlock(pref.get());
 }
 
 NS_IMETHODIMP
@@ -2648,11 +2466,11 @@ nsPrefBranch::AddObserver(const char* aDomain,
   // aDomain == nullptr is the only possible failure, and we trapped it with
   // NS_ENSURE_ARG above.
   const PrefName& pref = GetPrefName(aDomain);
-  PREF_RegisterCallback(pref.get(),
-                        NotifyObserver,
-                        pCallback,
-                        Preferences::PrefixMatch,
-                        /* isPriority */ false);
+  Preferences::RegisterCallback(NotifyObserver,
+                                pref.get(),
+                                pCallback,
+                                Preferences::PrefixMatch,
+                                /* isPriority */ false);
 
   return NS_OK;
 }
@@ -2685,8 +2503,8 @@ nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
   if (pCallback) {
     // aDomain == nullptr is the only possible failure, trapped above.
     const PrefName& pref = GetPrefName(aDomain);
-    rv = PREF_UnregisterCallback(
-      pref.get(), NotifyObserver, pCallback, Preferences::PrefixMatch);
+    rv = Preferences::UnregisterCallback(
+      NotifyObserver, pref.get(), pCallback, Preferences::PrefixMatch);
   }
 
   return rv;
@@ -2755,10 +2573,10 @@ nsPrefBranch::FreeObserverList()
     nsAutoPtr<PrefCallback>& callback = iter.Data();
     nsPrefBranch* prefBranch = callback->GetPrefBranch();
     const PrefName& pref = prefBranch->GetPrefName(callback->GetDomain().get());
-    PREF_UnregisterCallback(pref.get(),
-                            nsPrefBranch::NotifyObserver,
-                            callback,
-                            Preferences::PrefixMatch);
+    Preferences::UnregisterCallback(nsPrefBranch::NotifyObserver,
+                                    pref.get(),
+                                    callback,
+                                    Preferences::PrefixMatch);
     iter.Remove();
   }
   mFreeingObserverList = false;
@@ -3437,6 +3255,8 @@ Preferences::GetInstanceForService()
     nsresult rv = Preferences::GetCString(
       "general.config.filename", lockFileName, PrefValueKind::User);
     if (NS_SUCCEEDED(rv)) {
+      Telemetry::ScalarSet(Telemetry::ScalarID::GENERAL_AUTOCONFIG_HAS_FILENAME,
+                           true);
       NS_CreateServicesFromCategory(
         "pref-config-startup",
         static_cast<nsISupports*>(static_cast<void*>(sPreferences)),
@@ -3671,8 +3491,30 @@ NS_IMETHODIMP
 Preferences::ResetUserPrefs()
 {
   ENSURE_PARENT_PROCESS("Preferences::ResetUserPrefs", "all prefs");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  MOZ_ASSERT(NS_IsMainThread());
 
-  PREF_ClearAllUserPrefs();
+  Vector<const char*> prefNames;
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+
+    if (pref->HasUserValue()) {
+      if (!prefNames.append(pref->Name())) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      pref->ClearUserValue();
+      if (!pref->HasDefaultValue()) {
+        iter.Remove();
+      }
+    }
+  }
+
+  for (const char* prefName : prefNames) {
+    NotifyCallbacks(prefName);
+  }
+
+  Preferences::HandleDirty();
   return NS_OK;
 }
 
@@ -3764,7 +3606,7 @@ Preferences::SetPreference(const PrefSetting& aSetting)
   if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
     SetValueFromDom(prefName, userValue.get_PrefValue(), PrefValueKind::User);
   } else {
-    PREF_ClearUserPref(prefName);
+    Preferences::ClearUserInAnyProcess(prefName);
   }
 
   // NB: we should never try to clear a default value, that doesn't
@@ -4414,7 +4256,7 @@ Preferences::InitInitialObjects()
     Preferences::SetBoolInAnyProcess(
       kTelemetryPref, false, PrefValueKind::Default);
   }
-  PREF_LockPref(kTelemetryPref, true);
+  Preferences::LockInAnyProcess(kTelemetryPref);
 #endif // MOZ_WIDGET_ANDROID
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
@@ -4625,18 +4467,98 @@ Preferences::SetComplex(const char* aPrefName,
 }
 
 /* static */ nsresult
-Preferences::ClearUser(const char* aPref)
+Preferences::LockInAnyProcess(const char* aPrefName)
 {
-  ENSURE_PARENT_PROCESS("ClearUser", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_ClearUserPref(aPref);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!pref->IsLocked()) {
+    pref->SetIsLocked(true);
+    gIsAnyPrefLocked = true;
+    NotifyCallbacks(aPrefName);
+  }
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+Preferences::Lock(const char* aPrefName)
+{
+  ENSURE_PARENT_PROCESS("Lock", aPrefName);
+  return Preferences::LockInAnyProcess(aPrefName);
+}
+
+/* static */ nsresult
+Preferences::Unlock(const char* aPrefName)
+{
+  ENSURE_PARENT_PROCESS("Unlock", aPrefName);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (pref->IsLocked()) {
+    pref->SetIsLocked(false);
+    NotifyCallbacks(aPrefName);
+  }
+
+  return NS_OK;
 }
 
 /* static */ bool
-Preferences::HasUserValue(const char* aPref)
+Preferences::IsLocked(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
-  return PREF_HasUserPref(aPref);
+
+  if (gIsAnyPrefLocked) {
+    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+    if (pref && pref->IsLocked()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* static */ nsresult
+Preferences::ClearUserInAnyProcess(const char* aPrefName)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (pref && pref->HasUserValue()) {
+    pref->ClearUserValue();
+
+    if (!pref->HasDefaultValue()) {
+      gHashTable->RemoveEntry(pref);
+    }
+
+    NotifyCallbacks(aPrefName);
+    Preferences::HandleDirty();
+  }
+  return NS_OK;
+}
+
+/* static */ nsresult
+Preferences::ClearUser(const char* aPrefName)
+{
+  ENSURE_PARENT_PROCESS("ClearUser", aPrefName);
+  return ClearUserInAnyProcess(aPrefName);
+}
+
+/* static */ bool
+Preferences::HasUserValue(const char* aPrefName)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), false);
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->HasUserValue();
 }
 
 /* static */ int32_t
@@ -4716,31 +4638,37 @@ Preferences::RemoveObservers(nsIObserver* aObserver, const char** aPrefs)
   return NS_OK;
 }
 
-// RegisterVarCacheCallback uses high priority callbacks to ensure that cache
-// observers are called prior to ordinary pref observers. Doing this ensures
-// that ordinary observers will never get stale values from cache variables.
-static void
-RegisterVarCacheCallback(PrefChangedFunc aCallback,
-                         const char* aPref,
-                         void* aClosure)
-{
-  MOZ_ASSERT(Preferences::IsServiceAvailable());
-
-  PREF_RegisterCallback(
-    aPref, aCallback, aClosure, Preferences::ExactMatch, /* isPriority */ true);
-}
-
 /* static */ nsresult
 Preferences::RegisterCallback(PrefChangedFunc aCallback,
-                              const char* aPref,
-                              void* aClosure,
-                              MatchKind aMatchKind)
+                              const char* aPrefNode,
+                              void* aData,
+                              MatchKind aMatchKind,
+                              bool aIsPriority)
 {
-  MOZ_ASSERT(aCallback);
+  NS_ENSURE_ARG(aPrefNode);
+  NS_ENSURE_ARG(aCallback);
+
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PREF_RegisterCallback(
-    aPref, aCallback, aClosure, aMatchKind, /* isPriority */ false);
+  auto node = new CallbackNode(aPrefNode, aCallback, aData, aMatchKind);
+
+  if (aIsPriority) {
+    // Add to the start of the list.
+    node->mNext = gFirstCallback;
+    gFirstCallback = node;
+    if (!gLastPriorityNode) {
+      gLastPriorityNode = node;
+    }
+  } else {
+    // Add to the start of the non-priority part of the list.
+    if (gLastPriorityNode) {
+      node->mNext = gLastPriorityNode->mNext;
+      gLastPriorityNode->mNext = node;
+    } else {
+      node->mNext = gFirstCallback;
+      gFirstCallback = node;
+    }
+  }
 
   return NS_OK;
 }
@@ -4762,8 +4690,8 @@ Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
 
 /* static */ nsresult
 Preferences::UnregisterCallback(PrefChangedFunc aCallback,
-                                const char* aPref,
-                                void* aClosure,
+                                const char* aPrefNode,
+                                void* aData,
                                 MatchKind aMatchKind)
 {
   MOZ_ASSERT(aCallback);
@@ -4773,7 +4701,31 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
 
-  return PREF_UnregisterCallback(aPref, aCallback, aClosure, aMatchKind);
+  nsresult rv = NS_ERROR_FAILURE;
+  CallbackNode* node = gFirstCallback;
+  CallbackNode* prev_node = nullptr;
+
+  while (node) {
+    if (node->mFunc == aCallback && node->mData == aData &&
+        node->mMatchKind == aMatchKind &&
+        strcmp(node->mDomain.get(), aPrefNode) == 0) {
+      if (gCallbacksInProgress) {
+        // postpone the node removal until after
+        // callbacks enumeration is finished.
+        node->mFunc = nullptr;
+        gShouldCleanupDeadNodes = true;
+        prev_node = node;
+        node = node->mNext;
+      } else {
+        node = pref_RemoveCallbackNode(node, prev_node);
+      }
+      rv = NS_OK;
+    } else {
+      prev_node = node;
+      node = node->mNext;
+    }
+  }
+  return rv;
 }
 
 static void
@@ -4808,7 +4760,11 @@ Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
   CacheDataAppendElement(data);
-  RegisterVarCacheCallback(BoolVarChanged, aPref, data);
+  Preferences::RegisterCallback(BoolVarChanged,
+                                aPref,
+                                data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
   return NS_OK;
 }
 
@@ -4823,7 +4779,9 @@ AtomicBoolVarChanged(const char* aPref, void* aClosure)
 
 template<MemoryOrdering Order>
 /* static */ nsresult
-Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache, const char* aPref, bool aDefault)
+Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
+                                   const char* aPref,
+                                   bool aDefault)
 {
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
@@ -4837,7 +4795,11 @@ Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache, const char* aPre
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
   CacheDataAppendElement(data);
-  RegisterVarCacheCallback(AtomicBoolVarChanged<Order>, aPref, data);
+  Preferences::RegisterCallback(AtomicBoolVarChanged<Order>,
+                                aPref,
+                                data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
   return NS_OK;
 }
 
@@ -4866,7 +4828,8 @@ Preferences::AddIntVarCache(int32_t* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueInt = aDefault;
   CacheDataAppendElement(data);
-  RegisterVarCacheCallback(IntVarChanged, aPref, data);
+  Preferences::RegisterCallback(
+    IntVarChanged, aPref, data, Preferences::ExactMatch, /* isPriority */ true);
   return NS_OK;
 }
 
@@ -4897,7 +4860,11 @@ Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
   CacheDataAppendElement(data);
-  RegisterVarCacheCallback(AtomicIntVarChanged<Order>, aPref, data);
+  Preferences::RegisterCallback(AtomicIntVarChanged<Order>,
+                                aPref,
+                                data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
   return NS_OK;
 }
 
@@ -4926,7 +4893,11 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
   CacheDataAppendElement(data);
-  RegisterVarCacheCallback(UintVarChanged, aPref, data);
+  Preferences::RegisterCallback(UintVarChanged,
+                                aPref,
+                                data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
   return NS_OK;
 }
 
@@ -4957,7 +4928,11 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
   CacheDataAppendElement(data);
-  RegisterVarCacheCallback(AtomicUintVarChanged<Order>, aPref, data);
+  Preferences::RegisterCallback(AtomicUintVarChanged<Order>,
+                                aPref,
+                                data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
   return NS_OK;
 }
 
@@ -4965,9 +4940,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 // need to explicitly specify the instantiations that are required. Currently
 // only the order=Relaxed variant is needed.
 template nsresult
-Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
-                                   const char*,
-                                   bool);
+Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*, const char*, bool);
 
 template nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
@@ -5002,7 +4975,11 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
   data->mCacheLocation = aCache;
   data->mDefaultValueFloat = aDefault;
   CacheDataAppendElement(data);
-  RegisterVarCacheCallback(FloatVarChanged, aPref, data);
+  Preferences::RegisterCallback(FloatVarChanged,
+                                aPref,
+                                data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
   return NS_OK;
 }
 

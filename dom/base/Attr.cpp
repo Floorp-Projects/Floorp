@@ -282,6 +282,7 @@ Attr::GetTextContentInternal(nsAString& aTextContent,
 
 void
 Attr::SetTextContentInternal(const nsAString& aTextContent,
+                             nsIPrincipal* aSubjectPrincipal,
                              ErrorResult& aError)
 {
   SetNodeValueInternal(aTextContent, aError);

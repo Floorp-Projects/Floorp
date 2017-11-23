@@ -157,7 +157,8 @@ TEST(CallbackAndVarCacheOrder, Bool)
 
 TEST(CallbackAndVarCacheOrder, AtomicBool)
 {
-  RunTest<bool, Atomic<bool, Relaxed>>("test_pref.atomic_bool.1", "test_pref.atomic_bool.2", false, true);
+  RunTest<bool, Atomic<bool, Relaxed>>(
+    "test_pref.atomic_bool.1", "test_pref.atomic_bool.2", false, true);
 }
 
 TEST(CallbackAndVarCacheOrder, Int)
@@ -167,7 +168,8 @@ TEST(CallbackAndVarCacheOrder, Int)
 
 TEST(CallbackAndVarCacheOrder, AtomicInt)
 {
-  RunTest<int32_t, Atomic<int32_t, Relaxed>>("test_pref.atomic_int.1", "test_pref.atomic_int.2", -3, 4);
+  RunTest<int32_t, Atomic<int32_t, Relaxed>>(
+    "test_pref.atomic_int.1", "test_pref.atomic_int.2", -3, 4);
 }
 
 TEST(CallbackAndVarCacheOrder, Uint)

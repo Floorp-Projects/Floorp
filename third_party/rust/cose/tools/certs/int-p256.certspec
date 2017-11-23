@@ -1,0 +1,8 @@
+issuer:root-p256
+subject:int-p256
+issuerKey:secp256k1
+subjectKey:secp256r1
+signature:ecdsaWithSHA256
+extension:basicConstraints:cA,
+extension:keyUsage:cRLSign,keyCertSign
+validity:3650

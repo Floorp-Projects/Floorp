@@ -328,10 +328,29 @@ def call(*args, **kwargs):
 
 def killPid(pid, log):
     # see also https://bugzilla.mozilla.org/show_bug.cgi?id=911249#c58
-    try:
-        os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-    except Exception as e:
-        log.info("Failed to kill process %d: %s" % (pid, str(e)))
+
+    if HAVE_PSUTIL:
+        # Kill a process tree (including grandchildren) with signal.SIGTERM
+        if pid == os.getpid():
+            raise RuntimeError("Error: trying to kill ourselves, not another process")
+        try:
+            parent = psutil.Process(pid)
+            children = parent.children(recursive=True)
+            children.append(parent)
+            for p in children:
+                p.send_signal(signal.SIGTERM)
+            gone, alive = psutil.wait_procs(children, timeout=30)
+            for p in gone:
+                log.info('psutil found pid %s dead' % p.pid)
+            for p in alive:
+                log.info('failed to kill pid %d after 30s' % p.pid)
+        except Exception as e:
+            log.info("Error: Failed to kill process %d: %s" % (pid, str(e)))
+    else:
+        try:
+            os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+        except Exception as e:
+            log.info("Failed to kill process %d: %s" % (pid, str(e)))
 
 
 if mozinfo.isWin:
@@ -1670,7 +1689,8 @@ toolbar#nav-bar {
                             killPid(proc.pid, self.log)
                         else:
                             self.log.info("NOT killing %s (not an orphan?)" % procd)
-                except:
+                except Exception as e:
+                    self.log.info("Warning: Unable to kill process %s: %s" % (pname, str(e)))
                     # may not be able to access process info for all processes
                     continue
         else:

@@ -7,6 +7,7 @@
 SOURCES += [
     'CertDBTest.cpp',
     'CertListTest.cpp',
+    'CoseTest.cpp',
     'DataStorageTest.cpp',
     'DeserializeCertTest.cpp',
     'MD4Test.cpp',
@@ -19,6 +20,7 @@ LOCAL_INCLUDES += [
     '/security/manager/ssl',
     '/security/pkix/include',
     '/security/pkix/test/lib',
+    '/third_party/rust/cose-c/include',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
