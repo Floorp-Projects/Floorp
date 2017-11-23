@@ -29,13 +29,11 @@ function setupServer(mm) {
   gLoader.invisibleToDebugger = true;
   let { DebuggerServer } = gLoader.require("devtools/server/main");
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-  }
+  DebuggerServer.init();
   // For browser content toolbox, we do need a regular root actor and all tab
   // actors, but don't need all the "browser actors" that are only useful when
   // debugging the parent process via the browser toolbox.
-  DebuggerServer.registerActors({ browser: false, root: true, tab: true });
+  DebuggerServer.registerActors({ root: true, tab: true });
 
   // Clean up things when the client disconnects
   mm.addMessageListener("debug:content-process-destroy", function onDestroy() {

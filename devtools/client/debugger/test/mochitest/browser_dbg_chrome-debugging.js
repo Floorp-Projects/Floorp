@@ -20,10 +20,8 @@ customLoader.invisibleToDebugger = true;
 var { DebuggerServer } = customLoader.require("devtools/server/main");
 
 function test() {
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
 
   let transport = DebuggerServer.connectPipe();

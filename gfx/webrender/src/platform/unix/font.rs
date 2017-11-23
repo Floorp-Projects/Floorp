@@ -14,6 +14,7 @@ use freetype::freetype::{FT_F26Dot6, FT_Face, FT_Glyph_Format, FT_Long, FT_UInt}
 use freetype::freetype::{FT_GlyphSlot, FT_LcdFilter, FT_New_Face, FT_New_Memory_Face};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
 use freetype::freetype::{FT_Library, FT_Outline_Get_CBox, FT_Set_Char_Size, FT_Select_Size};
+use freetype::freetype::{FT_Fixed, FT_Matrix, FT_Set_Transform};
 use freetype::freetype::{FT_LOAD_COLOR, FT_LOAD_DEFAULT, FT_LOAD_FORCE_AUTOHINT};
 use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHINT};
 use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL_LAYOUT};
@@ -186,15 +187,33 @@ impl FontContext {
         load_flags |= FT_LOAD_COLOR;
         load_flags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
 
+        let req_size = font.size.to_f64_px();
         let mut result = if font.render_mode == FontRenderMode::Bitmap {
             if (load_flags & FT_LOAD_NO_BITMAP) != 0 {
                 FT_Error(FT_Err_Cannot_Render_Glyph as i32)
             } else {
-                self.choose_bitmap_size(face.face, font.size.to_f64_px())
+                unsafe { FT_Set_Transform(face.face, ptr::null_mut(), ptr::null_mut()) };
+                self.choose_bitmap_size(face.face, req_size)
             }
         } else {
-            let char_size = font.size.to_f64_px() * 64.0 + 0.5;
-            unsafe { FT_Set_Char_Size(face.face, char_size as FT_F26Dot6, 0, 0, 0) }
+            let (major, minor) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+            let shape = font.transform.pre_scale(major.recip() as f32, minor.recip() as f32);
+            let mut ft_shape = FT_Matrix {
+                xx: (shape.scale_x * 65536.0) as FT_Fixed,
+                xy: (shape.skew_x * -65536.0) as FT_Fixed,
+                yx: (shape.skew_y * -65536.0) as FT_Fixed,
+                yy: (shape.scale_y * 65536.0) as FT_Fixed,
+            };
+            unsafe {
+                FT_Set_Transform(face.face, &mut ft_shape, ptr::null_mut());
+                FT_Set_Char_Size(
+                    face.face,
+                    (req_size * major * 64.0 + 0.5) as FT_F26Dot6,
+                    (req_size * minor * 64.0 + 0.5) as FT_F26Dot6,
+                    0,
+                    0,
+                )
+            }
         };
 
         if result.succeeded() {
@@ -518,14 +537,14 @@ impl FontContext {
         let (format, actual_width, actual_height) = match pixel_mode {
             FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
                 assert!(bitmap.width % 3 == 0);
-                (GlyphFormat::Subpixel, (bitmap.width / 3) as i32, bitmap.rows as i32)
+                (font.get_subpixel_glyph_format(), (bitmap.width / 3) as i32, bitmap.rows as i32)
             }
             FT_Pixel_Mode::FT_PIXEL_MODE_LCD_V => {
                 assert!(bitmap.rows % 3 == 0);
-                (GlyphFormat::Subpixel, bitmap.width as i32, (bitmap.rows / 3) as i32)
+                (font.get_subpixel_glyph_format(), bitmap.width as i32, (bitmap.rows / 3) as i32)
             }
             FT_Pixel_Mode::FT_PIXEL_MODE_MONO => {
-                (GlyphFormat::Mono, bitmap.width as i32, bitmap.rows as i32)
+                (GlyphFormat::Alpha, bitmap.width as i32, bitmap.rows as i32)
             }
             FT_Pixel_Mode::FT_PIXEL_MODE_GRAY => {
                 (GlyphFormat::Alpha, bitmap.width as i32, bitmap.rows as i32)
@@ -620,8 +639,8 @@ impl FontContext {
         }
 
         Some(RasterizedGlyph {
-            left: ((dimensions.left + left) as f32 * scale).round(),
-            top: ((dimensions.top + top - actual_height) as f32 * scale).round(),
+            left: (dimensions.left + left) as f32,
+            top: (dimensions.top + top - actual_height) as f32,
             width: actual_width as u32,
             height: actual_height as u32,
             scale,

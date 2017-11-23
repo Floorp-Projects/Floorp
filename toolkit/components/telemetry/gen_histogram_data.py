@@ -11,7 +11,7 @@ from shared_telemetry_utils import StringTable, static_assert, ParserError
 import sys
 import histogram_tools
 
-banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
+banner = """/* This file is auto-generated, see gen_histogram_data.py.  */
 """
 
 

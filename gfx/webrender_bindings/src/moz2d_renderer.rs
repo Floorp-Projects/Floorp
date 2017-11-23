@@ -1,5 +1,5 @@
 #![allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &Arc<Vec> to an extern function
-use webrender_api::*;
+use webrender::api::*;
 use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8};
 use rayon::ThreadPool;
 

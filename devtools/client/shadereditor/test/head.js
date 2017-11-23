@@ -226,10 +226,8 @@ function reload(aTarget, aWaitForTargetEvent = "navigate") {
 function initBackend(aUrl) {
   info("Initializing a shader editor front.");
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 
   return Task.spawn(function* () {
     let tab = yield addTab(aUrl);

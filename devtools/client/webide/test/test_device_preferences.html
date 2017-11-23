@@ -19,10 +19,8 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function* () {
-          if (!DebuggerServer.initialized) {
-            DebuggerServer.init();
-            DebuggerServer.addBrowserActors();
-          }
+          DebuggerServer.init();
+          DebuggerServer.registerAllActors();
 
           let win = yield openWebIDE();
 

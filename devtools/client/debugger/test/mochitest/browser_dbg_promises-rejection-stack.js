@@ -41,7 +41,7 @@ const TEST_DATA = [
 function test() {
   Task.spawn(function* () {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerAllActors();
 
     let options = {
       source: TAB_URL,

@@ -4,49 +4,28 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that a file with an unsupported CSP directive ('reflected-xss filter')
-// displays the appropriate message to the console.
+// displays the appropriate message to the console. See Bug 1045902.
 
 "use strict";
 
 const EXPECTED_RESULT = "Not supporting directive \u2018reflected-xss\u2019. " +
                         "Directive and values will be ignored.";
-const TEST_FILE = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/test_bug1045902_console_csp_ignore_reflected_xss_" +
-                  "message.html";
+const TEST_FILE =
+  "http://example.com/browser/devtools/client/webconsole/new-console-output/test/" +
+  "mochitest/test_console_csp_ignore_reflected_xss_message.html";
 
-var hud = undefined;
+const TEST_URI =
+  "data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)";
 
-var TEST_URI = "data:text/html;charset=utf8,Web Console CSP ignoring " +
-               "reflected XSS (bug 1045902)";
+const cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+  .getService(Ci.nsICacheStorageService);
 
-add_task(function* () {
-  let { browser } = yield loadTab(TEST_URI);
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
+  await loadDocument(TEST_FILE);
 
-  hud = yield openConsole();
+  await waitFor(() => findMessage(hud, EXPECTED_RESULT, ".message.warn"));
+  ok(true, `CSP logs displayed in console when using "reflected-xss" directive`);
 
-  yield loadDocument(browser);
-  yield testViolationMessage();
-
-  hud = null;
+  cache.clear();
 });
-
-function loadDocument(browser) {
-  hud.jsterm.clearOutput();
-  browser.loadURI(TEST_FILE);
-  return BrowserTestUtils.browserLoaded(browser);
-}
-
-function testViolationMessage() {
-  let aOutputNode = hud.outputNode;
-
-  return waitForSuccess({
-    name: "Confirming that CSP logs messages to the console when " +
-          "\u2018reflected-xss\u2019 directive is used!",
-    validator: function () {
-      console.log(aOutputNode.textContent);
-      let success = false;
-      success = aOutputNode.textContent.indexOf(EXPECTED_RESULT) > -1;
-      return success;
-    }
-  });
-}

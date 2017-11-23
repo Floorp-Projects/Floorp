@@ -60,13 +60,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   _toolbars: new WeakMap(),
 
-  _tabStats: {
-    peakOpen: 0,
-    peakPinned: 0,
-    histOpen: [],
-    histPinned: []
-  },
-
   /**
    * This function is for the benefit of Tools:DevToolbox in
    * browser/base/content/browser-sets.inc and should not be used outside
@@ -328,10 +321,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
   _getContentProcessTarget(processId) {
     // Create a DebuggerServer in order to connect locally to it
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
+    DebuggerServer.init();
+    DebuggerServer.registerAllActors();
     DebuggerServer.allowChromeProcess = true;
 
     let transport = DebuggerServer.connectPipe();
@@ -476,10 +467,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
     let tabContainer = win.gBrowser.tabContainer;
     tabContainer.addEventListener("TabSelect", this);
-    tabContainer.addEventListener("TabOpen", this);
-    tabContainer.addEventListener("TabClose", this);
-    tabContainer.addEventListener("TabPinned", this);
-    tabContainer.addEventListener("TabUnpinned", this);
   },
 
   /**
@@ -711,35 +698,10 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
     let tabContainer = win.gBrowser.tabContainer;
     tabContainer.removeEventListener("TabSelect", this);
-    tabContainer.removeEventListener("TabOpen", this);
-    tabContainer.removeEventListener("TabClose", this);
-    tabContainer.removeEventListener("TabPinned", this);
-    tabContainer.removeEventListener("TabUnpinned", this);
   },
 
   handleEvent(event) {
     switch (event.type) {
-      case "TabOpen":
-      case "TabClose":
-      case "TabPinned":
-      case "TabUnpinned":
-        let open = 0;
-        let pinned = 0;
-
-        for (let win of this._trackedBrowserWindows) {
-          let tabContainer = win.gBrowser.tabContainer;
-          let numPinnedTabs = win.gBrowser._numPinnedTabs || 0;
-          let numTabs = tabContainer.itemCount - numPinnedTabs;
-
-          open += numTabs;
-          pinned += numPinnedTabs;
-        }
-
-        this._tabStats.histOpen.push(open);
-        this._tabStats.histPinned.push(pinned);
-        this._tabStats.peakOpen = Math.max(open, this._tabStats.peakOpen);
-        this._tabStats.peakPinned = Math.max(pinned, this._tabStats.peakPinned);
-        break;
       case "TabSelect":
         gDevToolsBrowser._updateMenuCheckbox();
         break;

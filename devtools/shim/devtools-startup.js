@@ -769,7 +769,7 @@ DevToolsStartup.prototype = {
       let { DebuggerServer: debuggerServer } =
         serverLoader.require("devtools/server/main");
       debuggerServer.init();
-      debuggerServer.addBrowserActors();
+      debuggerServer.registerAllActors();
       debuggerServer.allowChromeProcess = true;
 
       let listener = debuggerServer.createListener();

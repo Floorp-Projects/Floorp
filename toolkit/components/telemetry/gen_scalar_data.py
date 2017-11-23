@@ -13,7 +13,7 @@ import sys
 
 # The banner/text at the top of the generated file.
 banner = """/* This file is auto-generated, only for internal use in TelemetryScalar.h,
-   see gen-scalar-data.py. */
+   see gen_scalar_data.py. */
 """
 
 file_header = """\
