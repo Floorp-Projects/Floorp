@@ -7,7 +7,7 @@
 # buckets specified by each histogram.
 
 import sys
-import histogram_tools
+import parse_histograms
 import json
 
 from collections import OrderedDict
@@ -18,7 +18,7 @@ def main(argv):
 
     all_histograms = OrderedDict()
 
-    for histogram in histogram_tools.from_files(filenames):
+    for histogram in parse_histograms.from_files(filenames):
         name = histogram.name()
         parameters = OrderedDict()
         table = {
@@ -30,8 +30,8 @@ def main(argv):
             'count': '4',
         }
         # Use __setitem__ because Python lambdas are so limited.
-        histogram_tools.table_dispatch(histogram.kind(), table,
-                                       lambda k: parameters.__setitem__('kind', k))
+        parse_histograms.table_dispatch(histogram.kind(), table,
+                                        lambda k: parameters.__setitem__('kind', k))
         if histogram.low() == 0:
             parameters['min'] = 1
         else:
@@ -42,7 +42,7 @@ def main(argv):
             parameters['buckets'] = buckets
             parameters['max'] = buckets[-1]
             parameters['bucket_count'] = len(buckets)
-        except histogram_tools.DefinitionException:
+        except parse_histograms.DefinitionException:
             continue
 
         all_histograms.update({name: parameters})

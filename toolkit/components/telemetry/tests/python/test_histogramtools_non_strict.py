@@ -10,7 +10,7 @@ from os import path
 
 TELEMETRY_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir, path.pardir))
 sys.path.append(TELEMETRY_ROOT_PATH)
-import histogram_tools   # noqa: E402
+import parse_histograms   # noqa: E402
 
 
 def load_histogram(histograms):
@@ -21,7 +21,7 @@ def load_histogram(histograms):
     :returns: Parsed Histogram dictionary mapping histogram names to histogram parameters
     """
     def hook(ps):
-        return histogram_tools.load_histograms_into_dict(ps, strict_type_checks=False)
+        return parse_histograms.load_histograms_into_dict(ps, strict_type_checks=False)
     return json.loads(json.dumps(histograms), object_pairs_hook=hook)
 
 
@@ -37,9 +37,9 @@ class TestParser(unittest.TestCase):
                 }}
         histograms = load_histogram(SAMPLE_HISTOGRAM)
 
-        hist = histogram_tools.Histogram('A11Y_INSTANTIATED_FLAG',
-                                         histograms['A11Y_INSTANTIATED_FLAG'],
-                                         strict_type_checks=False)
+        hist = parse_histograms.Histogram('A11Y_INSTANTIATED_FLAG',
+                                          histograms['A11Y_INSTANTIATED_FLAG'],
+                                          strict_type_checks=False)
         self.assertEqual(hist.expiration(), 'never')
         self.assertEqual(hist.kind(), 'flag')
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
@@ -54,18 +54,18 @@ class TestParser(unittest.TestCase):
                 }}
 
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        hist = histogram_tools.Histogram('TEST_NON_NUMERIC_HISTOGRAM',
-                                         histograms['TEST_NON_NUMERIC_HISTOGRAM'],
-                                         strict_type_checks=False)
+        hist = parse_histograms.Histogram('TEST_NON_NUMERIC_HISTOGRAM',
+                                          histograms['TEST_NON_NUMERIC_HISTOGRAM'],
+                                          strict_type_checks=False)
 
-        # expected values come off histogram_tools.py
+        # expected values come off parse_histograms.py
         self.assertEqual(hist.n_buckets(), 101)
         self.assertEqual(hist.high(), 12)
 
     def test_current_histogram(self):
         HISTOGRAMS_PATH = path.join(TELEMETRY_ROOT_PATH, "Histograms.json")
-        all_histograms = list(histogram_tools.from_files([HISTOGRAMS_PATH],
-                                                         strict_type_checks=False))
+        all_histograms = list(parse_histograms.from_files([HISTOGRAMS_PATH],
+                                                          strict_type_checks=False))
         test_histogram = [i for i in all_histograms if i.name() == 'TELEMETRY_TEST_FLAG'][0]
 
         self.assertEqual(test_histogram.expiration(), 'never')

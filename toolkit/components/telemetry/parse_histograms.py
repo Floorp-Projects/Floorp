@@ -40,7 +40,7 @@ BASE_DOC_URL = ("https://firefox-source-docs.mozilla.org/toolkit/components/"
 HISTOGRAMS_DOC_URL = (BASE_DOC_URL + "collection/histograms.html")
 SCALARS_DOC_URL = (BASE_DOC_URL + "collection/scalars.html")
 
-# histogram_tools.py is used by scripts from a mozilla-central build tree
+# parse_histograms.py is used by scripts from a mozilla-central build tree
 # and also by outside consumers, such as the telemetry server.  We need
 # to ensure that importing things works in both contexts.  Therefore,
 # unconditionally importing things that are local to the build tree, such
