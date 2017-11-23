@@ -95,6 +95,18 @@ add_task(async function() {
     return gURLBar.popup.richlistbox.children[index];
   }
 
+  async function promiseClickOnItem(item, details) {
+    // The Address Bar panel is animated and updated on a timer, thus it may not
+    // yet be listening to events when we try to click on it.  This uses a
+    // polling strategy to repeat the click, if it doesn't go through.
+    let clicked = false;
+    item.addEventListener("mousedown", () => { clicked = true; }, {once: true});
+    while (!clicked) {
+      EventUtils.synthesizeMouseAtCenter(item, details);
+      await new Promise(r => window.requestIdleCallback(r, {timeout: 1000}));
+    }
+  }
+
   let inputSessionSerial = 0;
   async function startInputSession(indexToWaitFor) {
     gURLBar.focus();
@@ -198,12 +210,12 @@ add_task(async function() {
     is(item.getAttribute("displayurl"), `${keyword} ${text}`,
       `Expected heuristic result to have displayurl: "${keyword} ${text}".`);
 
-    EventUtils.synthesizeMouseAtCenter(item, {});
-
-    await expectEvent("on-input-entered-fired", {
+    let promiseEvent = expectEvent("on-input-entered-fired", {
       text,
       disposition: "currentTab",
     });
+    await promiseClickOnItem(item, {});
+    await promiseEvent;
   }
 
   async function testDisposition(suggestionIndex, expectedDisposition, expectedText) {
@@ -214,19 +226,20 @@ add_task(async function() {
       EventUtils.synthesizeKey("VK_DOWN", {});
     }
 
-    let item = gURLBar.popup.richlistbox.children[suggestionIndex];
-    if (expectedDisposition == "currentTab") {
-      EventUtils.synthesizeMouseAtCenter(item, {});
-    } else if (expectedDisposition == "newForegroundTab") {
-      EventUtils.synthesizeMouseAtCenter(item, {accelKey: true});
-    } else if (expectedDisposition == "newBackgroundTab") {
-      EventUtils.synthesizeMouseAtCenter(item, {shiftKey: true, accelKey: true});
-    }
-
-    await expectEvent("on-input-entered-fired", {
+    let promiseEvent = expectEvent("on-input-entered-fired", {
       text: expectedText,
       disposition: expectedDisposition,
     });
+
+    let item = gURLBar.popup.richlistbox.children[suggestionIndex];
+    if (expectedDisposition == "currentTab") {
+      await promiseClickOnItem(item, {});
+    } else if (expectedDisposition == "newForegroundTab") {
+      await promiseClickOnItem(item, {accelKey: true});
+    } else if (expectedDisposition == "newBackgroundTab") {
+      await promiseClickOnItem(item, {shiftKey: true, accelKey: true});
+    }
+    await promiseEvent;
   }
 
   async function testSuggestions(info) {
@@ -250,11 +263,12 @@ add_task(async function() {
 
     info.suggestions.forEach(expectSuggestion);
 
-    EventUtils.synthesizeMouseAtCenter(gURLBar.popup.richlistbox.children[0], {});
-    await expectEvent("on-input-entered-fired", {
+    let promiseEvent = expectEvent("on-input-entered-fired", {
       text,
       disposition: "currentTab",
     });
+    await promiseClickOnItem(gURLBar.popup.richlistbox.children[0], {});
+    await promiseEvent;
   }
 
   await extension.startup();
