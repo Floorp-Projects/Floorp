@@ -59,7 +59,7 @@ interface Node : EventTarget {
 
   [CEReactions, SetterThrows, Pure]
            attribute DOMString? nodeValue;
-  [CEReactions, SetterThrows, GetterCanOOM, Pure]
+  [CEReactions, SetterThrows, GetterCanOOM, NeedsSubjectPrincipal, Pure]
            attribute DOMString? textContent;
   [CEReactions, Throws]
   Node insertBefore(Node node, Node? child);

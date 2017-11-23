@@ -70,8 +70,11 @@ HTMLOutputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 }
 
 bool
-HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                                  const nsAString& aValue, nsAttrValue& aResult)
+HTMLOutputElement::ParseAttribute(int32_t aNamespaceID,
+                                  nsAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsIPrincipal* aMaybeScriptedPrincipal,
+                                  nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::_for) {
@@ -81,7 +84,9 @@ HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   }
 
   return nsGenericHTMLFormElement::ParseAttribute(aNamespaceID, aAttribute,
-                                                  aValue, aResult);
+                                                  aValue,
+                                                  aMaybeScriptedPrincipal,
+                                                  aResult);
 }
 
 void

@@ -1725,6 +1725,7 @@ nsAttrValue::LoadImage(nsIDocument* aDocument)
 
 bool
 nsAttrValue::ParseStyleAttribute(const nsAString& aString,
+                                 nsIPrincipal* aMaybeScriptedPrincipal,
                                  nsStyledElement* aElement)
 {
   nsIDocument* ownerDoc = aElement->OwnerDoc();
@@ -1735,11 +1736,19 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   NS_ASSERTION(aElement->NodePrincipal() == ownerDoc->NodePrincipal(),
                "This is unexpected");
 
+  nsCOMPtr<nsIPrincipal> principal = (
+      aMaybeScriptedPrincipal ? aMaybeScriptedPrincipal
+                              : aElement->NodePrincipal());
+
   // If the (immutable) document URI does not match the element's base URI
   // (the common case is that they do match) do not cache the rule.  This is
   // because the results of the CSS parser are dependent on these URIs, and we
   // do not want to have to account for the URIs in the hash lookup.
-  bool cachingAllowed = sheet && baseURI == docURI;
+  // Similarly, if the triggering principal does not match the node principal,
+  // do not cache the rule, since the principal will be encoded in any parsed
+  // URLs in the rule.
+  bool cachingAllowed = (sheet && baseURI == docURI &&
+                         principal == aElement->NodePrincipal());
   if (cachingAllowed) {
     MiscContainer* cont = sheet->LookupStyleAttr(aString);
     if (cont) {
@@ -1753,7 +1762,7 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   RefPtr<DeclarationBlock> decl;
   if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
     RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI,
-                                                 aElement->NodePrincipal());
+                                                 principal);
     decl = ServoDeclarationBlock::FromCssText(aString, data,
                                               ownerDoc->GetCompatibilityMode(),
                                               ownerDoc->CSSLoader());
@@ -1761,7 +1770,7 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
     css::Loader* cssLoader = ownerDoc->CSSLoader();
     nsCSSParser cssParser(cssLoader);
     decl = cssParser.ParseStyleAttribute(aString, docURI, baseURI,
-                                         aElement->NodePrincipal());
+                                         principal);
   }
   if (!decl) {
     return false;

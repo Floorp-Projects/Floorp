@@ -174,8 +174,11 @@ function run_test() {
     var type = Cc["@mozilla.org/mime;1"].
                getService(Ci.nsIMIMEService).
                getTypeFromExtension(".txt");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_ERROR_NOT_AVAILABLE)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException) ||
+        e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw e;
+    }
     // This is an expected exception, thrown if the type can't be determined
   } finally {
     // Ensure we restore the original factory when the test is finished

@@ -11,7 +11,7 @@
 interface HTMLSelectElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
   attribute boolean autofocus;
-  [CEReactions, Pref="dom.forms.autocomplete.formautofill", SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
   attribute DOMString autocomplete;
   [CEReactions, SetterThrows, Pure]
   attribute boolean disabled;

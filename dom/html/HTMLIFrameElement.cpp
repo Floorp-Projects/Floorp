@@ -45,6 +45,7 @@ bool
 HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
                                   nsAtom* aAttribute,
                                   const nsAString& aValue,
+                                  nsIPrincipal* aMaybeScriptedPrincipal,
                                   nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
@@ -76,7 +77,9 @@ HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
   }
 
   return nsGenericHTMLFrameElement::ParseAttribute(aNamespaceID, aAttribute,
-                                                   aValue, aResult);
+                                                   aValue,
+                                                   aMaybeScriptedPrincipal,
+                                                   aResult);
 }
 
 void

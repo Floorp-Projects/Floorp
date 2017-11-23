@@ -504,20 +504,26 @@ nsIContent::GetBaseURIForStyleAttr() const
   return OwnerDoc()->GetDocBaseURI();
 }
 
-URLExtraData*
-nsIContent::GetURLDataForStyleAttr() const
+already_AddRefed<URLExtraData>
+nsIContent::GetURLDataForStyleAttr(nsIPrincipal* aSubjectPrincipal) const
 {
   if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
     nsIContent* bindingParent = GetBindingParent();
     MOZ_ASSERT(bindingParent);
     SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
     if (URLExtraData* data = useElement->GetContentURLData()) {
-      return data;
+      return do_AddRef(data);
     }
+  }
+  if (aSubjectPrincipal && aSubjectPrincipal != NodePrincipal()) {
+    // TODO: Cache this?
+    return MakeAndAddRef<URLExtraData>(OwnerDoc()->GetDocBaseURI(),
+                                       OwnerDoc()->GetDocumentURI(),
+                                       aSubjectPrincipal);
   }
   // This also ignores the case that SVG inside XBL binding.
   // But it is probably fine.
-  return OwnerDoc()->DefaultStyleAttrURLData();
+  return do_AddRef(OwnerDoc()->DefaultStyleAttrURLData());
 }
 
 //----------------------------------------------------------------------
@@ -1388,6 +1394,7 @@ FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
 
 void
 FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
+                                          nsIPrincipal* aSubjectPrincipal,
                                           ErrorResult& aError)
 {
   aError = nsContentUtils::SetNodeTextContent(this, aTextContent, false);

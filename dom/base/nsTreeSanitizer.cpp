@@ -1185,9 +1185,10 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         aElement->GetAttr(attrNs, attrLocal, value);
         nsIDocument* document = aElement->OwnerDoc();
         if (document->IsStyledByServo()) {
+          RefPtr<URLExtraData> urlExtra(aElement->GetURLDataForStyleAttr());
           decl = ServoDeclarationBlock::FromCssText(
               value,
-              aElement->GetURLDataForStyleAttr(),
+              urlExtra,
               document->GetCompatibilityMode(),
               document->CSSLoader());
         } else {
