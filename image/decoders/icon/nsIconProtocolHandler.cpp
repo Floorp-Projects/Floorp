@@ -74,16 +74,6 @@ nsIconProtocolHandler::NewURI(const nsACString& aSpec,
   nsresult rv = uri->SetSpec(aSpec);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIURL> iconURL;
-  uri->GetIconURL(getter_AddRefs(iconURL));
-  if (iconURL) {
-    uri = new nsNestedMozIconURI();
-    rv = uri->SetSpec(aSpec);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
   NS_ADDREF(*result = uri);
   return NS_OK;
 }
