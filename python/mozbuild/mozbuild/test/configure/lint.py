@@ -31,6 +31,7 @@ class LintMeta(type):
             'embedding/ios',
             'extensions',
             'js',
+            'memory',
             'mobile/android',
         ):
             attrs['test_%s' % project.replace('/', '_')] = create_test(
