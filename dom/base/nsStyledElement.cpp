@@ -39,15 +39,16 @@ bool
 nsStyledElement::ParseAttribute(int32_t aNamespaceID,
                                 nsAtom* aAttribute,
                                 const nsAString& aValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
                                 nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::style && aNamespaceID == kNameSpaceID_None) {
-    ParseStyleAttribute(aValue, aResult, false);
+    ParseStyleAttribute(aValue, aMaybeScriptedPrincipal, aResult, false);
     return true;
   }
 
   return nsStyledElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                             aResult);
+                                             aMaybeScriptedPrincipal, aResult);
 }
 
 nsresult
@@ -145,7 +146,7 @@ nsStyledElement::ReparseStyleAttribute(bool aForceInDataDoc, bool aForceIfAlread
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
-    ParseStyleAttribute(stringValue, attrValue, aForceInDataDoc);
+    ParseStyleAttribute(stringValue, nullptr, attrValue, aForceInDataDoc);
     // Don't bother going through SetInlineStyleDeclaration; we don't
     // want to fire off mutation events or document notifications anyway
     bool oldValueSet;
@@ -179,6 +180,7 @@ nsStyledElement::GetExistingStyle()
 
 void
 nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
+                                     nsIPrincipal* aMaybeScriptedPrincipal,
                                      nsAttrValue& aResult,
                                      bool aForceInDataDoc)
 {
@@ -187,6 +189,7 @@ nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
 
   if (!isNativeAnon &&
       !nsStyleUtil::CSPAllowsInlineStyle(nullptr, NodePrincipal(),
+                                         aMaybeScriptedPrincipal,
                                          doc->GetDocumentURI(), 0, aValue,
                                          nullptr))
     return;
@@ -206,7 +209,8 @@ nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
       }
     }
 
-    if (isCSS && aResult.ParseStyleAttribute(aValue, this)) {
+    if (isCSS && aResult.ParseStyleAttribute(aValue, aMaybeScriptedPrincipal,
+                                             this)) {
       return;
     }
   }

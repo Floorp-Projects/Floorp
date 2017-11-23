@@ -106,6 +106,13 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                uint32_t aViolatedPolicyIndex,
                                uint32_t aLineNumber);
 
+    static int32_t sScriptSampleMaxLength;
+
+    static uint32_t ScriptSampleMaxLength()
+    {
+      return std::max(sScriptSampleMaxLength, 0);
+    }
+
     nsString                                   mReferrer;
     uint64_t                                   mInnerWindowID; // used for web console logging
     nsTArray<nsCSPPolicy*>                     mPolicies;

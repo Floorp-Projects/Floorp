@@ -148,7 +148,11 @@ add_task(async function test_signature()
   try {
     let signatureInfo = saver.signatureInfo;
     do_throw("Can't get signature before saver is complete.");
-  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw ex;
+    }
+  }
 
   saver.enableSignatureInfo();
   saver.setTarget(destFile, false);

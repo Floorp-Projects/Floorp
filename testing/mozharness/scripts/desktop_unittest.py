@@ -663,6 +663,71 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                                     'resources',
                                                     module))
 
+    def _kill_proc_tree(self, pid):
+        # Kill a process tree (including grandchildren) with signal.SIGTERM
+        try:
+            import signal
+            import psutil
+            if pid == os.getpid():
+                return (None, None)
+
+            parent = psutil.Process(pid)
+            children = parent.children(recursive=True)
+            children.append(parent)
+
+            for p in children:
+                p.send_signal(signal.SIGTERM)
+
+            # allow for 60 seconds to kill procs
+            timeout = 60
+            gone, alive = psutil.wait_procs(children, timeout=timeout)
+            for p in gone:
+                self.info('psutil found pid %s dead' % p.pid)
+            for p in alive:
+                self.error('failed to kill pid %d after %d' % (p.pid, timeout))
+
+            return (gone, alive)
+        except Exception as e:
+            self.error('Exception while trying to kill process tree: %s' % str(e))
+
+    def _kill_named_proc(self, pname):
+        try:
+            import psutil
+        except Exception as e:
+            self.info("Error importing psutil, not killing process %s: %s" % pname, str(e))
+            return
+
+        for proc in psutil.process_iter():
+            try:
+                if proc.name() == pname:
+                    procd = proc.as_dict(attrs=['pid', 'ppid', 'name', 'username'])
+                    self.info("in _kill_named_proc, killing %s" % procd)
+                    self._kill_proc_tree(proc.pid)
+            except Exception as e:
+                self.info("Warning: Unable to kill process %s: %s" % (pname, str(e)))
+                # may not be able to access process info for all processes
+                continue
+
+    def _remove_xen_clipboard(self):
+        """
+            When running on a Windows 7 VM, we have XenDPriv.exe running which
+            interferes with the clipboard, lets terminate this process and remove
+            the binary so it doesn't restart
+        """
+        if not self._is_windows():
+            return
+
+        self._kill_named_proc('XenDPriv.exe')
+        xenpath = os.path.join(os.environ['ProgramFiles'],
+                               'Citrix',
+                               'XenTools',
+                               'XenDPriv.exe')
+        try:
+            if os.path.isfile(xenpath):
+                os.remove(xenpath)
+        except Exception as e:
+            self.error("Error: Failure to remove file %s: %s" % (xenpath, str(e)))
+
     def _report_system_info(self):
         """
            Create the system-info.log artifact file, containing a variety of
@@ -704,6 +769,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
     # preflight_run_tests defined in TestingMixin.
 
     def run_tests(self):
+        self._remove_xen_clipboard()
         self._report_system_info()
         self.start_time = datetime.now()
         for category in SUITE_CATEGORIES:

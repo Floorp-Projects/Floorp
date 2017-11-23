@@ -360,7 +360,11 @@ add_task(async function test_combinations()
       if (cancelAtSomePoint) {
         do_throw("Failure expected.");
       }
-    } catch (ex if cancelAtSomePoint && ex.result == Cr.NS_ERROR_FAILURE) { }
+    } catch (ex) {
+      if (!cancelAtSomePoint || ex.result != Cr.NS_ERROR_FAILURE) {
+        throw ex;
+      }
+    }
 
     if (!cancelAtSomePoint) {
       // In this case, the file must exist.
@@ -646,7 +650,11 @@ add_task(async function test_invalid_hash()
   try {
     let hash = saver.sha256Hash;
     do_throw("Shouldn't be able to get hash if hashing not enabled");
-  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw e;
+    }
+  }
   // Enable hashing, but don't feed any data to saver
   saver.enableSha256();
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -659,13 +667,21 @@ add_task(async function test_invalid_hash()
   try {
     let hash = saver.sha256Hash;
     do_throw("Shouldn't be able to get hash if save did not succeed");
-  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw ex;
+    }
+  }
   // Wait for completion so that the worker thread finishes dealing with the
   // target file. We expect it to fail.
   try {
     await completionPromise;
     do_throw("completionPromise should throw");
-  } catch (ex if ex.result == Cr.NS_ERROR_FAILURE) { }
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_FAILURE) {
+      throw ex;
+    }
+  }
 });
 
 add_task(async function test_signature()
@@ -679,7 +695,11 @@ add_task(async function test_signature()
   try {
     let signatureInfo = saver.signatureInfo;
     do_throw("Can't get signature if saver is not complete");
-  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw ex;
+    }
+  }
 
   saver.enableSignatureInfo();
   saver.setTarget(destFile, false);
@@ -711,7 +731,11 @@ add_task(async function test_signature_not_enabled()
   try {
     let signatureInfo = saver.signatureInfo;
     do_throw("Can't get signature if not enabled");
-  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw ex;
+    }
+  }
 
   // Clean up.
   destFile.remove(false);

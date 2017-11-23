@@ -63,7 +63,12 @@ class TestDownloadListener {
                    "the update state" + MSG_SHOULD_EQUAL);
       Assert.equal(aStatus, Cr.NS_OK,
                    "the download status" + MSG_SHOULD_EQUAL);
-      do_execute_soon(finish_test);
+
+      // Cleaning up the active update along with reloading the update manager
+      // in doTestFinish will prevent writing the update xml files during
+      // shutdown.
+      gUpdateManager.cleanupActiveUpdate();
+      do_execute_soon(waitForUpdateXMLFiles);
     }
   }
 
@@ -99,4 +104,11 @@ function resumeDownload() {
 
   // Resuming creates a new Downloader, and thus drops registered listeners.
   gAUS.addDownloadListener(gListener);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
+  stop_httpserver(doTestFinish);
 }

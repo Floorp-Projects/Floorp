@@ -49,6 +49,12 @@ public:
     return mOriginPos;
   }
 
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override {
+    // We can implement this, but currently don't want to because it will cause the
+    // SurfaceTexture to be permanently bound to the snapshot readback context.
+    return nullptr;
+  }
+
   SurfaceTextureImage* AsSurfaceTextureImage() override {
     return this;
   }

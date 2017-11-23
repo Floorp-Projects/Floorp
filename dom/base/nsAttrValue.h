@@ -433,8 +433,12 @@ public:
    *
    * @param aString the style attribute value to be parsed.
    * @param aElement the element the attribute is set on.
+   * @param aMaybeScriptedPrincipal if available, the scripted principal
+   *        responsible for this attribute value, as passed to
+   *        Element::ParseAttribute.
    */
   bool ParseStyleAttribute(const nsAString& aString,
+                           nsIPrincipal* aMaybeScriptedPrincipal,
                            nsStyledElement* aElement);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;

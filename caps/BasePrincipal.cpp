@@ -359,12 +359,10 @@ BasePrincipal::AddonHasPermission(const nsAtom* aPerm)
 }
 
 nsIPrincipal*
-BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI,
-                                  bool aAllowIfInheritsPrincipal)
+BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI)
 {
   if (Is<ExpandedPrincipal>()) {
-    return As<ExpandedPrincipal>()->PrincipalToInherit(aRequestedURI,
-                                                       aAllowIfInheritsPrincipal);
+    return As<ExpandedPrincipal>()->PrincipalToInherit(aRequestedURI);
   }
   return this;
 }

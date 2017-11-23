@@ -21,7 +21,10 @@ function run_test() {
     propVal = chan1.getPropertyAsInterface("baseURI",
                                            Components.interfaces.nsIURI);
     haveProp = true;
-  } catch (e if e.result == Components.results.NS_ERROR_NOT_AVAILABLE) {
+  } catch (e) {
+    if (e.result != Components.results.NS_ERROR_NOT_AVAILABLE) {
+      throw e;
+    }
     // Property shouldn't be there.
   }
   do_check_eq(propVal, null);

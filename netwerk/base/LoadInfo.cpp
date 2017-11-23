@@ -541,12 +541,8 @@ LoadInfo::FindPrincipalToInherit(nsIChannel* aChannel)
     Unused << aChannel->GetOriginalURI(getter_AddRefs(uri));
   }
 
-  bool dataInherits = mSecurityFlags & (SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS |
-                                        SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                                        SEC_REQUIRE_CORS_DATA_INHERITS);
-
   auto prin = BasePrincipal::Cast(mTriggeringPrincipal);
-  return prin->PrincipalToInherit(uri, dataInherits);
+  return prin->PrincipalToInherit(uri);
 }
 
 NS_IMETHODIMP

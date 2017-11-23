@@ -1137,7 +1137,7 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
                                                        mozilla::dom::AutocompleteInfo& aInfo,
                                                        bool aGrantAllValidValue)
 {
-  // No sandbox attribute so we are done
+  // No autocomplete attribute so we are done
   if (!aAttrVal) {
     return eAutocompleteAttrState_Invalid;
   }

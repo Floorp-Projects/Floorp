@@ -890,7 +890,8 @@ nsCSSFontFaceStyleDecl::GetCssTextImpl(nsAString& aCssText) const
 }
 
 NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::SetCssText(const nsAString & aCssText)
+nsCSSFontFaceStyleDecl::SetCssText(const nsAString& aCssText,
+                                   nsIPrincipal* aSubjectPrincipal)
 {
   return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
 }
@@ -940,9 +941,10 @@ nsCSSFontFaceStyleDecl::GetPropertyPriority(const nsAString & propertyName,
 }
 
 NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::SetProperty(const nsAString & propertyName,
-                                    const nsAString & value,
-                                    const nsAString & priority)
+nsCSSFontFaceStyleDecl::SetProperty(const nsAString& propertyName,
+                                    const nsAString& value,
+                                    const nsAString& priority,
+                                    nsIPrincipal* aSubjectPrincipal)
 {
   // FIXME(heycam): If we are changing unicode-range, then a FontFace object
   // representing this rule must have its mUnicodeRange value invalidated.
@@ -1012,10 +1014,11 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(const nsCSSPropertyID aPropID,
 
 NS_IMETHODIMP
 nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSPropertyID aPropID,
-                                         const nsAString& aValue)
+                                         const nsAString& aValue,
+                                         nsIPrincipal* aSubjectPrincipal)
 {
   return SetProperty(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
-                     aValue, EmptyString());
+                     aValue, EmptyString(), aSubjectPrincipal);
 }
 
 nsINode*
@@ -1418,13 +1421,15 @@ nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(Operation aOperation)
 }
 
 void
-nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
+nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                                        nsIPrincipal* aSubjectPrincipal)
 {
   GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
 }
 
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-nsCSSKeyframeStyleDeclaration::GetServoCSSParsingEnvironment() const
+nsCSSKeyframeStyleDeclaration::GetServoCSSParsingEnvironment(
+  nsIPrincipal* aSubjectPrincipal) const
 {
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
@@ -1864,13 +1869,15 @@ nsCSSPageStyleDeclaration::GetCSSDeclaration(Operation aOperation)
 }
 
 void
-nsCSSPageStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
+nsCSSPageStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
+                                                    nsIPrincipal* aSubjectPrincipal)
 {
   GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
 }
 
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-nsCSSPageStyleDeclaration::GetServoCSSParsingEnvironment() const
+nsCSSPageStyleDeclaration::GetServoCSSParsingEnvironment(
+  nsIPrincipal* aSubjectPrincipal) const
 {
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }

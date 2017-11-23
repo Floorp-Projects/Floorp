@@ -39,8 +39,7 @@ public:
 
   // Returns the principal to inherit when this principal requests the given
   // URL. See BasePrincipal::PrincipalToInherit.
-  nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr,
-                                   bool aAllowIfInheritsPrincipal = true);
+  nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr);
 
 protected:
   explicit ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList);
