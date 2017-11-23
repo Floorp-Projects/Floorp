@@ -20,39 +20,18 @@ const AUTH_TYPE = {
 };
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/ChromeMigrationUtils.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
-/**
- * Get an nsIFile instance representing the expected location of user data
- * for this copy of Chrome/Chromium/Canary on different OSes.
- * @param subfoldersWin {Array} an array of subfolders to use for Windows
- * @param subfoldersOSX {Array} an array of subfolders to use for OS X
- * @param subfoldersUnix {Array} an array of subfolders to use for *nix systems
- * @returns {nsIFile} the place we expect data to live. Might not actually exist!
- */
-function getDataFolder(subfoldersWin, subfoldersOSX, subfoldersUnix) {
-  let dirServiceID, subfolders;
-  if (AppConstants.platform == "win") {
-    dirServiceID = "LocalAppData";
-    subfolders = subfoldersWin.concat(["User Data"]);
-  } else if (AppConstants.platform == "macosx") {
-    dirServiceID = "ULibDir";
-    subfolders = ["Application Support"].concat(subfoldersOSX);
-  } else {
-    dirServiceID = "Home";
-    subfolders = [".config"].concat(subfoldersUnix);
-  }
-  return FileUtils.getDir(dirServiceID, subfolders, false);
-}
 
 /**
  * Convert Chrome time format to Date object
@@ -113,8 +92,8 @@ function convertBookmarks(items, errorAccumulator) {
 }
 
 function ChromeProfileMigrator() {
-  let chromeUserDataFolder =
-    getDataFolder(["Google", "Chrome"], ["Google", "Chrome"], ["google-chrome"]);
+  let path = ChromeMigrationUtils.getDataPath("Chrome");
+  let chromeUserDataFolder = new FileUtils.File(path);
   this._chromeUserDataFolder = chromeUserDataFolder.exists() ?
     chromeUserDataFolder : null;
 }
@@ -171,19 +150,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {
 
     let profiles = [];
     try {
-      // Local State is a JSON file that contains profile info.
-      let localState = this._chromeUserDataFolder.clone();
-      localState.append("Local State");
-      if (!localState.exists())
-        throw new Error("Chrome's 'Local State' file does not exist.");
-      if (!localState.isReadable())
-        throw new Error("Chrome's 'Local State' file could not be read.");
-
-      let fstream = Cc[FILE_INPUT_STREAM_CID].createInstance(Ci.nsIFileInputStream);
-      fstream.init(localState, -1, 0, 0);
-      let inputStream = NetUtil.readInputStreamToString(fstream, fstream.available(),
-                                                        { charset: "UTF-8" });
-      let info_cache = JSON.parse(inputStream).profile.info_cache;
+      let info_cache = ChromeMigrationUtils.getLocalState().profile.info_cache;
       for (let profileFolderName in info_cache) {
         let profileFolder = this._chromeUserDataFolder.clone();
         profileFolder.append(profileFolderName);
@@ -503,7 +470,8 @@ ChromeProfileMigrator.prototype.classID = Components.ID("{4cec1de4-1671-4fc3-a53
  *  Chromium migration
  **/
 function ChromiumProfileMigrator() {
-  let chromiumUserDataFolder = getDataFolder(["Chromium"], ["Chromium"], ["chromium"]);
+  let path = ChromeMigrationUtils.getDataPath("Chromium");
+  let chromiumUserDataFolder = new FileUtils.File(path);
   this._chromeUserDataFolder = chromiumUserDataFolder.exists() ? chromiumUserDataFolder : null;
 }
 
@@ -519,7 +487,8 @@ var componentsArray = [ChromeProfileMigrator, ChromiumProfileMigrator];
  * Not available on Linux
  **/
 function CanaryProfileMigrator() {
-  let chromeUserDataFolder = getDataFolder(["Google", "Chrome SxS"], ["Google", "Chrome Canary"]);
+  let path = ChromeMigrationUtils.getDataPath("Canary");
+  let chromeUserDataFolder = new FileUtils.File(path);
   this._chromeUserDataFolder = chromeUserDataFolder.exists() ? chromeUserDataFolder : null;
 }
 CanaryProfileMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
