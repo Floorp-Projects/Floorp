@@ -15,7 +15,7 @@
 from __future__ import print_function
 from shared_telemetry_utils import ParserError
 
-import histogram_tools
+import parse_histograms
 import itertools
 import sys
 
@@ -46,7 +46,7 @@ def main(output, *filenames):
 
     # Load the histograms.
     try:
-        all_histograms = list(histogram_tools.from_files(filenames))
+        all_histograms = list(parse_histograms.from_files(filenames))
     except ParserError as ex:
         print("\nError processing histograms:\n" + str(ex) + "\n")
         sys.exit(1)
@@ -55,7 +55,7 @@ def main(output, *filenames):
                                lambda h: h.name().startswith("USE_COUNTER2_"))
 
     # Print the histogram enums.
-    # Note that histogram_tools.py guarantees that all of the USE_COUNTER2_*
+    # Note that parse_histograms.py guarantees that all of the USE_COUNTER2_*
     # histograms are defined in a contiguous block.  We therefore assume
     # that there's at most one group for which use_counter_group is true.
     print("enum HistogramID : uint32_t {", file=output)
