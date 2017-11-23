@@ -860,10 +860,13 @@ class MochitestDesktop(object):
         self.start_script_kwargs = {}
         self.urlOpts = []
 
-        commandline.log_formatters["tbpl"] = (
-            MochitestFormatter,
-            "Mochitest specific tbpl formatter")
-        self.log = commandline.setup_logging("mochitest", logger_options, {"tbpl": sys.stdout})
+        if logger_options.get('log'):
+            self.log = logger_options['log']
+        else:
+            commandline.log_formatters["tbpl"] = (
+                MochitestFormatter,
+                "Mochitest specific tbpl formatter")
+            self.log = commandline.setup_logging("mochitest", logger_options, {"tbpl": sys.stdout})
 
         self.message_logger = MessageLogger(
                 logger=self.log, buffering=quiet, structured=True)
