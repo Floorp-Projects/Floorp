@@ -22,14 +22,10 @@ def jemalloc(value, target, build_project, c_compiler):
     if build_project == 'js':
         return True
 
-    if target.kernel == 'Darwin' and target.cpu == 'x86_64':
-        # Don't enable by default on 32-bits OSX. See bug 702250.
+    if target.kernel in ('Darwin', 'Linux'):
         return True
 
     if target.kernel == 'WINNT' and c_compiler.type in ('msvc', 'clang-cl'):
-        return True
-
-    if target.kernel == 'Linux':
         return True
 
     if value and target.kernel not in ('WINNT', 'Linux', 'Darwin', 'kFreeBSD',
