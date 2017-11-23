@@ -58,7 +58,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
                                      w.toString(16)).join(", "));
   is(startWindows.length, 1);
 
-  yield refreshTab(tab);
+  yield refreshTab();
 
   const endWindows = yield getWindowsInSnapshot(front);
   is(endWindows.length, 1);
