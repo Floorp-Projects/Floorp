@@ -12,7 +12,6 @@
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TextTrack.h"
-#include "mozilla/dom/VTTRegionBinding.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
@@ -48,13 +47,9 @@ public:
     return mLines;
   }
 
-  void SetLines(double aLines, ErrorResult& aRv)
+  void SetLines(double aLines)
   {
-    if (aLines < 0) {
-      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    } else {
-      mLines = aLines;
-    }
+    mLines = aLines;
   }
 
   double Width() const
@@ -117,16 +112,19 @@ public:
     }
   }
 
-  ScrollSetting Scroll() const
+  void GetScroll(nsAString& aScroll) const
   {
-    return mScroll;
+    aScroll = mScroll;
   }
 
-  void SetScroll(const ScrollSetting& aScroll)
+  void SetScroll(const nsAString& aScroll, ErrorResult& aRv)
   {
-    if (aScroll == ScrollSetting::_empty || aScroll == ScrollSetting::Up) {
-      mScroll = aScroll;
+    if (!aScroll.EqualsLiteral("") && !aScroll.EqualsLiteral("up")) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return;
     }
+
+    mScroll = aScroll;
   }
 
   void GetId(nsAString& aId) const
@@ -147,6 +145,10 @@ public:
   void CopyValues(TextTrackRegion& aRegion);
 
   // -----helpers-------
+  const nsAString& Scroll() const
+  {
+    return mScroll;
+  }
   const nsAString& Id() const
   {
     return mId;
@@ -163,7 +165,7 @@ private:
   double mRegionAnchorY;
   double mViewportAnchorX;
   double mViewportAnchorY;
-  ScrollSetting mScroll;
+  nsString mScroll;
 
   // Helper to ensure new value is in the range: 0.0% - 100.0%; throws
   // an IndexSizeError otherwise.

@@ -4,21 +4,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/webvtt/#the-vttregion-interface
+ *  http://dev.w3.org/html5/webvtt/#extension-of-the-texttrack-interface-for-region-support
  */
-
-enum ScrollSetting {
-  "",
-  "up"
-};
 
 [Constructor, Pref="media.webvtt.regions.enabled"]
 interface VTTRegion {
            attribute DOMString id;
            [SetterThrows]
            attribute double width;
-           [SetterThrows]
+
            attribute long lines;
+
            [SetterThrows]
            attribute double regionAnchorX;
            [SetterThrows]
@@ -27,6 +23,6 @@ interface VTTRegion {
            attribute double viewportAnchorX;
            [SetterThrows]
            attribute double viewportAnchorY;
-
-           attribute ScrollSetting scroll;
+           [SetterThrows]
+           attribute DOMString scroll;
 };
