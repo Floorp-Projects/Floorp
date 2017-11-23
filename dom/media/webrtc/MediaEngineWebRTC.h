@@ -508,12 +508,12 @@ private:
 
   RefPtr<mozilla::AudioInput> mAudioInput;
   RefPtr<WebRTCAudioDataListener> mListener;
-  RefPtr<AudioOutputObserver> mAudioOutputObserver;
 
   // Note: shared across all microphone sources
   static int sChannelsOpen;
 
   const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
+  const RefPtr<AudioOutputObserver> mAudioOutputObserver;
 
   // accessed from the GraphDriver thread except for deletion
   nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizer;
@@ -543,7 +543,7 @@ private:
   // mSkipProcessing is true if none of the processing passes are enabled,
   // because of prefs or constraints. This allows simply copying the audio into
   // the MSG, skipping resampling and the whole webrtc.org code.
-  bool mSkipProcessing;
+  std::atomic_bool mSkipProcessing;
 
   // To only update microphone when needed, we keep track of previous settings.
   MediaEnginePrefs mLastPrefs;
