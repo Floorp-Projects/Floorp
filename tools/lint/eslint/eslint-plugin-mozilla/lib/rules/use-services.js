@@ -28,8 +28,6 @@ var servicesASTParser = {
     "nsIXULAppInfo": "appinfo",
     "nsIDirectoryService": "dirsvc",
     "nsIProperties": "dirsvc",
-    "nsIFrameScriptLoader": "mm",
-    "nsIProcessScriptLoader": "ppmm",
     "nsIIOService": "io",
     "nsISpeculativeConnect": "io",
     "nsICookieManager": "cookies"
@@ -108,6 +106,9 @@ function getInterfacesFromServicesFile() {
       servicesASTParser[type](node, parents);
     }
   });
+
+  // nsISupports is used for multiple services, so we can't really warn for it.
+  delete servicesASTParser.result.nsISupports;
 
   // nsIPropertyBag2 is used for system-info, but it is also used for other
   // services and items as well, so we can't really warn for it.
