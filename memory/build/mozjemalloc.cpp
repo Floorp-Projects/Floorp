@@ -945,8 +945,8 @@ struct arena_bin_t
   unsigned long mNumRuns;
 
   // Amount of overhead runs are allowed to have.
-  static constexpr long double kRunOverhead = 1.6_percent;
-  static constexpr long double kRunRelaxedOverhead = 2.4_percent;
+  static constexpr double kRunOverhead = 1.6_percent;
+  static constexpr double kRunRelaxedOverhead = 2.4_percent;
 
   // Initialize a bin for the given size class.
   // The generated run sizes, for a page size of 4 KiB, are:

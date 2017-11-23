@@ -72,9 +72,9 @@ constexpr size_t operator"" _MiB(long double aNum)
   return size_t(aNum * 1024_KiB);
 }
 
-constexpr long double operator""_percent(long double aPercent)
+constexpr double operator""_percent(long double aPercent)
 {
-  return aPercent / 100;
+  return double(aPercent) / 100;
 }
 
 // Helper for (fast) comparison of fractions without involving divisions or
