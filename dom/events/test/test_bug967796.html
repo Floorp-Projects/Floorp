@@ -43,9 +43,9 @@ var pointerleavecount = 0;
 var pointerovercount = 0;
 var pointeroutcount = 0;
 
-function sendPointerEvent(t, elem) {
+function sendMouseEventToElement(t, elem) {
   var r = elem.getBoundingClientRect();
-  synthesizePointer(elem, r.width / 2, r.height / 2, {type: t});
+  synthesizeMouse(elem, r.width / 2, r.height / 2, {type: t});
 }
 
 var expectedPointerEnterTargets = [];
@@ -68,7 +68,7 @@ function runTests() {
   iframe.addEventListener("pointerover", pover);
 
   // Make sure ESM thinks pointer is outside the test elements.
-  sendPointerEvent("pointermove", outside);
+  sendMouseEventToElement("mousemove", outside);
 
   pointerentercount = 0;
   pointerleavecount = 0;
@@ -78,7 +78,7 @@ function runTests() {
   expectedRelatedEnter = outside;
   expectedRelatedLeave = inner;
   expectedPointerEnterTargets = ["outertest", "middletest", "innertest"];
-  sendPointerEvent("pointermove", inner);
+  sendMouseEventToElement("mousemove", inner);
   is(pointerentercount, 3, "Unexpected pointerenter event count!");
   is(pointerovercount, 1, "Unexpected pointerover event count!");
   is(pointeroutcount, 0, "Unexpected pointerout event count!");
@@ -86,7 +86,7 @@ function runTests() {
   expectedRelatedEnter = inner;
   expectedRelatedLeave = outside;
   expectedPointerLeaveTargets = ["innertest", "middletest", "outertest"];
-  sendPointerEvent("pointermove", outside);
+  sendMouseEventToElement("mousemove", outside);
   is(pointerentercount, 3, "Unexpected pointerenter event count!");
   is(pointerovercount, 1, "Unexpected pointerover event count!");
   is(pointeroutcount, 1, "Unexpected pointerout event count!");
@@ -96,14 +96,14 @@ function runTests() {
   var r = file.getBoundingClientRect();
   expectedRelatedEnter = outside;
   expectedRelatedLeave = file;
-  synthesizePointer(file, r.width / 6, r.height / 2, {type: "pointermove"});
+  synthesizeMouse(file, r.width / 6, r.height / 2, {type: "mousemove"});
   is(pointerentercount, 4, "Unexpected pointerenter event count!");
   is(pointerovercount, 2, "Unexpected pointerover event count!");
   is(pointeroutcount, 1, "Unexpected pointerout event count!");
   is(pointerleavecount, 3, "Unexpected pointerleave event count!");
 
   // Moving pointer over type="file" shouldn't cause pointerover/out/enter/leave events
-  synthesizePointer(file, r.width - (r.width / 6), r.height / 2, {type: "pointermove"});
+  synthesizeMouse(file, r.width - (r.width / 6), r.height / 2, {type: "mousemove"});
   is(pointerentercount, 4, "Unexpected pointerenter event count!");
   is(pointerovercount, 2, "Unexpected pointerover event count!");
   is(pointeroutcount, 1, "Unexpected pointerout event count!");
@@ -111,7 +111,7 @@ function runTests() {
 
   expectedRelatedEnter = file;
   expectedRelatedLeave = outside;
-  sendPointerEvent("pointermove", outside);
+  sendMouseEventToElement("mousemove", outside);
   is(pointerentercount, 4, "Unexpected pointerenter event count!");
   is(pointerovercount, 2, "Unexpected pointerover event count!");
   is(pointeroutcount, 2, "Unexpected pointerout event count!");
@@ -135,17 +135,17 @@ function runTests() {
   expectedRelatedEnter = outside;
   expectedRelatedLeave = iframe;
   // Move pointer inside the iframe.
-  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "pointermove"},
-                    iframe.contentWindow);
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "mousemove"},
+                  iframe.contentWindow);
   is(pointerentercount, 6, "Unexpected pointerenter event count!");
   is(pointerleavecount, 4, "Unexpected pointerleave event count!");
-  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "pointermove"},
-                    iframe.contentWindow);
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "mousemove"},
+                  iframe.contentWindow);
   is(pointerentercount, 7, "Unexpected pointerenter event count!");
   is(pointerleavecount, 5, "Unexpected pointerleave event count!");
   expectedRelatedEnter = iframe;
   expectedRelatedLeave = outside;
-  sendPointerEvent("pointermove", outside);
+  sendMouseEventToElement("mousemove", outside);
   is(pointerentercount, 7, "Unexpected pointerenter event count!");
   is(pointerleavecount, 7, "Unexpected pointerleave event count!");
 
@@ -153,19 +153,19 @@ function runTests() {
   expectedRelatedEnter = outside;
   expectedRelatedLeave = iframe;
   // Move pointer inside the iframe.
-  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "pointerdown"},
-                    iframe.contentWindow);
-  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "pointerdown"},
-                    iframe.contentWindow);
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "mousedown"},
+                  iframe.contentWindow);
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "mousedown"},
+                  iframe.contentWindow);
   is(pointerentercount, 10, "Unexpected pointerenter event count!");
 
   // pointerdown + pointermove must produce single pointerenter event
   expectedRelatedEnter = outside;
   expectedRelatedLeave = iframe;
-  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "pointerdown"},
-                    iframe.contentWindow);
-  synthesizePointer(iframe.contentDocument.body, r.width / 2 + 1, r.height / 4 + 1, {type: "pointermove"},
-                    iframe.contentWindow);
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "mousedown"},
+                  iframe.contentWindow);
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2 + 1, r.height / 4 + 1, {type: "mousemove"},
+                  iframe.contentWindow);
   is(pointerentercount, 11, "Unexpected pointerenter event count!");
 
   Array.from(document.querySelectorAll('*'))
