@@ -109,6 +109,9 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
     newCookie.domain = restrictToHost;
   }
   assert.string(newCookie.domain, "Cookie domain must be string");
+  if (newCookie.domain.substring(0, 1) === ".") {
+    newCookie.domain = newCookie.domain.substring(1);
+  }
 
   if (typeof newCookie.secure == "undefined") {
     newCookie.secure = false;
