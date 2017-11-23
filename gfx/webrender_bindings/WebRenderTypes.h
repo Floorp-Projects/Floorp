@@ -744,7 +744,7 @@ struct WrClipId {
 struct WrStickyId {
   uint64_t id;
 
-  bool operator==(const WrClipId& other) const {
+  bool operator==(const WrStickyId& other) const {
     return id == other.id;
   }
 };
