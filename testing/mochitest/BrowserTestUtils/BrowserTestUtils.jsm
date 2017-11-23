@@ -427,7 +427,7 @@ this.BrowserTestUtils = {
               tabbrowser.tabContainer.removeEventListener("TabOpen", tabOpenListener);
             }
             tabbrowser.removeTabsProgressListener(progressListener);
-            resolve(result);
+            TestUtils.executeSoon(() => resolve(result));
           },
         };
         tabbrowser.addTabsProgressListener(progressListener);
