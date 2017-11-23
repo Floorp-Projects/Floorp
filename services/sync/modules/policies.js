@@ -392,8 +392,10 @@ SyncScheduler.prototype = {
           this.scheduleNextSync(3000);
         });
       case "sleep_notification":
-        this._log.debug("Going to sleep, doing a quick sync.");
-        this.scheduleNextSync(0, ["tabs"], "sleep");
+        if (this.service.engineManager.get("tabs")._tracker.modified) {
+          this._log.debug("Going to sleep, doing a quick sync.");
+          this.scheduleNextSync(0, ["tabs"], "sleep");
+        }
         break;
     }
   },
