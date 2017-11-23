@@ -113,7 +113,7 @@ var gTests = [
     Services.prefs.setCharPref(kStatusPref, "pending");
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false,
-                                                     "about:preferences")
+                                                     "about:preferences#search");
     gBrowser.contentDocument.getElementById("linkSettingsPage").click();
     await loadPromise;
 
