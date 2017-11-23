@@ -179,6 +179,26 @@ union PrefValue {
     Clear(aOldType);
     Init(aNewType, aNewValue);
   }
+
+  void ToDomPrefValue(PrefType aType, dom::PrefValue* aDomValue)
+  {
+    switch (aType) {
+      case PrefType::String:
+        *aDomValue = nsDependentCString(mStringVal);
+        return;
+
+      case PrefType::Int:
+        *aDomValue = mIntVal;
+        return;
+
+      case PrefType::Bool:
+        *aDomValue = mBoolVal;
+        return;
+
+      default:
+        MOZ_CRASH();
+    }
+  }
 };
 
 #ifdef DEBUG
@@ -379,46 +399,21 @@ public:
     return NS_OK;
   }
 
-private:
-  static void AssignPrefValueToDomPrefValue(PrefType aType,
-                                            PrefValue* aValue,
-                                            dom::PrefValue* aDomValue)
-  {
-    switch (aType) {
-      case PrefType::String:
-        *aDomValue = nsDependentCString(aValue->mStringVal);
-        return;
-
-      case PrefType::Int:
-        *aDomValue = aValue->mIntVal;
-        return;
-
-      case PrefType::Bool:
-        *aDomValue = !!aValue->mBoolVal;
-        return;
-
-      default:
-        MOZ_CRASH();
-    }
-  }
-
-public:
   void ToDomPref(dom::Pref* aDomPref)
   {
     aDomPref->name() = mName;
 
     if (mHasDefaultValue) {
       aDomPref->defaultValue() = dom::PrefValue();
-      AssignPrefValueToDomPrefValue(
-        Type(), &mDefaultValue, &aDomPref->defaultValue().get_PrefValue());
+      mDefaultValue.ToDomPrefValue(Type(),
+                                   &aDomPref->defaultValue().get_PrefValue());
     } else {
       aDomPref->defaultValue() = null_t();
     }
 
     if (mHasUserValue) {
       aDomPref->userValue() = dom::PrefValue();
-      AssignPrefValueToDomPrefValue(
-        Type(), &mUserValue, &aDomPref->userValue().get_PrefValue());
+      mUserValue.ToDomPrefValue(Type(), &aDomPref->userValue().get_PrefValue());
     } else {
       aDomPref->userValue() = null_t();
     }
