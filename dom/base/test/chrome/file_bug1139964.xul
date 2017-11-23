@@ -11,8 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
   <label value="Mozilla Bug 1139964"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-  var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-              .getService(Ci.nsIMessageBroadcaster);
+  var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
 
   function ok(cond, msg) {
     opener.wrappedJSObject.ok(cond, msg);

@@ -4,11 +4,10 @@
 
 "use strict";
 
-var { Cc, Ci } = require("chrome");
+var { Cc } = require("chrome");
 
 loader.lazyGetter(this, "ppmm", () => {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(
-    Ci.nsIMessageBroadcaster);
+  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
 });
 
 function ProcessActorList() {

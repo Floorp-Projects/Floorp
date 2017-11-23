@@ -85,11 +85,11 @@
       // 1. Test that loading a script works, and that accessing process level mm and
       //     global mm works.
       var ppm = Components.classes["@mozilla.org/parentprocessmessagemanager;1"]
-                          .getService(Components.interfaces.nsIMessageBroadcaster);
+                          .getService();
       var gm = Components.classes["@mozilla.org/globalmessagemanager;1"]
-                         .getService(Components.interfaces.nsIMessageBroadcaster);
+                         .getService();
       var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
-                            .getService(Components.interfaces.nsISyncMessageSender);
+                          .getService();
 
       if (ppm.childCount != 2) {
         alert("Should have two child processes!");
