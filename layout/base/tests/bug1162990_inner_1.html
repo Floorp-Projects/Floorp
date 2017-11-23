@@ -100,13 +100,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1162990
       setEventHandlers();
       var rectCd = child.getBoundingClientRect();
       var rectLr = listener.getBoundingClientRect();
-      synthesizePointer(listener, rectLr.width/3, rectLr.height/2,  {type: "pointerdown"});
-      synthesizePointer(child,    rectCd.width/3, rectCd.height/2,  {type: "pointermove"});
-      synthesizePointer(listener, rectLr.width/3, rectLr.height/2,  {type: "pointermove"});
-      synthesizePointer(child,    rectCd.width/3, rectCd.height/2,  {type: "pointermove"});
-      synthesizePointer(listener, rectLr.width/3, rectLr.height/2,  {type: "pointermove"});
-      synthesizePointer(listener, rectLr.width/3, rectLr.height/2,  {type: "pointerup"});
-      synthesizePointer(listener, rectLr.width/3, rectLr.height/3,  {type: "pointermove"});
+      synthesizeMouse(listener, rectLr.width/3, rectLr.height/2,  {type: "mousedown"});
+      synthesizeMouse(child,    rectCd.width/3, rectCd.height/2,  {type: "mousemove"});
+      synthesizeMouse(listener, rectLr.width/3, rectLr.height/2,  {type: "mousemove"});
+      synthesizeMouse(child,    rectCd.width/3, rectCd.height/2,  {type: "mousemove"});
+      synthesizeMouse(listener, rectLr.width/3, rectLr.height/2,  {type: "mousemove"});
+      synthesizeMouse(listener, rectLr.width/3, rectLr.height/2,  {type: "mouseup"});
+      synthesizeMouse(listener, rectLr.width/3, rectLr.height/3,  {type: "mousemove"});
       finishTest();
     }
 
