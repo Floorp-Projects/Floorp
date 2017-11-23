@@ -1933,7 +1933,7 @@ pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_set_item_tag(state: &mut WrState,
                                   scroll_id: u64,
-                                  hit_info: u8) {
+                                  hit_info: u16) {
     state.current_tag = Some((scroll_id, hit_info));
 }
 
@@ -1947,7 +1947,7 @@ pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle,
                                   point: WorldPoint,
                                   out_pipeline_id: &mut WrPipelineId,
                                   out_scroll_id: &mut u64,
-                                  out_hit_info: &mut u8) -> bool {
+                                  out_hit_info: &mut u16) -> bool {
     let result = dh.api.hit_test(dh.document_id, None, point, HitTestFlags::empty());
     for item in &result.items {
         // For now we should never be getting results back for which the tag is
