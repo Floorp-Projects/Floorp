@@ -21,8 +21,7 @@ function Spinner(props, context) {
 
   const ITEM_HEIGHT = 2.5,
         VIEWPORT_SIZE = 7,
-        VIEWPORT_COUNT = 5,
-        SCROLL_TIMEOUT = 100;
+        VIEWPORT_COUNT = 5;
 
   Spinner.prototype = {
     /**
@@ -153,15 +152,14 @@ function Spinner(props, context) {
         }
       }
 
-      // Use a timer to detect if a scroll event has not fired within some time
-      // (defined in SCROLL_TIMEOUT). This is required because we need to hide
-      // highlight and hover state when user is scrolling.
-      clearTimeout(this.state.scrollTimer);
       this.elements.spinner.classList.add("scrolling");
-      this.state.scrollTimer = setTimeout(() => {
-        this.elements.spinner.classList.remove("scrolling");
-        this.elements.spinner.dispatchEvent(new CustomEvent("ScrollStop"));
-      }, SCROLL_TIMEOUT);
+    },
+
+    /**
+     * Remove the "scrolling" state on scrollend.
+     */
+    _onScrollend() {
+      this.elements.spinner.classList.remove("scrolling");
     },
 
     /**
@@ -264,6 +262,7 @@ function Spinner(props, context) {
       const { spinner, container } = this.elements;
 
       spinner.addEventListener("scroll", this, { passive: true });
+      spinner.addEventListener("scrollend", this, { passive: true });
       container.addEventListener("mouseup", this, { passive: true });
       container.addEventListener("mousedown", this, { passive: true });
     },
@@ -280,6 +279,10 @@ function Spinner(props, context) {
       switch (event.type) {
         case "scroll": {
           this._onScroll();
+          break;
+        }
+        case "scrollend": {
+          this._onScrollend();
           break;
         }
         case "mousedown": {
