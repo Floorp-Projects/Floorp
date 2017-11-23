@@ -1066,8 +1066,8 @@ add_task(async function test_contentscript_triggeringPrincipals() {
  * content page.
  */
 add_task(async function test_contentscript_csp() {
-  // We currently don't get the full set of CSP reports when running in network
-  // scheduling chaos mode (bug 1408193). It's not entirely clear why.
+  // TODO bug 1408193: We currently don't get the full set of CSP reports when
+  // running in network scheduling chaos mode. It's not entirely clear why.
   let chaosMode = parseInt(env.get("MOZ_CHAOSMODE"), 16);
   let checkCSPReports = !(chaosMode === 0 || chaosMode & 0x02);
 

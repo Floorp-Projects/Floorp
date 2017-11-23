@@ -22,6 +22,9 @@ var FormAssistant = {
   // Whether we're in the middle of an autocomplete.
   _doingAutocomplete: false,
 
+  // Last state received in "PanZoom:StateChange" observer.
+  _lastPanZoomState: "NOTHING",
+
   init: function() {
     Services.obs.addObserver(this, "PanZoom:StateChange");
   },
@@ -83,6 +86,7 @@ var FormAssistant = {
           // temporarily hide the form assist popup while we're panning or zooming the page
           this._hideFormAssistPopup(focused);
         }
+        this._lastPanZoomState = aData;
         break;
     }
   },
@@ -115,6 +119,9 @@ var FormAssistant = {
         if (this._showValidationMessage(currentElement) ||
             this._isAutoComplete(currentElement)) {
           this._currentFocusedElement = Cu.getWeakReference(currentElement);
+          // Start listening to resizes.
+          currentElement.ownerGlobal.addEventListener(
+              "resize", this, {capture: true, mozSystemGroup: true, once: true});
         }
         break;
       }
@@ -174,6 +181,18 @@ var FormAssistant = {
         };
 
         this._showAutoCompleteSuggestions(currentElement, checkResultsInput);
+        break;
+      }
+
+      case "resize": {
+        let focused = this.focusedElement;
+        if (focused && focused.ownerGlobal == aEvent.target) {
+          // Reposition the popup as in the case of pan/zoom.
+          this.observe(null, "PanZoom:StateChange", this._lastPanZoomState);
+          // Continue to listen to resizes.
+          focused.ownerGlobal.addEventListener(
+              "resize", this, {capture: true, mozSystemGroup: true, once: true});
+        }
         break;
       }
     }
@@ -349,11 +368,7 @@ var FormAssistant = {
       document = document.defaultView.frameElement.ownerDocument;
     }
 
-    let cwu = document.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIDOMWindowUtils);
-    let scrollX = {}, scrollY = {};
-    cwu.getScrollXY(false, scrollX, scrollY);
-
+    let scrollX = 0, scrollY = 0;
     let r = aElement.getBoundingClientRect();
 
     // step out of iframes and frames, offsetting scroll values
@@ -363,13 +378,13 @@ var FormAssistant = {
       let rect = frame.frameElement.getBoundingClientRect();
       let left = frame.getComputedStyle(frame.frameElement).borderLeftWidth;
       let top = frame.getComputedStyle(frame.frameElement).borderTopWidth;
-      scrollX.value += rect.left + parseInt(left);
-      scrollY.value += rect.top + parseInt(top);
+      scrollX += rect.left + parseInt(left);
+      scrollY += rect.top + parseInt(top);
     }
 
     return {
-      x: r.left + scrollX.value,
-      y: r.top + scrollY.value,
+      x: r.left + scrollX,
+      y: r.top + scrollY,
       w: r.width,
       h: r.height,
     };

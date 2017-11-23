@@ -827,9 +827,9 @@ add_task(async function ensureCanSync_handles_deleted_conflicts() {
 });
 
 add_task(async function ensureCanSync_handles_flushes() {
-  // One of the ways that bug 1359879 presents is as bug 1350088. This
-  // seems to be the symptom that results when the user had two
-  // devices, one of which was not syncing at the time the keyring was
+  // See Bug 1359879 and Bug 1350088. One of the ways that 1359879 presents is
+  // as 1350088. This seems to be the symptom that results when the user had
+  // two devices, one of which was not syncing at the time the keyring was
   // lost. Ensure we can recover for these users as well.
   const extensionId = uuid();
   const extensionId2 = uuid();

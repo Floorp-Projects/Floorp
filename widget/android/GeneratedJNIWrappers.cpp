@@ -1262,14 +1262,6 @@ const char LayerSession::Compositor::name[] =
 constexpr char LayerSession::Compositor::AttachToJava_t::name[];
 constexpr char LayerSession::Compositor::AttachToJava_t::signature[];
 
-constexpr char LayerSession::Compositor::ContentDocumentChanged_t::name[];
-constexpr char LayerSession::Compositor::ContentDocumentChanged_t::signature[];
-
-auto LayerSession::Compositor::ContentDocumentChanged() const -> void
-{
-    return mozilla::jni::Method<ContentDocumentChanged_t>::Call(Compositor::mCtx, nullptr);
-}
-
 constexpr char LayerSession::Compositor::CreateCompositor_t::name[];
 constexpr char LayerSession::Compositor::CreateCompositor_t::signature[];
 
@@ -1278,14 +1270,6 @@ constexpr char LayerSession::Compositor::DisposeNative_t::signature[];
 
 constexpr char LayerSession::Compositor::EnableLayerUpdateNotifications_t::name[];
 constexpr char LayerSession::Compositor::EnableLayerUpdateNotifications_t::signature[];
-
-constexpr char LayerSession::Compositor::IsContentDocumentDisplayed_t::name[];
-constexpr char LayerSession::Compositor::IsContentDocumentDisplayed_t::signature[];
-
-auto LayerSession::Compositor::IsContentDocumentDisplayed() const -> bool
-{
-    return mozilla::jni::Method<IsContentDocumentDisplayed_t>::Call(Compositor::mCtx, nullptr);
-}
 
 constexpr char LayerSession::Compositor::OnBoundsChanged_t::name[];
 constexpr char LayerSession::Compositor::OnBoundsChanged_t::signature[];

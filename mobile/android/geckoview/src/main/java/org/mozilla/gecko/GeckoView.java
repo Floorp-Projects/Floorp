@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.gecko.gfx.LayerView;
 
@@ -202,6 +203,10 @@ public class GeckoView extends LayerView {
 
     public GeckoSessionSettings getSettings() {
         return mSession.getSettings();
+    }
+
+    public DynamicToolbarAnimator getDynamicToolbarAnimator() {
+        return mSession.getDynamicToolbarAnimator();
     }
 
     @Override

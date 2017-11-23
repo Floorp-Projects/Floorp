@@ -143,7 +143,8 @@ task_description_schema = Schema({
         'job-name': basestring,
 
         # Type of gecko v2 index to use
-        'type': Any('generic', 'nightly', 'l10n', 'nightly-with-multi-l10n', 'release'),
+        'type': Any('generic', 'nightly', 'l10n', 'nightly-with-multi-l10n',
+                    'release', 'nightly-l10n'),
 
         # The rank that the task will receive in the TaskCluster
         # index.  A newly completed task supercedes the currently
@@ -581,6 +582,13 @@ V2_NIGHTLY_TEMPLATES = [
     "index.gecko.v2.{project}.nightly.{build_date}.revision.{head_rev}.{product}.{job-name}",
     "index.gecko.v2.{project}.nightly.{build_date}.latest.{product}.{job-name}",
     "index.gecko.v2.{project}.nightly.revision.{head_rev}.{product}.{job-name}",
+]
+
+V2_NIGHTLY_L10N_TEMPLATES = [
+    "index.gecko.v2.{project}.nightly.latest.{product}-l10n.{job-name}.{locale}",
+    "index.gecko.v2.{project}.nightly.{build_date}.revision.{head_rev}.{product}-l10n.{job-name}.{locale}",  # noqa - too long
+    "index.gecko.v2.{project}.nightly.{build_date}.latest.{product}-l10n.{job-name}.{locale}",
+    "index.gecko.v2.{project}.nightly.revision.{head_rev}.{product}-l10n.{job-name}.{locale}",
 ]
 
 V2_L10N_TEMPLATES = [
@@ -1194,6 +1202,41 @@ def add_l10n_index_routes(config, task, force_locale=None):
     return task
 
 
+@index_builder('nightly-l10n')
+def add_nightly_l10n_index_routes(config, task, force_locale=None):
+    index = task.get('index')
+    routes = task.setdefault('routes', [])
+
+    verify_index_job_name(index)
+
+    subs = config.params.copy()
+    subs['job-name'] = index['job-name']
+    subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
+                                            time.gmtime(config.params['build_date']))
+    subs['product'] = index['product']
+
+    locales = task['attributes'].get('chunk_locales',
+                                     task['attributes'].get('all_locales'))
+    # Some tasks has only one locale set
+    if task['attributes'].get('locale'):
+        locales = [task['attributes']['locale']]
+
+    if force_locale:
+        # Used for en-US and multi-locale
+        locales = [force_locale]
+
+    if not locales:
+        raise Exception("Error: Unable to use l10n index for tasks without locales")
+
+    for locale in locales:
+        for tpl in V2_NIGHTLY_L10N_TEMPLATES:
+            routes.append(tpl.format(locale=locale, **subs))
+
+    # Add locales at old route too
+    task = add_l10n_index_routes(config, task, force_locale=force_locale)
+    return task
+
+
 @transforms.add
 def add_index_routes(config, tasks):
     for task in tasks:
@@ -1503,13 +1546,15 @@ def check_v2_routes():
     with open(os.path.join(GECKO, "testing/mozharness/configs/routes.json"), "rb") as f:
         routes_json = json.load(f)
 
-    for key in ('routes', 'nightly', 'l10n'):
+    for key in ('routes', 'nightly', 'l10n', 'nightly-l10n'):
         if key == 'routes':
             tc_template = V2_ROUTE_TEMPLATES
         elif key == 'nightly':
             tc_template = V2_NIGHTLY_TEMPLATES
         elif key == 'l10n':
             tc_template = V2_L10N_TEMPLATES
+        elif key == 'nightly-l10n':
+            tc_template = V2_NIGHTLY_L10N_TEMPLATES + V2_L10N_TEMPLATES
 
         routes = routes_json[key]
 
