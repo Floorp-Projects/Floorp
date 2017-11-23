@@ -46,7 +46,7 @@ public:
     Done(aStatus);
   }
 
-  void Do(const string& aName, Host_8* aHost)
+  void Do(const string& aName, Host_9* aHost)
   {
     // Initialize the FileIO.
     mFileIO = aHost->CreateFileIO(this);
@@ -82,7 +82,7 @@ private:
 };
 
 void
-WriteRecord(Host_8* aHost,
+WriteRecord(Host_9* aHost,
             const std::string& aRecordName,
             const uint8_t* aData,
             uint32_t aNumBytes,
@@ -98,7 +98,7 @@ WriteRecord(Host_8* aHost,
 }
 
 void
-WriteRecord(Host_8* aHost,
+WriteRecord(Host_9* aHost,
             const std::string& aRecordName,
             const std::string& aData,
             function<void()> &&aOnSuccess,
@@ -141,7 +141,7 @@ public:
   {
   }
 
-  void Do(const string& aName, Host_8* aHost)
+  void Do(const string& aName, Host_9* aHost)
   {
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
@@ -176,7 +176,7 @@ private:
 };
 
 void
-ReadRecord(Host_8* aHost,
+ReadRecord(Host_9* aHost,
            const std::string& aRecordName,
            function<void(bool, const uint8_t*, uint32_t)>&& aOnReadComplete)
 {
@@ -208,7 +208,7 @@ public:
   {
   }
 
-  void Do(const string& aName, Host_8* aHost)
+  void Do(const string& aName, Host_9* aHost)
   {
     // Initialize the FileIO.
     mFileIO = aHost->CreateFileIO(this);
@@ -242,7 +242,7 @@ private:
 };
 
 void
-OpenRecord(Host_8* aHost,
+OpenRecord(Host_9* aHost,
            const std::string& aRecordName,
            function<void(bool)>&& aOpenComplete)
 {
