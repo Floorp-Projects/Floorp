@@ -16,6 +16,10 @@
 #include <windows.h>
 #endif
 
+#if defined(OS_FUCHSIA)
+#include <magenta/types.h>
+#endif
+
 namespace base {
 
 // ProcessHandle is a platform specific type which represents the underlying OS
@@ -27,6 +31,11 @@ typedef DWORD ProcessId;
 typedef HANDLE UserTokenHandle;
 const ProcessHandle kNullProcessHandle = NULL;
 const ProcessId kNullProcessId = 0;
+#elif defined(OS_FUCHSIA)
+typedef mx_handle_t ProcessHandle;
+typedef mx_koid_t ProcessId;
+const ProcessHandle kNullProcessHandle = MX_HANDLE_INVALID;
+const ProcessId kNullProcessId = MX_KOID_INVALID;
 #elif defined(OS_POSIX)
 // On POSIX, our ProcessHandle will just be the PID.
 typedef pid_t ProcessHandle;
@@ -34,6 +43,15 @@ typedef pid_t ProcessId;
 const ProcessHandle kNullProcessHandle = 0;
 const ProcessId kNullProcessId = 0;
 #endif  // defined(OS_WIN)
+
+// To print ProcessIds portably use CrPRIdPid (based on PRIuS and friends from
+// C99 and format_macros.h) like this:
+// base::StringPrintf("PID is %" CrPRIdPid ".\n", pid);
+#if defined(OS_WIN) || defined(OS_FUCHSIA)
+#define CrPRIdPid "ld"
+#else
+#define CrPRIdPid "d"
+#endif
 
 // Returns the id of the current process.
 // Note that on some platforms, this is not guaranteed to be unique across
@@ -68,8 +86,10 @@ BASE_EXPORT ProcessHandle GetCurrentProcessHandle();
 // processes.
 BASE_EXPORT ProcessId GetProcId(ProcessHandle process);
 
-// Returns the ID for the parent of the given process.
+#if !defined(OS_FUCHSIA)
+// Returns the ID for the parent of the given process. Not available on Fuchsia.
 BASE_EXPORT ProcessId GetParentProcessId(ProcessHandle process);
+#endif  // !defined(OS_FUCHSIA)
 
 #if defined(OS_POSIX)
 // Returns the path to the executable of the given process.

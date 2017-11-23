@@ -69,7 +69,10 @@ class SingletonBase {
 // Convert a short path (C:\path~1 or \\??\\c:\path~1) to the long version of
 // the path. If the path is not a valid filesystem path, the function returns
 // false and argument is not modified.
-bool ConvertToLongPath(base::string16* path);
+// - If passing in a short native device path (\Device\HarddiskVolumeX\path~1),
+//   a drive letter string (c:\) must also be provided.
+bool ConvertToLongPath(base::string16* path,
+                       const base::string16* drive_letter = nullptr);
 
 // Returns ERROR_SUCCESS if the path contains a reparse point,
 // ERROR_NOT_A_REPARSE_POINT if there's no reparse point in this path, or an

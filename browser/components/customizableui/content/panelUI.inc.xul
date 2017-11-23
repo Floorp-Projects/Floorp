@@ -9,7 +9,7 @@
        position="bottomcenter topright"
        photon="true"
        hidden="true">
-  <photonpanelmultiview mainViewId="widget-overflow-mainView" disablekeynav="true">
+  <panelmultiview mainViewId="widget-overflow-mainView" disablekeynav="true">
     <panelview id="widget-overflow-mainView"
                context="toolbar-context-menu">
       <vbox class="panel-subview-body">
@@ -24,7 +24,7 @@
                       accesskey="&overflowCustomizeToolbar.accesskey;"
                       label="&overflowCustomizeToolbar.label;"/>
     </panelview>
-  </photonpanelmultiview>
+  </panelmultiview>
   <!-- This menu is here because not having it in the menu in which it's used flickers
        when hover styles overlap. See https://bugzilla.mozilla.org/show_bug.cgi?id=1378427 .
        -->
@@ -164,8 +164,8 @@
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView"
-                        viewCacheId="appMenu-viewCache">
+  <panelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView"
+                  viewCacheId="appMenu-viewCache">
     <panelview id="appMenu-mainView" class="PanelUI-subView"
                descriptionheightworkaround="true">
       <vbox class="panel-subview-body">
@@ -667,7 +667,7 @@
                        label-checked="&hideBookmarksToolbar.label;"/>
       </vbox>
     </panelview>
-  </photonpanelmultiview>
+  </panelmultiview>
 </panel>
 
 <panel id="downloads-button-autohide-panel"

@@ -901,6 +901,15 @@ public:
   }
 
   /**
+   * Called when the document was decoded as UTF-8 and decoder encountered no
+   * errors.
+   */
+  void DisableEncodingMenu()
+  {
+    mEncodingMenuDisabled = true;
+  }
+
+  /**
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
    */
@@ -3591,6 +3600,9 @@ protected:
 
   // True if the document is allowed to use PaymentRequest.
   bool mAllowPaymentRequest : 1;
+
+  // True if the encoding menu should be disabled.
+  bool mEncodingMenuDisabled : 1;
 
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };

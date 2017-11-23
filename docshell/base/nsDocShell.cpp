@@ -3864,7 +3864,6 @@ ItemIsActive(nsIDocShellTreeItem* aItem)
 {
   if (nsCOMPtr<nsPIDOMWindowOuter> window = aItem->GetWindow()) {
     auto* win = nsGlobalWindowOuter::Cast(window);
-    MOZ_ASSERT(win->IsOuterWindow());
     if (!win->GetClosedOuter()) {
       return true;
     }

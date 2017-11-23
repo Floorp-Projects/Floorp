@@ -17,8 +17,6 @@
 
 namespace sandbox {
 
-enum EvalResult;
-
 // This class centralizes most of the knowledge related to sync policy
 class SyncPolicy {
  public:

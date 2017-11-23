@@ -2848,8 +2848,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 
   if (aLoadInfo.mWindow) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aLoadInfo.mWindow->IsInnerWindow(),
-               "Should have inner window here!");
     BindToOwner(aLoadInfo.mWindow);
   }
 

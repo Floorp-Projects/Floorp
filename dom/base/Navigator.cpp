@@ -168,7 +168,6 @@ Navigator::Init()
 Navigator::Navigator(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
-  MOZ_ASSERT(aWindow->IsInnerWindow(), "Navigator must get an inner window!");
 }
 
 Navigator::~Navigator()
@@ -1628,8 +1627,6 @@ Navigator::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 void
 Navigator::SetWindow(nsPIDOMWindowInner *aInnerWindow)
 {
-  NS_ASSERTION(aInnerWindow->IsInnerWindow(),
-               "Navigator must get an inner window!");
   mWindow = aInnerWindow;
 }
 
@@ -1712,7 +1709,6 @@ Navigator::GetWindowFromGlobal(JSObject* aGlobal)
 {
   nsCOMPtr<nsPIDOMWindowInner> win =
     do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(aGlobal));
-  MOZ_ASSERT(!win || win->IsInnerWindow());
   return win.forget();
 }
 

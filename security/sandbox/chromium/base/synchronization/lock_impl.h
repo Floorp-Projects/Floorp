@@ -6,12 +6,14 @@
 #define BASE_SYNCHRONIZATION_LOCK_IMPL_H_
 
 #include "base/base_export.h"
+#include "base/logging.h"
 #include "base/macros.h"
 #include "build/build_config.h"
 
 #if defined(OS_WIN)
 #include <windows.h>
 #elif defined(OS_POSIX)
+#include <errno.h>
 #include <pthread.h>
 #endif
 
@@ -26,7 +28,7 @@ class BASE_EXPORT LockImpl {
 #if defined(OS_WIN)
   using NativeHandle = SRWLOCK;
 #elif defined(OS_POSIX)
-  using NativeHandle =  pthread_mutex_t;
+  using NativeHandle = pthread_mutex_t;
 #endif
 
   LockImpl();
@@ -41,7 +43,7 @@ class BASE_EXPORT LockImpl {
 
   // Release the lock.  This must only be called by the lock's holder: after
   // a successful call to Try, or a call to Lock.
-  void Unlock();
+  inline void Unlock();
 
   // Return the native underlying lock.
   // TODO(awalker): refactor lock and condition variables so that this is
@@ -58,6 +60,17 @@ class BASE_EXPORT LockImpl {
 
   DISALLOW_COPY_AND_ASSIGN(LockImpl);
 };
+
+#if defined(OS_WIN)
+void LockImpl::Unlock() {
+  ::ReleaseSRWLockExclusive(&native_handle_);
+}
+#elif defined(OS_POSIX)
+void LockImpl::Unlock() {
+  int rv = pthread_mutex_unlock(&native_handle_);
+  DCHECK_EQ(rv, 0) << ". " << strerror(rv);
+}
+#endif
 
 }  // namespace internal
 }  // namespace base

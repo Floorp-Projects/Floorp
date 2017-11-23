@@ -20,7 +20,7 @@ var BrowserPageActions = {
   },
 
   /**
-   * The photonmultiview node in the main page action panel (DOM node)
+   * The panelmultiview node in the main page action panel (DOM node)
    */
   get multiViewNode() {
     delete this.multiViewNode;
@@ -234,7 +234,7 @@ var BrowserPageActions = {
     let iframeNode = null;
 
     if (action.subview) {
-      let multiViewNode = document.createElement("photonpanelmultiview");
+      let multiViewNode = document.createElement("panelmultiview");
       panelViewNode = this._makePanelViewNodeForAction(action, true);
       multiViewNode.appendChild(panelViewNode);
       panelNode.appendChild(multiViewNode);

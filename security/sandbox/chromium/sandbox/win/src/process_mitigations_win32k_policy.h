@@ -12,8 +12,6 @@
 
 namespace sandbox {
 
-enum EvalResult;
-
 // A callback function type to get a function for testing.
 typedef void* (*OverrideForTestFunction)(const char* name);
 

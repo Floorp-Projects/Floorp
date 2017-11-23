@@ -26,10 +26,6 @@ void PlatformThreadLocalStorage::FreeTLS(TLSKey key) {
   DCHECK(ret);
 }
 
-void* PlatformThreadLocalStorage::GetTLSValue(TLSKey key) {
-  return TlsGetValue(key);
-}
-
 void PlatformThreadLocalStorage::SetTLSValue(TLSKey key, void* value) {
   BOOL ret = TlsSetValue(key, value);
   DCHECK(ret);

@@ -22,7 +22,6 @@
 %define panelPaletteIconSize 16px
 
 :root {
-  --panel-ui-exit-subview-gutter-width: 38px;
   --appmenu-yellow-warning-border-color: hsl(45, 100%, 77%);
   --appmenu-yellow-warning-color: #FFEFBF;
   --appmenu-yellow-warning-hover-color: #FFE8A2;
@@ -114,26 +113,11 @@
   background: #FFBF00 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
 }
 
-.panel-subviews {
-  padding: 4px;
-  background-clip: padding-box;
-  border-left: 1px solid var(--arrowpanel-border-color);
-  box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
-              0 0 7px hsla(210,4%,10%,.1);
-  margin-inline-start: var(--panel-ui-exit-subview-gutter-width);
-}
-
-.panel-viewstack[viewtype="main"] > .panel-subviews {
-  transform: translateX(@menuPanelWidth@);
-}
-
-.panel-viewstack[viewtype="main"] > .panel-subviews:-moz-locale-dir(rtl) {
-  transform: translateX(-@menuPanelWidth@);
-}
-
 panelview {
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
+  background: var(--arrowpanel-background);
+  padding: 0;
 }
 
 /* This section is to anchor all the drop down panels at the same height, shift the
@@ -200,6 +184,7 @@ panelview {
   overflow-y: auto;
   overflow-x: hidden;
   -moz-box-flex: 1;
+  padding: 6px 0;
 }
 
 .panel-view-body-unscrollable {
@@ -242,8 +227,7 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   margin-inline-start: 0;
 }
 
-#BMB_bookmarksPopup,
-.panel-mainview {
+#BMB_bookmarksPopup {
   max-width: @standaloneSubviewWidth@;
 }
 
@@ -323,11 +307,6 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   opacity: 1;
 }
 
-/* Give WebExtension stand-alone panels extra width for Chrome compatibility */
-.cui-widget-panel[viewId^=PanelUI-webext-] .panel-mainview {
-  max-width: 800px;
-}
-
 .cui-widget-panel[viewId^=PanelUI-webext-] > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
@@ -347,15 +326,8 @@ panelview:not([mainview]) .toolbarbutton-text,
   padding: 4px 0;
 }
 
-/* START photonpanelview adjustments */
-
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
 panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-}
-
-photonpanelmultiview panelview {
-  background: var(--arrowpanel-background);
   padding: 0;
 }
 
@@ -376,12 +348,6 @@ photonpanelmultiview panelview {
 #appMenu-popup[touchmode] panelview {
   min-width: calc(@menuPanelWidth@ + 32px);
 }
-
-photonpanelmultiview .panel-subview-body {
-  padding: 6px 0;
-}
-
-/* END photonpanelview adjustments */
 
 .cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {
   padding-bottom: 0;
@@ -461,7 +427,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   content: "";
   width: 16px;
   height: 16px;
-  margin-inline-end: 16.5px;
+  margin-inline-start: 10px;
+  margin-inline-end: 12px;
   display: -moz-box;
 }
 
@@ -904,25 +871,9 @@ panelview .toolbarbutton-1,
   color: inherit;
 }
 
-/* START photon adjustments */
-
 .subviewbutton[checked="true"] {
-  background: url(chrome://browser/skin/check.svg) center left 7px / 11px 11px no-repeat transparent;
-  fill: currentColor;
-}
-
-.subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
-  background-position: center right 7px;
-}
-
-photonpanelmultiview .subviewbutton[checked="true"] {
-  background: none;
   list-style-image: url(chrome://browser/skin/check.svg);
-}
-
-photonpanelmultiview .subviewbutton > .menu-iconic-left {
-  -moz-appearance: none;
-  margin-inline-end: 0;
+  fill: currentColor;
 }
 
 #appMenu-popup .toolbaritem-combined-buttons {
@@ -933,22 +884,22 @@ photonpanelmultiview .subviewbutton > .menu-iconic-left {
   margin-inline-end: 8px;
 }
 
-photonpanelmultiview .toolbaritem-combined-buttons > label {
+panelmultiview .toolbaritem-combined-buttons > label {
   -moz-box-flex: 1;
   font: menu;
   margin: 0;
 }
 
-photonpanelmultiview .toolbaritem-combined-buttons > spacer.before-label {
+panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   width: 36px; /* 12px toolbarbutton padding + 16px icon + 8px label padding start */
 }
 
-photonpanelmultiview .toolbaritem-combined-buttons > spacer.after-label {
+panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   -moz-box-flex: 1;
   width: 20px; /* a little bigger than the width of the scrollbar */
 }
 
-photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton {
+.PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton {
   -moz-box-flex: 0;
   height: auto;
   margin-inline-start: 18px;
@@ -975,43 +926,32 @@ photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbu
   margin-inline-start: 0;
 }
 
-photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons >
-  .subviewbutton-iconic > .toolbarbutton-text,
-photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons >
-  .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-icon {
+.PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton-iconic > .toolbarbutton-text,
+.PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-icon {
   display: none;
 }
 
 /* Using this selector, because this way the hover and active selectors will apply properly. */
-photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons >
-  .subviewbutton:not(.subviewbutton-iconic) {
+.PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) {
   background-color: #f9f9f9;
   border: 1px solid #e1e1e1;
   border-radius: 10000px;
   padding: 1px 8px;
 }
 
-photonpanelmultiview .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
+.toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
   font-size: 1em;
   padding-inline-start: 0;
 }
 
-photonpanelmultiview .addon-banner-item::after,
-photonpanelmultiview .panel-banner-item::after {
-  margin-inline-end: 12px;
-  margin-inline-start: 10px;
-}
-
-photonpanelmultiview .subview-subheader {
+.subview-subheader {
   color: GrayText;
 }
 
-photonpanelmultiview .subview-subheader,
-photonpanelmultiview .panel-subview-footer {
+.subview-subheader,
+.panel-subview-footer {
   font: menu;
 }
-
-/* END photon adjustments */
 
 panelview .toolbarbutton-1 {
   margin-top: 6px;
@@ -1108,10 +1048,14 @@ menuitem.panel-subview-footer@menuStateActive@,
   padding: 0;
 }
 
-.PanelUI-subView menuseparator,
-.PanelUI-subView toolbarseparator {
+.PanelUI-subView menuseparator {
   margin-inline-start: -5px;
   margin-inline-end: -4px;
+}
+
+.PanelUI-subView toolbarseparator {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 .PanelUI-subView menuseparator.small-separator,
@@ -1240,7 +1184,6 @@ toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton 
   padding: 0;
 }
 
-.cui-widget-panelview,
 #widget-overflow-mainView .panel-subview-body {
   overflow-y: auto;
   overflow-x: hidden;
@@ -1293,14 +1236,13 @@ toolbarpaletteitem[place=panel] > .subviewbutton-nav::after {
 
 .subviewbutton > .menu-iconic-left {
   -moz-appearance: none;
-  margin-inline-end: 3px;
+  margin-inline-end: 0;
 }
 
 menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   visibility: hidden;
 }
 
-.panel-mainview[panelid=customizationui-widget-panel],
 #PanelUI-panicView > .panel-subview-body,
 #PanelUI-panicView {
   overflow: visible;
@@ -1493,8 +1435,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   }
 }
 
-/* START photon adjustments */
-
 .panel-header {
   align-items: center;
   border-bottom: 1px solid var(--panel-separator-color);
@@ -1514,7 +1454,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   text-align: center;
 }
 
-photonpanelmultiview .PanelUI-subView .panel-header > .subviewbutton-back {
+.PanelUI-subView .panel-header > .subviewbutton-back {
   -moz-context-properties: fill;
   fill: var(--arrowpanel-color);
   list-style-image: url(chrome://browser/skin/arrow-left.svg);
@@ -1531,18 +1471,7 @@ photonpanelmultiview .PanelUI-subView .panel-header > .subviewbutton-back {
   display: none !important;
 }
 
-photonpanelmultiview .PanelUI-subView toolbarseparator {
-  margin-inline-start: 0;
-  margin-inline-end: 0;
-}
-
-/* This is explicitly overriding the overflow properties set above. */
-photonpanelmultiview .cui-widget-panelview {
-  overflow-x: visible;
-  overflow-y: visible;
-}
-
-photonpanelmultiview #panelMenu_pocket {
+#panelMenu_pocket {
   display: none;
 }
 
@@ -1597,5 +1526,3 @@ photonpanelmultiview #panelMenu_pocket {
 .subviewbutton.download:-moz-any([openLabel],[retryLabel]) > .action-button@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-even-further);
 }
-
-/* END photon adjustments */

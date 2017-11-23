@@ -13,6 +13,7 @@
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/handle_closer_agent.h"
 #include "sandbox/win/src/handle_interception.h"
+#include "sandbox/win/src/heap_helper.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/process_mitigations.h"
 #include "sandbox/win/src/restricted_token_utils.h"
@@ -21,6 +22,7 @@
 #include "sandbox/win/src/sandbox_types.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 
+namespace sandbox {
 namespace {
 
 // Flushing a cached key is triggered by just opening the key and closing the
@@ -46,16 +48,35 @@ bool FlushCachedRegHandles() {
           FlushRegKey(HKEY_USERS));
 }
 
+// Cleans up this process if CSRSS will be disconnected, as this disconnection
+// is not supported Windows behavior.
+// Currently, this step requires closing a heap that this shared with csrss.exe.
+// Closing the ALPC Port handle to csrss.exe leaves this heap in an invalid
+// state. This causes problems if anyone enumerates the heap.
+bool CsrssDisconnectCleanup() {
+  HANDLE csr_port_heap = FindCsrPortHeap();
+  if (!csr_port_heap) {
+    DLOG(ERROR) << "Failed to find CSR Port heap handle";
+    return false;
+  }
+  HeapDestroy(csr_port_heap);
+  return true;
+}
+
 // Checks if we have handle entries pending and runs the closer.
 // Updates is_csrss_connected based on which handle types are closed.
 bool CloseOpenHandles(bool* is_csrss_connected) {
-  if (sandbox::HandleCloserAgent::NeedsHandlesClosed()) {
-    sandbox::HandleCloserAgent handle_closer;
+  if (HandleCloserAgent::NeedsHandlesClosed()) {
+    HandleCloserAgent handle_closer;
     handle_closer.InitializeHandlesToClose(is_csrss_connected);
+    if (!*is_csrss_connected) {
+      if (!CsrssDisconnectCleanup()) {
+        return false;
+      }
+    }
     if (!handle_closer.CloseHandles())
       return false;
   }
-
   return true;
 }
 
@@ -99,12 +120,11 @@ bool WarmupWindowsLocales() {
 // are not available early. We can't use a regular function static because on
 // VS2015, because the CRT tries to acquire a lock to guard initialization, but
 // this code runs before the CRT is initialized.
-char g_target_services_memory[sizeof(sandbox::TargetServicesBase)];
-sandbox::TargetServicesBase* g_target_services = nullptr;
+char g_target_services_memory[sizeof(TargetServicesBase)];
+TargetServicesBase* g_target_services = nullptr;
 
 }  // namespace
 
-namespace sandbox {
 
 SANDBOX_INTERCEPT IntegrityLevel g_shared_delayed_integrity_level =
     INTEGRITY_LEVEL_LAST;

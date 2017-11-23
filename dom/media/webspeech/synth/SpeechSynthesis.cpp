@@ -61,7 +61,6 @@ SpeechSynthesis::SpeechSynthesis(nsPIDOMWindowInner* aParent)
   , mHoldQueue(false)
   , mInnerID(aParent->WindowID())
 {
-  MOZ_ASSERT(aParent->IsInnerWindow());
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
