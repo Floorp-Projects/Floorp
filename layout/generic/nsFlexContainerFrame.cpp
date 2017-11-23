@@ -157,6 +157,49 @@ ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL)
   return NS_STYLE_ALIGN_FLEX_START;
 }
 
+// Helper-function to find the first non-anonymous-box descendent of aFrame.
+static nsIFrame*
+GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
+{
+  while (aFrame) {
+    nsAtom* pseudoTag = aFrame->StyleContext()->GetPseudo();
+
+    // If aFrame isn't an anonymous container, then it'll do.
+    if (!pseudoTag ||                                 // No pseudotag.
+        !nsCSSAnonBoxes::IsAnonBox(pseudoTag) ||      // Pseudotag isn't anon.
+        nsCSSAnonBoxes::IsNonElement(pseudoTag)) {    // Text, not a container.
+      break;
+    }
+
+    // Otherwise, descend to its first child and repeat.
+
+    // SPECIAL CASE: if we're dealing with an anonymous table, then it might
+    // be wrapping something non-anonymous in its caption or col-group lists
+    // (instead of its principal child list), so we have to look there.
+    // (Note: For anonymous tables that have a non-anon cell *and* a non-anon
+    // column, we'll always return the column. This is fine; we're really just
+    // looking for a handle to *anything* with a meaningful content node inside
+    // the table, for use in DOM comparisons to things outside of the table.)
+    if (MOZ_UNLIKELY(aFrame->IsTableWrapperFrame())) {
+      nsIFrame* captionDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kCaptionList).FirstChild());
+      if (captionDescendant) {
+        return captionDescendant;
+      }
+    } else if (MOZ_UNLIKELY(aFrame->IsTableFrame())) {
+      nsIFrame* colgroupDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kColGroupList).FirstChild());
+      if (colgroupDescendant) {
+        return colgroupDescendant;
+      }
+    }
+
+    // USUAL CASE: Descend to the first child in principal list.
+    aFrame = aFrame->PrincipalChildList().FirstChild();
+  }
+  return aFrame;
+}
+
 // Indicates whether advancing along the given axis is equivalent to
 // increasing our X or Y position (as opposed to decreasing it).
 static inline bool
@@ -4311,10 +4354,32 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // each item.
       for (const FlexItem* item = line->GetFirstItem(); item;
            item = item->getNext()) {
+        nsIFrame* frame = item->Frame();
+
+        // The frame may be for an element, or it may be for an
+        // anonymous flex item, e.g. wrapping one or more text nodes.
+        // DevTools wants the content node for the actual child in
+        // the DOM tree, so we descend through anonymous boxes.
+        nsIFrame* targetFrame = GetFirstNonAnonBoxDescendant(frame);
+        nsIContent* content = targetFrame->GetContent();
+
+        // Skip over content that is only whitespace, which might
+        // have been broken off from a text node which is our real
+        // target.
+        while (content && content->TextIsOnlyWhitespace()) {
+          // If content is only whitespace, try the frame sibling.
+          targetFrame = targetFrame->GetNextSibling();
+          if (targetFrame) {
+            content = targetFrame->GetContent();
+          } else {
+            content = nullptr;
+          }
+        }
+
         ComputedFlexItemInfo* itemInfo =
           lineInfo->mItems.AppendElement();
 
-        itemInfo->mNode = item->Frame()->GetContent();
+        itemInfo->mNode = content;
 
         // mMainBaseSize and itemInfo->mMainDeltaSize will
         // be filled out in ResolveFlexibleLengths().
