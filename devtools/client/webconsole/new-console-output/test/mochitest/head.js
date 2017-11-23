@@ -394,6 +394,23 @@ async function openConsole(tab) {
 }
 
 /**
+ * Close the Web Console for the given tab.
+ *
+ * @param nsIDOMElement [tab]
+ *        Optional tab element for which you want close the Web Console.
+ *        Defaults to current selected tab.
+ * @return object
+ *         A promise that is resolved once the web console is closed.
+ */
+async function closeConsole(tab = gBrowser.selectedTab) {
+  let target = TargetFactory.forTab(tab);
+  let toolbox = gDevTools.getToolbox(target);
+  if (toolbox) {
+    await toolbox.destroy();
+  }
+}
+
+/**
  * Fake clicking a link and return the URL we would have navigated to.
  * This function should be used to check external links since we can't access
  * network in tests.
