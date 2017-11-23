@@ -17,7 +17,7 @@
     <resources>
       <stylesheet src="chrome://browser/content/customizableui/panelUI.css"/>
     </resources>
-    <content>
+    <content data-subviewbutton-tooltip="&backCmd.label;">
       <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,transitioning">
         <xul:box anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
           <children includes="panelview"/>
@@ -36,38 +36,6 @@
       <destructor><![CDATA[
         this.instance.destructor();
       ]]></destructor>
-    </implementation>
-  </binding>
-
-  <binding id="panelview">
-    <content>
-      <xul:box class="panel-header" anonid="header">
-        <xul:toolbarbutton anonid="back"
-                           class="subviewbutton subviewbutton-iconic subviewbutton-back"
-                           closemenu="none"
-                           tabindex="0"
-                           tooltip="&backCmd.label;"
-                           oncommand="document.getBindingParent(this).panelMultiView.goBack(); this.blur()"/>
-        <xul:label xbl:inherits="value=title"/>
-      </xul:box>
-      <children/>
-    </content>
-    <implementation>
-      <property name="header"
-                readonly="true"
-                onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'header');"/>
-      <property name="backButton"
-                readonly="true"
-                onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'back');"/>
-      <property name="panelMultiView" readonly="true">
-        <getter><![CDATA[
-          if (!this.parentNode.localName.endsWith("panelmultiview")) {
-            return document.getBindingParent(this.parentNode);
-          }
-
-          return this.parentNode;
-        ]]></getter>
-      </property>
     </implementation>
   </binding>
 </bindings>
