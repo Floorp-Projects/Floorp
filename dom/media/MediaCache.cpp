@@ -1551,7 +1551,8 @@ MediaCache::Update()
   for (uint32_t i = 0; i < mSuspendedStatusToNotify.Length(); ++i) {
     MediaCache::ResourceStreamIterator iter(this, mSuspendedStatusToNotify[i]);
     while (MediaCacheStream* stream = iter.Next()) {
-      stream->mClient->CacheClientNotifySuspendedStatusChanged();
+      stream->mClient->CacheClientNotifySuspendedStatusChanged(
+        stream->AreAllStreamsForResourceSuspended());
     }
   }
   mSuspendedStatusToNotify.Clear();
