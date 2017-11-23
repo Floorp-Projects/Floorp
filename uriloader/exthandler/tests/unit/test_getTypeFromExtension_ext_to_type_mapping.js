@@ -30,8 +30,11 @@ function run_test() {
     mimeService.getTypeFromExtension(kTestExtension);
     // The line above should have thrown an exception.
     do_throw("nsIMIMEService.getTypeFromExtension succeeded unexpectedly");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_ERROR_NOT_AVAILABLE)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException) ||
+        e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+      throw e;
+    }
     // This is an expected exception, thrown if the type can't be determined.
     // Any other exception would cause the test to fail.
   }
