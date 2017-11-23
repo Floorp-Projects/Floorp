@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -17,35 +17,75 @@ const StackTrace = createFactory(require("devtools/client/shared/components/Stac
  * This component represents a side panel responsible for
  * rendering stack-trace info for selected request.
  */
-function StackTracePanel({
-  connector,
-  openLink,
-  request,
-  sourceMapService,
-}) {
-  let { stacktrace } = request.cause;
+class StackTracePanel extends Component {
+  static get propTypes() {
+    return {
+      connector: PropTypes.object.isRequired,
+      request: PropTypes.object.isRequired,
+      sourceMapService: PropTypes.object,
+      openLink: PropTypes.func,
+    };
+  }
 
-  return (
-    div({ className: "panel-container" },
-      StackTrace({
-        stacktrace,
-        onViewSourceInDebugger: ({ url, line }) => {
-          return connector.viewSourceInDebugger(url, line);
-        },
-        sourceMapService,
-        openLink,
-      }),
-    )
-  );
+  /**
+   * `componentDidMount` is called when opening the StackTracePanel
+   * for the first time
+   */
+  componentDidMount() {
+    this.maybeFetchStackTrace(this.props);
+  }
+
+  /**
+   * `componentWillReceiveProps` is the only method called when
+   * switching between two requests while this panel is displayed.
+   */
+  componentWillReceiveProps(nextProps) {
+    this.maybeFetchStackTrace(nextProps);
+  }
+
+  /**
+   * When switching to another request, lazily fetch stack-trace
+   * from the backend. This Panel will first be empty and then
+   * display the content.
+   */
+  maybeFetchStackTrace(props) {
+    // Fetch stack trace only if it's available and not yet
+    // on the client.
+    if (!props.request.stacktrace &&
+      props.request.cause.stacktraceAvailable) {
+      // This method will set `props.request.stacktrace`
+      // asynchronously and force another render.
+      props.connector.requestData(props.request.id, "stackTrace");
+    }
+  }
+
+  // Rendering
+
+  render() {
+    let {
+      connector,
+      openLink,
+      request,
+      sourceMapService,
+    } = this.props;
+
+    let {
+      stacktrace = []
+    } = request;
+
+    return (
+      div({ className: "panel-container" },
+        StackTrace({
+          stacktrace,
+          onViewSourceInDebugger: ({ url, line }) => {
+            return connector.viewSourceInDebugger(url, line);
+          },
+          sourceMapService,
+          openLink,
+        }),
+      )
+    );
+  }
 }
-
-StackTracePanel.displayName = "StackTracePanel";
-
-StackTracePanel.propTypes = {
-  connector: PropTypes.object.isRequired,
-  request: PropTypes.object.isRequired,
-  sourceMapService: PropTypes.object,
-  openLink: PropTypes.func,
-};
 
 module.exports = StackTracePanel;

@@ -10128,23 +10128,6 @@ nsContentUtils::UnregisterUnresolvedElement(Element* aElement)
   registry->UnregisterUnresolvedElement(aElement, typeAtom);
 }
 
-/* static */ CustomElementDefinition*
-nsContentUtils::GetElementDefinitionIfObservingAttr(Element* aCustomElement,
-                                                    nsAtom* aExtensionType,
-                                                    nsAtom* aAttrName)
-{
-  CustomElementDefinition* definition =
-    aCustomElement->GetCustomElementDefinition();
-
-  // Custom element not defined yet or attribute is not in the observed
-  // attribute list.
-  if (!definition || !definition->IsInObservedAttributeList(aAttrName)) {
-    return nullptr;
-  }
-
-  return definition;
-}
-
 /* static */ void
 nsContentUtils::EnqueueUpgradeReaction(Element* aElement,
                                        CustomElementDefinition* aDefinition)

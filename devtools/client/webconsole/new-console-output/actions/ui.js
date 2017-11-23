@@ -25,7 +25,7 @@ function filterBarToggle(show) {
       type: FILTER_BAR_TOGGLE,
     });
     const uiState = getAllUi(getState());
-    Services.prefs.setBoolPref(PREFS.UI.FILTER_BAR, uiState.get("filterBarVisible"));
+    Services.prefs.setBoolPref(PREFS.UI.FILTER_BAR, uiState.filterBarVisible);
   };
 }
 
@@ -35,7 +35,7 @@ function persistToggle(show) {
       type: PERSIST_TOGGLE,
     });
     const uiState = getAllUi(getState());
-    Services.prefs.setBoolPref(PREFS.UI.PERSIST, uiState.get("persistLogs"));
+    Services.prefs.setBoolPref(PREFS.UI.PERSIST, uiState.persistLogs);
   };
 }
 

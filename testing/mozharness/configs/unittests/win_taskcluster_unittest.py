@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 
 # OS Specifics
@@ -9,6 +10,16 @@ XPCSHELL_NAME = 'xpcshell.exe'
 EXE_SUFFIX = '.exe'
 DISABLE_SCREEN_SAVER = False
 ADJUST_MOUSE_AND_SCREEN = True
+DESKTOP_VISUALFX_THEME = {
+    'Let Windows choose': 0,
+    'Best appearance': 1,
+    'Best performance': 2,
+    'Custom': 3
+}.get('Best appearance')
+TASKBAR_AUTOHIDE_REG_PATH = {
+    'Windows 7': 'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects2',
+    'Windows 10': 'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3'
+}.get('{} {}'.format(platform.system(), platform.release()))
 #####
 config = {
     "exes": {
@@ -263,14 +274,34 @@ config = {
             'enabled': ADJUST_MOUSE_AND_SCREEN
         },
         {
-            'name': 'hide win 10 taskbar',
+            'name': 'set windows VisualFX',
             'cmd': [
                 'powershell', '-command',
-                '"&{$p=\'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3\';$v=(Get-ItemProperty -Path $p).Settings;$v[8]=3;&Set-ItemProperty -Path $p -Name Settings -Value $v;&Stop-Process -ProcessName explorer}"'
+                '"&{{&Set-ItemProperty -Path \'HKCU:Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\' -Name VisualFXSetting -Value {}}}"'.format(DESKTOP_VISUALFX_THEME)
             ],
             'architectures': ['32bit', '64bit'],
             'halt_on_failure': True,
-            'enabled': os.environ.get('ProgramFiles(x86)', False)
+            'enabled': True
+        },
+        {
+            'name': 'hide windows taskbar',
+            'cmd': [
+                'powershell', '-command',
+                '"&{{$p=\'{}\';$v=(Get-ItemProperty -Path $p).Settings;$v[8]=3;&Set-ItemProperty -Path $p -Name Settings -Value $v}}"'.format(TASKBAR_AUTOHIDE_REG_PATH)
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': True
+        },
+        {
+            'name': 'restart windows explorer',
+            'cmd': [
+                'powershell', '-command',
+                '"&{&Stop-Process -ProcessName explorer}"'
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': True
         },
     ],
     "vcs_output_timeout": 1000,

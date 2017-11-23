@@ -13,7 +13,7 @@ from shared_telemetry_utils import ParserError
 import sys
 import parse_scalars
 
-banner = """/* This file is auto-generated, see gen-scalar-enum.py.  */
+banner = """/* This file is auto-generated, see gen_scalar_enum.py.  */
 """
 
 file_header = """\

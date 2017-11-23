@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
 
-use webrender_api::*;
+use webrender::api::*;
 use webrender::{ReadPixelsFormat, Renderer, RendererOptions, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
@@ -25,8 +25,6 @@ use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
 use core_foundation::string::CFString;
 #[cfg(target_os = "macos")]
 use core_graphics::font::CGFont;
-
-extern crate webrender_api;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrExternalImageBufferType = ExternalImageType;
@@ -78,7 +76,8 @@ pub struct DocumentHandle {
 
 impl DocumentHandle {
     pub fn new(api: RenderApi, size: DeviceUintSize) -> DocumentHandle {
-        let doc = api.add_document(size);
+        let layer = 0; //TODO
+        let doc = api.add_document(size, layer);
         DocumentHandle {
             api: api,
             document_id: doc
@@ -446,23 +445,29 @@ extern "C" {
                                   raw_event: usize);
 }
 
-impl webrender_api::RenderNotifier for CppNotifier {
-    fn clone(&self) -> Box<webrender_api::RenderNotifier> {
+impl RenderNotifier for CppNotifier {
+    fn clone(&self) -> Box<RenderNotifier> {
         Box::new(CppNotifier {
             window_id: self.window_id,
         })
     }
 
-    fn new_frame_ready(&self) {
+    fn wake_up(&self) {
         unsafe {
             wr_notifier_new_frame_ready(self.window_id);
         }
     }
 
-    fn new_scroll_frame_ready(&self,
-                              composite_needed: bool) {
+    fn new_document_ready(&self,
+                          _: DocumentId,
+                          scrolled: bool,
+                          composite_needed: bool) {
         unsafe {
-            wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
+            if scrolled {
+                wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
+            } else {
+                wr_notifier_new_frame_ready(self.window_id);
+            }
         }
     }
 
@@ -1166,7 +1171,7 @@ pub unsafe extern "C" fn wr_api_get_namespace(dh: &mut DocumentHandle) -> WrIdNa
 
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: WrPipelineId,
-    pub dl_builder: webrender_api::DisplayListBuilder,
+    pub dl_builder: DisplayListBuilder,
 }
 
 impl WebRenderFrameBuilder {
@@ -1174,7 +1179,7 @@ impl WebRenderFrameBuilder {
                content_size: LayoutSize) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
-            dl_builder: webrender_api::DisplayListBuilder::new(root_pipeline_id, content_size),
+            dl_builder: DisplayListBuilder::new(root_pipeline_id, content_size),
         }
     }
     pub fn with_capacity(root_pipeline_id: WrPipelineId,
@@ -1182,7 +1187,7 @@ impl WebRenderFrameBuilder {
                capacity: usize) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
-            dl_builder: webrender_api::DisplayListBuilder::with_capacity(root_pipeline_id, content_size, capacity),
+            dl_builder: DisplayListBuilder::with_capacity(root_pipeline_id, content_size, capacity),
         }
     }
 
@@ -1300,7 +1305,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
-                                webrender_api::ScrollPolicy::Scrollable,
+                                ScrollPolicy::Scrollable,
                                 transform_binding,
                                 transform_style,
                                 perspective,
@@ -1928,7 +1933,7 @@ pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_set_item_tag(state: &mut WrState,
                                   scroll_id: u64,
-                                  hit_info: u8) {
+                                  hit_info: u16) {
     state.current_tag = Some((scroll_id, hit_info));
 }
 
@@ -1942,7 +1947,7 @@ pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle,
                                   point: WorldPoint,
                                   out_pipeline_id: &mut WrPipelineId,
                                   out_scroll_id: &mut u64,
-                                  out_hit_info: &mut u8) -> bool {
+                                  out_hit_info: &mut u16) -> bool {
     let result = dh.api.hit_test(dh.document_id, None, point, HitTestFlags::empty());
     for item in &result.items {
         // For now we should never be getting results back for which the tag is

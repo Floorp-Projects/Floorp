@@ -145,7 +145,7 @@ BrowserToolboxProcess.prototype = {
     // We mainly need a root actor and tab actors for opening a toolbox, even
     // against chrome/content/addon. But the "no auto hide" button uses the
     // preference actor, so also register the browser actors.
-    this.debuggerServer.registerActors({ root: true, browser: true, tab: true });
+    this.debuggerServer.registerAllActors();
     this.debuggerServer.allowChromeProcess = true;
     dumpn("initialized and added the browser actors for the DebuggerServer.");
 

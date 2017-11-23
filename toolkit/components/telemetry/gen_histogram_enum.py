@@ -20,7 +20,7 @@ import itertools
 import sys
 
 
-banner = """/* This file is auto-generated, see gen-histogram-enum.py.  */
+banner = """/* This file is auto-generated, see gen_histogram_enum.py.  */
 """
 
 header = """

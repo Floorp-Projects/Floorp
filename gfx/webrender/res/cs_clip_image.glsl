@@ -48,8 +48,7 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    float alpha = 1.f;
-    vec2 local_pos = init_transform_fs(vPos, alpha);
+    float alpha = init_transform_fs(vPos.xy / vPos.z);
 
     bool repeat_mask = false; //TODO
     vec2 clamped_mask_uv = repeat_mask ? fract(vClipMaskUv.xy) :

@@ -5,8 +5,9 @@
 use api::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DebugCommand, DeviceIntPoint};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, DocumentMsg};
-use api::{HitTestResult, IdNamespace, LayerPoint, PipelineId, RenderNotifier};
+use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use api::{DocumentId, DocumentLayer, DocumentMsg};
+use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier};
 use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 #[cfg(feature = "debugger")]
@@ -14,7 +15,7 @@ use debug_server;
 use frame::FrameContext;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
-use internal_types::{DebugOutput, FastHashMap, FastHashSet, RendererFrame, ResultMsg};
+use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
 use rayon::ThreadPool;
 use record::ApiRecordingReceiver;
@@ -33,9 +34,11 @@ use time::precise_time_ns;
 struct Document {
     scene: Scene,
     frame_ctx: FrameContext,
+    // the `Option` here is only to deal with borrow checker
     frame_builder: Option<FrameBuilder>,
     window_size: DeviceUintSize,
     inner_rect: DeviceUintRect,
+    layer: DocumentLayer,
     pan: DeviceIntPoint,
     device_pixel_ratio: f32,
     page_zoom_factor: f32,
@@ -54,7 +57,8 @@ struct Document {
 impl Document {
     pub fn new(
         config: FrameBuilderConfig,
-        initial_size: DeviceUintSize,
+        window_size: DeviceUintSize,
+        layer: DocumentLayer,
         enable_render_on_scroll: bool,
         default_device_pixel_ratio: f32,
     ) -> Self {
@@ -66,9 +70,10 @@ impl Document {
         Document {
             scene: Scene::new(),
             frame_ctx: FrameContext::new(config),
-            frame_builder: None,
-            window_size: initial_size,
-            inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), initial_size),
+            frame_builder: Some(FrameBuilder::empty()),
+            window_size,
+            inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), window_size),
+            layer,
             pan: DeviceIntPoint::zero(),
             page_zoom_factor: 1.0,
             pinch_zoom_factor: 1.0,
@@ -86,8 +91,9 @@ impl Document {
 
     fn build_scene(&mut self, resource_cache: &mut ResourceCache) {
         let accumulated_scale_factor = self.accumulated_scale_factor();
-        self.frame_builder = self.frame_ctx.create(
-            self.frame_builder.take(),
+        // this code is why we have `Option`, which is never `None`
+        let frame_builder = self.frame_ctx.create(
+            self.frame_builder.take().unwrap(),
             &self.scene,
             resource_cache,
             self.window_size,
@@ -95,6 +101,7 @@ impl Document {
             accumulated_scale_factor,
             &self.output_pipelines,
         );
+        self.frame_builder = Some(frame_builder);
     }
 
     fn render(
@@ -102,30 +109,24 @@ impl Document {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         resource_profile: &mut ResourceProfileCounters,
-    ) -> RendererFrame {
+    ) -> RenderedDocument {
         let accumulated_scale_factor = self.accumulated_scale_factor();
         let pan = LayerPoint::new(
             self.pan.x as f32 / accumulated_scale_factor,
             self.pan.y as f32 / accumulated_scale_factor,
         );
-        match self.frame_builder {
-            Some(ref mut builder) => {
-                self.frame_ctx.build_renderer_frame(
-                    builder,
-                    resource_cache,
-                    gpu_cache,
-                    &self.scene.pipelines,
-                    accumulated_scale_factor,
-                    pan,
-                    &mut resource_profile.texture_cache,
-                    &mut resource_profile.gpu_cache,
-                    &self.scene.properties,
-                )
-            }
-            None => {
-                self.frame_ctx.get_renderer_frame()
-            }
-        }
+        self.frame_ctx.build_rendered_document(
+            self.frame_builder.as_mut().unwrap(),
+            resource_cache,
+            gpu_cache,
+            &self.scene.pipelines,
+            accumulated_scale_factor,
+            self.layer,
+            pan,
+            &mut resource_profile.texture_cache,
+            &mut resource_profile.gpu_cache,
+            &self.scene.properties,
+        )
     }
 }
 
@@ -133,8 +134,8 @@ enum DocumentOp {
     Nop,
     Built,
     ScrolledNop,
-    Scrolled(RendererFrame),
-    Rendered(RendererFrame),
+    Scrolled(RenderedDocument),
+    Rendered(RenderedDocument),
 }
 
 /// The unique id for WR resource identification.
@@ -361,13 +362,11 @@ impl RenderBackend {
             }
             DocumentMsg::HitTest(pipeline_id, point, flags, tx) => {
                 profile_scope!("HitTest");
-                let result = match doc.frame_builder {
-                    Some(ref builder) => {
-                        let cst = doc.frame_ctx.get_clip_scroll_tree();
-                        builder.hit_test(cst, pipeline_id, point, flags)
-                    },
-                    None => HitTestResult::default(),
-                };
+                let cst = doc.frame_ctx.get_clip_scroll_tree();
+                let result = doc.frame_builder
+                    .as_ref()
+                    .unwrap()
+                    .hit_test(cst, pipeline_id, point, flags);
                 tx.send(result).unwrap();
                 DocumentOp::Nop
             }
@@ -482,10 +481,11 @@ impl RenderBackend {
                 ApiMsg::CloneApi(sender) => {
                     sender.send(self.next_namespace_id()).unwrap();
                 }
-                ApiMsg::AddDocument(document_id, initial_size) => {
+                ApiMsg::AddDocument(document_id, initial_size, layer) => {
                     let document = Document::new(
                         self.frame_config.clone(),
                         initial_size,
+                        layer,
                         self.enable_render_on_scroll,
                         self.default_device_pixel_ratio,
                     );
@@ -500,17 +500,17 @@ impl RenderBackend {
                     DocumentOp::Nop => {}
                     DocumentOp::Built => {}
                     DocumentOp::ScrolledNop => {
-                        self.notify_compositor_of_new_scroll_frame(false);
+                        self.notify_compositor_of_new_scroll_document(document_id, false);
                     }
-                    DocumentOp::Scrolled(frame) => {
-                        self.publish_frame(document_id, frame, &mut profile_counters);
-                        self.notify_compositor_of_new_scroll_frame(true);
+                    DocumentOp::Scrolled(doc) => {
+                        self.publish_document(document_id, doc, &mut profile_counters);
+                        self.notify_compositor_of_new_scroll_document(document_id, true);
                     }
-                    DocumentOp::Rendered(frame) => {
+                    DocumentOp::Rendered(doc) => {
                         frame_counter += 1;
-                        self.publish_frame_and_notify_compositor(
+                        self.publish_document_and_notify_compositor(
                             document_id,
-                            frame,
+                            doc,
                             &mut profile_counters,
                         );
                     }
@@ -541,10 +541,7 @@ impl RenderBackend {
                         cancel_rendering: true,
                     };
                     self.result_tx.send(msg).unwrap();
-                    // We use new_frame_ready to wake up the renderer and get the
-                    // resource updates processed, but the UpdateResources message
-                    // will cancel rendering the frame.
-                    self.notifier.new_frame_ready();
+                    self.notifier.wake_up();
                 }
                 ApiMsg::DebugCommand(option) => {
                     let msg = match option {
@@ -559,7 +556,7 @@ impl RenderBackend {
                         _ => ResultMsg::DebugCommand(option),
                     };
                     self.result_tx.send(msg).unwrap();
-                    self.notifier.new_frame_ready();
+                    self.notifier.wake_up();
                 }
                 ApiMsg::ShutDown => {
                     self.notifier.shut_down();
@@ -569,31 +566,35 @@ impl RenderBackend {
         }
     }
 
-    fn publish_frame(
+    fn publish_document(
         &mut self,
         document_id: DocumentId,
-        frame: RendererFrame,
+        document: RenderedDocument,
         profile_counters: &mut BackendProfileCounters,
     ) {
         let pending_update = self.resource_cache.pending_updates();
-        let msg = ResultMsg::NewFrame(document_id, frame, pending_update, profile_counters.clone());
+        let msg = ResultMsg::PublishDocument(document_id, document, pending_update, profile_counters.clone());
         self.result_tx.send(msg).unwrap();
         profile_counters.reset();
     }
 
-    fn publish_frame_and_notify_compositor(
+    fn publish_document_and_notify_compositor(
         &mut self,
         document_id: DocumentId,
-        frame: RendererFrame,
+        document: RenderedDocument,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        self.publish_frame(document_id, frame, profile_counters);
+        self.publish_document(document_id, document, profile_counters);
 
-        self.notifier.new_frame_ready();
+        self.notifier.new_document_ready(document_id, false, true);
     }
 
-    fn notify_compositor_of_new_scroll_frame(&self, composite_needed: bool) {
-        self.notifier.new_scroll_frame_ready(composite_needed);
+    fn notify_compositor_of_new_scroll_document(
+        &self,
+        document_id: DocumentId,
+        composite_needed: bool,
+    ) {
+        self.notifier.new_document_ready(document_id, true, composite_needed);
     }
 
 
@@ -676,11 +677,10 @@ impl RenderBackend {
 
             // TODO(gw): Restructure the storage of clip-scroll tree, clip store
             //           etc so this isn't so untidy.
-            if let Some(ref frame_builder) = doc.frame_builder {
-                doc.frame_ctx
-                    .get_clip_scroll_tree()
-                    .print_with(&frame_builder.clip_store, &mut builder);
-            }
+            let clip_store = &doc.frame_builder.as_ref().unwrap().clip_store;
+            doc.frame_ctx
+                .get_clip_scroll_tree()
+                .print_with(clip_store, &mut builder);
 
             debug_root.add(builder.build());
         }

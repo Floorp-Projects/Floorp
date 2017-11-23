@@ -43,13 +43,11 @@ class GeckoViewRemoteDebugger extends GeckoViewModule {
   }
 
   register() {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors("navigator:geckoview");
-      DebuggerServer.registerModule(
-        "resource://gre/modules/dbg-browser-actors.js");
-      DebuggerServer.allowChromeProcess = true;
-    }
+    DebuggerServer.init();
+    DebuggerServer.registerAllActors();
+    DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
+    DebuggerServer.allowChromeProcess = true;
+    DebuggerServer.chromeWindowType = "navigator:geckoview";
 
     let windowId = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIDOMWindowUtils)

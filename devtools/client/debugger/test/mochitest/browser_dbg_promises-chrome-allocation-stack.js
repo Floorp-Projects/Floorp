@@ -24,7 +24,7 @@ function test() {
     requestLongerTimeout(10);
 
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
+    DebuggerServer.registerAllActors();
     DebuggerServer.allowChromeProcess = true;
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());

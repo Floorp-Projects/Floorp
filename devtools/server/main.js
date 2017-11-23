@@ -249,7 +249,7 @@ var DebuggerServer = {
   },
 
   /**
-   * Register all type of actors. Only register the one that are not already
+   * Register different type of actors. Only register the one that are not already
    * registered.
    *
    * @param root boolean
@@ -261,18 +261,10 @@ var DebuggerServer = {
    * @param tab boolean
    *        Registers all the tab actors like console, script, ... all useful
    *        for debugging a target context.
-   * @param windowType string
-   *        "windowtype" attribute of the main chrome windows. Used by some
-   *        actors to retrieve them.
    */
-  registerActors({ root = true, browser = true, tab = true,
-                   windowType = null }) {
-    if (windowType) {
-      this.chromeWindowType = windowType;
-    }
-
+  registerActors({ root, browser, tab }) {
     if (browser) {
-      this.addBrowserActors(this.chromeWindowType);
+      this._addBrowserActors();
     }
 
     if (root) {
@@ -280,8 +272,15 @@ var DebuggerServer = {
     }
 
     if (tab) {
-      this.addTabActors();
+      this._addTabActors();
     }
+  },
+
+  /**
+   * Register all possible actors for this DebuggerServer.
+   */
+  registerAllActors() {
+    this.registerActors({ root: true, browser: true, tab: true });
   },
 
   /**
@@ -417,30 +416,18 @@ var DebuggerServer = {
    *
    * /!\ Be careful when adding a new actor, especially global actors.
    * Any new global actor will be exposed and returned by the root actor.
-   *
-   * That's the reason why tab actors aren't loaded on demand via
-   * restrictPrivileges=true, to prevent exposing them on b2g parent process's
-   * root actor.
    */
-  addBrowserActors(windowType = null, restrictPrivileges = false) {
-    if (windowType) {
-      this.chromeWindowType = windowType;
-    }
-    this.registerModule("devtools/server/actors/webbrowser");
-
-    if (!restrictPrivileges) {
-      this.addTabActors();
-      this.registerModule("devtools/server/actors/preference", {
-        prefix: "preference",
-        constructor: "PreferenceActor",
-        type: { global: true }
-      });
-      this.registerModule("devtools/server/actors/actor-registry", {
-        prefix: "actorRegistry",
-        constructor: "ActorRegistryActor",
-        type: { global: true }
-      });
-    }
+  _addBrowserActors() {
+    this.registerModule("devtools/server/actors/preference", {
+      prefix: "preference",
+      constructor: "PreferenceActor",
+      type: { global: true }
+    });
+    this.registerModule("devtools/server/actors/actor-registry", {
+      prefix: "actorRegistry",
+      constructor: "ActorRegistryActor",
+      type: { global: true }
+    });
     this.registerModule("devtools/server/actors/addons", {
       prefix: "addons",
       constructor: "AddonsActor",
@@ -461,7 +448,7 @@ var DebuggerServer = {
   /**
    * Install tab actors.
    */
-  addTabActors() {
+  _addTabActors() {
     this.registerModule("devtools/server/actors/webconsole", {
       prefix: "console",
       constructor: "WebConsoleActor",

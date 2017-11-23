@@ -30,7 +30,7 @@ function run_test() {
   DebuggerServer.addGlobalActor(TestActor);
 
   DebuggerServer.init();
-  DebuggerServer.addBrowserActors();
+  DebuggerServer.registerAllActors();
 
   add_test(init);
   add_test(test_client_request_callback);

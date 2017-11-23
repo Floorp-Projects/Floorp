@@ -13,35 +13,34 @@ const {
   SIDEBAR_TOGGLE,
   TIMESTAMPS_TOGGLE,
 } = require("devtools/client/webconsole/new-console-output/constants");
-const Immutable = require("devtools/client/shared/vendor/immutable");
 
 const {
   PANELS,
 } = require("devtools/client/netmonitor/src/constants");
 
-const UiState = Immutable.Record({
+const UiState = (overrides) => Object.freeze(Object.assign({
   filterBarVisible: false,
   initialized: false,
   networkMessageActiveTabId: PANELS.HEADERS,
   persistLogs: false,
   sidebarVisible: false,
   timestampsVisible: true,
-});
+}, overrides));
 
-function ui(state = new UiState(), action) {
+function ui(state = UiState(), action) {
   switch (action.type) {
     case FILTER_BAR_TOGGLE:
-      return state.set("filterBarVisible", !state.filterBarVisible);
+      return Object.assign({}, state, {filterBarVisible: !state.filterBarVisible});
     case PERSIST_TOGGLE:
-      return state.set("persistLogs", !state.persistLogs);
+      return Object.assign({}, state, {persistLogs: !state.persistLogs});
     case TIMESTAMPS_TOGGLE:
-      return state.set("timestampsVisible", action.visible);
+      return Object.assign({}, state, {timestampsVisible: action.visible});
     case SELECT_NETWORK_MESSAGE_TAB:
-      return state.set("networkMessageActiveTabId", action.id);
+      return Object.assign({}, state, {networkMessageActiveTabId: action.id});
     case SIDEBAR_TOGGLE:
-      return state.set("sidebarVisible", !state.sidebarVisible);
+      return Object.assign({}, state, {sidebarVisible: !state.sidebarVisible});
     case INITIALIZE:
-      return state.set("initialized", true);
+      return Object.assign({}, state, {initialized: true});
   }
 
   return state;

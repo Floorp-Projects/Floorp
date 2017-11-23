@@ -16,7 +16,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(TEST_URL, true);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getDisplayedRequests,
@@ -52,6 +52,12 @@ add_task(function* () {
   });
   yield wait;
 
+  // Fetch stack-trace data from the backend and wait till
+  // all packets are received.
+  let requests = getSortedRequests(store.getState());
+  yield Promise.all(requests.map(requestItem =>
+    connector.requestData(requestItem.id, "stackTrace")));
+
   let requestItems = document.querySelectorAll(".request-list-item");
   for (let requestItem of requestItems) {
     requestItem.scrollIntoView();
@@ -74,7 +80,7 @@ add_task(function* () {
       request.details
     );
 
-    let { stacktrace } = item.cause;
+    let { stacktrace } = item;
     let stackLen = stacktrace ? stacktrace.length : 0;
 
     ok(stacktrace, `Request #${index} has a stacktrace`);
