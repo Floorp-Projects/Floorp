@@ -375,6 +375,10 @@ function getUserMedia(constraints) {
 var setTestOptions;
 var testConfigured = new Promise(r => setTestOptions = r);
 
+function pushPrefs(...p) {
+  return SpecialPowers.pushPrefEnv({set: p});
+}
+
 function setupEnvironment() {
   if (!window.SimpleTest) {
     // Running under Steeplechase
