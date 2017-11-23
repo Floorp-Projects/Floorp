@@ -115,7 +115,7 @@ var gTests = [
     Services.prefs.setCharPref(kStatusPref, "pending");
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false,
-                                                     "about:preferences");
+                                                     "about:preferences#search");
     // eslint-disable-next-line mozilla/no-cpows-in-tests
     gBrowser.contentDocument.getElementById("linkSettingsPage").click();
     await loadPromise;
