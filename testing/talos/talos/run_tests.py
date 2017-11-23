@@ -96,6 +96,12 @@ def run_tests(config, browser_config):
                                                '/\\t:\\')))
             test['preferences']['talos.tpmanifest'] = test['tpmanifest']
 
+        # if using firstNonBlankPaint, set test preference for it
+        # so that the browser pref will be turned on (in ffsetup)
+        if test.get('fnbpaint', False):
+            LOG.info("Test is using firstNonBlankPaint, browser pref will be turned on")
+            test['preferences']['dom.performance.time_to_non_blank_paint.enabled'] = True
+
         test['setup'] = utils.interpolate(test['setup'])
         test['cleanup'] = utils.interpolate(test['cleanup'])
 
@@ -107,11 +113,6 @@ def run_tests(config, browser_config):
     # instance
     if browser_config['develop']:
         browser_config['extra_args'] = '--no-remote'
-
-    # if using firstNonBlankPaint, must turn on pref for it
-    if test.get('fnbpaint', False):
-        LOG.info("Using firstNonBlankPaint, so turning on pref for it")
-        browser_config['preferences']['dom.performance.time_to_non_blank_paint.enabled'] = True
 
     # Pass subtests filter argument via a preference
     if browser_config['subtests']:
