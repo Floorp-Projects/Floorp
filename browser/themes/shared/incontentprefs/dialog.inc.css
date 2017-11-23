@@ -66,3 +66,12 @@ groupbox description {
   margin-right: 0;
   margin-left: 0;
 }
+
+label.menu-text,
+textbox.tree-input {
+  font-size: unset;
+}
+
+menulist label {
+  font-weight: unset;
+}

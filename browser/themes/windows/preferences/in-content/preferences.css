@@ -10,7 +10,7 @@ window * {
   font-size: 1.25rem;
 }
 
-caption label:not(.dialogTitle) {
+caption label {
   font-size: 1.42rem;
 }
 

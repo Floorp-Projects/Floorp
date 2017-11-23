@@ -4,16 +4,10 @@
 
 %include ../../../shared/incontentprefs/dialog.inc.css
 
-label:not(.menu-text),
+label,
 textbox,
 description,
 .tab-text,
-caption label {
+menulist label {
   font-size: 1.25rem;
-}
-
-/* Create a separate rule to unset these styles on .tree-input instead of
-   using :not(.tree-input) so the selector specifity doesn't change. */
-textbox.tree-input {
-  font-size: unset;
 }
