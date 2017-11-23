@@ -2393,12 +2393,14 @@ Engine.prototype = {
                                                            URLTYPE_SEARCH_HTML;
     }
 
+    let resetPending;
     if (aResponseType == URLTYPE_SEARCH_HTML &&
-        Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled") &&
+        ((resetPending = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "reset.status", "") == "pending") ||
+         Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled")) &&
         this.name == Services.search.currentEngine.name &&
         !this._isDefault &&
         this.name != Services.search.originalDefaultEngine.name &&
-        (!this.getAttr("loadPathHash") ||
+        (resetPending || !this.getAttr("loadPathHash") ||
          this.getAttr("loadPathHash") != getVerificationHash(this._loadPath)) &&
         !this._isWhiteListed) {
       let url = "about:searchreset";
