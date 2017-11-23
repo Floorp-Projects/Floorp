@@ -7,7 +7,7 @@ use api::{IdNamespace, LayoutPoint};
 use api::{ColorF, ColorU, DevicePoint, DeviceUintSize};
 use api::{FontInstancePlatformOptions, FontRenderMode, FontVariation};
 use api::{FontKey, FontTemplate, GlyphDimensions, GlyphKey, SubpixelDirection};
-use api::{ImageData, ImageDescriptor, ImageFormat};
+use api::{ImageData, ImageDescriptor, ImageFormat, LayerToWorldTransform};
 use app_units::Au;
 use device::TextureFilter;
 use glyph_cache::{CachedGlyphInfo, GlyphCache};
@@ -17,11 +17,114 @@ use platform::font::FontContext;
 use profiler::TextureCacheProfileCounters;
 use rayon::ThreadPool;
 use rayon::prelude::*;
+use std::cmp;
 use std::collections::hash_map::Entry;
+use std::hash::{Hash, Hasher};
 use std::mem;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use texture_cache::{TextureCache, TextureCacheHandle};
+
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct FontTransform {
+    pub scale_x: f32,
+    pub skew_x: f32,
+    pub skew_y: f32,
+    pub scale_y: f32,
+}
+
+// Floats don't impl Hash/Eq/Ord...
+impl Eq for FontTransform {}
+impl Ord for FontTransform {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.partial_cmp(other).unwrap_or(cmp::Ordering::Equal)
+    }
+}
+impl Hash for FontTransform {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Note: this is inconsistent with the Eq impl for -0.0 (don't care).
+        self.scale_x.to_bits().hash(state);
+        self.skew_x.to_bits().hash(state);
+        self.skew_y.to_bits().hash(state);
+        self.scale_y.to_bits().hash(state);
+    }
+}
+
+impl FontTransform {
+    const QUANTIZE_SCALE: f32 = 1024.0;
+
+    pub fn new(scale_x: f32, skew_x: f32, skew_y: f32, scale_y: f32) -> Self {
+        FontTransform { scale_x, skew_x, skew_y, scale_y }
+    }
+
+    pub fn identity() -> Self {
+        FontTransform::new(1.0, 0.0, 0.0, 1.0)
+    }
+
+    pub fn is_identity(&self) -> bool {
+        *self == FontTransform::identity()
+    }
+
+    pub fn quantize(&self) -> Self {
+        FontTransform::new(
+            (self.scale_x * Self::QUANTIZE_SCALE).round() / Self::QUANTIZE_SCALE,
+            (self.skew_x * Self::QUANTIZE_SCALE).round() / Self::QUANTIZE_SCALE,
+            (self.skew_y * Self::QUANTIZE_SCALE).round() / Self::QUANTIZE_SCALE,
+            (self.scale_y * Self::QUANTIZE_SCALE).round() / Self::QUANTIZE_SCALE,
+        )
+    }
+
+    pub fn determinant(&self) -> f64 {
+        self.scale_x as f64 * self.scale_y as f64 - self.skew_y as f64 * self.skew_x as f64
+    }
+
+    pub fn compute_scale(&self) -> Option<(f64, f64)> {
+        let det = self.determinant();
+        if det != 0.0 {
+            let major = (self.scale_x as f64).hypot(self.skew_y as f64);
+            let minor = det.abs() / major;
+            Some((major, minor))
+        } else {
+            None
+        }
+    }
+
+    pub fn pre_scale(&self, scale_x: f32, scale_y: f32) -> Self {
+        FontTransform::new(
+            self.scale_x * scale_x,
+            self.skew_x * scale_y,
+            self.skew_y * scale_x,
+            self.scale_y * scale_y,
+        )
+    }
+
+    #[allow(dead_code)]
+    pub fn inverse(&self) -> Option<Self> {
+        let det = self.determinant();
+        if det != 0.0 {
+            let inv_det = det.recip() as f32;
+            Some(FontTransform::new(
+                self.scale_y * inv_det,
+                -self.skew_x * inv_det,
+                -self.skew_y * inv_det,
+                self.scale_x * inv_det
+            ))
+        } else {
+            None
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn apply(&self, x: f32, y: f32) -> (f32, f32) {
+        (self.scale_x * x + self.skew_x * y, self.skew_y * x + self.scale_y * y)
+    }
+}
+
+impl<'a> From<&'a LayerToWorldTransform> for FontTransform {
+    fn from(xform: &'a LayerToWorldTransform) -> Self {
+        FontTransform::new(xform.m11, xform.m21, xform.m12, xform.m22)
+    }
+}
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 pub struct FontInstance {
@@ -39,6 +142,7 @@ pub struct FontInstance {
     pub platform_options: Option<FontInstancePlatformOptions>,
     pub variations: Vec<FontVariation>,
     pub synthetic_italics: bool,
+    pub transform: FontTransform,
 }
 
 impl FontInstance {
@@ -63,6 +167,7 @@ impl FontInstance {
             platform_options,
             variations,
             synthetic_italics,
+            transform: FontTransform::identity(),
         }
     }
 
@@ -73,25 +178,27 @@ impl FontInstance {
             SubpixelDirection::Vertical => (0.0, glyph.subpixel_offset.into()),
         }
     }
+
+    pub fn get_subpixel_glyph_format(&self) -> GlyphFormat {
+        if self.transform.is_identity() { GlyphFormat::Subpixel } else { GlyphFormat::TransformedSubpixel }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_glyph_format(&self) -> GlyphFormat {
+        match self.render_mode {
+            FontRenderMode::Mono | FontRenderMode::Alpha => GlyphFormat::Alpha,
+            FontRenderMode::Subpixel => self.get_subpixel_glyph_format(),
+            FontRenderMode::Bitmap => GlyphFormat::ColorBitmap,
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum GlyphFormat {
-    Mono,
     Alpha,
     Subpixel,
+    TransformedSubpixel,
     ColorBitmap,
-}
-
-impl From<FontRenderMode> for GlyphFormat {
-    fn from(render_mode: FontRenderMode) -> GlyphFormat {
-        match render_mode {
-            FontRenderMode::Mono => GlyphFormat::Mono,
-            FontRenderMode::Alpha => GlyphFormat::Alpha,
-            FontRenderMode::Subpixel => GlyphFormat::Subpixel,
-            FontRenderMode::Bitmap => GlyphFormat::ColorBitmap,
-        }
-    }
 }
 
 pub struct RasterizedGlyph {
@@ -396,7 +503,7 @@ impl GlyphRasterizer {
                         },
                         TextureFilter::Linear,
                         ImageData::Raw(glyph_bytes.clone()),
-                        [glyph.left, glyph.top, glyph.scale],
+                        [glyph.left, -glyph.top, glyph.scale],
                         None,
                         gpu_cache,
                     );
@@ -404,7 +511,7 @@ impl GlyphRasterizer {
                         texture_cache_handle,
                         glyph_bytes,
                         size: DeviceUintSize::new(glyph.width, glyph.height),
-                        offset: DevicePoint::new(glyph.left, glyph.top),
+                        offset: DevicePoint::new(glyph.left, -glyph.top),
                         scale: glyph.scale,
                         format: glyph.format,
                     })

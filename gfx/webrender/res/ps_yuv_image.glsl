@@ -18,11 +18,10 @@ flat varying vec2 vHalfTexelUv;    // Normalized length of the half of u and v t
 flat varying vec3 vLayers;
 
 #ifdef WR_FEATURE_TRANSFORM
-varying vec3 vLocalPos;
 flat varying vec4 vLocalRect;
-#else
-varying vec2 vLocalPos;
 #endif
+
+varying vec2 vLocalPos;
 
 #ifdef WR_VERTEX_SHADER
 struct YuvImage {
@@ -37,7 +36,7 @@ YuvImage fetch_yuv_image(int address) {
 void main(void) {
     Primitive prim = load_primitive();
 #ifdef WR_FEATURE_TRANSFORM
-    TransformVertexInfo vi = write_transform_vertex_primitive(prim);
+    VertexInfo vi = write_transform_vertex_primitive(prim);
     vLocalPos = vi.local_pos;
     vLocalRect = vec4(prim.local_rect.p0, prim.local_rect.p0 + prim.local_rect.size);
 #else
@@ -146,12 +145,11 @@ const mat3 YuvColorMatrix = mat3(
 
 void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
-    float alpha = 0.0;
-    vec2 pos = init_transform_fs(vLocalPos, alpha);
+    float alpha = init_transform_fs(vLocalPos);
 
     // We clamp the texture coordinate calculation here to the local rectangle boundaries,
     // which makes the edge of the texture stretch instead of repeat.
-    vec2 relative_pos_in_rect = clamp(pos, vLocalRect.xy, vLocalRect.zw) - vLocalRect.xy;
+    vec2 relative_pos_in_rect = clamp(vLocalPos, vLocalRect.xy, vLocalRect.zw) - vLocalRect.xy;
 #else
     float alpha = 1.0;;
     vec2 relative_pos_in_rect = vLocalPos;

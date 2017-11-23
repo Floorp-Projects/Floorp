@@ -185,16 +185,19 @@ struct App {
 }
 
 impl Example for App {
+    // Make this the only example to test all shaders for compile errors.
+    const PRECACHE_SHADERS: bool = true;
+
     fn render(
         &mut self,
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
         resources: &mut ResourceUpdates,
-        layout_size: LayoutSize,
+        _: DeviceUintSize,
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
+        let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
         let info = LayoutPrimitiveInfo::new(bounds);
         builder.push_stacking_context(
             &info,

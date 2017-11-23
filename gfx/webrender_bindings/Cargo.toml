@@ -5,7 +5,6 @@ authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 
 [dependencies]
-webrender_api = {path = "../webrender_api", version = "0.54.0"}
 rayon = "0.8"
 thread_profiler = "0.1.1"
 euclid = "0.15"
@@ -23,6 +22,6 @@ dwrote = "0.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.4"
-core-graphics = "0.12.2"
+core-graphics = "0.12.3"
 foreign-types = "0.3.0"
 

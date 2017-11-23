@@ -39,13 +39,11 @@ var AboutDebugging = {
       return;
     }
 
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-    }
+    DebuggerServer.init();
     DebuggerServer.allowChromeProcess = true;
     // We want a full featured server for about:debugging. Especially the
     // "browser actors" like addons.
-    DebuggerServer.registerActors({ root: true, browser: true, tab: true });
+    DebuggerServer.registerAllActors();
 
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
 

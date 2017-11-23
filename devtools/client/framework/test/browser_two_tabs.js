@@ -20,10 +20,8 @@ var gTabActor1, gTabActor2;
 function test() {
   waitForExplicitFinish();
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
 
   openTabs();
 }

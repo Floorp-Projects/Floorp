@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF, ComplexClipRegion};
-use api::{DeviceUintRect, DeviceUintSize, DisplayItemRef, Epoch, FilterOp};
+use api::{DeviceUintRect, DeviceUintSize, DisplayItemRef, DocumentLayer, Epoch, FilterOp};
 use api::{ImageDisplayItem, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect};
 use api::{LayerSize, LayerVector2D};
 use api::{LayoutRect, LayoutSize};
@@ -17,12 +17,12 @@ use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
 use frame_builder::{FrameBuilder, FrameBuilderConfig, ScrollbarInfo};
 use gpu_cache::GpuCache;
-use internal_types::{FastHashMap, FastHashSet, RendererFrame};
+use internal_types::{FastHashMap, FastHashSet, RenderedDocument};
 use prim_store::RectangleContent;
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{FontInstanceMap,ResourceCache, TiledImageMap};
 use scene::{Scene, StackingContextHelpers, ScenePipeline, SceneProperties};
-use tiling::{CompositeOps, Frame};
+use tiling::CompositeOps;
 use util::ComplexClipRegionHelpers;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Eq, Ord)]
@@ -262,8 +262,8 @@ impl<'a> FlattenContext<'a> {
         // that fixed position stacking contexts are positioned relative to us.
         let is_reference_frame =
             stacking_context.transform.is_some() || stacking_context.perspective.is_some();
-        if is_reference_frame {
-            let origin = reference_frame_relative_offset + bounds.origin.to_vector();
+        let origin = reference_frame_relative_offset + bounds.origin.to_vector();
+        reference_frame_relative_offset = if is_reference_frame {
             let reference_frame_bounds = LayerRect::new(LayerPoint::zero(), bounds.size);
             let mut clip_id = self.apply_scroll_frame_id_replacement(context_scroll_node_id);
             clip_id = self.builder.push_reference_frame(
@@ -277,12 +277,9 @@ impl<'a> FlattenContext<'a> {
                 self.clip_scroll_tree,
             );
             self.replacements.push((context_scroll_node_id, clip_id));
-            reference_frame_relative_offset = LayerVector2D::zero();
+            LayerVector2D::zero()
         } else {
-            reference_frame_relative_offset = LayerVector2D::new(
-                reference_frame_relative_offset.x + bounds.origin.x,
-                reference_frame_relative_offset.y + bounds.origin.y,
-            );
+            origin
         };
 
         let sc_scroll_node_id = self.apply_scroll_frame_id_replacement(context_scroll_node_id);
@@ -1024,6 +1021,7 @@ impl<'a> FlattenContext<'a> {
 /// Frame context contains the information required to update
 /// (e.g. scroll) a renderer frame builder (`FrameBuilder`).
 pub struct FrameContext {
+    window_size: DeviceUintSize,
     clip_scroll_tree: ClipScrollTree,
     pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
     id: FrameId,
@@ -1033,6 +1031,7 @@ pub struct FrameContext {
 impl FrameContext {
     pub fn new(config: FrameBuilderConfig) -> Self {
         FrameContext {
+            window_size: DeviceUintSize::zero(),
             pipeline_epoch_map: FastHashMap::default(),
             clip_scroll_tree: ClipScrollTree::new(),
             id: FrameId(0),
@@ -1083,14 +1082,14 @@ impl FrameContext {
 
     pub fn create(
         &mut self,
-        old_builder: Option<FrameBuilder>,
+        old_builder: FrameBuilder,
         scene: &Scene,
         resource_cache: &mut ResourceCache,
         window_size: DeviceUintSize,
         inner_rect: DeviceUintRect,
         device_pixel_ratio: f32,
         output_pipelines: &FastHashSet<PipelineId>,
-    ) -> Option<FrameBuilder> {
+    ) -> FrameBuilder {
         let root_pipeline_id = match scene.root_pipeline_id {
             Some(root_pipeline_id) => root_pipeline_id,
             None => return old_builder,
@@ -1104,6 +1103,7 @@ impl FrameContext {
         if window_size.width == 0 || window_size.height == 0 {
             error!("ERROR: Invalid window dimensions! Please call api.set_window_size()");
         }
+        self.window_size = window_size;
 
         let old_scrolling_states = self.reset();
 
@@ -1117,9 +1117,8 @@ impl FrameContext {
         let frame_builder = {
             let mut roller = FlattenContext {
                 scene,
-                builder: FrameBuilder::new(
-                    old_builder,
-                    window_size,
+                builder: old_builder.recycle(
+                    inner_rect,
                     background_color,
                     self.frame_builder_config,
                 ),
@@ -1165,47 +1164,42 @@ impl FrameContext {
 
         self.clip_scroll_tree
             .finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
-        Some(frame_builder)
+        frame_builder
     }
 
     pub fn update_epoch(&mut self, pipeline_id: PipelineId, epoch: Epoch) {
         self.pipeline_epoch_map.insert(pipeline_id, epoch);
     }
 
-    fn get_renderer_frame_impl(&self, frame: Option<Frame>) -> RendererFrame {
-        let nodes_bouncing_back = self.clip_scroll_tree.collect_nodes_bouncing_back();
-        RendererFrame::new(self.pipeline_epoch_map.clone(), nodes_bouncing_back, frame)
-    }
-
-    pub fn build_renderer_frame(
+    pub fn build_rendered_document(
         &mut self,
         frame_builder: &mut FrameBuilder,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         pipelines: &FastHashMap<PipelineId, ScenePipeline>,
         device_pixel_ratio: f32,
+        layer: DocumentLayer,
         pan: LayerPoint,
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
-        scene_properties: &SceneProperties,
-    ) -> RendererFrame {
+		scene_properties: &SceneProperties,
+    ) -> RenderedDocument {
         let frame = frame_builder.build(
             resource_cache,
             gpu_cache,
             self.id,
             &mut self.clip_scroll_tree,
             pipelines,
+            self.window_size,
             device_pixel_ratio,
+            layer,
             pan,
             texture_cache_profile,
             gpu_cache_profile,
             scene_properties,
         );
 
-        self.get_renderer_frame_impl(Some(frame))
-    }
-
-    pub fn get_renderer_frame(&self) -> RendererFrame {
-        self.get_renderer_frame_impl(None)
+        let nodes_bouncing_back = self.clip_scroll_tree.collect_nodes_bouncing_back();
+        RenderedDocument::new(self.pipeline_epoch_map.clone(), nodes_bouncing_back, frame)
     }
 }
