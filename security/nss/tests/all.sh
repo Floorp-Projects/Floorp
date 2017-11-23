@@ -279,16 +279,6 @@ run_cycles()
 
 ############################## main code ###############################
 
-SCRIPTNAME=all.sh
-CLEANUP="${SCRIPTNAME}"
-cd `dirname $0`
-
-# all.sh should be the first one to try to source the init
-if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
-    cd common
-    . ./init.sh
-fi
-
 cycles="standard pkix upgradedb sharedb"
 CYCLES=${NSS_CYCLES:-$cycles}
 
@@ -314,6 +304,16 @@ NSS_SSL_TESTS="${NSS_SSL_TESTS:-$nss_ssl_tests}"
 
 nss_ssl_run="cov auth stapling stress"
 NSS_SSL_RUN="${NSS_SSL_RUN:-$nss_ssl_run}"
+
+SCRIPTNAME=all.sh
+CLEANUP="${SCRIPTNAME}"
+cd `dirname $0`
+
+# all.sh should be the first one to try to source the init
+if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
+    cd common
+    . ./init.sh
+fi
 
 # NOTE:
 # Lists of enabled tests and other settings are stored to ${ENV_BACKUP}

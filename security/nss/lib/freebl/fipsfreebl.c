@@ -16,7 +16,9 @@
 #include "secerr.h"
 #include "prtypes.h"
 
+#ifdef NSS_ENABLE_ECC
 #include "ec.h" /* Required for ECDSA */
+#endif
 
 /*
  * different platforms have different ways of calling and initial entry point
@@ -1076,6 +1078,8 @@ rsa_loser:
     return (SECFailure);
 }
 
+#ifdef NSS_ENABLE_ECC
+
 static SECStatus
 freebl_fips_ECDSA_Test(ECParams *ecparams,
                        const PRUint8 *knownSignature,
@@ -1271,6 +1275,8 @@ freebl_fips_ECDSA_PowerUpSelfTest()
 
     return (SECSuccess);
 }
+
+#endif /* NSS_ENABLE_ECC */
 
 static SECStatus
 freebl_fips_DSA_PowerUpSelfTest(void)
@@ -1554,11 +1560,13 @@ freebl_fipsPowerUpSelfTest(unsigned int tests)
         if (rv != SECSuccess)
             return rv;
 
+#ifdef NSS_ENABLE_ECC
         /* ECDSA Power-Up SelfTest(s). */
         rv = freebl_fips_ECDSA_PowerUpSelfTest();
 
         if (rv != SECSuccess)
             return rv;
+#endif
     }
     /* Passed Power-Up SelfTest(s). */
     return (SECSuccess);

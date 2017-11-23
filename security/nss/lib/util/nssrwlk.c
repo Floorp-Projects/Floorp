@@ -120,8 +120,6 @@ NSSRWLock_Destroy(NSSRWLock *rwlock)
 {
     PR_ASSERT(rwlock != NULL);
     PR_ASSERT(rwlock->rw_waiting_readers == 0);
-    PR_ASSERT(rwlock->rw_writer_locks == 0);
-    PR_ASSERT(rwlock->rw_reader_locks == 0);
 
     /* XXX Shouldn't we lock the PZLock before destroying this?? */
 

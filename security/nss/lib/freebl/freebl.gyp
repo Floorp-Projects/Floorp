@@ -255,15 +255,7 @@
               # The Makefile does version-tests on GCC, but we're not doing that here.
               'HAVE_INT128_SUPPORT',
             ],
-          }, {
-            'defines': [
-              'KRML_NOUINT128',
-            ],
           }],
-        ],
-      }, {
-        'defines': [
-          'KRML_NOUINT128',
         ],
       }],
       [ 'OS=="linux"', {

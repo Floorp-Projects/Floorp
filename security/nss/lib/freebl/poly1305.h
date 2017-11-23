@@ -8,8 +8,6 @@
 #ifndef FREEBL_POLY1305_H_
 #define FREEBL_POLY1305_H_
 
-#include "stddef.h"
-
 typedef unsigned char poly1305_state[512];
 
 /* Poly1305Init sets up |state| so that it can be used to calculate an
