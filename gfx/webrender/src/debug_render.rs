@@ -8,7 +8,6 @@ use device::{Device, Program, Texture, TextureSlot, VertexDescriptor, VAO};
 use device::{TextureFilter, TextureTarget, VertexAttribute, VertexAttributeKind, VertexUsageHint};
 use euclid::{Point2D, Rect, Size2D, Transform3D};
 use internal_types::{ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
-use internal_types::RenderTargetMode;
 use std::f32;
 
 #[derive(Debug, Copy, Clone)]
@@ -124,7 +123,7 @@ impl DebugRenderer {
             debug_font_data::BMP_HEIGHT,
             ImageFormat::A8,
             TextureFilter::Linear,
-            RenderTargetMode::None,
+            None,
             1,
             Some(&debug_font_data::FONT_BITMAP),
         );

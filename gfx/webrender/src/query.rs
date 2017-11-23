@@ -214,14 +214,6 @@ impl<T> GpuProfiler<T> {
         }
     }
 
-    pub fn toggle_timers_enabled(&mut self) {
-        if self.frames[0].timers.set.is_empty() {
-            self.enable_timers();
-        } else {
-            self.disable_timers();
-        }
-    }
-
     pub fn enable_samplers(&mut self) {
         const MAX_SAMPLERS_PER_FRAME: i32 = 16;
         if cfg!(target_os = "macos") {
@@ -236,14 +228,6 @@ impl<T> GpuProfiler<T> {
     pub fn disable_samplers(&mut self) {
         for frame in &mut self.frames {
             frame.disable_samplers();
-        }
-    }
-
-    pub fn toggle_samplers_enabled(&mut self) {
-        if self.frames[0].samplers.set.is_empty() {
-            self.enable_samplers();
-        } else {
-            self.disable_samplers();
         }
     }
 }

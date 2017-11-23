@@ -356,7 +356,32 @@ impl PicturePrimitive {
 
                         self.render_task_id = Some(render_tasks.add(picture_task));
                     }
-                    Some(PictureCompositeMode::Filter(..)) | Some(PictureCompositeMode::Blit) => {
+                    Some(PictureCompositeMode::Filter(filter)) => {
+                        // If this filter is not currently going to affect
+                        // the picture, just collapse this picture into the
+                        // current render task. This most commonly occurs
+                        // when opacity == 1.0, but can also occur on other
+                        // filters and be a significant performance win.
+                        if filter.is_noop() {
+                            parent_tasks.extend(child_tasks);
+                            self.render_task_id = None;
+                        } else {
+                            let picture_task = RenderTask::new_picture(
+                                Some(prim_screen_rect.size),
+                                prim_index,
+                                RenderTargetKind::Color,
+                                prim_screen_rect.origin.x as f32,
+                                prim_screen_rect.origin.y as f32,
+                                PremultipliedColorF::TRANSPARENT,
+                                ClearMode::Transparent,
+                                self.rasterization_kind,
+                                child_tasks,
+                            );
+
+                            self.render_task_id = Some(render_tasks.add(picture_task));
+                        }
+                    }
+                    Some(PictureCompositeMode::Blit) => {
                         let picture_task = RenderTask::new_picture(
                             Some(prim_screen_rect.size),
                             prim_index,

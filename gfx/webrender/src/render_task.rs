@@ -9,7 +9,7 @@ use clip_scroll_tree::CoordinateSystemId;
 use gpu_types::{ClipScrollNodeIndex};
 use picture::RasterizationSpace;
 use prim_store::{PrimitiveIndex};
-use std::{cmp, usize, f32, i32};
+use std::{cmp, ops, usize, f32, i32};
 use std::rc::Rc;
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
@@ -57,7 +57,7 @@ impl Iterator for ClipChainNodeIter {
 }
 
 impl RenderTaskTree {
-    pub fn new() -> RenderTaskTree {
+    pub fn new() -> Self {
         RenderTaskTree {
             tasks: Vec::new(),
             task_data: Vec::new(),
@@ -115,17 +115,8 @@ impl RenderTaskTree {
         pass.add_render_task(id, task.get_dynamic_size(), task.target_kind());
     }
 
-    pub fn get(&self, id: RenderTaskId) -> &RenderTask {
-        &self.tasks[id.0 as usize]
-    }
-
-    pub fn get_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
-        &mut self.tasks[id.0 as usize]
-    }
-
     pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
-        let task = &self.tasks[id.0 as usize];
-        match task.kind {
+        match self[id].kind {
             RenderTaskKind::Alias(alias_id) => RenderTaskAddress(alias_id.0),
             _ => RenderTaskAddress(id.0),
         }
@@ -135,6 +126,19 @@ impl RenderTaskTree {
         for task in &mut self.tasks {
             self.task_data.push(task.write_task_data());
         }
+    }
+}
+
+impl ops::Index<RenderTaskId> for RenderTaskTree {
+    type Output = RenderTask;
+    fn index(&self, id: RenderTaskId) -> &RenderTask {
+        &self.tasks[id.0 as usize]
+    }
+}
+
+impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
+    fn index_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
+        &mut self.tasks[id.0 as usize]
     }
 }
 
@@ -191,7 +195,7 @@ impl ClipWorkItem {
         for &(ref clip, _) in clips {
             match *clip {
                 ClipSource::Rectangle(..) => {
-                    if self.has_compatible_coordinate_system(prim_coordinate_system_id) {
+                    if !self.has_compatible_coordinate_system(prim_coordinate_system_id) {
                         return MaskGeometryKind::Default;
                     }
                 },
@@ -432,7 +436,7 @@ impl RenderTask {
     ) -> Self {
         // Adjust large std deviation value.
         let mut adjusted_blur_std_deviation = blur_std_deviation;
-        let blur_target_size = render_tasks.get(src_task_id).get_dynamic_size();
+        let blur_target_size = render_tasks[src_task_id].get_dynamic_size();
         let mut adjusted_blur_target_size = blur_target_size;
         let mut downscaling_src_task_id = src_task_id;
         let mut scale_factor = 1.0;
@@ -664,15 +668,5 @@ impl RenderTask {
                 panic!("BUG: is_shared() called on aliased task");
             }
         }
-    }
-
-    pub fn set_alias(&mut self, id: RenderTaskId) {
-        debug_assert!(self.cache_key.is_some());
-        // TODO(gw): We can easily handle invalidation of tasks that
-        //           contain children in the future. Since we don't
-        //           have any cases of that yet, just assert to simplify
-        //           the current implementation.
-        debug_assert!(self.children.is_empty());
-        self.kind = RenderTaskKind::Alias(id);
     }
 }
