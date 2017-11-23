@@ -18,13 +18,7 @@
 #include "secder.h"
 #include "secpkcs5.h"
 
-const int NSS_PBE_DEFAULT_ITERATION_COUNT = /* used in p12e.c too */
-#ifdef DEBUG
-    10000
-#else
-    1000000
-#endif
-    ;
+const int NSS_PBE_DEFAULT_ITERATION_COUNT = 100000; /* used in p12e.c too */
 
 static SECStatus
 sec_pkcs7_init_content_info(SEC_PKCS7ContentInfo *cinfo, PLArenaPool *poolp,

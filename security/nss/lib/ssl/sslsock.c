@@ -3127,7 +3127,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
     }
     blocking = ssl_FdIsBlocking(fd);
 
-#define K16 ((int)sizeof(buf))
+#define K16 sizeof(buf)
 #define KILL_VECTORS                   \
     while (vectors && !iov->iov_len) { \
         ++iov;                         \

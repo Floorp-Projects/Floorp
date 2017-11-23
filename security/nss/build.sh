@@ -68,7 +68,6 @@ fi
 while [ $# -gt 0 ]; do
     case $1 in
         -c) clean=1 ;;
-        -cc) clean_only=1 ;;
         --gyp|-g) rebuild_gyp=1 ;;
         --nspr) nspr_clean; rebuild_nspr=1 ;;
         -j) ninja_params+=(-j "$2"); shift ;;
@@ -125,15 +124,10 @@ dist_dir=$(mkdir -p "$dist_dir"; cd "$dist_dir"; pwd -P)
 gyp_params+=(-Dnss_dist_dir="$dist_dir")
 
 # -c = clean first
-if [ "$clean" = 1 -o "$clean_only" = 1 ]; then
+if [ "$clean" = 1 ]; then
     nspr_clean
     rm -rf "$cwd"/out
     rm -rf "$dist_dir"
-    # -cc = only clean, don't build
-    if [ "$clean_only" = 1 ]; then
-        echo "Cleaned"
-        exit 0
-    fi
 fi
 
 # This saves a canonical representation of arguments that we are passing to gyp
