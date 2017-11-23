@@ -53,7 +53,7 @@ ssl3_ConsumeFromItem(SECItem *item, unsigned char **buf, PRUint32 bytes)
 SECStatus
 ssl3_ConsumeNumberFromItem(SECItem *item, PRUint32 *num, PRUint32 bytes)
 {
-    int i;
+    unsigned int i;
 
     if (bytes > item->len || bytes > sizeof(*num)) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
