@@ -1044,7 +1044,7 @@ bool wr_api_hit_test(DocumentHandle *aDh,
                      WorldPoint aPoint,
                      WrPipelineId *aOutPipelineId,
                      uint64_t *aOutScrollId,
-                     uint8_t *aOutHitInfo)
+                     uint16_t *aOutHitInfo)
 WR_FUNC;
 
 WR_INLINE
@@ -1573,7 +1573,7 @@ WR_FUNC;
 WR_INLINE
 void wr_set_item_tag(WrState *aState,
                      uint64_t aScrollId,
-                     uint8_t aHitInfo)
+                     uint16_t aHitInfo)
 WR_FUNC;
 
 WR_INLINE
