@@ -25,10 +25,6 @@ def jemalloc(value, target, build_project, c_compiler):
     if target.kernel == 'WINNT' and c_compiler.type in ('msvc', 'clang-cl'):
         return True
 
-    if value and target.kernel not in ('WINNT', 'Linux', 'Darwin', 'kFreeBSD',
-                                       'FreeBSD', 'NetBSD'):
-        die('--enable-jemalloc is not supported on %s', target.kernel)
-
 
 set_config('MOZ_MEMORY', jemalloc)
 set_define('MOZ_MEMORY', jemalloc)
