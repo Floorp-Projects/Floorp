@@ -16,7 +16,9 @@ LOGALLOC_VAR = LD_PRELOAD
 endif
 endif
 
+ifndef MOZ_REPLACE_MALLOC_STATIC
 LOGALLOC = $(LOGALLOC_VAR)=$(CURDIR)/../$(DLL_PREFIX)logalloc$(DLL_SUFFIX)
+endif
 LOGALLOC_MINIMAL = $(LOGALLOC_VAR)=$(CURDIR)/../minimal/$(DLL_PREFIX)logalloc_minimal$(DLL_SUFFIX)
 
 expected_output.log: $(srcdir)/replay.log

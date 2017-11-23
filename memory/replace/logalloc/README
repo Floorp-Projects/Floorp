@@ -5,20 +5,8 @@ Firefox's default memory allocator independently or through another
 replace-malloc library, allowing the testing of other allocators under the
 exact same workload.
 
-To get an allocation log the following environment variables need to be set
-when starting Firefox:
-- on Linux:
-  LD_PRELOAD=/path/to/liblogalloc.so
-- on Mac OSX:
-  DYLD_INSERT_LIBRARIES=/path/to/liblogalloc.dylib
-- on Windows:
-  MOZ_REPLACE_MALLOC_LIB=/path/to/logalloc.dll
-- on Android:
-  MOZ_REPLACE_MALLOC_LIB=/path/to/liblogalloc.so
-  (see https://wiki.mozilla.org/Mobile/Fennec/Android#Arguments_and_Environment_Variables
-  for how to pass environment variables to Firefox for Android)
-
-- on all platforms:
+To get an allocation log the following environment variable when starting
+Firefox:
   MALLOC_LOG=/path/to/log-file
   or
   MALLOC_LOG=number
