@@ -965,54 +965,54 @@ class BaseStackFrame
 
     void zeroLocals(BaseRegAlloc& ra);
 
-    void loadLocalI32(RegI32 r, const Local& local) {
-        masm.load32(Address(sp_, localOffset(local)), r);
+    void loadLocalI32(const Local& src, RegI32 dest) {
+        masm.load32(Address(sp_, localOffset(src)), dest);
     }
 
 #ifndef JS_64BIT
-    void loadLocalI64Low(RegI32 r, const Local& local) {
-        masm.load32(Address(sp_, localOffset(local) + INT64LOW_OFFSET), r);
+    void loadLocalI64Low(const Local& src, RegI32 dest) {
+        masm.load32(Address(sp_, localOffset(src) + INT64LOW_OFFSET), dest);
     }
 
-    void loadLocalI64High(RegI32 r, const Local& local) {
-        masm.load32(Address(sp_, localOffset(local) + INT64HIGH_OFFSET), r);
+    void loadLocalI64High(const Local& src, RegI32 dest) {
+        masm.load32(Address(sp_, localOffset(src) + INT64HIGH_OFFSET), dest);
     }
 #endif
 
-    void loadLocalI64(RegI64 r, const Local& local) {
-        masm.load64(Address(sp_, localOffset(local)), r);
+    void loadLocalI64(const Local& src, RegI64 dest) {
+        masm.load64(Address(sp_, localOffset(src)), dest);
     }
 
-    void loadLocalPtr(Register r, const Local& local) {
-        masm.loadPtr(Address(sp_, localOffset(local)), r);
+    void loadLocalPtr(const Local& src, Register dest) {
+        masm.loadPtr(Address(sp_, localOffset(src)), dest);
     }
 
-    void loadLocalF64(RegF64 r, const Local& local) {
-        masm.loadDouble(Address(sp_, localOffset(local)), r);
+    void loadLocalF64(const Local& src, RegF64 dest) {
+        masm.loadDouble(Address(sp_, localOffset(src)), dest);
     }
 
-    void loadLocalF32(RegF32 r, const Local& local) {
-        masm.loadFloat32(Address(sp_, localOffset(local)), r);
+    void loadLocalF32(const Local& src, RegF32 dest) {
+        masm.loadFloat32(Address(sp_, localOffset(src)), dest);
     }
 
-    void storeLocalI32(RegI32 r, const Local& local) {
-        masm.store32(r, Address(sp_, localOffset(local)));
+    void storeLocalI32(RegI32 src, const Local& dest) {
+        masm.store32(src, Address(sp_, localOffset(dest)));
     }
 
-    void storeLocalI64(RegI64 r, const Local& local) {
-        masm.store64(r, Address(sp_, localOffset(local)));
+    void storeLocalI64(RegI64 src, const Local& dest) {
+        masm.store64(src, Address(sp_, localOffset(dest)));
     }
 
-    void storeLocalPtr(Register r, const Local& local) {
-        masm.storePtr(r, Address(sp_, localOffset(local)));
+    void storeLocalPtr(Register src, const Local& dest) {
+        masm.storePtr(src, Address(sp_, localOffset(dest)));
     }
 
-    void storeLocalF64(RegF64 r, const Local& local) {
-        masm.storeDouble(r, Address(sp_, localOffset(local)));
+    void storeLocalF64(RegF64 src, const Local& dest) {
+        masm.storeDouble(src, Address(sp_, localOffset(dest)));
     }
 
-    void storeLocalF32(RegF32 r, const Local& local) {
-        masm.storeFloat32(r, Address(sp_, localOffset(local)));
+    void storeLocalF32(RegF32 src, const Local& dest) {
+        masm.storeFloat32(src, Address(sp_, localOffset(dest)));
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -1155,37 +1155,37 @@ class BaseStackFrame
         }
     }
 
-    void loadStackI32(RegI32 r, int32_t offset) {
-        masm.load32(Address(sp_, stackOffset(offset)), r);
+    void loadStackI32(int32_t offset, RegI32 dest) {
+        masm.load32(Address(sp_, stackOffset(offset)), dest);
     }
 
-    void loadStackI64(RegI64 r, int32_t offset) {
-        masm.load64(Address(sp_, stackOffset(offset)), r);
+    void loadStackI64(int32_t offset, RegI64 dest) {
+        masm.load64(Address(sp_, stackOffset(offset)), dest);
     }
 
 #ifndef JS_64BIT
-    void loadStackI64Low(RegI32 r, int32_t offset) {
-        masm.load32(Address(sp_, stackOffset(offset - INT64LOW_OFFSET)), r);
+    void loadStackI64Low(int32_t offset, RegI32 dest) {
+        masm.load32(Address(sp_, stackOffset(offset - INT64LOW_OFFSET)), dest);
     }
 
-    void loadStackI64High(RegI32 r, int32_t offset) {
-        masm.load32(Address(sp_, stackOffset(offset - INT64HIGH_OFFSET)), r);
+    void loadStackI64High(int32_t offset, RegI32 dest) {
+        masm.load32(Address(sp_, stackOffset(offset - INT64HIGH_OFFSET)), dest);
     }
 #endif
 
     // Disambiguation: this loads a "Ptr" value from the stack, it does not load
     // the "StackPtr".
 
-    void loadStackPtr(Register r, int32_t offset) {
-        masm.loadPtr(Address(sp_, stackOffset(offset)), r);
+    void loadStackPtr(int32_t offset, Register dest) {
+        masm.loadPtr(Address(sp_, stackOffset(offset)), dest);
     }
 
-    void loadStackF64(RegF64 r, int32_t offset) {
-        masm.loadDouble(Address(sp_, stackOffset(offset)), r);
+    void loadStackF64(int32_t offset, RegF64 dest) {
+        masm.loadDouble(Address(sp_, stackOffset(offset)), dest);
     }
 
-    void loadStackF32(RegF32 r, int32_t offset) {
-        masm.loadFloat32(Address(sp_, stackOffset(offset)), r);
+    void loadStackF32(int32_t offset, RegF32 dest) {
+        masm.loadFloat32(Address(sp_, stackOffset(offset)), dest);
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -1849,11 +1849,11 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadMemI32(Stk& src, RegI32 dest) {
-        fr.loadStackI32(dest, src.offs());
+        fr.loadStackI32(src.offs(), dest);
     }
 
     void loadLocalI32(Stk& src, RegI32 dest) {
-        fr.loadLocalI32(dest, localFromSlot(src.slot(), MIRType::Int32));
+        fr.loadLocalI32(localFromSlot(src.slot(), MIRType::Int32), dest);
     }
 
     void loadRegisterI32(Stk& src, RegI32 dest) {
@@ -1865,11 +1865,11 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadMemI64(Stk& src, RegI64 dest) {
-        fr.loadStackI64(dest, src.offs());
+        fr.loadStackI64(src.offs(), dest);
     }
 
     void loadLocalI64(Stk& src, RegI64 dest) {
-        fr.loadLocalI64(dest, localFromSlot(src.slot(), MIRType::Int64));
+        fr.loadLocalI64(localFromSlot(src.slot(), MIRType::Int64), dest);
     }
 
     void loadRegisterI64(Stk& src, RegI64 dest) {
@@ -1883,11 +1883,11 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadMemF64(Stk& src, RegF64 dest) {
-        fr.loadStackF64(dest, src.offs());
+        fr.loadStackF64(src.offs(), dest);
     }
 
     void loadLocalF64(Stk& src, RegF64 dest) {
-        fr.loadLocalF64(dest, localFromSlot(src.slot(), MIRType::Double));
+        fr.loadLocalF64(localFromSlot(src.slot(), MIRType::Double), dest);
     }
 
     void loadRegisterF64(Stk& src, RegF64 dest) {
@@ -1901,11 +1901,11 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void loadMemF32(Stk& src, RegF32 dest) {
-        fr.loadStackF32(dest, src.offs());
+        fr.loadStackF32(src.offs(), dest);
     }
 
     void loadLocalF32(Stk& src, RegF32 dest) {
-        fr.loadLocalF32(dest, localFromSlot(src.slot(), MIRType::Float32));
+        fr.loadLocalF32(localFromSlot(src.slot(), MIRType::Float32), dest);
     }
 
     void loadRegisterF32(Stk& src, RegF32 dest) {
@@ -1959,10 +1959,10 @@ class BaseCompiler final : public BaseCompilerInterface
             moveImm32(int32_t(src.i64val()), dest);
             break;
           case Stk::MemI64:
-            fr.loadStackI64Low(dest, src.offs());
+            fr.loadStackI64Low(src.offs(), dest);
             break;
           case Stk::LocalI64:
-            fr.loadLocalI64Low(dest, localFromSlot(src.slot(), MIRType::Int64));
+            fr.loadLocalI64Low(localFromSlot(src.slot(), MIRType::Int64), dest);
             break;
           case Stk::RegisterI64:
             moveI32(RegI32(src.i64reg().low), dest);
@@ -1979,10 +1979,10 @@ class BaseCompiler final : public BaseCompilerInterface
             moveImm32(int32_t(src.i64val() >> 32), dest);
             break;
           case Stk::MemI64:
-            fr.loadStackI64High(dest, src.offs());
+            fr.loadStackI64High(src.offs(), dest);
             break;
           case Stk::LocalI64:
-            fr.loadLocalI64High(dest, localFromSlot(src.slot(), MIRType::Int64));
+            fr.loadLocalI64High(localFromSlot(src.slot(), MIRType::Int64), dest);
             break;
           case Stk::RegisterI64:
             moveI32(RegI32(src.i64reg().high), dest);
@@ -2090,9 +2090,9 @@ class BaseCompiler final : public BaseCompilerInterface
                 loadI64(v, fromI32(scratch));
                 uint32_t offs = fr.pushPtr(scratch);
 #else
-                fr.loadLocalI64High(scratch, localFromSlot(v.slot(), MIRType::Int64));
+                fr.loadLocalI64High(localFromSlot(v.slot(), MIRType::Int64), scratch);
                 fr.pushPtr(scratch);
-                fr.loadLocalI64Low(scratch, localFromSlot(v.slot(), MIRType::Int64));
+                fr.loadLocalI64Low(localFromSlot(v.slot(), MIRType::Int64), scratch);
                 uint32_t offs = fr.pushPtr(scratch);
 #endif
                 v.setOffs(Stk::MemI64, offs);
