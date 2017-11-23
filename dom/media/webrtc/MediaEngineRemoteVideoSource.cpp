@@ -17,6 +17,8 @@ extern mozilla::LogModule* GetMediaManagerLog();
 
 namespace mozilla {
 
+uint64_t MediaEngineCameraVideoSource::AllocationHandle::sId = 0;
+
 // These need a definition somewhere because template
 // code is allowed to take their address, and they aren't
 // guaranteed to have one without this.
@@ -80,6 +82,8 @@ MediaEngineRemoteVideoSource::Shutdown()
         empty = mSources.IsEmpty();
         if (empty) {
           MOZ_ASSERT(mPrincipalHandles.IsEmpty());
+          MOZ_ASSERT(mTargetCapabilities.IsEmpty());
+          MOZ_ASSERT(mHandleIds.IsEmpty());
           break;
         }
         source = mSources[0];
@@ -126,6 +130,8 @@ MediaEngineRemoteVideoSource::Allocate(
     MonitorAutoLock lock(mMonitor);
     if (mSources.IsEmpty()) {
       MOZ_ASSERT(mPrincipalHandles.IsEmpty());
+      MOZ_ASSERT(mTargetCapabilities.IsEmpty());
+      MOZ_ASSERT(mHandleIds.IsEmpty());
       LOG(("Video device %d reallocated", mCaptureIndex));
     } else {
       LOG(("Video device %d allocated shared", mCaptureIndex));
@@ -172,7 +178,12 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
     MonitorAutoLock lock(mMonitor);
     mSources.AppendElement(aStream);
     mPrincipalHandles.AppendElement(aPrincipalHandle);
+    mTargetCapabilities.AppendElement(mTargetCapability);
+    mHandleIds.AppendElement(mHandleId);
+
     MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
+    MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
+    MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
   }
 
   aStream->AddTrack(aID, 0, new VideoSegment(), SourceMediaStream::ADDTRACK_QUEUED);
@@ -218,8 +229,12 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
     }
 
     MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
+    MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
+    MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
     mSources.RemoveElementAt(i);
     mPrincipalHandles.RemoveElementAt(i);
+    mTargetCapabilities.RemoveElementAt(i);
+    mHandleIds.RemoveElementAt(i);
 
     aSource->EndTrack(aID);
 
@@ -262,18 +277,21 @@ nsresult
 MediaEngineRemoteVideoSource::UpdateSingleSource(
     const AllocationHandle* aHandle,
     const NormalizedConstraints& aNetConstraints,
+    const NormalizedConstraints& aNewConstraint,
     const MediaEnginePrefs& aPrefs,
     const nsString& aDeviceId,
     const char** aOutBadConstraint)
 {
-  if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId)) {
-    *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
-    return NS_ERROR_FAILURE;
-  }
-
   switch (mState) {
     case kReleased:
       MOZ_ASSERT(aHandle);
+      mHandleId = aHandle->mId;
+      if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId, mCapability, kFitness)) {
+        *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
+        return NS_ERROR_FAILURE;
+      }
+      mTargetCapability = mCapability;
+
       if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
                                   mCapEngine, GetUUID().get(),
                                   kMaxUniqueIdLength, mCaptureIndex,
@@ -286,18 +304,42 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
       break;
 
     case kStarted:
-      if (mCapability != mLastCapability) {
-        camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
-                                mCapEngine, mCaptureIndex);
-        if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
-                                    mCapEngine, mCaptureIndex, mCapability,
-                                    this)) {
-          LOG(("StartCapture failed"));
+      {
+        size_t index = mHandleIds.NoIndex;
+        if (aHandle) {
+          mHandleId = aHandle->mId;
+          index = mHandleIds.IndexOf(mHandleId);
+        }
+
+        if (!ChooseCapability(aNewConstraint, aPrefs, aDeviceId, mTargetCapability,
+                              kFitness)) {
+          *aOutBadConstraint = FindBadConstraint(aNewConstraint, *this, aDeviceId);
           return NS_ERROR_FAILURE;
         }
-        SetLastCapability(mCapability);
+
+        if (index != mHandleIds.NoIndex) {
+          mTargetCapabilities[index] = mTargetCapability;
+        }
+
+        if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId, mCapability,
+                              kFeasibility)) {
+          *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
+          return NS_ERROR_FAILURE;
+        }
+
+        if (mCapability != mLastCapability) {
+          camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
+                                  mCapEngine, mCaptureIndex);
+          if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
+                                      mCapEngine, mCaptureIndex, mCapability,
+                                      this)) {
+            LOG(("StartCapture failed"));
+            return NS_ERROR_FAILURE;
+          }
+          SetLastCapability(mCapability);
+        }
+        break;
       }
-      break;
 
     default:
       LOG(("Video device %d in ignored state %d", mCaptureIndex, mState));
@@ -464,7 +506,9 @@ bool
 MediaEngineRemoteVideoSource::ChooseCapability(
     const NormalizedConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs,
-    const nsString& aDeviceId)
+    const nsString& aDeviceId,
+    webrtc::CaptureCapability& aCapability,
+    const DistanceCalculation aCalculate)
 {
   AssertIsOnOwningThread();
 
@@ -477,15 +521,16 @@ MediaEngineRemoteVideoSource::ChooseCapability(
       // time (and may in fact change over time), so as a hack, we push ideal
       // and max constraints down to desktop_capture_impl.cc and finish the
       // algorithm there.
-      mCapability.width = (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 |
-                          (c.mWidth.mMax & 0xffff);
-      mCapability.height = (c.mHeight.mIdeal.valueOr(0) & 0xffff) << 16 |
-                           (c.mHeight.mMax & 0xffff);
-      mCapability.maxFPS = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
+      aCapability.width =
+        (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 | (c.mWidth.mMax & 0xffff);
+      aCapability.height =
+        (c.mHeight.mIdeal.valueOr(0) & 0xffff) << 16 | (c.mHeight.mMax & 0xffff);
+      aCapability.maxFPS =
+        c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
       return true;
     }
     default:
-      return MediaEngineCameraVideoSource::ChooseCapability(aConstraints, aPrefs, aDeviceId);
+      return MediaEngineCameraVideoSource::ChooseCapability(aConstraints, aPrefs, aDeviceId, aCapability, aCalculate);
   }
 
 }
