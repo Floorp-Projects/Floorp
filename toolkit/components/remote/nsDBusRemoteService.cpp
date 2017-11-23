@@ -12,6 +12,7 @@
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/Base64.h"
 #include "nsIServiceManager.h"
 #include "nsIWeakReference.h"
 #include "nsIWidget.h"
@@ -151,33 +152,37 @@ static DBusObjectPathVTable remoteHandlersTable = {
 NS_IMETHODIMP
 nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
 {
-  if (!aAppName || !aProfileName)
-    return NS_ERROR_INVALID_ARG;
-
   if (mConnection && dbus_connection_get_is_connected(mConnection)) {
     // We're already connected so we don't need to reconnect
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
+  if (!aAppName || !aProfileName)
+    return NS_ERROR_INVALID_ARG;
+
+  mConnection = already_AddRefed<DBusConnection>(
+    dbus_bus_get(DBUS_BUS_SESSION, nullptr));
+  if (!mConnection) {
+    return NS_ERROR_FAILURE;
+  }
+  dbus_connection_set_exit_on_disconnect(mConnection, false);
+
   mAppName = aAppName;
   ToLowerCase(mAppName);
 
+  // D-Bus names can contain only [a-z][A-Z][0-9]_
+  // characters so adjust the profile string properly.
+  nsAutoCString profileName;
+  nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfileName), profileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  profileName.ReplaceChar("+/=", '_');
+
+  nsAutoCString busName;
+  busName = nsPrintfCString("org.mozilla.%s.%s", mAppName.get(),
+                                                 profileName.get());
   DBusError err;
   dbus_error_init(&err);
-  mConnection = already_AddRefed<DBusConnection>(
-    dbus_bus_get(DBUS_BUS_SESSION, &err));
-  if (dbus_error_is_set(&err)) {
-    dbus_error_free(&err);
-    return NS_ERROR_FAILURE;
-  }
-
-  dbus_connection_set_exit_on_disconnect(mConnection, false);
-
-  nsAutoCString interfaceName;
-  interfaceName = nsPrintfCString("org.mozilla.%s.%s", aAppName, aProfileName);
-
-  dbus_error_init(&err);
-  dbus_bus_request_name(mConnection, interfaceName.get(),
+  dbus_bus_request_name(mConnection, busName.get(),
                        DBUS_NAME_FLAG_DO_NOT_QUEUE, &err);
   // The interface is already owned - there is another application/profile
   // instance already running.
@@ -187,11 +192,10 @@ nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoCString objectName;
-  objectName = nsPrintfCString("/org/mozilla/%s/Remote", aAppName);
-
-  if (!dbus_connection_register_object_path(mConnection, objectName.get(),
-                                           &remoteHandlersTable, this)) {
+  nsAutoCString pathName;
+  pathName = nsPrintfCString("/org/mozilla/%s/Remote", mAppName.get());
+  if (!dbus_connection_register_object_path(mConnection, pathName.get(),
+                                            &remoteHandlersTable, this)) {
     mConnection = nullptr;
     return NS_ERROR_FAILURE;
   }
