@@ -212,6 +212,7 @@ UNIFIED_SOURCES += [
     'nsAnimationManager.cpp',
     'nsComputedDOMStyle.cpp',
     'nsCSSAnonBoxes.cpp',
+    'nsCSSCounterStyleRule.cpp',
     'nsCSSDataBlock.cpp',
     'nsCSSKeywords.cpp',
     'nsCSSParser.cpp',
