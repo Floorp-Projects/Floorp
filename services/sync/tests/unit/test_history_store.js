@@ -343,6 +343,70 @@ add_task(async function test_remove() {
   do_check_null(queryres);
 });
 
+add_task(async function test_chunking() {
+  let mvpi = store.MAX_VISITS_PER_INSERT;
+  store.MAX_VISITS_PER_INSERT = 3;
+  let checkChunks = function(input, expected) {
+    let chunks = Array.from(store._generateChunks(input));
+    deepEqual(chunks, expected);
+  };
+  try {
+    checkChunks([{visits: ["x"]}],
+                [[{visits: ["x"]}]]);
+
+    // 3 should still be one chunk.
+    checkChunks([{visits: ["x", "x", "x"]}],
+                [[{visits: ["x", "x", "x"]}]]);
+
+    // 4 should still be one chunk as we don't split individual records.
+    checkChunks([{visits: ["x", "x", "x", "x"]}],
+                [[{visits: ["x", "x", "x", "x"]}]]
+               );
+
+    // 4 in the first and 1 in the second should be 2 chunks.
+    checkChunks([
+                  {visits: ["x", "x", "x", "x"]},
+                  {visits: ["x"]}
+                ],
+                // expected
+                [
+                  [
+                    {visits: ["x", "x", "x", "x"]}
+                  ],
+                  [
+                    {visits: ["x"]}
+                  ],
+                ]
+               );
+
+    // we put multiple records into chunks
+    checkChunks([
+                  {visits: ["x", "x"]},
+                  {visits: ["x"]},
+                  {visits: ["x"]},
+                  {visits: ["x", "x"]},
+                  {visits: ["x", "x", "x", "x"]},
+                ],
+                // expected
+                [
+                  [
+                    {visits: ["x", "x"]},
+                    {visits: ["x"]},
+                  ],
+                  [
+                    {visits: ["x"]},
+                    {visits: ["x", "x"]},
+                  ],
+                  [
+                    {visits: ["x", "x", "x", "x"]},
+                  ],
+                ]
+               );
+  } finally {
+    store.MAX_VISITS_PER_INSERT = mvpi;
+  }
+});
+
 add_task(async function cleanup() {
   _("Clean up.");
   await PlacesTestUtils.clearHistory();
