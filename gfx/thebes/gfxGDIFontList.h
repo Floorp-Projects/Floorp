@@ -165,8 +165,7 @@ public:
                                          gfxWindowsFontType aFontType,
                                          uint8_t aStyle,
                                          uint16_t aWeight, int16_t aStretch,
-                                         gfxUserFontData* aUserFontData,
-                                         bool aFamilyHasItalicFace);
+                                         gfxUserFontData* aUserFontData);
 
     // create a font entry for a font referenced by its fullname
     static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
@@ -175,13 +174,7 @@ public:
                                        uint8_t aStyle);
 
     gfxWindowsFontType mFontType;
-    bool mForceGDI    : 1;
-
-    // For src:local user-fonts, we keep track of whether the platform family
-    // contains an italic face, because in this case we can't safely ask GDI
-    // to create synthetic italics (oblique) via the LOGFONT.
-    // (For other types of font, this is just set to false.)
-    bool mFamilyHasItalicFace : 1;
+    bool mForceGDI;
 
     gfxSparseBitSet mUnicodeRanges;
 
@@ -190,7 +183,7 @@ protected:
 
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
                  uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
-                 gfxUserFontData *aUserFontData, bool aFamilyHasItalicFace);
+                 gfxUserFontData *aUserFontData);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
 
