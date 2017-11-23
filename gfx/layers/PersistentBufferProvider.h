@@ -100,6 +100,12 @@ public:
   virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
 
   virtual bool PreservesDrawingState() const override { return true; }
+
+  virtual void OnShutdown() override { Destroy(); }
+
+protected:
+  void Destroy();
+
 private:
   ~PersistentBufferProviderBasic();
 
