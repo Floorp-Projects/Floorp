@@ -2269,7 +2269,7 @@ Engine.prototype = {
     // we'll accept as a 'default' engine anything that has been registered at
     // resource://search-plugins/ even if the file doesn't come from the
     // application folder.  If not, skip costly additional checks.
-    if (Services.locale.defaultLocale !== Services.locale.getRequestedLocale() &&
+    if (Services.locale.defaultLocale == Services.locale.getRequestedLocale() &&
         !gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR"))
       return false;
 
