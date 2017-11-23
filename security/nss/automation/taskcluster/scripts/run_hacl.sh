@@ -13,19 +13,12 @@ set -e -x -v
 # successfully executed.
 
 # Format the extracted C code.
-cd ~/hacl-star/snapshots/nss
+cd ~/hacl-star/snapshots/nss-production
 cp ~/nss/.clang-format .
 find . -type f -name '*.[ch]' -exec clang-format -i {} \+
 
 # These diff commands will return 1 if there are differences and stop the script.
 files=($(find ~/nss/lib/freebl/verified/ -type f -name '*.[ch]'))
-for f in "${files[@]}"; do
-    diff $f $(basename "$f")
-done
-
-# Check that the specs didn't change either.
-cd ~/hacl-star/specs
-files=($(find ~/nss/lib/freebl/verified/specs -type f))
 for f in "${files[@]}"; do
     diff $f $(basename "$f")
 done
