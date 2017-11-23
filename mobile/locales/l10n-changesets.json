@@ -577,7 +577,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "ae3ee26ca0a4"
+        "revision": "3c009454298d"
     }, 
     "rm": {
         "platforms": [
