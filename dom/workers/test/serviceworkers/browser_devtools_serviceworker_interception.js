@@ -22,11 +22,9 @@ async function checkObserverInContent(aInput) {
   // We always get two channels which receive the "http-on-stop-request"
   // notification if the service worker hijacks the request and respondWith an
   // another fetch. One is for the "outer" window request when the other one is
-  // for the "inner" service worker request. We used to distinguish them by the
-  // channel.URI.spec, but it doesn't work fine with internal redirect case. The
-  // reason is that the two different channels will have the same channel.URI
-  // if it's an internal redirect. Therefore, distinguish them by the order.
-  let waitForSecondOnStopRequest = aInput.redirect;
+  // for the "inner" service worker request. Therefore, distinguish them by the
+  // order.
+  let waitForSecondOnStopRequest = aInput.intercepted;
 
   let promiseResolve;
 
@@ -35,8 +33,7 @@ async function checkObserverInContent(aInput) {
     // Since we cannot make sure that the network event triggered by the fetch()
     // in this testcase is the very next event processed by ObserverService, we
     // have to wait until we catch the one we want.
-    if (!(aInput.redirect && channel.URI.spec.includes(aInput.redirect)) &&
-        !(!aInput.redirect && channel.URI.spec.includes(aInput.url))) {
+    if (!channel.URI.spec.includes(aInput.expectedURL)) {
       return;
     }
 
@@ -197,24 +194,28 @@ add_task(async function test_serivce_worker_interception() {
   let testcases = [
     {
       url: helloDoc,
+      expectedURL: helloDoc,
       swPresent: false,
       intercepted: false,
       fetch: true
     },
     {
       url: fakeDoc,
+      expectedURL: helloDoc,
       swPresent: true,
       intercepted: true,
       fetch: false // should use HTTP cache
     },
     { // Bypass http cache
       url: helloDoc + "?ForBypassingHttpCache=" + Date.now(),
+      expectedURL: helloDoc,
       swPresent: true,
       intercepted: false,
       fetch: true
     },
     { // no-cors mode redirect to no-cors mode (trigger internal redirect)
       url: crossRedirect + "?url=" + crossHelloDoc + "&mode=no-cors",
+      expectedURL: crossHelloDoc,
       swPresent: true,
       redirect: "hello.html",
       intercepted: true,
