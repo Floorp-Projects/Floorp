@@ -4874,6 +4874,17 @@ replace_malloc_handle()
 static void
 replace_malloc_init_funcs();
 
+#ifdef MOZ_REPLACE_MALLOC_STATIC
+extern "C" void
+logalloc_init(malloc_table_t*, ReplaceMallocBridge**);
+#endif
+
+bool
+Equals(malloc_table_t& aTable1, malloc_table_t& aTable2)
+{
+  return memcmp(&aTable1, &aTable2, sizeof(malloc_table_t)) == 0;
+}
+
 // Below is the malloc implementation overriding jemalloc and calling the
 // replacement functions if they exist.
 static bool gReplaceMallocInitialized = false;
@@ -4881,6 +4892,10 @@ static ReplaceMallocBridge* gReplaceMallocBridge = nullptr;
 static void
 init()
 {
+#ifdef MOZ_REPLACE_MALLOC_STATIC
+  malloc_table_t initialTable = gReplaceMallocTable;
+#endif
+
 #ifdef MOZ_DYNAMIC_REPLACE_INIT
   replace_malloc_handle_t handle = replace_malloc_handle();
   if (handle) {
@@ -4894,6 +4909,11 @@ init()
   if (replace_init) {
     replace_init(&gReplaceMallocTable, &gReplaceMallocBridge);
   }
+#ifdef MOZ_REPLACE_MALLOC_STATIC
+  if (Equals(initialTable, gReplaceMallocTable)) {
+    logalloc_init(&gReplaceMallocTable, &gReplaceMallocBridge);
+  }
+#endif
   replace_malloc_init_funcs();
 }
 
