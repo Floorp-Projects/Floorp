@@ -849,13 +849,13 @@ ChannelMediaResource::UpdatePrincipal()
 }
 
 void
-ChannelMediaResource::CacheClientNotifySuspendedStatusChanged()
+ChannelMediaResource::CacheClientNotifySuspendedStatusChanged(bool aSuspended)
 {
   mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod<bool>(
     "MediaResourceCallback::NotifySuspendedStatusChanged",
     mCallback.get(),
     &MediaResourceCallback::NotifySuspendedStatusChanged,
-    IsSuspendedByCache()));
+    aSuspended));
 }
 
 nsresult
@@ -941,12 +941,6 @@ bool
 ChannelMediaResource::IsDataCachedToEndOfResource(int64_t aOffset)
 {
   return mCacheStream.IsDataCachedToEndOfStream(aOffset);
-}
-
-bool
-ChannelMediaResource::IsSuspendedByCache()
-{
-  return mCacheStream.AreAllStreamsForResourceSuspended();
 }
 
 bool
