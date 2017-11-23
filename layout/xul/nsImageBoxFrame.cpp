@@ -572,8 +572,12 @@ nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
                                            mozilla::layers::WebRenderLayerManager* aManager,
                                            nsDisplayListBuilder* aDisplayListBuilder)
 {
-  ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
+  if (!imageFrame->CanOptimizeToImageLayer()) {
+    return false;
+  }
+
+  if (!imageFrame->mImageRequest) {
     return false;
   }
 
@@ -585,7 +589,7 @@ nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 
-  DrawResult result = static_cast<nsImageBoxFrame*>(mFrame)->
+  DrawResult result = imageFrame->
     CreateWebRenderCommands(aBuilder, aResources, aSc, aManager, this, ToReferenceFrame(), flags);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
