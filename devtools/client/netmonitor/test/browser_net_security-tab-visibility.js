@@ -42,7 +42,6 @@ add_task(function* () {
   for (let testcase of TEST_DATA) {
     info("Testing Security tab visibility for " + testcase.desc);
     let onNewItem = monitor.panelWin.once(EVENTS.NETWORK_EVENT);
-    let onSecurityInfo = monitor.panelWin.once(EVENTS.RECEIVED_SECURITY_INFO);
     let onComplete = testcase.isBroken ?
                        waitForSecurityBrokenNetworkEvent() :
                        waitForNetworkEvents(monitor, 1);
@@ -65,12 +64,20 @@ add_task(function* () {
       "Security tab is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
       " after new request was added to the menu.");
 
-    info("Waiting for security information to arrive.");
-    yield onSecurityInfo;
+    if (testcase.visibleOnSecurityInfo) {
+      // click security panel to lazy load the securityState
+      yield waitUntil(() => document.querySelector("#security-tab"));
+      EventUtils.sendMouseEvent({ type: "click" },
+        document.querySelector("#security-tab"));
+      yield waitUntil(() => document.querySelector(
+        "#security-panel .security-info-value"));
+      info("Waiting for security information to arrive.");
 
-    yield waitUntil(() => !!getSelectedRequest(store.getState()).securityState);
-    ok(getSelectedRequest(store.getState()).securityState,
-       "Security state arrived.");
+      yield waitUntil(() => !!getSelectedRequest(store.getState()).securityState);
+      ok(getSelectedRequest(store.getState()).securityState,
+         "Security state arrived.");
+    }
+
     is(!!document.querySelector("#security-tab"), testcase.visibleOnSecurityInfo,
        "Security tab is " + (testcase.visibleOnSecurityInfo ? "visible" : "hidden") +
        " after security information arrived.");

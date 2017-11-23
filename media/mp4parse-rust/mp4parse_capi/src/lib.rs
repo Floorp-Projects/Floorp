@@ -18,14 +18,14 @@
 //! }
 //!
 //! let mut file = std::fs::File::open("../mp4parse/tests/minimal.mp4").unwrap();
-//! let io = mp4parse_capi::mp4parse_io {
+//! let io = mp4parse_capi::Mp4parseIo {
 //!     read: Some(buf_read),
 //!     userdata: &mut file as *mut _ as *mut std::os::raw::c_void
 //! };
 //! unsafe {
 //!     let parser = mp4parse_capi::mp4parse_new(&io);
 //!     let rv = mp4parse_capi::mp4parse_read(parser);
-//!     assert_eq!(rv, mp4parse_capi::mp4parse_status::OK);
+//!     assert_eq!(rv, mp4parse_capi::Mp4parseStatus::Ok);
 //!     mp4parse_capi::mp4parse_free(parser);
 //! }
 //! ```
@@ -60,57 +60,55 @@ use mp4parse::CodecType;
 use mp4parse::Track;
 use mp4parse::vec_push;
 
+#[repr(C)]
+#[derive(PartialEq, Debug)]
+pub enum Mp4parseStatus {
+    Ok = 0,
+    BadArg = 1,
+    Invalid = 2,
+    Unsupported = 3,
+    Eof = 4,
+    Io = 5,
+    Oom = 6,
+}
+
+#[repr(C)]
+#[derive(PartialEq, Debug)]
+pub enum Mp4parseTrackType {
+    Video = 0,
+    Audio = 1,
+}
+
+impl Default for Mp4parseTrackType {
+    fn default() -> Self { Mp4parseTrackType::Video }
+}
+
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(PartialEq, Debug)]
-pub enum mp4parse_status {
-    OK = 0,
-    BAD_ARG = 1,
-    INVALID = 2,
-    UNSUPPORTED = 3,
-    EOF = 4,
-    IO = 5,
-    OOM = 6,
+pub enum Mp4parseCodec {
+    Unknown,
+    Aac,
+    Flac,
+    Opus,
+    Avc,
+    Vp9,
+    Mp3,
+    Mp4v,
+    Jpeg,   // for QT JPEG atom in video track
+    Ac3,
+    Ec3,
 }
 
-#[allow(non_camel_case_types)]
-#[repr(C)]
-#[derive(PartialEq, Debug)]
-pub enum mp4parse_track_type {
-    VIDEO = 0,
-    AUDIO = 1,
-}
-
-impl Default for mp4parse_track_type {
-    fn default() -> Self { mp4parse_track_type::VIDEO }
-}
-
-#[allow(non_camel_case_types)]
-#[repr(C)]
-#[derive(PartialEq, Debug)]
-pub enum mp4parse_codec {
-    UNKNOWN,
-    AAC,
-    FLAC,
-    OPUS,
-    AVC,
-    VP9,
-    MP3,
-    MP4V,
-    JPEG,   // for QT JPEG atom in video track
-    AC3,
-    EC3,
-}
-
-impl Default for mp4parse_codec {
-    fn default() -> Self { mp4parse_codec::UNKNOWN }
+impl Default for Mp4parseCodec {
+    fn default() -> Self { Mp4parseCodec::Unknown }
 }
 
 #[repr(C)]
 #[derive(Default, Debug)]
-pub struct mp4parse_track_info {
-    pub track_type: mp4parse_track_type,
-    pub codec: mp4parse_codec,
+pub struct Mp4parseTrackInfo {
+    pub track_type: Mp4parseTrackType,
+    pub codec: Mp4parseCodec,
     pub track_id: u32,
     pub duration: u64,
     pub media_time: i64, // wants to be u64? understand how elst adjustment works
@@ -119,7 +117,7 @@ pub struct mp4parse_track_info {
 
 #[repr(C)]
 #[derive(Default, Debug, PartialEq)]
-pub struct mp4parse_indice {
+pub struct Mp4parseIndice {
     pub start_offset: u64,
     pub end_offset: u64,
     pub start_composition: i64,
@@ -130,16 +128,16 @@ pub struct mp4parse_indice {
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct mp4parse_byte_data {
+pub struct Mp4parseByteData {
     pub length: u32,
     // cheddar can't handle generic type, so it needs to be multiple data types here.
     pub data: *const u8,
-    pub indices: *const mp4parse_indice,
+    pub indices: *const Mp4parseIndice,
 }
 
-impl Default for mp4parse_byte_data {
+impl Default for Mp4parseByteData {
     fn default() -> Self {
-        mp4parse_byte_data {
+        Self {
             length: 0,
             data: std::ptr::null(),
             indices: std::ptr::null(),
@@ -147,12 +145,13 @@ impl Default for mp4parse_byte_data {
     }
 }
 
-impl mp4parse_byte_data {
+impl Mp4parseByteData {
     fn set_data(&mut self, data: &[u8]) {
         self.length = data.len() as u32;
         self.data = data.as_ptr();
     }
-    fn set_indices(&mut self, data: &[mp4parse_indice]) {
+
+    fn set_indices(&mut self, data: &[Mp4parseIndice]) {
         self.length = data.len() as u32;
         self.indices = data.as_ptr();
     }
@@ -160,146 +159,140 @@ impl mp4parse_byte_data {
 
 #[repr(C)]
 #[derive(Default)]
-pub struct mp4parse_pssh_info {
-    pub data: mp4parse_byte_data,
+pub struct Mp4parsePsshInfo {
+    pub data: Mp4parseByteData,
 }
 
 #[repr(C)]
 #[derive(Default, Debug)]
-pub struct mp4parse_sinf_info {
+pub struct Mp4parseSinfInfo {
     pub is_encrypted: u32,
     pub iv_size: u8,
-    pub kid: mp4parse_byte_data,
+    pub kid: Mp4parseByteData,
 }
 
 #[repr(C)]
 #[derive(Default, Debug)]
-pub struct mp4parse_track_audio_info {
+pub struct Mp4parseTrackAudioInfo {
     pub channels: u16,
     pub bit_depth: u16,
     pub sample_rate: u32,
     pub profile: u16,
-    pub codec_specific_config: mp4parse_byte_data,
-    pub extra_data: mp4parse_byte_data,
-    pub protected_data: mp4parse_sinf_info,
+    pub codec_specific_config: Mp4parseByteData,
+    pub extra_data: Mp4parseByteData,
+    pub protected_data: Mp4parseSinfInfo,
 }
 
 #[repr(C)]
 #[derive(Default, Debug)]
-pub struct mp4parse_track_video_info {
+pub struct Mp4parseTrackVideoInfo {
     pub display_width: u32,
     pub display_height: u32,
     pub image_width: u16,
     pub image_height: u16,
     pub rotation: u16,
-    pub extra_data: mp4parse_byte_data,
-    pub protected_data: mp4parse_sinf_info,
+    pub extra_data: Mp4parseByteData,
+    pub protected_data: Mp4parseSinfInfo,
 }
 
 #[repr(C)]
 #[derive(Default, Debug)]
-pub struct mp4parse_fragment_info {
+pub struct Mp4parseFragmentInfo {
     pub fragment_duration: u64,
     // TODO:
     // info in trex box.
 }
 
-// Even though mp4parse_parser is opaque to C, rusty-cheddar won't let us
-// use more than one member, so we introduce *another* wrapper.
-struct Wrap {
+pub struct Mp4parseParser {
     context: MediaContext,
-    io: mp4parse_io,
+    io: Mp4parseIo,
     poisoned: bool,
     opus_header: HashMap<u32, Vec<u8>>,
     pssh_data: Vec<u8>,
-    sample_table: HashMap<u32, Vec<mp4parse_indice>>,
+    sample_table: HashMap<u32, Vec<Mp4parseIndice>>,
 }
 
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct mp4parse_parser(Wrap);
-
-impl mp4parse_parser {
+impl Mp4parseParser {
     fn context(&self) -> &MediaContext {
-        &self.0.context
+        &self.context
     }
 
     fn context_mut(&mut self) -> &mut MediaContext {
-        &mut self.0.context
+        &mut self.context
     }
 
-    fn io_mut(&mut self) -> &mut mp4parse_io {
-        &mut self.0.io
+    fn io_mut(&mut self) -> &mut Mp4parseIo {
+        &mut self.io
     }
 
     fn poisoned(&self) -> bool {
-        self.0.poisoned
+        self.poisoned
     }
 
     fn set_poisoned(&mut self, poisoned: bool) {
-        self.0.poisoned = poisoned;
+        self.poisoned = poisoned;
     }
 
     fn opus_header_mut(&mut self) -> &mut HashMap<u32, Vec<u8>> {
-        &mut self.0.opus_header
+        &mut self.opus_header
     }
 
     fn pssh_data_mut(&mut self) -> &mut Vec<u8> {
-        &mut self.0.pssh_data
+        &mut self.pssh_data
     }
 
-    fn sample_table_mut(&mut self) -> &mut HashMap<u32, Vec<mp4parse_indice>> {
-        &mut self.0.sample_table
+    fn sample_table_mut(&mut self) -> &mut HashMap<u32, Vec<Mp4parseIndice>> {
+        &mut self.sample_table
     }
 }
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct mp4parse_io {
+pub struct Mp4parseIo {
     pub read: Option<extern fn(buffer: *mut u8, size: usize, userdata: *mut std::os::raw::c_void) -> isize>,
     pub userdata: *mut std::os::raw::c_void,
 }
 
-impl Read for mp4parse_io {
+impl Read for Mp4parseIo {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         if buf.len() > isize::max_value() as usize {
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "buf length overflow in mp4parse_io Read impl"));
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "buf length overflow in Mp4parseIo Read impl"));
         }
         let rv = self.read.unwrap()(buf.as_mut_ptr(), buf.len(), self.userdata);
         if rv >= 0 {
             Ok(rv as usize)
         } else {
-            Err(std::io::Error::new(std::io::ErrorKind::Other, "I/O error in mp4parse_io Read impl"))
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "I/O error in Mp4parseIo Read impl"))
         }
     }
 }
 
 // C API wrapper functions.
 
-/// Allocate an `mp4parse_parser*` to read from the supplied `mp4parse_io`.
+/// Allocate an `Mp4parseParser*` to read from the supplied `Mp4parseIo`.
 #[no_mangle]
-pub unsafe extern fn mp4parse_new(io: *const mp4parse_io) -> *mut mp4parse_parser {
+pub unsafe extern fn mp4parse_new(io: *const Mp4parseIo) -> *mut Mp4parseParser {
     if io.is_null() || (*io).userdata.is_null() {
         return std::ptr::null_mut();
     }
     if (*io).read.is_none() {
         return std::ptr::null_mut();
     }
-    let parser = Box::new(mp4parse_parser(Wrap {
+    let parser = Box::new(Mp4parseParser {
         context: MediaContext::new(),
         io: (*io).clone(),
         poisoned: false,
         opus_header: HashMap::new(),
         pssh_data: Vec::new(),
         sample_table: HashMap::new(),
-    }));
+    });
 
     Box::into_raw(parser)
 }
 
-/// Free an `mp4parse_parser*` allocated by `mp4parse_new()`.
+/// Free an `Mp4parseParser*` allocated by `mp4parse_new()`.
 #[no_mangle]
-pub unsafe extern fn mp4parse_free(parser: *mut mp4parse_parser) {
+pub unsafe extern fn mp4parse_free(parser: *mut Mp4parseParser) {
     assert!(!parser.is_null());
     let _ = Box::from_raw(parser);
 }
@@ -310,12 +303,12 @@ pub unsafe extern fn mp4parse_log(enable: bool) {
     mp4parse::set_debug_mode(enable);
 }
 
-/// Run the `mp4parse_parser*` allocated by `mp4parse_new()` until EOF or error.
+/// Run the `Mp4parseParser*` allocated by `mp4parse_new()` until EOF or error.
 #[no_mangle]
-pub unsafe extern fn mp4parse_read(parser: *mut mp4parse_parser) -> mp4parse_status {
+pub unsafe extern fn mp4parse_read(parser: *mut Mp4parseParser) -> Mp4parseStatus {
     // Validate arguments from C.
     if parser.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     let context = (*parser).context_mut();
@@ -323,41 +316,41 @@ pub unsafe extern fn mp4parse_read(parser: *mut mp4parse_parser) -> mp4parse_sta
 
     let r = read_mp4(io, context);
     match r {
-        Ok(_) => mp4parse_status::OK,
+        Ok(_) => Mp4parseStatus::Ok,
         Err(Error::NoMoov) | Err(Error::InvalidData(_)) => {
             // Block further calls. We've probable lost sync.
             (*parser).set_poisoned(true);
-            mp4parse_status::INVALID
+            Mp4parseStatus::Invalid
         }
-        Err(Error::Unsupported(_)) => mp4parse_status::UNSUPPORTED,
-        Err(Error::UnexpectedEOF) => mp4parse_status::EOF,
+        Err(Error::Unsupported(_)) => Mp4parseStatus::Unsupported,
+        Err(Error::UnexpectedEOF) => Mp4parseStatus::Eof,
         Err(Error::Io(_)) => {
             // Block further calls after a read failure.
             // Getting std::io::ErrorKind::UnexpectedEof is normal
             // but our From trait implementation should have converted
             // those to our Error::UnexpectedEOF variant.
             (*parser).set_poisoned(true);
-            mp4parse_status::IO
+            Mp4parseStatus::Io
         },
-        Err(Error::OutOfMemory) => mp4parse_status::OOM,
+        Err(Error::OutOfMemory) => Mp4parseStatus::Oom,
     }
 }
 
 /// Return the number of tracks parsed by previous `mp4parse_read()` call.
 #[no_mangle]
-pub unsafe extern fn mp4parse_get_track_count(parser: *const mp4parse_parser, count: *mut u32) -> mp4parse_status {
+pub unsafe extern fn mp4parse_get_track_count(parser: *const Mp4parseParser, count: *mut u32) -> Mp4parseStatus {
     // Validate arguments from C.
     if parser.is_null() || count.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
     let context = (*parser).context();
 
     // Make sure the track count fits in a u32.
     if context.tracks.len() > u32::max_value() as usize {
-        return mp4parse_status::INVALID;
+        return Mp4parseStatus::Invalid;
     }
     *count = context.tracks.len() as u32;
-    mp4parse_status::OK
+    Mp4parseStatus::Ok
 }
 
 /// Calculate numerator * scale / denominator, if possible.
@@ -397,11 +390,11 @@ fn track_time_to_us<T>(time: TrackScaledTime<T>, scale: TrackTimeScale<T>) -> Op
     rational_scale::<T, u64>(time.0, scale.0, microseconds_per_second)
 }
 
-/// Fill the supplied `mp4parse_track_info` with metadata for `track`.
+/// Fill the supplied `Mp4parseTrackInfo` with metadata for `track`.
 #[no_mangle]
-pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track_index: u32, info: *mut mp4parse_track_info) -> mp4parse_status {
+pub unsafe extern fn mp4parse_get_track_info(parser: *mut Mp4parseParser, track_index: u32, info: *mut Mp4parseTrackInfo) -> Mp4parseStatus {
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     // Initialize fields to default values to ensure all fields are always valid.
@@ -409,43 +402,43 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
 
     let context = (*parser).context_mut();
     let track_index: usize = track_index as usize;
-    let info: &mut mp4parse_track_info = &mut *info;
+    let info: &mut Mp4parseTrackInfo = &mut *info;
 
     if track_index >= context.tracks.len() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     info.track_type = match context.tracks[track_index].track_type {
-        TrackType::Video => mp4parse_track_type::VIDEO,
-        TrackType::Audio => mp4parse_track_type::AUDIO,
-        TrackType::Unknown => return mp4parse_status::UNSUPPORTED,
+        TrackType::Video => Mp4parseTrackType::Video,
+        TrackType::Audio => Mp4parseTrackType::Audio,
+        TrackType::Unknown => return Mp4parseStatus::Unsupported,
     };
 
     // Return UNKNOWN for unsupported format.
     info.codec = match context.tracks[track_index].data {
         Some(SampleEntry::Audio(ref audio)) => match audio.codec_specific {
             AudioCodecSpecific::OpusSpecificBox(_) =>
-                mp4parse_codec::OPUS,
+                Mp4parseCodec::Opus,
             AudioCodecSpecific::FLACSpecificBox(_) =>
-                mp4parse_codec::FLAC,
+                Mp4parseCodec::Flac,
             AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::AAC =>
-                mp4parse_codec::AAC,
+                Mp4parseCodec::Aac,
             AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::MP3 =>
-                mp4parse_codec::MP3,
+                Mp4parseCodec::Mp3,
             AudioCodecSpecific::ES_Descriptor(_) | AudioCodecSpecific::LPCM =>
-                mp4parse_codec::UNKNOWN,
+                Mp4parseCodec::Unknown,
             AudioCodecSpecific::MP3 =>
-                mp4parse_codec::MP3,
+                Mp4parseCodec::Mp3,
         },
         Some(SampleEntry::Video(ref video)) => match video.codec_specific {
             VideoCodecSpecific::VPxConfig(_) =>
-                mp4parse_codec::VP9,
+                Mp4parseCodec::Vp9,
             VideoCodecSpecific::AVCConfig(_) =>
-                mp4parse_codec::AVC,
+                Mp4parseCodec::Avc,
             VideoCodecSpecific::ESDSConfig(_) => // MP4V (14496-2) video is unsupported.
-                mp4parse_codec::UNKNOWN,
+                Mp4parseCodec::Unknown,
         },
-        _ => mp4parse_codec::UNKNOWN,
+        _ => Mp4parseCodec::Unknown,
     };
 
     let track = &context.tracks[track_index];
@@ -457,42 +450,42 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
             match track.media_time.map_or(Some(0), |media_time| {
                     track_time_to_us(media_time, track_timescale) }) {
                 Some(time) => time as i64,
-                None => return mp4parse_status::INVALID,
+                None => return Mp4parseStatus::Invalid,
             };
         let empty_duration =
             match track.empty_duration.map_or(Some(0), |empty_duration| {
                     media_time_to_us(empty_duration, context_timescale) }) {
                 Some(time) => time as i64,
-                None => return mp4parse_status::INVALID,
+                None => return Mp4parseStatus::Invalid,
             };
         info.media_time = media_time - empty_duration;
 
         if let Some(track_duration) = track.duration {
             match track_time_to_us(track_duration, track_timescale) {
                 Some(duration) => info.duration = duration,
-                None => return mp4parse_status::INVALID,
+                None => return Mp4parseStatus::Invalid,
             }
         } else {
             // Duration unknown; stagefright returns 0 for this.
             info.duration = 0
         }
     } else {
-        return mp4parse_status::INVALID
+        return Mp4parseStatus::Invalid
     }
 
     info.track_id = match track.track_id {
         Some(track_id) => track_id,
-        None => return mp4parse_status::INVALID,
+        None => return Mp4parseStatus::Invalid,
     };
 
-    mp4parse_status::OK
+    Mp4parseStatus::Ok
 }
 
-/// Fill the supplied `mp4parse_track_audio_info` with metadata for `track`.
+/// Fill the supplied `Mp4parseTrackAudioInfo` with metadata for `track`.
 #[no_mangle]
-pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser, track_index: u32, info: *mut mp4parse_track_audio_info) -> mp4parse_status {
+pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut Mp4parseParser, track_index: u32, info: *mut Mp4parseTrackAudioInfo) -> Mp4parseStatus {
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     // Initialize fields to default values to ensure all fields are always valid.
@@ -501,24 +494,24 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
     let context = (*parser).context_mut();
 
     if track_index as usize >= context.tracks.len() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     let track = &context.tracks[track_index as usize];
 
     match track.track_type {
         TrackType::Audio => {}
-        _ => return mp4parse_status::INVALID,
+        _ => return Mp4parseStatus::Invalid,
     };
 
     let audio = match track.data {
         Some(ref data) => data,
-        None => return mp4parse_status::INVALID,
+        None => return Mp4parseStatus::Invalid,
     };
 
     let audio = match *audio {
         SampleEntry::Audio(ref x) => x,
-        _ => return mp4parse_status::INVALID,
+        _ => return Mp4parseStatus::Invalid,
     };
 
     (*info).channels = audio.channelcount as u16;
@@ -528,7 +521,7 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
     match audio.codec_specific {
         AudioCodecSpecific::ES_Descriptor(ref v) => {
             if v.codec_esds.len() > std::u32::MAX as usize {
-                return mp4parse_status::INVALID;
+                return Mp4parseStatus::Invalid;
             }
             (*info).extra_data.length = v.codec_esds.len() as u32;
             (*info).extra_data.data = v.codec_esds.as_ptr();
@@ -548,7 +541,7 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
             // Return the STREAMINFO metadata block in the codec_specific.
             let streaminfo = &flac.blocks[0];
             if streaminfo.block_type != 0 || streaminfo.data.len() != 34 {
-                return mp4parse_status::INVALID;
+                return Mp4parseStatus::Invalid;
             }
             (*info).extra_data.length = streaminfo.data.len() as u32;
             (*info).extra_data.data = streaminfo.data.as_ptr();
@@ -557,14 +550,14 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
             let mut v = Vec::new();
             match serialize_opus_header(opus, &mut v) {
                 Err(_) => {
-                    return mp4parse_status::INVALID;
+                    return Mp4parseStatus::Invalid;
                 }
                 Ok(_) => {
                     let header = (*parser).opus_header_mut();
                     header.insert(track_index, v);
                     if let Some(v) = header.get(&track_index) {
                         if v.len() > std::u32::MAX as usize {
-                            return mp4parse_status::INVALID;
+                            return Mp4parseStatus::Invalid;
                         }
                         (*info).extra_data.length = v.len() as u32;
                         (*info).extra_data.data = v.as_ptr();
@@ -583,14 +576,14 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
         }
     }
 
-    mp4parse_status::OK
+    Mp4parseStatus::Ok
 }
 
-/// Fill the supplied `mp4parse_track_video_info` with metadata for `track`.
+/// Fill the supplied `Mp4parseTrackVideoInfo` with metadata for `track`.
 #[no_mangle]
-pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser, track_index: u32, info: *mut mp4parse_track_video_info) -> mp4parse_status {
+pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut Mp4parseParser, track_index: u32, info: *mut Mp4parseTrackVideoInfo) -> Mp4parseStatus {
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     // Initialize fields to default values to ensure all fields are always valid.
@@ -599,24 +592,24 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
     let context = (*parser).context_mut();
 
     if track_index as usize >= context.tracks.len() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     let track = &context.tracks[track_index as usize];
 
     match track.track_type {
         TrackType::Video => {}
-        _ => return mp4parse_status::INVALID,
+        _ => return Mp4parseStatus::Invalid,
     };
 
     let video = match track.data {
         Some(ref data) => data,
-        None => return mp4parse_status::INVALID,
+        None => return Mp4parseStatus::Invalid,
     };
 
     let video = match *video {
         SampleEntry::Video(ref x) => x,
-        _ => return mp4parse_status::INVALID,
+        _ => return Mp4parseStatus::Invalid,
     };
 
     if let Some(ref tkhd) = track.tkhd {
@@ -631,7 +624,7 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
             _ => 0,
         };
     } else {
-        return mp4parse_status::INVALID;
+        return Mp4parseStatus::Invalid;
     }
     (*info).image_width = video.width;
     (*info).image_height = video.height;
@@ -651,13 +644,13 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
         }
     }
 
-    mp4parse_status::OK
+    Mp4parseStatus::Ok
 }
 
 #[no_mangle]
-pub unsafe extern fn mp4parse_get_indice_table(parser: *mut mp4parse_parser, track_id: u32, indices: *mut mp4parse_byte_data) -> mp4parse_status {
+pub unsafe extern fn mp4parse_get_indice_table(parser: *mut Mp4parseParser, track_id: u32, indices: *mut Mp4parseByteData) -> Mp4parseStatus {
     if parser.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     // Initialize fields to default values to ensure all fields are always valid.
@@ -667,13 +660,13 @@ pub unsafe extern fn mp4parse_get_indice_table(parser: *mut mp4parse_parser, tra
     let tracks = &context.tracks;
     let track = match tracks.iter().find(|track| track.track_id == Some(track_id)) {
         Some(t) => t,
-        _ => return mp4parse_status::INVALID,
+        _ => return Mp4parseStatus::Invalid,
     };
 
     let index_table = (*parser).sample_table_mut();
     if let Some(v) = index_table.get(&track_id) {
         (*indices).set_indices(v);
-        return mp4parse_status::OK;
+        return Mp4parseStatus::Ok;
     }
 
     let media_time = match (&track.media_time, &track.timescale) {
@@ -703,10 +696,10 @@ pub unsafe extern fn mp4parse_get_indice_table(parser: *mut mp4parse_parser, tra
     if let Some(v) = create_sample_table(track, offset_time) {
         (*indices).set_indices(&v);
         index_table.insert(track_id, v);
-        return mp4parse_status::OK;
+        return Mp4parseStatus::Ok;
     }
 
-    mp4parse_status::INVALID
+    Mp4parseStatus::Invalid
 }
 
 // Convert a 'ctts' compact table to full table by iterator,
@@ -859,7 +852,7 @@ impl<'a> Iterator for SampleToChunkIterator<'a> {
     }
 }
 
-fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4parse_indice>> {
+fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<Mp4parseIndice>> {
     let timescale = match track.timescale {
         Some(ref t) => TrackTimeScale::<i64>(t.0 as i64, t.1),
         _ => TrackTimeScale::<i64>(0, 0),
@@ -908,7 +901,7 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
             }
             cur_position = end_offset;
 
-            let res = vec_push(&mut sample_table, mp4parse_indice {
+            let res = vec_push(&mut sample_table, Mp4parseIndice {
                 start_offset: start_offset,
                 end_offset: end_offset,
                 start_composition: 0,
@@ -1016,41 +1009,41 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
     Some(sample_table)
 }
 
-/// Fill the supplied `mp4parse_fragment_info` with metadata from fragmented file.
+/// Fill the supplied `Mp4parseFragmentInfo` with metadata from fragmented file.
 #[no_mangle]
-pub unsafe extern fn mp4parse_get_fragment_info(parser: *mut mp4parse_parser, info: *mut mp4parse_fragment_info) -> mp4parse_status {
+pub unsafe extern fn mp4parse_get_fragment_info(parser: *mut Mp4parseParser, info: *mut Mp4parseFragmentInfo) -> Mp4parseStatus {
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     // Initialize fields to default values to ensure all fields are always valid.
     *info = Default::default();
 
     let context = (*parser).context();
-    let info: &mut mp4parse_fragment_info = &mut *info;
+    let info: &mut Mp4parseFragmentInfo = &mut *info;
 
     info.fragment_duration = 0;
 
     let duration = match context.mvex {
         Some(ref mvex) => mvex.fragment_duration,
-        None => return mp4parse_status::INVALID,
+        None => return Mp4parseStatus::Invalid,
     };
 
     if let (Some(time), Some(scale)) = (duration, context.timescale) {
         info.fragment_duration = match media_time_to_us(time, scale) {
             Some(time_us) => time_us as u64,
-            None => return mp4parse_status::INVALID,
+            None => return Mp4parseStatus::Invalid,
         }
     }
 
-    mp4parse_status::OK
+    Mp4parseStatus::Ok
 }
 
 /// A fragmented file needs mvex table and contains no data in stts, stsc, and stco boxes.
 #[no_mangle]
-pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_id: u32, fragmented: *mut u8) -> mp4parse_status {
+pub unsafe extern fn mp4parse_is_fragmented(parser: *mut Mp4parseParser, track_id: u32, fragmented: *mut u8) -> Mp4parseStatus {
     if parser.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     let context = (*parser).context_mut();
@@ -1058,18 +1051,18 @@ pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_
     (*fragmented) = false as u8;
 
     if context.mvex.is_none() {
-        return mp4parse_status::OK;
+        return Mp4parseStatus::Ok;
     }
 
     // check sample tables.
     let mut iter = tracks.iter();
-    iter.find(|track| track.track_id == Some(track_id)).map_or(mp4parse_status::BAD_ARG, |track| {
+    iter.find(|track| track.track_id == Some(track_id)).map_or(Mp4parseStatus::BadArg, |track| {
         match (&track.stsc, &track.stco, &track.stts) {
             (&Some(ref stsc), &Some(ref stco), &Some(ref stts))
                 if stsc.samples.is_empty() && stco.offsets.is_empty() && stts.samples.is_empty() => (*fragmented) = true as u8,
             _ => {},
         };
-        mp4parse_status::OK
+        Mp4parseStatus::Ok
     })
 }
 
@@ -1081,9 +1074,9 @@ pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_
 /// - pssh box size (32-bit native endian)
 /// - pssh box content (including header)
 #[no_mangle]
-pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut mp4parse_parser, info: *mut mp4parse_pssh_info) -> mp4parse_status {
+pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut Mp4parseParser, info: *mut Mp4parsePsshInfo) -> Mp4parseStatus {
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
-        return mp4parse_status::BAD_ARG;
+        return Mp4parseStatus::BadArg;
     }
 
     // Initialize fields to default values to ensure all fields are always valid.
@@ -1091,17 +1084,17 @@ pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut mp4parse_parser, info: 
 
     let context = (*parser).context_mut();
     let pssh_data = (*parser).pssh_data_mut();
-    let info: &mut mp4parse_pssh_info = &mut *info;
+    let info: &mut Mp4parsePsshInfo = &mut *info;
 
     pssh_data.clear();
     for pssh in &context.psshs {
         let content_len = pssh.box_content.len();
         if content_len > std::u32::MAX as usize {
-            return mp4parse_status::INVALID;
+            return Mp4parseStatus::Invalid;
         }
         let mut data_len = Vec::new();
         if data_len.write_u32::<byteorder::NativeEndian>(content_len as u32).is_err() {
-            return mp4parse_status::IO;
+            return Mp4parseStatus::Io;
         }
         pssh_data.extend_from_slice(pssh.system_id.as_slice());
         pssh_data.extend_from_slice(data_len.as_slice());
@@ -1110,7 +1103,7 @@ pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut mp4parse_parser, info: 
 
     info.data.set_data(pssh_data);
 
-    mp4parse_status::OK
+    Mp4parseStatus::Ok
 }
 
 #[cfg(test)]
@@ -1137,7 +1130,7 @@ extern fn valid_read(buf: *mut u8, size: usize, userdata: *mut std::os::raw::c_v
 #[test]
 fn new_parser() {
     let mut dummy_value: u32 = 42;
-    let io = mp4parse_io {
+    let io = Mp4parseIo {
         read: Some(panic_read),
         userdata: &mut dummy_value as *mut _ as *mut std::os::raw::c_void,
     };
@@ -1161,65 +1154,65 @@ fn get_track_count_null_parser() {
     unsafe {
         let mut count: u32 = 0;
         let rv = mp4parse_get_track_count(std::ptr::null(), std::ptr::null_mut());
-        assert_eq!(rv, mp4parse_status::BAD_ARG);
+        assert_eq!(rv, Mp4parseStatus::BadArg);
         let rv = mp4parse_get_track_count(std::ptr::null(), &mut count);
-        assert_eq!(rv, mp4parse_status::BAD_ARG);
+        assert_eq!(rv, Mp4parseStatus::BadArg);
     }
 }
 
 #[test]
 fn arg_validation() {
     unsafe {
-        // Passing a null mp4parse_io is an error.
+        // Passing a null Mp4parseIo is an error.
         let parser = mp4parse_new(std::ptr::null());
         assert!(parser.is_null());
 
         let null_mut: *mut std::os::raw::c_void = std::ptr::null_mut();
 
-        // Passing an mp4parse_io with null members is an error.
-        let io = mp4parse_io { read: None,
+        // Passing an Mp4parseIo with null members is an error.
+        let io = Mp4parseIo { read: None,
                                userdata: null_mut };
         let parser = mp4parse_new(&io);
         assert!(parser.is_null());
 
-        let io = mp4parse_io { read: Some(panic_read),
+        let io = Mp4parseIo { read: Some(panic_read),
                                userdata: null_mut };
         let parser = mp4parse_new(&io);
         assert!(parser.is_null());
 
         let mut dummy_value = 42;
-        let io = mp4parse_io {
+        let io = Mp4parseIo {
             read: None,
             userdata: &mut dummy_value as *mut _ as *mut std::os::raw::c_void,
         };
         let parser = mp4parse_new(&io);
         assert!(parser.is_null());
 
-        // Passing a null mp4parse_parser is an error.
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_read(std::ptr::null_mut()));
+        // Passing a null Mp4parseParser is an error.
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_read(std::ptr::null_mut()));
 
-        let mut dummy_info = mp4parse_track_info {
-            track_type: mp4parse_track_type::VIDEO,
-            codec: mp4parse_codec::UNKNOWN,
+        let mut dummy_info = Mp4parseTrackInfo {
+            track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
         };
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_info(std::ptr::null_mut(), 0, &mut dummy_info));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_info(std::ptr::null_mut(), 0, &mut dummy_info));
 
-        let mut dummy_video = mp4parse_track_video_info {
+        let mut dummy_video = Mp4parseTrackVideoInfo {
             display_width: 0,
             display_height: 0,
             image_width: 0,
             image_height: 0,
             rotation: 0,
-            extra_data: mp4parse_byte_data::default(),
+            extra_data: Mp4parseByteData::default(),
             protected_data: Default::default(),
         };
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_video_info(std::ptr::null_mut(), 0, &mut dummy_video));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_video_info(std::ptr::null_mut(), 0, &mut dummy_video));
 
         let mut dummy_audio = Default::default();
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_audio_info(std::ptr::null_mut(), 0, &mut dummy_audio));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_audio_info(std::ptr::null_mut(), 0, &mut dummy_audio));
     }
 }
 
@@ -1227,46 +1220,46 @@ fn arg_validation() {
 fn arg_validation_with_parser() {
     unsafe {
         let mut dummy_value = 42;
-        let io = mp4parse_io {
+        let io = Mp4parseIo {
             read: Some(error_read),
             userdata: &mut dummy_value as *mut _ as *mut std::os::raw::c_void,
         };
         let parser = mp4parse_new(&io);
         assert!(!parser.is_null());
 
-        // Our mp4parse_io read should simply fail with an error.
-        assert_eq!(mp4parse_status::IO, mp4parse_read(parser));
+        // Our Mp4parseIo read should simply fail with an error.
+        assert_eq!(Mp4parseStatus::Io, mp4parse_read(parser));
 
         // The parser is now poisoned and unusable.
-        assert_eq!(mp4parse_status::BAD_ARG,  mp4parse_read(parser));
+        assert_eq!(Mp4parseStatus::BadArg,  mp4parse_read(parser));
 
         // Null info pointers are an error.
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_info(parser, 0, std::ptr::null_mut()));
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_video_info(parser, 0, std::ptr::null_mut()));
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_audio_info(parser, 0, std::ptr::null_mut()));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_info(parser, 0, std::ptr::null_mut()));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_video_info(parser, 0, std::ptr::null_mut()));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_audio_info(parser, 0, std::ptr::null_mut()));
 
-        let mut dummy_info = mp4parse_track_info {
-            track_type: mp4parse_track_type::VIDEO,
-            codec: mp4parse_codec::UNKNOWN,
+        let mut dummy_info = Mp4parseTrackInfo {
+            track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
         };
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_info(parser, 0, &mut dummy_info));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_info(parser, 0, &mut dummy_info));
 
-        let mut dummy_video = mp4parse_track_video_info {
+        let mut dummy_video = Mp4parseTrackVideoInfo {
             display_width: 0,
             display_height: 0,
             image_width: 0,
             image_height: 0,
             rotation: 0,
-            extra_data: mp4parse_byte_data::default(),
+            extra_data: Mp4parseByteData::default(),
             protected_data: Default::default(),
         };
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_video_info(parser, 0, &mut dummy_video));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_video_info(parser, 0, &mut dummy_video));
 
         let mut dummy_audio = Default::default();
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_audio_info(parser, 0, &mut dummy_audio));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_audio_info(parser, 0, &mut dummy_audio));
 
         mp4parse_free(parser);
     }
@@ -1276,19 +1269,19 @@ fn arg_validation_with_parser() {
 fn get_track_count_poisoned_parser() {
     unsafe {
         let mut dummy_value = 42;
-        let io = mp4parse_io {
+        let io = Mp4parseIo {
             read: Some(error_read),
             userdata: &mut dummy_value as *mut _ as *mut std::os::raw::c_void,
         };
         let parser = mp4parse_new(&io);
         assert!(!parser.is_null());
 
-        // Our mp4parse_io read should simply fail with an error.
-        assert_eq!(mp4parse_status::IO, mp4parse_read(parser));
+        // Our Mp4parseIo read should simply fail with an error.
+        assert_eq!(Mp4parseStatus::Io, mp4parse_read(parser));
 
         let mut count: u32 = 0;
         let rv = mp4parse_get_track_count(parser, &mut count);
-        assert_eq!(rv, mp4parse_status::BAD_ARG);
+        assert_eq!(rv, Mp4parseStatus::BadArg);
 
         mp4parse_free(parser);
     }
@@ -1298,90 +1291,91 @@ fn get_track_count_poisoned_parser() {
 fn arg_validation_with_data() {
     unsafe {
         let mut file = std::fs::File::open("../mp4parse/tests/minimal.mp4").unwrap();
-        let io = mp4parse_io { read: Some(valid_read),
+        let io = Mp4parseIo { read: Some(valid_read),
                                userdata: &mut file as *mut _ as *mut std::os::raw::c_void };
         let parser = mp4parse_new(&io);
         assert!(!parser.is_null());
 
-        assert_eq!(mp4parse_status::OK, mp4parse_read(parser));
+        assert_eq!(Mp4parseStatus::Ok, mp4parse_read(parser));
 
         let mut count: u32 = 0;
-        assert_eq!(mp4parse_status::OK, mp4parse_get_track_count(parser, &mut count));
+        assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_count(parser, &mut count));
         assert_eq!(2, count);
 
-        let mut info = mp4parse_track_info {
-            track_type: mp4parse_track_type::VIDEO,
-            codec: mp4parse_codec::UNKNOWN,
+        let mut info = Mp4parseTrackInfo {
+            track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
         };
-        assert_eq!(mp4parse_status::OK, mp4parse_get_track_info(parser, 0, &mut info));
-        assert_eq!(info.track_type, mp4parse_track_type::VIDEO);
-        assert_eq!(info.codec, mp4parse_codec::AVC);
+        assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_info(parser, 0, &mut info));
+        assert_eq!(info.track_type, Mp4parseTrackType::Video);
+        assert_eq!(info.codec, Mp4parseCodec::Avc);
         assert_eq!(info.track_id, 1);
         assert_eq!(info.duration, 40000);
         assert_eq!(info.media_time, 0);
 
-        assert_eq!(mp4parse_status::OK, mp4parse_get_track_info(parser, 1, &mut info));
-        assert_eq!(info.track_type, mp4parse_track_type::AUDIO);
-        assert_eq!(info.codec, mp4parse_codec::AAC);
+        assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_info(parser, 1, &mut info));
+        assert_eq!(info.track_type, Mp4parseTrackType::Audio);
+        assert_eq!(info.codec, Mp4parseCodec::Aac);
         assert_eq!(info.track_id, 2);
         assert_eq!(info.duration, 61333);
         assert_eq!(info.media_time, 21333);
 
-        let mut video = mp4parse_track_video_info {
+        let mut video = Mp4parseTrackVideoInfo {
             display_width: 0,
             display_height: 0,
             image_width: 0,
             image_height: 0,
             rotation: 0,
-            extra_data: mp4parse_byte_data::default(),
+            extra_data: Mp4parseByteData::default(),
             protected_data: Default::default(),
         };
-        assert_eq!(mp4parse_status::OK, mp4parse_get_track_video_info(parser, 0, &mut video));
+        assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_video_info(parser, 0, &mut video));
         assert_eq!(video.display_width, 320);
         assert_eq!(video.display_height, 240);
         assert_eq!(video.image_width, 320);
         assert_eq!(video.image_height, 240);
 
         let mut audio = Default::default();
-        assert_eq!(mp4parse_status::OK, mp4parse_get_track_audio_info(parser, 1, &mut audio));
+        assert_eq!(Mp4parseStatus::Ok, mp4parse_get_track_audio_info(parser, 1, &mut audio));
         assert_eq!(audio.channels, 1);
         assert_eq!(audio.bit_depth, 16);
         assert_eq!(audio.sample_rate, 48000);
 
         // Test with an invalid track number.
-        let mut info = mp4parse_track_info {
-            track_type: mp4parse_track_type::VIDEO,
-            codec: mp4parse_codec::UNKNOWN,
+        let mut info = Mp4parseTrackInfo {
+            track_type: Mp4parseTrackType::Video,
+            codec: Mp4parseCodec::Unknown,
             track_id: 0,
             duration: 0,
             media_time: 0,
         };
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_info(parser, 3, &mut info));
-        assert_eq!(info.track_type, mp4parse_track_type::VIDEO);
-        assert_eq!(info.codec, mp4parse_codec::UNKNOWN);
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_info(parser, 3, &mut info));
+        assert_eq!(info.track_type, Mp4parseTrackType::Video);
+        assert_eq!(info.codec, Mp4parseCodec::Unknown);
         assert_eq!(info.track_id, 0);
         assert_eq!(info.duration, 0);
         assert_eq!(info.media_time, 0);
 
-        let mut video = mp4parse_track_video_info { display_width: 0,
-                                                    display_height: 0,
-                                                    image_width: 0,
-                                                    image_height: 0,
-                                                    rotation: 0,
-                                                    extra_data: mp4parse_byte_data::default(),
-                                                    protected_data: Default::default(),
+        let mut video = Mp4parseTrackVideoInfo {
+            display_width: 0,
+            display_height: 0,
+            image_width: 0,
+            image_height: 0,
+            rotation: 0,
+            extra_data: Mp4parseByteData::default(),
+            protected_data: Default::default(),
         };
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_video_info(parser, 3, &mut video));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_video_info(parser, 3, &mut video));
         assert_eq!(video.display_width, 0);
         assert_eq!(video.display_height, 0);
         assert_eq!(video.image_width, 0);
         assert_eq!(video.image_height, 0);
 
         let mut audio = Default::default();
-        assert_eq!(mp4parse_status::BAD_ARG, mp4parse_get_track_audio_info(parser, 3, &mut audio));
+        assert_eq!(Mp4parseStatus::BadArg, mp4parse_get_track_audio_info(parser, 3, &mut audio));
         assert_eq!(audio.channels, 0);
         assert_eq!(audio.bit_depth, 0);
         assert_eq!(audio.sample_rate, 0);

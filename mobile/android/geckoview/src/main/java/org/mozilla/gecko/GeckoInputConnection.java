@@ -235,7 +235,7 @@ class GeckoInputConnection
                     v.requestFocus();
                 }
                 final GeckoView view = getView();
-                if (view != null) {
+                if (view != null && view.getSession() != null) {
                     if (showToolbar) {
                         view.getDynamicToolbarAnimator().showToolbar(/*immediately*/ true);
                     }
@@ -352,8 +352,45 @@ class GeckoInputConnection
 
     @TargetApi(21)
     @Override
-    public void updateCompositionRects(final RectF[] aRects) {
+    public void updateCompositionRects(final RectF[] rects) {
         if (!(Build.VERSION.SDK_INT >= 21)) {
+            return;
+        }
+
+        final GeckoView view = getView();
+        if (view == null) {
+            return;
+        }
+
+        final Editable content = getEditable();
+        if (content == null) {
+            return;
+        }
+
+        final int composingStart = getComposingSpanStart(content);
+        final int composingEnd = getComposingSpanEnd(content);
+        if (composingStart < 0 || composingEnd < 0) {
+            if (DEBUG) {
+                Log.d(LOGTAG, "No composition for updates");
+            }
+            return;
+        }
+
+        final CharSequence composition = content.subSequence(composingStart, composingEnd);
+
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                updateCompositionRectsOnUi(view, rects, composition);
+            }
+        });
+    }
+
+    @TargetApi(21)
+    /* package */ void updateCompositionRectsOnUi(final GeckoView view,
+                                                  final RectF[] rects,
+                                                  final CharSequence composition) {
+        if (view.getSession() == null) {
             return;
         }
 
@@ -362,60 +399,24 @@ class GeckoInputConnection
         }
         mCursorAnchorInfoBuilder.reset();
 
-        // Calculate Gecko logical coords to screen coords
-        final GeckoView view = getView();
-        if (view == null) {
-            return;
-        }
-
-        // First aRects element is the widget bounds in device units.
-        final float zoom = view.getZoomFactor();
         final Matrix matrix = new Matrix();
-        matrix.postScale(zoom, zoom);
-        matrix.postTranslate(aRects[0].left, aRects[0].top);
+        view.getSession().getClientToScreenMatrix(matrix);
         mCursorAnchorInfoBuilder.setMatrix(matrix);
 
-        final Editable content = getEditable();
-        if (content == null) {
-            return;
-        }
-        int composingStart = getComposingSpanStart(content);
-        int composingEnd = getComposingSpanEnd(content);
-        if (composingStart < 0 || composingEnd < 0) {
-            if (DEBUG) {
-                Log.d(LOGTAG, "No composition for updates");
-            }
-            return;
+        for (int i = 0; i < rects.length; i++) {
+            mCursorAnchorInfoBuilder.addCharacterBounds(
+                    i, rects[i].left, rects[i].top, rects[i].right, rects[i].bottom,
+                    CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION);
         }
 
-        // Subsequent aRects elements are character bounds in CSS units.
-        for (int i = 1; i < aRects.length; i++) {
-            mCursorAnchorInfoBuilder.addCharacterBounds(i - 1,
-                                                        aRects[i].left,
-                                                        aRects[i].top,
-                                                        aRects[i].right,
-                                                        aRects[i].bottom,
-                                                        CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION);
-        }
-
-        mCursorAnchorInfoBuilder.setComposingText(0, content.subSequence(composingStart, composingEnd));
-
-        updateCursor();
-    }
-
-    @TargetApi(21)
-    private void updateCursor() {
-        if (mCursorAnchorInfoBuilder == null) {
-            return;
-        }
+        mCursorAnchorInfoBuilder.setComposingText(0, composition);
 
         final InputMethodManager imm = getInputMethodManager();
-        final View v = getView();
-        if (imm == null || v == null) {
+        if (imm == null) {
             return;
         }
 
-        imm.updateCursorAnchorInfo(v, mCursorAnchorInfoBuilder.build());
+        imm.updateCursorAnchorInfo(view, mCursorAnchorInfoBuilder.build());
     }
 
     @Override

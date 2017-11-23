@@ -74,9 +74,6 @@ static const uint16_t kSyntheticDate = (1 + (1 << 5) + (0 << 9));
 static uint16_t xtoint(const uint8_t *ii);
 static uint32_t xtolong(const uint8_t *ll);
 static uint32_t HashName(const char* aName, uint16_t nameLen);
-#ifdef XP_UNIX
-static nsresult ResolveSymlink(const char *path);
-#endif
 
 class ZipArchiveLogger {
 public:
@@ -475,7 +472,6 @@ MOZ_WIN_MEM_TRY_CATCH(return nullptr)
 // This extracts the item to the filehandle provided.
 // If 'aFd' is null, it only tests the extraction.
 // On extraction error(s) it removes the file.
-// When needed, it also resolves the symlink.
 //---------------------------------------------
 nsresult nsZipArchive::ExtractFile(nsZipItem *item, const char *outname,
                                    PRFileDesc* aFd)
@@ -513,15 +509,11 @@ nsresult nsZipArchive::ExtractFile(nsZipItem *item, const char *outname,
     }
   }
 
-  //-- delete the file on errors, or resolve symlink if needed
+  //-- delete the file on errors
   if (aFd) {
     PR_Close(aFd);
     if (rv != NS_OK)
       PR_Delete(outname);
-#ifdef XP_UNIX
-    else if (item->IsSymlink())
-      rv = ResolveSymlink(outname);
-#endif
   }
 
   return rv;
@@ -627,33 +619,6 @@ MOZ_WIN_MEM_TRY_BEGIN
 MOZ_WIN_MEM_TRY_CATCH(return NS_ERROR_FAILURE)
   return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
 }
-
-#ifdef XP_UNIX
-//---------------------------------------------
-// ResolveSymlink
-//---------------------------------------------
-static nsresult ResolveSymlink(const char *path)
-{
-  PRFileDesc * fIn = PR_Open(path, PR_RDONLY, 0000);
-  if (!fIn)
-    return NS_ERROR_FILE_DISK_FULL;
-
-  char buf[PATH_MAX+1];
-  int32_t length = PR_Read(fIn, (void*)buf, PATH_MAX);
-  PR_Close(fIn);
-
-  if (length <= 0) {
-    return NS_ERROR_FILE_DISK_FULL;
-  }
-
-  buf[length] = '\0';
-
-  if (PR_Delete(path) != 0 || symlink(buf, path) != 0) {
-     return NS_ERROR_FILE_DISK_FULL;
-  }
-  return NS_OK;
-}
-#endif
 
 //***********************************************************
 //      nsZipArchive  --  private implementation
@@ -1162,14 +1127,6 @@ PRTime nsZipItem::LastModTime()
 
   return GetModTime(Date(), Time());
 }
-
-#ifdef XP_UNIX
-bool nsZipItem::IsSymlink()
-{
-  if (isSynthetic) return false;
-  return (xtoint(central->external_attributes+2) & S_IFMT) == S_IFLNK;
-}
-#endif
 
 nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf,
                          uint32_t aBufSize, bool doCRC)

@@ -68,7 +68,7 @@ function getExtension() {
       let result = await testSubFrameResource(tab.id);
       browser.test.assertEq("loaded", result[0], "frame 1 loaded");
       browser.test.assertEq(redirectUrl, result[1], "frame 1 redirected");
-      // Bug 1390346 If jar caching breaks redirects, this next test will fail.
+      // If jar caching breaks redirects, this next test will fail (See Bug 1390346).
       result = await testSubFrameResource(tab.id);
       browser.test.assertEq("loaded", result[0], "frame 2 loaded");
       browser.test.assertEq(redirectUrl, result[1], "frame 2 redirected");

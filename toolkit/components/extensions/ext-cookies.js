@@ -347,7 +347,7 @@ this.cookies = class extends ExtensionAPI {
           for (let {cookie, storeId} of query(details, ["url", "name", "storeId"], context)) {
             Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
 
-            // Todo: could there be multiple per subdomain?
+            // TODO Bug 1387957: could there be multiple per subdomain?
             return Promise.resolve({
               url: details.url,
               name: details.name,

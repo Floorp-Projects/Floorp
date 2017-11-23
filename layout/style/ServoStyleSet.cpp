@@ -1344,16 +1344,21 @@ ServoStyleSet::MaybeGCRuleTree()
 ServoStyleSet::MayTraverseFrom(const Element* aElement)
 {
   MOZ_ASSERT(aElement->IsInComposedDoc());
-  Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
+  nsINode* parent = aElement->GetFlattenedTreeParentNodeForStyle();
   if (!parent) {
-    return true;
-  }
-
-  if (!parent->HasServoData()) {
     return false;
   }
 
-  return !Servo_Element_IsDisplayNone(parent);
+  if (!parent->IsElement()) {
+    MOZ_ASSERT(parent->IsNodeOfType(nsINode::eDOCUMENT));
+    return true;
+  }
+
+  if (!parent->AsElement()->HasServoData()) {
+    return false;
+  }
+
+  return !Servo_Element_IsDisplayNone(parent->AsElement());
 }
 
 bool

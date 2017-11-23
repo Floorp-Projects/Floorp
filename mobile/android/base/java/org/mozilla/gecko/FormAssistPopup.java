@@ -6,8 +6,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -18,7 +16,9 @@ import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener.OnDismissCallb
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.PointF;
+import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
@@ -254,10 +254,6 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
     }
 
     private void positionAndShowPopup() {
-        positionAndShowPopup(mGeckoView.getViewportMetrics());
-    }
-
-    private void positionAndShowPopup(ImmutableViewportMetrics aMetrics) {
         ThreadUtils.assertOnUiThread();
 
         // Don't show the form assist popup when using fullscreen VKB
@@ -282,34 +278,30 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
             sValidationMessageHeight = (int) (res.getDimension(R.dimen.validation_message_height));
         }
 
-        float zoom = aMetrics.zoomFactor;
-
         // These values correspond to the input box for which we want to
         // display the FormAssistPopup.
-        int left = (int) (mX * zoom - aMetrics.viewportRectLeft);
-        int top = (int) (mY * zoom - aMetrics.viewportRectTop + mGeckoView.getTop() +
-                         mGeckoView.getCurrentToolbarHeight());
-        int width = (int) (mW * zoom);
-        int height = (int) (mH * zoom);
+        final Matrix matrix = new Matrix();
+        final RectF input = new RectF((float) mX, (float) mY,
+                                      (float) (mX + mW), (float) (mY + mH));
+        mGeckoView.getSession().getClientToSurfaceMatrix(matrix);
+        matrix.mapRect(input);
+
+        final Rect page = new Rect();
+        mGeckoView.getSession().getSurfaceBounds(page);
 
         int popupWidth = LayoutParams.MATCH_PARENT;
-        int popupLeft = left < 0 ? 0 : left;
-
-        FloatSize viewport = aMetrics.getSize();
+        int popupLeft = Math.max((int) input.left, page.left);
 
         // For autocomplete suggestions, if the input is smaller than the screen-width,
         // shrink the popup's width. Otherwise, keep it as MATCH_PARENT.
-        if ((mPopupType == PopupType.AUTOCOMPLETE) && (left + width) < viewport.width) {
-            popupWidth = left < 0 ? left + width : width;
-
+        if ((mPopupType == PopupType.AUTOCOMPLETE) && (int) input.right < page.right) {
             // Ensure the popup has a minimum width.
-            if (popupWidth < sAutoCompleteMinWidth) {
-                popupWidth = sAutoCompleteMinWidth;
+            final int visibleWidth = (int) input.right - popupLeft;
+            popupWidth = Math.max(visibleWidth, sAutoCompleteMinWidth);
 
-                // Move the popup to the left if there isn't enough room for it.
-                if ((popupLeft + popupWidth) > viewport.width) {
-                    popupLeft = (int) (viewport.width - popupWidth);
-                }
+            // Move the popup to the left if there isn't enough room for it.
+            if ((popupLeft + popupWidth) > page.right) {
+                popupLeft = Math.max(page.right - popupWidth, page.left);
             }
         }
 
@@ -326,7 +318,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
             popupHeight = sValidationMessageHeight;
         }
 
-        int popupTop = top + height;
+        int popupTop = (int) input.bottom;
 
         if (mPopupType == PopupType.VALIDATIONMESSAGE) {
             mValidationMessageText.setLayoutParams(sValidationTextLayoutNormal);
@@ -336,20 +328,15 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
 
         // If the popup doesn't fit below the input box, shrink its height, or
         // see if we can place it above the input instead.
-        if ((popupTop + popupHeight) > (mGeckoView.getTop() + viewport.height)) {
+        if ((popupTop + popupHeight) > page.bottom) {
             // Find where the maximum space is, and put the popup there.
-            if ((viewport.height - popupTop) > top) {
+            if ((page.bottom - (int) input.bottom) > ((int) input.top - page.top)) {
                 // Shrink the height to fit it below the input box.
-                popupHeight = (int) (viewport.height - popupTop);
+                popupHeight = page.bottom - (int) input.bottom;
             } else {
-                if (popupHeight < top) {
-                    // No shrinking needed to fit on top.
-                    popupTop = (top - popupHeight);
-                } else {
-                    // Shrink to available space on top.
-                    popupTop = 0;
-                    popupHeight = top;
-                }
+                // Shrink to available space on top if needed.
+                popupTop = Math.max((int) input.top - popupHeight, page.top);
+                popupHeight = (int) input.top - popupTop;
 
                 if (mPopupType == PopupType.VALIDATIONMESSAGE) {
                     mValidationMessageText.setLayoutParams(sValidationTextLayoutInverted);
@@ -383,19 +370,6 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
             return;
         }
         positionAndShowPopup();
-    }
-
-    void onMetricsChanged(final ImmutableViewportMetrics aMetrics) {
-        if (!isShown()) {
-            return;
-        }
-
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                positionAndShowPopup(aMetrics);
-            }
-        });
     }
 
     private static final class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {

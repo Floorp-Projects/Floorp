@@ -2323,14 +2323,18 @@ nsWindow::GetWidgetScreen()
     return screenMgrAndroid->ScreenForId(mScreenId);
 }
 
-jni::DependentRef<java::LayerSession::Compositor>
-nsWindow::GetJavaCompositor()
+void
+nsWindow::SetContentDocumentDisplayed(bool aDisplayed)
 {
-    if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
-        return lvs->GetJavaCompositor().Get();
-    }
-    return nullptr;
+    mContentDocumentDisplayed = aDisplayed;
 }
+
+bool
+nsWindow::IsContentDocumentDisplayed()
+{
+    return mContentDocumentDisplayed;
+}
+
 void
 nsWindow::RecvToolbarAnimatorMessageFromCompositor(int32_t aMessage)
 {
@@ -2346,6 +2350,7 @@ nsWindow::UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToSc
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
     const auto& compositor = lvs->GetJavaCompositor();
+    mContentDocumentDisplayed = true;
     compositor->UpdateRootFrameMetrics(aScrollOffset.x, aScrollOffset.y, aZoom.scale);
   }
 }

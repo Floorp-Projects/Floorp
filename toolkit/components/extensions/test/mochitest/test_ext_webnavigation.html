@@ -304,7 +304,7 @@ add_task(async function webnav_transitions_props() {
   if (found) {
     is(found.details.transitionType, "auto_subframe",
        "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
-    // BUG 1264936: currently the server_redirect is not detected in sub-frames
+    // TODO BUG 1264936: currently the server_redirect is not detected in sub-frames
     // once we fix it we can test it here:
     //
     // ok(Array.isArray(found.details.transitionQualifiers) &&

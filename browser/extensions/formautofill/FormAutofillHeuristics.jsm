@@ -201,7 +201,6 @@ class FieldScanner {
   findSameField(info) {
     return this.fieldDetails.findIndex(f => f.section == info.section &&
                                        f.addressType == info.addressType &&
-                                       f.contactType == info.contactType &&
                                        f.fieldName == info.fieldName);
   }
 
