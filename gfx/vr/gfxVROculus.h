@@ -42,14 +42,12 @@ class VROculusSession
 public:
   VROculusSession();
   void Refresh(bool aForceRefresh = false);
-  void StartTracking();
-  void StopTracking();
   bool IsTrackingReady() const;
+  bool IsRenderReady() const;
+  ovrSession Get();
   void StartPresentation(const IntSize& aSize);
   void StopPresentation();
-  bool IsPresentationReady() const;
-  bool IsMounted() const;
-  ovrSession Get();
+  void StopTracking();
   bool IsQuitTimeoutActive();
   already_AddRefed<layers::CompositingRenderTargetD3D11> GetNextRenderTarget();
   ovrTextureSwapChain GetSwapChain();
@@ -67,12 +65,8 @@ private:
   // The timestamp of the last ending presentation
   TimeStamp mLastPresentationEnd;
   VRTelemetry mTelemetry;
-  bool mRequestPresentation;
-  bool mRequestTracking;
-  bool mTracking;
+  bool mPresenting;
   bool mDrawBlack;
-  bool mIsConnected;
-  bool mIsMounted;
 
   ~VROculusSession();
   void Uninitialize(bool aUnloadLib);
@@ -90,6 +84,7 @@ private:
 class VRDisplayOculus : public VRDisplayHost
 {
 public:
+  virtual void NotifyVSync() override;
   void ZeroSensor() override;
 
 protected:
@@ -105,7 +100,6 @@ protected:
 public:
   explicit VRDisplayOculus(VROculusSession* aSession);
   void Destroy();
-  void Refresh();
 
 protected:
   virtual ~VRDisplayOculus();
@@ -182,10 +176,7 @@ public:
   static already_AddRefed<VRSystemManagerOculus> Create();
   virtual void Destroy() override;
   virtual void Shutdown() override;
-  virtual void Enumerate() override;
-  virtual void NotifyVSync() override;
-  virtual bool ShouldInhibitEnumeration() override;
-  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
+  virtual bool GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
