@@ -124,6 +124,7 @@
 #include "RegionBuilder.h"
 #include "SVGViewportElement.h"
 #include "DisplayItemClip.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "prenv.h"
 #include "RetainedDisplayListBuilder.h"
@@ -7133,6 +7134,53 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
   }
 
   return imageSize;
+}
+
+/* static */ IntSize
+nsLayoutUtils::ComputeImageContainerDrawingParameters(imgIContainer*            aImage,
+                                                      nsIFrame*                 aForFrame,
+                                                      const LayoutDeviceRect&   aDestRect,
+                                                      const StackingContextHelper& aSc,
+                                                      uint32_t                  aFlags,
+                                                      Maybe<SVGImageContext>&   aSVGContext)
+{
+  MOZ_ASSERT(aImage);
+  MOZ_ASSERT(aForFrame);
+
+  gfx::Size scaleFactors = aSc.GetInheritedScale();
+  SamplingFilter samplingFilter =
+    nsLayoutUtils::GetSamplingFilterForFrame(aForFrame);
+
+  // Compute our SVG context parameters, if any.
+  SVGImageContext::MaybeStoreContextPaint(aSVGContext, aForFrame, aImage);
+  if ((scaleFactors.width != 1.0 || scaleFactors.height != 1.0) &&
+      aImage->GetType() == imgIContainer::TYPE_VECTOR) {
+    if (!aSVGContext) {
+      aSVGContext.emplace();
+    }
+
+    gfxSize gfxDestSize(aDestRect.Width(), aDestRect.Height());
+    IntSize viewportSize =
+      aImage->OptimalImageSizeForDest(gfxDestSize,
+                                      imgIContainer::FRAME_CURRENT,
+                                      samplingFilter, aFlags);
+
+    aSVGContext->SetViewportSize(Some(CSSIntSize(viewportSize.width,
+                                                 viewportSize.height)));
+  }
+
+  // Compute our size in layer pixels.
+  const LayerIntSize layerSize =
+    RoundedToInt(LayerSize(aDestRect.Width() * scaleFactors.width,
+                           aDestRect.Height() * scaleFactors.height));
+
+  // Determine the optimal image size to use. An empty size is unacceptable so
+  // we ensure our suggested size is at least 1 pixel wide/tall.
+  gfxSize gfxLayerSize = gfxSize(std::max(layerSize.width, 1),
+                                 std::max(layerSize.height, 1));
+  return aImage->OptimalImageSizeForDest(gfxLayerSize,
+                                         imgIContainer::FRAME_CURRENT,
+                                         samplingFilter, aFlags);
 }
 
 /* static */ nsPoint
