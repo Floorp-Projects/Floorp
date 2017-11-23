@@ -1335,14 +1335,26 @@ public:
   virtual bool IsHTMLContentElement() const { return false; }
 
   void GetTextContent(nsAString& aTextContent,
+                      nsIPrincipal& aSubjectPrincipal,
+                      mozilla::OOMReporter& aError)
+  {
+    GetTextContentInternal(aTextContent, aError);
+  }
+  void GetTextContent(nsAString& aTextContent,
                       mozilla::OOMReporter& aError)
   {
     GetTextContentInternal(aTextContent, aError);
   }
   void SetTextContent(const nsAString& aTextContent,
+                      nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aError)
   {
-    SetTextContentInternal(aTextContent, aError);
+    SetTextContentInternal(aTextContent, &aSubjectPrincipal, aError);
+  }
+  void SetTextContent(const nsAString& aTextContent,
+                      mozilla::ErrorResult& aError)
+  {
+    SetTextContentInternal(aTextContent, nullptr, aError);
   }
 
   mozilla::dom::Element* QuerySelector(const nsAString& aSelector,
@@ -1993,6 +2005,7 @@ protected:
   virtual void GetTextContentInternal(nsAString& aTextContent,
                                       mozilla::OOMReporter& aError);
   virtual void SetTextContentInternal(const nsAString& aTextContent,
+                                      nsIPrincipal* aSubjectPrincipal,
                                       mozilla::ErrorResult& aError)
   {
   }

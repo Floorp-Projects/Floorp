@@ -25,7 +25,7 @@ pub struct Transaction {
 impl Transaction {
     pub fn new<F, T>(timeout: u64, callback: OnceCallback<T>, new_device_cb: F) -> io::Result<Self>
     where
-        F: Fn(IOHIDDeviceRef, Receiver<Vec<u8>>, &Fn() -> bool) + Sync + Send + 'static,
+        F: Fn((IOHIDDeviceRef, Receiver<Vec<u8>>), &Fn() -> bool) + Sync + Send + 'static,
         T: 'static,
     {
         let (tx, rx) = channel();

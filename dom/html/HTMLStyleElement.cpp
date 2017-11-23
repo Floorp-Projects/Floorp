@@ -100,6 +100,7 @@ HTMLStyleElement::ContentRemoved(nsIDocument* aDocument,
 void
 HTMLStyleElement::ContentChanged(nsIContent* aContent)
 {
+  mTriggeringPrincipal = nullptr;
   if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
     UpdateStyleSheetInternal(nullptr, nullptr);
   }
@@ -174,13 +175,24 @@ HTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 
 void
 HTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML,
+                               nsIPrincipal& aScriptedPrincipal,
                                ErrorResult& aError)
+{
+  SetTextContentInternal(aInnerHTML, &aScriptedPrincipal, aError);
+}
+
+void
+HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
+                                         nsIPrincipal* aScriptedPrincipal,
+                                         ErrorResult& aError)
 {
   SetEnableUpdates(false);
 
-  aError = nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
+  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, true);
 
   SetEnableUpdates(true);
+
+  mTriggeringPrincipal = aScriptedPrincipal;
 
   UpdateStyleSheetInternal(nullptr, nullptr);
 }
@@ -189,7 +201,7 @@ already_AddRefed<nsIURI>
 HTMLStyleElement::GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal)
 {
   *aIsInline = true;
-  *aTriggeringPrincipal = nullptr;
+  *aTriggeringPrincipal = do_AddRef(mTriggeringPrincipal).take();
   return nullptr;
 }
 

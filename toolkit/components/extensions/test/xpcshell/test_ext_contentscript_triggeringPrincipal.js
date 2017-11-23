@@ -20,6 +20,10 @@ Cu.importGlobalProperties(["URL"]);
 Services.prefs.setBoolPref("media.autoplay.enabled", true);
 Services.prefs.setIntPref("media.preload.default", 3);
 
+// Increase the length of the code samples included in CSP reports so that we
+// can correctly validate them.
+Services.prefs.setIntPref("security.csp.reporting.script-sample.max-length", 4096);
+
 // ExtensionContent.jsm needs to know when it's running from xpcshell,
 // to use the right timeout for content scripts executed at document_idle.
 ExtensionTestUtils.mockAppInfo();
@@ -93,8 +97,8 @@ const AUTOCLOSE_TAGS = new Set(["img", "input", "link", "source"]);
  * @typedef {object} ElementTestOptions
  * @property {string} origin
  *        The origin with which the content is expected to load. This
- *        may be either "page" or "extension". The actual load of the
- *        URL will be tested against the computed origin strings for
+ *        may be one of "page", "contentScript", or "extension". The actual load
+ *        of the URL will be tested against the computed origin strings for
  *        those two contexts.
  * @property {string} source
  *        An arbitrary string which uniquely identifies the source of
@@ -245,6 +249,189 @@ function toHTML(test, opts) {
 }
 
 /**
+ * Injects various permutations of inline CSS into a content page, from both
+ * extension content script and content page contexts, and sends a "css-sources"
+ * message to the test harness describing the injected content for verification.
+ */
+function testInlineCSS() {
+  let urls = [];
+  let sources = [];
+
+  /**
+   * Constructs the URL of an image to be loaded by the given origin, and
+   * returns a CSS url() expression for it.
+   *
+   * The `name` parameter is an arbitrary name which should describe how the URL
+   * is loaded. The `opts` object may contain arbitrary properties which
+   * describe the load. Currently, only `inline` is recognized, and indicates
+   * that the URL is being used in an inline stylesheet which may be blocked by
+   * CSP.
+   *
+   * The URL and its parameters are recorded, and sent to the parent process for
+   * verification.
+   *
+   * @param {string} origin
+   * @param {string} name
+   * @param {object} [opts]
+   * @returns {string}
+   */
+  let i = 0;
+  let url = (origin, name, opts = {}) => {
+    let source = `${origin}-${name}`;
+
+    let {href} = new URL(`css-${i++}.png?origin=${encodeURIComponent(origin)}&source=${encodeURIComponent(source)}`,
+                         location.href);
+
+    urls.push(Object.assign({}, opts, {href, origin, source}));
+    return `url("${href}")`;
+  };
+
+  /**
+   * Registers the given inline CSS source as being loaded by the given origin,
+   * and returns that CSS text.
+   *
+   * @param {string} origin
+   * @param {string} css
+   * @returns {string}
+   */
+  let source = (origin, css) => {
+    sources.push({origin, css});
+    return css;
+  };
+
+  /**
+   * Saves the given function to be run after a short delay, just before sending
+   * the list of loaded sources to the parent process.
+   */
+  let laters = [];
+  let later = (fn) => {
+    laters.push(fn);
+  };
+
+  // Note: When accessing an element through `wrappedJSObject`, the operations
+  // occur in the content page context, using the content subject principal.
+  // When accessing it through X-ray wrappers, they happen in the content script
+  // context, using its subject principal.
+
+  {
+    let li = document.createElement("li");
+    li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-first")}`));
+    li.style.wrappedJSObject.listStyleImage = url("page", "li.style.listStyleImage-second");
+    document.body.appendChild(li);
+  }
+
+  {
+    let li = document.createElement("li");
+    li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-first", {inline: true})}`));
+    li.style.listStyleImage = url("contentScript", "li.style.listStyleImage-second");
+    document.body.appendChild(li);
+  }
+
+  {
+    let li = document.createElement("li");
+    document.body.appendChild(li);
+    li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-first")}`));
+    later(() => li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-second", {inline: true})}`)));
+  }
+
+  {
+    let li = document.createElement("li");
+    document.body.appendChild(li);
+    li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-first", {inline: true})}`));
+    later(() => li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-second")}`)));
+  }
+
+  {
+    let li = document.createElement("li");
+    document.body.appendChild(li);
+    li.style.cssText = source("contentScript", `background: ${url("contentScript", "li.style.cssText-first")}`);
+
+    // TODO: This inline style should be blocked, since our style-src does not
+    // include 'unsafe-eval', but that is currently unimplemented.
+    later(() => { li.style.wrappedJSObject.cssText = `background: ${url("page", "li.style.cssText-second")}`; });
+  }
+
+  // Creates a new element, inserts it into the page, and returns its CSS selector.
+  let divNum = 0;
+  function getSelector() {
+    let div = document.createElement("div");
+    div.id = `generated-div-${divNum++}`;
+    document.body.appendChild(div);
+    return `#${div.id}`;
+  }
+
+  for (let prop of ["textContent", "innerHTML"]) {
+    // Test creating <style> element from the extension side and then replacing
+    // its contents from the content side.
+    {
+      let sel = getSelector();
+      let style = document.createElement("style");
+      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${prop}-first`)}; }`);
+      document.head.appendChild(style);
+
+      later(() => {
+        style.wrappedJSObject[prop] = source("page", `${sel} { background: ${url("page", `style-${prop}-second`, {inline: true})}; }`);
+      });
+    }
+
+    // Test creating <style> element from the extension side and then appending
+    // a text node to it. Regardless of whether the append happens from the
+    // content or extension side, this should cause the principal to be
+    // forgotten.
+    let testModifyAfterInject = (name, modifyFunc) => {
+      let sel = getSelector();
+      let style = document.createElement("style");
+      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${name}-${prop}-first`)}; }`);
+      document.head.appendChild(style);
+
+      later(() => {
+        modifyFunc(style, `${sel} { background: ${url("page", `style-${name}-${prop}-second`, {inline: true})}; }`);
+        source("page", style.textContent);
+      });
+    };
+
+    testModifyAfterInject("appendChild", (style, css) => {
+      style.appendChild(document.createTextNode(css));
+    });
+
+    // Test creating <style> element from the extension side and then appending
+    // to it using insertAdjacentHTML, with the same rules as above.
+    testModifyAfterInject("insertAdjacentHTML", (style, css) => {
+      // eslint-disable-next-line no-unsanitized/method
+      style.insertAdjacentHTML("beforeend", css);
+    });
+
+    // And again using insertAdjacentText.
+    testModifyAfterInject("insertAdjacentText", (style, css) => {
+      style.insertAdjacentText("beforeend", css);
+    });
+
+    // Test creating a style element and then accessing its CSSStyleSheet object.
+    {
+      let sel = getSelector();
+      let style = document.createElement("style");
+      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${prop}-sheet`)}; }`);
+      document.head.appendChild(style);
+
+      browser.test.assertThrows(
+        () => style.sheet.wrappedJSObject.cssRules,
+        /operation is insecure/,
+        "Page content should not be able to access extension-generated CSS rules");
+
+      style.sheet.insertRule(
+        source("extension", `${sel} { border-image: ${url("extension", `style-${prop}-sheet-insertRule`)}; }`));
+    }
+  }
+
+  setTimeout(() => {
+    for (let fn of laters) {
+      fn();
+    }
+    browser.test.sendMessage("css-sources", {urls, sources});
+  });
+}
+
+/**
  * A function which will be stringified, and run both as a page script
  * and an extension content script, to test element injection under
  * various configurations.
@@ -258,6 +445,14 @@ function toHTML(test, opts) {
  */
 function injectElements(tests, baseOpts) {
   window.addEventListener("load", () => {
+    if (typeof browser === "object") {
+      try {
+        testInlineCSS();
+      } catch (e) {
+        browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      }
+    }
+
     // Basic smoke test to check that SVG images do not try to create a document
     // with an expanded principal, which would cause a crash.
     let img = document.createElement("img");
@@ -268,16 +463,22 @@ function injectElements(tests, baseOpts) {
 
     // Basic smoke test to check that we don't try to create stylesheets with an
     // expanded principal, which would cause a crash when loading font sets.
-    let link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "data:text/css;base64," + btoa(`
+    let cssText = `
       @font-face {
           font-family: "DoesNotExist${rand}";
           src: url("fonts/DoesNotExist.${rand}.woff") format("woff");
           font-weight: normal;
           font-style: normal;
-      }`);
+      }`;
+
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "data:text/css;base64," + btoa(cssText);
     document.head.appendChild(link);
+
+    let style = document.createElement("style");
+    style.textContent = cssText;
+    document.head.appendChild(style);
 
     let overrideOpts = opts => Object.assign({}, baseOpts, opts);
     let opts = baseOpts;
@@ -396,10 +597,48 @@ function getInjectionScript(tests, opts) {
   return `
     ${getElementData}
     ${createElement}
+    ${testInlineCSS}
     (${injectElements})(${JSON.stringify(tests)},
                         ${JSON.stringify(opts)});
   `;
 }
+
+/**
+ * Extracts the "origin" query parameter from the given URL, and returns it,
+ * along with the URL sans origin parameter.
+ *
+ * @param {string} origURL
+ * @returns {object}
+ *        An object with `origin` and `baseURL` properties, containing the value
+ *        or the URL's "origin" query parameter and the URL with that parameter
+ *        removed, respectively.
+ */
+function getOriginBase(origURL) {
+  let url = new URL(origURL);
+  let origin = url.searchParams.get("origin");
+  url.searchParams.delete("origin");
+
+  return {origin, baseURL: url.href};
+}
+
+/**
+ * An object containing sets of base URLs and CSS sources which are present in
+ * the test page, sorted based on how they should be treated by CSP.
+ *
+ * @typedef {object} RequestedURLs
+ * @property {Set<string>} expectedURLs
+ *        A set of URLs which should be successfully requested by the content
+ *        page.
+ * @property {Set<string>} forbiddenURLs
+ *        A set of URLs which are present in the content page, but should never
+ *        generate requests.
+ * @property {Set<string>} blockedURLs
+ *        A set of URLs which are present in the content page, and should be
+ *        blocked by CSP, and reported in a CSP report.
+ * @property {Set<string>} blockedSources
+ *        A set of inline CSS sources which should be blocked by CSP, and
+ *        reported in a CSP report.
+ */
 
 /**
  * Computes a list of expected and forbidden base URLs for the given
@@ -417,9 +656,7 @@ function getInjectionScript(tests, opts) {
  *        A set of sources for which requests should never be sent. Any
  *        matching requests from these sources will cause the test to
  *        fail.
- * @returns {object}
- *        An object with `expectedURLs` and `forbiddenURLs` property,
- *        each containing a Set of URL strings.
+ * @returns {RequestedURLs}
  */
 function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
   let expectedURLs = new Set();
@@ -441,7 +678,66 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
       forbiddenURLs.add(urlPrefix);
     }
   }
-  return {expectedURLs, forbiddenURLs};
+
+  return {expectedURLs, forbiddenURLs, blockedURLs: forbiddenURLs};
+}
+
+/**
+ * Generates a set of expected and forbidden URLs and sources based on the CSS
+ * injected by our content script.
+ *
+ * @param {object} message
+ *        The "css-sources" message sent by the content script, containing lists
+ *        of CSS sources injected into the page.
+ * @param {Array<object>} message.urls
+ *        A list of URLs present in styles injected by the content script.
+ * @param {string} message.urls.*.origin
+ *        The origin of the URL, one of "page", "contentScript", or "extension".
+ * @param {string} message.urls.*.href
+ *        The URL string.
+ * @param {boolean} message.urls.*.inline
+ *        If true, the URL is present in an inline stylesheet, which may be
+ *        blocked by CSP prior to parsing, depending on its origin.
+ * @param {Array<object>} message.sources
+ *        A list of inline CSS sources injected by the content script.
+ * @param {string} message.sources.*.origin
+ *        The origin of the CSS, one of "page", "contentScript", or "extension".
+ * @param {string} message.sources.*.css
+ *        The CSS source text.
+ * @param {boolean} [cspEnabled = false]
+ *        If true, a strict CSP is enabled for this page, and inline page
+ *        sources should be blocked. URLs present in these sources will not be
+ *        expected to generate a CSP report, the inline sources themselves will.
+ * @returns {RequestedURLs}
+ */
+function computeExpectedForbiddenURLs({urls, sources}, cspEnabled = false) {
+  let expectedURLs = new Set();
+  let forbiddenURLs = new Set();
+  let blockedURLs = new Set();
+  let blockedSources = new Set();
+
+  for (let {href, origin, inline} of urls) {
+    let {baseURL} = getOriginBase(href);
+    if (cspEnabled && origin === "page") {
+      if (inline) {
+        forbiddenURLs.add(baseURL);
+      } else {
+        blockedURLs.add(baseURL);
+      }
+    } else {
+      expectedURLs.add(baseURL);
+    }
+  }
+
+  if (cspEnabled) {
+    for (let {origin, css} of sources) {
+      if (origin === "page") {
+        blockedSources.add(css);
+      }
+    }
+  }
+
+  return {expectedURLs, forbiddenURLs, blockedURLs, blockedSources};
 }
 
 /**
@@ -449,9 +745,9 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
  * and checks that their origin strings are as expected. Triggers a test
  * failure if any of the given forbidden URLs is requested.
  *
- * @param {object} urls
- *        An object containing expected and forbidden URL sets, as
- *        returned by {@see computeBaseURLs}.
+ * @param {Promise<object>} urlsPromise
+ *        A promise which resolves to an object containing expected and
+ *        forbidden URL sets, as returned by {@see computeBaseURLs}.
  * @param {object<string, string>} origins
  *        A mapping of origin parameters as they appear in URL query
  *        strings to the origin strings returned by corresponding
@@ -461,25 +757,23 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
  *        A promise which resolves when all requests have been
  *        processed.
  */
-function awaitLoads({expectedURLs, forbiddenURLs}, origins) {
-  expectedURLs = new Set(expectedURLs);
-
+function awaitLoads(urlsPromise, origins) {
   return new Promise(resolve => {
-    let observer = (channel, topic, data) => {
-      channel.QueryInterface(Ci.nsIChannel);
+    let expectedURLs, forbiddenURLs;
+    let queuedChannels = [];
 
+    let observer;
+
+    function checkChannel(channel) {
       let origURL = channel.URI.spec;
-      let url = new URL(origURL);
-      let origin = url.searchParams.get("origin");
-      url.searchParams.delete("origin");
+      let {baseURL, origin} = getOriginBase(origURL);
 
-
-      if (forbiddenURLs.has(url.href)) {
+      if (forbiddenURLs.has(baseURL)) {
         ok(false, `Got unexpected request for forbidden URL ${origURL}`);
       }
 
-      if (expectedURLs.has(url.href)) {
-        expectedURLs.delete(url.href);
+      if (expectedURLs.has(baseURL)) {
+        expectedURLs.delete(baseURL);
 
         equal(channel.loadInfo.triggeringPrincipal.origin,
               origins[origin],
@@ -490,6 +784,24 @@ function awaitLoads({expectedURLs, forbiddenURLs}, origins) {
           do_print("Got all expected requests");
           resolve();
         }
+      }
+    }
+
+    urlsPromise.then(urls => {
+      expectedURLs = new Set(urls.expectedURLs);
+      forbiddenURLs = new Set([...urls.forbiddenURLs,
+                               ...urls.blockedURLs]);
+
+      for (let channel of queuedChannels.splice(0)) {
+        checkChannel(channel.QueryInterface(Ci.nsIChannel));
+      }
+    });
+
+    observer = (channel, topic, data) => {
+      if (expectedURLs) {
+        checkChannel(channel.QueryInterface(Ci.nsIChannel));
+      } else {
+        queuedChannels.push(channel);
       }
     };
     Services.obs.addObserver(observer, "http-on-modify-request");
@@ -506,40 +818,69 @@ function readUTF8InputStream(stream) {
  * Triggers a test failure if any of the given expected URLs triggers a
  * report.
  *
- * @param {object} urls
- *        An object containing expected and forbidden URL sets, as
- *        returned by {@see computeBaseURLs}.
+ * @param {Promise<object>} urlsPromise
+ *        A promise which resolves to an object containing expected and
+ *        forbidden URL sets, as returned by {@see computeBaseURLs}.
  * @returns {Promise}
  *        A promise which resolves when all requests have been
  *        processed.
  */
-function awaitCSP({expectedURLs, forbiddenURLs}) {
-  forbiddenURLs = new Set(forbiddenURLs);
-
+function awaitCSP(urlsPromise) {
   return new Promise(resolve => {
-    server.registerPathHandler(CSP_REPORT_PATH, (request, response) => {
-      response.setStatusLine(request.httpVersion, 204, "No Content");
+    let expectedURLs, blockedURLs, blockedSources;
+    let queuedRequests = [];
 
+    function checkRequest(request) {
       let body = JSON.parse(readUTF8InputStream(request.bodyInputStream));
       let report = body["csp-report"];
 
       let origURL = report["blocked-uri"];
-      let url = new URL(origURL);
-      url.searchParams.delete("origin");
+      if (origURL !== "self") {
+        let {baseURL} = getOriginBase(origURL);
 
-      if (expectedURLs.has(url.href)) {
-        ok(false, `Got unexpected CSP report for allowed URL ${origURL}`);
+        if (expectedURLs.has(baseURL)) {
+          ok(false, `Got unexpected CSP report for allowed URL ${origURL}`);
+        }
+
+        if (blockedURLs.has(baseURL)) {
+          blockedURLs.delete(baseURL);
+
+          do_print(`Got CSP report for forbidden URL ${origURL}`);
+        }
       }
 
-      if (forbiddenURLs.has(url.href)) {
-        forbiddenURLs.delete(url.href);
+      let source = report["script-sample"];
+      if (source) {
+        if (blockedSources.has(source)) {
+          blockedSources.delete(source);
 
-        do_print(`Got CSP report for forbidden URL ${origURL}`);
-
-        if (!forbiddenURLs.size) {
-          do_print("Got all expected CSP reports");
-          resolve();
+          do_print(`Got CSP report for forbidden inline source ${JSON.stringify(source)}`);
         }
+      }
+
+      if (!blockedURLs.size && !blockedSources.size) {
+        do_print("Got all expected CSP reports");
+        resolve();
+      }
+    }
+
+    urlsPromise.then(urls => {
+      blockedURLs = new Set(urls.blockedURLs);
+      blockedSources = new Set(urls.blockedSources);
+      ({expectedURLs} = urls);
+
+      for (let request of queuedRequests.splice(0)) {
+        checkRequest(request);
+      }
+    });
+
+    server.registerPathHandler(CSP_REPORT_PATH, (request, response) => {
+      response.setStatusLine(request.httpVersion, 204, "No Content");
+
+      if (expectedURLs) {
+        checkRequest(request);
+      } else {
+        queuedRequests.push(request);
       }
     });
   });
@@ -663,12 +1004,33 @@ const EXTENSION_DATA = {
   },
 
   files: {
-    "content_script.js": getInjectionScript(TESTS, {source: "contentScript", origin: "extension"}),
+    "content_script.js": getInjectionScript(TESTS, {source: "contentScript", origin: "contentScript"}),
   },
 };
 
 const pageURL = `${BASE_URL}/page.html`;
 const pageURI = Services.io.newURI(pageURL);
+
+// Merges the sets of expected URL and source data returned by separate
+// computedExpectedForbiddenURLs and computedBaseURLs calls.
+function mergeSources(a, b) {
+  return {
+    expectedURLs: new Set([...a.expectedURLs, ...b.expectedURLs]),
+    forbiddenURLs: new Set([...a.forbiddenURLs, ...b.forbiddenURLs]),
+    blockedURLs: new Set([...a.blockedURLs, ...b.blockedURLs]),
+    blockedSources: a.blockedSources || b.blockedSources,
+  };
+}
+
+// Returns a set of origin strings for the given extension and content page, for
+// use in verifying request triggering principals.
+function getOrigins(extension) {
+  return {
+    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {}).origin,
+    contentScript: Cu.getObjectPrincipal(Cu.Sandbox([extension.principal, pageURL])).origin,
+    extension: extension.principal.origin,
+  };
+}
 
 /**
  * Tests that various types of inline content elements initiate requests
@@ -678,11 +1040,14 @@ add_task(async function test_contentscript_triggeringPrincipals() {
   let extension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
   await extension.startup();
 
-  let origins = {
-    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {}).origin,
-    extension: Cu.getObjectPrincipal(Cu.Sandbox([extension.extension.principal, pageURL])).origin,
-  };
-  let finished = awaitLoads(computeBaseURLs(TESTS, SOURCES), origins);
+  let urlsPromise = extension.awaitMessage("css-sources").then(msg => {
+    return mergeSources(
+      computeExpectedForbiddenURLs(msg),
+      computeBaseURLs(TESTS, SOURCES));
+  });
+
+  let origins = getOrigins(extension.extension);
+  let finished = awaitLoads(urlsPromise, origins);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(pageURL);
 
@@ -711,15 +1076,17 @@ add_task(async function test_contentscript_csp() {
   let extension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
   await extension.startup();
 
-  let origins = {
-    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {}).origin,
-    extension: Cu.getObjectPrincipal(Cu.Sandbox([extension.extension.principal, pageURL])).origin,
-  };
+  let urlsPromise = extension.awaitMessage("css-sources").then(msg => {
+    return mergeSources(
+      computeExpectedForbiddenURLs(msg, true),
+      computeBaseURLs(TESTS, EXTENSION_SOURCES, PAGE_SOURCES));
+  });
 
-  let baseURLs = computeBaseURLs(TESTS, EXTENSION_SOURCES, PAGE_SOURCES);
+  let origins = getOrigins(extension.extension);
+
   let finished = Promise.all([
-    awaitLoads(baseURLs, origins),
-    checkCSPReports && awaitCSP(baseURLs),
+    awaitLoads(urlsPromise, origins),
+    checkCSPReports && awaitCSP(urlsPromise),
   ]);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(pageURL);

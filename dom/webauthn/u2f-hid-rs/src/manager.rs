@@ -7,7 +7,7 @@ use std::sync::mpsc::{channel, Sender, RecvTimeoutError};
 use std::time::Duration;
 
 use consts::PARAMETER_SIZE;
-use platform::PlatformManager;
+use statemachine::StateMachine;
 use runloop::RunLoop;
 use util::{to_io_err, OnceCallback};
 
@@ -40,7 +40,7 @@ impl U2FManager {
 
         // Start a new work queue thread.
         let queue = RunLoop::new(move |alive| {
-            let mut pm = PlatformManager::new();
+            let mut sm = StateMachine::new();
 
             while alive() {
                 match rx.recv_timeout(Duration::from_millis(50)) {
@@ -52,7 +52,7 @@ impl U2FManager {
                            callback,
                        }) => {
                         // This must not block, otherwise we can't cancel.
-                        pm.register(timeout, challenge, application, key_handles, callback);
+                        sm.register(timeout, challenge, application, key_handles, callback);
                     }
                     Ok(QueueAction::Sign {
                            timeout,
@@ -62,12 +62,12 @@ impl U2FManager {
                            callback,
                        }) => {
                         // This must not block, otherwise we can't cancel.
-                        pm.sign(timeout, challenge, application, key_handles, callback);
+                        sm.sign(timeout, challenge, application, key_handles, callback);
                     }
                     Ok(QueueAction::Cancel) => {
                         // Cancelling must block so that we don't start a new
                         // polling thread before the old one has shut down.
-                        pm.cancel();
+                        sm.cancel();
                     }
                     Err(RecvTimeoutError::Disconnected) => {
                         break;
@@ -77,7 +77,7 @@ impl U2FManager {
             }
 
             // Cancel any ongoing activity.
-            pm.cancel();
+            sm.cancel();
         })?;
 
         Ok(Self {
