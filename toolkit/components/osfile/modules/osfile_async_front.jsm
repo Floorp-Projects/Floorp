@@ -88,6 +88,7 @@ for (let [constProp, dirKey] of [
   ["profileDir", "ProfD"],
   ["userApplicationDataDir", "UAppData"],
   ["winAppDataDir", "AppData"],
+  ["winLocalAppDataDir", "LocalAppData"],
   ["winStartMenuProgsDir", "Progs"],
   ]) {
 
