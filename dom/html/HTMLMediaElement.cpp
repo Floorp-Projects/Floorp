@@ -670,6 +670,11 @@ void HTMLMediaElement::ReportLoadError(const char* aMsg,
                                   aParamCount);
 }
 
+static bool IsAutoplayEnabled()
+{
+  return Preferences::GetBool("media.autoplay.enabled");
+}
+
 class HTMLMediaElement::AudioChannelAgentCallback final :
   public nsIAudioChannelAgentCallback
 {
@@ -2429,8 +2434,7 @@ void HTMLMediaElement::UpdatePreloadAction()
   PreloadAction nextAction = PRELOAD_UNDEFINED;
   // If autoplay is set, or we're playing, we should always preload data,
   // as we'll need it to play.
-  if ((AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this)) &&
-       HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) ||
+  if ((IsAutoplayEnabled() && HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) ||
       !mPaused)
   {
     nextAction = HTMLMediaElement::PRELOAD_ENOUGH;
@@ -6174,7 +6178,7 @@ bool HTMLMediaElement::CanActivateAutoplay()
   // download is controlled by the script and there is no way to evaluate
   // MediaDecoder::CanPlayThrough().
 
-  if (!AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this))) {
+  if (!IsAutoplayEnabled()) {
     return false;
   }
 
