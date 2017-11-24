@@ -422,6 +422,17 @@ RenderThread::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
   return mRenderTextures.GetWeak(aExternalImageId.mHandle);
 }
 
+WebRenderProgramCache*
+RenderThread::ProgramCache()
+{
+  MOZ_ASSERT(IsInRenderThread());
+
+  if (!mProgramCache) {
+    mProgramCache = MakeUnique<WebRenderProgramCache>();
+  }
+  return mProgramCache.get();
+}
+
 WebRenderThreadPool::WebRenderThreadPool()
 {
   mThreadPool = wr_thread_pool_new();
@@ -430,6 +441,16 @@ WebRenderThreadPool::WebRenderThreadPool()
 WebRenderThreadPool::~WebRenderThreadPool()
 {
   wr_thread_pool_delete(mThreadPool);
+}
+
+WebRenderProgramCache::WebRenderProgramCache()
+{
+  mProgramCache = wr_program_cache_new();
+}
+
+WebRenderProgramCache::~WebRenderProgramCache()
+{
+  wr_program_cache_delete(mProgramCache);
 }
 
 } // namespace wr
