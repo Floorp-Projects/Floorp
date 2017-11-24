@@ -1370,7 +1370,8 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     // Wrap the list to make it its own layer
     aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR, 0,
+      nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR,
+                        nsDisplayOwnLayerFlags::eNone,
                         mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
                         mozilla::layers::ScrollThumbData{}, true, true));
   }
