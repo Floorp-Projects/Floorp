@@ -1,0 +1,22 @@
+<html>
+<head>
+  <style>
+    body[fired] {
+      background-color: #f00;
+    }
+  </style>
+  <script>
+    window.onbeforeunload = function() {
+      document.body.setAttribute("fired", true);
+      return "Parent document prompt";
+    }
+  </script>
+</head>
+<body>
+TEST PAGE
+  <iframe style="width: 150px; height: 60px" src="file_bug1415918_beforeunload_iframe.html">
+  </iframe>
+  <iframe style="width: 150px; height: 60px" src="file_bug1415918_beforeunload_iframe.html">
+  </iframe>
+</body>
+</html>

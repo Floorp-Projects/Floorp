@@ -2539,11 +2539,14 @@
 
       <method name="discardBrowser">
         <parameter name="aBrowser"/>
+        <parameter name="aForceDiscard"/>
         <body>
           <![CDATA[
             "use strict";
 
             let tab = this.getTabForBrowser(aBrowser);
+
+            let permitUnloadFlags = aForceDiscard ? aBrowser.dontPromptAndUnload : aBrowser.dontPromptAndDontUnload;
 
             if (!tab ||
                 tab.selected ||
@@ -2551,7 +2554,7 @@
                 this._windowIsClosing ||
                 !aBrowser.isConnected ||
                 !aBrowser.isRemoteBrowser ||
-                aBrowser.frameLoader.tabParent.hasBeforeUnload) {
+                !aBrowser.permitUnload(permitUnloadFlags).permitUnload) {
               return;
             }
 

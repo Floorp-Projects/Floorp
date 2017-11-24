@@ -50,10 +50,35 @@ interface nsIContentViewer : nsISupports
   [noscript] readonly attribute boolean isStopped;
 
   /**
-   * Checks if the document wants to prevent unloading by firing beforeunload on
-   * the document, and if it does, prompts the user. The result is returned.
+   * aPermitUnloadFlags are passed to PermitUnload to indicate what action to take
+   * if a beforeunload handler wants to prompt the user.  It is also used by
+   * permitUnloadInternal to ensure we only prompt once.
+   *
+   * ePrompt: Prompt and return the user's choice (default).
+   * eDontPromptAndDontUnload: Don't prompt and return false (unload not permitted)
+   *                           if the document (or its children) asks us to prompt.
+   * eDontPromptAndUnload: Don't prompt and return true (unload permitted) no matter what.
    */
-  boolean permitUnload();
+  const unsigned long ePrompt = 0;
+  const unsigned long eDontPromptAndDontUnload = 1;
+  const unsigned long eDontPromptAndUnload = 2;
+
+  /**
+   * Overload PermitUnload method for C++ consumers with no aPermitUnloadFlags
+   * argument.
+   */
+  %{C++
+    nsresult PermitUnload(bool* canUnload) {
+      return PermitUnload(ePrompt, canUnload);
+    }
+  %}
+
+  /**
+   * Checks if the document wants to prevent unloading by firing beforeunload on
+   * the document, and if it does, takes action directed by aPermitUnloadFlags.
+   * The result is returned.
+   */
+  boolean permitUnload([optional] in unsigned long aPermitUnloadFlags);
 
   /**
    * Exposes whether we're blocked in a call to permitUnload.
@@ -61,11 +86,11 @@ interface nsIContentViewer : nsISupports
   readonly attribute boolean inPermitUnload;
 
   /**
-   * As above, but this passes around the aShouldPrompt argument to keep
+   * As above, but this passes around the aPermitUnloadFlags argument to keep
    * track of whether the user has responded to a prompt.
    * Used internally by the scriptable version to ensure we only prompt once.
    */
-  [noscript,nostdcall] boolean permitUnloadInternal(inout boolean aShouldPrompt);
+  [noscript,nostdcall] boolean permitUnloadInternal(inout unsigned long aPermitUnloadFlags);
 
   /**
    * Exposes whether we're in the process of firing the beforeunload event.
