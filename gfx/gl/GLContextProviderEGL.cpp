@@ -217,7 +217,10 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
 
     gl->MakeCurrent();
     gl->SetIsDoubleBuffered(doubleBuffered);
-
+    if (aWebRender && sEGLLibrary.IsANGLE()) {
+        MOZ_ASSERT(doubleBuffered);
+        sEGLLibrary.fSwapInterval(EGL_DISPLAY(), 0);
+    }
     return gl.forget();
 }
 
