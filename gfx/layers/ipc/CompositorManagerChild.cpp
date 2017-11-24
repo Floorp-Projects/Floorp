@@ -287,10 +287,8 @@ CompositorManagerChild::SetReplyTimeout()
 {
 #ifndef DEBUG
   // Add a timeout for release builds to kill GPU process when it hangs.
-  // Don't apply timeout when using web render as it tend to timeout frequently.
   if (XRE_IsParentProcess() &&
-      GPUProcessManager::Get()->GetGPUChild() &&
-      !gfx::gfxVars::UseWebRender()) {
+      GPUProcessManager::Get()->GetGPUChild()) {
     int32_t timeout = gfxPrefs::GPUProcessIPCReplyTimeoutMs();
     SetReplyTimeoutMs(timeout);
   }
