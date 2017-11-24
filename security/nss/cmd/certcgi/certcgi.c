@@ -233,8 +233,7 @@ make_datastruct(char *data, int len)
         if (remaining == 1) {
             remaining += fields;
             fields = fields * 2;
-            datastruct = (Pair *)PORT_Realloc(datastruct, fields *
-                                                              sizeof(Pair));
+            datastruct = (Pair *)PORT_Realloc(datastruct, fields * sizeof(Pair));
             if (datastruct == NULL) {
                 error_allocate();
             }

@@ -62,21 +62,6 @@ size_t DataBuffer::Write(size_t index, uint32_t val, size_t count) {
   return Write(index, addr + sizeof(uint32_t) - count, count);
 }
 
-// This can't use the same trick as Write(), since we might be reading from a
-// smaller data source.
-bool DataBuffer::Read(size_t index, size_t count, uint32_t* val) const {
-  assert(count < sizeof(uint32_t));
-  assert(val);
-  if ((index > len()) || (count > (len() - index))) {
-    return false;
-  }
-  *val = 0;
-  for (size_t i = 0; i < count; ++i) {
-    *val = (*val << 8) | data()[index + i];
-  }
-  return true;
-}
-
 void DataBuffer::Splice(const uint8_t* ins, size_t ins_len, size_t index,
                         size_t remove) {
   assert(ins);
@@ -105,6 +90,32 @@ void DataBuffer::Splice(const uint8_t* ins, size_t ins_len, size_t index,
   }
 
   delete[] old_value;
+}
+
+// This can't use the same trick as Write(), since we might be reading from a
+// smaller data source.
+bool DataBuffer::Read(size_t index, size_t count, uint64_t* val) const {
+  assert(count <= sizeof(uint64_t));
+  assert(val);
+  if ((index > len()) || (count > (len() - index))) {
+    return false;
+  }
+  *val = 0;
+  for (size_t i = 0; i < count; ++i) {
+    *val = (*val << 8) | data()[index + i];
+  }
+  return true;
+}
+
+bool DataBuffer::Read(size_t index, size_t count, uint32_t* val) const {
+  assert(count <= sizeof(uint32_t));
+  uint64_t tmp;
+
+  if (!Read(index, count, &tmp)) {
+    return false;
+  }
+  *val = tmp & 0xffffffff;
+  return true;
 }
 
 size_t DataBuffer::logging_limit = 32;

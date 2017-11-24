@@ -92,18 +92,16 @@ SSL_HandshakeNegotiatedExtension(PRFileDesc *socket,
 
     /* according to public API SSL_GetChannelInfo, this doesn't need a lock */
     if (sslsocket->opt.useSecurity) {
-        if (sslsocket->ssl3.initialized) { /* SSL3 and TLS */
-            /* now we know this socket went through ssl3_InitState() and
-             * ss->xtnData got initialized, which is the only member accessed by
-             * ssl3_ExtensionNegotiated();
-             * Member xtnData appears to get accessed in functions that handle
-             * the handshake (hello messages and extension sending),
-             * therefore the handshake lock should be sufficient.
-             */
-            ssl_GetSSL3HandshakeLock(sslsocket);
-            *pYes = ssl3_ExtensionNegotiated(sslsocket, extId);
-            ssl_ReleaseSSL3HandshakeLock(sslsocket);
-        }
+        /* now we know this socket went through ssl3_InitState() and
+         * ss->xtnData got initialized, which is the only member accessed by
+         * ssl3_ExtensionNegotiated();
+         * Member xtnData appears to get accessed in functions that handle
+         * the handshake (hello messages and extension sending),
+         * therefore the handshake lock should be sufficient.
+         */
+        ssl_GetSSL3HandshakeLock(sslsocket);
+        *pYes = ssl3_ExtensionNegotiated(sslsocket, extId);
+        ssl_ReleaseSSL3HandshakeLock(sslsocket);
     }
 
     return SECSuccess;

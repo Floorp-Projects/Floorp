@@ -1115,8 +1115,7 @@ extract_js(char *filename)
 
     textStart = 0;
     startLine = 0;
-    while (linenum = FB_GetLineNum(fb), (curchar = FB_GetChar(fb)) !=
-                                            EOF) {
+    while (linenum = FB_GetLineNum(fb), (curchar = FB_GetChar(fb)) != EOF) {
         switch (state) {
             case TEXT_HTML_STATE:
                 if (curchar == '<') {

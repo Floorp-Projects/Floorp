@@ -1294,8 +1294,7 @@ DPCache_AddCRL(CRLDPCache* cache, CachedCrl* newcrl, PRBool* added)
         }
     }
 
-    newcrls = (CachedCrl**)PORT_Realloc(cache->crls, (cache->ncrls + 1) *
-                                                         sizeof(CachedCrl*));
+    newcrls = (CachedCrl**)PORT_Realloc(cache->crls, (cache->ncrls + 1) * sizeof(CachedCrl*));
     if (!newcrls) {
         return SECFailure;
     }

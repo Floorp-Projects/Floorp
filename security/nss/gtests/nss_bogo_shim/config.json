@@ -1,12 +1,14 @@
 {
     "DisabledTests": {
         "### These tests break whenever we rev versions, so just leave them here for easy uncommenting":"",
-        "#*TLS13*":"(NSS=18, BoGo=16)",
-        "#*HelloRetryRequest*":"(NSS=18, BoGo=16)",
-        "#*KeyShare*":"(NSS=18, BoGo=16)",
-        "#*EncryptedExtensions*":"(NSS=18, BoGo=16)",
-        "#*SecondClientHello*":"(NSS=18, BoGo=16)",
-        "#*IgnoreClientVersionOrder*":"(NSS=18, BoGo=16)",
+        "*TLS13*":"(NSS=19, BoGo=18)",
+        "*HelloRetryRequest*":"(NSS=19, BoGo=18)",
+        "*KeyShare*":"(NSS=19, BoGo=18)",
+        "*EncryptedExtensions*":"(NSS=19, BoGo=18)",
+        "*SecondClientHello*":"(NSS=19, BoGo=18)",
+        "*IgnoreClientVersionOrder*":"(NSS=19, BoGo=18)",
+        "SkipEarlyData*":"(NSS=19, BoGo=18)",
+        "*Binder*":"(NSS=19, BoGo=18)",
         "Resume-Server-BinderWrongLength":"Alert disagreement (Bug 1317633)",
         "Resume-Server-NoPSKBinder":"Alert disagreement (Bug 1317633)",
         "CheckRecordVersion-TLS*":"Bug 1317634",
@@ -66,4 +68,3 @@
         ":DIGEST_CHECK_FAILED:":"SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE"
     }
 }
-

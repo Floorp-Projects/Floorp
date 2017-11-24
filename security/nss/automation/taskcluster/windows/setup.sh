@@ -2,12 +2,12 @@
 
 set -v -e -x
 
-export VSPATH="$(pwd)/vs2015u3"
+export VSPATH="$(pwd)/vs2017_15.4.2"
 export NINJA_PATH="$(pwd)/ninja/bin"
 
 export WINDOWSSDKDIR="${VSPATH}/SDK"
 export VS90COMNTOOLS="${VSPATH}/VC"
-export INCLUDE="${VSPATH}/VC/include:${VSPATH}/SDK/Include/10.0.14393.0/ucrt:${VSPATH}/SDK/Include/10.0.14393.0/shared:${VSPATH}/SDK/Include/10.0.14393.0/um"
+export INCLUDE="${VSPATH}/VC/include:${VSPATH}/SDK/Include/10.0.15063.0/ucrt:${VSPATH}/SDK/Include/10.0.15063.0/shared:${VSPATH}/SDK/Include/10.0.15063.0/um"
 
 # Usage: hg_clone repo dir [revision=@]
 hg_clone() {
