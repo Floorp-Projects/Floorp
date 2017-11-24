@@ -19,7 +19,7 @@
 // An initialization function is called before any malloc replacement
 // function, and has the following declaration:
 //
-//   void replace_init(malloc_table_t *)
+//   void replace_init(malloc_table_t*, ReplaceMallocBridge**)
 //
 // The malloc_table_t pointer given to that function is a table containing
 // pointers to the original allocator implementation, so that replacement
@@ -28,9 +28,13 @@
 // If it needs the original implementation, it thus needs a copy of the
 // original table.
 //
+// The ReplaceMallocBridge* pointer is an outparam that allows the
+// replace_init function to return a pointer to its ReplaceMallocBridge
+// (see replace_malloc_bridge.h).
+//
 // The functions to be implemented in the external library are of the form:
 //
-//   void *replace_malloc(size_t size)
+//   void* replace_malloc(size_t size)
 //   {
 //     // Fiddle with the size if necessary.
 //     // orig->malloc doesn't have to be called if the external library
@@ -85,11 +89,11 @@ MOZ_BEGIN_EXTERN_C
 #define MOZ_REPLACE_WEAK
 #endif
 
-// Export replace_init and replace_get_bridge.
+// Export replace_init.
 #define MALLOC_DECL(name, return_type, ...)                                    \
   MOZ_EXPORT return_type replace_##name(__VA_ARGS__) MOZ_REPLACE_WEAK;
 
-#define MALLOC_FUNCS (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE)
+#define MALLOC_FUNCS MALLOC_FUNCS_INIT
 #include "malloc_decls.h"
 
 // Define the remaining replace_* functions as not exported.

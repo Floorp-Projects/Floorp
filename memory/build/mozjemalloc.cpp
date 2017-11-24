@@ -4830,7 +4830,7 @@ static malloc_table_t gReplaceMallocTable = {
 #define MALLOC_DECL(name, return_type, ...)                                    \
   typedef return_type(name##_impl_t)(__VA_ARGS__);                             \
   name##_impl_t* replace_##name = nullptr;
-#define MALLOC_FUNCS (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE)
+#define MALLOC_FUNCS MALLOC_FUNCS_INIT
 #include "malloc_decls.h"
 #endif
 
@@ -4878,6 +4878,7 @@ replace_malloc_init_funcs();
 // Below is the malloc implementation overriding jemalloc and calling the
 // replacement functions if they exist.
 static bool gReplaceMallocInitialized = false;
+static ReplaceMallocBridge* gReplaceMallocBridge = nullptr;
 static void
 init()
 {
@@ -4887,7 +4888,7 @@ init()
 #define MALLOC_DECL(name, ...)                                                 \
   replace_##name = REPLACE_MALLOC_GET_FUNC(handle, name);
 
-#define MALLOC_FUNCS (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE)
+#define MALLOC_FUNCS MALLOC_FUNCS_INIT
 #include "malloc_decls.h"
   }
 #endif
@@ -4896,7 +4897,7 @@ init()
   // malloc() we'll get an infinite loop.
   gReplaceMallocInitialized = true;
   if (replace_init) {
-    replace_init(&gReplaceMallocTable);
+    replace_init(&gReplaceMallocTable, &gReplaceMallocBridge);
   }
   replace_malloc_init_funcs();
 }
@@ -4919,10 +4920,7 @@ get_bridge(void)
   if (MOZ_UNLIKELY(!gReplaceMallocInitialized)) {
     init();
   }
-  if (MOZ_LIKELY(!replace_get_bridge)) {
-    return nullptr;
-  }
-  return replace_get_bridge();
+  return gReplaceMallocBridge;
 }
 
 // posix_memalign, aligned_alloc, memalign and valloc all implement some kind
