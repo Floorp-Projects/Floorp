@@ -4146,6 +4146,13 @@ public:
   bool BuiltBlendContainer() { return mBuiltBlendContainer; }
   void SetBuiltBlendContainer(bool aBuilt) { mBuiltBlendContainer = aBuilt; }
 
+  /**
+   * Returns the set of flags indicating the properties of the frame that the
+   * compositor might care about for hit-testing purposes. Note that this function
+   * must be called during Gecko display list construction time (i.e while the
+   * frame tree is being traversed) because that is when the display list builder
+   * has the necessary state set up correctly.
+   */
   mozilla::gfx::CompositorHitTestInfo GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder);
 
 protected:

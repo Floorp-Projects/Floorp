@@ -4343,17 +4343,7 @@ public:
 class nsDisplayCompositorHitTestInfo : public nsDisplayEventReceiver {
 public:
   nsDisplayCompositorHitTestInfo(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                                 mozilla::gfx::CompositorHitTestInfo aHitTestInfo)
-    : nsDisplayEventReceiver(aBuilder, aFrame)
-    , mHitTestInfo(aHitTestInfo)
-  {
-    MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
-    // We should never even create this display item if we're not building
-    // compositor hit-test info or if the computed hit info indicated the
-    // frame is invisible to hit-testing
-    MOZ_ASSERT(aBuilder->BuildCompositorHitTestInfo());
-    MOZ_ASSERT(mHitTestInfo != mozilla::gfx::CompositorHitTestInfo::eInvisibleToHitTest);
-  }
+                                 mozilla::gfx::CompositorHitTestInfo aHitTestInfo);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayCompositorHitTestInfo()
@@ -4375,6 +4365,7 @@ public:
 
 private:
   mozilla::gfx::CompositorHitTestInfo mHitTestInfo;
+  mozilla::Maybe<mozilla::layers::FrameMetrics::ViewID> mScrollTarget;
 };
 
 /**
@@ -5155,6 +5146,8 @@ public:
   {
     return false;
   }
+
+  void WriteDebugInfo(std::stringstream& aStream) override;
 
   nsDisplayOwnLayerFlags GetFlags() { return mFlags; }
   bool IsScrollThumbLayer() const;
