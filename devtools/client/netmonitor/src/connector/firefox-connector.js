@@ -68,18 +68,19 @@ class FirefoxConnector {
   async disconnect() {
     this.actions.batchReset();
 
-    // The timeline front wasn't initialized and started if the server wasn't
-    // recent enough to emit the markers we were interested in.
-    if (this.tabTarget.getTrait("documentLoadingMarkers") && this.timelineFront) {
-      this.timelineFront.off("doc-loading", this.onDocLoadingMarker);
-      await this.timelineFront.destroy();
-    }
-
     this.removeListeners();
 
-    this.tabTarget.off("will-navigate");
+    if (this.tabTarget) {
+      // The timeline front wasn't initialized and started if the server wasn't
+      // recent enough to emit the markers we were interested in.
+      if (this.tabTarget.getTrait("documentLoadingMarkers") && this.timelineFront) {
+        this.timelineFront.off("doc-loading", this.onDocLoadingMarker);
+        await this.timelineFront.destroy();
+      }
 
-    this.tabTarget = null;
+      this.tabTarget.off("will-navigate");
+      this.tabTarget = null;
+    }
     this.webConsoleClient = null;
     this.timelineFront = null;
     this.dataProvider = null;
@@ -103,9 +104,13 @@ class FirefoxConnector {
   }
 
   removeListeners() {
-    this.tabTarget.off("close");
-    this.webConsoleClient.off("networkEvent");
-    this.webConsoleClient.off("networkEventUpdate");
+    if (this.tabTarget) {
+      this.tabTarget.off("close");
+    }
+    if (this.webConsoleClient) {
+      this.webConsoleClient.off("networkEvent");
+      this.webConsoleClient.off("networkEventUpdate");
+    }
   }
 
   willNavigate() {
@@ -316,6 +321,12 @@ class FirefoxConnector {
     }
   }
 
+  /**
+   * Fetch networkEventUpdate websocket message from back-end when
+   * data provider is connected.
+   * @param {object} request network request instance
+   * @param {string} type NetworkEventUpdate type
+   */
   requestData(request, type) {
     return this.dataProvider.requestData(request, type);
   }
