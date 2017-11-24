@@ -282,8 +282,6 @@ public:
    */
   void Update(ScrollWheelInput& aEvent);
 
-  ScrollDirections GetAllowedScrollDirections() const { return mAllowedScrollDirections; }
-
 protected:
   void UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc) override;
 
@@ -292,7 +290,6 @@ private:
   TimeStamp mLastMouseMove;
   uint32_t mScrollSeriesCounter;
   bool mTransactionEnded;
-  ScrollDirections mAllowedScrollDirections;
 };
 
 /**
@@ -357,12 +354,9 @@ public:
 
   void SetNeedsToWaitForContentResponse(bool aWaitForContentResponse);
 
-  ScrollDirections GetAllowedScrollDirections() const { return mAllowedScrollDirections; }
-
 private:
   bool mInterrupted;
   bool mWaitingForContentResponse;
-  ScrollDirections mAllowedScrollDirections;
 };
 
 /**
