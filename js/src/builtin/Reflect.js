@@ -127,10 +127,30 @@ function Reflect_getOwnPropertyDescriptor(target, propertyKey) {
 // 26.1.8 Reflect.has ( target, propertyKey )
 function Reflect_has(target, propertyKey) {
     // Step 1.
-    if (!IsObject(target))
+    if (!IsObject(target)) {
         ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT_ARG, "`target`", "Reflect.has",
                        ToSource(target));
+    }
 
     // Steps 2-3 are identical to the runtime semantics of the "in" operator.
     return propertyKey in target;
+}
+
+// ES2018 draft rev 0525bb33861c7f4e9850f8a222c89642947c4b9c
+// 26.1.5 Reflect.get ( target, propertyKey [ , receiver ] )
+function Reflect_get(target, propertyKey/*, receiver*/) {
+    // Step 1.
+    if (!IsObject(target)) {
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT_ARG, "`target`", "Reflect.get",
+                       ToSource(target));
+    }
+
+    // Step 3 (reordered).
+    if (arguments.length > 2) {
+        // Steps 2, 4.
+        return getPropertySuper(target, propertyKey, arguments[2]);
+    }
+
+    // Steps 2, 4.
+    return target[propertyKey];
 }
