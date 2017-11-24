@@ -7,6 +7,7 @@
 #include "AutoplayPolicy.h"
 
 #include "mozilla/EventStateManager.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsIDocument.h"
@@ -17,6 +18,10 @@ namespace dom {
 /* static */ bool
 AutoplayPolicy::IsDocumentAllowedToPlay(nsIDocument* aDoc)
 {
+  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed")) {
+    return true;
+  }
+
   return aDoc ? aDoc->HasBeenUserActivated() : false;
 }
 
@@ -27,25 +32,13 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
     return true;
   }
 
+  if (Preferences::GetBool("media.autoplay.enabled.user-gestures-needed")) {
+    return AutoplayPolicy::IsDocumentAllowedToPlay(aElement->OwnerDoc());
+  }
+
   // TODO : this old way would be removed when user-gestures-needed becomes
   // as a default option to block autoplay.
-  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed", false)) {
-    return EventStateManager::IsHandlingUserInput();
-   }
-
-  // Muted content
-  if (aElement->Volume() == 0.0 || aElement->Muted()) {
-    return true;
-  }
-
-  // Media has already loaded metadata and doesn't contain audio track
-  if (aElement->IsVideo() &&
-      aElement->ReadyState() >= nsIDOMHTMLMediaElement::HAVE_METADATA &&
-      !aElement->HasAudio()) {
-    return true;
-  }
-
-  return AutoplayPolicy::IsDocumentAllowedToPlay(aElement->OwnerDoc());
+  return EventStateManager::IsHandlingUserInput();
 }
 
 } // namespace dom
