@@ -190,12 +190,6 @@ public:
   static nsIContent* FindContentFor(ViewID aId);
 
   /**
-   * Find the view ID (or generate a new one) for the content element
-   * corresponding to the ASR.
-   */
-  static ViewID ViewIDForASR(const mozilla::ActiveScrolledRoot* aASR);
-
-  /**
    * Find the scrollable frame for a given ID.
    */
   static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);

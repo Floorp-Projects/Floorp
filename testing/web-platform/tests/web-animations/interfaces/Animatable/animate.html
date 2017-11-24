@@ -170,7 +170,7 @@ async_test(t => {
 test(t => {
   const div = createDiv(t);
   const anim = div.animate({ opacity: [ 0, 1 ] }, 2000);
-  assert_equals(anim.playState, 'pending');
+  assert_equals(anim.playState, 'running');
 }, 'Element.animate() calls play on the Animation');
 
 // Tests on CSSPseudoElement

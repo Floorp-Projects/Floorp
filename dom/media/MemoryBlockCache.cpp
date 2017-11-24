@@ -71,10 +71,9 @@ NS_IMPL_ISUPPORTS(MemoryBlockCacheTelemetry,
 /* static */ size_t
 MemoryBlockCacheTelemetry::NotifyCombinedSizeGrown(size_t aNewSize)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
   // Ensure gMemoryBlockCacheTelemetry exists.
   if (!gMemoryBlockCacheTelemetry) {
+    MOZ_ASSERT(NS_IsMainThread());
     gMemoryBlockCacheTelemetry = new MemoryBlockCacheTelemetry();
 
     nsCOMPtr<nsIObserverService> observerService =
@@ -140,10 +139,12 @@ enum MemoryBlockCacheTelemetryErrors
 static int32_t
 CalculateMaxBlocks(int64_t aContentLength)
 {
+  int64_t maxSize = int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024;
+  MOZ_ASSERT(aContentLength <= maxSize);
+  MOZ_ASSERT(maxSize % MediaBlockCacheBase::BLOCK_SIZE == 0);
   // Note: It doesn't matter if calculations overflow, Init() would later fail.
   // We want at least enough blocks to contain the original content length.
-  const int32_t requiredBlocks =
-    int32_t((aContentLength - 1) / MediaBlockCacheBase::BLOCK_SIZE + 1);
+  const int32_t requiredBlocks = maxSize / MediaBlockCacheBase::BLOCK_SIZE;
   // Allow at least 1s of ultra HD (25Mbps).
   const int32_t workableBlocks =
     25 * 1024 * 1024 / 8 / MediaBlockCacheBase::BLOCK_SIZE;

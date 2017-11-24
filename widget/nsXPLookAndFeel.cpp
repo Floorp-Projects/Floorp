@@ -248,6 +248,8 @@ const char nsXPLookAndFeel::sColorPrefs[][41] =
   "ui.-moz-mac-secondaryhighlight",
   "ui.-moz-mac-vibrancy-light",
   "ui.-moz-mac-vibrancy-dark",
+  "ui.-moz-mac-vibrant-titlebar-light",
+  "ui.-moz-mac-vibrant-titlebar-dark",
   "ui.-moz-mac-menupopup",
   "ui.-moz-mac-menuitem",
   "ui.-moz-mac-active-menuitem",
@@ -677,8 +679,10 @@ nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID)
     case eColorID__moz_mac_secondaryhighlight:
       result = NS_RGB(0xD4, 0xD4, 0xD4); break;
     case eColorID__moz_mac_vibrancy_light:
+    case eColorID__moz_mac_vibrant_titlebar_light:
       result = NS_RGB(0xf7, 0xf7, 0xf7); break;
     case eColorID__moz_mac_vibrancy_dark:
+    case eColorID__moz_mac_vibrant_titlebar_dark:
       result = NS_RGB(0x28, 0x28, 0x28); break;
     case eColorID__moz_mac_menupopup:
       result = NS_RGB(0xe6, 0xe6, 0xe6); break;

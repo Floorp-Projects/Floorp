@@ -20,6 +20,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android':
       '/media/webrtc/signaling/src/mediapipeline',
       '/media/webrtc/signaling/src/peerconnection',
       '/media/webrtc/trunk',
+      '/netwerk/srtp/src/include',
     ]
 
     SOURCES += [
