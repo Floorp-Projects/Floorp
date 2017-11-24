@@ -558,7 +558,7 @@ class GTestCommands(MachCommandBase):
                        print_directory=False, ensure_exit_code=True)
 
         app_path = self.get_binary_path('app')
-        args = [app_path, '-unittest'];
+        args = [app_path, '-unittest', '--gtest_death_test_style=threadsafe'];
 
         if debug or debugger or debugger_args:
             args = self.prepend_debugger_args(args, debugger, debugger_args)
