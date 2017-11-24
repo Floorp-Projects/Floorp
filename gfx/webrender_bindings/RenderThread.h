@@ -40,6 +40,17 @@ protected:
   wr::WrThreadPool* mThreadPool;
 };
 
+class WebRenderProgramCache {
+public:
+  WebRenderProgramCache();
+
+  ~WebRenderProgramCache();
+
+  wr::WrProgramCache* Raw() { return mProgramCache; }
+
+protected:
+  wr::WrProgramCache* mProgramCache;
+};
 
 /// Base class for an event that can be scheduled to run on the render thread.
 ///
@@ -143,6 +154,9 @@ public:
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
 
+  /// Can only be called from the render thread.
+  WebRenderProgramCache* ProgramCache();
+
 private:
   explicit RenderThread(base::Thread* aThread);
 
@@ -154,6 +168,7 @@ private:
   base::Thread* const mThread;
 
   WebRenderThreadPool mThreadPool;
+  UniquePtr<WebRenderProgramCache> mProgramCache;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
 
