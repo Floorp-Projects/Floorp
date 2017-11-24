@@ -17,6 +17,7 @@
 #include "HandlerData_i.c"
 #include "mozilla/Assertions.h"
 #include "mozilla/a11y/AccessibleWrap.h"
+#include "mozilla/a11y/HandlerDataCleanup.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/AgileReference.h"
@@ -132,7 +133,8 @@ HandlerProvider::GetAndSerializePayload(const MutexAutoLock&,
   // Now that we have serialized payload, we should clean up any
   // BSTRs, interfaces, etc. fetched in BuildInitialIA2Data.
   CleanupStaticIA2Data(payload.mStaticData);
-  CleanupDynamicIA2Data(payload.mDynamicData);
+  // No need to zero memory, since payload is going out of scope.
+  CleanupDynamicIA2Data(payload.mDynamicData, false);
 }
 
 HRESULT
@@ -419,13 +421,6 @@ HandlerProvider::CleanupStaticIA2Data(StaticIA2Data& aData)
     aData.mIATableCell->Release();
   }
   ZeroMemory(&aData, sizeof(StaticIA2Data));
-}
-
-void
-HandlerProvider::CleanupDynamicIA2Data(DynamicIA2Data& aData)
-{
-  ::VariantClear(&aData.mRole);
-  ZeroMemory(&aData, sizeof(DynamicIA2Data));
 }
 
 void
