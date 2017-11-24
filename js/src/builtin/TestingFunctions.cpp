@@ -4304,8 +4304,6 @@ GetModuleEnvironment(JSContext* cx, HandleModuleObject module)
     // before they have been instantiated.
     RootedModuleEnvironmentObject env(cx, &module->initialEnvironment());
     MOZ_ASSERT(env);
-    MOZ_ASSERT_IF(module->environment(), module->environment() == env);
-
     return env;
 }
 

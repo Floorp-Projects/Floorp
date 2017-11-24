@@ -344,16 +344,13 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
     switch (lpk->keyType) {
         case rsaKey:
             keyType = CKK_RSA;
-            PK11_SETATTRS(attrs, CKA_UNWRAP, (keyUsage & KU_KEY_ENCIPHERMENT) ? &cktrue
-                                                                              : &ckfalse,
+            PK11_SETATTRS(attrs, CKA_UNWRAP, (keyUsage & KU_KEY_ENCIPHERMENT) ? &cktrue : &ckfalse,
                           sizeof(CK_BBOOL));
             attrs++;
-            PK11_SETATTRS(attrs, CKA_DECRYPT, (keyUsage & KU_DATA_ENCIPHERMENT) ? &cktrue
-                                                                                : &ckfalse,
+            PK11_SETATTRS(attrs, CKA_DECRYPT, (keyUsage & KU_DATA_ENCIPHERMENT) ? &cktrue : &ckfalse,
                           sizeof(CK_BBOOL));
             attrs++;
-            PK11_SETATTRS(attrs, CKA_SIGN, (keyUsage & KU_DIGITAL_SIGNATURE) ? &cktrue
-                                                                             : &ckfalse,
+            PK11_SETATTRS(attrs, CKA_SIGN, (keyUsage & KU_DIGITAL_SIGNATURE) ? &cktrue : &ckfalse,
                           sizeof(CK_BBOOL));
             attrs++;
             PK11_SETATTRS(attrs, CKA_SIGN_RECOVER,
@@ -491,8 +488,7 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
                               lpk->u.ec.publicValue.len);
                 attrs++;
             }
-            PK11_SETATTRS(attrs, CKA_SIGN, (keyUsage & KU_DIGITAL_SIGNATURE) ? &cktrue
-                                                                             : &ckfalse,
+            PK11_SETATTRS(attrs, CKA_SIGN, (keyUsage & KU_DIGITAL_SIGNATURE) ? &cktrue : &ckfalse,
                           sizeof(CK_BBOOL));
             attrs++;
             PK11_SETATTRS(attrs, CKA_SIGN_RECOVER,
@@ -500,8 +496,7 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
                                                             : &ckfalse,
                           sizeof(CK_BBOOL));
             attrs++;
-            PK11_SETATTRS(attrs, CKA_DERIVE, (keyUsage & KU_KEY_AGREEMENT) ? &cktrue
-                                                                           : &ckfalse,
+            PK11_SETATTRS(attrs, CKA_DERIVE, (keyUsage & KU_KEY_AGREEMENT) ? &cktrue : &ckfalse,
                           sizeof(CK_BBOOL));
             attrs++;
             ck_id = PK11_MakeIDFromPubKey(&lpk->u.ec.publicValue);

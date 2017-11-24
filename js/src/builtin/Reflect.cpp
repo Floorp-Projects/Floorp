@@ -46,30 +46,6 @@ Reflect_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* ES6 26.1.6 Reflect.get(target, propertyKey [, receiver]) */
-static bool
-Reflect_get(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Step 1.
-    RootedObject obj(cx, NonNullObjectArg(cx, "`target`", "Reflect.get", args.get(0)));
-    if (!obj)
-        return false;
-
-    // Steps 2-3.
-    RootedValue propertyKey(cx, args.get(1));
-    RootedId key(cx);
-    if (!ToPropertyKey(cx, propertyKey, &key))
-        return false;
-
-    // Step 4.
-    RootedValue receiver(cx, args.length() > 2 ? args[2] : args.get(0));
-
-    // Step 5.
-    return GetProperty(cx, obj, receiver, key, args.rval());
-}
-
 /* ES6 26.1.8 Reflect.getPrototypeOf(target) */
 bool
 js::Reflect_getPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
@@ -210,7 +186,7 @@ static const JSFunctionSpec methods[] = {
     JS_SELF_HOSTED_FN("construct", "Reflect_construct", 2, 0),
     JS_SELF_HOSTED_FN("defineProperty", "Reflect_defineProperty", 3, 0),
     JS_FN("deleteProperty", Reflect_deleteProperty, 2, 0),
-    JS_FN("get", Reflect_get, 2, 0),
+    JS_SELF_HOSTED_FN("get", "Reflect_get", 2, 0),
     JS_SELF_HOSTED_FN("getOwnPropertyDescriptor", "Reflect_getOwnPropertyDescriptor", 2, 0),
     JS_INLINABLE_FN("getPrototypeOf", Reflect_getPrototypeOf, 1, 0, ReflectGetPrototypeOf),
     JS_SELF_HOSTED_FN("has", "Reflect_has", 2, 0),

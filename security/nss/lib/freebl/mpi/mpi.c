@@ -2782,15 +2782,7 @@ s_mp_pad(mp_int *mp, mp_size min)
 void
 s_mp_setz(mp_digit *dp, mp_size count)
 {
-#if MP_MEMSET == 0
-    int ix;
-
-    for (ix = 0; ix < count; ix++)
-        dp[ix] = 0;
-#else
     memset(dp, 0, count * sizeof(mp_digit));
-#endif
-
 } /* end s_mp_setz() */
 
 /* }}} */
@@ -2801,14 +2793,7 @@ s_mp_setz(mp_digit *dp, mp_size count)
 void
 s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 {
-#if MP_MEMCPY == 0
-    int ix;
-
-    for (ix = 0; ix < count; ix++)
-        dp[ix] = sp[ix];
-#else
     memcpy(dp, sp, count * sizeof(mp_digit));
-#endif
 } /* end s_mp_copy() */
 
 /* }}} */

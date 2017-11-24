@@ -1572,10 +1572,7 @@ main(int argc, char **argv)
             {
                 unsigned int j;
                 for (j = 0; j < input.len; j++)
-                    fprintf(stderr, "%2x%c", input.data[j], (j > 0 &&
-                                                             j % 35 == 0)
-                                                                ? '\n'
-                                                                : ' ');
+                    fprintf(stderr, "%2x%c", input.data[j], (j > 0 && j % 35 == 0) ? '\n' : ' ');
             }
         }
         if (input.len > 0) { /* skip if certs-only (or other zero content) */

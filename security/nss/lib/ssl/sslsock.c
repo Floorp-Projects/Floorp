@@ -80,12 +80,7 @@ static sslOptions ssl_defaults = {
     PR_FALSE,              /* enableSignedCertTimestamps */
     PR_FALSE,              /* requireDHENamedGroups */
     PR_FALSE,              /* enable0RttData */
-#ifdef NSS_ENABLE_TLS13_SHORT_HEADERS
-    PR_TRUE, /* enableShortHeaders */
-#else
-    PR_FALSE, /* enableShortHeaders */
-#endif
-    PR_FALSE /* enableAltHandshaketype */
+    PR_FALSE               /* enableTls13CompatMode */
 };
 
 /*
@@ -303,6 +298,7 @@ ssl_DupSocket(sslSocket *os)
 
     if (ss->opt.useSecurity) {
         PRCList *cursor;
+
         for (cursor = PR_NEXT_LINK(&os->serverCerts);
              cursor != &os->serverCerts;
              cursor = PR_NEXT_LINK(cursor)) {
@@ -312,7 +308,6 @@ ssl_DupSocket(sslSocket *os)
             PR_APPEND_LINK(&sc->link, &ss->serverCerts);
         }
 
-        PR_INIT_CLIST(&ss->ephemeralKeyPairs);
         for (cursor = PR_NEXT_LINK(&os->ephemeralKeyPairs);
              cursor != &os->ephemeralKeyPairs;
              cursor = PR_NEXT_LINK(cursor)) {
@@ -321,6 +316,18 @@ ssl_DupSocket(sslSocket *os)
             if (!skp)
                 goto loser;
             PR_APPEND_LINK(&skp->link, &ss->ephemeralKeyPairs);
+        }
+
+        for (cursor = PR_NEXT_LINK(&os->extensionHooks);
+             cursor != &os->extensionHooks;
+             cursor = PR_NEXT_LINK(cursor)) {
+            sslCustomExtensionHooks *oh = (sslCustomExtensionHooks *)cursor;
+            sslCustomExtensionHooks *sh = PORT_ZNew(sslCustomExtensionHooks);
+            if (!sh) {
+                goto loser;
+            }
+            *sh = *oh;
+            PR_APPEND_LINK(&sh->link, &ss->extensionHooks);
         }
 
         /*
@@ -357,6 +364,7 @@ ssl_DupSocket(sslSocket *os)
             goto loser;
         }
     }
+
     return ss;
 
 loser:
@@ -425,9 +433,16 @@ ssl_DestroySocketContents(sslSocket *ss)
         PR_REMOVE_LINK(cursor);
         ssl_FreeServerCert((sslServerCert *)cursor);
     }
+
+    /* Remove extension handlers. */
+    ssl_ClearPRCList(&ss->extensionHooks, NULL);
+
     ssl_FreeEphemeralKeyPairs(ss);
     SECITEM_FreeItem(&ss->opt.nextProtoNego, PR_FALSE);
     ssl3_FreeSniNameArray(&ss->xtnData);
+
+    ssl_ClearPRCList(&ss->ssl3.hs.dtlsSentHandshake, NULL);
+    ssl_ClearPRCList(&ss->ssl3.hs.dtlsRcvdHandshake, NULL);
 }
 
 /*
@@ -504,7 +519,7 @@ PrepareSocket(sslSocket *ss)
 }
 
 SECStatus
-SSL_Enable(PRFileDesc *fd, int which, PRBool on)
+SSL_Enable(PRFileDesc *fd, int which, PRIntn on)
 {
     return SSL_OptionSet(fd, which, on);
 }
@@ -516,9 +531,9 @@ static PRBool ssl_VersionIsSupportedByPolicy(
  * ssl.h in the section "SSL version range setting API".
  */
 static void
-ssl_EnableTLS(SSLVersionRange *vrange, PRBool on)
+ssl_EnableTLS(SSLVersionRange *vrange, PRIntn enable)
 {
-    if (on) {
+    if (enable) {
         /* don't turn it on if tls1.0 disallowed by by policy */
         if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
                                             SSL_LIBRARY_VERSION_TLS_1_0)) {
@@ -526,14 +541,14 @@ ssl_EnableTLS(SSLVersionRange *vrange, PRBool on)
         }
     }
     if (SSL_ALL_VERSIONS_DISABLED(vrange)) {
-        if (on) {
+        if (enable) {
             vrange->min = SSL_LIBRARY_VERSION_TLS_1_0;
             vrange->max = SSL_LIBRARY_VERSION_TLS_1_0;
         } /* else don't change anything */
         return;
     }
 
-    if (on) {
+    if (enable) {
         /* Expand the range of enabled version to include TLS 1.0 */
         vrange->min = PR_MIN(vrange->min, SSL_LIBRARY_VERSION_TLS_1_0);
         vrange->max = PR_MAX(vrange->max, SSL_LIBRARY_VERSION_TLS_1_0);
@@ -553,9 +568,9 @@ ssl_EnableTLS(SSLVersionRange *vrange, PRBool on)
  * ssl.h in the section "SSL version range setting API".
  */
 static void
-ssl_EnableSSL3(SSLVersionRange *vrange, PRBool on)
+ssl_EnableSSL3(SSLVersionRange *vrange, PRIntn enable)
 {
-    if (on) {
+    if (enable) {
         /* don't turn it on if ssl3 disallowed by by policy */
         if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
                                             SSL_LIBRARY_VERSION_3_0)) {
@@ -563,14 +578,14 @@ ssl_EnableSSL3(SSLVersionRange *vrange, PRBool on)
         }
     }
     if (SSL_ALL_VERSIONS_DISABLED(vrange)) {
-        if (on) {
+        if (enable) {
             vrange->min = SSL_LIBRARY_VERSION_3_0;
             vrange->max = SSL_LIBRARY_VERSION_3_0;
         } /* else don't change anything */
         return;
     }
 
-    if (on) {
+    if (enable) {
         /* Expand the range of enabled versions to include SSL 3.0. We know
          * SSL 3.0 or some version of TLS is already enabled at this point, so
          * we don't need to change vrange->max.
@@ -589,7 +604,7 @@ ssl_EnableSSL3(SSLVersionRange *vrange, PRBool on)
 }
 
 SECStatus
-SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
+SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRIntn val)
 {
     sslSocket *ss = ssl_FindSocket(fd);
     SECStatus rv = SECSuccess;
@@ -608,63 +623,63 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
         case SSL_SOCKS:
             ss->opt.useSocks = PR_FALSE;
             rv = PrepareSocket(ss);
-            if (on) {
+            if (val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 rv = SECFailure;
             }
             break;
 
         case SSL_SECURITY:
-            ss->opt.useSecurity = on;
+            ss->opt.useSecurity = val;
             rv = PrepareSocket(ss);
             break;
 
         case SSL_REQUEST_CERTIFICATE:
-            ss->opt.requestCertificate = on;
+            ss->opt.requestCertificate = val;
             break;
 
         case SSL_REQUIRE_CERTIFICATE:
-            ss->opt.requireCertificate = on;
+            ss->opt.requireCertificate = val;
             break;
 
         case SSL_HANDSHAKE_AS_CLIENT:
-            if (ss->opt.handshakeAsServer && on) {
+            if (ss->opt.handshakeAsServer && val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 rv = SECFailure;
                 break;
             }
-            ss->opt.handshakeAsClient = on;
+            ss->opt.handshakeAsClient = val;
             break;
 
         case SSL_HANDSHAKE_AS_SERVER:
-            if (ss->opt.handshakeAsClient && on) {
+            if (ss->opt.handshakeAsClient && val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 rv = SECFailure;
                 break;
             }
-            ss->opt.handshakeAsServer = on;
+            ss->opt.handshakeAsServer = val;
             break;
 
         case SSL_ENABLE_TLS:
             if (IS_DTLS(ss)) {
-                if (on) {
+                if (val) {
                     PORT_SetError(SEC_ERROR_INVALID_ARGS);
                     rv = SECFailure; /* not allowed */
                 }
                 break;
             }
-            ssl_EnableTLS(&ss->vrange, on);
+            ssl_EnableTLS(&ss->vrange, val);
             break;
 
         case SSL_ENABLE_SSL3:
             if (IS_DTLS(ss)) {
-                if (on) {
+                if (val) {
                     PORT_SetError(SEC_ERROR_INVALID_ARGS);
                     rv = SECFailure; /* not allowed */
                 }
                 break;
             }
-            ssl_EnableSSL3(&ss->vrange, on);
+            ssl_EnableSSL3(&ss->vrange, val);
             break;
 
         case SSL_ENABLE_SSL2:
@@ -673,26 +688,26 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
              * However, if an old application requests to disable SSL v2,
              * we shouldn't fail.
              */
-            if (on) {
+            if (val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 rv = SECFailure;
             }
             break;
 
         case SSL_NO_CACHE:
-            ss->opt.noCache = on;
+            ss->opt.noCache = val;
             break;
 
         case SSL_ENABLE_FDX:
-            if (on && ss->opt.noLocks) {
+            if (val && ss->opt.noLocks) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 rv = SECFailure;
             }
-            ss->opt.fdx = on;
+            ss->opt.fdx = val;
             break;
 
         case SSL_ROLLBACK_DETECTION:
-            ss->opt.detectRollBack = on;
+            ss->opt.detectRollBack = val;
             break;
 
         case SSL_NO_STEP_DOWN:
@@ -702,14 +717,14 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
             break;
 
         case SSL_NO_LOCKS:
-            if (on && ss->opt.fdx) {
+            if (val && ss->opt.fdx) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 rv = SECFailure;
             }
-            if (on && ssl_force_locks)
-                on = PR_FALSE; /* silent override */
-            ss->opt.noLocks = on;
-            if (on) {
+            if (val && ssl_force_locks)
+                val = PR_FALSE; /* silent override */
+            ss->opt.noLocks = val;
+            if (val) {
                 locksEverDisabled = PR_TRUE;
                 strcpy(lockStatus + LOCKSTATUS_OFFSET, "DISABLED.");
             } else if (!holdingLocks) {
@@ -721,71 +736,75 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
             break;
 
         case SSL_ENABLE_SESSION_TICKETS:
-            ss->opt.enableSessionTickets = on;
+            ss->opt.enableSessionTickets = val;
             break;
 
         case SSL_ENABLE_DEFLATE:
-            ss->opt.enableDeflate = on;
+            ss->opt.enableDeflate = val;
             break;
 
         case SSL_ENABLE_RENEGOTIATION:
-            if (IS_DTLS(ss) && on != SSL_RENEGOTIATE_NEVER) {
+            if (IS_DTLS(ss) && val != SSL_RENEGOTIATE_NEVER) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 rv = SECFailure;
                 break;
             }
-            ss->opt.enableRenegotiation = on;
+            ss->opt.enableRenegotiation = val;
             break;
 
         case SSL_REQUIRE_SAFE_NEGOTIATION:
-            ss->opt.requireSafeNegotiation = on;
+            ss->opt.requireSafeNegotiation = val;
             break;
 
         case SSL_ENABLE_FALSE_START:
-            ss->opt.enableFalseStart = on;
+            ss->opt.enableFalseStart = val;
             break;
 
         case SSL_CBC_RANDOM_IV:
-            ss->opt.cbcRandomIV = on;
+            ss->opt.cbcRandomIV = val;
             break;
 
         case SSL_ENABLE_OCSP_STAPLING:
-            ss->opt.enableOCSPStapling = on;
+            ss->opt.enableOCSPStapling = val;
             break;
 
         case SSL_ENABLE_NPN:
             break;
 
         case SSL_ENABLE_ALPN:
-            ss->opt.enableALPN = on;
+            ss->opt.enableALPN = val;
             break;
 
         case SSL_REUSE_SERVER_ECDHE_KEY:
-            ss->opt.reuseServerECDHEKey = on;
+            ss->opt.reuseServerECDHEKey = val;
             break;
 
         case SSL_ENABLE_FALLBACK_SCSV:
-            ss->opt.enableFallbackSCSV = on;
+            ss->opt.enableFallbackSCSV = val;
             break;
 
         case SSL_ENABLE_SERVER_DHE:
-            ss->opt.enableServerDhe = on;
+            ss->opt.enableServerDhe = val;
             break;
 
         case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-            ss->opt.enableExtendedMS = on;
+            ss->opt.enableExtendedMS = val;
             break;
 
         case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-            ss->opt.enableSignedCertTimestamps = on;
+            ss->opt.enableSignedCertTimestamps = val;
             break;
 
         case SSL_REQUIRE_DH_NAMED_GROUPS:
-            ss->opt.requireDHENamedGroups = on;
+            ss->opt.requireDHENamedGroups = val;
             break;
 
         case SSL_ENABLE_0RTT_DATA:
-            ss->opt.enable0RttData = on;
+            ss->opt.enable0RttData = val;
+            break;
+
+        case SSL_ENABLE_TLS13_COMPAT_MODE:
+            ss->opt.enableTls13CompatMode = val;
             break;
 
         default:
@@ -807,19 +826,19 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 }
 
 SECStatus
-SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
+SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRIntn *pVal)
 {
     sslSocket *ss = ssl_FindSocket(fd);
     SECStatus rv = SECSuccess;
-    PRBool on = PR_FALSE;
+    PRIntn val = PR_FALSE;
 
-    if (!pOn) {
+    if (!pVal) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
     if (!ss) {
         SSL_DBG(("%d: SSL[%d]: bad socket in Enable", SSL_GETPID(), fd));
-        *pOn = PR_FALSE;
+        *pVal = PR_FALSE;
         return SECFailure;
     }
 
@@ -828,98 +847,101 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
 
     switch (which) {
         case SSL_SOCKS:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_SECURITY:
-            on = ss->opt.useSecurity;
+            val = ss->opt.useSecurity;
             break;
         case SSL_REQUEST_CERTIFICATE:
-            on = ss->opt.requestCertificate;
+            val = ss->opt.requestCertificate;
             break;
         case SSL_REQUIRE_CERTIFICATE:
-            on = ss->opt.requireCertificate;
+            val = ss->opt.requireCertificate;
             break;
         case SSL_HANDSHAKE_AS_CLIENT:
-            on = ss->opt.handshakeAsClient;
+            val = ss->opt.handshakeAsClient;
             break;
         case SSL_HANDSHAKE_AS_SERVER:
-            on = ss->opt.handshakeAsServer;
+            val = ss->opt.handshakeAsServer;
             break;
         case SSL_ENABLE_TLS:
-            on = ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_0;
+            val = ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_0;
             break;
         case SSL_ENABLE_SSL3:
-            on = ss->vrange.min == SSL_LIBRARY_VERSION_3_0;
+            val = ss->vrange.min == SSL_LIBRARY_VERSION_3_0;
             break;
         case SSL_ENABLE_SSL2:
         case SSL_V2_COMPATIBLE_HELLO:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_NO_CACHE:
-            on = ss->opt.noCache;
+            val = ss->opt.noCache;
             break;
         case SSL_ENABLE_FDX:
-            on = ss->opt.fdx;
+            val = ss->opt.fdx;
             break;
         case SSL_ROLLBACK_DETECTION:
-            on = ss->opt.detectRollBack;
+            val = ss->opt.detectRollBack;
             break;
         case SSL_NO_STEP_DOWN:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_BYPASS_PKCS11:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_NO_LOCKS:
-            on = ss->opt.noLocks;
+            val = ss->opt.noLocks;
             break;
         case SSL_ENABLE_SESSION_TICKETS:
-            on = ss->opt.enableSessionTickets;
+            val = ss->opt.enableSessionTickets;
             break;
         case SSL_ENABLE_DEFLATE:
-            on = ss->opt.enableDeflate;
+            val = ss->opt.enableDeflate;
             break;
         case SSL_ENABLE_RENEGOTIATION:
-            on = ss->opt.enableRenegotiation;
+            val = ss->opt.enableRenegotiation;
             break;
         case SSL_REQUIRE_SAFE_NEGOTIATION:
-            on = ss->opt.requireSafeNegotiation;
+            val = ss->opt.requireSafeNegotiation;
             break;
         case SSL_ENABLE_FALSE_START:
-            on = ss->opt.enableFalseStart;
+            val = ss->opt.enableFalseStart;
             break;
         case SSL_CBC_RANDOM_IV:
-            on = ss->opt.cbcRandomIV;
+            val = ss->opt.cbcRandomIV;
             break;
         case SSL_ENABLE_OCSP_STAPLING:
-            on = ss->opt.enableOCSPStapling;
+            val = ss->opt.enableOCSPStapling;
             break;
         case SSL_ENABLE_NPN:
-            on = ss->opt.enableNPN;
+            val = ss->opt.enableNPN;
             break;
         case SSL_ENABLE_ALPN:
-            on = ss->opt.enableALPN;
+            val = ss->opt.enableALPN;
             break;
         case SSL_REUSE_SERVER_ECDHE_KEY:
-            on = ss->opt.reuseServerECDHEKey;
+            val = ss->opt.reuseServerECDHEKey;
             break;
         case SSL_ENABLE_FALLBACK_SCSV:
-            on = ss->opt.enableFallbackSCSV;
+            val = ss->opt.enableFallbackSCSV;
             break;
         case SSL_ENABLE_SERVER_DHE:
-            on = ss->opt.enableServerDhe;
+            val = ss->opt.enableServerDhe;
             break;
         case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-            on = ss->opt.enableExtendedMS;
+            val = ss->opt.enableExtendedMS;
             break;
         case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-            on = ss->opt.enableSignedCertTimestamps;
+            val = ss->opt.enableSignedCertTimestamps;
             break;
         case SSL_REQUIRE_DH_NAMED_GROUPS:
-            on = ss->opt.requireDHENamedGroups;
+            val = ss->opt.requireDHENamedGroups;
             break;
         case SSL_ENABLE_0RTT_DATA:
-            on = ss->opt.enable0RttData;
+            val = ss->opt.enable0RttData;
+            break;
+        case SSL_ENABLE_TLS13_COMPAT_MODE:
+            val = ss->opt.enableTls13CompatMode;
             break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -929,17 +951,17 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
 
-    *pOn = on;
+    *pVal = val;
     return rv;
 }
 
 SECStatus
-SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
+SSL_OptionGetDefault(PRInt32 which, PRIntn *pVal)
 {
     SECStatus rv = SECSuccess;
-    PRBool on = PR_FALSE;
+    PRIntn val = PR_FALSE;
 
-    if (!pOn) {
+    if (!pVal) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -948,114 +970,117 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
 
     switch (which) {
         case SSL_SOCKS:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_SECURITY:
-            on = ssl_defaults.useSecurity;
+            val = ssl_defaults.useSecurity;
             break;
         case SSL_REQUEST_CERTIFICATE:
-            on = ssl_defaults.requestCertificate;
+            val = ssl_defaults.requestCertificate;
             break;
         case SSL_REQUIRE_CERTIFICATE:
-            on = ssl_defaults.requireCertificate;
+            val = ssl_defaults.requireCertificate;
             break;
         case SSL_HANDSHAKE_AS_CLIENT:
-            on = ssl_defaults.handshakeAsClient;
+            val = ssl_defaults.handshakeAsClient;
             break;
         case SSL_HANDSHAKE_AS_SERVER:
-            on = ssl_defaults.handshakeAsServer;
+            val = ssl_defaults.handshakeAsServer;
             break;
         case SSL_ENABLE_TLS:
-            on = versions_defaults_stream.max >= SSL_LIBRARY_VERSION_TLS_1_0;
+            val = versions_defaults_stream.max >= SSL_LIBRARY_VERSION_TLS_1_0;
             break;
         case SSL_ENABLE_SSL3:
-            on = versions_defaults_stream.min == SSL_LIBRARY_VERSION_3_0;
+            val = versions_defaults_stream.min == SSL_LIBRARY_VERSION_3_0;
             break;
         case SSL_ENABLE_SSL2:
         case SSL_V2_COMPATIBLE_HELLO:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_NO_CACHE:
-            on = ssl_defaults.noCache;
+            val = ssl_defaults.noCache;
             break;
         case SSL_ENABLE_FDX:
-            on = ssl_defaults.fdx;
+            val = ssl_defaults.fdx;
             break;
         case SSL_ROLLBACK_DETECTION:
-            on = ssl_defaults.detectRollBack;
+            val = ssl_defaults.detectRollBack;
             break;
         case SSL_NO_STEP_DOWN:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_BYPASS_PKCS11:
-            on = PR_FALSE;
+            val = PR_FALSE;
             break;
         case SSL_NO_LOCKS:
-            on = ssl_defaults.noLocks;
+            val = ssl_defaults.noLocks;
             break;
         case SSL_ENABLE_SESSION_TICKETS:
-            on = ssl_defaults.enableSessionTickets;
+            val = ssl_defaults.enableSessionTickets;
             break;
         case SSL_ENABLE_DEFLATE:
-            on = ssl_defaults.enableDeflate;
+            val = ssl_defaults.enableDeflate;
             break;
         case SSL_ENABLE_RENEGOTIATION:
-            on = ssl_defaults.enableRenegotiation;
+            val = ssl_defaults.enableRenegotiation;
             break;
         case SSL_REQUIRE_SAFE_NEGOTIATION:
-            on = ssl_defaults.requireSafeNegotiation;
+            val = ssl_defaults.requireSafeNegotiation;
             break;
         case SSL_ENABLE_FALSE_START:
-            on = ssl_defaults.enableFalseStart;
+            val = ssl_defaults.enableFalseStart;
             break;
         case SSL_CBC_RANDOM_IV:
-            on = ssl_defaults.cbcRandomIV;
+            val = ssl_defaults.cbcRandomIV;
             break;
         case SSL_ENABLE_OCSP_STAPLING:
-            on = ssl_defaults.enableOCSPStapling;
+            val = ssl_defaults.enableOCSPStapling;
             break;
         case SSL_ENABLE_NPN:
-            on = ssl_defaults.enableNPN;
+            val = ssl_defaults.enableNPN;
             break;
         case SSL_ENABLE_ALPN:
-            on = ssl_defaults.enableALPN;
+            val = ssl_defaults.enableALPN;
             break;
         case SSL_REUSE_SERVER_ECDHE_KEY:
-            on = ssl_defaults.reuseServerECDHEKey;
+            val = ssl_defaults.reuseServerECDHEKey;
             break;
         case SSL_ENABLE_FALLBACK_SCSV:
-            on = ssl_defaults.enableFallbackSCSV;
+            val = ssl_defaults.enableFallbackSCSV;
             break;
         case SSL_ENABLE_SERVER_DHE:
-            on = ssl_defaults.enableServerDhe;
+            val = ssl_defaults.enableServerDhe;
             break;
         case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-            on = ssl_defaults.enableExtendedMS;
+            val = ssl_defaults.enableExtendedMS;
             break;
         case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-            on = ssl_defaults.enableSignedCertTimestamps;
+            val = ssl_defaults.enableSignedCertTimestamps;
             break;
         case SSL_ENABLE_0RTT_DATA:
-            on = ssl_defaults.enable0RttData;
+            val = ssl_defaults.enable0RttData;
+            break;
+        case SSL_ENABLE_TLS13_COMPAT_MODE:
+            val = ssl_defaults.enableTls13CompatMode;
             break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             rv = SECFailure;
     }
 
-    *pOn = on;
+    *pVal = val;
     return rv;
 }
 
 /* XXX Use Global Lock to protect this stuff. */
 SECStatus
-SSL_EnableDefault(int which, PRBool on)
+SSL_EnableDefault(int which, PRIntn val)
 {
-    return SSL_OptionSetDefault(which, on);
+    return SSL_OptionSetDefault(which, val);
 }
 
 SECStatus
-SSL_OptionSetDefault(PRInt32 which, PRBool on)
+SSL_OptionSetDefault(PRInt32 which, PRIntn val)
 {
     SECStatus status = ssl_Init();
 
@@ -1068,46 +1093,46 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
     switch (which) {
         case SSL_SOCKS:
             ssl_defaults.useSocks = PR_FALSE;
-            if (on) {
+            if (val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 return SECFailure;
             }
             break;
 
         case SSL_SECURITY:
-            ssl_defaults.useSecurity = on;
+            ssl_defaults.useSecurity = val;
             break;
 
         case SSL_REQUEST_CERTIFICATE:
-            ssl_defaults.requestCertificate = on;
+            ssl_defaults.requestCertificate = val;
             break;
 
         case SSL_REQUIRE_CERTIFICATE:
-            ssl_defaults.requireCertificate = on;
+            ssl_defaults.requireCertificate = val;
             break;
 
         case SSL_HANDSHAKE_AS_CLIENT:
-            if (ssl_defaults.handshakeAsServer && on) {
+            if (ssl_defaults.handshakeAsServer && val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 return SECFailure;
             }
-            ssl_defaults.handshakeAsClient = on;
+            ssl_defaults.handshakeAsClient = val;
             break;
 
         case SSL_HANDSHAKE_AS_SERVER:
-            if (ssl_defaults.handshakeAsClient && on) {
+            if (ssl_defaults.handshakeAsClient && val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 return SECFailure;
             }
-            ssl_defaults.handshakeAsServer = on;
+            ssl_defaults.handshakeAsServer = val;
             break;
 
         case SSL_ENABLE_TLS:
-            ssl_EnableTLS(&versions_defaults_stream, on);
+            ssl_EnableTLS(&versions_defaults_stream, val);
             break;
 
         case SSL_ENABLE_SSL3:
-            ssl_EnableSSL3(&versions_defaults_stream, on);
+            ssl_EnableSSL3(&versions_defaults_stream, val);
             break;
 
         case SSL_ENABLE_SSL2:
@@ -1116,26 +1141,26 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
              * However, if an old application requests to disable SSL v2,
              * we shouldn't fail.
              */
-            if (on) {
+            if (val) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 return SECFailure;
             }
             break;
 
         case SSL_NO_CACHE:
-            ssl_defaults.noCache = on;
+            ssl_defaults.noCache = val;
             break;
 
         case SSL_ENABLE_FDX:
-            if (on && ssl_defaults.noLocks) {
+            if (val && ssl_defaults.noLocks) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 return SECFailure;
             }
-            ssl_defaults.fdx = on;
+            ssl_defaults.fdx = val;
             break;
 
         case SSL_ROLLBACK_DETECTION:
-            ssl_defaults.detectRollBack = on;
+            ssl_defaults.detectRollBack = val;
             break;
 
         case SSL_NO_STEP_DOWN:
@@ -1145,76 +1170,80 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
             break;
 
         case SSL_NO_LOCKS:
-            if (on && ssl_defaults.fdx) {
+            if (val && ssl_defaults.fdx) {
                 PORT_SetError(SEC_ERROR_INVALID_ARGS);
                 return SECFailure;
             }
-            if (on && ssl_force_locks)
-                on = PR_FALSE; /* silent override */
-            ssl_defaults.noLocks = on;
-            if (on) {
+            if (val && ssl_force_locks)
+                val = PR_FALSE; /* silent override */
+            ssl_defaults.noLocks = val;
+            if (val) {
                 locksEverDisabled = PR_TRUE;
                 strcpy(lockStatus + LOCKSTATUS_OFFSET, "DISABLED.");
             }
             break;
 
         case SSL_ENABLE_SESSION_TICKETS:
-            ssl_defaults.enableSessionTickets = on;
+            ssl_defaults.enableSessionTickets = val;
             break;
 
         case SSL_ENABLE_DEFLATE:
-            ssl_defaults.enableDeflate = on;
+            ssl_defaults.enableDeflate = val;
             break;
 
         case SSL_ENABLE_RENEGOTIATION:
-            ssl_defaults.enableRenegotiation = on;
+            ssl_defaults.enableRenegotiation = val;
             break;
 
         case SSL_REQUIRE_SAFE_NEGOTIATION:
-            ssl_defaults.requireSafeNegotiation = on;
+            ssl_defaults.requireSafeNegotiation = val;
             break;
 
         case SSL_ENABLE_FALSE_START:
-            ssl_defaults.enableFalseStart = on;
+            ssl_defaults.enableFalseStart = val;
             break;
 
         case SSL_CBC_RANDOM_IV:
-            ssl_defaults.cbcRandomIV = on;
+            ssl_defaults.cbcRandomIV = val;
             break;
 
         case SSL_ENABLE_OCSP_STAPLING:
-            ssl_defaults.enableOCSPStapling = on;
+            ssl_defaults.enableOCSPStapling = val;
             break;
 
         case SSL_ENABLE_NPN:
             break;
 
         case SSL_ENABLE_ALPN:
-            ssl_defaults.enableALPN = on;
+            ssl_defaults.enableALPN = val;
             break;
 
         case SSL_REUSE_SERVER_ECDHE_KEY:
-            ssl_defaults.reuseServerECDHEKey = on;
+            ssl_defaults.reuseServerECDHEKey = val;
             break;
 
         case SSL_ENABLE_FALLBACK_SCSV:
-            ssl_defaults.enableFallbackSCSV = on;
+            ssl_defaults.enableFallbackSCSV = val;
             break;
 
         case SSL_ENABLE_SERVER_DHE:
-            ssl_defaults.enableServerDhe = on;
+            ssl_defaults.enableServerDhe = val;
             break;
 
         case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-            ssl_defaults.enableExtendedMS = on;
+            ssl_defaults.enableExtendedMS = val;
             break;
 
         case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-            ssl_defaults.enableSignedCertTimestamps = on;
+            ssl_defaults.enableSignedCertTimestamps = val;
             break;
 
         case SSL_ENABLE_0RTT_DATA:
-            ssl_defaults.enable0RttData = on;
+            ssl_defaults.enable0RttData = val;
+            break;
+
+        case SSL_ENABLE_TLS13_COMPAT_MODE:
+            ssl_defaults.enableTls13CompatMode = val;
             break;
 
         default:
@@ -2127,6 +2156,25 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
             return NULL;
         PR_APPEND_LINK(&skp->link, &ss->ephemeralKeyPairs);
     }
+
+    while (!PR_CLIST_IS_EMPTY(&ss->extensionHooks)) {
+        cursor = PR_LIST_TAIL(&ss->extensionHooks);
+        PR_REMOVE_LINK(cursor);
+        PORT_Free(cursor);
+    }
+    for (cursor = PR_NEXT_LINK(&sm->extensionHooks);
+         cursor != &sm->extensionHooks;
+         cursor = PR_NEXT_LINK(cursor)) {
+        SECStatus rv;
+        sslCustomExtensionHooks *hook = (sslCustomExtensionHooks *)cursor;
+        rv = SSL_InstallExtensionHooks(ss->fd, hook->type,
+                                       hook->writer, hook->writerArg,
+                                       hook->handler, hook->handlerArg);
+        if (rv != SECSuccess) {
+            return NULL;
+        }
+    }
+
     PORT_Memcpy((void *)ss->namedGroupPreferences,
                 sm->namedGroupPreferences,
                 sizeof(ss->namedGroupPreferences));
@@ -3127,7 +3175,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
     }
     blocking = ssl_FdIsBlocking(fd);
 
-#define K16 sizeof(buf)
+#define K16 ((int)sizeof(buf))
 #define KILL_VECTORS                   \
     while (vectors && !iov->iov_len) { \
         ++iov;                         \
@@ -3755,7 +3803,6 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     SECStatus rv;
     sslSocket *ss;
     int i;
-
     ssl_SetDefaultsFromEnvironment();
 
     if (ssl_force_locks)
@@ -3786,6 +3833,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 
     PR_INIT_CLIST(&ss->serverCerts);
     PR_INIT_CLIST(&ss->ephemeralKeyPairs);
+    PR_INIT_CLIST(&ss->extensionHooks);
 
     ss->dbHandle = CERT_GetDefaultCertDB();
 
@@ -3813,7 +3861,11 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
     PR_INIT_CLIST(&ss->ssl3.hs.cipherSpecs);
     PR_INIT_CLIST(&ss->ssl3.hs.bufferedEarlyData);
-    ssl3_InitExtensionData(&ss->xtnData);
+    ssl3_InitExtensionData(&ss->xtnData, ss);
+    PR_INIT_CLIST(&ss->ssl3.hs.dtlsSentHandshake);
+    PR_INIT_CLIST(&ss->ssl3.hs.dtlsRcvdHandshake);
+    dtls_InitTimers(ss);
+
     if (makeLocks) {
         rv = ssl_MakeLocks(ss);
         if (rv != SECSuccess)
@@ -3825,6 +3877,10 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     rv = ssl3_InitGather(&ss->gs);
     if (rv != SECSuccess)
         goto loser;
+    rv = ssl3_InitState(ss);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
     return ss;
 
 loser:
@@ -3875,7 +3931,11 @@ struct {
     void *function;
 } ssl_experimental_functions[] = {
 #ifndef SSL_DISABLE_EXPERIMENTAL_API
-    EXP(UseAltServerHelloType),
+    EXP(GetExtensionSupport),
+    EXP(HelloRetryRequestCallback),
+    EXP(InstallExtensionHooks),
+    EXP(SendSessionTicket),
+    EXP(SetupAntiReplay),
 #endif
     { "", NULL }
 };
@@ -3893,4 +3953,20 @@ SSL_GetExperimentalAPI(const char *name)
     }
     PORT_SetError(SSL_ERROR_UNSUPPORTED_EXPERIMENTAL_API);
     return NULL;
+}
+
+void
+ssl_ClearPRCList(PRCList *list, void (*f)(void *))
+{
+    PRCList *cursor;
+
+    while (!PR_CLIST_IS_EMPTY(list)) {
+        cursor = PR_LIST_TAIL(list);
+
+        PR_REMOVE_LINK(cursor);
+        if (f) {
+            f(cursor);
+        }
+        PORT_Free(cursor);
+    }
 }

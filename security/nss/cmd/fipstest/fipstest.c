@@ -5922,8 +5922,7 @@ tls(char *reqfn)
                 goto loser;
             }
             crv = NSC_DeriveKey(session, &master_mech, pms_handle,
-                                derive_template, derive_template_count -
-                                                     1,
+                                derive_template, derive_template_count - 1,
                                 &master_handle);
             if (crv != CKR_OK) {
                 fprintf(stderr, "NSC_DeriveKey(master) failed crv=0x%x\n",
