@@ -6,110 +6,120 @@
 
 SPHINX_TREES['crashreporter'] = 'docs'
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DIRS += [
-        'google-breakpad/src/common',
-        'google-breakpad/src/processor',
-        'breakpad-windows-libxul',
-    ]
-
-    if CONFIG['MSVC_HAS_DIA_SDK']:
-        DIRS += ['google-breakpad/src/tools/windows/dump_syms']
-
-    if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
-        DIRS += ['breakpad-windows-standalone']
-
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    DIRS += [
-        'breakpad-client',
-        'breakpad-client/mac/crash_generation',
-        'breakpad-client/mac/handler',
-        'google-breakpad/src/common',
-        'google-breakpad/src/common/mac',
-        'google-breakpad/src/processor',
-        'google-breakpad/src/tools/mac/dump_syms',
-    ]
-
-elif CONFIG['OS_ARCH'] == 'Linux':
-    DIRS += [
-        'breakpad-client',
-        'breakpad-client/linux/',
-        'google-breakpad/src/common',
-        'google-breakpad/src/common/linux',
-        'google-breakpad/src/processor',
-        'google-breakpad/src/tools/linux/dump_syms',
-    ]
-
-
-DIRS += [
-    'client',
-    'minidump-analyzer',
-]
-
-if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
-    DIRS += ['injector']
-    UNIFIED_SOURCES += [
-        'InjectCrashReporter.cpp',
-        'LoadLibraryRemote.cpp',
-    ]
-
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['test/gtest']
-
-TEST_DIRS += ['test']
-
 EXPORTS += [
     'nsExceptionHandler.h',
 ]
 
-UNIFIED_SOURCES += [
-    'nsExceptionHandler.cpp',
-    'ThreadAnnotation.cpp',
+JAR_MANIFESTS += ['jar.mn']
+
+UNIFIED_SOURCES = [
+    'nsExceptionHandlerUtils.cpp',
 ]
-
-if CONFIG['OS_ARCH'] == 'Darwin':
-    UNIFIED_SOURCES += [
-        'mac_utils.mm',
-    ]
-
-EXTRA_JS_MODULES += [
-    'CrashReports.jsm',
-    'CrashSubmit.jsm',
-    'KeyValueParser.jsm',
-]
-
-include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['OS_TARGET'] == 'Android':
-    DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
-    DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
-    DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
-    # NDK5 workarounds
-    DEFINES['_STLP_CONST_CONSTRUCTOR_BUG'] = True
-    DEFINES['_STLP_NO_MEMBER_TEMPLATES'] = True
-    LOCAL_INCLUDES += [
-        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+if CONFIG['MOZ_CRASHREPORTER']:
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        DIRS += [
+            'google-breakpad/src/common',
+            'google-breakpad/src/processor',
+            'breakpad-windows-libxul',
+        ]
+
+        if CONFIG['MSVC_HAS_DIA_SDK']:
+            DIRS += ['google-breakpad/src/tools/windows/dump_syms']
+
+        if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
+            DIRS += ['breakpad-windows-standalone']
+
+    elif CONFIG['OS_ARCH'] == 'Darwin':
+        DIRS += [
+            'breakpad-client',
+            'breakpad-client/mac/crash_generation',
+            'breakpad-client/mac/handler',
+            'google-breakpad/src/common',
+            'google-breakpad/src/common/mac',
+            'google-breakpad/src/processor',
+            'google-breakpad/src/tools/mac/dump_syms',
+        ]
+
+    elif CONFIG['OS_ARCH'] == 'Linux':
+        DIRS += [
+            'breakpad-client',
+            'breakpad-client/linux/',
+            'google-breakpad/src/common',
+            'google-breakpad/src/common/linux',
+            'google-breakpad/src/processor',
+            'google-breakpad/src/tools/linux/dump_syms',
+        ]
+
+
+    DIRS += [
+        'client',
+        'minidump-analyzer',
     ]
 
-DEFINES['UNICODE'] = True
-DEFINES['_UNICODE'] = True
+    if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
+        DIRS += ['injector']
+        UNIFIED_SOURCES += [
+            'InjectCrashReporter.cpp',
+            'LoadLibraryRemote.cpp',
+        ]
 
-JAR_MANIFESTS += ['jar.mn']
+    if CONFIG['ENABLE_TESTS']:
+        DIRS += ['test/gtest']
 
-LOCAL_INCLUDES += [
-    'google-breakpad/src',
-]
+    TEST_DIRS += ['test']
 
-PYTHON_UNITTEST_MANIFESTS += [
-    'tools/python.ini',
-]
+    UNIFIED_SOURCES += [
+        'nsExceptionHandler.cpp',
+        'ThreadAnnotation.cpp',
+    ]
 
-include('/toolkit/crashreporter/crashreporter.mozbuild')
+    if CONFIG['OS_ARCH'] == 'Darwin':
+        UNIFIED_SOURCES += [
+            'mac_utils.mm',
+        ]
+
+    EXTRA_JS_MODULES += [
+        'CrashReports.jsm',
+        'CrashSubmit.jsm',
+        'KeyValueParser.jsm',
+    ]
+
+    include('/ipc/chromium/chromium-config.mozbuild')
+
+    if CONFIG['OS_TARGET'] == 'Android':
+        DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
+        DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
+        DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
+        # NDK5 workarounds
+        DEFINES['_STLP_CONST_CONSTRUCTOR_BUG'] = True
+        DEFINES['_STLP_NO_MEMBER_TEMPLATES'] = True
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+        ]
+
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
+
+    LOCAL_INCLUDES += [
+        'google-breakpad/src',
+    ]
+
+    PYTHON_UNITTEST_MANIFESTS += [
+        'tools/python.ini',
+    ]
+
+    include('/toolkit/crashreporter/crashreporter.mozbuild')
+
+    if CONFIG['GNU_CXX']:
+        CXXFLAGS += ['-Wno-shadow']
+else:
+    UNIFIED_SOURCES += [
+        'nsDummyExceptionHandler.cpp',
+    ]
+
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Crash Reporting')
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wno-shadow']

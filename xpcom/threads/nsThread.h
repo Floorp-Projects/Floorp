@@ -87,7 +87,6 @@ public:
 
   void WaitForAllAsynchronousShutdowns();
 
-#ifdef MOZ_CRASHREPORTER
   enum class ShouldSaveMemoryReport
   {
     kMaybeReport,
@@ -95,7 +94,6 @@ public:
   };
 
   static bool SaveMemoryReportNearOOM(ShouldSaveMemoryReport aShouldSave);
-#endif
 
   static const uint32_t kRunnableNameBufSize = 1000;
   static mozilla::Array<char, kRunnableNameBufSize> sMainThreadRunnableName;

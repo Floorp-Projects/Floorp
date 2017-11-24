@@ -87,7 +87,7 @@ private:
   bool ShouldInstantiate(const DWORD aClientTid);
 
   bool GetClientExecutableName(const DWORD aClientTid, nsIFile** aOutClientExe);
-#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#if defined(MOZ_TELEMETRY_REPORTING)
   class AccumulateRunnable final : public Runnable
   {
   public:
@@ -120,7 +120,7 @@ private:
   void AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend);
   void GatherTelemetry(nsIFile* aClientExe, AccumulateRunnable* aRunnable);
   void AccumulateTelemetry(const nsString& aValue);
-#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#endif // defined(MOZ_TELEMETRY_REPORTING)
 
   /**
    * @return S_OK if we have a valid mRealRoot to invoke methods on
@@ -152,9 +152,9 @@ private:
   RootAccessibleWrap* mWeakRootAccWrap;
   IAccessible*        mWeakAccessible;
   IDispatch*          mWeakDispatch;
-#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#if defined(MOZ_TELEMETRY_REPORTING)
   nsCOMPtr<nsIThread> mTelemetryThread;
-#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#endif // defined(MOZ_TELEMETRY_REPORTING)
 };
 
 } // namespace a11y

@@ -3,6 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This header has two implementations, the real one in nsExceptionHandler.cpp
+// and a dummy in nsDummyExceptionHandler.cpp. The latter is used in builds
+// configured with --disable-crashreporter. If you add or remove a function
+// from this header you must update both implementations otherwise you'll break
+// builds that disable the crash reporter.
+
 #ifndef nsExceptionHandler_h__
 #define nsExceptionHandler_h__
 
@@ -34,6 +40,19 @@ template<class KeyClass, class DataType> class nsDataHashtable;
 class nsCStringHashKey;
 
 namespace CrashReporter {
+
+/**
+ * Returns true if the crash reporter is using the dummy implementation.
+ */
+static inline bool
+IsDummy() {
+#ifdef MOZ_CRASHREPORTER
+  return false;
+#else
+  return true;
+#endif
+}
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force=false);
 nsresult UnsetExceptionHandler();
 
@@ -248,7 +267,7 @@ void UnregisterInjectorCallback(DWORD processID);
 bool SetRemoteExceptionHandler(const nsACString& crashPipe);
 void InitChildProcessTmpDir(nsIFile* aDirOverride = nullptr);
 
-#  elif defined(XP_LINUX)
+#  elif defined(XP_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
 // Parent-side API for children
 
 // Set the outparams for crash reporter server's fd (|childCrashFd|)

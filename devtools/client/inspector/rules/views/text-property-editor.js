@@ -1040,4 +1040,4 @@ TextPropertyEditor.prototype = {
   },
 };
 
-exports.TextPropertyEditor = TextPropertyEditor;
+module.exports = TextPropertyEditor;

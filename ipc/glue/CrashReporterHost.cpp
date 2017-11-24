@@ -10,11 +10,9 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
-#ifdef MOZ_CRASHREPORTER
-# include "nsExceptionHandler.h"
-# include "nsIAsyncShutdown.h"
-# include "nsICrashService.h"
-#endif
+#include "nsExceptionHandler.h"
+#include "nsIAsyncShutdown.h"
+#include "nsICrashService.h"
 
 namespace mozilla {
 namespace ipc {
@@ -30,7 +28,6 @@ CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
 {
 }
 
-#ifdef MOZ_CRASHREPORTER
 bool
 CrashReporterHost::GenerateCrashReport(base::ProcessId aPid)
 {
@@ -288,7 +285,6 @@ CrashReporterHost::AddNote(const nsCString& aKey, const nsCString& aValue)
 {
   mExtraNotes.Put(aKey, aValue);
 }
-#endif
 
 } // namespace ipc
 } // namespace mozilla

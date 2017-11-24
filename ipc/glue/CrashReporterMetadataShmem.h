@@ -28,9 +28,7 @@ public:
   void AnnotateCrashReport(const nsCString& aKey, const nsCString& aData);
   void AppendAppNotes(const nsCString& aData);
 
-#ifdef MOZ_CRASHREPORTER
   static void ReadAppNotes(const Shmem& aShmem, CrashReporter::AnnotationTable* aNotes);
-#endif
 
 private:
   void SyncNotesToShmem();
