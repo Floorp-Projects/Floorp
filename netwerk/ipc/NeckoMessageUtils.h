@@ -9,15 +9,13 @@
 #include "mozilla/DebugOnly.h"
 
 #include "ipc/IPCMessageUtils.h"
+#include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
 #include "nsStringGlue.h"
 #include "prio.h"
 #include "mozilla/net/DNS.h"
 #include "TimingStruct.h"
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#include "nsPrintfCString.h"
-#endif
 
 namespace IPC {
 
@@ -102,12 +100,11 @@ struct ParamTraits<mozilla::net::NetAddr>
       aMsg->WriteBytes(aParam.local.path, sizeof(aParam.local.path));
 #endif
     } else {
-#ifdef MOZ_CRASHREPORTER
       if (XRE_IsParentProcess()) {
         nsPrintfCString msg("%d", aParam.raw.family);
         CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Unknown NetAddr socket family"), msg);
       }
-#endif
+
       MOZ_CRASH("Unknown socket family");
     }
   }

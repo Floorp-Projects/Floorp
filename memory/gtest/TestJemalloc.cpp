@@ -8,15 +8,13 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozmemory.h"
+#include "nsCOMPtr.h"
+#include "nsICrashReporter.h"
+#include "nsServiceManagerUtils.h"
 #include "Utils.h"
 
 #include "gtest/gtest.h"
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsCOMPtr.h"
-#include "nsICrashReporter.h"
-#include "nsServiceManagerUtils.h"
-#endif
 
 #ifdef NIGHTLY_BUILD
 #if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
@@ -28,13 +26,11 @@ extern unsigned int _gdb_sleep_duration;
 #ifndef XP_DARWIN
 static void DisableCrashReporter()
 {
-#ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> crashreporter =
     do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   if (crashreporter) {
     crashreporter->SetEnabled(false);
   }
-#endif
 }
 
 // Wrap ASSERT_DEATH_IF_SUPPORTED to disable the crash reporter
