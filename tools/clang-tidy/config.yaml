@@ -37,7 +37,8 @@ clang_checkers:
  - name: modernize-use-nullptr
    publish: !!bool yes
  - name: modernize-use-override
-   publish: !!bool yes
+   # Too noisy because of the way how we implement NS_IMETHOD. See Bug 1420366.
+   publish: !!bool no
  - name: mozilla-*
    publish: !!bool yes
  - name: performance-*
