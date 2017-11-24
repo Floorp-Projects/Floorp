@@ -52,16 +52,13 @@ function GetCachedFormat(format, required, defaults) {
            "unexpected format key: please update the comment by " +
            "dateTimeFormatCache");
 
-    var runtimeDefaultLocale = RuntimeDefaultLocale();
-    var icuDefaultTimeZone = intl_defaultTimeZone();
-
     var formatters;
-    if (dateTimeFormatCache.runtimeDefaultLocale !== runtimeDefaultLocale ||
-        dateTimeFormatCache.icuDefaultTimeZone !== icuDefaultTimeZone)
+    if (!IsRuntimeDefaultLocale(dateTimeFormatCache.runtimeDefaultLocale) ||
+        !intl_isDefaultTimeZone(dateTimeFormatCache.icuDefaultTimeZone))
     {
         formatters = dateTimeFormatCache.formatters = new Record();
-        dateTimeFormatCache.runtimeDefaultLocale = runtimeDefaultLocale;
-        dateTimeFormatCache.icuDefaultTimeZone = icuDefaultTimeZone;
+        dateTimeFormatCache.runtimeDefaultLocale = RuntimeDefaultLocale();
+        dateTimeFormatCache.icuDefaultTimeZone = intl_defaultTimeZone();
     } else {
         formatters = dateTimeFormatCache.formatters;
     }
