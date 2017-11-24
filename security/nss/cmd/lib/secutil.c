@@ -240,7 +240,8 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
             sprintf(prompt,
                     "Press Enter, then enter PIN for \"%s\" on external device.\n",
                     PK11_GetTokenName(slot));
-            (void)SECU_GetPasswordString(NULL, prompt);
+            char *pw = SECU_GetPasswordString(NULL, prompt);
+            PORT_Free(pw);
         /* Fall Through */
         case PW_PLAINTEXT:
             return PL_strdup(pwdata->data);
@@ -1192,7 +1193,7 @@ secu_PrintRSAPSSParams(FILE *out, SECItem *value, char *m, int level)
             SECU_Indent(out, level + 1);
             fprintf(out, "Salt length: default, %i (0x%2X)\n", 20, 20);
         } else {
-            SECU_PrintInteger(out, &param.saltLength, "Salt Length", level + 1);
+            SECU_PrintInteger(out, &param.saltLength, "Salt length", level + 1);
         }
     } else {
         SECU_Indent(out, level + 1);

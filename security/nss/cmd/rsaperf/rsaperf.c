@@ -671,8 +671,7 @@ main(int argc, char **argv)
 
     printf("%ld iterations in %s\n",
            iters, TimingGenerateString(timeCtx));
-    printf("%.2f operations/s .\n", ((double)(iters) * (double)1000000.0) /
-                                        (double)timeCtx->interval);
+    printf("%.2f operations/s .\n", ((double)(iters) * (double)1000000.0) / (double)timeCtx->interval);
     TimingDivide(timeCtx, iters);
     printf("one operation every %s\n", TimingGenerateString(timeCtx));
 

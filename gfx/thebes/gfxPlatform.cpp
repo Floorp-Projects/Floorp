@@ -2553,6 +2553,10 @@ gfxPlatform::InitWebRenderConfig()
   }
 #endif
 
+  if (Preferences::GetBool("gfx.webrender.program-binary", false)) {
+    gfx::gfxVars::SetUseWebRenderProgramBinary(gfxConfig::IsEnabled(Feature::WEBRENDER));
+  }
+
 #ifdef MOZ_WIDGET_ANDROID
   featureWebRender.ForceDisable(
     FeatureStatus::Unavailable,

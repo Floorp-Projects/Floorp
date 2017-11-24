@@ -250,6 +250,8 @@ struct ResourceUpdates;
 
 struct Vec_u8;
 
+struct WrProgramCache;
+
 struct WrRenderedEpochs;
 
 struct WrState;
@@ -1410,6 +1412,14 @@ extern void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId,
                                                bool aCompositeNeeded);
 
 WR_INLINE
+void wr_program_cache_delete(WrProgramCache *aProgramCache)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+WrProgramCache *wr_program_cache_new()
+WR_FUNC;
+
+WR_INLINE
 void wr_rendered_epochs_delete(WrRenderedEpochs *aPipelineEpochs)
 WR_DESTRUCTOR_SAFE_FUNC;
 
@@ -1463,6 +1473,11 @@ WR_FUNC;
 
 WR_INLINE
 void wr_renderer_update(Renderer *aRenderer)
+WR_FUNC;
+
+WR_INLINE
+void wr_renderer_update_program_cache(Renderer *aRenderer,
+                                      WrProgramCache *aProgramCache)
 WR_FUNC;
 
 WR_INLINE

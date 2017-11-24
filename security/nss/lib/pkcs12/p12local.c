@@ -267,8 +267,7 @@ sec_pkcs12_generate_key_from_password(SECOidTag algorithm,
         return NULL;
     }
 
-    pre_hash = (unsigned char *)PORT_ArenaZAlloc(poolp, sizeof(char) *
-                                                            (salt->len + password->len));
+    pre_hash = (unsigned char *)PORT_ArenaZAlloc(poolp, sizeof(char) * (salt->len + password->len));
     if (pre_hash == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         goto loser;

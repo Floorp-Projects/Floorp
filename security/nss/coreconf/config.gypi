@@ -96,7 +96,6 @@
     'mozilla_client%': 0,
     'moz_fold_libs%': 0,
     'moz_folded_library_name%': '',
-    'ssl_enable_zlib%': 1,
     'sanitizer_flags%': 0,
     'test_build%': 0,
     'no_zdefs%': 0,

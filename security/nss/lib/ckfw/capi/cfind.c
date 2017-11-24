@@ -331,8 +331,7 @@ collect_class(
                     nss_ZFreeIf(keyProvInfo);
 
                     if (provName &&
-                        (strncmp(provName, "Microsoft", sizeof("Microsoft") -
-                                                            1) != 0)) {
+                        (strncmp(provName, "Microsoft", sizeof("Microsoft") - 1) != 0)) {
                         continue;
                     }
                 } else {

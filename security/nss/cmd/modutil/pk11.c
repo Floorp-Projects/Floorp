@@ -728,7 +728,7 @@ ChangePW(char *tokenName, char *pwFile, char *newpwFile)
                 ret = BAD_PW_ERR;
                 goto loser;
             }
-        } else {
+        } else if (PK11_NeedLogin(slot)) {
             for (matching = PR_FALSE; !matching;) {
                 oldpw = SECU_GetPasswordString(NULL, "Enter old password: ");
                 if (PK11_CheckUserPassword(slot, oldpw) == SECSuccess) {

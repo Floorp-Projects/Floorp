@@ -98,8 +98,13 @@ int32_t DummyPrSocket::Recv(PRFileDesc *f, void *buf, int32_t buflen,
 }
 
 int32_t DummyPrSocket::Write(PRFileDesc *f, const void *buf, int32_t length) {
+  if (write_error_) {
+    PR_SetError(write_error_, 0);
+    return -1;
+  }
+
   auto peer = peer_.lock();
-  if (!peer || !writeable_) {
+  if (!peer) {
     PR_SetError(PR_IO_ERROR, 0);
     return -1;
   }
@@ -109,7 +114,7 @@ int32_t DummyPrSocket::Write(PRFileDesc *f, const void *buf, int32_t length) {
   DataBuffer filtered;
   PacketFilter::Action action = PacketFilter::KEEP;
   if (filter_) {
-    action = filter_->Filter(packet, &filtered);
+    action = filter_->Process(packet, &filtered);
   }
   switch (action) {
     case PacketFilter::CHANGE:

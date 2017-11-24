@@ -13,6 +13,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "js/GCVector.h"
 #include "js/Id.h"
+#include "js/UniquePtr.h"
 #include "vm/NativeObject.h"
 #include "vm/ProxyObject.h"
 
@@ -167,8 +168,16 @@ class IndirectBindingMap
 class ModuleNamespaceObject : public ProxyObject
 {
   public:
+    enum ModuleNamespaceSlot
+    {
+        ExportsSlot = 0,
+        BindingsSlot
+    };
+
     static bool isInstance(HandleValue value);
-    static ModuleNamespaceObject* create(JSContext* cx, HandleModuleObject module);
+    static ModuleNamespaceObject* create(JSContext* cx, HandleModuleObject module,
+                                         HandleObject exports,
+                                         UniquePtr<IndirectBindingMap> bindings);
 
     ModuleObject& module();
     JSObject& exports();
@@ -209,6 +218,9 @@ class ModuleNamespaceObject : public ProxyObject
         bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
                  HandleValue receiver, ObjectOpResult& result) const override;
 
+        void trace(JSTracer* trc, JSObject* proxy) const override;
+        void finalize(JSFreeOp* fop, JSObject* proxy) const override;
+
         static const char family;
     };
 
@@ -239,7 +251,6 @@ class ModuleObject : public NativeObject
     enum ModuleSlot
     {
         ScriptSlot = 0,
-        InitialEnvironmentSlot,
         EnvironmentSlot,
         NamespaceSlot,
         StatusSlot,
@@ -251,8 +262,6 @@ class ModuleObject : public NativeObject
         IndirectExportEntriesSlot,
         StarExportEntriesSlot,
         ImportBindingsSlot,
-        NamespaceExportsSlot,
-        NamespaceBindingsSlot,
         FunctionDeclarationsSlot,
         DFSIndexSlot,
         DFSAncestorIndexSlot,
@@ -302,16 +311,11 @@ class ModuleObject : public NativeObject
     ArrayObject& indirectExportEntries() const;
     ArrayObject& starExportEntries() const;
     IndirectBindingMap& importBindings();
-    JSObject* namespaceExports();
-    IndirectBindingMap* namespaceBindings();
 
     static bool Instantiate(JSContext* cx, HandleModuleObject self);
     static bool Evaluate(JSContext* cx, HandleModuleObject self);
 
     void setHostDefinedField(const JS::Value& value);
-
-    // For intrinsic_CreateModuleEnvironment.
-    void createEnvironment();
 
     // For BytecodeEmitter.
     bool noteFunctionDeclaration(JSContext* cx, HandleAtom name, HandleFunction fun);

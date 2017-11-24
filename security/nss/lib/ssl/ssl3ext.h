@@ -9,53 +9,37 @@
 #ifndef __ssl3ext_h_
 #define __ssl3ext_h_
 
+#include "sslencode.h"
+
 typedef enum {
     sni_nametype_hostname
 } SNINameType;
 typedef struct TLSExtensionDataStr TLSExtensionData;
 
-/* registerable callback function that either appends extension to buffer
+/* Registerable callback function that either appends extension to buffer
  * or returns length of data that it would have appended.
  */
-typedef PRInt32 (*ssl3HelloExtensionSenderFunc)(const sslSocket *ss,
-                                                TLSExtensionData *xtnData,
-                                                PRBool append,
-                                                PRUint32 maxBytes);
-
-/* registerable callback function that handles a received extension,
- * of the given type.
- */
-typedef SECStatus (*ssl3ExtensionHandlerFunc)(const sslSocket *ss,
-                                              TLSExtensionData *xtnData,
-                                              PRUint16 ex_type,
-                                              SECItem *data);
+typedef SECStatus (*sslExtensionBuilderFunc)(const sslSocket *ss,
+                                             TLSExtensionData *xtnData,
+                                             sslBuffer *buf, PRBool *added);
 
 /* row in a table of hello extension senders */
 typedef struct {
     PRInt32 ex_type;
-    ssl3HelloExtensionSenderFunc ex_sender;
-} ssl3HelloExtensionSender;
-
-/* row in a table of hello extension handlers */
-typedef struct {
-    PRInt32 ex_type;
-    ssl3ExtensionHandlerFunc ex_handler;
-} ssl3ExtensionHandler;
+    sslExtensionBuilderFunc ex_sender;
+} sslExtensionBuilder;
 
 struct TLSExtensionDataStr {
     /* registered callbacks that send server hello extensions */
-    ssl3HelloExtensionSender serverHelloSenders[SSL_MAX_EXTENSIONS];
-    ssl3HelloExtensionSender encryptedExtensionsSenders[SSL_MAX_EXTENSIONS];
-    ssl3HelloExtensionSender certificateSenders[SSL_MAX_EXTENSIONS];
+    sslExtensionBuilder serverHelloSenders[SSL_MAX_EXTENSIONS];
+    sslExtensionBuilder encryptedExtensionsSenders[SSL_MAX_EXTENSIONS];
+    sslExtensionBuilder certificateSenders[SSL_MAX_EXTENSIONS];
 
-    /* Keep track of the extensions that are negotiated. */
+    /* Keep track of the extensions that are advertised or negotiated. */
     PRUint16 numAdvertised;
+    PRUint16 *advertised; /* Allocated dynamically. */
     PRUint16 numNegotiated;
-    PRUint16 advertised[SSL_MAX_EXTENSIONS];
     PRUint16 negotiated[SSL_MAX_EXTENSIONS];
-
-    /* Amount of padding we need to add. */
-    PRUint16 paddingLen;
 
     /* SessionTicket Extension related data. */
     PRBool ticketTimestampVerified;
@@ -86,10 +70,13 @@ struct TLSExtensionDataStr {
     PRBool peerSupportsFfdheGroups; /* if the peer supports named ffdhe groups */
 
     /* clientSigAndHash contains the contents of the signature_algorithms
-     * extension (if any) from the client. This is only valid for TLS 1.2
-     * or later. */
-    SSLSignatureScheme *clientSigSchemes;
-    unsigned int numClientSigScheme;
+     * extension (if any) the other side supports. This is only valid for TLS
+     * 1.2 or later. In TLS 1.3, it is also used for CertificateRequest. */
+    SSLSignatureScheme *sigSchemes;
+    unsigned int numSigSchemes;
+
+    SECItem certReqContext;
+    CERTDistNames certReqAuthorities;
 
     /* In a client: if the server supports Next Protocol Negotiation, then
      * this is the protocol that was negotiated.
@@ -99,9 +86,18 @@ struct TLSExtensionDataStr {
 
     PRUint16 dtlsSRTPCipherSuite; /* 0 if not selected */
 
-    SECItem pskBinder;                /* The PSK binder for the first PSK (TLS 1.3) */
-    unsigned long pskBinderPrefixLen; /* The length of the binder input. */
-    PRCList remoteKeyShares;          /* The other side's public keys (TLS 1.3) */
+    unsigned int lastXtnOffset; /* Where to insert padding. 0 = end. */
+    PRCList remoteKeyShares;    /* The other side's public keys (TLS 1.3) */
+
+    /* The following are used by a TLS 1.3 server. */
+    SECItem pskBinder;                     /* The binder for the first PSK. */
+    unsigned int pskBindersLen;            /* The length of the binders. */
+    PRUint32 ticketAge;                    /* Used to accept early data. */
+    SECItem cookie;                        /* HRR Cookie. */
+    const sslNamedGroupDef *selectedGroup; /* For HRR. */
+    /* The application token contains a value that was passed to the client via
+     * a session ticket, or the cookie in a HelloRetryRequest. */
+    SECItem applicationToken;
 };
 
 typedef struct TLSExtensionStr {
@@ -110,40 +106,44 @@ typedef struct TLSExtensionStr {
     SECItem data;  /* Pointers into the handshake data. */
 } TLSExtension;
 
+typedef struct sslCustomExtensionHooks {
+    PRCList link;
+    PRUint16 type;
+    SSLExtensionWriter writer;
+    void *writerArg;
+    SSLExtensionHandler handler;
+    void *handlerArg;
+} sslCustomExtensionHooks;
+
 SECStatus ssl3_HandleExtensions(sslSocket *ss,
                                 PRUint8 **b, PRUint32 *length,
-                                SSL3HandshakeType handshakeMessage);
+                                SSLHandshakeType handshakeMessage);
 SECStatus ssl3_ParseExtensions(sslSocket *ss,
                                PRUint8 **b, PRUint32 *length);
 SECStatus ssl3_HandleParsedExtensions(sslSocket *ss,
-                                      SSL3HandshakeType handshakeMessage);
+                                      SSLHandshakeType handshakeMessage);
 TLSExtension *ssl3_FindExtension(sslSocket *ss,
                                  SSLExtensionType extension_type);
 void ssl3_DestroyRemoteExtensions(PRCList *list);
-void ssl3_InitExtensionData(TLSExtensionData *xtnData);
-void ssl3_ResetExtensionData(TLSExtensionData *xtnData);
+void ssl3_InitExtensionData(TLSExtensionData *xtnData, const sslSocket *ss);
+void ssl3_DestroyExtensionData(TLSExtensionData *xtnData);
+void ssl3_ResetExtensionData(TLSExtensionData *xtnData, const sslSocket *ss);
 
 PRBool ssl3_ExtensionNegotiated(const sslSocket *ss, PRUint16 ex_type);
-PRBool ssl3_ClientExtensionAdvertised(const sslSocket *ss, PRUint16 ex_type);
+PRBool ssl3_ExtensionAdvertised(const sslSocket *ss, PRUint16 ex_type);
 
 SECStatus ssl3_RegisterExtensionSender(const sslSocket *ss,
                                        TLSExtensionData *xtnData,
                                        PRUint16 ex_type,
-                                       ssl3HelloExtensionSenderFunc cb);
-PRInt32 ssl3_CallHelloExtensionSenders(sslSocket *ss, PRBool append, PRUint32 maxBytes,
-                                       const ssl3HelloExtensionSender *sender);
-
-void ssl3_CalculatePaddingExtLen(sslSocket *ss,
-                                 unsigned int clientHelloLength);
+                                       sslExtensionBuilderFunc cb);
+SECStatus ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf,
+                                  SSLHandshakeType message);
+SECStatus ssl_SendEmptyExtension(const sslSocket *ss, TLSExtensionData *xtnData,
+                                 sslBuffer *buf, PRBool *append);
+SECStatus ssl_InsertPaddingExtension(const sslSocket *ss, unsigned int prefixLen,
+                                     sslBuffer *buf);
 
 /* Thunks to let us operate on const sslSocket* objects. */
-SECStatus ssl3_ExtAppendHandshake(const sslSocket *ss, const void *void_src,
-                                  PRInt32 bytes);
-SECStatus ssl3_ExtAppendHandshakeNumber(const sslSocket *ss, PRInt32 num,
-                                        PRInt32 lenSize);
-SECStatus ssl3_ExtAppendHandshakeVariable(const sslSocket *ss,
-                                          const PRUint8 *src, PRInt32 bytes,
-                                          PRInt32 lenSize);
 void ssl3_ExtSendAlert(const sslSocket *ss, SSL3AlertLevel level,
                        SSL3AlertDescription desc);
 void ssl3_ExtDecodeError(const sslSocket *ss);
@@ -155,5 +155,11 @@ SECStatus ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRUint32 *num,
 SECStatus ssl3_ExtConsumeHandshakeVariable(const sslSocket *ss, SECItem *i,
                                            PRUint32 bytes, PRUint8 **b,
                                            PRUint32 *length);
+
+SECStatus SSLExp_GetExtensionSupport(PRUint16 type,
+                                     SSLExtensionSupport *support);
+SECStatus SSLExp_InstallExtensionHooks(
+    PRFileDesc *fd, PRUint16 extension, SSLExtensionWriter writer,
+    void *writerArg, SSLExtensionHandler handler, void *handlerArg);
 
 #endif

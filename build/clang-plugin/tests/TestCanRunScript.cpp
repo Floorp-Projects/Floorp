@@ -1,6 +1,7 @@
 #include <mozilla/RefPtr.h>
 
 #define MOZ_CAN_RUN_SCRIPT __attribute__((annotate("moz_can_run_script")))
+#define MOZ_CAN_RUN_SCRIPT_BOUNDARY __attribute__((annotate("moz_can_run_script_boundary")))
 
 MOZ_CAN_RUN_SCRIPT void test() {
 
@@ -104,4 +105,23 @@ MOZ_CAN_RUN_SCRIPT void test4() {
 
   RefPtr<RefCountedSubChild> refptr4 = new RefCountedSubChild;
   refptr4->method_test3();
+}
+
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void test5() {
+  RefPtr<RefCountedBase> refptr1 = new RefCountedChild;
+  refptr1->method_test3();
+
+  RefPtr<RefCountedBase> refptr2 = new RefCountedSubChild;
+  refptr2->method_test3();
+
+  RefPtr<RefCountedChild> refptr3 = new RefCountedSubChild;
+  refptr3->method_test3();
+
+  RefPtr<RefCountedSubChild> refptr4 = new RefCountedSubChild;
+  refptr4->method_test3();
+}
+
+// We should be able to call test5 from a non-can_run_script function.
+void test5_b() {
+  test5();
 }

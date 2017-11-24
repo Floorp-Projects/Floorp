@@ -31,11 +31,11 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
  public:
   TlsCipherSuiteTestBase(SSLProtocolVariant variant, uint16_t version,
                          uint16_t cipher_suite, SSLNamedGroup group,
-                         SSLSignatureScheme signature_scheme)
+                         SSLSignatureScheme sig_scheme)
       : TlsConnectTestBase(variant, version),
         cipher_suite_(cipher_suite),
         group_(group),
-        signature_scheme_(signature_scheme),
+        sig_scheme_(sig_scheme),
         csinfo_({0}) {
     SECStatus rv =
         SSL_GetCipherSuiteInfo(cipher_suite_, &csinfo_, sizeof(csinfo_));
@@ -60,14 +60,14 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
       server_->ConfigNamedGroups(groups);
       kea_type_ = SSLInt_GetKEAType(group_);
 
-      client_->SetSignatureSchemes(&signature_scheme_, 1);
-      server_->SetSignatureSchemes(&signature_scheme_, 1);
+      client_->SetSignatureSchemes(&sig_scheme_, 1);
+      server_->SetSignatureSchemes(&sig_scheme_, 1);
     }
   }
 
   virtual void SetupCertificate() {
     if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
-      switch (signature_scheme_) {
+      switch (sig_scheme_) {
         case ssl_sig_rsa_pkcs1_sha256:
         case ssl_sig_rsa_pkcs1_sha384:
         case ssl_sig_rsa_pkcs1_sha512:
@@ -93,8 +93,7 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
           auth_type_ = ssl_auth_ecdsa;
           break;
         default:
-          ASSERT_TRUE(false) << "Unsupported signature scheme: "
-                             << signature_scheme_;
+          ADD_FAILURE() << "Unsupported signature scheme: " << sig_scheme_;
           break;
       }
     } else {
@@ -187,7 +186,7 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
   SSLAuthType auth_type_;
   SSLKEAType kea_type_;
   SSLNamedGroup group_;
-  SSLSignatureScheme signature_scheme_;
+  SSLSignatureScheme sig_scheme_;
   SSLCipherSuiteInfo csinfo_;
 };
 

@@ -437,6 +437,11 @@ SECMOD_DeleteInternalModule(const char *name)
         return rv;
     }
 
+#ifdef NSS_FIPS_DISABLED
+    PORT_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR);
+    return rv;
+#endif
+
     SECMOD_GetWriteLock(moduleLock);
     for (mlpp = &modules, mlp = modules;
          mlp != NULL; mlpp = &mlp->next, mlp = *mlpp) {
@@ -955,7 +960,11 @@ SECMOD_DestroyModuleList(SECMODModuleList *list)
 PRBool
 SECMOD_CanDeleteInternalModule(void)
 {
+#ifdef NSS_FIPS_DISABLED
+    return PR_FALSE;
+#else
     return (PRBool)(pendingModule == NULL);
+#endif
 }
 
 /*
