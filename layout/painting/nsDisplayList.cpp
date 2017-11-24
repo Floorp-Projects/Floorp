@@ -6838,8 +6838,7 @@ nsDisplayOwnLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayOwnLayer::IsScrollThumbLayer() const
 {
-  return (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar) ||
-         (mFlags & nsDisplayOwnLayerFlags::eHorizontalScrollbar);
+  return mThumbData.mDirection.isSome();
 }
 
 bool
@@ -6860,11 +6859,14 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
-  if (mThumbData.mDirection.isSome()) {
+  if (IsScrollThumbLayer()) {
     layer->SetScrollThumbData(mScrollTarget, mThumbData);
   }
   if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
-    layer->SetIsScrollbarContainer(mScrollTarget);
+    ScrollDirection dir = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
+                        ? ScrollDirection::eVertical
+                        : ScrollDirection::eHorizontal;
+    layer->SetScrollbarContainer(mScrollTarget, dir);
   }
 
   if (mFlags & nsDisplayOwnLayerFlags::eGenerateSubdocInvalidations) {
@@ -6880,7 +6882,7 @@ nsDisplayOwnLayer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
                                            WebRenderLayerManager* aManager,
                                            nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (!aManager->AsyncPanZoomEnabled() || mThumbData.mDirection.isNothing()) {
+  if (!aManager->AsyncPanZoomEnabled() || !IsScrollThumbLayer()) {
     return nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, aSc,
                                                       aManager, aDisplayListBuilder);
   }
@@ -6922,7 +6924,10 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
   if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
     ret = true;
     if (aLayerData) {
-      aLayerData->SetIsScrollbarContainer();
+      ScrollDirection dir = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
+                          ? ScrollDirection::eVertical
+                          : ScrollDirection::eHorizontal;
+      aLayerData->SetScrollbarContainerDirection(dir);
       aLayerData->SetScrollbarTargetContainerId(mScrollTarget);
     }
   }

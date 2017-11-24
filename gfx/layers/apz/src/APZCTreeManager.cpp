@@ -758,7 +758,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                            aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollThumbData(),
-                           aLayer.IsScrollbarContainer());
+                           aLayer.GetScrollbarContainerDirection());
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
     return node;
   }
@@ -952,7 +952,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
   node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                          aLayer.GetScrollbarAnimationId(),
                          aLayer.GetScrollThumbData(),
-                         aLayer.IsScrollbarContainer());
+                         aLayer.GetScrollbarContainerDirection());
   node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
   return node;
 }
