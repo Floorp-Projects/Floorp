@@ -13,8 +13,6 @@ namespace mozilla {
                                    const nsStyleDisplay* aDisplay)
     : mHorizontal(aH), mVertical(aV),
       mScrollBehavior(aDisplay->mScrollBehavior),
-      mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY),
       mScrollSnapTypeX(aDisplay->mScrollSnapTypeX),
       mScrollSnapTypeY(aDisplay->mScrollSnapTypeY),
       mScrollSnapPointsX(aDisplay->mScrollSnapPointsX),
@@ -25,8 +23,6 @@ namespace mozilla {
   ScrollbarStyles::ScrollbarStyles(const nsStyleDisplay* aDisplay)
     : mHorizontal(aDisplay->mOverflowX), mVertical(aDisplay->mOverflowY),
       mScrollBehavior(aDisplay->mScrollBehavior),
-      mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY),
       mScrollSnapTypeX(aDisplay->mScrollSnapTypeX),
       mScrollSnapTypeY(aDisplay->mScrollSnapTypeY),
       mScrollSnapPointsX(aDisplay->mScrollSnapPointsX),
