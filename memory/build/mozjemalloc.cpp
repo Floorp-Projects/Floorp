@@ -4812,8 +4812,9 @@ static
 // the zygote.
 #ifdef XP_DARWIN
 #define MOZ_REPLACE_WEAK __attribute__((weak_import))
-#elif defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
-#define MOZ_NO_REPLACE_FUNC_DECL
+#elif defined(XP_WIN) || defined(ANDROID)
+#define MOZ_DYNAMIC_REPLACE_INIT
+#define replace_init replace_init_decl
 #elif defined(__GNUC__)
 #define MOZ_REPLACE_WEAK __attribute__((weak))
 #endif
@@ -4826,12 +4827,10 @@ static malloc_table_t gReplaceMallocTable = {
 #include "malloc_decls.h"
 };
 
-#ifdef MOZ_NO_REPLACE_FUNC_DECL
-#define MALLOC_DECL(name, return_type, ...)                                    \
-  typedef return_type(name##_impl_t)(__VA_ARGS__);                             \
-  name##_impl_t* replace_##name = nullptr;
-#define MALLOC_FUNCS MALLOC_FUNCS_INIT
-#include "malloc_decls.h"
+#ifdef MOZ_DYNAMIC_REPLACE_INIT
+#undef replace_init
+typedef decltype(replace_init_decl) replace_init_impl_t;
+static replace_init_impl_t* replace_init = nullptr;
 #endif
 
 #ifdef XP_WIN
@@ -4849,8 +4848,8 @@ replace_malloc_handle()
   return nullptr;
 }
 
-#define REPLACE_MALLOC_GET_FUNC(handle, name)                                  \
-  (name##_impl_t*)GetProcAddress(handle, "replace_" #name)
+#define REPLACE_MALLOC_GET_INIT_FUNC(handle)                                   \
+  (replace_init_impl_t*)GetProcAddress(handle, "replace_init")
 
 #elif defined(ANDROID)
 #include <dlfcn.h>
@@ -4867,8 +4866,8 @@ replace_malloc_handle()
   return nullptr;
 }
 
-#define REPLACE_MALLOC_GET_FUNC(handle, name)                                  \
-  (name##_impl_t*)dlsym(handle, "replace_" #name)
+#define REPLACE_MALLOC_GET_INIT_FUNC(handle)                                   \
+  (replace_init_impl_t*)dlsym(handle, "replace_init")
 
 #endif
 
@@ -4882,14 +4881,10 @@ static ReplaceMallocBridge* gReplaceMallocBridge = nullptr;
 static void
 init()
 {
-#ifdef MOZ_NO_REPLACE_FUNC_DECL
+#ifdef MOZ_DYNAMIC_REPLACE_INIT
   replace_malloc_handle_t handle = replace_malloc_handle();
   if (handle) {
-#define MALLOC_DECL(name, ...)                                                 \
-  replace_##name = REPLACE_MALLOC_GET_FUNC(handle, name);
-
-#define MALLOC_FUNCS MALLOC_FUNCS_INIT
-#include "malloc_decls.h"
+    replace_init = REPLACE_MALLOC_GET_INIT_FUNC(handle);
   }
 #endif
 

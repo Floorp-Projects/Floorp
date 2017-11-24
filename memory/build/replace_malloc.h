@@ -80,28 +80,20 @@
 
 MOZ_BEGIN_EXTERN_C
 
-// MOZ_NO_REPLACE_FUNC_DECL and MOZ_REPLACE_WEAK are only defined in
-// replace_malloc.c. Normally including this header will add function
-// definitions.
-#ifndef MOZ_NO_REPLACE_FUNC_DECL
-
+// MOZ_REPLACE_WEAK is only defined in mozjemalloc.cpp. Normally including
+// this header will add function definitions.
 #ifndef MOZ_REPLACE_WEAK
 #define MOZ_REPLACE_WEAK
 #endif
 
-// Export replace_init.
-#define MALLOC_DECL(name, return_type, ...)                                    \
-  MOZ_EXPORT return_type replace_##name(__VA_ARGS__) MOZ_REPLACE_WEAK;
+// Replace-malloc library initialization function. See top of this file
+MOZ_EXPORT void
+replace_init(malloc_table_t*, struct ReplaceMallocBridge**) MOZ_REPLACE_WEAK;
 
-#define MALLOC_FUNCS MALLOC_FUNCS_INIT
-#include "malloc_decls.h"
-
-// Define the remaining replace_* functions as not exported.
+// Define the replace_* functions as not exported.
 #define MALLOC_DECL(name, return_type, ...)                                    \
   return_type replace_##name(__VA_ARGS__);
 #include "malloc_decls.h"
-
-#endif // MOZ_NO_REPLACE_FUNC_DECL
 
 MOZ_END_EXTERN_C
 
