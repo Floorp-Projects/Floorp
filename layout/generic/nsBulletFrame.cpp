@@ -215,6 +215,15 @@ public:
     MOZ_ASSERT(IsPathType());
   }
 
+  BulletRenderer(const LayoutDeviceRect& aPathRect, nscolor color, int32_t listStyleType)
+    : mPathRect(aPathRect)
+    , mColor(color)
+    , mListStyleType(listStyleType)
+  {
+    MOZ_ASSERT(IsPathType());
+  }
+
+
   BulletRenderer(const nsString& text,
                  nsFontMetrics* fm,
                  nscolor color,
@@ -251,12 +260,11 @@ public:
   bool
   IsPathType() const
   {
-    return (mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
-            mListStyleType == NS_STYLE_LIST_STYLE_CIRCLE ||
-            mListStyleType == NS_STYLE_LIST_STYLE_SQUARE ||
-            mListStyleType == NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN ||
-            mListStyleType == NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED) &&
-           mPath;
+    return mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
+           mListStyleType == NS_STYLE_LIST_STYLE_CIRCLE ||
+           mListStyleType == NS_STYLE_LIST_STYLE_SQUARE ||
+           mListStyleType == NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN ||
+           mListStyleType == NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED;
   }
 
   bool
@@ -312,6 +320,15 @@ private:
   // mImage is the image content and mDest is the image position.
   RefPtr<imgIContainer> mImage;
   nsRect mDest;
+
+  // Some bullet types are stored as a rect (in device pixels) instead of a Path to allow
+  // generating proper WebRender commands. When webrender is disabled the Path is lazily created
+  // for these items before painting.
+  // TODO: The size of this structure doesn't seem to be an issue since it has so many fields
+  // that are specific to a bullet style or another, but if it becomes one we can easily
+  // store mDest and mPathRect into the same memory location since they are never used by
+  // the same bullet types.
+  LayoutDeviceRect mPathRect;
 
   // mColor indicate the color of list-style. Both text and path type would use this memeber.
   nscolor mColor;
@@ -369,16 +386,31 @@ BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
 
   if (IsPathType()) {
     DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+
+    if (!mPath) {
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      switch (mListStyleType) {
+      case NS_STYLE_LIST_STYLE_CIRCLE:
+      case NS_STYLE_LIST_STYLE_DISC:
+        AppendEllipseToPath(builder, mPathRect.Center().ToUnknownPoint(), mPathRect.Size().ToUnknownSize());
+        break;
+      case NS_STYLE_LIST_STYLE_SQUARE:
+        AppendRectToPath(builder, mPathRect.ToUnknownRect());
+        break;
+      default:
+        MOZ_ASSERT(false, "Should have a parth.");
+      }
+      mPath = builder->Finish();
+    }
+
     switch (mListStyleType) {
     case NS_STYLE_LIST_STYLE_CIRCLE:
-      MOZ_ASSERT(mPath);
       drawTarget->Stroke(mPath, ColorPattern(ToDeviceColor(mColor)));
       break;
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_SQUARE:
     case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
     case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
-      MOZ_ASSERT(mPath);
       drawTarget->Fill(mPath, ColorPattern(ToDeviceColor(mColor)));
       break;
     default:
@@ -511,10 +543,42 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                                nsDisplayListBuilder* aDisplayListBuilder)
 {
   MOZ_ASSERT(IsPathType());
-
-  if (!aManager->CommandBuilder().PushItemAsImage(aItem, aBuilder, aResources, aSc, aDisplayListBuilder)) {
-    NS_WARNING("Fail to create WebRender commands for Bullet path.");
-    return false;
+  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(mPathRect);
+  auto color = wr::ToColorF(ToDeviceColor(mColor));
+  bool isBackfaceVisible = !aItem->BackfaceIsHidden();
+  switch (mListStyleType) {
+    case NS_STYLE_LIST_STYLE_CIRCLE: {
+      LayoutDeviceSize radii = mPathRect.Size() / 2.0;
+      auto borderWidths = wr::ToBorderWidths(1.0, 1.0, 1.0, 1.0);
+      wr::BorderSide side = { color, wr::BorderStyle::Solid };
+      wr::BorderSide sides[4] = { side, side, side, side };
+      Range<const wr::BorderSide> sidesRange(sides, 4);
+      aBuilder.PushBorder(dest, dest, isBackfaceVisible, borderWidths,
+                          sidesRange,
+                          wr::ToBorderRadius(radii, radii, radii, radii));
+      return true;
+    }
+    case NS_STYLE_LIST_STYLE_DISC: {
+      nsTArray<wr::ComplexClipRegion> clips;
+      clips.AppendElement(wr::ToComplexClipRegion(
+        RoundedRect(ThebesRect(mPathRect.ToUnknownRect()),
+                    RectCornerRadii(dest.size.width / 2.0))
+      ));
+      auto clipId = aBuilder.DefineClip(Nothing(), Nothing(), dest, &clips, nullptr);
+      aBuilder.PushClip(clipId);
+      aBuilder.PushRect(dest, dest, isBackfaceVisible, color);
+      aBuilder.PopClip();
+      return true;
+    }
+    case NS_STYLE_LIST_STYLE_SQUARE: {
+      aBuilder.PushRect(dest, dest, isBackfaceVisible, color);
+      return true;
+    }
+    default:
+      if (!aManager->CommandBuilder().PushItemAsImage(aItem, aBuilder, aResources, aSc, aDisplayListBuilder)) {
+        NS_WARNING("Fail to create WebRender commands for Bullet path.");
+        return false;
+      }
   }
 
   return true;
@@ -766,13 +830,8 @@ nsBulletFrame::CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt)
                   padding.top + aPt.y,
                   mRect.width - (padding.left + padding.right),
                   mRect.height - (padding.top + padding.bottom));
-      Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel);
-      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
-      AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
-
-      RefPtr<Path> path = builder->Finish();
-      BulletRenderer br(path, color, listStyleType->GetStyle());
-      return Some(br);
+      auto devPxRect = LayoutDeviceRect::FromAppUnits(rect, appUnitsPerDevPixel);
+      return Some(BulletRenderer(devPxRect, color, listStyleType->GetStyle()));
     }
 
   case NS_STYLE_LIST_STYLE_SQUARE:
@@ -792,14 +851,8 @@ nsBulletFrame::CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt)
                       pc->RoundAppUnitsToNearestDevPixels(rect.height));
       snapRect.MoveBy((rect.width - snapRect.width) / 2,
                       (rect.height - snapRect.height) / 2);
-      Rect devPxRect =
-        NSRectToSnappedRect(snapRect, appUnitsPerDevPixel, *drawTarget);
-      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
-      AppendRectToPath(builder, devPxRect);
-
-      RefPtr<Path> path = builder->Finish();
-      BulletRenderer br(path, color, listStyleType->GetStyle());
-      return Some(br);
+      auto devPxRect = LayoutDeviceRect::FromAppUnits(snapRect, appUnitsPerDevPixel);
+      return Some(BulletRenderer(devPxRect, color, listStyleType->GetStyle()));
     }
 
   case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
