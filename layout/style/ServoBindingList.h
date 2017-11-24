@@ -757,6 +757,11 @@ SERVO_BINDING_FUNC(Servo_ParseTransformIntoMatrix, bool,
                    RawGeckoGfxMatrix4x4* result);
 SERVO_BINDING_FUNC(Servo_ParseCounterStyleName, nsAtom*,
                    const nsACString* value);
+SERVO_BINDING_FUNC(Servo_ParseCounterStyleDescriptor, bool,
+                   nsCSSCounterDesc aDescriptor,
+                   const nsACString* aValue,
+                   RawGeckoURLExtraData* aURLExtraData,
+                   nsCSSValue* aResult);
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
