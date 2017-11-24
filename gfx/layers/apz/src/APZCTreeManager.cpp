@@ -2188,14 +2188,12 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
                                HitTestResult* aOutHitResult,
                                RefPtr<HitTestingTreeNode>* aOutScrollbarNode)
 {
+  MutexAutoLock lock(mTreeLock);
+
   HitTestResult hitResult = HitNothing;
   HitTestingTreeNode* scrollbarNode = nullptr;
   RefPtr<AsyncPanZoomController> target;
-
-  { // scope mTreeLock
-    MutexAutoLock lock(mTreeLock);
-    target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
-  }
+  target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
 
   if (gfxPrefs::WebRenderHitTest()) {
     HitTestResult wrHitResult = HitNothing;
@@ -2246,7 +2244,11 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
   }
 
   uint64_t layersId = wr::AsUint64(pipelineId);
-  result = GetTargetAPZC(layersId, scrollId);
+  RefPtr<HitTestingTreeNode> node = GetTargetNode(
+      ScrollableLayerGuid(layersId, 0, scrollId),
+      &GuidComparatorIgnoringPresShell);
+  MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
+  result = node ? node->GetApzc() : nullptr;
   if (!result) {
     // It falls back to the root
     MOZ_ASSERT(scrollId == FrameMetrics::NULL_SCROLL_ID);
