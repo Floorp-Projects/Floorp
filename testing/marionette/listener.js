@@ -27,7 +27,6 @@ const {
 } = Cu.import("chrome://marionette/content/element.js", {});
 const {
   ElementNotInteractableError,
-  error,
   InsecureCertificateError,
   InvalidArgumentError,
   InvalidElementStateError,
@@ -490,7 +489,7 @@ function dispatch(fn) {
     });
 
     req.then(rv => sendResponse(rv, id), err => sendError(err, id))
-        .catch(error.report);
+        .catch(err => sendError(err, id));
   };
 }
 
