@@ -41,6 +41,7 @@ add_task(async function testFullscreen() {
     callback: () => { mainActionCalled = true; }
   };
   AppMenuNotifications.showNotification("update-manual", mainAction);
+  await BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
 
   isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
   let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
