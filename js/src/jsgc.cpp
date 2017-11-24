@@ -8269,7 +8269,7 @@ JS_FRIEND_API(void)
 JS::AssertGCThingIsNotAnObjectSubclass(Cell* cell)
 {
     MOZ_ASSERT(cell);
-    MOZ_ASSERT(cell->getTraceKind() != JS::TraceKind::Object);
+    MOZ_ASSERT(!cell->is<JSObject>());
 }
 
 JS_FRIEND_API(void)
