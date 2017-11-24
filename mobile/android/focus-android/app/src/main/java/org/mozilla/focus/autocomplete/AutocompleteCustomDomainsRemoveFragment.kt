@@ -38,7 +38,7 @@ class AutocompleteCustomDomainsRemoveFragment : AutocompleteCustomDomainsFragmen
         fragmentManager.popBackStack()
     }
 
-    override fun isRemoveMode() = true
+    override fun isSelectionMode() = true
 
     override fun onResume() {
         super.onResume()

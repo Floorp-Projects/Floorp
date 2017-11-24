@@ -2,13 +2,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="8dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="?android:attr/listSeparatorTextViewStyle"
-        android:text="@string/preference_autocomplete_add_title" />
+        android:text="@string/preference_autocomplete_add_title"
+        android:textColor="@color/colorAccentSettings"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp" />
 
     <EditText
         android:id="@+id/domainView"
@@ -26,6 +29,8 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/preference_autocomplete_add_example" />
+        android:text="@string/preference_autocomplete_add_example"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp" />
 
 </LinearLayout>

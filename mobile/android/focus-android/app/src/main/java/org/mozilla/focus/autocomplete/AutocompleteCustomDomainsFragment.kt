@@ -26,7 +26,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         setHasOptionsMenu(true)
     }
 
-    open fun isRemoveMode() = false
+    open fun isSelectionMode() = false
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View =
             inflater!!.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
@@ -43,11 +43,17 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         updater.updateTitle(R.string.preference_autocomplete_subitem_customlist)
         updater.updateIcon(R.drawable.ic_back)
 
-        (domainList.adapter as DomainListAdapter).refresh(activity)
+        (domainList.adapter as DomainListAdapter).refresh(activity) {
+            activity?.invalidateOptionsMenu()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         inflater?.inflate(R.menu.menu_autocomplete_list, menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?) {
+        menu?.findItem(R.id.remove)?.isVisible = isSelectionMode() || domainList.adapter.itemCount > 1
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean = when (item?.itemId) {
@@ -66,7 +72,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         private val domains: MutableList<String> = mutableListOf()
         private val selectedDomains: MutableSet<String> = mutableSetOf()
 
-        fun refresh(context: Context) {
+        fun refresh(context: Context, body: (() -> Unit)? = null) {
             launch(UI) {
                 val updatedDomains = async { CustomAutocomplete.loadCustomAutoCompleteDomains(context) }.await()
 
@@ -74,6 +80,8 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
                 domains.addAll(updatedDomains)
 
                 notifyDataSetChanged()
+
+                body?.invoke()
             }
         }
 
@@ -95,11 +103,11 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
                     else -> throw IllegalArgumentException("Unknown view type: $viewType")
                 }
 
-        override fun getItemCount(): Int = domains.size + if (isRemoveMode()) 0 else 1
+        override fun getItemCount(): Int = domains.size + if (isSelectionMode()) 0 else 1
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
             if (holder is DomainViewHolder) {
-                holder.bind(domains[position], isRemoveMode(), selectedDomains)
+                holder.bind(domains[position], isSelectionMode(), selectedDomains)
             }
         }
 
