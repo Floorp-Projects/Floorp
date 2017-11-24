@@ -124,6 +124,16 @@ HitTestingTreeNode::IsScrollbarNode() const
   return mScrollbarContainerDirection.isSome() || IsScrollThumbNode();
 }
 
+ScrollDirection
+HitTestingTreeNode::GetScrollbarDirection() const
+{
+  MOZ_ASSERT(IsScrollbarNode());
+  if (mScrollThumbData.mDirection.isSome()) {
+    return *(mScrollThumbData.mDirection);
+  }
+  return *mScrollbarContainerDirection;
+}
+
 FrameMetrics::ViewID
 HitTestingTreeNode::GetScrollTargetId() const
 {
