@@ -285,6 +285,7 @@
       </method>
 
       <method name="permitUnload">
+        <parameter name="aPermitUnloadFlags"/>
         <body>
         <![CDATA[
           let {tabParent} = this.frameLoader;
@@ -326,7 +327,7 @@
             Services.obs.removeObserver(observer, "message-manager-close");
           }
 
-          mm.sendAsyncMessage("PermitUnload", {id});
+          mm.sendAsyncMessage("PermitUnload", {id, aPermitUnloadFlags});
           mm.addMessageListener("PermitUnload", msgListener);
           Services.obs.addObserver(observer, "message-manager-close");
 

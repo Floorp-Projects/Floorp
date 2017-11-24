@@ -704,8 +704,7 @@ hash_put(
         return (DBM_ERROR);
     }
 
-    rv = hash_access(hashp, flag == R_NOOVERWRITE ? HASH_PUTNEW
-                                                  : HASH_PUT,
+    rv = hash_access(hashp, flag == R_NOOVERWRITE ? HASH_PUTNEW : HASH_PUT,
                      (DBT *)key, (DBT *)data);
 
     if (rv == DATABASE_CORRUPTED_ERROR) {

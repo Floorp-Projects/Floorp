@@ -103,14 +103,11 @@ TEST_P(TlsConnectGenericPre13, ConnectFfdheServer) {
 
 class TlsDheServerKeyExchangeDamager : public TlsHandshakeFilter {
  public:
-  TlsDheServerKeyExchangeDamager() {}
+  TlsDheServerKeyExchangeDamager()
+      : TlsHandshakeFilter({kTlsHandshakeServerKeyExchange}) {}
   virtual PacketFilter::Action FilterHandshake(
       const TlsHandshakeFilter::HandshakeHeader& header,
       const DataBuffer& input, DataBuffer* output) {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
     // Damage the first octet of dh_p.  Anything other than the known prime will
     // be rejected as "weak" when we have SSL_REQUIRE_DH_NAMED_GROUPS enabled.
     *output = input;
@@ -144,7 +141,8 @@ class TlsDheSkeChangeY : public TlsHandshakeFilter {
     kYZeroPad
   };
 
-  TlsDheSkeChangeY(ChangeYTo change) : change_Y_(change) {}
+  TlsDheSkeChangeY(uint8_t handshake_type, ChangeYTo change)
+      : TlsHandshakeFilter({handshake_type}), change_Y_(change) {}
 
  protected:
   void ChangeY(const DataBuffer& input, DataBuffer* output, size_t offset,
@@ -210,7 +208,9 @@ class TlsDheSkeChangeY : public TlsHandshakeFilter {
 class TlsDheSkeChangeYServer : public TlsDheSkeChangeY {
  public:
   TlsDheSkeChangeYServer(ChangeYTo change, bool modify)
-      : TlsDheSkeChangeY(change), modify_(modify), p_() {}
+      : TlsDheSkeChangeY(kTlsHandshakeServerKeyExchange, change),
+        modify_(modify),
+        p_() {}
 
   const DataBuffer& prime() const { return p_; }
 
@@ -218,10 +218,6 @@ class TlsDheSkeChangeYServer : public TlsDheSkeChangeY {
   virtual PacketFilter::Action FilterHandshake(
       const TlsHandshakeFilter::HandshakeHeader& header,
       const DataBuffer& input, DataBuffer* output) override {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
     size_t offset = 2;
     // Read dh_p
     uint32_t dh_len = 0;
@@ -251,16 +247,13 @@ class TlsDheSkeChangeYClient : public TlsDheSkeChangeY {
   TlsDheSkeChangeYClient(
       ChangeYTo change,
       std::shared_ptr<const TlsDheSkeChangeYServer> server_filter)
-      : TlsDheSkeChangeY(change), server_filter_(server_filter) {}
+      : TlsDheSkeChangeY(kTlsHandshakeClientKeyExchange, change),
+        server_filter_(server_filter) {}
 
  protected:
   virtual PacketFilter::Action FilterHandshake(
       const TlsHandshakeFilter::HandshakeHeader& header,
       const DataBuffer& input, DataBuffer* output) override {
-    if (header.handshake_type() != kTlsHandshakeClientKeyExchange) {
-      return KEEP;
-    }
-
     ChangeY(input, output, 0, server_filter_->prime());
     return CHANGE;
   }
@@ -365,13 +358,10 @@ INSTANTIATE_TEST_CASE_P(
 
 class TlsDheSkeMakePEven : public TlsHandshakeFilter {
  public:
+  TlsDheSkeMakePEven() : TlsHandshakeFilter({kTlsHandshakeServerKeyExchange}) {}
   virtual PacketFilter::Action FilterHandshake(
       const TlsHandshakeFilter::HandshakeHeader& header,
       const DataBuffer& input, DataBuffer* output) {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
     // Find the end of dh_p
     uint32_t dh_len = 0;
     EXPECT_TRUE(input.Read(0, 2, &dh_len));
@@ -399,13 +389,10 @@ TEST_P(TlsConnectGenericPre13, MakeDhePEven) {
 
 class TlsDheSkeZeroPadP : public TlsHandshakeFilter {
  public:
+  TlsDheSkeZeroPadP() : TlsHandshakeFilter({kTlsHandshakeServerKeyExchange}) {}
   virtual PacketFilter::Action FilterHandshake(
       const TlsHandshakeFilter::HandshakeHeader& header,
       const DataBuffer& input, DataBuffer* output) {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
     *output = input;
     uint32_t dh_len = 0;
     EXPECT_TRUE(input.Read(0, 2, &dh_len));
@@ -559,16 +546,15 @@ TEST_P(TlsConnectTls13, ResumeFfdhe) {
 class TlsDheSkeChangeSignature : public TlsHandshakeFilter {
  public:
   TlsDheSkeChangeSignature(uint16_t version, const uint8_t* data, size_t len)
-      : version_(version), data_(data), len_(len) {}
+      : TlsHandshakeFilter({kTlsHandshakeServerKeyExchange}),
+        version_(version),
+        data_(data),
+        len_(len) {}
 
  protected:
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                                const DataBuffer& input,
                                                DataBuffer* output) {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
     TlsParser parser(input);
     EXPECT_TRUE(parser.SkipVariable(2));  // dh_p
     EXPECT_TRUE(parser.SkipVariable(2));  // dh_g

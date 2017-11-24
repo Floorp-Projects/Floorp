@@ -2169,36 +2169,22 @@ PKM_Mechanism(CK_FUNCTION_LIST_PTR pFunctionList,
         PKM_LogIt("    ulMinKeySize = %lu\n", minfo.ulMinKeySize);
         PKM_LogIt("    ulMaxKeySize = %lu\n", minfo.ulMaxKeySize);
         PKM_LogIt("    flags = 0x%08x\n", minfo.flags);
-        PKM_LogIt("        -> HW = %s\n", minfo.flags & CKF_HW ? "TRUE"
-                                                               : "FALSE");
-        PKM_LogIt("        -> ENCRYPT = %s\n", minfo.flags & CKF_ENCRYPT ? "TRUE"
-                                                                         : "FALSE");
-        PKM_LogIt("        -> DECRYPT = %s\n", minfo.flags & CKF_DECRYPT ? "TRUE"
-                                                                         : "FALSE");
-        PKM_LogIt("        -> DIGEST = %s\n", minfo.flags & CKF_DIGEST ? "TRUE"
-                                                                       : "FALSE");
-        PKM_LogIt("        -> SIGN = %s\n", minfo.flags & CKF_SIGN ? "TRUE"
-                                                                   : "FALSE");
-        PKM_LogIt("        -> SIGN_RECOVER = %s\n", minfo.flags &
-                                                            CKF_SIGN_RECOVER
-                                                        ? "TRUE"
-                                                        : "FALSE");
-        PKM_LogIt("        -> VERIFY = %s\n", minfo.flags & CKF_VERIFY ? "TRUE"
-                                                                       : "FALSE");
+        PKM_LogIt("        -> HW = %s\n", minfo.flags & CKF_HW ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> ENCRYPT = %s\n", minfo.flags & CKF_ENCRYPT ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> DECRYPT = %s\n", minfo.flags & CKF_DECRYPT ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> DIGEST = %s\n", minfo.flags & CKF_DIGEST ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> SIGN = %s\n", minfo.flags & CKF_SIGN ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> SIGN_RECOVER = %s\n", minfo.flags & CKF_SIGN_RECOVER ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> VERIFY = %s\n", minfo.flags & CKF_VERIFY ? "TRUE" : "FALSE");
         PKM_LogIt("        -> VERIFY_RECOVER = %s\n",
                   minfo.flags & CKF_VERIFY_RECOVER ? "TRUE" : "FALSE");
-        PKM_LogIt("        -> GENERATE = %s\n", minfo.flags & CKF_GENERATE ? "TRUE"
-                                                                           : "FALSE");
+        PKM_LogIt("        -> GENERATE = %s\n", minfo.flags & CKF_GENERATE ? "TRUE" : "FALSE");
         PKM_LogIt("        -> GENERATE_KEY_PAIR = %s\n",
                   minfo.flags & CKF_GENERATE_KEY_PAIR ? "TRUE" : "FALSE");
-        PKM_LogIt("        -> WRAP = %s\n", minfo.flags & CKF_WRAP ? "TRUE"
-                                                                   : "FALSE");
-        PKM_LogIt("        -> UNWRAP = %s\n", minfo.flags & CKF_UNWRAP ? "TRUE"
-                                                                       : "FALSE");
-        PKM_LogIt("        -> DERIVE = %s\n", minfo.flags & CKF_DERIVE ? "TRUE"
-                                                                       : "FALSE");
-        PKM_LogIt("        -> EXTENSION = %s\n", minfo.flags & CKF_EXTENSION ? "TRUE"
-                                                                             : "FALSE");
+        PKM_LogIt("        -> WRAP = %s\n", minfo.flags & CKF_WRAP ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> UNWRAP = %s\n", minfo.flags & CKF_UNWRAP ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> DERIVE = %s\n", minfo.flags & CKF_DERIVE ? "TRUE" : "FALSE");
+        PKM_LogIt("        -> EXTENSION = %s\n", minfo.flags & CKF_EXTENSION ? "TRUE" : "FALSE");
 
         PKM_LogIt("\n");
     }
@@ -3604,24 +3590,12 @@ PKM_FindAllObjects(CK_FUNCTION_LIST_PTR pFunctionList,
     PKM_LogIt("        state = %lu\n", sinfo.state);
     PKM_LogIt("        flags = 0x%08x\n", sinfo.flags);
 #ifdef CKF_EXCLUSIVE_SESSION
-    PKM_LogIt("            -> EXCLUSIVE SESSION = %s\n", sinfo.flags &
-                                                                 CKF_EXCLUSIVE_SESSION
-                                                             ? "TRUE"
-                                                             : "FALSE");
+    PKM_LogIt("            -> EXCLUSIVE SESSION = %s\n", sinfo.flags & CKF_EXCLUSIVE_SESSION ? "TRUE" : "FALSE");
 #endif /* CKF_EXCLUSIVE_SESSION */
-    PKM_LogIt("            -> RW SESSION = %s\n", sinfo.flags &
-                                                          CKF_RW_SESSION
-                                                      ? "TRUE"
-                                                      : "FALSE");
-    PKM_LogIt("            -> SERIAL SESSION = %s\n", sinfo.flags &
-                                                              CKF_SERIAL_SESSION
-                                                          ? "TRUE"
-                                                          : "FALSE");
+    PKM_LogIt("            -> RW SESSION = %s\n", sinfo.flags & CKF_RW_SESSION ? "TRUE" : "FALSE");
+    PKM_LogIt("            -> SERIAL SESSION = %s\n", sinfo.flags & CKF_SERIAL_SESSION ? "TRUE" : "FALSE");
 #ifdef CKF_INSERTION_CALLBACK
-    PKM_LogIt("            -> INSERTION CALLBACK = %s\n", sinfo.flags &
-                                                                  CKF_INSERTION_CALLBACK
-                                                              ? "TRUE"
-                                                              : "FALSE");
+    PKM_LogIt("            -> INSERTION CALLBACK = %s\n", sinfo.flags & CKF_INSERTION_CALLBACK ? "TRUE" : "FALSE");
 #endif /* CKF_INSERTION_CALLBACK */
     PKM_LogIt("        ulDeviceError = %lu\n", sinfo.ulDeviceError);
     PKM_LogIt("\n");

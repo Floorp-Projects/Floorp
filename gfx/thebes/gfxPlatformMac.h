@@ -57,10 +57,6 @@ public:
                      gfxFontStyle &aFontStyle,
                      float aDevPixPerCSSPixel);
 
-    virtual bool CanRenderContentToDataSurface() const override {
-      return true;
-    }
-
     virtual bool SupportsApzWheelInput() const override {
       return true;
     }

@@ -438,6 +438,10 @@
  * MOZ_CAN_RUN_SCRIPT: Applies to functions which can run script. Callers of
  *   this function must also be marked as MOZ_CAN_RUN_SCRIPT, and all refcounted
  *   arguments must be strongly held in the caller.
+ * MOZ_CAN_RUN_SCRIPT_BOUNDARY: Applies to functions which need to call
+ *   MOZ_CAN_RUN_SCRIPT functions, but should not themselves be considered
+ *   MOZ_CAN_RUN_SCRIPT. This is important for some bindings and low level code
+ *   which need to opt out of the safety checks performed by MOZ_CAN_RUN_SCRIPT.
  * MOZ_MUST_OVERRIDE: Applies to all C++ member functions. All immediate
  *   subclasses must provide an exact override of this method; if a subclass
  *   does not override this method, the compiler will emit an error. This
@@ -597,6 +601,7 @@
  */
 #ifdef MOZ_CLANG_PLUGIN
 #  define MOZ_CAN_RUN_SCRIPT __attribute__((annotate("moz_can_run_script")))
+#  define MOZ_CAN_RUN_SCRIPT_BOUNDARY __attribute__((annotate("moz_can_run_script_boundary")))
 #  define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))
 #  define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
 #  define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
@@ -652,6 +657,7 @@
     _Pragma("clang diagnostic pop")
 #else
 #  define MOZ_CAN_RUN_SCRIPT /* nothing */
+#  define MOZ_CAN_RUN_SCRIPT_BOUNDARY /* nothing */
 #  define MOZ_MUST_OVERRIDE /* nothing */
 #  define MOZ_STACK_CLASS /* nothing */
 #  define MOZ_NONHEAP_CLASS /* nothing */

@@ -473,8 +473,7 @@ ER3(SSL_ERROR_RX_MALFORMED_PRE_SHARED_KEY, (SSL_ERROR_BASE + 147),
 ER3(SSL_ERROR_RX_MALFORMED_EARLY_DATA, (SSL_ERROR_BASE + 148),
     "SSL received an invalid EarlyData extension.")
 
-ER3(SSL_ERROR_END_OF_EARLY_DATA_ALERT, (SSL_ERROR_BASE + 149),
-    "SSL received an unexpected end of early data alert.")
+UNUSED_ERROR(149)
 
 ER3(SSL_ERROR_MISSING_ALPN_EXTENSION, (SSL_ERROR_BASE + 150),
     "SSL didn't receive an expected ALPN extension.")
@@ -520,3 +519,15 @@ ER3(SSL_ERROR_RX_MALFORMED_END_OF_EARLY_DATA, (SSL_ERROR_BASE + 163),
 
 ER3(SSL_ERROR_UNSUPPORTED_EXPERIMENTAL_API, (SSL_ERROR_BASE + 164),
     "An experimental API was called, but not supported.")
+
+ER3(SSL_ERROR_APPLICATION_ABORT, (SSL_ERROR_BASE + 165),
+    "SSL handshake aborted by the application.")
+
+ER3(SSL_ERROR_APP_CALLBACK_ERROR, (SSL_ERROR_BASE + 166),
+    "An application callback produced an invalid response.")
+
+ER3(SSL_ERROR_NO_TIMERS_ERROR, (SSL_ERROR_BASE + 167),
+    "No timers are currently running.")
+
+ER3(SSL_ERROR_MISSING_COOKIE_EXTENSION, (SSL_ERROR_BASE + 168),
+    "A second ClientHello was received without a cookie extension.")

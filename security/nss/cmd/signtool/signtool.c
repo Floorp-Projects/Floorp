@@ -1033,9 +1033,7 @@ main(int argc, char *argv[])
         if (errorCount > 0 || warningCount > 0) {
             PR_fprintf(outputFD, "%d error%s, %d warning%s.\n",
                        errorCount,
-                       errorCount == 1 ? "" : "s", warningCount, warningCount == 1
-                                                                     ? ""
-                                                                     : "s");
+                       errorCount == 1 ? "" : "s", warningCount, warningCount == 1 ? "" : "s");
         } else {
             PR_fprintf(outputFD, "Directory %s signed successfully.\n",
                        jartree);

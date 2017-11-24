@@ -53,7 +53,7 @@ to change are:
     single digit.  This is just a printf() format string, so you
     can adjust it appropriately.
 
-(3) The macros DIGIT_MAX and MP_WORD_MAX, which specify the 
+(3) The macros DIGIT_MAX and MP_WORD_MAX, which specify the
     largest value expressible in an mp_digit and an mp_word,
     respectively.
 
@@ -345,7 +345,7 @@ returns values of x and y satisfying Bezout's identity.  This is used
 by mp_invmod() to find modular inverses.  However, if you do not need
 these values, you will find that mp_gcd() is MUCH more efficient,
 since it doesn't need all the intermediate values that mp_xgcd()
-requires in order to compute x and y. 
+requires in order to compute x and y.
 
 The mp_gcd() (and mp_xgcd()) functions use the binary (extended) GCD
 algorithm due to Josef Stein.
@@ -361,7 +361,7 @@ mp_read_radix(mp, str, r)  - convert a string in radix r to an mp_int
 mp_read_raw(mp, s, len)    - convert a string of bytes to an mp_int
 mp_radix_size(mp, r)       - return length of buffer needed by mp_toradix()
 mp_raw_size(mp)            - return length of buffer needed by mp_toraw()
-mp_toradix(mp, str, r)     - convert an mp_int to a string of radix r 
+mp_toradix(mp, str, r)     - convert an mp_int to a string of radix r
                              digits
 mp_toraw(mp, str)          - convert an mp_int to a string of bytes
 mp_tovalue(ch, r)          - convert ch to its value when taken as
@@ -387,7 +387,7 @@ The mp_read_radix() and mp_toradix() functions support bases from 2 to
 than this, you will need to write them yourself (that's why mp_div_d()
 is provided, after all).
 
-Note:   mp_read_radix() will accept as digits either capital or 
+Note:   mp_read_radix() will accept as digits either capital or
 ----    lower-case letters.  However, the current implementation of
         mp_toradix() only outputs upper-case letters, when writing
         bases betwee 10 and 36.  The underlying code supports using
@@ -448,14 +448,14 @@ Note:  The mpp_random() and mpp_random_size() functions use the C
        to change.
 
 mpp_divis_vector(a, v, s, w)  - is a divisible by any of the s digits
-                                in v?  If so, let w be the index of 
+                                in v?  If so, let w be the index of
                                 that digit
 
 mpp_divis_primes(a, np)       - is a divisible by any of the first np
-                                primes?  If so, set np to the prime 
+                                primes?  If so, set np to the prime
                                 which divided a.
 
-mpp_fermat(a, d)              - test if w^a = w (mod a).  If so, 
+mpp_fermat(a, d)              - test if w^a = w (mod a).  If so,
                                 returns MP_YES, otherwise MP_NO.
 
 mpp_pprime(a, nt)             - perform nt iterations of the Rabin-
@@ -486,7 +486,7 @@ The file 'mpi-config.h' defines several configurable parameters for
 the library, which you can adjust to suit your application.  At the
 time of this writing, the available options are:
 
-MP_IOFUNC       - Define true to include the mp_print() function, 
+MP_IOFUNC       - Define true to include the mp_print() function,
                   which is moderately useful for debugging.  This
                   implicitly includes <stdio.h>.
 
@@ -502,21 +502,14 @@ MP_LOGTAB       - If true, the file "logtab.h" is included, which
                   the library includes <math.h> and uses log().  This
                   typically forces you to link against math libraries.
 
-MP_MEMSET       - If true, use memset() to zero buffers.  If you run
-                  into weird alignment related bugs, set this to zero
-                  and an explicit loop will be used.
-
-MP_MEMCPY       - If true, use memcpy() to copy buffers.  If you run
-                  into weird alignment bugs, set this to zero and an
-                  explicit loop will be used.
 
 MP_ARGCHK       - Set to 0, 1, or 2.  This defines how the argument
-                  checking macro, ARGCHK(), gets expanded.  If this 
-                  is set to zero, ARGCHK() expands to nothing; no 
+                  checking macro, ARGCHK(), gets expanded.  If this
+                  is set to zero, ARGCHK() expands to nothing; no
                   argument checks are performed.  If this is 1, the
                   ARGCHK() macro expands to code that returns MP_BADARG
-                  or similar at runtime.  If it is 2, ARGCHK() expands 
-                  to an assert() call that aborts the program on a 
+                  or similar at runtime.  If it is 2, ARGCHK() expands
+                  to an assert() call that aborts the program on a
                   bad input.
 
 MP_DEBUG        - Turns on debugging output.  This is probably not at
@@ -528,14 +521,14 @@ MP_DEFPREC      - The default precision of a newly-created mp_int, in
                   the mp_set_prec() function, but this is its initial
                   value.
 
-MP_SQUARE       - If this is set to a nonzero value, the mp_sqr() 
+MP_SQUARE       - If this is set to a nonzero value, the mp_sqr()
                   function will use an alternate algorithm that takes
                   advantage of the redundant inner product computation
                   when both multiplicands are identical.  Unfortunately,
                   with some compilers this is actually SLOWER than just
                   calling mp_mul() with the same argument twice.  So
                   if you set MP_SQUARE to zero, mp_sqr() will be expan-
-                  ded into a call to mp_mul().  This applies to all 
+                  ded into a call to mp_mul().  This applies to all
                   the uses of mp_sqr(), including mp_sqrmod() and the
                   internal calls to s_mp_sqr() inside mpi.c
 
@@ -568,7 +561,7 @@ CFLAGS=-ansi -pedantic -Wall -O2
 
 If all goes well, the library should compile without warnings using
 this combination.  You should, of course, make whatever adjustments
-you find necessary.  
+you find necessary.
 
 The MPI library distribution comes with several additional programs
 which are intended to demonstrate the use of the library, and provide
@@ -580,7 +573,7 @@ directory) for manipulating large numbers.  These include:
 basecvt.c       A radix-conversion program, supporting bases from
                 2 to 64 inclusive.
 
-bbsrand.c       A BBS (quadratic residue) pseudo-random number 
+bbsrand.c       A BBS (quadratic residue) pseudo-random number
                 generator.  The file 'bbsrand.c' is just the driver
                 for the program; the real code lives in the files
                 'bbs_rand.h' and 'bbs_rand.c'
@@ -626,7 +619,7 @@ Acknowledgements:
 ----------------
 
 The algorithms used in this library were drawn primarily from Volume
-2 of Donald Knuth's magnum opus, _The Art of Computer Programming_, 
+2 of Donald Knuth's magnum opus, _The Art of Computer Programming_,
 "Semi-Numerical Methods".  Barrett's algorithm for modular reduction
 came from Menezes, Oorschot, and Vanstone's _Handbook of Applied
 Cryptography_, Chapter 14.

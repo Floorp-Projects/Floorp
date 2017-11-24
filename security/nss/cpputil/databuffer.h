@@ -55,9 +55,6 @@ class DataBuffer {
   // Returns the offset of the end of the write.
   size_t Write(size_t index, uint32_t val, size_t count);
 
-  // This can't use the same trick as Write(), since we might be reading from a
-  // smaller data source.
-  bool Read(size_t index, size_t count, uint32_t* val) const;
   // Starting at |index|, remove |remove| bytes and replace them with the
   // contents of |buf|.
   void Splice(const DataBuffer& buf, size_t index, size_t remove = 0) {
@@ -67,6 +64,9 @@ class DataBuffer {
   void Splice(const uint8_t* ins, size_t ins_len, size_t index,
               size_t remove = 0);
   void Append(const DataBuffer& buf) { Splice(buf, len_); }
+
+  bool Read(size_t index, size_t count, uint64_t* val) const;
+  bool Read(size_t index, size_t count, uint32_t* val) const;
 
   const uint8_t* data() const { return data_; }
   uint8_t* data() { return data_; }
