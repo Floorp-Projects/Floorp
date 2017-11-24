@@ -410,27 +410,7 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
   // Note that if pointers to other objects (in contrast to
   // interfaces of *this* object) are added in future, we should not release
   // those pointers.
-  if (mCachedData.mStaticData.mIA2) {
-    mCachedData.mStaticData.mIA2->Release();
-  }
-  if (mCachedData.mStaticData.mIEnumVARIANT) {
-    mCachedData.mStaticData.mIEnumVARIANT->Release();
-  }
-  if (mCachedData.mStaticData.mIAHypertext) {
-    mCachedData.mStaticData.mIAHypertext->Release();
-  }
-  if (mCachedData.mStaticData.mIAHyperlink) {
-    mCachedData.mStaticData.mIAHyperlink->Release();
-  }
-  if (mCachedData.mStaticData.mIATable) {
-    mCachedData.mStaticData.mIATable->Release();
-  }
-  if (mCachedData.mStaticData.mIATable2) {
-    mCachedData.mStaticData.mIATable2->Release();
-  }
-  if (mCachedData.mStaticData.mIATableCell) {
-    mCachedData.mStaticData.mIATableCell->Release();
-  }
+  ReleaseStaticIA2DataInterfaces(mCachedData.mStaticData);
 
   if (!mCachedData.mGeckoBackChannel) {
     return S_OK;
