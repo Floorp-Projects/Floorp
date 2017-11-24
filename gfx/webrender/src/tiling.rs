@@ -20,7 +20,7 @@ use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveIn
 use gpu_types::{ClipScrollNodeIndex, ClipScrollNodeData};
 use internal_types::{FastHashMap, SourceTexture};
 use internal_types::BatchTextures;
-use picture::{PictureCompositeMode, PictureKind, PicturePrimitive};
+use picture::{PictureCompositeMode, PictureKind, PicturePrimitive, RasterizationSpace};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
 use prim_store::{BrushMaskKind, BrushKind, DeferredResolve, PrimitiveRun, RectangleContent};
@@ -547,6 +547,7 @@ fn add_to_batch(
             let font = text_cpu.get_font(
                 ctx.device_pixel_ratio,
                 &scroll_node.transform,
+                RasterizationSpace::Screen,
             );
 
             ctx.resource_cache.fetch_glyphs(
@@ -1483,6 +1484,7 @@ impl RenderTarget for ColorRenderTarget {
                                                 let font = text.get_font(
                                                     ctx.device_pixel_ratio,
                                                     &LayerToWorldTransform::identity(),
+                                                    RasterizationSpace::Local,
                                                 );
 
                                                 ctx.resource_cache.fetch_glyphs(

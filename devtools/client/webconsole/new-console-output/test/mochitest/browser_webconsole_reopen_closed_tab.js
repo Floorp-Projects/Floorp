@@ -5,68 +5,49 @@
 
 "use strict";
 
-// See Bug 597756.
+// See Bug 597756. Check that errors are still displayed in the console after reloading a
+// page.
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-bug-597756-reopen-closed-tab.html";
+                 "new-console-output/test/mochitest/test-reopen-closed-tab.html";
 
-var HUD;
+add_task(async function () {
+  // If we persist log, the test might be successful even if only the first error log is
+  // shown
+  pushPref("devtools.webconsole.persistlog", false);
 
-add_task(function* () {
+  info("Open console and refresh tab.");
+
+  expectUncaughtExceptionNoE10s();
+  let hud = await openNewTabAndConsole(TEST_URI);
+  hud.jsterm.clearOutput();
+
+  expectUncaughtExceptionNoE10s();
+  await refreshTab();
+  await waitForError(hud);
+
+  // Close and reopen
+  await closeConsole();
+
+  expectUncaughtExceptionNoE10s();
+  gBrowser.removeCurrentTab();
+  hud = await openNewTabAndConsole(TEST_URI);
+
+  expectUncaughtExceptionNoE10s();
+  await refreshTab();
+  await waitForError(hud);
+});
+
+async function waitForError(hud) {
+  info("Wait for error message");
+  await waitFor(() => findMessage(hud, "fooBug597756_error", ".message.error"));
+  ok(true, "error message displayed");
+}
+
+function expectUncaughtExceptionNoE10s() {
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {
     expectUncaughtException();
   }
-
-  let { browser } = yield loadTab(TEST_URI);
-  HUD = yield openConsole();
-
-  if (!Services.appinfo.browserTabsRemoteAutostart) {
-    expectUncaughtException();
-  }
-
-  yield reload(browser);
-
-  yield testMessages();
-
-  yield closeConsole();
-
-  // Close and reopen
-  gBrowser.removeCurrentTab();
-
-  if (!Services.appinfo.browserTabsRemoteAutostart) {
-    expectUncaughtException();
-  }
-
-  let tab = yield loadTab(TEST_URI);
-  HUD = yield openConsole();
-
-  if (!Services.appinfo.browserTabsRemoteAutostart) {
-    expectUncaughtException();
-  }
-
-  yield reload(tab.browser);
-
-  yield testMessages();
-
-  HUD = null;
-});
-
-function reload(browser) {
-  let loaded = loadBrowser(browser);
-  browser.reload();
-  return loaded;
-}
-
-function testMessages() {
-  return waitForMessages({
-    webconsole: HUD,
-    messages: [{
-      name: "error message displayed",
-      text: "fooBug597756_error",
-      category: CATEGORY_JS,
-      severity: SEVERITY_ERROR,
-    }],
-  });
 }

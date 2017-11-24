@@ -51,7 +51,7 @@ add_task(function* () {
 
   info("Reload the page, expect the highlighter to be displayed once again");
   let onStateRestored = highlighters.once("grid-state-restored");
-  yield refreshTab(gBrowser.selectedTab);
+  yield refreshTab();
   let { restored } = yield onStateRestored;
   ok(restored, "The highlighter state was restored");
 

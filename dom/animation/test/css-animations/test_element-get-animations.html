@@ -7,7 +7,8 @@
 'use strict';
 setup({explicit_done: true});
 SpecialPowers.pushPrefEnv(
-  { "set": [["dom.animations-api.core.enabled", true]]},
+  { "set": [["dom.animations-api.core.enabled", true],
+            ["dom.animations-api.pending-member.enabled", true]]},
   function() {
     window.open("file_element-get-animations.html");
   });

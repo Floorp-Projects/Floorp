@@ -60,14 +60,14 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
     case SRTP_AES128_CM_HMAC_SHA1_80:
       CSFLogDebug(LOGTAG,
                   "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_80");
-      crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
-      crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
       break;
     case SRTP_AES128_CM_HMAC_SHA1_32:
       CSFLogDebug(LOGTAG,
                   "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_32");
-      crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-      crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp); // 80-bit per RFC 5764
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp); // 80-bit per RFC 5764
       break;                                                   // S 4.1.2.
     default:
       CSFLogError(LOGTAG, "Request to set unknown SRTP cipher suite");
@@ -85,8 +85,8 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   policy.next = nullptr;
 
   // Now make the session
-  err_status_t r = srtp_create(&flow->session_, &policy);
-  if (r != err_status_ok) {
+  srtp_err_status_t r = srtp_create(&flow->session_, &policy);
+  if (r != srtp_err_status_ok) {
     CSFLogError(LOGTAG, "Error creating srtp session");
     return nullptr;
   }
@@ -137,9 +137,9 @@ nsresult SrtpFlow::ProtectRtp(void *in, int in_len,
     return res;
 
   int len = in_len;
-  err_status_t r = srtp_protect(session_, in, &len);
+  srtp_err_status_t r = srtp_protect(session_, in, &len);
 
-  if (r != err_status_ok) {
+  if (r != srtp_err_status_ok) {
     CSFLogError(LOGTAG, "Error protecting SRTP packet");
     return NS_ERROR_FAILURE;
   }
@@ -161,9 +161,9 @@ nsresult SrtpFlow::UnprotectRtp(void *in, int in_len,
     return res;
 
   int len = in_len;
-  err_status_t r = srtp_unprotect(session_, in, &len);
+  srtp_err_status_t r = srtp_unprotect(session_, in, &len);
 
-  if (r != err_status_ok) {
+  if (r != srtp_err_status_ok) {
     CSFLogError(LOGTAG, "Error unprotecting SRTP packet error=%d", (int)r);
     return NS_ERROR_FAILURE;
   }
@@ -184,9 +184,9 @@ nsresult SrtpFlow::ProtectRtcp(void *in, int in_len,
     return res;
 
   int len = in_len;
-  err_status_t r = srtp_protect_rtcp(session_, in, &len);
+  srtp_err_status_t r = srtp_protect_rtcp(session_, in, &len);
 
-  if (r != err_status_ok) {
+  if (r != srtp_err_status_ok) {
     CSFLogError(LOGTAG, "Error protecting SRTCP packet");
     return NS_ERROR_FAILURE;
   }
@@ -207,9 +207,9 @@ nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len,
     return res;
 
   int len = in_len;
-  err_status_t r = srtp_unprotect_rtcp(session_, in, &len);
+  srtp_err_status_t r = srtp_unprotect_rtcp(session_, in, &len);
 
-  if (r != err_status_ok) {
+  if (r != srtp_err_status_ok) {
     CSFLogError(LOGTAG, "Error unprotecting SRTCP packet error=%d", (int)r);
     return NS_ERROR_FAILURE;
   }
@@ -231,15 +231,15 @@ void SrtpFlow::srtp_event_handler(srtp_event_data_t *data) {
 
 nsresult SrtpFlow::Init() {
   if (!initialized) {
-    err_status_t r = srtp_init();
-    if (r != err_status_ok) {
+    srtp_err_status_t r = srtp_init();
+    if (r != srtp_err_status_ok) {
       CSFLogError(LOGTAG, "Could not initialize SRTP");
       MOZ_ASSERT(PR_FALSE);
       return NS_ERROR_FAILURE;
     }
 
     r = srtp_install_event_handler(&SrtpFlow::srtp_event_handler);
-    if (r != err_status_ok) {
+    if (r != srtp_err_status_ok) {
       CSFLogError(LOGTAG, "Could not install SRTP event handler");
       MOZ_ASSERT(PR_FALSE);
       return NS_ERROR_FAILURE;

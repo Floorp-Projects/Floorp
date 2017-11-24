@@ -10,6 +10,6 @@
 }
 
 #TabsToolbar:-moz-lwtheme-darktext {
-  -moz-appearance: -moz-mac-vibrancy-light;
-  -moz-font-smoothing-background-color: -moz-mac-vibrancy-light;
+  -moz-appearance: -moz-mac-vibrant-titlebar-light;
+  -moz-font-smoothing-background-color: -moz-mac-vibrant-titlebar-light;
 }

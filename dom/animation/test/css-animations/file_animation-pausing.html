@@ -141,7 +141,8 @@ promise_test(function(t) {
 
   return animation.ready.then(function() {
     div.style.animationPlayState = 'paused';
-    assert_equals(animation.playState, 'pending', 'Animation is pause pending');
+    assert_true(animation.pending && animation.playState === 'paused',
+                'Animation is pause-pending');
 
     // Set current time
     animation.currentTime = 5 * MS_PER_SEC;

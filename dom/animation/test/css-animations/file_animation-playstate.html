@@ -8,41 +8,29 @@
 <script>
 'use strict';
 
-promise_test(function(t) {
+test(function(t) {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
   var animation = div.getAnimations()[0];
-  assert_equals(animation.playState, 'pending');
-
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
-  });
+  assert_equals(animation.playState, 'running');
 }, 'Animation returns correct playState when running');
 
-promise_test(function(t) {
+test(function(t) {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
   var animation = div.getAnimations()[0];
-  assert_equals(animation.playState, 'pending');
-
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'paused');
-  });
+  assert_equals(animation.playState, 'paused');
 }, 'Animation returns correct playState when paused');
 
-promise_test(function(t) {
+test(function(t) {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
   var animation = div.getAnimations()[0];
   animation.pause();
-  assert_equals(animation.playState, 'pending');
-
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'paused');
-  });
+  assert_equals(animation.playState, 'paused');
 }, 'Animation.playState updates when paused by script');
 
 test(function(t) {
@@ -53,8 +41,8 @@ test(function(t) {
   div.style.animationPlayState = 'running';
 
   // This test also checks that calling playState flushes style
-  assert_equals(animation.playState, 'pending',
-                'Animation.playState reports pending after updating'
+  assert_equals(animation.playState, 'running',
+                'Animation.playState reports running after updating'
                 + ' animation-play-state (got: ' + animation.playState + ')');
 }, 'Animation.playState updates when resumed by setting style');
 

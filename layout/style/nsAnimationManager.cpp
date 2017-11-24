@@ -89,6 +89,15 @@ CSSAnimation::PlayStateFromJS() const
   return Animation::PlayStateFromJS();
 }
 
+bool
+CSSAnimation::PendingFromJS() const
+{
+  // Flush style since, for example, if the animation-play-state was just
+  // changed its possible we should now be pending.
+  FlushStyle();
+  return Animation::PendingFromJS();
+}
+
 void
 CSSAnimation::PlayFromJS(ErrorResult& aRv)
 {

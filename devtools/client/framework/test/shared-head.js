@@ -172,17 +172,17 @@ var removeTab = Task.async(function* (tab) {
 });
 
 /**
- * Refresh the given tab.
- * @param {Object} tab The tab to be refreshed.
+ * Refresh the provided tab.
+ * @param {Object} tab The tab to be refreshed. Defaults to the currently selected tab.
  * @return Promise<undefined> resolved when the tab is successfully refreshed.
  */
-var refreshTab = Task.async(function*(tab) {
+var refreshTab = async function (tab = gBrowser.selectedTab) {
   info("Refreshing tab.");
   const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.reloadTab(gBrowser.selectedTab);
-  yield finished;
+  gBrowser.reloadTab(tab);
+  await finished;
   info("Tab finished refreshing.");
-});
+};
 
 /**
  * Simulate a key event from a <key> element.

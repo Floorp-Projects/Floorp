@@ -11,10 +11,7 @@
 #include "sslproto.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
-
-typedef struct srtp_policy_t srtp_policy_t;
-typedef struct srtp_ctx_t *srtp_t;
-typedef struct srtp_event_data_t srtp_event_data_t;
+#include "srtp.h"
 
 namespace mozilla {
 
