@@ -413,6 +413,7 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         SYMBOL(QueryContext),
         SYMBOL(BindTexImage),
         SYMBOL(ReleaseTexImage),
+        SYMBOL(SwapInterval),
         SYMBOL(QuerySurface),
         END_OF_SYMBOLS
     };

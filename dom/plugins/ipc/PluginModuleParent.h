@@ -21,6 +21,7 @@
 #include "mozilla/Unused.h"
 #include "npapi.h"
 #include "npfunctions.h"
+#include "nsExceptionHandler.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
@@ -29,10 +30,6 @@
 #if defined(MOZ_SANDBOX)
 #include "sandboxPermissions.h"
 #endif
-#endif
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
 #endif
 
 class nsPluginTag;
@@ -334,7 +331,6 @@ protected:
     RefPtr<layers::TextureClientRecycleAllocator> mTextureAllocatorForDirectBitmap;
     RefPtr<layers::TextureClientRecycleAllocator> mTextureAllocatorForDXGISurface;
 
-#ifdef MOZ_CRASHREPORTER
     /**
      * This mutex protects the crash reporter when the Plugin Hang UI event
      * handler is executing off main thread. It is intended to protect both
@@ -343,7 +339,6 @@ protected:
      */
     mozilla::Mutex mCrashReporterMutex;
     UniquePtr<ipc::CrashReporterHost> mCrashReporter;
-#endif // MOZ_CRASHREPORTER
 };
 
 class PluginModuleContentParent : public PluginModuleParent
@@ -458,7 +453,6 @@ class PluginModuleChromeParent
     }
 
   private:
-#ifdef MOZ_CRASHREPORTER
     // The following methods are callbacks invoked after calling
     // TakeFullMinidump(). The methods are invoked in the following order:
     void TakeBrowserAndPluginMinidumps(bool aReportsReady,
@@ -469,7 +463,7 @@ class PluginModuleChromeParent
                                     base::ProcessId aContentPid,
                                     const nsAString& aBrowserDumpId);
 
-#endif
+
     // The following method is the callback invoked after calling
     // TerminateChidlProcess().
     void TerminateChildProcessOnDumpComplete(MessageLoop* aMsgLoop,
@@ -518,12 +512,10 @@ private:
 
     virtual bool ShouldContinueFromReplyTimeout() override;
 
-#ifdef MOZ_CRASHREPORTER
     void ProcessFirstMinidump();
     void WriteExtraDataForMinidump();
     void RetainPluginRef();
     void ReleasePluginRef();
-#endif
 
     PluginProcessParent* Process() const { return mSubprocess; }
     base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
@@ -641,10 +633,9 @@ private:
     mozilla::SandboxPermissions mSandboxPermissions;
 #endif
 
-#ifdef MOZ_CRASHREPORTER
     nsCOMPtr<nsIFile> mBrowserDumpFile;
     TakeFullMinidumpCallback mTakeFullMinidumpCallback;
-#endif
+
     TerminateChildProcessCallback mTerminateChildProcessCallback;
 };
 

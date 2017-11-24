@@ -388,20 +388,20 @@ UserProperties.prototype = {
    *
    * @param {CSSStyleDeclaration} style
    *        The CSSStyleDeclaration against which the property is to be mapped.
-   * @param {String} bame
+   * @param {String} name
    *        The name of the property to set.
    * @param {String} userValue
    *        The value of the property to set.
    */
-  setProperty: function (style, bame, userValue) {
-    let key = this.getKey(style, bame);
+  setProperty: function (style, name, userValue) {
+    let key = this.getKey(style, name);
     let entry = this.map.get(key, null);
 
     if (entry) {
-      entry[bame] = userValue;
+      entry[name] = userValue;
     } else {
       let props = {};
-      props[bame] = userValue;
+      props[name] = userValue;
       this.map.set(key, props);
     }
   },

@@ -117,7 +117,6 @@ X11Error(Display *display, XErrorEvent *event) {
     }
   }
 
-#ifdef MOZ_CRASHREPORTER
   switch (XRE_GetProcessType()) {
   case GeckoProcessType_Default:
   case GeckoProcessType_Plugin:
@@ -127,7 +126,6 @@ X11Error(Display *display, XErrorEvent *event) {
   default:
     ; // crash report notes not supported.
   }
-#endif
 
 #ifdef DEBUG
   // The resource id is unlikely to be useful in a crash report without

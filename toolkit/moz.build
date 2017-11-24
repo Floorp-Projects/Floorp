@@ -7,6 +7,7 @@
 DIRS += [
     'components',
     'content',
+    'crashreporter',
     'forgetaboutsite',
     'locales',
     'modules',
@@ -45,9 +46,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DIRS += ['system/windowsproxy']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['system/androidproxy']
-
-if CONFIG['MOZ_CRASHREPORTER']:
-    DIRS += ['crashreporter']
 
 TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.crashreporter.test.browser += [
     'crashreporter/test/browser/crashreport.sjs',

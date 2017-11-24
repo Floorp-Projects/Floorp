@@ -10,7 +10,9 @@
 
 #include "GfxInfo.h"
 #include "nsUnicharUtils.h"
+#include "nsExceptionHandler.h"
 #include "nsCocoaFeatures.h"
+#include "nsICrashReporter.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
 
@@ -18,11 +20,7 @@
 #import <IOKit/IOKitLib.h>
 #import <Cocoa/Cocoa.h>
 
-#if defined(MOZ_CRASHREPORTER)
-#include "nsExceptionHandler.h"
-#include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -275,7 +273,6 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 void
 GfxInfo::AddCrashReportAnnotations()
 {
-#if defined(MOZ_CRASHREPORTER)
   nsString deviceID, vendorID, driverVersion;
   nsAutoCString narrowDeviceID, narrowVendorID, narrowDriverVersion;
 
@@ -301,7 +298,6 @@ GfxInfo::AddCrashReportAnnotations()
   note.AppendLiteral(", AdapterDeviceID: ");
   note.Append(narrowDeviceID);
   CrashReporter::AppendAppNotesToCrashReport(note);
-#endif
 }
 
 // We don't support checking driver versions on Mac.

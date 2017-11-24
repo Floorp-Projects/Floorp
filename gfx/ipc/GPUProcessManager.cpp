@@ -39,11 +39,8 @@
 #include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "MediaPrefs.h"
+#include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
-
-#ifdef MOZ_CRASHREPORTER
-# include "nsExceptionHandler.h"
-#endif
 
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/widget/AndroidUiThread.h"
@@ -368,7 +365,6 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, Move(vsyncChild));
   mGPUChild->SendInitVsyncBridge(Move(vsyncParent));
 
-#ifdef MOZ_CRASHREPORTER
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("GPUProcessStatus"),
     NS_LITERAL_CSTRING("Running"));
@@ -376,7 +372,6 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("GPUProcessLaunchCount"),
     nsPrintfCString("%d", mNumProcessAttempts));
-#endif
 }
 
 static bool
@@ -717,11 +712,9 @@ GPUProcessManager::DestroyProcess()
     mVsyncBridge = nullptr;
   }
 
-#ifdef MOZ_CRASHREPORTER
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("GPUProcessStatus"),
     NS_LITERAL_CSTRING("Destroyed"));
-#endif
 }
 
 already_AddRefed<CompositorSession>

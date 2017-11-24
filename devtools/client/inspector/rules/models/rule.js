@@ -9,8 +9,7 @@
 const promise = require("promise");
 const CssLogic = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
-const {TextProperty} =
-      require("devtools/client/inspector/rules/models/text-property");
+const TextProperty = require("devtools/client/inspector/rules/models/text-property");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {parseNamedDeclarations} = require("devtools/shared/css/parsing-utils");
 const Services = require("Services");
