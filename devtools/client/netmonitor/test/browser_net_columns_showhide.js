@@ -13,8 +13,9 @@ add_task(function* () {
 
   let { document, store, parent } = monitor.panelWin;
 
-  for (let [column, shown] of store.getState().ui.columns) {
-    if (shown) {
+  let columns = store.getState().ui.columns;
+  for (let column in columns) {
+    if (columns[column]) {
       yield testVisibleColumnContextMenuItem(column, document, parent);
       yield testHiddenColumnContextMenuItem(column, document, parent);
     } else {
@@ -23,8 +24,9 @@ add_task(function* () {
     }
   }
 
-  for (let [column, shown] of store.getState().ui.columns) {
-    if (shown) {
+  columns = store.getState().ui.columns;
+  for (let column in columns) {
+    if (columns[column]) {
       yield testVisibleColumnContextMenuItem(column, document, parent);
       // Right click on the white-space for the context menu to appear
       // and toggle column visibility

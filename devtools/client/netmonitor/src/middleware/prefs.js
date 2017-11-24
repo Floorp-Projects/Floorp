@@ -42,9 +42,13 @@ function prefsMiddleware(store) {
         break;
       case TOGGLE_COLUMN:
       case RESET_COLUMNS:
-        let visibleColumns = [...store.getState().ui.columns]
-          .filter(([column, shown]) => shown)
-          .map(([column, shown]) => column);
+        let visibleColumns = [];
+        let columns = store.getState().ui.columns;
+        for (let column in columns) {
+          if (columns[column]) {
+            visibleColumns.push(column);
+          }
+        }
         Services.prefs.setCharPref(
           "devtools.netmonitor.visibleColumns", JSON.stringify(visibleColumns));
         break;
