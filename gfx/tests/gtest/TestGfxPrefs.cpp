@@ -81,7 +81,6 @@ TEST(GfxPrefs, Set) {
   ASSERT_TRUE(gfxPrefs::APZMaxVelocity() == -1.0f);
 }
 
-#ifdef MOZ_CRASHREPORTER
 // Randomly test the function we use in nsExceptionHandler.cpp here:
 extern bool SimpleNoCLibDtoA(double aValue, char* aBuffer, int aBufferLength);
 TEST(GfxPrefs, StringUtility)
@@ -104,4 +103,3 @@ TEST(GfxPrefs, StringUtility)
   // It won't fit into 32:
   ASSERT_FALSE(SimpleNoCLibDtoA(testVal[4], testBuffer, sizeof(testBuffer)/2));
 }
-#endif

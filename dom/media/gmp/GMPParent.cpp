@@ -7,11 +7,13 @@
 #include "mozilla/Logging.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "nsIRunnable.h"
 #include "nsIWritablePropertyBag2.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/SSE.h"
 #include "mozilla/SyncRunnable.h"
@@ -28,12 +30,8 @@
 
 using mozilla::ipc::GeckoChildProcessHost;
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsPrintfCString.h"
-#include "mozilla/ipc/CrashReporterHost.h"
 using CrashReporter::AnnotationTable;
 using CrashReporter::GetIDFromMinidump;
-#endif
 
 #include "mozilla/Telemetry.h"
 
@@ -452,7 +450,6 @@ GMPParent::EnsureProcessLoaded()
   return NS_SUCCEEDED(rv);
 }
 
-#ifdef MOZ_CRASHREPORTER
 void
 GMPParent::WriteExtraDataForMinidump()
 {
@@ -497,12 +494,12 @@ GMPNotifyObservers(const uint32_t aPluginID, const nsACString& aPluginName, cons
     service->RunPluginCrashCallbacks(aPluginID, aPluginName);
   }
 }
-#endif
+
 void
 GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   LOGD("%s: (%d)", __FUNCTION__, (int)aWhy);
-#ifdef MOZ_CRASHREPORTER
+
   if (AbnormalShutdown == aWhy) {
     Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
                           NS_LITERAL_CSTRING("gmplugin"), 1);
@@ -519,7 +516,7 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
       &GMPNotifyObservers, mPluginId, mDisplayName, dumpID);
     mMainThread->Dispatch(r.forget());
   }
-#endif
+
   // warn us off trying to close again
   mState = GMPStateClosing;
   mAbnormalShutdownInProgress = true;
@@ -540,12 +537,11 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 mozilla::ipc::IPCResult
 GMPParent::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
 {
-#ifdef MOZ_CRASHREPORTER
   mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
     GeckoProcessType_GMPlugin,
     aShmem,
     aThreadId);
-#endif
+
   return IPC_OK();
 }
 

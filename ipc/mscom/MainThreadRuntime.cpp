@@ -13,9 +13,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
+#if defined(ACCESSIBILITY)
 #include "nsExceptionHandler.h"
-#endif // defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
+#endif // defined(ACCESSIBILITY)
 #include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"
 
@@ -50,7 +50,7 @@ MainThreadRuntime::MainThreadRuntime()
   , mActCtxRgn(a11y::Compatibility::GetActCtxResourceId())
 #endif // defined(ACCESSIBILITY)
 {
-#if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
+#if defined(ACCESSIBILITY)
   GeckoProcessType procType = XRE_GetProcessType();
   if (procType == GeckoProcessType_Default ||
       procType == GeckoProcessType_Content) {
@@ -65,7 +65,7 @@ MainThreadRuntime::MainThreadRuntime()
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AssemblyManifestCtx"),
                                        strActCtx);
   }
-#endif // defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
+#endif // defined(ACCESSIBILITY)
 
   // We must be the outermost COM initialization on this thread. The COM runtime
   // cannot be configured once we start manipulating objects

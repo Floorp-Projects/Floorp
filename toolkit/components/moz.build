@@ -26,6 +26,7 @@ DIRS += [
     'commandlines',
     'contentprefs',
     'contextualidentity',
+    'crashes',
     'crashmonitor',
     'diskspacewatcher',
     'downloads',
@@ -79,9 +80,6 @@ if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
 
     if CONFIG['NS_PRINTING']:
         DIRS += ['printing']
-
-if CONFIG['MOZ_CRASHREPORTER']:
-    DIRS += ['crashes']
 
 if CONFIG['BUILD_CTYPES']:
     DIRS += ['ctypes']

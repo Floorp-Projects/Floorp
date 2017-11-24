@@ -954,6 +954,13 @@ VectorImage::Draw(gfxContext* aContext,
     SendOnUnlockedDraw(aFlags);
   }
 
+  // We should always bypass the cache when using DrawTargetRecording because
+  // we prefer the drawing commands in general to the rasterized surface. This
+  // allows blob images to avoid rasterized SVGs with WebRender.
+  if (aContext->GetDrawTarget()->GetBackendType() == BackendType::RECORDING) {
+    aFlags |= FLAG_BYPASS_SURFACE_CACHE;
+  }
+
   MOZ_ASSERT(!(aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) ||
              (aSVGContext && aSVGContext->GetViewportSize()),
              "Viewport size is required when using "

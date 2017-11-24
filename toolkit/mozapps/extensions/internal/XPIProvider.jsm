@@ -2201,8 +2201,7 @@ this.XPIProvider = {
         Services.obs.notifyObservers(null, "chrome-flush-caches");
       }
 
-      if ("nsICrashReporter" in Ci &&
-          Services.appinfo instanceof Ci.nsICrashReporter) {
+      if (AppConstants.MOZ_CRASHREPORTER) {
         // Annotate the crash report with relevant add-on information.
         try {
           Services.appinfo.annotateCrashReport("Theme", this.currentSkin);
@@ -2763,14 +2762,16 @@ this.XPIProvider = {
    * Adds a list of currently active add-ons to the next crash report.
    */
   addAddonsToCrashReporter() {
-    if (!("nsICrashReporter" in Ci) ||
-        !(Services.appinfo instanceof Ci.nsICrashReporter))
+    if (!(Services.appinfo instanceof Ci.nsICrashReporter) ||
+        !AppConstants.MOZ_CRASHREPORTER) {
       return;
+    }
 
     // In safe mode no add-ons are loaded so we should not include them in the
     // crash report
-    if (Services.appinfo.inSafeMode)
+    if (Services.appinfo.inSafeMode) {
       return;
+    }
 
     let data = Array.from(XPIStates.enabledAddons(),
                           a => encoded`${a.id}:${a.version}`).join(",");
