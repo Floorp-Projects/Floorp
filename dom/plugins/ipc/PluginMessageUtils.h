@@ -22,10 +22,9 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Logging.h"
+#include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
-#ifdef MOZ_CRASHREPORTER
-#  include "nsExceptionHandler.h"
-#endif
+
 #ifdef XP_MACOSX
 #include "PluginInterposeOSX.h"
 #else

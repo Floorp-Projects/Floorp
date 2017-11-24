@@ -7,10 +7,13 @@
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const Rule = require("devtools/client/inspector/rules/models/rule");
-const {InplaceEditor, editableField, editableItem} =
-      require("devtools/client/shared/inplace-editor");
-const {TextPropertyEditor} =
-      require("devtools/client/inspector/rules/views/text-property-editor");
+const {
+  InplaceEditor,
+  editableField,
+  editableItem
+} = require("devtools/client/shared/inplace-editor");
+const TextPropertyEditor =
+  require("devtools/client/inspector/rules/views/text-property-editor");
 const {
   createChild,
   blurOnMultipleProperties,

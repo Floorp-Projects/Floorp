@@ -2566,13 +2566,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 '"'+ _protocolHeaderName(self.protocol, self.side) +'.h"') ]
             + setToIncludes(self.externalIncludes))
 
-        if self.protocol.decl.type.isToplevel():
-            cf.addthings([
-                CppDirective('ifdef', 'MOZ_CRASHREPORTER'),
-                CppDirective('  include', '"nsXULAppAPI.h"'),
-                CppDirective('endif')
-            ])
-
         cppheaders = [CppDirective('include', '"%s"' % filename)
                       for filename in ipdl.builtin.CppIncludes]
 

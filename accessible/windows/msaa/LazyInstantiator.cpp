@@ -17,6 +17,7 @@
 #include "nsAccessibilityService.h"
 #include "nsWindowsHelpers.h"
 #include "nsCOMPtr.h"
+#include "nsExceptionHandler.h"
 #include "nsIFile.h"
 #include "nsXPCOM.h"
 #include "RootAccessibleWrap.h"
@@ -25,10 +26,6 @@
 #if defined(MOZ_TELEMETRY_REPORTING)
 #include "mozilla/Telemetry.h"
 #endif // defined(MOZ_TELEMETRY_REPORTING)
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
 
 #include <oaidl.h>
 
@@ -305,7 +302,7 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
     a11y::SetInstantiator(filePath);
   }
 
-#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#if defined(MOZ_TELEMETRY_REPORTING)
   if (!mTelemetryThread) {
     // Call GatherTelemetry on a background thread because it does I/O on
     // the executable file to retrieve version information.
@@ -318,12 +315,12 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
                                              new AccumulateRunnable(this)));
     NS_NewThread(getter_AddRefs(mTelemetryThread), runnable);
   }
-#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#endif // defined(MOZ_TELEMETRY_REPORTING)
 
   return true;
 }
 
-#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#if defined(MOZ_TELEMETRY_REPORTING)
 /**
  * Appends version information in the format "|a.b.c.d".
  * If there is no version information, we append nothing.
@@ -406,11 +403,9 @@ LazyInstantiator::AccumulateTelemetry(const nsString& aValue)
     Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS,
                          aValue);
 #endif // defined(MOZ_TELEMETRY_REPORTING)
-#if defined(MOZ_CRASHREPORTER)
     CrashReporter::
       AnnotateCrashReport(NS_LITERAL_CSTRING("AccessibilityClient"),
                           NS_ConvertUTF16toUTF8(aValue));
-#endif // defined(MOZ_CRASHREPORTER)
   }
 
   if (mTelemetryThread) {
@@ -418,7 +413,7 @@ LazyInstantiator::AccumulateTelemetry(const nsString& aValue)
     mTelemetryThread = nullptr;
   }
 }
-#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+#endif // defined(MOZ_TELEMETRY_REPORTING)
 
 RootAccessibleWrap*
 LazyInstantiator::ResolveRootAccWrap()

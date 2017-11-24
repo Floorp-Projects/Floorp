@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     'nsIBlocklistService.idl',
+    'nsICrashReporter.idl',
     'nsIDeviceSensors.idl',
     'nsIGConfService.idl',
     'nsIGeolocationProvider.idl',
@@ -16,10 +17,5 @@ XPIDL_SOURCES += [
     'nsIXULAppInfo.idl',
     'nsIXULRuntime.idl',
 ]
-
-if CONFIG['MOZ_CRASHREPORTER']:
-    XPIDL_SOURCES += [
-        'nsICrashReporter.idl',
-    ]
 
 XPIDL_MODULE = 'xpcom_system'

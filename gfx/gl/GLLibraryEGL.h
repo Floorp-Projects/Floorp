@@ -256,6 +256,9 @@ public:
     EGLBoolean fReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer) const
         WRAP(  fReleaseTexImage(dpy, surface, buffer) )
 
+    EGLBoolean fSwapInterval(EGLDisplay dpy, EGLint interval) const
+        WRAP(  fSwapInterval(dpy, interval) )
+
     EGLImage   fCreateImage(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint* attrib_list) const
         WRAP(  fCreateImageKHR(dpy, ctx, target, buffer, attrib_list) )
 
@@ -433,6 +436,7 @@ private:
                                                 EGLint buffer);
         EGLBoolean (GLAPIENTRY * fReleaseTexImage)(EGLDisplay, EGLSurface surface,
                                                    EGLint buffer);
+        EGLBoolean (GLAPIENTRY * fSwapInterval)(EGLDisplay dpy, EGLint interval);
         EGLImage   (GLAPIENTRY * fCreateImageKHR)(EGLDisplay dpy, EGLContext ctx,
                                                   EGLenum target, EGLClientBuffer buffer,
                                                   const EGLint* attrib_list);
