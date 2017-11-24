@@ -837,7 +837,6 @@ public:
   static const KTableEntry kRubyAlignKTable[];
   static const KTableEntry kRubyPositionKTable[];
   static const KTableEntry kScrollBehaviorKTable[];
-  static const KTableEntry kOverscrollBehaviorKTable[];
   static const KTableEntry kScrollSnapTypeKTable[];
   static const KTableEntry kSpeakKTable[];
   static const KTableEntry kSpeakHeaderKTable[];

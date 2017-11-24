@@ -422,14 +422,13 @@ public:
    *                   start a fling (in this case the fling is given to the
    *                   first APZC in the chain)
    *
-   * The return value is the "residual velocity", the portion of
-   * |aHandoffState.mVelocity| that was not consumed by APZCs in the
-   * handoff chain doing flings.
+   * aHandoffState.mVelocity will be modified depending on how much of that
+   * velocity has been consumed by APZCs in the overscroll hand-off chain.
    * The caller can use this value to determine whether it should consume
-   * the excess velocity by going into overscroll.
+   * the excess velocity by going into an overscroll fling.
    */
-  ParentLayerPoint DispatchFling(AsyncPanZoomController* aApzc,
-                                 const FlingHandoffState& aHandoffState);
+  void DispatchFling(AsyncPanZoomController* aApzc,
+                     FlingHandoffState& aHandoffState);
 
   void StartScrollbarDrag(
       const ScrollableLayerGuid& aGuid,

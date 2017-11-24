@@ -9357,11 +9357,6 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     metadata.SetUsesContainerScrolling(scrollableFrame->UsesContainerScrolling());
 
     metadata.SetSnapInfo(scrollableFrame->GetScrollSnapInfo());
-
-    ScrollbarStyles scrollbarStyles = scrollableFrame->GetScrollbarStyles();
-    metadata.SetOverscrollBehavior(OverscrollBehaviorInfo::FromStyleConstants(
-        scrollbarStyles.mOverscrollBehaviorX,
-        scrollbarStyles.mOverscrollBehaviorY));
   }
 
   // If we have the scrollparent being the same as the scroll id, the
