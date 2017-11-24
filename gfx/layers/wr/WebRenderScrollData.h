@@ -81,8 +81,8 @@ public:
   const uint64_t& GetScrollbarAnimationId() const { return mScrollbarAnimationId; }
   void SetScrollbarTargetContainerId(FrameMetrics::ViewID aId) { mScrollbarTargetContainerId = aId; }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const { return mScrollbarTargetContainerId; }
-  void SetIsScrollbarContainer() { mIsScrollbarContainer = true; }
-  bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
+  void SetScrollbarContainerDirection(ScrollDirection aDirection) { mScrollbarContainerDirection = Some(aDirection); }
+  Maybe<ScrollDirection> GetScrollbarContainerDirection() const { return mScrollbarContainerDirection; }
 
   void SetFixedPositionScrollContainerId(FrameMetrics::ViewID aId) { mFixedPosScrollContainerId = aId; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
@@ -116,7 +116,7 @@ private:
   ScrollThumbData mScrollThumbData;
   uint64_t mScrollbarAnimationId;
   FrameMetrics::ViewID mScrollbarTargetContainerId;
-  bool mIsScrollbarContainer;
+  Maybe<ScrollDirection> mScrollbarContainerDirection;
   FrameMetrics::ViewID mFixedPosScrollContainerId;
 };
 
@@ -233,7 +233,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
     WriteParam(aMsg, aParam.mScrollThumbData);
     WriteParam(aMsg, aParam.mScrollbarAnimationId);
     WriteParam(aMsg, aParam.mScrollbarTargetContainerId);
-    WriteParam(aMsg, aParam.mIsScrollbarContainer);
+    WriteParam(aMsg, aParam.mScrollbarContainerDirection);
     WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
   }
 
@@ -251,7 +251,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
         && ReadParam(aMsg, aIter, &aResult->mScrollThumbData)
         && ReadParam(aMsg, aIter, &aResult->mScrollbarAnimationId)
         && ReadParam(aMsg, aIter, &aResult->mScrollbarTargetContainerId)
-        && ReadParam(aMsg, aIter, &aResult->mIsScrollbarContainer)
+        && ReadParam(aMsg, aIter, &aResult->mScrollbarContainerDirection)
         && ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId);
   }
 };

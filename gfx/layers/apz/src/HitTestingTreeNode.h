@@ -97,7 +97,7 @@ public:
   void SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
                         const uint64_t& aScrollbarAnimationId,
                         const ScrollThumbData& aThumbData,
-                        bool aIsScrollContainer);
+                        const Maybe<ScrollDirection>& aScrollContainerDirection);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   bool IsScrollbarNode() const;  // Scroll thumb or scrollbar container layer.
   bool IsScrollThumbNode() const;  // Scroll thumb container layer.
@@ -151,7 +151,7 @@ private:
   ScrollThumbData mScrollThumbData;
 
   // This is set for scroll track Container layers only.
-  bool mIsScrollbarContainer;
+  Maybe<ScrollDirection> mScrollbarContainerDirection;
 
   FrameMetrics::ViewID mFixedPosTarget;
 
