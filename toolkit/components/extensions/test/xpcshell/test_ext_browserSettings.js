@@ -28,13 +28,20 @@ add_task(async function test_browser_settings() {
     "dom.popup_allowed_events": Preferences.get("dom.popup_allowed_events"),
     "image.animation_mode": "none",
     "permissions.default.desktop-notification": PERM_UNKNOWN_ACTION,
+    "ui.context_menus.after_mouseup": false,
   };
 
   async function background() {
     browser.test.onMessage.addListener(async (msg, apiName, value) => {
       let apiObj = browser.browserSettings[apiName];
-      await apiObj.set({value});
-      browser.test.sendMessage("settingData", await apiObj.get({}));
+      let result = await apiObj.set({value});
+      if (msg === "set") {
+        browser.test.assertTrue(result, "set returns true.");
+        browser.test.sendMessage("settingData", await apiObj.get({}));
+      } else {
+        browser.test.assertFalse(result, "set returns false for a no-op.");
+        browser.test.sendMessage("no-op set");
+      }
     });
   }
 
@@ -68,6 +75,14 @@ add_task(async function test_browser_settings() {
           `The ${setting} setting has the expected value.`);
     equal(data.levelOfControl, "controlled_by_this_extension",
           `The ${setting} setting has the expected levelOfControl.`);
+    for (let pref in expected) {
+      equal(Preferences.get(pref), expected[pref], `${pref} set correctly for ${value}`);
+    }
+  }
+
+  async function testNoOpSetting(setting, value, expected) {
+    extension.sendMessage("setNoOp", setting, value);
+    await extension.awaitMessage("no-op set");
     for (let pref in expected) {
       equal(Preferences.get(pref), expected[pref], `${pref} set correctly for ${value}`);
     }
@@ -110,7 +125,48 @@ add_task(async function test_browser_settings() {
         AppConstants.MOZ_BUILD_APP !== "browser" ? undefined : PERM_UNKNOWN_ACTION,
     });
 
-  await extension.unload();
+  // This setting is a no-op on Android.
+  if (AppConstants.platform === "android") {
+    await testNoOpSetting("contextMenuShowEvent", "mouseup",
+      {"ui.context_menus.after_mouseup": false});
+  } else {
+    await testSetting(
+      "contextMenuShowEvent", "mouseup",
+      {"ui.context_menus.after_mouseup": true});
+  }
 
+  // "mousedown" is also a no-op on Windows.
+  if (["android", "win"].includes(AppConstants.platform)) {
+    await testNoOpSetting("contextMenuShowEvent", "mousedown",
+      {"ui.context_menus.after_mouseup": AppConstants.platform === "win"});
+  } else {
+    await testSetting(
+      "contextMenuShowEvent", "mousedown",
+      {"ui.context_menus.after_mouseup": false});
+  }
+
+  await extension.unload();
   await promiseShutdownManager();
+});
+
+add_task(async function test_bad_value() {
+  async function background() {
+    await browser.test.assertRejects(
+      browser.browserSettings.contextMenuShowEvent.set({value: "bad"}),
+      /bad is not a valid value for contextMenuShowEvent/,
+      "contextMenuShowEvent.set rejects with an invalid value.");
+
+    browser.test.sendMessage("done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["browserSettings"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
