@@ -146,7 +146,7 @@
   <string name="dialog_addtohomescreen_title">ホーム画面に追加</string>
   <string name="dialog_addtohomescreen_action_add">追加</string>
   <string name="dialog_addtohomescreen_action_cancel">キャンセル</string>
-  <string name="dialog_addtohomescreen_tracking_protection">ショートカットはトラッキング防止機能が無効の状態で開かれます</string>
+  <string name="dialog_addtohomescreen_tracking_protection">ショートカットはトラッキング防止が無効の状態で開かれます</string>
   <string name="dialog_opentab_title">リンクを選択したタブで開く</string>
   <string name="dialog_opentab_action_open">開く</string>
   <string name="notification_browsing_session_channel_name">プライベートブラウジングセッション</string>
