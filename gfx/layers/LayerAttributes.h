@@ -253,7 +253,7 @@ public:
   const ScrollThumbData& ThumbData() const {
     return mThumbData;
   }
-  float IsScrollbarContainer() const {
+  bool IsScrollbarContainer() const {
     return mIsScrollbarContainer;
   }
   gfx::CompositionOp MixBlendMode() const {
