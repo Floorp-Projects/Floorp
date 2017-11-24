@@ -21,6 +21,11 @@ class WebDriverException(Exception):
             "%s" % (self.status_code, self.http_status, self.stacktrace))
 
 
+class ElementClickInterceptedException(WebDriverException):
+    http_status = 400
+    status_code = "element click intercepted"
+
+
 class ElementNotSelectableException(WebDriverException):
     http_status = 400
     status_code = "element not selectable"
