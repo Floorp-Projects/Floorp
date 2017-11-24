@@ -90,6 +90,9 @@ public:
     if (wrRenderer && renderer) {
       wr::WrExternalImageHandler handler = renderer->GetExternalImageHandler();
       wr_renderer_set_external_image_handler(wrRenderer, &handler);
+      if (gfx::gfxVars::UseWebRenderProgramBinary()) {
+        wr_renderer_update_program_cache(wrRenderer, aRenderThread.ProgramCache()->Raw());
+      }
     }
 
     if (renderer) {
