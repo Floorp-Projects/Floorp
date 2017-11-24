@@ -71,17 +71,6 @@ using namespace mozilla::css;
 
 typedef nsCSSProps::KTableEntry KTableEntry;
 
-const uint32_t
-nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  parsevariant_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
-#include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
-#undef CSS_PROP
-};
-
 // Maximum number of repetitions for the repeat() function
 // in the grid-template-rows and grid-template-columns properties,
 // to limit high memory usage from small stylesheets.
