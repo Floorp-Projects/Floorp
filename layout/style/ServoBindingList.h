@@ -744,7 +744,8 @@ SERVO_BINDING_FUNC(Servo_ComputeColor, bool,
                    RawServoStyleSetBorrowedOrNull set,
                    nscolor current_color,
                    const nsAString* value,
-                   nscolor* result_color);
+                   nscolor* result_color,
+                   bool* was_current_color);
 SERVO_BINDING_FUNC(Servo_ParseIntersectionObserverRootMargin, bool,
                    const nsAString* value,
                    nsCSSRect* result);
