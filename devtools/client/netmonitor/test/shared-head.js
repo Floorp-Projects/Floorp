@@ -22,11 +22,9 @@ async function waitForExistingRequests(monitor) {
       }
       // Do same check than FirefoxDataProvider.isRequestPayloadReady,
       // in order to ensure there is no more pending payload requests to be done.
-      if (!request.requestHeaders || !request.requestCookies ||
-          !request.eventTimings ||
-          ((!request.responseHeaders || !request.responseCookies) &&
-            request.securityState != "broken" &&
-            (!request.responseContentAvailable || request.status))) {
+      if (!request.requestHeaders || !request.eventTimings ||
+          (!request.responseHeaders && request.securityState !== "broken" &&
+          (!request.responseContentAvailable || request.status))) {
         return false;
       }
     }

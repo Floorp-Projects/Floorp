@@ -75,8 +75,6 @@ add_task(function* () {
     while (true) {
       info("Waiting for one network request");
       yield waitForNetworkEvents(monitor, 1);
-      console.log(requestsContainer.scrollHeight);
-      console.log(requestsContainer.clientHeight);
       if (requestsContainer.scrollHeight > requestsContainer.clientHeight) {
         info("The list is long enough, returning");
         return;
