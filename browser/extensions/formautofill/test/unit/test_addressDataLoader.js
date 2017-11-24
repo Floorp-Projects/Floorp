@@ -69,5 +69,13 @@ SUPPORT_COUNTRIES_TESTCASES.forEach(testcase => {
     let metadata = FormAutofillUtils.getCountryAddressData(testcase.country);
     Assert.ok(testcase.properties.every(key => metadata[key]),
               "These properties should exist: " + testcase.properties);
+    // Verify the multi-locale country
+    if (metadata.languages && metadata.languages.length > 1) {
+      let locales = FormAutofillUtils.getCountryAddressDataWithLocales(testcase.country);
+      Assert.equal(metadata.languages.length, locales.length, "Total supported locales should be matched");
+      metadata.languages.forEach((lang, index) => {
+        Assert.equal(lang, locales[index].lang, `Should support ${lang}`);
+      });
+    }
   });
 });
