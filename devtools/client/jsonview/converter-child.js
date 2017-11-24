@@ -338,48 +338,10 @@ function onContentMessage(e) {
 
   let value = e.detail.value;
   switch (e.detail.type) {
-    case "copy":
-      copyString(win, value);
-      break;
-
-    case "copy-headers":
-      copyHeaders(win, value);
-      break;
-
     case "save":
       childProcessMessageManager.sendAsyncMessage(
         "devtools:jsonview:save", value);
   }
-}
-
-function copyHeaders(win, headers) {
-  let value = "";
-  let eol = (Services.appinfo.OS !== "WINNT") ? "\n" : "\r\n";
-
-  let responseHeaders = headers.response;
-  for (let i = 0; i < responseHeaders.length; i++) {
-    let header = responseHeaders[i];
-    value += header.name + ": " + header.value + eol;
-  }
-
-  value += eol;
-
-  let requestHeaders = headers.request;
-  for (let i = 0; i < requestHeaders.length; i++) {
-    let header = requestHeaders[i];
-    value += header.name + ": " + header.value + eol;
-  }
-
-  copyString(win, value);
-}
-
-function copyString(win, string) {
-  win.document.addEventListener("copy", event => {
-    event.clipboardData.setData("text/plain", string);
-    event.preventDefault();
-  }, {once: true});
-
-  win.document.execCommand("copy", false, null);
 }
 
 function createInstance() {
