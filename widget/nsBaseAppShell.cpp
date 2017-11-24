@@ -6,9 +6,7 @@
 #include "base/message_loop.h"
 
 #include "nsBaseAppShell.h"
-#if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
-#endif
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
@@ -320,18 +318,14 @@ void
 nsBaseAppShell::IncrementEventloopNestingLevel()
 {
   ++mEventloopNestingLevel;
-#if defined(MOZ_CRASHREPORTER)
   CrashReporter::SetEventloopNestingLevel(mEventloopNestingLevel);
-#endif
 }
 
 void
 nsBaseAppShell::DecrementEventloopNestingLevel()
 {
   --mEventloopNestingLevel;
-#if defined(MOZ_CRASHREPORTER)
   CrashReporter::SetEventloopNestingLevel(mEventloopNestingLevel);
-#endif
 }
 
 // Called from the main thread

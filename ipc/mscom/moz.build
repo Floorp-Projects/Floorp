@@ -32,13 +32,9 @@ UNIFIED_SOURCES += [
     'Objref.cpp',
     'PassthruProxy.cpp',
     'ProxyStream.cpp',
+    'RegistrationAnnotator.cpp',
     'Utils.cpp',
 ]
-
-if CONFIG['MOZ_CRASHREPORTER']:
-    UNIFIED_SOURCES += [
-        'RegistrationAnnotator.cpp',
-    ]
 
 if CONFIG['ACCESSIBILITY']:
     DIRS += [

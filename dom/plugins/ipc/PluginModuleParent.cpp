@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/ipc/CrashReporterClient.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -65,12 +67,7 @@ using namespace mozilla;
 using namespace mozilla::plugins;
 using namespace mozilla::plugins::parent;
 
-#ifdef MOZ_CRASHREPORTER
-#include "mozilla/ipc/CrashReporterClient.h"
-#include "mozilla/ipc/CrashReporterHost.h"
-
 using namespace CrashReporter;
-#endif
 
 static const char kContentTimeoutPref[] = "dom.ipc.plugins.contentTimeoutSecs";
 static const char kChildTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
@@ -525,7 +522,6 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
 
     RegisterSettingsCallbacks();
 
-#ifdef MOZ_CRASHREPORTER
     // If this fails, we're having IPC troubles, and we're doomed anyways.
     if (!InitCrashReporter()) {
         mShutdown = true;
@@ -533,7 +529,6 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
         OnInitFailure();
         return;
     }
-#endif
 
 #if defined(XP_WIN) && defined(_X86_)
     // Protected mode only applies to Windows and only to x86.
@@ -552,7 +547,6 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
 bool
 PluginModuleChromeParent::InitCrashReporter()
 {
-#ifdef MOZ_CRASHREPORTER
     ipc::Shmem shmem;
     if (!ipc::CrashReporterClient::AllocShmem(this, &shmem)) {
         return false;
@@ -570,7 +564,6 @@ PluginModuleChromeParent::InitCrashReporter()
         shmem,
         threadId);
     }
-#endif
 
     return true;
 }
@@ -588,9 +581,7 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome)
     , mTaskFactory(this)
     , mSandboxLevel(0)
     , mIsFlashPlugin(false)
-#ifdef MOZ_CRASHREPORTER
     , mCrashReporterMutex("PluginModuleChromeParent::mCrashReporterMutex")
-#endif
 {
 }
 
@@ -702,7 +693,6 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
     mozilla::HangMonitor::UnregisterAnnotator(*this);
 }
 
-#ifdef MOZ_CRASHREPORTER
 void
 PluginModuleChromeParent::WriteExtraDataForMinidump()
 {
@@ -744,7 +734,6 @@ PluginModuleChromeParent::WriteExtraDataForMinidump()
 #endif
     }
 }
-#endif  // MOZ_CRASHREPORTER
 
 void
 PluginModuleParent::SetChildTimeout(const int32_t aChildTimeout)
@@ -1000,7 +989,6 @@ PluginModuleChromeParent::AnnotateHang(mozilla::HangMonitor::HangAnnotations& aA
     }
 }
 
-#ifdef MOZ_CRASHREPORTER
 static bool
 CreatePluginMinidump(base::ProcessId processId, ThreadId childThread,
                      nsIFile* parentMinidump, const nsACString& name)
@@ -1012,7 +1000,6 @@ CreatePluginMinidump(base::ProcessId processId, ThreadId childThread,
   }
   return CreateAdditionalChildMinidump(handle, 0, parentMinidump, name);
 }
-#endif
 
 bool
 PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
@@ -1067,7 +1054,6 @@ PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
                                            std::function<void(nsString)>&& aCallback,
                                            bool aAsync)
 {
-#ifdef MOZ_CRASHREPORTER
     mozilla::MutexAutoLock lock(mCrashReporterMutex);
 
     if (!mCrashReporter || !mTakeFullMinidumpCallback.IsEmpty()) {
@@ -1111,12 +1097,8 @@ PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
     } else {
         TakeBrowserAndPluginMinidumps(false, aContentPid, browserDumpId, aAsync);
     }
-#else // MOZ_CRASHREPORTER
-    aCallback(NS_LITERAL_STRING(""));
-#endif
 }
 
-#ifdef MOZ_CRASHREPORTER
 void
 PluginModuleChromeParent::RetainPluginRef()
 {
@@ -1235,8 +1217,6 @@ PluginModuleChromeParent::OnTakeFullMinidumpComplete(bool aReportsReady,
     }
 }
 
-#endif // MOZ_CRASHREPORTER
-
 void
 PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
                                                 base::ProcessId aContentPid,
@@ -1251,7 +1231,6 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
     }
     mTerminateChildProcessCallback.Init(Move(aCallback), aAsync);
 
-#ifdef MOZ_CRASHREPORTER
     // Start by taking a full minidump if necessary, this is done early
     // because it also needs to lock the mCrashReporterMutex and Mutex doesn't
     // support recursive locking.
@@ -1276,17 +1255,12 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
     } else {
         TerminateChildProcessOnDumpComplete(aMsgLoop, aMonitorDescription);
     }
-
-#else
-    TerminateChildProcessOnDumpComplete(aMsgLoop, aMonitorDescription);
-#endif
 }
 
 void
 PluginModuleChromeParent::TerminateChildProcessOnDumpComplete(MessageLoop* aMsgLoop,
                                                               const nsCString& aMonitorDescription)
 {
-#ifdef MOZ_CRASHREPORTER
     mCrashReporterMutex.AssertCurrentThreadOwns();
 
     if (!mCrashReporter) {
@@ -1310,7 +1284,6 @@ PluginModuleChromeParent::TerminateChildProcessOnDumpComplete(MessageLoop* aMsgL
         }
     }
 #endif // XP_WIN
-#endif // MOZ_CRASHREPORTER
 
     mozilla::ipc::ScopedProcessHandle geckoChildProcess;
     bool childOpened = base::OpenProcessHandle(OtherPid(),
@@ -1341,7 +1314,7 @@ PluginModuleChromeParent::TerminateChildProcessOnDumpComplete(MessageLoop* aMsgL
     if (!GetProcessCpuUsage(processHandles, mPluginCpuUsageOnHang)) {
       mPluginCpuUsageOnHang.Clear();
     }
-#endif // MOZ_CRASHREPORTER
+#endif
 
     // this must run before the error notification from the channel,
     // or not at all
@@ -1486,7 +1459,6 @@ PluginModuleChromeParent::OnHangUIContinue()
 }
 #endif // XP_WIN
 
-#ifdef MOZ_CRASHREPORTER
 #ifdef MOZ_CRASHREPORTER_INJECTOR
 static void
 RemoveMinidump(nsIFile* minidump)
@@ -1578,7 +1550,6 @@ PluginModuleChromeParent::ProcessFirstMinidump()
     }
     mCrashReporter->FinalizeCrashReport();
 }
-#endif
 
 void
 PluginModuleParent::ActorDestroy(ActorDestroyReason why)
@@ -1617,9 +1588,7 @@ void
 PluginModuleChromeParent::ActorDestroy(ActorDestroyReason why)
 {
     if (why == AbnormalShutdown) {
-#ifdef MOZ_CRASHREPORTER
         ProcessFirstMinidump();
-#endif
         Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
                               NS_LITERAL_CSTRING("plugin"), 1);
     }
@@ -1656,11 +1625,11 @@ PluginModuleParent::NotifyPluginCrashed()
 
     nsString dumpID;
     nsString browserDumpID;
-#ifdef MOZ_CRASHREPORTER
+
     if (mCrashReporter && mCrashReporter->HasMinidump()) {
         dumpID = mCrashReporter->MinidumpID();
     }
-#endif
+
     mPlugin->PluginCrashed(dumpID, browserDumpID);
 }
 

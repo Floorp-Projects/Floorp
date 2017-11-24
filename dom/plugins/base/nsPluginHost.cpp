@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <stdio.h>
 #include "prio.h"
+#include "nsExceptionHandler.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsNPAPIPluginInstance.h"
@@ -101,10 +102,6 @@
 #include "nsIBaseWindow.h"
 #include "windows.h"
 #include "winbase.h"
-#endif
-
-#if MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
 #endif
 
 #include "npapi.h"

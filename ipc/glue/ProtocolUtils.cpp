@@ -28,7 +28,7 @@
 #include "mozilla/sandboxTarget.h"
 #endif
 
-#if defined(MOZ_CRASHREPORTER) && defined(XP_WIN)
+#if defined(XP_WIN)
 #include "aclapi.h"
 #include "sddl.h"
 
@@ -45,7 +45,7 @@ using base::ProcessId;
 
 namespace mozilla {
 
-#if defined(MOZ_CRASHREPORTER) && defined(XP_WIN)
+#if defined(XP_WIN)
 // Generate RAII classes for LPTSTR and PSECURITY_DESCRIPTOR.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedLPTStr, \
                                           RemovePointer<LPTSTR>::Type, \
@@ -209,11 +209,9 @@ bool DuplicateHandle(HANDLE aSourceHandle,
                                                 FALSE,
                                                 aTargetProcessId));
   if (!targetProcess) {
-#ifdef MOZ_CRASHREPORTER
     CrashReporter::AnnotateCrashReport(
       NS_LITERAL_CSTRING("IPCTransportFailureReason"),
       NS_LITERAL_CSTRING("Failed to open target process."));
-#endif
     return false;
   }
 
@@ -223,7 +221,6 @@ bool DuplicateHandle(HANDLE aSourceHandle,
 }
 #endif
 
-#ifdef MOZ_CRASHREPORTER
 void
 AnnotateSystemError()
 {
@@ -239,9 +236,8 @@ AnnotateSystemError()
       nsPrintfCString("%" PRId64, error));
   }
 }
-#endif
 
-#if defined(MOZ_CRASHREPORTER) && defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 void
 AnnotateCrashReportWithErrno(const char* tag, int error)
 {
@@ -288,7 +284,6 @@ FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent)
   formattedMessage.AppendLiteral("]: \"");
   formattedMessage.AppendASCII(aMsg);
   if (aIsParent) {
-#ifdef MOZ_CRASHREPORTER
     // We're going to crash the parent process because at this time
     // there's no other really nice way of getting a minidump out of
     // this process if we're off the main thread.
@@ -299,7 +294,6 @@ FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent)
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCFatalErrorMsg"),
                                        nsDependentCString(aMsg));
     AnnotateSystemError();
-#endif
     MOZ_CRASH("IPC FatalError in the parent process!");
   } else {
     formattedMessage.AppendLiteral("\". abort()ing as a result.");
@@ -617,11 +611,7 @@ bool
 IToplevelProtocol::TakeMinidump(nsIFile** aDump, uint32_t* aSequence)
 {
   MOZ_RELEASE_ASSERT(GetSide() == ParentSide);
-#ifdef MOZ_CRASHREPORTER
   return XRE_TakeMinidumpForChild(OtherPid(), aDump, aSequence);
-#else
-  return false;
-#endif
 }
 
 bool
