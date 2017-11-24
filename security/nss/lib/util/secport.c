@@ -789,7 +789,7 @@ unsigned int
 NSS_SecureMemcmpZero(const void *mem, size_t n)
 {
     PRUint8 zero = 0;
-    int i;
+    size_t i;
     for (i = 0; i < n; ++i) {
         zero |= *(PRUint8 *)((uintptr_t)mem + i);
     }

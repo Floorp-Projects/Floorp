@@ -7,9 +7,6 @@
 TESTDIR=${1-.}
 COMMAND=${2-run}
 TESTS="aes aesgcm dsa ecdsa hmac tls rng rsa sha tdea"
-if [ ${NSS_ENABLE_ECC}x = 1x ]; then
-   TESTS=${TESTS} ecdsa
-fi
 for i in $TESTS
 do
     echo "********************Running $i tests"

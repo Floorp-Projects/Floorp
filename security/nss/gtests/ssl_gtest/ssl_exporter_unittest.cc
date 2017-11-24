@@ -118,7 +118,6 @@ int32_t RegularExporterShouldFail(TlsAgent* agent, const SECItem* srvNameArr,
 
 TEST_P(TlsConnectTls13, EarlyExporter) {
   SetupForZeroRtt();
-  ExpectAlert(client_, kTlsAlertEndOfEarlyData);
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);

@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * Various SSL functions.
  *
@@ -200,7 +201,7 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ssl_Release1stHandshakeLock(ss);
 
     ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
-    ssl3_ResetExtensionData(&ss->xtnData);
+    ssl3_ResetExtensionData(&ss->xtnData, ss);
 
     if (!ss->TCPconnected)
         ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));
@@ -342,11 +343,6 @@ SSL_RecommendedCanFalseStart(PRFileDesc *fd, PRBool *canFalseStart)
         return SECFailure;
     }
 
-    if (!ss->ssl3.initialized) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-
     /* Require a forward-secret key exchange. */
     *canFalseStart = ss->ssl3.hs.kea_def->kea == kea_dhe_dss ||
                      ss->ssl3.hs.kea_def->kea == kea_dhe_rsa ||
@@ -433,58 +429,6 @@ SSL_ForceHandshakeWithTimeout(PRFileDesc *fd,
 }
 
 /************************************************************************/
-
-/*
-** Grow a buffer to hold newLen bytes of data.
-** Called for both recv buffers and xmit buffers.
-** Caller must hold xmitBufLock or recvBufLock, as appropriate.
-*/
-SECStatus
-sslBuffer_Grow(sslBuffer *b, unsigned int newLen)
-{
-    newLen = PR_MAX(newLen, MAX_FRAGMENT_LENGTH + 2048);
-    if (newLen > b->space) {
-        unsigned char *newBuf;
-        if (b->buf) {
-            newBuf = (unsigned char *)PORT_Realloc(b->buf, newLen);
-        } else {
-            newBuf = (unsigned char *)PORT_Alloc(newLen);
-        }
-        if (!newBuf) {
-            return SECFailure;
-        }
-        SSL_TRC(10, ("%d: SSL: grow buffer from %d to %d",
-                     SSL_GETPID(), b->space, newLen));
-        b->buf = newBuf;
-        b->space = newLen;
-    }
-    return SECSuccess;
-}
-
-SECStatus
-sslBuffer_Append(sslBuffer *b, const void *data, unsigned int len)
-{
-    unsigned int newLen = b->len + len;
-    SECStatus rv;
-
-    rv = sslBuffer_Grow(b, newLen);
-    if (rv != SECSuccess)
-        return rv;
-    PORT_Memcpy(b->buf + b->len, data, len);
-    b->len += len;
-    return SECSuccess;
-}
-
-void
-sslBuffer_Clear(sslBuffer *b)
-{
-    if (b->buf) {
-        PORT_Free(b->buf);
-        b->buf = NULL;
-        b->len = 0;
-        b->space = 0;
-    }
-}
 
 /*
 ** Save away write data that is trying to be written before the security
@@ -774,8 +718,7 @@ ssl_SecureClose(sslSocket *ss)
 
     if (!(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
         ss->firstHsDone &&
-        !ss->recvdCloseNotify &&
-        ss->ssl3.initialized) {
+        !ss->recvdCloseNotify) {
 
         /* We don't want the final alert to be Nagle delayed. */
         if (!ss->delayDisabled) {
@@ -805,8 +748,7 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
     if ((sslHow & ssl_SHUTDOWN_SEND) != 0 &&
         !(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
         ss->firstHsDone &&
-        !ss->recvdCloseNotify &&
-        ss->ssl3.initialized) {
+        !ss->recvdCloseNotify) {
 
         (void)SSL3_SendAlert(ss, alert_warning, close_notify);
     }
@@ -1241,14 +1183,7 @@ SSL_AuthCertificateComplete(PRFileDesc *fd, PRErrorCode error)
     }
 
     ssl_Get1stHandshakeLock(ss);
-
-    if (!ss->ssl3.initialized) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        rv = SECFailure;
-    } else {
-        rv = ssl3_AuthCertificateComplete(ss, error);
-    }
-
+    rv = ssl3_AuthCertificateComplete(ss, error);
     ssl_Release1stHandshakeLock(ss);
 
     return rv;
