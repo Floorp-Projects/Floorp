@@ -28,8 +28,10 @@ function Number_toLocaleString() {
     if (locales === undefined && options === undefined) {
         // This cache only optimizes for the old ES5 toLocaleString without
         // locales and options.
-        if (numberFormatCache.numberFormat === undefined)
+        if (!IsRuntimeDefaultLocale(numberFormatCache.runtimeDefaultLocale)) {
             numberFormatCache.numberFormat = intl_NumberFormat(locales, options);
+            numberFormatCache.runtimeDefaultLocale = RuntimeDefaultLocale();
+        }
         numberFormat = numberFormatCache.numberFormat;
     } else {
         numberFormat = intl_NumberFormat(locales, options);
