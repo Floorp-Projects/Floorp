@@ -1,4 +1,4 @@
-Usage: build.sh [-hcv] [-j <n>] [--nspr] [--gyp|-g] [--opt|-o] [-m32]
+Usage: build.sh [-hcv] [-cc] [-j <n>] [--nspr] [--gyp|-g] [--opt|-o] [-m32]
                 [--test] [--pprof] [--scan-build[=output]] [--ct-verif]
                 [--asan] [--ubsan] [--msan] [--sancov[=edge|bb|func|...]]
                 [--disable-tests] [--fuzz[=tls|oss]] [--system-sqlite]
@@ -14,6 +14,7 @@ NSS build tool options:
 
     -h               display this help and exit
     -c               clean before build
+    -cc              clean without building
     -v               verbose build
     -j <n>           run at most <n> concurrent jobs
     --nspr           force a rebuild of NSPR

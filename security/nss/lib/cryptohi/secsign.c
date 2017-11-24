@@ -610,6 +610,7 @@ sec_CreateRSAPSSParameters(PLArenaPool *arena,
     SECKEYRSAPSSParams pssParams;
     int modBytes, hashLength;
     unsigned long saltLength;
+    PRBool defaultSHA1 = PR_FALSE;
     SECStatus rv;
 
     if (key->keyType != rsaKey && key->keyType != rsaPssKey) {
@@ -631,6 +632,7 @@ sec_CreateRSAPSSParameters(PLArenaPool *arena,
         if (rv != SECSuccess) {
             return NULL;
         }
+        defaultSHA1 = PR_TRUE;
     }
 
     if (pssParams.trailerField.data) {
@@ -652,15 +654,23 @@ sec_CreateRSAPSSParameters(PLArenaPool *arena,
     /* Determine the hash algorithm to use, based on hashAlgTag and
      * pssParams.hashAlg; there are four cases */
     if (hashAlgTag != SEC_OID_UNKNOWN) {
+        SECOidTag tag = SEC_OID_UNKNOWN;
+
         if (pssParams.hashAlg) {
-            if (SECOID_GetAlgorithmTag(pssParams.hashAlg) != hashAlgTag) {
-                PORT_SetError(SEC_ERROR_INVALID_ARGS);
-                return NULL;
-            }
+            tag = SECOID_GetAlgorithmTag(pssParams.hashAlg);
+        } else if (defaultSHA1) {
+            tag = SEC_OID_SHA1;
+        }
+
+        if (tag != SEC_OID_UNKNOWN && tag != hashAlgTag) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return NULL;
         }
     } else if (hashAlgTag == SEC_OID_UNKNOWN) {
         if (pssParams.hashAlg) {
             hashAlgTag = SECOID_GetAlgorithmTag(pssParams.hashAlg);
+        } else if (defaultSHA1) {
+            hashAlgTag = SEC_OID_SHA1;
         } else {
             /* Find a suitable hash algorithm based on the NIST recommendation */
             if (modBytes <= 384) { /* 128, in NIST 800-57, Part 1 */
@@ -709,6 +719,11 @@ sec_CreateRSAPSSParameters(PLArenaPool *arena,
             PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
             return NULL;
         }
+    } else if (defaultSHA1) {
+        if (hashAlgTag != SEC_OID_SHA1) {
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return NULL;
+        }
     }
 
     hashLength = HASH_ResultLenByOidTag(hashAlgTag);
@@ -725,6 +740,8 @@ sec_CreateRSAPSSParameters(PLArenaPool *arena,
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             return NULL;
         }
+    } else if (defaultSHA1) {
+        saltLength = 20;
     }
 
     /* Fill in the parameters */

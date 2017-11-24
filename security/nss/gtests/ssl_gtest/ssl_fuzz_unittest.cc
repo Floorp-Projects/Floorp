@@ -47,9 +47,9 @@ class TlsApplicationDataRecorder : public TlsRecordFilter {
 
 // Ensure that ssl_Time() returns a constant value.
 FUZZ_F(TlsFuzzTest, SSL_Time_Constant) {
-  PRUint32 now = ssl_Time();
+  PRUint32 now = ssl_TimeSec();
   PR_Sleep(PR_SecondsToInterval(2));
-  EXPECT_EQ(ssl_Time(), now);
+  EXPECT_EQ(ssl_TimeSec(), now);
 }
 
 // Check that due to the deterministic PRNG we derive
@@ -215,58 +215,6 @@ FUZZ_P(TlsConnectGeneric, SessionTicketResumption) {
   SendReceive();
 }
 
-class TlsSessionTicketMacDamager : public TlsExtensionFilter {
- public:
-  TlsSessionTicketMacDamager() {}
-  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
-                                               const DataBuffer& input,
-                                               DataBuffer* output) {
-    if (extension_type != ssl_session_ticket_xtn &&
-        extension_type != ssl_tls13_pre_shared_key_xtn) {
-      return KEEP;
-    }
-
-    *output = input;
-
-    // Handle everything before TLS 1.3.
-    if (extension_type == ssl_session_ticket_xtn) {
-      // Modify the last byte of the MAC.
-      output->data()[output->len() - 1] ^= 0xff;
-    }
-
-    // Handle TLS 1.3.
-    if (extension_type == ssl_tls13_pre_shared_key_xtn) {
-      TlsParser parser(input);
-
-      uint32_t ids_len;
-      EXPECT_TRUE(parser.Read(&ids_len, 2) && ids_len > 0);
-
-      uint32_t ticket_len;
-      EXPECT_TRUE(parser.Read(&ticket_len, 2) && ticket_len > 0);
-
-      // Modify the last byte of the MAC.
-      output->data()[2 + 2 + ticket_len - 1] ^= 0xff;
-    }
-
-    return CHANGE;
-  }
-};
-
-// Check that session ticket resumption works with a bad MAC.
-FUZZ_P(TlsConnectGeneric, SessionTicketResumptionBadMac) {
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  Connect();
-  SendReceive();
-
-  Reset();
-  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  ExpectResumption(RESUME_TICKET);
-
-  client_->SetPacketFilter(std::make_shared<TlsSessionTicketMacDamager>());
-  Connect();
-  SendReceive();
-}
-
 // Check that session tickets are not encrypted.
 FUZZ_P(TlsConnectGeneric, UnencryptedSessionTickets) {
   ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
@@ -276,10 +224,13 @@ FUZZ_P(TlsConnectGeneric, UnencryptedSessionTickets) {
   server_->SetPacketFilter(i1);
   Connect();
 
+  std::cerr << "ticket" << i1->buffer() << std::endl;
   size_t offset = 4; /* lifetime */
   if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
-    offset += 1 + 1 + /* ke_modes */
-              1 + 1;  /* auth_modes */
+    offset += 4; /* ticket_age_add */
+    uint32_t nonce_len = 0;
+    EXPECT_TRUE(i1->buffer().Read(offset, 1, &nonce_len));
+    offset += 1 + nonce_len;
   }
   offset += 2 + /* ticket length */
             2;  /* TLS_EX_SESS_TICKET_VERSION */

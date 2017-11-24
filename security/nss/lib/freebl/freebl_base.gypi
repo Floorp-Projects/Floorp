@@ -130,15 +130,16 @@
         }],
       ],
     }],
-    ['target_arch=="ia32" or target_arch=="x64"', {
+    ['target_arch=="ia32" or target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64"', {
       'sources': [
-        # All intel architectures get the 64 bit version
+        # All intel and 64-bit ARM architectures get the 64 bit version.
         'ecl/curve25519_64.c',
-        'verified/hacl_curve25519_64.c',
+        'verified/Hacl_Curve25519.c',
+        'verified/FStar.c',
       ],
     }, {
       'sources': [
-        # All non intel architectures get the generic 32 bit implementation (slow!)
+        # All other architectures get the generic 32 bit implementation (slow!)
         'ecl/curve25519_32.c',
       ],
     }],
@@ -153,6 +154,7 @@
           # not x64
           'sources': [
             'chacha20.c',
+            'verified/Hacl_Chacha20.c',
             'poly1305.c',
           ],
         }],

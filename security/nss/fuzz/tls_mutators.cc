@@ -7,7 +7,9 @@
 #include "tls_parser.h"
 
 #include "ssl.h"
+extern "C" {
 #include "sslimpl.h"
+}
 
 using namespace nss_test;
 
@@ -40,7 +42,9 @@ class Record {
   void truncate(size_t length) {
     assert(length >= 5 + gExtraHeaderBytes);
     uint8_t *dest = const_cast<uint8_t *>(data_);
-    (void)ssl_EncodeUintX(length - 5 - gExtraHeaderBytes, 2, &dest[3]);
+    size_t l = length - (5 + gExtraHeaderBytes);
+    dest[3] = (l >> 8) & 0xff;
+    dest[4] = l & 0xff;
     memmove(dest + length, data_ + size_, remaining_);
   }
 
@@ -223,8 +227,8 @@ size_t FragmentRecord(uint8_t *data, size_t size, size_t max_size,
   }
 
   // Pick a record to fragment at random.
-  std::uniform_int_distribution<size_t> dist(0, records.size() - 1);
-  auto &rec = records.at(dist(rng));
+  std::uniform_int_distribution<size_t> rand_record(0, records.size() - 1);
+  auto &rec = records.at(rand_record(rng));
   uint8_t *rdata = const_cast<uint8_t *>(rec->data());
   size_t length = rec->size();
   size_t content_length = length - 5;
@@ -234,17 +238,21 @@ size_t FragmentRecord(uint8_t *data, size_t size, size_t max_size,
   }
 
   // Assign a new length to the first fragment.
-  size_t new_length = content_length / 2;
-  uint8_t *content = ssl_EncodeUintX(new_length, 2, &rdata[3]);
+  std::uniform_int_distribution<size_t> rand_size(1, content_length - 1);
+  size_t first_length = rand_size(rng);
+  size_t second_length = content_length - first_length;
+  rdata[3] = (first_length >> 8) & 0xff;
+  rdata[4] = first_length & 0xff;
+  uint8_t *second_record = rdata + 5 + first_length;
 
-  // Make room for one more header.
-  memmove(content + new_length + 5, content + new_length,
-          rec->remaining() + content_length - new_length);
+  // Make room for the header of the second record.
+  memmove(second_record + 5, second_record,
+          rec->remaining() + content_length - first_length);
 
   // Write second header.
-  memcpy(content + new_length, rdata, 3);
-  (void)ssl_EncodeUintX(content_length - new_length, 2,
-                        &content[new_length + 3]);
+  memcpy(second_record, rdata, 3);
+  second_record[3] = (second_length >> 8) & 0xff;
+  second_record[4] = second_length & 0xff;
 
   return size + 5;
 }
