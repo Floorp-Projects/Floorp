@@ -86,6 +86,8 @@ public:
 
   void SetSeamlessLoopingEnabled(bool aEnabled);
 
+  void AdjustByLooping(media::TimeUnit& aTime);
+
 private:
   ~ReaderProxy();
   RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder&& aMetadata);
@@ -114,6 +116,8 @@ private:
   media::TimeUnit mLoopingOffset = media::TimeUnit::Zero();
   // To keep tracking the latest time of decoded audio data.
   media::TimeUnit mLastAudioEndTime = media::TimeUnit::Zero();
+  // The duration of the audio track.
+  media::TimeUnit mAudioDuration = media::TimeUnit::Invalid();
 
   // To prevent seamless looping while seeking.
   bool mSeamlessLoopingBlocked;
