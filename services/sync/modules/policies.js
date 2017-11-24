@@ -392,8 +392,10 @@ SyncScheduler.prototype = {
           this.scheduleNextSync(3000);
         });
       case "sleep_notification":
-        this._log.debug("Going to sleep, doing a quick sync.");
-        this.scheduleNextSync(0, ["tabs"], "sleep");
+        if (this.service.engineManager.get("tabs")._tracker.modified) {
+          this._log.debug("Going to sleep, doing a quick sync.");
+          this.scheduleNextSync(0, ["tabs"], "sleep");
+        }
         break;
     }
   },
@@ -1012,6 +1014,7 @@ ErrorHandler.prototype = {
    * This method also looks for "side-channel" warnings.
    */
   checkServerError(resp) {
+    // In this case we were passed a resolved value of Resource#_doRequest.
     switch (resp.status) {
       case 200:
       case 404:
@@ -1081,6 +1084,7 @@ ErrorHandler.prototype = {
         break;
     }
 
+    // In this other case we were passed a rejection value.
     switch (resp.result) {
       case Cr.NS_ERROR_UNKNOWN_HOST:
       case Cr.NS_ERROR_CONNECTION_REFUSED:

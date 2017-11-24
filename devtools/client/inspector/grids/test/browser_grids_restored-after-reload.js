@@ -62,7 +62,7 @@ add_task(function* () {
   let onGridListRestored = waitUntilState(store, state =>
     state.grids.length == 1 &&
     state.grids[0].highlighted);
-  yield refreshTab(gBrowser.selectedTab);
+  yield refreshTab();
   let { restored } = yield onStateRestored;
   yield onGridListRestored;
 

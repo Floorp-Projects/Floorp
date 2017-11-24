@@ -8,26 +8,26 @@
  */
 
 /*
- *	
- * Copyright (c) 2001-2006, Cisco Systems, Inc.
+ *
+ * Copyright (c) 2001-2017, Cisco Systems, Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  *   Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * 
+ *
  *   Redistributions in binary form must reproduce the above
  *   copyright notice, this list of conditions and the following
  *   disclaimer in the documentation and/or other materials provided
  *   with the distribution.
- * 
+ *
  *   Neither the name of the Cisco Systems, Inc. nor the names of its
  *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -43,8 +43,11 @@
  *
  */
 
-#include "rdbx.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
+#include "rdbx.h"
 
 /*
  * from RFC 3711:
@@ -60,110 +63,104 @@
  * incremented by one (if the packet containing s is authentic).
  */
 
-
-
 /*
  * rdbx implementation notes
  *
- * A xtd_seq_num_t is essentially a sequence number for which some of
+ * A srtp_xtd_seq_num_t is essentially a sequence number for which some of
  * the data on the wire are implicit.  It logically consists of a
  * rollover counter and a sequence number; the sequence number is the
  * explicit part, and the rollover counter is the implicit part.
  *
  * Upon receiving a sequence_number (e.g. in a newly received SRTP
- * packet), the complete xtd_seq_num_t can be estimated by using a
- * local xtd_seq_num_t as a basis.  This is done using the function
- * index_guess(&local, &guess, seq_from_packet).  This function
+ * packet), the complete srtp_xtd_seq_num_t can be estimated by using a
+ * local srtp_xtd_seq_num_t as a basis.  This is done using the function
+ * srtp_index_guess(&local, &guess, seq_from_packet).  This function
  * returns the difference of the guess and the local value.  The local
- * xtd_seq_num_t can be moved forward to the guess using the function
- * index_advance(&guess, delta), where delta is the difference.
- * 
+ * srtp_xtd_seq_num_t can be moved forward to the guess using the function
+ * srtp_index_advance(&guess, delta), where delta is the difference.
  *
- * A rdbx_t consists of a xtd_seq_num_t and a bitmask.  The index is highest
- * sequence number that has been received, and the bitmask indicates
+ *
+ * A srtp_rdbx_t consists of a srtp_xtd_seq_num_t and a bitmask.  The index is
+ * highest sequence number that has been received, and the bitmask indicates
  * which of the recent indicies have been received as well.  The
  * highest bit in the bitmask corresponds to the index in the bitmask.
  */
 
-
-void
-index_init(xtd_seq_num_t *pi) {
+void srtp_index_init(srtp_xtd_seq_num_t *pi)
+{
 #ifdef NO_64BIT_MATH
-  *pi = make64(0,0);
+    *pi = make64(0, 0);
 #else
-  *pi = 0;
+    *pi = 0;
 #endif
 }
 
-void
-index_advance(xtd_seq_num_t *pi, sequence_number_t s) {
+void srtp_index_advance(srtp_xtd_seq_num_t *pi, srtp_sequence_number_t s)
+{
 #ifdef NO_64BIT_MATH
-  /* a > ~b means a+b will generate a carry */
-  /* s is uint16 here */
-  *pi = make64(high32(*pi) + (s > ~low32(*pi) ? 1 : 0),low32(*pi) + s);
+    /* a > ~b means a+b will generate a carry */
+    /* s is uint16 here */
+    *pi = make64(high32(*pi) + (s > ~low32(*pi) ? 1 : 0), low32(*pi) + s);
 #else
-  *pi += s;
+    *pi += s;
 #endif
 }
-
 
 /*
- * index_guess(local, guess, s)
- * 
- * given a xtd_seq_num_t local (which represents the last
- * known-to-be-good received xtd_seq_num_t) and a sequence number s
+ * srtp_index_guess(local, guess, s)
+ *
+ * given a srtp_xtd_seq_num_t local (which represents the last
+ * known-to-be-good received srtp_xtd_seq_num_t) and a sequence number s
  * (from a newly arrived packet), sets the contents of *guess to
  * contain the best guess of the packet index to which s corresponds,
  * and returns the difference between *guess and *local
  *
  * nota bene - the output is a signed integer, DON'T cast it to a
- * unsigned integer!  
+ * unsigned integer!
  */
 
-int
-index_guess(const xtd_seq_num_t *local,
-		   xtd_seq_num_t *guess,
-		   sequence_number_t s) {
+int32_t srtp_index_guess(const srtp_xtd_seq_num_t *local,
+                         srtp_xtd_seq_num_t *guess,
+                         srtp_sequence_number_t s)
+{
 #ifdef NO_64BIT_MATH
-  uint32_t local_roc = ((high32(*local) << 16) |
-						(low32(*local) >> 16));
-  uint16_t local_seq = (uint16_t) (low32(*local));
+    uint32_t local_roc = ((high32(*local) << 16) | (low32(*local) >> 16));
+    uint16_t local_seq = (uint16_t)(low32(*local));
 #else
-  uint32_t local_roc = (uint32_t)(*local >> 16);
-  uint16_t local_seq = (uint16_t) *local;
+    uint32_t local_roc = (uint32_t)(*local >> 16);
+    uint16_t local_seq = (uint16_t)*local;
 #endif
-  uint32_t guess_roc;
-  uint16_t guess_seq;
-  int difference;
+    uint32_t guess_roc;
+    uint16_t guess_seq;
+    int32_t difference;
 
-  if (local_seq < seq_num_median) {
-    if (s - local_seq > seq_num_median) {
-      guess_roc = local_roc - 1;
-      difference = seq_num_max - s + local_seq;
+    if (local_seq < seq_num_median) {
+        if (s - local_seq > seq_num_median) {
+            guess_roc = local_roc - 1;
+            difference = s - local_seq - seq_num_max;
+        } else {
+            guess_roc = local_roc;
+            difference = s - local_seq;
+        }
     } else {
-      guess_roc = local_roc;
-      difference = s - local_seq;
+        if (local_seq - seq_num_median > s) {
+            guess_roc = local_roc + 1;
+            difference = s - local_seq + seq_num_max;
+        } else {
+            guess_roc = local_roc;
+            difference = s - local_seq;
+        }
     }
-  } else {
-    if (local_seq - seq_num_median > s) {
-      guess_roc = local_roc+1;
-      difference = seq_num_max - local_seq + s;
-    } else {
-      difference = s - local_seq;
-      guess_roc = local_roc;
-    }
-  }
-  guess_seq = s;
+    guess_seq = s;
 
-  /* Note: guess_roc is 32 bits, so this generates a 48-bit result! */
+/* Note: guess_roc is 32 bits, so this generates a 48-bit result! */
 #ifdef NO_64BIT_MATH
-  *guess = make64(guess_roc >> 16,
-				  (guess_roc << 16) | guess_seq);
+    *guess = make64(guess_roc >> 16, (guess_roc << 16) | guess_seq);
 #else
-  *guess = (((uint64_t) guess_roc) << 16) | guess_seq;
+    *guess = (((uint64_t)guess_roc) << 16) | guess_seq;
 #endif
 
-  return difference;
+    return difference;
 }
 
 /*
@@ -171,176 +168,219 @@ index_guess(const xtd_seq_num_t *local,
  *
  */
 
-
 /*
- *  rdbx_init(&r, ws) initializes the rdbx_t pointed to by r with window size ws
+ *  srtp_rdbx_init(&r, ws) initializes the srtp_rdbx_t pointed to by r with
+ * window size ws
  */
+srtp_err_status_t srtp_rdbx_init(srtp_rdbx_t *rdbx, unsigned long ws)
+{
+    if (ws == 0) {
+        return srtp_err_status_bad_param;
+    }
 
-err_status_t
-rdbx_init(rdbx_t *rdbx, unsigned long ws) {
-  if (ws == 0)
-    return err_status_bad_param;
+    if (bitvector_alloc(&rdbx->bitmask, ws) != 0) {
+        return srtp_err_status_alloc_fail;
+    }
 
-  if (bitvector_alloc(&rdbx->bitmask, ws) != 0)
-    return err_status_alloc_fail;
+    srtp_index_init(&rdbx->index);
 
-  index_init(&rdbx->index);
-
-  return err_status_ok;
+    return srtp_err_status_ok;
 }
 
 /*
- *  rdbx_dealloc(&r) frees memory for the rdbx_t pointed to by r
+ *  srtp_rdbx_dealloc(&r) frees memory for the srtp_rdbx_t pointed to by r
  */
+srtp_err_status_t srtp_rdbx_dealloc(srtp_rdbx_t *rdbx)
+{
+    bitvector_dealloc(&rdbx->bitmask);
 
-err_status_t
-rdbx_dealloc(rdbx_t *rdbx) {
-  bitvector_dealloc(&rdbx->bitmask);
-
-  return err_status_ok;
+    return srtp_err_status_ok;
 }
 
 /*
- * rdbx_set_roc(rdbx, roc) initalizes the rdbx_t at the location rdbx
+ * srtp_rdbx_set_roc(rdbx, roc) initalizes the srtp_rdbx_t at the location rdbx
  * to have the rollover counter value roc.  If that value is less than
  * the current rollover counter value, then the function returns
- * err_status_replay_old; otherwise, err_status_ok is returned.
- * 
+ * srtp_err_status_replay_old; otherwise, srtp_err_status_ok is returned.
+ *
  */
-
-err_status_t
-rdbx_set_roc(rdbx_t *rdbx, uint32_t roc) {
-  bitvector_set_to_zero(&rdbx->bitmask);
+srtp_err_status_t srtp_rdbx_set_roc(srtp_rdbx_t *rdbx, uint32_t roc)
+{
+    bitvector_set_to_zero(&rdbx->bitmask);
 
 #ifdef NO_64BIT_MATH
-  #error not yet implemented
+#error not yet implemented
 #else
 
-  /* make sure that we're not moving backwards */
-  if (roc < (rdbx->index >> 16))
-    return err_status_replay_old;
+    /* make sure that we're not moving backwards */
+    if (roc < (rdbx->index >> 16)) {
+        return srtp_err_status_replay_old;
+    }
 
-  rdbx->index &= 0xffff;   /* retain lowest 16 bits */
-  rdbx->index |= ((uint64_t)roc) << 16;  /* set ROC */
+    rdbx->index &= 0xffff;                /* retain lowest 16 bits */
+    rdbx->index |= ((uint64_t)roc) << 16; /* set ROC */
 #endif
 
-  return err_status_ok;
+    return srtp_err_status_ok;
 }
 
 /*
- * rdbx_get_packet_index(rdbx) returns the value of the packet index
- * for the rdbx_t pointed to by rdbx
- * 
+ * srtp_rdbx_get_packet_index(rdbx) returns the value of the packet index
+ * for the srtp_rdbx_t pointed to by rdbx
+ *
  */
-
-xtd_seq_num_t
-rdbx_get_packet_index(const rdbx_t *rdbx) {
-  return rdbx->index;   
+srtp_xtd_seq_num_t srtp_rdbx_get_packet_index(const srtp_rdbx_t *rdbx)
+{
+    return rdbx->index;
 }
 
 /*
- * rdbx_get_window_size(rdbx) returns the value of the window size
- * for the rdbx_t pointed to by rdbx
- * 
+ * srtp_rdbx_get_window_size(rdbx) returns the value of the window size
+ * for the srtp_rdbx_t pointed to by rdbx
+ *
  */
-
-unsigned long
-rdbx_get_window_size(const rdbx_t *rdbx) {
-  return bitvector_get_length(&rdbx->bitmask);
+unsigned long srtp_rdbx_get_window_size(const srtp_rdbx_t *rdbx)
+{
+    return bitvector_get_length(&rdbx->bitmask);
 }
 
 /*
- * rdbx_check(&r, delta) checks to see if the xtd_seq_num_t
+ * srtp_rdbx_check(&r, delta) checks to see if the srtp_xtd_seq_num_t
  * which is at rdbx->index + delta is in the rdb
  */
+srtp_err_status_t srtp_rdbx_check(const srtp_rdbx_t *rdbx, int delta)
+{
+    if (delta > 0) { /* if delta is positive, it's good */
+        return srtp_err_status_ok;
+    } else if ((int)(bitvector_get_length(&rdbx->bitmask) - 1) + delta < 0) {
+        /* if delta is lower than the bitmask, it's bad */
+        return srtp_err_status_replay_old;
+    } else if (bitvector_get_bit(
+                   &rdbx->bitmask,
+                   (int)(bitvector_get_length(&rdbx->bitmask) - 1) + delta) ==
+               1) {
+        /* delta is within the window, so check the bitmask */
+        return srtp_err_status_replay_fail;
+    }
+    /* otherwise, the index is okay */
 
-err_status_t
-rdbx_check(const rdbx_t *rdbx, int delta) {
-  
-  if (delta > 0) {       /* if delta is positive, it's good */
-    return err_status_ok;
-  } else if ((int)(bitvector_get_length(&rdbx->bitmask) - 1) + delta < 0) {   
-                         /* if delta is lower than the bitmask, it's bad */
-    return err_status_replay_old; 
-  } else if (bitvector_get_bit(&rdbx->bitmask, 
-			       (int)(bitvector_get_length(&rdbx->bitmask) - 1) + delta) == 1) {
-                         /* delta is within the window, so check the bitmask */
-    return err_status_replay_fail;    
-  }
- /* otherwise, the index is okay */
-
-  return err_status_ok; 
+    return srtp_err_status_ok;
 }
 
 /*
- * rdbx_add_index adds the xtd_seq_num_t at rdbx->window_start + d to
- * replay_db (and does *not* check if that xtd_seq_num_t appears in db)
+ * srtp_rdbx_add_index adds the srtp_xtd_seq_num_t at rdbx->window_start + d to
+ * replay_db (and does *not* check if that srtp_xtd_seq_num_t appears in db)
  *
  * this function should be called only after replay_check has
  * indicated that the index does not appear in the rdbx, e.g., a mutex
  * should protect the rdbx between these calls if need be
  */
+srtp_err_status_t srtp_rdbx_add_index(srtp_rdbx_t *rdbx, int delta)
+{
+    if (delta > 0) {
+        /* shift forward by delta */
+        srtp_index_advance(&rdbx->index, delta);
+        bitvector_left_shift(&rdbx->bitmask, delta);
+        bitvector_set_bit(&rdbx->bitmask,
+                          bitvector_get_length(&rdbx->bitmask) - 1);
+    } else {
+        /* delta is in window */
+        bitvector_set_bit(&rdbx->bitmask,
+                          bitvector_get_length(&rdbx->bitmask) - 1 + delta);
+    }
 
-err_status_t
-rdbx_add_index(rdbx_t *rdbx, int delta) {
-  
-  if (delta > 0) {
-    /* shift forward by delta */
-    index_advance(&rdbx->index, delta);
-    bitvector_left_shift(&rdbx->bitmask, delta);
-    bitvector_set_bit(&rdbx->bitmask, bitvector_get_length(&rdbx->bitmask) - 1);
-  } else {
-    /* delta is in window */
-    bitvector_set_bit(&rdbx->bitmask, bitvector_get_length(&rdbx->bitmask) -1 + delta);
-  }
+    /* note that we need not consider the case that delta == 0 */
 
-  /* note that we need not consider the case that delta == 0 */
-  
-  return err_status_ok;
+    return srtp_err_status_ok;
 }
 
-
-
 /*
- * rdbx_estimate_index(rdbx, guess, s)
- * 
+ * srtp_rdbx_estimate_index(rdbx, guess, s)
+ *
  * given an rdbx and a sequence number s (from a newly arrived packet),
  * sets the contents of *guess to contain the best guess of the packet
  * index to which s corresponds, and returns the difference between
  * *guess and the locally stored synch info
  */
-
-int
-rdbx_estimate_index(const rdbx_t *rdbx,
-		    xtd_seq_num_t *guess,
-		    sequence_number_t s) {
-
-  /*
-   * if the sequence number and rollover counter in the rdbx are
-   * non-zero, then use the index_guess(...) function, otherwise, just
-   * set the rollover counter to zero (since the index_guess(...)
-   * function might incorrectly guess that the rollover counter is
-   * 0xffffffff)
-   */
+int32_t srtp_rdbx_estimate_index(const srtp_rdbx_t *rdbx,
+                                 srtp_xtd_seq_num_t *guess,
+                                 srtp_sequence_number_t s)
+{
+/*
+ * if the sequence number and rollover counter in the rdbx are
+ * non-zero, then use the srtp_index_guess(...) function, otherwise, just
+ * set the rollover counter to zero (since the srtp_index_guess(...)
+ * function might incorrectly guess that the rollover counter is
+ * 0xffffffff)
+ */
 
 #ifdef NO_64BIT_MATH
-  /* seq_num_median = 0x8000 */
-  if (high32(rdbx->index) > 0 ||
-	  low32(rdbx->index) > seq_num_median)
+    /* seq_num_median = 0x8000 */
+    if (high32(rdbx->index) > 0 || low32(rdbx->index) > seq_num_median)
 #else
-  if (rdbx->index > seq_num_median)
+    if (rdbx->index > seq_num_median)
 #endif
-    return index_guess(&rdbx->index, guess, s);
-  
+    {
+        return srtp_index_guess(&rdbx->index, guess, s);
+    }
+
 #ifdef NO_64BIT_MATH
-  *guess = make64(0,(uint32_t) s);
-#else  
-  *guess = s;
+    *guess = make64(0, (uint32_t)s);
+#else
+    *guess = s;
 #endif
 
 #ifdef NO_64BIT_MATH
-  return s - (uint16_t) low32(rdbx->index);
+    return s - (uint16_t)low32(rdbx->index);
 #else
-  return s - (uint16_t) rdbx->index;
+    return s - (uint16_t)rdbx->index;
 #endif
+}
+
+/*
+ * srtp_rdbx_get_roc(rdbx)
+ *
+ * Get the current rollover counter
+ *
+ */
+uint32_t srtp_rdbx_get_roc(const srtp_rdbx_t *rdbx)
+{
+    uint32_t roc;
+
+#ifdef NO_64BIT_MATH
+    roc = ((high32(rdbx->index) << 16) | (low32(rdbx->index) >> 16));
+#else
+    roc = (uint32_t)(rdbx->index >> 16);
+#endif
+
+    return roc;
+}
+
+/*
+ * srtp_rdbx_set_roc_seq(rdbx, roc, seq) initalizes the srtp_rdbx_t at the
+ * location rdbx to have the rollover counter value roc and packet sequence
+ * number seq.  If the new rollover counter value is less than the current
+ * rollover counter value, then the function returns
+ * srtp_err_status_replay_old, otherwise, srtp_err_status_ok is returned.
+ */
+srtp_err_status_t srtp_rdbx_set_roc_seq(srtp_rdbx_t *rdbx,
+                                        uint32_t roc,
+                                        uint16_t seq)
+{
+#ifdef NO_64BIT_MATH
+#error not yet implemented
+#else
+
+    /* make sure that we're not moving backwards */
+    if (roc < (rdbx->index >> 16)) {
+        return srtp_err_status_replay_old;
+    }
+
+    rdbx->index = seq;
+    rdbx->index |= ((uint64_t)roc) << 16; /* set ROC */
+#endif
+
+    bitvector_set_to_zero(&rdbx->bitmask);
+
+    return srtp_err_status_ok;
 }

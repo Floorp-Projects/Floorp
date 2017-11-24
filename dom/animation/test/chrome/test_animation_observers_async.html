@@ -782,13 +782,13 @@ function assert_records_any_order(expected, desc) {
     // Finish and pause.
     animations[0].finish();
     animations[0].pause();
-    is(animations[0].playState, "pending",
+    is(animations[0].playState, "paused",
        "playState after finishing and calling pause()");
 
     // Call finish() again to abort the pause
     animations[0].finish();
     is(animations[0].playState, "finished",
-       "playState after finishing and calling pause()");
+       "playState after finishing again");
 
     // Wait for three MutationRecords for the Animation changes to
     // be delivered: one for each finish(), pause(), finish() operation.
@@ -1237,7 +1237,9 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
 SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();
 
-runAllAsyncTests().then(() => {
+SpecialPowers.pushPrefEnv(
+  { set: [["dom.animations-api.pending-member.enabled", true]] }
+).then(runAllAsyncTests).then(() => {
   SimpleTest.finish();
 }, aError => {
   ok(false, "Something failed: " + aError);

@@ -731,9 +731,8 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
     // Currently this only happens when the timeline is driven by a refresh
     // driver under test control. In this case, the next time the refresh
     // driver is advanced it will trigger any pending animations.
-    if (anim->PlayState() == AnimationPlayState::Pending &&
-        (anim->GetTimeline() &&
-         !anim->GetTimeline()->TracksWallclockTime())) {
+    if (anim->Pending() &&
+        (anim->GetTimeline() && !anim->GetTimeline()->TracksWallclockTime())) {
       continue;
     }
 
@@ -4905,7 +4904,7 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
   // this display item).
   FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
   if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
-    scrollId = nsLayoutUtils::ViewIDForASR(asr);
+    scrollId = asr->GetViewId();
   }
 
   // Insert a transparent rectangle with the hit-test info

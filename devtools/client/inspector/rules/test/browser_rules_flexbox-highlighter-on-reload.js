@@ -25,7 +25,7 @@ add_task(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 
-  yield refreshTab(gBrowser.selectedTab);
+  yield refreshTab();
 
   info("Check that the flexbox highlighter can be displayed after reloading the page.");
   yield checkFlexboxHighlighter();

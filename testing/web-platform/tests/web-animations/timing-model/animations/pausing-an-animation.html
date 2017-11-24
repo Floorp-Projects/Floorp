@@ -18,7 +18,7 @@ promise_test(t => {
   return promise.then(p => {
     assert_equals(p, animation);
     assert_equals(animation.ready, promise);
-    assert_equals(animation.playState, 'paused');
+    assert_false(animation.pending, 'No longer pause-pending');
   });
 }, 'A pending ready promise should be resolved and not replaced when the'
    + ' animation is paused');
