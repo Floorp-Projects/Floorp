@@ -9,9 +9,9 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.coroutines.experimental.android.UI
@@ -20,10 +20,16 @@ import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
 
-class AutocompleteCustomDomainsFragment : Fragment() {
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater!!.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
+open class AutocompleteCustomDomainsFragment : Fragment() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
     }
+
+    open fun isRemoveMode() = false
+
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View =
+            inflater!!.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         domainList.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
@@ -40,8 +46,25 @@ class AutocompleteCustomDomainsFragment : Fragment() {
         (domainList.adapter as DomainListAdapter).refresh(activity)
     }
 
-    private inner class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        inflater?.inflate(R.menu.menu_autocomplete_list, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean = when (item?.itemId) {
+        R.id.remove -> {
+            fragmentManager
+                    .beginTransaction()
+                    .replace(R.id.container, AutocompleteCustomDomainsRemoveFragment())
+                    .addToBackStack(null)
+                    .commit()
+            true
+        }
+        else -> super.onOptionsItemSelected(item)
+    }
+
+    inner class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val domains: MutableList<String> = mutableListOf()
+        private val selectedDomains: MutableSet<String> = mutableSetOf()
 
         fun refresh(context: Context) {
             launch(UI) {
@@ -72,22 +95,42 @@ class AutocompleteCustomDomainsFragment : Fragment() {
                     else -> throw IllegalArgumentException("Unknown view type: $viewType")
                 }
 
-        override fun getItemCount(): Int = domains.size + 1
+        override fun getItemCount(): Int = domains.size + if (isRemoveMode()) 0 else 1
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
             if (holder is DomainViewHolder) {
-                holder.bind(domains[position])
+                holder.bind(domains[position], isRemoveMode(), selectedDomains)
             }
         }
+
+        override fun onViewRecycled(holder: RecyclerView.ViewHolder?) {
+            if (holder is DomainViewHolder) {
+                holder.checkBoxView.setOnCheckedChangeListener(null)
+            }
+        }
+
+        fun selection() : Set<String> = selectedDomains
     }
 
     private class DomainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val domainView: TextView = itemView.findViewById(R.id.domainView)
+        val checkBoxView : CheckBox = itemView.findViewById(R.id.checkbox)
+
         companion object {
             val LAYOUT_ID = R.layout.item_custom_domain
         }
 
-        fun bind(domain: String) {
-            (itemView as TextView).text  = domain
+        fun bind(domain: String, isRemoveMode: Boolean, selectedDomains: MutableSet<String>) {
+            domainView.text  = domain
+            checkBoxView.visibility = if (isRemoveMode) View.VISIBLE else View.GONE
+            checkBoxView.isChecked = selectedDomains.contains(domain)
+            checkBoxView.setOnCheckedChangeListener({ _: CompoundButton, isChecked: Boolean ->
+                if (isChecked) {
+                    selectedDomains.add(domain)
+                } else {
+                    selectedDomains.remove(domain)
+                }
+            })
         }
     }
 

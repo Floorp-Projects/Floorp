@@ -31,6 +31,10 @@ object CustomAutocomplete {
         saveDomains(context, domains)
     }
 
+    suspend fun removeDomains(context: Context, domains: Set<String>) {
+        saveDomains(context, loadCustomAutoCompleteDomains(context) - domains)
+    }
+
     fun subscribe(context: Context, listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         preferences(context).registerOnSharedPreferenceChangeListener(listener)
     }

@@ -135,6 +135,8 @@
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Add custom URL</string>
 
+    <string name="preference_autocomplete_title_remove">Remove custom URLs</string>
+
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">Learn more</string>
 
