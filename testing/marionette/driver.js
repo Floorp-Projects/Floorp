@@ -2171,12 +2171,12 @@ GeckoDriver.prototype.findElements = async function(cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.getActiveElement = async function(cmd, resp) {
+GeckoDriver.prototype.getActiveElement = async function() {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
   this._assertAndDismissModal();
 
-  resp.body.value = await this.listener.getActiveElement();
+  return this.listener.getActiveElement();
 };
 
 /**
