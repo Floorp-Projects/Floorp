@@ -31,14 +31,14 @@ add_task(async function testExecuteScript() {
         },
       },
       {
-        background: "rgb(42, 42, 42)",
+        background: "rgb(43, 43, 43)",
         foreground: "rgb(0, 113, 4)",
         promise: () => {
           return browser.tabs.insertCSS({
             code: "* { background: rgb(100, 100, 100) !important }",
             cssOrigin: "author",
           }).then(r => browser.tabs.insertCSS({
-            code: "* { background: rgb(42, 42, 42) !important }",
+            code: "* { background: rgb(43, 43, 43) !important }",
             cssOrigin: "author",
           }));
         },
@@ -52,7 +52,7 @@ add_task(async function testExecuteScript() {
             code: "* { background: rgb(100, 100, 100) !important }",
             cssOrigin: "user",
           }).then(r => browser.tabs.insertCSS({
-            code: "* { background: rgb(42, 42, 42) !important }",
+            code: "* { background: rgb(44, 44, 44) !important }",
             cssOrigin: "author",
           }));
         },
