@@ -57,7 +57,8 @@ class GTests(object):
                 process_output = lambda line: stream_output(stack_fixer(line))
 
 
-        proc = mozprocess.ProcessHandler([prog, "-unittest"],
+        proc = mozprocess.ProcessHandler([prog, "-unittest",
+                                         "--gtest_death_test_style=threadsafe"],
                                          cwd=cwd,
                                          env=env,
                                          processOutputLine=process_output)
