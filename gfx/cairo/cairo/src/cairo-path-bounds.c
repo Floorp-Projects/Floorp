@@ -139,6 +139,13 @@ _cairo_path_bounder_curve_to (void *closure,
 static cairo_status_t
 _cairo_path_bounder_close_path (void *closure)
 {
+    cairo_path_bounder_t *bounder = closure;
+
+    if (bounder->has_initial_point) {
+	_cairo_path_bounder_add_point (bounder, &bounder->current_point);
+	bounder->has_initial_point = FALSE;
+    } 
+
     return CAIRO_STATUS_SUCCESS;
 }
 
