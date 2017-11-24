@@ -616,8 +616,7 @@ crlgen_CreateInvalidityDate(PLArenaPool *arena, const char **dataArr,
         goto loser;
     }
 
-    PORT_Memcpy(encodedItem->data, dataArr[2], (encodedItem->len = length) *
-                                                   sizeof(char));
+    PORT_Memcpy(encodedItem->data, dataArr[2], (encodedItem->len = length) * sizeof(char));
 
     *extCode = SEC_OID_X509_INVALID_DATE;
     return encodedItem;

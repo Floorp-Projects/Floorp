@@ -520,8 +520,7 @@ DecodeGroup(void* dest,
         if (SECSuccess == rv) {
             /* allocate room for pointer array and entries */
             /* we want to allocate the array even if there is 0 entry */
-            entries = (void**)PORT_ArenaZAlloc(arena, sizeof(void*) *
-                                                              (totalEntries + 1) + /* the extra one is for NULL termination */
+            entries = (void**)PORT_ArenaZAlloc(arena, sizeof(void*) * (totalEntries + 1) + /* the extra one is for NULL termination */
                                                           subTemplate->size * totalEntries);
 
             if (entries) {

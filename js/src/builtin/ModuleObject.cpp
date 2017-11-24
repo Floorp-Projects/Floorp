@@ -383,7 +383,8 @@ ModuleNamespaceObject::isInstance(HandleValue value)
 }
 
 /* static */ ModuleNamespaceObject*
-ModuleNamespaceObject::create(JSContext* cx, HandleModuleObject module)
+ModuleNamespaceObject::create(JSContext* cx, HandleModuleObject module, HandleObject exports,
+                              UniquePtr<IndirectBindingMap> bindings)
 {
     RootedValue priv(cx, ObjectValue(*module));
     ProxyOptions options;
@@ -392,6 +393,9 @@ ModuleNamespaceObject::create(JSContext* cx, HandleModuleObject module)
     RootedObject object(cx, NewProxyObject(cx, &proxyHandler, priv, nullptr, options));
     if (!object)
         return nullptr;
+
+    SetProxyReservedSlot(object, ExportsSlot, ObjectValue(*exports));
+    SetProxyReservedSlot(object, BindingsSlot, PrivateValue(bindings.release()));
 
     return &object->as<ModuleNamespaceObject>();
 }
@@ -405,15 +409,14 @@ ModuleNamespaceObject::module()
 JSObject&
 ModuleNamespaceObject::exports()
 {
-    JSObject* exports = module().namespaceExports();
-    MOZ_ASSERT(exports);
-    return *exports;
+    return GetProxyReservedSlot(this, ExportsSlot).toObject();
 }
 
 IndirectBindingMap&
 ModuleNamespaceObject::bindings()
 {
-    IndirectBindingMap* bindings = module().namespaceBindings();
+    Value value = GetProxyReservedSlot(this, BindingsSlot);
+    auto bindings = static_cast<IndirectBindingMap*>(value.toPrivate());
     MOZ_ASSERT(bindings);
     return *bindings;
 }
@@ -422,13 +425,10 @@ bool
 ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
                                   HandleModuleObject targetModule, HandleAtom localName)
 {
-    IndirectBindingMap* bindings(this->module().namespaceBindings());
-    MOZ_ASSERT(bindings);
-
     RootedModuleEnvironmentObject environment(cx, &targetModule->initialEnvironment());
     RootedId exportedNameId(cx, AtomToId(exportedName));
     RootedId localNameId(cx, AtomToId(localName));
-    return bindings->putNew(cx, exportedNameId, environment, localNameId);
+    return bindings().putNew(cx, exportedNameId, environment, localNameId);
 }
 
 const char ModuleNamespaceObject::ProxyHandler::family = 0;
@@ -676,6 +676,19 @@ ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject
     return true;
 }
 
+void
+ModuleNamespaceObject::ProxyHandler::trace(JSTracer* trc, JSObject* proxy) const
+{
+    auto& self = proxy->as<ModuleNamespaceObject>();
+    self.bindings().trace(trc);
+}
+
+void ModuleNamespaceObject::ProxyHandler::finalize(JSFreeOp* fop, JSObject* proxy) const
+{
+    auto& self = proxy->as<ModuleNamespaceObject>();
+    js_delete(&self.bindings());
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // FunctionDeclaration
 
@@ -772,10 +785,15 @@ ModuleObject::finalize(js::FreeOp* fop, JSObject* obj)
     ModuleObject* self = &obj->as<ModuleObject>();
     if (self->hasImportBindings())
         fop->delete_(&self->importBindings());
-    if (IndirectBindingMap* bindings = self->namespaceBindings())
-        fop->delete_(bindings);
     if (FunctionDeclarationVector* funDecls = self->functionDeclarations())
         fop->delete_(funDecls);
+}
+
+ModuleEnvironmentObject&
+ModuleObject::initialEnvironment() const
+{
+    Value value = getReservedSlot(EnvironmentSlot);
+    return value.toObject().as<ModuleEnvironmentObject>();
 }
 
 ModuleEnvironmentObject*
@@ -783,11 +801,12 @@ ModuleObject::environment() const
 {
     MOZ_ASSERT(status() != MODULE_STATUS_ERRORED);
 
-    Value value = getReservedSlot(EnvironmentSlot);
-    if (value.isUndefined())
+    // According to the spec the environment record is created during
+    // instantiation, but we create it earlier than that.
+    if (status() < MODULE_STATUS_INSTANTIATED)
         return nullptr;
 
-    return &value.toObject().as<ModuleEnvironmentObject>();
+    return &initialEnvironment();
 }
 
 bool
@@ -801,26 +820,6 @@ IndirectBindingMap&
 ModuleObject::importBindings()
 {
     return *static_cast<IndirectBindingMap*>(getReservedSlot(ImportBindingsSlot).toPrivate());
-}
-
-JSObject*
-ModuleObject::namespaceExports()
-{
-    Value value = getReservedSlot(NamespaceExportsSlot);
-    if (value.isUndefined())
-        return nullptr;
-
-    return &value.toObject();
-}
-
-IndirectBindingMap*
-ModuleObject::namespaceBindings()
-{
-    Value value = getReservedSlot(NamespaceBindingsSlot);
-    if (value.isUndefined())
-        return nullptr;
-
-    return static_cast<IndirectBindingMap*>(value.toPrivate());
 }
 
 ModuleNamespaceObject*
@@ -852,7 +851,7 @@ ModuleObject::init(HandleScript script)
 void
 ModuleObject::setInitialEnvironment(HandleModuleEnvironmentObject initialEnvironment)
 {
-    initReservedSlot(InitialEnvironmentSlot, ObjectValue(*initialEnvironment));
+    initReservedSlot(EnvironmentSlot, ObjectValue(*initialEnvironment));
 }
 
 void
@@ -992,12 +991,6 @@ ModuleObject::setHostDefinedField(const JS::Value& value)
     setReservedSlot(HostDefinedSlot, value);
 }
 
-ModuleEnvironmentObject&
-ModuleObject::initialEnvironment() const
-{
-    return getReservedSlot(InitialEnvironmentSlot).toObject().as<ModuleEnvironmentObject>();
-}
-
 Scope*
 ModuleObject::enclosingScope() const
 {
@@ -1016,21 +1009,9 @@ ModuleObject::trace(JSTracer* trc, JSObject* obj)
 
     if (module.hasImportBindings())
         module.importBindings().trace(trc);
-    if (IndirectBindingMap* bindings = module.namespaceBindings())
-        bindings->trace(trc);
 
     if (FunctionDeclarationVector* funDecls = module.functionDeclarations())
         funDecls->trace(trc);
-}
-
-void
-ModuleObject::createEnvironment()
-{
-    // The environment has already been created, we just neet to set it in the
-    // right slot.
-    MOZ_ASSERT(!getReservedSlot(InitialEnvironmentSlot).isUndefined());
-    MOZ_ASSERT(getReservedSlot(EnvironmentSlot).isUndefined());
-    setReservedSlot(EnvironmentSlot, getReservedSlot(InitialEnvironmentSlot));
 }
 
 bool
@@ -1049,6 +1030,7 @@ ModuleObject::noteFunctionDeclaration(JSContext* cx, HandleAtom name, HandleFunc
 ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self)
 {
 #ifdef DEBUG
+    MOZ_ASSERT(self->status() == MODULE_STATUS_INSTANTIATING);
     if (!AssertFrozen(cx, self))
         return false;
 #endif
@@ -1094,6 +1076,7 @@ ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject 
 ModuleObject::execute(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
 {
 #ifdef DEBUG
+    MOZ_ASSERT(self->status() == MODULE_STATUS_EVALUATING);
     if (!AssertFrozen(cx, self))
         return false;
 #endif
@@ -1114,21 +1097,18 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleObje
     MOZ_ASSERT(!self->namespace_());
     MOZ_ASSERT(exports->is<ArrayObject>());
 
-    RootedModuleNamespaceObject ns(cx, ModuleNamespaceObject::create(cx, self));
-    if (!ns)
-        return nullptr;
-
     Zone* zone = cx->zone();
-    IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
+    auto bindings = zone->make_unique<IndirectBindingMap>(zone);
     if (!bindings || !bindings->init()) {
         ReportOutOfMemory(cx);
-        js_delete<IndirectBindingMap>(bindings);
         return nullptr;
     }
 
+    auto ns = ModuleNamespaceObject::create(cx, self, exports, Move(bindings));
+    if (!ns)
+        return nullptr;
+
     self->initReservedSlot(NamespaceSlot, ObjectValue(*ns));
-    self->initReservedSlot(NamespaceExportsSlot, ObjectValue(*exports));
-    self->initReservedSlot(NamespaceBindingsSlot, PrivateValue(bindings));
     return ns;
 }
 

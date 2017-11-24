@@ -55,10 +55,6 @@ public:
 
     FT_Library GetFTLibrary() override;
 
-    virtual bool CanRenderContentToDataSurface() const override {
-      return true;
-    }
-
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
 
 protected:

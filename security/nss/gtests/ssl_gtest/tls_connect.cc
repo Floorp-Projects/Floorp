@@ -89,6 +89,8 @@ std::string VersionString(uint16_t version) {
   switch (version) {
     case 0:
       return "(no version)";
+    case SSL_LIBRARY_VERSION_3_0:
+      return "1.0";
     case SSL_LIBRARY_VERSION_TLS_1_0:
       return "1.0";
     case SSL_LIBRARY_VERSION_TLS_1_1:
@@ -180,6 +182,7 @@ void TlsConnectTestBase::SetUp() {
   SSLInt_ClearSelfEncryptKey();
   SSLInt_SetTicketLifetime(30);
   SSLInt_SetMaxEarlyDataSize(1024);
+  SSL_SetupAntiReplay(1 * PR_USEC_PER_SEC, 1, 3);
   ClearStats();
   Init();
 }
@@ -219,6 +222,18 @@ void TlsConnectTestBase::Reset(const std::string& server_name,
   }
 
   Init();
+}
+
+void TlsConnectTestBase::MakeNewServer() {
+  auto replacement = std::make_shared<TlsAgent>(
+      server_->name(), TlsAgent::SERVER, server_->variant());
+  server_ = replacement;
+  if (version_) {
+    server_->SetVersionRange(version_, version_);
+  }
+  client_->SetPeer(server_);
+  server_->SetPeer(client_);
+  server_->StartConnect();
 }
 
 void TlsConnectTestBase::ExpectResumption(SessionResumptionMode expected,
@@ -263,6 +278,11 @@ void TlsConnectTestBase::Connect() {
   CheckConnected();
 }
 
+void TlsConnectTestBase::StartConnect() {
+  server_->StartConnect(server_model_ ? server_model_->ssl_fd() : nullptr);
+  client_->StartConnect(client_model_ ? client_model_->ssl_fd() : nullptr);
+}
+
 void TlsConnectTestBase::ConnectWithCipherSuite(uint16_t cipher_suite) {
   EnsureTlsSetup();
   client_->EnableSingleCipher(cipher_suite);
@@ -279,6 +299,19 @@ void TlsConnectTestBase::ConnectWithCipherSuite(uint16_t cipher_suite) {
 }
 
 void TlsConnectTestBase::CheckConnected() {
+  // Have the client read handshake twice to make sure we get the
+  // NST and the ACK.
+  if (client_->version() >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+      variant_ == ssl_variant_datagram) {
+    client_->Handshake();
+    client_->Handshake();
+    auto suites = SSLInt_CountCipherSpecs(client_->ssl_fd());
+    // Verify that we dropped the client's retransmission cipher suites.
+    EXPECT_EQ(2, suites) << "Client has the wrong number of suites";
+    if (suites != 2) {
+      SSLInt_PrintCipherSpecs("client", client_->ssl_fd());
+    }
+  }
   EXPECT_EQ(client_->version(), server_->version());
   if (!skip_version_checks_) {
     // Check the version is as expected
@@ -391,8 +424,7 @@ void TlsConnectTestBase::CheckKeysResumption(SSLKEAType kea_type,
 }
 
 void TlsConnectTestBase::ConnectExpectFail() {
-  server_->StartConnect();
-  client_->StartConnect();
+  StartConnect();
   Handshake();
   ASSERT_EQ(TlsAgent::STATE_ERROR, client_->state());
   ASSERT_EQ(TlsAgent::STATE_ERROR, server_->state());
@@ -413,8 +445,7 @@ void TlsConnectTestBase::ConnectExpectAlert(std::shared_ptr<TlsAgent>& sender,
 }
 
 void TlsConnectTestBase::ConnectExpectFailOneSide(TlsAgent::Role failing_side) {
-  server_->StartConnect();
-  client_->StartConnect();
+  StartConnect();
   client_->SetServerKeyBits(server_->server_key_bits());
   client_->Handshake();
   server_->Handshake();
@@ -473,21 +504,25 @@ void TlsConnectTestBase::EnableSomeEcdhCiphers() {
   }
 }
 
+void TlsConnectTestBase::ConfigureSelfEncrypt() {
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey privKey;
+  ASSERT_TRUE(
+      TlsAgent::LoadCertificate(TlsAgent::kServerRsaDecrypt, &cert, &privKey));
+
+  ScopedSECKEYPublicKey pubKey(CERT_ExtractPublicKey(cert.get()));
+  ASSERT_TRUE(pubKey);
+
+  EXPECT_EQ(SECSuccess,
+            SSL_SetSessionTicketKeyPair(pubKey.get(), privKey.get()));
+}
+
 void TlsConnectTestBase::ConfigureSessionCache(SessionResumptionMode client,
                                                SessionResumptionMode server) {
   client_->ConfigureSessionCache(client);
   server_->ConfigureSessionCache(server);
   if ((server & RESUME_TICKET) != 0) {
-    ScopedCERTCertificate cert;
-    ScopedSECKEYPrivateKey privKey;
-    ASSERT_TRUE(TlsAgent::LoadCertificate(TlsAgent::kServerRsaDecrypt, &cert,
-                                          &privKey));
-
-    ScopedSECKEYPublicKey pubKey(CERT_ExtractPublicKey(cert.get()));
-    ASSERT_TRUE(pubKey);
-
-    EXPECT_EQ(SECSuccess,
-              SSL_SetSessionTicketKeyPair(pubKey.get(), privKey.get()));
+    ConfigureSelfEncrypt();
   }
 }
 
@@ -566,23 +601,18 @@ void TlsConnectTestBase::SendReceive() {
 
 // Do a first connection so we can do 0-RTT on the second one.
 void TlsConnectTestBase::SetupForZeroRtt() {
+  // If we don't do this, then all 0-RTT attempts will be rejected.
+  SSLInt_RolloverAntiReplay();
+
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   server_->Set0RttEnabled(true);  // So we signal that we allow 0-RTT.
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
   CheckKeys();
 
   Reset();
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->StartConnect();
-  client_->StartConnect();
+  StartConnect();
 }
 
 // Do a first connection so we can do resumption
@@ -602,10 +632,6 @@ void TlsConnectTestBase::ZeroRttSendReceive(
   const char* k0RttData = "ABCDEF";
   const PRInt32 k0RttDataLen = static_cast<PRInt32>(strlen(k0RttData));
 
-  if (expect_writable && expect_readable) {
-    ExpectAlert(client_, kTlsAlertEndOfEarlyData);
-  }
-
   client_->Handshake();  // Send ClientHello.
   if (post_clienthello_check) {
     if (!post_clienthello_check()) return;
@@ -617,7 +643,7 @@ void TlsConnectTestBase::ZeroRttSendReceive(
   } else {
     EXPECT_EQ(SECFailure, rv);
   }
-  server_->Handshake();  // Consume ClientHello, EE, Finished.
+  server_->Handshake();  // Consume ClientHello
 
   std::vector<uint8_t> buf(k0RttDataLen);
   rv = PR_Read(server_->ssl_fd(), buf.data(), k0RttDataLen);  // 0-RTT read
@@ -671,6 +697,30 @@ void TlsConnectTestBase::SkipVersionChecks() {
   server_->SkipVersionChecks();
 }
 
+// Shift the DTLS timers, to the minimum time necessary to let the next timer
+// run on either client or server.  This allows tests to skip waiting without
+// having timers run out of order.
+void TlsConnectTestBase::ShiftDtlsTimers() {
+  PRIntervalTime time_shift = PR_INTERVAL_NO_TIMEOUT;
+  PRIntervalTime time;
+  SECStatus rv = DTLS_GetHandshakeTimeout(client_->ssl_fd(), &time);
+  if (rv == SECSuccess) {
+    time_shift = time;
+  }
+  rv = DTLS_GetHandshakeTimeout(server_->ssl_fd(), &time);
+  if (rv == SECSuccess &&
+      (time < time_shift || time_shift == PR_INTERVAL_NO_TIMEOUT)) {
+    time_shift = time;
+  }
+
+  if (time_shift == PR_INTERVAL_NO_TIMEOUT) {
+    return;
+  }
+
+  EXPECT_EQ(SECSuccess, SSLInt_ShiftDtlsTimers(client_->ssl_fd(), time_shift));
+  EXPECT_EQ(SECSuccess, SSLInt_ShiftDtlsTimers(server_->ssl_fd(), time_shift));
+}
+
 TlsConnectGeneric::TlsConnectGeneric()
     : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
 
@@ -709,11 +759,15 @@ void TlsKeyExchangeTest::ConfigNamedGroups(
 }
 
 std::vector<SSLNamedGroup> TlsKeyExchangeTest::GetGroupDetails(
-    const DataBuffer& ext) {
+    const std::shared_ptr<TlsExtensionCapture>& capture) {
+  EXPECT_TRUE(capture->captured());
+  const DataBuffer& ext = capture->extension();
+
   uint32_t tmp = 0;
   EXPECT_TRUE(ext.Read(0, 2, &tmp));
   EXPECT_EQ(ext.len() - 2, static_cast<size_t>(tmp));
   EXPECT_TRUE(ext.len() % 2 == 0);
+
   std::vector<SSLNamedGroup> groups;
   for (size_t i = 1; i < ext.len() / 2; i += 1) {
     EXPECT_TRUE(ext.Read(2 * i, 2, &tmp));
@@ -723,10 +777,14 @@ std::vector<SSLNamedGroup> TlsKeyExchangeTest::GetGroupDetails(
 }
 
 std::vector<SSLNamedGroup> TlsKeyExchangeTest::GetShareDetails(
-    const DataBuffer& ext) {
+    const std::shared_ptr<TlsExtensionCapture>& capture) {
+  EXPECT_TRUE(capture->captured());
+  const DataBuffer& ext = capture->extension();
+
   uint32_t tmp = 0;
   EXPECT_TRUE(ext.Read(0, 2, &tmp));
   EXPECT_EQ(ext.len() - 2, static_cast<size_t>(tmp));
+
   std::vector<SSLNamedGroup> shares;
   size_t i = 2;
   while (i < ext.len()) {
@@ -742,17 +800,15 @@ std::vector<SSLNamedGroup> TlsKeyExchangeTest::GetShareDetails(
 void TlsKeyExchangeTest::CheckKEXDetails(
     const std::vector<SSLNamedGroup>& expected_groups,
     const std::vector<SSLNamedGroup>& expected_shares, bool expect_hrr) {
-  std::vector<SSLNamedGroup> groups =
-      GetGroupDetails(groups_capture_->extension());
+  std::vector<SSLNamedGroup> groups = GetGroupDetails(groups_capture_);
   EXPECT_EQ(expected_groups, groups);
 
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
     ASSERT_LT(0U, expected_shares.size());
-    std::vector<SSLNamedGroup> shares =
-        GetShareDetails(shares_capture_->extension());
+    std::vector<SSLNamedGroup> shares = GetShareDetails(shares_capture_);
     EXPECT_EQ(expected_shares, shares);
   } else {
-    EXPECT_EQ(0U, shares_capture_->extension().len());
+    EXPECT_FALSE(shares_capture_->captured());
   }
 
   EXPECT_EQ(expect_hrr, capture_hrr_->buffer().len() != 0);
@@ -774,8 +830,6 @@ void TlsKeyExchangeTest::CheckKEXDetails(
     EXPECT_NE(expected_share2, it);
   }
   std::vector<SSLNamedGroup> expected_shares2 = {expected_share2};
-  std::vector<SSLNamedGroup> shares =
-      GetShareDetails(shares_capture2_->extension());
-  EXPECT_EQ(expected_shares2, shares);
+  EXPECT_EQ(expected_shares2, GetShareDetails(shares_capture2_));
 }
 }  // namespace nss_test

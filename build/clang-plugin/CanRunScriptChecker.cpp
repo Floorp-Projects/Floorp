@@ -181,7 +181,15 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
       Result.Nodes.getNodeAs<FunctionDecl>("nonCanRunScriptParentFunction");
   // If the parent function can run script, consider that we didn't find a match
   // because we only care about parent functions which can't run script.
-  if (ParentFunction && CanRunScriptFuncs.count(ParentFunction)) {
+  //
+  // In addition, If the parent function is annotated as a
+  // CAN_RUN_SCRIPT_BOUNDARY, we don't want to complain about it calling a
+  // CAN_RUN_SCRIPT function. This is a mechanism to opt out of the infectious
+  // nature of CAN_RUN_SCRIPT which is necessary in some tricky code like
+  // Bindings.
+  if (ParentFunction &&
+      (CanRunScriptFuncs.count(ParentFunction) ||
+       hasCustomAnnotation(ParentFunction, "moz_can_run_script_boundary"))) {
     ParentFunction = nullptr;
   }
 

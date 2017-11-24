@@ -26,10 +26,10 @@ ssl3_AppendToItem(SECItem *item, const unsigned char *buf, PRUint32 bytes)
 }
 
 SECStatus
-ssl3_AppendNumberToItem(SECItem *item, PRUint32 num, PRInt32 lenSize)
+ssl3_AppendNumberToItem(SECItem *item, PRUint64 num, PRInt32 lenSize)
 {
     SECStatus rv;
-    PRUint8 b[4];
+    PRUint8 b[sizeof(num)];
 
     ssl_EncodeUintX(num, lenSize, b);
     rv = ssl3_AppendToItem(item, &b[0], lenSize);
@@ -53,7 +53,7 @@ ssl3_ConsumeFromItem(SECItem *item, unsigned char **buf, PRUint32 bytes)
 SECStatus
 ssl3_ConsumeNumberFromItem(SECItem *item, PRUint32 *num, PRUint32 bytes)
 {
-    int i;
+    unsigned int i;
 
     if (bytes > item->len || bytes > sizeof(*num)) {
         PORT_SetError(SEC_ERROR_BAD_DATA);

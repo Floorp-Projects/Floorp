@@ -401,6 +401,10 @@ nsTerminator::StartWatchdog()
   UniquePtr<Options> options(new Options());
   const PRIntervalTime ticksDuration = PR_MillisecondsToInterval(1000);
   options->crashAfterTicks = crashAfterMS / ticksDuration;
+  // Handle systems where ticksDuration is greater than crashAfterMS.
+  if (options->crashAfterTicks == 0) {
+    options->crashAfterTicks = crashAfterMS / 1000;
+  }
 
   DebugOnly<PRThread*> watchdogThread = CreateSystemThread(RunWatchdog,
                                                 options.release());

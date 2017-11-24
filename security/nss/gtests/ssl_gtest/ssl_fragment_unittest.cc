@@ -51,8 +51,14 @@ class RecordFragmenter : public PacketFilter {
       while (parser.remaining()) {
         TlsHandshakeFilter::HandshakeHeader handshake_header;
         DataBuffer handshake_body;
-        if (!handshake_header.Parse(&parser, record_header, &handshake_body)) {
+        bool complete = false;
+        if (!handshake_header.Parse(&parser, record_header, DataBuffer(),
+                                    &handshake_body, &complete)) {
           ADD_FAILURE() << "couldn't parse handshake header";
+          return false;
+        }
+        if (!complete) {
+          ADD_FAILURE() << "don't want to deal with fragmented messages";
           return false;
         }
 
@@ -82,7 +88,7 @@ class RecordFragmenter : public PacketFilter {
       while (parser.remaining()) {
         TlsRecordHeader header;
         DataBuffer record;
-        if (!header.Parse(&parser, &record)) {
+        if (!header.Parse(0, &parser, &record)) {
           ADD_FAILURE() << "bad record header";
           return false;
         }

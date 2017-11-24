@@ -413,8 +413,7 @@ static const policyFlagDef policyFlagList[] = {
     /* add other signatures in the future */
     { CIPHER_NAME("SIGNATURE"), NSS_USE_ALG_IN_CERT_SIGNATURE },
     /* enable everything */
-    { CIPHER_NAME("ALL"), NSS_USE_ALG_IN_SSL | NSS_USE_ALG_IN_SSL_KX |
-                              NSS_USE_ALG_IN_CERT_SIGNATURE },
+    { CIPHER_NAME("ALL"), NSS_USE_ALG_IN_SSL | NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
     { CIPHER_NAME("NONE"), 0 }
 };
 
