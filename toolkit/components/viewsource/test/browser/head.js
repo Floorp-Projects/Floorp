@@ -47,53 +47,27 @@ function testViewSourceWindow(aURI, aTestCallback, aCloseCallback) {
   });
 }
 
-/**
- * Wait for view source tab or window after calling given function to open it.
- *
- * @param open - a function to open view source.
- * @returns the new tab or window which shows the source.
- */
-async function waitForViewSourceTabOrWindow(open) {
-  let sourceLoadedPromise;
-  let tabOrWindowPromise;
-  if (Services.prefs.getBoolPref("view_source.tab")) {
-    tabOrWindowPromise = new Promise(resolve => {
-      gBrowser.tabContainer.addEventListener("TabOpen", event => {
-        let tab = event.target;
-        sourceLoadedPromise = waitForSourceLoaded(tab);
-        resolve(tab);
-      }, { once: true });
-    });
-  } else {
-    tabOrWindowPromise = new Promise(resolve => {
-      let windowListener = {
-        onOpenWindow(xulWindow) {
-          let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindow);
-          win.addEventListener("load", function() {
-            if (win.document.documentElement.getAttribute("windowtype") !=
-                WINDOW_TYPE) {
-              return;
-            }
-            // Found the window
-            sourceLoadedPromise = waitForSourceLoaded(win);
-            resolve(win);
-            Services.wm.removeListener(windowListener);
-          }, {once: true});
-        },
-        onCloseWindow() {},
-        onWindowTitleChange() {}
-      };
-      Services.wm.addListener(windowListener);
-    });
-  }
-
-  await open();
-
-  let tabOrWindow = await tabOrWindowPromise;
-  await sourceLoadedPromise;
-
-  return tabOrWindow;
+function waitForViewSourceWindow() {
+  return new Promise(resolve => {
+    let windowListener = {
+      onOpenWindow(xulWindow) {
+        let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow);
+        win.addEventListener("load", function() {
+          if (win.document.documentElement.getAttribute("windowtype") !=
+              WINDOW_TYPE) {
+            return;
+          }
+          // Found the window
+          resolve(win);
+          Services.wm.removeListener(windowListener);
+        }, {once: true});
+      },
+      onCloseWindow() {},
+      onWindowTitleChange() {}
+    };
+    Services.wm.addListener(windowListener);
+  });
 }
 
 /**
@@ -103,9 +77,16 @@ async function waitForViewSourceTabOrWindow(open) {
  * @returns the new tab or window which shows the source.
  */
 function openViewSource(browser) {
-  return waitForViewSourceTabOrWindow(() => {
-    window.BrowserViewSource(browser);
-  });
+  let openPromise;
+  if (Services.prefs.getBoolPref("view_source.tab")) {
+    openPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
+  } else {
+    openPromise = waitForViewSourceWindow();
+  }
+
+  window.BrowserViewSource(browser);
+
+  return openPromise;
 }
 
 /**
@@ -126,13 +107,20 @@ async function openViewPartialSource(aCSSSelector) {
           { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
   await popupShownPromise;
 
-  return waitForViewSourceTabOrWindow(async () => {
-    let popupHiddenPromise =
-        BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popuphidden");
-    let item = document.getElementById("context-viewpartialsource-selection");
-    EventUtils.synthesizeMouseAtCenter(item, {});
-    await popupHiddenPromise;
-  });
+  let openPromise;
+  if (Services.prefs.getBoolPref("view_source.tab")) {
+    openPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
+  } else {
+    openPromise = waitForViewSourceWindow();
+  }
+
+  let popupHiddenPromise =
+    BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popuphidden");
+  let item = document.getElementById("context-viewpartialsource-selection");
+  EventUtils.synthesizeMouseAtCenter(item, {});
+  await popupHiddenPromise;
+
+  return openPromise;
 }
 
 /**
@@ -157,13 +145,15 @@ async function openViewFrameSourceTab(aCSSSelector) {
   EventUtils.synthesizeMouseAtCenter(frameContextMenu, {});
   await popupShownPromise;
 
-  return waitForViewSourceTabOrWindow(async () => {
-    let popupHiddenPromise =
-        BrowserTestUtils.waitForEvent(frameContextMenu, "popuphidden");
-    let item = document.getElementById("context-viewframesource");
-    EventUtils.synthesizeMouseAtCenter(item, {});
-    await popupHiddenPromise;
-  });
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
+
+  let popupHiddenPromise =
+    BrowserTestUtils.waitForEvent(frameContextMenu, "popuphidden");
+  let item = document.getElementById("context-viewframesource");
+  EventUtils.synthesizeMouseAtCenter(item, {});
+  await popupHiddenPromise;
+
+  return newTabPromise;
 }
 
 registerCleanupFunction(function() {
@@ -208,7 +198,12 @@ async function openDocumentSelect(aURI, aCSSSelector) {
     content.getSelection().selectAllChildren(element);
   });
 
-  return openViewPartialSource(aCSSSelector);
+  let tabOrWindow = await openViewPartialSource(aCSSSelector);
+
+  // Wait until the source has been loaded.
+  await waitForSourceLoaded(tabOrWindow);
+
+  return tabOrWindow;
 }
 
 function pushPrefs(...aPrefs) {
