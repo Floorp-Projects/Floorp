@@ -393,7 +393,7 @@ nsHtml5TreeOperation::CreateHTMLElement(
   nsIDocument* document = nodeInfo->GetDocument();
   bool willExecuteScript = false;
   bool isCustomElement = false;
-  nsString isValue;
+  RefPtr<nsAtom> isAtom;
   dom::CustomElementDefinition* definition = nullptr;
 
   // Avoid overhead by checking if custom elements pref is enabled or not.
@@ -401,15 +401,17 @@ nsHtml5TreeOperation::CreateHTMLElement(
     if (aAttributes) {
       nsHtml5String is = aAttributes->getValue(nsHtml5AttributeName::ATTR_IS);
       if (is) {
+        nsAutoString isValue;
         is.ToString(isValue);
+        isAtom = NS_Atomize(isValue);
       }
     }
 
-    isCustomElement = (aCreator == NS_NewCustomElement || !isValue.IsEmpty());
+    isCustomElement = (aCreator == NS_NewCustomElement || isAtom);
     if (isCustomElement && aFromParser != dom::FROM_PARSER_FRAGMENT) {
       RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
       RefPtr<nsAtom> typeAtom =
-        (aCreator == NS_NewCustomElement) ? tagAtom : NS_Atomize(isValue);
+        (aCreator == NS_NewCustomElement) ? tagAtom : isAtom;
 
       definition = nsContentUtils::LookupCustomElementDefinition(document,
         nodeInfo->LocalName(), nodeInfo->NamespaceID(), typeAtom);
@@ -433,8 +435,7 @@ nsHtml5TreeOperation::CreateHTMLElement(
 
     nsCOMPtr<dom::Element> newElement;
     NS_NewHTMLElement(getter_AddRefs(newElement), nodeInfo.forget(),
-                      aFromParser, (isValue.IsEmpty() ? nullptr : &isValue),
-                      definition);
+                      aFromParser, isAtom, definition);
 
     MOZ_ASSERT(newElement, "Element creation created null pointer.");
     newContent = newElement;
@@ -458,8 +459,7 @@ nsHtml5TreeOperation::CreateHTMLElement(
 
     if (isCustomElement) {
       NS_NewHTMLElement(getter_AddRefs(newElement), nodeInfo.forget(),
-                        aFromParser, (isValue.IsEmpty() ? nullptr : &isValue),
-                        definition);
+                        aFromParser, isAtom, definition);
     } else {
       newElement = aCreator(nodeInfo.forget(), aFromParser);
     }
