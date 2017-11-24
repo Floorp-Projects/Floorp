@@ -128,6 +128,10 @@ public:
   RenderTextureHost* GetRenderTexture(WrExternalImageId aExternalImageId);
 
   /// Can be called from any thread.
+  bool IsDestroyed(wr::WindowId aWindowId);
+  /// Can be called from any thread.
+  void SetDestroyed(wr::WindowId aWindowId);
+  /// Can be called from any thread.
   bool TooManyPendingFrames(wr::WindowId aWindowId);
   /// Can be called from any thread.
   void IncPendingFrameCount(wr::WindowId aWindowId);
@@ -153,13 +157,14 @@ private:
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
 
-  struct FrameCount {
+  struct WindowInfo {
+    bool mIsDestroyed = false;
     int64_t mPendingCount = 0;
     int64_t mRenderingCount = 0;
   };
 
   Mutex mFrameCountMapLock;
-  nsDataHashtable<nsUint64HashKey, FrameCount> mPendingFrameCounts;
+  nsDataHashtable<nsUint64HashKey, WindowInfo> mWindowInfos;
 
   Mutex mRenderTextureMapLock;
   nsRefPtrHashtable<nsUint64HashKey, RenderTextureHost> mRenderTextures;

@@ -118,7 +118,7 @@ RenderThread::AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRender
   mRenderers[aWindowId] = Move(aRenderer);
 
   MutexAutoLock lock(mFrameCountMapLock);
-  mPendingFrameCounts.Put(AsUint64(aWindowId), FrameCount());
+  mWindowInfos.Put(AsUint64(aWindowId), WindowInfo());
 }
 
 void
@@ -133,7 +133,7 @@ RenderThread::RemoveRenderer(wr::WindowId aWindowId)
   mRenderers.erase(aWindowId);
 
   MutexAutoLock lock(mFrameCountMapLock);
-  mPendingFrameCounts.Remove(AsUint64(aWindowId));
+  mWindowInfos.Remove(AsUint64(aWindowId));
 }
 
 RendererOGL*
@@ -164,6 +164,10 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
                                       this,
                                       &RenderThread::NewFrameReady,
                                       aWindowId));
+    return;
+  }
+
+  if (IsDestroyed(aWindowId)) {
     return;
   }
 
@@ -274,17 +278,42 @@ RenderThread::TooManyPendingFrames(wr::WindowId aWindowId)
   // or if RenderBackend is still processing a frame.
 
   MutexAutoLock lock(mFrameCountMapLock);
-  FrameCount count;
-  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
+  WindowInfo info;
+  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
     MOZ_ASSERT(false);
     return true;
   }
 
-  if (count.mPendingCount > maxFrameCount) {
+  if (info.mPendingCount > maxFrameCount) {
     return true;
   }
-  MOZ_ASSERT(count.mPendingCount >= count.mRenderingCount);
-  return count.mPendingCount > count.mRenderingCount;
+  MOZ_ASSERT(info.mPendingCount >= info.mRenderingCount);
+  return info.mPendingCount > info.mRenderingCount;
+}
+
+bool
+RenderThread::IsDestroyed(wr::WindowId aWindowId)
+{
+  MutexAutoLock lock(mFrameCountMapLock);
+  WindowInfo info;
+  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+    return true;
+  }
+
+  return info.mIsDestroyed;
+}
+
+void
+RenderThread::SetDestroyed(wr::WindowId aWindowId)
+{
+  MutexAutoLock lock(mFrameCountMapLock);
+  WindowInfo info;
+  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  info.mIsDestroyed = true;
+  mWindowInfos.Put(AsUint64(aWindowId), info);
 }
 
 void
@@ -292,14 +321,14 @@ RenderThread::IncPendingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
   // Get the old count.
-  FrameCount count;
-  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
+  WindowInfo info;
+  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
     MOZ_ASSERT(false);
     return;
   }
   // Update pending frame count.
-  count.mPendingCount = count.mPendingCount + 1;
-  mPendingFrameCounts.Put(AsUint64(aWindowId), count);
+  info.mPendingCount = info.mPendingCount + 1;
+  mWindowInfos.Put(AsUint64(aWindowId), info);
 }
 
 void
@@ -307,14 +336,14 @@ RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
   // Get the old count.
-  FrameCount count;
-  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
+  WindowInfo info;
+  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
     MOZ_ASSERT(false);
     return;
   }
   // Update rendering frame count.
-  count.mRenderingCount = count.mRenderingCount + 1;
-  mPendingFrameCounts.Put(AsUint64(aWindowId), count);
+  info.mRenderingCount = info.mRenderingCount + 1;
+  mWindowInfos.Put(AsUint64(aWindowId), info);
 }
 
 void
@@ -322,20 +351,20 @@ RenderThread::DecPendingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
   // Get the old count.
-  FrameCount count;
-  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
+  WindowInfo info;
+  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
     MOZ_ASSERT(false);
     return;
   }
-  MOZ_ASSERT(count.mPendingCount > 0);
-  MOZ_ASSERT(count.mRenderingCount > 0);
-  if (count.mPendingCount <= 0) {
+  MOZ_ASSERT(info.mPendingCount > 0);
+  MOZ_ASSERT(info.mRenderingCount > 0);
+  if (info.mPendingCount <= 0) {
     return;
   }
   // Update frame counts.
-  count.mPendingCount = count.mPendingCount - 1;
-  count.mRenderingCount = count.mRenderingCount - 1;
-  mPendingFrameCounts.Put(AsUint64(aWindowId), count);
+  info.mPendingCount = info.mPendingCount - 1;
+  info.mRenderingCount = info.mRenderingCount - 1;
+  mWindowInfos.Put(AsUint64(aWindowId), info);
 }
 
 void
