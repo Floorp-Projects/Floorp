@@ -4868,6 +4868,27 @@ nsDisplayEventReceiver::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder&
   return true;
 }
 
+nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuilder* aBuilder,
+                                                               nsIFrame* aFrame,
+                                                               mozilla::gfx::CompositorHitTestInfo aHitTestInfo)
+  : nsDisplayEventReceiver(aBuilder, aFrame)
+  , mHitTestInfo(aHitTestInfo)
+{
+  MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
+  // We should never even create this display item if we're not building
+  // compositor hit-test info or if the computed hit info indicated the
+  // frame is invisible to hit-testing
+  MOZ_ASSERT(aBuilder->BuildCompositorHitTestInfo());
+  MOZ_ASSERT(mHitTestInfo != mozilla::gfx::CompositorHitTestInfo::eInvisibleToHitTest);
+
+  if (aBuilder->GetCurrentScrollbarFlags() != nsDisplayOwnLayerFlags::eNone) {
+    // In the case of scrollbar frames, we use the scrollbar's target scrollframe
+    // instead of the scrollframe with which the scrollbar actually moves.
+    MOZ_ASSERT(mHitTestInfo & CompositorHitTestInfo::eScrollbar);
+    mScrollTarget = Some(aBuilder->GetCurrentScrollbarTarget());
+  }
+}
+
 bool
 nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -4902,10 +4923,13 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
   // we don't need to do it as often, and so that we can do it for other
   // display item types as well (reducing the need for as many instances of
   // this display item).
-  FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
-  if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
-    scrollId = asr->GetViewId();
-  }
+  FrameMetrics::ViewID scrollId = mScrollTarget.valueOrFrom(
+      [&]() -> FrameMetrics::ViewID {
+          if (const ActiveScrolledRoot* asr = GetActiveScrolledRoot()) {
+            return asr->GetViewId();
+          }
+          return FrameMetrics::NULL_SCROLL_ID;
+      });
 
   // Insert a transparent rectangle with the hit-test info
   aBuilder.SetHitTestInfo(scrollId, mHitTestInfo);
@@ -6932,6 +6956,12 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
     }
   }
   return ret;
+}
+
+void
+nsDisplayOwnLayer::WriteDebugInfo(std::stringstream& aStream)
+{
+  aStream << nsPrintfCString(" (flags 0x%x) (scrolltarget %" PRIu64 ")", (int)mFlags, mScrollTarget).get();
 }
 
 nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
