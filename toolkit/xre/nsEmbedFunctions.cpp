@@ -283,10 +283,8 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX)
   return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe));
-#elif defined(OS_LINUX)
-  return CrashReporter::SetRemoteExceptionHandler();
 #else
-#  error "OOP crash reporter unsupported on this platform"
+  return CrashReporter::SetRemoteExceptionHandler();
 #endif
 }
 
@@ -493,7 +491,7 @@ XRE_InitChildProcess(int aArgc,
       // Bug 684322 will add better visibility into this condition
       NS_WARNING("Could not setup crash reporting\n");
     }
-#elif defined(OS_LINUX)
+#else
     // on POSIX, |crashReporterArg| is "true" if crash reporting is
     // enabled, false otherwise
     if (0 != strcmp("false", crashReporterArg) &&
@@ -501,8 +499,6 @@ XRE_InitChildProcess(int aArgc,
       // Bug 684322 will add better visibility into this condition
       NS_WARNING("Could not setup crash reporting\n");
     }
-#else
-#  error "OOP crash reporting unsupported on this platform"
 #endif
   }
 
