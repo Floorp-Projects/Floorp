@@ -9,16 +9,20 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
+import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback
 import android.view.*
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
+import java.util.*
 
 open class AutocompleteCustomDomainsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +38,23 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         domainList.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
         domainList.adapter = DomainListAdapter()
+
+        ItemTouchHelper(object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
+                if (recyclerView == null || viewHolder == null || target == null) {
+                    return false
+                }
+
+                val from = viewHolder.adapterPosition
+                val to = target.adapterPosition
+
+                (recyclerView.adapter as DomainListAdapter).move(from, to)
+
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {}
+        }).attachToRecyclerView(domainList)
     }
 
     override fun onResume() {
@@ -70,7 +91,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
 
     inner class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val domains: MutableList<String> = mutableListOf()
-        private val selectedDomains: MutableSet<String> = mutableSetOf()
+        private val selectedDomains: MutableList<String> = mutableListOf()
 
         fun refresh(context: Context, body: (() -> Unit)? = null) {
             launch(UI) {
@@ -117,7 +138,16 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
             }
         }
 
-        fun selection() : Set<String> = selectedDomains
+        fun selection() : List<String> = selectedDomains
+
+        fun move(from: Int, to: Int) {
+            Collections.swap(domains, from, to)
+            notifyItemMoved(from, to)
+
+            launch(CommonPool) {
+                CustomAutocomplete.saveDomains(activity.applicationContext, domains)
+            }
+        }
     }
 
     private class DomainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -128,7 +158,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
             val LAYOUT_ID = R.layout.item_custom_domain
         }
 
-        fun bind(domain: String, isRemoveMode: Boolean, selectedDomains: MutableSet<String>) {
+        fun bind(domain: String, isRemoveMode: Boolean, selectedDomains: MutableList<String>) {
             domainView.text  = domain
             checkBoxView.visibility = if (isRemoveMode) View.VISIBLE else View.GONE
             checkBoxView.isChecked = selectedDomains.contains(domain)

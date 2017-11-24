@@ -16,6 +16,7 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText
 import java.io.IOException
 import java.util.*
 import kotlin.collections.HashSet
+import kotlin.collections.LinkedHashSet
 
 class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
     companion object {
@@ -24,8 +25,8 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
 
     private var settings : Settings? = null
 
-    private var customDomains : Set<String> = emptySet()
-    private var preInstalledDomains : Set<String> = emptySet()
+    private var customDomains : List<String> = emptyList()
+    private var preInstalledDomains : List<String> = emptyList()
 
     override fun onFilter(rawSearchText: String, view: InlineAutocompleteEditText?) {
         if (view == null) {
@@ -54,7 +55,7 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         }
     }
 
-    private fun tryToAutocomplete(searchText: String, domains: Set<String>): String? {
+    private fun tryToAutocomplete(searchText: String, domains: List<String>): String? {
         domains.forEach {
             val wwwDomain = "www." + it
             if (wwwDomain.startsWith(searchText)) {
@@ -69,7 +70,7 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         return null
     }
 
-    internal fun onDomainsLoaded(domains: Set<String>, customDomains: Set<String>) {
+    internal fun onDomainsLoaded(domains: List<String>, customDomains: List<String>) {
         this.preInstalledDomains = domains
         this.customDomains = customDomains
     }
@@ -87,7 +88,7 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         }
     }
 
-    private suspend fun loadDomains(context: Context): Set<String> {
+    private suspend fun loadDomains(context: Context): List<String> {
         val domains = LinkedHashSet<String>()
         val availableLists = getAvailableDomainLists(context)
 
@@ -100,11 +101,11 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         // And then add domains from the global list
         loadDomainsForLanguage(context, domains, "global")
 
-        return domains
+        return domains.toList()
     }
 
     private fun getAvailableDomainLists(context: Context): Set<String> {
-        val availableDomains = HashSet<String>()
+        val availableDomains = LinkedHashSet<String>()
 
         val assetManager = context.assets
 
