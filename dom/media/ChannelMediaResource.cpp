@@ -185,7 +185,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     // If the request was cancelled by nsCORSListenerProxy due to failing
     // the CORS security check, send an error through to the media element.
     if (status == NS_ERROR_DOM_BAD_URI) {
-      mCallback->NotifyNetworkError();
+      mCallback->NotifyNetworkError(MediaResult(status, "CORS not allowed"));
       return NS_ERROR_DOM_BAD_URI;
     }
   }
@@ -215,7 +215,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
         // work here.
         mCacheStream.NotifyDataEnded(status);
       } else {
-        mCallback->NotifyNetworkError();
+        mCallback->NotifyNetworkError(
+          MediaResult(NS_ERROR_FAILURE, "HTTP error"));
       }
 
       // This disconnects our listener so we don't get any more data. We

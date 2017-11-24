@@ -58,11 +58,12 @@ ChannelMediaDecoder::ResourceCallback::GetMediaOwner() const
 }
 
 void
-ChannelMediaDecoder::ResourceCallback::NotifyNetworkError()
+ChannelMediaDecoder::ResourceCallback::NotifyNetworkError(
+  const MediaResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mDecoder) {
-    mDecoder->NetworkError();
+    mDecoder->NetworkError(aError);
   }
 }
 
@@ -324,7 +325,7 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
     // Also NotifySuspendedStatusChanged() will be called to update readyState
     // if download ended with success.
   } else if (aStatus != NS_BASE_STREAM_CLOSED) {
-    NetworkError();
+    NetworkError(MediaResult(aStatus, "Download aborted"));
   }
 }
 
