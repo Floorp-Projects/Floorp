@@ -239,7 +239,6 @@ class ModuleObject : public NativeObject
     enum ModuleSlot
     {
         ScriptSlot = 0,
-        InitialEnvironmentSlot,
         EnvironmentSlot,
         NamespaceSlot,
         StatusSlot,
@@ -309,9 +308,6 @@ class ModuleObject : public NativeObject
     static bool Evaluate(JSContext* cx, HandleModuleObject self);
 
     void setHostDefinedField(const JS::Value& value);
-
-    // For intrinsic_CreateModuleEnvironment.
-    void createEnvironment();
 
     // For BytecodeEmitter.
     bool noteFunctionDeclaration(JSContext* cx, HandleAtom name, HandleFunction fun);
