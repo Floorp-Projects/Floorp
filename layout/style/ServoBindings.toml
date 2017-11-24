@@ -517,6 +517,7 @@ structs-types = [
     "StyleShapeSource",
     "StyleTransition",
     "gfxFontFeatureValueSet",
+    "nsCSSCounterDesc",
     "nsCSSCounterStyleRule",
     "nsCSSFontFaceRule",
     "nsCSSKeyword",
