@@ -927,7 +927,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mMode(aMode),
       mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarTarget(FrameMetrics::NULL_SCROLL_ID),
-      mCurrentScrollbarFlags(0),
+      mCurrentScrollbarFlags(nsDisplayOwnLayerFlags::eNone),
       mPerspectiveItemIndex(0),
       mSVGEffectsBuildingDepth(0),
       mContainsBlendMode(false),
@@ -6795,7 +6795,7 @@ nsDisplayBlendContainer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
                                      const ActiveScrolledRoot* aActiveScrolledRoot,
-                                     uint32_t aFlags, ViewID aScrollTarget,
+                                     nsDisplayOwnLayerFlags aFlags, ViewID aScrollTarget,
                                      const ScrollThumbData& aThumbData,
                                      bool aForceActive,
                                      bool aClearClipChain)
@@ -6838,7 +6838,8 @@ nsDisplayOwnLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayOwnLayer::IsScrollThumbLayer() const
 {
-  return (mFlags & VERTICAL_SCROLLBAR) || (mFlags & HORIZONTAL_SCROLLBAR);
+  return (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar) ||
+         (mFlags & nsDisplayOwnLayerFlags::eHorizontalScrollbar);
 }
 
 bool
@@ -6862,11 +6863,11 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (mThumbData.mDirection.isSome()) {
     layer->SetScrollThumbData(mScrollTarget, mThumbData);
   }
-  if (mFlags & SCROLLBAR_CONTAINER) {
+  if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
     layer->SetIsScrollbarContainer(mScrollTarget);
   }
 
-  if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
+  if (mFlags & nsDisplayOwnLayerFlags::eGenerateSubdocInvalidations) {
     mFrame->PresContext()->SetNotifySubDocInvalidationData(layer);
   }
   return layer.forget();
@@ -6918,7 +6919,7 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
       aLayerData->SetScrollbarTargetContainerId(mScrollTarget);
     }
   }
-  if (mFlags & SCROLLBAR_CONTAINER) {
+  if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
     ret = true;
     if (aLayerData) {
       aLayerData->SetIsScrollbarContainer();
@@ -6931,7 +6932,8 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
 nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aFrame,
                                            nsSubDocumentFrame* aSubDocFrame,
-                                           nsDisplayList* aList, uint32_t aFlags)
+                                           nsDisplayList* aList,
+                                           nsDisplayOwnLayerFlags aFlags)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aBuilder->CurrentActiveScrolledRoot(), aFlags)
     , mScrollParentId(aBuilder->GetCurrentScrollParentId())
     , mShouldFlatten(false)
@@ -6957,7 +6959,7 @@ UniquePtr<ScrollMetadata>
 nsDisplaySubDocument::ComputeScrollMetadata(LayerManager* aLayerManager,
                                             const ContainerLayerParameters& aContainerParameters)
 {
-  if (!(mFlags & GENERATE_SCROLLABLE_LAYER)) {
+  if (!(mFlags & nsDisplayOwnLayerFlags::eGenerateScrollableLayer)) {
     return UniquePtr<ScrollMetadata>(nullptr);
   }
 
@@ -6994,7 +6996,7 @@ nsDisplaySubDocument::GetBounds(nsDisplayListBuilder* aBuilder,
 {
   bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
-  if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
+  if ((mFlags & nsDisplayOwnLayerFlags::eGenerateScrollableLayer) && usingDisplayPort) {
     *aSnap = false;
     return mFrame->GetRect() + aBuilder->ToReferenceFrame(mFrame);
   }
@@ -7008,7 +7010,7 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 {
   bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
-  if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
+  if (!(mFlags & nsDisplayOwnLayerFlags::eGenerateScrollableLayer) || !usingDisplayPort) {
     return nsDisplayWrapList::ComputeVisibility(aBuilder, aVisibleRegion);
   }
 
@@ -7050,7 +7052,7 @@ nsDisplaySubDocument::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBui
 {
   bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
-  if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
+  if ((mFlags & nsDisplayOwnLayerFlags::eGenerateScrollableLayer) && usingDisplayPort) {
     return true;
   }
 
@@ -7063,7 +7065,7 @@ nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 {
   bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
-  if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
+  if ((mFlags & nsDisplayOwnLayerFlags::eGenerateScrollableLayer) && usingDisplayPort) {
     *aSnap = false;
     return nsRegion();
   }
@@ -7073,7 +7075,7 @@ nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 
 nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList,
-                                         uint32_t aFlags)
+                                         nsDisplayOwnLayerFlags aFlags)
     : nsDisplaySubDocument(aBuilder, aFrame, nullptr, aList, aFlags) {
   MOZ_COUNT_CTOR(nsDisplayResolution);
 }
@@ -7609,7 +7611,7 @@ nsDisplayScrollInfoLayer::WriteDebugInfo(std::stringstream& aStream)
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
                              int32_t aAPD, int32_t aParentAPD,
-                             uint32_t aFlags)
+                             nsDisplayOwnLayerFlags aFlags)
     : nsDisplaySubDocument(aBuilder, aFrame, nullptr, aList, aFlags)
     , mAPD(aAPD), mParentAPD(aParentAPD) {
   MOZ_COUNT_CTOR(nsDisplayZoom);
@@ -7663,7 +7665,7 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   // nsDisplaySubDocument::ComputeVisibility to make the necessary adjustments
   // for ComputeVisibility, it does all it's calculations in the child APD.
   bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
-  if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
+  if (!(mFlags & nsDisplayOwnLayerFlags::eGenerateScrollableLayer) || !usingDisplayPort) {
     retval =
       mList.ComputeVisibilityForSublist(aBuilder, &visibleRegion,
                                         transformedVisibleRect);
