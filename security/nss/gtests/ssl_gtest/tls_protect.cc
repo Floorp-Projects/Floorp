@@ -32,7 +32,6 @@ void AeadCipher::FormatNonce(uint64_t seq, uint8_t *nonce) {
   }
 
   DataBuffer d(nonce, 12);
-  std::cerr << "Nonce " << d << std::endl;
 }
 
 bool AeadCipher::AeadInner(bool decrypt, void *params, size_t param_length,
@@ -92,8 +91,9 @@ bool AeadCipherChacha20Poly1305::Aead(bool decrypt, uint64_t seq,
                    in, inlen, out, outlen, maxlen);
 }
 
-bool TlsCipherSpec::Init(SSLCipherAlgorithm cipher, PK11SymKey *key,
-                         const uint8_t *iv) {
+bool TlsCipherSpec::Init(uint16_t epoch, SSLCipherAlgorithm cipher,
+                         PK11SymKey *key, const uint8_t *iv) {
+  epoch_ = epoch;
   switch (cipher) {
     case ssl_calg_aes_gcm:
       aead_.reset(new AeadCipherAesGcm());

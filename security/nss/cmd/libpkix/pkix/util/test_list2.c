@@ -78,16 +78,14 @@ test_list2(int argc, char *argv[])
     for (i = 0; i < size; i++)
         for (j = 9; j > i; j--) {
             PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_GetItem(list, j, &obj, plContext));
-            PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_GetItem(list, j -
-                                                                  1,
+            PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_GetItem(list, j - 1,
                                                         &obj2, plContext));
 
             PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Object_Compare(obj, obj2, &cmpResult, plContext));
             if (cmpResult < 0) {
                 /* Exchange the items */
                 PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_SetItem(list, j, obj2, plContext));
-                PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_SetItem(list, j -
-                                                                      1,
+                PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_SetItem(list, j - 1,
                                                             obj, plContext));
             }
             /* DecRef objects */

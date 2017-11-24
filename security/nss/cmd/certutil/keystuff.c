@@ -576,8 +576,7 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
     fprintf(stderr, "Generating key.  This may take a few moments...\n\n");
 
     privKey = PK11_GenerateKeyPairWithOpFlags(slot, mechanism, params, pubkeyp,
-                                              attrFlags, opFlagsOn, opFlagsOn |
-                                                                        opFlagsOff,
+                                              attrFlags, opFlagsOn, opFlagsOn | opFlagsOff,
                                               pwdata /*wincx*/);
     /* free up the params */
     switch (keytype) {

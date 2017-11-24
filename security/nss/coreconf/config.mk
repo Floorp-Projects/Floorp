@@ -172,7 +172,7 @@ endif
 
 # FIPS support requires startup tests to be executed at load time of shared modules.
 # For performance reasons, these tests are disabled by default.
-# When compiling binaries that must support FIPS mode, 
+# When compiling binaries that must support FIPS mode,
 # you should define NSS_FORCE_FIPS
 #
 # NSS_NO_INIT_SUPPORT is always defined on platforms that don't support
@@ -199,8 +199,3 @@ DEFINES += -DNO_NSPR_10_SUPPORT
 
 # Hide old, deprecated, TLS cipher suite names when building NSS
 DEFINES += -DSSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES
-
-# Mozilla's mozilla/modules/zlib/src/zconf.h adds the MOZ_Z_ prefix to zlib
-# exported symbols, which causes problem when NSS is built as part of Mozilla.
-# So we add a NSS_SSL_ENABLE_ZLIB variable to allow Mozilla to turn this off.
-NSS_SSL_ENABLE_ZLIB = 1

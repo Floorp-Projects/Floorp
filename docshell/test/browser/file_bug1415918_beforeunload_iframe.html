@@ -1,0 +1,18 @@
+<html>
+<head>
+  <style>
+    body[fired] {
+      background-color: #0f0;
+    }
+  </style>
+  <script>
+    window.onbeforeunload = function() {
+      document.body.setAttribute("fired", true);
+      return "Frame document prompt";
+    }
+  </script>
+</head>
+</body>
+FRAME
+</body>
+</html>

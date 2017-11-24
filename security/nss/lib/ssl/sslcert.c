@@ -46,7 +46,7 @@ ssl_SetupCAListOnce(void *arg)
 }
 
 SECStatus
-ssl_SetupCAList(sslSocket *ss)
+ssl_SetupCAList(const sslSocket *ss)
 {
     if (PR_SUCCESS != PR_CallOnceWithArg(&ssl_server_ca_list.setup,
                                          &ssl_SetupCAListOnce,
@@ -58,11 +58,11 @@ ssl_SetupCAList(sslSocket *ss)
 }
 
 SECStatus
-ssl_GetCertificateRequestCAs(sslSocket *ss, unsigned int *calen,
-                             SECItem **names, unsigned int *nnames)
+ssl_GetCertificateRequestCAs(const sslSocket *ss, unsigned int *calen,
+                             const SECItem **names, unsigned int *nnames)
 {
-    SECItem *name;
-    CERTDistNames *ca_list;
+    const SECItem *name;
+    const CERTDistNames *ca_list;
     unsigned int i;
 
     *calen = 0;

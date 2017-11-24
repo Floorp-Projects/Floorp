@@ -216,7 +216,7 @@ rsaKeysAreEqual(PK11ObjectType srcType, void *src,
         printf("Could read source key\n");
         return PR_FALSE;
     }
-    readKey(destType, dest, destTemplate, 0, RSA_ATTRIBUTES);
+    rv = readKey(destType, dest, destTemplate, 0, RSA_ATTRIBUTES);
     if (rv != SECSuccess) {
         printf("Could read dest key\n");
         return PR_FALSE;

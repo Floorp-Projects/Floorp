@@ -40,6 +40,17 @@ protected:
   wr::WrThreadPool* mThreadPool;
 };
 
+class WebRenderProgramCache {
+public:
+  WebRenderProgramCache();
+
+  ~WebRenderProgramCache();
+
+  wr::WrProgramCache* Raw() { return mProgramCache; }
+
+protected:
+  wr::WrProgramCache* mProgramCache;
+};
 
 /// Base class for an event that can be scheduled to run on the render thread.
 ///
@@ -128,6 +139,10 @@ public:
   RenderTextureHost* GetRenderTexture(WrExternalImageId aExternalImageId);
 
   /// Can be called from any thread.
+  bool IsDestroyed(wr::WindowId aWindowId);
+  /// Can be called from any thread.
+  void SetDestroyed(wr::WindowId aWindowId);
+  /// Can be called from any thread.
   bool TooManyPendingFrames(wr::WindowId aWindowId);
   /// Can be called from any thread.
   void IncPendingFrameCount(wr::WindowId aWindowId);
@@ -138,6 +153,9 @@ public:
 
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
+
+  /// Can only be called from the render thread.
+  WebRenderProgramCache* ProgramCache();
 
 private:
   explicit RenderThread(base::Thread* aThread);
@@ -150,16 +168,18 @@ private:
   base::Thread* const mThread;
 
   WebRenderThreadPool mThreadPool;
+  UniquePtr<WebRenderProgramCache> mProgramCache;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
 
-  struct FrameCount {
+  struct WindowInfo {
+    bool mIsDestroyed = false;
     int64_t mPendingCount = 0;
     int64_t mRenderingCount = 0;
   };
 
   Mutex mFrameCountMapLock;
-  nsDataHashtable<nsUint64HashKey, FrameCount> mPendingFrameCounts;
+  nsDataHashtable<nsUint64HashKey, WindowInfo> mWindowInfos;
 
   Mutex mRenderTextureMapLock;
   nsRefPtrHashtable<nsUint64HashKey, RenderTextureHost> mRenderTextures;

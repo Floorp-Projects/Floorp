@@ -104,6 +104,7 @@ tools_init()
   cp ${QADIR}/tools/sign*.html ${TOOLSDIR}/html
   mkdir -p ${TOOLSDIR}/data
   cp ${QADIR}/tools/TestOldCA.p12 ${TOOLSDIR}/data
+  cp ${QADIR}/tools/TestOldAES128CA.p12 ${TOOLSDIR}/data
 
   cd ${TOOLSDIR}
 }
@@ -421,11 +422,17 @@ tools_p12_export_list_import_with_default_ciphers()
 
 tools_p12_import_old_files()
 {
-  echo "$SCRIPTNAME: Importing CA cert & key created with NSS 3.21 --------------"
+  echo "$SCRIPTNAME: Importing PKCS#12 files created with older NSS --------------"
   echo "pk12util -i TestOldCA.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
   ${BINDIR}/pk12util -i ${TOOLSDIR}/data/TestOldCA.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
   ret=$?
-  html_msg $ret 0 "Importing CA cert & key created with NSS 3.21"
+  html_msg $ret 0 "Importing PKCS#12 file created with NSS 3.21 (PBES2 with BMPString password)"
+  check_tmpfile
+
+  echo "pk12util -i TestOldAES128CA.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
+  ${BINDIR}/pk12util -i ${TOOLSDIR}/data/TestOldAES128CA.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
+  ret=$?
+  html_msg $ret 0 "Importing PKCS#12 file created with NSS 3.29.5 (PBES2 with incorrect AES-128-CBC algorithm ID)"
   check_tmpfile
 }
 

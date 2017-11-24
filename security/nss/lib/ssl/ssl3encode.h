@@ -16,7 +16,7 @@
 SECStatus ssl3_AppendToItem(SECItem *item,
                             const unsigned char *buf, PRUint32 bytes);
 SECStatus ssl3_AppendNumberToItem(SECItem *item,
-                                  PRUint32 num, PRInt32 lenSize);
+                                  PRUint64 num, PRInt32 lenSize);
 SECStatus ssl3_ConsumeFromItem(SECItem *item,
                                unsigned char **buf, PRUint32 bytes);
 SECStatus ssl3_ConsumeNumberFromItem(SECItem *item,

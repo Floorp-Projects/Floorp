@@ -12,7 +12,7 @@ With Mercurial:
 
 With Git, the process is similar, but you first need to add an alias to create Mercurial-style patches. Have a look at [the detailed documentation](https://developer.mozilla.org/en-US/docs/Tools/Contributing#Creating_a_patch_to_check_in).
 
-## Commit messags
+## Commit messages
 
 Commit messages should follow the pattern `Bug 1234567 - change description. r=reviewer`
 

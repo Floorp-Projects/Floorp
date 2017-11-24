@@ -64,8 +64,7 @@ secmodUnlockMutext(CK_VOID_PTR mutext)
 static SECMODModuleID nextModuleID = 1;
 static const CK_C_INITIALIZE_ARGS secmodLockFunctions = {
     secmodCreateMutext, secmodDestroyMutext, secmodLockMutext,
-    secmodUnlockMutext, CKF_LIBRARY_CANT_CREATE_OS_THREADS |
-                            CKF_OS_LOCKING_OK,
+    secmodUnlockMutext, CKF_LIBRARY_CANT_CREATE_OS_THREADS | CKF_OS_LOCKING_OK,
     NULL
 };
 static const CK_C_INITIALIZE_ARGS secmodNoLockArgs = {

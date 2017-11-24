@@ -2,25 +2,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "pk11pub.h"
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
 #include "tls13hkdf.h"
-
-static const char *
-ssl_GetCompressionMethodName(SSLCompressionMethod compression)
-{
-    switch (compression) {
-        case ssl_compression_null:
-            return "NULL";
-#ifdef NSS_ENABLE_ZLIB
-        case ssl_compression_deflate:
-            return "DEFLATE";
-#endif
-        default:
-            return "???";
-    }
-}
 
 SECStatus
 SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
@@ -48,59 +34,58 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     inf.length = PR_MIN(sizeof inf, len);
 
     if (ss->opt.useSecurity && ss->enoughFirstHsDone) {
+        SSLCipherSuiteInfo cinfo;
+        SECStatus rv;
+
         sid = ss->sec.ci.sid;
         inf.protocolVersion = ss->version;
         inf.authKeyBits = ss->sec.authKeyBits;
         inf.keaKeyBits = ss->sec.keaKeyBits;
-        if (ss->ssl3.initialized) {
-            SSLCipherSuiteInfo cinfo;
-            SECStatus rv;
 
-            ssl_GetSpecReadLock(ss);
-            /* XXX  The cipher suite should be in the specs and this
-             * function should get it from cwSpec rather than from the "hs".
-             * See bug 275744 comment 69 and bug 766137.
-             */
-            inf.cipherSuite = ss->ssl3.hs.cipher_suite;
-            inf.compressionMethod = ss->ssl3.cwSpec->compression_method;
-            ssl_ReleaseSpecReadLock(ss);
-            inf.compressionMethodName =
-                ssl_GetCompressionMethodName(inf.compressionMethod);
+        ssl_GetSpecReadLock(ss);
+        /* XXX  The cipher suite should be in the specs and this
+         * function should get it from cwSpec rather than from the "hs".
+         * See bug 275744 comment 69 and bug 766137.
+         */
+        inf.cipherSuite = ss->ssl3.hs.cipher_suite;
+        ssl_ReleaseSpecReadLock(ss);
+        inf.compressionMethod = ssl_compression_null;
+        inf.compressionMethodName = "NULL";
 
-            /* Fill in the cipher details from the cipher suite. */
-            rv = SSL_GetCipherSuiteInfo(inf.cipherSuite,
-                                        &cinfo, sizeof(cinfo));
-            if (rv != SECSuccess) {
-                return SECFailure; /* Error code already set. */
-            }
-            inf.symCipher = cinfo.symCipher;
-            inf.macAlgorithm = cinfo.macAlgorithm;
-            /* Get these fromm |ss->sec| because that is accurate
-             * even with TLS 1.3 disaggregated cipher suites. */
-            inf.keaType = ss->sec.keaType;
-            inf.originalKeaGroup = ss->sec.originalKeaGroup
-                                       ? ss->sec.originalKeaGroup->name
-                                       : ssl_grp_none;
-            inf.keaGroup = ss->sec.keaGroup
-                               ? ss->sec.keaGroup->name
-                               : ssl_grp_none;
-            inf.keaKeyBits = ss->sec.keaKeyBits;
-            inf.authType = ss->sec.authType;
-            inf.authKeyBits = ss->sec.authKeyBits;
-            inf.signatureScheme = ss->sec.signatureScheme;
-            /* If this is a resumed session, signatureScheme isn't set in ss->sec.
-             * Use the signature scheme from the previous handshake. */
-            if (inf.signatureScheme == ssl_sig_none && sid->sigScheme) {
-                inf.signatureScheme = sid->sigScheme;
-            }
-            inf.resumed = ss->statelessResume || ss->ssl3.hs.isResuming;
+        /* Fill in the cipher details from the cipher suite. */
+        rv = SSL_GetCipherSuiteInfo(inf.cipherSuite,
+                                    &cinfo, sizeof(cinfo));
+        if (rv != SECSuccess) {
+            return SECFailure; /* Error code already set. */
         }
+        inf.symCipher = cinfo.symCipher;
+        inf.macAlgorithm = cinfo.macAlgorithm;
+        /* Get these fromm |ss->sec| because that is accurate
+         * even with TLS 1.3 disaggregated cipher suites. */
+        inf.keaType = ss->sec.keaType;
+        inf.originalKeaGroup = ss->sec.originalKeaGroup
+                                   ? ss->sec.originalKeaGroup->name
+                                   : ssl_grp_none;
+        inf.keaGroup = ss->sec.keaGroup
+                           ? ss->sec.keaGroup->name
+                           : ssl_grp_none;
+        inf.keaKeyBits = ss->sec.keaKeyBits;
+        inf.authType = ss->sec.authType;
+        inf.authKeyBits = ss->sec.authKeyBits;
+        inf.signatureScheme = ss->sec.signatureScheme;
+        /* If this is a resumed session, signatureScheme isn't set in ss->sec.
+         * Use the signature scheme from the previous handshake. */
+        if (inf.signatureScheme == ssl_sig_none && sid->sigScheme) {
+            inf.signatureScheme = sid->sigScheme;
+        }
+        inf.resumed = ss->statelessResume || ss->ssl3.hs.isResuming;
+
         if (sid) {
             unsigned int sidLen;
 
-            inf.creationTime = sid->creationTime;
-            inf.lastAccessTime = sid->lastAccessTime;
-            inf.expirationTime = sid->expirationTime;
+            inf.creationTime = sid->creationTime / PR_USEC_PER_SEC;
+            inf.lastAccessTime = sid->lastAccessTime / PR_USEC_PER_SEC;
+            inf.expirationTime = sid->expirationTime / PR_USEC_PER_SEC;
             inf.extendedMasterSecretUsed =
                 (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ||
                  sid->u.ssl3.keys.extendedMasterSecretUsed)
@@ -207,17 +192,17 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 #define K_ANY "TLS 1.3", ssl_kea_tls13_any
 
 /* record protection cipher */
-#define C_SEED "SEED", calg_seed
-#define C_CAMELLIA "CAMELLIA", calg_camellia
-#define C_AES "AES", calg_aes
-#define C_RC4 "RC4", calg_rc4
-#define C_RC2 "RC2", calg_rc2
-#define C_DES "DES", calg_des
-#define C_3DES "3DES", calg_3des
-#define C_NULL "NULL", calg_null
-#define C_SJ "SKIPJACK", calg_sj
-#define C_AESGCM "AES-GCM", calg_aes_gcm
-#define C_CHACHA20 "CHACHA20POLY1305", calg_chacha20
+#define C_SEED "SEED", ssl_calg_seed
+#define C_CAMELLIA "CAMELLIA", ssl_calg_camellia
+#define C_AES "AES", ssl_calg_aes
+#define C_RC4 "RC4", ssl_calg_rc4
+#define C_RC2 "RC2", ssl_calg_rc2
+#define C_DES "DES", ssl_calg_des
+#define C_3DES "3DES", ssl_calg_3des
+#define C_NULL "NULL", ssl_calg_null
+#define C_SJ "SKIPJACK", ssl_calg_sj
+#define C_AESGCM "AES-GCM", ssl_calg_aes_gcm
+#define C_CHACHA20 "CHACHA20POLY1305", ssl_calg_chacha20
 
 /* "block cipher" sizes */
 #define B_256 256, 256, 256
@@ -378,8 +363,7 @@ SSL_GetNegotiatedHostInfo(PRFileDesc *fd)
     }
 
     if (ss->sec.isServer) {
-        if (ss->version > SSL_LIBRARY_VERSION_3_0 &&
-            ss->ssl3.initialized) { /* TLS */
+        if (ss->version > SSL_LIBRARY_VERSION_3_0) { /* TLS */
             SECItem *crsName;
             ssl_GetSpecReadLock(ss); /*********************************/
             crsName = &ss->ssl3.hs.srvVirtName;
@@ -403,22 +387,47 @@ SSL_GetNegotiatedHostInfo(PRFileDesc *fd)
     return sniName;
 }
 
+/*
+ *     HKDF-Expand-Label(Derive-Secret(Secret, label, ""),
+ *                       "exporter", Hash(context_value), key_length)
+ */
 static SECStatus
 tls13_Exporter(sslSocket *ss, PK11SymKey *secret,
                const char *label, unsigned int labelLen,
                const unsigned char *context, unsigned int contextLen,
                unsigned char *out, unsigned int outLen)
 {
+    SSL3Hashes contextHash;
+    PK11SymKey *innerSecret = NULL;
+    SECStatus rv;
+
+    static const char *kExporterInnerLabel = "exporter";
+
     if (!secret) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
 
-    return tls13_HkdfExpandLabelRaw(secret,
-                                    tls13_GetHash(ss),
-                                    context, contextLen,
-                                    label, labelLen,
-                                    out, outLen);
+    /* Pre-hash the context. */
+    rv = tls13_ComputeHash(ss, &contextHash, context, contextLen);
+    if (rv != SECSuccess) {
+        return rv;
+    }
+
+    rv = tls13_DeriveSecretNullHash(ss, secret, label, labelLen,
+                                    &innerSecret);
+    if (rv != SECSuccess) {
+        return rv;
+    }
+
+    rv = tls13_HkdfExpandLabelRaw(innerSecret,
+                                  tls13_GetHash(ss),
+                                  contextHash.u.raw, contextHash.len,
+                                  kExporterInnerLabel,
+                                  strlen(kExporterInnerLabel),
+                                  out, outLen);
+    PK11_FreeSymKey(innerSecret);
+    return rv;
 }
 
 SECStatus
@@ -484,7 +493,7 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
      * secret is available and we have sent ChangeCipherSpec.
      */
     ssl_GetSpecReadLock(ss);
-    if (!ss->ssl3.cwSpec->master_secret && !ss->ssl3.cwSpec->msItem.len) {
+    if (!ss->ssl3.cwSpec->masterSecret) {
         PORT_SetError(SSL_ERROR_HANDSHAKE_NOT_COMPLETED);
         rv = SECFailure;
     } else {

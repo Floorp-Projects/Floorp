@@ -619,7 +619,7 @@ addMessageListener("PermitUnload", msg => {
 
   let permitUnload = true;
   if (docShell && docShell.contentViewer) {
-    permitUnload = docShell.contentViewer.permitUnload();
+    permitUnload = docShell.contentViewer.permitUnload(msg.data.aPermitUnloadFlags);
   }
 
   sendAsyncMessage("PermitUnload", {id: msg.data.id, kind: "end", permitUnload});
