@@ -204,6 +204,9 @@ WebRenderAPI::GetNamespace() {
 WebRenderAPI::~WebRenderAPI()
 {
   if (!mRootApi) {
+
+    RenderThread::Get()->SetDestroyed(GetId());
+
     layers::SynchronousTask task("Destroy WebRenderAPI");
     auto event = MakeUnique<RemoveRenderer>(&task);
     RunOnRenderThread(Move(event));
