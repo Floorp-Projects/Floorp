@@ -49,6 +49,7 @@ const {
   promiseDocumentLoaded,
   promiseDocumentReady,
   runSafeSyncWithoutClone,
+  stringToCryptoHash,
 } = ExtensionUtils;
 
 const {
@@ -92,6 +93,7 @@ const SCRIPT_EXPIRY_TIMEOUT_MS = 5 * 60 * 1000;
 const SCRIPT_CLEAR_TIMEOUT_MS = 5 * 1000;
 
 const CSS_EXPIRY_TIMEOUT_MS = 30 * 60 * 1000;
+const CSSCODE_EXPIRY_TIMEOUT_MS = 10 * 60 * 1000;
 
 const scriptCaches = new WeakSet();
 const sheetCacheDocuments = new DefaultWeakMap(() => new WeakSet());
@@ -152,27 +154,23 @@ class ScriptCache extends CacheMap {
   }
 }
 
-class CSSCache extends CacheMap {
-  constructor(sheetType) {
-    super(CSS_EXPIRY_TIMEOUT_MS, url => {
-      let uri = Services.io.newURI(url);
-      return styleSheetService.preloadSheetAsync(uri, sheetType).then(sheet => {
-        return {url, sheet};
-      });
-    });
+/**
+ * Shared base class for the two specialized CSS caches:
+ * CSSCache (for the "url"-based stylesheets) and CSSCodeCache
+ * (for the stylesheet defined by plain CSS content as a string).
+ */
+class BaseCSSCache extends CacheMap {
+  addDocument(key, document) {
+    sheetCacheDocuments.get(this.get(key)).add(document);
   }
 
-  addDocument(url, document) {
-    sheetCacheDocuments.get(this.get(url)).add(document);
+  deleteDocument(key, document) {
+    sheetCacheDocuments.get(this.get(key)).delete(document);
   }
 
-  deleteDocument(url, document) {
-    sheetCacheDocuments.get(this.get(url)).delete(document);
-  }
-
-  delete(url) {
-    if (this.has(url)) {
-      let promise = this.get(url);
+  delete(key) {
+    if (this.has(key)) {
+      let promise = this.get(key);
 
       // Never remove a sheet from the cache if it's still being used by a
       // document. Rule processors can be shared between documents with the
@@ -184,7 +182,56 @@ class CSSCache extends CacheMap {
       }
     }
 
-    super.delete(url);
+    super.delete(key);
+  }
+}
+
+/**
+ * Cache of the preloaded stylesheet defined by url.
+ */
+class CSSCache extends BaseCSSCache {
+  constructor(sheetType) {
+    super(CSS_EXPIRY_TIMEOUT_MS, url => {
+      let uri = Services.io.newURI(url);
+      return styleSheetService.preloadSheetAsync(uri, sheetType).then(sheet => {
+        return {url, sheet};
+      });
+    });
+  }
+}
+
+/**
+ * Cache of the preloaded stylesheet defined by plain CSS content as a string,
+ * the key of the cached stylesheet is the hash of its "CSSCode" string.
+ */
+class CSSCodeCache extends BaseCSSCache {
+  constructor(sheetType, extension) {
+    super(CSSCODE_EXPIRY_TIMEOUT_MS, (hash) => {
+      if (!this.has(hash)) {
+        // Do not allow the getter to be used to lazily create the cached stylesheet,
+        // the cached CSSCode stylesheet has to be explicitly set.
+        throw new Error("Unexistent cached cssCode stylesheet: " + Error().stack);
+      }
+
+      return super.get(hash);
+    });
+
+    // Store the preferred sheetType (used to preload the expected stylesheet type in
+    // the addCSSCode method).
+    this.sheetType = sheetType;
+  }
+
+  addCSSCode(hash, cssCode) {
+    if (this.has(hash)) {
+      // This cssCode have been already cached, no need to create it again.
+      return;
+    }
+    const uri = Services.io.newURI("data:text/css;charset=utf-8," + encodeURIComponent(cssCode));
+    const value = styleSheetService.preloadSheetAsync(uri, this.sheetType).then(sheet => {
+      return {sheet, uri};
+    });
+
+    super.set(hash, value);
   }
 }
 
@@ -204,6 +251,17 @@ defineLazyGetter(BrowserExtensionContent.prototype, "authorCSS", () => {
   return new CSSCache(Ci.nsIStyleSheetService.AUTHOR_SHEET);
 });
 
+// These two caches are similar to the above but specialized to cache the cssCode
+// using an hash computed from the cssCode string as the key (instead of the generated data
+// URI which can be pretty long for bigger injected cssCode).
+defineLazyGetter(BrowserExtensionContent.prototype, "userCSSCode", function() {
+  return new CSSCodeCache(Ci.nsIStyleSheetService.USER_SHEET, this);
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "authorCSSCode", function() {
+  return new CSSCodeCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
+});
+
 // Represents a content script.
 class Script {
   constructor(extension, matcher) {
@@ -212,21 +270,42 @@ class Script {
 
     this.runAt = this.matcher.runAt;
     this.js = this.matcher.jsPaths;
-    this.css = this.matcher.cssPaths;
+    this.css = this.matcher.cssPaths.slice();
+    this.cssCodeHash = null;
+
     this.removeCSS = this.matcher.removeCSS;
     this.cssOrigin = this.matcher.cssOrigin;
 
-    this.cssCache = extension[this.cssOrigin === "user" ? "userCSS"
-                                                        : "authorCSS"];
-    this.scriptCache = extension[matcher.wantReturnValue ? "dynamicScripts"
-                                                         : "staticScripts"];
+    this.cssCache = extension[
+      this.cssOrigin === "user" ? "userCSS" : "authorCSS"
+    ];
+    this.cssCodeCache = extension[
+      this.cssOrigin === "user" ? "userCSSCode" : "authorCSSCode"
+    ];
+    this.scriptCache = extension[
+      matcher.wantReturnValue ? "dynamicScripts" : "staticScripts"
+    ];
 
     if (matcher.wantReturnValue) {
       this.compileScripts();
       this.loadCSS();
     }
+  }
 
-    this.requiresCleanup = !this.removeCss && (this.css.length > 0 || matcher.cssCode);
+  get requiresCleanup() {
+    return !this.removeCss && (this.css.length > 0 || this.cssCodeHash);
+  }
+
+  async addCSSCode(cssCode) {
+    if (!cssCode) {
+      return;
+    }
+
+    // Store the hash of the cssCode.
+    this.cssCodeHash = await stringToCryptoHash(cssCode);
+
+    // Cache and preload the cssCode stylesheet.
+    this.cssCodeCache.addCSSCode(this.cssCodeHash, cssCode);
   }
 
   compileScripts() {
@@ -234,7 +313,7 @@ class Script {
   }
 
   loadCSS() {
-    return this.cssURLs.map(url => this.cssCache.get(url));
+    return this.css.map(url => this.cssCache.get(url));
   }
 
   preload() {
@@ -242,19 +321,32 @@ class Script {
     this.compileScripts();
   }
 
-  cleanup(window) {
-    if (!this.removeCss && this.cssURLs.length) {
-      let winUtils = getWinUtils(window);
+  cleanup(window, forceCacheClear = false) {
+    if (this.requiresCleanup) {
+      if (window) {
+        let winUtils = getWinUtils(window);
 
-      let type = this.cssOrigin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
-      for (let url of this.cssURLs) {
-        this.cssCache.deleteDocument(url, window.document);
-        runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
+        let type = this.cssOrigin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
+
+        for (let url of this.css) {
+          this.cssCache.deleteDocument(url, window.document);
+          runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
+        }
+
+        const {cssCodeHash} = this;
+
+        if (cssCodeHash && this.cssCodeCache.has(cssCodeHash)) {
+          this.cssCodeCache.get(cssCodeHash).then(({uri}) => {
+            runSafeSyncWithoutClone(winUtils.removeSheet, uri, type);
+          });
+          this.cssCodeCache.deleteDocument(cssCodeHash, window.document);
+        }
       }
 
       // Clear any sheets that were kept alive past their timeout as
       // a result of living in this document.
-      this.cssCache.clear(CSS_EXPIRY_TIMEOUT_MS);
+      this.cssCodeCache.clear(forceCacheClear ? 0 : CSSCODE_EXPIRY_TIMEOUT_MS);
+      this.cssCache.clear(forceCacheClear ? 0 : CSS_EXPIRY_TIMEOUT_MS);
     }
   }
 
@@ -301,18 +393,27 @@ class Script {
       context.addScript(this);
     }
 
+    const {cssCodeHash} = this;
+
     let cssPromise;
-    if (this.cssURLs.length) {
+    if (this.css.length || cssCodeHash) {
       let window = context.contentWindow;
       let winUtils = getWinUtils(window);
 
       let type = this.cssOrigin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
 
       if (this.removeCSS) {
-        for (let url of this.cssURLs) {
+        for (let url of this.css) {
           this.cssCache.deleteDocument(url, window.document);
 
           runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
+        }
+
+        if (cssCodeHash && this.cssCodeCache.has(cssCodeHash)) {
+          const {uri} = await this.cssCodeCache.get(cssCodeHash);
+          this.cssCodeCache.deleteDocument(cssCodeHash, window.document);
+
+          runSafeSyncWithoutClone(winUtils.removeSheet, uri, type);
         }
       } else {
         cssPromise = Promise.all(this.loadCSS()).then(sheets => {
@@ -327,6 +428,15 @@ class Script {
             runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
           }
         });
+
+        if (cssCodeHash) {
+          cssPromise = cssPromise.then(async () => {
+            const {sheet} = await this.cssCodeCache.get(cssCodeHash);
+            this.cssCodeCache.addDocument(cssCodeHash, window.document);
+
+            runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
+          });
+        }
       }
     }
 
@@ -370,17 +480,6 @@ class Script {
     return result;
   }
 }
-
-defineLazyGetter(Script.prototype, "cssURLs", function() {
-  // We can handle CSS urls (css) and CSS code (cssCode).
-  let urls = this.css.slice();
-
-  if (this.matcher.cssCode) {
-    urls.push("data:text/css;charset=utf-8," + encodeURIComponent(this.matcher.cssCode));
-  }
-
-  return urls;
-});
 
 /**
  * An execution context for semi-privileged extension content scripts.
@@ -511,14 +610,21 @@ class ContentScriptContextChild extends BaseContext {
     }
   }
 
+  cleanupScripts(forceCacheClear = false) {
+    // Cleanup the scripts (even if the contentWindow have been destroyed) and their
+    // related CSS and Script caches.
+    for (let script of this.scripts) {
+      script.cleanup(this.contentWindow, forceCacheClear);
+    }
+  }
+
   close() {
     super.unload();
 
-    if (this.contentWindow) {
-      for (let script of this.scripts) {
-        script.cleanup(this.contentWindow);
-      }
+    // Cleanup the scripts even if the contentWindow have been destroyed.
+    this.cleanupScripts();
 
+    if (this.contentWindow) {
       // Overwrite the content script APIs with an empty object if the APIs objects are still
       // defined in the content window (See Bug 1214658).
       if (this.isExtensionPage) {
@@ -612,6 +718,10 @@ DocumentManager = {
     for (let extensions of this.contexts.values()) {
       let context = extensions.get(extension);
       if (context) {
+        // Passing true to context.cleanupScripts causes the caches for this context
+        // to be cleared.
+        context.cleanupScripts(true);
+
         context.close();
         extensions.delete(extension);
       }
