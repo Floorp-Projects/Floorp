@@ -1331,6 +1331,10 @@ pref("security.insecure_password.ui.enabled", true);
 // Show in-content login form warning UI for insecure login fields
 pref("security.insecure_field_warning.contextual.enabled", true);
 
+// Show degraded UI for http pages; disabled for now
+pref("security.insecure_connection_icon.enabled", false);
+pref("security.insecure_connection_icon.pbmode.enabled", false);
+
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);
 

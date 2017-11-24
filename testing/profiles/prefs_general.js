@@ -170,7 +170,6 @@ user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 // Point Firefox Health Report at a local server. We don't care if it actually
 // works. It just can't hit the default production endpoint.
 user_pref("datareporting.healthreport.documentServerURI", "http://%(server)s/healthreport/");
-user_pref("datareporting.healthreport.about.reportUrl", "http://%(server)s/abouthealthreport/v4/");
 
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);

@@ -152,6 +152,11 @@ interface IGeckoBackChannel : IUnknown
 {
   [propput] HRESULT HandlerControl([in] long aPid, [in] IHandlerControl* aCtrl);
   HRESULT Refresh([out] DynamicIA2Data* aOutData);
+  [propget] HRESULT AllTextInfo([out] BSTR* aText,
+    [out, size_is(,*aNHyperlinks)] IAccessibleHyperlink*** aHyperlinks,
+    [out] long* aNHyperlinks,
+    [out, size_is(,*aNAttribRuns)] IA2TextSegment** aAttribRuns,
+    [out] long* aNAttribRuns);
 }
 
 [uuid(1e545f07-f108-4912-9471-546827a80983)]
