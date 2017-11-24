@@ -11,6 +11,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/CSSCounterStyleRuleBinding.h"
+#include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h"
 #include "nsStyleUtil.h"
 
@@ -132,9 +133,17 @@ nsCSSCounterStyleRule::GetName(nsAString& aName)
 NS_IMETHODIMP
 nsCSSCounterStyleRule::SetName(const nsAString& aName)
 {
-  nsCSSParser parser;
-  if (RefPtr<nsAtom> name = parser.ParseCounterStyleName(aName, nullptr)) {
-    nsIDocument* doc = GetDocument();
+  RefPtr<nsAtom> name;
+
+  nsIDocument* doc = GetDocument();
+  if (!doc || doc->IsStyledByServo()) {
+    name = ServoCSSParser::ParseCounterStyleName(aName);
+  } else {
+    nsCSSParser parser;
+    name = parser.ParseCounterStyleName(aName, nullptr);
+  }
+
+  if (name) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 
     mName = name;
