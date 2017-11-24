@@ -54,7 +54,7 @@ def set_tp_preferences(test, browser_config):
                 test[cycle_var] = 2
 
     CLI_bool_options = ['tpchrome', 'tpmozafterpaint', 'tploadnocache', 'tpscrolltest', 'fnbpaint']
-    CLI_options = ['tpcycles', 'tppagecycles', 'tptimeout']
+    CLI_options = ['tpcycles', 'tppagecycles', 'tptimeout', 'tpmanifest']
     for key in CLI_bool_options:
         if key in test:
             _pref_name = "talos.%s" % key
@@ -82,6 +82,7 @@ def run_tests(config, browser_config):
     tests = config['tests']
     tests = useBaseTestDefaults(config.get('basetest', {}), tests)
     paths = ['profile_path', 'tpmanifest', 'extensions', 'setup', 'cleanup']
+
     for test in tests:
         # Check for profile_path, tpmanifest and interpolate based on Talos
         # root https://bugzilla.mozilla.org/show_bug.cgi?id=727711
@@ -94,11 +95,6 @@ def run_tests(config, browser_config):
                 os.path.normpath('file:/%s' % (urllib.quote(test['tpmanifest'],
                                                '/\\t:\\')))
             test['preferences']['talos.tpmanifest'] = test['tpmanifest']
-
-        if not test.get('url'):
-            # set browser prefs for pageloader test setings (doesn't use cmd line args / url)
-            test['url'] = None
-            set_tp_preferences(test, browser_config)
 
         test['setup'] = utils.interpolate(test['setup'])
         test['cleanup'] = utils.interpolate(test['cleanup'])
@@ -227,6 +223,7 @@ def run_tests(config, browser_config):
                                          str(scripts_path))
 
     testname = None
+
     # run the tests
     timer = utils.Timer()
     LOG.suite_start(tests=[test['name'] for test in tests])
@@ -234,6 +231,11 @@ def run_tests(config, browser_config):
         for test in tests:
             testname = test['name']
             LOG.test_start(testname)
+
+            if not test.get('url'):
+                # set browser prefs for pageloader test setings (doesn't use cmd line args / url)
+                test['url'] = None
+                set_tp_preferences(test, browser_config)
 
             mytest = TTest()
 
