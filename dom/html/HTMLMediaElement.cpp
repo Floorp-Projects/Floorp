@@ -1956,6 +1956,13 @@ NS_IMETHODIMP HTMLMediaElement::Load()
 
 void HTMLMediaElement::DoLoad()
 {
+  // Check if media is allowed for the docshell.
+  nsCOMPtr<nsIDocShell> docShell = OwnerDoc()->GetDocShell();
+  if (docShell && !docShell->GetAllowMedia()) {
+    LOG(LogLevel::Debug, ("%p Media not allowed", this));
+    return;
+  }
+
   if (mIsRunningLoadMethod) {
     return;
   }
@@ -2495,12 +2502,6 @@ nsresult HTMLMediaElement::LoadResource()
   if (mChannelLoader) {
     mChannelLoader->Cancel();
     mChannelLoader = nullptr;
-  }
-
-  // Check if media is allowed for the docshell.
-  nsCOMPtr<nsIDocShell> docShell = OwnerDoc()->GetDocShell();
-  if (docShell && !docShell->GetAllowMedia()) {
-    return NS_ERROR_FAILURE;
   }
 
   // Set the media element's CORS mode only when loading a resource
