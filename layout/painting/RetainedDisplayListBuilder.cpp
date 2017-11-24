@@ -7,6 +7,7 @@
 
 #include "RetainedDisplayListBuilder.h"
 #include "nsSubDocumentFrame.h"
+#include "nsViewManager.h"
 
 /**
  * Code for doing display list building for a modified subset of the window,
@@ -518,20 +519,48 @@ TakeAndAddModifiedFramesFromRootFrame(nsTArray<nsIFrame*>& aFrames,
   frames->Clear();
 }
 
+struct CbData {
+  nsDisplayListBuilder* builder;
+  nsTArray<nsIFrame*> modifiedFrames;
+};
+
 static bool
 SubDocEnumCb(nsIDocument* aDocument, void* aData)
 {
   MOZ_ASSERT(aDocument);
   MOZ_ASSERT(aData);
 
-  nsTArray<nsIFrame*>* modifiedFrames =
-    static_cast<nsTArray<nsIFrame*>*>(aData);
+  CbData* data = static_cast<CbData*>(aData);
+
+  // Although this is the actual subdocument, it might not be
+  // what painting uses. Walk up to the nsSubDocumentFrame owning
+  // us, and then ask that which subdoc it's going to paint.
 
   nsIPresShell* presShell = aDocument->GetShell();
-  nsIFrame* rootFrame = presShell ? presShell->GetRootFrame() : nullptr;
+  if (presShell) {
+    nsView* rootView = presShell->GetViewManager()->GetRootView();
+    MOZ_ASSERT(rootView);
 
-  if (rootFrame) {
-    TakeAndAddModifiedFramesFromRootFrame(*modifiedFrames, rootFrame);
+    // There should be an anonymous inner view between the root view
+    // of the subdoc, and the view for the nsSubDocumentFrame.
+    nsView* innerView = rootView->GetParent();
+    MOZ_ASSERT(innerView);
+
+    nsView* subDocView = innerView->GetParent();
+    MOZ_ASSERT(subDocView);
+
+    nsIFrame* subDocFrame = subDocView->GetFrame();
+    MOZ_ASSERT(subDocFrame);
+    nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
+    MOZ_ASSERT(subdocumentFrame);
+
+    presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
+      data->builder->IsIgnoringPaintSuppression() ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION : 0);
+    nsIFrame* rootFrame = presShell ? presShell->GetRootFrame() : nullptr;
+
+    if (rootFrame) {
+      TakeAndAddModifiedFramesFromRootFrame(data->modifiedFrames, rootFrame);
+    }
   }
 
   aDocument->EnumerateSubDocuments(SubDocEnumCb, aData);
@@ -539,20 +568,21 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
 }
 
 static nsTArray<nsIFrame*>
-GetModifiedFrames(nsIFrame* aDisplayRootFrame)
+GetModifiedFrames(nsDisplayListBuilder* aBuilder)
 {
-  MOZ_ASSERT(aDisplayRootFrame);
+  MOZ_ASSERT(aBuilder->RootReferenceFrame());
 
-  nsTArray<nsIFrame*> modifiedFrames;
-  TakeAndAddModifiedFramesFromRootFrame(modifiedFrames, aDisplayRootFrame);
+  CbData data;
+  data.builder = aBuilder;
+  TakeAndAddModifiedFramesFromRootFrame(data.modifiedFrames, aBuilder->RootReferenceFrame());
 
-  nsIDocument* rootdoc = aDisplayRootFrame->PresContext()->Document();
+  nsIDocument* rootdoc = aBuilder->RootReferenceFrame()->PresContext()->Document();
 
   if (rootdoc) {
-    rootdoc->EnumerateSubDocuments(SubDocEnumCb, &modifiedFrames);
+    rootdoc->EnumerateSubDocuments(SubDocEnumCb, &data);
   }
 
-  return modifiedFrames;
+  return Move(data.modifiedFrames);
 }
 
 // ComputeRebuildRegion  debugging
@@ -786,7 +816,7 @@ void
 RetainedDisplayListBuilder::ClearModifiedFrameProps()
 {
   nsTArray<nsIFrame*> modifiedFrames =
-    GetModifiedFrames(mBuilder.RootReferenceFrame());
+    GetModifiedFrames(&mBuilder);
 
   ClearFrameProps(modifiedFrames);
 }
@@ -802,7 +832,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
   mBuilder.EnterPresShell(mBuilder.RootReferenceFrame());
 
   nsTArray<nsIFrame*> modifiedFrames =
-    GetModifiedFrames(mBuilder.RootReferenceFrame());
+    GetModifiedFrames(&mBuilder);
 
   // Do not allow partial builds if the retained display list is empty, or if
   // ShouldBuildPartial heuristic fails.
