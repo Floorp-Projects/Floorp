@@ -43,6 +43,7 @@ class RequestListContextMenu {
       mimeType,
       httpVersion,
       requestHeaders,
+      requestPostData,
       requestPostDataAvailable,
       responseHeaders,
       responseContentAvailable,
@@ -73,7 +74,7 @@ class RequestListContextMenu {
       id: "request-list-context-copy-post-data",
       label: L10N.getStr("netmonitor.context.copyPostData"),
       accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
-      visible: !!(selectedRequest && requestPostDataAvailable),
+      visible: !!(selectedRequest && (requestPostDataAvailable || requestPostData)),
       click: () => this.copyPostData(id),
     });
 

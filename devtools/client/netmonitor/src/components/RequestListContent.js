@@ -211,6 +211,7 @@ class RequestListContent extends Component {
 
   render() {
     const {
+      connector,
       columns,
       displayedRequests,
       firstRequestStartedMillis,
@@ -236,6 +237,7 @@ class RequestListContent extends Component {
             displayedRequests.map((item, index) => RequestListItem({
               firstRequestStartedMillis,
               fromCache: item.status === "304" || item.fromCache,
+              connector,
               columns,
               item,
               index,
