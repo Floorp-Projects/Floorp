@@ -23,7 +23,7 @@ add_task(function* () {
   let requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
 
   info("Waiting for OPTIONS, then POST");
-  let wait = waitForNetworkEvents(monitor, 1, 1);
+  let wait = waitForNetworkEvents(monitor, 2);
   yield ContentTask.spawn(tab.linkedBrowser, requestUrl, function* (url) {
     content.wrappedJSObject.performRequests(url, "triggering/preflight", "post-data");
   });
@@ -40,7 +40,7 @@ add_task(function* () {
 
   // Resend both requests without modification. Wait for resent OPTIONS, then POST.
   // POST is supposed to have no preflight OPTIONS request this time (CORS is disabled)
-  let onRequests = waitForNetworkEvents(monitor, 1, 0);
+  let onRequests = waitForNetworkEvents(monitor, 1);
   ITEMS.forEach((item) => {
     info(`Selecting the ${item.method} request`);
     store.dispatch(Actions.selectRequest(item.id));
