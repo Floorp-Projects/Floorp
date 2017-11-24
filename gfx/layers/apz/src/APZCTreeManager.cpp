@@ -2197,7 +2197,8 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
 
   if (gfxPrefs::WebRenderHitTest()) {
     HitTestResult wrHitResult = HitNothing;
-    RefPtr<AsyncPanZoomController> wrTarget = GetAPZCAtPointWR(aPoint, &wrHitResult);
+    HitTestingTreeNode* wrScrollbarNode = nullptr;
+    RefPtr<AsyncPanZoomController> wrTarget = GetAPZCAtPointWR(aPoint, &wrHitResult, &wrScrollbarNode);
     // For now just compare the WR and non-WR results.
     if (wrHitResult != hitResult) {
       printf_stderr("WR hit result mismatch at %s: got %d, expected %d\n",
@@ -2209,6 +2210,11 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
           Stringify(aPoint).c_str(),
           wrTarget ? Stringify(wrTarget->GetGuid()).c_str() : "null",
           target ? Stringify(target->GetGuid()).c_str() : "null");
+      // MOZ_RELEASE_ASSERT(false);
+    }
+    if (wrScrollbarNode != scrollbarNode) {
+      printf_stderr("WR scrollbar node mismatch at %s: got %p, expected %p\n",
+          Stringify(aPoint).c_str(), wrScrollbarNode, scrollbarNode);
       // MOZ_RELEASE_ASSERT(false);
     }
   }
@@ -2224,9 +2230,11 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
 
 already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
-                                  HitTestResult* aOutHitResult)
+                                  HitTestResult* aOutHitResult,
+                                  HitTestingTreeNode** aOutScrollbarNode)
 {
   MOZ_ASSERT(aOutHitResult);
+  MOZ_ASSERT(aOutScrollbarNode);
 
   RefPtr<AsyncPanZoomController> result;
   RefPtr<wr::WebRenderAPI> wr = GetWebRenderAPI();
@@ -2254,6 +2262,22 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
     MOZ_ASSERT(scrollId == FrameMetrics::NULL_SCROLL_ID);
     result = FindRootApzcForLayersId(layersId);
     MOZ_ASSERT(result);
+  }
+
+  bool isScrollbar = bool(hitInfo & gfx::CompositorHitTestInfo::eScrollbar);
+  bool isScrollbarThumb = bool(hitInfo & gfx::CompositorHitTestInfo::eScrollbarThumb);
+  ScrollDirection direction = (hitInfo & gfx::CompositorHitTestInfo::eScrollbarVertical)
+                            ? ScrollDirection::eVertical
+                            : ScrollDirection::eHorizontal;
+  if (isScrollbar || isScrollbarThumb) {
+    *aOutScrollbarNode = BreadthFirstSearch<ReverseIterator>(mRootNode.get(),
+      [&](HitTestingTreeNode* aNode) {
+        return (aNode->GetLayersId() == layersId) &&
+               (aNode->IsScrollbarNode() == isScrollbar) &&
+               (aNode->IsScrollThumbNode() == isScrollbarThumb) &&
+               (aNode->GetScrollbarDirection() == direction) &&
+               (aNode->GetScrollTargetId() == scrollId);
+      });
   }
 
   *aOutHitResult = HitLayer;
