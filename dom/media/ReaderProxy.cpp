@@ -81,6 +81,11 @@ ReaderProxy::OnAudioDataRequestFailed(const MediaResult& aError)
   // audio data time in the next round when seamless looping is enabled.
   mLoopingOffset = mLastAudioEndTime;
 
+  // Save the duration of the audio track if it hasn't been set.
+  if (!mAudioDuration.IsValid()) {
+    mAudioDuration = mLastAudioEndTime;
+  }
+
   // For seamless looping, the demuxer is sought to the beginning and then
   // keep requesting decoded data in advance, upon receiving EOS.
   // The MDSM will not be aware of the EOS and keep receiving decoded data
@@ -160,6 +165,7 @@ ReaderProxy::Seek(const SeekTarget& aTarget)
   // Reset the members for seamless looping if the seek is triggered outside.
   mLoopingOffset = media::TimeUnit::Zero();
   mLastAudioEndTime = media::TimeUnit::Zero();
+  mAudioDuration = media::TimeUnit::Invalid();
   return SeekInternal(aTarget);
 }
 
@@ -288,6 +294,17 @@ ReaderProxy::SetSeamlessLoopingEnabled(bool aEnabled)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   mSeamlessLoopingEnabled = aEnabled;
+}
+
+void
+ReaderProxy::AdjustByLooping(media::TimeUnit& aTime)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_ASSERT(!mShutdown);
+  MOZ_ASSERT(!mSeamlessLoopingEnabled || !mSeamlessLoopingBlocked);
+  if (mAudioDuration.IsValid() && mAudioDuration.IsPositive()) {
+    aTime = aTime % mAudioDuration.ToMicroseconds();
+  }
 }
 
 } // namespace mozilla
