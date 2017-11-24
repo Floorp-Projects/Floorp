@@ -226,7 +226,7 @@ public:
 
 nsresult
 NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                  FromParser aFromParser, const nsAString* aIs,
+                  FromParser aFromParser, nsAtom* aIsAtom,
                   mozilla::dom::CustomElementDefinition* aDefinition)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
@@ -234,7 +234,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
   NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
                "Trying to create HTML elements that don't have the XHTML namespace");
 
-  return nsContentUtils::NewXULOrHTMLElement(aResult, nodeInfo, aFromParser, aIs, aDefinition);
+  return nsContentUtils::NewXULOrHTMLElement(aResult, nodeInfo, aFromParser, aIsAtom, aDefinition);
 }
 
 already_AddRefed<nsGenericHTMLElement>
