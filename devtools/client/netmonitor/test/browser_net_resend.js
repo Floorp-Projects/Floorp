@@ -26,7 +26,7 @@ add_task(function* () {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 0, 2);
+  let wait = waitForNetworkEvents(monitor, 2);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
     content.wrappedJSObject.performRequests();
   });
@@ -52,7 +52,7 @@ add_task(function* () {
   testCustomItemChanged(customItem, origItem);
 
   // send the new request
-  wait = waitForNetworkEvents(monitor, 0, 1);
+  wait = waitForNetworkEvents(monitor, 1);
   store.dispatch(Actions.sendCustomRequest(connector));
   yield wait;
 

@@ -16,7 +16,6 @@ function* throttleTest(actuallyThrottle) {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   let { store, windowRequire, connector } = monitor.panelWin;
   let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
   let { setPreferences, triggerActivity } = connector;
   let {
     getSortedRequests,
@@ -46,9 +45,9 @@ function* throttleTest(actuallyThrottle) {
     });
   });
 
-  let eventPromise = monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS);
+  let wait = waitForNetworkEvents(monitor, 1);
   yield triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);
-  yield eventPromise;
+  yield wait;
 
   yield waitUntil(() => {
     let requestItem = getSortedRequests(store.getState()).get(0);
