@@ -360,7 +360,7 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
   }
   switch (aError.Value()) {
   case MediaSourceEndOfStreamError::Network:
-    mDecoder->NetworkError();
+    mDecoder->NetworkError(MediaResult(NS_ERROR_FAILURE, "MSE network"));
     break;
   case MediaSourceEndOfStreamError::Decode:
     mDecoder->DecodeError(NS_ERROR_DOM_MEDIA_FATAL_ERR);

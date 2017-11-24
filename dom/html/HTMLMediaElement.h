@@ -174,7 +174,7 @@ public:
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
-  virtual void NetworkError() final override;
+  virtual void NetworkError(const MediaResult& aError) final override;
 
   // Called by the video decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
@@ -1055,7 +1055,7 @@ protected:
   /**
    * The resource-fetch algorithm step of the load algorithm.
    */
-  nsresult LoadResource();
+  MediaResult LoadResource();
 
   /**
    * Selects the next <source> child from which to load a resource. Called
