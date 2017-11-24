@@ -190,7 +190,7 @@ function runTests() {
 
   document.body.offsetLeft;
 
-  // This shouldn't enable capturing, since we're not in a right kind of 
+  // This shouldn't enable capturing, since we're not in a right kind of
   // event listener.
   utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
@@ -204,12 +204,11 @@ function runTests() {
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
                        [angle, angle], [force, force], 2, modifiers);
 
-  // No implicitly / explicitly pointer capture. pointermove should be
-  // dispatched to 1d2, 2d2
-  is(test1d1pointermovecount, 0, "1d1 shouldn't have got pointermove");
-  is(test2d1pointermovecount, 0, "2d1 shouldn't have got pointermove");
-  is(test1d2pointermovecount, 1, "1d2 should have got pointermove");
-  is(test2d2pointermovecount, 1, "2d2 should have got pointermove");
+  // Implicitly pointer capture. pointermove should be dispatched to 1d1, 2d1
+  is(test1d1pointermovecount, 1, "1d1 should have got pointermove");
+  is(test2d1pointermovecount, 1, "2d1 should have got pointermove");
+  is(test1d2pointermovecount, 0, "1d2 shouldn't have got pointermove");
+  is(test2d2pointermovecount, 0, "2d2 shouldn't have got pointermove");
 
   // Explicitly capture pointer to 1d1, 2d1
   test1d1.addEventListener("pointerdown", test1d1CapturePointer, {capture: true, once: true});
@@ -225,14 +224,14 @@ function runTests() {
 
   // Explicitly capture pointer to 1d1, 2d1. pointermove, gotpointercapture
   // should be dispatched to 1d1, 2d1
-  is(test1d1pointermovecount, 1, "1d1 should have got pointermove");
-  is(test1d1pointergotcapture, 1, "1d1 should have got pointergotcapture");
-  is(test1d2pointermovecount, 1, "1d2 shouldn't have got pointermove");
+  is(test1d1pointermovecount, 2, "1d1 should have got pointermove");
+  is(test1d1pointergotcapture, 2, "1d1 should have got pointergotcapture");
+  is(test1d2pointermovecount, 0, "1d2 shouldn't have got pointermove");
   is(test1d2pointergotcapture, 0, "1d2 shouldn't have got pointergotcapture");
 
-  is(test2d1pointermovecount, 1, "2d1 should have got pointermove");
-  is(test2d1pointergotcapture, 1, "2d1 should have got pointergotcapture");
-  is(test2d2pointermovecount, 1, "2d2 shouldn't have got pointermove");
+  is(test2d1pointermovecount, 2, "2d1 should have got pointermove");
+  is(test2d1pointergotcapture, 2, "2d1 should have got pointergotcapture");
+  is(test2d2pointermovecount, 0, "2d2 shouldn't have got pointermove");
   is(test2d2pointergotcapture, 0, "2d2 shouldn't have got pointergotcapture");
 
   utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
@@ -261,14 +260,14 @@ function runTests() {
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
                        [angle, angle], [force, force], 2, modifiers);
 
-  is(test1d1pointermovecount, 2, "1d1 should have got pointermove");
-  is(test1d1pointergotcapture, 2, "1d1 should have got pointergotcapture");
-  is(test1d2pointermovecount, 2, "1d2 should have got pointermove");
+  is(test1d1pointermovecount, 3, "1d1 shouldn't have got pointermove");
+  is(test1d1pointergotcapture, 3, "1d1 should have got pointergotcapture");
+  is(test1d2pointermovecount, 1, "1d2 should have got pointermove");
   is(test1d2pointergotcapture, 1, "1d2 should have got pointergotcapture");
 
-  is(test2d1pointermovecount, 2, "2d1 should have got pointermove");
-  is(test2d1pointergotcapture, 2, "2d1 should have got pointergotcapture");
-  is(test2d2pointermovecount, 2, "2d2 should have got pointermove");
+  is(test2d1pointermovecount, 3, "2d1 shouldn't have got pointermove");
+  is(test2d1pointergotcapture, 3, "2d1 should have got pointergotcapture");
+  is(test2d2pointermovecount, 1, "2d2 should have got pointermove");
   is(test2d2pointergotcapture, 1, "2d2 should have got pointergotcapture");
 
   utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
@@ -282,7 +281,7 @@ function finishTest() {
   // Let window.onerror have a chance to fire
   setTimeout(function() {
     setTimeout(function() {
-      window.parent.postMessage("run next", "*");
+      window.parent.postMessage("finishTest", "*");
     }, 0);
   }, 0);
 }
@@ -291,7 +290,7 @@ window.onload = function () {
   SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.w3c_pointer_events.enabled", true],
-      ["dom.w3c_pointer_events.implicit_capture", false]
+      ["dom.w3c_pointer_events.implicit_capture", true]
     ]
   }, runTests);
 }
