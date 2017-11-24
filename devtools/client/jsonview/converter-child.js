@@ -24,7 +24,6 @@ const BinaryInput = CC("@mozilla.org/binaryinputstream;1",
                        "nsIBinaryInputStream", "setInputStream");
 const BufferStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
                        "nsIArrayBufferInputStream", "setData");
-const encodingLength = 0;
 
 // Localization
 loader.lazyGetter(this, "jsonViewStrings", () => {
@@ -71,25 +70,10 @@ Converter.prototype = {
   },
 
   onDataAvailable: function (request, context, inputStream, offset, count) {
-    // If the encoding is not known, store data in an array until we have enough bytes.
-    if (this.encodingArray) {
-      let desired = encodingLength - this.encodingArray.length;
-      let n = Math.min(desired, count);
-      let bytes = new BinaryInput(inputStream).readByteArray(n);
-      offset += n;
-      count -= n;
-      this.encodingArray.push(...bytes);
-      if (n < desired) {
-        // Wait until there is more data.
-        return;
-      }
-      this.determineEncoding(request, context);
-    }
-
     // Decode and insert data.
     let buffer = new ArrayBuffer(count);
     new BinaryInput(inputStream).readArrayBuffer(count, buffer);
-    this.decodeAndInsertBuffer(request, context, buffer);
+    this.decodeAndInsertBuffer(buffer);
   },
 
   onStartRequest: function (request, context) {
@@ -100,6 +84,7 @@ Converter.prototype = {
 
     // Don't honor the charset parameter and use UTF-8 (see bug 741776).
     request.contentCharset = "UTF-8";
+    this.decoder = new TextDecoder("UTF-8");
 
     // Changing the content type breaks saving functionality. Fix it.
     fixSave(request);
@@ -123,18 +108,11 @@ Converter.prototype = {
     let buffer = new TextEncoder().encode(initialHTML(win.document)).buffer;
     let stream = new BufferStream(buffer, 0, buffer.byteLength);
     this.listener.onDataAvailable(request, context, stream, 0, stream.available());
-
-    // Create an array to store data until the encoding is determined.
-    this.encodingArray = [];
   },
 
   onStopRequest: function (request, context, statusCode) {
     // Flush data.
-    if (this.encodingArray) {
-      this.determineEncoding(request, context, true);
-    } else {
-      this.decodeAndInsertBuffer(request, context, new ArrayBuffer(0), true);
-    }
+    this.decodeAndInsertBuffer(new ArrayBuffer(0), true);
 
     // Stop the request.
     this.listener.onStopRequest(request, context, statusCode);
@@ -143,24 +121,8 @@ Converter.prototype = {
     this.data = null;
   },
 
-  // Determines the encoding of the response.
-  determineEncoding: function (request, context, flush = false) {
-    // Always use UTF-8
-    let encoding = "UTF-8";
-    let bytes = this.encodingArray;
-
-    // Create a decoder for that encoding.
-    this.decoder = new TextDecoder(encoding);
-    this.data.encoding = encoding;
-
-    // Decode and insert the bytes in encodingArray, and remove it.
-    let buffer = new Uint8Array(bytes).buffer;
-    this.decodeAndInsertBuffer(request, context, buffer, flush);
-    this.encodingArray = null;
-  },
-
   // Decodes an ArrayBuffer into a string and inserts it into the page.
-  decodeAndInsertBuffer: function (request, context, buffer, flush = false) {
+  decodeAndInsertBuffer: function (buffer, flush = false) {
     // Decode the buffer into a string.
     let data = this.decoder.decode(buffer, {stream: !flush});
 
