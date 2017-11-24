@@ -8,7 +8,7 @@ function ObjectGetOwnPropertyDescriptors(O) {
     var obj = ToObject(O);
 
     // Step 2.
-    var keys = OwnPropertyKeys(obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
+    var keys = OwnPropertyKeys(obj);
 
     // Step 3.
     var descriptors = {};
