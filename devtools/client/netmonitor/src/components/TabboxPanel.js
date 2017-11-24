@@ -68,7 +68,11 @@ function TabboxPanel({
         id: PANELS.COOKIES,
         title: COOKIES_TITLE,
       },
-        CookiesPanel({ request, openLink }),
+        CookiesPanel({
+          connector,
+          openLink,
+          request,
+        }),
       ),
       TabPanel({
         id: PANELS.PARAMS,

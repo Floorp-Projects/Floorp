@@ -30,7 +30,7 @@ add_task(function* () {
     { name: "Accept-Language", value: "cs-CZ" }
   ];
 
-  let wait = waitForNetworkEvents(monitor, 0, 1);
+  let wait = waitForNetworkEvents(monitor, 1);
   sendHTTPRequest({
     url: requestUrl,
     method: "POST",
