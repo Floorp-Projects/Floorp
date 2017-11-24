@@ -860,6 +860,7 @@ pref("gfx.webrender.enabled", false);
 #endif
 #ifdef XP_WIN
 pref("gfx.webrender.force-angle", true);
+pref("gfx.webrender.program-binary", true);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);

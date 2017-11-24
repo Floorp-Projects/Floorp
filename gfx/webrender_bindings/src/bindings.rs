@@ -2,6 +2,7 @@ use std::ffi::{CStr, CString};
 use std::{mem, slice};
 use std::path::PathBuf;
 use std::ptr;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
@@ -11,6 +12,7 @@ use webrender::{ReadPixelsFormat, Renderer, RendererOptions, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
+use webrender::ProgramCache;
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
@@ -658,6 +660,26 @@ pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
 #[no_mangle]
 pub unsafe extern "C" fn wr_thread_pool_delete(thread_pool: *mut WrThreadPool) {
     Box::from_raw(thread_pool);
+}
+
+pub struct WrProgramCache(Rc<ProgramCache>);
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_program_cache_new() -> *mut WrProgramCache {
+    let program_cache = ProgramCache::new();
+    Box::into_raw(Box::new(WrProgramCache(program_cache)))
+}
+
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
+#[no_mangle]
+pub unsafe extern "C" fn wr_program_cache_delete(program_cache: *mut WrProgramCache) {
+    Rc::from_raw(program_cache);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_update_program_cache(renderer: &mut Renderer, program_cache: &mut WrProgramCache) {
+    let program_cache = Rc::clone(&program_cache.0);
+    renderer.update_program_cache(program_cache);
 }
 
 // Call MakeCurrent before this.

@@ -9,90 +9,114 @@
 #ifndef __ssl3exthandle_h_
 #define __ssl3exthandle_h_
 
-PRInt32 ssl3_SendRenegotiationInfoXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                      PRBool append, PRUint32 maxBytes);
-SECStatus ssl3_HandleRenegotiationInfoXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                          PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_ClientHandleNextProtoNegoXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                            PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_ClientHandleAppProtoXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                       PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_ServerHandleNextProtoNegoXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                            PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_ServerHandleAppProtoXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
-                                       SECItem *data);
-PRInt32 ssl3_ClientSendNextProtoNegoXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                        PRUint32 maxBytes);
-PRInt32 ssl3_ClientSendAppProtoXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                   PRUint32 maxBytes);
-PRInt32 ssl3_ServerSendAppProtoXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                   PRUint32 maxBytes);
-PRInt32 ssl3_ClientSendUseSRTPXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                  PRUint32 maxBytes);
-PRInt32 ssl3_ServerSendUseSRTPXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                  PRUint32 maxBytes);
-SECStatus ssl3_ClientHandleUseSRTPXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
-                                      SECItem *data);
-SECStatus ssl3_ServerHandleUseSRTPXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
-                                      SECItem *data);
-PRInt32 ssl3_ServerSendStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                        PRBool append, PRUint32 maxBytes);
-SECStatus ssl3_ServerHandleStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                            PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_ClientHandleStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                            PRUint16 ex_type,
-                                            SECItem *data);
-PRInt32 ssl3_ClientSendStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                        PRUint32 maxBytes);
-PRInt32 ssl3_ClientSendSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                  PRUint32 maxBytes);
-SECStatus ssl3_ServerHandleSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
-                                      SECItem *data);
+#include "sslencode.h"
 
-PRInt32 ssl3_ClientSendPaddingExtension(const sslSocket *ss, TLSExtensionData *xtnData,
-                                        PRBool append, PRUint32 maxBytes);
-
-PRInt32 ssl3_ClientSendSignedCertTimestampXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                              PRBool append,
-                                              PRUint32 maxBytes);
-SECStatus ssl3_ClientHandleSignedCertTimestampXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                                  PRUint16 ex_type,
-                                                  SECItem *data);
-PRInt32 ssl3_ServerSendSignedCertTimestampXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                              PRBool append,
-                                              PRUint32 maxBytes);
-SECStatus ssl3_ServerHandleSignedCertTimestampXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                                  PRUint16 ex_type,
-                                                  SECItem *data);
-PRInt32 ssl3_SendExtendedMasterSecretXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool append,
-                                         PRUint32 maxBytes);
-SECStatus ssl3_HandleExtendedMasterSecretXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                             PRUint16 ex_type,
-                                             SECItem *data);
-SECStatus ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data);
-PRInt32 ssl3_SendServerNameXtn(const sslSocket *ss,
-                               TLSExtensionData *xtnData,
-                               PRBool append,
-                               PRUint32 maxBytes);
-SECStatus ssl3_HandleServerNameXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                   PRUint16 ex_type, SECItem *data);
-SECStatus ssl_HandleSupportedGroupsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                       PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_HandleSupportedPointFormatsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                              PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_ClientHandleSessionTicketXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                            PRUint16 ex_type, SECItem *data);
-SECStatus ssl3_ServerHandleSessionTicketXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                            PRUint16 ex_type, SECItem *data);
-PRInt32 ssl3_SendSessionTicketXtn(const sslSocket *ss,
-                                  TLSExtensionData *xtnData,
-                                  PRBool append,
-                                  PRUint32 maxBytes);
-
-PRInt32 ssl_SendSupportedGroupsXtn(const sslSocket *ss,
-                                   TLSExtensionData *xtnData,
-                                   PRBool append, PRUint32 maxBytes);
-PRInt32 ssl3_SendSupportedPointFormatsXtn(const sslSocket *ss,
+SECStatus ssl3_SendRenegotiationInfoXtn(const sslSocket *ss,
+                                        TLSExtensionData *xtnData,
+                                        sslBuffer *buf, PRBool *added);
+SECStatus ssl3_HandleRenegotiationInfoXtn(const sslSocket *ss,
                                           TLSExtensionData *xtnData,
-                                          PRBool append, PRUint32 maxBytes);
+                                          SECItem *data);
+SECStatus ssl3_ClientHandleNextProtoNegoXtn(const sslSocket *ss,
+                                            TLSExtensionData *xtnData,
+                                            SECItem *data);
+SECStatus ssl3_ClientHandleAppProtoXtn(const sslSocket *ss,
+                                       TLSExtensionData *xtnData,
+                                       SECItem *data);
+SECStatus ssl3_ServerHandleNextProtoNegoXtn(const sslSocket *ss,
+                                            TLSExtensionData *xtnData,
+                                            SECItem *data);
+SECStatus ssl3_ServerHandleAppProtoXtn(const sslSocket *ss,
+                                       TLSExtensionData *xtnData,
+                                       SECItem *data);
+SECStatus ssl3_ClientSendNextProtoNegoXtn(const sslSocket *ss,
+                                          TLSExtensionData *xtnData,
+                                          sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ClientSendAppProtoXtn(const sslSocket *ss,
+                                     TLSExtensionData *xtnData,
+                                     sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ServerSendAppProtoXtn(const sslSocket *ss,
+                                     TLSExtensionData *xtnData,
+                                     sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ClientSendUseSRTPXtn(const sslSocket *ss,
+                                    TLSExtensionData *xtnData,
+                                    sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ServerSendUseSRTPXtn(const sslSocket *ss,
+                                    TLSExtensionData *xtnData,
+                                    sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ClientHandleUseSRTPXtn(const sslSocket *ss,
+                                      TLSExtensionData *xtnData,
+                                      SECItem *data);
+SECStatus ssl3_ServerHandleUseSRTPXtn(const sslSocket *ss,
+                                      TLSExtensionData *xtnData,
+                                      SECItem *data);
+SECStatus ssl3_ServerSendStatusRequestXtn(const sslSocket *ss,
+                                          TLSExtensionData *xtnData,
+                                          sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ServerHandleStatusRequestXtn(const sslSocket *ss,
+                                            TLSExtensionData *xtnData,
+                                            SECItem *data);
+SECStatus ssl3_ClientHandleStatusRequestXtn(const sslSocket *ss,
+                                            TLSExtensionData *xtnData,
+                                            SECItem *data);
+SECStatus ssl3_ClientSendStatusRequestXtn(const sslSocket *ss,
+                                          TLSExtensionData *xtnData,
+                                          sslBuffer *buf, PRBool *added);
+SECStatus ssl3_SendSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                              sslBuffer *buf, PRBool *added);
+SECStatus ssl3_HandleSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                                SECItem *data);
+
+SECStatus ssl3_ClientSendPaddingExtension(const sslSocket *ss,
+                                          TLSExtensionData *xtnData,
+                                          sslBuffer *buf, PRBool *added);
+
+SECStatus ssl3_ClientSendSignedCertTimestampXtn(const sslSocket *ss,
+                                                TLSExtensionData *xtnData,
+                                                sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ClientHandleSignedCertTimestampXtn(const sslSocket *ss,
+                                                  TLSExtensionData *xtnData,
+                                                  SECItem *data);
+SECStatus ssl3_ServerSendSignedCertTimestampXtn(const sslSocket *ss,
+                                                TLSExtensionData *xtnData,
+                                                sslBuffer *buf, PRBool *added);
+SECStatus ssl3_ServerHandleSignedCertTimestampXtn(const sslSocket *ss,
+                                                  TLSExtensionData *xtnData,
+                                                  SECItem *data);
+SECStatus ssl3_SendExtendedMasterSecretXtn(const sslSocket *ss,
+                                           TLSExtensionData *xtnData,
+                                           sslBuffer *buf, PRBool *added);
+SECStatus ssl3_HandleExtendedMasterSecretXtn(const sslSocket *ss,
+                                             TLSExtensionData *xtnData,
+                                             SECItem *data);
+SECStatus ssl3_ProcessSessionTicketCommon(sslSocket *ss, const SECItem *ticket,
+                                          /* out */ SECItem *appToken);
+SECStatus ssl3_ClientSendServerNameXtn(const sslSocket *ss,
+                                       TLSExtensionData *xtnData,
+                                       sslBuffer *buf, PRBool *added);
+SECStatus ssl3_HandleServerNameXtn(const sslSocket *ss,
+                                   TLSExtensionData *xtnData,
+                                   SECItem *data);
+SECStatus ssl_HandleSupportedGroupsXtn(const sslSocket *ss,
+                                       TLSExtensionData *xtnData,
+                                       SECItem *data);
+SECStatus ssl3_HandleSupportedPointFormatsXtn(const sslSocket *ss,
+                                              TLSExtensionData *xtnData,
+                                              SECItem *data);
+SECStatus ssl3_ClientHandleSessionTicketXtn(const sslSocket *ss,
+                                            TLSExtensionData *xtnData,
+                                            SECItem *data);
+SECStatus ssl3_ServerHandleSessionTicketXtn(const sslSocket *ss,
+                                            TLSExtensionData *xtnData,
+                                            SECItem *data);
+SECStatus ssl3_ClientSendSessionTicketXtn(const sslSocket *ss,
+                                          TLSExtensionData *xtnData,
+                                          sslBuffer *buf, PRBool *added);
+
+SECStatus ssl_SendSupportedGroupsXtn(const sslSocket *ss,
+                                     TLSExtensionData *xtnData,
+                                     sslBuffer *buf, PRBool *added);
+SECStatus ssl3_SendSupportedPointFormatsXtn(const sslSocket *ss,
+                                            TLSExtensionData *xtnData,
+                                            sslBuffer *buf, PRBool *added);
 #endif

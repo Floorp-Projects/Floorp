@@ -163,6 +163,7 @@
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
     macro(getPrefix, getPrefix, "get ") \
     macro(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
+    macro(getPropertySuper, getPropertySuper, "getPropertySuper") \
     macro(getPrototypeOf, getPrototypeOf, "getPrototypeOf") \
     macro(global, global, "global") \
     macro(group, group, "group") \

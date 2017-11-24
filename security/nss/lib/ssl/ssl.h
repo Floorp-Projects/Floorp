@@ -107,8 +107,7 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_NO_LOCKS 17                 /* Don't use locks for protection */
 #define SSL_ENABLE_SESSION_TICKETS 18   /* Enable TLS SessionTicket       */
                                         /* extension (off by default)     */
-#define SSL_ENABLE_DEFLATE 19           /* Enable TLS compression with    */
-                                        /* DEFLATE (off by default)       */
+#define SSL_ENABLE_DEFLATE 19           /* (unsupported, deprecated, off) */
 #define SSL_ENABLE_RENEGOTIATION 20     /* Values below (default: never)  */
 #define SSL_REQUIRE_SAFE_NEGOTIATION 21 /* Peer must send Signaling       */
                                         /* Cipher Suite Value (SCSV) or   */
@@ -243,20 +242,34 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * WARNING: 0-RTT data has different anti-replay and PFS properties than
  * the rest of the TLS data. See [draft-ietf-tls-tls13; Section 8]
  * for more details.
+ *
+ * Note: when DTLS 1.3 is in use, any 0-RTT data received after EndOfEarlyData
+ * (e.g., because of reordering) is discarded.
  */
 #define SSL_ENABLE_0RTT_DATA 33
 
+/* Enables TLS 1.3 compatibility mode.  In this mode, the client includes a fake
+ * session ID in the handshake and sends a ChangeCipherSpec.  A server will
+ * always use the setting chosen by the client, so the value of this option has
+ * no effect for a server. This setting is ignored for DTLS. */
+#define SSL_ENABLE_TLS13_COMPAT_MODE 35
+
 #ifdef SSL_DEPRECATED_FUNCTION
 /* Old deprecated function names */
-SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);
-SSL_IMPORT SECStatus SSL_EnableDefault(int option, PRBool on);
+SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRIntn on);
+SSL_IMPORT SECStatus SSL_EnableDefault(int option, PRIntn on);
 #endif
 
-/* New function names */
-SSL_IMPORT SECStatus SSL_OptionSet(PRFileDesc *fd, PRInt32 option, PRBool on);
-SSL_IMPORT SECStatus SSL_OptionGet(PRFileDesc *fd, PRInt32 option, PRBool *on);
-SSL_IMPORT SECStatus SSL_OptionSetDefault(PRInt32 option, PRBool on);
-SSL_IMPORT SECStatus SSL_OptionGetDefault(PRInt32 option, PRBool *on);
+/* Set (and get) options for sockets and defaults for newly created sockets.
+ *
+ * While the |val| parameter of these methods is PRIntn, options only support
+ * two values by default: PR_TRUE or PR_FALSE.  The documentation of specific
+ * options will explain if other values are permitted.
+ */
+SSL_IMPORT SECStatus SSL_OptionSet(PRFileDesc *fd, PRInt32 option, PRIntn val);
+SSL_IMPORT SECStatus SSL_OptionGet(PRFileDesc *fd, PRInt32 option, PRIntn *val);
+SSL_IMPORT SECStatus SSL_OptionSetDefault(PRInt32 option, PRIntn val);
+SSL_IMPORT SECStatus SSL_OptionGetDefault(PRInt32 option, PRIntn *val);
 SSL_IMPORT SECStatus SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHandle);
 
 /* SSLNextProtoCallback is called during the handshake for the client, when a

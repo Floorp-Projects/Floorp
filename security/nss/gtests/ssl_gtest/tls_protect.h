@@ -58,16 +58,19 @@ class AeadCipherAesGcm : public AeadCipher {
 // Our analog of ssl3CipherSpec
 class TlsCipherSpec {
  public:
-  TlsCipherSpec() : aead_() {}
+  TlsCipherSpec() : epoch_(0), aead_() {}
 
-  bool Init(SSLCipherAlgorithm cipher, PK11SymKey *key, const uint8_t *iv);
+  bool Init(uint16_t epoch, SSLCipherAlgorithm cipher, PK11SymKey *key,
+            const uint8_t *iv);
 
   bool Protect(const TlsRecordHeader &header, const DataBuffer &plaintext,
                DataBuffer *ciphertext);
   bool Unprotect(const TlsRecordHeader &header, const DataBuffer &ciphertext,
                  DataBuffer *plaintext);
+  uint16_t epoch() const { return epoch_; }
 
  private:
+  uint16_t epoch_;
   std::unique_ptr<AeadCipher> aead_;
 };
 

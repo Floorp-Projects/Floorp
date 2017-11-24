@@ -1314,8 +1314,7 @@ CERT_GetCertificateEmailAddress(CERTCertificate* cert)
                     }
                 } else if (current->type == certRFC822Name) {
                     rawEmailAddr =
-                        (char*)PORT_ArenaZAlloc(cert->arena, current->name.other.len +
-                                                                 1);
+                        (char*)PORT_ArenaZAlloc(cert->arena, current->name.other.len + 1);
                     if (!rawEmailAddr) {
                         goto finish;
                     }

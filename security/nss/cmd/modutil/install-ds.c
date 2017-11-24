@@ -975,8 +975,7 @@ Pk11Install_Platform_Print(Pk11Install_Platform* _this, int pad)
         printf("Doesn't use equiv\n");
     }
     PAD(pad);
-    printf("Module File: %s\n", _this->moduleFile ? _this->moduleFile
-                                                  : "<NULL>");
+    printf("Module File: %s\n", _this->moduleFile ? _this->moduleFile : "<NULL>");
     PAD(pad);
     printf("mechFlags: %lx\n", _this->mechFlags);
     PAD(pad);

@@ -2721,9 +2721,7 @@ dump_states(SEC_ASN1DecoderContext *cx)
                (state == cx->current) ? "STATE" : "State",
                state->theTemplate,
                kindBuf);
-        printf(" %s", (state->place >= 0 && state->place <= notInUse)
-                          ? place_names[state->place]
-                          : "(undefined)");
+        printf(" %s", (state->place >= 0 && state->place <= notInUse) ? place_names[state->place] : "(undefined)");
         if (!i)
             printf(", expect 0x%02x",
                    state->expect_tag_number | state->expect_tag_modifiers);

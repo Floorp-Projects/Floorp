@@ -2,6 +2,12 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.require_user_interaction_for_beforeunload", false],
+    ]
+  });
+
   let url = "about:robots";
   let tab0 = gBrowser.tabs[0];
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -23,18 +29,35 @@ add_task(async function test() {
 
   gBrowser._endRemoveTab(tab1);
 
-  // Test that tab with beforeunload handler is not able to be suspended.
+  // Open tab containing a page which has a beforeunload handler which shows a prompt.
   url = "http://example.com/browser/browser/components/sessionstore/test/browser_1284886_suspend_tab.html";
-
   tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let browser1 = tab1.linkedBrowser;
   await BrowserTestUtils.switchTab(gBrowser, tab0);
 
-  gBrowser.discardBrowser(tab1.linkedBrowser);
-  ok(tab1.linkedPanel, "cannot suspend a tab with beforeunload handler");
+  // Test that tab with beforeunload handler which would show a prompt cannot be suspended.
+  gBrowser.discardBrowser(browser1);
+  ok(tab1.linkedPanel, "cannot suspend a tab with beforeunload handler which would show a prompt");
+
+  // Test that tab with beforeunload handler which would show a prompt will be suspended if forced.
+  gBrowser.discardBrowser(browser1, true);
+  ok(!tab1.linkedPanel, "force suspending a tab with beforeunload handler which would show a prompt");
 
   await promiseRemoveTab(tab1);
 
-  // Test that remote tab is not able to be suspended.
+  // Open tab containing a page which has a beforeunload handler which does not show a prompt.
+  url = "http://example.com/browser/browser/components/sessionstore/test/browser_1284886_suspend_tab_2.html";
+  tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  browser1 = tab1.linkedBrowser;
+  await BrowserTestUtils.switchTab(gBrowser, tab0);
+
+  // Test that tab with beforeunload handler which would not show a prompt can be suspended.
+  gBrowser.discardBrowser(browser1);
+  ok(!tab1.linkedPanel, "can suspend a tab with beforeunload handler which would not show a prompt");
+
+  await promiseRemoveTab(tab1);
+
+  // Test that non-remote tab is not able to be suspended.
   url = "about:robots";
   tab1 = BrowserTestUtils.addTab(gBrowser, url, { forceNotRemote: true });
   await promiseBrowserLoaded(tab1.linkedBrowser, true, url);

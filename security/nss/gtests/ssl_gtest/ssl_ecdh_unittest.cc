@@ -193,7 +193,9 @@ TEST_P(TlsConnectGenericPre13, P384PriorityFromModelSocket) {
 
 class TlsKeyExchangeGroupCapture : public TlsHandshakeFilter {
  public:
-  TlsKeyExchangeGroupCapture() : group_(ssl_grp_none) {}
+  TlsKeyExchangeGroupCapture()
+      : TlsHandshakeFilter({kTlsHandshakeServerKeyExchange}),
+        group_(ssl_grp_none) {}
 
   SSLNamedGroup group() const { return group_; }
 
@@ -201,10 +203,6 @@ class TlsKeyExchangeGroupCapture : public TlsHandshakeFilter {
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
                                                const DataBuffer &input,
                                                DataBuffer *output) {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
     uint32_t value = 0;
     EXPECT_TRUE(input.Read(0, 1, &value));
     EXPECT_EQ(3U, value) << "curve type has to be 3";
@@ -518,16 +516,12 @@ TEST_P(TlsKeyExchangeTest13, MultipleClientShares) {
 // Replace the point in the client key exchange message with an empty one
 class ECCClientKEXFilter : public TlsHandshakeFilter {
  public:
-  ECCClientKEXFilter() {}
+  ECCClientKEXFilter() : TlsHandshakeFilter({kTlsHandshakeClientKeyExchange}) {}
 
  protected:
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
                                                const DataBuffer &input,
                                                DataBuffer *output) {
-    if (header.handshake_type() != kTlsHandshakeClientKeyExchange) {
-      return KEEP;
-    }
-
     // Replace the client key exchange message with an empty point
     output->Allocate(1);
     output->Write(0, 0U, 1);  // set point length 0
@@ -538,16 +532,12 @@ class ECCClientKEXFilter : public TlsHandshakeFilter {
 // Replace the point in the server key exchange message with an empty one
 class ECCServerKEXFilter : public TlsHandshakeFilter {
  public:
-  ECCServerKEXFilter() {}
+  ECCServerKEXFilter() : TlsHandshakeFilter({kTlsHandshakeServerKeyExchange}) {}
 
  protected:
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
                                                const DataBuffer &input,
                                                DataBuffer *output) {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
     // Replace the server key exchange message with an empty point
     output->Allocate(4);
     output->Write(0, 3U, 1);  // named curve
