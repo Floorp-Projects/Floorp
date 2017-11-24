@@ -1312,9 +1312,10 @@ public:
   // Set during construction for the container layer of scrollbar components.
   // |aScrollId| holds the scroll identifier of the scrollable content that
   // the scrollbar is for.
-  void SetIsScrollbarContainer(FrameMetrics::ViewID aScrollId)
+  void SetScrollbarContainer(FrameMetrics::ViewID aScrollId,
+                             ScrollDirection aDirection)
   {
-    if (mSimpleAttrs.SetIsScrollbarContainer(aScrollId)) {
+    if (mSimpleAttrs.SetScrollbarContainer(aScrollId, aDirection)) {
       MutatedSimple();
     }
   }
@@ -1378,7 +1379,8 @@ public:
   const LayerRect& GetStickyScrollRangeInner() { return mSimpleAttrs.StickyScrollRangeInner(); }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mSimpleAttrs.ScrollbarTargetContainerId(); }
   const ScrollThumbData& GetScrollThumbData() const { return mSimpleAttrs.ThumbData(); }
-  bool IsScrollbarContainer() { return mSimpleAttrs.IsScrollbarContainer(); }
+  bool IsScrollbarContainer() { return mSimpleAttrs.GetScrollbarContainerDirection().isSome(); }
+  Maybe<ScrollDirection> GetScrollbarContainerDirection() { return mSimpleAttrs.GetScrollbarContainerDirection(); }
   Layer* GetMaskLayer() const { return mMaskLayer; }
   bool HasPendingTransform() const { return mPendingTransform; }
 

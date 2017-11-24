@@ -433,10 +433,10 @@ public:
     return mLayer->GetScrollbarTargetContainerId();
   }
 
-  bool IsScrollbarContainer() const
+  Maybe<ScrollDirection> GetScrollbarContainerDirection() const
   {
     MOZ_ASSERT(IsValid());
-    return mLayer->IsScrollbarContainer();
+    return mLayer->GetScrollbarContainerDirection();
   }
 
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const

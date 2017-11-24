@@ -1812,7 +1812,7 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (Is3DContextLeaf()) {
     aStream << " [is3DContextLeaf]";
   }
-  if (IsScrollbarContainer()) {
+  if (GetScrollbarContainerDirection().isSome()) {
     aStream << " [scrollbar]";
   }
   if (Maybe<ScrollDirection> thumbDirection = GetScrollThumbData().mDirection) {

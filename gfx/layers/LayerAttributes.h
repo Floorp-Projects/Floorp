@@ -79,7 +79,6 @@ public:
      mOpacity(1.0f),
      mIsFixedPosition(false),
      mScrollbarTargetContainerId(FrameMetrics::NULL_SCROLL_ID),
-     mIsScrollbarContainer(false),
      mMixBlendMode(gfx::CompositionOp::OP_OVER),
      mForceIsolatedGroup(false)
   {
@@ -129,11 +128,14 @@ public:
     mThumbData = aThumbData;
     return true;
   }
-  bool SetIsScrollbarContainer(FrameMetrics::ViewID aScrollId) {
-    if (mIsScrollbarContainer && mScrollbarTargetContainerId == aScrollId) {
+  bool SetScrollbarContainer(FrameMetrics::ViewID aScrollId,
+                             ScrollDirection aDirection) {
+    if (mScrollbarContainerDirection &&
+        *mScrollbarContainerDirection == aDirection &&
+        mScrollbarTargetContainerId == aScrollId) {
       return false;
     }
-    mIsScrollbarContainer = true;
+    mScrollbarContainerDirection = Some(aDirection);
     mScrollbarTargetContainerId = aScrollId;
     return true;
   }
@@ -210,7 +212,7 @@ public:
   // This returns true if scrolling info is equivalent for the purposes of
   // APZ hit testing.
   bool HitTestingInfoIsEqual(const SimpleLayerAttributes& aOther) const {
-    if (mIsScrollbarContainer != aOther.mIsScrollbarContainer) {
+    if (mScrollbarContainerDirection != aOther.mScrollbarContainerDirection) {
       return false;
     }
     if (mScrollbarTargetContainerId != aOther.mScrollbarTargetContainerId) {
@@ -253,8 +255,8 @@ public:
   const ScrollThumbData& ThumbData() const {
     return mThumbData;
   }
-  bool IsScrollbarContainer() const {
-    return mIsScrollbarContainer;
+  Maybe<ScrollDirection> GetScrollbarContainerDirection() const {
+    return mScrollbarContainerDirection;
   }
   gfx::CompositionOp MixBlendMode() const {
     return mMixBlendMode;
@@ -306,7 +308,7 @@ public:
            mIsFixedPosition == aOther.mIsFixedPosition &&
            mScrollbarTargetContainerId == aOther.mScrollbarTargetContainerId &&
            mThumbData == aOther.mThumbData &&
-           mIsScrollbarContainer == aOther.mIsScrollbarContainer &&
+           mScrollbarContainerDirection == aOther.mScrollbarContainerDirection &&
            mMixBlendMode == aOther.mMixBlendMode &&
            mForceIsolatedGroup == aOther.mForceIsolatedGroup;
   }
@@ -322,7 +324,7 @@ private:
   bool mIsFixedPosition;
   uint64_t mScrollbarTargetContainerId;
   ScrollThumbData mThumbData;
-  bool mIsScrollbarContainer;
+  Maybe<ScrollDirection> mScrollbarContainerDirection;
   gfx::CompositionOp mMixBlendMode;
   bool mForceIsolatedGroup;
 
