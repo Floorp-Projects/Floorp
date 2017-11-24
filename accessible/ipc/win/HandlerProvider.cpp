@@ -399,27 +399,7 @@ HandlerProvider::CleanupStaticIA2Data(StaticIA2Data& aData)
 {
   // When CoMarshalInterface writes interfaces out to a stream, it AddRefs.
   // Therefore, we must release our references after this.
-  if (aData.mIA2) {
-    aData.mIA2->Release();
-  }
-  if (aData.mIEnumVARIANT) {
-    aData.mIEnumVARIANT->Release();
-  }
-  if (aData.mIAHypertext) {
-    aData.mIAHypertext->Release();
-  }
-  if (aData.mIAHyperlink) {
-    aData.mIAHyperlink->Release();
-  }
-  if (aData.mIATable) {
-    aData.mIATable->Release();
-  }
-  if (aData.mIATable2) {
-    aData.mIATable2->Release();
-  }
-  if (aData.mIATableCell) {
-    aData.mIATableCell->Release();
-  }
+  ReleaseStaticIA2DataInterfaces(aData);
   ZeroMemory(&aData, sizeof(StaticIA2Data));
 }
 

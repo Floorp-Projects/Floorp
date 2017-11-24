@@ -14,6 +14,34 @@ namespace mozilla {
 namespace a11y {
 
 inline void
+ReleaseStaticIA2DataInterfaces(StaticIA2Data& aData)
+{
+  // Only interfaces of the IA2 object should be released here, never other
+  // objects!
+  if (aData.mIA2) {
+    aData.mIA2->Release();
+  }
+  if (aData.mIEnumVARIANT) {
+    aData.mIEnumVARIANT->Release();
+  }
+  if (aData.mIAHypertext) {
+    aData.mIAHypertext->Release();
+  }
+  if (aData.mIAHyperlink) {
+    aData.mIAHyperlink->Release();
+  }
+  if (aData.mIATable) {
+    aData.mIATable->Release();
+  }
+  if (aData.mIATable2) {
+    aData.mIATable2->Release();
+  }
+  if (aData.mIATableCell) {
+    aData.mIATableCell->Release();
+  }
+}
+
+inline void
 CleanupDynamicIA2Data(DynamicIA2Data& aData, bool aZero=true)
 {
   ::VariantClear(&aData.mRole);
