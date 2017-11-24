@@ -21,9 +21,7 @@ Cu.import("resource://services-sync/util.js");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkValidator",
                                   "resource://services-sync/bookmark_validator.js");
 XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
-  let bundleService = Cc["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Ci.nsIStringBundleService);
-  return bundleService.createBundle("chrome://places/locale/places.properties");
+  return Services.strings.createBundle("chrome://places/locale/places.properties");
 });
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
