@@ -131,6 +131,7 @@ add_task(async function test_mixedcontent() {
  * Checks that insecure window.opener does not trigger a warning.
  */
 add_task(async function test_ignoring_window_opener() {
+  let newTabURL = "https://example.com" + TEST_URL_PATH + "form_basic.html";
   let path = getRootDirectory(gTestPath)
     .replace("chrome://mochitests/content", "http://example.com");
   let url = path + "insecure_opener.html";
