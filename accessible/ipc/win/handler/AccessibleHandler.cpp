@@ -16,6 +16,7 @@
 #include "Factory.h"
 #include "HandlerData.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/a11y/HandlerDataCleanup.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/UniquePtr.h"
 
@@ -92,6 +93,8 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
 
 AccessibleHandler::~AccessibleHandler()
 {
+  // No need to zero memory, since we're being destroyed anyway.
+  CleanupDynamicIA2Data(mCachedData.mDynamicData, false);
   if (mCachedData.mGeckoBackChannel) {
     mCachedData.mGeckoBackChannel->Release();
   }
@@ -393,6 +396,9 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
   if (!deserializer.Read(&newData, &IA2Payload_Decode)) {
     return E_FAIL;
   }
+  // Clean up the old data.
+  // No need to zero memory, since we're about to completely replace this.
+  CleanupDynamicIA2Data(mCachedData.mDynamicData, false);
   mCachedData = newData;
 
   // These interfaces have been aggregated into the proxy manager.
