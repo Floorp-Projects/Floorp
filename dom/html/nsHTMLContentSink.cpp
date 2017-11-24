@@ -266,13 +266,18 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
                "Trying to HTML elements that don't have the XHTML namespace");
 
   int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
+  bool isCustomElementName = (tag == eHTMLTag_userdefined &&
+                              nsContentUtils::IsCustomElementName(name));
+  bool isCustomElement = isCustomElementName || aIs;
+  MOZ_ASSERT_IF(aDefinition, isCustomElement);
 
   // https://dom.spec.whatwg.org/#concept-create-element
   // We only handle the "synchronous custom elements flag is set" now.
   // For the unset case (e.g. cloning a node), see bug 1319342 for that.
   // Step 4.
   CustomElementDefinition* definition = aDefinition;
-  if (!definition && CustomElementRegistry::IsCustomElementEnabled()) {
+  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement &&
+      !definition) {
     definition =
       nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
                                                     nodeInfo->LocalName(),
@@ -355,8 +360,6 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
 
   // Per the Custom Element specification, unknown tags that are valid custom
   // element names should be HTMLElement instead of HTMLUnknownElement.
-  bool isCustomElementName = (tag == eHTMLTag_userdefined &&
-                              nsContentUtils::IsCustomElementName(name));
   if (isCustomElementName) {
     NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
   } else {
@@ -367,8 +370,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (CustomElementRegistry::IsCustomElementEnabled() &&
-      (isCustomElementName || aIs)) {
+  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement) {
     (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
   }
 

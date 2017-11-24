@@ -454,6 +454,11 @@ private:
   // waiting on the media cache monitor. Called on the main thread only.
   void FlushPartialBlockInternal(bool aNotify, ReentrantMonitorAutoEnter& aReentrantMonitor);
 
+  void NotifyDataStartedInternal(uint32_t aLoadID,
+                                 int64_t aOffset,
+                                 bool aSeekable,
+                                 int64_t aLength);
+
   void NotifyDataEndedInternal(uint32_t aLoadID,
                                nsresult aStatus,
                                bool aReopenOnError);

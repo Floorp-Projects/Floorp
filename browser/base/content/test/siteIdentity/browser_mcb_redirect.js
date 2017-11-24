@@ -57,9 +57,11 @@ const PREF_ACTIVE = "security.mixed_content.block_active_content";
 const PREF_DISPLAY = "security.mixed_content.block_display_content";
 const HTTPS_TEST_ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
 const HTTP_TEST_ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+const PREF_INSECURE_ICON = "security.insecure_connection_icon.enabled";
 
 var origBlockActive;
 var origBlockDisplay;
+var origInsecurePref;
 var gTestBrowser = null;
 
 // ------------------------ Helper Functions ---------------------
@@ -68,6 +70,7 @@ registerCleanupFunction(function() {
   // Set preferences back to their original values
   Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
   Services.prefs.setBoolPref(PREF_DISPLAY, origBlockDisplay);
+  Services.prefs.setBoolPref(PREF_INSECURE_ICON, origInsecurePref);
 
   // Make sure we are online again
   Services.io.offline = false;
@@ -82,6 +85,16 @@ function cleanUpAfterTests() {
 // ------------------------ Test 1 ------------------------------
 
 function test1() {
+  Services.prefs.setBoolPref(PREF_INSECURE_ICON, false);
+
+  var url = HTTPS_TEST_ROOT + "test_mcb_redirect.html";
+  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkUIForTest1);
+}
+
+function testInsecure1() {
+  Services.prefs.setBoolPref(PREF_INSECURE_ICON, true);
+
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
   BrowserTestUtils.browserLoaded(gTestBrowser).then(checkUIForTest1);
@@ -285,6 +298,7 @@ function test() {
   // Store original preferences so we can restore settings after testing
   origBlockActive = Services.prefs.getBoolPref(PREF_ACTIVE);
   origBlockDisplay = Services.prefs.getBoolPref(PREF_DISPLAY);
+  origInsecurePref = Services.prefs.getBoolPref(PREF_INSECURE_ICON);
   Services.prefs.setBoolPref(PREF_ACTIVE, true);
   Services.prefs.setBoolPref(PREF_DISPLAY, true);
 

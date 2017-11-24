@@ -12,9 +12,6 @@ chrome.jar:
   skin/aboutAddons.css                      (aboutAddons.css)
   skin/aboutBase.css                        (aboutBase.css)
   skin/aboutDownloads.css                   (aboutDownloads.css)
-#ifdef MOZ_SERVICES_HEALTHREPORT
-  skin/aboutHealthReport.css                (aboutHealthReport.css)
-#endif
   skin/aboutMemory.css                      (aboutMemory.css)
   skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)

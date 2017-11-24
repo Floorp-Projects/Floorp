@@ -1,6 +1,7 @@
 // Test that the Mixed Content Doorhanger Action to re-enable protection works
 
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
+const PREF_INSECURE = "security.insecure_connection_icon.enabled";
 const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "file_bug1045809_1.html";
 
 var origBlockActive;
@@ -19,6 +20,17 @@ add_task(async function() {
 
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
+  // Check with insecure lock disabled
+  await SpecialPowers.pushPrefEnv({set: [[PREF_INSECURE, false]]});
+  await runTests(tab);
+
+
+  // Check with insecure lock disabled
+  await SpecialPowers.pushPrefEnv({set: [[PREF_INSECURE, true]]});
+  await runTests(tab);
+});
+
+async function runTests(tab) {
   // Test 1: mixed content must be blocked
   await promiseTabLoadEvent(tab, TEST_URL);
   await test1(gBrowser.getBrowserForTab(tab));
@@ -30,7 +42,7 @@ add_task(async function() {
   // Test 3: mixed content must be blocked again
   await promiseTabLoadEvent(tab);
   await test3(gBrowser.getBrowserForTab(tab));
-});
+}
 
 async function test1(gTestBrowser) {
   await assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});

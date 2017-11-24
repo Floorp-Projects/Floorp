@@ -1,0 +1,10 @@
+{
+   "app": {
+      "launch": {
+         "local_path": "main.html"
+      }
+   },
+   "default_locale": "en_US",
+   "description": "__MSG_description__",
+   "name": "__MSG_name__"
+}

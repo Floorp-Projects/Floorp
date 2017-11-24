@@ -100,6 +100,11 @@ ia2AccessibleHypertext::get_hyperlinks(IAccessibleHyperlink*** aHyperlinks,
   uint32_t count = hyperText->LinkCount();
   *aNHyperlinks = count;
 
+  if (count == 0) {
+    *aHyperlinks = nullptr;
+    return S_FALSE;
+  }
+
   *aHyperlinks = static_cast<IAccessibleHyperlink**>(::CoTaskMemAlloc(
     sizeof(IAccessibleHyperlink*) * count));
   if (!*aHyperlinks) {
