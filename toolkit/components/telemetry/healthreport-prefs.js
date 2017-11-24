@@ -8,5 +8,3 @@ pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privac
 
 // Health Report is enabled by default on all channels.
 pref("datareporting.healthreport.uploadEnabled", true);
-
-pref("datareporting.healthreport.about.reportUrl", "https://fhr.cdn.mozilla.net/%LOCALE%/v4/");

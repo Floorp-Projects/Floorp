@@ -203,6 +203,7 @@
   visibility: visible;
 }
 
+#urlbar[pageproxystate="valid"] > #identity-box.notSecure > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #connection-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);

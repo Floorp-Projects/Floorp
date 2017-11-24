@@ -80,3 +80,31 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         self.assertListEqual([self.start_tab], self.marionette.window_handles)
         self.assertListEqual([self.start_window], self.marionette.chrome_window_handles)
         self.assertIsNotNone(self.marionette.session)
+
+    @skip_if_mobile("discardBrowser is only available in Firefox")
+    def test_close_browserless_tab(self):
+        self.close_all_tabs()
+
+        test_page = self.marionette.absolute_url("windowHandles.html")
+        tab = self.open_tab()
+        self.marionette.switch_to_window(tab)
+        self.marionette.navigate(test_page)
+        self.marionette.switch_to_window(self.start_tab)
+
+        with self.marionette.using_context("chrome"):
+            self.marionette.execute_async_script("""
+              Components.utils.import("resource:///modules/RecentWindow.jsm");
+
+              let win = RecentWindow.getMostRecentBrowserWindow();
+              win.addEventListener("TabBrowserDiscarded", ev => {
+                marionetteScriptFinished(true);
+              }, { once: true});
+              win.gBrowser.discardBrowser(win.gBrowser.tabs[1].linkedBrowser);
+            """)
+
+        window_handles = self.marionette.window_handles
+        window_handles.remove(self.start_tab)
+        self.assertEqual(1, len(window_handles))
+        self.marionette.switch_to_window(window_handles[0], focus=False)
+        self.marionette.close()
+        self.assertListEqual([self.start_tab], self.marionette.window_handles)

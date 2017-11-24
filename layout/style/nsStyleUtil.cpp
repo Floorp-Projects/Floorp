@@ -16,6 +16,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
 #include "nsISupportsPrimitives.h"
+#include "nsLayoutUtils.h"
 #include "nsPrintfCString.h"
 #include <cctype>
 
