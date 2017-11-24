@@ -7,8 +7,6 @@
 
 interface nsIPrincipal;
 
-typedef unsigned long long nsViewID;
-
 [builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
 interface nsITabParent : nsISupports
 {
