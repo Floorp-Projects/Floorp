@@ -185,8 +185,8 @@ function getElRect(selector, win) {
  * the rect of the dragged element as it was before drag.
  */
 function dragElementBy(selector, x, y, win) {
-  let React = win.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
+  let ReactDOM = win.require("devtools/client/shared/vendor/react-dom");
+  let { Simulate } = ReactDOM.TestUtils;
   let rect = getElRect(selector, win);
   let startPoint = {
     clientX: Math.floor(rect.left + rect.width / 2),
@@ -222,8 +222,8 @@ function* testViewportResize(ui, selector, moveBy,
 
 function openDeviceModal({ toolWindow }) {
   let { document } = toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
+  let ReactDOM = toolWindow.require("devtools/client/shared/vendor/react-dom");
+  let { Simulate } = ReactDOM.TestUtils;
   let select = document.querySelector(".viewport-device-selector");
   let modal = document.querySelector("#device-modal-wrapper");
 
@@ -240,8 +240,8 @@ function openDeviceModal({ toolWindow }) {
 
 function changeSelectValue({ toolWindow }, selector, value) {
   let { document } = toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
+  let ReactDOM = toolWindow.require("devtools/client/shared/vendor/react-dom");
+  let { Simulate } = ReactDOM.TestUtils;
 
   info(`Selecting ${value} in ${selector}.`);
 
@@ -383,10 +383,9 @@ function* testUserAgent(ui, expected) {
  * function adds `device` via the form, saves it, and waits for it to appear in the store.
  */
 function addDeviceInModal(ui, device) {
-  let { toolWindow } = ui;
+  let ReactDOM = ui.toolWindow.require("devtools/client/shared/vendor/react-dom");
+  let { Simulate } = ReactDOM.TestUtils;
   let { store, document } = ui.toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
 
   let nameInput = document.querySelector("#device-adder-name input");
   let [ widthInput, heightInput ] = document.querySelectorAll("#device-adder-size input");
