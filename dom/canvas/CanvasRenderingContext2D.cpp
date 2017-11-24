@@ -1167,6 +1167,27 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
                           ? mCanvasElement->OwnerDoc()
                           : nullptr;
 
+  if (document->IsStyledByServo()) {
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    ServoStyleSet* set = presShell ? presShell->StyleSet()->AsServo() : nullptr;
+
+    // First, try computing the color without handling currentcolor.
+    bool wasCurrentColor = false;
+    if (!ServoCSSParser::ComputeColor(set, NS_RGB(0, 0, 0), aString, aColor,
+                                      &wasCurrentColor)) {
+      return false;
+    }
+
+    if (wasCurrentColor) {
+      // Otherwise, get the value of the color property, flushing style
+      // if necessary.
+      RefPtr<nsStyleContext> canvasStyle =
+        nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr, presShell);
+      *aColor = canvasStyle->StyleColor()->mColor;
+    }
+    return true;
+  }
+
   // Pass the CSS Loader object to the parser, to allow parser error
   // reports to include the outer window ID.
   nsCSSParser parser(document ? document->CSSLoader() : nullptr);
