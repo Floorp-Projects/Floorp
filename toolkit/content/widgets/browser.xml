@@ -1594,13 +1594,23 @@
         </body>
       </method>
 
+      <property name="dontPromptAndDontUnload"
+                onget="return 1;"
+                readonly="true"/>
+
+      <property name="dontPromptAndUnload"
+                onget="return 2;"
+                readonly="true"/>
+
       <method name="permitUnload">
+        <parameter name="aPermitUnloadFlags"/>
         <body>
         <![CDATA[
           if (!this.docShell || !this.docShell.contentViewer) {
             return {permitUnload: true, timedOut: false};
           }
-          return {permitUnload: this.docShell.contentViewer.permitUnload(), timedOut: false};
+          return {permitUnload: this.docShell.contentViewer.permitUnload(aPermitUnloadFlags),
+                  timedOut: false};
         ]]>
         </body>
       </method>
