@@ -74,8 +74,9 @@ class LogAllocBridge : public ReplaceMallocBridge
 };
 
 void
-replace_init(malloc_table_t* aTable)
+replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
 {
+  static LogAllocBridge bridge;
   sFuncs = *aTable;
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #define MALLOC_DECL(name, ...) aTable->name = replace_ ## name;
@@ -86,6 +87,7 @@ replace_init(malloc_table_t* aTable)
   aTable->aligned_alloc = replace_aligned_alloc;
   aTable->valloc = replace_valloc;
 #endif
+  *aBridge = &bridge;
 
 #ifndef _WIN32
   /* When another thread has acquired a lock before forking, the child
@@ -166,13 +168,6 @@ replace_init(malloc_table_t* aTable)
     }
 #endif
   }
-}
-
-ReplaceMallocBridge*
-replace_get_bridge()
-{
-  static LogAllocBridge bridge;
-  return &bridge;
 }
 
 /* Do a simple, text-form, log of all calls to replace-malloc functions.

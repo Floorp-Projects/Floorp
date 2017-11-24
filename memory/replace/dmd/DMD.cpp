@@ -1265,18 +1265,13 @@ static void Init(malloc_table_t* aMallocTable);
 } // namespace mozilla
 
 void
-replace_init(malloc_table_t* aMallocTable)
+replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge)
 {
   mozilla::dmd::Init(aMallocTable);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #define MALLOC_DECL(name, ...) aMallocTable->name = replace_ ## name;
 #include "malloc_decls.h"
-}
-
-ReplaceMallocBridge*
-replace_get_bridge()
-{
-  return mozilla::dmd::gDMDBridge;
+  *aBridge = mozilla::dmd::gDMDBridge;
 }
 
 void*

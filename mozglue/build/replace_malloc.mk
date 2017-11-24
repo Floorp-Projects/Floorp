@@ -3,5 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifeq (Darwin_1,$(OS_TARGET)_$(MOZ_REPLACE_MALLOC))
-MK_LDFLAGS = -Wl,-U,_replace_init -Wl,-U,_replace_get_bridge
+MK_LDFLAGS = -Wl,-U,_replace_init
 endif
