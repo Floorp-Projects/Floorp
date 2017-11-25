@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 
 public class SharedMemory implements Parcelable {
     private static final String LOGTAG = "GeckoShmem";
-    private static Method sGetFDMethod = null; // MemoryFile.getFileDescriptor() is hidden. :(
+    private static final Method sGetFDMethod;
     private ParcelFileDescriptor mDescriptor;
     private int mSize;
     private int mId;
@@ -24,12 +24,15 @@ public class SharedMemory implements Parcelable {
     private boolean mIsMapped;
     private MemoryFile mBackedFile;
 
+    // MemoryFile.getFileDescriptor() is hidden. :(
     static {
+        Method method = null;
         try {
-            sGetFDMethod = MemoryFile.class.getDeclaredMethod("getFileDescriptor");
+            method = MemoryFile.class.getDeclaredMethod("getFileDescriptor");
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
+        sGetFDMethod = method;
     }
 
     private SharedMemory(Parcel in) {
