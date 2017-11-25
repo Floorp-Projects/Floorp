@@ -24,7 +24,7 @@ import android.util.Log;
 
 public class GeckoServiceChildProcess extends Service {
 
-    static private String LOGTAG = "GeckoServiceChildProcess";
+    private static final String LOGTAG = "GeckoServiceChildProcess";
 
     private static IProcessManager sProcessManager;
 

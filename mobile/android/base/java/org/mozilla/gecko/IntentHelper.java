@@ -60,11 +60,11 @@ public final class IntentHelper implements BundleEventListener {
     };
 
     // via http://developer.android.com/distribute/tools/promote/linking.html
-    private static String MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id=";
-    private static String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
+    private static final String MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id=";
+    private static final String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
 
     /** A partial URI to an error page - the encoded error URI should be appended before loading. */
-    private static String UNKNOWN_PROTOCOL_URI_PREFIX = "about:neterror?e=unknownProtocolFound&u=";
+    private static final String UNKNOWN_PROTOCOL_URI_PREFIX = "about:neterror?e=unknownProtocolFound&u=";
 
     private static IntentHelper instance;
 
