@@ -57,7 +57,7 @@ ObjectClassToString(JSContext* cx, HandleObject obj);
 
 // Exposed so SelfHosting.cpp can use it in the OwnPropertyKeys intrinsic
 MOZ_MUST_USE bool
-GetOwnPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, JS::MutableHandleValue rval);
+GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags);
 
 // Exposed for SelfHosting.cpp
 MOZ_MUST_USE bool
