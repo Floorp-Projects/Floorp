@@ -14,7 +14,7 @@ import android.util.Log;
 
 public class SurfaceAllocatorService extends Service {
 
-    static private String LOGTAG = "SurfaceAllocatorService";
+    private static final String LOGTAG = "SurfaceAllocatorService";
 
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
         return Service.START_STICKY;

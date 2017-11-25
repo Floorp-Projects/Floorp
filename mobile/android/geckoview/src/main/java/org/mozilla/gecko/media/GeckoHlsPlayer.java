@@ -50,7 +50,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private static final int MAX_TIMELINE_ITEM_LINES = 3;
     private static final boolean DEBUG = BuildConfig.NIGHTLY_BUILD || BuildConfig.DEBUG_BUILD;
 
-    private static AtomicInteger sPlayerId = new AtomicInteger(0);
+    private static final AtomicInteger sPlayerId = new AtomicInteger(0);
     /*
      *  Because we treat GeckoHlsPlayer as a source data provider.
      *  It will be created and initialized with a URL by HLSResource in

@@ -11,12 +11,19 @@ add_task(async function test_screenshot() {
   let webcompatButton = document.getElementById(WC_PAGE_ACTION_ID);
   ok(webcompatButton, "Report Site Issue button exists.");
 
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+  let screenshotPromise;
+  let newTabPromise = new Promise(resolve => {
+    gBrowser.tabContainer.addEventListener("TabOpen", event => {
+      let tab = event.target;
+      screenshotPromise = BrowserTestUtils.waitForContentEvent(
+        tab.linkedBrowser, "ScreenshotReceived", false, null, true);
+      resolve(tab);
+    }, { once: true });
+  });
   openPageActions();
   webcompatButton.click();
   let tab2 = await newTabPromise;
-
-  await BrowserTestUtils.waitForContentEvent(tab2.linkedBrowser, "ScreenshotReceived", false, null, true);
+  await screenshotPromise;
 
   await ContentTask.spawn(tab2.linkedBrowser, {TEST_PAGE}, function(args) {
     let doc = content.document;
