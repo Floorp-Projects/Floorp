@@ -19,16 +19,22 @@
 // An initialization function is called before any malloc replacement
 // function, and has the following declaration:
 //
-//   void replace_init(const malloc_table_t *)
+//   void replace_init(malloc_table_t*, ReplaceMallocBridge**)
 //
-// The const malloc_table_t pointer given to that function is a table
-// containing pointers to the original jemalloc implementation, so that
-// replacement functions can call them back if they need to. The pointer
-// itself can safely be kept around (no need to copy the table itself).
+// The malloc_table_t pointer given to that function is a table containing
+// pointers to the original allocator implementation, so that replacement
+// functions can call them back if they need to. The initialization function
+// needs to alter that table to replace the function it wants to replace.
+// If it needs the original implementation, it thus needs a copy of the
+// original table.
+//
+// The ReplaceMallocBridge* pointer is an outparam that allows the
+// replace_init function to return a pointer to its ReplaceMallocBridge
+// (see replace_malloc_bridge.h).
 //
 // The functions to be implemented in the external library are of the form:
 //
-//   void *replace_malloc(size_t size)
+//   void* replace_malloc(size_t size)
 //   {
 //     // Fiddle with the size if necessary.
 //     // orig->malloc doesn't have to be called if the external library
@@ -39,7 +45,7 @@
 //     return ptr;
 //   }
 //
-// where "orig" is the pointer obtained from replace_init.
+// where "orig" is a pointer to a copy of the table replace_init got.
 //
 // See malloc_decls.h for a list of functions that can be replaced this
 // way. The implementations are all in the form:
@@ -74,22 +80,20 @@
 
 MOZ_BEGIN_EXTERN_C
 
-// MOZ_NO_REPLACE_FUNC_DECL and MOZ_REPLACE_WEAK are only defined in
-// replace_malloc.c. Normally including this header will add function
-// definitions.
-#ifndef MOZ_NO_REPLACE_FUNC_DECL
-
+// MOZ_REPLACE_WEAK is only defined in mozjemalloc.cpp. Normally including
+// this header will add function definitions.
 #ifndef MOZ_REPLACE_WEAK
 #define MOZ_REPLACE_WEAK
 #endif
 
+// Replace-malloc library initialization function. See top of this file
+MOZ_EXPORT void
+replace_init(malloc_table_t*, struct ReplaceMallocBridge**) MOZ_REPLACE_WEAK;
+
+// Define the replace_* functions as not exported.
 #define MALLOC_DECL(name, return_type, ...)                                    \
-  MOZ_EXPORT return_type replace_##name(__VA_ARGS__) MOZ_REPLACE_WEAK;
-
-#define MALLOC_FUNCS MALLOC_FUNCS_ALL
+  return_type replace_##name(__VA_ARGS__);
 #include "malloc_decls.h"
-
-#endif // MOZ_NO_REPLACE_FUNC_DECL
 
 MOZ_END_EXTERN_C
 

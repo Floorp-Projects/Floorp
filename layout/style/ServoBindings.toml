@@ -173,6 +173,7 @@ rusty-enums = [
     "StyleBoxDecorationBreak",
     "StyleRuleInclusion",
     "StyleGridTrackBreadth",
+    "StyleOverscrollBehavior",
     "nsStyleImageType",
     "StyleWhiteSpace",
     "nsStyleSVGPaintType",

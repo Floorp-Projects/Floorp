@@ -376,18 +376,18 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     // that the event region that gets created for the thumb is included in
     // the nsDisplayOwnLayer contents.
 
-    uint32_t flags = aBuilder->GetCurrentScrollbarFlags();
+    nsDisplayOwnLayerFlags flags = aBuilder->GetCurrentScrollbarFlags();
     mozilla::layers::FrameMetrics::ViewID scrollTargetId =
       aBuilder->GetCurrentScrollbarTarget();
     bool thumbGetsLayer = (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
 
     if (thumbGetsLayer) {
-      MOZ_ASSERT((flags & nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR) ||
-                 (flags & nsDisplayOwnLayer::VERTICAL_SCROLLBAR));
-      bool isHorizontal = (flags & nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR);
+      MOZ_ASSERT((flags & nsDisplayOwnLayerFlags::eHorizontalScrollbar) ||
+                 (flags & nsDisplayOwnLayerFlags::eVerticalScrollbar));
+      bool isHorizontal = bool(flags & nsDisplayOwnLayerFlags::eHorizontalScrollbar);
       ScrollDirection scrollDirection = isHorizontal
-          ? ScrollDirection::HORIZONTAL
-          : ScrollDirection::VERTICAL;
+          ? ScrollDirection::eHorizontal
+          : ScrollDirection::eVertical;
       const float appUnitsPerCss = float(AppUnitsPerCSSPixel());
       CSSCoord thumbLength = NSAppUnitsToFloatPixels(
           isHorizontal ? thumbRect.width : thumbRect.height, appUnitsPerCss);
@@ -1139,8 +1139,8 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
   AsyncDragMetrics dragMetrics(scrollTargetId, presShellId, inputblockId,
                                NSAppUnitsToFloatPixels(mDragStart,
                                  float(AppUnitsPerCSSPixel())),
-                               isHorizontal ? ScrollDirection::HORIZONTAL :
-                                              ScrollDirection::VERTICAL);
+                               isHorizontal ? ScrollDirection::eHorizontal :
+                                              ScrollDirection::eVertical);
 
   if (!nsLayoutUtils::HasDisplayPort(scrollableContent)) {
     return;

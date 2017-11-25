@@ -20,29 +20,19 @@
 #define MALLOC_FUNCS_MALLOC                                                    \
   (MALLOC_FUNCS_MALLOC_BASE | MALLOC_FUNCS_MALLOC_EXTRA)
 #define MALLOC_FUNCS_JEMALLOC 4
-#define MALLOC_FUNCS_INIT 8
-#define MALLOC_FUNCS_BRIDGE 16
-#define MALLOC_FUNCS_ARENA_BASE 32
-#define MALLOC_FUNCS_ARENA_ALLOC 64
+#define MALLOC_FUNCS_ARENA_BASE 8
+#define MALLOC_FUNCS_ARENA_ALLOC 16
 #define MALLOC_FUNCS_ARENA (MALLOC_FUNCS_ARENA_BASE | MALLOC_FUNCS_ARENA_ALLOC)
 #define MALLOC_FUNCS_ALL                                                       \
-  (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE | MALLOC_FUNCS_MALLOC |             \
-   MALLOC_FUNCS_JEMALLOC | MALLOC_FUNCS_ARENA)
+  (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | MALLOC_FUNCS_ARENA)
 
 #endif // malloc_decls_h
 
 #ifndef MALLOC_FUNCS
-#define MALLOC_FUNCS                                                           \
-  (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | MALLOC_FUNCS_ARENA)
+#define MALLOC_FUNCS MALLOC_FUNCS_ALL
 #endif
 
 #ifdef MALLOC_DECL
-#if MALLOC_FUNCS & MALLOC_FUNCS_INIT
-MALLOC_DECL(init, void, const malloc_table_t*)
-#endif
-#if MALLOC_FUNCS & MALLOC_FUNCS_BRIDGE
-MALLOC_DECL(get_bridge, struct ReplaceMallocBridge*)
-#endif
 #if MALLOC_FUNCS & MALLOC_FUNCS_MALLOC_BASE
 MALLOC_DECL(malloc, void*, size_t)
 MALLOC_DECL(calloc, void*, size_t, size_t)
