@@ -312,7 +312,15 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
   return false;
 }
 
-#elif defined(XP_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
+#elif defined(XP_MACOSX)
+
+bool
+SetRemoteExceptionHandler(const nsACString& crashPipe)
+{
+  return false;
+}
+
+#else
 
 bool
 CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd)
@@ -322,14 +330,6 @@ CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd)
 
 bool
 SetRemoteExceptionHandler()
-{
-  return false;
-}
-
-#elif defined(XP_MACOSX)
-
-bool
-SetRemoteExceptionHandler(const nsACString& crashPipe)
 {
   return false;
 }

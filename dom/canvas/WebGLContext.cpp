@@ -712,6 +712,19 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
         flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
     }
 
+#ifdef XP_MACOSX
+    const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    nsString vendorID, deviceID;
+
+    // Avoid crash for Intel HD Graphics 3000 on OSX. (Bug 1413269)
+    gfxInfo->GetAdapterVendorID(vendorID);
+    gfxInfo->GetAdapterDeviceID(deviceID);
+    if (vendorID.EqualsLiteral("0x8086") &&
+        (deviceID.EqualsLiteral("0x0116") || deviceID.EqualsLiteral("0x0126")))
+    {
+        flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+    }
+#endif
     //////
 
     const bool useEGL = PR_GetEnv("MOZ_WEBGL_FORCE_EGL");
