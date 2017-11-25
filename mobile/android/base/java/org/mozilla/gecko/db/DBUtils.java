@@ -106,8 +106,8 @@ public class DBUtils {
         }
     }
 
-    private static String HISTOGRAM_DATABASE_LOCKED = "DATABASE_LOCKED_EXCEPTION";
-    private static String HISTOGRAM_DATABASE_UNLOCKED = "DATABASE_SUCCESSFUL_UNLOCK";
+    private static final String HISTOGRAM_DATABASE_LOCKED = "DATABASE_LOCKED_EXCEPTION";
+    private static final String HISTOGRAM_DATABASE_UNLOCKED = "DATABASE_SUCCESSFUL_UNLOCK";
     public static void ensureDatabaseIsNotLocked(SQLiteOpenHelper dbHelper, String databasePath) {
         final int maxAttempts = 5;
         int attempt = 0;

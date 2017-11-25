@@ -65,7 +65,7 @@ public class MmaDelegate {
     public static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
     private static final String DEBUG_LEANPLUM_DEVICE_ID = "8effda84-99df-11e7-abc4-cec278b6b50a";
 
-    private static MmaInterface mmaHelper = MmaConstants.getMma();
+    private static final MmaInterface mmaHelper = MmaConstants.getMma();
     private static WeakReference<Context> applicationContext;
 
     public static void init(Activity activity) {
