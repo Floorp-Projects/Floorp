@@ -11271,6 +11271,11 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
   } else if (touchAction & NS_STYLE_TOUCH_ACTION_MANIPULATION) {
     result |= CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
   } else {
+    // This path handles the cases none | [pan-x || pan-y] and so both
+    // double-tap and pinch zoom are disabled in here.
+    result |= CompositorHitTestInfo::eTouchActionPinchZoomDisabled
+            | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
+
     if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
       result |= CompositorHitTestInfo::eTouchActionPanXDisabled;
     }
@@ -11278,11 +11283,9 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
       result |= CompositorHitTestInfo::eTouchActionPanYDisabled;
     }
     if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
-      result |= CompositorHitTestInfo::eTouchActionPinchZoomDisabled
-              | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
-      // pan-x and pan-y disabled flags will already have been set above
-      MOZ_ASSERT(result & CompositorHitTestInfo::eTouchActionPanXDisabled);
-      MOZ_ASSERT(result & CompositorHitTestInfo::eTouchActionPanYDisabled);
+      // all the touch-action disabling flags will already have been set above
+      MOZ_ASSERT((result & CompositorHitTestInfo::eTouchActionMask)
+               == CompositorHitTestInfo::eTouchActionMask);
     }
   }
 
