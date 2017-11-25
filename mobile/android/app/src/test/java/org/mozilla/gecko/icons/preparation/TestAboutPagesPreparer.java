@@ -19,6 +19,7 @@ public class TestAboutPagesPreparer {
             AboutPages.CONFIG,
             AboutPages.DOWNLOADS,
             AboutPages.FIREFOX,
+            AboutPages.HEALTHREPORT,
             AboutPages.HOME
     };
 
