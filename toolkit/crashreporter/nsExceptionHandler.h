@@ -267,7 +267,7 @@ void UnregisterInjectorCallback(DWORD processID);
 bool SetRemoteExceptionHandler(const nsACString& crashPipe);
 void InitChildProcessTmpDir(nsIFile* aDirOverride = nullptr);
 
-#  elif defined(XP_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
+#  else
 // Parent-side API for children
 
 // Set the outparams for crash reporter server's fd (|childCrashFd|)
