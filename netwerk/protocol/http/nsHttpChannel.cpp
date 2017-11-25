@@ -6208,6 +6208,7 @@ nsHttpChannel::BeginConnect()
     mRequestHead.SetHTTPS(isHttps);
     mRequestHead.SetOrigin(scheme, host, port);
 
+    SetOriginHeader();
     SetDoNotTrack();
 
     OriginAttributes originAttributes;
@@ -8953,6 +8954,58 @@ nsHttpChannel::SetLoadGroupUserAgentOverride()
             }
         }
     }
+}
+
+// Step 10 of HTTP-network-or-cache fetch
+void
+nsHttpChannel::SetOriginHeader()
+{
+    if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
+        return;
+    }
+    nsAutoCString existingHeader;
+    Unused << mRequestHead.GetHeader(nsHttp::Origin, existingHeader);
+    if (!existingHeader.IsEmpty()) {
+        LOG(("nsHttpChannel::SetOriginHeader Origin header already present"));
+        return;
+    }
+
+    DebugOnly<nsresult> rv;
+
+    // Instead of consulting Preferences::GetInt() all the time we
+    // can cache the result to speed things up.
+    static int32_t sSendOriginHeader = 0;
+    static bool sIsInited = false;
+    if (!sIsInited) {
+        sIsInited = true;
+        Preferences::AddIntVarCache(&sSendOriginHeader,
+                                    "network.http.sendOriginHeader");
+    }
+    if (sSendOriginHeader == 0) {
+        // Origin header suppressed by user setting
+        return;
+    }
+
+    nsCOMPtr<nsIURI> referrer;
+    mLoadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(referrer));
+
+    nsAutoCString origin("null");
+    if (referrer && IsReferrerSchemeAllowed(referrer)) {
+        nsContentUtils::GetASCIIOrigin(referrer, origin);
+    }
+
+    // Restrict Origin to same-origin loads if requested by user
+    if (sSendOriginHeader == 1) {
+        nsAutoCString currentOrigin;
+        nsContentUtils::GetASCIIOrigin(mURI, currentOrigin);
+        if (!origin.EqualsIgnoreCase(currentOrigin.get())) {
+            // Origin header suppressed by user setting
+            return;
+        }
+    }
+
+    rv = mRequestHead.SetHeader(nsHttp::Origin, origin, false /* merge */);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void
