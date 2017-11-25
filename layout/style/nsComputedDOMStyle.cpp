@@ -3623,6 +3623,26 @@ nsComputedDOMStyle::DoGetScrollBehavior()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetOverscrollBehaviorX()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverscrollBehaviorX,
+                                   nsCSSProps::kOverscrollBehaviorKTable));
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetOverscrollBehaviorY()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverscrollBehaviorY,
+                                   nsCSSProps::kOverscrollBehaviorKTable));
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetScrollSnapType()
 {
   const nsStyleDisplay* display = StyleDisplay();

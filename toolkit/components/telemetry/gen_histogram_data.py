@@ -9,7 +9,7 @@ from __future__ import print_function
 from shared_telemetry_utils import StringTable, static_assert, ParserError
 
 import sys
-import histogram_tools
+import parse_histograms
 
 banner = """/* This file is auto-generated, see gen_histogram_data.py.  */
 """
@@ -193,7 +193,7 @@ def write_histogram_ranges(output, histograms):
 
 def main(output, *filenames):
     try:
-        histograms = list(histogram_tools.from_files(filenames))
+        histograms = list(parse_histograms.from_files(filenames))
     except ParserError as ex:
         print("\nError processing histograms:\n" + str(ex) + "\n")
         sys.exit(1)

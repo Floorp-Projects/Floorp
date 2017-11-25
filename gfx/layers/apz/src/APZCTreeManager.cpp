@@ -758,7 +758,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                            aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollThumbData(),
-                           aLayer.IsScrollbarContainer());
+                           aLayer.GetScrollbarContainerDirection());
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
     return node;
   }
@@ -952,7 +952,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
   node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                          aLayer.GetScrollbarAnimationId(),
                          aLayer.GetScrollThumbData(),
-                         aLayer.IsScrollbarContainer());
+                         aLayer.GetScrollbarContainerDirection());
   node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
   return node;
 }
@@ -1198,6 +1198,9 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         apzc->GetGuid(aOutTargetGuid);
         panInput.mPanStartPoint = *untransformedStartPoint;
         panInput.mPanDisplacement = *untransformedDisplacement;
+
+        panInput.mOverscrollBehaviorAllowsSwipe =
+            apzc->OverscrollBehaviorAllowsSwipe();
       }
       break;
     } case PINCHGESTURE_INPUT: {  // note: no one currently sends these
@@ -1622,6 +1625,7 @@ APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
   }
 
   const ScrollThumbData& thumbData = aScrollThumbNode->GetScrollThumbData();
+  MOZ_ASSERT(thumbData.mDirection.isSome());
 
   // Record the thumb's position at the start of the drag.
   // We snap back to this position if, during the drag, the mouse
@@ -1655,7 +1659,7 @@ APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
     // Only consider the translation, since we do not support both
     // zooming and scrollbar dragging on any platform.
     CSSCoord thumbStart = thumbData.mThumbStart
-                        + ((thumbData.mDirection == ScrollDirection::HORIZONTAL)
+                        + ((*thumbData.mDirection == ScrollDirection::eHorizontal)
                            ? thumbTransform._41 : thumbTransform._42);
     dragStart -= thumbStart;
 
@@ -1671,7 +1675,7 @@ APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
                          aApzc->GetGuid().mPresShellId,
                          dragBlockId,
                          dragStart,
-                         thumbData.mDirection));
+                         *thumbData.mDirection));
   }
 }
 
@@ -2028,25 +2032,22 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev,
   }
 }
 
-void
+ParentLayerPoint
 APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
-                               FlingHandoffState& aHandoffState)
+                               const FlingHandoffState& aHandoffState)
 {
   // If immediate handoff is disallowed, do not allow handoff beyond the
   // single APZC that's scrolled by the input block that triggered this fling.
   if (aHandoffState.mIsHandoff &&
       !gfxPrefs::APZAllowImmediateHandoff() &&
       aHandoffState.mScrolledApzc == aPrev) {
-    return;
+    return aHandoffState.mVelocity;
   }
 
   const OverscrollHandoffChain* chain = aHandoffState.mChain;
   RefPtr<AsyncPanZoomController> current;
   uint32_t overscrollHandoffChainLength = chain->Length();
   uint32_t startIndex;
-
-  // This will store any velocity left over after the entire handoff.
-  ParentLayerPoint finalResidualVelocity = aHandoffState.mVelocity;
 
   // The fling's velocity needs to be transformed from the screen coordinates
   // of |aPrev| to the screen coordinates of |next|. To transform a velocity
@@ -2064,64 +2065,78 @@ APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
     // IndexOf will return aOverscrollHandoffChain->Length() if
     // |aPrev| is not found.
     if (startIndex >= overscrollHandoffChainLength) {
-      return;
+      return aHandoffState.mVelocity;
     }
   } else {
     startIndex = 0;
   }
 
+  // This will store any velocity left over after the entire handoff.
+  ParentLayerPoint finalResidualVelocity = aHandoffState.mVelocity;
+
+  ParentLayerPoint currentVelocity = aHandoffState.mVelocity;
   for (; startIndex < overscrollHandoffChainLength; startIndex++) {
     current = chain->GetApzcAtIndex(startIndex);
 
-    // Make sure the apcz about to be handled can be handled
+    // Make sure the apzc about to be handled can be handled
     if (current == nullptr || current->IsDestroyed()) {
-      return;
+      break;
     }
 
-    endPoint = startPoint + aHandoffState.mVelocity;
+    endPoint = startPoint + currentVelocity;
 
-    // Only transform when current apcz can be transformed with previous
-    if (startIndex > 0) {
+    RefPtr<AsyncPanZoomController> prevApzc = (startIndex > 0)
+                                            ? chain->GetApzcAtIndex(startIndex - 1)
+                                            : nullptr;
+
+    // Only transform when current apzc can be transformed with previous
+    if (prevApzc) {
       if (!TransformDisplacement(this,
-                                 chain->GetApzcAtIndex(startIndex - 1),
+                                 prevApzc,
                                  current,
                                  startPoint,
                                  endPoint)) {
-        return;
-      }
-    }
-
-    ParentLayerPoint transformedVelocity = endPoint - startPoint;
-    aHandoffState.mVelocity = transformedVelocity;
-
-    if (current->AttemptFling(aHandoffState)) {
-      // Coming out of AttemptFling(), the handoff state's velocity is the
-      // residual velocity after attempting to fling |current|.
-      ParentLayerPoint residualVelocity = aHandoffState.mVelocity;
-
-      // If there's no residual velocity, there's nothing more to hand off.
-      if (IsZero(residualVelocity)) {
-        finalResidualVelocity = ParentLayerPoint();
         break;
       }
-
-      // If there is residual velocity, subtract the proportion of used
-      // velocity from finalResidualVelocity and continue handoff along the
-      // chain.
-      if (!FuzzyEqualsAdditive(transformedVelocity.x,
-                               residualVelocity.x, COORDINATE_EPSILON)) {
-        finalResidualVelocity.x *= (residualVelocity.x / transformedVelocity.x);
-      }
-      if (!FuzzyEqualsAdditive(transformedVelocity.y,
-                               residualVelocity.y, COORDINATE_EPSILON)) {
-        finalResidualVelocity.y *= (residualVelocity.y / transformedVelocity.y);
-      }
     }
+
+    ParentLayerPoint availableVelocity = (endPoint - startPoint);
+    ParentLayerPoint residualVelocity;
+
+    FlingHandoffState transformedHandoffState = aHandoffState;
+    transformedHandoffState.mVelocity = availableVelocity;
+
+    // Obey overscroll-behavior.
+    if (prevApzc) {
+      residualVelocity += prevApzc->AdjustHandoffVelocityForOverscrollBehavior(transformedHandoffState.mVelocity);
+    }
+
+    residualVelocity += current->AttemptFling(transformedHandoffState);
+
+    // If there's no residual velocity, there's nothing more to hand off.
+    if (IsZero(residualVelocity)) {
+      return ParentLayerPoint();
+    }
+
+    // If any of the velocity available to be handed off was consumed,
+    // subtract the proportion of consumed velocity from finalResidualVelocity.
+    // Note: it's important to compare |residualVelocity| to |availableVelocity|
+    // here and not to |transformedHandoffState.mVelocity|, since the latter
+    // may have been modified by AdjustHandoffVelocityForOverscrollBehavior().
+    if (!FuzzyEqualsAdditive(availableVelocity.x,
+                             residualVelocity.x, COORDINATE_EPSILON)) {
+      finalResidualVelocity.x *= (residualVelocity.x / availableVelocity.x);
+    }
+    if (!FuzzyEqualsAdditive(availableVelocity.y,
+                             residualVelocity.y, COORDINATE_EPSILON)) {
+      finalResidualVelocity.y *= (residualVelocity.y / availableVelocity.y);
+    }
+
+    currentVelocity = residualVelocity;
   }
 
-  // Set the handoff state's velocity to any residual velocity left over
-  // after the entire handoff process.
-  aHandoffState.mVelocity = finalResidualVelocity;
+  // Return any residual velocity left over after the entire handoff process.
+  return finalResidualVelocity;
 }
 
 bool
@@ -2187,18 +2202,17 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
                                HitTestResult* aOutHitResult,
                                RefPtr<HitTestingTreeNode>* aOutScrollbarNode)
 {
+  MutexAutoLock lock(mTreeLock);
+
   HitTestResult hitResult = HitNothing;
   HitTestingTreeNode* scrollbarNode = nullptr;
   RefPtr<AsyncPanZoomController> target;
-
-  { // scope mTreeLock
-    MutexAutoLock lock(mTreeLock);
-    target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
-  }
+  target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
 
   if (gfxPrefs::WebRenderHitTest()) {
     HitTestResult wrHitResult = HitNothing;
-    RefPtr<AsyncPanZoomController> wrTarget = GetAPZCAtPointWR(aPoint, &wrHitResult);
+    HitTestingTreeNode* wrScrollbarNode = nullptr;
+    RefPtr<AsyncPanZoomController> wrTarget = GetAPZCAtPointWR(aPoint, &wrHitResult, &wrScrollbarNode);
     // For now just compare the WR and non-WR results.
     if (wrHitResult != hitResult) {
       printf_stderr("WR hit result mismatch at %s: got %d, expected %d\n",
@@ -2210,6 +2224,11 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
           Stringify(aPoint).c_str(),
           wrTarget ? Stringify(wrTarget->GetGuid()).c_str() : "null",
           target ? Stringify(target->GetGuid()).c_str() : "null");
+      // MOZ_RELEASE_ASSERT(false);
+    }
+    if (wrScrollbarNode != scrollbarNode) {
+      printf_stderr("WR scrollbar node mismatch at %s: got %p, expected %p\n",
+          Stringify(aPoint).c_str(), wrScrollbarNode, scrollbarNode);
       // MOZ_RELEASE_ASSERT(false);
     }
   }
@@ -2225,9 +2244,11 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
 
 already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
-                                  HitTestResult* aOutHitResult)
+                                  HitTestResult* aOutHitResult,
+                                  HitTestingTreeNode** aOutScrollbarNode)
 {
   MOZ_ASSERT(aOutHitResult);
+  MOZ_ASSERT(aOutScrollbarNode);
 
   RefPtr<AsyncPanZoomController> result;
   RefPtr<wr::WebRenderAPI> wr = GetWebRenderAPI();
@@ -2245,12 +2266,32 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
   }
 
   uint64_t layersId = wr::AsUint64(pipelineId);
-  result = GetTargetAPZC(layersId, scrollId);
+  RefPtr<HitTestingTreeNode> node = GetTargetNode(
+      ScrollableLayerGuid(layersId, 0, scrollId),
+      &GuidComparatorIgnoringPresShell);
+  MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
+  result = node ? node->GetApzc() : nullptr;
   if (!result) {
     // It falls back to the root
     MOZ_ASSERT(scrollId == FrameMetrics::NULL_SCROLL_ID);
     result = FindRootApzcForLayersId(layersId);
     MOZ_ASSERT(result);
+  }
+
+  bool isScrollbar = bool(hitInfo & gfx::CompositorHitTestInfo::eScrollbar);
+  bool isScrollbarThumb = bool(hitInfo & gfx::CompositorHitTestInfo::eScrollbarThumb);
+  ScrollDirection direction = (hitInfo & gfx::CompositorHitTestInfo::eScrollbarVertical)
+                            ? ScrollDirection::eVertical
+                            : ScrollDirection::eHorizontal;
+  if (isScrollbar || isScrollbarThumb) {
+    *aOutScrollbarNode = BreadthFirstSearch<ReverseIterator>(mRootNode.get(),
+      [&](HitTestingTreeNode* aNode) {
+        return (aNode->GetLayersId() == layersId) &&
+               (aNode->IsScrollbarNode() == isScrollbar) &&
+               (aNode->IsScrollThumbNode() == isScrollbarThumb) &&
+               (aNode->GetScrollbarDirection() == direction) &&
+               (aNode->GetScrollTargetId() == scrollId);
+      });
   }
 
   *aOutHitResult = HitLayer;

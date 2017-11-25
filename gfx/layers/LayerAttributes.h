@@ -6,6 +6,7 @@
 #ifndef mozilla_gfx_layers_LayerAttributes_h
 #define mozilla_gfx_layers_LayerAttributes_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayersTypes.h"
 
@@ -19,8 +20,7 @@ namespace layers {
 // Data stored for scroll thumb container layers.
 struct ScrollThumbData {
   ScrollThumbData()
-    : mDirection(ScrollDirection::NONE)
-    , mThumbRatio(0.0f)
+    : mThumbRatio(0.0f)
     , mIsAsyncDraggable(false)
   {}
   ScrollThumbData(ScrollDirection aDirection,
@@ -30,7 +30,7 @@ struct ScrollThumbData {
                   bool aIsAsyncDraggable,
                   CSSCoord aScrollTrackStart,
                   CSSCoord aScrollTrackLength)
-    : mDirection(aDirection)
+    : mDirection(Some(aDirection))
     , mThumbRatio(aThumbRatio)
     , mThumbStart(aThumbStart)
     , mThumbLength(aThumbLength)
@@ -39,7 +39,7 @@ struct ScrollThumbData {
     , mScrollTrackLength(aScrollTrackLength)
   {}
 
-  ScrollDirection mDirection;
+  Maybe<ScrollDirection> mDirection;
   // The scrollbar thumb ratio is the ratio of the thumb position (in the CSS
   // pixels of the scrollframe's parent's space) to the scroll position (in the
   // CSS pixels of the scrollframe's space).
@@ -79,7 +79,6 @@ public:
      mOpacity(1.0f),
      mIsFixedPosition(false),
      mScrollbarTargetContainerId(FrameMetrics::NULL_SCROLL_ID),
-     mIsScrollbarContainer(false),
      mMixBlendMode(gfx::CompositionOp::OP_OVER),
      mForceIsolatedGroup(false)
   {
@@ -129,11 +128,14 @@ public:
     mThumbData = aThumbData;
     return true;
   }
-  bool SetIsScrollbarContainer(FrameMetrics::ViewID aScrollId) {
-    if (mIsScrollbarContainer && mScrollbarTargetContainerId == aScrollId) {
+  bool SetScrollbarContainer(FrameMetrics::ViewID aScrollId,
+                             ScrollDirection aDirection) {
+    if (mScrollbarContainerDirection &&
+        *mScrollbarContainerDirection == aDirection &&
+        mScrollbarTargetContainerId == aScrollId) {
       return false;
     }
-    mIsScrollbarContainer = true;
+    mScrollbarContainerDirection = Some(aDirection);
     mScrollbarTargetContainerId = aScrollId;
     return true;
   }
@@ -210,7 +212,7 @@ public:
   // This returns true if scrolling info is equivalent for the purposes of
   // APZ hit testing.
   bool HitTestingInfoIsEqual(const SimpleLayerAttributes& aOther) const {
-    if (mIsScrollbarContainer != aOther.mIsScrollbarContainer) {
+    if (mScrollbarContainerDirection != aOther.mScrollbarContainerDirection) {
       return false;
     }
     if (mScrollbarTargetContainerId != aOther.mScrollbarTargetContainerId) {
@@ -253,8 +255,8 @@ public:
   const ScrollThumbData& ThumbData() const {
     return mThumbData;
   }
-  float IsScrollbarContainer() const {
-    return mIsScrollbarContainer;
+  Maybe<ScrollDirection> GetScrollbarContainerDirection() const {
+    return mScrollbarContainerDirection;
   }
   gfx::CompositionOp MixBlendMode() const {
     return mMixBlendMode;
@@ -306,7 +308,7 @@ public:
            mIsFixedPosition == aOther.mIsFixedPosition &&
            mScrollbarTargetContainerId == aOther.mScrollbarTargetContainerId &&
            mThumbData == aOther.mThumbData &&
-           mIsScrollbarContainer == aOther.mIsScrollbarContainer &&
+           mScrollbarContainerDirection == aOther.mScrollbarContainerDirection &&
            mMixBlendMode == aOther.mMixBlendMode &&
            mForceIsolatedGroup == aOther.mForceIsolatedGroup;
   }
@@ -322,7 +324,7 @@ private:
   bool mIsFixedPosition;
   uint64_t mScrollbarTargetContainerId;
   ScrollThumbData mThumbData;
-  bool mIsScrollbarContainer;
+  Maybe<ScrollDirection> mScrollbarContainerDirection;
   gfx::CompositionOp mMixBlendMode;
   bool mForceIsolatedGroup;
 
