@@ -17,16 +17,6 @@
 namespace mozilla {
 namespace layers {
 
-enum HitTestResult {
-  HitNothing,
-  HitLayer,
-  HitLayerTouchActionNone,
-  HitLayerTouchActionPanX,
-  HitLayerTouchActionPanY,
-  HitLayerTouchActionPanXY,
-  HitDispatchToContentRegion,
-};
-
 enum CancelAnimationFlags : uint32_t {
   Default = 0x0,             /* Cancel all animations */
   ExcludeOverscroll = 0x1,   /* Don't clear overscroll */
