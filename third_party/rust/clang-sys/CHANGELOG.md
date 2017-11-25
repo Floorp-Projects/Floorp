@@ -1,3 +1,11 @@
+## [0.21.1] - 2017-11-24
+
+### Changed
+- Improved finding of versioned libraries (e.g., `libclang-3.9.so`)
+
+### Fixed
+* Fixed compilation failures on the beta and nightly channels caused by a [compiler bug](https://github.com/KyleMayes/clang-sys/pull/69)
+
 ## [0.21.0] - 2017-10-11
 
 ### Changed

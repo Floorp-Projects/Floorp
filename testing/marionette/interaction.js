@@ -8,15 +8,16 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/atom.js");
+Cu.import("chrome://marionette/content/element.js");
 const {
   ElementClickInterceptedError,
   ElementNotInteractableError,
   InvalidArgumentError,
   InvalidElementStateError,
 } = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/element.js");
-const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 Cu.import("chrome://marionette/content/event.js");
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
+const {TimedPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 Cu.importGlobalProperties(["File"]);
 
@@ -296,13 +297,14 @@ interaction.selectOption = function(el) {
  *
  * @return {Promise}
  *     Promise is resolved once <var>el</var> has been clicked
- *     (its <code>click</code> event fires) or the document is unloaded.
+ *     (its <code>click</code> event fires), the document is unloaded,
+ *     or a 500 ms timeout is reached.
  */
 interaction.flushEventLoop = async function(el) {
   const win = el.ownerGlobal;
   let unloadEv, clickEv;
 
-  return new Promise(resolve => {
+  let spinEventLoop = resolve => {
     unloadEv = resolve;
     clickEv = () => {
       if (win.closed) {
@@ -314,11 +316,15 @@ interaction.flushEventLoop = async function(el) {
 
     win.addEventListener("unload", unloadEv, {mozSystemGroup: true});
     el.addEventListener("click", clickEv, {mozSystemGroup: true});
-  }).then(() => {
+  };
+  let removeListeners = () => {
     // only one event fires
     win.removeEventListener("unload", unloadEv);
     el.removeEventListener("click", clickEv);
-  });
+  };
+
+  return new TimedPromise(spinEventLoop, {timeout: 500, throws: null})
+      .then(removeListeners);
 };
 
 /**

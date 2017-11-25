@@ -24,7 +24,10 @@ macro_rules! link {
         #[cfg($cfg)]
         pub fn $name(library: &mut super::SharedLibrary) {
             let symbol = unsafe { library.library.get(stringify!($name).as_bytes()) }.ok();
-            library.functions.$name = symbol.map(|s| *s);
+            library.functions.$name = match symbol {
+                Some(s) => *s,
+                None => None,
+            };
         }
 
         #[cfg(not($cfg))]
@@ -40,15 +43,9 @@ macro_rules! link {
         use std::sync::{Arc};
 
         /// The set of functions loaded dynamically.
-        #[derive(Debug)]
+        #[derive(Debug, Default)]
         pub struct Functions {
             $($(#[cfg($cfg)])* pub $name: Option<unsafe extern fn($($pname: $pty), *) $(-> $ret)*>,)+
-        }
-
-        impl Default for Functions {
-            fn default() -> Functions {
-                unsafe { std::mem::zeroed() }
-            }
         }
 
         /// A dynamically loaded instance of the `libclang` library.
