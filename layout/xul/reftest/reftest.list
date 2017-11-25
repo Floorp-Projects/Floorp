@@ -4,3 +4,6 @@ fails-if(Android) == textbox-multiline-noresize.xul textbox-multiline-ref.xul # 
 random-if(Android) fuzzy-if(webrender,128-128,168-168) == image-size.xul image-size-ref.xul
 == image-scaling-min-height-1.xul image-scaling-min-height-1-ref.xul
 == textbox-text-transform.xul textbox-text-transform-ref.xul
+
+== checkbox-dynamic-change.xul checkbox-dynamic-change-ref.xul
+== radio-dynamic-change.xul radio-dynamic-change-ref.xul
