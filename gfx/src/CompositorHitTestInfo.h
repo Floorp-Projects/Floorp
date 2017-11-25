@@ -34,6 +34,17 @@ enum class CompositorHitTestInfo : uint16_t {
   eTouchActionDoubleTapZoomDisabled = 1 << 5,
   // Mask to check for all the touch-action flags at once
   eTouchActionMask = (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5),
+
+  // The frame is a scrollbar or a subframe inside a scrollbar (including
+  // scroll thumbs)
+  eScrollbar = 1 << 6,
+  // The frame is a scrollthumb. If this is set then eScrollbar will also be
+  // set, unless gecko somehow generates a scroll thumb without a containing
+  // scrollbar.
+  eScrollbarThumb = 1 << 7,
+  // If eScrollbar is set, this flag indicates if the scrollbar is a vertical
+  // one (if set) or a horizontal one (if not set)
+  eScrollbarVertical = 1 << 8,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CompositorHitTestInfo)

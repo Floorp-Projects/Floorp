@@ -22,7 +22,7 @@
 
 #include "base/lock.h"
 
-static const malloc_table_t* sFuncs = nullptr;
+static malloc_table_t sFuncs;
 static intptr_t sFd = 0;
 static bool sStdoutOrStderr = false;
 
@@ -74,9 +74,20 @@ class LogAllocBridge : public ReplaceMallocBridge
 };
 
 void
-replace_init(const malloc_table_t* aTable)
+replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
 {
-  sFuncs = aTable;
+  static LogAllocBridge bridge;
+  sFuncs = *aTable;
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
+#define MALLOC_DECL(name, ...) aTable->name = replace_ ## name;
+#include "malloc_decls.h"
+  aTable->jemalloc_stats = replace_jemalloc_stats;
+#ifndef LOGALLOC_MINIMAL
+  aTable->posix_memalign = replace_posix_memalign;
+  aTable->aligned_alloc = replace_aligned_alloc;
+  aTable->valloc = replace_valloc;
+#endif
+  *aBridge = &bridge;
 
 #ifndef _WIN32
   /* When another thread has acquired a lock before forking, the child
@@ -107,7 +118,7 @@ replace_init(const malloc_table_t* aTable)
    * called after ours, which means it needs to be registered before ours.
    * So trick the real allocator into initializing itself without more side
    * effects by calling malloc with a size it can't possibly allocate. */
-  sFuncs->malloc(-1);
+  sFuncs.malloc(-1);
   pthread_atfork(prefork, postfork, postfork);
 #endif
 
@@ -159,13 +170,6 @@ replace_init(const malloc_table_t* aTable)
   }
 }
 
-ReplaceMallocBridge*
-replace_get_bridge()
-{
-  static LogAllocBridge bridge;
-  return &bridge;
-}
-
 /* Do a simple, text-form, log of all calls to replace-malloc functions.
  * Use locking to guarantee that an allocation that did happen is logged
  * before any other allocation/free happens.
@@ -175,7 +179,7 @@ void*
 replace_malloc(size_t aSize)
 {
   AutoLock lock(sLock);
-  void* ptr = sFuncs->malloc(aSize);
+  void* ptr = sFuncs.malloc(aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   }
@@ -187,7 +191,7 @@ int
 replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
 {
   AutoLock lock(sLock);
-  int ret = sFuncs->posix_memalign(aPtr, aAlignment, aSize);
+  int ret = sFuncs.posix_memalign(aPtr, aAlignment, aSize);
   if (ret == 0) {
     FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
              aAlignment, aSize, *aPtr);
@@ -199,7 +203,7 @@ void*
 replace_aligned_alloc(size_t aAlignment, size_t aSize)
 {
   AutoLock lock(sLock);
-  void* ptr = sFuncs->aligned_alloc(aAlignment, aSize);
+  void* ptr = sFuncs.aligned_alloc(aAlignment, aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
              aAlignment, aSize, ptr);
@@ -212,7 +216,7 @@ void*
 replace_calloc(size_t aNum, size_t aSize)
 {
   AutoLock lock(sLock);
-  void* ptr = sFuncs->calloc(aNum, aSize);
+  void* ptr = sFuncs.calloc(aNum, aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
              aSize, ptr);
@@ -224,7 +228,7 @@ void*
 replace_realloc(void* aPtr, size_t aSize)
 {
   AutoLock lock(sLock);
-  void* new_ptr = sFuncs->realloc(aPtr, aSize);
+  void* new_ptr = sFuncs.realloc(aPtr, aSize);
   if (new_ptr || !aSize) {
     FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
              aSize, new_ptr);
@@ -239,14 +243,14 @@ replace_free(void* aPtr)
   if (aPtr) {
     FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
   }
-  sFuncs->free(aPtr);
+  sFuncs.free(aPtr);
 }
 
 void*
 replace_memalign(size_t aAlignment, size_t aSize)
 {
   AutoLock lock(sLock);
-  void* ptr = sFuncs->memalign(aAlignment, aSize);
+  void* ptr = sFuncs.memalign(aAlignment, aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
              aAlignment, aSize, ptr);
@@ -259,7 +263,7 @@ void*
 replace_valloc(size_t aSize)
 {
   AutoLock lock(sLock);
-  void* ptr = sFuncs->valloc(aSize);
+  void* ptr = sFuncs.valloc(aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   }
@@ -271,6 +275,6 @@ void
 replace_jemalloc_stats(jemalloc_stats_t* aStats)
 {
   AutoLock lock(sLock);
-  sFuncs->jemalloc_stats(aStats);
+  sFuncs.jemalloc_stats(aStats);
   FdPrintf(sFd, "%zu %zu jemalloc_stats()\n", GetPid(), GetTid());
 }

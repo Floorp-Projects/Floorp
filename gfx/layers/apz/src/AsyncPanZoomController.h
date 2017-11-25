@@ -420,6 +420,10 @@ public:
   // direction.
   bool CanScroll(const InputData& aEvent) const;
 
+  // Return the directions in which this APZC allows handoff (as governed by
+  // overscroll-behavior).
+  ScrollDirections GetAllowedHandoffDirections() const;
+
   // Return whether or not a scroll delta will be able to scroll in either
   // direction.
   bool CanScrollWithWheel(const ParentLayerPoint& aDelta) const;
@@ -437,6 +441,8 @@ public:
                                  const ScrollThumbData& aThumbData) const;
 
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
+
+  bool OverscrollBehaviorAllowsSwipe() const;
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -667,6 +673,12 @@ protected:
    * layers code.
    */
   const FrameMetrics& GetFrameMetrics() const;
+
+  /**
+   * Gets the current scroll metadata. This is *not* the Gecko copy stored in
+   * the layers code/
+   */
+  const ScrollMetadata& GetScrollMetadata() const;
 
   /**
    * Gets the pointer to the apzc tree manager. All the access to tree manager
@@ -996,16 +1008,16 @@ private:
 public:
   /**
    * Attempt a fling with the velocity specified in |aHandoffState|.
-   * If we are not pannable, the fling is handed off to the next APZC in
-   * the handoff chain via mTreeManager->DispatchFling().
-   * Returns true iff. the entire velocity of the fling was consumed by
-   * this APZC. |aHandoffState.mVelocity| is modified to contain any
-   * unused, residual velocity.
    * |aHandoffState.mIsHandoff| should be true iff. the fling was handed off
    * from a previous APZC, and determines whether acceleration is applied
    * to the fling.
+   * We only accept the fling in the direction(s) in which we are pannable.
+   * Returns the "residual velocity", i.e. the portion of
+   * |aHandoffState.mVelocity| that this APZC did not consume.
    */
-  bool AttemptFling(FlingHandoffState& aHandoffState);
+  ParentLayerPoint AttemptFling(const FlingHandoffState& aHandoffState);
+
+  ParentLayerPoint AdjustHandoffVelocityForOverscrollBehavior(ParentLayerPoint& aHandoffVelocity) const;
 
 private:
   friend class AndroidFlingAnimation;
@@ -1037,9 +1049,6 @@ private:
                              const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
 
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
-
-  // Helper function used by AttemptFling().
-  void AcceptFling(FlingHandoffState& aHandoffState);
 
   // Start an overscroll animation with the given initial velocity.
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
@@ -1179,6 +1188,8 @@ private:
    */
   void OverscrollBy(ParentLayerPoint& aOverscroll);
 
+  // Helper function for CanScroll().
+  ParentLayerPoint GetDeltaForEvent(const InputData& aEvent) const;
 
   /* ===================================================================
    * The functions and members in this section are used to maintain the

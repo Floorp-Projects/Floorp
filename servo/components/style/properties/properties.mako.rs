@@ -3276,12 +3276,6 @@ where
     };
 
     let ignore_colors = !device.use_document_colors();
-    let default_background_color_decl = if ignore_colors {
-        let color = device.default_background_color();
-        Some(PropertyDeclaration::BackgroundColor(color.into()))
-    } else {
-        None
-    };
 
     // Set computed values, overwriting earlier declarations for the same
     // property.
@@ -3304,22 +3298,8 @@ where
             let mut font_family = None;
         % endif
         for (declaration, cascade_level) in iter_declarations() {
-            let mut declaration = match *declaration {
-                PropertyDeclaration::WithVariables(id, ref unparsed) => {
-                    if !id.inherited() {
-                        context.rule_cache_conditions.borrow_mut()
-                            .set_uncacheable();
-                    }
-                    Cow::Owned(unparsed.substitute_variables(
-                        id,
-                        context.builder.custom_properties.as_ref(),
-                        context.quirks_mode
-                    ))
-                }
-                ref d => Cow::Borrowed(d)
-            };
-
-            let longhand_id = match declaration.id() {
+            let declaration_id = declaration.id();
+            let longhand_id = match declaration_id {
                 PropertyDeclarationId::Longhand(id) => id,
                 PropertyDeclarationId::Custom(..) => continue,
             };
@@ -3336,8 +3316,38 @@ where
                 continue;
             }
 
+            if
+                % if category_to_cascade_now == "early":
+                    !
+                % endif
+                longhand_id.is_early_property()
+            {
+                continue
+            }
+
+            <% maybe_to_physical = ".to_physical(writing_mode)" if category_to_cascade_now != "early" else "" %>
+            let physical_longhand_id = longhand_id ${maybe_to_physical};
+            if seen.contains(physical_longhand_id) {
+                continue
+            }
+
+            let mut declaration = match *declaration {
+                PropertyDeclaration::WithVariables(id, ref unparsed) => {
+                    if !id.inherited() {
+                        context.rule_cache_conditions.borrow_mut()
+                            .set_uncacheable();
+                    }
+                    Cow::Owned(unparsed.substitute_variables(
+                        id,
+                        context.builder.custom_properties.as_ref(),
+                        context.quirks_mode
+                    ))
+                }
+                ref d => Cow::Borrowed(d)
+            };
+
             // When document colors are disabled, skip properties that are
-            // marked as ignored in that mode, if they come from a UA or
+            // marked as ignored in that mode, unless they come from a UA or
             // user style sheet.
             if ignore_colors &&
                longhand_id.is_ignored_when_document_colors_disabled() &&
@@ -3355,26 +3365,16 @@ where
                     }
                     _ => continue
                 };
-                // FIXME: moving this out of `match` is a work around for borrows being lexical.
+
+                // FIXME: moving this out of `match` is a work around for
+                // borrows being lexical.
                 if non_transparent_background {
-                    declaration = Cow::Borrowed(default_background_color_decl.as_ref().unwrap());
+                    let color = device.default_background_color();
+                    declaration =
+                        Cow::Owned(PropertyDeclaration::BackgroundColor(color.into()));
                 }
             }
 
-            if
-                % if category_to_cascade_now == "early":
-                    !
-                % endif
-                longhand_id.is_early_property()
-            {
-                continue
-            }
-
-            <% maybe_to_physical = ".to_physical(writing_mode)" if category_to_cascade_now != "early" else "" %>
-            let physical_longhand_id = longhand_id ${maybe_to_physical};
-            if seen.contains(physical_longhand_id) {
-                continue
-            }
             seen.insert(physical_longhand_id);
 
             % if category_to_cascade_now == "early":

@@ -28,7 +28,6 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mLayersId(aLayersId)
   , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
   , mScrollbarAnimationId(0)
-  , mIsScrollbarContainer(false)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
   , mOverride(EventRegionsOverride::NoOverride)
 {
@@ -97,12 +96,12 @@ void
 HitTestingTreeNode::SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
                                      const uint64_t& aScrollbarAnimationId,
                                      const ScrollThumbData& aThumbData,
-                                     bool aIsScrollContainer)
+                                     const Maybe<ScrollDirection>& aScrollContainerDirection)
 {
   mScrollViewId = aScrollViewId;
   mScrollbarAnimationId = aScrollbarAnimationId;
   mScrollThumbData = aThumbData;
-  mIsScrollbarContainer = aIsScrollContainer;
+  mScrollbarContainerDirection = aScrollContainerDirection;
 }
 
 bool
@@ -116,13 +115,23 @@ HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetric
 bool
 HitTestingTreeNode::IsScrollThumbNode() const
 {
-  return mScrollThumbData.mDirection != ScrollDirection::NONE;
+  return mScrollThumbData.mDirection.isSome();
 }
 
 bool
 HitTestingTreeNode::IsScrollbarNode() const
 {
-  return mIsScrollbarContainer || IsScrollThumbNode();
+  return mScrollbarContainerDirection.isSome() || IsScrollThumbNode();
+}
+
+ScrollDirection
+HitTestingTreeNode::GetScrollbarDirection() const
+{
+  MOZ_ASSERT(IsScrollbarNode());
+  if (mScrollThumbData.mDirection.isSome()) {
+    return *(mScrollThumbData.mDirection);
+  }
+  return *mScrollbarContainerDirection;
 }
 
 FrameMetrics::ViewID
@@ -346,7 +355,7 @@ HitTestingTreeNode::Dump(const char* aPrefix) const
     (mFixedPosTarget != FrameMetrics::NULL_SCROLL_ID) ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get() : "",
     Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
     mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none",
-    mIsScrollbarContainer ? " scrollbar" : "",
+    mScrollbarContainerDirection.isSome() ? " scrollbar" : "",
     IsScrollThumbNode() ? " scrollthumb" : "");
   if (mLastChild) {
     mLastChild->Dump(nsPrintfCString("%s  ", aPrefix).get());

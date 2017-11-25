@@ -178,6 +178,28 @@ AppendToString(std::stringstream& aStream, const EventRegions& e,
 }
 
 void
+AppendToString(std::stringstream& aStream, OverscrollBehavior aBehavior,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  switch (aBehavior) {
+  case OverscrollBehavior::Auto: {
+    aStream << "auto";
+    break;
+  }
+  case OverscrollBehavior::Contain: {
+    aStream << "contain";
+    break;
+  }
+  case OverscrollBehavior::None: {
+    aStream << "none";
+    break;
+  }
+  }
+  aStream << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
                const char* pfx, const char* sfx)
 {
@@ -192,6 +214,18 @@ AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
   }
   if (m.HasMaskLayer()) {
     AppendToString(aStream, m.ScrollClip().GetMaskLayerIndex().value(), "] [mask=");
+  }
+  OverscrollBehavior overscrollX = m.GetOverscrollBehavior().mBehaviorX;
+  OverscrollBehavior overscrollY = m.GetOverscrollBehavior().mBehaviorY;
+  if (overscrollX == overscrollY && overscrollX != OverscrollBehavior::Auto) {
+    AppendToString(aStream, overscrollX, "] [overscroll=");
+  } else {
+    if (overscrollX != OverscrollBehavior::Auto) {
+      AppendToString(aStream, overscrollX, "] [overscroll-x=");
+    }
+    if (overscrollY != OverscrollBehavior::Auto) {
+      AppendToString(aStream, overscrollY, "] [overscroll-y=");
+    }
   }
   aStream << "] }" << sfx;
 }
