@@ -57,7 +57,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "23c4fddb353c"
+        "revision": "185d5f046734"
     }, 
     "az": {
         "platforms": [
@@ -622,7 +622,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "5592daf57295"
+        "revision": "15e60bb15a52"
     }, 
     "mr": {
         "platforms": [
@@ -762,7 +762,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "9872edfc8b93"
+        "revision": "9e3ffce404df"
     }, 
     "ru": {
         "platforms": [
