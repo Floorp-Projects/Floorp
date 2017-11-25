@@ -129,6 +129,7 @@ public class GeckoPreferences
     private static final String PREFS_UPDATER_URL = "app.update.url.android";
     private static final String PREFS_GEO_REPORTING = NON_PREF_PREFIX + "app.geo.reportdata";
     private static final String PREFS_GEO_LEARN_MORE = NON_PREF_PREFIX + "geo.learn_more";
+    private static final String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     public static final String PREFS_DEVTOOLS_REMOTE_USB_ENABLED = "devtools.remote.usb.enabled";
     public static final String PREFS_DEVTOOLS_REMOTE_WIFI_ENABLED = "devtools.remote.wifi.enabled";
     private static final String PREFS_DEVTOOLS_REMOTE_LINK = NON_PREF_PREFIX + "remote_debugging.link";
@@ -674,7 +675,8 @@ public class GeckoPreferences
                         i--;
                         continue;
                     }
-                } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(key)) {
+                } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(key) ||
+                           PREFS_HEALTHREPORT_LINK.equals(key)) {
                     if (!AppConstants.MOZ_SERVICES_HEALTHREPORT || !Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
                         preferences.removePreference(pref);
                         i--;
