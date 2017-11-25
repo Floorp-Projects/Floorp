@@ -16,8 +16,6 @@ async function checkFrameSource() {
     gBrowser.removeTab(sourceTab);
   });
 
-  await waitForSourceLoaded(sourceTab);
-
   let browser = gBrowser.selectedBrowser;
   let textContent = await ContentTask.spawn(browser, {}, async function() {
     return content.document.body.textContent;

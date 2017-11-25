@@ -68,6 +68,10 @@ RootsRemovedGCSliceCallback(JSContext* cx, JS::GCProgress progress, const JS::GC
 
 BEGIN_TEST(testGCRootsRemoved)
 {
+#ifdef JS_GC_ZEAL
+    AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
+
     JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
 
     gSliceCallbackCount = 0;
