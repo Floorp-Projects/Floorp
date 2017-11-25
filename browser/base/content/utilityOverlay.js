@@ -818,6 +818,14 @@ function openTroubleshootingPage() {
 }
 
 /**
+ * Opens the troubleshooting information (about:support) page for this version
+ * of the application.
+ */
+function openHealthReport() {
+  openUILinkIn("about:healthreport", "tab");
+}
+
+/**
  * Opens the feedback page for this version of the application.
  */
 function openFeedbackPage() {
