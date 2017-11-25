@@ -8,8 +8,8 @@ import android.widget.RelativeLayout;
 
 public class SplashScreen extends RelativeLayout {
 
-    private static long MIN_DISPLAY_TIME = 0;
-    private static long MAX_DISPLAY_TIME = 2000;
+    private static final long MIN_DISPLAY_TIME = 0;
+    private static final long MAX_DISPLAY_TIME = 2000;
 
     private boolean hasReachedThreshold = false;
     private boolean shouldHideAsap = false;

@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
-    public static String LOGTAG = "PocketStoriesLoader";
+    public static final String LOGTAG = "PocketStoriesLoader";
 
     public static final String POCKET_REFERRER_URI = "https://getpocket.com/recommendations";
 

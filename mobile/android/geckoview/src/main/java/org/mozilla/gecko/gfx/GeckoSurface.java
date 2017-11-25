@@ -19,7 +19,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 public final class GeckoSurface extends Surface {
     private static final String LOGTAG = "GeckoSurface";
 
-    private static HashMap<Integer, GeckoSurfaceTexture> sSurfaceTextures = new HashMap<Integer, GeckoSurfaceTexture>();
+    private static final HashMap<Integer, GeckoSurfaceTexture> sSurfaceTextures = new HashMap<Integer, GeckoSurfaceTexture>();
 
     private int mHandle;
     private boolean mIsSingleBuffer;
