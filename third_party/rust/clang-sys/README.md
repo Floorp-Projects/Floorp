@@ -50,9 +50,10 @@ These libraries can be either be installed as a part of Clang or downloaded
 [here](http://llvm.org/releases/download.html).
 
 **Note:** This crate supports finding versioned instances of `libclang.so` (e.g.,
-`libclang.so.3.9`). In the case where there are multiple instances to choose from, this crate will
-prefer an unversioned instance first, then the version with the shortest and highest version. For
-example, the following instances of `libclang.so` are listed in descending order of preference:
+`libclang.so.3.9` or `libclang-3.9.so`). In the case where there are multiple instances to choose
+from, this crate will prefer an unversioned instance first, then the version with the shortest and
+highest version. For example, the following instances of `libclang.so` are listed in descending
+order of preference:
 
 1. `libclang.so`
 2. `libclang.so.4`
