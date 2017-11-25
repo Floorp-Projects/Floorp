@@ -175,6 +175,10 @@ const RECOMMENDED_PREFS = new Map([
   // Do not show datareporting policy notifications which can
   // interfere with tests
   [
+    "datareporting.healthreport.about.reportUrl",
+    "http://%(server)s/dummy/abouthealthreport/",
+  ],
+  [
     "datareporting.healthreport.documentServerURI",
     "http://%(server)s/dummy/healthreport/",
   ],

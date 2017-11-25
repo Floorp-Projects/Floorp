@@ -96,6 +96,11 @@
                             android:summary="@string/datareporting_fhr_summary2"
                             android:defaultValue="true" />
 
+        <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.healthreport.link"
+                                                                android:title="@string/datareporting_abouthr_title"
+                                                                android:persistent="false"
+                                                                url="about:healthreport" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

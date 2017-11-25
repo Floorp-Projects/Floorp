@@ -72,6 +72,13 @@ var modules = {
   },
 };
 
+if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+  modules.healthreport = {
+    uri: "chrome://browser/content/aboutHealthReport.xhtml",
+    privileged: true
+  };
+}
+
 function AboutRedirector() {}
 AboutRedirector.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
