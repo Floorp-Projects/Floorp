@@ -490,6 +490,7 @@ private:
 
     void SetLoadGroupUserAgentOverride();
 
+    void SetOriginHeader();
     void SetDoNotTrack();
 
     already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();

@@ -1,0 +1,341 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+    <title> Bug 446344 - Test Origin Header</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=446344">Mozilla Bug 446344</a></p>
+
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const EMPTY_ORIGIN = "Origin: ";
+
+let testsToRun = [
+    {
+        name: "sendOriginHeader=0 (never)",
+        prefs: [
+            ["network.http.sendOriginHeader", 0],
+        ],
+        results: {
+            framePost: EMPTY_ORIGIN,
+            framePostXOrigin: EMPTY_ORIGIN,
+            frameGet: EMPTY_ORIGIN,
+            framePostNonSandboxed: EMPTY_ORIGIN,
+            framePostNonSandboxedXOrigin: EMPTY_ORIGIN,
+            framePostSandboxed: EMPTY_ORIGIN,
+            framePostSrcDoc: EMPTY_ORIGIN,
+            framePostSrcDocXOrigin: EMPTY_ORIGIN,
+            framePostDataURI: EMPTY_ORIGIN,
+        },
+    },
+    {
+        name: "sendOriginHeader=1 (same-origin)",
+        prefs: [
+            ["network.http.sendOriginHeader", 1],
+        ],
+        results: {
+            framePost: "Origin: http://mochi.test:8888",
+            framePostXOrigin: EMPTY_ORIGIN,
+            frameGet: EMPTY_ORIGIN,
+            framePostNonSandboxed: "Origin: http://mochi.test:8888",
+            framePostNonSandboxedXOrigin: EMPTY_ORIGIN,
+            framePostSandboxed: EMPTY_ORIGIN,
+            framePostSrcDoc: "Origin: http://mochi.test:8888",
+            framePostSrcDocXOrigin: EMPTY_ORIGIN,
+            framePostDataURI: EMPTY_ORIGIN,
+        },
+    },
+    {
+        name: "sendOriginHeader=2 (always)",
+        prefs: [
+            ["network.http.sendOriginHeader", 2],
+        ],
+        results: {
+            framePost: "Origin: http://mochi.test:8888",
+            framePostXOrigin: "Origin: http://mochi.test:8888",
+            frameGet: EMPTY_ORIGIN,
+            framePostNonSandboxed: "Origin: http://mochi.test:8888",
+            framePostNonSandboxedXOrigin: "Origin: http://mochi.test:8888",
+            framePostSandboxed: "Origin: null",
+            framePostSrcDoc: "Origin: http://mochi.test:8888",
+            framePostSrcDocXOrigin: "Origin: http://mochi.test:8888",
+            framePostDataURI: "Origin: null",
+        },
+    },
+    {
+        name: "sendRefererHeader=0 (never)",
+        prefs: [
+            ["network.http.sendRefererHeader", 0],
+        ],
+        results: {
+            framePost: "Origin: http://mochi.test:8888",
+            framePostXOrigin: "Origin: http://mochi.test:8888",
+            frameGet: EMPTY_ORIGIN,
+            framePostNonSandboxed: "Origin: http://mochi.test:8888",
+            framePostNonSandboxedXOrigin: "Origin: http://mochi.test:8888",
+            framePostSandboxed: "Origin: null",
+            framePostSrcDoc: "Origin: http://mochi.test:8888",
+            framePostSrcDocXOrigin: "Origin: http://mochi.test:8888",
+            framePostDataURI: "Origin: null",
+        },
+    },
+    {
+        name: "userControlPolicy=0 (no-referrer)",
+        prefs: [
+            ["network.http.sendRefererHeader", 2],
+            ["network.http.referer.userControlPolicy", 0],
+        ],
+        results: {
+            framePost: "Origin: http://mochi.test:8888",
+            framePostXOrigin: "Origin: http://mochi.test:8888",
+            frameGet: EMPTY_ORIGIN,
+            framePostNonSandboxed: "Origin: http://mochi.test:8888",
+            framePostNonSandboxedXOrigin: "Origin: http://mochi.test:8888",
+            framePostSandboxed: "Origin: null",
+            framePostSrcDoc: "Origin: http://mochi.test:8888",
+            framePostSrcDocXOrigin: "Origin: http://mochi.test:8888",
+            framePostDataURI: "Origin: null",
+        },
+    },
+];
+
+let checksToRun = [
+    {
+        name: "POST",
+        frameID: "framePost",
+        formID: "formPost",
+    },
+    {
+        name: "cross-origin POST",
+        frameID: "framePostXOrigin",
+        formID: "formPostXOrigin",
+    },
+    {
+        name: "GET",
+        frameID: "frameGet",
+        formID: "formGet",
+    },
+    {
+        name: "POST inside iframe",
+        frameID: "framePostNonSandboxed",
+        frameSrc: "HTTP://mochi.test:8888/tests/netwerk/test/mochitests/origin_header_form_post.html",
+    },
+    {
+        name: "cross-origin POST inside iframe",
+        frameID: "framePostNonSandboxedXOrigin",
+        frameSrc: "Http://mochi.test:8888/tests/netwerk/test/mochitests/origin_header_form_post_xorigin.html",
+    },
+    {
+        name: "POST inside sandboxed iframe",
+        frameID: "framePostSandboxed",
+        frameSrc: "http://mochi.test:8888/tests/netwerk/test/mochitests/origin_header_form_post.html",
+    },
+    {
+        name: "POST inside a srcdoc iframe",
+        frameID: "framePostSrcDoc",
+        srcdoc: "origin_header_form_post.html",
+    },
+    {
+        name: "cross-origin POST inside a srcdoc iframe",
+        frameID: "framePostSrcDocXOrigin",
+        srcdoc: "origin_header_form_post_xorigin.html",
+    },
+    {
+        name: "POST inside a data: iframe",
+        frameID: "framePostDataURI",
+        dataURI: "origin_header_form_post.html",
+    },
+];
+
+function frameLoaded(test, check)
+{
+    let frame = window.document.getElementById(check.frameID);
+    frame.onload = null;
+    let result = SpecialPowers.wrap(frame).contentDocument.documentElement.textContent;
+    is(result, test.results[check.frameID], check.name + " with " + test.name);
+}
+
+function submitForm(test, check)
+{
+     return new Promise((resolve, reject) => {
+         document.getElementById(check.frameID).onload = () => {
+             frameLoaded(test, check);
+             resolve();
+         };
+         document.getElementById(check.formID).submit();
+     });
+}
+
+function loadIframe(test, check)
+{
+    return new Promise((resolve, reject) => {
+        let frame = SpecialPowers.wrap(window.document.getElementById(check.frameID));
+        frame.onload = function () {
+            // Ignore the first load and wait for the submitted form instead.
+            let location = frame.contentWindow.location + "";
+            if (location.endsWith("origin_header.sjs")) {
+                frameLoaded(test, check);
+                resolve();
+            }
+        }
+        frame.src = check.frameSrc;
+    });
+}
+
+function loadSrcDocFrame(test, check)
+{
+    return new Promise((resolve, reject) => {
+        let frame = SpecialPowers.wrap(window.document.getElementById(check.frameID));
+        frame.onload = function () {
+            // Ignore the first load and wait for the submitted form instead.
+            let location = frame.contentWindow.location + "";
+            if (location.endsWith("origin_header.sjs")) {
+                frameLoaded(test, check);
+                resolve();
+            }
+        }
+        fetch(check.srcdoc).then((response) => {
+            response.text().then((body) => {
+                frame.srcdoc = body;
+            });;
+        });
+    });
+ }
+
+function loadDataURIFrame(test, check)
+{
+    return new Promise((resolve, reject) => {
+        let frame = SpecialPowers.wrap(window.document.getElementById(check.frameID));
+        frame.onload = function () {
+            // Ignore the first load and wait for the submitted form instead.
+            let location = frame.contentWindow.location + "";
+            if (location.endsWith("origin_header.sjs")) {
+                frameLoaded(test, check);
+                resolve();
+            }
+        }
+        fetch(check.dataURI).then((response) => {
+            response.text().then((body) => {
+                frame.src = "data:text/html," + encodeURIComponent(body);
+            });;
+        });
+    });
+}
+
+async function resetFrames()
+{
+    let checkPromises = [];
+    for (check of checksToRun) {
+        checkPromises.push(new Promise((resolve, reject) => {
+            let frame = document.getElementById(check.frameID);
+            frame.onload = () => resolve();
+            if (check.srcdoc) {
+                frame.srcdoc = "";
+            } else {
+                frame.src = "about:blank";
+            }
+        }));
+    }
+    await Promise.all(checkPromises);
+}
+
+async function runTests()
+{
+    for (test of testsToRun) {
+        await resetFrames();
+        await SpecialPowers.pushPrefEnv({"set": test.prefs});
+
+        let checkPromises = [];
+        for (check of checksToRun) {
+            if (check.formID) {
+                checkPromises.push(submitForm(test, check));
+            } else if (check.frameSrc) {
+                checkPromises.push(loadIframe(test, check));
+            } else if (check.srcdoc) {
+                checkPromises.push(loadSrcDocFrame(test, check));
+            } else if (check.dataURI) {
+                checkPromises.push(loadDataURIFrame(test, check));
+            } else {
+                ok(false, "Unsupported check");
+                break;
+            }
+        }
+        await Promise.all(checkPromises);
+    };
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(5); // work around Android timeouts
+addLoadEvent(runTests);
+
+</script>
+</pre>
+<table>
+<tr>
+    <td>
+        <iframe src="about:blank" name="framePost" id="framePost"></iframe>
+        <form action="origin_header.sjs"
+              method="POST"
+              id="formPost"
+              target="framePost">
+            <input type="submit" value="Submit POST">
+        </form>
+    </td>
+    <td>
+        <iframe src="about:blank" name="framePostXOrigin" id="framePostXOrigin"></iframe>
+        <form action="http://test1.mochi.test:8888/tests/netwerk/test/mochitests/origin_header.sjs"
+              method="POST"
+              id="formPostXOrigin"
+              target="framePostXOrigin">
+            <input type="submit" value="Submit XOrigin POST">
+        </form>
+    </td>
+    <td>
+        <iframe src="about:blank" name="frameGet" id="frameGet"></iframe>
+        <form action="origin_header.sjs"
+              method="GET"
+              id="formGet"
+              target="frameGet">
+            <input type="submit" value="Submit GET">
+        </form>
+    </td>
+</tr>
+<tr>
+    <td>
+        <iframe src="about:blank" id="framePostNonSandboxed"></iframe>
+        <div>Non-sandboxed iframe</div>
+    </td>
+    <td>
+        <iframe src="about:blank" id="framePostNonSandboxedXOrigin"></iframe>
+        <div>Non-sandboxed cross-origin iframe</div>
+    </td>
+    <td>
+        <iframe src="about:blank" id="framePostSandboxed" sandbox="allow-forms allow-scripts"></iframe>
+        <div>Sandboxed iframe</div>
+    </td>
+</tr>
+<tr>
+    <td>
+        <iframe id="framePostSrcDoc" src="about:blank"></iframe>
+        <div>Srcdoc iframe</div>
+    </td>
+    <td>
+        <iframe id="framePostSrcDocXOrigin" src="about:blank"></iframe>
+        <div>Srcdoc cross-origin iframe</div>
+    </td>
+    <td>
+        <iframe id="framePostDataURI" src="about:blank"></iframe>
+        <div>data: URI iframe</div>
+    </td>
+</tr>
+</table>
+
+</body>
+</html>
