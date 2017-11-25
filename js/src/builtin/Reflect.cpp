@@ -85,21 +85,18 @@ js::Reflect_isExtensible(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-// ES2018 draft rev c164be80f7ea91de5526b33d54e5c9321ed03d3f
-// 26.1.10 Reflect.ownKeys ( target )
+/* ES6 26.1.11 Reflect.ownKeys(target) */
 static bool
 Reflect_ownKeys(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
-    RootedObject target(cx, NonNullObjectArg(cx, "`target`", "Reflect.ownKeys", args.get(0)));
-    if (!target)
+    if (!NonNullObjectArg(cx, "`target`", "Reflect.ownKeys", args.get(0)))
         return false;
 
-    // Steps 2-3.
-    return GetOwnPropertyKeys(cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
-                              args.rval());
+    // Steps 2-4.
+    return GetOwnPropertyKeys(cx, args, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
 }
 
 /* ES6 26.1.12 Reflect.preventExtensions(target) */
