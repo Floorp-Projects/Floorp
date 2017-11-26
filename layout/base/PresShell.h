@@ -42,6 +42,7 @@ class ReflowCountMgr;
 
 class nsPresShellEventCB;
 class nsAutoCauseReflowNotifier;
+class AutoPointerEventTargetUpdater;
 
 namespace mozilla {
 
@@ -427,6 +428,7 @@ protected:
   }
   nsresult DidCauseReflow();
   friend class ::nsAutoCauseReflowNotifier;
+  friend class ::AutoPointerEventTargetUpdater;
 
   nsresult DispatchEventToDOM(mozilla::WidgetEvent* aEvent,
                               nsEventStatus* aStatus,

@@ -545,6 +545,47 @@ private:
   nsCOMPtr<nsIDocument> mDocument;
 };
 
+// This is a helper class to track whether the targeted frame is destroyed after
+// dispatching pointer events. In that case, we need the original targeted
+// content so that we can dispatch the mouse events to it.
+class MOZ_STACK_CLASS AutoPointerEventTargetUpdater final
+{
+public:
+  AutoPointerEventTargetUpdater(PresShell* aShell,
+                                WidgetGUIEvent* aEvent,
+                                nsIFrame* aFrame,
+                                nsIContent** aTargetContent)
+  {
+    MOZ_ASSERT(aShell);
+    MOZ_ASSERT(aEvent);
+    MOZ_ASSERT(aFrame);
+    if (!aTargetContent || aEvent->mClass != ePointerEventClass) {
+      return;
+    }
+    MOZ_ASSERT(!aFrame->GetContent() ||
+               aShell->GetDocument() == aFrame->GetContent()->OwnerDoc());
+
+    MOZ_ASSERT(PointerEventHandler::IsPointerEventEnabled());
+    mShell = aShell;
+    mWeakFrame = aFrame;
+    mTargetContent = aTargetContent;
+    aShell->mPointerEventTarget = aFrame->GetContent();
+  }
+
+  ~AutoPointerEventTargetUpdater()
+  {
+    if (!mTargetContent || !mShell || mWeakFrame.IsAlive()) {
+      return;
+    }
+    mShell->mPointerEventTarget.swap(*mTargetContent);
+  }
+
+private:
+  RefPtr<PresShell> mShell;
+  AutoWeakFrame mWeakFrame;
+  nsIContent** mTargetContent;
+};
+
 bool PresShell::sDisableNonTestMouseEvents = false;
 
 mozilla::LazyLogModule PresShell::gLog("PresShell");
@@ -7234,22 +7275,11 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         }
       }
     }
-
-    // Before HandlePositionedEvent we should save mPointerEventTarget in some
-    // cases
-    AutoWeakFrame weakFrame;
-    if (aTargetContent && ePointerEventClass == aEvent->mClass) {
-      MOZ_ASSERT(PointerEventHandler::IsPointerEventEnabled());
-      weakFrame = frame;
-      shell->mPointerEventTarget = frame->GetContent();
-      MOZ_ASSERT(!frame->GetContent() ||
-                 shell->GetDocument() == frame->GetContent()->OwnerDoc());
-    }
-
     // Prevent deletion until we're done with event handling (bug 336582) and
     // swap mPointerEventTarget to *aTargetContent
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(shell);
     nsresult rv;
+    AutoPointerEventTargetUpdater updater(shell, aEvent, frame, aTargetContent);
     if (shell != this) {
       // Handle the event in the correct shell.
       // We pass the subshell's root frame as the frame to start from. This is
@@ -7260,15 +7290,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     } else {
       rv = HandlePositionedEvent(frame, aEvent, aEventStatus);
     }
-
-    // After HandlePositionedEvent we should reestablish
-    // content (which still live in tree) in some cases
-    if (aTargetContent && ePointerEventClass == aEvent->mClass) {
-      if (!weakFrame.IsAlive()) {
-        shell->mPointerEventTarget.swap(*aTargetContent);
-      }
-    }
-
     return rv;
   }
 
