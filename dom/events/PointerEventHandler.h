@@ -8,6 +8,8 @@
 #define mozilla_PointerEventHandler_h
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TouchEvents.h"
 
 class nsIFrame;
 class nsIContent;
@@ -77,6 +79,9 @@ public:
 
   // CheckPointerCaptureState checks cases, when got/lostpointercapture events
   // should be fired.
+  static void MaybeProcessPointerCapture(WidgetGUIEvent* aEvent);
+  static void ProcessPointerCaptureForMouse(WidgetMouseEvent* aEvent);
+  static void ProcessPointerCaptureForTouch(WidgetTouchEvent* aEvent);
   static void CheckPointerCaptureState(WidgetPointerEvent* aEvent);
 
   // Implicitly get and release capture of current pointer for touch.
@@ -136,6 +141,7 @@ public:
 
   static void DispatchPointerFromMouseOrTouch(PresShell* aShell,
                                               nsIFrame* aFrame,
+                                              nsIContent* aContent,
                                               WidgetGUIEvent* aEvent,
                                               bool aDontRetargetEvents,
                                               nsEventStatus* aStatus,
@@ -149,6 +155,19 @@ public:
                                         WidgetTouchEvent* aTouchEvent,
                                         mozilla::dom::Touch* aTouch,
                                         bool aIsPrimary);
+
+  static bool ShouldGeneratePointerEventFromMouse(WidgetGUIEvent* aEvent)
+  {
+    return aEvent->mMessage == eMouseDown || aEvent->mMessage == eMouseUp ||
+           aEvent->mMessage == eMouseMove;
+  }
+
+  static bool ShouldGeneratePointerEventFromTouch(WidgetGUIEvent* aEvent)
+  {
+    return aEvent->mMessage == eTouchStart || aEvent->mMessage == eTouchMove ||
+           aEvent->mMessage == eTouchEnd || aEvent->mMessage == eTouchCancel ||
+           aEvent->mMessage == eTouchPointerCancel;
+  }
 
 private:
   // GetPointerType returns pointer type like mouse, pen or touch for pointer
