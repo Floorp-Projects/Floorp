@@ -195,6 +195,59 @@ PointerEventHandler::GetPointerInfo(uint32_t aPointerId, bool& aActiveState)
 }
 
 /* static */ void
+PointerEventHandler::MaybeProcessPointerCapture(WidgetGUIEvent* aEvent)
+{
+  switch (aEvent->mClass) {
+  case eMouseEventClass:
+    ProcessPointerCaptureForMouse(aEvent->AsMouseEvent());
+    break;
+  case eTouchEventClass:
+    ProcessPointerCaptureForTouch(aEvent->AsTouchEvent());
+    break;
+  default:
+    break;
+  }
+}
+
+/* static */ void
+PointerEventHandler::ProcessPointerCaptureForMouse(WidgetMouseEvent* aEvent)
+{
+  if (!ShouldGeneratePointerEventFromMouse(aEvent)) {
+    return;
+  }
+
+  PointerCaptureInfo* info = GetPointerCaptureInfo(aEvent->pointerId);
+  if (!info || info->mPendingContent == info->mOverrideContent) {
+    return;
+  }
+  WidgetPointerEvent localEvent(*aEvent);
+  InitPointerEventFromMouse(&localEvent, aEvent, eVoidEvent);
+  CheckPointerCaptureState(&localEvent);
+}
+
+/* static */ void
+PointerEventHandler::ProcessPointerCaptureForTouch(WidgetTouchEvent* aEvent)
+{
+  if (!ShouldGeneratePointerEventFromTouch(aEvent)) {
+    return;
+  }
+
+  for (uint32_t i = 0; i < aEvent->mTouches.Length(); ++i) {
+    Touch* touch = aEvent->mTouches[i];
+    if (!TouchManager::ShouldConvertTouchToPointer(touch, aEvent)) {
+      continue;
+    }
+    PointerCaptureInfo* info = GetPointerCaptureInfo(touch->Identifier());
+    if (!info || info->mPendingContent == info->mOverrideContent) {
+      continue;
+    }
+    WidgetPointerEvent event(aEvent->IsTrusted(), eVoidEvent, aEvent->mWidget);
+    InitPointerEventFromTouch(&event, aEvent, touch, i == 0);
+    CheckPointerCaptureState(&event);
+  }
+}
+
+/* static */ void
 PointerEventHandler::CheckPointerCaptureState(WidgetPointerEvent* aEvent)
 {
   // Handle pending pointer capture before any pointer events except
@@ -435,13 +488,14 @@ PointerEventHandler::InitPointerEventFromTouch(
 PointerEventHandler::DispatchPointerFromMouseOrTouch(
                        PresShell* aShell,
                        nsIFrame* aFrame,
+                       nsIContent* aContent,
                        WidgetGUIEvent* aEvent,
                        bool aDontRetargetEvents,
                        nsEventStatus* aStatus,
                        nsIContent** aTargetContent)
 {
   MOZ_ASSERT(IsPointerEventEnabled());
-  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aFrame || aContent);
   MOZ_ASSERT(aEvent);
 
   EventMessage pointerMessage = eVoidEvent;
@@ -475,10 +529,18 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
     WidgetPointerEvent event(*mouseEvent);
     InitPointerEventFromMouse(&event, mouseEvent, pointerMessage);
     event.convertToPointer = mouseEvent->convertToPointer = false;
-    PreHandlePointerEventsPreventDefault(&event, aEvent);
     RefPtr<PresShell> shell(aShell);
-    shell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus,
-                       aTargetContent);
+    if (!aFrame) {
+      shell = PresShell::GetShellForEventTarget(nullptr, aContent);
+      if (!shell) {
+        return;
+      }
+    }
+    PreHandlePointerEventsPreventDefault(&event, aEvent);
+    // Dispatch pointer event to the same target which is found by the
+    // corresponding mouse event.
+    shell->HandleEventWithTarget(&event, aFrame, aContent, aStatus, true,
+                                 aTargetContent);
     PostHandlePointerEventsPreventDefault(&event, aEvent);
   } else if (aEvent->mClass == eTouchEventClass) {
     WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
@@ -514,10 +576,34 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
 
       InitPointerEventFromTouch(&event, touchEvent, touch, i == 0);
       event.convertToPointer = touch->convertToPointer = false;
-      PreHandlePointerEventsPreventDefault(&event, aEvent);
-      shell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus,
-                         aTargetContent);
-      PostHandlePointerEventsPreventDefault(&event, aEvent);
+      if (aEvent->mMessage == eTouchStart) {
+        // We already did hit test for touchstart in PresShell. We should
+        // dispatch pointerdown to the same target as touchstart.
+        nsCOMPtr<nsIContent> content = do_QueryInterface(touch->mTarget);
+        if (!content) {
+          continue;
+        }
+
+        nsIFrame* frame = content->GetPrimaryFrame();
+        shell = PresShell::GetShellForEventTarget(frame, content);
+        if (!shell) {
+          continue;
+        }
+
+        PreHandlePointerEventsPreventDefault(&event, aEvent);
+        shell->HandleEventWithTarget(&event, frame, content, aStatus, true,
+                                     aTargetContent);
+        PostHandlePointerEventsPreventDefault(&event, aEvent);
+      } else {
+        // We didn't hit test for other touch events. Spec doesn't mention that
+        // all pointer events should be dispatched to the same target as their
+        // corresponding touch events. Call PresShell::HandleEvent so that we do
+        // hit test for pointer events.
+        PreHandlePointerEventsPreventDefault(&event, aEvent);
+        shell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus,
+                           aTargetContent);
+        PostHandlePointerEventsPreventDefault(&event, aEvent);
+      }
     }
   }
 }
