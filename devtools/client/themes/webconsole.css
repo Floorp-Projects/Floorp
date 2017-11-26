@@ -1007,6 +1007,15 @@ a.learn-more-link.webconsole-learn-more-link {
   font-style: inherit;
 }
 
+.webconsole-output-wrapper .message.network .status .status-info .status-code {
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.webconsole-output-wrapper .message.network .status .status-info .status-code:not([data-code^="3"]) {
+  color: var(--theme-body-background);
+}
+
 
 .network.message .network-info {
   display: none;
