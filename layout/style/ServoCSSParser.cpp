@@ -20,12 +20,10 @@ ServoCSSParser::IsValidCSSColor(const nsAString& aValue)
 ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
                              nscolor aCurrentColor,
                              const nsAString& aValue,
-                             nscolor* aResultColor,
-                             bool* aWasCurrentColor)
+                             nscolor* aResultColor)
 {
   return Servo_ComputeColor(aStyleSet ? aStyleSet->RawSet() : nullptr,
-                            aCurrentColor, &aValue, aResultColor,
-                            aWasCurrentColor);
+                            aCurrentColor, &aValue, aResultColor);
 }
 
 /* static */ bool
