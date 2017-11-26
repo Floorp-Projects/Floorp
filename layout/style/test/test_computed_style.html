@@ -4,12 +4,12 @@
   <title>Test for miscellaneous computed style issues</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style"></style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -730,6 +730,47 @@ var noframe_container = document.getElementById("content");
   }
 
   p.remove();
+})();
+
+(function test_bug_1418433() {
+  // Test that the style data read through getComputedStyle is always up-to-date,
+  // even for non-displayed elements.
+
+  var d = document.createElement("div");
+  d.setAttribute("id", "nonDisplayedDiv");
+  var cs = getComputedStyle(d, null);
+  noframe_container.appendChild(d);
+
+  // Test for stylesheet change, i.e., added/changed/removed
+  var style = document.getElementById("style");
+  is(cs.height, "auto",
+     "computed value of display none element (before testing)");
+  style.textContent = "#nonDisplayedDiv { height: 100px; }";
+  is(cs.height, "100px",
+     "computed value of display none element (sheet added)");
+  style.textContent = "#nonDisplayedDiv { height: 10px; }";
+  is(cs.height, "10px",
+     "computed value of display none element (sheet changed)");
+  style.textContent = "";
+  is(cs.height, "auto",
+     "computed value of display none element (sheet removed)");
+
+  // Test for rule change, i.e., added/changed/removed
+  var styleSheet = style.sheet;
+  is(cs.width, "auto",
+     "computed value of display none element (before testing)");
+  styleSheet.insertRule("#nonDisplayedDiv { width: 100px; }", 0);
+  is(cs.width, "100px",
+     "computed value of display none element (rule added)");
+  styleSheet.deleteRule(0);
+  styleSheet.insertRule("#nonDisplayedDiv { width: 10px; }", 0);
+  is(cs.width, "10px",
+     "computed value of display none element (rule changed)");
+  styleSheet.deleteRule(0);
+  is(cs.width, "auto",
+     "computed value of display none element (rule removed)");
+
+  d.remove();
 })();
 
 </script>
