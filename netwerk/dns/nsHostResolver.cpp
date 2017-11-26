@@ -231,7 +231,6 @@ nsHostRecord::CopyExpirationTimesAndFlagsFrom(const nsHostRecord *aFromHostRecor
 nsHostRecord::~nsHostRecord()
 {
     Telemetry::Accumulate(Telemetry::DNS_BLACKLIST_COUNT, mBlacklistedCount);
-    delete addr_info;
 }
 
 bool
@@ -599,7 +598,8 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
         while (node != aPendingQ) {
             nsHostRecord *rec = static_cast<nsHostRecord *>(node);
             node = node->next;
-            OnLookupComplete(rec, NS_ERROR_ABORT, nullptr);
+            OnLookupComplete(rec, NS_ERROR_ABORT,
+                             mozilla::UniquePtr<AddrInfo>(nullptr));
         }
     }
 }
@@ -880,7 +880,7 @@ nsHostResolver::ResolveHost(const char             *host,
                                 if ((af == addrIter->mAddress.inet.family) &&
                                      !unspecHe->rec->Blacklisted(&addrIter->mAddress)) {
                                     if (!he->rec->addr_info) {
-                                        he->rec->addr_info = new AddrInfo(
+                                        he->rec->addr_info = mozilla::MakeUnique<AddrInfo>(
                                             unspecHe->rec->addr_info->mHostName,
                                             unspecHe->rec->addr_info->mCanonicalName);
                                         he->rec->CopyExpirationTimesAndFlagsFrom(unspecHe->rec);
@@ -1282,7 +1282,8 @@ different_rrset(AddrInfo *rrset1, AddrInfo *rrset2)
 // returns LOOKUP_RESOLVEAGAIN, but only if 'status' is not NS_ERROR_ABORT.
 // takes ownership of AddrInfo parameter
 nsHostResolver::LookupStatus
-nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* newRRSet)
+nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status,
+                                 mozilla::UniquePtr<AddrInfo>&& newRRSet)
 {
     // get the list of pending callbacks for this lookup, and notify
     // them that the lookup is complete.
@@ -1294,7 +1295,6 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* n
         if (rec->mResolveAgain && (status != NS_ERROR_ABORT)) {
             LOG(("nsHostResolver record %p resolve again due to flushcache\n", rec));
             rec->mResolveAgain = false;
-            delete newRRSet;
             return LOOKUP_RESOLVEAGAIN;
         }
 
@@ -1303,22 +1303,18 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* n
 
         // update record fields.  We might have a rec->addr_info already if a
         // previous lookup result expired and we're reresolving it..
-        AddrInfo  *old_addr_info;
         {
             MutexAutoLock lock(rec->addr_info_lock);
-            if (different_rrset(rec->addr_info, newRRSet)) {
+            if (different_rrset(rec->addr_info.get(), newRRSet.get())) {
                 LOG(("nsHostResolver record %p new gencnt\n", rec));
-                old_addr_info = rec->addr_info;
-                rec->addr_info = newRRSet;
+                rec->addr_info = Move(newRRSet);
                 rec->addr_info_gencnt++;
             } else {
                 if (rec->addr_info && newRRSet) {
                     rec->addr_info->ttl = newRRSet->ttl;
                 }
-                old_addr_info = newRRSet;
             }
         }
-        delete old_addr_info;
 
         rec->negative = !rec->addr_info;
         PrepareRecordExpiration(rec);
@@ -1468,7 +1464,7 @@ nsHostResolver::ThreadFunc(void *arg)
 #endif
     nsHostResolver *resolver = (nsHostResolver *)arg;
     nsHostRecord *rec  = nullptr;
-    AddrInfo *ai = nullptr;
+    mozilla::UniquePtr<AddrInfo> ai = nullptr;
 
     while (rec || resolver->GetHostToLookup(&rec)) {
         LOG(("DNS lookup thread - Calling getaddrinfo for host [%s%s%s].\n",
@@ -1482,10 +1478,10 @@ nsHostResolver::ThreadFunc(void *arg)
 #endif
 
         nsresult status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface,
-                                      &ai, getTtl);
+                                      ai, getTtl);
 #if defined(RES_RETRY_ON_FAILURE)
         if (NS_FAILED(status) && rs.Reset()) {
-            status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface, &ai,
+            status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface, ai,
                                  getTtl);
         }
 #endif
@@ -1521,7 +1517,8 @@ nsHostResolver::ThreadFunc(void *arg)
              LOG_HOST(rec->host, rec->netInterface),
              ai ? "success" : "failure: unknown host"));
 
-        if (LOOKUP_RESOLVEAGAIN == resolver->OnLookupComplete(rec, status, ai)) {
+        if (LOOKUP_RESOLVEAGAIN == resolver->OnLookupComplete(rec, status,
+                                                              mozilla::Move(ai))) {
             // leave 'rec' assigned and loop to make a renewed host resolve
             LOG(("DNS lookup thread - Re-resolving host [%s%s%s].\n",
                  LOG_HOST(rec->host, rec->netInterface)));
