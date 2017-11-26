@@ -59,6 +59,8 @@
   <string name="tutorial_search_manually_add">ເພີ່ມເອງ</string>
   <string name="tutorial_search_title">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
   <string name="action_option_add_search_engine">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+  <string name="tutorial_search_step3_alternative">3. ແຕະ %1$s</string>
+  <string name="tutorial_search_finish">ເລີ່ມຕົ້ນໃຊ້ງານ</string>
   <string name="search_add_manually_name">ຊື່ທີຈະສະແດງ</string>
   <string name="search_add_manually_name_hint">ຊື່ເຄື່ອງມືການຄົ້ນຫາ</string>
   <string name="search_add_manually_string">ຊອກຫາສະຕຣິງທີ່ຈະໃຊ້</string>
