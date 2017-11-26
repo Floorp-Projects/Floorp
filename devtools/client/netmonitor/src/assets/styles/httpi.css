@@ -17,3 +17,23 @@
 @import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/MdnLink.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsPanel.css";
+
+.status-code[data-code^="1"] {
+  background-color: var(--status-code-color-1xx);
+}
+
+.status-code[data-code^="2"] {
+  background-color: var(--status-code-color-2xx);
+}
+
+.status-code[data-code^="3"] {
+  background-color: var(--status-code-color-3xx);
+}
+
+.status-code[data-code^="4"] {
+  background-color: var(--status-code-color-4xx);
+}
+
+.status-code[data-code^="5"] {
+  background-color: var(--status-code-color-5xx);
+}
