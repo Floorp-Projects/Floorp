@@ -71,10 +71,14 @@ function NetworkEventMessage({
   } = response;
 
   const topLevelClasses = [ "cm-s-mozilla" ];
-  let statusInfo;
+  let statusCode, statusInfo;
 
   if (httpVersion && status && statusText !== undefined && totalTime !== undefined) {
-    statusInfo = `[${httpVersion} ${status} ${statusText} ${totalTime}ms]`;
+    statusCode = dom.span({className: "status-code", "data-code": status}, status);
+    statusInfo = dom.span(
+      {className: "status-info"},
+      `[${httpVersion} `, statusCode, ` ${statusText} ${totalTime}ms]`
+    );
   }
 
   const toggle = () => {
