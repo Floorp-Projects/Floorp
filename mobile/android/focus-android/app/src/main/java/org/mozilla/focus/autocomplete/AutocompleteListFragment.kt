@@ -232,6 +232,12 @@ open class AutocompleteListFragment : Fragment() {
                 }
                 false
             })
+
+            if (isSelectionMode) {
+                itemView.setOnClickListener({
+                    checkBoxView.isChecked = !checkBoxView.isChecked
+                })
+            }
         }
 
         fun onSelected() {
