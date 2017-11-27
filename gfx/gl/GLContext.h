@@ -196,7 +196,7 @@ class GLContext
 {
 public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
-    static MOZ_THREAD_LOCAL(const GLContext*) sCurrentContext;
+    static MOZ_THREAD_LOCAL(uintptr_t) sCurrentContext;
 
     bool mImplicitMakeCurrent;
 
