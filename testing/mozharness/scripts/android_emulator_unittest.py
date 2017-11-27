@@ -200,6 +200,15 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         with open(os.path.join(avd_home_dir, "ddms.cfg"), 'w') as f:
             f.write("pingOptIn=false\npingId=0\n")
 
+        # Delete emulator auth file, so it doesn't prompt
+        AUTH_FILE = os.path.join(os.path.expanduser('~'), '.emulator_console_auth_token')
+        if os.path.exists(AUTH_FILE):
+            try:
+                os.remove(AUTH_FILE)
+                self.info("deleted %s" % AUTH_FILE)
+            except:
+                self.warning("failed to remove %s" % AUTH_FILE)
+
         # Set environment variables to help emulator find the AVD.
         # In newer versions of the emulator, ANDROID_AVD_HOME should
         # point to the 'avd' directory.
@@ -259,13 +268,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _run_proc(self, cmd, quiet=False):
         self.info('Running %s' % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         if out and not quiet:
             self.info('%s' % str(out.strip()))
         if err and not quiet:
             self.info('stderr: %s' % str(err.strip()))
-        return out
+        return out, err
 
     def _verify_adb(self):
         self.info('Verifying adb connectivity')
@@ -273,7 +282,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         return True
 
     def _verify_adb_device(self):
-        out = self._run_with_timeout(30, [self.adb_path, 'devices'])
+        out, _ = self._run_with_timeout(30, [self.adb_path, 'devices'])
         if (self.emulator['device_id'] in out) and ("device" in out):
             return True
         return False
@@ -281,7 +290,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     def _is_boot_completed(self):
         boot_cmd = [self.adb_path, '-s', self.emulator['device_id'],
                     'shell', 'getprop', 'sys.boot_completed']
-        out = self._run_with_timeout(30, boot_cmd)
+        out, _ = self._run_with_timeout(30, boot_cmd)
         if out.strip() == '1':
             return True
         return False
@@ -327,8 +336,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         else:
             cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r',
                    self.installer_path]
-        out = self._run_with_timeout(300, cmd, True)
-        if 'Success' in out:
+        out, err = self._run_with_timeout(300, cmd, True)
+        if 'Success' in out or 'Success' in err:
             install_ok = True
         return install_ok
 
@@ -340,8 +349,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         else:
             cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r',
                    self.robocop_path]
-        out = self._run_with_timeout(300, cmd, True)
-        if 'Success' in out:
+        out, err = self._run_with_timeout(300, cmd, True)
+        if 'Success' in out or 'Success' in err:
             install_ok = True
         return install_ok
 
@@ -368,7 +377,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _restart_adbd(self):
         self._run_with_timeout(30, [self.adb_path, 'kill-server'])
-        self._run_with_timeout(30, [self.adb_path, 'start-server'])
+        self._run_with_timeout(30, [self.adb_path, 'root'])
 
     def _screenshot(self, prefix):
         """
@@ -614,33 +623,33 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         with open(perf_path, "w") as f:
 
             f.write('\n\nHost /proc/cpuinfo:\n')
-            out = self._run_proc(['cat', '/proc/cpuinfo'], quiet=True)
+            out, _ = self._run_proc(['cat', '/proc/cpuinfo'], quiet=True)
             f.write(out)
 
             f.write('\n\nHost /proc/meminfo:\n')
-            out = self._run_proc(['cat', '/proc/meminfo'], quiet=True)
+            out, _ = self._run_proc(['cat', '/proc/meminfo'], quiet=True)
             f.write(out)
 
             f.write('\n\nHost process list:\n')
-            out = self._run_proc(['ps', '-ef'], quiet=True)
+            out, _ = self._run_proc(['ps', '-ef'], quiet=True)
             f.write(out)
 
             f.write('\n\nEmulator /proc/cpuinfo:\n')
             cmd = [self.adb_path, '-s', self.emulator['device_id'],
                    'shell', 'cat', '/proc/cpuinfo']
-            out = self._run_with_timeout(30, cmd, quiet=True)
+            out, _ = self._run_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
             f.write('\n\nEmulator /proc/meminfo:\n')
             cmd = [self.adb_path, '-s', self.emulator['device_id'],
                    'shell', 'cat', '/proc/meminfo']
-            out = self._run_with_timeout(30, cmd, quiet=True)
+            out, _ = self._run_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
             f.write('\n\nEmulator process list:\n')
             cmd = [self.adb_path, '-s', self.emulator['device_id'],
                    'shell', 'ps']
-            out = self._run_with_timeout(30, cmd, quiet=True)
+            out, _ = self._run_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
     def verify_emulator(self):
@@ -707,9 +716,9 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         assert self.installer_path is not None, \
             "Either add installer_path to the config or use --installer-path."
 
-        self.sdk_level = self._run_with_timeout(30, [self.adb_path, '-s',
-                                                     self.emulator['device_id'],
-                                                'shell', 'getprop', 'ro.build.version.sdk'])
+        cmd = [self.adb_path, '-s', self.emulator['device_id'], 'shell',
+               'getprop', 'ro.build.version.sdk']
+        self.sdk_level, _ = self._run_with_timeout(30, cmd)
 
         # Install Fennec
         install_ok = self._retry(3, 30, self._install_fennec_apk, "Install app APK")
