@@ -363,45 +363,64 @@ function getFilename(defaultName) {
  * for now.
  */
 function saveToClipboard(context, reply) {
-  try {
-    const channel = NetUtil.newChannel({
-      uri: reply.data,
-      loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
-    });
-    const input = channel.open2();
+  return new Promise(resolve => {
+    try {
+      const channel = NetUtil.newChannel({
+        uri: reply.data,
+        loadUsingSystemPrincipal: true,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
+      });
+      const input = channel.open2();
 
-    const loadContext = context.environment.chromeWindow
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsILoadContext);
+      const loadContext = context.environment.chromeWindow
+                                 .QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebNavigation)
+                                 .QueryInterface(Ci.nsILoadContext);
 
-    const imgTools = Cc["@mozilla.org/image/tools;1"]
-                        .getService(Ci.imgITools);
+      const callback = {
+        onImageReady(container, status) {
+          if (!container) {
+            console.error("imgTools.decodeImageAsync failed");
+            reply.destinations.push(l10n.lookup("screenshotErrorCopying"));
+            resolve();
+            return;
+          }
 
-    const container = imgTools.decodeImage(input, channel.contentType);
+          try {
+            const wrapped = Cc["@mozilla.org/supports-interface-pointer;1"]
+                              .createInstance(Ci.nsISupportsInterfacePointer);
+            wrapped.data = container;
 
-    const wrapped = Cc["@mozilla.org/supports-interface-pointer;1"]
-                      .createInstance(Ci.nsISupportsInterfacePointer);
-    wrapped.data = container;
+            const trans = Cc["@mozilla.org/widget/transferable;1"]
+                            .createInstance(Ci.nsITransferable);
+            trans.init(loadContext);
+            trans.addDataFlavor(channel.contentType);
+            trans.setTransferData(channel.contentType, wrapped, -1);
 
-    const trans = Cc["@mozilla.org/widget/transferable;1"]
-                    .createInstance(Ci.nsITransferable);
-    trans.init(loadContext);
-    trans.addDataFlavor(channel.contentType);
-    trans.setTransferData(channel.contentType, wrapped, -1);
+            const clip = Cc["@mozilla.org/widget/clipboard;1"]
+                            .getService(Ci.nsIClipboard);
+            clip.setData(trans, null, Ci.nsIClipboard.kGlobalClipboard);
 
-    const clip = Cc["@mozilla.org/widget/clipboard;1"]
-                    .getService(Ci.nsIClipboard);
-    clip.setData(trans, null, Ci.nsIClipboard.kGlobalClipboard);
+            reply.destinations.push(l10n.lookup("screenshotCopied"));
+          } catch (ex) {
+            console.error(ex);
+            reply.destinations.push(l10n.lookup("screenshotErrorCopying"));
+          }
+          resolve();
+        }
+      };
 
-    reply.destinations.push(l10n.lookup("screenshotCopied"));
-  } catch (ex) {
-    console.error(ex);
-    reply.destinations.push(l10n.lookup("screenshotErrorCopying"));
-  }
-
-  return Promise.resolve();
+      const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
+      const imgTools = Cc["@mozilla.org/image/tools;1"]
+                          .getService(Ci.imgITools);
+      imgTools.decodeImageAsync(input, channel.contentType, callback,
+                                threadManager.currentThread);
+    } catch (ex) {
+      console.error(ex);
+      reply.destinations.push(l10n.lookup("screenshotErrorCopying"));
+      resolve();
+    }
+  });
 }
 
 /**

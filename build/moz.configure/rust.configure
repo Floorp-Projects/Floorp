@@ -4,10 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
+@imports(_from='os.path', _import='expanduser')
+def add_rustup_path(what):
+    # rustup installs rustc/cargo into ~/.cargo/bin by default,
+    # so look there if the binaries aren't in $PATH.
+    return [what, os.path.join(expanduser('~/.cargo/bin'), what)]
+
+
 # Rust is required by `rust_compiler` below. We allow_missing here
 # to propagate failures to the better error message there.
-rustc = check_prog('RUSTC', ['rustc'], allow_missing=True)
-cargo = check_prog('CARGO', ['cargo'], allow_missing=True)
+rustc = check_prog('RUSTC', add_rustup_path('rustc'), allow_missing=True)
+cargo = check_prog('CARGO', add_rustup_path('cargo'), allow_missing=True)
 
 
 @depends_if(rustc)

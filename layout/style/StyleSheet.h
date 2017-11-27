@@ -77,6 +77,7 @@ public:
     RuleAdded,
     RuleRemoved,
     RuleChanged,
+    ReparsedFromInspector,
   };
 
   void SetOwningNode(nsINode* aOwningNode)
