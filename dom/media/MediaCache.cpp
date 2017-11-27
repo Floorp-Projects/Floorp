@@ -427,6 +427,8 @@ protected:
   // end
   void Truncate();
 
+  void FlushInternal(AutoLock&);
+
   // There is at most one file-backed media cache.
   // It is owned by all MediaCacheStreams that use it.
   // This is a raw pointer set by GetMediaCache(), and reset by ~MediaCache(),
@@ -695,13 +697,10 @@ MediaCacheStream::BlockList::NotifyBlockSwapped(int32_t aBlockIndex1,
 }
 
 void
-MediaCache::Flush()
+MediaCache::FlushInternal(AutoLock& aLock)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  AutoLock lock(mMonitor);
-
   for (uint32_t blockIndex = 0; blockIndex < mIndex.Length(); ++blockIndex) {
-    FreeBlock(lock, blockIndex);
+    FreeBlock(aLock, blockIndex);
   }
 
   // Truncate index array.
@@ -709,6 +708,18 @@ MediaCache::Flush()
   NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
   // Reset block cache to its pristine state.
   mBlockCache->Flush();
+}
+
+void
+MediaCache::Flush()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCache::Flush", [self = RefPtr<MediaCache>(this)]() {
+      AutoLock lock(self->mMonitor);
+      self->FlushInternal(lock);
+    });
+  sThread->Dispatch(r.forget());
 }
 
 void
