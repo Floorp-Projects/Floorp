@@ -73,6 +73,115 @@ class LogAllocBridge : public ReplaceMallocBridge
   }
 };
 
+/* Do a simple, text-form, log of all calls to replace-malloc functions.
+ * Use locking to guarantee that an allocation that did happen is logged
+ * before any other allocation/free happens.
+ */
+
+static void*
+replace_malloc(size_t aSize)
+{
+  AutoLock lock(sLock);
+  void* ptr = sFuncs.malloc(aSize);
+  if (ptr) {
+    FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
+  }
+  return ptr;
+}
+
+#ifndef LOGALLOC_MINIMAL
+static int
+replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
+{
+  AutoLock lock(sLock);
+  int ret = sFuncs.posix_memalign(aPtr, aAlignment, aSize);
+  if (ret == 0) {
+    FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
+             aAlignment, aSize, *aPtr);
+  }
+  return ret;
+}
+
+static void*
+replace_aligned_alloc(size_t aAlignment, size_t aSize)
+{
+  AutoLock lock(sLock);
+  void* ptr = sFuncs.aligned_alloc(aAlignment, aSize);
+  if (ptr) {
+    FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
+             aAlignment, aSize, ptr);
+  }
+  return ptr;
+}
+#endif
+
+static void*
+replace_calloc(size_t aNum, size_t aSize)
+{
+  AutoLock lock(sLock);
+  void* ptr = sFuncs.calloc(aNum, aSize);
+  if (ptr) {
+    FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
+             aSize, ptr);
+  }
+  return ptr;
+}
+
+static void*
+replace_realloc(void* aPtr, size_t aSize)
+{
+  AutoLock lock(sLock);
+  void* new_ptr = sFuncs.realloc(aPtr, aSize);
+  if (new_ptr || !aSize) {
+    FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
+             aSize, new_ptr);
+  }
+  return new_ptr;
+}
+
+static void
+replace_free(void* aPtr)
+{
+  AutoLock lock(sLock);
+  if (aPtr) {
+    FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
+  }
+  sFuncs.free(aPtr);
+}
+
+static void*
+replace_memalign(size_t aAlignment, size_t aSize)
+{
+  AutoLock lock(sLock);
+  void* ptr = sFuncs.memalign(aAlignment, aSize);
+  if (ptr) {
+    FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
+             aAlignment, aSize, ptr);
+  }
+  return ptr;
+}
+
+#ifndef LOGALLOC_MINIMAL
+static void*
+replace_valloc(size_t aSize)
+{
+  AutoLock lock(sLock);
+  void* ptr = sFuncs.valloc(aSize);
+  if (ptr) {
+    FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
+  }
+  return ptr;
+}
+#endif
+
+static void
+replace_jemalloc_stats(jemalloc_stats_t* aStats)
+{
+  AutoLock lock(sLock);
+  sFuncs.jemalloc_stats(aStats);
+  FdPrintf(sFd, "%zu %zu jemalloc_stats()\n", GetPid(), GetTid());
+}
+
 void
 replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
 {
@@ -168,113 +277,4 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
     }
 #endif
   }
-}
-
-/* Do a simple, text-form, log of all calls to replace-malloc functions.
- * Use locking to guarantee that an allocation that did happen is logged
- * before any other allocation/free happens.
- */
-
-void*
-replace_malloc(size_t aSize)
-{
-  AutoLock lock(sLock);
-  void* ptr = sFuncs.malloc(aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
-  }
-  return ptr;
-}
-
-#ifndef LOGALLOC_MINIMAL
-int
-replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
-{
-  AutoLock lock(sLock);
-  int ret = sFuncs.posix_memalign(aPtr, aAlignment, aSize);
-  if (ret == 0) {
-    FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
-             aAlignment, aSize, *aPtr);
-  }
-  return ret;
-}
-
-void*
-replace_aligned_alloc(size_t aAlignment, size_t aSize)
-{
-  AutoLock lock(sLock);
-  void* ptr = sFuncs.aligned_alloc(aAlignment, aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
-             aAlignment, aSize, ptr);
-  }
-  return ptr;
-}
-#endif
-
-void*
-replace_calloc(size_t aNum, size_t aSize)
-{
-  AutoLock lock(sLock);
-  void* ptr = sFuncs.calloc(aNum, aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
-             aSize, ptr);
-  }
-  return ptr;
-}
-
-void*
-replace_realloc(void* aPtr, size_t aSize)
-{
-  AutoLock lock(sLock);
-  void* new_ptr = sFuncs.realloc(aPtr, aSize);
-  if (new_ptr || !aSize) {
-    FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
-             aSize, new_ptr);
-  }
-  return new_ptr;
-}
-
-void
-replace_free(void* aPtr)
-{
-  AutoLock lock(sLock);
-  if (aPtr) {
-    FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
-  }
-  sFuncs.free(aPtr);
-}
-
-void*
-replace_memalign(size_t aAlignment, size_t aSize)
-{
-  AutoLock lock(sLock);
-  void* ptr = sFuncs.memalign(aAlignment, aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
-             aAlignment, aSize, ptr);
-  }
-  return ptr;
-}
-
-#ifndef LOGALLOC_MINIMAL
-void*
-replace_valloc(size_t aSize)
-{
-  AutoLock lock(sLock);
-  void* ptr = sFuncs.valloc(aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
-  }
-  return ptr;
-}
-#endif
-
-void
-replace_jemalloc_stats(jemalloc_stats_t* aStats)
-{
-  AutoLock lock(sLock);
-  sFuncs.jemalloc_stats(aStats);
-  FdPrintf(sFd, "%zu %zu jemalloc_stats()\n", GetPid(), GetTid());
 }

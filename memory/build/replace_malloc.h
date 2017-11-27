@@ -90,11 +90,6 @@ MOZ_BEGIN_EXTERN_C
 MOZ_EXPORT void
 replace_init(malloc_table_t*, struct ReplaceMallocBridge**) MOZ_REPLACE_WEAK;
 
-// Define the replace_* functions as not exported.
-#define MALLOC_DECL(name, return_type, ...)                                    \
-  return_type replace_##name(__VA_ARGS__);
-#include "malloc_decls.h"
-
 MOZ_END_EXTERN_C
 
 #endif // replace_malloc_h
