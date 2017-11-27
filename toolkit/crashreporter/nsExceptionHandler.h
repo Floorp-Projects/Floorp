@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include "nsError.h"
 #include "nsString.h"
+#include "prio.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
@@ -176,14 +177,29 @@ bool TakeMinidumpForChild(uint32_t childPid,
 
 #if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
+typedef DWORD ProcessId;
 typedef DWORD ThreadId;
+typedef HANDLE FileHandle;
 #elif defined(XP_MACOSX)
 typedef task_t ProcessHandle;
+typedef pid_t ProcessId;
 typedef mach_port_t ThreadId;
+typedef int FileHandle;
 #else
 typedef int ProcessHandle;
+typedef pid_t ProcessId;
 typedef int ThreadId;
+typedef int FileHandle;
 #endif
+
+#if !defined(XP_WIN)
+int
+GetAnnotationTimeCrashFd();
+#endif
+void
+RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess, PRFileDesc* aFd);
+void
+DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess);
 
 // Return the current thread's ID.
 //
@@ -264,8 +280,13 @@ void UnregisterInjectorCallback(DWORD processID);
 #endif
 
 // Child-side API
+#if defined(XP_WIN32)
+bool
+SetRemoteExceptionHandler(const nsACString& crashPipe,
+                          uintptr_t aCrashTimeAnnotationFile);
+#else
 bool SetRemoteExceptionHandler(const nsACString& crashPipe);
-void InitChildProcessTmpDir(nsIFile* aDirOverride = nullptr);
+#endif
 
 #  else
 // Parent-side API for children
@@ -291,6 +312,7 @@ bool UnsetRemoteExceptionHandler();
 // Android creates child process as services so we must explicitly set
 // the handle for the pipe since it can't get remapped to a default value.
 void SetNotificationPipeForChild(int childCrashFd);
+void SetCrashAnnotationPipeForChild(int childCrashAnnotationFd);
 
 // Android builds use a custom library loader, so /proc/<pid>/maps
 // will just show anonymous mappings for all the non-system

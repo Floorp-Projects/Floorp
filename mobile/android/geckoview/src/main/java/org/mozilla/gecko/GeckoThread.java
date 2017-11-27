@@ -127,6 +127,7 @@ public class GeckoThread extends Thread {
     // Child process parameters
     private int mCrashFileDescriptor = -1;
     private int mIPCFileDescriptor = -1;
+    private int mCrashAnnotationFileDescriptor = -1;
 
     GeckoThread() {
         setName("Gecko");
@@ -139,7 +140,8 @@ public class GeckoThread extends Thread {
 
     private synchronized boolean init(final GeckoProfile profile, final String[] args,
                                       final String extraArgs, final int flags,
-                                      final int crashFd, final int ipcFd) {
+                                      final int crashFd, final int ipcFd,
+                                      final int crashAnnotationFd) {
         ThreadUtils.assertOnUiThread();
         uiThreadId = android.os.Process.myTid();
 
@@ -153,6 +155,7 @@ public class GeckoThread extends Thread {
         mFlags = flags;
         mCrashFileDescriptor = crashFd;
         mIPCFileDescriptor = ipcFd;
+        mCrashAnnotationFileDescriptor = crashAnnotationFd;
 
         mInitialized = true;
         notifyAll();
@@ -162,13 +165,15 @@ public class GeckoThread extends Thread {
     public static boolean initMainProcess(final GeckoProfile profile, final String extraArgs,
                                           final int flags) {
         return INSTANCE.init(profile, /* args */ null, extraArgs, flags,
-                                 /* crashFd */ -1, /* ipcFd */ -1);
+                                 /* crashFd */ -1, /* ipcFd */ -1,
+                                 /* crashAnnotationFd */ -1);
     }
 
     public static boolean initChildProcess(final String[] args, final int crashFd,
-                                           final int ipcFd) {
+                                           final int ipcFd,
+                                           final int crashAnnotationFd) {
         return INSTANCE.init(/* profile */ null, args, /* extraArgs */ null,
-                                 /* flags */ 0, crashFd, ipcFd);
+                                 /* flags */ 0, crashFd, ipcFd, crashAnnotationFd);
     }
 
     private static boolean canUseProfile(final Context context, final GeckoProfile profile,
@@ -404,7 +409,7 @@ public class GeckoThread extends Thread {
         }
 
         // And go.
-        GeckoLoader.nativeRun(args, mCrashFileDescriptor, mIPCFileDescriptor);
+        GeckoLoader.nativeRun(args, mCrashFileDescriptor, mIPCFileDescriptor, mCrashAnnotationFileDescriptor);
 
         // And... we're done.
         final boolean restarting = isState(State.RESTARTING);

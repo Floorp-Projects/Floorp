@@ -63,6 +63,7 @@
 #include "nsHashKeys.h"
 #include "nsNativeCharsetUtils.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
+#include "private/pprio.h"
 
 using mozilla::MonitorAutoLock;
 using mozilla::ipc::GeckoChildProcessHost;
@@ -122,6 +123,16 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
   if (mChildTask != MACH_PORT_NULL)
     mach_port_deallocate(mach_task_self(), mChildTask);
 #endif
+
+  if (mChildProcessHandle != 0) {
+#if defined(XP_WIN)
+    CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
+      base::GetProcId(mChildProcessHandle));
+#else
+    CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
+      mChildProcessHandle);
+#endif
+  }
 }
 
 //static
@@ -621,6 +632,12 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   const char* const childProcessType =
       XRE_ChildProcessTypeToString(mProcessType);
 
+  PRFileDesc* crashAnnotationReadPipe;
+  PRFileDesc* crashAnnotationWritePipe;
+  if (PR_CreatePipe(&crashAnnotationReadPipe, &crashAnnotationWritePipe) != PR_SUCCESS) {
+    return false;
+  }
+
 //--------------------------------------------------
 #if defined(OS_POSIX)
   // For POSIX, we have to be extremely anal about *not* using
@@ -768,6 +785,10 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     childArgv.push_back(CrashReporter::GetChildNotificationPipe());
 #endif  // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
   }
+
+  int fd = PR_FileDesc2NativeHandle(crashAnnotationWritePipe);
+  mLaunchOptions->fds_to_remap.push_back(
+    std::make_pair(fd, CrashReporter::GetAnnotationTimeCrashFd()));
 
 # ifdef MOZ_WIDGET_COCOA
   // Add a mach port to the command line so the child can communicate its
@@ -1007,6 +1028,14 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   cmdLine.AppendLooseValue(
     UTF8ToWide(CrashReporter::GetChildNotificationPipe()));
 
+  PROsfd h = PR_FileDesc2NativeHandle(crashAnnotationWritePipe);
+# if defined(MOZ_SANDBOX)
+  mSandboxBroker.AddHandleToShare(reinterpret_cast<HANDLE>(h));
+# endif // defined(MOZ_SANDBOX)
+  mLaunchOptions->handles_to_inherit.push_back(reinterpret_cast<HANDLE>(h));
+  std::string hStr = std::to_string(h);
+  cmdLine.AppendLooseValue(UTF8ToWide(hStr));
+
   // Process type
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 
@@ -1069,6 +1098,15 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
      ) {
     MOZ_CRASH("cannot open handle to child process");
   }
+#if defined(XP_WIN)
+  CrashReporter::RegisterChildCrashAnnotationFileDescriptor(
+    base::GetProcId(process), crashAnnotationReadPipe);
+#else
+  CrashReporter::RegisterChildCrashAnnotationFileDescriptor(process,
+                                                            crashAnnotationReadPipe);
+#endif
+  PR_Close(crashAnnotationWritePipe);
+
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CREATED;
   lock.Notify();
@@ -1140,7 +1178,7 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
                                             const base::file_handle_mapping_vector& fds_to_remap,
                                             ProcessHandle* process_handle)
 {
-  MOZ_ASSERT((fds_to_remap.size() > 0) && (fds_to_remap.size() <= 2));
+  MOZ_ASSERT((fds_to_remap.size() > 0) && (fds_to_remap.size() <= 3));
   JNIEnv* const env = mozilla::jni::GetEnvForThread();
   MOZ_ASSERT(env);
 
@@ -1154,7 +1192,8 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
   it++;
   // If the Crash Reporter is disabled, there will not be a second file descriptor.
   int32_t crashFd = (it != fds_to_remap.end()) ? it->first : -1;
-  int32_t handle = java::GeckoProcessManager::Start(type, jargs, crashFd, ipcFd);
+  int32_t crashAnnotationFd = (it != fds_to_remap.end()) ? it->first : -1;
+  int32_t handle = java::GeckoProcessManager::Start(type, jargs, crashFd, ipcFd, crashAnnotationFd);
 
   if (process_handle) {
     *process_handle = handle;
