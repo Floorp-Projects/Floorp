@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+<body>
+  <div style="width:200px; height:200px; perspective:1000px">
+    <div style="width:200px; height:200px; transform:translateZ(2px); background-color:green" id="transformed"></div>
+  </div>
+  <div style="width: 200px; height:200px; background-color:red" id="helper"></div>
+</body>
+<script>
+  function doTest() {
+    var element = document.getElementById("transformed");
+    element.parentNode.removeChild(element);
+    document.getElementById("helper").style.backgroundColor = "blue";
+    document.documentElement.className = "";
+  }
+  window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>
