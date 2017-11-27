@@ -3055,10 +3055,12 @@ TransformGfxRectToAncestor(nsIFrame *aFrame,
     *aPreservesAxisAlignedRectangles =
       ctm.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles();
   }
-  Rect maxBounds = Rect(-std::numeric_limits<float>::max() * 0.5,
-                        -std::numeric_limits<float>::max() * 0.5,
-                        std::numeric_limits<float>::max(),
-                        std::numeric_limits<float>::max());
+  const nsIFrame* ancestor = aOutAncestor ? *aOutAncestor : aAncestor;
+  float factor = ancestor->PresContext()->AppUnitsPerDevPixel();
+  Rect maxBounds = Rect(float(nscoord_MIN) / factor * 0.5,
+                        float(nscoord_MIN) / factor * 0.5,
+                        float(nscoord_MAX) / factor,
+                        float(nscoord_MAX) / factor);
   return ctm.TransformAndClipBounds(aRect, maxBounds);
 }
 
