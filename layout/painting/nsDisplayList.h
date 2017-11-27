@@ -2063,7 +2063,7 @@ public:
     return mFrame;
   }
 
-  bool HasDeletedFrame() const { return !mFrame; }
+  virtual bool HasDeletedFrame() const { return !mFrame; }
 
   virtual nsIFrame* StyleFrame() const { return mFrame; }
 
@@ -6154,6 +6154,12 @@ public:
   nsDisplayPerspective(nsDisplayListBuilder* aBuilder, nsIFrame* aTransformFrame,
                        nsIFrame* aPerspectiveFrame,
                        nsDisplayList* aList);
+  ~nsDisplayPerspective()
+  {
+    if (mTransformFrame) {
+      mTransformFrame->RemoveDisplayItem(this);
+    }
+  }
 
   virtual uint32_t GetPerFrameKey() const override {
     return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
@@ -6258,6 +6264,16 @@ public:
   {
     mList.GetChildren()->DeleteAll(aBuilder);
     nsDisplayItem::Destroy(aBuilder);
+  }
+
+  virtual bool HasDeletedFrame() const override { return !mTransformFrame || nsDisplayItem::HasDeletedFrame(); }
+
+  virtual void RemoveFrame(nsIFrame* aFrame) override
+  {
+    if (aFrame == mTransformFrame) {
+      mTransformFrame = nullptr;
+    }
+    nsDisplayItem::RemoveFrame(aFrame);
   }
 
 private:
