@@ -449,6 +449,13 @@ public:
   virtual void SetZoomableByAPZ(bool aZoomable) = 0;
 
   /**
+   * Mark this scroll frame as having out-of-flow content inside a CSS filter.
+   * Such content will move incorrectly during async-scrolling; to mitigate
+   * this, paint skipping is disabled for such scroll frames.
+   */
+  virtual void SetHasOutOfFlowContentInsideFilter() = 0;
+
+  /**
    * Whether or not this frame uses containerful scrolling.
    */
   virtual bool UsesContainerScrolling() const = 0;
