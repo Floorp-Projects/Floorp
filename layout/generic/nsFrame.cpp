@@ -2752,8 +2752,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     // We rebuild everything within preserve-3d and don't try
     // to retain, so override the dirty rect now.
-    dirtyRect = visibleRect;
-    aBuilder->MarkFrameModifiedDuringBuilding(this);
+    if (aBuilder->IsRetainingDisplayList()) {
+      dirtyRect = visibleRect;
+      aBuilder->MarkFrameModifiedDuringBuilding(this);
+    }
   }
 
   bool inTransform = aBuilder->IsInTransform();
