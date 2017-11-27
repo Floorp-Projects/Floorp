@@ -180,7 +180,7 @@ URLPreloader::GetCacheFile(const nsAString& suffix)
     return Move(cacheFile);
 }
 
-static const uint8_t URL_MAGIC[] = "mozURLcachev001";
+static const uint8_t URL_MAGIC[] = "mozURLcachev002";
 
 Result<nsCOMPtr<nsIFile>, nsresult>
 URLPreloader::FindCacheFile()
@@ -516,13 +516,6 @@ URLPreloader::ReadFile(nsIFile* file, ReadType readType)
 }
 
 /* static */ Result<const nsCString, nsresult>
-URLPreloader::ReadFile(const nsACString& path, ReadType readType)
-{
-    CacheKey key(CacheKey::TypeFile, path);
-    return Read(key, readType);
-}
-
-/* static */ Result<const nsCString, nsresult>
 URLPreloader::Read(FileLocation& location, ReadType readType)
 {
     if (location.IsZip()) {
@@ -604,10 +597,10 @@ URLPreloader::ResolveURI(nsIURI* uri)
         nsCOMPtr<nsIFile> file;
         MOZ_TRY(fileURL->GetFile(getter_AddRefs(file)));
 
-        nsCString path;
-        MOZ_TRY(file->GetNativePath(path));
+        nsString path;
+        MOZ_TRY(file->GetPath(path));
 
-        return CacheKey(CacheKey::TypeFile, path);
+        return CacheKey(CacheKey::TypeFile, NS_ConvertUTF16toUTF8(path));
     }
 
     // Not a file or Omnijar URI, so currently unsupported.
@@ -628,7 +621,8 @@ URLPreloader::CacheKey::ToFileLocation()
 {
     if (mType == TypeFile) {
         nsCOMPtr<nsIFile> file;
-        MOZ_TRY(NS_NewNativeLocalFile(mPath, false, getter_AddRefs(file)));
+        MOZ_TRY(NS_NewLocalFile(NS_ConvertUTF8toUTF16(mPath), false,
+                                getter_AddRefs(file)));
         return Move(FileLocation(file));
     }
 
