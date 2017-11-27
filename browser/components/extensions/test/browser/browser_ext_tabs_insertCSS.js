@@ -81,7 +81,7 @@ add_task(async function testExecuteScript() {
       browser.test.notifyPass("insertCSS");
     } catch (e) {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
-      browser.test.notifyFailure("insertCSS");
+      browser.test.notifyFail("insertCSS");
     }
   }
 
