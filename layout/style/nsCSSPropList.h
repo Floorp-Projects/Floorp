@@ -3775,6 +3775,16 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
+    shape-image-threshold,
+    shape_image_threshold,
+    ShapeImageThreshold,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.shape-outside.enabled",
+    VARIANT_HN,
+    nullptr,
+    offsetof(nsStyleDisplay, mShapeImageThreshold),
+    eStyleAnimType_float)
+CSS_PROP_DISPLAY(
     shape-outside,
     shape_outside,
     ShapeOutside,

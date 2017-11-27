@@ -2622,6 +2622,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mAnimationPlayStateCount,
            mAnimationIterationCountCount;
 
+
+  // The threshold used for extracting a shape from shape-outside: <image>.
+  float mShapeImageThreshold = 0.0f; // [reset]
+
   mozilla::StyleShapeSource mShapeOutside; // [reset]
 
   bool IsBlockInsideStyle() const {
