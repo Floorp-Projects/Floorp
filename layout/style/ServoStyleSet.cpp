@@ -1330,11 +1330,6 @@ ServoStyleSet::UpdateStylist()
     mBindingManager->UpdateBoundContentBindingsForServo(mPresContext);
   }
 
-  // We need to invalidate cached style in getComputedStyle for undisplayed
-  // elements, since we don't know if any of the style sheet change that we
-  // do would affect undisplayed elements.
-  mPresContext->RestyleManager()->AsServo()->IncrementUndisplayedRestyleGeneration();
-
   mStylistState = StylistState::NotDirty;
 }
 
