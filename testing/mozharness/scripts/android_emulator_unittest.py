@@ -377,7 +377,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _restart_adbd(self):
         self._run_with_timeout(30, [self.adb_path, 'kill-server'])
-        self._run_with_timeout(30, [self.adb_path, 'start-server'])
+        self._run_with_timeout(30, [self.adb_path, 'root'])
 
     def _screenshot(self, prefix):
         """
