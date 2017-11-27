@@ -1349,8 +1349,7 @@ var gFinishedPage = {
     }
 
     // Restart the application
-    CoC["@mozilla.org/toolkit/app-startup;1"].getService(CoI.nsIAppStartup).
-    quit(CoI.nsIAppStartup.eAttemptQuit | CoI.nsIAppStartup.eRestart);
+    Services.startup.quit(CoI.nsIAppStartup.eAttemptQuit | CoI.nsIAppStartup.eRestart);
   },
 
   /**

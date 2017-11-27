@@ -6,6 +6,8 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
@@ -69,8 +71,6 @@ function process() {
 
 function setPassword() {
   var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                .getService(Components.interfaces.nsIPromptService);
   var token = pk11db.getInternalKeyToken();
 
   var oldpwbox = document.getElementById("oldpw");
@@ -100,23 +100,23 @@ function setPassword() {
             var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
             if (secmoddb.isFIPSEnabled) {
               // empty passwords are not allowed in FIPS mode
-              promptService.alert(window,
-                                  bundle.getString("pw_change_failed_title"),
-                                  bundle.getString("pw_change2empty_in_fips_mode"));
+              Services.prompt.alert(window,
+                                    bundle.getString("pw_change_failed_title"),
+                                    bundle.getString("pw_change2empty_in_fips_mode"));
               passok = 0;
             }
           }
           if (passok) {
             token.changePassword(oldpw, pw1.value);
             if (pw1.value == "") {
-              promptService.alert(window,
-                                  bundle.getString("pw_change_success_title"),
-                                  bundle.getString("pw_erased_ok")
-                                  + " " + bundle.getString("pw_empty_warning"));
+              Services.prompt.alert(window,
+                                    bundle.getString("pw_change_success_title"),
+                                    bundle.getString("pw_erased_ok")
+                                    + " " + bundle.getString("pw_empty_warning"));
             } else {
-              promptService.alert(window,
-                                  bundle.getString("pw_change_success_title"),
-                                  bundle.getString("pw_change_ok"));
+              Services.prompt.alert(window,
+                                    bundle.getString("pw_change_success_title"),
+                                    bundle.getString("pw_change_ok"));
             }
             success = true;
           }
@@ -124,22 +124,22 @@ function setPassword() {
       } else {
         oldpwbox.focus();
         oldpwbox.setAttribute("value", "");
-        promptService.alert(window,
-                            bundle.getString("pw_change_failed_title"),
-                            bundle.getString("incorrect_pw"));
+        Services.prompt.alert(window,
+                              bundle.getString("pw_change_failed_title"),
+                              bundle.getString("incorrect_pw"));
       }
     } catch (e) {
-      promptService.alert(window,
-                          bundle.getString("pw_change_failed_title"),
-                          bundle.getString("failed_pw_change"));
+      Services.prompt.alert(window,
+                            bundle.getString("pw_change_failed_title"),
+                            bundle.getString("failed_pw_change"));
     }
   } else {
     token.initPassword(pw1.value);
     if (pw1.value == "") {
-      promptService.alert(window,
-                          bundle.getString("pw_change_success_title"),
-                          bundle.getString("pw_not_wanted")
-                          + " " + bundle.getString("pw_empty_warning"));
+      Services.prompt.alert(window,
+                            bundle.getString("pw_change_success_title"),
+                            bundle.getString("pw_not_wanted")
+                            + " " + bundle.getString("pw_empty_warning"));
     }
     success = true;
   }

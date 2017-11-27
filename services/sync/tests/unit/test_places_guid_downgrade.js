@@ -9,8 +9,6 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 
 const kDBName = "places.sqlite";
-const storageSvc = Cc["@mozilla.org/storage/service;1"]
-                     .getService(Ci.mozIStorageService);
 
 function setPlacesDatabase(aFileName) {
   removePlacesDatabase();
@@ -43,7 +41,7 @@ add_test(function test_initial_state() {
   // it to be.
   let dbFile = gSyncProfile.clone();
   dbFile.append(kDBName);
-  let db = storageSvc.openUnsharedDatabase(dbFile);
+  let db = Services.storage.openUnsharedDatabase(dbFile);
 
   let stmt = db.createStatement("PRAGMA journal_mode");
   do_check_true(stmt.executeStep());

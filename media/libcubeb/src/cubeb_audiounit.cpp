@@ -112,7 +112,7 @@ to_string(io_side side)
 typedef uint32_t device_flags_value;
 
 enum device_flags {
-  DEV_UKNOWN            = 0x00, /* Unkown */
+  DEV_UNKNOWN           = 0x00, /* Unknown */
   DEV_INPUT             = 0x01, /* Record device like mic */
   DEV_OUTPUT            = 0x02, /* Playback device like speakers */
   DEV_SYSTEM_DEFAULT    = 0x04, /* System default device */
@@ -121,7 +121,7 @@ enum device_flags {
 
 struct device_info {
   AudioDeviceID id = kAudioObjectUnknown;
-  device_flags_value flags = DEV_UKNOWN;
+  device_flags_value flags = DEV_UNKNOWN;
 };
 
 struct cubeb_stream {
@@ -716,21 +716,16 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
     return noErr;
   }
   stm->switching_device = true;
-  device_flags_value switch_side = DEV_UKNOWN;
 
   LOG("(%p) Audio device changed, %u events.", stm, (unsigned int) address_count);
   for (UInt32 i = 0; i < address_count; i++) {
     switch(addresses[i].mSelector) {
       case kAudioHardwarePropertyDefaultOutputDevice: {
           LOG("Event[%u] - mSelector == kAudioHardwarePropertyDefaultOutputDevice for id=%d", (unsigned int) i, id);
-          // Allow restart to choose the new default
-          switch_side |= DEV_OUTPUT;
         }
         break;
       case kAudioHardwarePropertyDefaultInputDevice: {
           LOG("Event[%u] - mSelector == kAudioHardwarePropertyDefaultInputDevice for id=%d", (unsigned int) i, id);
-          // Allow restart to choose the new default
-          switch_side |= DEV_INPUT;
         }
       break;
       case kAudioDevicePropertyDeviceIsAlive: {
@@ -742,18 +737,10 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
             stm->switching_device = false;
             return noErr;
           }
-          // Allow restart to choose the new default. Event register only for input.
-          switch_side |= DEV_INPUT;
         }
         break;
       case kAudioDevicePropertyDataSource: {
           LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource for id=%d", (unsigned int) i, id);
-          if (stm->input_unit) {
-            switch_side |= DEV_INPUT;
-          }
-          if (stm->output_unit) {
-            switch_side |= DEV_OUTPUT;
-          }
         }
         break;
       default:
@@ -761,6 +748,15 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
         stm->switching_device = false;
         return noErr;
     }
+  }
+
+  // Allow restart to choose the new default
+  device_flags_value switch_side = DEV_UNKNOWN;
+  if (has_input(stm)) {
+    switch_side |= DEV_INPUT;
+  }
+  if (has_input(stm)) {
+    switch_side |= DEV_OUTPUT;
   }
 
   for (UInt32 i = 0; i < address_count; i++) {
@@ -784,9 +780,9 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
   dispatch_async(stm->context->serial_queue, ^() {
     if (audiounit_reinit_stream(stm, switch_side) != CUBEB_OK) {
       if (audiounit_uninstall_system_changed_callback(stm) != CUBEB_OK) {
-        LOG("(%p) Could not uninstall the device changed callback", stm);
+        LOG("(%p) Could not uninstall system changed callback", stm);
       }
-      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
+      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
       LOG("(%p) Could not reopen the stream after switching.", stm);
     }
     stm->switching_device = false;
@@ -1683,6 +1679,8 @@ audiounit_activate_clock_drift_compensation(const AudioDeviceID aggregate_device
 }
 
 static int audiounit_destroy_aggregate_device(AudioObjectID plugin_id, AudioDeviceID * aggregate_device_id);
+static void audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectPropertyScope scope,
+                                   uint32_t * min, uint32_t * max, uint32_t * def);
 
 /*
  * Aggregate Device is a virtual audio interface which utilizes inputs and outputs
@@ -1706,6 +1704,26 @@ static int audiounit_destroy_aggregate_device(AudioObjectID plugin_id, AudioDevi
 static int
 audiounit_create_aggregate_device(cubeb_stream * stm)
 {
+  uint32_t input_min_rate = 0;
+  uint32_t input_max_rate = 0;
+  uint32_t input_nominal_rate = 0;
+  audiounit_get_available_samplerate(stm->input_device.id, kAudioObjectPropertyScopeGlobal,
+                                     &input_min_rate, &input_max_rate, &input_nominal_rate);
+  LOG("(%p) Input device %u min: %u, max: %u, nominal: %u rate", stm, stm->input_device.id
+      , input_min_rate, input_max_rate, input_nominal_rate);
+  uint32_t output_min_rate = 0;
+  uint32_t output_max_rate = 0;
+  uint32_t output_nominal_rate = 0;
+  audiounit_get_available_samplerate(stm->output_device.id, kAudioObjectPropertyScopeGlobal,
+                                     &output_min_rate, &output_max_rate, &output_nominal_rate);
+  LOG("(%p) Output device %u min: %u, max: %u, nominal: %u rate", stm, stm->output_device.id
+      , output_min_rate, output_max_rate, output_nominal_rate);
+
+  if ((output_nominal_rate < input_min_rate || output_nominal_rate > output_max_rate)
+      || (input_nominal_rate < output_min_rate || input_nominal_rate > output_max_rate)){
+    return CUBEB_ERROR;
+  }
+
   int r = audiounit_create_blank_aggregate_device(&stm->plugin_id, &stm->aggregate_device_id);
   if (r != CUBEB_OK) {
     LOG("(%p) Failed to create blank aggregate device", stm);
@@ -1732,6 +1750,24 @@ audiounit_create_aggregate_device(cubeb_stream * stm)
     LOG("(%p) Failed to activate clock drift compensation for aggregate device", stm);
     audiounit_destroy_aggregate_device(stm->plugin_id, &stm->aggregate_device_id);
     return  CUBEB_ERROR;
+  }
+
+  if (input_nominal_rate != output_nominal_rate) {
+    Float64 rate = std::min(input_nominal_rate, output_nominal_rate);
+    AudioObjectPropertyAddress addr = {kAudioDevicePropertyNominalSampleRate,
+                                       kAudioObjectPropertyScopeGlobal,
+                                       kAudioObjectPropertyElementMaster};
+
+    OSStatus rv = AudioObjectSetPropertyData(stm->aggregate_device_id,
+                                             &addr,
+                                             0,
+                                             nullptr,
+                                             sizeof(Float64),
+                                             &rate);
+    if (rv != noErr) {
+      LOG("AudioObjectSetPropertyData/kAudioDevicePropertyNominalSampleRate, rv=%d", rv);
+      return CUBEB_ERROR;
+    }
   }
 
   return CUBEB_OK;

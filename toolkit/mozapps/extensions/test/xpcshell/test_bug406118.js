@@ -136,18 +136,15 @@ function run_test_1() {
   load_blocklist("test_bug393285.xml", function() {
     restartManager();
 
-    var blocklist = Cc["@mozilla.org/extensions/blocklist;1"]
-                    .getService(Ci.nsIBlocklistService);
-
     AddonManager.getAddonsByIDs(addonIDs,
                                function([a1, a2, a3, a4]) {
       // No info in blocklist, shouldn't be blocked
-      do_check_false(blocklist.isAddonBlocklisted(a1, null, null));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a1, null, null));
 
       // All these should be blocklisted for the current app.
-      do_check_true(blocklist.isAddonBlocklisted(a2, null, null));
-      do_check_true(blocklist.isAddonBlocklisted(a3, null, null));
-      do_check_true(blocklist.isAddonBlocklisted(a4, null, null));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a2, null, null));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a3, null, null));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a4, null, null));
 
       end_test();
     });

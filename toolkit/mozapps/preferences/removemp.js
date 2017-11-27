@@ -4,15 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 var gRemovePasswordDialog = {
   _token: null,
   _bundle: null,
-  _prompt: null,
   _okButton: null,
   _password: null,
   init() {
-    this._prompt = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                             .getService(Components.interfaces.nsIPromptService);
     this._bundle = document.getElementById("bundlePreferences");
 
     this._okButton = document.documentElement.getButton("accept");
@@ -36,17 +35,16 @@ var gRemovePasswordDialog = {
   removePassword() {
     if (this._token.checkPassword(this._password.value)) {
       this._token.changePassword(this._password.value, "");
-      this._prompt.alert(window,
-                         this._bundle.getString("pw_change_success_title"),
-                         this._bundle.getString("pw_erased_ok")
-                         + " " + this._bundle.getString("pw_empty_warning"));
+      Services.prompt.alert(window,
+                            this._bundle.getString("pw_change_success_title"),
+                            this._bundle.getString("pw_erased_ok")
+                            + " " + this._bundle.getString("pw_empty_warning"));
     } else {
       this._password.value = "";
       this._password.focus();
-      this._prompt.alert(window,
-                         this._bundle.getString("pw_change_failed_title"),
-                         this._bundle.getString("incorrect_pw"));
+      Services.prompt.alert(window,
+                            this._bundle.getString("pw_change_failed_title"),
+                            this._bundle.getString("incorrect_pw"));
     }
   },
 };
-

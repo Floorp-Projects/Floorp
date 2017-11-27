@@ -13,7 +13,7 @@
 #include "VideoDecoder.h"
 #endif
 
-class ClearKeyCDM : public cdm::ContentDecryptionModule_8
+class ClearKeyCDM : public cdm::ContentDecryptionModule_9
 {
 private:
   RefPtr<ClearKeySessionManager> mSessionManager;
@@ -22,13 +22,16 @@ private:
 #endif
 
 protected:
-  cdm::Host_8* mHost;
+  cdm::Host_9* mHost;
 
 public:
-  explicit ClearKeyCDM(cdm::Host_8* mHost);
+  explicit ClearKeyCDM(cdm::Host_9* mHost);
 
   void Initialize(bool aAllowDistinctiveIdentifier,
                   bool aAllowPersistentState) override;
+
+  void GetStatusForPolicy(uint32_t aPromiseId,
+                          const cdm::Policy& aPolicy) override;
 
   void SetServerCertificate(uint32_t aPromiseId,
                             const uint8_t* aServerCertificateData,
@@ -91,6 +94,10 @@ public:
     OnQueryOutputProtectionStatus(cdm::QueryResult aResult,
                                   uint32_t aLinkMask,
                                   uint32_t aOutputProtectionMask) override;
+
+  void OnStorageId(uint32_t aVersion,
+                   const uint8_t* aStorageId,
+                   uint32_t aStorageIdSize) override;
 
   void Destroy() override;
 };

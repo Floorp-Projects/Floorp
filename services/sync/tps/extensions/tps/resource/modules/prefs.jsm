@@ -13,9 +13,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
-var prefs = Cc["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefBranch);
-
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://tps/logger.jsm");
 
 /**
@@ -47,31 +45,31 @@ Preference.prototype = {
     // Determine if this pref is actually something Weave even looks at.
     let weavepref = WEAVE_PREF_PREFIX + this.name;
     try {
-      let syncPref = prefs.getBoolPref(weavepref);
+      let syncPref = Services.prefs.getBoolPref(weavepref);
       if (!syncPref)
-        prefs.setBoolPref(weavepref, true);
+        Services.prefs.setBoolPref(weavepref, true);
     } catch (e) {
       Logger.AssertTrue(false, "Weave doesn't sync pref " + this.name);
     }
 
     // Modify the pref; throw an exception if the pref type is different
     // than the value type specified in the test.
-    let prefType = prefs.getPrefType(this.name);
+    let prefType = Services.prefs.getPrefType(this.name);
     switch (prefType) {
       case Ci.nsIPrefBranch.PREF_INT:
         Logger.AssertEqual(typeof(this.value), "number",
           "Wrong type used for preference value");
-        prefs.setIntPref(this.name, this.value);
+        Services.prefs.setIntPref(this.name, this.value);
         break;
       case Ci.nsIPrefBranch.PREF_STRING:
         Logger.AssertEqual(typeof(this.value), "string",
           "Wrong type used for preference value");
-        prefs.setCharPref(this.name, this.value);
+        Services.prefs.setCharPref(this.name, this.value);
         break;
       case Ci.nsIPrefBranch.PREF_BOOL:
         Logger.AssertEqual(typeof(this.value), "boolean",
           "Wrong type used for preference value");
-        prefs.setBoolPref(this.name, this.value);
+        Services.prefs.setBoolPref(this.name, this.value);
         break;
     }
   },
@@ -89,16 +87,16 @@ Preference.prototype = {
     // Read the pref value.
     let value;
     try {
-      let prefType = prefs.getPrefType(this.name);
+      let prefType = Services.prefs.getPrefType(this.name);
       switch (prefType) {
         case Ci.nsIPrefBranch.PREF_INT:
-          value = prefs.getIntPref(this.name);
+          value = Services.prefs.getIntPref(this.name);
           break;
         case Ci.nsIPrefBranch.PREF_STRING:
-          value = prefs.getCharPref(this.name);
+          value = Services.prefs.getCharPref(this.name);
           break;
         case Ci.nsIPrefBranch.PREF_BOOL:
-          value = prefs.getBoolPref(this.name);
+          value = Services.prefs.getBoolPref(this.name);
           break;
       }
     } catch (e) {
@@ -112,4 +110,3 @@ Preference.prototype = {
     Logger.AssertEqual(value, this.value, "Preference values don't match");
   },
 };
-

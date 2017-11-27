@@ -101,7 +101,7 @@ ClearKeyPersistence::WriteIndex() {
 }
 
 
-ClearKeyPersistence::ClearKeyPersistence(Host_8* aHost)
+ClearKeyPersistence::ClearKeyPersistence(Host_9* aHost)
 {
   this->mHost = aHost;
 }

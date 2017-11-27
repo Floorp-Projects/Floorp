@@ -1979,7 +1979,12 @@ void HTMLMediaElement::DoLoad()
     return;
   }
 
+  // Detect if user has interacted with element so that play will not be
+  // blocked when initiated by a script. This enables sites to capture user
+  // intent to play by calling load() in the click handler of a "catalog
+  // view" of a gallery of videos.
   if (EventStateManager::IsHandlingUserInput()) {
+    mHasUserInteractedLoadOrSeek = true;
     // Mark the channel as urgent-start when autopaly so that it will play the
     // media from src after loading enough resource.
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) {
@@ -2747,6 +2752,12 @@ HTMLMediaElement::Seek(double aTime,
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  // Detect if user has interacted with element by seeking so that
+  // play will not be blocked when initiated by a script.
+  if (EventStateManager::IsHandlingUserInput()) {
+    mHasUserInteractedLoadOrSeek = true;
   }
 
   StopSuspendingAfterFirstFrame();
@@ -4032,6 +4043,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mIsEncrypted(false),
     mWaitingForKey(NOT_WAITING_FOR_KEY),
     mDisableVideo(false),
+    mHasUserInteractedLoadOrSeek(false),
     mFirstFrameLoaded(false),
     mDefaultPlaybackStartPosition(0.0),
     mHasSuspendTaint(false),

@@ -772,9 +772,7 @@ this.AddonRepository = {
       if (type == Services.prefs.PREF_STRING) {
         pref = PREF_GETADDONS_BYIDS_PERFORMANCE;
 
-        let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].
-                          getService(Ci.nsIAppStartup).
-                          getStartupInfo();
+        let startupInfo = Services.startup.getStartupInfo();
 
         params.TIME_MAIN = "";
         params.TIME_FIRST_PAINT = "";
