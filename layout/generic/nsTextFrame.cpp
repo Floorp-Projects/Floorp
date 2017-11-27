@@ -9315,6 +9315,12 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     }
   }
 
+  // If trimming whitespace left us with nothing to do, return early.
+  if (length == 0) {
+    ClearMetrics(aMetrics);
+    return;
+  }
+
   bool completedFirstLetter = false;
   // Layout dependent styles are a problem because we need to reconstruct
   // the gfxTextRun based on our layout.
@@ -9803,11 +9809,20 @@ nsTextFrame::CanContinueTextRun() const
 nsTextFrame::TrimOutput
 nsTextFrame::TrimTrailingWhiteSpace(DrawTarget* aDrawTarget)
 {
+  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_FIRST_REFLOW),
+             "frame should have been reflowed");
+
   TrimOutput result;
   result.mChanged = false;
   result.mDeltaWidth = 0;
 
   AddStateBits(TEXT_END_OF_LINE);
+
+  if (!GetTextRun(nsTextFrame::eInflated)) {
+    // If reflow didn't create a textrun, there must have been no content once
+    // leading whitespace was trimmed, so nothing more to do here.
+    return result;
+  }
 
   int32_t contentLength = GetContentLength();
   if (!contentLength)
