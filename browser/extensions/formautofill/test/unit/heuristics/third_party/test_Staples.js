@@ -6,7 +6,7 @@ runHeuristicsTest([
   {
     fixturePath: "Basic.html",
     expectedResult: [
-      [[ // ac-off
+      [ // ac-off
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
@@ -14,7 +14,7 @@ runHeuristicsTest([
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "organization"},
-      ]],
+      ],
     ],
   }, {
     fixturePath: "Basic_ac_on.html",

@@ -26,6 +26,9 @@ runHeuristicsTest([
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
+      ], [
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
