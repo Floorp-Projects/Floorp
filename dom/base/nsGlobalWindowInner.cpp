@@ -1362,9 +1362,11 @@ nsGlobalWindowInner::FreeInnerObjects()
   mClientSource.reset();
 
   if (mTabChild) {
-    while (mBeforeUnloadListenerCount-- > 0) {
+    // Remove any remaining listeners, and reset mBeforeUnloadListenerCount.
+    for (int i = 0; i < mBeforeUnloadListenerCount; ++i) {
       mTabChild->BeforeUnloadRemoved();
     }
+    mBeforeUnloadListenerCount = 0;
   }
 }
 
