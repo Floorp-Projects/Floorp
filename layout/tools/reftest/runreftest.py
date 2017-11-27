@@ -294,6 +294,7 @@ class RefTest(object):
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.manifests'] = json.dumps(manifests)
+        prefs['reftest.suite'] = options.suite
 
         if startAfter not in (None, self.TEST_SEEN_INITIAL, self.TEST_SEEN_FINAL):
             self.log.info("Setting reftest.startAfter to %s" % startAfter)
