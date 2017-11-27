@@ -104,3 +104,22 @@ add_task(async function addremove_before_newtab_api() {
   CustomizableUI.reset();
   ok(CustomizableUI.inDefaultState, "Should be in default state");
 });
+
+/**
+  * Reset to defaults in customize mode to see if that doesn't break things.
+  */
+add_task(async function reset_before_newtab_customizemode() {
+  await startCustomizing();
+  simulateItemDrag(document.getElementById("home-button"), kGlobalNewTabButton);
+  ok(!gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),
+    "tabs should no longer have the adjacent newtab attribute");
+  await endCustomizing();
+  assertNewTabButton("global");
+  await startCustomizing();
+  await gCustomizeMode.reset();
+  ok(gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),
+    "tabs should have the adjacent newtab attribute again");
+  await endCustomizing();
+  assertNewTabButton("inner");
+  ok(CustomizableUI.inDefaultState, "Should be in default state");
+});

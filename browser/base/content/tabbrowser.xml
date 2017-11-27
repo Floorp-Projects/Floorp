@@ -5860,22 +5860,14 @@
 
       <method name="_updateNewTabVisibility">
         <body><![CDATA[
-          let isCustomizing = this.tabContainer.parentNode.getAttribute("customizing") == "true";
+          // Helper functions to help deal with customize mode wrapping some items
+          let wrap = n => n.parentNode.localName == "toolbarpaletteitem" ? n.parentNode : n;
+          let unwrap = n => n && n.localName == "toolbarpaletteitem" ? n.firstElementChild : n;
 
-          // Confusingly, the <tabs> are never wrapped in <toolbarpaletteitem>s in customize mode,
-          // but the other items will be.
-          let sib = this.tabContainer.nextElementSibling;
-          if (isCustomizing) {
-            sib = sib && sib.firstElementChild;
-          }
-          while (sib && sib.hidden) {
-            if (isCustomizing) {
-              sib = sib.parentNode.nextElementSibling;
-              sib = sib && sib.firstElementChild;
-            } else {
-              sib = sib.nextElementSibling;
-            }
-          }
+          let sib = this.tabContainer;
+          do {
+            sib = unwrap(wrap(sib).nextElementSibling);
+          } while (sib && sib.hidden);
 
           const kAttr = "hasadjacentnewtabbutton";
           if (sib && sib.id == "new-tab-button") {
