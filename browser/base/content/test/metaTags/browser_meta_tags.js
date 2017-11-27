@@ -19,7 +19,7 @@ add_task(async function test_metadata() {
   // Wait until places has stored the page info
   const pageInfo = await waitForPageInfo(URL);
   is(pageInfo.description, "og:description", "got the correct description");
-  is(pageInfo.previewImageURL.href, "og:image:secure_url", "got the correct preview image");
+  is(pageInfo.previewImageURL.href, "https://test.com/og-image-secure-url.jpg", "got the correct preview image");
 
   await BrowserTestUtils.removeTab(tab);
   await PlacesTestUtils.clearHistory();
@@ -40,7 +40,7 @@ add_task(async function multiple_tabs() {
   // Wait until places has stored the page info
   const pageInfo = await waitForPageInfo(URL);
   is(pageInfo.description, "og:description", "got the correct description");
-  is(pageInfo.previewImageURL.href, "og:image:secure_url", "got the correct preview image");
+  is(pageInfo.previewImageURL.href, "https://test.com/og-image-secure-url.jpg", "got the correct preview image");
 
   await BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);

@@ -7,16 +7,16 @@
     <meta property="og:description" content="og:description" />
     <meta name="description" content="description" />
     <meta name="unknown:tag" content="unknown:tag" />
-    <meta property="og:image" content="og:image" />
-    <meta property="twitter:image" content="twitter:image" />
-    <meta property="og:image:url" content="og:image:url" />
-    <meta name="thumbnail" content="thumbnail" />
+    <meta property="og:image" content="https://test.com/og-image.jpg" />
+    <meta property="twitter:image" content="https://test.com/twitter-image.jpg" />
+    <meta property="og:image:url" content="https://test.com/og-image-url" />
+    <meta name="thumbnail" content="https://test.com/thumbnail.jpg" />
   </head>
   <body>
     <script>
       function addMeta(tag) {
         const meta = document.createElement("meta");
-        meta.content = tag;
+        meta.content = "https://test.com/og-image-secure-url.jpg";
         meta.setAttribute("property", tag);
         document.head.appendChild(meta);
       }
