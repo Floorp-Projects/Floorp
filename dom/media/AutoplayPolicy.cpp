@@ -32,7 +32,7 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
     return true;
   }
 
-  if (Preferences::GetBool("media.autoplay.enabled.user-gestures-needed")) {
+  if (Preferences::GetBool("media.autoplay.enabled.user-gestures-needed", false)) {
     return AutoplayPolicy::IsDocumentAllowedToPlay(aElement->OwnerDoc());
   }
 
