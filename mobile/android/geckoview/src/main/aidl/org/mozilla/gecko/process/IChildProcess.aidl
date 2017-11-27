@@ -10,5 +10,5 @@ import android.os.ParcelFileDescriptor;
 
 interface IChildProcess {
     int getPid();
-    boolean start(in IProcessManager procMan, in String[] args, in ParcelFileDescriptor crashReporterPfd, in ParcelFileDescriptor ipcPfd);
+    boolean start(in IProcessManager procMan, in String[] args, in ParcelFileDescriptor crashReporterPfd, in ParcelFileDescriptor ipcPfd, in ParcelFileDescriptor crashAnnotationPfd);
 }
