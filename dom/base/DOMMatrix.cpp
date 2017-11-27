@@ -12,6 +12,7 @@
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/ServoBindings.h"
 #include "nsCSSParser.h"
 #include "nsStyleTransformMatrix.h"
 
@@ -672,37 +673,48 @@ DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
     return this;
   }
 
-  nsCSSValue value;
-  nsCSSParser parser;
-  bool parseSuccess = parser.ParseTransformProperty(aTransformList,
-                                                    true,
-                                                    value);
-  if (!parseSuccess) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
-
-  // A value of "none" results in a 2D identity matrix.
-  if (value.GetUnit() == eCSSUnit_None) {
-    mMatrix3D = nullptr;
-    mMatrix2D = new gfx::Matrix();
-    return this;
-  }
-
-  // A value other than a transform-list is a syntax error.
-  if (value.GetUnit() != eCSSUnit_SharedList) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
-
-  RuleNodeCacheConditions dummy;
-  nsStyleTransformMatrix::TransformReferenceBox dummyBox;
+  gfx::Matrix4x4 transform;
   bool contains3dTransform = false;
-  gfx::Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
-                               value.GetSharedListValue()->mHead,
-                               nullptr, nullptr, dummy, dummyBox,
-                               nsPresContext::AppUnitsPerCSSPixel(),
-                               &contains3dTransform);
+  if (mIsServo) {
+    bool status = Servo_ParseTransformIntoMatrix(&aTransformList,
+                                                 &contains3dTransform,
+                                                 &transform.components);
+    if (!status) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return nullptr;
+    }
+  } else {
+    nsCSSValue value;
+    nsCSSParser parser;
+    bool parseSuccess = parser.ParseTransformProperty(aTransformList,
+                                                      true,
+                                                      value);
+    if (!parseSuccess) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return nullptr;
+    }
+
+    // A value of "none" results in a 2D identity matrix.
+    if (value.GetUnit() == eCSSUnit_None) {
+      mMatrix3D = nullptr;
+      mMatrix2D = new gfx::Matrix();
+      return this;
+    }
+
+    // A value other than a transform-list is a syntax error.
+    if (value.GetUnit() != eCSSUnit_SharedList) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return nullptr;
+    }
+
+    RuleNodeCacheConditions dummy;
+    nsStyleTransformMatrix::TransformReferenceBox dummyBox;
+    transform = nsStyleTransformMatrix::ReadTransforms(
+                    value.GetSharedListValue()->mHead,
+                    nullptr, nullptr, dummy, dummyBox,
+                    nsPresContext::AppUnitsPerCSSPixel(),
+                    &contains3dTransform);
+  }
 
   if (!contains3dTransform) {
     mMatrix3D = nullptr;
