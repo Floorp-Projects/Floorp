@@ -945,6 +945,8 @@ class RunProgram(MachCommandBase):
 
             if dmd_params:
                 env_vars[arch]["DMD"] = " ".join(dmd_params)
+            else:
+                env_vars[arch]["DMD"] = "1"
 
             extra_env.update(env_vars.get(arch, {}))
 

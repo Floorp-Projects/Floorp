@@ -1256,7 +1256,7 @@ FreeCallback(void* aPtr, Thread* aT, DeadBlock* aDeadBlock)
 // malloc/free interception
 //---------------------------------------------------------------------------
 
-static void Init(malloc_table_t* aMallocTable);
+static bool Init(malloc_table_t* aMallocTable);
 
 } // namespace dmd
 } // namespace mozilla
@@ -1368,11 +1368,12 @@ replace_free(void* aPtr)
 void
 replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge)
 {
-  mozilla::dmd::Init(aMallocTable);
+  if (mozilla::dmd::Init(aMallocTable)) {
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #define MALLOC_DECL(name, ...) aMallocTable->name = replace_ ## name;
 #include "malloc_decls.h"
-  *aBridge = mozilla::dmd::gDMDBridge;
+    *aBridge = mozilla::dmd::gDMDBridge;
+  }
 }
 
 namespace mozilla {
@@ -1439,9 +1440,6 @@ Options::Options(const char* aDMDEnvVar)
   , mStacks(Stacks::Partial)
   , mShowDumpStats(false)
 {
-  // It's no longer necessary to set the DMD env var to "1" if you want default
-  // options (you can leave it undefined) but we still accept "1" for
-  // backwards compatibility.
   char* e = mDMDEnvVar;
   if (e && strcmp(e, "1") != 0) {
     bool isEnd = false;
@@ -1551,10 +1549,21 @@ postfork()
 // have run.  For this reason, non-scalar globals such as gStateLock and
 // gStackTraceTable are allocated dynamically (so we can guarantee their
 // construction in this function) rather than statically.
-static void
+static bool
 Init(malloc_table_t* aMallocTable)
 {
+  // DMD is controlled by the |DMD| environment variable.
+  const char* e = getenv("DMD");
+
+  if (!e) {
+    return false;
+  }
+  // Initialize the function table first, because StatusMsg uses
+  // InfallibleAllocPolicy::malloc_, which uses it.
   gMallocTable = *aMallocTable;
+
+  StatusMsg("$DMD = '%s'\n", e);
+
   gDMDBridge = InfallibleAllocPolicy::new_<DMDBridge>();
 
 #ifndef XP_WIN
@@ -1566,16 +1575,6 @@ Init(malloc_table_t* aMallocTable)
   // system malloc a chance to insert its own atfork handler.
   pthread_atfork(prefork, postfork, postfork);
 #endif
-
-  // DMD is controlled by the |DMD| environment variable.
-  const char* e = getenv("DMD");
-
-  if (e) {
-    StatusMsg("$DMD = '%s'\n", e);
-  } else {
-    StatusMsg("$DMD is undefined\n");
-  }
-
   // Parse $DMD env var.
   gOptions = InfallibleAllocPolicy::new_<Options>(e);
 
@@ -1604,6 +1603,7 @@ Init(malloc_table_t* aMallocTable)
     MOZ_ALWAYS_TRUE(gDeadBlockTable->init(tableSize));
   }
 
+  return true;
 }
 
 //---------------------------------------------------------------------------
