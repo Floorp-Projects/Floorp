@@ -264,7 +264,7 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
 
         // Trigger style flush
         div.clientTop;
-        return waitForPaints();
+        return waitForPaintsFlushed();
       }).then(function() {
         var opacity = utils.getOMTAStyle(div, "opacity");
         cleanUp();
