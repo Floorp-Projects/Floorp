@@ -280,6 +280,8 @@ class MochiRemote(MochitestDesktop):
         browserEnv["MOZ_LOG_FILE"] = os.path.join(
             self.remoteMozLog,
             self.mozLogName)
+        if options.dmd:
+            browserEnv['DMD'] = '1'
         return browserEnv
 
     def runApp(self, *args, **kwargs):

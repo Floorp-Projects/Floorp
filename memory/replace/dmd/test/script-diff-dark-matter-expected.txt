@@ -7,7 +7,7 @@ Invocation 1 {
 }
 
 Invocation 2 {
-  $DMD is undefined
+  $DMD = '1'
   Mode = 'dark-matter'
 }
 
