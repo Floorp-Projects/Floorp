@@ -6,6 +6,7 @@
 
 #include "imgTools.h"
 
+#include "DecodePool.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
@@ -20,6 +21,7 @@
 #include "imgIEncoder.h"
 #include "nsStreamUtils.h"
 #include "nsContentUtils.h"
+#include "nsProxyRelease.h"
 #include "ImageFactory.h"
 #include "Image.h"
 #include "ScriptedNotificationObserver.h"
@@ -30,6 +32,137 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace image {
+
+namespace {
+
+class ImageDecoderHelper final : public Runnable
+                               , public nsIInputStreamCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  ImageDecoderHelper(already_AddRefed<image::Image> aImage,
+                     already_AddRefed<nsIInputStream> aInputStream,
+                     nsIEventTarget* aEventTarget,
+                     imgIContainerCallback* aCallback,
+                     nsIEventTarget* aCallbackEventTarget)
+    : Runnable("ImageDecoderHelper")
+    , mImage(Move(aImage))
+    , mInputStream(Move(aInputStream))
+    , mEventTarget(aEventTarget)
+    , mCallback(aCallback)
+    , mCallbackEventTarget(aCallbackEventTarget)
+    , mStatus(NS_OK)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    // This runnable is dispatched on the Image thread when reading data, but
+    // at the end, it goes back to the main-thread in order to complete the
+    // operation.
+    if (NS_IsMainThread()) {
+      // Let the Image know we've sent all the data.
+      mImage->OnImageDataComplete(nullptr, nullptr, mStatus, true);
+
+      RefPtr<ProgressTracker> tracker = mImage->GetProgressTracker();
+      tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
+
+      nsCOMPtr<imgIContainer> container;
+      if (NS_SUCCEEDED(mStatus)) {
+        container = do_QueryInterface(mImage);
+      }
+
+      mCallback->OnImageReady(container, mStatus);
+      return NS_OK;
+    }
+
+    uint64_t length;
+    nsresult rv = mInputStream->Available(&length);
+    if (rv == NS_BASE_STREAM_CLOSED) {
+      return OperationCompleted(NS_OK);
+    }
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return OperationCompleted(rv);
+    }
+
+    // Nothing else to read, but maybe we just need to wait.
+    if (length == 0) {
+      nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
+        do_QueryInterface(mInputStream);
+      if (asyncInputStream) {
+        rv = asyncInputStream->AsyncWait(this, 0, 0, mEventTarget);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return OperationCompleted(rv);
+        }
+        return NS_OK;
+      }
+
+      // We really have nothing else to read.
+      if (length == 0) {
+        return OperationCompleted(NS_OK);
+      }
+    }
+
+    // Send the source data to the Image.
+    rv = mImage->OnImageDataAvailable(nullptr, nullptr, mInputStream, 0,
+                                      uint32_t(length));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return OperationCompleted(rv);
+    }
+
+    rv = mEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return OperationCompleted(rv);
+    }
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  OnInputStreamReady(nsIAsyncInputStream* aAsyncInputStream) override
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    return Run();
+  }
+
+  nsresult
+  OperationCompleted(nsresult aStatus)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    mStatus = aStatus;
+    mCallbackEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+    return NS_OK;
+  }
+
+private:
+  ~ImageDecoderHelper()
+  {
+    NS_ReleaseOnMainThreadSystemGroup("ImageDecoderHelper::mImage",
+                                      mImage.forget());
+    NS_ReleaseOnMainThreadSystemGroup("ImageDecoderHelper::mCallback",
+                                      mCallback.forget());
+  }
+
+  RefPtr<image::Image> mImage;
+
+  nsCOMPtr<nsIInputStream> mInputStream;
+  nsCOMPtr<nsIEventTarget> mEventTarget;
+  nsCOMPtr<imgIContainerCallback> mCallback;
+  nsCOMPtr<nsIEventTarget> mCallbackEventTarget;
+
+  nsresult mStatus;
+};
+
+NS_IMPL_ISUPPORTS_INHERITED(ImageDecoderHelper, Runnable,
+                            nsIInputStreamCallback)
+
+} // anonymous
+
 /* ========== imgITools implementation ========== */
 
 
@@ -53,9 +186,25 @@ imgTools::DecodeImage(nsIInputStream* aInStr,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsresult rv;
-
   NS_ENSURE_ARG_POINTER(aInStr);
+
+  // We are not able to decode an async inputStream! Please use
+  // DecodeImageAsync instead.
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aInStr);
+  if (NS_WARN_IF(asyncStream)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool nonBlocking;
+  nsresult rv = aInStr->IsNonBlocking(&nonBlocking);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We don't want to block the main-thread. Please use DecodeImageAsync
+  // instead.
+  if (NS_WARN_IF(!nonBlocking)) {
+    MOZ_ASSERT_UNREACHABLE("We don't want to block the main-thread. Please use DecodeImageAsync instead.");
+    return NS_ERROR_FAILURE;
+  }
 
   // Prepare the input stream.
   nsCOMPtr<nsIInputStream> inStream = aInStr;
@@ -63,9 +212,8 @@ imgTools::DecodeImage(nsIInputStream* aInStr,
     nsCOMPtr<nsIInputStream> bufStream;
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
                                    inStream.forget(), 1024);
-    if (NS_SUCCEEDED(rv)) {
-      inStream = bufStream;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
+    inStream = bufStream.forget();
   }
 
   // Figure out how much data we've been passed.
@@ -84,7 +232,7 @@ imgTools::DecodeImage(nsIInputStream* aInStr,
     return NS_ERROR_FAILURE;
   }
 
-  // Send the source data to the Image.
+  // If we have anything to read, let's inform the image.
   rv = image->OnImageDataAvailable(nullptr, nullptr, inStream, 0,
                                    uint32_t(length));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -95,7 +243,56 @@ imgTools::DecodeImage(nsIInputStream* aInStr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // All done.
-  NS_ADDREF(*aContainer = image.get());
+  image.forget(aContainer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+imgTools::DecodeImageAsync(nsIInputStream* aInStr,
+                           const nsACString& aMimeType,
+                           imgIContainerCallback* aCallback,
+                           nsIEventTarget* aEventTarget)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_ARG_POINTER(aInStr);
+  NS_ENSURE_ARG_POINTER(aCallback);
+  NS_ENSURE_ARG_POINTER(aEventTarget);
+
+  nsresult rv;
+
+  // Let's continuing the reading on a separate thread.
+  DecodePool* decodePool = DecodePool::Singleton();
+  MOZ_ASSERT(decodePool);
+
+  RefPtr<nsIEventTarget> target = decodePool->GetIOEventTarget();
+  NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+
+  // Prepare the input stream.
+  nsCOMPtr<nsIInputStream> stream = aInStr;
+  if (!NS_InputStreamIsBuffered(aInStr)) {
+    nsCOMPtr<nsIInputStream> bufStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
+                                   stream.forget(), 1024);
+    NS_ENSURE_SUCCESS(rv, rv);
+    stream = bufStream.forget();
+  }
+
+  // Create a new image container to hold the decoded data.
+  nsAutoCString mimeType(aMimeType);
+  RefPtr<image::Image> image = ImageFactory::CreateAnonymousImage(mimeType, 0);
+
+  // Already an error?
+  if (image->HasError()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<ImageDecoderHelper> helper =
+    new ImageDecoderHelper(image.forget(), stream.forget(), target, aCallback,
+                           aEventTarget);
+  rv = target->Dispatch(helper.forget(), NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 

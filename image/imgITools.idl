@@ -6,6 +6,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIEventTarget;
 interface nsIInputStream;
 interface imgIContainer;
 interface imgILoader;
@@ -13,6 +14,7 @@ interface imgICache;
 interface nsIDOMDocument;
 interface imgIScriptedNotificationObserver;
 interface imgINotificationObserver;
+interface imgIContainerCallback;
 
 [scriptable, builtinclass, uuid(4c2383a4-931c-484d-8c4a-973590f66e3f)]
 interface imgITools : nsISupports
@@ -30,6 +32,27 @@ interface imgITools : nsISupports
      */
     imgIContainer decodeImage(in nsIInputStream aStream,
                               in ACString aMimeType);
+
+    /**
+     * decodeImageAsync
+     * See decodeImage. The main difference between this method and decodeImage
+     * is that here the operation is done async on a thread from the decode
+     * pool. When the operation is completed, the callback is executed with the
+     * result.
+     *
+     * @param aStream
+     *        An input stream for an encoded image file.
+     * @param aMimeType
+     *        Type of image in the stream.
+     * @param aCallback
+     *        The callback is executed when the imgContainer is fully created.
+     * @param aEventTarget
+     *        This eventTarget is used to execute aCallback
+     */
+    void decodeImageAsync(in nsIInputStream aStream,
+                          in ACString aMimeType,
+                          in imgIContainerCallback aCallback,
+                          in nsIEventTarget aEventTarget);
 
     /**
      * encodeImage
@@ -127,4 +150,14 @@ interface imgITools : nsISupports
      */
     imgINotificationObserver
     createScriptedObserver(in imgIScriptedNotificationObserver aObserver);
+};
+
+/**
+ * This is a companion interface for nsIAsyncInputStream::asyncWait.
+ */
+[function, scriptable, uuid(f195772c-a4c0-47ae-80ca-211e001c67be)]
+interface imgIContainerCallback : nsISupports
+{
+    /* If the operation fails, aStatus will contain the error value */
+    void onImageReady(in imgIContainer aImage, in nsresult aStatus);
 };
