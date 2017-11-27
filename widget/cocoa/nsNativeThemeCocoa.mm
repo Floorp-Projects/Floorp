@@ -3080,9 +3080,18 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
     case NS_THEME_RANGE:
     case NS_THEME_SCROLLBARTHUMB_VERTICAL:
     case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
-    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
-    case NS_THEME_SCROLLBARTRACK_VERTICAL:
       return false;
+
+    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBARTRACK_VERTICAL: {
+      BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
+      if (isOverlay && !IsParentScrollbarRolledOver(aFrame)) {
+        // There is no scrollbar track, draw nothing and return true.
+        return true;
+      }
+      // There is a scrollbar track and it needs to be drawn using fallback.
+      return false;
+    }
 
     case NS_THEME_TEXTFIELD_MULTILINE: {
       if (eventState.HasState(NS_EVENT_STATE_FOCUS)) {
