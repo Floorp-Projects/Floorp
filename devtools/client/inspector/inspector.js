@@ -13,16 +13,15 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Task} = require("devtools/shared/task");
-
-// Use privileged promise in panel documents to prevent having them to freeze
-// during toolbox destruction. See bug 1402779.
-const Promise = require("Promise");
-
-// constructor
+const {PrefObserver} = require("devtools/client/shared/prefs");
 const Telemetry = require("devtools/client/shared/telemetry");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const Store = require("devtools/client/inspector/store");
+
+// Use privileged promise in panel documents to prevent having them to freeze
+// during toolbox destruction. See bug 1402779.
+const Promise = require("Promise");
 
 loader.lazyRequireGetter(this, "initCssProperties", "devtools/shared/fronts/css-properties", true);
 loader.lazyRequireGetter(this, "HTMLBreadcrumbs", "devtools/client/inspector/breadcrumbs", true);
@@ -30,7 +29,6 @@ loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-short
 loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
 loader.lazyRequireGetter(this, "MarkupView", "devtools/client/inspector/markup/markup");
-
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
@@ -50,7 +48,10 @@ const INITIAL_SIDEBAR_SIZE = 350;
 
 // If the toolbox width is smaller than given amount of pixels,
 // the sidebar automatically switches from 'landscape' to 'portrait' mode.
-const PORTRAIT_MODE_WIDTH = 700;
+const PORTRAIT_MODE_WIDTH = 800;
+
+const SHOW_SPLIT_SIDEBAR_TOGGLE_PREF = "devtools.inspector.split-sidebar-toggle";
+const SPLIT_RULE_VIEW_PREF = "devtools.inspector.split-rule-enabled";
 
 /**
  * Represents an open instance of the Inspector for a tab.
@@ -102,6 +103,7 @@ function Inspector(toolbox) {
   this._panels = new Map();
 
   this.highlighters = new HighlightersOverlay(this);
+  this.prefsObserver = new PrefObserver("devtools.");
   this.reflowTracker = new ReflowTracker(this._target);
   this.store = Store();
   this.telemetry = new Telemetry();
@@ -109,6 +111,10 @@ function Inspector(toolbox) {
   // Store the URL of the target page prior to navigation in order to ensure
   // telemetry counts in the Grid Inspector are not double counted on reload.
   this.previousURL = this.target.url;
+
+  this.showSplitSidebarToggle = Services.prefs.getBoolPref(
+    SHOW_SPLIT_SIDEBAR_TOGGLE_PREF);
+  this.isSplitRuleViewEnabled = Services.prefs.getBoolPref(SPLIT_RULE_VIEW_PREF);
 
   this.nodeMenuTriggerInfo = null;
 
@@ -129,8 +135,11 @@ function Inspector(toolbox) {
   this.onSidebarResized = this.onSidebarResized.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onSidebarShown = this.onSidebarShown.bind(this);
+  this.onSidebarToggle = this.onSidebarToggle.bind(this);
+  this.onSplitRuleViewPrefChanged = this.onSplitRuleViewPrefChanged.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
+  this.prefsObserver.on(SPLIT_RULE_VIEW_PREF, this.onSplitRuleViewPrefChanged);
 }
 
 Inspector.prototype = {
@@ -453,25 +462,40 @@ Inspector.prototype = {
   setupSplitter: function () {
     let SplitBox = this.React.createFactory(this.browserRequire(
       "devtools/client/shared/components/splitter/SplitBox"));
+    let { width, height, splitSidebarWidth } = this.getSidebarSize();
 
-    let { width, height } = this.getSidebarSize();
     let splitter = SplitBox({
       className: "inspector-sidebar-splitter",
       initialWidth: width,
       initialHeight: height,
+      minSize: "10%",
+      maxSize: "80%",
       splitterSize: 1,
       endPanelControl: true,
       startPanel: this.InspectorTabPanel({
         id: "inspector-main-content"
       }),
-      endPanel: this.InspectorTabPanel({
-        id: "inspector-sidebar-container"
+      endPanel: SplitBox({
+        initialWidth: splitSidebarWidth,
+        minSize: 10,
+        maxSize: "80%",
+        splitterSize: this.isSplitRuleViewEnabled ? 1 : 0,
+        endPanelControl: false,
+        startPanel: this.InspectorTabPanel({
+          id: "inspector-rules-container"
+        }),
+        endPanel: this.InspectorTabPanel({
+          id: "inspector-sidebar-container"
+        }),
+        ref: splitbox => {
+          this.sidebarSplitBox = splitbox;
+        },
       }),
       vert: this.useLandscapeMode(),
       onControlledPanelResized: this.onSidebarResized,
     });
 
-    this._splitter = this.ReactDOM.render(splitter,
+    this.splitBox = this.ReactDOM.render(splitter,
       this.panelDoc.getElementById("inspector-splitter-box"));
 
     this.panelWin.addEventListener("resize", this.onPanelWindowResize, true);
@@ -493,7 +517,7 @@ Inspector.prototype = {
    * to `horizontal` to support portrait view.
    */
   onPanelWindowResize: function () {
-    this._splitter.setState({
+    this.splitBox.setState({
       vert: this.useLandscapeMode(),
     });
   },
@@ -501,31 +525,42 @@ Inspector.prototype = {
   getSidebarSize: function () {
     let width;
     let height;
+    let splitSidebarWidth;
 
     // Initialize splitter size from preferences.
     try {
       width = Services.prefs.getIntPref("devtools.toolsidebar-width.inspector");
       height = Services.prefs.getIntPref("devtools.toolsidebar-height.inspector");
+      splitSidebarWidth = Services.prefs.getIntPref(
+        "devtools.toolsidebar-width.inspector.splitsidebar");
     } catch (e) {
       // Set width and height of the splitter. Only one
       // value is really useful at a time depending on the current
       // orientation (vertical/horizontal).
       // Having both is supported by the splitter component.
-      width = INITIAL_SIDEBAR_SIZE;
+      width = this.isSplitRuleViewEnabled ?
+        INITIAL_SIDEBAR_SIZE * 2 : INITIAL_SIDEBAR_SIZE;
       height = INITIAL_SIDEBAR_SIZE;
+      splitSidebarWidth = INITIAL_SIDEBAR_SIZE;
     }
-    return { width, height };
-  },
 
-  onSidebarShown: function () {
-    this._splitter.setState(this.getSidebarSize());
+    return { width, height, splitSidebarWidth };
   },
 
   onSidebarHidden: function () {
     // Store the current splitter size to preferences.
-    let state = this._splitter.state;
+    let state = this.splitBox.state;
     Services.prefs.setIntPref("devtools.toolsidebar-width.inspector", state.width);
     Services.prefs.setIntPref("devtools.toolsidebar-height.inspector", state.height);
+
+    if (this.isSplitRuleViewEnabled) {
+      Services.prefs.setIntPref("devtools.toolsidebar-width.inspector.splitsidebar",
+        this.sidebarSplitBox.state.width);
+    }
+  },
+
+  onSidebarResized: function (width, height) {
+    this.toolbox.emit("inspector-sidebar-resized", { width, height });
   },
 
   onSidebarSelect: function (event, toolId) {
@@ -539,8 +574,83 @@ Inspector.prototype = {
     this.toolbox.emit("inspector-sidebar-select", toolId);
   },
 
-  onSidebarResized: function (width, height) {
-    this.toolbox.emit("inspector-sidebar-resized", { width, height });
+  onSidebarShown: function () {
+    let { width, height, splitSidebarWidth } = this.getSidebarSize();
+    this.splitBox.setState({ width, height });
+    this.sidebarSplitBox.setState({ width: splitSidebarWidth });
+  },
+
+  onSidebarToggle: function () {
+    Services.prefs.setBoolPref(SPLIT_RULE_VIEW_PREF, !this.isSplitRuleViewEnabled);
+  },
+
+  async onSplitRuleViewPrefChanged() {
+    // Update the stored value of the split rule view preference since it changed.
+    this.isSplitRuleViewEnabled = Services.prefs.getBoolPref(SPLIT_RULE_VIEW_PREF);
+
+    await this.setupToolbar();
+    await this.addRuleView();
+  },
+
+  /**
+   * Adds the rule view to the main or split sidebar depending on whether or not it is
+   * split view mode. The default tab specifies whether or not the rule view should be
+   * selected. The defaultTab defaults to the rule view when the rule view is being merged
+   * back into the sidebar from the split sidebar. Otherwise, we specify the default tab
+   * when handling the sidebar setup.
+   *
+   * @params {String} defaultTab
+   *         Thie id of the default tab for the sidebar.
+   */
+  async addRuleView(defaultTab = "ruleview") {
+    let ruleViewSidebar = this.sidebarSplitBox.startPanelContainer;
+
+    if (this.isSplitRuleViewEnabled) {
+      // Removes the rule view from the main sidebar and adds the rule view to the split
+      // sidebar.
+      ruleViewSidebar.style.display = "block";
+
+      // The sidebar toggle might not be setup yet on the initial setup.
+      if (this.sidebarToggle) {
+        this.sidebarToggle.setState({ collapsed: false });
+      }
+
+      // Show the splitter inside the sidebar split box.
+      this.sidebarSplitBox.setState({ splitterSize: 1 });
+
+      // Force the rule view panel creation by calling getPanel
+      this.getPanel("ruleview");
+
+      await this.sidebar.removeTab("ruleview");
+
+      this.ruleViewSideBar.addExistingTab(
+        "ruleview",
+        INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
+        true);
+
+      this.ruleViewSideBar.show("ruleview");
+    } else {
+      // Removes the rule view from the split sidebar and adds the rule view to the main
+      // sidebar.
+      ruleViewSidebar.style.display = "none";
+
+      // The sidebar toggle might not be setup yet on the initial setup.
+      if (this.sidebarToggle) {
+        this.sidebarToggle.setState({ collapsed: true });
+      }
+
+      // Hide the splitter to prevent any drag events in the sidebar split box.
+      this.sidebarSplitBox.setState({ splitterSize: 0 });
+
+      this.ruleViewSideBar.hide();
+      await this.ruleViewSideBar.removeTab("ruleview");
+
+      this.sidebar.addExistingTab(
+        "ruleview",
+        INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
+        defaultTab == "ruleview",
+        0);
+    }
   },
 
   /**
@@ -578,20 +688,28 @@ Inspector.prototype = {
   /**
    * Build the sidebar.
    */
-  setupSidebar: function () {
-    let tabbox = this.panelDoc.querySelector("#inspector-sidebar");
-    this.sidebar = new ToolSidebar(tabbox, this, "inspector", {
+  async setupSidebar() {
+    let sidebar = this.panelDoc.getElementById("inspector-sidebar");
+    this.sidebar = new ToolSidebar(sidebar, this, "inspector", {
       showAllTabsMenu: true
     });
+
+    let ruleSideBar = this.panelDoc.getElementById("inspector-rules-sidebar");
+    this.ruleViewSideBar = new ToolSidebar(ruleSideBar, this, "inspector", {
+      hideTabstripe: true
+    });
+
     this.sidebar.on("select", this.onSidebarSelect);
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
+    if (this.isSplitRuleViewEnabled && defaultTab === "ruleview") {
+      defaultTab = "computedview";
+    }
+
     // Append all side panels
-    this.sidebar.addExistingTab(
-      "ruleview",
-      INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
-      defaultTab == "ruleview");
+
+    await this.addRuleView(defaultTab);
 
     this.sidebar.addExistingTab(
       "computedview",
@@ -876,6 +994,22 @@ Inspector.prototype = {
       eyeDropperButton.disabled = true;
       eyeDropperButton.title = INSPECTOR_L10N.getStr("eyedropper.disabled.title");
     }
+
+    // Setup the sidebar toggle button if the split rule view is enabled.
+    if (this.showSplitSidebarToggle && !this.sidebarToggle) {
+      let SidebarToggle = this.React.createFactory(this.browserRequire(
+        "devtools/client/shared/components/SidebarToggle"));
+
+      let sidebarToggle = SidebarToggle({
+        collapsed: !this.isSplitRuleViewEnabled,
+        collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.hideSplitRulesView"),
+        expandPaneTitle: INSPECTOR_L10N.getStr("inspector.showSplitRulesView"),
+        onClick: this.onSidebarToggle
+      });
+
+      let parentBox = this.panelDoc.getElementById("inspector-sidebar-toggle-box");
+      this.sidebarToggle = this.ReactDOM.render(sidebarToggle, parentBox);
+    }
   }),
 
   teardownToolbar: function () {
@@ -1130,6 +1264,7 @@ Inspector.prototype = {
 
     this.cancelUpdate();
 
+    this.prefsObserver.off(SPLIT_RULE_VIEW_PREF, this.onSplitRuleViewPrefChanged);
     this.target.off("will-navigate", this._onBeforeNavigate);
     this.target.off("thread-paused", this.updateDebuggerPausedWarning);
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
@@ -1161,6 +1296,9 @@ Inspector.prototype = {
     this.sidebar.off("select", this.onSidebarSelect);
     let sidebarDestroyer = this.sidebar.destroy();
 
+    let ruleViewSideBarDestroyer = this.ruleViewSideBar ?
+      this.ruleViewSideBar.destroy() : null;
+
     this.teardownSplitter();
 
     this.teardownToolbar();
@@ -1171,25 +1309,29 @@ Inspector.prototype = {
     let markupDestroyer = this._destroyMarkup();
 
     this.highlighters.destroy();
+    this.prefsObserver.destroy();
     this.reflowTracker.destroy();
     this.search.destroy();
 
     this._toolbox = null;
     this.breadcrumbs = null;
+    this.highlighters = null;
     this.panelDoc = null;
     this.panelWin.inspector = null;
     this.panelWin = null;
+    this.prefsObserver = null;
+    this.resultsLength = null;
+    this.search = null;
+    this.searchBox = null;
     this.sidebar = null;
     this.store = null;
     this.target = null;
-    this.highlighters = null;
-    this.search = null;
-    this.searchBox = null;
 
     this._panelDestroyer = promise.all([
-      sidebarDestroyer,
+      cssPropertiesDestroyer,
       markupDestroyer,
-      cssPropertiesDestroyer
+      sidebarDestroyer,
+      ruleViewSideBarDestroyer
     ]);
 
     return this._panelDestroyer;
