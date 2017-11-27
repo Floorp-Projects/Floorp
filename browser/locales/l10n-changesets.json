@@ -407,7 +407,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6d4787e74706"
+        "revision": "f8d6a71de776"
     }, 
     "hi-IN": {
         "platforms": [
@@ -427,7 +427,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e2faec5ff2ce"
+        "revision": "b2d7a7642bbc"
     }, 
     "hsb": {
         "platforms": [
@@ -496,13 +496,13 @@
             "win32", 
             "win64"
         ], 
-        "revision": "fded9066a682"
+        "revision": "5d3affb88755"
     }, 
     "ja-JP-mac": {
         "platforms": [
             "macosx64"
         ], 
-        "revision": "aa25a0865c08"
+        "revision": "510d65d13cdb"
     }, 
     "ka": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "1afba505394f"
+        "revision": "2efb6acc61a6"
     }, 
     "kk": {
         "platforms": [
@@ -552,7 +552,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "d206426013ed"
+        "revision": "e77d1fbca599"
     }, 
     "ko": {
         "platforms": [
@@ -592,7 +592,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0300f5d37eef"
+        "revision": "8b0a0777344b"
     }, 
     "mai": {
         "platforms": [
@@ -732,7 +732,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "7b818dc93e65"
+        "revision": "6b53686ec50c"
     }, 
     "pt-PT": {
         "platforms": [
@@ -792,7 +792,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f30d823fc3a1"
+        "revision": "e766dd7da3f8"
     }, 
     "sl": {
         "platforms": [
@@ -802,7 +802,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a6b122b7ea73"
+        "revision": "ab0e92e0306b"
     }, 
     "son": {
         "platforms": [
@@ -862,7 +862,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a89702dd75e4"
+        "revision": "ebf361fbc6fa"
     }, 
     "th": {
         "platforms": [
