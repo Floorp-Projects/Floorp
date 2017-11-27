@@ -133,13 +133,16 @@ class UrlInputFragment :
     override fun onResume() {
         super.onResume()
 
-        urlAutoCompleteFilter.load(activity.applicationContext)
+        activity?.let {
+            urlAutoCompleteFilter.load(it.applicationContext)
+        }
+
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
             inflater.inflate(R.layout.fragment_urlinput, container, false)
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         listOf(dismissView, clearView, searchView).forEach { it.setOnClickListener(this) }
 
         urlView.setOnFilterListener(this)
@@ -208,9 +211,11 @@ class UrlInputFragment :
     override fun onStart() {
         super.onStart()
 
-        if (!Settings.getInstance(context).shouldShowFirstrun()) {
-            // Only show keyboard if we are not displaying the first run tour on top.
-            showKeyboard()
+        context?.let {
+            if (!Settings.getInstance(it).shouldShowFirstrun()) {
+                // Only show keyboard if we are not displaying the first run tour on top.
+                showKeyboard()
+            }
         }
     }
 
