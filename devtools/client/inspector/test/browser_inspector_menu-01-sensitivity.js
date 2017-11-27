@@ -308,13 +308,9 @@ function copyImageToClipboard(data) {
   // Image data is stored as base64 in the test.
   let image = atob(data);
 
-  let input = Cc["@mozilla.org/io/string-input-stream;1"]
-                .createInstance(Ci.nsIStringInputStream);
-  input.setData(image, image.length);
-
   let imgPtr = Cc["@mozilla.org/supports-interface-pointer;1"]
                  .createInstance(Ci.nsISupportsInterfacePointer);
-  imgPtr.data = imageTools.decodeImage(input, "image/png");
+  imgPtr.data = imageTools.decodeImageBuffer(image, image.length, "image/png");
 
   let xferable = Cc["@mozilla.org/widget/transferable;1"]
                    .createInstance(Ci.nsITransferable);

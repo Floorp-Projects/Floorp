@@ -20,6 +20,7 @@
 #include "imgIContainer.h"
 #include "imgIEncoder.h"
 #include "nsStreamUtils.h"
+#include "nsStringStream.h"
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 #include "ImageFactory.h"
@@ -180,61 +181,35 @@ imgTools::~imgTools()
 }
 
 NS_IMETHODIMP
-imgTools::DecodeImage(nsIInputStream* aInStr,
-                      const nsACString& aMimeType,
-                      imgIContainer** aContainer)
+imgTools::DecodeImageBuffer(const char* aBuffer, uint32_t aSize,
+                            const nsACString& aMimeType,
+                            imgIContainer** aContainer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_ENSURE_ARG_POINTER(aInStr);
-
-  // We are not able to decode an async inputStream! Please use
-  // DecodeImageAsync instead.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aInStr);
-  if (NS_WARN_IF(asyncStream)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool nonBlocking;
-  nsresult rv = aInStr->IsNonBlocking(&nonBlocking);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We don't want to block the main-thread. Please use DecodeImageAsync
-  // instead.
-  if (NS_WARN_IF(!nonBlocking)) {
-    MOZ_ASSERT_UNREACHABLE("We don't want to block the main-thread. Please use DecodeImageAsync instead.");
-    return NS_ERROR_FAILURE;
-  }
-
-  // Prepare the input stream.
-  nsCOMPtr<nsIInputStream> inStream = aInStr;
-  if (!NS_InputStreamIsBuffered(aInStr)) {
-    nsCOMPtr<nsIInputStream> bufStream;
-    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
-                                   inStream.forget(), 1024);
-    NS_ENSURE_SUCCESS(rv, rv);
-    inStream = bufStream.forget();
-  }
-
-  // Figure out how much data we've been passed.
-  uint64_t length;
-  rv = inStream->Available(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(length <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+  NS_ENSURE_ARG_POINTER(aBuffer);
 
   // Create a new image container to hold the decoded data.
   nsAutoCString mimeType(aMimeType);
   RefPtr<image::Image> image =
-    ImageFactory::CreateAnonymousImage(mimeType, uint32_t(length));
+    ImageFactory::CreateAnonymousImage(mimeType, aSize);
   RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
 
   if (image->HasError()) {
     return NS_ERROR_FAILURE;
   }
 
-  // If we have anything to read, let's inform the image.
-  rv = image->OnImageDataAvailable(nullptr, nullptr, inStream, 0,
-                                   uint32_t(length));
+  // Let's create a temporary inputStream.
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                                      aBuffer, aSize,
+                                      NS_ASSIGNMENT_DEPEND);
+  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(stream);
+  MOZ_ASSERT(NS_InputStreamIsBuffered(stream));
+
+  rv = image->OnImageDataAvailable(nullptr, nullptr, stream, 0,
+                                   aSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Let the Image know we've sent all the data.
