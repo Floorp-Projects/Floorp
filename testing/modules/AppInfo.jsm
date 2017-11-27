@@ -14,12 +14,9 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"]
     .getService(Ci.nsIPlatformInfo);
-
-let origProcessType = Services.appinfo.processType;
 
 /**
  * Create new XULAppInfo instance with specified options.
@@ -62,7 +59,6 @@ this.newAppInfo = function(options = {}) {
     XPCOMABI: "noarch-spidermonkey",
     invalidateCachesOnRestart() {},
     shouldBlockIncompatJaws: false,
-    processType: origProcessType,
 
     // nsIWinAppHelper
     get userCanElevate() {
