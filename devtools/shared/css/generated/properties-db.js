@@ -3086,6 +3086,7 @@ exports.CSS_PROPERTIES = {
       "scroll-snap-points-y",
       "scroll-snap-type-x",
       "scroll-snap-type-y",
+      "shape-image-threshold",
       "shape-outside",
       "shape-rendering",
       "-moz-stack-sizing",
@@ -3371,6 +3372,7 @@ exports.CSS_PROPERTIES = {
       "geometricprecision",
       "grab",
       "grabbing",
+      "grayscale",
       "grid",
       "groove",
       "groupbox",
@@ -9999,6 +10001,10 @@ exports.PREFERENCES = [
   [
     "scroll-snap-type-y",
     "layout.css.scroll-snap.enabled"
+  ],
+  [
+    "shape-image-threshold",
+    "layout.css.shape-outside.enabled"
   ],
   [
     "shape-outside",

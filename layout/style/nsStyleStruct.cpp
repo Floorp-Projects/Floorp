@@ -3684,6 +3684,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationFillModeCount(aSource.mAnimationFillModeCount)
   , mAnimationPlayStateCount(aSource.mAnimationPlayStateCount)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
+  , mShapeImageThreshold(aSource.mShapeImageThreshold)
   , mShapeOutside(aSource.mShapeOutside)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
@@ -3786,10 +3787,13 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     hint |= nsChangeHint_ReflowHintsForFloatAreaChange;
   }
 
-  if (mShapeOutside != aNewData.mShapeOutside) {
+  if (mShapeOutside != aNewData.mShapeOutside ||
+      mShapeImageThreshold != aNewData.mShapeImageThreshold) {
     if (aNewData.mFloat != StyleFloat::None) {
-      // If we are floating, and our shape-outside property changes, our
-      // descendants are not impacted, but our ancestor and siblings are.
+      // If we are floating, and our shape-outside or shape-image-threshold
+      // are changed, our descendants are not impacted, but our ancestor and
+      // siblings are.
+      //
       // This is similar to a float-only change, but since the ISize of the
       // float area changes arbitrarily along its block axis, more is required
       // to get the siblings to adjust properly. Hinting overflow change is
@@ -3801,8 +3805,8 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       hint |= nsChangeHint_ReflowHintsForFloatAreaChange |
               nsChangeHint_CSSOverflowChange;
     } else {
-      // shape-outside changed, but we don't need to reflow because we're not
-      // floating.
+      // shape-outside or shape-image-threshold changed, but we don't need
+      // to reflow because we're not floating.
       hint |= nsChangeHint_NeutralChange;
     }
   }
