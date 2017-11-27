@@ -49,6 +49,12 @@ nsRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return RangeBinding::Wrap(aCx, this, aGivenProto);
 }
 
+DocGroup*
+nsRange::GetDocGroup() const
+{
+  return mOwner ? mOwner->GetDocGroup() : nullptr;
+}
+
 /******************************************************
  * stack based utilty class for managing monitor
  ******************************************************/

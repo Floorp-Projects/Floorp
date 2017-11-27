@@ -412,6 +412,12 @@ nsDOMTokenList::Stringify(nsAString& aResult)
   mElement->GetAttr(kNameSpaceID_None, mAttrAtom, aResult);
 }
 
+DocGroup*
+nsDOMTokenList::GetDocGroup() const
+{
+  return mElement ? mElement->OwnerDoc()->GetDocGroup() : nullptr;
+}
+
 JSObject*
 nsDOMTokenList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {

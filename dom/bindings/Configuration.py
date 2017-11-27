@@ -708,6 +708,9 @@ class Descriptor(DescriptorProvider):
                  not self.interface.isExposedInWindow()) or
                 self.interface.isExposedInSomeButNotAllWorkers())
 
+    def hasCEReactions(self):
+        return any(m.getExtendedAttribute("CEReactions") for m in self.interface.members)
+
     def isExposedConditionally(self):
         return (self.interface.isExposedConditionally() or
                 self.interface.isExposedInSomeButNotAllWorkers())
