@@ -21,6 +21,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/ThreadLocal.h"
 
 #include "jit/AtomicOperations.h"
 #include "jit/Disassembler.h"
@@ -48,22 +49,20 @@ extern "C" MFBT_API bool IsSignalHandlingBroken();
 // report dialog via Breakpad. To guard against this we watch for such
 // recursion and fall through to the next handler immediately rather than
 // trying to handle it.
-class AutoSetHandlingSegFault
-{
-    JSContext* cx;
 
-  public:
-    explicit AutoSetHandlingSegFault(JSContext* cx)
-      : cx(cx)
+static MOZ_THREAD_LOCAL(bool) sAlreadyInSignalHandler;
+
+struct AutoSignalHandler
+{
+    explicit AutoSignalHandler()
     {
-        MOZ_ASSERT(!cx->handlingSegFault);
-        cx->handlingSegFault = true;
+        MOZ_ASSERT(!sAlreadyInSignalHandler.get());
+        sAlreadyInSignalHandler.set(true);
     }
 
-    ~AutoSetHandlingSegFault()
-    {
-        MOZ_ASSERT(cx->handlingSegFault);
-        cx->handlingSegFault = false;
+    ~AutoSignalHandler() {
+        MOZ_ASSERT(sAlreadyInSignalHandler.get());
+        sAlreadyInSignalHandler.set(false);
     }
 };
 
@@ -968,12 +967,6 @@ IsHeapAccessAddress(const Instance &instance, uint8_t* faultingAddress)
            faultingAddress < instance.memoryBase() + accessLimit;
 }
 
-MOZ_COLD static bool
-IsActiveContext(JSContext* cx)
-{
-    return cx == cx->runtime()->activeContext();
-}
-
 #if defined(XP_WIN)
 
 static bool
@@ -991,19 +984,12 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (record->NumberParameters < 2)
         return false;
 
-    // Don't allow recursive handling of signals, see AutoSetHandlingSegFault.
-    JSContext* cx = TlsContext.get();
-    if (!cx || cx->handlingSegFault || !IsActiveContext(cx))
-        return false;
-    AutoSetHandlingSegFault handling(cx);
-
-    if (!cx->activation() || !cx->activation()->isJit())
-        return false;
-    JitActivation* activation = cx->activation()->asJit();
-
     const CodeSegment* codeSegment = LookupCodeSegment(pc);
     if (!codeSegment)
         return false;
+
+    JitActivation* activation = TlsContext.get()->activation()->asJit();
+    MOZ_ASSERT(activation);
 
     const Instance* instance = LookupFaultingInstance(*codeSegment, pc, ContextToFP(context));
     if (!instance) {
@@ -1028,6 +1014,8 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
+    MOZ_ASSERT(activation->compartment() == instance->compartment());
+
     // Similar to the non-atomic situation above, on Windows, an OOB fault at a
     // PC can trigger *after* an async interrupt observed that PC and attempted
     // to redirect to the async stub. In this unique case, isWasmInterrupted() is
@@ -1047,6 +1035,11 @@ HandleFault(PEXCEPTION_POINTERS exception)
 static LONG WINAPI
 WasmFaultHandler(LPEXCEPTION_POINTERS exception)
 {
+    // Before anything else, prevent handler recursion.
+    if (sAlreadyInSignalHandler.get())
+        return EXCEPTION_CONTINUE_SEARCH;
+    AutoSignalHandler ash;
+
     if (HandleFault(exception))
         return EXCEPTION_CONTINUE_EXECUTION;
 
@@ -1084,11 +1077,6 @@ struct ExceptionRequest
 static bool
 HandleMachException(JSContext* cx, const ExceptionRequest& request)
 {
-    // Don't allow recursive handling of signals, see AutoSetHandlingSegFault.
-    if (cx->handlingSegFault || !IsActiveContext(cx))
-        return false;
-    AutoSetHandlingSegFault handling(cx);
-
     // Get the port of the JSContext's thread from the message.
     mach_port_t cxThread = request.body.thread.name;
 
@@ -1132,10 +1120,6 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     // normally only be accessed by the cx's active thread.
     AutoNoteSingleThreadedRegion anstr;
 
-    if (!cx->activation() || !cx->activation()->isJit())
-        return false;
-    JitActivation* activation = cx->activation()->asJit();
-
     const CodeSegment* codeSegment = LookupCodeSegment(pc);
     if (!codeSegment)
         return false;
@@ -1150,6 +1134,9 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     // sure we aren't covering up a real bug.
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
+
+    JitActivation* activation = cx->activation()->asJit();
+    MOZ_ASSERT(activation->compartment() == instance->compartment());
 
     HandleMemoryAccess(&context, pc, faultingAddress, codeSegment, *instance, activation, ppc);
 
@@ -1314,38 +1301,21 @@ MachExceptionHandler::install(JSContext* cx)
 
 #else  // If not Windows or Mac, assume Unix
 
-enum class Signal {
-    SegFault,
-    BusError
-};
-
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
-template<Signal signal>
 static bool
 HandleFault(int signum, siginfo_t* info, void* ctx)
 {
-    // The signals we're expecting come from access violations, accessing
-    // mprotected memory. If the signal originates anywhere else, don't try
-    // to handle it.
-    if (signal == Signal::SegFault)
-        MOZ_RELEASE_ASSERT(signum == SIGSEGV);
-    else
-        MOZ_RELEASE_ASSERT(signum == SIGBUS);
+    // Before anything else, prevent handler recursion.
+    if (sAlreadyInSignalHandler.get())
+        return false;
+    AutoSignalHandler ash;
+
+    MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS);
 
     CONTEXT* context = (CONTEXT*)ctx;
     uint8_t** ppc = ContextToPC(context);
     uint8_t* pc = *ppc;
-
-    // Don't allow recursive handling of signals, see AutoSetHandlingSegFault.
-    JSContext* cx = TlsContext.get();
-    if (!cx || cx->handlingSegFault || !IsActiveContext(cx))
-        return false;
-    AutoSetHandlingSegFault handling(cx);
-
-    if (!cx->activation() || !cx->activation()->isJit())
-        return false;
-    JitActivation* activation = cx->activation()->asJit();
 
     const CodeSegment* segment = LookupCodeSegment(pc);
     if (!segment)
@@ -1376,8 +1346,11 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
             return false;
     }
 
+    JitActivation* activation = TlsContext.get()->activation()->asJit();
+    MOZ_ASSERT(activation->compartment() == instance->compartment());
+
 #ifdef JS_CODEGEN_ARM
-    if (signal == Signal::BusError) {
+    if (signum == SIGBUS) {
         // TODO: We may see a bus error for something that is an unaligned access that
         // partly overlaps the end of the heap.  In this case, it is an out-of-bounds
         // error and we should signal that properly, but to do so we must inspect
@@ -1395,11 +1368,10 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
 static struct sigaction sPrevSEGVHandler;
 static struct sigaction sPrevSIGBUSHandler;
 
-template<Signal signal>
 static void
 WasmFaultHandler(int signum, siginfo_t* info, void* context)
 {
-    if (HandleFault<signal>(signum, info, context))
+    if (HandleFault(signum, info, context))
         return;
 
     struct sigaction* previousSignal = signum == SIGSEGV
@@ -1629,7 +1601,7 @@ ProcessHasSignalHandlers()
     // Allow handling OOB with signals on all architectures
     struct sigaction faultHandler;
     faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-    faultHandler.sa_sigaction = WasmFaultHandler<Signal::SegFault>;
+    faultHandler.sa_sigaction = WasmFaultHandler;
     sigemptyset(&faultHandler.sa_mask);
     if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler))
         MOZ_CRASH("unable to install segv handler");
@@ -1638,7 +1610,7 @@ ProcessHasSignalHandlers()
     // On Arm Handle Unaligned Accesses
     struct sigaction busHandler;
     busHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-    busHandler.sa_sigaction = WasmFaultHandler<Signal::BusError>;
+    busHandler.sa_sigaction = WasmFaultHandler;
     sigemptyset(&busHandler.sa_mask);
     if (sigaction(SIGBUS, &busHandler, &sPrevSIGBUSHandler))
         MOZ_CRASH("unable to install sigbus handler");
