@@ -252,7 +252,6 @@ caption {
 %ifndef MOZ_WIDGET_GTK
 titlebar,
 toolbar:not([nowindowdrag="true"]):not([customizing="true"]),
-statusbar:not([nowindowdrag="true"]),
 %endif
 windowdragbox {
   -moz-window-dragging: drag;
@@ -500,16 +499,6 @@ panel[type="arrow"][side][animate="cancel"] {
 panel[type="arrow"][animating] {
   pointer-events: none;
 }
-
-%ifdef XP_MACOSX
-.statusbar-resizerpanel {
-  display: none;
-}
-%else
-window[sizemode="maximized"] statusbarpanel.statusbar-resizerpanel {
-  visibility: collapse;
-}
-%endif
 
 /******** grid **********/
 
@@ -1002,19 +991,6 @@ arrowscrollbox[clicktoscroll="true"] {
 
 autorepeatbutton {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#autorepeatbutton");
-}
-
-/********** statusbar **********/
-
-statusbar {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar");
-%ifdef XP_MACOSX
-  padding-right: 14px;
-%endif
-}
-
-statusbarpanel {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel");
 }
 
 /********** spinbuttons ***********/
