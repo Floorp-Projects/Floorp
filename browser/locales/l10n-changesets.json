@@ -87,7 +87,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "8b572701bec2"
+        "revision": "8a0741e5f9af"
     }, 
     "bn-BD": {
         "platforms": [
@@ -127,7 +127,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f042d00644ee"
+        "revision": "391af61ce268"
     }, 
     "ca": {
         "platforms": [
@@ -167,7 +167,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a30d441ee1b7"
+        "revision": "1cef80e3bf70"
     }, 
     "da": {
         "platforms": [
@@ -317,7 +317,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "66a2b2b77a7a"
+        "revision": "d7a1cea11477"
     }, 
     "fi": {
         "platforms": [
@@ -327,7 +327,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "8e7d6225f3b4"
+        "revision": "0166d6eecd9c"
     }, 
     "fr": {
         "platforms": [
@@ -347,7 +347,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "81f00096c7d5"
+        "revision": "cc9179a45527"
     }, 
     "ga-IE": {
         "platforms": [
@@ -357,7 +357,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0f70aa01912b"
+        "revision": "bf66310c0312"
     }, 
     "gd": {
         "platforms": [
@@ -367,7 +367,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "fdaaacc571be"
+        "revision": "2d65db07c66f"
     }, 
     "gl": {
         "platforms": [
@@ -427,7 +427,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b5c663cfab6e"
+        "revision": "e2faec5ff2ce"
     }, 
     "hsb": {
         "platforms": [
@@ -437,7 +437,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f75898161e1d"
+        "revision": "23a4be0d5638"
     }, 
     "hu": {
         "platforms": [
@@ -447,7 +447,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0c0a76bf25e6"
+        "revision": "c81ee93d7622"
     }, 
     "hy-AM": {
         "platforms": [
@@ -467,7 +467,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a3bf6ed07225"
+        "revision": "8a1606dcec35"
     }, 
     "is": {
         "platforms": [
@@ -477,7 +477,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "82098782a913"
+        "revision": "2ea9cc247311"
     }, 
     "it": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "4470abb7bdb8"
+        "revision": "6d8d17f605a5"
     }, 
     "kab": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "444af32df29f"
+        "revision": "1afba505394f"
     }, 
     "kk": {
         "platforms": [
@@ -532,7 +532,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "33c1b8bfbe84"
+        "revision": "406e6625d590"
     }, 
     "km": {
         "platforms": [
@@ -542,7 +542,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "21dcf412d6d8"
+        "revision": "e43a5c2374fb"
     }, 
     "kn": {
         "platforms": [
@@ -562,7 +562,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "dc10fe42def2"
+        "revision": "30692c673f5d"
     }, 
     "lij": {
         "platforms": [
@@ -572,7 +572,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "86bdea44ad3e"
+        "revision": "0bdad2cf2883"
     }, 
     "lt": {
         "platforms": [
@@ -582,7 +582,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b2dc979f8486"
+        "revision": "bce902b53bc6"
     }, 
     "lv": {
         "platforms": [
@@ -652,7 +652,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "c97f927b3192"
+        "revision": "697db1e6863d"
     }, 
     "nb-NO": {
         "platforms": [
@@ -862,7 +862,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "d8632422ce7f"
+        "revision": "a89702dd75e4"
     }, 
     "th": {
         "platforms": [
