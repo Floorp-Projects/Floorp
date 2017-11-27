@@ -133,7 +133,6 @@ class FieldScanner {
       }
       previousType = fieldDetail.fieldName;
       seenTypes.add(fieldDetail.fieldName);
-      delete fieldDetail._duplicated;
       this._pushToSection(DEFAULT_SECTION_NAME + "-" + sectionCount, fieldDetail);
     }
   }
@@ -168,8 +167,7 @@ class FieldScanner {
 
   /**
    * This function will prepare an autocomplete info object with getInfo
-   * function and push the detail to fieldDetails property. Any duplicated
-   * detail will be marked as _duplicated = true for the parser.
+   * function and push the detail to fieldDetails property.
    * Any field will be pushed into `this._sections` based on the section name
    * in `autocomplete` attribute.
    *
@@ -196,13 +194,6 @@ class FieldScanner {
 
     if (info._reason) {
       fieldInfo._reason = info._reason;
-    }
-
-    // Store the association between the field metadata and the element.
-    if (this.findSameField(info) != -1) {
-      // A field with the same identifier already exists.
-      log.debug("Not collecting a field matching another with the same info:", info);
-      fieldInfo._duplicated = true;
     }
 
     this.fieldDetails.push(fieldInfo);
@@ -234,18 +225,12 @@ class FieldScanner {
       throw new Error("Try to update the non-existing field detail.");
     }
     this.fieldDetails[index].fieldName = fieldName;
-
-    delete this.fieldDetails[index]._duplicated;
-    let indexSame = this.findSameField(this.fieldDetails[index]);
-    if (indexSame != index && indexSame != -1) {
-      this.fieldDetails[index]._duplicated = true;
-    }
   }
 
-  findSameField(info) {
-    return this.fieldDetails.findIndex(f => f.section == info.section &&
-                                       f.addressType == info.addressType &&
-                                       f.fieldName == info.fieldName);
+  _isSameField(field1, field2) {
+    return field1.section == field2.section &&
+           field1.addressType == field2.addressType &&
+           field1.fieldName == field2.fieldName;
   }
 
   /**
@@ -264,7 +249,16 @@ class FieldScanner {
     if (this._allowDuplicates) {
       return fieldDetails.filter(f => f.fieldName);
     }
-    return fieldDetails.filter(f => f.fieldName && !f._duplicated);
+
+    let dedupedFieldDetails = [];
+    for (let fieldDetail of fieldDetails) {
+      if (fieldDetail.fieldName && !dedupedFieldDetails.find(f => this._isSameField(fieldDetail, f))) {
+        dedupedFieldDetails.push(fieldDetail);
+      } else {
+        log.debug("Not collecting an invalid field or matching another with the same info:", fieldDetail);
+      }
+    }
+    return dedupedFieldDetails;
   }
 
   elementExisting(index) {
