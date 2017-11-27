@@ -32,7 +32,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "imgIContainer.h"
 #include "imgITools.h"
-#include "nsStringStream.h"
 #include "nsNetUtil.h"
 #include "nsIOutputStream.h"
 #include "nsNetCID.h"
@@ -1266,18 +1265,12 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   rv = icoFile->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Convert the obtained favicon data to an input stream
-  nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                             reinterpret_cast<const char*>(aData),
-                             aDataLen,
-                             NS_ASSIGNMENT_DEPEND);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Decode the image from the format it was returned to us in (probably PNG)
   nsCOMPtr<imgIContainer> container;
   nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
-  rv = imgtool->DecodeImage(stream, aMimeType, getter_AddRefs(container));
+  rv = imgtool->DecodeImageBuffer(reinterpret_cast<const char*>(aData),
+                                  aDataLen, aMimeType,
+                                  getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<SourceSurface> surface =

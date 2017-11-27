@@ -871,6 +871,9 @@ StyleSheet::List(FILE* out, int32_t aIndent) const
 void
 StyleSheet::SetMedia(dom::MediaList* aMedia)
 {
+  if (aMedia) {
+    aMedia->SetStyleSheet(this);
+  }
   mMedia = aMedia;
 }
 
