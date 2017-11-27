@@ -152,6 +152,7 @@ public class Tabs implements BundleEventListener {
             "Content:SecurityChange",
             "Content:StateChange",
             "Content:LoadError",
+            "Content:DOMContentLoaded",
             "Content:PageShow",
             "Content:DOMTitleChanged",
             "DesktopMode:Changed",
@@ -636,6 +637,10 @@ public class Tabs implements BundleEventListener {
         } else if ("Content:LoadError".equals(event)) {
             tab.handleContentLoaded();
             notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
+
+        } else if ("Content:DOMContentLoaded".equals(event)) {
+            tab.handleContentLoaded();
+            notifyListeners(tab, TabEvents.LOADED);
 
         } else if ("Content:PageShow".equals(event)) {
             tab.setLoadedFromCache(message.getBoolean("fromCache"));

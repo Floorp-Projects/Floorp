@@ -2159,10 +2159,11 @@ GeckoDriver.prototype.findElements = async function(cmd, resp) {
 };
 
 /**
- * Return the active element on the page.
+ * Return the active element in the document.
  *
  * @return {WebElement}
- *     Active element of the current browsing context's document element.
+ *     Active element of the current browsing context's document
+ *     element, if the document element is non-null.
  *
  * @throws {UnsupportedOperationError}
  *     Not available in current context.
@@ -2170,13 +2171,16 @@ GeckoDriver.prototype.findElements = async function(cmd, resp) {
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {NoSuchElementError}
+ *     If the document does not have an active element, i.e. if
+ *     its document element has been deleted.
  */
-GeckoDriver.prototype.getActiveElement = async function(cmd, resp) {
+GeckoDriver.prototype.getActiveElement = async function() {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
   this._assertAndDismissModal();
 
-  resp.body.value = await this.listener.getActiveElement();
+  return this.listener.getActiveElement();
 };
 
 /**

@@ -9,6 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 try {
   // In the context of xpcshell tests, there won't be a default AppInfo
+  // eslint-disable-next-line mozilla/use-services
   Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
 } catch (ex) {
 

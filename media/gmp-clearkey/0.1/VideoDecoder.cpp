@@ -27,7 +27,7 @@
 using namespace wmf;
 using namespace cdm;
 
-VideoDecoder::VideoDecoder(Host_8 *aHost)
+VideoDecoder::VideoDecoder(Host_9 *aHost)
   : mHost(aHost)
   , mHasShutdown(false)
 {

@@ -262,9 +262,7 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
         utils.advanceTimeAndRefresh(0);
         div.style.animation = animationName + " 10s";
 
-        // Trigger style flush
-        div.clientTop;
-        return waitForPaints();
+        return waitForPaintsFlushed();
       }).then(function() {
         var opacity = utils.getOMTAStyle(div, "opacity");
         cleanUp();
@@ -282,12 +280,6 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
       } else {
         window.addEventListener("load", resolve);
       }
-    });
-  }
-
-  function waitForPaints() {
-    return new Promise(function(resolve, reject) {
-      waitForAllPaintsFlushed(resolve);
     });
   }
 

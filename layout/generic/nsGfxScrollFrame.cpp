@@ -3631,19 +3631,23 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (couldBuildLayer) {
     // Make sure that APZ will dispatch events back to content so we can create
     // a displayport for this frame. We'll add the item later on.
-    nsDisplayLayerEventRegions* inactiveRegionItem = nullptr;
-    if (aBuilder->IsPaintingToWindow() &&
-        !mWillBuildScrollableLayer &&
-        aBuilder->IsBuildingLayerEventRegions())
-    {
-      inactiveRegionItem = new (aBuilder) nsDisplayLayerEventRegions(aBuilder, mScrolledFrame, 1);
-      inactiveRegionItem->AddInactiveScrollPort(mScrolledFrame, mScrollPort + aBuilder->ToReferenceFrame(mOuter));
-    }
-
-    if (inactiveRegionItem) {
+    if (!mWillBuildScrollableLayer) {
       int32_t zIndex =
         MaxZIndexInListOfItemsContainedInFrame(scrolledContent.PositionedDescendants(), mOuter);
-      AppendInternalItemToTop(scrolledContent, inactiveRegionItem, zIndex);
+      if (aBuilder->BuildCompositorHitTestInfo()) {
+        CompositorHitTestInfo info = CompositorHitTestInfo::eVisibleToHitTest
+                                   | CompositorHitTestInfo::eDispatchToContent;
+        nsDisplayCompositorHitTestInfo* hitInfo =
+            new (aBuilder) nsDisplayCompositorHitTestInfo(aBuilder, mScrolledFrame, info, 1);
+        hitInfo->SetArea(mScrollPort + aBuilder->ToReferenceFrame(mOuter));
+        AppendInternalItemToTop(scrolledContent, hitInfo, zIndex);
+      }
+      if (aBuilder->IsBuildingLayerEventRegions()) {
+        nsDisplayLayerEventRegions* inactiveRegionItem =
+            new (aBuilder) nsDisplayLayerEventRegions(aBuilder, mScrolledFrame, 1);
+        inactiveRegionItem->AddInactiveScrollPort(mScrolledFrame, mScrollPort + aBuilder->ToReferenceFrame(mOuter));
+        AppendInternalItemToTop(scrolledContent, inactiveRegionItem, zIndex);
+      }
     }
 
     if (aBuilder->ShouldBuildScrollInfoItemsForHoisting()) {

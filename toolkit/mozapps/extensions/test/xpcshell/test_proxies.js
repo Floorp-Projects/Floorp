@@ -37,8 +37,6 @@ var METADATA = {
   }]
 };
 
-const ios = AM_Cc["@mozilla.org/network/io-service;1"].getService(AM_Ci.nsIIOService);
-
 const gHaveSymlinks = AppConstants.platform != "win";
 
 
@@ -140,14 +138,14 @@ async function run_proxy_tests() {
           do_check_eq(addon.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
 
           // Check that getResourceURI points to the right place.
-          do_check_eq(ios.newFileURI(ADDONS[i].directory).spec,
+          do_check_eq(Services.io.newFileURI(ADDONS[i].directory).spec,
                       fixURL(addon.getResourceURI().spec),
                       `Base resource URL resolves as expected`);
 
           let file = ADDONS[i].directory.clone();
           file.append("install.rdf");
 
-          do_check_eq(ios.newFileURI(file).spec,
+          do_check_eq(Services.io.newFileURI(file).spec,
                       fixURL(addon.getResourceURI("install.rdf").spec),
                       `Resource URLs resolve as expected`);
 
@@ -226,4 +224,3 @@ async function run_symlink_tests() {
     tempDirectory.remove(true);
   });
 }
-
