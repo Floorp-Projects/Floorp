@@ -230,6 +230,12 @@ HTMLOptionsCollection::GetParentObject()
   return mSelect;
 }
 
+DocGroup*
+HTMLOptionsCollection::GetDocGroup() const
+{
+  return mSelect ? mSelect->GetDocGroup() : nullptr;
+}
+
 void
 HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 {

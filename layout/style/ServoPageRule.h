@@ -16,6 +16,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class DocGroup;
+} // namespace dom
+
 class ServoDeclarationBlock;
 class ServoPageRule;
 
@@ -26,6 +30,7 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParent) final;
   nsINode* GetParentObject() final;
+  DocGroup* GetDocGroup() const final;
 
 protected:
   DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;

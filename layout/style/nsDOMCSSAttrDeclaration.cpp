@@ -203,6 +203,12 @@ nsDOMCSSAttributeDeclaration::GetParentObject()
   return mElement;
 }
 
+/* virtual */ DocGroup*
+nsDOMCSSAttributeDeclaration::GetDocGroup() const
+{
+  return mElement ? mElement->OwnerDoc()->GetDocGroup() : nullptr;
+}
+
 NS_IMETHODIMP
 nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                                const nsAString& aValue,
