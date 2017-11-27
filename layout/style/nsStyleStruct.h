@@ -2472,15 +2472,7 @@ struct StyleShapeSource final
       : nullptr;
   }
 
-  void SetURL(css::URLValue* aValue);
-
-  const UniquePtr<nsStyleImage>& GetShapeImage() const
-  {
-    MOZ_ASSERT(mType == StyleShapeSourceType::Image, "Wrong shape source type!");
-    return mShapeImage;
-  }
-
-  void SetShapeImage(UniquePtr<nsStyleImage> aShapeImage);
+  bool SetURL(css::URLValue* aValue);
 
   const UniquePtr<StyleBasicShape>& GetBasicShape() const
   {
@@ -2540,8 +2532,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   nsStyleDisplay(const nsStyleDisplay& aOther);
   ~nsStyleDisplay();
 
-  void FinishStyle(nsPresContext* aPresContext);
-  const static bool kHasFinishStyle = true;
+  void FinishStyle(nsPresContext* aPresContext) {}
+  const static bool kHasFinishStyle = false;
 
   void* operator new(size_t sz, nsStyleDisplay* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
