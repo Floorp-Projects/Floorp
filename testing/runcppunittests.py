@@ -154,7 +154,7 @@ class CPPUnitTests(object):
         """
         self.xre_path = xre_path
         self.log = mozlog.get_default_logger()
-        self.log.suite_start(programs)
+        self.log.suite_start(programs, name='cppunittest')
         env = self.build_environment()
         pass_count = 0
         fail_count = 0

@@ -96,8 +96,12 @@ StructuredLogger.prototype = {
     this._logData("assertion_count", data);
   },
 
-  suiteStart(tests, runinfo = null, versioninfo = null, deviceinfo = null, extra = null) {
+  suiteStart(tests, name = null, runinfo = null, versioninfo = null, deviceinfo = null, extra = null) {
     var data = {tests: tests.map(x => this._testId(x))};
+    if (name !== null) {
+      data.name = name;
+    }
+
     if (runinfo !== null) {
       data.runinfo = runinfo;
     }
