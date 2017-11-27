@@ -883,6 +883,46 @@ nsDisplayListBuilder::MergeItems(nsTArray<nsDisplayItem*>& aMergedItems)
 }
 
 void
+nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::SetCurrentActiveScrolledRoot(
+    const ActiveScrolledRoot* aActiveScrolledRoot)
+{
+  MOZ_ASSERT(!mUsed);
+
+  // Set the builder's mCurrentActiveScrolledRoot.
+  mBuilder->mCurrentActiveScrolledRoot = aActiveScrolledRoot;
+
+  // We also need to adjust the builder's mCurrentContainerASR.
+  // mCurrentContainerASR needs to be an ASR that all the container's
+  // contents have finite bounds with respect to. If aActiveScrolledRoot
+  // is an ancestor ASR of mCurrentContainerASR, that means we need to
+  // set mCurrentContainerASR to aActiveScrolledRoot, because otherwise
+  // the items that will be created with aActiveScrolledRoot wouldn't
+  // have finite bounds with respect to mCurrentContainerASR. There's one
+  // exception, in the case where there's a content clip on the builder
+  // that is scrolled by a descendant ASR of aActiveScrolledRoot. This
+  // content clip will clip all items that are created while this
+  // AutoCurrentActiveScrolledRootSetter exists. This means that the items
+  // created during our lifetime will have finite bounds with respect to
+  // the content clip's ASR, even if the items' actual ASR is an ancestor
+  // of that. And it also means that mCurrentContainerASR only needs to be
+  // set to the content clip's ASR and not all the way to aActiveScrolledRoot.
+  // This case is tested by fixed-pos-scrolled-clip-opacity-layerize.html
+  // and fixed-pos-scrolled-clip-opacity-inside-layerize.html.
+
+  // finiteBoundsASR is the leafmost ASR that all items created during
+  // object's lifetime have finite bounds with respect to.
+  const ActiveScrolledRoot* finiteBoundsASR = ActiveScrolledRoot::PickDescendant(
+    mContentClipASR, aActiveScrolledRoot);
+
+  // mCurrentContainerASR is adjusted so that it's still an ancestor of
+  // finiteBoundsASR.
+  mBuilder->mCurrentContainerASR = ActiveScrolledRoot::PickAncestor(
+    mBuilder->mCurrentContainerASR, finiteBoundsASR);
+
+  mUsed = true;
+}
+
+void
 nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::InsertScrollFrame(nsIScrollableFrame* aScrollableFrame)
 {
   MOZ_ASSERT(!mUsed);
