@@ -9,14 +9,18 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    '../../../mfbt/HashFunctions.cpp',
-    '../../../mfbt/JSONWriter.cpp',
-    '../../../mfbt/Poison.cpp',
-    '../../../mozglue/misc/StackWalk.cpp',
     'DMD.cpp',
 ]
 
-SharedLibrary('dmd')
+if not CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
+    UNIFIED_SOURCES += [
+        '/mfbt/HashFunctions.cpp',
+        '/mfbt/JSONWriter.cpp',
+        '/mfbt/Poison.cpp',
+        '/mozglue/misc/StackWalk.cpp',
+    ]
+
+ReplaceMalloc('dmd')
 
 DEFINES['MOZ_NO_MOZALLOC'] = True
 DEFINES['IMPL_MFBT'] = True
