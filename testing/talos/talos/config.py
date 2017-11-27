@@ -214,7 +214,6 @@ GLOBAL_OVERRIDES = (
     'gecko_profile',
     'gecko_profile_interval',
     'gecko_profile_entries',
-    'shutdown',
     'tpcycles',
     'tppagecycles',
     'tpmanifest',
@@ -330,11 +329,6 @@ def get_global_overrides(config):
         if key != 'gecko_profile':
             config.pop(key)
 
-    # HACK: currently xperf tests post results to graph server and
-    # we want to ensure we don't publish shutdown numbers
-    # This is also hacked because "--noShutdown -> shutdown:True"
-    if config['xperf_path']:
-        global_overrides['shutdown'] = False
     return global_overrides
 
 
