@@ -87,7 +87,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "8a0741e5f9af"
+        "revision": "40d662815b4a"
     }, 
     "bn-BD": {
         "platforms": [
@@ -157,7 +157,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a9c76acf11cb"
+        "revision": "fd244a79a1c1"
     }, 
     "cy": {
         "platforms": [
@@ -477,7 +477,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "2ea9cc247311"
+        "revision": "7bfdffbc3278"
     }, 
     "it": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "2efb6acc61a6"
+        "revision": "cba7b454b8df"
     }, 
     "kk": {
         "platforms": [
