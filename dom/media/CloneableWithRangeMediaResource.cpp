@@ -44,10 +44,7 @@ public:
     do {
       uint32_t read;
       nsresult rv = SyncRead(aBuffer + done, aSize - done, &read);
-      if (NS_SUCCEEDED(rv) && read == 0) {
-        break;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (NS_WARN_IF(NS_FAILED(rv)) || read == 0) {
         return rv;
       }
       done += read;
@@ -82,7 +79,7 @@ private:
       nsresult rv = mStream->Read(aBuffer, aSize, aRead);
       // All good.
       if (rv == NS_BASE_STREAM_CLOSED || NS_SUCCEEDED(rv)) {
-        return NS_OK;
+        return rv;
       }
 
       // An error.
