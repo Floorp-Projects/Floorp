@@ -1263,6 +1263,7 @@ var gBrowserInit = {
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
     mm.loadFrameScript("chrome://browser/content/content.js", true);
     mm.loadFrameScript("chrome://browser/content/content-UITour.js", true);
+    mm.loadFrameScript("chrome://global/content/content-HybridContentTelemetry.js", true);
     mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
 
     window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
