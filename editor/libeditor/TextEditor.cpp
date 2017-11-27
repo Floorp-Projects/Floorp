@@ -466,6 +466,9 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
       pointToInsertBrNode.Set(node);
       Unused << newLeftNode;
     }
+    // Lock the offset of pointToInsertBrNode because it'll be referred after
+    // inserting a new <br> node before it.
+    Unused << pointToInsertBrNode.Offset();
     // create br
     brNode = CreateNode(nsGkAtoms::br, pointToInsertBrNode);
     if (NS_WARN_IF(!brNode)) {

@@ -8,7 +8,6 @@ var tmp = {};
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", tmp);
 var AddonRepository = tmp.AddonRepository;
 
-var gTelemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 var gProvider;
 
 function parseParams(aQuery) {
@@ -43,8 +42,8 @@ function test() {
 
     // Check if we encountered telemetry errors and turn the tests for which
     // we don't have valid data into known failures.
-    let snapshot = gTelemetry.getHistogramById("STARTUP_MEASUREMENT_ERRORS")
-                             .snapshot();
+    let snapshot = Services.telemetry.getHistogramById("STARTUP_MEASUREMENT_ERRORS")
+                           .snapshot();
 
     let tProcessValid = (snapshot.counts[0] == 0);
     let tMainValid = tProcessValid && (snapshot.counts[2] == 0);
@@ -95,4 +94,3 @@ function test() {
     }
   }, true);
 }
-

@@ -683,3 +683,28 @@
             label="&customizeMode.autoHideDownloadsButton.label;" checked="true"
             oncommand="gCustomizeMode.onDownloadsAutoHideChange(event)"/>
 </panel>
+
+<panel id="extension-notification-panel"
+       role="group"
+       type="arrow"
+       hidden="true"
+       flip="slide"
+       position="bottomcenter topright"
+       tabspecific="true">
+  <popupnotification id="extension-new-tab-notification"
+                     popupid="extension-new-tab"
+                     label="&newTabControlled.header.message;"
+                     buttonlabel="&newTabControlled.keepButton.label;"
+                     buttonaccesskey="&newTabControlled.keepButton.accesskey;"
+                     secondarybuttonlabel="&newTabControlled.restoreButton.label;"
+                     secondarybuttonaccesskey="&newTabControlled.restoreButton.accesskey;"
+                     closebuttonhidden="true"
+                     dropmarkerhidden="true"
+                     checkboxhidden="true">
+    <popupnotificationcontent orient="vertical">
+      <description id="extension-new-tab-notification-description">
+        &newTabControlled.message;
+      </description>
+    </popupnotificationcontent>
+  </popupnotification>
+</panel>

@@ -91,8 +91,7 @@ amContentHandler.prototype = {
 
   log(aMsg) {
     let msg = "amContentHandler.js: " + (aMsg.join ? aMsg.join("") : aMsg);
-    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
-      logStringMessage(msg);
+    Services.console.logStringMessage(msg);
     dump(msg + "\n");
   }
 };

@@ -88,7 +88,7 @@ public:
   // Notify that the principal for the cached resource changed.
   void CacheClientNotifyPrincipalChanged();
   // Notify the decoder that the cache suspended status changed.
-  void CacheClientNotifySuspendedStatusChanged();
+  void CacheClientNotifySuspendedStatusChanged(bool aSuspended);
 
   // These are called on the main thread by MediaCache. These shouldn't block,
   // but they may grab locks --- the media cache is not holding its lock
@@ -192,7 +192,6 @@ public:
 protected:
   nsresult Seek(int64_t aOffset, bool aResume);
 
-  bool IsSuspendedByCache();
   // These are called on the main thread by Listener.
   nsresult OnStartRequest(nsIRequest* aRequest, int64_t aRequestOffset);
   nsresult OnStopRequest(nsIRequest* aRequest, nsresult aStatus);

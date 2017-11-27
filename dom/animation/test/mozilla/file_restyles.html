@@ -306,6 +306,14 @@ waitForAllPaints(() => {
         return;
       }
 
+      // Skip this test on Android since this test have been failing
+      // intermittently.
+      // Bug 1413817: We should audit this test still fails once we have the
+      // conformant Promise micro task.
+      if (isAndroid) {
+        return;
+      }
+
       await SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] });
 
       var parentElement = addDiv(null,

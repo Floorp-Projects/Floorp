@@ -24,6 +24,19 @@ namespace webrtc {
 
 namespace mozilla {
 
+// Fitness distance is defined in
+// https://www.w3.org/TR/2017/CR-mediacapture-streams-20171003/#dfn-selectsettings
+// The main difference of feasibility and fitness distance is that if the
+// constraint is required ('max', or 'exact'), and the settings dictionary's value
+// for the constraint does not satisfy the constraint, the fitness distance is
+// positive infinity. Given a continuous space of settings dictionaries comprising
+// all discrete combinations of dimension and frame-rate related properties,
+// the feasibility distance is still in keeping with the constraints algorithm.
+enum DistanceCalculation {
+  kFitness,
+  kFeasibility
+};
+
 class MediaEngineCameraVideoSource : public MediaEngineVideoSource
 {
 public:
@@ -86,7 +99,14 @@ protected:
                              TrackID aID,
                              StreamTime delta,
                              const PrincipalHandle& aPrincipalHandle);
+  uint32_t GetDistance(const webrtc::CaptureCapability& aCandidate,
+                       const NormalizedConstraintSet &aConstraints,
+                       const nsString& aDeviceId,
+                       const DistanceCalculation aCalculate) const;
   uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
+                              const NormalizedConstraintSet &aConstraints,
+                              const nsString& aDeviceId) const;
+  uint32_t GetFeasibilityDistance(const webrtc::CaptureCapability& aCandidate,
                               const NormalizedConstraintSet &aConstraints,
                               const nsString& aDeviceId) const;
   static void TrimLessFitCandidates(CapabilitySet& set);
@@ -96,9 +116,13 @@ protected:
                             uint32_t aDistance);
   virtual size_t NumCapabilities() const;
   virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const;
-  virtual bool ChooseCapability(const NormalizedConstraints &aConstraints,
-                                const MediaEnginePrefs &aPrefs,
-                                const nsString& aDeviceId);
+  virtual bool ChooseCapability(
+    const NormalizedConstraints &aConstraints,
+    const MediaEnginePrefs &aPrefs,
+    const nsString& aDeviceId,
+    webrtc::CaptureCapability& aCapability,
+    const DistanceCalculation aCalculate
+  );
   void SetName(nsString aName);
   void SetUUID(const char* aUUID);
   const nsCString& GetUUID() const; // protected access
@@ -116,6 +140,9 @@ protected:
   nsTArray<RefPtr<SourceMediaStream>> mSources; // When this goes empty, we shut down HW
   nsTArray<PrincipalHandle> mPrincipalHandles; // Directly mapped to mSources.
   RefPtr<layers::Image> mImage;
+  nsTArray<RefPtr<layers::Image>> mImages;
+  nsTArray<webrtc::CaptureCapability> mTargetCapabilities;
+  nsTArray<uint64_t> mHandleIds;
   RefPtr<layers::ImageContainer> mImageContainer;
   // end of data protected by mMonitor
 
@@ -125,6 +152,8 @@ protected:
   TrackID mTrackID;
 
   webrtc::CaptureCapability mCapability;
+  webrtc::CaptureCapability mTargetCapability;
+  uint64_t mHandleId;
 
   mutable nsTArray<webrtc::CaptureCapability> mHardcodedCapabilities;
 private:

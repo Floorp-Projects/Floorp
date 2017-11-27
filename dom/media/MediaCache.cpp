@@ -833,6 +833,7 @@ MediaCache::FindBlockForIncomingData(TimeStamp aNow,
                                      MediaCacheStream* aStream,
                                      int32_t aStreamBlockIndex)
 {
+  MOZ_ASSERT(sThread->IsOnCurrentThread());
   mReentrantMonitor.AssertCurrentThreadIn();
 
   int32_t blockIndex =
@@ -863,6 +864,8 @@ MediaCache::FindBlockForIncomingData(TimeStamp aNow,
 bool
 MediaCache::BlockIsReusable(int32_t aBlockIndex)
 {
+  mReentrantMonitor.AssertCurrentThreadIn();
+
   Block* block = &mIndex[aBlockIndex];
   for (uint32_t i = 0; i < block->mOwners.Length(); ++i) {
     MediaCacheStream* stream = block->mOwners[i].mStream;
@@ -904,6 +907,7 @@ MediaCache::FindReusableBlock(TimeStamp aNow,
                                 int32_t aForStreamBlock,
                                 int32_t aMaxSearchBlockIndex)
 {
+  MOZ_ASSERT(sThread->IsOnCurrentThread());
   mReentrantMonitor.AssertCurrentThreadIn();
 
   uint32_t length = std::min(uint32_t(aMaxSearchBlockIndex), uint32_t(mIndex.Length()));
@@ -968,6 +972,8 @@ MediaCache::FindReusableBlock(TimeStamp aNow,
 MediaCache::BlockList*
 MediaCache::GetListForBlock(BlockOwner* aBlock)
 {
+  mReentrantMonitor.AssertCurrentThreadIn();
+
   switch (aBlock->mClass) {
   case METADATA_BLOCK:
     NS_ASSERTION(aBlock->mStream, "Metadata block has no stream?");
@@ -987,6 +993,8 @@ MediaCache::GetListForBlock(BlockOwner* aBlock)
 MediaCache::BlockOwner*
 MediaCache::GetBlockOwner(int32_t aBlockIndex, MediaCacheStream* aStream)
 {
+  mReentrantMonitor.AssertCurrentThreadIn();
+
   Block* block = &mIndex[aBlockIndex];
   for (uint32_t i = 0; i < block->mOwners.Length(); ++i) {
     if (block->mOwners[i].mStream == aStream)
@@ -1042,6 +1050,8 @@ MediaCache::SwapBlocks(int32_t aBlockIndex1, int32_t aBlockIndex2)
 void
 MediaCache::RemoveBlockOwner(int32_t aBlockIndex, MediaCacheStream* aStream)
 {
+  mReentrantMonitor.AssertCurrentThreadIn();
+
   Block* block = &mIndex[aBlockIndex];
   for (uint32_t i = 0; i < block->mOwners.Length(); ++i) {
     BlockOwner* bo = &block->mOwners[i];
@@ -1062,6 +1072,8 @@ MediaCache::AddBlockOwnerAsReadahead(int32_t aBlockIndex,
                                        MediaCacheStream* aStream,
                                        int32_t aStreamBlockIndex)
 {
+  mReentrantMonitor.AssertCurrentThreadIn();
+
   Block* block = &mIndex[aBlockIndex];
   if (block->mOwners.IsEmpty()) {
     mFreeBlocks.RemoveBlock(aBlockIndex);
@@ -1102,6 +1114,7 @@ MediaCache::FreeBlock(int32_t aBlock)
 TimeDuration
 MediaCache::PredictNextUse(TimeStamp aNow, int32_t aBlock)
 {
+  MOZ_ASSERT(sThread->IsOnCurrentThread());
   mReentrantMonitor.AssertCurrentThreadIn();
   NS_ASSERTION(!IsBlockFree(aBlock), "aBlock is free");
 
@@ -1157,6 +1170,7 @@ MediaCache::PredictNextUse(TimeStamp aNow, int32_t aBlock)
 TimeDuration
 MediaCache::PredictNextUseForIncomingData(MediaCacheStream* aStream)
 {
+  MOZ_ASSERT(sThread->IsOnCurrentThread());
   mReentrantMonitor.AssertCurrentThreadIn();
 
   int64_t bytesAhead = aStream->mChannelOffset - aStream->mStreamOffset;
@@ -1537,7 +1551,8 @@ MediaCache::Update()
   for (uint32_t i = 0; i < mSuspendedStatusToNotify.Length(); ++i) {
     MediaCache::ResourceStreamIterator iter(this, mSuspendedStatusToNotify[i]);
     while (MediaCacheStream* stream = iter.Next()) {
-      stream->mClient->CacheClientNotifySuspendedStatusChanged();
+      stream->mClient->CacheClientNotifySuspendedStatusChanged(
+        stream->AreAllStreamsForResourceSuspended());
     }
   }
   mSuspendedStatusToNotify.Clear();
@@ -1627,8 +1642,7 @@ MediaCache::Verify()
 #endif
 
 void
-MediaCache::InsertReadaheadBlock(BlockOwner* aBlockOwner,
-                                   int32_t aBlockIndex)
+MediaCache::InsertReadaheadBlock(BlockOwner* aBlockOwner, int32_t aBlockIndex)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
@@ -1659,6 +1673,7 @@ MediaCache::AllocateAndWriteBlock(MediaCacheStream* aStream,
                                   Span<const uint8_t> aData1,
                                   Span<const uint8_t> aData2)
 {
+  MOZ_ASSERT(sThread->IsOnCurrentThread());
   mReentrantMonitor.AssertCurrentThreadIn();
 
   // Remove all cached copies of this block
@@ -2105,6 +2120,8 @@ void
 MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
                                             ReentrantMonitorAutoEnter& aReentrantMonitor)
 {
+  MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
+
   int32_t blockIndex = OffsetToBlockIndexUnchecked(mChannelOffset);
   int32_t blockOffset = OffsetInBlock(mChannelOffset);
   if (blockOffset > 0) {
@@ -2134,26 +2151,11 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
 }
 
 void
-MediaCacheStream::FlushPartialBlock()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-
-  // Write the current partial block to memory.
-  // Note: This writes a full block, so if data is not at the end of the
-  // stream, the decoder must subsequently choose correct start and end offsets
-  // for reading/seeking.
-  FlushPartialBlockInternal(false, mon);
-
-  mMediaCache->QueueUpdate();
-}
-
-void
 MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
                                           nsresult aStatus,
                                           bool aReopenOnError)
 {
+  MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
 
   if (mClosed || aLoadID != mLoadID) {
@@ -2289,7 +2291,9 @@ MediaCacheStream::~MediaCacheStream()
 bool
 MediaCacheStream::AreAllStreamsForResourceSuspended()
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+
   MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
   // Look for a stream that's able to read the data we need
   int64_t dataOffset = -1;
@@ -2340,6 +2344,7 @@ MediaCacheStream::Close()
 void
 MediaCacheStream::Pin()
 {
+  // TODO: Assert non-main thread.
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   ++mPinCount;
   // Queue an Update since we may no longer want to read more into the
@@ -2350,6 +2355,7 @@ MediaCacheStream::Pin()
 void
 MediaCacheStream::Unpin()
 {
+  // TODO: Assert non-main thread.
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   NS_ASSERTION(mPinCount > 0, "Unbalanced Unpin");
   --mPinCount;
@@ -2361,6 +2367,7 @@ MediaCacheStream::Unpin()
 int64_t
 MediaCacheStream::GetLength()
 {
+  // TODO: Assert non-main thread.
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   return mStreamLength;
 }
@@ -2368,6 +2375,7 @@ MediaCacheStream::GetLength()
 int64_t
 MediaCacheStream::GetOffset() const
 {
+  // TODO: Assert non-main thread.
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   return mChannelOffset;
 }
@@ -2375,6 +2383,7 @@ MediaCacheStream::GetOffset() const
 int64_t
 MediaCacheStream::GetNextCachedData(int64_t aOffset)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   return GetNextCachedDataInternal(aOffset);
 }
@@ -2382,6 +2391,7 @@ MediaCacheStream::GetNextCachedData(int64_t aOffset)
 int64_t
 MediaCacheStream::GetCachedDataEnd(int64_t aOffset)
 {
+  // TODO: Assert non-main thread.
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   return GetCachedDataEndInternal(aOffset);
 }
@@ -2389,6 +2399,7 @@ MediaCacheStream::GetCachedDataEnd(int64_t aOffset)
 bool
 MediaCacheStream::IsDataCachedToEndOfStream(int64_t aOffset)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   if (mStreamLength < 0)
     return false;
@@ -2473,6 +2484,7 @@ MediaCacheStream::GetNextCachedDataInternal(int64_t aOffset)
 void
 MediaCacheStream::SetReadMode(ReadMode aMode)
 {
+  // TODO: Assert non-main thread.
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   if (aMode == mCurrentMode)
     return;
@@ -2612,8 +2624,7 @@ MediaCacheStream::ReadBlockFromCache(int64_t aOffset,
 nsresult
 MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
+  MOZ_ASSERT(!NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
 
   // Cache the offset in case it is changed again when we are waiting for the
@@ -2710,8 +2721,7 @@ nsresult
 MediaCacheStream::ReadAt(int64_t aOffset, char* aBuffer,
                          uint32_t aCount, uint32_t* aBytes)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
+  MOZ_ASSERT(!NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   nsresult rv = Seek(aOffset);
   if (NS_FAILED(rv)) return rv;
@@ -2721,6 +2731,7 @@ MediaCacheStream::ReadAt(int64_t aOffset, char* aBuffer,
 nsresult
 MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
 
   // The buffer we are about to fill.
@@ -2858,6 +2869,7 @@ MediaCacheStream::OwnerThread() const
 
 nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   // Take the monitor, so that the cached data ranges can't grow while we're
   // trying to loop over them.
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
