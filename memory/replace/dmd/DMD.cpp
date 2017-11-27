@@ -91,9 +91,6 @@ StatusMsg(const char* aFmt, ...)
 
 static malloc_table_t gMallocTable;
 
-// Whether DMD finished initializing.
-static bool gIsDMDInitialized = false;
-
 // This provides infallible allocations (they abort on OOM).  We use it for all
 // of DMD's own allocations, which fall into the following three cases.
 //
@@ -1269,14 +1266,6 @@ replace_malloc(size_t aSize)
 {
   using namespace mozilla::dmd;
 
-  if (!gIsDMDInitialized) {
-    // DMD hasn't started up, either because it wasn't enabled by the user, or
-    // we're still in Init() and something has indirectly called malloc.  Do a
-    // vanilla malloc.  (In the latter case, if it fails we'll crash.  But
-    // OOM is highly unlikely so early on.)
-    return gMallocTable.malloc(aSize);
-  }
-
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
     // Intercepts are blocked, which means this must be a call to malloc
@@ -1295,10 +1284,6 @@ replace_calloc(size_t aCount, size_t aSize)
 {
   using namespace mozilla::dmd;
 
-  if (!gIsDMDInitialized) {
-    return gMallocTable.calloc(aCount, aSize);
-  }
-
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
     return InfallibleAllocPolicy::calloc_(aCount * aSize);
@@ -1313,10 +1298,6 @@ static void*
 replace_realloc(void* aOldPtr, size_t aSize)
 {
   using namespace mozilla::dmd;
-
-  if (!gIsDMDInitialized) {
-    return gMallocTable.realloc(aOldPtr, aSize);
-  }
 
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
@@ -1355,10 +1336,6 @@ replace_memalign(size_t aAlignment, size_t aSize)
 {
   using namespace mozilla::dmd;
 
-  if (!gIsDMDInitialized) {
-    return gMallocTable.memalign(aAlignment, aSize);
-  }
-
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
     return InfallibleAllocPolicy::memalign_(aAlignment, aSize);
@@ -1373,11 +1350,6 @@ static void
 replace_free(void* aPtr)
 {
   using namespace mozilla::dmd;
-
-  if (!gIsDMDInitialized) {
-    gMallocTable.free(aPtr);
-    return;
-  }
 
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
@@ -1632,7 +1604,6 @@ Init(malloc_table_t* aMallocTable)
     MOZ_ALWAYS_TRUE(gDeadBlockTable->init(tableSize));
   }
 
-  gIsDMDInitialized = true;
 }
 
 //---------------------------------------------------------------------------
