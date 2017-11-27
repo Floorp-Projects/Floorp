@@ -41,6 +41,7 @@ PER_PROJECT_PARAMETERS = {
 
     'try-comm-central': {
         'target_tasks_method': 'try_tasks',
+        'include_nightly': True,
     },
 
     'ash': {
@@ -242,7 +243,9 @@ def get_decision_parameters(options):
         parameters['try_task_config'] = None
         parameters['try_options'] = None
 
-    return Parameters(**parameters)
+    result = Parameters(**parameters)
+    result.check()
+    return result
 
 
 def write_artifact(filename, data):
