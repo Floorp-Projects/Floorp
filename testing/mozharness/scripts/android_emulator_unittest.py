@@ -200,6 +200,15 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         with open(os.path.join(avd_home_dir, "ddms.cfg"), 'w') as f:
             f.write("pingOptIn=false\npingId=0\n")
 
+        # Delete emulator auth file, so it doesn't prompt
+        AUTH_FILE = os.path.join(os.path.expanduser('~'), '.emulator_console_auth_token')
+        if os.path.exists(AUTH_FILE):
+            try:
+                os.remove(AUTH_FILE)
+                self.info("deleted %s" % AUTH_FILE)
+            except:
+                self.warning("failed to remove %s" % AUTH_FILE)
+
         # Set environment variables to help emulator find the AVD.
         # In newer versions of the emulator, ANDROID_AVD_HOME should
         # point to the 'avd' directory.
