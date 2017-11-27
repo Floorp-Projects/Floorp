@@ -1622,7 +1622,6 @@ toolbar#nav-bar {
             xrePath=options.xrePath,
             env=env,
             debugger=debugger,
-            dmdPath=options.dmdPath,
             lsanPath=lsanPath,
             ubsanPath=ubsanPath)
 
