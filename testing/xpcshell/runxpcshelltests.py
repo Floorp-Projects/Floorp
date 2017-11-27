@@ -1459,7 +1459,7 @@ class XPCShellTests(object):
         tests_by_manifest = defaultdict(list)
         for test in self.alltests:
             tests_by_manifest[test['manifest']].append(test['id'])
-        self.log.suite_start(tests_by_manifest)
+        self.log.suite_start(tests_by_manifest, name='xpcshell')
 
         while tests_queue or running_tests:
             # if we're not supposed to continue and all of the running tests

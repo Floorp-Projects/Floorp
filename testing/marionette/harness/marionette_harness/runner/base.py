@@ -884,6 +884,7 @@ class BaseMarionetteTestRunner(object):
             tests_by_group[test['group']].append(test['filepath'])
 
         self.logger.suite_start(tests_by_group,
+                                name='marionette-test',
                                 version_info=self.version_info,
                                 device_info=device_info)
 
