@@ -1546,6 +1546,23 @@ public:
   virtual void Detach() override;
 
   /**
+   * Ensure that NotifyDidPaintForSubtree is eventually called on this
+   * object after a timeout.
+   */
+  void EnsureEventualDidPaintEvent(uint64_t aTransactionId);
+
+  /**
+   * Cancels any pending eventual did paint timer for transaction
+   * ids up to and including aTransactionId.
+   */
+  void CancelDidPaintTimers(uint64_t aTransactionId);
+
+  /**
+   * Cancel all pending eventual did paint timers.
+   */
+  void CancelAllDidPaintTimers();
+
+  /**
    * Registers a plugin to receive geometry updates (position and clip
    * region) so it can update its widget.
    * Callers must call UnregisterPluginForGeometryUpdates before
@@ -1652,6 +1669,7 @@ protected:
     uint64_t mTransactionId;
     nsCOMPtr<nsITimer> mTimer;
   };
+  AutoTArray<NotifyDidPaintTimer, 4> mNotifyDidPaintTimers;
 
   nsCOMPtr<nsITimer> mApplyPluginGeometryTimer;
   nsTHashtable<nsRefPtrHashKey<nsIContent> > mRegisteredPlugins;
