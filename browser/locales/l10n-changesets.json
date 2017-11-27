@@ -197,7 +197,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "dcb7ee92e7f6"
+        "revision": "a345df481b9e"
     }, 
     "el": {
         "platforms": [
@@ -437,7 +437,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "3e1c3aea1ac9"
+        "revision": "f75898161e1d"
     }, 
     "hu": {
         "platforms": [
@@ -902,7 +902,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b53672ebe46e"
+        "revision": "ae632ad45acd"
     }, 
     "uz": {
         "platforms": [
