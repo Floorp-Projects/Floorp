@@ -14,7 +14,7 @@ use std::ptr;
 
 #[test]
 fn typedarray() {
-    let rt = Runtime_::new().unwrap();
+    let rt = Runtime_::new(false).unwrap();
     let cx = rt.cx();
 
     unsafe {
@@ -72,7 +72,7 @@ fn typedarray() {
 #[test]
 #[should_panic]
 fn typedarray_update_panic() {
-    let rt = Runtime_::new().unwrap();
+    let rt = Runtime_::new(false).unwrap();
     let cx = rt.cx();
 
     unsafe {
