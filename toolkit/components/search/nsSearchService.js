@@ -32,9 +32,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gChromeReg: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
 });
 
-const ArrayBufferInputStream = Components.Constructor(
-  "@mozilla.org/io/arraybuffer-input-stream;1",
-  "nsIArrayBufferInputStream", "setData");
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -357,10 +354,11 @@ loadListener.prototype = {
 function rescaleIcon(aByteArray, aContentType, aSize = 32) {
   if (aContentType == "image/svg+xml")
     throw new Error("Cannot rescale SVG image");
-  let buffer = Uint8Array.from(aByteArray).buffer;
+
+  let str = String.fromCharCode.apply(String, new Uint8Array(aByteArray));
+
   let imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
-  let input = new ArrayBufferInputStream(buffer, 0, buffer.byteLength);
-  let container = imgTools.decodeImage(input, aContentType);
+  let container = imgTools.decodeImageBuffer(str, str.length, aContentType);
   let stream = imgTools.encodeScaledImage(container, "image/png", aSize, aSize);
   let size = stream.available();
   if (size > MAX_ICON_SIZE)

@@ -21,17 +21,23 @@ interface imgITools : nsISupports
 {
     /**
      * decodeImage
-     * Caller provides an input stream and mimetype. We read from the stream
-     * and decompress it (according to the specified mime type) and return
-     * the resulting imgIContainer.
+     * decodeImageBuffer
+     * Caller provides an buffer, a buffer size and a mimetype. We read from
+     * the stream and decompress it (according to the specified mime type) and
+     * return the resulting imgIContainer.
      *
      * @param aStream
      *        An input stream for an encoded image file.
+     * @param aBuffer
+     *        Data in memory.
+     * @param aSize
+     *        Buffer size.
      * @param aMimeType
      *        Type of image in the stream.
      */
-    imgIContainer decodeImage(in nsIInputStream aStream,
-                              in ACString aMimeType);
+    imgIContainer decodeImageBuffer(in string aBuffer,
+                                    in unsigned long aSize,
+                                    in ACString aMimeType);
 
     /**
      * decodeImageAsync
