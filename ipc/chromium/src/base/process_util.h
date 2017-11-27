@@ -112,6 +112,8 @@ struct LaunchOptions {
   // Environment variables to be applied in addition to the current
   // process's environment, replacing them where necessary.
   EnvironmentMap env_map;
+
+  std::vector<HANDLE> handles_to_inherit;
 #endif
 #if defined(OS_POSIX)
   environment_map env_map;
