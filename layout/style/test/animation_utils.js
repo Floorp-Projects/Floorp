@@ -283,12 +283,6 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
     });
   }
 
-  function waitForPaints() {
-    return new Promise(function(resolve, reject) {
-      waitForAllPaintsFlushed(resolve);
-    });
-  }
-
   function loadPaintListener() {
     return new Promise(function(resolve, reject) {
       if (typeof(window.waitForAllPaints) !== "function") {
