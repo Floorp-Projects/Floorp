@@ -8,7 +8,6 @@ import android.app.Fragment
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v4.view.MotionEventCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -16,7 +15,6 @@ import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback
 import android.view.*
 import android.widget.CheckBox
 import android.widget.CompoundButton
-import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -61,6 +59,14 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {}
 
+            override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?): Int {
+                if (viewHolder is AddActionViewHolder) {
+                    return ItemTouchHelper.Callback.makeMovementFlags(0,0)
+                }
+
+                return super.getMovementFlags(recyclerView, viewHolder)
+            }
+
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
                 super.onSelectedChanged(viewHolder, actionState)
 
@@ -75,6 +81,14 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
                 if (viewHolder is DomainViewHolder) {
                     viewHolder.onCleared()
                 }
+            }
+
+            override fun canDropOver(recyclerView: RecyclerView?, current: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
+                if (target is AddActionViewHolder) {
+                    return false
+                }
+
+                return super.canDropOver(recyclerView, current, target)
             }
         })
         itemTouchHelper?.attachToRecyclerView(domainList)
