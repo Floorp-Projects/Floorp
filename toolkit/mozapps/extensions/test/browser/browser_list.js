@@ -739,38 +739,35 @@ add_task(async function() {
 
   let items = get_test_items();
 
-  var fm = Cc["@mozilla.org/focus-manager;1"].
-           getService(Ci.nsIFocusManager);
-
   let addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);
   EventUtils.synthesizeMouseAtCenter(addon, { }, gManagerWindow);
-  is(fm.focusedElement, addon.parentNode, "Focus should have moved to the list");
+  is(Services.focus.focusedElement, addon.parentNode, "Focus should have moved to the list");
 
   EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
-  is(fm.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
+  is(Services.focus.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
 
   EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
-  is(fm.focusedElement, get_node(addon, "disable-btn"), "Focus should have moved to the disable button");
+  is(Services.focus.focusedElement, get_node(addon, "disable-btn"), "Focus should have moved to the disable button");
 
   EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
-  is(fm.focusedElement, get_node(addon, "remove-btn"), "Focus should have moved to the remove button");
+  is(Services.focus.focusedElement, get_node(addon, "remove-btn"), "Focus should have moved to the remove button");
 
   EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
-  ok(!is_node_in_list(fm.focusedElement), "Focus should be outside the list");
+  ok(!is_node_in_list(Services.focus.focusedElement), "Focus should be outside the list");
 
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
-  is(fm.focusedElement, get_node(addon, "remove-btn"), "Focus should have moved to the remove button");
+  is(Services.focus.focusedElement, get_node(addon, "remove-btn"), "Focus should have moved to the remove button");
 
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
-  is(fm.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
+  is(Services.focus.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
 
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
-  is(fm.focusedElement, addon.parentNode, "Focus should have moved to the list");
+  is(Services.focus.focusedElement, addon.parentNode, "Focus should have moved to the list");
 
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
-  ok(!is_node_in_list(fm.focusedElement), "Focus should be outside the list");
+  ok(!is_node_in_list(Services.focus.focusedElement), "Focus should be outside the list");
 
   try {
     Services.prefs.clearUserPref("accessibility.tabfocus_applies_to_xul");

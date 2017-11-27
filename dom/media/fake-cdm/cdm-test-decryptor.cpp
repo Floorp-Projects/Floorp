@@ -76,7 +76,7 @@ private:
   set<string> mTestIDs;
 };
 
-FakeDecryptor::FakeDecryptor(cdm::Host_8* aHost)
+FakeDecryptor::FakeDecryptor(cdm::Host_9* aHost)
   : mHost(aHost)
 {
   MOZ_ASSERT(!sInstance);
@@ -92,9 +92,7 @@ FakeDecryptor::Message(const std::string& aMessage)
                                      sid.size(),
                                      cdm::MessageType::kLicenseRequest,
                                      aMessage.c_str(),
-                                     aMessage.size(),
-                                     nullptr,
-                                     0);
+                                     aMessage.size());
 }
 
 std::vector<std::string>

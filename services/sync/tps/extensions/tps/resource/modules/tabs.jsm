@@ -11,6 +11,7 @@ const EXPORTED_SYMBOLS = ["BrowserTabs"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-sync/main.js");
 
 // Unfortunately, due to where TPS is run, we can't directly reuse the logic from
@@ -40,9 +41,7 @@ var BrowserTabs = {
 
     // Open the uri in a new tab in the current browser window, and calls
     // the callback fn from the tab's onload handler.
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-               .getService(Ci.nsIWindowMediator);
-    let mainWindow = wm.getMostRecentWindow("navigator:browser");
+    let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let browser = mainWindow.getBrowser();
     let mm = browser.ownerGlobal.messageManager;
     mm.addMessageListener("tps:loadEvent", function onLoad(msg) {
@@ -82,4 +81,3 @@ var BrowserTabs = {
     return false;
   },
 };
-

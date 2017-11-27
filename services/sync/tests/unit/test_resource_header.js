@@ -40,8 +40,7 @@ function triggerRedirect() {
                                    "PROXY localhost:" + HTTP_PORT + "';" +
                          "}";
 
-  let prefsService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
-  let prefs = prefsService.getBranch("network.proxy.");
+  let prefs = Services.prefs.getBranch("network.proxy.");
   prefs.setIntPref("type", 2);
   prefs.setCharPref("autoconfig_url", "data:text/plain," + PROXY_FUNCTION);
 }

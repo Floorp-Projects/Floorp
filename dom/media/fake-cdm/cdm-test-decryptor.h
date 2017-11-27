@@ -10,12 +10,17 @@
 #include <string>
 #include "mozilla/Attributes.h"
 
-class FakeDecryptor : public cdm::ContentDecryptionModule_8 {
+class FakeDecryptor : public cdm::ContentDecryptionModule_9 {
 public:
-  explicit FakeDecryptor(cdm::Host_8* aHost);
+  explicit FakeDecryptor(cdm::Host_9* aHost);
 
   void Initialize(bool aAllowDistinctiveIdentifier,
                   bool aAllowPersistentState) override
+  {
+  }
+
+  void GetStatusForPolicy(uint32_t aPromiseId,
+                          const cdm::Policy& aPolicy) override
   {
   }
 
@@ -115,6 +120,12 @@ public:
   {
   }
 
+  void OnStorageId(uint32_t aVersion,
+                   const uint8_t* aStorageId,
+                   uint32_t aStorageIdSize) override
+  {
+  }
+
   void Destroy() override
   {
     delete this;
@@ -123,7 +134,7 @@ public:
 
   static void Message(const std::string& aMessage);
 
-  cdm::Host_8* mHost;
+  cdm::Host_9* mHost;
 
   static FakeDecryptor* sInstance;
 

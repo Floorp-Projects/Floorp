@@ -120,7 +120,7 @@ public final class WaitHelper {
 
         // Wait for the page load and title changed event.
         final EventExpecter[] eventExpecters = new EventExpecter[] {
-            sActions.expectGlobalEvent(Actions.EventType.GECKO, "Content:DOMContentLoaded"),
+            sActions.expectGlobalEvent(Actions.EventType.UI, "Content:DOMContentLoaded"),
             sActions.expectGlobalEvent(Actions.EventType.UI, "Content:DOMTitleChanged")
         };
 

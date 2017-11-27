@@ -128,6 +128,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "prenv.h"
 #include "RetainedDisplayListBuilder.h"
+#include "DisplayListChecker.h"
 #include "TextDrawTarget.h"
 #include "nsDeckFrame.h"
 #include "nsIEffectiveTLDService.h" // for IsInStyloBlocklist
@@ -3847,16 +3848,26 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
           builder.IsBuildingLayerEventRegions() &&
           nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
 
+      DisplayListChecker beforeMergeChecker;
+      DisplayListChecker afterMergeChecker;
+
       // Attempt to do a partial build and merge into the existing list.
       // This calls BuildDisplayListForStacking context on a subset of the
       // viewport.
       bool merged = false;
 
       if (useRetainedBuilder) {
+        if (gfxPrefs::LayoutVerifyRetainDisplayList()) {
+          beforeMergeChecker.Set(&list, "BM");
+        }
         merged = retainedBuilder->AttemptPartialUpdate(aBackstop);
+        if (merged && beforeMergeChecker) {
+          afterMergeChecker.Set(&list, "AM");
+        }
       }
 
-      if (merged && gfxPrefs::LayoutDisplayListBuildTwice()) {
+      if (merged &&
+          (gfxPrefs::LayoutDisplayListBuildTwice() || afterMergeChecker)) {
         merged = false;
         if (gfxPrefs::LayersDrawFPS()) {
           if (RefPtr<LayerManager> lm = builder.GetWidgetLayerManager()) {
@@ -3877,6 +3888,22 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
 
         builder.LeavePresShell(aFrame, &list);
+
+        if (afterMergeChecker) {
+          DisplayListChecker nonRetainedChecker(&list, "NR");
+          std::stringstream ss;
+          ss << "**** Differences between retained-after-merged (AM) and "
+             << "non-retained (NR) display lists:";
+          if (!nonRetainedChecker.CompareList(afterMergeChecker, ss)) {
+            ss << "\n\n*** non-retained display items:";
+            nonRetainedChecker.Dump(ss);
+            ss << "\n\n*** before-merge retained display items:";
+            beforeMergeChecker.Dump(ss);
+            ss << "\n\n*** after-merge retained display items:";
+            afterMergeChecker.Dump(ss);
+            fprintf(stderr, "%s\n\n", ss.str().c_str());
+          }
+        }
       }
     }
 

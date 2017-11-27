@@ -68,10 +68,8 @@ var observer = {
   }
 };
 
-var os = Components.classes["@mozilla.org/observer-service;1"]
-                   .getService(Components.interfaces.nsIObserverService);
-os.addObserver(observer, "last-pb-context-exited", true);
-os.addObserver(observer, "browser:purge-session-history", true);
+Services.obs.addObserver(observer, "last-pb-context-exited", true);
+Services.obs.addObserver(observer, "browser:purge-session-history", true);
 
 function readLastDirPref() {
   try {

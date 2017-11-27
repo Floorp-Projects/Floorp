@@ -21,7 +21,7 @@ add_task(async function testLastAccessed() {
 
         let now = Date.now();
 
-        browser.test.assertTrue(past < tab1.lastAccessed,
+        browser.test.assertTrue(past <= tab1.lastAccessed,
                                 "lastAccessed of tab 1 is later than the test start time.");
         browser.test.assertTrue(tab1.lastAccessed < tab2.lastAccessed,
                                 "lastAccessed of tab 2 is later than lastAccessed of tab 1.");

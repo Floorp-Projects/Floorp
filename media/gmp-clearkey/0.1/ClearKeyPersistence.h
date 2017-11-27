@@ -41,7 +41,7 @@ enum PersistentKeyState {
 class ClearKeyPersistence : public RefCounted
 {
 public:
-  explicit ClearKeyPersistence(cdm::Host_8* aHost);
+  explicit ClearKeyPersistence(cdm::Host_9* aHost);
 
   void EnsureInitialized(bool aPersistentStateAllowed,
                          std::function<void()>&& aOnInitialized);
@@ -54,7 +54,7 @@ public:
 
   void PersistentSessionRemoved(std::string& aSid);
 private:
-  cdm::Host_8* mHost = nullptr;
+  cdm::Host_9* mHost = nullptr;
 
   PersistentKeyState mPersistentKeyState = PersistentKeyState::UNINITIALIZED;
 

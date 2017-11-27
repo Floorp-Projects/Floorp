@@ -84,11 +84,21 @@ public:
   void SetCanonicalDuration(
     AbstractCanonical<media::NullableTimeUnit>* aCanonical);
 
+  void SetSeamlessLoopingEnabled(bool aEnabled);
+
+  void AdjustByLooping(media::TimeUnit& aTime);
+
 private:
   ~ReaderProxy();
   RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder&& aMetadata);
   RefPtr<MetadataPromise> OnMetadataNotRead(const MediaResult& aError);
   void UpdateDuration();
+  RefPtr<SeekPromise> SeekInternal(const SeekTarget& aTarget);
+
+  RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestCompleted(
+    RefPtr<AudioData> aAudio);
+  RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestFailed(
+    const MediaResult& aError);
 
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaFormatReader> mReader;
@@ -101,6 +111,18 @@ private:
 
   // Duration, mirrored from the state machine task queue.
   Mirror<media::NullableTimeUnit> mDuration;
+
+  // The total duration of audio looping in previous rounds.
+  media::TimeUnit mLoopingOffset = media::TimeUnit::Zero();
+  // To keep tracking the latest time of decoded audio data.
+  media::TimeUnit mLastAudioEndTime = media::TimeUnit::Zero();
+  // The duration of the audio track.
+  media::TimeUnit mAudioDuration = media::TimeUnit::Invalid();
+
+  // To prevent seamless looping while seeking.
+  bool mSeamlessLoopingBlocked;
+  // Indicates whether we should loop the media.
+  bool mSeamlessLoopingEnabled;
 };
 
 } // namespace mozilla

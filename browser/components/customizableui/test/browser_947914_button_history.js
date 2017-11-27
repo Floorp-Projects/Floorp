@@ -36,7 +36,7 @@ add_task(async function() {
   let historyItems = document.getElementById("appMenu_historyMenu");
   let historyItemForURL = historyItems.querySelector("toolbarbutton.bookmark-item[label='Happy History Hero']");
   ok(historyItemForURL, "Should have a history item for the history we just made.");
-  historyItemForURL.click();
+  EventUtils.synthesizeMouseAtCenter(historyItemForURL, {});
   await browserLoaded;
   is(gBrowser.currentURI.spec, TEST_PATH + "dummy_history_item.html", "Should have expected page load");
 
