@@ -9,9 +9,10 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoMediaList.h"
-#include "mozilla/ServoCSSRuleList.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
@@ -340,6 +341,19 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
         break;
       }
     }
+  }
+
+  // FIXME(emilio): This is kind-of a hack for bug 1420713. As you may notice,
+  // there's nothing that triggers a style flush or anything similar (neither
+  // here or in the relevant Gecko path inside DidDirty).
+  //
+  // The tl;dr is: if we want to make sure scripted changes to sheets not
+  // associated with any document get properly reflected, we need to rejigger a
+  // fair amount of stuff. I'm probably doing that work as part of the shadow
+  // DOM stuff.
+  for (StyleSetHandle handle : mStyleSets) {
+    handle->AsServo()->RecordStyleSheetChange(
+      this, StyleSheet::ChangeType::ReparsedFromInspector);
   }
 
   return NS_OK;

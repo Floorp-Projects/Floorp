@@ -8,7 +8,6 @@
 #include "nsXPCOM.h"
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
-#define TARGET_SANDBOX_EXPORTS
 #include "mozilla/sandboxTarget.h"
 #endif
 
