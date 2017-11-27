@@ -3776,7 +3776,11 @@ nsDocument::ElementsFromPointHelper(float aX, float aY,
       // If this helper is called via ElementsFromPoint, we need to make sure
       // our frame is an element. Otherwise return whatever the top frame is
       // even if it isn't the top-painted element.
-      if (!(aFlags & nsIDocument::IS_ELEMENT_FROM_POINT)) {
+      // SVG 'text' element's SVGTextFrame doesn't respond to hit-testing, so
+      // if 'node' is a child of such an element then we need to manually defer
+      // to the parent here.
+      if (!(aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) &&
+          !nsSVGUtils::IsInSVGTextSubtree(outFrames[i])) {
         continue;
       }
       node = node->GetParent();
