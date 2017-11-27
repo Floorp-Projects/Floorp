@@ -57,7 +57,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b8441aacdc91"
+        "revision": "04292a0b0c1c"
     }, 
     "az": {
         "platforms": [
@@ -447,7 +447,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "c81ee93d7622"
+        "revision": "71c8b5802efa"
     }, 
     "hy-AM": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6d8d17f605a5"
+        "revision": "079beb46523a"
     }, 
     "kab": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "ce42d9d0e12f"
+        "revision": "89d1d634f6f3"
     }, 
     "kk": {
         "platforms": [
@@ -742,7 +742,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "bc5d5b6f64ea"
+        "revision": "fe257161ee24"
     }, 
     "rm": {
         "platforms": [
