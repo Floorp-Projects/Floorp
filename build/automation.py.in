@@ -183,33 +183,11 @@ class Automation(object):
       else:
         os.kill(self.pid, signal.SIGKILL)
 
-  def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, dmdPath=None, lsanPath=None, ubsanPath=None):
+  def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, lsanPath=None, ubsanPath=None):
     if xrePath == None:
       xrePath = self.DIST_BIN
     if env == None:
       env = dict(os.environ)
-
-    ldLibraryPath = os.path.abspath(os.path.join(SCRIPT_DIR, xrePath))
-    dmdLibrary = None
-    preloadEnvVar = None
-    if self.UNIXISH or self.IS_MAC:
-      envVar = "LD_LIBRARY_PATH"
-      preloadEnvVar = "LD_PRELOAD"
-      if self.IS_MAC:
-        envVar = "DYLD_LIBRARY_PATH"
-        dmdLibrary = "libdmd.dylib"
-      else: # unixish
-        dmdLibrary = "libdmd.so"
-      if envVar in env:
-        ldLibraryPath = ldLibraryPath + ":" + env[envVar]
-      env[envVar] = ldLibraryPath
-    elif self.IS_WIN32:
-      env["PATH"] = env["PATH"] + ";" + str(ldLibraryPath)
-      dmdLibrary = "dmd.dll"
-      preloadEnvVar = "MOZ_REPLACE_MALLOC_LIB"
-
-    if dmdPath and dmdLibrary and preloadEnvVar:
-      env[preloadEnvVar] = os.path.join(dmdPath, dmdLibrary)
 
     if crashreporter and not debugger:
       env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'

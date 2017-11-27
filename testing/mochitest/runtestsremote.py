@@ -356,13 +356,6 @@ def run_test_harness(parser, options):
     mozinfo.info['android_version'] = androidVersion
 
     deviceRoot = dm.deviceRoot
-    if options.dmdPath:
-        dmdLibrary = "libdmd.so"
-        dmdPathOnDevice = os.path.join(deviceRoot, dmdLibrary)
-        dm.removeFile(dmdPathOnDevice)
-        dm.pushFile(os.path.join(options.dmdPath, dmdLibrary), dmdPathOnDevice)
-        options.dmdPath = deviceRoot
-
     options.dumpOutputDirectory = deviceRoot
 
     procName = options.app.split('/')[-1]
