@@ -67,15 +67,6 @@ nsINIParser::Init(nsIFile* aFile)
   return InitFromString(result);
 }
 
-nsresult
-nsINIParser::Init(const char* aPath)
-{
-  nsCString result;
-  MOZ_TRY_VAR(result, URLPreloader::ReadFile(nsDependentCString(aPath)));
-
-  return InitFromString(result);
-}
-
 static const char kNL[] = "\r\n";
 static const char kEquals[] = "=";
 static const char kWhitespace[] = " \t";
