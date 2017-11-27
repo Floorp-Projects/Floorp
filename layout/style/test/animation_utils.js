@@ -262,8 +262,6 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
         utils.advanceTimeAndRefresh(0);
         div.style.animation = animationName + " 10s";
 
-        // Trigger style flush
-        div.clientTop;
         return waitForPaintsFlushed();
       }).then(function() {
         var opacity = utils.getOMTAStyle(div, "opacity");
