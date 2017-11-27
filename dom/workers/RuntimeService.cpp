@@ -252,26 +252,6 @@ GetWorkerPref(const nsACString& aPref,
   return result;
 }
 
-// This fn creates a key for a SharedWorker that contains the name, script
-// spec, and the serialized origin attributes:
-// "name|scriptSpec^key1=val1&key2=val2&key3=val3"
-void
-GenerateSharedWorkerKey(const nsACString& aScriptSpec,
-                        const nsAString& aName,
-                        const OriginAttributes& aAttrs,
-                        nsCString& aKey)
-{
-  nsAutoCString suffix;
-  aAttrs.CreateSuffix(suffix);
-
-  aKey.Truncate();
-  aKey.SetCapacity(aName.Length() + aScriptSpec.Length() + suffix.Length() + 2);
-  aKey.Append(NS_ConvertUTF16toUTF8(aName));
-  aKey.Append('|');
-  aKey.Append(aScriptSpec);
-  aKey.Append(suffix);
-}
-
 void
 LoadContextOptions(const char* aPrefName, void* /* aClosure */)
 {
@@ -1601,16 +1581,23 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
     }
 
     if (isSharedWorker) {
-      const nsString& sharedWorkerName(aWorkerPrivate->WorkerName());
-      nsAutoCString key;
-      GenerateSharedWorkerKey(sharedWorkerScriptSpec, sharedWorkerName,
-                              aWorkerPrivate->GetOriginAttributes(), key);
-      MOZ_ASSERT(!domainInfo->mSharedWorkerInfos.Get(key));
+#ifdef DEBUG
+      for (const UniquePtr<SharedWorkerInfo>& data : domainInfo->mSharedWorkerInfos) {
+         if (data->mScriptSpec == sharedWorkerScriptSpec &&
+             data->mName == aWorkerPrivate->WorkerName() &&
+             // We want to be sure that the window's principal subsumes the
+             // SharedWorker's principal and vice versa.
+             data->mWorkerPrivate->GetPrincipal()->Subsumes(aWorkerPrivate->GetPrincipal()) &&
+             aWorkerPrivate->GetPrincipal()->Subsumes(data->mWorkerPrivate->GetPrincipal())) {
+           MOZ_CRASH("We should not instantiate a new SharedWorker!");
+         }
+      }
+#endif
 
-      SharedWorkerInfo* sharedWorkerInfo =
+      UniquePtr<SharedWorkerInfo> sharedWorkerInfo(
         new SharedWorkerInfo(aWorkerPrivate, sharedWorkerScriptSpec,
-                             sharedWorkerName);
-      domainInfo->mSharedWorkerInfos.Put(key, sharedWorkerInfo);
+                             aWorkerPrivate->WorkerName()));
+      domainInfo->mSharedWorkerInfos.AppendElement(Move(sharedWorkerInfo));
     }
   }
 
@@ -1670,18 +1657,11 @@ void
 RuntimeService::RemoveSharedWorker(WorkerDomainInfo* aDomainInfo,
                                    WorkerPrivate* aWorkerPrivate)
 {
-  for (auto iter = aDomainInfo->mSharedWorkerInfos.Iter();
-       !iter.Done();
-       iter.Next()) {
-    SharedWorkerInfo* data = iter.UserData();
+  for (uint32_t i = 0; i < aDomainInfo->mSharedWorkerInfos.Length(); ++i) {
+    const UniquePtr<SharedWorkerInfo>& data =
+      aDomainInfo->mSharedWorkerInfos[i];
     if (data->mWorkerPrivate == aWorkerPrivate) {
-#ifdef DEBUG
-      nsAutoCString key;
-      GenerateSharedWorkerKey(data->mScriptSpec, data->mName,
-                              aWorkerPrivate->GetOriginAttributes(), key);
-      MOZ_ASSERT(iter.Key() == key);
-#endif
-      iter.Remove();
+      aDomainInfo->mSharedWorkerInfos.RemoveElementAt(i);
       break;
     }
   }
@@ -2372,21 +2352,25 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
   {
     MutexAutoLock lock(mMutex);
 
-    WorkerDomainInfo* domainInfo;
-    SharedWorkerInfo* sharedWorkerInfo;
-
     nsCString scriptSpec;
     nsresult rv = aLoadInfo->mResolvedScriptURI->GetSpec(scriptSpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     MOZ_ASSERT(aLoadInfo->mPrincipal);
-    nsAutoCString key;
-    GenerateSharedWorkerKey(scriptSpec, aName,
-        aLoadInfo->mPrincipal->OriginAttributesRef(), key);
 
-    if (mDomainMap.Get(aLoadInfo->mDomain, &domainInfo) &&
-        domainInfo->mSharedWorkerInfos.Get(key, &sharedWorkerInfo)) {
-      workerPrivate = sharedWorkerInfo->mWorkerPrivate;
+    WorkerDomainInfo* domainInfo;
+    if (mDomainMap.Get(aLoadInfo->mDomain, &domainInfo)) {
+      for (const UniquePtr<SharedWorkerInfo>& data : domainInfo->mSharedWorkerInfos) {
+        if (data->mScriptSpec == scriptSpec &&
+            data->mName == aName &&
+            // We want to be sure that the window's principal subsumes the
+            // SharedWorker's principal and vice versa.
+            aLoadInfo->mPrincipal->Subsumes(data->mWorkerPrivate->GetPrincipal()) &&
+            data->mWorkerPrivate->GetPrincipal()->Subsumes(aLoadInfo->mPrincipal)) {
+          workerPrivate = data->mWorkerPrivate;
+          break;
+        }
+      }
     }
   }
 
