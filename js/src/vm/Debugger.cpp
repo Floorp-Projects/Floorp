@@ -5187,9 +5187,9 @@ GetScriptReferent(JSObject* obj)
 {
     MOZ_ASSERT(obj->getClass() == &DebuggerScript_class);
     if (gc::Cell* cell = GetScriptReferentCell(obj)) {
-        if (cell->getTraceKind() == JS::TraceKind::Script)
-            return AsVariant(static_cast<JSScript*>(cell));
-        MOZ_ASSERT(cell->getTraceKind() == JS::TraceKind::Object);
+        if (cell->is<JSScript>())
+            return AsVariant(cell->as<JSScript>());
+        MOZ_ASSERT(cell->is<JSObject>());
         return AsVariant(&static_cast<NativeObject*>(cell)->as<WasmInstanceObject>());
     }
     return AsVariant(static_cast<JSScript*>(nullptr));
@@ -5201,13 +5201,13 @@ DebuggerScript_trace(JSTracer* trc, JSObject* obj)
     /* This comes from a private pointer, so no barrier needed. */
     gc::Cell* cell = GetScriptReferentCell(obj);
     if (cell) {
-        if (cell->getTraceKind() == JS::TraceKind::Script) {
-            JSScript* script = static_cast<JSScript*>(cell);
+        if (cell->is<JSScript>()) {
+            JSScript* script = cell->as<JSScript>();
             TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &script,
                                                        "Debugger.Script script referent");
             obj->as<NativeObject>().setPrivateUnbarriered(script);
         } else {
-            JSObject* wasm = static_cast<JSObject*>(cell);
+            JSObject* wasm = cell->as<JSObject>();
             TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &wasm,
                                                        "Debugger.Script wasm referent");
             MOZ_ASSERT(wasm->is<WasmInstanceObject>());
