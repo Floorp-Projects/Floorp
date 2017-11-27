@@ -7,11 +7,11 @@ runHeuristicsTest([
     fixturePath: "ShippingAddress.html",
     expectedResult: [
       [],
-      [[]], // search form, ac-off
-      [[ // ac-off
+      [], // search form, ac-off
+      [ // ac-off
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-      ]],
-      [[ // check-out, ac-off
+      ],
+      [ // check-out, ac-off
 /*
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
@@ -24,7 +24,7 @@ runHeuristicsTest([
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
 */
-      ]],
+      ],
       [ // ac-off
 /*
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
@@ -40,18 +40,18 @@ runHeuristicsTest([
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "new-password"},
 */
       ],
-      [[ // ac-off
+      [ // ac-off
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-      ]],
-      [[ // ac-off
+      ],
+      [ // ac-off
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-      ]],
+      ],
     ],
   }, {
     fixturePath: "PaymentOptions.html",
     expectedResult: [
       [],
-      [[]], // search
+      [], // search
       [[ // credit card
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
         // FIXME: bug 1392958 - Cardholder name field should be detected as cc-name
