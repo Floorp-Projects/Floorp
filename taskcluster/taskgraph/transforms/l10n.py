@@ -65,6 +65,10 @@ l10n_description_schema = Schema({
         # Config files passed to the mozharness script
         Required('config'): _by_platform([basestring]),
 
+        # Additional paths to look for mozharness configs in. These should be
+        # relative to the base of the source checkout
+        Optional('config-paths'): _by_platform([basestring]),
+
         # Options to pass to the mozharness script
         Required('options'): _by_platform([basestring]),
 
