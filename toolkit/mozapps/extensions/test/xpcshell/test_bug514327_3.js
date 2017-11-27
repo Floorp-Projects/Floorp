@@ -14,7 +14,6 @@ const nsIBLS = Ci.nsIBlocklistService;
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 var gBlocklist = null;
-var gPrefs = null;
 var gTestserver = null;
 
 var gNextTestPart = null;
@@ -90,7 +89,7 @@ MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher)
 function do_update_blocklist(aDatafile, aNextPart) {
   gNextTestPart = aNextPart;
 
-  gPrefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/" + aDatafile);
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/" + aDatafile);
   gBlocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
 }
 
@@ -107,7 +106,6 @@ function run_test() {
   // initialize the blocklist with no entries
   copyBlocklistToProfile(do_get_file("data/test_bug514327_3_empty.xml"));
 
-  gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
 
   // should NOT be marked as outdated by the blocklist

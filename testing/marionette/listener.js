@@ -1274,9 +1274,22 @@ async function findElementsContent(strategy, selector, opts = {}) {
   return webEls;
 }
 
-/** Find and return the active element on the page. */
+/**
+ * Return the active element in the document.
+ *
+ * @return {WebElement}
+ *     Active element of the current browsing context's document
+ *     element, if the document element is non-null.
+ *
+ * @throws {NoSuchElementError}
+ *     If the document does not have an active element, i.e. if
+ *     its document element has been deleted.
+ */
 function getActiveElement() {
   let el = curContainer.frame.document.activeElement;
+  if (!el) {
+    throw new NoSuchElementError();
+  }
   return evaluate.toJSON(el, seenEls);
 }
 

@@ -852,14 +852,11 @@ this.AddonUpdateChecker = {
     if (!aPlatformVersion)
       aPlatformVersion = Services.appinfo.platformVersion;
 
-    let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                    getService(Ci.nsIBlocklistService);
-
     let newest = null;
     for (let update of aUpdates) {
       if (!update.updateURL)
         continue;
-      let state = blocklist.getAddonBlocklistState(update, aAppVersion, aPlatformVersion);
+      let state = Services.blocklist.getAddonBlocklistState(update, aAppVersion, aPlatformVersion);
       if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
         continue;
       if ((newest == null || (Services.vc.compare(newest.version, update.version) < 0)) &&

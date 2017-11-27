@@ -2124,8 +2124,8 @@ this.PlacesPanelview = class extends PlacesViewBase {
   handleEvent(event) {
     switch (event.type) {
       case "click":
-        // For left and middle clicks, fall through to the command handler.
-        if (event.button >= 2) {
+        // For middle clicks, fall through to the command handler.
+        if (event.button != 1) {
           break;
         }
       case "command":
@@ -2154,8 +2154,22 @@ this.PlacesPanelview = class extends PlacesViewBase {
     if (!button._placesNode)
       return;
 
+    let modifKey = AppConstants.platform === "macosx" ? event.metaKey
+                                                      : event.ctrlKey;
+    if (!PlacesUIUtils.openInTabClosesMenu && modifKey) {
+      // If 'Recent Bookmarks' in Bookmarks Panel.
+      if (button.parentNode.id == "panelMenu_bookmarksMenu") {
+        button.setAttribute("closemenu", "none");
+      }
+    } else {
+      button.removeAttribute("closemenu");
+    }
     PlacesUIUtils.openNodeWithEvent(button._placesNode, event);
-    this.panelMultiView.closest("panel").hidePopup();
+    // Unlike left-click, middle-click requires manual menu closing.
+    if (button.parentNode.id != "panelMenu_bookmarksMenu" ||
+        (event.type == "click" && event.button == 1 && PlacesUIUtils.openInTabClosesMenu)) {
+      this.panelMultiView.closest("panel").hidePopup();
+    }
   }
 
   _onDragEnd() {

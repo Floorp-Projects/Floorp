@@ -381,8 +381,6 @@ async function updatePinningList(records) {
   if (!Services.prefs.getBoolPref(PREF_BLOCKLIST_PINNING_ENABLED)) {
     return;
   }
-  const appInfo = Cc["@mozilla.org/xre/app-info;1"]
-      .getService(Ci.nsIXULAppInfo);
 
   const siteSecurityService = Cc["@mozilla.org/ssservice;1"]
       .getService(Ci.nsISiteSecurityService);
@@ -394,7 +392,7 @@ async function updatePinningList(records) {
   for (let item of records) {
     try {
       const {pinType, pins = [], versions} = item;
-      if (versions.indexOf(appInfo.version) != -1) {
+      if (versions.indexOf(Services.appinfo.version) != -1) {
         if (pinType == "KeyPin" && pins.length) {
           siteSecurityService.setKeyPins(item.hostName,
               item.includeSubdomains,

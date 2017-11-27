@@ -380,10 +380,8 @@ function run_test() {
   do_check_eq(ltm.currentTheme, null);
 
   // Force the theme into the prefs anyway
-  let prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
   let themes = [data];
-  prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
   do_check_eq(ltm.usedThemes.length, 1);
 
   // This should silently drop the bad theme.
@@ -395,7 +393,7 @@ function run_test() {
 
   // Add one broken and some working.
   themes = [data, dummy("x1"), dummy("x2")];
-  prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
   do_check_eq(ltm.usedThemes.length, 3);
 
   // Switching to an existing theme should drop the bad theme.
@@ -406,7 +404,7 @@ function run_test() {
   do_check_eq(ltm.usedThemes.length, 0);
   do_check_eq(ltm.currentTheme, null);
 
-  prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
   do_check_eq(ltm.usedThemes.length, 3);
 
   // Forgetting an existing theme should drop the bad theme.
@@ -419,7 +417,7 @@ function run_test() {
   // Test whether a JSON set with setCharPref can be retrieved with usedThemes
   ltm.currentTheme = dummy("x0");
   ltm.currentTheme = dummy("x1");
-  prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(ltm.usedThemes));
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(ltm.usedThemes));
   do_check_eq(ltm.usedThemes.length, 2);
   do_check_eq(ltm.currentTheme.id, "x1");
   do_check_eq(ltm.usedThemes[1].id, "x0");

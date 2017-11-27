@@ -40,15 +40,11 @@ p {
 }
 
 .list-row > ul > li {
-  float: left;
+  float: inline-start;
   width: 16em;
   line-height: 2em;
   margin-inline-start: 1em;
   margin-bottom: 0;
-}
-
-.list-row > ul > li:dir(rtl) {
-  float: right;
 }
 
 .title {
@@ -153,12 +149,7 @@ a.button {
 }
 
 .toggle:checked + .toggle-btn::after {
-  left: 21px;
-}
-
-.toggle:checked + .toggle-btn:dir(rtl)::after {
-  left: auto;
-  right: 16px;
+  offset-inline-start: 21px;
 }
 
 .toggle:-moz-focusring + .toggle-btn {

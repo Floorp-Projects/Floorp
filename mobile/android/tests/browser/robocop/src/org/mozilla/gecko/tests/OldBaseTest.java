@@ -158,7 +158,7 @@ abstract class OldBaseTest extends BaseRobocopTest {
 
     protected final void hitEnterAndWait() {
         Actions.EventExpecter contentEventExpecter =
-                mActions.expectGlobalEvent(Actions.EventType.GECKO, "Content:DOMContentLoaded");
+                mActions.expectGlobalEvent(Actions.EventType.UI, "Content:DOMContentLoaded");
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
         // wait for screen to load
         contentEventExpecter.blockForEvent();
@@ -202,7 +202,7 @@ abstract class OldBaseTest extends BaseRobocopTest {
      */
     protected final void loadUrlAndWait(final String url) {
         Actions.EventExpecter contentEventExpecter =
-                mActions.expectGlobalEvent(Actions.EventType.GECKO, "Content:DOMContentLoaded");
+                mActions.expectGlobalEvent(Actions.EventType.UI, "Content:DOMContentLoaded");
         loadUrl(url);
         contentEventExpecter.blockForEvent();
         contentEventExpecter.unregisterListener();

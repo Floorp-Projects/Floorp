@@ -63,10 +63,8 @@ TPSCmdLineHandler.prototype = {
     const onStartupFinished = () => {
       Services.obs.removeObserver(onStartupFinished, "browser-delayed-startup-finished");
       /* Ignore the platform's online/offline status while running tests. */
-      var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                          .getService(Components.interfaces.nsIIOService);
-      ios.manageOfflineStatus = false;
-      ios.offline = false;
+      Services.io.manageOfflineStatus = false;
+      Services.io.offline = false;
       Components.utils.import("resource://tps/tps.jsm");
       Components.utils.import("resource://tps/quit.js", TPS);
       TPS.RunTestPhase(uri, phase, logfile, options).catch(err => TPS.DumpError("TestPhase failed", err));

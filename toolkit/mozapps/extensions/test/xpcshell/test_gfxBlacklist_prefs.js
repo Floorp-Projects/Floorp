@@ -16,12 +16,6 @@ gPort = gTestserver.identity.primaryPort;
 mapFile("/data/test_gfxBlacklist.xml", gTestserver);
 mapFile("/data/test_gfxBlacklist2.xml", gTestserver);
 
-function get_platform() {
-  var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                             .getService(Components.interfaces.nsIXULRuntime);
-  return xulRuntime.OS;
-}
-
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
                              gPort + "/data/" + file);
@@ -48,7 +42,7 @@ function run_test() {
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
 
   // Set the vendor/device ID, etc, to match the test file.
-  switch (get_platform()) {
+  switch (Services.appinfo.OS) {
     case "WINNT":
       gfxInfo.spoofVendorID("0xabcd");
       gfxInfo.spoofDeviceID("0x1234");
@@ -90,9 +84,7 @@ function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch);
-    do_check_eq(prefs.getIntPref("gfx.blacklist.direct2d"),
+    do_check_eq(Services.prefs.getIntPref("gfx.blacklist.direct2d"),
                 Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     Services.obs.removeObserver(blacklistAdded, "blocklist-data-gfxItems");
@@ -113,11 +105,9 @@ function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch);
     var exists = false;
     try {
-      prefs.getIntPref("gfx.blacklist.direct2d");
+      Services.prefs.getIntPref("gfx.blacklist.direct2d");
       exists = true;
     } catch (e) {}
 

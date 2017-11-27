@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 // Constants
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xul";
 const STRINGBUNDLE_URL = "chrome://mozapps/locale/handling/handling.properties";
@@ -31,12 +33,8 @@ nsContentDispatchChooser.prototype =
         window = aWindowContext.getInterface(Ci.nsIDOMWindow);
     } catch (e) { /* it's OK to not have a window */ }
 
-    var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
-              getService(Ci.nsIStringBundleService);
-    var bundle = sbs.createBundle(STRINGBUNDLE_URL);
+    var bundle = Services.strings.createBundle(STRINGBUNDLE_URL);
 
-    var xai = Cc["@mozilla.org/xre/app-info;1"].
-              getService(Ci.nsIXULAppInfo);
     // TODO when this is hooked up for content, we will need different strings
     //      for most of these
     var arr = [bundle.GetStringFromName("protocol.title"),
@@ -47,7 +45,7 @@ nsContentDispatchChooser.prototype =
                                            [aURI.scheme], 1),
                bundle.GetStringFromName("protocol.checkbox.accesskey"),
                bundle.formatStringFromName("protocol.checkbox.extra",
-                                           [xai.name], 1)];
+                                           [Services.appinfo.name], 1)];
 
     var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     let SupportsString = Components.Constructor(
@@ -62,13 +60,11 @@ nsContentDispatchChooser.prototype =
     params.appendElement(aURI);
     params.appendElement(aWindowContext);
 
-    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-             getService(Ci.nsIWindowWatcher);
-    ww.openWindow(window,
-                  CONTENT_HANDLING_URL,
-                  null,
-                  "chrome,dialog=yes,resizable,centerscreen",
-                  params);
+    Services.ww.openWindow(window,
+                           CONTENT_HANDLING_URL,
+                           null,
+                           "chrome,dialog=yes,resizable,centerscreen",
+                           params);
   },
 
   // nsISupports

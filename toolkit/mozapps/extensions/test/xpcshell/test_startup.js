@@ -117,9 +117,7 @@ var gCachePurged = false;
 function run_test() {
   do_test_pending("test_startup main");
 
-  let obs = AM_Cc["@mozilla.org/observer-service;1"].
-    getService(AM_Ci.nsIObserverService);
-  obs.addObserver({
+  Services.obs.addObserver({
     observe(aSubject, aTopic, aData) {
       gCachePurged = true;
     }

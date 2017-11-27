@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
 const {GeckoDriver} = Cu.import("chrome://marionette/content/driver.js", {});
+const {WebElement} = Cu.import("chrome://marionette/content/element.js", {});
 const {
   error,
   UnknownCommandError,
@@ -27,8 +28,7 @@ const {
   Message,
   Response,
 } = Cu.import("chrome://marionette/content/message.js", {});
-const {DebuggerTransport} =
-    Cu.import("chrome://marionette/content/transport.js", {});
+const {DebuggerTransport} = Cu.import("chrome://marionette/content/transport.js", {});
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
@@ -560,7 +560,7 @@ server.TCPConnection = class {
     let rv = await fn.bind(this.driver)(cmd, resp);
 
     if (typeof rv != "undefined") {
-      if (typeof rv != "object") {
+      if (rv instanceof WebElement || typeof rv != "object") {
         resp.body = {value: rv};
       } else {
         resp.body = rv;
