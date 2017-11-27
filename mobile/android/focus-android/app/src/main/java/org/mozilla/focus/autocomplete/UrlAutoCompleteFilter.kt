@@ -15,7 +15,6 @@ import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.widget.InlineAutocompleteEditText
 import java.io.IOException
 import java.util.*
-import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashSet
 
 class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {

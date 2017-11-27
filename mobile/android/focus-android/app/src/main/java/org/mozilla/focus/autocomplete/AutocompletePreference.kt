@@ -12,6 +12,9 @@ import android.widget.TextView
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.Settings
 
+/**
+ * Autocomplete preference that will show a sub screen to configure the autocomplete behavior.
+ */
 class AutocompletePreference(context: Context?, attrs: AttributeSet?) : Preference(context, attrs) {
     var summaryView : TextView? = null
 

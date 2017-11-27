@@ -17,7 +17,10 @@ import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.ext.removePrefixesIgnoreCase
 import org.mozilla.focus.utils.ViewUtils
 
-class AutocompleteAddDomainFragment : Fragment() {
+/**
+ * Fragment showing settings UI to add custom autocomplete domains.
+ */
+class AutocompleteAddFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

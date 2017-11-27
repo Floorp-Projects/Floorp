@@ -9,7 +9,10 @@ import android.util.AttributeSet
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.LearnMoreSwitchPreference
 
-class AutocompleteDefaultPreference(context: Context?, attrs: AttributeSet?) : LearnMoreSwitchPreference(context, attrs) {
+/**
+ * Switch preference for enabling/disabling autocompletion for default domains that ship with the app.
+ */
+class AutocompleteDefaultDomainsPreference(context: Context?, attrs: AttributeSet?) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl() = "http://www.mozilla.org"
 
     override fun getDescription(): String? =

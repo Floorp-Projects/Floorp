@@ -11,6 +11,9 @@ import android.preference.PreferenceScreen
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
 
+/**
+ * Settings UI for configuring autocomplete.
+ */
 class AutocompleteSettingsFragment : PreferenceFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +33,7 @@ class AutocompleteSettingsFragment : PreferenceFragment() {
         preference?.let {
             if (it.key == getString(R.string.pref_key_screen_custom_domains)) {
                 fragmentManager.beginTransaction()
-                        .replace(R.id.container, AutocompleteCustomDomainsFragment())
+                        .replace(R.id.container, AutocompleteListFragment())
                         .addToBackStack(null)
                         .commit()
             }

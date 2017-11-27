@@ -25,7 +25,10 @@ import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
 import java.util.*
 
-open class AutocompleteCustomDomainsFragment : Fragment() {
+/**
+ * Fragment showing settings UI listing all custom autocomplete domains entered by the user.
+ */
+open class AutocompleteListFragment : Fragment() {
     var itemTouchHelper: ItemTouchHelper? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,6 +36,10 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         setHasOptionsMenu(true)
     }
 
+    /**
+     * In selection mode the user can select and remove items. In non-selection mode the list can
+     * be reordered by the user.
+     */
     open fun isSelectionMode() = false
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View =
@@ -118,7 +125,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         R.id.remove -> {
             fragmentManager
                     .beginTransaction()
-                    .replace(R.id.container, AutocompleteCustomDomainsRemoveFragment())
+                    .replace(R.id.container, AutocompleteRemoveFragment())
                     .addToBackStack(null)
                     .commit()
             true
@@ -126,6 +133,9 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         else -> super.onOptionsItemSelected(item)
     }
 
+    /**
+     * Adapter implementation for the list of custom autocomplete domains.
+     */
     inner class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val domains: MutableList<String> = mutableListOf()
         private val selectedDomains: MutableList<String> = mutableListOf()
@@ -153,7 +163,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
                 when (viewType) {
                     AddActionViewHolder.LAYOUT_ID ->
                             AddActionViewHolder(
-                                    this@AutocompleteCustomDomainsFragment,
+                                    this@AutocompleteListFragment,
                                     LayoutInflater.from(parent!!.context).inflate(viewType, parent, false))
                     DomainViewHolder.LAYOUT_ID ->
                             DomainViewHolder(
@@ -187,6 +197,9 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         }
     }
 
+    /**
+     * ViewHolder implementation for a domain item in the list.
+     */
     private class DomainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val domainView: TextView = itemView.findViewById(R.id.domainView)
         val checkBoxView : CheckBox = itemView.findViewById(R.id.checkbox)
@@ -227,12 +240,15 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         }
     }
 
-    private class AddActionViewHolder(val fragment: AutocompleteCustomDomainsFragment, itemView: View) : RecyclerView.ViewHolder(itemView) {
+    /**
+     * ViewHolder implementation for a "Add custom domain" item at the bottom of the list.
+     */
+    private class AddActionViewHolder(val fragment: AutocompleteListFragment, itemView: View) : RecyclerView.ViewHolder(itemView) {
         init {
             itemView.setOnClickListener {
                 fragment.fragmentManager
                         .beginTransaction()
-                        .replace(R.id.container, AutocompleteAddDomainFragment())
+                        .replace(R.id.container, AutocompleteAddFragment())
                         .addToBackStack(null)
                         .commit()
             }
