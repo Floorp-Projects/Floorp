@@ -442,21 +442,6 @@ storage.sync.api.usage:
     record_in_processes:
       - main
 
-general.autoconfig:
-  has_filename:
-    bug_numbers:
-      - 1226616
-    description: >
-      Recorded on startup. Boolean stating whether the
-      general.autoconfig.filename preference has a value.
-    expires: never
-    kind: boolean
-    notification_emails:
-      - florian@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
 services.sync:
   fxa_verification_method:
     bug_numbers:
