@@ -35,7 +35,7 @@ class CustomAutocompleteTest {
 
     @Test
     fun testSavingAndLoadingDomains() = runBlocking {
-        CustomAutocomplete.saveDomains(RuntimeEnvironment.application, setOf(
+        CustomAutocomplete.saveDomains(RuntimeEnvironment.application, listOf(
                 "mozilla.org",
                 "example.org",
                 "example.com"

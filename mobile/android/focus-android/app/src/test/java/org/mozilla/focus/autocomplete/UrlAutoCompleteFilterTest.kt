@@ -37,8 +37,8 @@ class UrlAutoCompleteFilterTest {
         val filter = UrlAutoCompleteFilter()
         filter.load(RuntimeEnvironment.application, false)
 
-        val domains = setOf("mozilla.org", "google.com", "facebook.com")
-        filter.onDomainsLoaded(domains, HashSet())
+        val domains = listOf("mozilla.org", "google.com", "facebook.com")
+        filter.onDomainsLoaded(domains, emptyList())
 
         assertAutocompletion(filter, "m", "mozilla.org")
         assertAutocompletion(filter, "www", "www.mozilla.org")
@@ -60,8 +60,8 @@ class UrlAutoCompleteFilterTest {
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_autocomplete_custom), true)
                 .apply()
 
-        val domains = setOf("facebook.com", "google.com", "mozilla.org")
-        val customDomains = setOf("gap.com", "fanfiction.com", "mobile.de")
+        val domains = listOf("facebook.com", "google.com", "mozilla.org")
+        val customDomains = listOf("gap.com", "fanfiction.com", "mobile.de")
 
         val filter = UrlAutoCompleteFilter()
         filter.load(RuntimeEnvironment.application, false)
