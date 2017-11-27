@@ -89,8 +89,7 @@ function MockPlugin(name, version, enabledState) {
 }
 Object.defineProperty(MockPlugin.prototype, "blocklisted", {
   get: function MockPlugin_getBlocklisted() {
-    let bls = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsIBlocklistService);
-    return bls.getPluginBlocklistState(this) == bls.STATE_BLOCKED;
+    return Services.blocklist.getPluginBlocklistState(this) == Services.blocklist.STATE_BLOCKED;
   }
 });
 Object.defineProperty(MockPlugin.prototype, "disabled", {
@@ -416,9 +415,6 @@ function check_test_pt3() {
   restartManager();
   dump("Checking results pt 3\n");
 
-  let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService(Ci.nsIBlocklistService);
-
   AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(addons) {
     // All should have gained the blocklist state, user disabled as previously
     do_check_eq(check_addon_state(addons[0]), "true,false,true");
@@ -435,18 +431,18 @@ function check_test_pt3() {
     do_check_eq(check_addon_state(addons[3]), "false,false,true");
 
     // Check blockIDs are correct
-    do_check_eq(blocklist.getAddonBlocklistURL(addons[0]), create_blocklistURL(addons[0].id));
-    do_check_eq(blocklist.getAddonBlocklistURL(addons[1]), create_blocklistURL(addons[1].id));
-    do_check_eq(blocklist.getAddonBlocklistURL(addons[2]), create_blocklistURL(addons[2].id));
-    do_check_eq(blocklist.getAddonBlocklistURL(addons[3]), create_blocklistURL(addons[3].id));
-    do_check_eq(blocklist.getAddonBlocklistURL(addons[4]), create_blocklistURL(addons[4].id));
+    do_check_eq(Services.blocklist.getAddonBlocklistURL(addons[0]), create_blocklistURL(addons[0].id));
+    do_check_eq(Services.blocklist.getAddonBlocklistURL(addons[1]), create_blocklistURL(addons[1].id));
+    do_check_eq(Services.blocklist.getAddonBlocklistURL(addons[2]), create_blocklistURL(addons[2].id));
+    do_check_eq(Services.blocklist.getAddonBlocklistURL(addons[3]), create_blocklistURL(addons[3].id));
+    do_check_eq(Services.blocklist.getAddonBlocklistURL(addons[4]), create_blocklistURL(addons[4].id));
 
     // All plugins have the same blockID on the test
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL("test_bug455906_plugin"));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[1]), create_blocklistURL("test_bug455906_plugin"));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[2]), create_blocklistURL("test_bug455906_plugin"));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[3]), create_blocklistURL("test_bug455906_plugin"));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[4]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(Services.blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(Services.blocklist.getPluginBlocklistURL(PLUGINS[1]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(Services.blocklist.getPluginBlocklistURL(PLUGINS[2]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(Services.blocklist.getPluginBlocklistURL(PLUGINS[3]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(Services.blocklist.getPluginBlocklistURL(PLUGINS[4]), create_blocklistURL("test_bug455906_plugin"));
 
     // Shouldn't be changed
     do_check_eq(check_addon_state(addons[5]), "false,false,true");

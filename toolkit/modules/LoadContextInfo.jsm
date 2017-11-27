@@ -11,5 +11,7 @@
  */
 
 this.EXPORTED_SYMBOLS = ["LoadContextInfo"];
+// XXX Bug 1417937 will remove this file.
+// eslint-disable-next-line mozilla/use-services
 this.LoadContextInfo = Components.classes["@mozilla.org/load-context-info-factory;1"]
                                  .getService(Components.interfaces.nsILoadContextInfoFactory);

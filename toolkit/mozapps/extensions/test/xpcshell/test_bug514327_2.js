@@ -24,9 +24,8 @@ function run_test() {
   copyBlocklistToProfile(do_get_file("data/test_bug514327_2.xml"));
 
   var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
-  prefs.setBoolPref("plugin.load_flash_only", false);
+  Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
   var plugin = get_test_plugintag();
   if (!plugin)

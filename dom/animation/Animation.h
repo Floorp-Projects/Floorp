@@ -112,12 +112,12 @@ public:
   AnimationPlayState PlayState() const;
   bool Pending() const { return mPendingState != PendingState::NotPending; }
   virtual Promise* GetReady(ErrorResult& aRv);
-  virtual Promise* GetFinished(ErrorResult& aRv);
+  Promise* GetFinished(ErrorResult& aRv);
   void Cancel();
-  virtual void Finish(ErrorResult& aRv);
+  void Finish(ErrorResult& aRv);
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
   virtual void Pause(ErrorResult& aRv);
-  virtual void Reverse(ErrorResult& aRv);
+  void Reverse(ErrorResult& aRv);
   bool IsRunningOnCompositor() const;
   IMPL_EVENT_HANDLER(finish);
   IMPL_EVENT_HANDLER(cancel);

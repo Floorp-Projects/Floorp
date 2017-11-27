@@ -381,16 +381,12 @@ PluginWrapper.prototype = {
 
   get blocklistState() {
     let { tags: [tag] } = pluginFor(this);
-    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
-             getService(Ci.nsIBlocklistService);
-    return bs.getPluginBlocklistState(tag);
+    return Services.blocklist.getPluginBlocklistState(tag);
   },
 
   get blocklistURL() {
     let { tags: [tag] } = pluginFor(this);
-    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
-             getService(Ci.nsIBlocklistService);
-    return bs.getPluginBlocklistURL(tag);
+    return Services.blocklist.getPluginBlocklistURL(tag);
   },
 
   get size() {

@@ -36,7 +36,7 @@
 class ClearKeySessionManager final : public RefCounted
 {
 public:
-  explicit ClearKeySessionManager(cdm::Host_8* aHost);
+  explicit ClearKeySessionManager(cdm::Host_9* aHost);
 
   void Init(bool aDistinctiveIdentifierAllowed,
             bool aPersistentStateAllowed);
@@ -91,7 +91,7 @@ private:
   RefPtr<ClearKeyDecryptionManager> mDecryptionManager;
   RefPtr<ClearKeyPersistence> mPersistence;
 
-  cdm::Host_8* mHost = nullptr;
+  cdm::Host_9* mHost = nullptr;
 
   std::set<KeyId> mKeyIds;
   std::map<std::string, ClearKeySession*> mSessions;

@@ -33,7 +33,7 @@
 using namespace std;
 using namespace cdm;
 
-ClearKeySessionManager::ClearKeySessionManager(Host_8* aHost)
+ClearKeySessionManager::ClearKeySessionManager(Host_9* aHost)
   : mDecryptionManager(ClearKeyDecryptionManager::Get())
 {
   CK_LOGD("ClearKeySessionManager ctor %p", this);
@@ -117,7 +117,7 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
 
     string message = "initDataType is not supported by ClearKey";
     mHost->OnRejectPromise(aPromiseId,
-                           Error::kNotSupportedError,
+                           Exception::kExceptionNotSupportedError,
                            0,
                            message.c_str(),
                            message.size());
@@ -137,7 +137,7 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
 
     const static char* message = "Failed to initialize session";
     mHost->OnRejectPromise(aPromiseId,
-                           Error::kUnknownError,
+                           Exception::kExceptionInvalidStateError,
                            0,
                            message,
                            strlen(message));
@@ -178,9 +178,7 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
                           sessionId.size(),
                           MessageType::kLicenseRequest,
                           request.c_str(),
-                          request.size(),
-                          nullptr,
-                          0);
+                          request.size());
 }
 
 void
@@ -356,7 +354,7 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
     CK_LOGW("ClearKey CDM couldn't resolve session ID in UpdateSession.");
     CK_LOGD("Unable to find session: %s", sessionId.c_str());
     mHost->OnRejectPromise(aPromiseId,
-                           Error::kInvalidAccessError,
+                           Exception::kExceptionTypeError,
                            0,
                            nullptr,
                            0);
@@ -371,7 +369,7 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
     CK_LOGD("Failed to parse response for session %s", sessionId.c_str());
 
     mHost->OnRejectPromise(aPromiseId,
-                           Error::kInvalidAccessError,
+                           Exception::kExceptionTypeError,
                            0,
                            nullptr,
                            0);
@@ -388,7 +386,7 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
     CK_LOGW("ClearKey CDM failed to parse JSON Web Key.");
 
     mHost->OnRejectPromise(aPromiseId,
-                           Error::kInvalidAccessError,
+                           Exception::kExceptionTypeError,
                            0,
                            nullptr,
                            0);
@@ -442,7 +440,7 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
 
     static const char* message = "Couldn't store cenc key init data";
     self->mHost->OnRejectPromise(aPromiseId,
-                                 Error::kInvalidStateError,
+                                 Exception::kExceptionInvalidStateError,
                                  0,
                                  message,
                                  strlen(message));
@@ -503,7 +501,7 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
   if (itr == mSessions.end()) {
     CK_LOGW("ClearKey CDM couldn't close non-existent session.");
     mHost->OnRejectPromise(aPromiseId,
-                           Error::kInvalidAccessError,
+                           Exception::kExceptionTypeError,
                            0,
                            nullptr,
                            0);
@@ -563,7 +561,7 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
     CK_LOGW("ClearKey CDM couldn't remove non-existent session.");
 
     mHost->OnRejectPromise(aPromiseId,
-                           Error::kInvalidAccessError,
+                           Exception::kExceptionTypeError,
                            0,
                            nullptr,
                            0);
@@ -601,7 +599,7 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
     }
     static const char* message = "Could not remove session";
     self->mHost->OnRejectPromise(aPromiseId,
-                                 Error::kInvalidAccessError,
+                                 Exception::kExceptionTypeError,
                                  0,
                                  message,
                                  strlen(message));
@@ -618,7 +616,7 @@ ClearKeySessionManager::SetServerCertificate(uint32_t aPromiseId,
   // ClearKey CDM doesn't support this method by spec.
   CK_LOGD("ClearKeySessionManager::SetServerCertificate");
   mHost->OnRejectPromise(aPromiseId,
-                         Error::kNotSupportedError,
+                         Exception::kExceptionNotSupportedError,
                          0,
                          nullptr /* message */,
                          0 /* messageLen */);

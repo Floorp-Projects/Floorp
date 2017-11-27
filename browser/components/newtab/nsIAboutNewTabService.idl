@@ -24,6 +24,11 @@ interface nsIAboutNewTabService : nsISupports
   attribute ACString defaultURL;
 
   /**
+   * Returns true if opening the New Tab page will notify the user of a change.
+   */
+  attribute bool willNotifyUser;
+
+  /**
    * Returns true if the default resource got overridden.
    */
   readonly attribute bool overridden;

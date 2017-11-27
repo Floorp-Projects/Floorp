@@ -608,27 +608,7 @@ public:
     mOnVideoPopped.DisconnectIfExists();
   }
 
-  void Step() override
-  {
-    if (mMaster->mPlayState != MediaDecoder::PLAY_STATE_PLAYING &&
-        mMaster->IsPlaying()) {
-      // We're playing, but the element/decoder is in paused state. Stop
-      // playing!
-      mMaster->StopPlayback();
-    }
-
-    // Start playback if necessary so that the clock can be properly queried.
-    if (!mIsPrerolling) {
-      mMaster->MaybeStartPlayback();
-    }
-
-    mMaster->UpdatePlaybackPositionPeriodically();
-
-    MOZ_ASSERT(!mMaster->IsPlaying() || mMaster->IsStateMachineScheduled(),
-               "Must have timer scheduled");
-
-    MaybeStartBuffering();
-  }
+  void Step() override;
 
   State GetState() const override
   {
@@ -1940,6 +1920,8 @@ public:
     if (!mSentPlaybackEndedEvent) {
       auto clockTime =
         std::max(mMaster->AudioEndTime(), mMaster->VideoEndTime());
+      // Correct the time over the end once looping was turned on.
+      Reader()->AdjustByLooping(clockTime);
       if (mMaster->mDuration.Ref()->IsInfinite()) {
         // We have a finite duration when playback reaches the end.
         mMaster->mDuration = Some(clockTime);
@@ -2198,6 +2180,13 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder&& aMetadata)
     Move(aMetadata.mTags),
     MediaDecoderEventVisibility::Observable);
 
+  // Check whether the media satisfies the requirement of seamless looing.
+  // (Before checking the media is audio only, we need to get metadata first.)
+  mMaster->mSeamlessLoopingAllowed = MediaPrefs::SeamlessLooping() &&
+                                     mMaster->HasAudio() &&
+                                     !mMaster->HasVideo();
+  mMaster->LoopingChanged();
+
   SetState<DecodingFirstFrameState>();
 }
 
@@ -2300,6 +2289,57 @@ DecodingState::Enter()
   if (mMaster->mPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
     StartDormantTimer();
   }
+}
+
+void
+MediaDecoderStateMachine::
+DecodingState::Step()
+{
+  if (mMaster->mPlayState != MediaDecoder::PLAY_STATE_PLAYING &&
+      mMaster->IsPlaying()) {
+    // We're playing, but the element/decoder is in paused state. Stop
+    // playing!
+    mMaster->StopPlayback();
+  }
+
+  // Start playback if necessary so that the clock can be properly queried.
+  if (!mIsPrerolling) {
+    mMaster->MaybeStartPlayback();
+  }
+
+  TimeUnit before = mMaster->GetMediaTime();
+  mMaster->UpdatePlaybackPositionPeriodically();
+
+  // Fire the `seeking` and `seeked` events to meet the HTML spec
+  // when the media is looped back from the end to the beginning.
+  if (before > mMaster->GetMediaTime()) {
+    MOZ_ASSERT(mMaster->mLooping);
+    mMaster->mOnPlaybackEvent.Notify(MediaEventType::Loop);
+  // After looping is cancelled, the time won't be corrected, and therefore we
+  // can check it to see if the end of the media track is reached. Make sure
+  // the media is started before comparing the time, or it's meaningless.
+  // Without checking IsStarted(), the media will be terminated immediately
+  // after seeking forward. When the state is just transited from seeking state,
+  // GetClock() is smaller than GetMediaTime(), since GetMediaTime() is updated
+  // upon seek is completed while GetClock() will be updated after the media is
+  // started again.
+  } else if (mMaster->mMediaSink->IsStarted() && !mMaster->mLooping) {
+    TimeUnit adjusted = mMaster->GetClock();
+    Reader()->AdjustByLooping(adjusted);
+    if (adjusted < before) {
+      mMaster->StopPlayback();
+      mMaster->mAudioDataRequest.DisconnectIfExists();
+      AudioQueue().Finish();
+      mMaster->mAudioCompleted = true;
+      SetState<CompletedState>();
+      return;
+    }
+  }
+
+  MOZ_ASSERT(!mMaster->IsPlaying() || mMaster->IsStateMachineScheduled(),
+             "Must have timer scheduled");
+
+  MaybeStartBuffering();
 }
 
 void
@@ -2621,6 +2661,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mOutputStreamManager(new OutputStreamManager()),
   mVideoDecodeMode(VideoDecodeMode::Normal),
   mIsMSE(aDecoder->IsMSE()),
+  mSeamlessLoopingAllowed(false),
   INIT_MIRROR(mBuffered, TimeIntervals()),
   INIT_MIRROR(mPlayState, MediaDecoder::PLAY_STATE_LOADING),
   INIT_MIRROR(mVolume, 1.0),
@@ -2677,6 +2718,7 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mPreservesPitch,
                       &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
+  mWatchManager.Watch(mLooping, &MediaDecoderStateMachine::LoopingChanged);
 
   MOZ_ASSERT(!mStateObj);
   auto* s = new DecodeMetadataState(this);
@@ -3464,7 +3506,13 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
   // advance the clock to after the media end time.
   if (VideoEndTime() > TimeUnit::Zero() || AudioEndTime() > TimeUnit::Zero()) {
 
-    const auto clockTime = GetClock();
+    auto clockTime = GetClock();
+
+    // Once looping was turned on, the time is probably larger than the duration
+    // of the media track, so the time over the end should be corrected.
+    mReader->AdjustByLooping(clockTime);
+    bool loopback = clockTime < GetMediaTime() && mLooping;
+
     // Skip frames up to the frame at the playback position, and figure out
     // the time remaining until it's time to display the next frame and drop
     // the current frame.
@@ -3476,7 +3524,7 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
     auto t = std::min(clockTime, maxEndTime);
     // FIXME: Bug 1091422 - chained ogg files hit this assertion.
     //MOZ_ASSERT(t >= GetMediaTime());
-    if (t > GetMediaTime()) {
+    if (loopback || t > GetMediaTime()) {
       UpdatePlaybackPosition(t);
     }
   }
@@ -3558,6 +3606,15 @@ void MediaDecoderStateMachine::PreservesPitchChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   mMediaSink->SetPreservesPitch(mPreservesPitch);
+}
+
+void
+MediaDecoderStateMachine::LoopingChanged()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  if (mSeamlessLoopingAllowed) {
+    mReader->SetSeamlessLoopingEnabled(mLooping);
+  }
 }
 
 TimeUnit

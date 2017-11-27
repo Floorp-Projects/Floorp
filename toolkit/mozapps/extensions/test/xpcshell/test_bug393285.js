@@ -269,47 +269,44 @@ function run_test_1() {
   load_blocklist("test_bug393285.xml", function() {
     restartManager();
 
-    var blocklist = Cc["@mozilla.org/extensions/blocklist;1"]
-                    .getService(Ci.nsIBlocklistService);
-
     AddonManager.getAddonsByIDs(addonIDs,
                                function([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
                                          a11, a12, a13, a14, a15]) {
       // No info in blocklist, shouldn't be blocked
-      do_check_false(blocklist.isAddonBlocklisted(a1, "1", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a1, "1", "1.9"));
 
       // Should always be blocked
-      do_check_true(blocklist.isAddonBlocklisted(a2, "1", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a2, "1", "1.9"));
 
       // Only version 1 should be blocked
-      do_check_true(blocklist.isAddonBlocklisted(a3, "1", "1.9"));
-      do_check_false(blocklist.isAddonBlocklisted(a4, "1", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a3, "1", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a4, "1", "1.9"));
 
       // Should be blocked for app version 1
-      do_check_true(blocklist.isAddonBlocklisted(a5, "1", "1.9"));
-      do_check_false(blocklist.isAddonBlocklisted(a5, "2", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a5, "1", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a5, "2", "1.9"));
 
       // Not blocklisted because we are a different OS
-      do_check_false(blocklist.isAddonBlocklisted(a6, "2", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a6, "2", "1.9"));
 
       // Blocklisted based on OS
-      do_check_true(blocklist.isAddonBlocklisted(a7, "2", "1.9"));
-      do_check_true(blocklist.isAddonBlocklisted(a8, "2", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a7, "2", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a8, "2", "1.9"));
 
       // Not blocklisted because we are a different ABI
-      do_check_false(blocklist.isAddonBlocklisted(a9, "2", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a9, "2", "1.9"));
 
       // Blocklisted based on ABI
-      do_check_true(blocklist.isAddonBlocklisted(a10, "2", "1.9"));
-      do_check_true(blocklist.isAddonBlocklisted(a11, "2", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a10, "2", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a11, "2", "1.9"));
 
       // Doesnt match both os and abi so not blocked
-      do_check_false(blocklist.isAddonBlocklisted(a12, "2", "1.9"));
-      do_check_false(blocklist.isAddonBlocklisted(a13, "2", "1.9"));
-      do_check_false(blocklist.isAddonBlocklisted(a14, "2", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a12, "2", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a13, "2", "1.9"));
+      do_check_false(Services.blocklist.isAddonBlocklisted(a14, "2", "1.9"));
 
       // Matches both os and abi so blocked
-      do_check_true(blocklist.isAddonBlocklisted(a15, "2", "1.9"));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a15, "2", "1.9"));
       end_test();
     });
   });

@@ -47,6 +47,7 @@
   border: none;
 }
 
+#PanelUI-menu-button[badge-status="extension-new-tab"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="download-success"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   display: none;
 }
@@ -325,6 +326,30 @@ panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 4px 0;
 }
+
+/* START notification popups for extension controlled content */
+#extension-notification-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-body {
+  width: 30em;
+}
+
+#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-body > hbox > vbox > .popup-notification-description {
+  font-size: 1.3em;
+  font-weight: lighter;
+}
+
+#extension-new-tab-notification-description {
+  margin-bottom: 0;
+}
+
+#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-body > .popup-notification-warning,
+#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-icon {
+  display: none;
+}
+/* END notification popups for extension controlled content */
 
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
 panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {

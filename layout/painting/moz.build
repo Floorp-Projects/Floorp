@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
     'DisplayItemClip.cpp',
     'DisplayItemClipChain.cpp',
     'DisplayItemScrollClip.cpp',
+    'DisplayListChecker.cpp',
     'DisplayListClipState.cpp',
     'DottedCornerFinder.cpp',
     'FrameLayerBuilder.cpp',
