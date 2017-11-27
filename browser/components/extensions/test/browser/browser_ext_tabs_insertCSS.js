@@ -111,3 +111,47 @@ add_task(async function testExecuteScript() {
   is(MessageChannel.responseManagers.size, responseManagersSize, "Response manager count");
   is(MessageChannel.pendingResponses.size, 0, "Pending response count");
 });
+
+add_task(async function testInsertCSS_cleanup() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
+
+  async function background() {
+    await browser.tabs.insertCSS({code: "* { background: rgb(42, 42, 42) }"});
+    await browser.tabs.insertCSS({file: "customize_fg_color.css"});
+
+    browser.test.notifyPass("insertCSS");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["http://mochi.test/"],
+    },
+    background,
+    files: {
+      "customize_fg_color.css": `* { color: rgb(255, 0, 0) }`,
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitFinish("insertCSS");
+
+  const getTabContentComputedStyle = async () => {
+    let computedStyle = content.getComputedStyle(content.document.body);
+    return [computedStyle.backgroundColor, computedStyle.color];
+  };
+
+  const appliedStyles = await ContentTask.spawn(tab.linkedBrowser, null, getTabContentComputedStyle);
+
+  is(appliedStyles[0], "rgb(42, 42, 42)", "The injected CSS code has been applied as expected");
+  is(appliedStyles[1], "rgb(255, 0, 0)", "The injected CSS file has been applied as expected");
+
+  await extension.unload();
+
+  const unloadedStyles = await ContentTask.spawn(tab.linkedBrowser, null, getTabContentComputedStyle);
+
+  is(unloadedStyles[0], "rgba(0, 0, 0, 0)", "The injected CSS code has been removed as expected");
+  is(unloadedStyles[1], "rgb(0, 0, 0)", "The injected CSS file has been removed as expected");
+
+  await BrowserTestUtils.removeTab(tab);
+});
