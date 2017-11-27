@@ -137,11 +137,82 @@ PR_IMPLEMENT(void) PR_FreeFileDesc(PRFileDesc *fd)
     _PR_Putfd(fd);
 }
 
+#if defined(_WIN64) && defined(WIN95)
+
+PRFileDescList *_fd_waiting_for_overlapped_done = NULL;
+PRLock *_fd_waiting_for_overlapped_done_lock = NULL;
+
+void CheckOverlappedPendingSocketsAreDone()
+{
+  if (!_fd_waiting_for_overlapped_done_lock ||
+      !_fd_waiting_for_overlapped_done) {
+    return;
+  }
+
+  PR_Lock(_fd_waiting_for_overlapped_done_lock);
+
+  PRFileDescList *cur = _fd_waiting_for_overlapped_done;
+  PRFileDescList *previous = NULL;
+  while (cur) {
+    PR_ASSERT(cur->fd->secret->overlappedActive);
+    PRFileDesc *fd = cur->fd;
+    DWORD rvSent;
+    if (GetOverlappedResult((HANDLE)fd->secret->md.osfd, &fd->secret->ol, &rvSent, FALSE) == TRUE) {
+      fd->secret->overlappedActive = PR_FALSE;
+      PR_LOG(_pr_io_lm, PR_LOG_MIN,
+             ("CheckOverlappedPendingSocketsAreDone GetOverlappedResult succeeded\n"));
+    } else {
+      DWORD err = WSAGetLastError();
+      PR_LOG(_pr_io_lm, PR_LOG_MIN,
+             ("CheckOverlappedPendingSocketsAreDone GetOverlappedResult failed %d\n", err));
+      if (err != ERROR_IO_INCOMPLETE) {
+        fd->secret->overlappedActive = PR_FALSE;
+      }
+    }
+
+    if (!fd->secret->overlappedActive) {
+
+      _PR_MD_CLOSE_SOCKET(fd->secret->md.osfd);
+      fd->secret->state = _PR_FILEDESC_CLOSED;
+#ifdef _PR_HAVE_PEEK_BUFFER
+      if (fd->secret->peekBuffer) {
+        PR_ASSERT(fd->secret->peekBufSize > 0);
+        PR_DELETE(fd->secret->peekBuffer);
+        fd->secret->peekBufSize = 0;
+        fd->secret->peekBytes = 0;
+      }
+#endif
+
+      PR_FreeFileDesc(fd);
+
+      if (previous) {
+        previous->next = cur->next;
+      } else {
+        _fd_waiting_for_overlapped_done = cur->next;
+      }
+      PRFileDescList *del = cur;
+      cur = cur->next;
+      PR_Free(del);
+    } else {
+      previous = cur;
+      cur = cur->next;
+    }
+  }
+
+  PR_Unlock(_fd_waiting_for_overlapped_done_lock);
+}
+#endif
+
 /*
 ** Wait for some i/o to finish on one or more more poll descriptors.
 */
 PR_IMPLEMENT(PRInt32) PR_Poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
+#if defined(_WIN64) && defined(WIN95)
+  // For each iteration check if TFO overlapped IOs are down.
+  CheckOverlappedPendingSocketsAreDone();
+#endif
+
 	return(_PR_MD_PR_POLL(pds, npds, timeout));
 }
 

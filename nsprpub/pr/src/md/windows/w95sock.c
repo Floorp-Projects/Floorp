@@ -382,6 +382,11 @@ PRInt32
 _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                  const PRNetAddr *addr, PRUint32 addrlen, PRIntervalTime timeout)
 {
+    if (!_fd_waiting_for_overlapped_done_lock) {
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        return PR_FAILURE;
+    }
+
     if (PR_CallOnce(&_pr_has_connectex_once, _pr_set_connectex) != PR_SUCCESS) {
         PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
         return PR_FAILURE;
