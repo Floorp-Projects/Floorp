@@ -32,7 +32,6 @@ NS_DEFINE_NAMED_CID(NS_WBRK_CID);
 NS_DEFINE_NAMED_CID(NS_STRINGBUNDLESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_STRINGBUNDLETEXTOVERRIDE_CID);
 NS_DEFINE_NAMED_CID(NS_COLLATIONFACTORY_CID);
-NS_DEFINE_NAMED_CID(NS_PLATFORMCHARSET_CID);
 NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
 
 static const mozilla::Module::CIDEntry kIntlCIDs[] = {
@@ -43,7 +42,6 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kNS_STRINGBUNDLESERVICE_CID, false, nullptr, nsStringBundleServiceConstructor },
     { &kNS_STRINGBUNDLETEXTOVERRIDE_CID, false, nullptr, nsStringBundleTextOverrideConstructor },
     { &kNS_COLLATIONFACTORY_CID, false, nullptr, nsCollationFactoryConstructor },
-    { &kNS_PLATFORMCHARSET_CID, false, nullptr, nsPlatformCharsetConstructor },
     { &kNS_COLLATION_CID, false, nullptr, nsCollationConstructor },
     { nullptr }
 };
@@ -56,7 +54,6 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { NS_STRINGBUNDLE_CONTRACTID, &kNS_STRINGBUNDLESERVICE_CID },
     { NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID, &kNS_STRINGBUNDLETEXTOVERRIDE_CID },
     { NS_COLLATIONFACTORY_CONTRACTID, &kNS_COLLATIONFACTORY_CID },
-    { NS_PLATFORMCHARSET_CONTRACTID, &kNS_PLATFORMCHARSET_CID },
     { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
     { nullptr }
 };
