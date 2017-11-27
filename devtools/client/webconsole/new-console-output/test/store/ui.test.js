@@ -23,4 +23,15 @@ describe("Testing UI", () => {
       expect(store.getState().ui.sidebarVisible).toEqual(false);
     });
   });
+
+  describe("Hide sidebar on clear", () => {
+    it("sidebar is hidden on clear", () => {
+      store.dispatch(actions.sidebarToggle());
+      expect(store.getState().ui.sidebarVisible).toEqual(true);
+      store.dispatch(actions.messagesClear());
+      expect(store.getState().ui.sidebarVisible).toEqual(false);
+      store.dispatch(actions.messagesClear());
+      expect(store.getState().ui.sidebarVisible).toEqual(false);
+    });
+  });
 });

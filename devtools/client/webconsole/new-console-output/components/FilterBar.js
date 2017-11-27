@@ -263,7 +263,7 @@ class FilterBar extends Component {
         }),
         sidebarToggle ?
           dom.button({
-            className: "devtools-button",
+            className: "devtools-button webconsole-sidebar-button",
             title: l10n.getStr("webconsole.toggleFilterButton.tooltip"),
             onClick: this.onClickSidebarToggle
           }, "Toggle Sidebar")
