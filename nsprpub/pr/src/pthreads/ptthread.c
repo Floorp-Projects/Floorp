@@ -1064,11 +1064,6 @@ void PR_HPUX10xInit(shl_t handle, int loading)
 
 void _PR_Fini(void)
 {
-    /* We disable the cleanup code on Mac OSX, see bug 1399746.
-     * The .dylib containing NSPR can get unloaded, and _PR_Fini called,
-     * and other code calling NSPR functions can get executed afterwards.
-    */
-#ifndef DARWIN
     void *thred;
     int rv;
 
@@ -1100,7 +1095,6 @@ void _PR_Fini(void)
     pt_book.keyCreated = PR_FALSE;
     /* TODO: free other resources used by NSPR */
     /* _pr_initialized = PR_FALSE; */
-#endif
 }  /* _PR_Fini */
 
 PR_IMPLEMENT(PRStatus) PR_Cleanup(void)
