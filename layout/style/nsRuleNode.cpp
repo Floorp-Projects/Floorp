@@ -6434,14 +6434,9 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       conditions.SetUncacheable();
       display->mShapeOutside = parentDisplay->mShapeOutside;
       break;
-    case eCSSUnit_Image:
-    case eCSSUnit_Function:
-    case eCSSUnit_Gradient:
-    case eCSSUnit_Element: {
-      auto shapeImage = MakeUnique<nsStyleImage>();
-      SetStyleImage(aContext, *shapeOutsideValue, *shapeImage, conditions);
+    case eCSSUnit_URL: {
       display->mShapeOutside = StyleShapeSource();
-      display->mShapeOutside.SetShapeImage(Move(shapeImage));
+      display->mShapeOutside.SetURL(shapeOutsideValue->GetURLStructValue());
       break;
     }
     case eCSSUnit_Array: {

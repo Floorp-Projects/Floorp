@@ -816,11 +816,8 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
       case eCSSProperty_content:
       case eCSSProperty_cursor:
       case eCSSProperty_clip_path:
-        supported = VARIANT_URL;
-        break;
-
       case eCSSProperty_shape_outside:
-        supported = VARIANT_IMAGE;
+        supported = VARIANT_URL;
         break;
 
       case eCSSProperty_fill:
