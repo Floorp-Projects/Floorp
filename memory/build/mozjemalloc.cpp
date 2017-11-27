@@ -4877,6 +4877,9 @@ replace_malloc_init_funcs();
 #ifdef MOZ_REPLACE_MALLOC_STATIC
 extern "C" void
 logalloc_init(malloc_table_t*, ReplaceMallocBridge**);
+
+extern "C" void
+dmd_init(malloc_table_t*, ReplaceMallocBridge**);
 #endif
 
 bool
@@ -4913,6 +4916,11 @@ init()
   if (Equals(initialTable, gReplaceMallocTable)) {
     logalloc_init(&gReplaceMallocTable, &gReplaceMallocBridge);
   }
+#ifdef MOZ_DMD
+  if (Equals(initialTable, gReplaceMallocTable)) {
+    dmd_init(&gReplaceMallocTable, &gReplaceMallocBridge);
+  }
+#endif
 #endif
   replace_malloc_init_funcs();
 }
