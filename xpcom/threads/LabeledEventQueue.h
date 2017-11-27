@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "mozilla/AbstractEventQueue.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Queue.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -30,7 +31,7 @@ class SchedulerGroup;
 class LabeledEventQueue final : public AbstractEventQueue
 {
 public:
-  LabeledEventQueue();
+  explicit LabeledEventQueue(EventPriority aPriority);
   ~LabeledEventQueue();
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
@@ -83,17 +84,6 @@ private:
   // decrement the number of events in the current epoch. If this number reaches
   // zero, we pop from the epoch queue.
 
-  struct QueueEntry
-  {
-    nsCOMPtr<nsIRunnable> mRunnable;
-    uintptr_t mEpochNumber;
-
-    QueueEntry(already_AddRefed<nsIRunnable> aRunnable, uintptr_t aEpoch)
-      : mRunnable(aRunnable)
-      , mEpochNumber(aEpoch)
-    {}
-  };
-
   struct Epoch
   {
     static Epoch First(bool aIsLabeled)
@@ -131,8 +121,7 @@ private:
   void PopEpoch();
   static SchedulerGroup* NextSchedulerGroup(SchedulerGroup* aGroup);
 
-  using RunnableEpochQueue = Queue<QueueEntry, 32>;
-  using LabeledMap = nsClassHashtable<nsRefPtrHashKey<SchedulerGroup>, RunnableEpochQueue>;
+  using RunnableEpochQueue = SchedulerGroup::RunnableEpochQueue;
   using EpochQueue = Queue<Epoch, 8>;
 
   // List of SchedulerGroups that might have events. This is static, so it
@@ -144,7 +133,6 @@ private:
   static size_t sLabeledEventQueueCount;
   static SchedulerGroup* sCurrentSchedulerGroup;
 
-  LabeledMap mLabeled;
   RunnableEpochQueue mUnlabeled;
   EpochQueue mEpochs;
   size_t mNumEvents = 0;
@@ -154,6 +142,7 @@ private:
   // foreground and background SchedulerGroups. For details, see its usage in
   // LabeledEventQueue.cpp.
   int64_t mAvoidActiveTabCount = 0;
+  EventPriority mPriority;
 };
 
 } // namespace mozilla
