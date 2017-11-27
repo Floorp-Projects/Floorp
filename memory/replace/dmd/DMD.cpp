@@ -1264,17 +1264,7 @@ static void Init(malloc_table_t* aMallocTable);
 } // namespace dmd
 } // namespace mozilla
 
-void
-replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge)
-{
-  mozilla::dmd::Init(aMallocTable);
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
-#define MALLOC_DECL(name, ...) aMallocTable->name = replace_ ## name;
-#include "malloc_decls.h"
-  *aBridge = mozilla::dmd::gDMDBridge;
-}
-
-void*
+static void*
 replace_malloc(size_t aSize)
 {
   using namespace mozilla::dmd;
@@ -1300,7 +1290,7 @@ replace_malloc(size_t aSize)
   return ptr;
 }
 
-void*
+static void*
 replace_calloc(size_t aCount, size_t aSize)
 {
   using namespace mozilla::dmd;
@@ -1319,7 +1309,7 @@ replace_calloc(size_t aCount, size_t aSize)
   return ptr;
 }
 
-void*
+static void*
 replace_realloc(void* aOldPtr, size_t aSize)
 {
   using namespace mozilla::dmd;
@@ -1360,7 +1350,7 @@ replace_realloc(void* aOldPtr, size_t aSize)
   return ptr;
 }
 
-void*
+static void*
 replace_memalign(size_t aAlignment, size_t aSize)
 {
   using namespace mozilla::dmd;
@@ -1379,7 +1369,7 @@ replace_memalign(size_t aAlignment, size_t aSize)
   return ptr;
 }
 
-void
+static void
 replace_free(void* aPtr)
 {
   using namespace mozilla::dmd;
@@ -1401,6 +1391,16 @@ replace_free(void* aPtr)
   FreeCallback(aPtr, t, &db);
   MaybeAddToDeadBlockTable(db);
   gMallocTable.free(aPtr);
+}
+
+void
+replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge)
+{
+  mozilla::dmd::Init(aMallocTable);
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
+#define MALLOC_DECL(name, ...) aMallocTable->name = replace_ ## name;
+#include "malloc_decls.h"
+  *aBridge = mozilla::dmd::gDMDBridge;
 }
 
 namespace mozilla {
