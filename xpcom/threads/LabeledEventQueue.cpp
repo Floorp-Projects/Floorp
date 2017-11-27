@@ -13,11 +13,14 @@
 
 using namespace mozilla::dom;
 
+using EpochQueueEntry = SchedulerGroup::EpochQueueEntry;
+
 LinkedList<SchedulerGroup>* LabeledEventQueue::sSchedulerGroups;
 size_t LabeledEventQueue::sLabeledEventQueueCount;
 SchedulerGroup* LabeledEventQueue::sCurrentSchedulerGroup;
 
-LabeledEventQueue::LabeledEventQueue()
+LabeledEventQueue::LabeledEventQueue(EventPriority aPriority)
+  : mPriority(aPriority)
 {
   // LabeledEventQueue should only be used by one consumer since it uses a
   // single static sSchedulerGroups field. It's hard to assert this, though, so
@@ -77,6 +80,8 @@ LabeledEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                             EventPriority aPriority,
                             const MutexAutoLock& aProofOfLock)
 {
+  MOZ_ASSERT(aPriority == mPriority);
+
   nsCOMPtr<nsIRunnable> event(aEvent);
 
   MOZ_ASSERT(event.get());
@@ -100,8 +105,8 @@ LabeledEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
   mNumEvents++;
   epoch->mNumEvents++;
 
-  RunnableEpochQueue* queue = isLabeled ? mLabeled.LookupOrAdd(group) : &mUnlabeled;
-  queue->Push(QueueEntry(event.forget(), epoch->mEpochNumber));
+  RunnableEpochQueue& queue = isLabeled ? group->GetQueue(aPriority) : mUnlabeled;
+  queue.Push(EpochQueueEntry(event.forget(), epoch->mEpochNumber));
 
   if (group && group->EnqueueEvent() == SchedulerGroup::NewlyQueued) {
     // This group didn't have any events before. Add it to the
@@ -150,13 +155,13 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
 
   Epoch epoch = mEpochs.FirstElement();
   if (!epoch.IsLabeled()) {
-    QueueEntry& first = mUnlabeled.FirstElement();
+    EpochQueueEntry& first = mUnlabeled.FirstElement();
     if (!IsReadyToRun(first.mRunnable, nullptr)) {
       return nullptr;
     }
 
     PopEpoch();
-    QueueEntry entry = mUnlabeled.Pop();
+    EpochQueueEntry entry = mUnlabeled.Pop();
     MOZ_ASSERT(entry.mEpochNumber == epoch.mEpochNumber);
     MOZ_ASSERT(entry.mRunnable.get());
     return entry.mRunnable.forget();
@@ -197,17 +202,15 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
   do {
     mAvoidActiveTabCount--;
 
-    auto queueEntry = mLabeled.Lookup(group);
-    if (!queueEntry) {
+    RunnableEpochQueue& queue = group->GetQueue(mPriority);
+
+    if (queue.IsEmpty()) {
       // This can happen if |group| is in a different LabeledEventQueue than |this|.
       group = NextSchedulerGroup(group);
       continue;
     }
 
-    RunnableEpochQueue* queue = queueEntry.Data();
-    MOZ_ASSERT(!queue->IsEmpty());
-
-    QueueEntry& first = queue->FirstElement();
+    EpochQueueEntry& first = queue.FirstElement();
     if (first.mEpochNumber == epoch.mEpochNumber &&
         IsReadyToRun(first.mRunnable, group)) {
       sCurrentSchedulerGroup = NextSchedulerGroup(group);
@@ -226,10 +229,7 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
         }
         group->removeFrom(*sSchedulerGroups);
       }
-      QueueEntry entry = queue->Pop();
-      if (queue->IsEmpty()) {
-        queueEntry.Remove();
-      }
+      EpochQueueEntry entry = queue.Pop();
       return entry.mRunnable.forget();
     }
 
@@ -261,24 +261,26 @@ LabeledEventQueue::HasReadyEvent(const MutexAutoLock& aProofOfLock)
   Epoch& frontEpoch = mEpochs.FirstElement();
 
   if (!frontEpoch.IsLabeled()) {
-    QueueEntry& entry = mUnlabeled.FirstElement();
+    EpochQueueEntry& entry = mUnlabeled.FirstElement();
     return IsReadyToRun(entry.mRunnable, nullptr);
   }
 
-  // Go through the labeled queues and look for one whose head is from the
-  // current epoch and is allowed to run.
+  // Go through the scheduler groups and look for one that has events
+  // for the priority of this labeled queue that is in the current
+  // epoch and is allowed to run.
   uintptr_t currentEpoch = frontEpoch.mEpochNumber;
-  for (auto iter = mLabeled.Iter(); !iter.Done(); iter.Next()) {
-    SchedulerGroup* key = iter.Key();
-    RunnableEpochQueue* queue = iter.Data();
-    MOZ_ASSERT(!queue->IsEmpty());
+  for (SchedulerGroup* group : *sSchedulerGroups) {
+    RunnableEpochQueue& queue = group->GetQueue(mPriority);
+    if (queue.IsEmpty()) {
+      continue;
+    }
 
-    QueueEntry& entry = queue->FirstElement();
+    EpochQueueEntry& entry = queue.FirstElement();
     if (entry.mEpochNumber != currentEpoch) {
       continue;
     }
 
-    if (IsReadyToRun(entry.mRunnable, key)) {
+    if (IsReadyToRun(entry.mRunnable, group)) {
       return true;
     }
   }

@@ -9,6 +9,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Queue.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
@@ -168,6 +169,25 @@ public:
   };
   static void SetValidatingAccess(ValidationType aType);
 
+  struct EpochQueueEntry
+  {
+    nsCOMPtr<nsIRunnable> mRunnable;
+    uintptr_t mEpochNumber;
+
+    EpochQueueEntry(already_AddRefed<nsIRunnable> aRunnable, uintptr_t aEpoch)
+      : mRunnable(aRunnable)
+      , mEpochNumber(aEpoch)
+    {
+    }
+  };
+
+  using RunnableEpochQueue = Queue<EpochQueueEntry, 32>;
+
+  RunnableEpochQueue& GetQueue(EventPriority aPriority)
+  {
+    return mEventQueues[size_t(aPriority)];
+  }
+
 protected:
   static nsresult InternalUnlabeledDispatch(TaskCategory aCategory,
                                             already_AddRefed<Runnable>&& aRunnable);
@@ -203,6 +223,7 @@ protected:
 
   nsCOMPtr<nsISerialEventTarget> mEventTargets[size_t(TaskCategory::Count)];
   RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
+  RunnableEpochQueue mEventQueues[size_t(EventPriority::Count)];
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerGroup::Runnable, NS_SCHEDULERGROUPRUNNABLE_IID);

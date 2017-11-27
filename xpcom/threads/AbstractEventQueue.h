@@ -19,7 +19,9 @@ enum class EventPriority
   High,
   Input,
   Normal,
-  Idle
+  Idle,
+
+  Count
 };
 
 // AbstractEventQueue is an abstract base class for all our unsynchronized event
