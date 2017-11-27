@@ -10,6 +10,7 @@
 #include "gc/GCEnum.h"
 #include "gc/Heap.h"
 #include "js/GCAnnotations.h"
+#include "js/TraceKind.h"
 
 namespace JS {
 
@@ -74,6 +75,23 @@ struct Cell
     inline JS::TraceKind getTraceKind() const;
 
     static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone* zone);
+
+    template <class T>
+    inline bool is() const {
+        return getTraceKind() == JS::MapTypeToTraceKind<T>::kind;
+    }
+
+    template<class T>
+    inline T* as() {
+        MOZ_ASSERT(is<T>());
+        return static_cast<T*>(this);
+    }
+
+    template <class T>
+    inline const T* as() const {
+        MOZ_ASSERT(is<T>());
+        return static_cast<const T*>(this);
+    }
 
 #ifdef DEBUG
     inline bool isAligned() const;
