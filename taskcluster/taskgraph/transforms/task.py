@@ -1445,6 +1445,21 @@ def build_task(config, tasks):
         }
 
 
+@transforms.add
+def check_task_identifiers(config, tasks):
+    """Ensures that all tasks have well defined identifiers:
+       ^[a-zA-Z0-9_-]{1,22}$
+    """
+    e = re.compile("^[a-zA-Z0-9_-]{1,22}$")
+    for task in tasks:
+        for attr in ('workerType', 'provisionerId'):
+            if not e.match(task['task'][attr]):
+                raise Exception(
+                    'task {}.{} is not a valid identifier: {}'.format(
+                        task['label'], attr, task['task'][attr]))
+        yield task
+
+
 def check_caches_are_volumes(task):
     """Ensures that all cache paths are defined as volumes.
 
