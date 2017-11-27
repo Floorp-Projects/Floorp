@@ -49,7 +49,8 @@ enum class State {
     D(MallocBytesTrigger) \
     D(GCBytesTrigger) \
     D(ZoneChange) \
-    D(CompartmentRevived)
+    D(CompartmentRevived) \
+    D(GrayRootBufferingFailed)
 enum class AbortReason {
 #define MAKE_REASON(name) name,
     GC_ABORT_REASONS(MAKE_REASON)

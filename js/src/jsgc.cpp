@@ -6956,6 +6956,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         if (!hasBufferedGrayRoots()) {
             budget.makeUnlimited();
             isIncremental = false;
+            stats().nonincremental(AbortReason::GrayRootBufferingFailed);
         }
 
         if (drainMarkStack(budget, gcstats::PhaseKind::MARK) == NotFinished)
@@ -8268,7 +8269,7 @@ JS_FRIEND_API(void)
 JS::AssertGCThingIsNotAnObjectSubclass(Cell* cell)
 {
     MOZ_ASSERT(cell);
-    MOZ_ASSERT(cell->getTraceKind() != JS::TraceKind::Object);
+    MOZ_ASSERT(!cell->is<JSObject>());
 }
 
 JS_FRIEND_API(void)
