@@ -22,7 +22,6 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsStreamUtils.h"
-#include "nsStringStream.h"
 #include "plbase64.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ArrayUtils.h"
@@ -819,17 +818,12 @@ nsFaviconService::OptimizeIconSizes(IconData& aIcon)
   // Make space for the optimized payloads.
   aIcon.payloads.Clear();
 
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      payload.data.get(),
-                                      payload.data.Length(),
-                                      NS_ASSIGNMENT_DEPEND);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // decode image
   nsCOMPtr<imgIContainer> container;
-  rv = GetImgTools()->DecodeImage(stream, payload.mimeType,
-                                  getter_AddRefs(container));
+  nsresult rv = GetImgTools()->DecodeImageBuffer(payload.data.get(),
+                                                 payload.data.Length(),
+                                                 payload.mimeType,
+                                                 getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // For ICO files, we must evaluate each of the frames we care about.
