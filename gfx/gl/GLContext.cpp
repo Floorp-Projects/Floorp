@@ -60,7 +60,7 @@ namespace gl {
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-MOZ_THREAD_LOCAL(const GLContext*) GLContext::sCurrentContext;
+MOZ_THREAD_LOCAL(uintptr_t) GLContext::sCurrentContext;
 
 // If adding defines, don't forget to undefine symbols. See #undef block below.
 #define CORE_SYMBOL(x) { (PRFuncPtr*) &mSymbols.f##x, { #x, nullptr } }
@@ -296,7 +296,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     mMaxViewportDims[1] = 0;
     mOwningThreadId = PlatformThread::CurrentId();
     MOZ_ALWAYS_TRUE( sCurrentContext.init() );
-    sCurrentContext.set(nullptr);
+    sCurrentContext.set(0);
 }
 
 GLContext::~GLContext() {
@@ -3034,7 +3034,7 @@ GLContext::MakeCurrent(bool aForce) const
     if (MOZ_LIKELY( !aForce )) {
         bool isCurrent;
         if (mUseTLSIsCurrent) {
-            isCurrent = (sCurrentContext.get() == this);
+            isCurrent = (sCurrentContext.get() == reinterpret_cast<uintptr_t>(this));
         } else {
             isCurrent = IsCurrentImpl();
         }
@@ -3048,7 +3048,7 @@ GLContext::MakeCurrent(bool aForce) const
         return false;
 
     if (mUseTLSIsCurrent) {
-        sCurrentContext.set(this);
+        sCurrentContext.set(reinterpret_cast<uintptr_t>(this));
     }
     return true;
 }
