@@ -7,6 +7,7 @@ package org.mozilla.focus.autocomplete
 import android.app.Fragment
 import android.content.Context
 import android.os.Bundle
+import android.support.v4.view.MotionEventCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -14,6 +15,7 @@ import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback
 import android.view.*
 import android.widget.CheckBox
 import android.widget.CompoundButton
+import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -25,6 +27,8 @@ import org.mozilla.focus.settings.SettingsFragment
 import java.util.*
 
 open class AutocompleteCustomDomainsFragment : Fragment() {
+    var itemTouchHelper: ItemTouchHelper? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -39,7 +43,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
         domainList.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
         domainList.adapter = DomainListAdapter()
 
-        ItemTouchHelper(object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+        itemTouchHelper = ItemTouchHelper(object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
                 if (recyclerView == null || viewHolder == null || target == null) {
                     return false
@@ -54,7 +58,8 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {}
-        }).attachToRecyclerView(domainList)
+        })
+        itemTouchHelper?.attachToRecyclerView(domainList)
     }
 
     override fun onResume() {
@@ -128,7 +133,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
             if (holder is DomainViewHolder) {
-                holder.bind(domains[position], isSelectionMode(), selectedDomains)
+                holder.bind(domains[position], isSelectionMode(), selectedDomains, itemTouchHelper)
             }
         }
 
@@ -153,14 +158,16 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
     private class DomainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val domainView: TextView = itemView.findViewById(R.id.domainView)
         val checkBoxView : CheckBox = itemView.findViewById(R.id.checkbox)
+        val handleView : View = itemView.findViewById(R.id.handleView)
 
         companion object {
             val LAYOUT_ID = R.layout.item_custom_domain
         }
 
-        fun bind(domain: String, isRemoveMode: Boolean, selectedDomains: MutableList<String>) {
+        fun bind(domain: String, isSelectionMode: Boolean, selectedDomains: MutableList<String>, itemTouchHelper: ItemTouchHelper?) {
             domainView.text  = domain
-            checkBoxView.visibility = if (isRemoveMode) View.VISIBLE else View.GONE
+
+            checkBoxView.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
             checkBoxView.isChecked = selectedDomains.contains(domain)
             checkBoxView.setOnCheckedChangeListener({ _: CompoundButton, isChecked: Boolean ->
                 if (isChecked) {
@@ -168,6 +175,14 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
                 } else {
                     selectedDomains.remove(domain)
                 }
+            })
+
+            handleView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
+            handleView.setOnTouchListener(View.OnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    itemTouchHelper?.startDrag(this)
+                }
+                false
             })
         }
     }
