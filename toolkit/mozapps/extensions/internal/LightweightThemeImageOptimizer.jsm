@@ -6,6 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["LightweightThemeImageOptimizer"];
 
+const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
@@ -98,14 +99,14 @@ var ImageCropper = {
 
     ImageFile.read(aURI, function(aInputStream, aContentType) {
       if (aInputStream && aContentType) {
-        let image = ImageTools.decode(aInputStream, aContentType);
-        if (image && image.width && image.height) {
-          let stream = ImageTools.encode(image, aScreen, aOrigin, aContentType);
-          if (stream) {
-            ImageFile.write(aTargetFile, stream, resetInProgress);
-            return;
+        ImageTools.decode(aInputStream, aContentType, function(aImage) {
+          if (aImage && aImage.width && aImage.height) {
+            let stream = ImageTools.encode(aImage, aScreen, aOrigin, aContentType);
+            if (stream) {
+              ImageFile.write(aTargetFile, stream, resetInProgress);
+            }
           }
-        }
+        });
       }
 
       resetInProgress();
@@ -150,14 +151,20 @@ XPCOMUtils.defineLazyModuleGetter(ImageFile, "_netUtil",
   "resource://gre/modules/NetUtil.jsm", "NetUtil");
 
 var ImageTools = {
-  decode(aInputStream, aContentType) {
-    let outParam = null;
+  decode(aInputStream, aContentType, aCallback) {
+    let callback = {
+      onImageReady(aImage, aStatus) {
+        aCallback(aImage);
+      }
+    };
 
     try {
-      outParam = this._imgTools.decodeImage(aInputStream, aContentType);
-    } catch (e) {}
-
-    return outParam;
+      let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
+      this._imgTools.decodeImageAsync(aInputStream, aContentType, callback,
+                                      threadManager.currentThread);
+    } catch (e) {
+      aCallback(null);
+    }
   },
 
   encode(aImage, aScreen, aOrigin, aContentType) {

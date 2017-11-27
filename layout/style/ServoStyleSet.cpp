@@ -1034,6 +1034,7 @@ ServoStyleSet::RecordStyleSheetChange(
     case StyleSheet::ChangeType::RuleAdded:
     case StyleSheet::ChangeType::RuleRemoved:
     case StyleSheet::ChangeType::RuleChanged:
+    case StyleSheet::ChangeType::ReparsedFromInspector:
       // FIXME(emilio): We can presumably do better in a bunch of these.
       return MarkOriginsDirty(aSheet->GetOrigin());
     case StyleSheet::ChangeType::ApplicableStateChanged:
