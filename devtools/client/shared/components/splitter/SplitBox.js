@@ -64,6 +64,7 @@ class SplitBox extends Component {
      */
     this.state = {
       vert: props.vert,
+      splitterSize: props.splitterSize,
       width: props.initialWidth || props.initialSize,
       height: props.initialHeight || props.initialSize
     };
@@ -74,7 +75,11 @@ class SplitBox extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let { vert } = nextProps;
+    let { splitterSize, vert } = nextProps;
+
+    if (splitterSize != this.props.splitterSize) {
+      this.setState({ splitterSize });
+    }
 
     if (vert !== this.props.vert) {
       this.setState({ vert });
@@ -85,12 +90,12 @@ class SplitBox extends Component {
     return nextState.width != this.state.width ||
       nextState.height != this.state.height ||
       nextState.vert != this.state.vert ||
+      nextState.splitterSize != this.state.splitterSize ||
       nextProps.startPanel != this.props.startPanel ||
       nextProps.endPanel != this.props.endPanel ||
       nextProps.endPanelControl != this.props.endPanelControl ||
       nextProps.minSize != this.props.minSize ||
-      nextProps.maxSize != this.props.maxSize ||
-      nextProps.splitterSize != this.props.splitterSize;
+      nextProps.maxSize != this.props.maxSize;
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -170,9 +175,8 @@ class SplitBox extends Component {
   // Rendering
 
   render() {
-    const vert = this.state.vert;
-    const { startPanel, endPanel, endPanelControl, minSize,
-      maxSize, splitterSize } = this.props;
+    const { splitterSize, vert } = this.state;
+    const { startPanel, endPanel, endPanelControl, minSize, maxSize } = this.props;
 
     let style = Object.assign({}, this.props.style);
 
@@ -223,20 +227,27 @@ class SplitBox extends Component {
         startPanel ?
           dom.div({
             className: endPanelControl ? "uncontrolled" : "controlled",
-            style: leftPanelStyle},
+            style: leftPanelStyle,
+            ref: div => {
+              this.startPanelContainer = div;
+            }},
             startPanel
           ) : null,
-        Draggable({
-          className: "splitter",
-          style: splitterStyle,
-          onStart: this.onStartMove,
-          onStop: this.onStopMove,
-          onMove: this.onMove
-        }),
+        splitterSize > 0 ?
+          Draggable({
+            className: "splitter",
+            style: splitterStyle,
+            onStart: this.onStartMove,
+            onStop: this.onStopMove,
+            onMove: this.onMove
+          }) : null,
         endPanel ?
           dom.div({
             className: endPanelControl ? "controlled" : "uncontrolled",
-            style: rightPanelStyle},
+            style: rightPanelStyle,
+            ref: div => {
+              this.endPanelContainer = div;
+            }},
             endPanel
           ) : null
       )
