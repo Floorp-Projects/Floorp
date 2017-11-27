@@ -98,7 +98,10 @@ open class AutocompleteListFragment : Fragment() {
                 return super.canDropOver(recyclerView, current, target)
             }
         })
-        itemTouchHelper?.attachToRecyclerView(domainList)
+
+        if (!isSelectionMode()) {
+            itemTouchHelper?.attachToRecyclerView(domainList)
+        }
     }
 
     override fun onResume() {
