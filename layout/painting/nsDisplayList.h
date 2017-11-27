@@ -1125,6 +1125,28 @@ public:
     bool                  mOldValue;
   };
 
+  /**
+   * A helper class to temporarily set the value of mFilterASR.
+   */
+  class AutoFilterASRSetter;
+  friend class AutoFilterASRSetter;
+  class AutoFilterASRSetter {
+  public:
+    AutoFilterASRSetter(nsDisplayListBuilder* aBuilder, bool aUsingFilter)
+      : mBuilder(aBuilder), mOldValue(aBuilder->mFilterASR)
+    {
+      if (!aBuilder->mFilterASR && aUsingFilter) {
+        aBuilder->mFilterASR = aBuilder->CurrentActiveScrolledRoot();
+      }
+    }
+    ~AutoFilterASRSetter() {
+      mBuilder->mFilterASR = mOldValue;
+    }
+  private:
+    nsDisplayListBuilder* mBuilder;
+    const ActiveScrolledRoot* mOldValue;
+  };
+
   class AutoSaveRestorePerspectiveIndex;
   friend class AutoSaveRestorePerspectiveIndex;
   class AutoSaveRestorePerspectiveIndex {
@@ -1771,6 +1793,9 @@ private:
   Preserves3DContext             mPreserves3DCtx;
   uint32_t                       mPerspectiveItemIndex;
   int32_t                        mSVGEffectsBuildingDepth;
+  // When we are inside a filter, the current ASR at the time we entered the
+  // filter. Otherwise nullptr.
+  const ActiveScrolledRoot*      mFilterASR;
   bool                           mContainsBlendMode;
   bool                           mIsBuildingScrollbar;
   bool                           mCurrentScrollbarWillHaveLayer;
