@@ -15,6 +15,7 @@ echo "running as" $(id)
 
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
+: MOZHARNESS_CONFIG_PATHS       ${MOZHARNESS_CONFIG_PATHS}
 : MOZHARNESS_ACTIONS            ${MOZHARNESS_ACTIONS}
 : MOZHARNESS_OPTIONS            ${MOZHARNESS_OPTIONS}
 
@@ -64,6 +65,11 @@ fi
 # entirely effective.
 export TOOLTOOL_CACHE
 
+config_path_cmds=""
+for path in ${MOZHARNESS_CONFIG_PATHS}; do
+    config_path_cmds="${config_path_cmds} --extra-config-path ${WORKSPACE}/build/src/${path}"
+done
+
 # support multiple, space delimited, config files
 config_cmds=""
 for cfg in $MOZHARNESS_CONFIG; do
@@ -95,6 +101,7 @@ python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} \
   --revision ${GECKO_HEAD_REV} \
   $actions \
   $options \
+  ${config_path_cmds} \
   ${config_cmds} \
   --log-level=debug \
   --scm-level=$MOZ_SCM_LEVEL \
