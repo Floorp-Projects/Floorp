@@ -336,8 +336,8 @@ class MachCommands(MachCommandBase):
             sys.exit(1)
 
     def show_taskgraph_labels(self, taskgraph):
-        for label in taskgraph.graph.visit_postorder():
-            print(label)
+        for index in taskgraph.graph.visit_postorder():
+            print(taskgraph.tasks[index].label)
 
     def show_taskgraph_json(self, taskgraph):
         print(json.dumps(taskgraph.to_json(),
