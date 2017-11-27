@@ -6,6 +6,7 @@ package org.mozilla.focus.autocomplete
 
 import android.app.Fragment
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.view.MotionEventCompat
 import android.support.v7.widget.LinearLayoutManager
@@ -42,6 +43,7 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         domainList.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
         domainList.adapter = DomainListAdapter()
+        domainList.setHasFixedSize(true)
 
         itemTouchHelper = ItemTouchHelper(object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
@@ -58,6 +60,22 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {}
+
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
+
+                if (viewHolder is DomainViewHolder) {
+                    viewHolder.onSelected()
+                }
+            }
+
+            override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) {
+                super.clearView(recyclerView, viewHolder)
+
+                if (viewHolder is DomainViewHolder) {
+                    viewHolder.onCleared()
+                }
+            }
         })
         itemTouchHelper?.attachToRecyclerView(domainList)
     }
@@ -184,6 +202,14 @@ open class AutocompleteCustomDomainsFragment : Fragment() {
                 }
                 false
             })
+        }
+
+        fun onSelected() {
+            itemView.setBackgroundColor(Color.DKGRAY)
+        }
+
+        fun onCleared() {
+            itemView.setBackgroundColor(0);
         }
     }
 
