@@ -748,6 +748,13 @@ SERVO_BINDING_FUNC(Servo_ComputeColor, bool,
 SERVO_BINDING_FUNC(Servo_ParseIntersectionObserverRootMargin, bool,
                    const nsAString* value,
                    nsCSSRect* result);
+// Returning false means the parsed transform contains relative lengths or
+// percentage value, so we cannot compute the matrix. In this case, we keep
+// |result| and |contains_3d_transform| as-is.
+SERVO_BINDING_FUNC(Servo_ParseTransformIntoMatrix, bool,
+                   const nsAString* value,
+                   bool* contains_3d_transform,
+                   RawGeckoGfxMatrix4x4* result);
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
