@@ -36,14 +36,6 @@ public:
   nsresult Init(nsIFile* aFile);
 
   /**
-   * Initialize the INIParser with a file path. If this method fails, no
-   * other methods should be called. This method reads and parses the file,
-   * the class does not hold a file handle open. An instance must only
-   * be initialized once.
-   */
-  nsresult Init(const char* aPath);
-
-  /**
    * Callback for GetSections
    * @return false to stop enumeration, or true to continue.
    */
