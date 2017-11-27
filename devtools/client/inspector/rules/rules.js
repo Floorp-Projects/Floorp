@@ -1600,10 +1600,7 @@ function RuleViewTool(inspector, window) {
   this.inspector.selection.on("new-node-front", this.onSelected);
   this.inspector.selection.on("pseudoclass", this.refresh);
   this.inspector.target.on("navigate", this.clearUserProperties);
-
-  this.inspector.ruleViewSideBar.on("ruleview-selected", this.onPanelSelected);
   this.inspector.sidebar.on("ruleview-selected", this.onPanelSelected);
-
   this.inspector.pageStyle.on("stylesheet-updated", this.refresh);
   this.inspector.walker.on("mutations", this.onMutations);
   this.inspector.walker.on("resize", this.onResized);
@@ -1616,9 +1613,7 @@ RuleViewTool.prototype = {
     if (!this.view) {
       return false;
     }
-
-    return this.inspector.isSplitRuleViewEnabled ?
-      true : this.inspector.sidebar.getCurrentTabID() == "ruleview";
+    return this.inspector.sidebar.getCurrentTabID() == "ruleview";
   },
 
   onSelected: function (event) {
