@@ -134,7 +134,6 @@ class TestTsBase(object):
         'url_timestamp',
         'timeout',
         'cycles',
-        'shutdown',
         'profile_path',
         'gecko_profile',
         'gecko_profile_interval',
@@ -194,7 +193,6 @@ class Test_ts_paint(object):
             'gecko_profile_startup',
             'gecko_profile_entries',
             'url',
-            'shutdown',
             'xperf_counters',
             'filters',
             'tpmozafterpaint'

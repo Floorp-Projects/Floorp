@@ -110,8 +110,6 @@ def create_parser(mach_interface=False):
             default=os.path.abspath('browser_failures.txt'),
             help="Filename to store the errors found during the test."
                  " Currently used for xperf only.")
-    add_arg('--noShutdown', dest='shutdown', action='store_true',
-            help="Record time browser takes to shutdown after testing")
     add_arg('--setpref', action='append', default=[], dest="extraPrefs",
             metavar="PREF=VALUE",
             help="defines an extra user preference")
