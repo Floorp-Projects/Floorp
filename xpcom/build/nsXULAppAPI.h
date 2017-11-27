@@ -410,8 +410,16 @@ XRE_API(bool,
                                    uint32_t* aSequence))
 
 // Used in child processes.
+#if defined(XP_WIN)
+// Uses uintptr_t, even though it's really a HANDLE, because including
+// <windows.h> here caused compilation issues.
+XRE_API(bool,
+        XRE_SetRemoteExceptionHandler,
+        (const char* aPipe, uintptr_t aCrashTimeAnnotationFile))
+#else
 XRE_API(bool,
         XRE_SetRemoteExceptionHandler, (const char* aPipe))
+#endif
 
 namespace mozilla {
 namespace gmp {
