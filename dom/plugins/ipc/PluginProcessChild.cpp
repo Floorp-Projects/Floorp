@@ -23,7 +23,6 @@ extern "C" CGError CGSSetDebugOptions(int options);
 #ifdef XP_WIN
 bool ShouldProtectPluginCurrentDirectory(char16ptr_t pluginFilePath);
 #if defined(MOZ_SANDBOX)
-#define TARGET_SANDBOX_EXPORTS
 #include "mozilla/sandboxTarget.h"
 #endif
 #endif
