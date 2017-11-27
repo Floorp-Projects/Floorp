@@ -27,8 +27,8 @@ class AutocompletePreference(context: Context?, attrs: AttributeSet?) : Preferen
         summaryView?.setText(
                 if (settings.shouldAutocompleteFromShippedDomainList()
                         || settings.shouldAutocompleteFromCustomDomainList())
-                    R.string.preference_state_enabled
+                    R.string.preference_state_on
                 else
-                    R.string.preference_state_disabled)
+                    R.string.preference_state_off)
     }
 }

@@ -104,12 +104,9 @@
 
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">On</string>
+
     <!-- Text that is shown below a "switch" preference that is disabled. -->
     <string name="preference_state_off">Off</string>
-    <!-- Text that is shown below a "switch" preference that is enabled. -->
-    <string name="preference_state_enabled">Enabled</string>
-    <!-- Text that is shown below a "switch" preference that is disabled. -->
-    <string name="preference_state_disabled">Disabled</string>
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
     <string name="preference_subitem_autocomplete">URL Autocomplete</string>

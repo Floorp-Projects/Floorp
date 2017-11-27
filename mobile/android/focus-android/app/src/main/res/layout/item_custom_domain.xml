@@ -31,6 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:src="@drawable/ic_reorder"
+        android:importantForAccessibility="no"
         android:paddingEnd="?android:attr/listPreferredItemPaddingStart" />
     <CheckBox
         android:id="@+id/checkbox"
