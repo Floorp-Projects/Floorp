@@ -30,7 +30,7 @@ fn assert_is_array(cx: *mut js::jsapi::root::JSContext,
 
 #[test]
 fn vec_conversion() {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new(false).unwrap();
     let cx = rt.cx();
 
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
