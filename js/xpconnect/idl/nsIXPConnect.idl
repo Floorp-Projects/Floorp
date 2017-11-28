@@ -14,8 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 
-struct JSFreeOp;
-
 class nsWrapperCache;
 %}
 
@@ -24,30 +22,18 @@ class nsWrapperCache;
 // NB: jsval and jsid are declared in nsrootidl.idl
 
 [ptr] native JSContextPtr(JSContext);
-[ptr] native JSClassPtr(JSClass);
-[ptr] native JSFreeOpPtr(JSFreeOp);
 [ptr] native JSObjectPtr(JSObject);
-[ptr] native JSValConstPtr(const JS::Value);
-      native JSEqualityOp(JSEqualityOp);
 [ptr] native JSScriptPtr(JSScript);
-[ptr] native voidPtrPtr(void*);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
-[ref] native JSCompartmentOptions(JS::CompartmentOptions);
-[ref] native JSCallArgsRef(const JS::CallArgs);
       native JSHandleId(JS::Handle<jsid>);
 
 /***************************************************************************/
 
 // forward declarations...
-interface nsIXPCScriptable;
-interface nsIXPConnect;
-interface nsIXPConnectWrappedNative;
 interface nsIInterfaceInfo;
-interface nsIXPCSecurityManager;
 interface nsIPrincipal;
 interface nsIClassInfo;
 interface nsIVariant;
-interface nsIStackFrame;
 interface nsIObjectInputStream;
 interface nsIObjectOutputStream;
 
