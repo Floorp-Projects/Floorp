@@ -9,7 +9,7 @@
 #include "txCore.h"
 
 class nsIDocument;
-class nsINode;
+class nsIDOMNode;
 
 /**
  * A utility class for URI handling
@@ -22,7 +22,7 @@ public:
     /**
      * Reset the given document with the document of the source node
      */
-    static void ResetWithSource(nsIDocument *aNewDoc, nsINode *aSourceNode);
+    static void ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode);
 
     /**
      * Resolves the given href argument, using the given documentBase

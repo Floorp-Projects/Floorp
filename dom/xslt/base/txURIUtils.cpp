@@ -43,9 +43,16 @@ void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
 
 // static
 void
-URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsINode *aSourceNode)
+URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
 {
-    nsCOMPtr<nsIDocument> sourceDoc = aSourceNode->OwnerDoc();
+    nsCOMPtr<nsINode> node = do_QueryInterface(aSourceNode);
+    if (!node) {
+        // XXXbz passing nullptr as the first arg to Reset is illegal
+        aNewDoc->Reset(nullptr, nullptr);
+        return;
+    }
+
+    nsCOMPtr<nsIDocument> sourceDoc = node->OwnerDoc();
     nsIPrincipal* sourcePrincipal = sourceDoc->NodePrincipal();
 
     // Copy the channel and loadgroup from the source document.

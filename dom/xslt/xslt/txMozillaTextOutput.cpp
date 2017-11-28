@@ -121,7 +121,7 @@ txMozillaTextOutput::startDocument()
 }
 
 nsresult
-txMozillaTextOutput::createResultDocument(nsIDocument* aSourceDocument,
+txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
                                           bool aLoadedAsData)
 {
     /*
@@ -148,9 +148,11 @@ txMozillaTextOutput::createResultDocument(nsIDocument* aSourceDocument,
     MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
                nsIDocument::READYSTATE_UNINITIALIZED, "Bad readyState");
     mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
+    nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
+    NS_ENSURE_STATE(source);
     bool hasHadScriptObject = false;
     nsIScriptGlobalObject* sgo =
-      aSourceDocument->GetScriptHandlingObject(hasHadScriptObject);
+      source->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(sgo || !hasHadScriptObject);
 
     NS_ASSERTION(mDocument, "Need document");

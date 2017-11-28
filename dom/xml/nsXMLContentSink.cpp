@@ -152,7 +152,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLContentSink,
     const StackNode& node = tmp->mContentStack.ElementAt(i);
     cb.NoteXPCOMChild(node.mContent);
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentChildren)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsIContentSink
@@ -294,7 +293,8 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
       }
     }
 
-    mXSLTProcessor->SetSourceContentModel(mDocument, mDocumentChildren);
+    nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
+    mXSLTProcessor->SetSourceContentModel(currentDOMDoc);
     // Since the processor now holds a reference to us we drop our reference
     // to it to avoid owning cycles
     mXSLTProcessor = nullptr;
@@ -358,9 +358,8 @@ NS_IMETHODIMP
 nsXMLContentSink::OnTransformDone(nsresult aResult,
                                   nsIDocument* aResultDocument)
 {
-  MOZ_ASSERT(aResultDocument, "Don't notify about transform end without a document.");
-
-  mDocumentChildren.Clear();
+  NS_ASSERTION(NS_FAILED(aResult) || aResultDocument,
+               "Don't notify about transform success without a document.");
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aResultDocument);
 
@@ -369,17 +368,28 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 
   if (NS_FAILED(aResult) && contentViewer) {
     // Transform failed.
-    aResultDocument->SetMayStartLayout(false);
-    // We have an error document.
-    contentViewer->SetDOMDocument(domDoc);
+    if (domDoc) {
+      aResultDocument->SetMayStartLayout(false);
+      // We have an error document.
+      contentViewer->SetDOMDocument(domDoc);
+    }
+    else {
+      // We don't have an error document, display the
+      // untransformed source document.
+      nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(mDocument);
+      contentViewer->SetDOMDocument(document);
+    }
   }
 
   nsCOMPtr<nsIDocument> originalDocument = mDocument;
-  // Transform succeeded, or it failed and we have an error document to display.
-  mDocument = aResultDocument;
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-  if (htmlDoc) {
-    htmlDoc->SetDocWriteDisabled(false);
+  if (NS_SUCCEEDED(aResult) || aResultDocument) {
+    // Transform succeeded or it failed and we have an error
+    // document to display.
+    mDocument = aResultDocument;
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+    if (htmlDoc) {
+      htmlDoc->SetDocWriteDisabled(false);
+    }
   }
 
   // Notify document observers that all the content has been stuck
@@ -605,17 +615,12 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 {
   nsresult result = NS_OK;
 
-  if (mState == eXMLContentSinkState_InProlog) {
-    NS_ASSERTION(mDocument, "Fragments have no prolog");
-    mDocumentChildren.AppendElement(aContent);
-  } else if (mState == eXMLContentSinkState_InEpilog) {
-    NS_ASSERTION(mDocument, "Fragments have no epilog");
-    if (mXSLTProcessor) {
-      mDocumentChildren.AppendElement(aContent);
-    } else {
-      mDocument->AppendChildTo(aContent, false);
-    }
-  } else {
+  if ((eXMLContentSinkState_InProlog == mState) ||
+      (eXMLContentSinkState_InEpilog == mState)) {
+    NS_ASSERTION(mDocument, "Fragments have no prolog or epilog");
+    mDocument->AppendChildTo(aContent, false);
+  }
+  else {
     nsCOMPtr<nsIContent> parent = GetCurrentContent();
 
     if (parent) {
@@ -870,20 +875,6 @@ nsXMLContentSink::SetDocElement(int32_t aNameSpaceID,
   if (mDocElement)
     return false;
 
-  mDocElement = aContent;
-
-  if (mXSLTProcessor) {
-    mDocumentChildren.AppendElement(aContent);
-    return true;
-  }
-
-  if (!mDocumentChildren.IsEmpty()) {
-    for (nsIContent* child : mDocumentChildren) {
-      mDocument->AppendChildTo(child, false);
-    }
-    mDocumentChildren.Clear();
-  }
-
   // check for root elements that needs special handling for
   // prettyprinting
   if ((aNameSpaceID == kNameSpaceID_XBL &&
@@ -902,6 +893,7 @@ nsXMLContentSink::SetDocElement(int32_t aNameSpaceID,
     }
   }
 
+  mDocElement = aContent;
   nsresult rv = mDocument->AppendChildTo(mDocElement, NotifyForDocElement());
   if (NS_FAILED(rv)) {
     // If we return false here, the caller will bail out because it won't
@@ -1009,17 +1001,17 @@ nsXMLContentSink::HandleStartElement(const char16_t *aName,
     mInMonolithicContainer++;
   }
 
-  if (!mXSLTProcessor) {
-    if (content == mDocElement) {
-      NotifyDocElementCreated(mDocument);
+  if (content != mDocElement && !mCurrentHead) {
+    // This isn't the root and we're not inside an XHTML <head>.
+    // Might need to start layout
+    MaybeStartLayout(false);
+  }
 
-      if (aInterruptable && NS_SUCCEEDED(result) && mParser && !mParser->IsParserEnabled()) {
-        return NS_ERROR_HTMLPARSER_BLOCK;
-      }
-    } else if (!mCurrentHead) {
-      // This isn't the root and we're not inside an XHTML <head>.
-      // Might need to start layout
-      MaybeStartLayout(false);
+  if (content == mDocElement) {
+    NotifyDocElementCreated(mDocument);
+
+    if (aInterruptable && NS_SUCCEEDED(result) && mParser && !mParser->IsParserEnabled()) {
+      return NS_ERROR_HTMLPARSER_BLOCK;
     }
   }
 
@@ -1183,9 +1175,9 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
   nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
   NS_ASSERTION(content, "doctype isn't content?");
 
-  mDocumentChildren.AppendElement(content);
+  rv = mDocument->AppendChildTo(content, false);
   DidAddContent();
-  return DidProcessATokenImpl();
+  return NS_SUCCEEDED(rv) ? DidProcessATokenImpl() : rv;
 }
 
 NS_IMETHODIMP
@@ -1335,7 +1327,6 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   mIsDocumentObserver = false;
 
   // Clear the current content
-  mDocumentChildren.Clear();
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
   if (node) {
     for (;;) {
