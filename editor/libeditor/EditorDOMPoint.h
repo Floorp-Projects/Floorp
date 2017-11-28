@@ -119,6 +119,16 @@ public:
       "Initializing RangeBoundary with invalid value");
   }
 
+  explicit EditorDOMPointBase(nsIDOMNode* aDOMPointedNode)
+    : mIsChildInitialized(false)
+  {
+    nsCOMPtr<nsIContent> child = do_QueryInterface(aDOMPointedNode);
+    if (NS_WARN_IF(!child)) {
+      return;
+    }
+    this->Set(child);
+  }
+
   EditorDOMPointBase(nsINode* aContainer,
                      nsIContent* aPointedNode,
                      int32_t aOffset)
