@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* globals windowTracker */
+/* globals windowTracker */
 
 "use strict";
 
@@ -170,8 +170,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         // Needs to be called every time to handle reenabling, but
         // only sets default for install or enable.
         await this.setDefault(engineName);
-      } else if (ExtensionSettingsStore.hasSetting(
-                extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME)) {
+      } else if (ExtensionSettingsStore.hasSetting(extension.id,
+                                                   DEFAULT_SEARCH_STORE_TYPE,
+                                                   DEFAULT_SEARCH_SETTING_NAME)) {
         // is_default has been removed, but we still have a setting. Remove it.
         chrome_settings_overrides.processDefaultSearchSetting("removeSetting", extension.id);
       }

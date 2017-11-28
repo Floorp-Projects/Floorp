@@ -130,7 +130,7 @@ add_task(async function test_browser_settings() {
   // This setting is a no-op on Android.
   if (AppConstants.platform === "android") {
     await testNoOpSetting("contextMenuShowEvent", "mouseup",
-      {"ui.context_menus.after_mouseup": false});
+                          {"ui.context_menus.after_mouseup": false});
   } else {
     await testSetting(
       "contextMenuShowEvent", "mouseup",
@@ -139,7 +139,8 @@ add_task(async function test_browser_settings() {
 
   // "mousedown" is also a no-op on Windows.
   if (["android", "win"].includes(AppConstants.platform)) {
-    await testNoOpSetting("contextMenuShowEvent", "mousedown",
+    await testNoOpSetting(
+      "contextMenuShowEvent", "mousedown",
       {"ui.context_menus.after_mouseup": AppConstants.platform === "win"});
   } else {
     await testSetting(

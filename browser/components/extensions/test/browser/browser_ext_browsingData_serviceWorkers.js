@@ -6,8 +6,8 @@
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.serviceWorkers.exemptFromPerDomainMax", true],
-         ["dom.serviceWorkers.enabled", true],
-         ["dom.serviceWorkers.testing.enabled", true]],
+          ["dom.serviceWorkers.enabled", true],
+          ["dom.serviceWorkers.testing.enabled", true]],
   });
 });
 

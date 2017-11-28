@@ -97,7 +97,7 @@ add_task(async function test_embedded_webextension_utils() {
   let msg = await waitPortMessage;
 
   equal(msg, "webextension -> legacy_extension",
-     "LegacyExtensionContext received the expected message from the webextension");
+        "LegacyExtensionContext received the expected message from the webextension");
 
   let waitForDisconnect = new Promise(resolve => {
     port.onDisconnect.addListener(resolve);

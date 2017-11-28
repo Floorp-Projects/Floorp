@@ -223,7 +223,7 @@ add_task(async function test_search() {
         const id = downloadIds[key];
         const thisExpected = expected.includes(key);
         equal(receivedIds.includes(id), thisExpected,
-           `search() for ${description} ${thisExpected ? "includes" : "does not include"} ${key}`);
+              `search() for ${description} ${thisExpected ? "includes" : "does not include"} ${key}`);
       });
     }
   }

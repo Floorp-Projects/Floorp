@@ -78,7 +78,8 @@ add_task(async function test_hsts_request() {
 
   // simple redirect
   let sample = "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
-  extension.sendMessage(`https://${testPath}/redirect_auto.sjs?redirect_uri=${sample}`,
+  extension.sendMessage(
+    `https://${testPath}/redirect_auto.sjs?redirect_uri=${sample}`,
     ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
      "onHeadersReceived", "onBeforeRedirect", "onBeforeRequest",
      "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
@@ -88,7 +89,8 @@ add_task(async function test_hsts_request() {
   ok((await extension.awaitMessage("onCompleted")).startsWith(sample), "redirection ok");
 
   // priming hsts
-  extension.sendMessage(`https://${testPath}/hsts.sjs`,
+  extension.sendMessage(
+    `https://${testPath}/hsts.sjs`,
     ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
      "onHeadersReceived", "onResponseStarted", "onCompleted"]);
   is(await extension.awaitMessage("tabs-done"),
@@ -98,7 +100,8 @@ add_task(async function test_hsts_request() {
      "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs");
 
   // test upgrade
-  extension.sendMessage(`http://${testPath}/hsts.sjs`,
+  extension.sendMessage(
+    `http://${testPath}/hsts.sjs`,
     ["onBeforeRequest", "onBeforeRedirect", "onBeforeRequest",
      "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
      "onResponseStarted", "onCompleted"]);

@@ -120,6 +120,17 @@ add_task(async function test_contentscript_window_open() {
     return;
   }
 
+  let script = async () => {
+    /* globals x */
+    browser.test.assertEq(1, x, "Should only run once");
+
+    if (top !== window) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    browser.test.sendMessage("content-script", [location.href, top === window]);
+  };
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {gecko: {id: "contentscript@tests.mozilla.org"}},
@@ -137,16 +148,7 @@ add_task(async function test_contentscript_window_open() {
     files: {
       "content_script.js": `
         var x = (x || 0) + 1;
-        (${async () => {
-          /* globals x */
-          browser.test.assertEq(1, x, "Should only run once");
-
-          if (top !== window) {
-            await new Promise(resolve => setTimeout(resolve, 0));
-          }
-
-          browser.test.sendMessage("content-script", [location.href, top === window]);
-        }})();
+        (${script})();
       `,
     },
   });

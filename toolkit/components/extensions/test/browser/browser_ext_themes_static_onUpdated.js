@@ -40,11 +40,11 @@ add_task(async function test_on_updated() {
   const {theme: receivedTheme, windowId} = await updatedPromise;
   Assert.ok(!windowId, "No window id in static theme update event");
   Assert.ok(receivedTheme.images.headerURL.includes("image1.png"),
-    "Theme header URL should be applied");
+            "Theme header URL should be applied");
   Assert.equal(receivedTheme.colors.accentcolor, ACCENT_COLOR,
-    "Theme accent color should be applied");
+               "Theme accent color should be applied");
   Assert.equal(receivedTheme.colors.textcolor, TEXT_COLOR,
-    "Theme text color should be applied");
+               "Theme text color should be applied");
 
   info("Testing update event on static theme unload");
   updatedPromise = extension.awaitMessage("theme-updated");
@@ -52,7 +52,7 @@ add_task(async function test_on_updated() {
   const updateInfo = await updatedPromise;
   Assert.ok(!windowId, "No window id in static theme update event on unload");
   Assert.equal(Object.keys(updateInfo.theme), 0,
-    "unloading theme sends empty theme in update event");
+               "unloading theme sends empty theme in update event");
 
   await extension.unload();
 });

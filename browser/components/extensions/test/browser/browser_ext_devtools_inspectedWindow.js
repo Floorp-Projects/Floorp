@@ -49,9 +49,9 @@ add_task(async function test_devtools_inspectedWindow_tabId() {
   }
 
   function devtools_page() {
-    browser.test.assertEq(undefined, browser.runtime.getBackgroundPage,
-      "The `runtime.getBackgroundPage` API method should be missing in a devtools_page context"
-    );
+    browser.test.assertEq(
+      undefined, browser.runtime.getBackgroundPage,
+      "The `runtime.getBackgroundPage` API method should be missing in a devtools_page context");
 
     try {
       let tabId = browser.devtools.inspectedWindow.tabId;

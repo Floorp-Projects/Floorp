@@ -73,7 +73,7 @@ add_task(async function testSettings() {
   is(SETTINGS_LIST.length, Object.keys(dataRemovalPermitted).length, `dataRemovalPermitted contains expected no of keys`);
   for (let key of SETTINGS_LIST) {
     is(true, dataRemovalPermitted[key],
-      `${key} property of dataRemovalPermitted matches the expected value.`);
+       `${key} property of dataRemovalPermitted matches the expected value.`);
   }
 
   // Verify values of dataToRemove keys are as expected.

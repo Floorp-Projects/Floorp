@@ -15,10 +15,10 @@ add_task(async function test_extension_adding_engine() {
     manifest: {
       "chrome_settings_overrides": {
         "search_provider": {
-             "name": "MozSearch",
-             "keyword": "MozSearch",
-             "search_url": kSearchEngineURL,
-             "suggest_url": kSearchSuggestURL,
+          "name": "MozSearch",
+          "keyword": "MozSearch",
+          "search_url": kSearchEngineURL,
+          "suggest_url": kSearchSuggestURL,
         },
       },
     },
@@ -49,9 +49,9 @@ add_task(async function test_extension_adding_engine_with_spaces() {
     manifest: {
       "chrome_settings_overrides": {
         "search_provider": {
-             "name": "MozSearch     ",
-             "keyword": "MozSearch",
-             "search_url": "https://example.com/?q={searchTerms}",
+          "name": "MozSearch     ",
+          "keyword": "MozSearch",
+          "search_url": "https://example.com/?q={searchTerms}",
         },
       },
     },
@@ -75,14 +75,14 @@ add_task(async function test_upgrade_default_position_engine() {
     manifest: {
       "chrome_settings_overrides": {
         "search_provider": {
-             "name": "MozSearch",
-             "keyword": "MozSearch",
-             "search_url": "https://example.com/?q={searchTerms}",
+          "name": "MozSearch",
+          "keyword": "MozSearch",
+          "search_url": "https://example.com/?q={searchTerms}",
         },
       },
       "applications": {
         "gecko": {
-           "id": "testengine@mozilla.com",
+          "id": "testengine@mozilla.com",
         },
       },
       "version": "0.1",
@@ -94,14 +94,14 @@ add_task(async function test_upgrade_default_position_engine() {
     manifest: {
       "chrome_settings_overrides": {
         "search_provider": {
-             "name": "MozSearch",
-             "keyword": "MozSearch",
-             "search_url": "https://example.com/?q={searchTerms}",
+          "name": "MozSearch",
+          "keyword": "MozSearch",
+          "search_url": "https://example.com/?q={searchTerms}",
         },
       },
       "applications": {
         "gecko": {
-           "id": "testengine@mozilla.com",
+          "id": "testengine@mozilla.com",
         },
       },
       "version": "0.2",
