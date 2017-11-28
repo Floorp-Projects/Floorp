@@ -1037,10 +1037,7 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
   newSelectors.SwapElements(mKeys);
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->AsGecko()->SetModifiedByChildRule();
-    if (doc) {
-      doc->StyleRuleChanged(sheet, this);
-    }
+    sheet->RuleChanged(this);
   }
 
   return NS_OK;
@@ -1071,10 +1068,7 @@ nsCSSKeyframeRule::ChangeDeclaration(css::Declaration* aDeclaration)
   }
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->AsGecko()->SetModifiedByChildRule();
-    if (doc) {
-      doc->StyleRuleChanged(sheet, this);
-    }
+    sheet->RuleChanged(this);
   }
 }
 
@@ -1174,10 +1168,7 @@ nsCSSKeyframesRule::SetName(const nsAString& aName)
   mName = NS_Atomize(aName);
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->AsGecko()->SetModifiedByChildRule();
-    if (doc) {
-      doc->StyleRuleChanged(sheet, this);
-    }
+    sheet->RuleChanged(this);
   }
 
   return NS_OK;
@@ -1201,10 +1192,7 @@ nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
     AppendStyleRule(rule);
 
     if (StyleSheet* sheet = GetStyleSheet()) {
-      sheet->AsGecko()->SetModifiedByChildRule();
-      if (doc) {
-        doc->StyleRuleChanged(sheet, this);
-      }
+      sheet->RuleChanged(this);
     }
   }
 
@@ -1248,11 +1236,7 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
     DeleteStyleRuleAt(index);
 
     if (StyleSheet* sheet = GetStyleSheet()) {
-      sheet->AsGecko()->SetModifiedByChildRule();
-
-      if (doc) {
-        doc->StyleRuleChanged(sheet, this);
-      }
+      sheet->RuleChanged(this);
     }
   }
   return NS_OK;
@@ -1458,8 +1442,10 @@ nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
     mDeclaration->SetOwningRule(this);
   }
 
+  nsIDocument* doc = GetDocument();
+  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->AsGecko()->SetModifiedByChildRule();
+    sheet->RuleChanged(this);
   }
 }
 

@@ -454,12 +454,18 @@ StyleSheet::EnsureUniqueInner()
     // already unique
     return;
   }
+
   // If this stylesheet is for XBL with Servo, don't bother cloning
   // it, as it may break ServoStyleRuleMap. XBL stylesheets are not
   // supposed to change anyway.
+  //
   // The mDocument check is used as a fast reject path because no
   // XBL stylesheets would have associated document, but in normal
   // cases, content stylesheets should usually have one.
+  //
+  // FIXME(emilio): Shadow DOM definitely modifies stylesheets! Right now all of
+  // them are unique anyway because we don't support <link>, but that needs to
+  // change.
   if (!mDocument && IsServo() &&
       mStyleSets.Length() == 1 &&
       mStyleSets[0]->AsServo()->IsForXBL()) {
@@ -603,14 +609,51 @@ StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
   NS_ENSURE_SUCCESS(result, result);
 
   rule->SetStyleSheet(nullptr);
+  RuleRemoved(*rule);
+  return NS_OK;
+}
 
+#define NOTIFY_STYLE_SETS(function_, args_) do {          \
+  StyleSheet* current = this;                             \
+  do {                                                    \
+    for (StyleSetHandle handle : current->mStyleSets) {   \
+      handle->function_ args_;                            \
+    }                                                     \
+    current = current->mParent;                           \
+  } while (current);                                      \
+} while (0)
+
+void
+StyleSheet::RuleAdded(css::Rule& aRule)
+{
   DidDirty();
+  NOTIFY_STYLE_SETS(RuleAdded, (*this, aRule));
 
   if (mDocument) {
-    mDocument->StyleRuleRemoved(this, rule);
+    mDocument->StyleRuleAdded(this, &aRule);
   }
+}
 
-  return NS_OK;
+void
+StyleSheet::RuleRemoved(css::Rule& aRule)
+{
+  DidDirty();
+  NOTIFY_STYLE_SETS(RuleRemoved, (*this, aRule));
+
+  if (mDocument) {
+    mDocument->StyleRuleRemoved(this, &aRule);
+  }
+}
+
+void
+StyleSheet::RuleChanged(css::Rule* aRule)
+{
+  DidDirty();
+  NOTIFY_STYLE_SETS(RuleChanged, (*this, aRule));
+
+  if (mDocument) {
+    mDocument->StyleRuleChanged(this, aRule);
+  }
 }
 
 nsresult
@@ -636,12 +679,7 @@ StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
     result = AsServo()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
   }
   NS_ENSURE_SUCCESS(result, result);
-
-  DidDirty();
-
-  if (mDocument) {
-    mDocument->StyleRuleAdded(this, aGroup->GetStyleRuleAt(aIndex));
-  }
+  RuleAdded(*aGroup->GetStyleRuleAt(aIndex));
 
   return NS_OK;
 }

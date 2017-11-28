@@ -766,9 +766,8 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
 
   // We don't notify immediately for @import rules, but rather when
   // the sheet the rule is importing is loaded (see StyleSheetLoaded)
-  if ((type != css::Rule::IMPORT_RULE || !RuleHasPendingChildSheet(rule)) &&
-      mDocument) {
-    mDocument->StyleRuleAdded(this, rule);
+  if (type != css::Rule::IMPORT_RULE || !RuleHasPendingChildSheet(rule)) {
+    RuleAdded(*rule);
   }
 
   return aIndex;
@@ -795,11 +794,7 @@ CSSStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
   if (rule) {
     Inner()->mOrderedRules.RemoveObjectAt(aIndex);
     rule->SetStyleSheet(nullptr);
-    DidDirty();
-
-    if (mDocument) {
-      mDocument->StyleRuleRemoved(this, rule);
-    }
+    RuleRemoved(*rule);
   }
 }
 
@@ -865,12 +860,9 @@ CSSStyleSheet::StyleSheetLoaded(StyleSheet* aSheet,
   NS_ASSERTION(this == sheet->GetParentSheet(),
                "We are being notified of a sheet load for a sheet that is not our child!");
 
-  if (mDocument && NS_SUCCEEDED(aStatus)) {
+  if (NS_SUCCEEDED(aStatus)) {
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
-
-    // XXXldb @import rules shouldn't even implement nsIStyleRule (but
-    // they do)!
-    mDocument->StyleRuleAdded(this, sheet->GetOwnerRule());
+    RuleAdded(*sheet->GetOwnerRule());
   }
 
   return NS_OK;
@@ -917,9 +909,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
         reusableSheets.AddReusableSheet(cssSheet);
       }
     }
-    if (mDocument) {
-      mDocument->StyleRuleRemoved(this, rule);
-    }
+    RuleRemoved(*rule);
   }
 
   // nuke child sheets list and current namespace map
@@ -949,15 +939,13 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // notify document of all new rules
-  if (mDocument) {
-    for (int32_t index = 0; index < Inner()->mOrderedRules.Count(); ++index) {
-      RefPtr<css::Rule> rule = Inner()->mOrderedRules.ObjectAt(index);
-      if (rule->GetType() == css::Rule::IMPORT_RULE &&
-          RuleHasPendingChildSheet(rule)) {
-        continue; // notify when loaded (see StyleSheetLoaded)
-      }
-      mDocument->StyleRuleAdded(this, rule);
+  for (int32_t index = 0; index < Inner()->mOrderedRules.Count(); ++index) {
+    RefPtr<css::Rule> rule = Inner()->mOrderedRules.ObjectAt(index);
+    if (rule->GetType() == css::Rule::IMPORT_RULE &&
+        RuleHasPendingChildSheet(rule)) {
+      continue; // notify when loaded (see StyleSheetLoaded)
     }
+    RuleAdded(*rule);
   }
   return NS_OK;
 }
