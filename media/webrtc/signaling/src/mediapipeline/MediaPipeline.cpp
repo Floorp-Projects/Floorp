@@ -52,6 +52,7 @@
 
 #include "webrtc/base/bind.h"
 #include "webrtc/common_types.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
@@ -61,6 +62,14 @@
 static_assert((WEBRTC_MAX_SAMPLE_RATE / 100) * sizeof(uint16_t) * 2
                <= AUDIO_SAMPLE_BUFFER_MAX_BYTES,
                "AUDIO_SAMPLE_BUFFER_MAX_BYTES is not large enough");
+
+// The number of frame buffers VideoFrameConverter may create before returning
+// errors.
+// Sometimes these are released synchronously but they can be forwarded all the
+// way to the encoder for asynchronous encoding. With a pool size of 5,
+// we allow 1 buffer for the current conversion, and 4 buffers to be queued at
+// the encoder.
+#define CONVERTER_BUFFER_POOL_SIZE 5
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -82,23 +91,11 @@ class VideoConverterListener
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoConverterListener)
 
-  virtual void OnVideoFrameConverted(const unsigned char* aVideoFrame,
-                                     unsigned int aVideoFrameLength,
-                                     unsigned short aWidth,
-                                     unsigned short aHeight,
-                                     VideoType aVideoType,
-                                     uint64_t aCaptureTime) = 0;
-
   virtual void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) = 0;
 
 protected:
   virtual ~VideoConverterListener() {}
 };
-
-// I420 buffer size macros
-#define YSIZE(x, y) (CheckedInt<int>(x) * (y))
-#define CRSIZE(x, y) ((((x) + 1) >> 1) * (((y) + 1) >> 1))
-#define I420SIZE(x, y) (YSIZE((x), (y)) + 2 * CRSIZE((x), (y)))
 
 // An async video frame format converter.
 //
@@ -119,6 +116,7 @@ public:
     , mTaskQueue(
         new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "VideoFrameConverter"))
+    , mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE)
     , mLastImage(-1) // -1 is not a guaranteed invalid serial. See bug 1262134.
 #ifdef DEBUG
     , mThrottleCount(0)
@@ -131,15 +129,43 @@ public:
 
   void QueueVideoChunk(const VideoChunk& aChunk, bool aForceBlack)
   {
-    if (aChunk.IsNull()) {
+    IntSize size = aChunk.mFrame.GetIntrinsicSize();
+    if (size.width == 0 || size.width == 0) {
       return;
     }
 
-    // We get passed duplicate frames every ~10ms even with no frame change.
-    int32_t serial = aChunk.mFrame.GetImage()->GetSerial();
-    if (serial == mLastImage) {
+    if (aChunk.IsNull()) {
+      aForceBlack = true;
+    } else {
+      aForceBlack = aChunk.mFrame.GetForceBlack();
+    }
+
+    int32_t serial;
+    if (aForceBlack) {
+      // Reset the last-img check.
+      // -1 is not a guaranteed invalid serial. See bug 1262134.
+      serial = -1;
+    } else {
+      serial = aChunk.mFrame.GetImage()->GetSerial();
+    }
+
+    const double duplicateMinFps = 1.0;
+    TimeStamp t = aChunk.mTimeStamp;
+    MOZ_ASSERT(!t.IsNull());
+    if (!t.IsNull() &&
+        serial == mLastImage &&
+        !mLastFrameSent.IsNull() &&
+        (t - mLastFrameSent).ToSeconds() < (1.0 / duplicateMinFps)) {
+      // We get passed duplicate frames every ~10ms even with no frame change.
+
+      // After disabling, or when the source is not producing many frames,
+      // we still want *some* frames to flow to the other side.
+      // It could happen that we drop the packet that carried the first disabled
+      // frame, for instance. Note that this still requires the application to
+      // send a frame, or it doesn't trigger at all.
       return;
     }
+    mLastFrameSent = t;
     mLastImage = serial;
 
     // A throttling limit of 1 allows us to convert 2 frames concurrently.
@@ -180,39 +206,16 @@ public:
     }
 #endif
 
-    bool forceBlack = aForceBlack || aChunk.mFrame.GetForceBlack();
-
-    if (forceBlack) {
-      // Reset the last-img check.
-      // -1 is not a guaranteed invalid serial. See bug 1262134.
-      mLastImage = -1;
-
-      // After disabling, we still want *some* frames to flow to the other side.
-      // It could happen that we drop the packet that carried the first disabled
-      // frame, for instance. Note that this still requires the application to
-      // send a frame, or it doesn't trigger at all.
-      const double disabledMinFps = 1.0;
-      TimeStamp t = aChunk.mTimeStamp;
-      MOZ_ASSERT(!t.IsNull());
-      if (!mDisabledFrameSent.IsNull() &&
-          (t - mDisabledFrameSent).ToSeconds() < (1.0 / disabledMinFps)) {
-        return;
-      }
-      mDisabledFrameSent = t;
-    } else {
-      // This sets it to the Null time.
-      mDisabledFrameSent = TimeStamp();
-    }
-
     ++mLength; // Atomic
 
     nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<StoreRefPtrPassByPtr<Image>, bool>(
+      NewRunnableMethod<StoreRefPtrPassByPtr<Image>, IntSize, bool>(
         "VideoFrameConverter::ProcessVideoFrame",
         this,
         &VideoFrameConverter::ProcessVideoFrame,
         aChunk.mFrame.GetImage(),
-        forceBlack);
+        size,
+        aForceBlack);
     nsresult rv = mTaskQueue->Dispatch(runnable.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
@@ -295,38 +298,33 @@ protected:
     }
   }
 
-  void ProcessVideoFrame(Image* aImage, bool aForceBlack)
+  void ProcessVideoFrame(Image* aImage, IntSize aSize, bool aForceBlack)
   {
     --mLength; // Atomic
     MOZ_ASSERT(mLength >= 0);
 
     if (aForceBlack) {
-      IntSize size = aImage->GetSize();
-      CheckedInt<int> yPlaneLen = YSIZE(size.width, size.height);
-      // doesn't need to be CheckedInt, any overflow will be caught by YSIZE
-      int cbcrPlaneLen = 2 * CRSIZE(size.width, size.height);
-      CheckedInt<int> length = yPlaneLen + cbcrPlaneLen;
-
-      if (!yPlaneLen.isValid() || !length.isValid()) {
+      // Send a black image.
+      rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+        mBufferPool.CreateBuffer(aSize.width, aSize.height);
+      if (!buffer) {
+        MOZ_DIAGNOSTIC_ASSERT(false, "Buffers not leaving scope except for "
+                                     "reconfig, should never leak");
+        CSFLogWarn(LOGTAG, "Creating a buffer for a black video frame failed");
         return;
       }
 
-      // Send a black image.
-      auto pixelData = MakeUniqueFallible<uint8_t[]>(length.value());
-      if (pixelData) {
-        // YCrCb black = 0x10 0x80 0x80
-        memset(pixelData.get(), 0x10, yPlaneLen.value());
-        // Fill Cb/Cr planes
-        memset(pixelData.get() + yPlaneLen.value(), 0x80, cbcrPlaneLen);
+      CSFLogDebug(LOGTAG, "Sending a black video frame");
+      webrtc::I420Buffer::SetBlack(buffer);
+      webrtc::VideoFrame frame(buffer,
+                               0, 0, // not setting timestamps
+                               webrtc::kVideoRotation_0);
+      VideoFrameConverted(frame);
+      return;
+    }
 
-        CSFLogDebug(LOGTAG, "Sending a black video frame");
-        VideoFrameConverted(Move(pixelData),
-                            length.value(),
-                            size.width,
-                            size.height,
-                            mozilla::kVideoI420,
-                            0);
-      }
+    if (!aImage) {
+      MOZ_ASSERT_UNREACHABLE("Must have image if not forcing black");
       return;
     }
 
@@ -386,22 +384,17 @@ protected:
       return;
     }
 
-    IntSize size = aImage->GetSize();
-    // these don't need to be CheckedInt, any overflow will be caught by YSIZE
-    int half_width = (size.width + 1) >> 1;
-    int half_height = (size.height + 1) >> 1;
-    int c_size = half_width * half_height;
-    CheckedInt<int> buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
-
-    if (!buffer_size.isValid()) {
+    if (aImage->GetSize() != aSize) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Unexpected intended size");
       return;
     }
 
-    auto yuv_scoped = MakeUniqueFallible<uint8[]>(buffer_size.value());
-    if (!yuv_scoped) {
+    rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+      mBufferPool.CreateBuffer(aSize.width, aSize.height);
+    if (!buffer) {
+      CSFLogWarn(LOGTAG, "Creating a buffer for a black video frame failed");
       return;
     }
-    uint8* yuv = yuv_scoped.get();
 
     DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
     if (!map.IsMapped()) {
@@ -415,33 +408,31 @@ protected:
     }
 
     int rv;
-    int cb_offset = YSIZE(size.width, size.height).value();
-    int cr_offset = cb_offset + c_size;
     switch (surf->GetFormat()) {
       case SurfaceFormat::B8G8R8A8:
       case SurfaceFormat::B8G8R8X8:
         rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
                                 map.GetStride(),
-                                yuv,
-                                size.width,
-                                yuv + cb_offset,
-                                half_width,
-                                yuv + cr_offset,
-                                half_width,
-                                size.width,
-                                size.height);
+                                buffer->MutableDataY(),
+                                buffer->StrideY(),
+                                buffer->MutableDataU(),
+                                buffer->StrideU(),
+                                buffer->MutableDataV(),
+                                buffer->StrideV(),
+                                aSize.width,
+                                aSize.height);
         break;
       case SurfaceFormat::R5G6B5_UINT16:
         rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
                                   map.GetStride(),
-                                  yuv,
-                                  size.width,
-                                  yuv + cb_offset,
-                                  half_width,
-                                  yuv + cr_offset,
-                                  half_width,
-                                  size.width,
-                                  size.height);
+                                  buffer->MutableDataY(),
+                                  buffer->StrideY(),
+                                  buffer->MutableDataU(),
+                                  buffer->StrideU(),
+                                  buffer->MutableDataV(),
+                                  buffer->StrideV(),
+                                  aSize.width,
+                                  aSize.height);
         break;
       default:
         CSFLogError(LOGTAG,
@@ -459,20 +450,19 @@ protected:
     CSFLogDebug(LOGTAG,
                 "Sending an I420 video frame converted from %s",
                 Stringify(surf->GetFormat()).c_str());
-    VideoFrameConverted(Move(yuv_scoped),
-                        buffer_size.value(),
-                        size.width,
-                        size.height,
-                        mozilla::kVideoI420,
-                        0);
+    webrtc::VideoFrame frame(buffer,
+                             0, 0, // not setting timestamps
+                             webrtc::kVideoRotation_0);
+    VideoFrameConverted(frame);
   }
 
   Atomic<int32_t, Relaxed> mLength;
   const RefPtr<AutoTaskQueue> mTaskQueue;
+  webrtc::I420BufferPool mBufferPool;
 
   // Written and read from the queueing thread (normally MSG).
-  int32_t mLastImage;           // serial number of last Image
-  TimeStamp mDisabledFrameSent; // The time we sent the last disabled frame.
+  int32_t mLastImage;       // serial number of last Image
+  TimeStamp mLastFrameSent; // The time we sent the last frame.
 #ifdef DEBUG
   uint32_t mThrottleCount;
   uint32_t mThrottleRecord;
@@ -1358,22 +1348,6 @@ public:
     mConverter = aConverter;
   }
 
-  void OnVideoFrameConverted(const unsigned char* aVideoFrame,
-                             unsigned int aVideoFrameLength,
-                             unsigned short aWidth,
-                             unsigned short aHeight,
-                             VideoType aVideoType,
-                             uint64_t aCaptureTime)
-  {
-    MOZ_RELEASE_ASSERT(mConduit->type() == MediaSessionConduit::VIDEO);
-    static_cast<VideoSessionConduit*>(mConduit.get())
-      ->SendVideoFrame(aVideoFrame,
-                       aVideoFrameLength,
-                       aWidth,
-                       aHeight,
-                       aVideoType,
-                       aCaptureTime);
-  }
 
   void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame)
   {
@@ -1438,26 +1412,6 @@ public:
     mListener = nullptr;
   }
 
-  void OnVideoFrameConverted(const unsigned char* aVideoFrame,
-                             unsigned int aVideoFrameLength,
-                             unsigned short aWidth,
-                             unsigned short aHeight,
-                             VideoType aVideoType,
-                             uint64_t aCaptureTime) override
-  {
-    MutexAutoLock lock(mMutex);
-
-    if (!mListener) {
-      return;
-    }
-
-    mListener->OnVideoFrameConverted(aVideoFrame,
-                                     aVideoFrameLength,
-                                     aWidth,
-                                     aHeight,
-                                     aVideoType,
-                                     aCaptureTime);
-  }
 
   void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) override
   {
