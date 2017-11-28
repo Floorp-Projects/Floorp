@@ -87,7 +87,6 @@ struct ServoGroupRuleRules
     // Do we ever clone Servo rules?
     MOZ_ASSERT_UNREACHABLE("stylo: Cloning GroupRule not implemented");
   }
-  ~ServoGroupRuleRules();
 
   void SetParentRule(GroupRule* aParentRule) {
     if (mRuleList) {
