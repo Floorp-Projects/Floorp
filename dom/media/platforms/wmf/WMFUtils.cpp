@@ -45,7 +45,7 @@ HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames)
 }
 
 HRESULT
-GetDefaultStride(IMFMediaType *aType, uint32_t aWidth, uint32_t* aOutStride)
+GetDefaultStride(IMFMediaType* aType, uint32_t aWidth, uint32_t* aOutStride)
 {
   // Try to get the default stride from the media type.
   HRESULT hr = aType->GetUINT32(MF_MT_DEFAULT_STRIDE, aOutStride);
@@ -64,6 +64,22 @@ GetDefaultStride(IMFMediaType *aType, uint32_t aWidth, uint32_t* aOutStride)
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   return hr;
+}
+
+YUVColorSpace
+GetYUVColorSpace(IMFMediaType* aType)
+{
+  UINT32 yuvColorMatrix;
+  HRESULT hr = aType->GetUINT32(MF_MT_YUV_MATRIX, &yuvColorMatrix);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), YUVColorSpace::BT601);
+
+  switch (yuvColorMatrix) {
+    case MFVideoTransferMatrix_BT709:
+      return YUVColorSpace::BT709;
+    case MFVideoTransferMatrix_BT601:
+    default:
+      return YUVColorSpace::BT601;
+  }
 }
 
 int32_t
