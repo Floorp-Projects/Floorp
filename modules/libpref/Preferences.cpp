@@ -424,6 +424,8 @@ public:
   {
     aDomPref->name() = mName;
 
+    aDomPref->isLocked() = mIsLocked;
+
     if (mHasDefaultValue) {
       aDomPref->defaultValue() = dom::PrefValue();
       mDefaultValue.ToDomPrefValue(Type(),
@@ -449,6 +451,8 @@ public:
   void FromDomPref(const dom::Pref& aDomPref, bool* aValueChanged)
   {
     MOZ_ASSERT(strcmp(mName, aDomPref.name().get()) == 0);
+
+    mIsLocked = aDomPref.isLocked();
 
     const dom::MaybePrefValue& defaultValue = aDomPref.defaultValue();
     bool defaultValueChanged = false;
