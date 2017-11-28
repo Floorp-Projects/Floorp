@@ -589,7 +589,9 @@ this.PanelMultiView = class {
     this._panel.setAttribute("height", rect.height);
 
     let viewRect;
-    if (viewNode.__lastKnownBoundingRect) {
+    if (reverse && viewNode.__lastKnownBoundingRect) {
+      // Use the cached size when going back to a previous view, but not when
+      // reopening a subview, because its contents may have changed.
       viewRect = viewNode.__lastKnownBoundingRect;
       viewNode.setAttribute("in-transition", true);
     } else if (viewNode.customRectGetter) {
@@ -604,6 +606,8 @@ this.PanelMultiView = class {
       viewNode.setAttribute("in-transition", true);
     } else {
       let oldSibling = viewNode.nextSibling || null;
+      this._offscreenViewStack.style.minHeight =
+        this._viewContainer.style.height;
       this._offscreenViewStack.appendChild(viewNode);
       viewNode.setAttribute("in-transition", true);
 
@@ -620,6 +624,8 @@ this.PanelMultiView = class {
       } catch (ex) {
         this._viewStack.appendChild(viewNode);
       }
+
+      this._offscreenViewStack.style.removeProperty("min-height");
     }
 
     this._transitioning = true;
@@ -643,7 +649,8 @@ this.PanelMultiView = class {
     this._viewStack.style.transition = "transform var(--animation-easing-function)" +
       " var(--panelui-subview-transition-duration)";
     this._viewStack.style.willChange = "transform";
-    deepestNode.style.borderInlineStart = "1px solid var(--panel-separator-color)";
+    // Use an outline instead of a border so that the size is not affected.
+    deepestNode.style.outline = "1px solid var(--panel-separator-color)";
 
     // Now set the viewContainer dimensions to that of the new view, which
     // kicks of the height animation.
@@ -734,7 +741,7 @@ this.PanelMultiView = class {
       if (reverse)
         this._viewStack.style.removeProperty("margin-inline-start");
       let deepestNode = reverse ? previousViewNode : viewNode;
-      deepestNode.style.removeProperty("border-inline-start");
+      deepestNode.style.removeProperty("outline");
       this._viewStack.style.removeProperty("transition");
     }
     if (phase >= TRANSITION_PHASES.TRANSITION) {
@@ -857,6 +864,7 @@ this.PanelMultiView = class {
         if (this._panel.state == "showing") {
           let maxHeight = this._calculateMaxHeight();
           this._viewStack.style.maxHeight = maxHeight + "px";
+          this._offscreenViewStack.style.maxHeight = maxHeight + "px";
         }
         break;
       }
