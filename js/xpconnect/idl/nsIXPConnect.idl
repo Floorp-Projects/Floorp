@@ -467,17 +467,6 @@ interface nsIXPConnect : nsISupports
      */
     void NotifyDidPaint();
 
-%{C++
-    /**
-     * Get the object principal for this wrapper.  Note that this may well end
-     * up being null; in that case one should seek principals elsewhere.  Null
-     * here does NOT indicate system principal or no principals at all, just
-     * that this wrapper doesn't have an intrinsic one.
-     */
-    virtual nsIPrincipal* GetPrincipal(JSObject* obj,
-                                       bool allowShortCircuit) const = 0;
-%}
-
     [noscript] void writeScript(in nsIObjectOutputStream aStream,
                                 in JSContextPtr aJSContext,
                                 in JSScriptPtr aJSScript);
