@@ -338,11 +338,27 @@ public:
   // Utility Routines, not part of public API
   NS_IMETHOD TypedText(const nsAString& aString,
                        ETypingAction aAction) override;
-  nsresult InsertNodeAtPoint(nsIDOMNode* aNode,
-                             nsCOMPtr<nsIDOMNode>* ioParent,
-                             int32_t* ioOffset,
-                             SplitAtEdges aSplitAtEdges,
-                             nsCOMPtr<nsIDOMNode>* ioChildAtOffset = nullptr);
+
+  /**
+   * InsertNodeIntoProperAncestor() attempts to insert aNode into the document,
+   * at aPointToInsert.  Checks with strict dtd to see if containment is
+   * allowed.  If not allowed, will attempt to find a parent in the parent
+   * hierarchy of aPointToInsert.Container() that will accept aNode as a child.
+   * If such a parent is found, will split the document tree from aPointToInsert
+   * up to parent, and then insert aNode. aPointToInsert is then adjusted to
+   * point to the actual location that aNode was inserted at.  aSplitAtEdges
+   * specifies if the splitting process is allowed to result in empty nodes.
+   *
+   * @param aNode             Node to insert.
+   * @param aPointToInsert    Insertion point.
+   * @param aSplitAtEdges     Splitting can result in empty nodes?
+   * @return                  Returns inserted point if succeeded.
+   *                          Otherwise, the result is not set.
+   */
+  EditorDOMPoint
+  InsertNodeIntoProperAncestor(nsIContent& aNode,
+                               const EditorRawDOMPoint& aPointToInsert,
+                               SplitAtEdges aSplitAtEdges);
 
   /**
    * Use this to assure that selection is set after attribute nodes when
