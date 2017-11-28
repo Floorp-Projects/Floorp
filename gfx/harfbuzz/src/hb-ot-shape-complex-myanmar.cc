@@ -512,7 +512,6 @@ final_reordering (const hb_ot_shape_plan_t *plan,
  * generic shaper, except that it zeros mark advances GDEF_LATE. */
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_myanmar_old =
 {
-  "default",
   nullptr, /* collect_features */
   nullptr, /* override_features */
   nullptr, /* data_create */
@@ -531,7 +530,6 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_myanmar_old =
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_myanmar =
 {
-  "myanmar",
   collect_features_myanmar,
   override_features_myanmar,
   nullptr, /* data_create */

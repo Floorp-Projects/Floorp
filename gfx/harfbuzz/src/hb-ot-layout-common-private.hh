@@ -29,6 +29,8 @@
 #ifndef HB_OT_LAYOUT_COMMON_PRIVATE_HH
 #define HB_OT_LAYOUT_COMMON_PRIVATE_HH
 
+#include "hb-private.hh"
+#include "hb-debug.hh"
 #include "hb-ot-layout-private.hh"
 #include "hb-open-type-private.hh"
 #include "hb-set-private.hh"
@@ -43,12 +45,6 @@
 
 
 namespace OT {
-
-
-#define TRACE_DISPATCH(this, format) \
-	hb_auto_trace_t<context_t::max_debug_depth, typename context_t::return_t> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "format %d", (int) format);
 
 
 #define NOT_COVERED		((unsigned int) -1)

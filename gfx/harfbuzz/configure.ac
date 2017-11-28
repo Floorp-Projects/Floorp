@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [1.6.3],
+        [1.7.1],
         [https://github.com/behdad/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -23,6 +23,7 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
+AX_CXX_COMPILE_STDCXX(11, noext, optional)
 AC_SYS_LARGEFILE
 PKG_PROG_PKG_CONFIG([0.20])
 AM_MISSING_PROG([RAGEL], [ragel])
@@ -79,9 +80,6 @@ if test "x$GCC" = "xyes"; then
 
 	# Make symbols link locally
 	LDFLAGS="$LDFLAGS -Bsymbolic-functions"
-
-	# Choose C++ version
-	CXXFLAGS="$CXXFLAGS -std=c++11"
 
 	# Make sure we don't link to libstdc++
 	CXXFLAGS="$CXXFLAGS -fno-rtti -fno-exceptions"
@@ -167,7 +165,7 @@ dnl ===========================================================================
 
 AC_ARG_WITH(gobject,
 	[AS_HELP_STRING([--with-gobject=@<:@yes/no/auto@:>@],
-			[Use gobject @<:@default=auto@:>@])],,
+			[Use gobject @<:@default=no@:>@])],,
 	[with_gobject=no])
 have_gobject=false
 if test "x$with_gobject" = "xyes" -o "x$with_gobject" = "xauto"; then

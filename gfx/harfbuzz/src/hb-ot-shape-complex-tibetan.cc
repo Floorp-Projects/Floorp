@@ -46,7 +46,6 @@ collect_features_tibetan (hb_ot_shape_planner_t *plan)
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_tibetan =
 {
-  "default",
   collect_features_tibetan,
   nullptr, /* override_features */
   nullptr, /* data_create */

@@ -48,7 +48,7 @@ GIT_MK_URL = https://raw.githubusercontent.com/behdad/git.mk/master/git.mk
 #
 # This file knows how to handle autoconf, automake, libtool, gtk-doc,
 # gnome-doc-utils, yelp.m4, mallard, intltool, gsettings, dejagnu, appdata,
-# appstream.
+# appstream, hotdoc.
 #
 # This makefile provides the following targets:
 #
@@ -86,6 +86,7 @@ GITIGNORE_MAINTAINERCLEANFILES_TOPLEVEL = \
 		ar-lib \
 		compile \
 		config.guess \
+		config.rpath \
 		config.sub \
 		depcomp \
 		install-sh \
@@ -120,6 +121,47 @@ GITIGNORE_MAINTAINERCLEANFILES_M4_LIBTOOL = \
 			lt~obsolete.m4 \
 		; do echo "$$MACRO_DIR/$$x"; done; \
 	 fi`
+#
+# Modules that use gettext and use  AC_CONFIG_MACRO_DIR() may also include this,
+# though it's harmless to include regardless.
+GITIGNORE_MAINTAINERCLEANFILES_M4_GETTEXT = \
+	`MACRO_DIR=$(srcdir)/$$(cd $(top_srcdir); $(AUTOCONF) --trace 'AC_CONFIG_MACRO_DIR:$$1' ./configure.ac); \
+	if test "x$$MACRO_DIR" != "x$(srcdir)/"; then	\
+		for x in				\
+			codeset.m4			\
+			extern-inline.m4		\
+			fcntl-o.m4			\
+			gettext.m4			\
+			glibc2.m4			\
+			glibc21.m4			\
+			iconv.m4			\
+			intdiv0.m4			\
+			intl.m4				\
+			intldir.m4			\
+			intlmacosx.m4			\
+			intmax.m4			\
+			inttypes-pri.m4			\
+			inttypes_h.m4			\
+			lcmessage.m4			\
+			lib-ld.m4			\
+			lib-link.m4			\
+			lib-prefix.m4			\
+			lock.m4				\
+			longlong.m4			\
+			nls.m4				\
+			po.m4				\
+			printf-posix.m4			\
+			progtest.m4			\
+			size_max.m4			\
+			stdint_h.m4			\
+			threadlib.m4			\
+			uintmax_t.m4			\
+			visibility.m4			\
+			wchar_t.m4			\
+			wint_t.m4			\
+			xsize.m4			\
+		; do echo "$$MACRO_DIR/$$x"; done; \
+	fi`
 
 
 
@@ -208,6 +250,15 @@ $(srcdir)/.gitignore: Makefile.am $(top_srcdir)/git.mk
 				"*/*.omf.out" \
 			; do echo /$$x; done; \
 		fi; \
+		if test "x$(HOTDOC)" = x; then :; else \
+			$(foreach project, $(HOTDOC_PROJECTS),echo "/$(call HOTDOC_TARGET,$(project))"; \
+				echo "/$(shell $(call HOTDOC_PROJECT_COMMAND,$(project)) --get-conf-path output)" ; \
+				echo "/$(shell $(call HOTDOC_PROJECT_COMMAND,$(project)) --get-private-folder)" ; \
+			) \
+			for x in \
+				.hotdoc.d \
+			; do echo "/$$x"; done; \
+		fi; \
 		if test "x$(HELP_ID)" = x -o "x$(HELP_LINGUAS)" = x; then :; else \
 			for lc in $(HELP_LINGUAS); do \
 				for x in \
@@ -235,6 +286,7 @@ $(srcdir)/.gitignore: Makefile.am $(top_srcdir)/git.mk
 		fi; \
 		if test -f $(srcdir)/po/Makefile.in.in; then \
 			for x in \
+				ABOUT-NLS \
 				po/Makefile.in.in \
 				po/Makefile.in.in~ \
 				po/Makefile.in \
@@ -243,6 +295,7 @@ $(srcdir)/.gitignore: Makefile.am $(top_srcdir)/git.mk
 				po/POTFILES \
 				po/Rules-quot \
 				po/stamp-it \
+				po/stamp-po \
 				po/.intltool-merge-cache \
 				"po/*.gmo" \
 				"po/*.header" \
@@ -274,7 +327,7 @@ $(srcdir)/.gitignore: Makefile.am $(top_srcdir)/git.mk
 		if test "x$(am__dirstamp)" = x; then :; else \
 			echo "$(am__dirstamp)"; \
 		fi; \
-		if test "x$(LTCOMPILE)" = x -a "x$(LTCXXCOMPILE)" = x -a "x$(GTKDOC_RUN)" = x; then :; else \
+		if test "x$(findstring libtool,$(LTCOMPILE))" = x -a "x$(findstring libtool,$(LTCXXCOMPILE))" = x -a "x$(GTKDOC_RUN)" = x; then :; else \
 			for x in \
 				"*.lo" \
 				".libs" "_libs" \

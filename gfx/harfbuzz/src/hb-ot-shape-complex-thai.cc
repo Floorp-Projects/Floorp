@@ -366,7 +366,6 @@ preprocess_text_thai (const hb_ot_shape_plan_t *plan,
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_thai =
 {
-  "thai",
   nullptr, /* collect_features */
   nullptr, /* override_features */
   nullptr, /* data_create */

@@ -65,8 +65,6 @@ enum hb_ot_shape_zero_width_marks_type_t {
 
 struct hb_ot_complex_shaper_t
 {
-  char name[8];
-
   /* collect_features()
    * Called during shape_plan().
    * Shapers should use plan->map to add their features and callbacks.

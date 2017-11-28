@@ -24,9 +24,7 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "hb-private.hh"
 
 #include "hb.h"
 #include "hb-ot.h"
