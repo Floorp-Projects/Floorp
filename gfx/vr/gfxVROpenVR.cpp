@@ -597,6 +597,7 @@ VRControllerOpenVR::StopVibrateHaptic()
 
 VRSystemManagerOpenVR::VRSystemManagerOpenVR()
   : mVRSystem(nullptr)
+  , mIsWindowsMR(false)
 {
 }
 
@@ -698,6 +699,9 @@ VRSystemManagerOpenVR::HandleInput()
   }
 
   RefPtr<impl::VRControllerOpenVR> controller;
+  // Compare with Edge, we have a wrong implementation for the vertical axis value.
+  // In order to not affect the current VR content, we add a workaround for yAxis.
+  const float yAxisInvert = (mIsWindowsMR) ? -1.0f : 1.0f;
   ::vr::VRControllerState_t state;
   ::vr::TrackedDevicePose_t poses[::vr::k_unMaxTrackedDeviceCount];
   mVRSystem->GetDeviceToAbsoluteTrackingPose(::vr::TrackingUniverseSeated, 0.0f,
@@ -737,17 +741,29 @@ VRSystemManagerOpenVR::HandleInput()
         switch (axisType) {
           case ::vr::EVRControllerAxisType::k_eControllerAxis_Joystick:
           case ::vr::EVRControllerAxisType::k_eControllerAxis_TrackPad:
+            if (mIsWindowsMR) {
+              // Adjust the input mapping for Windows MR which has
+              // different order.
+              axisIdx = (axisIdx == 0) ? 2 : 0;
+              buttonIdx = (buttonIdx == 0) ? 4 : 0;
+            }
+
             HandleAxisMove(i, axisIdx,
                            state.rAxis[j].x);
             ++axisIdx;
             HandleAxisMove(i, axisIdx,
-                           state.rAxis[j].y);
+                           state.rAxis[j].y * yAxisInvert);
             ++axisIdx;
             HandleButtonPress(i, buttonIdx,
                               ::vr::ButtonMaskFromId(
                                  static_cast<::vr::EVRButtonId>(::vr::k_EButton_Axis0 + j)),
                                  state.ulButtonPressed, state.ulButtonTouched);
             ++buttonIdx;
+
+            if (mIsWindowsMR) {
+              axisIdx = (axisIdx == 4) ? 2 : 4;
+              buttonIdx = (buttonIdx == 5) ? 1 : 2;
+            }
             break;
           case vr::EVRControllerAxisType::k_eControllerAxis_Trigger:
             if (j <= 2) {
@@ -755,6 +771,7 @@ VRSystemManagerOpenVR::HandleInput()
               ++buttonIdx;
               ++triggerIdx;
             } else {
+              // For SteamVR Knuckles.
               HandleTriggerPress(i, buttonIdx, triggerIdx, state.rAxis[j].x);
               ++buttonIdx;
               ++triggerIdx;
@@ -789,6 +806,11 @@ VRSystemManagerOpenVR::HandleInput()
         HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_ApplicationMenu),
                           state.ulButtonPressed, state.ulButtonTouched);
+        ++buttonIdx;
+      }
+      if (mIsWindowsMR) {
+        // button 4 in Windows MR has already been assigned
+        // to k_eControllerAxis_TrackPad.
         ++buttonIdx;
       }
       if (supportedButtons &
@@ -1160,6 +1182,7 @@ VRSystemManagerOpenVR::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceTy
     {
       ::vr::ETrackedPropertyError err;
       uint32_t requiredBufferLen;
+      bool founded = false;
       char charBuf[128];
       requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(aDeviceIndex,
                           ::vr::Prop_RenderModelName_String, charBuf, 128, &err);
@@ -1170,7 +1193,21 @@ VRSystemManagerOpenVR::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceTy
       nsCString deviceId(charBuf);
       if (deviceId.Find("knuckles") != kNotFound) {
         aId.AssignLiteral("OpenVR Knuckles");
-      } else {
+        founded = true;
+      }
+      requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(aDeviceIndex,
+        ::vr::Prop_SerialNumber_String, charBuf, 128, &err);
+      if (requiredBufferLen > 128) {
+        MOZ_CRASH("Larger than the buffer size.");
+      }
+      MOZ_ASSERT(requiredBufferLen && err == ::vr::TrackedProp_Success);
+      deviceId.Assign(charBuf);
+      if (deviceId.Find("MRSOURCE") != kNotFound) {
+        aId.AssignLiteral("Spatial Controller (Spatial Interaction Source) ");
+        mIsWindowsMR = true;
+        founded = true;
+      }
+      if (!founded) {
         aId.AssignLiteral("OpenVR Gamepad");
       }
       break;

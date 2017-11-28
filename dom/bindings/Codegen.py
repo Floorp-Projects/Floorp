@@ -1907,11 +1907,11 @@ class CGClassConstructor(CGAbstractStaticMethod):
             signatures = self._ctor.signatures()
             assert len(signatures) == 1
             # Given that HTMLConstructor takes no args, we can just codegen a
-            # call to CreateHTMLElement() in BindingUtils which reuses the
+            # call to CreateXULOrHTMLElement() in BindingUtils which reuses the
             # factory thing in HTMLContentSink. Then we don't have to implement
             # Constructor on all the HTML elements.
             callGenerator = CGPerSignatureCall(signatures[0][0], signatures[0][1],
-                                               "CreateHTMLElement", True,
+                                               "CreateXULOrHTMLElement", True,
                                                self.descriptor, self._ctor,
                                                isConstructor=True)
         else:

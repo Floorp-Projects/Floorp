@@ -15,7 +15,7 @@ use std::str;
 #[test]
 #[should_panic]
 fn panic() {
-    let runtime = Runtime::new().unwrap();
+    let runtime = Runtime::new(false).unwrap();
     let context = runtime.cx();
     let h_option = JS::OnNewGlobalHookOption::FireOnNewGlobalHook;
     let c_option = JS::CompartmentOptions::default();

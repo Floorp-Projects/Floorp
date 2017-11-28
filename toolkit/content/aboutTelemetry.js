@@ -1981,9 +1981,6 @@ function show(selected) {
   });
   selected_section.classList.add("active");
 
-  // Hack because subsection text appear selected. See Bug 1375114.
-  document.getSelection().empty();
-
   adjustHeaderState();
   displayProcessesSelector(selectedValue);
   adjustSearchState();
@@ -2008,7 +2005,6 @@ function showSubSection(selected) {
   let title = selected.parentElement.querySelector(".category-name").textContent;
   let subsection = selected.textContent;
   document.getElementById("sectionTitle").textContent = title + " - " + subsection;
-  document.getSelection().empty(); // prevent subsection text selection
   changeUrlPath(subsection, true);
 }
 
