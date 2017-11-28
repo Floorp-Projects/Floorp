@@ -7136,7 +7136,9 @@ HTMLMediaElement::RemoveMediaKeys()
   LOG(LogLevel::Debug, ("%s", __func__));
   // 5.2.3 Stop using the CDM instance represented by the mediaKeys attribute
   // to decrypt media data and remove the association with the media element.
-  mMediaKeys->Unbind();
+  if (mMediaKeys) {
+    mMediaKeys->Unbind();
+  }
   mMediaKeys = nullptr;
 }
 
