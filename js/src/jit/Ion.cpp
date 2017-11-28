@@ -767,9 +767,10 @@ JitCode::New<NoGC>(JSContext* cx, uint8_t* code, uint32_t bufferSize, uint32_t h
 void
 JitCode::copyFrom(MacroAssembler& masm)
 {
-    // Store the JitCode pointer right before the code buffer, so we can
-    // recover the gcthing from relocation tables.
-    *(JitCode**)(code_ - sizeof(JitCode*)) = this;
+    // Store the JitCode pointer in the JitCodeHeader so we can recover the
+    // gcthing from relocation tables.
+    JitCodeHeader::FromExecutable(code_)->init(this);
+
     insnSize_ = masm.instructionsSize();
     masm.executableCopy(code_);
 
