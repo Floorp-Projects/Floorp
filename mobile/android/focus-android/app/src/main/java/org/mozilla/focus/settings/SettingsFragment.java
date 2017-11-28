@@ -30,7 +30,6 @@ import org.mozilla.focus.search.MultiselectSearchEngineListPreference;
 import org.mozilla.focus.search.RadioSearchEngineListPreference;
 import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 import java.util.Locale;
@@ -49,9 +48,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     public enum SettingsScreen {
         MAIN(R.xml.settings, R.string.menu_settings),
-        SEARCH_ENGINES(AppConstants.FLAG_MANUAL_SEARCH_ENGINE ?
-                R.xml.search_engine_settings_featureflag_manual :
-                R.xml.search_engine_settings,
+        SEARCH_ENGINES(R.xml.search_engine_settings,
                 R.string.preference_search_installed_search_engines),
         ADD_SEARCH(R.xml.manual_add_search_engine, R.string.tutorial_search_title),
         REMOVE_ENGINES(R.xml.remove_search_engines, R.string.preference_search_remove_title);
@@ -94,8 +91,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         settingsScreen = SettingsScreen.valueOf(getArguments().getString(SETTINGS_SCREEN_NAME, SettingsScreen.MAIN.name()));
         addPreferencesFromResource(settingsScreen.prefsResId);
 
-        setHasOptionsMenu((settingsScreen == SettingsScreen.SEARCH_ENGINES
-                && AppConstants.FLAG_MANUAL_SEARCH_ENGINE)
+        setHasOptionsMenu(settingsScreen == SettingsScreen.SEARCH_ENGINES
                 || settingsScreen == SettingsScreen.REMOVE_ENGINES);
     }
 
@@ -209,7 +205,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
      * Refresh search engines list. Only runs if showing the "Installed search engines" screen.
      */
     private void refetchSearchEngines() {
-        if (settingsScreen == SettingsScreen.SEARCH_ENGINES && AppConstants.FLAG_MANUAL_SEARCH_ENGINE) {
+        if (settingsScreen == SettingsScreen.SEARCH_ENGINES) {
             final Preference pref = getPreferenceScreen()
                     .findPreference(getResources().getString(
                             R.string.pref_key_radio_search_engine_list));
