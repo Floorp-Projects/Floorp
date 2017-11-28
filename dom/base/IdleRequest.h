@@ -9,6 +9,7 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMNavigationTiming.h"
@@ -23,8 +24,7 @@ namespace dom {
 
 class IdleRequestCallback;
 
-class IdleRequest final : public nsISupports,
-                          public LinkedListElement<IdleRequest>
+class IdleRequest final : public LinkedListElement<RefPtr<IdleRequest>>
 {
 public:
   IdleRequest(IdleRequestCallback* aCallback, uint32_t aHandle);
@@ -42,9 +42,8 @@ public:
     return mHandle;
   }
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(IdleRequest)
-
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(IdleRequest)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(IdleRequest)
 private:
   ~IdleRequest();
 
