@@ -116,7 +116,7 @@
     </style>
 
     <style name="PwaConfirm.Title">
-        <item name="android:layout_toEndOf">@id/pwa_confirm_icon_wrap</item>
+        <item name="android:layout_toEndOf">@id/pwa_confirm_icon</item>
         <item name="android:layout_toStartOf">@id/pwa_confirm_cancel</item>
     </style>
 
