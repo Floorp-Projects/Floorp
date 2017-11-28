@@ -102,15 +102,17 @@ public:
                                        unsigned short height,
                                        uint64_t capture_time_ms)
   {
-    unsigned int yplane_length = width*height;
-    unsigned int cbcrplane_length = (width*height + 1)/2;
-    unsigned int video_length = yplane_length + cbcrplane_length;
-    uint8_t* buffer = new uint8_t[video_length];
-    memset(buffer, 0x10, yplane_length);
-    memset(buffer + yplane_length, 0x80, cbcrplane_length);
-    return mVideoConduit->SendVideoFrame(buffer, video_length, width, height,
-                                         VideoType::kVideoI420,
-                                         capture_time_ms);
+    rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+      webrtc::I420Buffer::Create(width, height);
+    memset(buffer->MutableDataY(), 0x10, buffer->StrideY() * buffer->height());
+    memset(buffer->MutableDataU(), 0x80, buffer->StrideU() * ((buffer->height() + 1) / 2));
+    memset(buffer->MutableDataV(), 0x80, buffer->StrideV() * ((buffer->height() + 1) / 2));
+
+    webrtc::VideoFrame frame(buffer,
+                             capture_time_ms,
+                             capture_time_ms,
+                             webrtc::kVideoRotation_0);
+    return mVideoConduit->SendVideoFrame(frame);
   }
 
   MockCall* mCall;
