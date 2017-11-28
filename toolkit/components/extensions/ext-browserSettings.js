@@ -27,11 +27,16 @@ const PERM_DENY_ACTION = Services.perms.DENY_ACTION;
 const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) => {
   return {
     async get(details) {
-      return {
-        levelOfControl: details.incognito ?
+      let levelOfControl = details.incognito ?
+        "not_controllable" :
+        await ExtensionPreferencesManager.getLevelOfControl(
+          extension.id, name, storeType);
+      levelOfControl =
+        (readOnly && levelOfControl === "controllable_by_this_extension") ?
           "not_controllable" :
-          await ExtensionPreferencesManager.getLevelOfControl(
-            extension.id, name, storeType),
+          levelOfControl;
+      return {
+        levelOfControl,
         value: await callback(),
       };
     },
@@ -40,11 +45,13 @@ const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) 
         return ExtensionPreferencesManager.setSetting(
           extension.id, name, details.value);
       }
+      return false;
     },
     clear(details) {
       if (!readOnly) {
         return ExtensionPreferencesManager.removeSetting(extension.id, name);
       }
+      return false;
     },
   };
 };
