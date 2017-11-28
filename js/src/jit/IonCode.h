@@ -40,9 +40,13 @@ struct JitCodeHeader
     // Link back to corresponding gcthing
     JitCode*    jitCode_;
 
-    void init(JitCode* jitCode) {
-        jitCode_ = jitCode;
-    }
+    // !!! NOTE !!!
+    // If we are running on AMD Bobcat, insert a NOP-slide at end of the JitCode
+    // header so we can try to recover when the CPU screws up the branch landing
+    // site. See Bug 1281759.
+    void*       nops_;
+
+    void init(JitCode* jitCode);
 
     static JitCodeHeader* FromExecutable(uint8_t* buffer) {
         return (JitCodeHeader*)(buffer - sizeof(JitCodeHeader));
