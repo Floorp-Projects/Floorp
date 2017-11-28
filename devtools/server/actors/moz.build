@@ -42,7 +42,6 @@ DevToolsModules(
     'memory.js',
     'monitor.js',
     'object.js',
-    'perf.js',
     'performance-recording.js',
     'performance.js',
     'preference.js',
