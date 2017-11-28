@@ -657,7 +657,7 @@ impl FontContext {
             width: metrics.rasterized_width,
             height: metrics.rasterized_height,
             scale: 1.0,
-            format: font.get_glyph_format(),
+            format: font.get_glyph_format(true),
             bytes: rasterized_pixels,
         })
     }
