@@ -1749,6 +1749,14 @@ nsGlobalWindowInner::EnsureClientSource()
   nsCOMPtr<nsIChannel> channel = mDoc->GetChannel();
   nsCOMPtr<nsILoadInfo> loadInfo = channel ? channel->GetLoadInfo() : nullptr;
 
+  // Take the initial client source from the docshell immediately.  Even if we
+  // don't end up using it here we should consume it.
+  UniquePtr<ClientSource> initialClientSource;
+  nsIDocShell* docshell = GetDocShell();
+  if (docshell) {
+    initialClientSource = docshell->TakeInitialClientSource();
+  }
+
   // Try to get the reserved client from the LoadInfo.  A Client is
   // reserved at the start of the channel load if there is not an
   // initial about:blank document that will be reused.  It is also
@@ -1769,12 +1777,9 @@ nsGlobalWindowInner::EnsureClientSource()
   // and it created an initial Client as a placeholder for the document.
   // In this case we want to inherit this placeholder Client here.
   if (!mClientSource) {
-    nsIDocShell* docshell = GetDocShell();
-    if (docshell) {
-      mClientSource = docshell->TakeInitialClientSource();
-      if (mClientSource) {
-        newClientSource = true;
-      }
+    mClientSource = Move(initialClientSource);
+    if (mClientSource) {
+      newClientSource = true;
     }
   }
 

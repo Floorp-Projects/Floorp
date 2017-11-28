@@ -7801,6 +7801,11 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     return NS_ERROR_NULL_POINTER;
   }
 
+  // Make sure to discard the initial client if we never created the initial
+  // about:blank document.  Do this before possibly returning from the method
+  // due to an error.
+  mInitialClientSource.reset();
+
   nsCOMPtr<nsIConsoleReportCollector> reporter = do_QueryInterface(aChannel);
   if (reporter) {
     nsCOMPtr<nsILoadGroup> loadGroup;
@@ -7835,10 +7840,6 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
 
   // Timing is picked up by the window, we don't need it anymore
   mTiming = nullptr;
-
-  // Make sure to discard the initial client if we never created the initial
-  // about:blank document.
-  mInitialClientSource.reset();
 
   // clean up reload state for meta charset
   if (eCharsetReloadRequested == mCharsetReloadState) {
@@ -11835,6 +11836,11 @@ nsDocShell::DoChannelLoad(nsIChannel* aChannel,
     openFlags |= nsIURILoader::DONT_RETARGET;
   }
 
+  // If anything fails here, make sure to clear our initial ClientSource.
+  auto cleanupInitialClient = MakeScopeExit([&] {
+    mInitialClientSource.reset();
+  });
+
   nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
   NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
@@ -11859,6 +11865,9 @@ nsDocShell::DoChannelLoad(nsIChannel* aChannel,
   // gives back any data, so main thread might have a chance to process a
   // collector slice
   nsJSContext::MaybeRunNextCollectorSlice(this, JS::gcreason::DOCSHELL);
+
+  // Success.  Keep the initial ClientSource if it exists.
+  cleanupInitialClient.release();
 
   return NS_OK;
 }
