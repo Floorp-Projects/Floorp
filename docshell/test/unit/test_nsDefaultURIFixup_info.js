@@ -482,7 +482,12 @@ var testcases = [ {
     input: "plonk:8080",
     fixedURI: "http://plonk:8080/",
     protocolChange: true,
-  }
+  }, {
+    input: "\u10E0\u10D4\u10D2\u10D8\u10E1\u10E2\u10E0\u10D0\u10EA\u10D8\u10D0.\u10D2\u10D4",
+    fixedURI: "http://xn--lodaehvb5cdik4g.xn--node/",
+    alternateURI: "http://www.xn--lodaehvb5cdik4g.xn--node/",
+    protocolChange: true,
+  },
 ];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
