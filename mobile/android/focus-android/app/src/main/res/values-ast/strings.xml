@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Encaboxar</string>
   <string name="action_ok">Aceutar</string>
+  <string name="action_save">Guardar</string>
   <string name="urlbar_hint">Gueta o introduz direiciones</string>
   <string name="teaser">Restolar en privao automático.\nRestola. Balera. Repiti.</string>
   <string name="feedback_erase">Baleróse\'l to historial de restolar.</string>
@@ -26,6 +27,26 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s date\'l control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salu como restolador priv&#225;u:\n  "<ul>"\n    "<li>Gueta y restola direutamente na aplicaci&#243;n</li>"\n    "<li>Bloquia los rastrexadores (o anueva los axustes pa perm&#237;tilos)</li>"\n    "<li>Balera les cookies am&#225;s del to historial de restolar y gueta</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produzlu Mozilla. La nuesa misi&#243;n ye fomentar un internet sano y abierto.<br/>\n<a href="%2$s">Deprendi mas</a></p>]]></string>
   <string name="preference_category_search">Gueta</string>
   <string name="preference_search_engine_default">Por defeutu</string>
+  <string name="preference_state_on">Sí</string>
+  <string name="preference_state_off">Non</string>
+  <string name="preference_subitem_autocomplete">Autocompletáu d\'URLs</string>
+  <string name="preference_switch_autocomplete">Autocompletáu</string>
+  <string name="preference_category_autocomplete_preinstalled">Llistáu d\'URLs por defeutu</string>
+  <string name="preference_category_autocomplete_custom">URL personalizada</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs personalizaes</string>
+  <string name="preference_autocomplete_action_add">+ Amestar URL personalizada</string>
+  <string name="preference_autocomplete_title_add">Amestar URL personalizada</string>
+  <string name="preference_autocomplete_title_remove">Desaniciar URL personalizada</string>
+  <string name="preference_autocomplete_learn_more">Deprendi más</string>
+  <string name="preference_autocomplete_custom_summary">Amiesta o xestiona URLs personalizaes d\'autocompletáu.</string>
+  <string name="preference_autocomplete_add_title">URL p\'amestar</string>
+  <string name="preference_autocomplete_add_hint">Apega o introduz la URL</string>
+  <string name="preference_autocomplete_add_example">Exemplu: exemplu.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Amestóse una URL nueva personalizada.</string>
+  <string name="preference_autocomplete_menu_remove">Desaniciar</string>
+  <string name="preference_autocomplete_action_remove_content_description">Desaniciar</string>
+  <string name="preference_autocomplete_add_error">Volvi comprobar la URL qu\'introduxesti.</string>
   <string name="preference_language">Llingua</string>
   <string name="preference_language_systemdefault">Predeterminada del sistema</string>
   <string name="preference_dialog_title_search_engine">Gueta por defeutu</string>
@@ -77,6 +98,9 @@
   <string name="accessibility_announcement_search">Amestar motor de gueta</string>
   <string name="search_add_confirmation">Amestóse\'l motor de gueta nuevu.</string>
   <string name="search_add_error">Comprueba la cadena de gueta y volvi tentalo</string>
+  <string name="search_add_error_empty_name">Introduz el nome del motor de gueta</string>
+  <string name="search_add_error_empty_search">Introduz la cadena de gueta</string>
+  <string name="search_add_error_format">Comprueba que la cadena de gueta concase col formatu del exemplu</string>
   <string name="content_description_clear_input">Llimpiar entrada</string>
   <string name="content_description_dismiss_input">Escartar</string>
   <string name="content_description_erase">Balerar historial de restolar</string>

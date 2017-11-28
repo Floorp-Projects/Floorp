@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Batal</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Simpan</string>
   <string name="urlbar_hint">Cari atau masukkan alamat</string>
   <string name="teaser">Pelayaran peribadi automatik.\nLayar. Buang. Ulang.</string>
   <string name="feedback_erase">Sejarah pelayaran anda telah dibuang.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s membolehkan anda mengawal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakannya sebagai pelayar peribadi:\n  "<ul>"\n    "<li>Cari dan melayar terus dalam app</li>"\n    "<li>Sekat penjejak (atau kemaskini tetapan untuk izinkan penjejak)</li>"\n    "<li>Padam untuk menghapuskan kuki serta sejarah carian dan pelayaran</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dihasilkan oleh Mozilla. Misi kami adalah untuk memupuk internet yang sihat dan terbuka.<br/>\n<a href="%2$s">Ketahui selanjutnya</a></p>]]></string>
   <string name="preference_category_search">Carian</string>
   <string name="preference_search_engine_default">Piawai</string>
+  <string name="preference_state_on">Aktif</string>
+  <string name="preference_state_off">Nyahaktif</string>
+  <string name="preference_subitem_autocomplete">Auto-lengkap URL</string>
+  <string name="preference_switch_autocomplete">Auto-lengkap</string>
+  <string name="preference_category_autocomplete_preinstalled">Senarai URL Piawai</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktifkan %1$s supaya auto-lengkap lebih 450 URLs popular dalam bar alamat.</string>
+  <string name="preference_category_autocomplete_custom">URL Penyesuaian</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs Penyesuaian</string>
+  <string name="preference_autocomplete_action_add">+ Tambah URL penyesuaian</string>
+  <string name="preference_autocomplete_title_add">Tambah URL penyesuaian</string>
+  <string name="preference_autocomplete_title_remove">Buang URLs penyesuaian</string>
+  <string name="preference_autocomplete_learn_more">Ketahui selanjutnya</string>
+  <string name="preference_autocomplete_custom_summary">Tambah dan urus penyesuaian URL auto-lengkap.</string>
+  <string name="preference_autocomplete_add_title">URL untuk ditambah</string>
+  <string name="preference_autocomplete_add_hint">Tampal atau masukkan URL</string>
+  <string name="preference_autocomplete_add_example">Contoh: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Penyesuaian URL baru ditambah.</string>
+  <string name="preference_autocomplete_menu_remove">Buang</string>
+  <string name="preference_autocomplete_action_remove_content_description">Buang</string>
+  <string name="preference_autocomplete_add_error">Semak semula URL yang anda masukkan.</string>
   <string name="preference_language">Bahasa</string>
   <string name="preference_language_systemdefault">Piawai sistem</string>
   <string name="preference_dialog_title_search_engine">Carian piawai</string>
@@ -77,6 +99,9 @@
   <string name="accessibility_announcement_search">Tambah enjin carian</string>
   <string name="search_add_confirmation">Enjin carian baru sudah ditambah.</string>
   <string name="search_add_error">Semak string carian dan cuba lagi</string>
+  <string name="search_add_error_empty_name">Masukkan nama enjin carian</string>
+  <string name="search_add_error_empty_search">Masukkan string carian</string>
+  <string name="search_add_error_format">Pastikan string carian sepadan format contoh</string>
   <string name="content_description_clear_input">Hapuskan input</string>
   <string name="content_description_dismiss_input">Abai</string>
   <string name="content_description_erase">Buang sejarah pelayaran</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">取消</string>
   <string name="action_ok">确定</string>
+  <string name="action_save">保存</string>
   <string name="urlbar_hint">搜索或输入网址</string>
   <string name="teaser">全自动的私密浏览。\n无痕浏览，不必劳心。</string>
   <string name="feedback_erase">您的浏览记录已清除。</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#29992;&#20316;&#38544;&#31169;&#27983;&#35272;&#22120;&#65292;&#21487;&#20197;&#65306;\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#25318;&#25130;&#36319;&#36394;&#22120;&#65288;&#20063;&#21487;&#35843;&#25972;&#20026;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#28165;&#38500; Cookie&#12289;&#25628;&#32034;&#35760;&#24405;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
   <string name="preference_category_search">搜索</string>
   <string name="preference_search_engine_default">默认</string>
+  <string name="preference_state_on">开</string>
+  <string name="preference_state_off">关</string>
+  <string name="preference_subitem_autocomplete">网址自动完成</string>
+  <string name="preference_switch_autocomplete">自动完成</string>
+  <string name="preference_category_autocomplete_preinstalled">默认网址列表</string>
+  <string name="preference_autocomplete_preinstalled_summary">启用在 %1$s 地址栏自动完成超过 450 个流行网址。</string>
+  <string name="preference_category_autocomplete_custom">自定义网址</string>
+  <string name="preference_autocomplete_subitem_customlist">自定义网址</string>
+  <string name="preference_autocomplete_action_add">+ 添加自定义网址</string>
+  <string name="preference_autocomplete_title_add">添加自定义网址</string>
+  <string name="preference_autocomplete_title_remove">移除自定义网址</string>
+  <string name="preference_autocomplete_learn_more">详细了解</string>
+  <string name="preference_autocomplete_custom_summary">添加和管理自定义的自动完成网址。</string>
+  <string name="preference_autocomplete_add_title">要添加的网址</string>
+  <string name="preference_autocomplete_add_hint">粘贴或输入网址</string>
+  <string name="preference_autocomplete_add_example">例如：example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">已添加新的自定义网址。</string>
+  <string name="preference_autocomplete_menu_remove">移除</string>
+  <string name="preference_autocomplete_action_remove_content_description">移除</string>
+  <string name="preference_autocomplete_add_error">请复查您输入的网址。</string>
   <string name="preference_language">语言</string>
   <string name="preference_language_systemdefault">系统默认</string>
   <string name="preference_dialog_title_search_engine">默认搜索</string>
@@ -77,6 +99,9 @@
   <string name="accessibility_announcement_search">添加搜索引擎</string>
   <string name="search_add_confirmation">已添加新的搜索引擎。</string>
   <string name="search_add_error">请检查搜索字符串并重试</string>
+  <string name="search_add_error_empty_name">输入搜索引擎名称</string>
+  <string name="search_add_error_empty_search">输入搜索字符串</string>
+  <string name="search_add_error_format">请检查搜索字符串与示例格式是否匹配</string>
   <string name="content_description_clear_input">清空输入内容</string>
   <string name="content_description_dismiss_input">关闭</string>
   <string name="content_description_erase">清除浏览记录</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Renunță</string>
   <string name="action_ok">Ok</string>
+  <string name="action_save">Salvează</string>
   <string name="urlbar_hint">Caută sau introdu adresa</string>
   <string name="teaser">Navigare privată automată.\nNavighează. Șterge. Repetă.</string>
   <string name="feedback_erase">Istoricul de navigare a fost șters.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a &#238;ndep&#259;rta cookie-urile precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet deschis &#537;i s&#259;n&#259;tos.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
   <string name="preference_category_search">Căutare</string>
   <string name="preference_search_engine_default">Implicit</string>
+  <string name="preference_state_on">Activat</string>
+  <string name="preference_state_off">Dezactivat</string>
+  <string name="preference_subitem_autocomplete">Autocompletare URL</string>
+  <string name="preference_switch_autocomplete">Autocompletare</string>
+  <string name="preference_category_autocomplete_preinstalled">Listă implicită de URL-uri</string>
+  <string name="preference_autocomplete_preinstalled_summary">Activează pentru a avea autocompletare %1$s pentru mai mult de 450 de URL-uri populare din bara de adrese.</string>
+  <string name="preference_category_autocomplete_custom">URL personalizat</string>
+  <string name="preference_autocomplete_subitem_customlist">URL-uri personalizate</string>
+  <string name="preference_autocomplete_action_add">+ adaugă URL personalizat</string>
+  <string name="preference_autocomplete_title_add">Adaugă URL personalizat</string>
+  <string name="preference_autocomplete_title_remove">Elimină URL-uri personalizate</string>
+  <string name="preference_autocomplete_learn_more">Află mai multe</string>
+  <string name="preference_autocomplete_custom_summary">Adaugă și gestionează URL-uri autocompletate personalizate.</string>
+  <string name="preference_autocomplete_add_title">URL de adăugat</string>
+  <string name="preference_autocomplete_add_hint">Lipește sau introdu un URL</string>
+  <string name="preference_autocomplete_add_example">Exemplu: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">URL personalizat nou adăugat.</string>
+  <string name="preference_autocomplete_menu_remove">Elimină</string>
+  <string name="preference_autocomplete_action_remove_content_description">Elimină</string>
+  <string name="preference_autocomplete_add_error">Verifică URL-ul introdus.</string>
   <string name="preference_language">Limbă</string>
   <string name="preference_language_systemdefault">Setarea implicită a sistemului</string>
   <string name="preference_dialog_title_search_engine">Căutare implicită</string>
@@ -77,6 +99,9 @@
   <string name="accessibility_announcement_search">Adaugă motor de căutare</string>
   <string name="search_add_confirmation">Motor nou de căutare adăugat.</string>
   <string name="search_add_error">Verifică textul de căutare şi încearcă din nou</string>
+  <string name="search_add_error_empty_name">Introdu numele motorului de căutare</string>
+  <string name="search_add_error_empty_search">Introdu șirul de căutare</string>
+  <string name="search_add_error_format">Verifică dacă șirul de căutare se potrivește cu formatul exemplu</string>
   <string name="content_description_clear_input">Șterge adresa introdusă</string>
   <string name="content_description_dismiss_input">Înlătură</string>
   <string name="content_description_erase">Șterge istoricul de navigare</string>

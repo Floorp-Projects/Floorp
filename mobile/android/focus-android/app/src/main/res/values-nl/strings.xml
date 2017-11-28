@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Annuleren</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Opslaan</string>
   <string name="urlbar_hint">Voer zoekterm of adres in</string>
   <string name="teaser">Automatische privénavigatie.\nSurfen. Wissen. Herhalen.</string>
   <string name="feedback_erase">Uw navigatiegeschiedenis is gewist.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s geeft u de controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gebruik als een priv&#233;browser:\n  "<ul>"\n    "<li>Rechtstreeks vanuit de app zoeken en browsen</li>"\n    "<li>Trackers blokkeren (of instellingen bijwerken om ze toe te staan)</li>"\n    "<li>Wissen verwijdert zowel cookies als zoek- en navigatiegeschiedenis</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wordt gemaakt door Mozilla. Onze missie is het verzorgen van een gezond en open internet.<br/>\n<a href="%2$s">Meer info</a></p>]]></string>
   <string name="preference_category_search">Zoeken</string>
   <string name="preference_search_engine_default">Standaard</string>
+  <string name="preference_state_on">Aan</string>
+  <string name="preference_state_off">Uit</string>
+  <string name="preference_subitem_autocomplete">URL’s automatisch aanvullen</string>
+  <string name="preference_switch_autocomplete">Automatisch aanvullen</string>
+  <string name="preference_category_autocomplete_preinstalled">Standaard URL-lijst</string>
+  <string name="preference_autocomplete_preinstalled_summary">Schakel dit in om %1$s automatisch meer dan 450 populaire URL’s in de adresbalk te laten aanvullen.</string>
+  <string name="preference_category_autocomplete_custom">Aangepaste URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Aangepaste URL’s</string>
+  <string name="preference_autocomplete_action_add">+ Aangepaste URL toevoegen</string>
+  <string name="preference_autocomplete_title_add">Aangepaste URL toevoegen</string>
+  <string name="preference_autocomplete_title_remove">Aangepaste URL’s verwijderen</string>
+  <string name="preference_autocomplete_learn_more">Meer info</string>
+  <string name="preference_autocomplete_custom_summary">Eigen URL’s voor automatisch aanvullen toevoegen en beheren</string>
+  <string name="preference_autocomplete_add_title">Toe te voegen URL</string>
+  <string name="preference_autocomplete_add_hint">Plak of voer URL in</string>
+  <string name="preference_autocomplete_add_example">Voorbeeld: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nieuwe aangepaste URL toegevoegd.</string>
+  <string name="preference_autocomplete_menu_remove">Verwijderen</string>
+  <string name="preference_autocomplete_action_remove_content_description">Verwijderen</string>
+  <string name="preference_autocomplete_add_error">Controleer de ingevoerde URL.</string>
   <string name="preference_language">Taal</string>
   <string name="preference_language_systemdefault">Systeemstandaard</string>
   <string name="preference_dialog_title_search_engine">Standaardzoekmachine</string>
@@ -77,6 +99,9 @@
   <string name="accessibility_announcement_search">Zoekmachine toevoegen</string>
   <string name="search_add_confirmation">Nieuwe zoekmachine toegevoegd.</string>
   <string name="search_add_error">Controleer de zoekstring en probeer het opnieuw</string>
+  <string name="search_add_error_empty_name">Voer naam van zoekmachine in</string>
+  <string name="search_add_error_empty_search">Voer zoekstring in</string>
+  <string name="search_add_error_format">Controleer of zoekstring aan voorbeeldnotatie voldoet</string>
   <string name="content_description_clear_input">Invoer wissen</string>
   <string name="content_description_dismiss_input">Verwijderen</string>
   <string name="content_description_erase">Navigatiegeschiedenis wissen</string>

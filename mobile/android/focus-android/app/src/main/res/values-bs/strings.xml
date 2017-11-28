@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Otkaži</string>
   <string name="action_ok">U redu</string>
+  <string name="action_save">Sačuvaj</string>
   <string name="urlbar_hint">Tražite ili upišite adresu</string>
   <string name="teaser">Automatsko privatno pretraživanje.\nPretražujte. Izbrišite. Ponovite.</string>
   <string name="feedback_erase">Vaša historija pretraživanja je izbrisana.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vam daje kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Koristite ga kao privatni pretra&#382;iva&#269;:\n  "<ul>"\n    "<li>Tra&#382;ite i pretra&#382;ujte direktno u aplikaciji</li>"\n    "<li>Blokirajte pratioce (ili ih omogu&#263;ite u postavkama)</li>"\n    "<li>Izbri&#353;ite sve kola&#269;i&#263;e kao i historiju pretra&#382;ivanja i pretrage</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s je stvorila Mozilla. Na&#353;a misija je njegovanje zdravog i otvorenog interneta.<br/>\n<a href="%2$s">Saznajte vi&#353;e</a></p>]]></string>
   <string name="preference_category_search">Traži</string>
   <string name="preference_search_engine_default">Izvorno</string>
+  <string name="preference_state_on">Uključeno</string>
+  <string name="preference_state_off">Isključeno</string>
+  <string name="preference_subitem_autocomplete">Automatsko završavanje URL-a</string>
+  <string name="preference_switch_autocomplete">Automatsko završavanje</string>
+  <string name="preference_category_autocomplete_preinstalled">Izvorna URL lista</string>
+  <string name="preference_autocomplete_preinstalled_summary">Omogućite da %1$s automatski završi preko 450 popularnih URL adresa u adresnoj traci.</string>
+  <string name="preference_category_autocomplete_custom">Prilagođeni URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Prilagođeni URL-ovi</string>
+  <string name="preference_autocomplete_action_add">+ Dodaj prilagođeni URL</string>
+  <string name="preference_autocomplete_title_add">Dodaj prilagođeni URL</string>
+  <string name="preference_autocomplete_title_remove">Ukloni prilagođene URL-ove</string>
+  <string name="preference_autocomplete_learn_more">Saznajte više</string>
+  <string name="preference_autocomplete_custom_summary">Dodajte i upravljajte prilagođenim automatski završenim URL-ovima.</string>
+  <string name="preference_autocomplete_add_title">URL za dodavanje</string>
+  <string name="preference_autocomplete_add_hint">Zalijepite ili unesite URL</string>
+  <string name="preference_autocomplete_add_example">Primjer: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Novi prilagođeni URL dodan.</string>
+  <string name="preference_autocomplete_menu_remove">Ukloni</string>
+  <string name="preference_autocomplete_action_remove_content_description">Ukloni</string>
+  <string name="preference_autocomplete_add_error">Dvaput provjerite URL koji ste unijeli.</string>
   <string name="preference_language">Jezik</string>
   <string name="preference_language_systemdefault">Izvorni sistemski</string>
   <string name="preference_dialog_title_search_engine">Primarni pretraživač</string>
@@ -77,6 +99,9 @@
   <string name="accessibility_announcement_search">Dodajte pretraživač</string>
   <string name="search_add_confirmation">Novi pretraživač dodan.</string>
   <string name="search_add_error">Provjerite tekst pretrage i pokušajte ponovo</string>
+  <string name="search_add_error_empty_name">Unesite naziv pretraživača</string>
+  <string name="search_add_error_empty_search">Unesite string za pretragu</string>
+  <string name="search_add_error_format">Provjerite da traženi string odgovara formatu primjera</string>
   <string name="content_description_clear_input">Očisti unos</string>
   <string name="content_description_dismiss_input">Odbaci</string>
   <string name="content_description_erase">Izbriši historiju pretraživanja</string>

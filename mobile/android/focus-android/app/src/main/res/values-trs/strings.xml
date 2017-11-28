@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Duyichin\'</string>
   <string name="action_ok">Ga\'ue</string>
+  <string name="action_save">Na\'nïnj sà\'</string>
   <string name="urlbar_hint">Gachrun nuguan\' ruhuât nanà\'uìt</string>
   <string name="teaser">Gache nu huì\' nanûn man\'an. Ni\'iaj. Nadure\'. yakaj da\'nga\' ñû.</string>
   <string name="feedback_erase">Gisij ganare\' nej nuguan\' garajsunt nga gaché nunt.</string>
@@ -26,6 +27,12 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s narikij kontrol ri&#241;at.</p>" "<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"garasun da\' gache nu hu&#236;t: "<ul>" "<li>Nana\'u&#236;\' ni gache nunt ne\' hu&#224;\'t ng&#224; app</li>" "<li>Narr&#224;n ri&#241;a blokeador (si nitaj ni guij nagi\'iaj da\' ga\'ue ga\'n&#239;nt gi\'iaj sun man)</li>" "<li>nadure\' da\' nar&#232;\' cookies danj nanj nej nuguan\' gachr&#251;nt nga gach&#233; nunt</li>" "</ul>" "</p>" "<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s Sa giri Mozilla huin.  Chrej nik&#242;\' &#241;&#251;nj huin sisi ga ni\'n&#239;nj ni dugumin internet s&#242;\'."<br/>" "<a href="%2$s">Gini\'in doj rayi\'&#238; nuguan\' na</a></p>]]></string>
   <string name="preference_category_search">Nana\'uì\'</string>
   <string name="preference_search_engine_default">Ngà hua niñanj</string>
+  <string name="preference_state_on">On</string>
+  <string name="preference_state_off">Off</string>
+  <string name="preference_autocomplete_add_title">URL nuto\'</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_menu_remove">Guxūn</string>
+  <string name="preference_autocomplete_action_remove_content_description">Guxūn</string>
   <string name="preference_language">Nânj (nuguan\')</string>
   <string name="preference_language_systemdefault">Sistema ngà hua niñaa</string>
   <string name="preference_dialog_title_search_engine">Riña nana\'uì\' yitïnjt</string>
@@ -77,6 +84,8 @@
   <string name="accessibility_announcement_search">Nutò\' sa nana\'uì\'</string>
   <string name="search_add_confirmation">Ngà nata\' a\'ngo sa nakà da\' nana\'uì\'.</string>
   <string name="search_add_error">Ni\'ìaj si hua hue\'è sa gachrut nī garahuè ñut</string>
+  <string name="search_add_error_empty_name">Si yugui sa nana\'ui\'</string>
+  <string name="search_add_error_empty_search">Duguatûj sa nanikò\' dugui\'i</string>
   <string name="content_description_clear_input">Nadure\' sa duguatujt</string>
   <string name="content_description_dismiss_input">Dunaj man</string>
   <string name="content_description_erase">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>

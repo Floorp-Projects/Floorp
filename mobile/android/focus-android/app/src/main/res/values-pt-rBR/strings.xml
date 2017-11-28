@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Cancelar</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Salvar</string>
   <string name="urlbar_hint">Pesquisar ou navegar</string>
   <string name="teaser">Navegação privativa automática.\nNavegar. Apagar. Repetir.</string>
   <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
@@ -26,6 +27,25 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s coloca voc&#234; no controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Use-o como o seu navegador privativo:\n  "<ul>"\n    "<li>Pesquise e navegue direto no aplicativo</li>"\n    "<li>Bloqueie rastreadores (ou atualize as configura&#231;&#245;es para permiti-los)</li>"\n    "<li>Apague para excluir cookies assim como o hist&#243;rico de pesquisa e navega&#231;&#227;o</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#233; produzido pela Mozilla. Nossa miss&#227;o &#233; promover uma Internet saud&#225;vel e aberta.<br/>\n<a href="%2$s">Saiba mais</a></p>]]></string>
   <string name="preference_category_search">Pesquisar</string>
   <string name="preference_search_engine_default">Padrão</string>
+  <string name="preference_state_on">Ativado</string>
+  <string name="preference_state_off">Desativado</string>
+  <string name="preference_subitem_autocomplete">Autocompletar URL</string>
+  <string name="preference_switch_autocomplete">Autocompletar</string>
+  <string name="preference_category_autocomplete_preinstalled">Lista de URL padrão</string>
+  <string name="preference_category_autocomplete_custom">URL personalizada</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
+  <string name="preference_autocomplete_action_add">+ Adicionar URL personalizada</string>
+  <string name="preference_autocomplete_title_add">Adicionar URL personalizada</string>
+  <string name="preference_autocomplete_title_remove">Remover URL personalizada</string>
+  <string name="preference_autocomplete_learn_more">Saiba mais</string>
+  <string name="preference_autocomplete_add_title">URL a adicionar</string>
+  <string name="preference_autocomplete_add_hint">Cole ou digite a URL</string>
+  <string name="preference_autocomplete_add_example">Exemplo: exemplo.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nova URL personalizada adicionada.</string>
+  <string name="preference_autocomplete_menu_remove">Remover</string>
+  <string name="preference_autocomplete_action_remove_content_description">Remover</string>
+  <string name="preference_autocomplete_add_error">Verifique novamente a URL digitada.</string>
   <string name="preference_language">Idioma</string>
   <string name="preference_language_systemdefault">Padrão do sistema</string>
   <string name="preference_dialog_title_search_engine">Pesquisa padrão</string>
@@ -77,6 +97,7 @@
   <string name="accessibility_announcement_search">Adicionar mecanismo de pesquisa</string>
   <string name="search_add_confirmation">Novo mecanismo de pesquisa adicionado.</string>
   <string name="search_add_error">Verifique o termo de pesquisa e tente novamente</string>
+  <string name="search_add_error_empty_name">Digite o nome do mecanismo de pesquisa</string>
   <string name="content_description_clear_input">Limpar campo</string>
   <string name="content_description_dismiss_input">Dispensar</string>
   <string name="content_description_erase">Apagar o histórico de navegação</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Скасувати</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Зберегти</string>
   <string name="urlbar_hint">Введіть запит чи адресу</string>
   <string name="teaser">Автоматичний приватний перегляд.\nПереглядайте. Видаляйте. Повторюйте.</string>
   <string name="feedback_erase">Ваша історія перегляду була очищена.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1085;&#1072;&#1076;&#1072;&#1108; &#1074;&#1072;&#1084; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1100;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1042;&#1080;&#1082;&#1086;&#1088;&#1080;&#1089;&#1090;&#1086;&#1074;&#1091;&#1081;&#1090;&#1077; &#1081;&#1086;&#1075;&#1086; &#1074; &#1103;&#1082;&#1086;&#1089;&#1090;&#1110; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1086;&#1075;&#1086; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088;&#1072;:\n  "<ul>"\n    "<li>&#1047;&#1076;&#1110;&#1081;&#1089;&#1085;&#1102;&#1081;&#1090;&#1077; &#1087;&#1086;&#1096;&#1091;&#1082; &#1110; &#1087;&#1077;&#1088;&#1077;&#1075;&#1083;&#1103;&#1076; &#1073;&#1077;&#1079;&#1087;&#1086;&#1089;&#1077;&#1088;&#1077;&#1076;&#1085;&#1100;&#1086; &#1074; &#1087;&#1088;&#1086;&#1075;&#1088;&#1072;&#1084;&#1110;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1091;&#1081;&#1090;&#1077; &#1089;&#1090;&#1077;&#1078;&#1077;&#1085;&#1085;&#1103; (&#1072;&#1073;&#1086; &#1079;&#1084;&#1110;&#1085;&#1110;&#1090;&#1100; &#1085;&#1072;&#1083;&#1072;&#1096;&#1090;&#1091;&#1074;&#1072;&#1085;&#1085;&#1103;, &#1097;&#1086;&#1073; &#1076;&#1086;&#1079;&#1074;&#1086;&#1083;&#1080;&#1090;&#1080; &#1081;&#1086;&#1075;&#1086;)</li>"\n    "<li>&#1042;&#1080;&#1076;&#1072;&#1083;&#1103;&#1081;&#1090;&#1077; &#1082;&#1091;&#1082;&#1080;, &#1072; &#1090;&#1072;&#1082;&#1086;&#1078; &#1110;&#1089;&#1090;&#1086;&#1088;&#1110;&#1102; &#1087;&#1086;&#1096;&#1091;&#1082;&#1091; &#1090;&#1072; &#1087;&#1077;&#1088;&#1077;&#1075;&#1083;&#1103;&#1076;&#1091;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1089;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085;&#1086; &#1074; Mozilla. &#1053;&#1072;&#1096;&#1086;&#1102; &#1084;&#1110;&#1089;&#1110;&#1108;&#1102; &#1108; &#1089;&#1087;&#1088;&#1080;&#1103;&#1085;&#1085;&#1103; &#1088;&#1086;&#1079;&#1074;&#1080;&#1090;&#1082;&#1091; &#1079;&#1076;&#1086;&#1088;&#1086;&#1074;&#1086;&#1075;&#1086; &#1090;&#1072; &#1074;&#1110;&#1076;&#1082;&#1088;&#1080;&#1090;&#1086;&#1075;&#1086; &#1030;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1091;.<br/>\n<a href="%2$s">&#1044;&#1086;&#1082;&#1083;&#1072;&#1076;&#1085;&#1110;&#1096;&#1077;</a></p>]]></string>
   <string name="preference_category_search">Пошук</string>
   <string name="preference_search_engine_default">Типовий</string>
+  <string name="preference_state_on">Увімкнено</string>
+  <string name="preference_state_off">Вимкнено</string>
+  <string name="preference_subitem_autocomplete">Автозавершення URL</string>
+  <string name="preference_switch_autocomplete">Автозавершення</string>
+  <string name="preference_category_autocomplete_preinstalled">Типовий перелік URL</string>
+  <string name="preference_autocomplete_preinstalled_summary">Увімкніть автозавершення в %1$s для понад 450 популярних URL-адрес в панелі адреси.</string>
+  <string name="preference_category_autocomplete_custom">Власна URL-адреса</string>
+  <string name="preference_autocomplete_subitem_customlist">Власні URL-адреси</string>
+  <string name="preference_autocomplete_action_add">+ Додати власну URL-адресу</string>
+  <string name="preference_autocomplete_title_add">Додати власну URL-адресу</string>
+  <string name="preference_autocomplete_title_remove">Вилучити власні URL-адреси</string>
+  <string name="preference_autocomplete_learn_more">Докладніше</string>
+  <string name="preference_autocomplete_custom_summary">Додавайте і керуйте автозавершенням власних URL-адрес.</string>
+  <string name="preference_autocomplete_add_title">URL для додавання</string>
+  <string name="preference_autocomplete_add_hint">Вставте чи введіть URL-адресу</string>
+  <string name="preference_autocomplete_add_example">Зразок: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Нову власну URL-адресу додано.</string>
+  <string name="preference_autocomplete_menu_remove">Вилучити</string>
+  <string name="preference_autocomplete_action_remove_content_description">Вилучити</string>
+  <string name="preference_autocomplete_add_error">Уважно перевірте введену URL-адресу.</string>
   <string name="preference_language">Мова</string>
   <string name="preference_language_systemdefault">Типова системна</string>
   <string name="preference_dialog_title_search_engine">Типовий пошук</string>
@@ -77,6 +99,9 @@
   <string name="accessibility_announcement_search">Додати засіб пошуку</string>
   <string name="search_add_confirmation">Новий засіб пошуку додано.</string>
   <string name="search_add_error">Перевірте пошуковий запит і спробуйте знову</string>
+  <string name="search_add_error_empty_name">Введіть назву засобу пошуку</string>
+  <string name="search_add_error_empty_search">Введіть пошуковий запит</string>
+  <string name="search_add_error_format">Перевірте пошуковий запит на відповідність формату зразка</string>
   <string name="content_description_clear_input">Очистити поле</string>
   <string name="content_description_dismiss_input">Відхилити</string>
   <string name="content_description_erase">Стерти історію перегляду</string>

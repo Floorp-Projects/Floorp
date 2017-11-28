@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Avbryt</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Spara</string>
   <string name="urlbar_hint">Sök eller ange adress</string>
   <string name="teaser">Automatisk privat surfning.\nSurfa. Radera. Upprepa.</string>
   <string name="feedback_erase">Din webbhistorik har raderats.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ger dig full kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anv&#228;nd den som en privat webbl&#228;sare:\n  "<ul>"\n    "<li>S&#246;k och surfa direkt i appen</li>"\n    "<li>Blockera trackers (eller uppdatera inst&#228;llningar att till&#229;ta trackers)</li>"\n    "<li>Radera f&#246;r att ta bort kakor samt s&#246;k- och webbhistorik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#228;r utvecklad av Mozilla. V&#229;rt uppdrag &#228;r att fr&#228;mja ett h&#228;lsosamt, &#246;ppet Internet.<br/>\n<a href="%2$s">L&#228;s mer</a></p>]]></string>
   <string name="preference_category_search">Sök</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_state_on">På</string>
+  <string name="preference_state_off">Av</string>
+  <string name="preference_subitem_autocomplete">Autokomplettera webbadress</string>
+  <string name="preference_switch_autocomplete">Autokomplettera</string>
+  <string name="preference_category_autocomplete_preinstalled">Standard webbadresslista</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktivera %1$s att automatiskt komplettera över 450 populära webbadresser i adressfältet.</string>
+  <string name="preference_category_autocomplete_custom">Anpassad webbadress</string>
+  <string name="preference_autocomplete_subitem_customlist">Anpassade webbadresser</string>
+  <string name="preference_autocomplete_action_add">+ Lägg till anpassad webbadress</string>
+  <string name="preference_autocomplete_title_add">Lägg till anpassad webbadress</string>
+  <string name="preference_autocomplete_title_remove">Ta bort anpassade webbadresser</string>
+  <string name="preference_autocomplete_learn_more">Läs mer</string>
+  <string name="preference_autocomplete_custom_summary">Lägg till och hantera anpassade autokompletterade webbadresser.</string>
+  <string name="preference_autocomplete_add_title">Webbadress att lägga till</string>
+  <string name="preference_autocomplete_add_hint">Klistra in eller ange webbadress</string>
+  <string name="preference_autocomplete_add_example">Exempel: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Ny anpassad webbadress tillagd.</string>
+  <string name="preference_autocomplete_menu_remove">Ta bort</string>
+  <string name="preference_autocomplete_action_remove_content_description">Ta bort</string>
+  <string name="preference_autocomplete_add_error">Dubbelkolla webbadressen du angav.</string>
   <string name="preference_language">Språk</string>
   <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standardsökmotor</string>
@@ -77,6 +99,9 @@
   <string name="accessibility_announcement_search">Lägg till sökmotor</string>
   <string name="search_add_confirmation">Ny sökmotor tillagd.</string>
   <string name="search_add_error">Kontrollera söksträngen och försök igen</string>
+  <string name="search_add_error_empty_name">Ange sökmotorns namn</string>
+  <string name="search_add_error_empty_search">Ange söksträng</string>
+  <string name="search_add_error_format">Kontrollera att söksträngen matchar exempelformat</string>
   <string name="content_description_clear_input">Rensa inmatning</string>
   <string name="content_description_dismiss_input">Ignorera</string>
   <string name="content_description_erase">Radera webbhistorik</string>
