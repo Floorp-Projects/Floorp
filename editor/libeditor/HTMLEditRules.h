@@ -111,10 +111,9 @@ public:
                             nsIDOMNode* aNextSiblingOfNewNode) override;
   NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode* aNewNode,
                            nsresult aResult) override;
-  NS_IMETHOD WillInsertNode(nsIDOMNode* aNode, nsIDOMNode* aParent,
-                            int32_t aPosition) override;
-  NS_IMETHOD DidInsertNode(nsIDOMNode* aNode, nsIDOMNode* aParent,
-                           int32_t aPosition, nsresult aResult) override;
+  NS_IMETHOD WillInsertNode(nsIDOMNode* aNode,
+                            nsIDOMNode* aNextSiblingOfNewNode) override;
+  NS_IMETHOD DidInsertNode(nsIDOMNode* aNode, nsresult aResult) override;
   NS_IMETHOD WillDeleteNode(nsIDOMNode* aChild) override;
   NS_IMETHOD DidDeleteNode(nsIDOMNode* aChild, nsresult aResult) override;
   NS_IMETHOD WillSplitNode(nsIDOMNode* aExistingRightNode,

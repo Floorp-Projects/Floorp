@@ -1501,9 +1501,9 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->WillInsertNode(aContentToInsert.AsDOMNode(),
-                               aPointToInsert.Container()->AsDOMNode(),
-                               aPointToInsert.Offset());
+      listener->WillInsertNode(
+                  aContentToInsert.AsDOMNode(),
+                  GetAsDOMNode(aPointToInsert.GetNextSiblingOfChildAtOffset()));
     }
   }
 
@@ -1517,10 +1517,7 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidInsertNode(aContentToInsert.AsDOMNode(),
-                              aPointToInsert.Container()->AsDOMNode(),
-                              aPointToInsert.Offset(),
-                              rv);
+      listener->DidInsertNode(aContentToInsert.AsDOMNode(), rv);
     }
   }
 
