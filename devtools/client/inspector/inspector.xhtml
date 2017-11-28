@@ -18,7 +18,6 @@
   <link rel="stylesheet" href="chrome://devtools/skin/animation.css"/>
   <link rel="stylesheet" href="resource://devtools/client/shared/components/tabs/Tabs.css"/>
   <link rel="stylesheet" href="resource://devtools/client/shared/components/tabs/TabBar.css"/>
-  <link rel="stylesheet" href="resource://devtools/client/shared/components/SidebarToggle.css"/>
   <link rel="stylesheet" href="resource://devtools/client/inspector/components/InspectorTabPanel.css"/>
   <link rel="stylesheet" href="resource://devtools/client/shared/components/splitter/SplitBox.css"/>
   <link rel="stylesheet" href="resource://devtools/client/inspector/layout/components/Accordion.css"/>
@@ -38,7 +37,7 @@
     }
   </script>
 
-  <!-- In content, inspector.js is mapped to the dynamically generated webpack bundle -->
+  <!-- in content, inspector.js is mapped to the dynamically generated webpack bundle -->
   <script type="application/javascript" src="inspector.js" defer="true"></script>
 </head>
 <body class="theme-body" role="application">
@@ -46,7 +45,6 @@
 
     <!-- Main Panel Content -->
     <div id="inspector-main-content" class="devtools-main-content" style="visibility: hidden;">
-      <!-- Toolbar -->
       <div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true"
            data-localization-bundle="devtools/client/locales/inspector.properties">
         <button id="inspector-element-add-button" class="devtools-button"
@@ -60,10 +58,7 @@
           <button id="inspector-searchinput-clear" class="devtools-searchinput-clear" tabindex="-1"></button>
         </div>
         <button id="inspector-eyedropper-toggle" class="devtools-button"></button>
-        <div id="inspector-sidebar-toggle-box"></div>
       </div>
-
-      <!-- Markup Container -->
       <div id="markup-box"></div>
       <div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
         <div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
@@ -72,20 +67,16 @@
     </div>
 
     <!-- Splitter -->
-    <div id="inspector-splitter-box"></div>
-
-    <!-- Split Sidebar Container -->
-    <div id="inspector-rules-container">
-      <div id="inspector-rules-sidebar" hidden="true"></div>
+    <div xmlns="http://www.w3.org/1999/xhtml" id="inspector-splitter-box">
     </div>
 
     <!-- Sidebar Container -->
     <div id="inspector-sidebar-container">
-      <div id="inspector-sidebar" hidden="true"></div>
+      <div xmlns="http://www.w3.org/1999/xhtml" id="inspector-sidebar" hidden="true"></div>
     </div>
 
-    <!-- Sidebar Panel Definitions -->
-    <div id="tabpanels" style="visibility: collapse">
+    <!-- Sidebar panel definitions -->
+    <div id="tabpanels" style="visibility:collapse">
       <div id="sidebar-panel-ruleview" class="theme-sidebar inspector-tabpanel"
            data-localization-bundle="devtools/client/locales/inspector.properties">
         <div id="ruleview-toolbar-container" class="devtools-toolbar">
