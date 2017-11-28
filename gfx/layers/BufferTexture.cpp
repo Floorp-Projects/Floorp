@@ -371,21 +371,25 @@ BufferTextureData::BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap)
 
   aMap.stereoMode = desc.stereoMode();
   aMap.metadata = nullptr;
+  uint32_t bytesPerPixel = desc.bitDepth() > 8 ? 2 : 1;
 
   aMap.y.data = data + desc.yOffset();
   aMap.y.size = ySize;
   aMap.y.stride = desc.yStride();
   aMap.y.skip = 0;
+  aMap.y.bytesPerPixel = bytesPerPixel;
 
   aMap.cb.data = data + desc.cbOffset();
   aMap.cb.size = cbCrSize;
   aMap.cb.stride = desc.cbCrStride();
   aMap.cb.skip = 0;
+  aMap.cb.bytesPerPixel = bytesPerPixel;
 
   aMap.cr.data = data + desc.crOffset();
   aMap.cr.size = cbCrSize;
   aMap.cr.stride = desc.cbCrStride();
   aMap.cr.skip = 0;
+  aMap.cr.bytesPerPixel = bytesPerPixel;
 
   return true;
 }
