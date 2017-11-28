@@ -735,7 +735,8 @@ class BaseRegAlloc
 // ScratchRegister abstractions.  We define our own, deferring to the platform's
 // when possible.
 
-#if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_NONE)
+#if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_NONE) || \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 class ScratchDoubleScope
 {
   public:
