@@ -30,7 +30,7 @@ detekt {
     version = "1.0.0.RC5-5"
     profile("main") {
         input = "$projectDir"
-        config = "$projectDir/detekt.yml"
+        config = "$projectDir/quality/detekt.yml"
         filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
     }
 }
