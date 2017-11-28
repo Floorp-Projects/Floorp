@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DevicePoint, DeviceRect, DeviceSize, LayerRect, LayerToWorldTransform};
-use api::{LayoutPoint, LayoutRect, LayoutSize};
-use api::WorldPoint3D;
+use api::{DevicePoint, DeviceRect, DeviceSize, LayerPoint, LayerRect, LayerSize};
+use api::{LayerToWorldTransform, LayoutPoint, LayoutRect, LayoutSize, WorldPoint3D};
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D};
 use euclid::TypedTransform3D;
 use num_traits::Zero;
 use std::f32::consts::FRAC_1_SQRT_2;
 use std::i32;
+use std::f32;
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
 const NEARLY_ZERO: f32 = 1.0 / 4096.0;
@@ -210,7 +210,7 @@ pub fn get_normal(x: f32) -> Option<f32> {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-#[repr(u8)]
+#[repr(u32)]
 pub enum TransformedRectKind {
     AxisAligned = 0,
     Complex = 1,
@@ -438,6 +438,15 @@ pub mod test {
 
 pub trait MaxRect {
     fn max_rect() -> Self;
+}
+
+impl MaxRect for LayerRect {
+    fn max_rect() -> Self {
+        LayerRect::new(
+            LayerPoint::new(f32::MIN / 2.0, f32::MIN / 2.0),
+            LayerSize::new(f32::MAX, f32::MAX),
+        )
+    }
 }
 
 impl MaxRect for DeviceIntRect {

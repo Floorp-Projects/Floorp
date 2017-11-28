@@ -179,16 +179,17 @@ impl FontInstance {
         }
     }
 
-    pub fn get_subpixel_glyph_format(&self) -> GlyphFormat {
-        if self.transform.is_identity() { GlyphFormat::Subpixel } else { GlyphFormat::TransformedSubpixel }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_glyph_format(&self) -> GlyphFormat {
+    pub fn get_glyph_format(&self, color_bitmaps: bool) -> GlyphFormat {
         match self.render_mode {
-            FontRenderMode::Mono | FontRenderMode::Alpha => GlyphFormat::Alpha,
-            FontRenderMode::Subpixel => self.get_subpixel_glyph_format(),
-            FontRenderMode::Bitmap => GlyphFormat::ColorBitmap,
+            FontRenderMode::Mono | FontRenderMode::Alpha => {
+                if self.transform.is_identity() { GlyphFormat::Alpha } else { GlyphFormat::TransformedAlpha }
+            }
+            FontRenderMode::Subpixel => {
+                if self.transform.is_identity() { GlyphFormat::Subpixel } else { GlyphFormat::TransformedSubpixel }
+            }
+            FontRenderMode::Bitmap => {
+                if color_bitmaps { GlyphFormat::ColorBitmap } else { GlyphFormat::Alpha }
+            }
         }
     }
 }
@@ -196,6 +197,7 @@ impl FontInstance {
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum GlyphFormat {
     Alpha,
+    TransformedAlpha,
     Subpixel,
     TransformedSubpixel,
     ColorBitmap,
