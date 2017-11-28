@@ -69,6 +69,7 @@ XPCOMUtils.defineLazyGetter(this, "browserSessionID", Utils.makeGUID);
 
 function Sync11Service() {
   this._notify = Utils.notify("weave:service:");
+  this.scheduler = new SyncScheduler(this);
 }
 Sync11Service.prototype = {
 
@@ -321,8 +322,6 @@ Sync11Service.prototype = {
     Svc.Obs.add("sync:collection_changed", this); // Pulled from FxAccountsCommon
     Svc.Obs.add("fxaccounts:device_disconnected", this);
     Services.prefs.addObserver(PREFS_BRANCH + "engine.", this);
-
-    this.scheduler = new SyncScheduler(this);
 
     if (!this.enabled) {
       this._log.info("Firefox Sync disabled.");
