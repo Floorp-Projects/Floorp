@@ -135,9 +135,7 @@ add_task(async function() {
     let minidumpID = propBag.getPropertyAsAString("pluginDumpID");
 
     Services.crashmanager.ensureCrashIsPresent(minidumpID).then(() => {
-      let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
-                     .getService(Ci.nsIProperties);
-      let minidumpDir = dirSvc.get("UAppData", Ci.nsIFile);
+      let minidumpDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
       minidumpDir.append("Crash Reports");
       minidumpDir.append("pending");
 

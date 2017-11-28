@@ -7,9 +7,7 @@
 "use strict";
 
 const kUrl = "https://example.com/";
-const kPrincipal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-    .getService(Ci.nsIScriptSecurityManager)
-    .createCodebasePrincipal(Services.io.newURI(kUrl), {});
+const kPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI(kUrl), {});
 const kPermission = "canvas/extractData";
 
 function initTab() {

@@ -7,8 +7,7 @@ const testURL1 = gTestRoot + "browser_clearplugindata.html";
 const testURL2 = gTestRoot + "browser_clearplugindata_noage.html";
 
 var tempScope = {};
-Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
-                                           .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
+Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 var Sanitizer = tempScope.Sanitizer;
 
 const pluginHostIface = Ci.nsIPluginHost;
