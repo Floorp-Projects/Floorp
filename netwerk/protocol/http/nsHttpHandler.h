@@ -145,6 +145,8 @@ public:
     }
     uint32_t       TailBlockingDelayMax() { return mTailDelayMax; }
 
+    uint32_t       ThrottlingReadLimit() { return mThrottleVersion == 1 ? 0 : mThrottleReadLimit; }
+
     // TCP Keepalive configuration values.
 
     // Returns true if TCP keepalive should be enabled for short-lived conns.
@@ -484,10 +486,13 @@ private:
     uint8_t  mMaxPersistentConnectionsPerProxy;
 
     bool mThrottleEnabled;
+    uint32_t mThrottleVersion;
     uint32_t mThrottleSuspendFor;
     uint32_t mThrottleResumeFor;
-    uint32_t mThrottleResumeIn;
-    uint32_t mThrottleTimeWindow;
+    uint32_t mThrottleReadLimit;
+    uint32_t mThrottleReadInterval;
+    uint32_t mThrottleHoldTime;
+    uint32_t mThrottleMaxTime;
 
     bool mUrgentStartEnabled;
     bool mTailBlockingEnabled;
