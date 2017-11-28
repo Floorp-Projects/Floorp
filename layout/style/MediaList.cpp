@@ -62,12 +62,12 @@ MediaList::DoMediaChange(Func aCallback)
   }
 
   if (mStyleSheet) {
-    mStyleSheet->DidDirty();
+    // FIXME(emilio): We should discern between "owned by a rule" (as in @media)
+    // and "owned by a sheet" (as in <style media>), and then pass something
+    // meaningful here.
+    mStyleSheet->RuleChanged(nullptr);
   }
-  /* XXXldb Pass something meaningful? */
-  if (doc) {
-    doc->StyleRuleChanged(mStyleSheet, nullptr);
-  }
+
   return rv;
 }
 

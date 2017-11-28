@@ -174,10 +174,7 @@ ServoKeyframeRule::UpdateRule(Func aCallback)
   aCallback();
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    // FIXME sheet->AsGecko()->SetModifiedByChildRule();
-    if (doc) {
-      doc->StyleRuleChanged(sheet, this);
-    }
+    sheet->RuleChanged(this);
   }
 }
 
