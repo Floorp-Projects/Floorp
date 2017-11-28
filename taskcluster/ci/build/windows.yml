@@ -77,7 +77,8 @@ win32-dmd/opt:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win32.py
             - builds/taskcluster_sub_win32/opt.py
-        custom-build-variant-cfg: dmd
+        extra-config:
+            mozconfig_variant: 'opt-dmd'
     run-on-projects: []
     toolchains:
         - win32-clang-cl
@@ -191,7 +192,8 @@ win64-dmd/opt:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/opt.py
-        custom-build-variant-cfg: dmd
+        extra-config:
+            mozconfig_variant: 'opt-dmd'
     run-on-projects: []
     toolchains:
         - win64-clang-cl
