@@ -979,34 +979,6 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
     return NS_OK;
 }
 
-nsIPrincipal*
-nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
-{
-    MOZ_ASSERT(IS_WN_REFLECTOR(obj), "What kind of wrapper is this?");
-
-    XPCWrappedNative* xpcWrapper = XPCWrappedNative::Get(obj);
-    if (xpcWrapper) {
-        if (allowShortCircuit) {
-            nsIPrincipal* result = xpcWrapper->GetObjectPrincipal();
-            if (result) {
-                return result;
-            }
-        }
-
-        // If not, check if it points to an nsIScriptObjectPrincipal
-        nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-            do_QueryInterface(xpcWrapper->Native());
-        if (objPrin) {
-            nsIPrincipal* result = objPrin->GetPrincipal();
-            if (result) {
-                return result;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
 namespace xpc {
 
 bool
