@@ -77,6 +77,10 @@ RenderDXGITextureHostOGL::EnsureLockable()
       return false;
     }
 
+    if (!mHandle) {
+      return false;
+    }
+
     // Get gl texture handle from shared handle.
     EGLint pbufferAttributes[] = {
         LOCAL_EGL_WIDTH, mSize.width,
