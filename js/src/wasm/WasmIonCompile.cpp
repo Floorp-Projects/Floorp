@@ -849,10 +849,10 @@ class FunctionCompiler
   public:
     MDefinition* computeEffectiveAddress(MDefinition* base, MemoryAccessDesc* access) {
         MOZ_ASSERT(!access->isPlainAsmJS());
-
         if (inDeadCode())
             return nullptr;
-
+        if (!access->offset())
+            return base;
         auto* ins = MWasmAddOffset::New(alloc(), base, access->offset(), bytecodeOffset());
         curBlock_->add(ins);
         access->clearOffset();
