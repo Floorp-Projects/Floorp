@@ -769,40 +769,6 @@ xpc::UnwrapReflectorToISupports(JSObject* reflector)
 }
 
 NS_IMETHODIMP
-nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
-                                            JSObject * aScopeArg,
-                                            nsISupports* aCOMObj,
-                                            const nsIID & aIID,
-                                            nsIXPConnectWrappedNative** _retval)
-{
-    MOZ_ASSERT(aJSContext, "bad param");
-    MOZ_ASSERT(aScopeArg, "bad param");
-    MOZ_ASSERT(aCOMObj, "bad param");
-    MOZ_ASSERT(_retval, "bad param");
-
-    *_retval = nullptr;
-
-    RootedObject aScope(aJSContext, aScopeArg);
-
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    RefPtr<XPCNativeInterface> iface =
-        XPCNativeInterface::GetNewOrUsed(&aIID);
-    if (!iface)
-        return NS_ERROR_FAILURE;
-
-    XPCWrappedNative* wrapper;
-
-    nsresult rv = XPCWrappedNative::GetUsedOnly(aCOMObj, scope, iface, &wrapper);
-    if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
-    *_retval = static_cast<nsIXPConnectWrappedNative*>(wrapper);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
                                        nsIXPCFunctionThisTranslator* aTranslator)
 {

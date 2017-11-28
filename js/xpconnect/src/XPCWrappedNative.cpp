@@ -479,54 +479,6 @@ FinishCreate(XPCWrappedNativeScope* Scope,
     return NS_OK;
 }
 
-// static
-nsresult
-XPCWrappedNative::GetUsedOnly(nsISupports* Object,
-                              XPCWrappedNativeScope* Scope,
-                              XPCNativeInterface* Interface,
-                              XPCWrappedNative** resultWrapper)
-{
-    AutoJSContext cx;
-    MOZ_ASSERT(Object, "XPCWrappedNative::GetUsedOnly was called with a null Object");
-    MOZ_ASSERT(Interface);
-
-    RefPtr<XPCWrappedNative> wrapper;
-    nsWrapperCache* cache = nullptr;
-    CallQueryInterface(Object, &cache);
-    if (cache) {
-        RootedObject flat(cx, cache->GetWrapper());
-        if (!flat) {
-            *resultWrapper = nullptr;
-            return NS_OK;
-        }
-        wrapper = XPCWrappedNative::Get(flat);
-    } else {
-        nsCOMPtr<nsISupports> identity = do_QueryInterface(Object);
-
-        if (!identity) {
-            NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
-            return NS_ERROR_FAILURE;
-        }
-
-        Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
-
-        wrapper = map->Find(identity);
-        if (!wrapper) {
-            *resultWrapper = nullptr;
-            return NS_OK;
-        }
-    }
-
-    nsresult rv;
-    if (!wrapper->FindTearOff(Interface, false, &rv)) {
-        MOZ_ASSERT(NS_FAILED(rv), "returning NS_OK on failure");
-        return rv;
-    }
-
-    wrapper.forget(resultWrapper);
-    return NS_OK;
-}
-
 // This ctor is used if this object will have a proto.
 XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeProto* aProto)
