@@ -507,7 +507,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
   , mStreamOffset(0)
   , mPlaybackBytesPerSecond(10000)
   , mPinCount(0)
-  , mCurrentMode(MODE_PLAYBACK)
   , mMetadataInPartialBlockBuffer(false)
   , mIsPrivateBrowsing(aIsPrivateBrowsing)
 {
