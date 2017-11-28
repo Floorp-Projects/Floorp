@@ -80,9 +80,6 @@ let autoCompleteSimple = {
 
 SimpleTest.waitForExplicitFinish();
 
-// XPFE AutoComplete needs to register early.
-autoCompleteSimple.registerFactory();
-
 let gACTimer;
 let gAutoComplete;
 
@@ -96,6 +93,8 @@ function searchComplete() {
 }
 
 function runTest() {
+
+  autoCompleteSimple.registerFactory();
   gAutoComplete = $("autocomplete");
 
   const SEARCH_STRING = "res";
