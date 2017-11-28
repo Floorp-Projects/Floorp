@@ -16,8 +16,14 @@ class IndicatorMenuButton(context: Context, attrs: AttributeSet): FrameLayout(co
     init {
         isClickable = true
 
-        val view = LayoutInflater.from(context).inflate(R.layout.item_indicator_menu_button, this, true)
+        val view = LayoutInflater.from(context).inflate(
+                R.layout.item_indicator_menu_button,
+                this,
+                true)
 
-        view.findViewById<View>(R.id.dot).visibility = if (WhatsNew.shouldHighlightWhatsNew(context)) View.VISIBLE else View.GONE
+        view.findViewById<View>(R.id.dot).visibility = if (WhatsNew.shouldHighlightWhatsNew(context))
+            View.VISIBLE
+        else
+            View.GONE
     }
 }

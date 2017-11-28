@@ -11,6 +11,9 @@ import org.mozilla.focus.settings.LearnMoreSwitchPreference
 /**
  * Switch preference for enabling/disabling autocompletion for custom domains entered by the user.
  */
-class AutocompleteCustomDomainsPreference(context: Context?, attrs: AttributeSet?) : LearnMoreSwitchPreference(context, attrs) {
+class AutocompleteCustomDomainsPreference(
+        context: Context?,
+        attrs: AttributeSet?
+) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl() = "http://www.mozilla.org"
 }

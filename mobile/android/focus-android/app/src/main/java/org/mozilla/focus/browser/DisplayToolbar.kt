@@ -13,7 +13,10 @@ import kotlinx.android.synthetic.main.browser_display_toolbar.view.*
 /**
  * The toolbar of the BrowserFragment; displaying the URL and other controls.
  */
-class DisplayToolbar(context: Context, attrs: AttributeSet) : AppBarLayout(context, attrs), AppBarLayout.OnOffsetChangedListener {
+class DisplayToolbar(
+        context: Context,
+        attrs: AttributeSet
+) : AppBarLayout(context, attrs), AppBarLayout.OnOffsetChangedListener {
     private val collapsedProgressTranslationY: Float by lazy {
         TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 2f, resources.displayMetrics)

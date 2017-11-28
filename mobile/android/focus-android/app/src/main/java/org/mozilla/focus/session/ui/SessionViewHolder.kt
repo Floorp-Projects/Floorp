@@ -19,7 +19,10 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.ext.beautifyUrl
 import java.lang.ref.WeakReference
 
-class SessionViewHolder internal constructor(private val fragment: SessionsSheetFragment, private val textView: TextView) : RecyclerView.ViewHolder(textView), View.OnClickListener {
+class SessionViewHolder internal constructor(
+        private val fragment: SessionsSheetFragment,
+        private val textView: TextView
+) : RecyclerView.ViewHolder(textView), View.OnClickListener {
     companion object {
         @JvmField
         internal val LAYOUT_ID = R.layout.item_session

@@ -35,7 +35,11 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText
 /**
  * Fragment for displaying he URL input controls.
  */
-class UrlInputFragment : LocaleAwareFragment(), View.OnClickListener, InlineAutocompleteEditText.OnCommitListener, InlineAutocompleteEditText.OnFilterListener {
+class UrlInputFragment :
+        LocaleAwareFragment(),
+        View.OnClickListener,
+        InlineAutocompleteEditText.OnCommitListener,
+        InlineAutocompleteEditText.OnFilterListener {
     companion object {
         @JvmField
         val FRAGMENT_TAG = "url_input"
@@ -169,12 +173,18 @@ class UrlInputFragment : LocaleAwareFragment(), View.OnClickListener, InlineAuto
         if (isOverlay) {
             activity?.supportFragmentManager
                     ?.beginTransaction()
-                    ?.replace(R.id.container, UrlInputFragment.createWithSession(session!!, urlView), UrlInputFragment.FRAGMENT_TAG)
+                    ?.replace(
+                            R.id.container,
+                            UrlInputFragment.createWithSession(session!!, urlView),
+                            UrlInputFragment.FRAGMENT_TAG)
                     ?.commit()
         } else {
             activity?.supportFragmentManager
                     ?.beginTransaction()
-                    ?.replace(R.id.container, UrlInputFragment.createWithBackground(), UrlInputFragment.FRAGMENT_TAG)
+                    ?.replace(
+                            R.id.container,
+                            UrlInputFragment.createWithBackground(),
+                            UrlInputFragment.FRAGMENT_TAG)
                     ?.commit()
         }
     }
