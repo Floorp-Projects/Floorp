@@ -1603,6 +1603,11 @@ class BaseCompiler final : public BaseCompilerInterface
             freeI64(r);
     }
 
+    void maybeFreeF64(RegF64 r) {
+        if (r.isValid())
+            freeF64(r);
+    }
+
     void needI32NoSync(RegI32 r) {
         MOZ_ASSERT(isAvailableI32(r));
         needI32(r);
@@ -3238,16 +3243,12 @@ class BaseCompiler final : public BaseCompilerInterface
 
         masm.bind(theTable);
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
         for (uint32_t i = 0; i < labels.length(); i++) {
             CodeLabel cl;
             masm.writeCodePointer(cl.patchAt());
             cl.target()->bind(labels[i].offset());
             masm.addCodeLabel(cl);
         }
-#else
-        MOZ_CRASH("BaseCompiler platform hook: jumpTable");
-#endif
     }
 
     void tableSwitch(Label* theTable, RegI32 switchValue, Label* dispatchCode) {
@@ -3574,40 +3575,34 @@ class BaseCompiler final : public BaseCompilerInterface
 
     MOZ_MUST_USE bool truncateF32ToI32(RegF32 src, RegI32 dest, bool isUnsigned) {
         BytecodeOffset off = bytecodeOffset();
-        OutOfLineCode* ool;
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
-        ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, isUnsigned, off);
-        ool = addOutOfLineCode(ool);
+        OutOfLineCode* ool =
+            addOutOfLineCode(new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src),
+                                                                        dest,
+                                                                        isUnsigned,
+                                                                        off));
         if (!ool)
             return false;
         if (isUnsigned)
             masm.wasmTruncateFloat32ToUInt32(src, dest, ool->entry());
         else
             masm.wasmTruncateFloat32ToInt32(src, dest, ool->entry());
-#else
-        (void)off;
-        MOZ_CRASH("BaseCompiler platform hook: truncateF32ToI32 wasm");
-#endif
         masm.bind(ool->rejoin());
         return true;
     }
 
     MOZ_MUST_USE bool truncateF64ToI32(RegF64 src, RegI32 dest, bool isUnsigned) {
         BytecodeOffset off = bytecodeOffset();
-        OutOfLineCode* ool;
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
-        ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, isUnsigned, off);
-        ool = addOutOfLineCode(ool);
+        OutOfLineCode* ool =
+            addOutOfLineCode(new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src),
+                                                                        dest,
+                                                                        isUnsigned,
+                                                                        off));
         if (!ool)
             return false;
         if (isUnsigned)
             masm.wasmTruncateDoubleToUInt32(src, dest, ool->entry());
         else
             masm.wasmTruncateDoubleToInt32(src, dest, ool->entry());
-#else
-        (void)off;
-        MOZ_CRASH("BaseCompiler platform hook: truncateF64ToI32 wasm");
-#endif
         masm.bind(ool->rejoin());
         return true;
     }
@@ -3654,6 +3649,14 @@ class BaseCompiler final : public BaseCompilerInterface
     };
 
 #ifndef RABALDR_FLOAT_TO_I64_CALLOUT
+    MOZ_MUST_USE RegF64 needTempForFloatingToI64(bool isUnsigned) {
+# if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+        if (isUnsigned)
+            return needF64();
+# endif
+        return RegF64::Invalid();
+    }
+
     MOZ_MUST_USE bool truncateF32ToI64(RegF32 src, RegI64 dest, bool isUnsigned, RegF64 temp) {
 # if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
@@ -3731,10 +3734,9 @@ class BaseCompiler final : public BaseCompilerInterface
 #endif // RABALDR_I64_TO_FLOAT_CALLOUT
 
     void cmp64Set(Assembler::Condition cond, RegI64 lhs, RegI64 rhs, RegI32 dest) {
-#if defined(JS_CODEGEN_X64)
-        masm.cmpq(rhs.reg, lhs.reg);
-        masm.emitSet(cond, dest);
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+#ifdef JS_PUNBOX64
+        masm.cmpPtrSet(cond, lhs.reg, rhs.reg, dest);
+#else
         // TODO / OPTIMIZE (Bug 1316822): This is pretty branchy, we should be
         // able to do better.
         Label done, condTrue;
@@ -3744,21 +3746,16 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.bind(&condTrue);
         moveImm32(1, dest);
         masm.bind(&done);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: cmp64Set");
 #endif
     }
 
     void eqz64(RegI64 src, RegI32 dest) {
-#if defined(JS_CODEGEN_X64)
-        masm.cmpq(Imm32(0), src.reg);
-        masm.emitSet(Assembler::Equal, dest);
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+#ifdef JS_PUNBOX64
+        masm.cmpPtrSet(Assembler::Equal, src.reg, ImmWord(0), dest);
+#else
         masm.or32(src.high, src.low);
         masm.cmp32(src.low, Imm32(0));
         masm.emitSet(Assembler::Equal, dest);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: eqz64");
 #endif
     }
 
@@ -5691,15 +5688,10 @@ BaseCompiler::emitTruncateF32ToI64()
 {
     RegF32 r0 = popF32();
     RegI64 x0 = needI64();
-    if (isUnsigned) {
-        RegF64 tmp = needF64();
-        if (!truncateF32ToI64(r0, x0, isUnsigned, tmp))
-            return false;
-        freeF64(tmp);
-    } else {
-        if (!truncateF32ToI64(r0, x0, isUnsigned, RegF64::Invalid()))
-            return false;
-    }
+    RegF64 tmp = needTempForFloatingToI64(isUnsigned);
+    if (!truncateF32ToI64(r0, x0, isUnsigned, tmp))
+        return false;
+    maybeFreeF64(tmp);
     freeF32(r0);
     pushI64(x0);
     return true;
@@ -5711,15 +5703,10 @@ BaseCompiler::emitTruncateF64ToI64()
 {
     RegF64 r0 = popF64();
     RegI64 x0 = needI64();
-    if (isUnsigned) {
-        RegF64 tmp = needF64();
-        if (!truncateF64ToI64(r0, x0, isUnsigned, tmp))
-            return false;
-        freeF64(tmp);
-    } else {
-        if (!truncateF64ToI64(r0, x0, isUnsigned, RegF64::Invalid()))
-            return false;
-    }
+    RegF64 tmp = needTempForFloatingToI64(isUnsigned);
+    if (!truncateF64ToI64(r0, x0, isUnsigned, tmp))
+        return false;
+    maybeFreeF64(tmp);
     freeF64(r0);
     pushI64(x0);
     return true;
@@ -6879,10 +6866,10 @@ BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType 
     bool isUnsigned = callee == SymbolicAddress::TruncateDoubleToUint64;
 
     // The OOL check just succeeds or fails, it does not generate a value.
-    OutOfLineCode* ool = new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(inputVal),
+    OutOfLineCode* ool =
+        addOutOfLineCode(new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(inputVal),
                                                                           isUnsigned,
-                                                                          bytecodeOffset());
-    ool = addOutOfLineCode(ool);
+                                                                          bytecodeOffset()));
     if (!ool)
         return false;
 
