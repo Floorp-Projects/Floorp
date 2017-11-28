@@ -4,7 +4,9 @@ interface HTMLAllCollection {
   readonly attribute unsigned long length;
   getter Element? (unsigned long index);
   getter (HTMLCollection or Element)? namedItem(DOMString name);
-  legacycaller (HTMLCollection or Element)? item(optional DOMString nameOrIndex);
+  (HTMLCollection or Element)? item(optional DOMString nameOrIndex);
+
+  // Note: HTMLAllCollection objects have a custom [[Call]] internal method and an [[IsHTMLDDA]] internal slot.
 };
 
 [Exposed=Window]
@@ -168,7 +170,6 @@ interface HTMLLinkElement : HTMLElement {
   [CEReactions] attribute DOMString type;
   [SameObject, PutForwards=value] readonly attribute DOMTokenList sizes;
   [CEReactions] attribute DOMString referrerPolicy;
-  [CEReactions] attribute USVString scope;
   [CEReactions] attribute DOMString workerType;
   [CEReactions] attribute DOMString updateViaCache;
 
