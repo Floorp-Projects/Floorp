@@ -66,7 +66,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 const TEST_STORE_FILE_NAME = "test-downloads.json";
 
-const TEST_REFERRER_URL = "http://www.example.com/referrer.html";
+// We are testing an HTTPS referrer with HTTP downloads in order to verify that
+// the default policy will not prevent the referrer from being passed around.
+const TEST_REFERRER_URL = "https://www.example.com/referrer.html";
 
 const TEST_DATA_SHORT = "This test string is downloaded.";
 // Generate using gzipCompressString in TelemetryController.jsm.
@@ -225,6 +227,7 @@ function promiseNewDownload(aSourceUrl) {
  *        {
  *          isPrivate: Boolean indicating whether the download originated from a
  *                     private window.
+ *          referrer: String containing the referrer for the download source.
  *          targetFile: nsIFile for the target, or null to use a temporary file.
  *          outPersist: Receives a reference to the created nsIWebBrowserPersist
  *                      instance.
@@ -307,7 +310,8 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
       }).catch(do_report_unexpected_exception);
 
       let isPrivate = aOptions && aOptions.isPrivate;
-
+      let referrer = aOptions && aOptions.referrer ?
+        NetUtil.newURI(aOptions.referrer) : null;
       // Initialize the components so they reference each other.  This will cause
       // the Download object to be created and added to the public downloads.
       transfer.init(sourceURI, NetUtil.newURI(targetFile), null, mimeInfo, null,
@@ -315,8 +319,9 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
       persist.progressListener = transfer;
 
       // Start the actual download process.
-      persist.savePrivacyAwareURI(sourceURI, null, null, 0, null, null, targetFile,
-                                  isPrivate);
+      persist.savePrivacyAwareURI(
+        sourceURI, null, referrer, Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+        null, null, targetFile, isPrivate);
     }).catch(do_report_unexpected_exception);
 
   });
