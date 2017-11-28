@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "دریافت"
   },
+  "downloadOnlyNotice": {
+    "message": "شما در حال حاضر در حالت فقط-دریافت هستید."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots در خصوص چنین موقعیتی به صورت خودکارحالت را به تنها دریافت تبدیل می‌کند:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "در پنجره‌های مرور ناشناس."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "کوکی‌های شخص ثالث غیرفعال شده باشند."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "امکان «هیچ‌وقت تاریخچه ذخیره نشود» فعال باشد."
+  },
   "notificationLinkCopiedTitle": {
     "message": "پیوند کپی شد"
   },
   "notificationLinkCopiedDetails": {
     "message": "لینک عکس شما در کلیپ‌بورد رونوشت شد. $META_KEY$-V را برای جای‌گذاری فشار دهید.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "رونوشت"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "رونوشت تصویر تهیه شد"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "عکس شما در کلیپ‌بورد رونوشت شد. $META_KEY$-V را برای جای‌گذاری فشار دهید.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Letöltés"
   },
+  "downloadOnlyNotice": {
+    "message": "Jelenleg csak letöltési módban van."
+  },
+  "downloadOnlyDetails": {
+    "message": "A Firefox Screenshots ezekben az esetekben automatikusan csak letöltési módba vált:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Privát böngészési ablakban."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Ha a harmadik féltől származó sütik tiltottak."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "A „Soha ne jegyezze meg az előzményeket” engedélyezett."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Hivatkozás másolva"
   },
   "notificationLinkCopiedDetails": {
     "message": "A képernyőképre mutató hivatkozás a vágólapra lett másolva. Nyomjon $META_KEY$-V-t a beillesztéshez.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Másolás"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Képernyőkép másolva"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "A képernyőkép a vágólapra lett másolva. Nyomjon $META_KEY$-V-t a beillesztéshez.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

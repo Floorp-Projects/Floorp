@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Last ned"
   },
+  "downloadOnlyNotice": {
+    "message": "Du er for tiden i nedlastingsmodus."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots endres automatisk til nedlastingsmodus i disse situasjonene:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "I et privat nettlesingsvindu."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Tredjeparts infokapsler er deaktivert."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "«Husk aldri historikk» er aktivert."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Lenke kopiert"
   },
   "notificationLinkCopiedDetails": {
     "message": "Lenken til skjermbildet ditt er kopiert til utklippstavlen. Trykk på $META_KEY$-V for å lime inn.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopier"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Bilde kopiert"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Bildet ditt er kopiert til utklippstavlen. Trykk på $META_KEY$-V for å lime det inn.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

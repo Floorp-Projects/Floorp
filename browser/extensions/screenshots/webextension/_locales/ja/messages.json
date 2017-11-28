@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "ダウンロード"
   },
+  "downloadOnlyNotice": {
+    "message": "ダウンロード専用モードが有効になっています。"
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots は以下のような状況では自動的にダウンロード専用モードへ切り替わります。"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "プライベートブラウジングを使用している場合。"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "サードパーティ Cookie が無効になっている場合。"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "「履歴を一切記憶させない」設定が有効になっている場合。"
+  },
   "notificationLinkCopiedTitle": {
     "message": "リンクをコピーしました"
   },
   "notificationLinkCopiedDetails": {
     "message": "ショットへのリンクがクリップボードへコピーされました。$META_KEY$+V キーで貼り付けられます。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "コピー"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "ショットをコピーしました"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "ショットがクリップボードへコピーされました。$META_KEY$+V キーで貼り付けられます。",
     "placeholders": {
       "meta_key": {
         "content": "$1"

@@ -238,7 +238,7 @@ function mapSet(map, key, value) {
  */
 function mapDelete(map, key) {
   let newMap = mapNew(map);
-  newMap.requests.delete(key);
+  newMap.delete(key);
   return newMap;
 }
 

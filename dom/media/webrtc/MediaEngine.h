@@ -227,14 +227,16 @@ public:
     : mConstraints(aConstraints),
       mPrincipalInfo(aPrincipalInfo),
       mPrefs(aPrefs),
-      mDeviceId(aDeviceId),
-      mId(sId++) {}
+#ifdef MOZ_WEBRTC
+      mId(sId++),
+#endif
+      mDeviceId(aDeviceId) {}
   public:
     NormalizedConstraints mConstraints;
     mozilla::ipc::PrincipalInfo mPrincipalInfo;
     MediaEnginePrefs mPrefs;
-    nsString mDeviceId;
     uint64_t mId;
+    nsString mDeviceId;
   };
 
   /* Release the device back to the system. */

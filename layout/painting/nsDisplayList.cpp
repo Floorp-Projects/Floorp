@@ -8530,7 +8530,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            nullptr,
                            gfx::CompositionOp::OP_OVER,
                            !BackfaceIsHidden(),
-                           mFrame->Extend3DContext());
+                           mFrame->Extend3DContext() && !mNoExtendContext);
 
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc,
                                              aManager, aDisplayListBuilder);

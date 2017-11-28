@@ -91,22 +91,6 @@ browser/features/firefox@getpocket.com/chrome/skin/linux/menuPanel.png
 browser/features/firefox@getpocket.com/chrome/skin/linux/menuPanel@2x.png
 browser/features/firefox@getpocket.com/chrome/skin/windows/menuPanel.png
 browser/features/firefox@getpocket.com/chrome/skin/windows/menuPanel@2x.png
-# flyweb reduction is bug 1313107
-browser/features/flyweb@mozilla.org/chrome/skin/linux/flyweb.css
-browser/features/flyweb@mozilla.org/chrome/skin/linux/icon-16.png
-browser/features/flyweb@mozilla.org/chrome/skin/linux/icon-32-anchored.png
-browser/features/flyweb@mozilla.org/chrome/skin/linux/icon-32.png
-browser/features/flyweb@mozilla.org/chrome/skin/linux/icon-64-anchored.png
-browser/features/flyweb@mozilla.org/chrome/skin/linux/icon-64.png
-browser/features/flyweb@mozilla.org/chrome/skin/osx/flyweb.css
-browser/features/flyweb@mozilla.org/chrome/skin/osx/icon-32-anchored.png
-browser/features/flyweb@mozilla.org/chrome/skin/osx/icon-64-anchored.png
-browser/features/flyweb@mozilla.org/chrome/skin/windows/flyweb.css
-browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-16.png
-browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-32-anchored.png
-browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-32.png
-browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-64-anchored.png
-browser/features/flyweb@mozilla.org/chrome/skin/windows/icon-64.png
 chrome.manifest
 chrome/toolkit/skin/classic/global/autocomplete.css
 chrome/toolkit/skin/classic/global/button.css

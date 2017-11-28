@@ -61,7 +61,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     private final RowItemType[] ACTIVITY_STREAM_SECTIONS =
             { RowItemType.TOP_PANEL, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE, RowItemType.LEARN_MORE_LINK };
     public static final int MAX_TOP_STORIES = 3;
-    private static final String LINK_MORE_POCKET = "https://getpocket.cdn.mozilla.net/explore/trending?src=ff_android";
+    private static final String LINK_MORE_POCKET = "https://getpocket.com/explore/trending?src=ff_android&cdn=0";
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
     private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;

@@ -696,13 +696,13 @@ function test3D()
 
 function testParsing()
 {
-  var m = new DOMMatrix("translate(10, 20) scale(.5, 2) rotate(45)");
+  var m = new DOMMatrix("translate(10px, 20px) scale(.5, 2) rotate(45deg)");
   var m2 = new DOMMatrix();
   m2.translateSelf(10, 20).scaleNonUniformSelf(.5,2).rotateSelf(45);
   ok(CompareDOMMatrix(m2, m), "string parsing didn't match");
 
   m = new DOMMatrix();
-  m.setMatrixValue("translate(10, 20) scale(.5, 2) rotate(45)");
+  m.setMatrixValue("translate(10px, 20px) scale(.5, 2) rotate(45deg)");
   ok(CompareDOMMatrix(m2, m), "string parsing didn't match");
 }
 

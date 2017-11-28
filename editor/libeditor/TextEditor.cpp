@@ -511,7 +511,17 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
 }
 
 
-NS_IMETHODIMP
+already_AddRefed<Element>
+TextEditor::CreateBR(nsINode* aNode,
+                     int32_t aOffset,
+                     EDirection aSelect)
+{
+  nsCOMPtr<nsINode> parent = aNode;
+  int32_t offset = aOffset;
+  return CreateBRImpl(address_of(parent), &offset, aSelect);
+}
+
+nsresult
 TextEditor::CreateBR(nsIDOMNode* aNode,
                      int32_t aOffset,
                      nsCOMPtr<nsIDOMNode>* outBRNode,

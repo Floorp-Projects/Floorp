@@ -37,8 +37,6 @@
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
-#include "mozilla/dom/FlyWebPublishedServer.h"
-#include "mozilla/dom/FlyWebService.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
@@ -1372,41 +1370,6 @@ Navigator::GetBattery(ErrorResult& aRv)
   mBatteryPromise->MaybeResolve(mBatteryManager);
 
   return mBatteryPromise;
-}
-
-already_AddRefed<Promise>
-Navigator::PublishServer(const nsAString& aName,
-                         const FlyWebPublishOptions& aOptions,
-                         ErrorResult& aRv)
-{
-  RefPtr<FlyWebService> service = FlyWebService::GetOrCreate();
-  if (!service) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  RefPtr<FlyWebPublishPromise> mozPromise =
-    service->PublishServer(aName, aOptions, mWindow);
-  MOZ_ASSERT(mozPromise);
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  ErrorResult result;
-  RefPtr<Promise> domPromise = Promise::Create(global, result);
-  if (result.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  mozPromise->Then(global->AbstractMainThreadFor(TaskCategory::Other),
-                   __func__,
-                   [domPromise] (FlyWebPublishedServer* aServer) {
-                     domPromise->MaybeResolve(aServer);
-                   },
-                   [domPromise] (nsresult aStatus) {
-                     domPromise->MaybeReject(aStatus);
-                   });
-
-  return domPromise.forget();
 }
 
 already_AddRefed<LegacyMozTCPSocket>

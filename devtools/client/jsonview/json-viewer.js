@@ -48,7 +48,7 @@ define(function (require, exports, module) {
    */
   input.actions = {
     onCopyJson: function () {
-      dispatchEvent("copy", input.prettified ? input.jsonPretty : input.jsonText);
+      copyString(input.prettified ? input.jsonPretty : input.jsonText);
     },
 
     onSaveJson: function () {
@@ -59,7 +59,25 @@ define(function (require, exports, module) {
     },
 
     onCopyHeaders: function () {
-      dispatchEvent("copy-headers", input.headers);
+      let value = "";
+      let isWinNT = document.documentElement.getAttribute("platform") === "win";
+      let eol = isWinNT ? "\r\n" : "\n";
+
+      let responseHeaders = input.headers.response;
+      for (let i = 0; i < responseHeaders.length; i++) {
+        let header = responseHeaders[i];
+        value += header.name + ": " + header.value + eol;
+      }
+
+      value += eol;
+
+      let requestHeaders = input.headers.request;
+      for (let i = 0; i < requestHeaders.length; i++) {
+        let header = requestHeaders[i];
+        value += header.name + ": " + header.value + eol;
+      }
+
+      copyString(value);
     },
 
     onSearch: function (value) {
@@ -83,6 +101,20 @@ define(function (require, exports, module) {
       input.prettified = !input.prettified;
     },
   };
+
+  /**
+   * Helper for copying a string to the clipboard.
+   *
+   * @param {String} string The text to be copied.
+   */
+  function copyString(string) {
+    document.addEventListener("copy", event => {
+      event.clipboardData.setData("text/plain", string);
+      event.preventDefault();
+    }, {once: true});
+
+    document.execCommand("copy", false, null);
+  }
 
   /**
    * Helper for dispatching an event. It's handled in chrome scope.
