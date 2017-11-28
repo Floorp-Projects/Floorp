@@ -145,6 +145,17 @@ typedef unsigned BitSize;
 enum class UseABI { Wasm, System };
 enum class InterModule { False = false, True = true };
 
+#if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_NONE) || \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+# define RABALDR_SCRATCH_I32
+# define RABALDR_SCRATCH_F32
+# define RABALDR_SCRATCH_F64
+
+static const Register RabaldrScratchI32 = Register::Invalid();
+static const FloatRegister RabaldrScratchF32 = InvalidFloatReg;
+static const FloatRegister RabaldrScratchF64 = InvalidFloatReg;
+#endif
+
 #ifdef JS_CODEGEN_X86
 // The selection of EBX here steps gingerly around: the need for EDX
 // to be allocatable for multiply/divide; ECX to be allocatable for
@@ -152,10 +163,12 @@ enum class InterModule { False = false, True = true };
 // EBX not being one of the WasmTableCall registers; and needing a
 // temp register for load/store that has a single-byte persona.
 //
-// The compiler assumes that ScratchRegX86 has a single-byte persona.
-// Code for 8-byte atomic operations assumes that ScratchRegX86 is in
-// fact ebx.
-static const Register ScratchRegX86 = ebx;
+// The compiler assumes that RabaldrScratchI32 has a single-byte
+// persona.  Code for 8-byte atomic operations assumes that
+// RabaldrScratchI32 is in fact ebx.
+
+# define RABALDR_SCRATCH_I32
+static const Register RabaldrScratchI32 = ebx;
 
 # define RABALDR_INT_DIV_I64_CALLOUT
 #endif
@@ -170,7 +183,9 @@ static const Register FuncPtrCallTemp = CallTempReg1;
 // the regular scratch register(s) pretty liberally.  We could
 // work around that in several cases but the mess does not seem
 // worth it yet.  CallTempReg2 seems safe.
-static const Register ScratchRegARM = CallTempReg2;
+
+# define RABALDR_SCRATCH_I32
+static const Register RabaldrScratchI32 = CallTempReg2;
 
 # define RABALDR_INT_DIV_I64_CALLOUT
 # define RABALDR_I64_TO_FLOAT_CALLOUT
@@ -324,7 +339,7 @@ class BaseRegAlloc
 #ifdef DEBUG
     AllocatableGeneralRegisterSet allGPR;       // The registers available to the compiler
     AllocatableFloatRegisterSet   allFPU;       //   after removing ScratchReg, HeapReg, etc
-    bool                          scratchTaken;
+    uint32_t                      scratchTaken;
 #endif
 #ifdef JS_CODEGEN_X86
     AllocatableGeneralRegisterSet singleByteRegs;
@@ -454,7 +469,7 @@ class BaseRegAlloc
       , availGPR(GeneralRegisterSet::All())
       , availFPU(FloatRegisterSet::All())
 #ifdef DEBUG
-      , scratchTaken(false)
+      , scratchTaken(0)
 #endif
 #ifdef JS_CODEGEN_X86
       , singleByteRegs(GeneralRegisterSet(Registers::SingleByteRegs))
@@ -462,10 +477,19 @@ class BaseRegAlloc
     {
         RegisterAllocator::takeWasmRegisters(availGPR);
 
-#if defined(JS_CODEGEN_ARM)
-        availGPR.take(ScratchRegARM);
-#elif defined(JS_CODEGEN_X86)
-        availGPR.take(ScratchRegX86);
+        // Allocate any private scratch registers.  For now we assume none of
+        // these registers alias.
+#if defined(RABALDR_SCRATCH_I32)
+        if (RabaldrScratchI32 != RegI32::Invalid())
+            availGPR.take(RabaldrScratchI32);
+#endif
+#if defined(RABALDR_SCRATCH_F32)
+        if (RabaldrScratchF32 != RegF32::Invalid())
+            availFPU.take(RabaldrScratchF32);
+#endif
+#if defined(RABALDR_SCRATCH_F64)
+        if (RabaldrScratchF64 != RegF64::Invalid())
+            availFPU.take(RabaldrScratchF64);
 #endif
 
 #ifdef DEBUG
@@ -474,13 +498,22 @@ class BaseRegAlloc
 #endif
     }
 
+    enum class ScratchKind {
+        I32 = 1,
+        F32 = 2,
+        F64 = 4
+    };
+
 #ifdef DEBUG
-    bool scratchRegisterTaken() const {
-        return scratchTaken;
+    bool isScratchRegisterTaken(ScratchKind s) const {
+        return (scratchTaken & uint32_t(s)) != 0;
     }
 
-    void setScratchRegisterTaken(bool state) {
-        scratchTaken = state;
+    void setScratchRegisterTaken(ScratchKind s, bool state) {
+        if (state)
+            scratchTaken |= uint32_t(s);
+        else
+            scratchTaken &= ~uint32_t(s);
     }
 #endif
 
@@ -632,82 +665,80 @@ class BaseRegAlloc
 #endif
 };
 
-// ScratchRegister abstractions.  We define our own, deferring to the platform's
-// when possible.
+// Scratch register abstractions.
+//
+// We define our own scratch registers when the platform doesn't provide what we
+// need.  A notable use case is that we will need a private scratch register
+// when the platform masm uses its scratch register very frequently (eg, ARM).
 
-#if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_NONE) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-class ScratchDoubleScope
+class BaseScratchRegister
 {
-  public:
-    explicit ScratchDoubleScope(MacroAssembler& m) {}
-    operator FloatRegister() const {
-        MOZ_CRASH("BaseCompiler platform hook - ScratchDoubleScope");
-    }
-};
+#ifdef DEBUG
+    BaseRegAlloc& ra;
+    BaseRegAlloc::ScratchKind s;
 
-class ScratchFloat32Scope
-{
   public:
-    explicit ScratchFloat32Scope(MacroAssembler& m) {}
-    operator FloatRegister() const {
-        MOZ_CRASH("BaseCompiler platform hook - ScratchFloat32Scope");
+    explicit BaseScratchRegister(BaseRegAlloc& ra, BaseRegAlloc::ScratchKind s)
+      : ra(ra),
+        s(s)
+    {
+        MOZ_ASSERT(!ra.isScratchRegisterTaken(s));
+        ra.setScratchRegisterTaken(s, true);
     }
-};
-
-class ScratchRegisterScope
-{
+    ~BaseScratchRegister() {
+        MOZ_ASSERT(ra.isScratchRegisterTaken(s));
+        ra.setScratchRegisterTaken(s, false);
+    }
+#else
   public:
-    explicit ScratchRegisterScope(MacroAssembler& m) {}
-    operator Register() const {
-        MOZ_CRASH("BaseCompiler platform hook - ScratchRegisterScope");
-    }
-};
+    explicit BaseScratchRegister(BaseRegAlloc& ra, BaseRegAlloc::ScratchKind s) {}
 #endif
+};
 
+#ifdef RABALDR_SCRATCH_F64
+class ScratchF64 : public BaseScratchRegister
+{
+  public:
+    explicit ScratchF64(BaseRegAlloc& ra)
+      : BaseScratchRegister(ra, BaseRegAlloc::ScratchKind::F64)
+    {}
+    operator RegF64() const { return RegF64(RabaldrScratchF64); }
+};
+#else
 class ScratchF64 : public ScratchDoubleScope
 {
   public:
     explicit ScratchF64(MacroAssembler& m) : ScratchDoubleScope(m) {}
     operator RegF64() const { return RegF64(FloatRegister(*this)); }
 };
+#endif
 
+#ifdef RABALDR_SCRATCH_F32
+class ScratchF32 : public BaseScratchRegister
+{
+  public:
+    explicit ScratchF32(BaseRegAlloc& ra)
+      : BaseScratchRegister(ra, BaseRegAlloc::ScratchKind::F32)
+    {}
+    operator RegF32() const { return RegF32(RabaldrScratchF32); }
+};
+#else
 class ScratchF32 : public ScratchFloat32Scope
 {
   public:
     explicit ScratchF32(MacroAssembler& m) : ScratchFloat32Scope(m) {}
     operator RegF32() const { return RegF32(FloatRegister(*this)); }
 };
+#endif
 
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-// On x86 we do not have a dedicated masm scratch register; on ARM, we need one
-// in addition to the one defined by masm because masm uses it too often.
-class ScratchI32
+#ifdef RABALDR_SCRATCH_I32
+class ScratchI32 : public BaseScratchRegister
 {
-# ifdef DEBUG
-    BaseRegAlloc& ra;
   public:
-    explicit ScratchI32(BaseRegAlloc& ra) : ra(ra)
-    {
-        MOZ_ASSERT(!ra.scratchRegisterTaken());
-        ra.setScratchRegisterTaken(true);
-    }
-    ~ScratchI32() {
-        MOZ_ASSERT(ra.scratchRegisterTaken());
-        ra.setScratchRegisterTaken(false);
-    }
-# else
-  public:
-    explicit ScratchI32(BaseRegAlloc&) {}
-# endif
-
-    operator RegI32() const {
-# ifdef JS_CODEGEN_X86
-        return RegI32(ScratchRegX86);
-# else
-        return RegI32(ScratchRegARM);
-# endif
-    }
+    explicit ScratchI32(BaseRegAlloc& ra)
+      : BaseScratchRegister(ra, BaseRegAlloc::ScratchKind::I32)
+    {}
+    operator RegI32() const { return RegI32(RabaldrScratchI32); }
 };
 #else
 class ScratchI32 : public ScratchRegisterScope
@@ -726,6 +757,10 @@ class ScratchI32 : public ScratchRegisterScope
 // the ScratchEBX alias, we document that at that point we require the
 // scratch register to be EBX.
 using ScratchEBX = ScratchI32;
+
+// ScratchI8 is a mnemonic device: For some ops we need a register with a
+// byte subregister.
+using ScratchI8 = ScratchI32;
 #endif
 
 // The stack frame.
@@ -3979,13 +4014,14 @@ class BaseCompiler final : public BaseCompilerInterface
             MOZ_ASSERT(dest.i64() == abiReturnRegI64);
             masm.wasmLoadI64(*access, srcAddr, dest.i64());
         } else {
+            ScratchI8 scratch(*this);
             bool byteRegConflict = access->byteSize() == 1 && !ra.isSingleByteI32(dest.i32());
-            AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
+            AnyRegister out = byteRegConflict ? AnyRegister(scratch) : dest.any();
 
             masm.wasmLoad(*access, srcAddr, out);
 
             if (byteRegConflict)
-                masm.mov(ScratchRegX86, dest.i32());
+                masm.mov(scratch, dest.i32());
         }
 #elif defined(JS_CODEGEN_ARM)
         if (IsUnaligned(*access)) {
@@ -4047,16 +4083,17 @@ class BaseCompiler final : public BaseCompilerInterface
             masm.wasmStoreI64(*access, src.i64(), dstAddr);
         } else {
             AnyRegister value;
+            ScratchI8 scratch(*this);
             if (src.tag == AnyReg::I64) {
                 if (access->byteSize() == 1 && !ra.isSingleByteI32(src.i64().low)) {
-                    masm.mov(src.i64().low, ScratchRegX86);
-                    value = AnyRegister(ScratchRegX86);
+                    masm.mov(src.i64().low, scratch);
+                    value = AnyRegister(scratch);
                 } else {
                     value = AnyRegister(src.i64().low);
                 }
             } else if (access->byteSize() == 1 && !ra.isSingleByteI32(src.i32())) {
-                masm.mov(src.i32(), ScratchRegX86);
-                value = AnyRegister(ScratchRegX86);
+                masm.mov(src.i32(), scratch);
+                value = AnyRegister(scratch);
             } else {
                 value = src.any();
             }
@@ -4192,7 +4229,7 @@ class BaseCompiler final : public BaseCompilerInterface
 #ifdef JS_CODEGEN_X86
             // The temp, if used, must be a byte register.
             MOZ_ASSERT(tmp.isInvalid());
-            ScratchEBX scratch(*this);
+            ScratchI8 scratch(*this);
             if (op != AtomicFetchAddOp && op != AtomicFetchSubOp)
                 tmp = scratch;
 #endif
@@ -4274,7 +4311,7 @@ class BaseCompiler final : public BaseCompilerInterface
         switch (access->type()) {
           case Scalar::Uint8: {
 #if defined(JS_CODEGEN_X86)
-            ScratchEBX scratch(*this);
+            ScratchI8 scratch(*this);
             MOZ_ASSERT(rd == specific_eax);
             if (!ra.isSingleByteI32(rnew)) {
                 // The replacement value must have a byte persona.
@@ -4308,7 +4345,7 @@ class BaseCompiler final : public BaseCompilerInterface
           case Scalar::Uint8: {
 #if defined(JS_CODEGEN_X86)
             if (!ra.isSingleByteI32(rd)) {
-                ScratchEBX scratch(*this);
+                ScratchI8 scratch(*this);
                 // The output register must have a byte persona.
                 masm.atomicExchange8ZeroExtend(srcAddr, rv, scratch);
                 masm.movl(scratch, rd);
