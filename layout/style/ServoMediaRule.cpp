@@ -24,6 +24,9 @@ ServoMediaRule::ServoMediaRule(RefPtr<RawServoMediaRule> aRawRule,
 
 ServoMediaRule::~ServoMediaRule()
 {
+  if (mMediaList) {
+    mMediaList->SetStyleSheet(nullptr);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(ServoMediaRule, CSSMediaRule)
@@ -33,8 +36,18 @@ NS_IMPL_RELEASE_INHERITED(ServoMediaRule, CSSMediaRule)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoMediaRule)
 NS_INTERFACE_MAP_END_INHERITING(CSSMediaRule)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServoMediaRule, CSSMediaRule,
-                                   mMediaList)
+NS_IMPL_CYCLE_COLLECTION_CLASS(ServoMediaRule)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServoMediaRule, CSSMediaRule)
+  if (tmp->mMediaList) {
+    tmp->mMediaList->SetStyleSheet(nullptr);
+    tmp->mMediaList = nullptr;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoMediaRule, CSSMediaRule)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 /* virtual */ already_AddRefed<css::Rule>
 ServoMediaRule::Clone() const
