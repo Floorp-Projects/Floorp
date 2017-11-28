@@ -110,7 +110,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget()
   width  /= TWIPS_PER_POINT_FLOAT;
   height /= TWIPS_PER_POINT_FLOAT;
 
-  DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", mPath, width, height));
+  DO_PR_DEBUG_LOG(("Making PrintTarget: width = %f, height = %f\n", width, height));
   nsresult rv;
 
   // We shouldn't be attempting to get a surface if we've already got a spool
