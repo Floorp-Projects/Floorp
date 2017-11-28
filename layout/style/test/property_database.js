@@ -6399,6 +6399,15 @@ if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.shape-outside.enabled")) {
+  gCSSProperties["shape-image-threshold"] = {
+    domProp: "shapeImageThreshold",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0", "0.0000", "-3", ],
+    other_values: [ "0.4", "1", "17", "397.376", "3e1", "3e+1", "3e-1", "3e0", "3e+0", "3e-0" ],
+    invalid_values: [ "0px", "1px", "20%", "default", "auto" ]
+  };
+
   gCSSProperties["shape-outside"] = {
     domProp: "shapeOutside",
     inherited: false,
