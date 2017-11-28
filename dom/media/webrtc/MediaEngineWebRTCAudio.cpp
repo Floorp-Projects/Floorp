@@ -904,7 +904,8 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
       // We already have planar audio data of the right format. Insert into the
       // MSG.
       MOZ_ASSERT(processedOutputChannelPointers.Length() == aChannels);
-      segment.AppendFrames(buffer.forget(),
+      RefPtr<SharedBuffer> other = buffer;
+      segment.AppendFrames(other.forget(),
                            processedOutputChannelPointersConst,
                            mPacketizer->PacketSize(),
                            mPrincipalHandles[i]);
