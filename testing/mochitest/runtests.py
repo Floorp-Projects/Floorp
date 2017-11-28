@@ -2003,20 +2003,21 @@ toolbar#nav-bar {
         """
         rv = []
         if parent_pid and HAVE_PSUTIL:
-            self.log.info("Determining child pids from psutil")
+            self.log.info("Determining child pids from psutil...")
             try:
                 rv = [p.pid for p in psutil.Process(parent_pid).children()]
+                self.log.info(str(rv))
             except psutil.NoSuchProcess:
                 self.log.warning("Failed to lookup children of pid %d" % parent_pid)
-            return rv
 
+        rv = set(rv)
         pid_re = re.compile(r'==> process \d+ launched child process (\d+)')
         with open(process_log) as fd:
             for line in fd:
                 self.log.info(line.rstrip())
                 m = pid_re.search(line)
                 if m:
-                    rv.append(int(m.group(1)))
+                    rv.add(int(m.group(1)))
         return rv
 
     def checkForZombies(self, processLog, utilityPath, debuggerInfo):
@@ -2254,6 +2255,7 @@ toolbar#nav-bar {
             # https://github.com/mozilla/mozbase/blob/master/mozrunner/mozrunner/runner.py#L61
             # until bug 913970 is fixed regarding mozrunner `wait` not returning status
             # see https://bugzilla.mozilla.org/show_bug.cgi?id=913970
+            self.log.info("runtests.py | Waiting for browser...")
             status = proc.wait()
             if status is None:
                 self.log.warning("runtests.py | Failed to get app exit code - running/crashed?")
