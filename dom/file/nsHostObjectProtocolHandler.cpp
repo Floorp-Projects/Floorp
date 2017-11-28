@@ -7,7 +7,6 @@
 #include "nsHostObjectProtocolHandler.h"
 
 #include "DOMMediaStream.h"
-#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Exceptions.h"
@@ -824,35 +823,23 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(uri);
-  if (!uriPrinc) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = uriPrinc->GetPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
 #ifdef DEBUG
-  // Info can be null, in case this blob URL has been revoked already.
   DataInfo* info = GetDataInfoFromURI(uri);
-  MOZ_ASSERT_IF(info, info->mPrincipal == principal, "Wrong principal!");
+
+  // Info can be null, in case this blob URL has been revoked already.
+  if (info) {
+    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(uri);
+    nsCOMPtr<nsIPrincipal> principal;
+    uriPrinc->GetPrincipal(getter_AddRefs(principal));
+    MOZ_ASSERT(info->mPrincipal == principal, "Wrong principal!");
+  }
 #endif
 
-  // We want to be sure that we stop the creation of the channel if the blob URL
-  // is copy-and-pasted on a different context (ex. private browsing or
-  // containers).
-  if (aLoadInfo &&
-      !ChromeUtils::IsOriginAttributesEqualIgnoringFPD(aLoadInfo->GetOriginAttributes(),
-                                                         BasePrincipal::Cast(principal)->OriginAttributesRef())) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-  ErrorResult error;
+  ErrorResult rv;
   nsCOMPtr<nsIInputStream> stream;
-  blobImpl->CreateInputStream(getter_AddRefs(stream), error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+  blobImpl->CreateInputStream(getter_AddRefs(stream), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   nsAutoString contentType;
@@ -865,8 +852,8 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
                                         NS_ConvertUTF16toUTF8(contentType),
                                         EmptyCString(), // aContentCharset
                                         aLoadInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   if (blobImpl->IsFile()) {
@@ -875,9 +862,9 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     channel->SetContentDispositionFilename(filename);
   }
 
-  uint64_t size = blobImpl->GetSize(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+  uint64_t size = blobImpl->GetSize(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   channel->SetOriginalURI(uri);
