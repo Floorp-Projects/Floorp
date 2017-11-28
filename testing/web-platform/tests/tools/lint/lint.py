@@ -56,7 +56,7 @@ For example, to make the lint tool ignore all '%s'
 errors in the %s file,
 you could add the following line to the lint.whitelist file.
 
-%s:%s"""
+%s: %s"""
 
 def all_filesystem_paths(repo_root):
     path_filter = PathFilter(repo_root, extras=[".git/*"])

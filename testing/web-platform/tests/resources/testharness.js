@@ -2084,11 +2084,7 @@ policies and contribution forms [3].
         var message_port;
 
         if (is_service_worker(worker)) {
-            // Microsoft Edge's implementation of ServiceWorker doesn't support MessagePort yet.
-            // Feature detection isn't a straightforward option here; it's only possible in the
-            // worker's script context.
-            var isMicrosoftEdgeBrowser = navigator.userAgent.includes("Edge");
-            if (window.MessageChannel && !isMicrosoftEdgeBrowser) {
+            if (window.MessageChannel) {
                 // The ServiceWorker's implicit MessagePort is currently not
                 // reliably accessible from the ServiceWorkerGlobalScope due to
                 // Blink setting MessageEvent.source to null for messages sent
