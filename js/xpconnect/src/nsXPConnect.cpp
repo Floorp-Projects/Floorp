@@ -392,13 +392,6 @@ nsXPConnect::GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info)
   return XPTInterfaceInfoManager::GetSingleton()->GetInfoForIID(aIID, info);
 }
 
-nsresult
-nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
-{
-  nsresult rv = XPTInterfaceInfoManager::GetSingleton()->GetInfoForName(name, info);
-  return NS_FAILED(rv) ? NS_OK : NS_ERROR_NO_INTERFACE;
-}
-
 void
 xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration)
 {
