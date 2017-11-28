@@ -257,7 +257,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6e617423c23c"
+        "revision": "4bc4143f714f"
     }, 
     "es-ES": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0ef2cf2c13e7"
+        "revision": "eca93cd2539e"
     }, 
     "ja": {
         "platforms": [
