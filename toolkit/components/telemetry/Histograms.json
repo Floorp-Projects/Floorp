@@ -13939,7 +13939,27 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "description": "Fraction of restyles on a single page that were parallel",
+    "description": "Percentage of restyles on a single page that were parallel",
+    "bug_numbers": [1421195]
+  },
+  "STYLO_PARALLEL_RESTYLE_FRACTION_WEIGHTED_TRAVERSED": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["manish@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Percentage of restyles on a single page that were parallel, weighted by elements traversed",
+    "bug_numbers": [1421195]
+  },
+  "STYLO_PARALLEL_RESTYLE_FRACTION_WEIGHTED_STYLED": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["manish@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Percentage of restyles on a single page that were parallel, weighted by elements styled",
     "bug_numbers": [1421195]
   }
 }
