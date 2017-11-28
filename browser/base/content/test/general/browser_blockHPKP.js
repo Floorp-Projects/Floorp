@@ -23,8 +23,6 @@
 
 const gSSService = Cc["@mozilla.org/ssservice;1"]
                      .getService(Ci.nsISiteSecurityService);
-const gIOService = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService);
 
 const kPinningDomain = "include-subdomains.pinning-dynamic.example.com";
 const khpkpPinninEnablePref = "security.cert_pinning.process_headers_from_non_builtin_roots";
@@ -41,7 +39,7 @@ function test() {
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(kpkpEnforcementPref);
     Services.prefs.clearUserPref(khpkpPinninEnablePref);
-    let uri = gIOService.newURI("https://" + kPinningDomain);
+    let uri = Services.io.newURI("https://" + kPinningDomain);
     gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
   });
   whenNewTabLoaded(window, loadPinningPage);

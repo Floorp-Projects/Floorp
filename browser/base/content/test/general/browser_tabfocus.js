@@ -63,9 +63,6 @@ function getFocusedElementForBrowser(browser, dontCheckExtraFocus = false) {
 }
 
 function focusInChild() {
-  var contentFM = Components.classes["@mozilla.org/focus-manager;1"].
-                      getService(Components.interfaces.nsIFocusManager);
-
   function getWindowDocId(target) {
     return (String(target.location).indexOf("1") >= 0) ? "window1" : "window2";
   }
@@ -94,24 +91,24 @@ function focusInChild() {
   /* eslint-disable mozilla/no-cpows-in-tests */
   addMessageListener("Browser:GetFocusedElement", function getFocusedElement(message) {
     var focusedWindow = {};
-    var node = contentFM.getFocusedElementForWindow(content, false, focusedWindow);
+    var node = Services.focus.getFocusedElementForWindow(content, false, focusedWindow);
     var details = "Focus is " + (node ? node.id : "<none>");
 
     /* Check focus manager properties. Add an error onto the string if they are
        not what is expected which will cause matching to fail in the parent process. */
     let doc = content.document;
     if (!message.data.dontCheckExtraFocus) {
-      if (contentFM.focusedElement != node) {
+      if (Services.focus.focusedElement != node) {
         details += "<ERROR: focusedElement doesn't match>";
       }
-      if (contentFM.focusedWindow && contentFM.focusedWindow != content) {
+      if (Services.focus.focusedWindow && Services.focus.focusedWindow != content) {
         details += "<ERROR: focusedWindow doesn't match>";
       }
-      if ((contentFM.focusedWindow == content) != doc.hasFocus()) {
+      if ((Services.focus.focusedWindow == content) != doc.hasFocus()) {
         details += "<ERROR: child hasFocus() is not correct>";
       }
-      if ((contentFM.focusedElement && doc.activeElement != contentFM.focusedElement) ||
-          (!contentFM.focusedElement && doc.activeElement != doc.body)) {
+      if ((Services.focus.focusedElement && doc.activeElement != Services.focus.focusedElement) ||
+          (!Services.focus.focusedElement && doc.activeElement != doc.body)) {
         details += "<ERROR: child activeElement is not correct>";
       }
     }

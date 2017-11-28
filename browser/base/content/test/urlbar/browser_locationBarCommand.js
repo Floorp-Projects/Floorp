@@ -210,8 +210,6 @@ function promiseCheckChildNoFocusedElement(browser) {
   }
 
   return ContentTask.spawn(browser, { }, async function() {
-    const fm = Components.classes["@mozilla.org/focus-manager;1"].
-                          getService(Components.interfaces.nsIFocusManager);
-    Assert.equal(fm.focusedElement, null, "There should be no focused element");
+    Assert.equal(Services.focus.focusedElement, null, "There should be no focused element");
   });
 }

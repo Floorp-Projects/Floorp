@@ -237,17 +237,14 @@ appUpdater.prototype =
       return;
     }
 
-    let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
-                     getService(Components.interfaces.nsIAppStartup);
-
     // If already in safe mode restart in safe mode (bug 327119)
     if (Services.appinfo.inSafeMode) {
-      appStartup.restartInSafeMode(Components.interfaces.nsIAppStartup.eAttemptQuit);
+      Services.startup.restartInSafeMode(Components.interfaces.nsIAppStartup.eAttemptQuit);
       return;
     }
 
-    appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
-                    Components.interfaces.nsIAppStartup.eRestart);
+    Services.startup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                          Components.interfaces.nsIAppStartup.eRestart);
   },
 
   /**

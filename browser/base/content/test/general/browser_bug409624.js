@@ -23,16 +23,12 @@ add_task(async function test() {
                        });
   });
 
-  let prefService = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefService);
-
   let tempScope = {};
-  Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
-                                             .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
+  Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
   let Sanitizer = tempScope.Sanitizer;
   let s = new Sanitizer();
   s.prefDomain = "privacy.cpd.";
-  let prefBranch = prefService.getBranch(s.prefDomain);
+  let prefBranch = Services.prefs.getBranch(s.prefDomain);
 
   prefBranch.setBoolPref("cache", false);
   prefBranch.setBoolPref("cookies", false);
