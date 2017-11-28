@@ -924,17 +924,17 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
   }
 
   nsAutoCString asciiHost;
-  nsAutoCString host;
+  nsAutoCString displayHost;
 
-  bool isValidAsciiHost =
+  bool isValidHost =
     aFixupInfo->mFixedURI &&
     NS_SUCCEEDED(aFixupInfo->mFixedURI->GetAsciiHost(asciiHost)) &&
     !asciiHost.IsEmpty();
 
-  bool isValidHost =
+  bool isValidDisplayHost =
     aFixupInfo->mFixedURI &&
-    NS_SUCCEEDED(aFixupInfo->mFixedURI->GetHost(host)) &&
-    !host.IsEmpty();
+    NS_SUCCEEDED(aFixupInfo->mFixedURI->GetDisplayHost(displayHost)) &&
+    !displayHost.IsEmpty();
 
   nsresult rv = NS_OK;
   // We do keyword lookups if a space or quote preceded the dot, colon
@@ -946,10 +946,10 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
       firstQMarkLoc == 0) {
     rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo,
                                    aPostData);
-    // ... or when the host is the same as asciiHost and there are no
+    // ... or when the asciiHost is the same as displayHost and there are no
     // characters from [a-z][A-Z]
-  } else if (isValidAsciiHost && isValidHost && !hasAsciiAlpha &&
-             host.EqualsIgnoreCase(asciiHost.get())) {
+  } else if (isValidHost && isValidDisplayHost && !hasAsciiAlpha &&
+             asciiHost.EqualsIgnoreCase(displayHost.get())) {
     if (!sDNSFirstForSingleWords) {
       rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo,
                                      aPostData);
@@ -962,7 +962,7 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
                                 firstDotLoc == aURIString.Length() - 1))) &&
            firstColonLoc == uint32_t(kNotFound) &&
            firstQMarkLoc == uint32_t(kNotFound)) {
-    if (isValidAsciiHost && IsDomainWhitelisted(asciiHost, firstDotLoc)) {
+    if (isValidHost && IsDomainWhitelisted(asciiHost, firstDotLoc)) {
       return NS_OK;
     }
 
@@ -970,7 +970,7 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
     // this is a valid host:
     if (firstDotLoc == uint32_t(kNotFound) &&
         lastSlashLoc != uint32_t(kNotFound) &&
-        hasAsciiAlpha && isValidAsciiHost) {
+        hasAsciiAlpha && isValidHost) {
       return NS_OK;
     }
 
