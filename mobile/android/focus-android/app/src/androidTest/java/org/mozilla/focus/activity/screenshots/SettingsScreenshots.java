@@ -20,7 +20,6 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.activity.TestHelper;
 import org.mozilla.focus.activity.helpers.MainActivityFirstrunTestRule;
-import org.mozilla.focus.utils.AppConstants;
 
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
@@ -82,26 +81,24 @@ public class SettingsScreenshots extends ScreenshotTest {
         TestHelper.settingsHeading.waitUntilGone(waitingTime);
         Screengrab.screenshot("SearchEngine_Selection");
 
-        if (AppConstants.FLAG_MANUAL_SEARCH_ENGINE) {
-            /* Remove Search Engine page */
-            openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getContext());
-            Screengrab.screenshot("SearchEngine_Search_Engine_Menu");
-            // Menu items don't have ids, so we have to match by text
-            onView(withText(R.string.preference_search_remove))
-                    .perform(click());
+        /* Remove Search Engine page */
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getContext());
+        Screengrab.screenshot("SearchEngine_Search_Engine_Menu");
+        // Menu items don't have ids, so we have to match by text
+        onView(withText(R.string.preference_search_remove))
+                .perform(click());
 
-            assertToolbarMatchesText(R.string.preference_search_remove_title);
-            Screengrab.screenshot("SearchEngine_Remove_Search_Engines");
-            TestHelper.pressBackKey();
+        assertToolbarMatchesText(R.string.preference_search_remove_title);
+        Screengrab.screenshot("SearchEngine_Remove_Search_Engines");
+        TestHelper.pressBackKey();
 
-            /* Manual Search Engine page */
-            final String addEngineLabel = getString(R.string.preference_search_add2);
-            onData(withTitleText(addEngineLabel))
-                    .perform(click());
-            TestHelper.settingsHeading.waitUntilGone(waitingTime);
-            Screengrab.screenshot("SearchEngine_Add_Search_Engine");
-            TestHelper.pressBackKey();
-        }
+        /* Manual Search Engine page */
+        final String addEngineLabel = getString(R.string.preference_search_add2);
+        onData(withTitleText(addEngineLabel))
+                .perform(click());
+        TestHelper.settingsHeading.waitUntilGone(waitingTime);
+        Screengrab.screenshot("SearchEngine_Add_Search_Engine");
+        TestHelper.pressBackKey();
 
         /* scroll down */
         TestHelper.pressBackKey();
