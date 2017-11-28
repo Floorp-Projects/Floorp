@@ -128,13 +128,7 @@ nsHttpConnection::~nsHttpConnection()
     if ((mFastOpenStatus != TFO_FAILED) &&
         (mFastOpenStatus != TFO_HTTP) &&
         ((mFastOpenStatus != TFO_NOT_TRIED) ||
-#if defined(_WIN64) && defined(WIN95)
-         (gHttpHandler->UseFastOpen() &&
-          gSocketTransportService &&
-          gSocketTransportService->HasFileDesc2PlatformOverlappedIOHandleFunc()))) {
-#else
          gHttpHandler->UseFastOpen())) {
-#endif
         // TFO_FAILED will be reported in the replacement connection with more
         // details.
         // Otherwise report only if TFO is enabled and supported.

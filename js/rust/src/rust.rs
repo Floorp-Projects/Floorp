@@ -84,7 +84,11 @@ impl Runtime {
     }
 
     /// Creates a new `JSContext`.
-    pub fn new() -> Result<Runtime, ()> {
+    ///
+    /// * `use_internal_job_queue`: If `true`, then SpiderMonkey's internal
+    /// micro-task job queue is used. If `false`, then it is up to you to
+    /// implement micro-tasks yourself.
+    pub fn new(use_internal_job_queue: bool) -> Result<Runtime, ()> {
         if SHUT_DOWN.load(Ordering::SeqCst) {
             return Err(());
         }
@@ -176,6 +180,10 @@ impl Runtime {
                 assert!(context.get().is_null());
                 context.set(js_context);
             });
+
+            if use_internal_job_queue {
+                assert!(js::UseInternalJobQueues(js_context, false));
+            }
 
             JS::InitSelfHostedCode(js_context);
 
@@ -1097,4 +1105,127 @@ pub unsafe fn maybe_wrap_value(cx: *mut JSContext, rval: JS::MutableHandleValue)
     } else if rval.is_object() {
         maybe_wrap_object_value(cx, rval);
     }
+}
+
+/// Equivalents of the JS_FN* macros.
+impl JSFunctionSpec {
+    pub fn js_fs(name: *const ::std::os::raw::c_char,
+                 func: JSNative,
+                 nargs: u16,
+                 flags: u16) -> JSFunctionSpec {
+        JSFunctionSpec {
+            name: name,
+            call: JSNativeWrapper {
+                op: func,
+                info: ptr::null(),
+            },
+            nargs: nargs,
+            flags: flags,
+            selfHostedName: 0 as *const _,
+        }
+    }
+
+    pub fn js_fn(name: *const ::std::os::raw::c_char,
+                 func: JSNative,
+                 nargs: u16,
+                 flags: u16) -> JSFunctionSpec {
+        JSFunctionSpec {
+            name: name,
+            call: JSNativeWrapper {
+                op: func,
+                info: ptr::null(),
+            },
+            nargs: nargs,
+            flags: flags,
+            selfHostedName: 0 as *const _,
+        }
+    }
+
+    pub const NULL: JSFunctionSpec = JSFunctionSpec {
+        name: 0 as *const _,
+        call: JSNativeWrapper {
+            op: None,
+            info: 0 as *const _,
+        },
+        nargs: 0,
+        flags: 0,
+        selfHostedName: 0 as *const _,
+    };
+}
+
+/// Equivalents of the JS_PS* macros.
+impl JSPropertySpec {
+    pub fn getter(name: *const ::std::os::raw::c_char, flags: u8, func: JSNative)
+                        -> JSPropertySpec {
+        debug_assert_eq!(flags & !(JSPROP_ENUMERATE | JSPROP_PERMANENT), 0);
+        JSPropertySpec {
+            name: name,
+            flags: flags,
+            __bindgen_anon_1: JSPropertySpec__bindgen_ty_1 {
+                accessors: JSPropertySpec__bindgen_ty_1__bindgen_ty_1 {
+                    getter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
+                        native: JSNativeWrapper {
+                            op: func,
+                            info: ptr::null(),
+                        },
+                    },
+                    setter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_2 {
+                        native: JSNativeWrapper {
+                            op: None,
+                            info: ptr::null(),
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn getter_setter(name: *const ::std::os::raw::c_char,
+                         flags: u8,
+                         g_f: JSNative,
+                         s_f: JSNative)
+                         -> JSPropertySpec {
+        debug_assert_eq!(flags & !(JSPROP_ENUMERATE | JSPROP_PERMANENT), 0);
+        JSPropertySpec {
+            name: name,
+            flags: flags,
+            __bindgen_anon_1: JSPropertySpec__bindgen_ty_1 {
+                accessors: JSPropertySpec__bindgen_ty_1__bindgen_ty_1 {
+                    getter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
+                        native: JSNativeWrapper {
+                            op: g_f,
+                            info: ptr::null(),
+                        },
+                    },
+                    setter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_2 {
+                        native: JSNativeWrapper {
+                            op: s_f,
+                            info: ptr::null(),
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+    pub const NULL: JSPropertySpec = JSPropertySpec {
+        name: 0 as *const _,
+        flags: 0,
+        __bindgen_anon_1: JSPropertySpec__bindgen_ty_1{
+            accessors: JSPropertySpec__bindgen_ty_1__bindgen_ty_1 {
+                getter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
+                    native: JSNativeWrapper {
+                        op: None,
+                        info: 0 as *const _,
+                    },
+                },
+                setter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_2 {
+                    native: JSNativeWrapper {
+                        op: None,
+                        info: 0 as *const _,
+                    },
+                }
+            }
+        }
+    };
 }

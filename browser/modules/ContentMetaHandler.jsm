@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 // sync script tags that could appear between desired meta tags
 const TIMEOUT_DELAY = 1000;
 
+const ACCEPTED_PROTOCOLS = ["http:", "https:"];
+
 // Possible description tags, listed in order from least favourable to most favourable
 const DESCRIPTION_RULES = [
   "twitter:description",
@@ -43,6 +45,28 @@ const PREVIEW_IMAGE_RULES = [
  */
 function shouldExtractMetadata(aRules, aTag, aEntry) {
   return aRules.indexOf(aTag) > aEntry.currMaxScore;
+}
+
+/*
+ * Ensure that the preview image URL is safe and valid before storing
+ *
+ * @param {URL} aURL
+ *          A URL object that needs to be checked for valid principal and protocol
+ *
+ * @returns {Boolean} true if the preview URL is safe and can be stored, false otherwise
+ */
+function checkLoadURIStr(aURL) {
+  if (!ACCEPTED_PROTOCOLS.includes(aURL.protocol)) {
+    return false;
+  }
+  try {
+    let ssm = Services.scriptSecurityManager;
+    let principal = ssm.createNullPrincipal({});
+    ssm.checkLoadURIStrWithPrincipal(principal, aURL.href, ssm.DISALLOW_INHERIT_PRINCIPAL);
+  } catch (e) {
+    return false;
+  }
+  return true;
 }
 
 this.EXPORTED_SYMBOLS = [ "ContentMetaHandler" ];
@@ -88,18 +112,26 @@ this.ContentMetaHandler = {
       timeout: null
     };
 
+    // Malformed meta tag - do not store it
+    const content = metaTag.getAttributeNS(null, "content");
+    if (!content) {
+      return;
+    }
+
     if (shouldExtractMetadata(DESCRIPTION_RULES, tag, entry.description)) {
       // Extract the description
-      const value = metaTag.getAttributeNS(null, "content");
-      if (value) {
-        entry.description.value = value;
-        entry.description.currMaxScore = DESCRIPTION_RULES.indexOf(tag);
-      }
+      entry.description.value = content;
+      entry.description.currMaxScore = DESCRIPTION_RULES.indexOf(tag);
     } else if (shouldExtractMetadata(PREVIEW_IMAGE_RULES, tag, entry.image)) {
       // Extract the preview image
-      const value = metaTag.getAttributeNS(null, "content");
-      if (value) {
-        entry.image.value = new URL(value, url).href;
+      let value;
+      try {
+        value = new URL(content, url);
+      } catch (e) {
+        return;
+      }
+      if (value && checkLoadURIStr(value)) {
+        entry.image.value = value.href;
         entry.image.currMaxScore = PREVIEW_IMAGE_RULES.indexOf(tag);
       }
     } else {

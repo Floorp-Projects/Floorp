@@ -1072,6 +1072,11 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   rv = NS_NewXMLDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // XBL documents must allow XUL and XBL elements in them but the usual check
+  // only checks if the document is loaded in the system principal which is
+  // sometimes not the case.
+  doc->ForceEnableXULXBL();
+
   // Set the style backend type before loading the XBL document. Assume
   // gecko if there's no bound document.
   doc->SetStyleBackendType(aBoundDocument ? aBoundDocument->GetStyleBackendType()

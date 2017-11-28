@@ -20,6 +20,7 @@
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "js/RootingAPI.h"
+#include "mozilla/dom/FromParser.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/GuardObjects.h"
@@ -3027,6 +3028,14 @@ public:
    * https://html.spec.whatwg.org/multipage/custom-elements.html#concept-try-upgrade
    */
   static void TryToUpgradeElement(Element* aElement);
+
+  /**
+   * Creates a new XUL or XHTML element applying any appropriate custom element
+   * definition.
+   */
+  static nsresult NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* aNodeInfo,
+                                      mozilla::dom::FromParser aFromParser, const nsAString* aIs,
+                                      mozilla::dom::CustomElementDefinition* aDefinition);
 
   /**
    * Looking up a custom element definition.
