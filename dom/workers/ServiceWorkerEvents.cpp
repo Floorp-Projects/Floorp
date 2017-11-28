@@ -674,7 +674,14 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
       response->Type() == ResponseType::Cors) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::SW_CORS_RES_FOR_SO_REQ_COUNT, 1);
 
-    // XXXtt: quirkResponse, will be implement in the follow-up patch.
+    // XXXtt: Will have a pref to enable the quirk response in bug 1419684.
+    // The variadic template provided by StringArrayAppender requires exactly
+    // an nsString.
+    NS_ConvertUTF8toUTF16 responseURL(ir->GetUnfilteredURL());
+    autoCancel.SetCancelMessage(
+      NS_LITERAL_CSTRING("CorsResponseForSameOriginRequest"), mRequestURL,
+      responseURL);
+    return;
   }
 
   // Propagate the URL to the content if the request mode is not "navigate".
