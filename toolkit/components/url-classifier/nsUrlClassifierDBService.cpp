@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1966,103 +1966,120 @@ private:
 NS_IMPL_ISUPPORTS(ThreatHitReportListener, nsIStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
-ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest,
+                                        nsISupports* aContext)
 {
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
-  if (httpChannel) {
-    nsresult rv;
-    nsresult status = NS_OK;
-    rv = httpChannel->GetStatus(&status);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint8_t netErrCode = NS_FAILED(status) ?
-      mozilla::safebrowsing::NetworkErrorToBucket(status) : 0;
-    mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::URLCLASSIFIER_THREATHIT_NETWORK_ERROR, netErrCode);
-
-    uint32_t requestStatus;
-    rv = httpChannel->GetResponseStatus(&requestStatus);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_THREATHIT_REMOTE_STATUS,
-                                   mozilla::safebrowsing::HTTPStatusToBucket(requestStatus));
-    if (LOG_ENABLED()) {
-      nsAutoCString errorName, spec;
-      mozilla::GetErrorName(status, errorName);
-      nsCOMPtr<nsIURI> uri;
-      rv = httpChannel->GetURI(getter_AddRefs(uri));
-      if (NS_SUCCEEDED(rv) && uri) {
-        uri->GetAsciiSpec(spec);
-      }
-
-      nsCOMPtr<nsIURLFormatter> urlFormatter =
-      do_GetService("@mozilla.org/toolkit/URLFormatterService;1");
-
-      // Trim sensitive log data
-      nsString trimmedSpec;
-      rv = urlFormatter->TrimSensitiveURLs(NS_ConvertUTF8toUTF16(spec), trimmedSpec);
-      if (NS_SUCCEEDED(rv)) {
-        LOG(("ThreatHitReportListener::OnStartRequest "
-             "(status=%s, uri=%s, this=%p)", errorName.get(),
-             NS_ConvertUTF16toUTF8(trimmedSpec).get(), this));
-
-      }
-    }
-
-    LOG(("ThreatHit report response %d %d", requestStatus, netErrCode));
+  if (!LOG_ENABLED()) {
+    return NS_OK; // Nothing to do!
   }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  NS_ENSURE_TRUE(httpChannel, NS_OK);
+
+  nsresult rv, status;
+  rv = httpChannel->GetStatus(&status);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  nsAutoCString errorName;
+  mozilla::GetErrorName(status, errorName);
+
+  uint32_t requestStatus;
+  rv = httpChannel->GetResponseStatus(&requestStatus);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  nsAutoCString spec;
+  nsCOMPtr<nsIURI> uri;
+  rv = httpChannel->GetURI(getter_AddRefs(uri));
+  if (NS_SUCCEEDED(rv) && uri) {
+    uri->GetAsciiSpec(spec);
+  }
+  nsCOMPtr<nsIURLFormatter> urlFormatter =
+    do_GetService("@mozilla.org/toolkit/URLFormatterService;1");
+  nsAutoString trimmed;
+  rv = urlFormatter->TrimSensitiveURLs(NS_ConvertUTF8toUTF16(spec), trimmed);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  LOG(("ThreatHitReportListener::OnStartRequest "
+       "(status=%s, code=%d, uri=%s, this=%p)", errorName.get(),
+       requestStatus, NS_ConvertUTF16toUTF8(trimmed).get(), this));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ThreatHitReportListener::OnDataAvailable(nsIRequest* aRequest,
-                                           nsISupports* aContext,
-                                           nsIInputStream* aInputStream,
-                                           uint64_t aOffset,
-                                           uint32_t aCount)
+                                         nsISupports* aContext,
+                                         nsIInputStream* aInputStream,
+                                         uint64_t aOffset,
+                                         uint32_t aCount)
 {
   return NS_OK;
 }
+
 NS_IMETHODIMP
-ThreatHitReportListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                                         nsresult aStatus)
+ThreatHitReportListener::OnStopRequest(nsIRequest* aRequest,
+                                       nsISupports* aContext,
+                                       nsresult aStatus)
 {
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  NS_ENSURE_TRUE(httpChannel, aStatus);
+
+  uint8_t netErrCode = NS_FAILED(aStatus) ?
+    mozilla::safebrowsing::NetworkErrorToBucket(aStatus) : 0;
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_THREATHIT_NETWORK_ERROR, netErrCode);
+
+  uint32_t requestStatus;
+  nsresult rv = httpChannel->GetResponseStatus(&requestStatus);
+  NS_ENSURE_SUCCESS(rv, aStatus);
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_THREATHIT_REMOTE_STATUS,
+                                 mozilla::safebrowsing::HTTPStatusToBucket(requestStatus));
+
+  if (LOG_ENABLED()) {
+    nsAutoCString errorName;
+    mozilla::GetErrorName(aStatus, errorName);
+
+    nsAutoCString spec;
+    nsCOMPtr<nsIURI> uri;
+    rv = httpChannel->GetURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv) && uri) {
+      uri->GetAsciiSpec(spec);
+    }
+    nsCOMPtr<nsIURLFormatter> urlFormatter =
+      do_GetService("@mozilla.org/toolkit/URLFormatterService;1");
+    nsString trimmed;
+    rv = urlFormatter->TrimSensitiveURLs(NS_ConvertUTF8toUTF16(spec), trimmed);
+    NS_ENSURE_SUCCESS(rv, aStatus);
+
+    LOG(("ThreatHitReportListener::OnStopRequest "
+         "(status=%s, code=%d, uri=%s, this=%p)", errorName.get(),
+         requestStatus, NS_ConvertUTF16toUTF8(trimmed).get(), this));
+  }
+
   return aStatus;
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel)
+nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel,
+                                              const nsACString& aProvider,
+                                              const nsACString& aList,
+                                              const nsACString& aFullHash)
 {
   NS_ENSURE_ARG_POINTER(aChannel);
-  nsresult rv;
 
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-    do_QueryInterface(aChannel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!classifiedChannel) {
+  if (aProvider.IsEmpty()) {
+    LOG(("nsUrlClassifierDBService::SendThreatHitReport missing provider"));
     return NS_ERROR_FAILURE;
   }
-
-  nsAutoCString provider;
-  rv = classifiedChannel->GetMatchedProvider(provider);
-  if (NS_FAILED(rv) || provider.IsEmpty()) {
+  if (aList.IsEmpty()) {
+    LOG(("nsUrlClassifierDBService::SendThreatHitReport missing list"));
     return NS_ERROR_FAILURE;
   }
-
-  nsAutoCString listName;
-  rv = classifiedChannel->GetMatchedList(listName);
-  if (NS_FAILED(rv) || listName.IsEmpty()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoCString fullHash;
-  rv = classifiedChannel->GetMatchedFullHash(fullHash);
-  if (NS_FAILED(rv) || fullHash.IsEmpty()) {
+  if (aFullHash.IsEmpty()) {
+    LOG(("nsUrlClassifierDBService::SendThreatHitReport missing fullhash"));
     return NS_ERROR_FAILURE;
   }
 
   nsPrintfCString reportUrlPref("browser.safebrowsing.provider.%s.dataSharingURL",
-                                provider.get());
+                                PromiseFlatCString(aProvider).get());
 
   nsCOMPtr<nsIURLFormatter> formatter(
     do_GetService("@mozilla.org/toolkit/URLFormatterService;1"));
@@ -2071,11 +2088,11 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel)
   }
 
   nsString urlStr;
-  rv = formatter->FormatURLPref(NS_ConvertUTF8toUTF16(reportUrlPref), urlStr);
+  nsresult rv = formatter->FormatURLPref(NS_ConvertUTF8toUTF16(reportUrlPref), urlStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (urlStr.IsEmpty() || NS_LITERAL_STRING("about:blank").Equals(urlStr)) {
-    LOG(("%s is missing a ThreatHit data reporting URL.", provider.get()));
+    LOG(("%s is missing a ThreatHit data reporting URL.", PromiseFlatCString(aProvider).get()));
     return NS_OK;
   }
 
@@ -2086,12 +2103,16 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel)
   }
 
   nsAutoCString reportBody;
-  rv = utilsService->MakeThreatHitReport(aChannel, listName, fullHash, reportBody);
+  rv = utilsService->MakeThreatHitReport(aChannel, aList, aFullHash, reportBody);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString reportUriStr = NS_ConvertUTF16toUTF8(urlStr);
   reportUriStr.Append("&$req=");
   reportUriStr.Append(reportBody);
+
+  LOG(("Sending the following ThreatHit report to %s about %s: %s",
+       PromiseFlatCString(aProvider).get(), PromiseFlatCString(aList).get(),
+       reportBody.get()));
 
   nsCOMPtr<nsIURI> reportURI;
   rv = NS_NewURI(getter_AddRefs(reportURI), reportUriStr);

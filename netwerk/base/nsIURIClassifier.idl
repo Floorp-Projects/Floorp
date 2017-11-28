@@ -107,7 +107,14 @@ interface nsIURIClassifier : nsISupports
    *
    * @param aChannel
    *        Channel for which the URL matched something on the threat list.
+   * @param aProvider
+   *        Provider to notify.
+   * @param aList
+   *        List where the full hash was found.
+   * @param aFullHash
+   *        Full URL hash that triggered the warning.
    */
 
-  void sendThreatHitReport(in nsIChannel aChannel);
+  void sendThreatHitReport(in nsIChannel aChannel, in ACString aProvider,
+                           in ACString aList, in ACString aFullHash);
 };
