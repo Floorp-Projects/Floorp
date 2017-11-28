@@ -4,6 +4,8 @@
 # Always ignore crashtests - specially crafted files that originally caused a
 # crash.
 **/crashtests/**
+# Also ignore reftest - specially crafted to produce expected output.
+**/reftest/**
 
 # Exclude expected objdirs.
 obj*/**
@@ -16,19 +18,33 @@ editor/**
 extensions/cookie/**
 extensions/spellcheck/**
 extensions/universalchardet/**
-gfx/**
+gfx/layers/**
+gfx/tests/browser/**
+gfx/tests/chrome/**
+gfx/tests/mochitest/**
+gfx/tests/unit/**
 image/**
 intl/**
 layout/**
-media/**
-memory/**
+memory/replace/dmd/test/**
 modules/**
-netwerk/**
+netwerk/base/NetUtil.jsm
+netwerk/cookie/test/browser/**
+netwerk/cookie/test/unit/**
+netwerk/protocol/**
+netwerk/dns/**
+netwerk/test/browser/**
+netwerk/test/httpserver/**
+netwerk/test/mochitests/**
+netwerk/test/unit*/**
+netwerk/wifi/**
 parser/**
 rdf/**
 tools/update-packaging/**
-uriloader/**
-widget/**
+uriloader/exthandler/**
+uriloader/exthandler/tests/mochitest/**
+widget/headless/tests/**
+widget/tests/**
 
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.
@@ -191,7 +207,8 @@ dom/battery/**
 dom/bindings/**
 dom/broadcastchannel/**
 dom/browser-element/**
-dom/cache/**
+dom/cache/test/mochitest/**
+dom/cache/test/xpcshell/**
 dom/canvas/**
 dom/commandhandler/**
 dom/console/**
@@ -220,25 +237,42 @@ dom/media/**
 !dom/media/*.js*
 dom/messagechannel/**
 dom/network/**
-dom/notification/**
+dom/notification/Notification*.*
+dom/notification/test/browser/**
+dom/notification/test/unit/**
 dom/offline/**
 dom/payments/**
 dom/performance/**
 dom/permission/**
-dom/plugins/**
+dom/plugins/test/mochitest/**
+dom/plugins/test/unit/**
 dom/power/**
-dom/presentation/**
+dom/presentation/Presentation*.js
+dom/presentation/provider/**
+dom/presentation/tests/mochitest/**
+dom/presentation/tests/xpcshell/**
 dom/promise/**
 dom/push/**
 dom/quota/**
 dom/res/**
 dom/secureelement/**
-dom/security/**
+dom/security/test/contentverifier/**
+dom/security/test/cors/**
+dom/security/test/csp/**
+dom/security/test/general/**
+dom/security/test/hsts/**
+dom/security/test/mixedcontentblocker/**
+dom/security/test/sri/**
+dom/security/test/unit/**
 dom/smil/**
 dom/storage/**
 dom/svg/**
 dom/system/**
-dom/tests/**
+dom/tests/browser/**
+dom/tests/html/**
+dom/tests/js/**
+dom/tests/mochitest/**
+dom/tests/unit/**
 dom/time/**
 dom/u2f/**
 dom/url/**
@@ -258,6 +292,10 @@ dom/xul/**
 # Third-party
 dom/media/webvtt/**
 
+# Third-party
+gfx/ots/**
+gfx/skia/**
+
 # Exclude everything but self-hosted JS
 js/ductwork/**
 js/examples/**
@@ -269,6 +307,9 @@ js/src/octane/**
 js/src/jit-test/**
 js/src/tests/**
 js/src/Y.js
+
+# Third-party
+media/webrtc/trunk/**
 
 # mobile/android/ exclusions
 mobile/android/tests/browser/chrome/tp5/**
