@@ -3398,7 +3398,8 @@ nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
 {
   // If there is an existing document then there is no need to create
   // a client for a future initial about:blank document.
-  if (mScriptGlobal && mScriptGlobal->GetExtantDoc()) {
+  if (mScriptGlobal && mScriptGlobal->GetCurrentInnerWindowInternal() &&
+      mScriptGlobal->GetCurrentInnerWindowInternal()->GetExtantDoc()) {
     MOZ_DIAGNOSTIC_ASSERT(
       mScriptGlobal->GetCurrentInnerWindowInternal()->GetClientInfo().isSome());
     MOZ_DIAGNOSTIC_ASSERT(!mInitialClientSource);
