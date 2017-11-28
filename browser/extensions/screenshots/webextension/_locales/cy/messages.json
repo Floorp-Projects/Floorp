@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "Llwytho i Lawr"
   },
+  "downloadOnlyNotice": {
+    "message": "Rydych yn y modd Llwytho i Lawr yn Unig."
+  },
+  "downloadOnlyDetails": {
+    "message": "Mae Firefox Screenshots yn newid yn awtomatig i'r modd Llwytho i Lawr y Unig yn y sefyllfaoedd hyn:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Mewn ffenestr Pori Prefat."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Mae cwcis trydydd parti wedi eu hanalluogi."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Mae “Peidio cofio hanes” wedi ei alluogi."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Dolen wedi ei Chadw"
   },

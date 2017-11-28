@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Sider"
   },
+  "downloadOnlyNotice": {
+    "message": "Aql-ak tura deg umskar n usider kan."
+  },
+  "downloadOnlyDetails": {
+    "message": "Deg isekaren-agi, Firefox Screenshots ad k-yeǧǧ kan ad tsidreḍ:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Deg iccer n tungin uslig."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Inagan n tuqna n tama tis kraḍ ttwasensen."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Werǧin ad tecfuḍ γef umazray” insa."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Aseγwen yettwanγel"
   },
   "notificationLinkCopiedDetails": {
     "message": "Aseγwen ar tuṭṭfa-ik yettwanγel yef afus. Senned yef $META_KEY$-V akken ad tsenṭḍeḍ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Nγel"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Tuṭṭfa tettwanγel"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Tuṭṭfa-inek tettwanγel yer ufus. Senned yef $META_KEY$-V akken ad tsenṭḍeḍ.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

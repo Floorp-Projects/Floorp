@@ -9,15 +9,21 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WebKitCSSMatrixBinding.h"
 #include "mozilla/Preferences.h"
-#include "nsCSSParser.h"
 #include "nsPresContext.h"
-#include "nsStyleTransformMatrix.h"
 #include "RuleNodeCacheConditions.h"
 
 namespace mozilla {
 namespace dom {
 
 static const double sRadPerDegree = 2.0 * M_PI / 360.0;
+
+static bool
+IsStyledByServo(JSContext* aContext)
+{
+  nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aContext);
+  nsIDocument* doc = win ? win->GetDoc() : nullptr;
+  return doc ? doc->IsStyledByServo() : false;
+}
 
 bool
 WebKitCSSMatrix::FeatureEnabled(JSContext* aCx, JSObject* aObj)
@@ -29,7 +35,9 @@ WebKitCSSMatrix::FeatureEnabled(JSContext* aCx, JSObject* aObj)
 already_AddRefed<WebKitCSSMatrix>
 WebKitCSSMatrix::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<WebKitCSSMatrix> obj = new WebKitCSSMatrix(aGlobal.GetAsSupports());
+  RefPtr<WebKitCSSMatrix> obj =
+    new WebKitCSSMatrix(aGlobal.GetAsSupports(),
+                        IsStyledByServo(aGlobal.Context()));
   return obj.forget();
 }
 
@@ -37,7 +45,9 @@ already_AddRefed<WebKitCSSMatrix>
 WebKitCSSMatrix::Constructor(const GlobalObject& aGlobal,
                              const nsAString& aTransformList, ErrorResult& aRv)
 {
-  RefPtr<WebKitCSSMatrix> obj = new WebKitCSSMatrix(aGlobal.GetAsSupports());
+  RefPtr<WebKitCSSMatrix> obj =
+    new WebKitCSSMatrix(aGlobal.GetAsSupports(),
+                        IsStyledByServo(aGlobal.Context()));
   obj = obj->SetMatrixValue(aTransformList, aRv);
   return obj.forget();
 }
@@ -61,58 +71,7 @@ WebKitCSSMatrix*
 WebKitCSSMatrix::SetMatrixValue(const nsAString& aTransformList,
                                 ErrorResult& aRv)
 {
-  // An empty string is a no-op.
-  if (aTransformList.IsEmpty()) {
-    return this;
-  }
-
-  nsCSSValue value;
-  nsCSSParser parser;
-  bool parseSuccess = parser.ParseTransformProperty(aTransformList,
-                                                    true,
-                                                    value);
-  if (!parseSuccess) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
-
-  // A value of "none" results in a 2D identity matrix.
-  if (value.GetUnit() == eCSSUnit_None) {
-    mMatrix3D = nullptr;
-    mMatrix2D = new gfx::Matrix();
-    return this;
-  }
-
-  // A value other than a transform-list is a syntax error.
-  if (value.GetUnit() != eCSSUnit_SharedList) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
-
-  RuleNodeCacheConditions dummy;
-  nsStyleTransformMatrix::TransformReferenceBox dummyBox;
-  bool contains3dTransform = false;
-  gfx::Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
-                               value.GetSharedListValue()->mHead,
-                               nullptr, nullptr, dummy, dummyBox,
-                               nsPresContext::AppUnitsPerCSSPixel(),
-                               &contains3dTransform);
-
-  if (!contains3dTransform) {
-    mMatrix3D = nullptr;
-    mMatrix2D = new gfx::Matrix();
-
-    SetA(transform._11);
-    SetB(transform._12);
-    SetC(transform._21);
-    SetD(transform._22);
-    SetE(transform._41);
-    SetF(transform._42);
-  } else {
-    mMatrix3D = new gfx::Matrix4x4(transform);
-    mMatrix2D = nullptr;
-  }
-
+  DOMMatrix::SetMatrixValue(aTransformList, aRv);
   return this;
 }
 

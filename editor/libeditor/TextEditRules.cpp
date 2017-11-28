@@ -1375,8 +1375,7 @@ TextEditRules::CreateTrailingBRIfNeeded()
 
   if (!lastChild->IsHTMLElement(nsGkAtoms::br)) {
     AutoTransactionsConserveSelection dontChangeMySelection(mTextEditor);
-    nsCOMPtr<nsIDOMNode> domBody = do_QueryInterface(body);
-    return CreateMozBR(domBody, body->Length());
+    return CreateMozBR(*body, body->Length());
   }
 
   // Check to see if the trailing BR is a former bogus node - this will have
@@ -1629,28 +1628,30 @@ TextEditRules::FillBufWithPWChars(nsAString* aOutString,
 }
 
 nsresult
-TextEditRules::CreateBRInternal(nsIDOMNode* inParent,
+TextEditRules::CreateBRInternal(nsINode& inParent,
                                 int32_t inOffset,
                                 bool aMozBR,
-                                nsIDOMNode** outBRNode)
+                                Element** aOutBRElement)
 {
-  NS_ENSURE_TRUE(inParent, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mTextEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<TextEditor> textEditor = mTextEditor;
 
-  nsCOMPtr<nsIDOMNode> brNode;
-  NS_ENSURE_STATE(mTextEditor);
-  nsresult rv = mTextEditor->CreateBR(inParent, inOffset, address_of(brNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Element> brElem = textEditor->CreateBR(&inParent, inOffset);
+  if (NS_WARN_IF(!brElem)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // give it special moz attr
-  nsCOMPtr<Element> brElem = do_QueryInterface(brNode);
-  if (aMozBR && brElem) {
-    rv = mTextEditor->SetAttribute(brElem, nsGkAtoms::type,
-                                   NS_LITERAL_STRING("_moz"));
+  if (aMozBR) {
+    nsresult rv = textEditor->SetAttribute(brElem, nsGkAtoms::type,
+                                           NS_LITERAL_STRING("_moz"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (outBRNode) {
-    brNode.forget(outBRNode);
+  if (aOutBRElement) {
+    brElem.forget(aOutBRElement);
   }
   return NS_OK;
 }

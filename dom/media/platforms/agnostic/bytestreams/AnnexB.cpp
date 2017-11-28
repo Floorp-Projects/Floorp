@@ -295,8 +295,10 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
       case 1: MOZ_TRY_VAR(nalLen, reader.ReadU8()); break;
       case 2: MOZ_TRY_VAR(nalLen, reader.ReadU16()); break;
       case 3: MOZ_TRY_VAR(nalLen, reader.ReadU24()); break;
-      case 4: MOZ_TRY_VAR(nalLen, reader.ReadU32()); break;
     }
+
+    MOZ_ASSERT(nalLenSize != 4);
+
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
       return Ok();

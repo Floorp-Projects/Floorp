@@ -512,16 +512,6 @@ public:
     const media::TimeUnit& aTimecode,
     const IntRect& aPicture);
 
-  static already_AddRefed<VideoData> CreateAndCopyIntoTextureClient(
-    const VideoInfo& aInfo,
-    int64_t aOffset,
-    const media::TimeUnit& aTime,
-    const media::TimeUnit& aDuration,
-    layers::TextureClient* aBuffer,
-    bool aKeyframe,
-    const media::TimeUnit& aTimecode,
-    const IntRect& aPicture);
-
   static already_AddRefed<VideoData> CreateFromImage(
     const IntSize& aDisplay,
     int64_t aOffset,

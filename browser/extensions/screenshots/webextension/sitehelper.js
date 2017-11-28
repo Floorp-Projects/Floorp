@@ -1,4 +1,4 @@
-/* globals catcher, callBackground */
+/* globals catcher, callBackground, content */
 /** This is a content script added to all screenshots.firefox.com pages, and allows the site to
     communicate with the add-on */
 
@@ -6,16 +6,9 @@
 
 this.sitehelper = (function() {
 
-  let ContentXMLHttpRequest = XMLHttpRequest;
   // This gives us the content's copy of XMLHttpRequest, instead of the wrapped
   // copy that this content script gets:
-  if (location.origin === "https://screenshots.firefox.com" ||
-      location.origin === "http://localhost:10080") {
-    // Note http://localhost:10080 is the default development server
-    // This code should always run, unless this content script is
-    // somehow run in a bad/malicious context
-    ContentXMLHttpRequest = window.wrappedJSObject.XMLHttpRequest;
-  }
+  let ContentXMLHttpRequest = content.XMLHttpRequest;
 
   catcher.registerHandler((errorObj) => {
     callBackground("reportError", errorObj);

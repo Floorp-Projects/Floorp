@@ -55,6 +55,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
 
@@ -382,8 +383,64 @@ nsXBLService::IsChromeOrResourceURI(nsIURI* aURI)
   return false;
 }
 
+// Servo avoids wasting work styling subtrees of elements with XBL bindings by
+// default, so whenever we leave LoadBindings in a way that doesn't guarantee
+// that the subtree is styled we need to take care of doing it manually.
+static void
+EnsureSubtreeStyled(Element* aElement)
+{
+  if (!aElement->IsStyledByServo() || !aElement->HasServoData()) {
+    return;
+  }
+
+  if (Servo_Element_IsDisplayNone(aElement)) {
+    return;
+  }
+
+  nsIPresShell* presShell = aElement->OwnerDoc()->GetShell();
+  if (!presShell || !presShell->DidInitialize()) {
+    return;
+  }
+
+  ServoStyleSet* servoSet = presShell->StyleSet()->AsServo();
+  StyleChildrenIterator iter(aElement);
+  for (nsIContent* child = iter.GetNextChild();
+       child;
+       child = iter.GetNextChild()) {
+    if (!child->IsElement()) {
+      continue;
+    }
+
+    if (child->AsElement()->HasServoData()) {
+      // If any child was styled, all of them should be styled already, so we
+      // can bail out.
+      return;
+    }
+
+    servoSet->StyleNewSubtree(child->AsElement());
+  }
+}
+
+// Ensures that EnsureSubtreeStyled is called on the element on destruction.
+class MOZ_RAII AutoEnsureSubtreeStyled
+{
+public:
+  explicit AutoEnsureSubtreeStyled(Element* aElement)
+    : mElement(aElement)
+  {
+  }
+
+  ~AutoEnsureSubtreeStyled()
+  {
+    EnsureSubtreeStyled(mElement);
+  }
+
+private:
+  Element* mElement;
+};
+
 // RAII class to restyle the XBL bound element when it shuffles the flat tree.
-class MOZ_STACK_CLASS AutoStyleElement
+class MOZ_RAII AutoStyleElement
 {
 public:
   explicit AutoStyleElement(Element* aElement)
@@ -401,9 +458,8 @@ public:
       return;
     }
 
-    if (ServoStyleSet* servoSet = presShell->StyleSet()->GetAsServo()) {
-      servoSet->StyleNewSubtree(mElement);
-    }
+    ServoStyleSet* servoSet = presShell->StyleSet()->AsServo();
+    servoSet->StyleNewSubtree(mElement);
   }
 
 private:
@@ -423,11 +479,23 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   *aBinding = nullptr;
   *aResolveStyle = false;
 
-  nsresult rv;
+  AutoEnsureSubtreeStyled subtreeStyled(aContent->AsElement());
+
+  if (MOZ_UNLIKELY(!aURL)) {
+    return NS_OK;
+  }
+
+  // Easy case: The binding was already loaded.
+  nsXBLBinding* binding = aContent->GetXBLBinding();
+  if (binding && !binding->MarkedForDeath() &&
+      binding->PrototypeBinding()->CompareBindingURI(aURL)) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDocument> document = aContent->OwnerDoc();
 
   nsAutoCString urlspec;
+  nsresult rv;
   bool ok = nsContentUtils::GetWrapperSafeScriptFilename(document, aURL,
                                                          urlspec, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -440,35 +508,9 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     return NS_OK;
   }
 
-  // There are various places in this function where we shuffle content around
-  // the subtree and rebind things to and from insertion points.
-  //
-  // Once all that's done, we want to invoke StyleNewSubtree to restyle the
-  // whole subtree with the new flattened tree that we may have after bindings
-  // have been removed and applied.
-  //
-  // This includes anonymous content created in this function, explicit children
-  // for which we defer styling until after XBL bindings are applied, and
-  // elements whose existing style was invalidated by a call to
-  // SetXBLInsertionParent.
-  Maybe<AutoStyleElement> styleElement;
-  if (aContent->IsStyledByServo()) {
-    styleElement.emplace(aContent->AsElement());
-  }
-
-  nsXBLBinding* binding = aContent->GetXBLBinding();
   if (binding) {
-    if (binding->MarkedForDeath()) {
-      FlushStyleBindings(aContent);
-      binding = nullptr;
-    }
-    else {
-      // See if the URIs match.
-      if (binding->PrototypeBinding()->CompareBindingURI(aURL))
-        return NS_OK;
-      FlushStyleBindings(aContent);
-      binding = nullptr;
-    }
+    FlushStyleBindings(aContent);
+    binding = nullptr;
   }
 
   bool ready;
@@ -490,15 +532,11 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  AutoStyleElement styleElement(aContent->AsElement());
+
   // We loaded a style binding.  It goes on the end.
-  if (binding) {
-    // Get the last binding that is in the append layer.
-    binding->RootBinding()->SetBaseBinding(newBinding);
-  }
-  else {
-    // Install the binding on the content node.
-    aContent->SetXBLBinding(newBinding);
-  }
+  // Install the binding on the content node.
+  aContent->SetXBLBinding(newBinding);
 
   {
     nsAutoScriptBlocker scriptBlocker;

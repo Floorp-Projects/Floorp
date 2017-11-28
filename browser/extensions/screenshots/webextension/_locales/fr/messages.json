@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Télécharger"
   },
+  "downloadOnlyNotice": {
+    "message": "Vous êtes actuellement dans un mode ne permettant que le téléchargement."
+  },
+  "downloadOnlyDetails": {
+    "message": "Dans les situations suivantes, Firefox Screenshots permet uniquement les téléchargements :"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "lorsque vous naviguez en navigation privée."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "lorsque les cookies tiers sont désactivés."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "lorsque « Ne jamais conserver l’historique » est activé."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Lien copié"
   },
   "notificationLinkCopiedDetails": {
     "message": "Le lien de votre capture a été copié dans le presse-papiers. Appuyez sur $META_KEY$-V pour le coller.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copier"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Capture copiée"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Votre capture a été copiée dans le presse-papiers. Appuyez sur $META_KEY$-V pour la coller.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
