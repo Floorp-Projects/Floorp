@@ -258,8 +258,13 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
     return waitForDocumentLoad()
       .then(loadPaintListener)
       .then(function() {
-        // Put refresh driver under test control and trigger animation
+        // Put refresh driver under test control and flush all pending style,
+        // layout and paint to avoid the situation that waitForPaintsFlush()
+        // receives unexpected MozAfterpaint event for those pending
+        // notifications.
         utils.advanceTimeAndRefresh(0);
+        return waitForPaintsFlushed();
+      }).then(function() {
         div.style.animation = animationName + " 10s";
 
         return waitForPaintsFlushed();
