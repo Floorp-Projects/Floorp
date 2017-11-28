@@ -21,7 +21,7 @@ use std::ptr;
 
 #[test]
 fn enumerate() {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new(false).unwrap();
     let cx = rt.cx();
 
     unsafe {

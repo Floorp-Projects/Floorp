@@ -478,6 +478,15 @@ extern MOZ_MUST_USE bool
 intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp);
 
 /**
+ * Return true if the given string is the default time zone as returned by
+ * intl_defaultTimeZone(). Otherwise return false.
+ *
+ * Usage: isIcuDefaultTimeZone = intl_isDefaultTimeZone(icuDefaultTimeZone)
+ */
+extern MOZ_MUST_USE bool
+intl_isDefaultTimeZone(JSContext* cx, unsigned argc, Value* vp);
+
+/**
  * Return a pattern in the date-time format pattern language of Unicode
  * Technical Standard 35, Unicode Locale Data Markup Language, for the
  * best-fit date-time format pattern corresponding to skeleton for the
