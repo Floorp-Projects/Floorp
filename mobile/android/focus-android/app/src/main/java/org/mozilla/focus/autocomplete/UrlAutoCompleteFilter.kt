@@ -109,7 +109,7 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         val assetManager = context.assets
 
         try {
-            Collections.addAll(availableDomains, *assetManager.list("domains"))
+            availableDomains.addAll(assetManager.list("domains"))
         } catch (e: IOException) {
             Log.w(LOG_TAG, "Could not list domain list directory")
         }
