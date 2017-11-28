@@ -794,6 +794,8 @@ TabChild::RemoteSizeShellTo(int32_t aWidth, int32_t aHeight,
 {
   nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(ourDocShell));
+  NS_ENSURE_STATE(docShellAsWin);
+
   int32_t width, height;
   docShellAsWin->GetSize(&width, &height);
 
