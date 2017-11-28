@@ -142,6 +142,7 @@ struct FontSizePrefs
 };
 
 // DOM Traversal.
+void Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel);
 bool Gecko_IsInDocument(RawGeckoNodeBorrowed node);
 bool Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed node);
 bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node,

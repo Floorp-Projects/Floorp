@@ -13931,5 +13931,15 @@
     "expires_in_version": "60",
     "kind": "boolean",
     "description": "Tracking how often scripts are loaded with a 'valid' version parameter. This telemetry ID helps us to decide if and when remove the support of script versioning."
+  },
+  "STYLO_PARALLEL_RESTYLE_FRACTION": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["manish@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Fraction of restyles on a single page that were parallel",
+    "bug_numbers": [1421195]
   }
 }
