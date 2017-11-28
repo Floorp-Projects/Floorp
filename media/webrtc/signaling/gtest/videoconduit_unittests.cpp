@@ -96,7 +96,10 @@ public:
     mVideoConduit->SetLocalSSRCs(ssrcs);
   }
 
-  ~VideoConduitTest() override = default;
+  ~VideoConduitTest() override
+  {
+    mVideoConduit->DeleteStreams();
+  }
 
   MediaConduitErrorCode SendVideoFrame(unsigned short width,
                                        unsigned short height,
