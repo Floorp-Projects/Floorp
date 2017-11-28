@@ -23,27 +23,35 @@ Linker::newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges /* = fa
     if (masm.oom())
         return fail(cx);
 
-    ExecutablePool* pool;
-    size_t bytesNeeded = masm.bytesNeeded() + sizeof(JitCode*) + CodeAlignment;
+    static const size_t ExecutableAllocatorAlignment = sizeof(void*);
+    static_assert(CodeAlignment >= ExecutableAllocatorAlignment,
+                  "Unexpected alignment requirements");
+
+    // We require enough bytes for the code, header, and worst-case alignment padding.
+    size_t bytesNeeded = masm.bytesNeeded() +
+                         sizeof(JitCodeHeader) +
+                         (CodeAlignment - ExecutableAllocatorAlignment);
     if (bytesNeeded >= MAX_BUFFER_SIZE)
         return fail(cx);
 
-    // ExecutableAllocator requires bytesNeeded to be word-size aligned.
-    bytesNeeded = AlignBytes(bytesNeeded, sizeof(void*));
+    // ExecutableAllocator requires bytesNeeded to be aligned.
+    bytesNeeded = AlignBytes(bytesNeeded, ExecutableAllocatorAlignment);
 
     ExecutableAllocator& execAlloc = hasPatchableBackedges
                                      ? cx->runtime()->jitRuntime()->backedgeExecAlloc()
                                      : cx->runtime()->jitRuntime()->execAlloc();
 
+    ExecutablePool* pool;
     uint8_t* result = (uint8_t*)execAlloc.alloc(cx, bytesNeeded, &pool, kind);
     if (!result)
         return fail(cx);
 
-    // The JitCode pointer will be stored right before the code buffer.
-    uint8_t* codeStart = result + sizeof(JitCode*);
+    // The JitCodeHeader will be stored right before the code buffer.
+    uint8_t* codeStart = result + sizeof(JitCodeHeader);
 
     // Bump the code up to a nice alignment.
     codeStart = (uint8_t*)AlignBytes((uintptr_t)codeStart, CodeAlignment);
+    MOZ_ASSERT(codeStart + masm.bytesNeeded() <= result + bytesNeeded);
     uint32_t headerSize = codeStart - result;
     JitCode* code = JitCode::New<allowGC>(cx, codeStart, bytesNeeded - headerSize,
                                           headerSize, pool, kind);
