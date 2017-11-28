@@ -39,7 +39,7 @@ window.gActivityStreamStrings = {
   "section_info_send_feedback": "Feedback senden",
   "section_info_privacy_notice": "Datenschutzhinweis",
   "section_disclaimer_topstories": "Die interessantesten Inhalte aus dem Internet auf Sie abgestimmt. Von Pocket, jetzt Teil von Mozilla.",
-  "section_disclaimer_topstories_linktext": "Lernen Sie wie das funktioniert.",
+  "section_disclaimer_topstories_linktext": "Lernen Sie, wie das funktioniert.",
   "section_disclaimer_topstories_buttontext": "Okay, verstanden",
   "welcome_title": "Willkommen im neuen Tab",
   "welcome_body": "Firefox nutzt diesen Bereich, um Ihnen Ihre wichtigsten Lesezeichen, Artikel, Videos und kürzlich besuchten Seiten anzuzeigen, damit Sie diese einfach wiederfinden.",
