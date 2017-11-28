@@ -360,20 +360,6 @@ XPCNativeSet::FindMember(JS::HandleId name,
 }
 
 inline XPCNativeInterface*
-XPCNativeSet::FindNamedInterface(jsid name) const
-{
-    XPCNativeInterface* const * pp = mInterfaces;
-
-    for (int i = (int) mInterfaceCount; i > 0; i--, pp++) {
-        XPCNativeInterface* iface = *pp;
-
-        if (name == iface->GetName())
-            return iface;
-    }
-    return nullptr;
-}
-
-inline XPCNativeInterface*
 XPCNativeSet::FindInterfaceWithIID(const nsIID& iid) const
 {
     XPCNativeInterface* const * pp = mInterfaces;

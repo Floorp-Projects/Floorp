@@ -1957,56 +1957,6 @@ XPCWrappedNative::GetJSObject()
     return GetFlatJSObject();
 }
 
-NS_IMETHODIMP XPCWrappedNative::GetNative(nsISupports * *aNative)
-{
-    // No need to QI here, we already have the correct nsISupports
-    // vtable.
-    nsCOMPtr<nsISupports> rval = mIdentity;
-    rval.forget(aNative);
-    return NS_OK;
-}
-
-NS_IMETHODIMP XPCWrappedNative::GetJSObjectPrototype(JSObject * *aJSObjectPrototype)
-{
-    *aJSObjectPrototype = HasProto() ?
-                GetProto()->GetJSProtoObject() : GetFlatJSObject();
-    return NS_OK;
-}
-
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(HandleId name,
-                                                        nsIInterfaceInfo * *_retval)
-{
-    RefPtr<XPCNativeInterface> iface;
-    XPCNativeMember*  member;
-
-    if (GetSet()->FindMember(name, &member, &iface) && iface) {
-        nsCOMPtr<nsIInterfaceInfo> temp = iface->GetInterfaceInfo();
-        temp.forget(_retval);
-    } else
-        *_retval = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(HandleId name,
-                                                      nsIInterfaceInfo * *_retval)
-{
-    XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
-    if (iface) {
-        nsCOMPtr<nsIInterfaceInfo> temp = iface->GetInterfaceInfo();
-        temp.forget(_retval);
-    } else
-        *_retval = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP_(bool)
-XPCWrappedNative::HasNativeMember(HandleId name)
-{
-    XPCNativeMember* member = nullptr;
-    uint16_t ignored;
-    return GetSet()->FindMember(name, &member, &ignored) && !!member;
-}
-
 NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
