@@ -9,22 +9,24 @@
 </head>
 <body>
 <script>
+function createScriptURL(isCrossOrigin, params) {
+  if (isCrossOrigin) {
+    return get_host_info().HTTPS_REMOTE_ORIGIN +
+           '/worklets/resources/referrer.py?' + params;
+  }
+  return 'referrer.py?' + params;
+}
+
 window.onmessage = e => {
-  const worklet_type = e.data.type;
-  const is_cross_origin = e.data.is_cross_origin;
+  const isCrossOrigin = e.data.isCrossOrigin;
 
   const params = new URLSearchParams;
-  params.append('referrer_policy', e.data.referrer_policy)
+  params.append('referrer_policy', e.data.referrerPolicy)
   params.append('source_origin', get_host_info().HTTPS_ORIGIN);
+  params.append('is_cross_origin', isCrossOrigin ? 'true' : 'false')
 
-  let script_url = '';
-  if (is_cross_origin) {
-    params.append('is_cross_origin', 'true')
-    script_url = get_host_info().HTTPS_REMOTE_ORIGIN + '/worklets/resources/';
-  }
-  script_url += 'referrer.py?' + params;
-
-  get_worklet(worklet_type).addModule(script_url)
+  const scriptURL = createScriptURL(isCrossOrigin, params);
+  get_worklet(e.data.workletType).addModule(scriptURL)
       .then(() => window.opener.postMessage('RESOLVED', '*'))
       .catch(e => window.opener.postMessage(e.message, '*'));
 };

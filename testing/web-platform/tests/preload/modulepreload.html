@@ -104,5 +104,21 @@ promise_test(function(t) {
     return attachAndWaitForError(link);
 }, 'link rel=modulepreload with invalid as= value');
 
+promise_test(function(t) {
+    var link = document.createElement('link');
+    link.rel = 'modulepreload';
+    link.href = 'resources/module1.js?integrity-match';
+    link.integrity = 'sha256-ZPBZ+J9CiHzZXaBBluSeCpjzuTUkT+rSWIdXUV3AtVo='
+    return attachAndWaitForLoad(link);
+}, 'link rel=modulepreload with integrity match');
+
+promise_test(function(t) {
+    var link = document.createElement('link');
+    link.rel = 'modulepreload';
+    link.href = 'resources/module1.js?integrity-doesnotmatch';
+    link.integrity = 'sha384-doesnotmatch'
+    return attachAndWaitForError(link);
+}, 'link rel=modulepreload with integrity mismatch');
+
 </script>
 </body>
