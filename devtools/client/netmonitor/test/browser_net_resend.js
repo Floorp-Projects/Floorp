@@ -57,6 +57,13 @@ add_task(function* () {
   let sentItem = getSelectedRequest(store.getState());
   testSentRequest(sentItem, origItem);
 
+  // Ensure the UI shows the new request, selected, and that the detail panel was closed.
+  is(getSortedRequests(store.getState()).length, 3, "There are 3 requests shown");
+  is(document.querySelector(".request-list-item.selected").getAttribute("data-id"),
+    sentItem.id, "The sent request is selected");
+  is(document.querySelector(".network-details-panel"), null,
+    "The detail panel is hidden");
+
   return teardown(monitor);
 
   function testCustomItem(item, orig) {
