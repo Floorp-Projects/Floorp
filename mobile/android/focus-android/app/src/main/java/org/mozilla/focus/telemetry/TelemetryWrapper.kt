@@ -67,6 +67,8 @@ object TelemetryWrapper {
         val SHOW = "show"
         val HIDE = "hide"
         val SHARE_INTENT = "share_intent"
+        val REMOVE = "remove"
+        val REORDER = "reorder"
     }
 
     private object Object {
@@ -91,6 +93,7 @@ object TelemetryWrapper {
         val TABS_TRAY = "tabs_tray"
         val RECENT_APPS = "recent_apps"
         val APP_ICON = "app_icon"
+        val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
     }
 
     private object Value {
@@ -119,6 +122,7 @@ object TelemetryWrapper {
     }
 
     private object Extra {
+        val FROM = "from"
         val TO = "to"
         val TOTAL = "total"
         val SELECTED = "selected"
@@ -557,5 +561,22 @@ object TelemetryWrapper {
     @JvmStatic
     fun menuReloadEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.RELOAD).queue();
+    }
+
+    fun saveAutocompleteDomainEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.AUTOCOMPLETE_DOMAIN).queue()
+    }
+
+    fun removeAutocompleteDomainsEvent(count: Int) {
+        TelemetryEvent.create(Category.ACTION, Method.REMOVE, Object.AUTOCOMPLETE_DOMAIN)
+                .extra(Extra.TOTAL, count.toString())
+                .queue()
+    }
+
+    fun reorderAutocompleteDomainEvent(from: Int, to: Int) {
+        TelemetryEvent.create(Category.ACTION, Method.REORDER, Object.AUTOCOMPLETE_DOMAIN)
+                .extra(Extra.FROM, from.toString())
+                .extra(Extra.TO, to.toString())
+                .queue()
     }
 }

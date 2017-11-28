@@ -23,6 +23,7 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.util.*
 
 /**
@@ -204,6 +205,8 @@ open class AutocompleteListFragment : Fragment() {
 
             launch(CommonPool) {
                 CustomAutocomplete.saveDomains(activity.applicationContext, domains)
+
+                TelemetryWrapper.reorderAutocompleteDomainEvent(from, to)
             }
         }
     }
