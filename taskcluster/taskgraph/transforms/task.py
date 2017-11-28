@@ -553,7 +553,7 @@ task_description_schema = Schema({
 
         # "Invalid" is a noop for try and other non-supported branches
         Required('google-play-track'): Any('production', 'beta', 'alpha', 'rollout', 'invalid'),
-        Required('dry-run', default=True): bool,
+        Required('commit', default=False): bool,
         Optional('rollout-percentage'): int,
     }),
 })
@@ -989,7 +989,7 @@ def build_push_apk_payload(config, task, task_def):
     worker = task['worker']
 
     task_def['payload'] = {
-        'dry_run': worker['dry-run'],
+        'commit': worker['commit'],
         'upstreamArtifacts':  worker['upstream-artifacts'],
         'google_play_track': worker['google-play-track'],
     }
