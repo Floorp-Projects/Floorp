@@ -17,7 +17,7 @@ use std::ptr;
 #[test]
 fn rooting() {
     unsafe {
-        let runtime = Runtime::new().unwrap();
+        let runtime = Runtime::new(false).unwrap();
         JS_SetGCZeal(runtime.cx(), 2, 1);
 
         let cx = runtime.cx();

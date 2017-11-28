@@ -1217,11 +1217,13 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
     }
   }
 
-  // Don't send the message to the main thread if it's not going to have
-  // any work to do.
-  if (aFinalUpdate ||
-      !mUpdateRunnables.IsEmpty() ||
-      !mStreamUpdates.IsEmpty()) {
+  // If this is the final update, then a stable state event will soon be
+  // posted just before this thread finishes, and so there is no need to also
+  // post here.
+  if (!aFinalUpdate &&
+      // Don't send the message to the main thread if it's not going to have
+      // any work to do.
+      !(mUpdateRunnables.IsEmpty() && mStreamUpdates.IsEmpty())) {
     EnsureStableStateEventPosted();
   }
 }
@@ -1460,12 +1462,7 @@ MediaStreamGraphImpl::UpdateMainThreadState()
     (IsEmpty() && mBackMessageQueue.IsEmpty());
   PrepareUpdatesToMainThreadState(finalUpdate);
   if (finalUpdate) {
-    // Enter shutdown mode. The stable-state handler will detect this
-    // and complete shutdown. Destroy any streams immediately.
-    LOG(LogLevel::Debug,
-        ("MediaStreamGraph %p waiting for main thread cleanup", this));
-    // We'll shut down this graph object if it does not get restarted.
-    LifecycleStateRef() = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
+    // Enter shutdown mode when this iteration is completed.
     // No need to Destroy streams here. The main-thread owner of each
     // stream is responsible for calling Destroy on them.
     return false;
@@ -1896,6 +1893,19 @@ MediaStreamGraphImpl::EnsureStableStateEventPosted()
   mPostedRunInStableStateEvent = true;
   nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this, true);
   mAbstractMainThread->Dispatch(event.forget());
+}
+
+void
+MediaStreamGraphImpl::SignalMainThreadCleanup()
+{
+  MOZ_ASSERT(mDriver->OnThread());
+
+  MonitorAutoLock lock(mMonitor);
+  LOG(LogLevel::Debug,
+      ("MediaStreamGraph %p waiting for main thread cleanup", this));
+  LifecycleStateRef() =
+    MediaStreamGraphImpl::LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
+  EnsureStableStateEventPosted();
 }
 
 void

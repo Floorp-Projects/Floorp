@@ -77,6 +77,7 @@ CustomElementConstructor::Construct(const char* aExecutionReason,
   JS::Rooted<JSObject*> result(cx);
   JS::Rooted<JS::Value> constructor(cx, JS::ObjectValue(*mCallback));
   if (!JS::Construct(cx, constructor, JS::HandleValueArray::empty(), &result)) {
+    aRv.NoteJSContextException(cx);
     return nullptr;
   }
 
@@ -157,10 +158,12 @@ namespace {
 class MOZ_RAII AutoConstructionStackEntry final
 {
 public:
-  AutoConstructionStackEntry(nsTArray<RefPtr<nsGenericHTMLElement>>& aStack,
-                             nsGenericHTMLElement* aElement)
+  AutoConstructionStackEntry(nsTArray<RefPtr<Element>>& aStack,
+                             Element* aElement)
     : mStack(aStack)
   {
+    MOZ_ASSERT(aElement->IsHTMLElement() || aElement->IsXULElement());
+
     mIndex = mStack.Length();
     mStack.AppendElement(aElement);
   }
@@ -173,7 +176,7 @@ public:
   }
 
 private:
-  nsTArray<RefPtr<nsGenericHTMLElement>>& mStack;
+  nsTArray<RefPtr<Element>>& mStack;
   uint32_t mIndex;
 };
 
@@ -916,8 +919,7 @@ CustomElementRegistry::Upgrade(Element* aElement,
   }
 
   // Step 5.
-  AutoConstructionStackEntry acs(aDefinition->mConstructionStack,
-                                 nsGenericHTMLElement::FromContent(aElement));
+  AutoConstructionStackEntry acs(aDefinition->mConstructionStack, aElement);
 
   // Step 6 and step 7.
   DoUpgrade(aElement, aDefinition->mConstructor, aRv);

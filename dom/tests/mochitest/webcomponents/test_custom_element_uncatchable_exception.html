@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1407669
+-->
+<head>
+  <title>Test custom elements runtime exception</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1407669">Bug 1407669</a>
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, function() {
+  window.onerror = function (e) {
+    ok(false, "How did we get here!?");
+  }
+
+  class Foo extends HTMLElement {
+    constructor() {
+      super()
+      TestFunctions.throwUncatchableException();
+    }
+  }
+
+  customElements.define("test-custom-element", Foo);
+  let element = document.createElement("test-custom-element");
+  is(element instanceof HTMLUnknownElement, true, "It should be a HTMLUnknownElement when uncatchable exception throws in constructor");
+  ok(true, "Uncatchable exception should not report");
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>
