@@ -267,7 +267,6 @@ public:
     bool IsShuttingDown() const {return mShuttingDown;}
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
-    nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
     void RecordTraversal(void* p, nsISupports* s);
 
