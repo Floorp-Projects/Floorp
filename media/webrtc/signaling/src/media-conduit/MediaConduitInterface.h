@@ -375,22 +375,13 @@ public:
   bool SetRemoteSSRC(unsigned int ssrc) override = 0;
 
   /**
-   * Function to deliver a capture video frame for encoding and transport
-   * @param video_frame: pointer to captured video-frame.
-   * @param video_frame_length: size of the frame
-   * @param width, height: dimensions of the frame
-   * @param video_type: Type of the video frame - I420, RAW
-   * @param captured_time: timestamp when the frame was captured.
-   *                       if 0 timestamp is automatcally generated
-   * NOTE: ConfigureSendMediaCodec() MUST be called before this function can be invoked
-   *       This ensures the inserted video-frames can be transmitted by the conduit
+   * Function to deliver a capture video frame for encoding and transport.
+   * If the frame's timestamp is 0, it will be automatcally generated.
+   *
+   * NOTE: ConfigureSendMediaCodec() must be called before this function can
+   *       be invoked. This ensures the inserted video-frames can be
+   *       transmitted by the conduit.
    */
-  virtual MediaConduitErrorCode SendVideoFrame(const unsigned char* video_frame,
-                                               unsigned int video_frame_length,
-                                               unsigned short width,
-                                               unsigned short height,
-                                               VideoType video_type,
-                                               uint64_t capture_time) = 0;
   virtual MediaConduitErrorCode SendVideoFrame(
     const webrtc::VideoFrame& frame) = 0;
 
