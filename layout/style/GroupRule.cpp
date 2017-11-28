@@ -198,13 +198,6 @@ GeckoGroupRuleRules::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 // ServoGroupRuleRules
 //
 
-ServoGroupRuleRules::~ServoGroupRuleRules()
-{
-  if (mRuleList) {
-    mRuleList->DropReference();
-  }
-}
-
 #ifdef DEBUG
 void
 ServoGroupRuleRules::List(FILE* out, int32_t aIndent) const
