@@ -9,6 +9,7 @@ buildscript {
     repositories {
         jcenter()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.3'
         classpath 'com.dicedmelon.gradle:jacoco-android:0.1.2'
@@ -18,6 +19,19 @@ buildscript {
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+    }
+}
+
+plugins {
+    id "io.gitlab.arturbosch.detekt" version "1.0.0.RC5-5"
+}
+
+detekt {
+    version = "1.0.0.RC5-5"
+    profile("main") {
+        input = "$projectDir"
+        config = "$projectDir/detekt.yml"
+        filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
     }
 }
 
