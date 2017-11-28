@@ -56,15 +56,16 @@ class txLoadedDocumentsHash : public nsTHashtable<txLoadedDocumentEntry>
 {
 public:
     txLoadedDocumentsHash()
-        : nsTHashtable<txLoadedDocumentEntry>(4)
+        : nsTHashtable<txLoadedDocumentEntry>(4),
+          mSourceDocument(nullptr)
     {
     }
     ~txLoadedDocumentsHash();
-    MOZ_MUST_USE nsresult init(const txXPathNode& aSource);
+    MOZ_MUST_USE nsresult init(txXPathNode* aSourceDocument);
 
 private:
     friend class txExecutionState;
-    nsAutoPtr<txXPathNode> mSourceDocument;
+    txXPathNode* mSourceDocument;
 };
 
 
