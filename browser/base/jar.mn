@@ -42,13 +42,6 @@ browser.jar:
         content/browser/illustrations/error-server-not-found.svg (content/illustrations/error-server-not-found.svg)
         content/browser/illustrations/error-malformed-url.svg (content/illustrations/error-malformed-url.svg)
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
-
-#ifdef MOZ_SERVICES_HEALTHREPORT
-        content/browser/abouthealthreport/abouthealth.xhtml   (content/abouthealthreport/abouthealth.xhtml)
-        content/browser/abouthealthreport/abouthealth.js      (content/abouthealthreport/abouthealth.js)
-        content/browser/abouthealthreport/abouthealth.css     (content/abouthealthreport/abouthealth.css)
-#endif
-
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
         content/browser/aboutRobots-widget-left.png   (content/aboutRobots-widget-left.png)
         content/browser/aboutTabCrashed.css           (content/aboutTabCrashed.css)

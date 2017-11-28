@@ -28,10 +28,7 @@ mozconfig Defines
 
   When Defined (which it is on most platforms):
 
-  * Builds ``about:healthreport`` and associated underpinnings (see `healthreport <../fhr/index>`)
-  * Desktop: includes ``toolkit/components/telemetry/healthreport-prefs.js`` (which sets ``datareporting.healthreport.{infoURL|uploadEnabled|about.reportUrl}``)
-  * Android: enables ``datareporting.healthreport.uploadEnabled`` (which is unused on Android)
-  * Android: includes ``mobile/android/chrome/content/healthreport-prefs.js`` (which sets ``datareporting.healthreport.about.reportUrl``)
+  * includes ``toolkit/components/telemetry/healthreport-prefs.js`` (which sets ``datareporting.healthreport.{infoURL|uploadEnabled}``)
 
 ``MOZ_DATA_REPORTING``
 
