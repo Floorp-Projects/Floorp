@@ -250,6 +250,27 @@ StyleSetHandle::Ptr::AddDocStyleSheet(StyleSheet* aSheet,
 }
 
 void
+StyleSetHandle::Ptr::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule)
+{
+  FORWARD_CONCRETE(RuleRemoved, (*aSheet.AsGecko(), aRule),
+                                (*aSheet.AsServo(), aRule));
+}
+
+void
+StyleSetHandle::Ptr::RuleAdded(StyleSheet& aSheet, css::Rule& aRule)
+{
+  FORWARD_CONCRETE(RuleAdded, (*aSheet.AsGecko(), aRule),
+                              (*aSheet.AsServo(), aRule));
+}
+
+void
+StyleSetHandle::Ptr::RuleChanged(StyleSheet& aSheet, css::Rule* aRule)
+{
+  FORWARD_CONCRETE(RuleChanged, (*aSheet.AsGecko(), aRule),
+                                (*aSheet.AsServo(), aRule));
+}
+
+void
 StyleSetHandle::Ptr::RecordStyleSheetChange(StyleSheet* aSheet,
                                             StyleSheet::ChangeType aChangeType)
 {
