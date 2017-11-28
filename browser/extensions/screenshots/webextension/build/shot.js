@@ -29,7 +29,7 @@ function isUrl(url) {
   if ((/^view-source:/i).test(url)) {
     return isUrl(url.substr("view-source:".length));
   }
-  return (/^https?:\/\/[a-z0-9.-_]{1,8000}[a-z0-9](:[0-9]{1,8000})?\/?/i).test(url);
+  return (/^https?:\/\/[a-z0-9._-]{1,8000}[a-z0-9](:[0-9]{1,8000})?\/?/i).test(url);
 }
 
 function isValidClipImageUrl(url) {
@@ -48,7 +48,7 @@ function assertUrl(url) {
 }
 
 function isSecureWebUri(url) {
-  return (/^https?:\/\/[a-z0-9.-_]{1,8000}[a-z0-9](:[0-9]{1,8000})?\/?/i).test(url);
+  return (/^https?:\/\/[a-z0-9._-]{1,8000}[a-z0-9](:[0-9]{1,8000})?\/?/i).test(url);
 }
 
 function assertOrigin(url) {
@@ -129,7 +129,7 @@ function resolveUrl(base, url) {
   }
   if (url.indexOf("/") === 0) {
     // Domain-relative URL
-    return (/^https?:\/\/[a-z0-9.-_]{1,4000}/i).exec(base)[0] + url;
+    return (/^https?:\/\/[a-z0-9._-]{1,4000}/i).exec(base)[0] + url;
   }
   // Otherwise, a full relative URL
   while (url.indexOf("./") === 0) {
@@ -209,7 +209,7 @@ class AbstractShot {
 
   constructor(backend, id, attrs) {
     attrs = attrs || {};
-    assert((/^[a-zA-Z0-9]{1,4000}\/[a-z0-9.-_]{1,4000}$/).test(id), "Bad ID (should be alphanumeric):", JSON.stringify(id));
+    assert((/^[a-zA-Z0-9]{1,4000}\/[a-z0-9._-]{1,4000}$/).test(id), "Bad ID (should be alphanumeric):", JSON.stringify(id));
     this._backend = backend;
     this._id = id;
     this.origin = attrs.origin || null;
@@ -389,7 +389,7 @@ class AbstractShot {
     if (!this.url) {
       return null;
     }
-    if (this.url.search(/^https?/i) != -1) {
+    if (/^https?:\/\//i.test(this.url)) {
       let txt = this.url;
       txt = txt.replace(/^[a-z]{1,4000}:\/\//i, "");
       txt = txt.replace(/\/.{0,4000}/, "");

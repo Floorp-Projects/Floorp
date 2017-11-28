@@ -308,6 +308,11 @@ class BaseConfig(object):
                  "keys/values that were not overwritten by another cfg -- "
                  "held the highest hierarchy."
         )
+        self.config_parser.add_option(
+            "--append-env-variables-from-configs", action="store_true",
+            dest="append_env_variables_from_configs",
+            help="Merge environment variables from config files."
+        )
 
         # Logging
         log_option_group = OptionGroup(self.config_parser, "Logging")
@@ -489,7 +494,8 @@ class BaseConfig(object):
                 options.config_files + options.opt_config_files, options=options
             ))
             config = {}
-            if self.append_env_variables_from_configs:
+            if (self.append_env_variables_from_configs
+                    or options.append_env_variables_from_configs):
                 # We only append values from various configs for the 'env' entry
                 # For everything else we follow the standard behaviour
                 for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):

@@ -8,73 +8,52 @@
 add_task(function* () {
   info("Test JSON encoding started");
 
-  const text = Symbol("text");
-
+  const bom = "%EF%BB%BF"; // UTF-8 BOM
   const tests = [
     {
-      "UTF-8 with BOM": "",
-      "UTF-16BE with BOM": "",
-      "UTF-16LE with BOM": "",
-      [text]: ""
+      input: bom,
+      output: ""
     }, {
-      "UTF-8": "%30",
-      "UTF-16BE": "%00%30",
-      "UTF-16LE": "%30%00",
-      [text]: "0"
+      input: "%FE%FF", // UTF-16BE BOM
+      output: "\uFFFD\uFFFD"
     }, {
-      "UTF-8": "%30%FF",
-      "UTF-16BE": "%00%30%00",
-      "UTF-16LE": "%30%00%00",
-      [text]: "0\uFFFD" // 0�
+      input: "%FF%FE", // UTF-16LE BOM
+      output: "\uFFFD\uFFFD"
     }, {
-      "UTF-8": "%C3%A0",
-      "UTF-16BE": "%00%E0",
-      "UTF-16LE": "%E0%00",
-      [text]: "\u00E0" // à
+      input: bom + "%30",
+      output: "0"
     }, {
-      "UTF-8 with BOM": "%E2%9D%A4",
-      "UTF-16BE with BOM": "%27%64",
-      "UTF-16LE with BOM": "%64%27",
-      [text]: "\u2764" // ❤
+      input: bom + bom,
+      output: "\uFEFF"
     }, {
-      "UTF-8": "%30%F0%9F%9A%80",
-      "UTF-16BE": "%00%30%D8%3D%DE%80",
-      "UTF-16LE": "%30%00%3D%D8%80%DE",
-      [text]: "0\uD83D\uDE80" // 0🚀
+      input: "%00%61",
+      output: "\u0000a"
+    }, {
+      input: "%61%00",
+      output: "a\u0000"
+    }, {
+      input: "%30%FF",
+      output: "0\uFFFD" // 0�
+    }, {
+      input: "%C3%A0",
+      output: "\u00E0" // à
+    }, {
+      input: "%E2%9D%A4",
+      output: "\u2764" // ❤
+    }, {
+      input: "%F0%9F%9A%80",
+      output: "\uD83D\uDE80" // 🚀
     }
   ];
 
-  const bom = {
-    "UTF-8": "%EF%BB%BF",
-    "UTF-16BE": "%FE%FF",
-    "UTF-16LE": "%FF%FE"
-  };
+  for (let {input, output} of tests) {
+    info("Test decoding of " + JSON.stringify(input) + ".");
 
-  // Test double BOM.
-  tests.push(Object.entries(bom).reduce((obj, [prop, value]) => {
-    obj[prop + " with BOM"] = value;
-    return obj;
-  }, {[text]: "\uFEFF"}));
+    yield addJsonViewTab("data:application/json," + input);
+    yield selectJsonViewContentTab("rawdata");
 
-  for (let test of tests) {
-    let result = test[text];
-    for (let [encoding, data] of Object.entries(test)) {
-      info("Testing " + JSON.stringify(result) + " encoded in " + encoding + ".");
-
-      if (encoding.endsWith("BOM")) {
-        encoding = encoding.split(" ")[0];
-        data = bom[encoding] + data;
-      }
-
-      yield addJsonViewTab("data:application/json," + data);
-      yield selectJsonViewContentTab("rawdata");
-
-      // Check encoding.
-      is(yield evalInContent("JSONView.encoding"), encoding, "Got the right encoding.");
-
-      // Check displayed data.
-      let output = yield getElementText(".textPanelBox .data");
-      is(output, result, "The right data has been received.");
-    }
+    // Check displayed data.
+    let data = yield getElementText(".textPanelBox .data");
+    is(data, output, "The right data has been received.");
   }
 });

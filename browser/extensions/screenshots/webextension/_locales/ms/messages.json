@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Muat turun"
   },
+  "downloadOnlyNotice": {
+    "message": "Anda sedang dalam mod Muat turun-Sahaja."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots secara automatik bertukar ke mod Muat turun-Sahaja dalam situasi berikut:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Dalam tetingkap Pelayaran Peribadi."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Kuki pihak ketiga dinyahdayakan."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Jangan sesekali ingat sejarah” didayakan."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Pautan Disalin"
   },
   "notificationLinkCopiedDetails": {
     "message": "Pautan ke syot anda telah disalin ke klipbod. Tekan $META_KEY$-V untuk tampal.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Salin"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Syot Disalin"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Syot anda telah disalin ke klipbod. Tekan $META_KEY$-V untuk tampal.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

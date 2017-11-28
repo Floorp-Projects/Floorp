@@ -72,7 +72,7 @@ interface DOMMatrixReadOnly {
 
     // Helper methods
     readonly attribute boolean is2D;
-    readonly attribute boolean identity;
+    readonly attribute boolean isIdentity;
     DOMPoint                   transformPoint(optional DOMPointInit point);
     [Throws] Float32Array      toFloat32Array();
     [Throws] Float64Array      toFloat64Array();

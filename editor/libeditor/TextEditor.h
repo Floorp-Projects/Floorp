@@ -187,9 +187,11 @@ protected:
                                          uint32_t aFlags,
                                          const nsACString& aCharset);
 
-  NS_IMETHOD CreateBR(nsIDOMNode* aNode, int32_t aOffset,
-                      nsCOMPtr<nsIDOMNode>* outBRNode,
-                      EDirection aSelect = eNone);
+  already_AddRefed<Element> CreateBR(nsINode* aNode, int32_t aOffset,
+                                     EDirection aSelect = eNone);
+  nsresult CreateBR(nsIDOMNode* aNode, int32_t aOffset,
+                    nsCOMPtr<nsIDOMNode>* outBRNode,
+                    EDirection aSelect = eNone);
   already_AddRefed<Element> CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
                                          int32_t* aInOutOffset,
                                          EDirection aSelect);

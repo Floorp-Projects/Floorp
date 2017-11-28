@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Stáhnout"
   },
+  "downloadOnlyNotice": {
+    "message": "Nyní jste v režimu pouze ke stažení."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots se automaticky přepne do režimu pouze ke stažení, pokud:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Jste v okně anonymního prohlížení."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Máte zakázané cookies třetích stran."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Máte zcela zakázané ukládání historie."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Odkaz zkopírován"
   },
   "notificationLinkCopiedDetails": {
     "message": "Odkaz na váš snímek byl zkopírován do schránky. Pro vložení stiskněte $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopírovat"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Snímek zkopírován"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Váš snímek byl zkopírován do schránky. Pro vložení stiskněte $META_KEY$-V.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

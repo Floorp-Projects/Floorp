@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Загрузить"
   },
+  "downloadOnlyNotice": {
+    "message": "Сейчас вы в режиме только загрузки."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots автоматически переходит в режим только загрузки в следующих ситуациях:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "В приватном окне."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Сторонние куки отключены."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Включено «не будет запоминать историю»."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ссылка скопирована"
   },
   "notificationLinkCopiedDetails": {
     "message": "Ссылка на ваш снимок была скопирована в буфер обмена. Нажмите $META_KEY$-V для её вставки.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Копировать"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Снимок скопирован"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Ваш снимок был скопирован в буфер обмена. Нажмите $META_KEY$-V для его вставки.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

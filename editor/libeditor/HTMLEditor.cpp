@@ -1035,31 +1035,6 @@ HTMLEditor::TabInTable(bool inIsShift,
   return NS_OK;
 }
 
-already_AddRefed<Element>
-HTMLEditor::CreateBR(nsINode* aNode,
-                     int32_t aOffset,
-                     EDirection aSelect)
-{
-  nsCOMPtr<nsIDOMNode> parent = GetAsDOMNode(aNode);
-  int32_t offset = aOffset;
-  nsCOMPtr<nsIDOMNode> outBRNode;
-  // We assume everything is fine if the br is not null, irrespective of retval
-  CreateBRImpl(address_of(parent), &offset, address_of(outBRNode), aSelect);
-  nsCOMPtr<Element> ret = do_QueryInterface(outBRNode);
-  return ret.forget();
-}
-
-NS_IMETHODIMP
-HTMLEditor::CreateBR(nsIDOMNode* aNode,
-                     int32_t aOffset,
-                     nsCOMPtr<nsIDOMNode>* outBRNode,
-                     EDirection aSelect)
-{
-  nsCOMPtr<nsIDOMNode> parent = aNode;
-  int32_t offset = aOffset;
-  return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
-}
-
 nsresult
 HTMLEditor::InsertBR()
 {

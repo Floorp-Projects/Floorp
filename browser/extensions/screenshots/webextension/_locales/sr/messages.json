@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Преузми"
   },
+  "downloadOnlyNotice": {
+    "message": "Тренутно сте у режиму где можете само преузимати."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots се пребацује у режим где се само преузима у следећим ситуацијама:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "У прозору приватног прегледања."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Колачићи трећих страна су онемогућени."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Опција „Никада не памти историјат“ је омогућена."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Веза копирана"
   },
   "notificationLinkCopiedDetails": {
     "message": "Веза коју сте забележили је копирана у бележницу. Притисните $META_KEY$-V да налепите.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Копирај"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Снимак је копиран"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Ваш снимак је копиран. Притисните $META_KEY$-V да налепите.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

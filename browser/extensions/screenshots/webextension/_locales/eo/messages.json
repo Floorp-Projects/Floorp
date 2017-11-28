@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Elŝuti"
   },
+  "downloadOnlyNotice": {
+    "message": "Vi estas nun en la reĝimo \"Nur elŝutoj\"."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots aŭtomate transiras al reĝimo \"Nur elŝutoj\" en la jenaj situacioj:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "en fenestro de privata retumo"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "se nerektaj kuketoj estas malaktivaj."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Neniam memori historion” estas aktiva."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ligilo kopiita"
   },
   "notificationLinkCopiedDetails": {
     "message": "La ligilo al via ekrankopio estis kopiita al la tondujo. Premu $META_KEY$-V por alglui.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopii"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Ekrankopio kopiita"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Via ekrankopio estis kopiita al la tondujo. Premu $META_KEY$-V por alglui.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

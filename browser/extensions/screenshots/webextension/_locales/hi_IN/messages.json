@@ -29,6 +29,18 @@
   "downloadScreenshot": {
     "message": "डाउनलोड करें"
   },
+  "downloadOnlyNotice": {
+    "message": "आप अभी केवल-डाउनलोड मोड में हैं."
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "एक निजी ब्राउज़िंग विंडो में."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "तृतीय-पक्ष कुकीज़ अक्षम हैं."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“कभी इतिहास याद न रखें” सक्षम है."
+  },
   "notificationLinkCopiedTitle": {
     "message": "लिंक की नक़ल की गयी"
   },
@@ -36,6 +48,14 @@
     "message": "आपके शॉट के लिंक क्लिपबोर्ड पर कॉपी किए गए हैं. पेस्ट करने के लिए $META_KEY$-V दबाएँ.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "इस छवि को $PIXELS$px में छोटा किया गया है.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -81,6 +101,9 @@
   },
   "tourBodyIntro": {
     "message": "Firefox छोड़े बिना स्क्रीनशॉट लें, सहेजें, और साझा करें."
+  },
+  "tourHeaderPageAction": {
+    "message": "सहेजने का एक नया तरीका"
   },
   "tourHeaderClickAndDrag": {
     "message": "जो आप चाहते हैं उसे कैद करें"

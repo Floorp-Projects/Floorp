@@ -931,23 +931,6 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
 }
 
 nsresult
-nsSocketTransport::InitPreResolved(const char **socketTypes, uint32_t typeCount,
-                                   const nsACString &host, uint16_t port,
-                                   const nsACString &hostRoute, uint16_t portRoute,
-                                   nsIProxyInfo *proxyInfo,
-                                   const mozilla::net::NetAddr* addr)
-{
-  nsresult rv = Init(socketTypes, typeCount, host, port, hostRoute, portRoute, proxyInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mNetAddr = *addr;
-  mNetAddrPreResolved = true;
-  return NS_OK;
-}
-
-nsresult
 nsSocketTransport::InitWithFilename(const char *filename)
 {
 #if defined(XP_UNIX)

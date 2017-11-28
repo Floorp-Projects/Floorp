@@ -186,6 +186,8 @@ class MediaCache;
  * This class can be directly embedded as a value.
  */
 class MediaCacheStream {
+  using AutoLock = ReentrantMonitorAutoEnter;
+
 public:
   // This needs to be a power of two
   static const int64_t BLOCK_SIZE = 32768;
@@ -334,7 +336,7 @@ public:
 
   // Returns true when all streams for this resource are suspended or their
   // channel has ended.
-  bool AreAllStreamsForResourceSuspended();
+  bool AreAllStreamsForResourceSuspended(AutoLock&);
 
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
@@ -424,31 +426,32 @@ private:
   // Read data from the partial block and return the number of bytes read
   // successfully. 0 if aOffset is not an offset in the partial block or there
   // is nothing to read.
-  uint32_t ReadPartialBlock(int64_t aOffset, Span<char> aBuffer);
+  uint32_t ReadPartialBlock(AutoLock&, int64_t aOffset, Span<char> aBuffer);
 
   // Read data from the cache block specified by aOffset. Return the number of
   // bytes read successfully or an error code if any failure.
-  Result<uint32_t, nsresult> ReadBlockFromCache(int64_t aOffset,
+  Result<uint32_t, nsresult> ReadBlockFromCache(AutoLock&,
+                                                int64_t aOffset,
                                                 Span<char> aBuffer,
                                                 bool aNoteBlockUsage = false);
 
   // Non-main thread only.
-  nsresult Seek(int64_t aOffset);
+  nsresult Seek(AutoLock&, int64_t aOffset);
 
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
   // This method assumes that the cache monitor is held and can be called on
   // any thread.
-  int64_t GetCachedDataEndInternal(int64_t aOffset);
+  int64_t GetCachedDataEndInternal(AutoLock&, int64_t aOffset);
   // Returns the offset of the first byte of cached data at or after aOffset,
   // or -1 if there is no such cached data.
   // This method assumes that the cache monitor is held and can be called on
   // any thread.
-  int64_t GetNextCachedDataInternal(int64_t aOffset);
+  int64_t GetNextCachedDataInternal(AutoLock&, int64_t aOffset);
   // Used by |NotifyDataEnded| to write |mPartialBlock| to disk.
   // If |aNotifyAll| is true, this function will wake up readers who may be
   // waiting on the media cache monitor. Called on the main thread only.
-  void FlushPartialBlockInternal(bool aNotify, ReentrantMonitorAutoEnter& aReentrantMonitor);
+  void FlushPartialBlockInternal(AutoLock&, bool aNotify);
 
   void NotifyDataStartedInternal(uint32_t aLoadID,
                                  int64_t aOffset,

@@ -29,11 +29,40 @@
   "downloadScreenshot": {
     "message": "Baixar"
   },
+  "downloadOnlyNotice": {
+    "message": "Você está atualmente no modo somente download."
+  },
+  "downloadOnlyDetails": {
+    "message": "O Firefox Screenshots alterna automaticamente para o modo somente download nessas situações:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Em uma janela de navegação privativa."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cookies de terceiros estão desabilitados."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Nunca lembrar o histórico” está habilitado."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link copiado"
   },
   "notificationLinkCopiedDetails": {
     "message": "O link da sua captura foi copiado para a área de transferência. Pressione $META_KEY$-V para colar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copiar"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Capturado"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Sua captura de tela foi copiada para a área de transferência. Pressione $META_KEY$-V para colar.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
