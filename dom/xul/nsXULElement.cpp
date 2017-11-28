@@ -186,8 +186,12 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *
                      bool aIsScriptable, bool aIsRoot)
 {
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    RefPtr<nsXULElement> element = new nsXULElement(ni.forget());
-    if (element) {
+    nsCOMPtr<Element> baseElement;
+    NS_NewXULElement(getter_AddRefs(baseElement), ni.forget(), dom::FROM_PARSER_NETWORK);
+
+    if (baseElement) {
+        nsXULElement* element = FromContent(baseElement);
+
         if (aPrototype->mHasIdAttribute) {
             element->SetHasID();
         }
@@ -216,9 +220,11 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *
                 }
             }
         }
+
+        return baseElement.forget().downcast<nsXULElement>();
     }
 
-    return element.forget();
+    return nullptr;
 }
 
 nsresult
@@ -255,20 +261,22 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-NS_NewXULElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+NS_NewXULElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                 FromParser aFromParser)
 {
-    RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
 
-    NS_PRECONDITION(ni, "need nodeinfo for non-proto Create");
+    NS_PRECONDITION(nodeInfo, "need nodeinfo for non-proto Create");
 
-    nsIDocument* doc = ni->GetDocument();
+    NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XUL),
+                 "Trying to create XUL elements that don't have the XUL namespace");
+
+    nsIDocument* doc = nodeInfo->GetDocument();
     if (doc && !doc->AllowXULXBL()) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    NS_ADDREF(*aResult = new nsXULElement(ni.forget()));
-
-    return NS_OK;
+    return nsContentUtils::NewXULOrHTMLElement(aResult, nodeInfo, aFromParser, nullptr, nullptr);
 }
 
 void

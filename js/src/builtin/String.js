@@ -490,8 +490,6 @@ function String_codePointAt(pos) {
     return (first - 0xD800) * 0x400 + (second - 0xDC00) + 0x10000;
 }
 
-var collatorCache = new Record();
-
 /* ES6 20121122 draft 15.5.4.21. */
 function String_repeat(count) {
     // Steps 1-3.
@@ -572,6 +570,8 @@ function StringIteratorNext() {
     return result;
 }
 
+var collatorCache = new Record();
+
 /**
  * Compare this String against that String, using the locale and collation
  * options provided.
@@ -593,8 +593,10 @@ function String_localeCompare(that) {
     if (locales === undefined && options === undefined) {
         // This cache only optimizes for the old ES5 localeCompare without
         // locales and options.
-        if (collatorCache.collator === undefined)
+        if (!IsRuntimeDefaultLocale(collatorCache.runtimeDefaultLocale)) {
             collatorCache.collator = intl_Collator(locales, options);
+            collatorCache.runtimeDefaultLocale = RuntimeDefaultLocale();
+        }
         collator = collatorCache.collator;
     } else {
         collator = intl_Collator(locales, options);

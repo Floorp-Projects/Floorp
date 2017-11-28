@@ -657,13 +657,13 @@ function DefaultLocaleIgnoringAvailableLocales() {
  * Spec: ECMAScript Internationalization API Specification, 6.2.4.
  */
 function DefaultLocale() {
-    const runtimeDefaultLocale = RuntimeDefaultLocale();
-    if (runtimeDefaultLocale === localeCache.runtimeDefaultLocale)
+    if (IsRuntimeDefaultLocale(localeCache.runtimeDefaultLocale))
         return localeCache.defaultLocale;
 
     // If we didn't have a cache hit, compute the candidate default locale.
     // Then use it as the actual default locale if ICU supports that locale
     // (perhaps via fallback).  Otherwise use the last-ditch locale.
+    var runtimeDefaultLocale = RuntimeDefaultLocale();
     var candidate = DefaultLocaleIgnoringAvailableLocales();
     var locale;
     if (BestAvailableLocaleIgnoringDefault(callFunction(collatorInternalProperties.availableLocales,
@@ -761,11 +761,11 @@ function CanonicalizeTimeZoneName(timeZone) {
  * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
  */
 function DefaultTimeZone() {
-    const icuDefaultTimeZone = intl_defaultTimeZone();
-    if (timeZoneCache.icuDefaultTimeZone === icuDefaultTimeZone)
+    if (intl_isDefaultTimeZone(timeZoneCache.icuDefaultTimeZone))
         return timeZoneCache.defaultTimeZone;
 
     // Verify that the current ICU time zone is a valid ECMA-402 time zone.
+    var icuDefaultTimeZone = intl_defaultTimeZone();
     var timeZone = intl_IsValidTimeZoneName(icuDefaultTimeZone);
     if (timeZone === null) {
         // Before defaulting to "UTC", try to represent the default time zone

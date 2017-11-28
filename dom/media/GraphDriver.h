@@ -119,7 +119,6 @@ public:
   virtual void WaitForNextIteration() = 0;
   /* Wakes up the graph if it is waiting. */
   virtual void WakeUp() = 0;
-  virtual void Destroy() {}
   /* Start the graph, init the driver, start the thread. */
   virtual void Start() = 0;
   /* Revive this driver, as more messages just arrived. */
@@ -145,9 +144,6 @@ public:
   GraphDriver* PreviousDriver();
   void SetNextDriver(GraphDriver* aNextDriver);
   void SetPreviousDriver(GraphDriver* aPreviousDriver);
-
-  /* Return whether we have been scheduled to start. */
-  bool Scheduled();
 
   /**
    * If we are running a real time graph, get the current time stamp to schedule
@@ -218,22 +214,6 @@ protected:
   // monitor.
   MediaStreamGraphImpl* mGraphImpl;
 
-  // This enum specifies the wait state of the driver.
-  enum WaitState {
-    // RunThread() is running normally
-    WAITSTATE_RUNNING,
-    // RunThread() is paused waiting for its next iteration, which will
-    // happen soon
-    WAITSTATE_WAITING_FOR_NEXT_ITERATION,
-    // RunThread() is paused indefinitely waiting for something to change
-    WAITSTATE_WAITING_INDEFINITELY,
-    // Something has signaled RunThread() to wake up immediately,
-    // but it hasn't done so yet
-    WAITSTATE_WAKING_UP
-  };
-  // This must be access with the monitor.
-  WaitState mWaitState;
-
   // This is used on the main thread (during initialization), and the graph
   // thread. No monitor needed because we know the graph thread does not run
   // during the initialization.
@@ -252,9 +232,6 @@ protected:
   // driver at the end of this iteration.
   // This must be accessed using the {Set,Get}NextDriver methods.
   RefPtr<GraphDriver> mNextDriver;
-  // This is initially false, but set to true as soon the driver has been
-  // scheduled to start through GraphDriver::Start().
-  bool mScheduled;
   virtual ~GraphDriver()
   { }
 };
@@ -317,6 +294,23 @@ private:
   // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
   TimeStamp mLastTimeStamp;
+
+  // This enum specifies the wait state of the driver.
+  enum WaitState {
+    // RunThread() is running normally
+    WAITSTATE_RUNNING,
+    // RunThread() is paused waiting for its next iteration, which will
+    // happen soon
+    WAITSTATE_WAITING_FOR_NEXT_ITERATION,
+    // RunThread() is paused indefinitely waiting for something to change
+    WAITSTATE_WAITING_INDEFINITELY,
+    // Something has signaled RunThread() to wake up immediately,
+    // but it hasn't done so yet
+    WAITSTATE_WAKING_UP
+  };
+  // This must be access with the monitor.
+  WaitState mWaitState;
+
   // This is true if this SystemClockDriver runs the graph because we could not
   // open an audio stream.
   bool mIsFallback;
@@ -389,7 +383,6 @@ public:
   explicit AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~AudioCallbackDriver();
 
-  void Destroy() override;
   void Start() override;
   void Revive() override;
   void RemoveCallback() override;
@@ -558,6 +551,14 @@ private:
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
   Atomic<bool> mMicrophoneActive;
+  /* Indication of whether a fallback SystemClockDriver should be started if
+   * StateCallback() receives an error.  No mutex need be held during access.
+   * The transition to true happens before cubeb_stream_start() is called.
+   * After transitioning to false on the last DataCallback(), the stream is
+   * not accessed from another thread until the graph thread either signals
+   * main thread cleanup or dispatches an event to switch to another
+   * driver. */
+  bool mShouldFallbackIfError;
   /* True if this driver was created from a driver created because of a previous
    * AudioCallbackDriver failure. */
   bool mFromFallback;

@@ -30,11 +30,9 @@ GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
   : mIterationStart(0),
     mIterationEnd(0),
     mGraphImpl(aGraphImpl),
-    mWaitState(WAITSTATE_RUNNING),
     mCurrentTimeStamp(TimeStamp::Now()),
     mPreviousDriver(nullptr),
-    mNextDriver(nullptr),
-    mScheduled(false)
+    mNextDriver(nullptr)
 { }
 
 void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
@@ -119,12 +117,6 @@ void GraphDriver::SetPreviousDriver(GraphDriver* aPreviousDriver)
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   mPreviousDriver = aPreviousDriver;
-}
-
-bool GraphDriver::Scheduled()
-{
-  GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
-  return mScheduled;
 }
 
 ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
@@ -216,8 +208,7 @@ ThreadedDriver::Start()
     // Note: mThread may be null during event->Run() if we pass to NewNamedThread!  See AudioInitTask
     nsresult rv = NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread));
     if (NS_SUCCEEDED(rv)) {
-      rv = mThread->EventTarget()->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
-      mScheduled = NS_SUCCEEDED(rv);
+      mThread->EventTarget()->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
     }
   }
 }
@@ -263,6 +254,7 @@ SystemClockDriver::SystemClockDriver(MediaStreamGraphImpl* aGraphImpl)
   : ThreadedDriver(aGraphImpl),
     mInitialTimeStamp(TimeStamp::Now()),
     mLastTimeStamp(TimeStamp::Now()),
+    mWaitState(WAITSTATE_RUNNING),
     mIsFallback(false)
 {}
 
@@ -284,8 +276,7 @@ SystemClockDriver::IsFallback()
 void
 ThreadedDriver::RunThread()
 {
-  bool stillProcessing = true;
-  while (stillProcessing) {
+  while (true) {
     mIterationStart = IterationEnd();
     mIterationEnd += GetIntervalForIteration();
 
@@ -324,10 +315,16 @@ ThreadedDriver::RunThread()
          (long)stateComputedTime,
          (long)nextStateComputedTime));
 
-    stillProcessing = mGraphImpl->OneIteration(nextStateComputedTime);
+    bool stillProcessing = mGraphImpl->OneIteration(nextStateComputedTime);
 
+    if (!stillProcessing) {
+      // Enter shutdown mode. The stable-state handler will detect this
+      // and complete shutdown if the graph does not get restarted.
+      mGraphImpl->SignalMainThreadCleanup();
+      return;
+    }
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
-    if (NextDriver() && stillProcessing) {
+    if (NextDriver()) {
       LOG(LogLevel::Debug, ("Switching to AudioCallbackDriver"));
       RemoveCallback();
       NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
@@ -540,6 +537,7 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   , mAddedMixer(false)
   , mInCallback(false)
   , mMicrophoneActive(false)
+  , mShouldFallbackIfError(false)
   , mFromFallback(false)
 {
   LOG(LogLevel::Debug, ("AudioCallbackDriver ctor for graph %p", aGraphImpl));
@@ -726,15 +724,6 @@ AudioCallbackDriver::Init()
   return true;
 }
 
-
-void
-AudioCallbackDriver::Destroy()
-{
-  LOG(LogLevel::Debug, ("AudioCallbackDriver destroyed."));
-  mAudioInput = nullptr;
-  mAudioStream.reset();
-}
-
 void
 AudioCallbackDriver::Start()
 {
@@ -760,13 +749,13 @@ AudioCallbackDriver::Start()
        "to ensure it runs after previous shutdown."));
   RefPtr<AsyncCubebTask> initEvent =
     new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebOperation::INIT);
-  nsresult rv = initEvent->Dispatch();
-  mScheduled = NS_SUCCEEDED(rv);
+  initEvent->Dispatch();
 }
 
 bool
 AudioCallbackDriver::StartStream()
 {
+  mShouldFallbackIfError = true;
   if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not start cubeb stream for MSG.");
     return false;
@@ -775,7 +764,6 @@ AudioCallbackDriver::StartStream()
   {
     MonitorAutoLock mon(mGraphImpl->GetMonitor());
     mStarted = true;
-    mWaitState = WAITSTATE_RUNNING;
   }
   return true;
 }
@@ -1009,13 +997,25 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
                                mSampleRate, mOutputChannels);
 
+  if (!stillProcessing) {
+    // About to hand over control of the graph.  Do not start a new driver if
+    // StateCallback() receives an error for this stream while the main thread
+    // or another driver has control of the graph.
+    mShouldFallbackIfError = false;
+    // Enter shutdown mode. The stable-state handler will detect this
+    // and complete shutdown if the graph does not get restarted.
+    mGraphImpl->SignalMainThreadCleanup();
+    return aFrames - 1;
+  }
+
   bool switching = false;
   {
     MonitorAutoLock mon(mGraphImpl->GetMonitor());
     switching = !!NextDriver();
   }
 
-  if (switching && stillProcessing) {
+  if (switching) {
+    mShouldFallbackIfError = false;
     // If the audio stream has not been started by the previous driver or
     // the graph itself, keep it alive.
     MonitorAutoLock mon(mGraphImpl->GetMonitor());
@@ -1032,11 +1032,6 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     return aFrames - 1;
   }
 
-  if (!stillProcessing) {
-    LOG(LogLevel::Debug,
-        ("Stopping audio thread for MediaStreamGraph %p", this));
-    return aFrames - 1;
-  }
   return aFrames;
 }
 
@@ -1045,22 +1040,8 @@ AudioCallbackDriver::StateCallback(cubeb_state aState)
 {
   LOG(LogLevel::Debug, ("AudioCallbackDriver State: %d", aState));
 
-  if (aState == CUBEB_STATE_ERROR) {
-    if (!mAudioStream) {
-      // If we don't have an audio stream here, this means that the stream
-      // initialization has failed. A fallback on a SystemCallDriver will happen at
-      // the callsite of `cubeb_stream_init`.
-      return;
-    }
-
+  if (aState == CUBEB_STATE_ERROR && mShouldFallbackIfError) {
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
-
-    if (NextDriver() && NextDriver()->Scheduled()) {
-      // We are switching to another driver that has already been scheduled
-      // to be initialized and started. There's nothing for us to do here.
-      return;
-    }
-
     // Fall back to a driver using a normal thread. If needed,
     // the graph will try to re-open an audio stream later.
     SystemClockDriver* nextDriver = new SystemClockDriver(GraphImpl());

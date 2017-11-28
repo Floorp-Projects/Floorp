@@ -7,6 +7,7 @@
 #ifndef WMFUtils_h
 #define WMFUtils_h
 
+#include "ImageTypes.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "WMF.h"
@@ -39,6 +40,8 @@ HRESULT HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames);
 
 HRESULT
 GetDefaultStride(IMFMediaType* aType, uint32_t aWidth, uint32_t* aOutStride);
+
+YUVColorSpace GetYUVColorSpace(IMFMediaType* aType);
 
 int32_t MFOffsetToInt32(const MFOffset& aOffset);
 

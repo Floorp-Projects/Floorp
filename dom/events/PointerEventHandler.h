@@ -143,6 +143,15 @@ public:
                                               nsEventStatus* aStatus,
                                               nsIContent** aTargetContent);
 
+  static void InitPointerEventFromMouse(WidgetPointerEvent* aPointerEvent,
+                                        WidgetMouseEvent* aMouseEvent,
+                                        EventMessage aMessage);
+
+  static void InitPointerEventFromTouch(WidgetPointerEvent* aPointerEvent,
+                                        WidgetTouchEvent* aTouchEvent,
+                                        mozilla::dom::Touch* aTouch,
+                                        bool aIsPrimary);
+
 private:
   // GetPointerType returns pointer type like mouse, pen or touch for pointer
   // event with pointerId. The return value must be one of

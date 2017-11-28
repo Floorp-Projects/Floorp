@@ -6397,7 +6397,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   // that old upgrade behavior could also share the new upgrade steps.
   // And this old upgrade will be remove at some point (when everything is
   // switched to latest custom element spec).
-  nsTArray<RefPtr<nsGenericHTMLElement>>& constructionStack =
+  nsTArray<RefPtr<Element>>& constructionStack =
     definition->mConstructionStack;
   if (constructionStack.Length()) {
     element = constructionStack.LastElement();

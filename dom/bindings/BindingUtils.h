@@ -3391,11 +3391,11 @@ GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
 CustomElementReactionsStack*
 GetCustomElementReactionsStack(JS::Handle<JSObject*> aObj);
 // This function is expected to be called from the constructor function for an
-// HTML element interface; the global/callargs need to be whatever was passed to
-// that constructor function.
-already_AddRefed<nsGenericHTMLElement>
-CreateHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
-                  JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv);
+// HTML or XUL element interface; the global/callargs need to be whatever was
+// passed to that constructor function.
+already_AddRefed<Element>
+CreateXULOrHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
+                       JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv);
 
 void
 SetDocumentAndPageUseCounter(JSObject* aObject, UseCounter aUseCounter);

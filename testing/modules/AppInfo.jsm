@@ -18,6 +18,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"]
     .getService(Ci.nsIPlatformInfo);
 
+let origRuntime = Cc["@mozilla.org/xre/app-info;1"]
+    .getService(Ci.nsIXULRuntime);
+
 /**
  * Create new XULAppInfo instance with specified options.
  *
@@ -59,6 +62,7 @@ this.newAppInfo = function(options = {}) {
     XPCOMABI: "noarch-spidermonkey",
     invalidateCachesOnRestart() {},
     shouldBlockIncompatJaws: false,
+    processType: origRuntime.processType,
 
     // nsIWinAppHelper
     get userCanElevate() {

@@ -1267,38 +1267,6 @@ screenshots:
     record_in_processes:
       - 'main'
 
-# The following section is for probes for tcp protocol.
-network.tcp:
-  overlapped_io_canceled_before_finished:
-    bug_numbers:
-      - 1363372
-    description: >
-      Count the number of sockets that use overlapped io and are canceled before
-      the overlapped io finishes. (We only use overlapped io for connectEx when
-      TCP Fast Open is used.)
-    expires: "58"
-    kind: uint
-    notification_emails:
-      - necko@mozilla.com
-      - ddamjanovic@ozilla.com
-    record_in_processes:
-      - 'main'
-
-  overlapped_result_delayed:
-    bug_numbers:
-      - 1363372
-    description: >
-      Count the number of overlapped io that are canceled but cancelation
-      have not completed immediately. (We only use overlapped io for
-      connectEx when TCP Fast Open is used.)
-    expires: "58"
-    kind: uint
-    notification_emails:
-      - necko@mozilla.com
-      - ddamjanovic@mozilla.com
-    record_in_processes:
-      - 'main'
-
 idb.type:
   persistent_count:
     bug_numbers:
