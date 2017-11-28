@@ -24,6 +24,8 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb-private.hh"
+#include "hb-debug.hh"
 #define HB_SHAPER uniscribe
 #include "hb-shaper-impl-private.hh"
 
@@ -36,11 +38,6 @@
 #include "hb-open-file-private.hh"
 #include "hb-ot-name-table.hh"
 #include "hb-ot-tag.h"
-
-
-#ifndef HB_DEBUG_UNISCRIBE
-#define HB_DEBUG_UNISCRIBE (HB_DEBUG+0)
-#endif
 
 
 static inline uint16_t hb_uint16_swap (const uint16_t v)
@@ -264,7 +261,9 @@ struct active_feature_t {
   OPENTYPE_FEATURE_RECORD rec;
   unsigned int order;
 
-  static int cmp (const active_feature_t *a, const active_feature_t *b) {
+  static int cmp (const void *pa, const void *pb) {
+    const active_feature_t *a = (const active_feature_t *) pa;
+    const active_feature_t *b = (const active_feature_t *) pb;
     return a->rec.tagFeature < b->rec.tagFeature ? -1 : a->rec.tagFeature > b->rec.tagFeature ? 1 :
 	   a->order < b->order ? -1 : a->order > b->order ? 1 :
 	   a->rec.lParameter < b->rec.lParameter ? -1 : a->rec.lParameter > b->rec.lParameter ? 1 :
@@ -280,7 +279,9 @@ struct feature_event_t {
   bool start;
   active_feature_t feature;
 
-  static int cmp (const feature_event_t *a, const feature_event_t *b) {
+  static int cmp (const void *pa, const void *pb) {
+    const feature_event_t *a = (const feature_event_t *) pa;
+    const feature_event_t *b = (const feature_event_t *) pb;
     return a->index < b->index ? -1 : a->index > b->index ? 1 :
 	   a->start < b->start ? -1 : a->start > b->start ? 1 :
 	   active_feature_t::cmp (&a->feature, &b->feature);
@@ -495,7 +496,7 @@ populate_log_font (LOGFONTW  *lf,
 		   unsigned int font_size)
 {
   memset (lf, 0, sizeof (*lf));
-  lf->lfHeight = -font_size;
+  lf->lfHeight = - (int) font_size;
   lf->lfCharSet = DEFAULT_CHARSET;
 
   hb_face_t *face = font->face;
@@ -854,7 +855,7 @@ retry:
   unsigned int glyphs_offset = 0;
   unsigned int glyphs_len;
   bool backward = HB_DIRECTION_IS_BACKWARD (buffer->props.direction);
-  for (unsigned int i = 0; i < item_count; i++)
+  for (int i = 0; i < item_count; i++)
   {
     unsigned int chars_offset = items[i].iCharPos;
     unsigned int item_chars_len = items[i + 1].iCharPos - chars_offset;
@@ -1030,6 +1031,8 @@ retry:
 
   if (backward)
     hb_buffer_reverse (buffer);
+
+  buffer->unsafe_to_break_all ();
 
   /* Wow, done! */
   return true;

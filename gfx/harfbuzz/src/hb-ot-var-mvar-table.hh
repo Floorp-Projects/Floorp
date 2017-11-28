@@ -77,7 +77,7 @@ struct MVAR
     const VariationValueRecord *record;
     record = (VariationValueRecord *) bsearch (&tag, values,
 					       valueRecordCount, valueRecordSize,
-					       (hb_compare_func_t) tag_compare);
+					       tag_compare);
     if (!record)
       return 0.;
 
@@ -85,8 +85,12 @@ struct MVAR
   }
 
 protected:
-  static inline int tag_compare (const hb_tag_t *a, const Tag *b)
-  { return b->cmp (*a); }
+  static inline int tag_compare (const void *pa, const void *pb)
+  {
+    const hb_tag_t *a = (const hb_tag_t *) pa;
+    const Tag *b = (const Tag *) pb;
+    return b->cmp (*a);
+  }
 
   protected:
   FixedVersion<>version;	/* Version of the metrics variation table
