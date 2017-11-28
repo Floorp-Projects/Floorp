@@ -391,7 +391,6 @@ pub struct Texture {
     format: ImageFormat,
     width: u32,
     height: u32,
-
     filter: TextureFilter,
     render_target: Option<RenderTargetInfo>,
     fbo_ids: Vec<FBOId>,
@@ -409,6 +408,10 @@ impl Texture {
 
     pub fn get_layer_count(&self) -> i32 {
         self.layer_count
+    }
+
+    pub fn get_format(&self) -> ImageFormat {
+        self.format
     }
 
     pub fn get_bpp(&self) -> u32 {
@@ -885,7 +888,9 @@ impl Device {
     ) {
         debug_assert!(self.inside_frame);
 
-        let resized = texture.width != width || texture.height != height;
+        let resized = texture.width != width ||
+            texture.height != height ||
+            texture.format != format;
 
         texture.format = format;
         texture.width = width;
@@ -893,9 +898,6 @@ impl Device {
         texture.filter = filter;
         texture.layer_count = layer_count;
         texture.render_target = render_target;
-
-        let (internal_format, gl_format) = gl_texture_formats_for_image_format(self.gl(), format);
-        let type_ = gl_type_for_texture_format(format);
 
         self.bind_texture(DEFAULT_TEXTURE, texture);
         self.set_texture_parameters(texture.target, filter);
@@ -906,6 +908,9 @@ impl Device {
                 self.update_texture_storage(texture, &info, resized);
             }
             None => {
+                let (internal_format, gl_format) = gl_texture_formats_for_image_format(self.gl(), format);
+                let type_ = gl_type_for_texture_format(format);
+
                 let expanded_data: Vec<u8>;
                 let actual_pixels = if pixels.is_some() && format == ImageFormat::A8 &&
                     cfg!(any(target_arch = "arm", target_arch = "aarch64"))

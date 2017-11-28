@@ -4,7 +4,8 @@
 
 use api::{BorderRadiusKind, ClipId, ColorF, DeviceIntPoint, ImageKey};
 use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
-use api::{DocumentLayer, ExternalImageType, FilterOp, FontRenderMode, ImageRendering};
+use api::{DocumentLayer, ExternalImageType, FilterOp, FontRenderMode};
+use api::{ImageFormat, ImageRendering};
 use api::{LayerRect, MixBlendMode, PipelineId};
 use api::{TileOffset, YuvColorSpace, YuvFormat};
 use api::{LayerToWorldTransform, WorldPixel};
@@ -1258,6 +1259,7 @@ pub enum RenderTargetKind {
 
 pub struct RenderTargetList<T> {
     screen_size: DeviceIntSize,
+    pub format: ImageFormat,
     pub max_size: DeviceUintSize,
     pub targets: Vec<T>,
     pub texture: Option<Texture>,
@@ -1266,9 +1268,11 @@ pub struct RenderTargetList<T> {
 impl<T: RenderTarget> RenderTargetList<T> {
     fn new(
         screen_size: DeviceIntSize,
+        format: ImageFormat,
     ) -> Self {
         RenderTargetList {
             screen_size,
+            format,
             max_size: DeviceUintSize::new(MIN_TARGET_SIZE, MIN_TARGET_SIZE),
             targets: Vec::new(),
             texture: None,
@@ -1753,8 +1757,8 @@ impl RenderPass {
     pub fn new_off_screen(screen_size: DeviceIntSize) -> Self {
         RenderPass {
             kind: RenderPassKind::OffScreen {
-                color: RenderTargetList::new(screen_size),
-                alpha: RenderTargetList::new(screen_size),
+                color: RenderTargetList::new(screen_size, ImageFormat::BGRA8),
+                alpha: RenderTargetList::new(screen_size, ImageFormat::A8),
             },
             tasks: vec![],
             dynamic_tasks: FastHashMap::default(),

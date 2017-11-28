@@ -198,6 +198,8 @@ pub struct ClipScrollNodeData {
     pub local_clip_rect: LayerRect,
     pub reference_frame_relative_scroll_offset: LayerVector2D,
     pub scroll_offset: LayerVector2D,
+    pub transform_kind: f32,
+    pub padding: [f32; 3],
 }
 
 impl ClipScrollNodeData {
@@ -208,6 +210,8 @@ impl ClipScrollNodeData {
             local_clip_rect: LayerRect::zero(),
             reference_frame_relative_scroll_offset: LayerVector2D::zero(),
             scroll_offset: LayerVector2D::zero(),
+            transform_kind: 0.0,
+            padding: [0.0; 3],
         }
     }
 }

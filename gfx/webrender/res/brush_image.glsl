@@ -4,6 +4,10 @@
 
 #include shared,prim_shared,brush
 
+#ifdef WR_FEATURE_ALPHA_PASS
+varying vec2 vLocalPos;
+#endif
+
 varying vec3 vUv;
 flat varying int vImageKind;
 flat varying vec4 vUvBounds;
@@ -76,6 +80,10 @@ void brush_vs(
 
     vUvBounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
     vUvBounds_NoClamp = vec4(uv0, uv1) / texture_size.xyxy;
+
+#ifdef WR_FEATURE_ALPHA_PASS
+    vLocalPos = local_pos;
+#endif
 }
 #endif
 
@@ -114,6 +122,10 @@ vec4 brush_fs() {
     vec4 color = texture(sColor0, vec3(uv, vUv.z));
 #else
     vec4 color = vColor * texture(sColor1, vec3(uv, vUv.z)).r;
+#endif
+
+#ifdef WR_FEATURE_ALPHA_PASS
+    color *= init_transform_fs(vLocalPos);
 #endif
 
     return color;
