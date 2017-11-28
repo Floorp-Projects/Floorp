@@ -215,18 +215,6 @@ class TestAccessibility(MarionetteTestCase):
         # Sending keys to valid input should not raise any exceptions
         self.run_element_test(['input1'], lambda element: element.send_keys("a"))
 
-        self.setup_accessibility(False, False)
-        # Sending keys to invalid element should not raise any exceptions when raising accessibility
-        # exceptions is disabled
-        self.run_element_test(['button5'], lambda element: element.send_keys("abc"))
-
-    def test_send_keys_raises_element_not_accessible(self):
-        self.setup_accessibility()
-        # Sending keys to invalid element should raise an exception
-        self.run_element_test(['button5'],
-                              lambda element: self.assertRaises(ElementNotAccessibleException,
-                                                                element.send_keys))
-
     def test_is_selected_raises_no_exception(self):
         self.setup_accessibility()
         # No exception should be raised for valid options
