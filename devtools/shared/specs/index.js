@@ -133,11 +133,6 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/node",
   },
   {
-    types: ["perf"],
-    spec: "devtools/shared/specs/perf",
-    front: "devtools/shared/fronts/perf",
-  },
-  {
     types: ["performance"],
     spec: "devtools/shared/specs/performance",
     front: "devtools/shared/fronts/performance",
