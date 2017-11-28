@@ -120,12 +120,6 @@ public:
     nsIDocument* aCloneDocument,
     nsINode* aCloneOwningNode) const final;
 
-  void SetModifiedByChildRule() {
-    NS_ASSERTION(mDirty,
-                 "sheet must be marked dirty before handing out child rules");
-    DidDirty();
-  }
-
   nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
 

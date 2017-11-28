@@ -77,7 +77,6 @@ public:
     RuleAdded,
     RuleRemoved,
     RuleChanged,
-    ReparsedFromInspector,
   };
 
   void SetOwningNode(nsINode* aOwningNode)
@@ -262,6 +261,12 @@ public:
   void WillDirty();
   virtual void DidDirty() {}
 
+  // Called when a rule changes from CSSOM.
+  //
+  // FIXME(emilio): This shouldn't allow null, but MediaList doesn't know about
+  // it's owning media rule, plus it's used for the stylesheet media itself.
+  void RuleChanged(css::Rule*);
+
   void AddStyleSet(const StyleSetHandle& aStyleSet);
   void DropStyleSet(const StyleSetHandle& aStyleSet);
 
@@ -293,6 +298,15 @@ private:
                          ErrorResult& aRv);
 
 protected:
+  // Called when a rule is removed from the sheet from CSSOM.
+  void RuleAdded(css::Rule&);
+
+  // Called when a rule is added to the sheet from CSSOM.
+  void RuleRemoved(css::Rule&);
+
+  // Called from SetEnabled when the enabled state changed.
+  void EnabledStateChanged();
+
   struct ChildSheetListBuilder {
     RefPtr<StyleSheet>* sheetSlot;
     StyleSheet* parent;
@@ -316,9 +330,6 @@ protected:
 
   // Drop our reference to mMedia
   void DropMedia();
-
-  // Called from SetEnabled when the enabled state changed.
-  void EnabledStateChanged();
 
   // Unlink our inner, if needed, for cycle collection
   virtual void UnlinkInner();
