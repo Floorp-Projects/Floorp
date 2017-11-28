@@ -399,13 +399,6 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
   return NS_FAILED(rv) ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 
-NS_IMETHODIMP
-nsXPConnect::GarbageCollect(uint32_t reason)
-{
-    mRuntime->GarbageCollect(reason);
-    return NS_OK;
-}
-
 void
 xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration)
 {
