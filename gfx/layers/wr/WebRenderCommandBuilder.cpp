@@ -355,6 +355,7 @@ PaintByLayer(nsDisplayItem* aItem,
   layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
   layerBuilder->DidBeginRetainedLayerTransaction(aManager);
 
+  aManager->SetDefaultTarget(aContext);
   aManager->BeginTransactionWithTarget(aContext);
   bool isInvalidated = false;
 
@@ -393,6 +394,7 @@ PaintByLayer(nsDisplayItem* aItem,
   }
 
   aManager->SetTarget(nullptr);
+  aManager->SetDefaultTarget(nullptr);
 
   return isInvalidated;
 }
