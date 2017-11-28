@@ -146,7 +146,7 @@ win32-rust-1.23.0-beta.1:
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TW32(rust)
+        symbol: TW32(rust-beta)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
