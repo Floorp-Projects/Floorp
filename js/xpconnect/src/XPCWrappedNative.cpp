@@ -2021,27 +2021,6 @@ NS_IMETHODIMP XPCWrappedNative::GetJSObjectPrototype(JSObject * *aJSObjectProtot
     return NS_OK;
 }
 
-nsIPrincipal*
-XPCWrappedNative::GetObjectPrincipal() const
-{
-    nsIPrincipal* principal = GetScope()->GetPrincipal();
-#ifdef DEBUG
-    // Because of inner window reuse, we can have objects with one principal
-    // living in a scope with a different (but same-origin) principal. So
-    // just check same-origin here.
-    nsCOMPtr<nsIScriptObjectPrincipal> objPrin(do_QueryInterface(mIdentity));
-    if (objPrin) {
-        bool equal;
-        if (!principal)
-            equal = !objPrin->GetPrincipal();
-        else
-            principal->Equals(objPrin->GetPrincipal(), &equal);
-        MOZ_ASSERT(equal, "Principal mismatch.  Expect bad things to happen");
-    }
-#endif
-    return principal;
-}
-
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(HandleId name,
                                                         nsIInterfaceInfo * *_retval)
 {
