@@ -255,9 +255,6 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
   rv = mResource->Open(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Set mode to METADATA since we are about to read metadata.
-  mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
-
   SetStateMachine(CreateStateMachine());
   NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
 
