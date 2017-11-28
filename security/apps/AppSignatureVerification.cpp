@@ -16,6 +16,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -839,8 +840,15 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
                              &pkcs7DataOid));
 }
 
+// This corresponds to the preference "security.signed_app_signatures.policy".
+enum class SignaturePolicy {
+  PKCS7WithSHA1OrSHA256 = 0,
+  PKCS7WithSHA256 = 1,
+};
+
 nsresult
 OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
+                  SignaturePolicy aPolicy,
                   /*out, optional */ nsIZipReader** aZipReader,
                   /*out, optional */ nsIX509Cert** aSignerCert)
 {
@@ -903,6 +911,16 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
                        sfCalculatedSHA256Digest.get(), digestToUse, builtChain);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  switch (aPolicy) {
+    case SignaturePolicy::PKCS7WithSHA256:
+      if (digestToUse != SEC_OID_SHA256) {
+        return NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE;
+      }
+      break;
+    case SignaturePolicy::PKCS7WithSHA1OrSHA256:
+      break;
   }
 
   nsAutoCString mfDigest;
@@ -1037,9 +1055,11 @@ class OpenSignedAppFileTask final : public CryptoTask
 {
 public:
   OpenSignedAppFileTask(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
+                        SignaturePolicy aPolicy,
                         nsIOpenSignedAppFileCallback* aCallback)
     : mTrustedRoot(aTrustedRoot)
     , mJarFile(aJarFile)
+    , mPolicy(aPolicy)
     , mCallback(new nsMainThreadPtrHolder<nsIOpenSignedAppFileCallback>(
         "OpenSignedAppFileTask::mCallback", aCallback))
   {
@@ -1048,7 +1068,7 @@ public:
 private:
   virtual nsresult CalculateResult() override
   {
-    return OpenSignedAppFile(mTrustedRoot, mJarFile,
+    return OpenSignedAppFile(mTrustedRoot, mJarFile, mPolicy,
                              getter_AddRefs(mZipReader),
                              getter_AddRefs(mSignerCert));
   }
@@ -1064,10 +1084,14 @@ private:
 
   const AppTrustedRoot mTrustedRoot;
   const nsCOMPtr<nsIFile> mJarFile;
+  const SignaturePolicy mPolicy;
   nsMainThreadPtrHandle<nsIOpenSignedAppFileCallback> mCallback;
   nsCOMPtr<nsIZipReader> mZipReader; // out
   nsCOMPtr<nsIX509Cert> mSignerCert; // out
 };
+
+static const SignaturePolicy sDefaultSignaturePolicy =
+  SignaturePolicy::PKCS7WithSHA1OrSHA256;
 
 } // unnamed namespace
 
@@ -1078,8 +1102,25 @@ nsNSSCertificateDB::OpenSignedAppFileAsync(
 {
   NS_ENSURE_ARG_POINTER(aJarFile);
   NS_ENSURE_ARG_POINTER(aCallback);
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+  SignaturePolicy policy =
+    static_cast<SignaturePolicy>(
+      Preferences::GetInt("security.signed_app_signatures.policy",
+                          static_cast<int32_t>(sDefaultSignaturePolicy)));
+  switch (policy) {
+    case SignaturePolicy::PKCS7WithSHA1OrSHA256:
+      break;
+    case SignaturePolicy::PKCS7WithSHA256:
+      break;
+    default:
+      policy = sDefaultSignaturePolicy;
+      break;
+  }
   RefPtr<OpenSignedAppFileTask> task(new OpenSignedAppFileTask(aTrustedRoot,
                                                                aJarFile,
+                                                               policy,
                                                                aCallback));
   return task->Dispatch("SignedJAR");
 }
