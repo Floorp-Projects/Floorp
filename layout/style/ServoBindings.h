@@ -75,6 +75,12 @@ class nsStyleCoord;
 struct nsStyleDisplay;
 class nsXBLBinding;
 
+#ifdef NIGHTLY_BUILD
+const bool GECKO_IS_NIGHTLY = true;
+#else
+const bool GECKO_IS_NIGHTLY = false;
+#endif
+
 namespace mozilla {
   #define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_ {nsStyle##name_ gecko;};
   #include "nsStyleStructList.h"
@@ -142,7 +148,9 @@ struct FontSizePrefs
 };
 
 // DOM Traversal.
-void Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel);
+void Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel,
+                                     uint32_t total_t, uint32_t parallel_t,
+                                     uint32_t total_s, uint32_t parallel_s);
 bool Gecko_IsInDocument(RawGeckoNodeBorrowed node);
 bool Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed node);
 bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node,
