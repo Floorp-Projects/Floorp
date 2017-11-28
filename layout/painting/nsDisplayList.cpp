@@ -2206,6 +2206,12 @@ nsDisplayListBuilder::AppendNewScrollInfoItemForHoisting(nsDisplayScrollInfoLaye
 bool
 nsDisplayListBuilder::IsBuildingLayerEventRegions()
 {
+  if (mBuildCompositorHitTestInfo) {
+    // If we have webrender hit-testing enabled, then we will build the
+    // nsDisplayCompositorHitTestInfo items and use those instead of event
+    // regions, so we don't need to build the event regions.
+    return false;
+  }
   if (IsPaintingToWindow()) {
     // Note: this function and LayerEventRegionsEnabled are the only places
     // that get to query LayoutEventRegionsEnabled 'directly' - other code
