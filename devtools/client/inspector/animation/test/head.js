@@ -117,6 +117,6 @@ const selectNodeAndWaitForAnimations = async function (data, inspector, reason =
  */
 const setSidebarWidth = async function (width, inspector) {
   const onUpdated = inspector.toolbox.once("inspector-sidebar-resized");
-  inspector.splitBox.setState({ width });
+  inspector._splitter.setState({ width });
   await onUpdated;
 };
