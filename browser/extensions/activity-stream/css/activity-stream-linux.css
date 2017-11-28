@@ -1217,7 +1217,8 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
 .collapsible-section .section-disclaimer {
   color: #4A4A4F;
   font-size: 13px;
-  margin-bottom: 16px; }
+  margin-bottom: 16px;
+  position: relative; }
   .collapsible-section .section-disclaimer .section-disclaimer-text {
     display: inline-block; }
     @media (min-width: 416px) {
@@ -1225,17 +1226,18 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
         width: 224px; } }
     @media (min-width: 544px) {
       .collapsible-section .section-disclaimer .section-disclaimer-text {
-        width: 336px; } }
+        width: 340px; } }
     @media (min-width: 800px) {
       .collapsible-section .section-disclaimer .section-disclaimer-text {
-        width: 640px; } }
+        width: 610px; } }
   .collapsible-section .section-disclaimer a {
     color: #008EA4;
     padding-left: 3px; }
   .collapsible-section .section-disclaimer button {
     margin-top: 2px;
     offset-inline-end: 0;
-    height: 26px;
+    min-height: 26px;
+    max-width: 130px;
     background: #F9F9FA;
     border: 1px solid #B1B1B3;
     border-radius: 4px;
@@ -1243,9 +1245,6 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
     .collapsible-section .section-disclaimer button:hover:not(.dismiss) {
       box-shadow: 0 0 0 5px #D7D7DB;
       transition: box-shadow 150ms; }
-    @media (min-width: 224px) {
-      .collapsible-section .section-disclaimer button {
-        position: relative; } }
     @media (min-width: 416px) {
       .collapsible-section .section-disclaimer button {
         position: absolute; } }
@@ -1267,9 +1266,6 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
 .collapsible-section.collapsed .section-body {
   max-height: 0;
   overflow: hidden; }
-
-.collapsible-section.collapsed .section-disclaimer {
-  position: relative; }
 
 .collapsible-section.collapsed .section-info-option {
   pointer-events: none; }
