@@ -217,7 +217,7 @@ set_indic_properties (hb_glyph_info_t &info)
 
   /* According to ScriptExtensions.txt, these Grantha marks may also be used in Tamil,
    * so the Indic shaper needs to know their categories. */
-  else if (unlikely (u == 0x11303u)) cat = OT_SM;
+  else if (unlikely (u == 0x11301u || u == 0x11303u)) cat = OT_SM;
   else if (unlikely (u == 0x1133cu)) cat = OT_N;
 
   else if (unlikely (u == 0x0AFBu)) cat = OT_N; /* https://github.com/behdad/harfbuzz/issues/552 */
@@ -508,7 +508,7 @@ struct indic_shape_plan_t
 
       /* Our get_nominal_glyph() function needs a font, so we can't get the virama glyph
        * during shape planning...  Instead, overwrite it here.  It's safe.  Don't worry! */
-      (const_cast<indic_shape_plan_t *> (this))->virama_glyph = glyph;
+      virama_glyph = glyph;
     }
 
     *pglyph = glyph;
@@ -518,7 +518,7 @@ struct indic_shape_plan_t
   const indic_config_t *config;
 
   bool is_old_spec;
-  hb_codepoint_t virama_glyph;
+  mutable hb_codepoint_t virama_glyph;
 
   would_substitute_feature_t rphf;
   would_substitute_feature_t pref;
@@ -692,7 +692,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
   hb_glyph_info_t *info = buffer->info;
 
   /* https://github.com/behdad/harfbuzz/issues/435#issuecomment-335560167
-   * // For compatibility with legacy useage in Kannada,
+   * // For compatibility with legacy usage in Kannada,
    * // Ra+h+ZWJ must behave like Ra+ZWJ+h...
    */
   if (buffer->props.script == HB_SCRIPT_KANNADA &&
@@ -1686,11 +1686,15 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 
 
   /* Apply 'init' to the Left Matra if it's a word start. */
-  if (info[start].indic_position () == POS_PRE_M &&
-      (!start ||
-       !(FLAG_UNSAFE (_hb_glyph_info_get_general_category (&info[start - 1])) &
-	 FLAG_RANGE (HB_UNICODE_GENERAL_CATEGORY_FORMAT, HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK))))
-    info[start].mask |= indic_plan->mask_array[INIT];
+  if (info[start].indic_position () == POS_PRE_M)
+  {
+    if (!start ||
+	!(FLAG_UNSAFE (_hb_glyph_info_get_general_category (&info[start - 1])) &
+	 FLAG_RANGE (HB_UNICODE_GENERAL_CATEGORY_FORMAT, HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))
+      info[start].mask |= indic_plan->mask_array[INIT];
+    else
+      buffer->unsafe_to_break (start - 1, start + 1);
+  }
 
 
   /*
@@ -1843,7 +1847,6 @@ compose_indic (const hb_ot_shape_normalize_context_t *c,
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
 {
-  "indic",
   collect_features_indic,
   override_features_indic,
   data_create_indic,

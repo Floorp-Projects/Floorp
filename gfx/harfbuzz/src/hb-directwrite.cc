@@ -22,6 +22,8 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
+#include "hb-private.hh"
+#include "hb-debug.hh"
 #define HB_SHAPER directwrite
 #include "hb-shaper-impl-private.hh"
 
@@ -29,10 +31,6 @@
 
 #include "hb-directwrite.h"
 
-
-#ifndef HB_DEBUG_DIRECTWRITE
-#define HB_DEBUG_DIRECTWRITE (HB_DEBUG+0)
-#endif
 
 HB_SHAPER_DATA_ENSURE_DEFINE(directwrite, face)
 HB_SHAPER_DATA_ENSURE_DEFINE(directwrite, font)
@@ -929,8 +927,7 @@ hb_directwrite_shape_experimental_width(hb_font_t          *font,
   hb_bool_t res = _hb_directwrite_shape_full (shape_plan, font, buffer,
     features, num_features, width);
 
-  if (res)
-    buffer->content_type = HB_BUFFER_CONTENT_TYPE_GLYPHS;
+  buffer->unsafe_to_break_all ();
 
   return res;
 }

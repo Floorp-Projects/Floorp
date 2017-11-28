@@ -305,16 +305,16 @@ struct hb_buffer_t {
     info.cluster = cluster;
   }
 
-  int
+  inline int
   _unsafe_to_break_find_min_cluster (const hb_glyph_info_t *info,
 				     unsigned int start, unsigned int end,
 				     unsigned int cluster) const
   {
     for (unsigned int i = start; i < end; i++)
-      cluster = MIN (cluster, info[i].cluster);
+      cluster = MIN<unsigned int> (cluster, info[i].cluster);
     return cluster;
   }
-  void
+  inline void
   _unsafe_to_break_set_mask (hb_glyph_info_t *info,
 			     unsigned int start, unsigned int end,
 			     unsigned int cluster)
@@ -325,6 +325,19 @@ struct hb_buffer_t {
 	scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_UNSAFE_TO_BREAK;
 	info[i].mask |= HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
       }
+  }
+
+  inline void
+  unsafe_to_break_all (void)
+  {
+    for (unsigned int i = 0; i < len; i++)
+      info[i].mask |= HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
+  }
+  inline void
+  safe_to_break_all (void)
+  {
+    for (unsigned int i = 0; i < len; i++)
+      info[i].mask &= ~HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
   }
 };
 
