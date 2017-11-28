@@ -9,7 +9,7 @@ import android.graphics.drawable.TransitionDrawable
 /**
  * A class to allow [TransitionDrawable]'s animations to play together: similar to [android.animation.AnimatorSet].
  */
-class TransitionDrawableGroup(private vararg val transitionDrawables: TransitionDrawable) {
+class TransitionDrawableGroup(vararg private val transitionDrawables: TransitionDrawable) {
     fun startTransition(durationMillis: Int) {
         // In theory, there are no guarantees these will play together.
         // In practice, I haven't noticed any problems.
