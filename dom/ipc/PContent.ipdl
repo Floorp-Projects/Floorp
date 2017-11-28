@@ -156,6 +156,7 @@ union MaybePrefValue {
 
 struct Pref {
   nsCString name;
+  bool isLocked;
   MaybePrefValue defaultValue;
   MaybePrefValue userValue;
 };
