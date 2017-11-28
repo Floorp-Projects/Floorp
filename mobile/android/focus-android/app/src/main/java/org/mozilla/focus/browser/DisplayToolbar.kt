@@ -26,6 +26,7 @@ class DisplayToolbar(
         addOnOffsetChangedListener(this)
     }
 
+    @Suppress("MagicNumber") // A mathematical expression - No need to add constants for 100% and 50%.
     override fun onOffsetChanged(appBarLayout: AppBarLayout, verticalOffset: Int) {
         // When scrolling the toolbar away we want to fade out the content on the toolbar
         // with an alpha animation. This will avoid that the text clashes with the status bar.
