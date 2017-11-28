@@ -157,14 +157,12 @@ window {
   font: message-box;
 }
 
-#inspector-rules-container,
 #inspector-sidebar-container {
   overflow: hidden;
   position: relative;
   height: 100%;
 }
 
-#inspector-rules-sidebar,
 #inspector-sidebar {
   position: absolute;
   top: 0;
