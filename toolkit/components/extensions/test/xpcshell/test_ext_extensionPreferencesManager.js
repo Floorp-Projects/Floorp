@@ -106,13 +106,13 @@ add_task(async function test_preference_manager() {
     let levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
       extensions[1].id, setting);
     equal(levelOfControl, "controllable_by_this_extension",
-      "getLevelOfControl returns correct levelOfControl with no settings set.");
+          "getLevelOfControl returns correct levelOfControl with no settings set.");
 
     let prefsChanged = await ExtensionPreferencesManager.setSetting(
       extensions[1].id, setting, newValue1);
     ok(prefsChanged, "setSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue1,
-      "setSetting sets the prefs for the first extension.");
+               "setSetting sets the prefs for the first extension.");
     levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(extensions[1].id, setting);
     equal(
       levelOfControl,
@@ -126,48 +126,48 @@ add_task(async function test_preference_manager() {
     prefsChanged = await ExtensionPreferencesManager.setSetting(extensions[0].id, setting, newValue2);
     ok(!prefsChanged, "setSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
-      "setSetting does not set the pref(s) for an earlier extension.");
+               "setSetting does not set the pref(s) for an earlier extension.");
 
     prefsChanged = await ExtensionPreferencesManager.disableSetting(extensions[0].id, setting);
     ok(!prefsChanged, "disableSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
-      "disableSetting does not change the pref(s) for the non-top extension.");
+               "disableSetting does not change the pref(s) for the non-top extension.");
 
     prefsChanged = await ExtensionPreferencesManager.enableSetting(extensions[0].id, setting);
     ok(!prefsChanged, "enableSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
-      "enableSetting does not change the pref(s) for the non-top extension.");
+               "enableSetting does not change the pref(s) for the non-top extension.");
 
     prefsChanged = await ExtensionPreferencesManager.removeSetting(extensions[0].id, setting);
     ok(!prefsChanged, "removeSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
-      "removeSetting does not change the pref(s) for the non-top extension.");
+               "removeSetting does not change the pref(s) for the non-top extension.");
 
     prefsChanged = await ExtensionPreferencesManager.setSetting(extensions[0].id, setting, newValue2);
     ok(!prefsChanged, "setSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
-      "setSetting does not set the pref(s) for an earlier extension.");
+               "setSetting does not set the pref(s) for an earlier extension.");
 
     prefsChanged = await ExtensionPreferencesManager.disableSetting(extensions[1].id, setting);
     ok(prefsChanged, "disableSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue2,
-      "disableSetting sets the pref(s) to the next value when disabling the top extension.");
+               "disableSetting sets the pref(s) to the next value when disabling the top extension.");
 
     prefsChanged = await ExtensionPreferencesManager.enableSetting(extensions[1].id, setting);
     ok(prefsChanged, "enableSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue1,
-      "enableSetting sets the pref(s) to the previous value(s).");
+               "enableSetting sets the pref(s) to the previous value(s).");
 
     prefsChanged = await ExtensionPreferencesManager.removeSetting(extensions[1].id, setting);
     ok(prefsChanged, "removeSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue2,
-      "removeSetting sets the pref(s) to the next value when removing the top extension.");
+               "removeSetting sets the pref(s) to the next value when removing the top extension.");
 
     prefsChanged = await ExtensionPreferencesManager.removeSetting(extensions[0].id, setting);
     ok(prefsChanged, "removeSetting returns true when the pref(s) have been set.");
     for (let i = 0; i < settingObj.prefNames.length; i++) {
       equal(Preferences.get(settingObj.prefNames[i]), settingObj.initalValues[i],
-        "removeSetting sets the pref(s) to the initial value(s) when removing the last extension.");
+            "removeSetting sets the pref(s) to the initial value(s) when removing the last extension.");
     }
 
     checkSetting = await ExtensionPreferencesManager.getSetting(setting);
@@ -190,7 +190,7 @@ add_task(async function test_preference_manager() {
     let settingObj = SETTINGS[setting];
     for (let i = 0; i < settingObj.prefNames.length; i++) {
       equal(Preferences.get(settingObj.prefNames[i]), settingObj.initalValues[i],
-        "disableAll unset the pref.");
+            "disableAll unset the pref.");
     }
   }
 
@@ -209,7 +209,7 @@ add_task(async function test_preference_manager() {
     let settingObj = SETTINGS[setting];
     for (let i = 0; i < settingObj.prefNames.length; i++) {
       equal(Preferences.get(settingObj.prefNames[i]), settingObj.initalValues[i],
-        "removeAll unset the pref.");
+            "removeAll unset the pref.");
     }
   }
 
@@ -259,7 +259,7 @@ add_task(async function test_preference_manager() {
   Preferences.reset(pref);
   await ExtensionPreferencesManager.setSetting(extensions[1].id, setting, newValue);
   equal(Preferences.get(pref), settingObj.valueFn(pref, newValue),
-    "Uninitialized pref is set.");
+        "Uninitialized pref is set.");
   await ExtensionPreferencesManager.removeSetting(extensions[1].id, setting);
   ok(!Preferences.has(pref), "removeSetting removed the pref.");
 

@@ -369,7 +369,7 @@ add_task(async function webnav_transitions_props() {
        "Got transitionQualifiers in the onHistoryStateUpdated event");
   }
 
-   // Test transitions properties on onReferenceFragmentUpdated events.
+  // Test transitions properties on onReferenceFragmentUpdated events.
 
   received = [];
   await loadAndWait(win, "onReferenceFragmentUpdated", `${FRAME2}/pushState#ref2`, () => {
@@ -383,7 +383,7 @@ add_task(async function webnav_transitions_props() {
 
   if (found) {
     is(typeof found.details.transitionType, "string",
-      "Got transitionType in the onReferenceFragmentUpdated event");
+       "Got transitionType in the onReferenceFragmentUpdated event");
     ok(Array.isArray(found.details.transitionQualifiers),
        "Got transitionQualifiers in the onReferenceFragmentUpdated event");
   }
@@ -596,7 +596,7 @@ add_task(async function webnav_error_event() {
 
   if (found) {
     ok(found.details.error.match(/Error code [0-9]+/),
-      "Got the expected error string in the onErrorOccurred event");
+       "Got the expected error string in the onErrorOccurred event");
   }
 
   // cleanup phase

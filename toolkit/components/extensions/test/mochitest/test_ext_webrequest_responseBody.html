@@ -411,23 +411,24 @@ add_task(async function() {
 add_task(async function test_cachedResponse() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.webRequest.onHeadersReceived.addListener(data => {
-        let filter = browser.webRequest.filterResponseData(data.requestId);
+      browser.webRequest.onHeadersReceived.addListener(
+        data => {
+          let filter = browser.webRequest.filterResponseData(data.requestId);
 
-        filter.onstop = event => {
-          filter.close();
-        };
-        filter.ondata = event => {
-          filter.write(event.data);
-        };
+          filter.onstop = event => {
+            filter.close();
+          };
+          filter.ondata = event => {
+            filter.write(event.data);
+          };
 
-        if (data.fromCache) {
-          browser.test.sendMessage("from-cache");
-        }
-      }, {
-        urls: ["http://mochi.test/*/file_sample.html?r=*"],
-      },
-      ["blocking"]);
+          if (data.fromCache) {
+            browser.test.sendMessage("from-cache");
+          }
+        }, {
+          urls: ["http://mochi.test/*/file_sample.html?r=*"],
+        },
+        ["blocking"]);
     },
 
     manifest: {
@@ -453,25 +454,26 @@ add_task(async function test_cachedResponse() {
 add_task(async function test_late_close() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.webRequest.onBeforeRequest.addListener(data => {
-        let filter = browser.webRequest.filterResponseData(data.requestId);
+      browser.webRequest.onBeforeRequest.addListener(
+        data => {
+          let filter = browser.webRequest.filterResponseData(data.requestId);
 
-        filter.onstop = event => {
-          browser.test.fail("Should not receive onstop after close()");
-          browser.test.assertEq("closed", filter.status,
-                                "Filter status should still be 'closed'");
-          browser.test.assertThrows(() => { filter.close(); });
-        };
-        filter.ondata = event => {
-          filter.write(event.data);
-          filter.close();
+          filter.onstop = event => {
+            browser.test.fail("Should not receive onstop after close()");
+            browser.test.assertEq("closed", filter.status,
+                                  "Filter status should still be 'closed'");
+            browser.test.assertThrows(() => { filter.close(); });
+          };
+          filter.ondata = event => {
+            filter.write(event.data);
+            filter.close();
 
-          browser.test.sendMessage(`done-${data.url}`);
-        };
-      }, {
-        urls: ["http://mochi.test/*/file_sample.html?*"],
-      },
-      ["blocking"]);
+            browser.test.sendMessage(`done-${data.url}`);
+          };
+        }, {
+          urls: ["http://mochi.test/*/file_sample.html?*"],
+        },
+        ["blocking"]);
     },
 
     manifest: {
@@ -502,8 +504,9 @@ add_task(async function test_permissions() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.assertEq(
-          undefined, browser.webRequest.filterResponseData,
-          "filterResponseData is undefined without blocking permissions");
+        undefined,
+        browser.webRequest.filterResponseData,
+        "filterResponseData is undefined without blocking permissions");
     },
 
     manifest: {

@@ -144,12 +144,15 @@ function promisePossiblyInaccurateContentDimensions(browser) {
     }
 
     return {
-      window: copyProps(content,
+      window: copyProps(
+        content,
         ["innerWidth", "innerHeight", "outerWidth", "outerHeight",
          "scrollX", "scrollY", "scrollMaxX", "scrollMaxY"]),
-      body: copyProps(content.document.body,
+      body: copyProps(
+        content.document.body,
         ["clientWidth", "clientHeight", "scrollWidth", "scrollHeight"]),
-      root: copyProps(content.document.documentElement,
+      root: copyProps(
+        content.document.documentElement,
         ["clientWidth", "clientHeight", "scrollWidth", "scrollHeight"]),
       isStandards: content.document.compatMode !== "BackCompat",
     };

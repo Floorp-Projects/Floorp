@@ -194,21 +194,21 @@ this.privacy = class extends ExtensionAPI {
     return {
       privacy: {
         network: {
-          networkPredictionEnabled: getPrivacyAPI(extension,
-            "network.networkPredictionEnabled",
+          networkPredictionEnabled: getPrivacyAPI(
+            extension, "network.networkPredictionEnabled",
             () => {
               return Preferences.get("network.predictor.enabled") &&
                 Preferences.get("network.prefetch-next") &&
                 Preferences.get("network.http.speculative-parallel-limit") > 0 &&
                 !Preferences.get("network.dns.disablePrefetch");
             }),
-          peerConnectionEnabled: getPrivacyAPI(extension,
-            "network.peerConnectionEnabled",
+          peerConnectionEnabled: getPrivacyAPI(
+            extension, "network.peerConnectionEnabled",
             () => {
               return Preferences.get("media.peerconnection.enabled");
             }),
-          webRTCIPHandlingPolicy: getPrivacyAPI(extension,
-            "network.webRTCIPHandlingPolicy",
+          webRTCIPHandlingPolicy: getPrivacyAPI(
+            extension, "network.webRTCIPHandlingPolicy",
             () => {
               if (Preferences.get("media.peerconnection.ice.proxy_only")) {
                 return "disable_non_proxied_udp";
@@ -228,41 +228,40 @@ this.privacy = class extends ExtensionAPI {
         },
 
         services: {
-          passwordSavingEnabled: getPrivacyAPI(extension,
-            "services.passwordSavingEnabled",
+          passwordSavingEnabled: getPrivacyAPI(
+            extension, "services.passwordSavingEnabled",
             () => {
               return Preferences.get("signon.rememberSignons");
             }),
         },
 
         websites: {
-          hyperlinkAuditingEnabled: getPrivacyAPI(extension,
-            "websites.hyperlinkAuditingEnabled",
+          hyperlinkAuditingEnabled: getPrivacyAPI(
+            extension, "websites.hyperlinkAuditingEnabled",
             () => {
               return Preferences.get("browser.send_pings");
             }),
-          referrersEnabled: getPrivacyAPI(extension,
-            "websites.referrersEnabled",
+          referrersEnabled: getPrivacyAPI(
+            extension, "websites.referrersEnabled",
             () => {
               return Preferences.get("network.http.sendRefererHeader") !== 0;
             }),
-          resistFingerprinting: getPrivacyAPI(extension,
-            "websites.resistFingerprinting",
+          resistFingerprinting: getPrivacyAPI(
+            extension, "websites.resistFingerprinting",
             () => {
               return Preferences.get("privacy.resistFingerprinting");
             }),
-          firstPartyIsolate: getPrivacyAPI(extension,
-            "websites.firstPartyIsolate",
+          firstPartyIsolate: getPrivacyAPI(
+            extension, "websites.firstPartyIsolate",
             () => {
               return Preferences.get("privacy.firstparty.isolate");
             }),
-          trackingProtectionMode: getPrivacyAPI(extension,
-            "websites.trackingProtectionMode",
+          trackingProtectionMode: getPrivacyAPI(
+            extension, "websites.trackingProtectionMode",
             () => {
               if (Preferences.get("privacy.trackingprotection.enabled")) {
                 return "always";
-              } else if (
-                  Preferences.get("privacy.trackingprotection.pbmode.enabled")) {
+              } else if (Preferences.get("privacy.trackingprotection.pbmode.enabled")) {
                 return "private_browsing";
               }
               return "never";

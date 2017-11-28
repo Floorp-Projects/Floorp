@@ -24,10 +24,10 @@ add_task(async function test_contentscript_exportHelpers() {
     exportFunction(() => value, window, {defineAs: "precisePi"});
 
     browser.test.assertEq("undefined", typeof precisePi,
-        "exportFunction should export to the page's scope only");
+                          "exportFunction should export to the page's scope only");
 
     browser.test.assertEq("undefined", typeof window.precisePi,
-        "exportFunction should export to the page's scope only");
+                          "exportFunction should export to the page's scope only");
 
     let results = [];
     exportFunction(pi => results.push(pi), window, {defineAs: "reportPi"});
@@ -54,12 +54,12 @@ add_task(async function test_contentscript_exportHelpers() {
     // Inline script ought to run synchronously.
 
     browser.test.assertEq(3.14, results[0],
-        "exportFunction on window should define a global function");
+                          "exportFunction on window should define a global function");
     browser.test.assertEq(3.14, results[1],
-        "exportFunction on window should export a property to window.");
+                          "exportFunction on window should export a property to window.");
 
     browser.test.assertEq(2, results.length,
-        "Expecting the number of results to match the number of method calls");
+                          "Expecting the number of results to match the number of method calls");
 
     browser.test.notifyPass("export helper test completed");
   }

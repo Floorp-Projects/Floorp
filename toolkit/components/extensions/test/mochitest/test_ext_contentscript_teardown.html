@@ -21,7 +21,7 @@ add_task(async function test_contentscript_reload_and_unload() {
     let removedTabs = 0;
     browser.tabs.onRemoved.addListener(() => {
       browser.test.assertEq(1, ++removedTabs,
-          "Expected only one tab to be removed during the test");
+                            "Expected only one tab to be removed during the test");
       browser.test.sendMessage("tab-closed");
     });
   }
@@ -44,7 +44,7 @@ add_task(async function test_contentscript_reload_and_unload() {
   await extension.startup();
 
   let chromeScript = SpecialPowers.loadChromeScript(
-      SimpleTest.getTestFileURL("file_teardown_test.js"));
+    SimpleTest.getTestFileURL("file_teardown_test.js"));
   await chromeScript.promiseOneMessage("chromescript-startup");
   async function getContextEvents() {
     chromeScript.sendAsyncMessage("get-context-events");
@@ -58,9 +58,9 @@ add_task(async function test_contentscript_reload_and_unload() {
 
   let contextEvents = await getContextEvents();
   is(contextEvents.length, 1,
-      "ExtensionContext state change after loading a content script");
+     "ExtensionContext state change after loading a content script");
   is(contextEvents[0].eventType, "load",
-      "Create ExtensionContext for content script");
+     "Create ExtensionContext for content script");
   is(contextEvents[0].url, tabUrl, "ExtensionContext URL = page");
 
   let promiseReload = extension.awaitMessage("contentscript-run");
@@ -68,11 +68,11 @@ add_task(async function test_contentscript_reload_and_unload() {
   await promiseReload;
   contextEvents = await getContextEvents();
   is(contextEvents.length, 2,
-      "ExtensionContext state changes after reloading a content script");
+     "ExtensionContext state changes after reloading a content script");
   is(contextEvents[0].eventType, "unload", "Unload old ExtensionContext");
   is(contextEvents[0].url, tabUrl, "ExtensionContext URL = page");
   is(contextEvents[1].eventType, "load",
-      "Create new ExtensionContext for content script");
+     "Create new ExtensionContext for content script");
   is(contextEvents[1].url, tabUrl, "ExtensionContext URL = page");
 
   let tabClosePromise = extension.awaitMessage("tab-closed");
@@ -81,9 +81,9 @@ add_task(async function test_contentscript_reload_and_unload() {
 
   contextEvents = await getContextEvents();
   is(contextEvents.length, 1,
-      "ExtensionContext state change after unloading a content script");
+     "ExtensionContext state change after unloading a content script");
   is(contextEvents[0].eventType, "unload",
-      "Unload ExtensionContext after closing the tab with the content script");
+     "Unload ExtensionContext after closing the tab with the content script");
   is(contextEvents[0].url, tabUrl, "ExtensionContext URL = page");
 
   chromeScript.sendAsyncMessage("cleanup");

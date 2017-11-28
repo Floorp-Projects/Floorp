@@ -111,8 +111,8 @@ add_task(async function testParameterValidation() {
   let testnamespace;
   function assertThrows(name, ...args) {
     Assert.throws(() => testnamespace[name](...args),
-        /Incorrect argument types/,
-        `Expected testnamespace.${name}(${args.map(String).join(", ")}) to throw.`);
+                  /Incorrect argument types/,
+                  `Expected testnamespace.${name}(${args.map(String).join(", ")}) to throw.`);
   }
   function assertNoThrows(name, ...args) {
     try {
@@ -188,9 +188,10 @@ add_task(async function testCheckAsyncResults() {
             "Missing optional properties is allowed");
 
   if (AppConstants.DEBUG) {
-    await Assert.rejects(invalid.async_result(),
-          `Type error for widget value (Property "size" is required)`,
-          "Should throw for invalid callback argument in DEBUG builds");
+    await Assert.rejects(
+      invalid.async_result(),
+      `Type error for widget value (Property "size" is required)`,
+      "Should throw for invalid callback argument in DEBUG builds");
   } else {
     deepEqual(await invalid.async_result(), {},
               "Invalid callback argument doesn't throw in release builds");
@@ -270,10 +271,12 @@ add_task(async function testAsyncResults() {
       });
 
       if (!isChromeCompat) { // No promises for chrome.
-        await Assert.rejects(testnamespace.async_required(), /ONE/,
-            "should reject testnamespace.async_required()").catch(() => {});
-        await Assert.rejects(testnamespace.async_optional(), /TWO/,
-            "should reject testnamespace.async_optional()").catch(() => {});
+        await Assert.rejects(
+          testnamespace.async_required(), /ONE/,
+          "should reject testnamespace.async_required()").catch(() => {});
+        await Assert.rejects(
+          testnamespace.async_optional(), /TWO/,
+          "should reject testnamespace.async_optional()").catch(() => {});
       }
 
       do_check_eq(await runFailCallback(testnamespace.async_required), "ONE");

@@ -70,14 +70,14 @@ add_task(async function testWindowTitle() {
       if (msg === "update") {
         let win = await browser.windows.get(windowId);
         browser.test.assertTrue(win.title.startsWith(expected.before.preface),
-                              "Window has the expected title preface before update.");
+                                "Window has the expected title preface before update.");
         browser.test.assertTrue(win.title.includes(expected.before.text),
-                              "Window has the expected title text before update.");
+                                "Window has the expected title text before update.");
         win = await browser.windows.update(windowId, options);
         browser.test.assertTrue(win.title.startsWith(expected.after.preface),
-                              "Window has the expected title preface after update.");
+                                "Window has the expected title preface after update.");
         browser.test.assertTrue(win.title.includes(expected.after.text),
-                              "Window has the expected title text after update.");
+                                "Window has the expected title text after update.");
         browser.test.sendMessage("updated", win);
       }
     });
