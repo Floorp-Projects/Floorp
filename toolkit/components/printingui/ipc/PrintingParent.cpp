@@ -142,8 +142,10 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   // Requesting the default printer name on Linux has been removed in the child,
   // because it was causing a sandbox violation (see Bug 1329216).
   // If no printer name is set at this point, use the print settings service
-  // to get the default printer name.
-  if (printerName.IsEmpty()) {
+  // to get the default printer name, unless we're printing to file.
+  bool printToFile = false;
+  MOZ_ALWAYS_SUCCEEDS(settings->GetPrintToFile(&printToFile));
+  if (!printToFile && printerName.IsEmpty()) {
     mPrintSettingsSvc->GetDefaultPrinterName(printerName);
     settings->SetPrinterName(printerName);
   }
