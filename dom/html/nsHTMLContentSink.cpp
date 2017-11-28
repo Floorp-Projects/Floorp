@@ -224,157 +224,17 @@ public:
   int32_t mStackPos;
 };
 
-static void
-DoCustomElementCreate(Element** aElement, nsIDocument* aDoc, nsAtom* aLocalName,
-                      CustomElementConstructor* aConstructor, ErrorResult& aRv)
-{
-  RefPtr<Element> element =
-    aConstructor->Construct("Custom Element Create", aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  if (!element || !element->IsHTMLElement()) {
-    aRv.ThrowTypeError<MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE>(NS_LITERAL_STRING("HTMLElement"));
-    return;
-  }
-
-  if (aDoc != element->OwnerDoc() || element->GetParentNode() ||
-      element->HasChildren() || element->GetAttrCount() ||
-      element->NodeInfo()->NameAtom() != aLocalName) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
-  element.forget(aElement);
-}
-
 nsresult
 NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                   FromParser aFromParser, const nsAString* aIs,
                   mozilla::dom::CustomElementDefinition* aDefinition)
 {
-  *aResult = nullptr;
-
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
 
-  nsAtom *name = nodeInfo->NameAtom();
-  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
-  RefPtr<nsAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
-
   NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
-               "Trying to HTML elements that don't have the XHTML namespace");
+               "Trying to create HTML elements that don't have the XHTML namespace");
 
-  int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
-  bool isCustomElementName = (tag == eHTMLTag_userdefined &&
-                              nsContentUtils::IsCustomElementName(name));
-  bool isCustomElement = isCustomElementName || aIs;
-  MOZ_ASSERT_IF(aDefinition, isCustomElement);
-
-  // https://dom.spec.whatwg.org/#concept-create-element
-  // We only handle the "synchronous custom elements flag is set" now.
-  // For the unset case (e.g. cloning a node), see bug 1319342 for that.
-  // Step 4.
-  CustomElementDefinition* definition = aDefinition;
-  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement &&
-      !definition) {
-    definition =
-      nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
-                                                    nodeInfo->LocalName(),
-                                                    nodeInfo->NamespaceID(),
-                                                    typeAtom);
-  }
-
-  // It might be a problem that parser synchronously calls constructor, so filed
-  // bug 1378079 to figure out what we should do for parser case.
-  if (definition) {
-    /*
-     * Synchronous custom elements flag is determined by 3 places in spec,
-     * 1) create an element for a token, the flag is determined by
-     *    "will execute script" which is not originally created
-     *    for the HTML fragment parsing algorithm.
-     * 2) createElement and createElementNS, the flag is the same as
-     *    NOT_FROM_PARSER.
-     * 3) clone a node, our implementation will not go into this function.
-     * For the unset case which is non-synchronous only applied for
-     * inner/outerHTML.
-     */
-    bool synchronousCustomElements = aFromParser != dom::FROM_PARSER_FRAGMENT ||
-                                     aFromParser == dom::NOT_FROM_PARSER;
-    // Per discussion in https://github.com/w3c/webcomponents/issues/635,
-    // use entry global in those places that are called from JS APIs and use the
-    // node document's global object if it is called from parser.
-    nsIGlobalObject* global;
-    if (aFromParser == dom::NOT_FROM_PARSER) {
-      global = GetEntryGlobal();
-    } else {
-      global = nodeInfo->GetDocument()->GetScopeObject();
-    }
-    if (!global) {
-      // In browser chrome code, one may have access to a document which doesn't
-      // have scope object anymore.
-      return NS_ERROR_FAILURE;
-    }
-
-    AutoEntryScript aes(global, "create custom elements");
-    JSContext* cx = aes.cx();
-    ErrorResult rv;
-
-    // Step 5.
-    if (definition->IsCustomBuiltIn()) {
-      // SetupCustomElement() should be called with an element that don't have
-      // CustomElementData setup, if not we will hit the assertion in
-      // SetCustomElementData().
-      // Built-in element
-      *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
-      (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
-      if (synchronousCustomElements) {
-        CustomElementRegistry::Upgrade(*aResult, definition, rv);
-        if (rv.MaybeSetPendingException(cx)) {
-          aes.ReportException();
-        }
-      } else {
-        nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
-      }
-
-      return NS_OK;
-    }
-
-    // Step 6.1.
-    if (synchronousCustomElements) {
-      DoCustomElementCreate(aResult, nodeInfo->GetDocument(),
-                            nodeInfo->NameAtom(),
-                            definition->mConstructor, rv);
-      if (rv.MaybeSetPendingException(cx)) {
-        NS_IF_ADDREF(*aResult = NS_NewHTMLUnknownElement(nodeInfo.forget(), aFromParser));
-      }
-      return NS_OK;
-    }
-
-    // Step 6.2.
-    NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
-    (*aResult)->SetCustomElementData(new CustomElementData(definition->mType));
-    nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
-    return NS_OK;
-  }
-
-  // Per the Custom Element specification, unknown tags that are valid custom
-  // element names should be HTMLElement instead of HTMLUnknownElement.
-  if (isCustomElementName) {
-    NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
-  } else {
-    *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
-  }
-
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement) {
-    (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
-  }
-
-  return NS_OK;
+  return nsContentUtils::NewXULOrHTMLElement(aResult, nodeInfo, aFromParser, aIs, aDefinition);
 }
 
 already_AddRefed<nsGenericHTMLElement>

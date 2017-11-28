@@ -15,7 +15,7 @@ use std::ptr;
 
 #[test]
 fn stack_limit() {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new(false).unwrap();
     let cx = rt.cx();
 
     unsafe {

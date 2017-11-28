@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="XUL Custom Elements"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTest();">
+  <title>XUL Custom Elements</title>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    class TestCustomElement extends XULElement {
+      constructor() {
+        super();
+      }
+
+      connectedCallback() {
+        this.textContent = "foo";
+      }
+    }
+
+    customElements.define("test-custom-element", TestCustomElement);
+
+    function runTest() {
+      const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+      let element = document.createElementNS(XUL_NS, "test-custom-element");
+      document.querySelector("#content").appendChild(element);
+      is(element.textContent, "foo", "Should have set the textContent");
+      ok(element instanceof TestCustomElement, "Should be an instance of TestCustomElement");
+
+      let element2 = element.cloneNode(false);
+      is(element2.textContent, "", "Shouldn't have cloned the textContent");
+      document.querySelector("#content").appendChild(element2);
+      is(element2.textContent, "foo", "Should have set the textContent");
+      ok(element2 instanceof TestCustomElement, "Should be an instance of TestCustomElement");
+
+      let element3 = new TestCustomElement();
+      is(element3.localName, "test-custom-element", "Should see the right tag");
+      is(element3.textContent, "", "Shouldn't have been inserted yet");
+      is(element3.namespaceURI, XUL_NS, "Should have set the right namespace");
+      document.querySelector("#content").appendChild(element3);
+      is(element3.textContent, "foo", "Should have set the textContent");
+      ok(element3 instanceof TestCustomElement, "Should be an instance of TestCustomElement");
+
+      let element4 = document.getElementById("element4");
+      is(element4.textContent, "foo",
+         "Parser should have instantiated the custom element.");
+      ok(element4 instanceof TestCustomElement, "Should be an instance of TestCustomElement");
+
+      SimpleTest.finish();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none">
+      <test-custom-element id="element4" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+    </div>
+    <pre id="test"></pre>
+  </body>
+</window>

@@ -952,28 +952,38 @@ static_assert(mozilla::IsSame<UChar, char16_t>::value,
 // The inline capacity we use for the char16_t Vectors.
 static const size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
-template <typename ICUStringFunction>
-static JSString*
-Call(JSContext* cx, const ICUStringFunction& strFn)
+template <typename ICUStringFunction, size_t InlineCapacity>
+static int32_t
+Call(JSContext* cx, const ICUStringFunction& strFn, Vector<char16_t, InlineCapacity>& chars)
 {
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    MOZ_ALWAYS_TRUE(chars.resize(INITIAL_CHAR_BUFFER_SIZE));
+    MOZ_ASSERT(chars.length() == 0);
+    MOZ_ALWAYS_TRUE(chars.resize(InlineCapacity));
 
     UErrorCode status = U_ZERO_ERROR;
-    int32_t size = strFn(chars.begin(), INITIAL_CHAR_BUFFER_SIZE, &status);
+    int32_t size = strFn(chars.begin(), InlineCapacity, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         MOZ_ASSERT(size >= 0);
         if (!chars.resize(size_t(size)))
-            return nullptr;
+            return -1;
         status = U_ZERO_ERROR;
         strFn(chars.begin(), size, &status);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return nullptr;
+        return -1;
     }
-
     MOZ_ASSERT(size >= 0);
+    return size;
+}
+
+template <typename ICUStringFunction>
+static JSString*
+Call(JSContext* cx, const ICUStringFunction& strFn)
+{
+    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    int32_t size = Call(cx, strFn, chars);
+    if (size < 0)
+        return nullptr;
     return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
 }
 
@@ -3106,6 +3116,48 @@ js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     args.rval().setInt32(offset);
+    return true;
+}
+
+bool
+js::intl_isDefaultTimeZone(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isString() || args[0].isUndefined());
+
+    // |undefined| is the default value when the Intl runtime caches haven't
+    // yet been initialized. Handle it the same way as a cache miss.
+    if (args[0].isUndefined()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+
+    // The current default might be stale, because JS::ResetTimeZone() doesn't
+    // immediately update ICU's default time zone. So perform an update if
+    // needed.
+    js::ResyncICUDefaultTimeZone();
+
+    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    int32_t size = Call(cx, ucal_getDefaultTimeZone, chars);
+    if (size < 0)
+        return false;
+
+    JSLinearString* str = args[0].toString()->ensureLinear(cx);
+    if (!str)
+        return false;
+
+    bool equals;
+    if (str->length() == size_t(size)) {
+        JS::AutoCheckCannotGC nogc;
+        equals = str->hasLatin1Chars()
+                 ? EqualChars(str->latin1Chars(nogc), chars.begin(), str->length())
+                 : EqualChars(str->twoByteChars(nogc), chars.begin(), str->length());
+    } else {
+        equals = false;
+    }
+
+    args.rval().setBoolean(equals);
     return true;
 }
 
