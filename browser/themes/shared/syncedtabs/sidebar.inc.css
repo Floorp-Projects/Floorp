@@ -231,6 +231,7 @@ body {
 
 .deck .instructions {
   text-align: center;
+  color: rgba(12, 12, 13, .5);
   padding: 0 11px;
   max-width: 15em;
   margin: 1em auto;
