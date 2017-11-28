@@ -2213,6 +2213,14 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             return true;
         }
 
+        // If we're constructing, require the callee to have JIT code. This
+        // isn't required for correctness but avoids allocating a template
+        // object below for constructors that aren't hot. See bug 1419758.
+        if (constructing && !fun->hasJITCode()) {
+            *handled = true;
+            return true;
+        }
+
         // Check if this stub chain has already generalized scripted calls.
         if (stub->scriptedStubsAreGeneralized()) {
             JitSpew(JitSpew_BaselineIC, "  Chain already has generalized scripted call stub!");
