@@ -446,12 +446,6 @@ interface nsIXPConnect : nsISupports
                                          in JSObjectPtr sandbox);
 
     /**
-     * Trigger a JS garbage collection.
-     * Use a js::gcreason::Reason from jsfriendapi.h for the kind.
-     */
-    void GarbageCollect(in uint32_t reason);
-
-    /**
      * Signals a good place to do an incremental GC slice, because the
      * browser is drawing a frame.
      */
