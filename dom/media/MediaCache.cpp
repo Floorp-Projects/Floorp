@@ -2510,12 +2510,16 @@ MediaCacheStream::GetNextCachedDataInternal(AutoLock&, int64_t aOffset)
 void
 MediaCacheStream::SetReadMode(ReadMode aMode)
 {
-  // TODO: Assert non-main thread.
-  AutoLock lock(mMediaCache->Monitor());
-  if (aMode == mCurrentMode)
-    return;
-  mCurrentMode = aMode;
-  mMediaCache->QueueUpdate(lock);
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::SetReadMode",
+    [ this, client = RefPtr<ChannelMediaResource>(mClient), aMode ]() {
+      AutoLock lock(mMediaCache->Monitor());
+      if (!mClosed && mCurrentMode != aMode) {
+        mCurrentMode = aMode;
+        mMediaCache->QueueUpdate(lock);
+      }
+    });
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void
