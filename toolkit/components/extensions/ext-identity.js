@@ -54,7 +54,7 @@ const openOAuthWindow = (details, redirectURI) => {
   let window = Services.ww.openWindow(null,
                                       Services.prefs.getCharPref("browser.chromeURL"),
                                       "launchWebAuthFlow_dialog",
-                                      "chrome,location=yes,centerscreen,dialog=no,resizable=yes",
+                                      "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes",
                                       args);
 
   return new Promise((resolve, reject) => {
