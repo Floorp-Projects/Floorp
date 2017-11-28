@@ -12,7 +12,7 @@ createHTML({
   title: "Disabling locally should be reflected remotely, individually for clones"
 });
 
-runNetworkTest(() => {
+runNetworkTest(async () => {
   var test = new PeerConnectionTest();
 
   var originalStream;
@@ -43,7 +43,7 @@ runNetworkTest(() => {
       is(test.pcRemote._pc.getRemoteStreams().length, 1,
          "pcRemote should have one stream");
     },
-    function CHECK_VIDEO() {
+    async function CHECK_VIDEO() {
       info("Checking video");
       var h = new CaptureStreamTestHelper2D();
       var localVideoClone = test.pcLocal.localMediaElements
@@ -69,36 +69,35 @@ runNetworkTest(() => {
         { offsetX, offsetY }
       );
 
-      return Promise.resolve()
-        .then(() => info("Checking local original enabled"))
-        .then(() => checkVideoEnabled(localVideoOriginal))
-        .then(() => info("Checking local clone enabled"))
-        .then(() => checkVideoEnabled(localVideoClone))
-        .then(() => info("Checking remote clone enabled"))
-        .then(() => checkVideoEnabled(remoteVideoClone))
+      info("Checking local original enabled");
+      await checkVideoEnabled(localVideoOriginal);
+      info("Checking local clone enabled");
+      await checkVideoEnabled(localVideoClone);
+      info("Checking remote clone enabled");
+      await checkVideoEnabled(remoteVideoClone);
 
-        .then(() => info("Disabling original"))
-        .then(() => originalStream.getVideoTracks()[0].enabled = false)
+      info("Disabling original");
+      originalStream.getVideoTracks()[0].enabled = false;
 
-        .then(() => info("Checking local original disabled"))
-        .then(() => checkVideoDisabled(localVideoOriginal))
-        .then(() => info("Checking local clone enabled"))
-        .then(() => checkVideoEnabled(localVideoClone))
-        .then(() => info("Checking remote clone enabled"))
-        .then(() => checkVideoEnabled(remoteVideoClone))
+      info("Checking local original disabled");
+      await checkVideoDisabled(localVideoOriginal);
+      info("Checking local clone enabled");
+      await checkVideoEnabled(localVideoClone);
+      info("Checking remote clone enabled");
+      await checkVideoEnabled(remoteVideoClone);
 
-        .then(() => info("Re-enabling original; disabling clone"))
-        .then(() => originalStream.getVideoTracks()[0].enabled = true)
-        .then(() => test.pcLocal._pc.getLocalStreams()[0].getVideoTracks()[0].enabled = false)
+      info("Re-enabling original; disabling clone");
+      originalStream.getVideoTracks()[0].enabled = true;
+      test.pcLocal._pc.getLocalStreams()[0].getVideoTracks()[0].enabled = false;
 
-        .then(() => info("Checking local original enabled"))
-        .then(() => checkVideoEnabled(localVideoOriginal))
-        .then(() => info("Checking local clone disabled"))
-        .then(() => checkVideoDisabled(localVideoClone))
-        .then(() => info("Checking remote clone disabled"))
-        .then(() => checkVideoDisabled(remoteVideoClone))
+      info("Checking local original enabled");
+      await checkVideoEnabled(localVideoOriginal);
+      info("Checking local clone disabled");
+      await checkVideoDisabled(localVideoClone);
+      info("Checking remote clone disabled");
+      await checkVideoDisabled(remoteVideoClone);
     },
-    function CHECK_AUDIO() {
+    async function CHECK_AUDIO() {
       info("Checking audio");
       var ac = new AudioContext();
       var localAnalyserOriginal = new AudioStreamAnalyser(ac, originalStream);
@@ -113,35 +112,34 @@ runNetworkTest(() => {
       var checkAudioDisabled = analyser =>
         analyser.waitForAnalysisSuccess(array => array[freq1k] < 50);
 
-      return Promise.resolve()
-        .then(() => info("Checking local original enabled"))
-        .then(() => checkAudioEnabled(localAnalyserOriginal))
-        .then(() => info("Checking local clone enabled"))
-        .then(() => checkAudioEnabled(localAnalyserClone))
-        .then(() => info("Checking remote clone enabled"))
-        .then(() => checkAudioEnabled(remoteAnalyserClone))
+      info("Checking local original enabled");
+      await checkAudioEnabled(localAnalyserOriginal);
+      info("Checking local clone enabled");
+      await checkAudioEnabled(localAnalyserClone);
+      info("Checking remote clone enabled");
+      await checkAudioEnabled(remoteAnalyserClone);
 
-        .then(() => info("Disabling original"))
-        .then(() => originalStream.getAudioTracks()[0].enabled = false)
+      info("Disabling original");
+      originalStream.getAudioTracks()[0].enabled = false;
 
-        .then(() => info("Checking local original disabled"))
-        .then(() => checkAudioDisabled(localAnalyserOriginal))
-        .then(() => info("Checking local clone enabled"))
-        .then(() => checkAudioEnabled(localAnalyserClone))
-        .then(() => info("Checking remote clone enabled"))
-        .then(() => checkAudioEnabled(remoteAnalyserClone))
+      info("Checking local original disabled");
+      await checkAudioDisabled(localAnalyserOriginal);
+      info("Checking local clone enabled");
+      await checkAudioEnabled(localAnalyserClone);
+      info("Checking remote clone enabled");
+      await checkAudioEnabled(remoteAnalyserClone);
 
-        .then(() => info("Re-enabling original; disabling clone"))
-        .then(() => originalStream.getAudioTracks()[0].enabled = true)
-        .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = false)
+      info("Re-enabling original; disabling clone");
+      originalStream.getAudioTracks()[0].enabled = true;
+      test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = false;
 
-        .then(() => info("Checking local original enabled"))
-        .then(() => checkAudioEnabled(localAnalyserOriginal))
-        .then(() => info("Checking local clone disabled"))
-        .then(() => checkAudioDisabled(localAnalyserClone))
-        .then(() => info("Checking remote clone disabled"))
-        .then(() => checkAudioDisabled(remoteAnalyserClone))
-    }
+      info("Checking local original enabled");
+      await checkAudioEnabled(localAnalyserOriginal);
+      info("Checking local clone disabled");
+      await checkAudioDisabled(localAnalyserClone);
+      info("Checking remote clone disabled");
+      await checkAudioDisabled(remoteAnalyserClone);
+    },
   ]);
   test.run();
 });
