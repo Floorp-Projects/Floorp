@@ -404,16 +404,6 @@ interface nsIXPConnect : nsISupports
 
     // Methods added since mozilla 0.6....
 
-    /**
-    * This only succeeds if the native object is already wrapped by xpconnect.
-    * A new wrapper is *never* constructed.
-    */
-    nsIXPConnectWrappedNative
-    getWrappedNativeOfNativeObject(in JSContextPtr aJSContext,
-                                   in JSObjectPtr  aScope,
-                                   in nsISupports  aCOMObj,
-                                   in nsIIDRef     aIID);
-
     void
     setFunctionThisTranslator(in nsIIDRef aIID,
                               in nsIXPCFunctionThisTranslator aTranslator);
