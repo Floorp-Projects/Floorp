@@ -212,3 +212,15 @@ class DateTimeTestHelper {
     this.panel = null;
   }
 }
+
+/**
+ * Used to listen events if you just need it once
+ */
+function once(target, name) {
+  var p = new Promise(function(resolve, reject) {
+    target.addEventListener(name, function() {
+      resolve();
+    }, {once: true});
+  });
+  return p;
+}
