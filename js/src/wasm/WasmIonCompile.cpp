@@ -801,7 +801,9 @@ class FunctionCompiler
         // Fold a constant base into the offset (so the base is 0 in which case
         // the codegen is optimized), if it doesn't wrap or trigger an
         // MWasmAddOffset.
-        if ((*base)->isConstant()) {
+        if (!access->isAtomic() && !isAsmJS() && // TODO bug 1421244
+            (*base)->isConstant())
+        {
             uint32_t basePtr = (*base)->toConstant()->toInt32();
             uint32_t offset = access->offset();
 
