@@ -208,11 +208,24 @@ ImportRule::~ImportRule()
 NS_IMPL_ADDREF_INHERITED(ImportRule, CSSImportRule)
 NS_IMPL_RELEASE_INHERITED(ImportRule, CSSImportRule)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ImportRule, CSSImportRule, mMedia, mChildSheet)
-
 // QueryInterface implementation for ImportRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImportRule)
 NS_INTERFACE_MAP_END_INHERITING(CSSImportRule)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(ImportRule)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ImportRule, CSSImportRule)
+  if (tmp->mChildSheet) {
+    tmp->mChildSheet->SetOwnerRule(nullptr);
+    tmp->mChildSheet = nullptr;
+  }
+  tmp->mMedia = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ImportRule, CSSImportRule)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildSheet)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 #ifdef DEBUG
 /* virtual */ void
@@ -338,8 +351,18 @@ NS_IMPL_RELEASE_INHERITED(MediaRule, CSSMediaRule)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaRule)
 NS_INTERFACE_MAP_END_INHERITING(CSSMediaRule)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRule, CSSMediaRule,
-                                   mMedia)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MediaRule)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaRule, CSSMediaRule)
+  if (tmp->mMedia) {
+    tmp->mMedia->SetStyleSheet(nullptr);
+    tmp->mMedia = nullptr;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaRule, CSSMediaRule)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 /* virtual */ void
 MediaRule::SetStyleSheet(StyleSheet* aSheet)
