@@ -8743,16 +8743,13 @@ HTMLEditRules::DidCreateNode(const nsAString& aTag,
 
 NS_IMETHODIMP
 HTMLEditRules::WillInsertNode(nsIDOMNode* aNode,
-                              nsIDOMNode* aParent,
-                              int32_t aPosition)
+                              nsIDOMNode* aNextSiblingOfNewNode)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditRules::DidInsertNode(nsIDOMNode* aNode,
-                             nsIDOMNode* aParent,
-                             int32_t aPosition,
                              nsresult aResult)
 {
   if (!mListenerEnabled) {
