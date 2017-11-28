@@ -12,13 +12,17 @@ add_task(async function setup() {
 
 function testBorderColor(element, expected) {
   Assert.equal(window.getComputedStyle(element).borderLeftColor,
-    "rgb(" + hexToRGB(expected).join(", ") + ")", "Field left border color should be set.");
+               hexToCSS(expected),
+               "Field left border color should be set.");
   Assert.equal(window.getComputedStyle(element).borderRightColor,
-    "rgb(" + hexToRGB(expected).join(", ") + ")", "Field right border color should be set.");
+               hexToCSS(expected),
+               "Field right border color should be set.");
   Assert.equal(window.getComputedStyle(element).borderTopColor,
-    "rgb(" + hexToRGB(expected).join(", ") + ")", "Field top border color should be set.");
+               hexToCSS(expected),
+               "Field top border color should be set.");
   Assert.equal(window.getComputedStyle(element).borderBottomColor,
-    "rgb(" + hexToRGB(expected).join(", ") + ")", "Field bottom border color should be set.");
+               hexToCSS(expected),
+               "Field bottom border color should be set.");
 }
 
 add_task(async function test_support_toolbar_field_properties() {
@@ -66,9 +70,11 @@ add_task(async function test_support_toolbar_field_properties() {
   for (let field of fields) {
     info(`Testing ${field.id || field.className}`);
     Assert.equal(window.getComputedStyle(field).backgroundColor,
-      "rgb(" + hexToRGB(TOOLBAR_FIELD_BACKGROUND).join(", ") + ")", "Field background should be set.");
+                 hexToCSS(TOOLBAR_FIELD_BACKGROUND),
+                 "Field background should be set.");
     Assert.equal(window.getComputedStyle(field).color,
-      "rgb(" + hexToRGB(TOOLBAR_FIELD_COLOR).join(", ") + ")", "Field color should be set.");
+                 hexToCSS(TOOLBAR_FIELD_COLOR),
+                 "Field color should be set.");
     testBorderColor(field, TOOLBAR_FIELD_BORDER);
   }
 

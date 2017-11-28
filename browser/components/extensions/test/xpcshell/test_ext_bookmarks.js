@@ -194,10 +194,9 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(1, results.length, "getTree returns one result");
       let bookmark = results[0].children.find(bookmarkItem => bookmarkItem.id == unsortedId);
       browser.test.assertEq(
-          "Other Bookmarks",
-          bookmark.title,
-          "Folder returned from getTree has the expected title"
-      );
+        "Other Bookmarks",
+        bookmark.title,
+        "Folder returned from getTree has the expected title");
       browser.test.assertEq("folder", bookmark.type,
                             "Folder returned from getTree has the expected type");
 
@@ -207,9 +206,8 @@ add_task(async function test_bookmarks() {
           "Expected error thrown when trying to create a bookmark with an invalid parentId"
         );
         browser.test.assertTrue(
-            error.message.includes(`"parentGuid":"invalid"`),
-            "Expected error thrown when trying to create a bookmark with an invalid parentId"
-        );
+          error.message.includes(`"parentGuid":"invalid"`),
+          "Expected error thrown when trying to create a bookmark with an invalid parentId");
       });
     }).then(() => {
       return browser.bookmarks.remove(ourId);
@@ -695,19 +693,19 @@ add_task(async function test_tree_with_empty_folder() {
     await browser.bookmarks.create({title: "A bookmark", url: "http://example.com", parentId: nonEmptyFolder.id});
 
     let tree = await browser.bookmarks.getSubTree(nonEmptyFolder.parentId);
-    browser.test.assertEq(0,
-      tree[0].children[0].children.length,
+    browser.test.assertEq(
+      0, tree[0].children[0].children.length,
       "The empty folder returns an empty array for children.");
-    browser.test.assertEq(1,
-      tree[0].children[1].children.length,
+    browser.test.assertEq(
+      1, tree[0].children[1].children.length,
       "The non-empty folder returns a single item array for children.");
 
     let children = await browser.bookmarks.getChildren(nonEmptyFolder.parentId);
     // getChildren should only return immediate children. This is not tested in the
     // monster test above.
     for (let child of children) {
-      browser.test.assertEq(undefined,
-        child.children,
+      browser.test.assertEq(
+        undefined, child.children,
         "Child from getChildren does not contain any children.");
     }
 

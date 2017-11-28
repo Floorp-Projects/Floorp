@@ -6,9 +6,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "imgTools",
                                    "@mozilla.org/image/tools;1", "imgITools");
 
 const SupportsInterfacePointer = Components.Constructor(
-    "@mozilla.org/supports-interface-pointer;1", "nsISupportsInterfacePointer");
+  "@mozilla.org/supports-interface-pointer;1", "nsISupportsInterfacePointer");
 const Transferable = Components.Constructor(
-    "@mozilla.org/widget/transferable;1", "nsITransferable");
+  "@mozilla.org/widget/transferable;1", "nsITransferable");
 
 this.clipboard = class extends ExtensionAPI {
   getAPI(context) {

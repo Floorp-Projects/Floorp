@@ -87,7 +87,7 @@ add_task(async function test_legacy_extension_context() {
   let extensionInfo = await waitForExtensionInfo;
 
   equal(legacyContext.envType, "legacy_extension",
-     "LegacyExtensionContext instance has the expected type");
+        "LegacyExtensionContext instance has the expected type");
 
   ok(legacyContext.api, "Got the expected API object");
   ok(legacyContext.api.browser, "Got the expected browser property");
@@ -106,7 +106,7 @@ add_task(async function test_legacy_extension_context() {
 
   let {singleMsg, msgSender} = await waitMessage;
   equal(singleMsg, "webextension -> legacy_extension message",
-     "Got the expected message");
+        "Got the expected message");
   ok(msgSender, "Got a message sender object");
 
   equal(msgSender.id, extension.id, "The sender has the expected id property");
@@ -138,9 +138,9 @@ add_task(async function test_legacy_extension_context() {
   ok(port, "Got the Port API object");
   ok(port.sender, "The port has a sender property");
   equal(port.sender.id, extension.id,
-     "The port sender has the expected id property");
+        "The port sender has the expected id property");
   equal(port.sender.url, extensionInfo.bgURL,
-     "The port sender has the expected url property");
+        "The port sender has the expected url property");
 
   let waitPortMessage = new Promise(resolve => {
     port.onMessage.addListener((msg) => {
@@ -153,7 +153,7 @@ add_task(async function test_legacy_extension_context() {
   let msg = await waitPortMessage;
 
   equal(msg, "webextension -> legacy_extension port message",
-     "LegacyExtensionContext received the expected message from the webextension");
+        "LegacyExtensionContext received the expected message from the webextension");
 
   let waitForDisconnect = new Promise(resolve => {
     port.onDisconnect.addListener(resolve);

@@ -259,7 +259,7 @@ add_task(async function tabsSendAndReceiveMessageTabId0() {
         browser.test.assertEq("message from tabId 0", msg,
                               "Got the expected message from a content script");
         browser.test.assertTrue(sender.tab,
-                              "Got a sender.tab object as expected");
+                                "Got a sender.tab object as expected");
         browser.test.assertEq(0, sender.tab.id,
                               "Got a sender.tab object with tab.id == 0");
 

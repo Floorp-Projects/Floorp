@@ -3,9 +3,9 @@
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                 "resource://gre/modules/Services.jsm");
+                                  "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
-                                 "chrome://devtools-shim/content/DevToolsShim.jsm");
+                                  "chrome://devtools-shim/content/DevToolsShim.jsm");
 
 // These are defined on "global" which is used for the same scopes as the other
 // ext-c-*.js files.

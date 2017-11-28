@@ -670,7 +670,8 @@ HttpObserverManager = {
       Services.tm.dispatchToMainThread(() => {
         channel.errorCheck();
         if (!channel.errorString) {
-          this.runChannelListener(channel, "onError",
+          this.runChannelListener(
+            channel, "onError",
             {error: this.activityErrorsMap.get(lastActivity) ||
                     `NS_ERROR_NET_UNKNOWN_${lastActivity}`});
         }

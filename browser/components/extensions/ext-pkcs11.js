@@ -6,10 +6,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this,
-  "pkcs11db",
-  "@mozilla.org/security/pkcs11moduledb;1",
-  "nsIPKCS11ModuleDB");
+XPCOMUtils.defineLazyServiceGetter(this, "pkcs11db",
+                                   "@mozilla.org/security/pkcs11moduledb;1",
+                                   "nsIPKCS11ModuleDB");
 
 var {DefaultMap} = ExtensionUtils;
 

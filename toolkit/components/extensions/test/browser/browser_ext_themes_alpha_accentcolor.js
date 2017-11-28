@@ -24,7 +24,7 @@ add_task(async function test_alpha_accentcolor() {
   let style = window.getComputedStyle(docEl);
 
   Assert.equal(style.backgroundColor, "rgb(230, 128, 0)",
-    "Window background color should be opaque");
+               "Window background color should be opaque");
 
   await extension.unload();
 });

@@ -181,7 +181,7 @@ add_task(async function test_devtools_inspectedWindow_reload_custom_user_agent()
             try {
               const [text] = await browser.tabs.executeScript(activeTabId, {code});
               browser.test.assertEq(expectedContent, text,
-                                      `Got the expected userAgent with userAgent=${enabled}`);
+                                    `Got the expected userAgent with userAgent=${enabled}`);
             } catch (err) {
               browser.test.fail(`Error: ${err.message} - ${err.stack}`);
             }
