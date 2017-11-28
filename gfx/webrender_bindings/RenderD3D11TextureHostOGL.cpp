@@ -91,7 +91,9 @@ RenderDXGITextureHostOGL::EnsureLockable()
                                                    reinterpret_cast<EGLClientBuffer>(mHandle),
                                                    gl::GLContextEGL::Cast(mGL.get())->mConfig,
                                                    pbufferAttributes);
-    MOZ_ASSERT(mSurface);
+    if (!mSurface) {
+      return false;
+    }
 
     // Query the keyed-mutex.
     egl->fQuerySurfacePointerANGLE(egl->Display(),
