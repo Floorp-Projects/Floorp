@@ -13,10 +13,6 @@
   #five, #six {border: thick solid red; border-inline-start-color:green; border-inline-end-color:blue}
   #seven {
     border: 3px solid;
-    -moz-border-top-colors: blue aqua fuchsia;
-    -moz-border-right-colors: aqua blue fuchsia;
-    -moz-border-bottom-colors: blue fuchsia aqua;
-    -moz-border-left-colors: fuchsia blue blue;
   }
 
   /* XXX also test rgba() */
@@ -107,14 +103,6 @@ function part1()
           "border-inline-start-color applies");
     isnot(cs6.borderLeftColor, cs2.borderLeftColor,
           "border-inline-end-color applies");
-    isnot(cs7.MozBorderTopColors, cs2.MozBorderTopColors,
-          "-moz-border-top-colors applies");
-    isnot(cs7.MozBorderRightColors, cs2.MozBorderRightColors,
-          "-moz-border-right-colors applies");
-    isnot(cs7.MozBorderBottomColors, cs2.MozBorderBottomColors,
-          "-moz-border-bottom-colors applies");
-    isnot(cs7.MozBorderLeftColors, cs2.MozBorderLeftColors,
-          "-moz-border-left-colors applies");
     is(cs1.color, cs3.color, "color applies");
     is(cs1.backgroundColor, cs3.backgroundColor, "background-color applies");
     isnot(cs3.backgroundColor, cs4.backgroundColor, "background-color applies");
@@ -154,14 +142,6 @@ function part2()
        "border-inline-start-color is blocked");
     is(cs6.borderLeftColor, cs2.borderLeftColor,
        "border-inline-end-color is blocked");
-    is(cs7.MozBorderTopColors, cs2.MozBorderTopColors,
-       "-moz-border-top-colors is blocked");
-    is(cs7.MozBorderRightColors, cs2.MozBorderRightColors,
-       "-moz-border-right-colors is blocked");
-    is(cs7.MozBorderBottomColors, cs2.MozBorderBottomColors,
-       "-moz-border-bottom-colors is blocked");
-    is(cs7.MozBorderLeftColors, cs2.MozBorderLeftColors,
-       "-moz-border-left-colors is blocked");
     is(cs1.borderBottomColor, cs2.borderBottomColor,
        "border-bottom-color is blocked");
     is(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,

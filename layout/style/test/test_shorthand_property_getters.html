@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=376075
 
 var e = document.getElementById("display");
 
-var borderExtras = ";-moz-border-top-colors: none; -moz-border-right-colors: none; -moz-border-bottom-colors: none; -moz-border-left-colors: none; border-image: none";
+var borderExtras = "; border-image: none";
 
 // Test that we only serialize the 'border' shorthand when appropriate.
 e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: blue medium solid" + borderExtras);
@@ -233,7 +233,7 @@ e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 2
 is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
 
 // Check that the 'border' shorthand resets 'border-image' and
-// '-moz-border-*-colors', but that other 'border-*' shorthands don't
+// but that other 'border-*' shorthands don't
 // (bug 482692).
 e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green');
 is(e.style.cssText,
@@ -243,14 +243,6 @@ e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5; border: medium so
 is(e.style.cssText,
    'border: medium solid green;',
    "border DOES reset border-image");
-e.setAttribute("style", '-moz-border-left-colors: fuchsia blue; border-left: medium solid green');
-is(e.style.cssText,
-   '-moz-border-left-colors: fuchsia blue; border-left: medium solid green;',
-   "border-left does NOT reset -moz-border-left-colors");
-e.setAttribute("style", '-moz-border-left-colors: fuchsia blue; border: medium solid green');
-is(e.style.cssText,
-   'border: medium solid green;',
-   "border DOES reset -moz-border-left-colors");
 
 // Test that the color goes at the beginning of the last item of the
 // background shorthand.
