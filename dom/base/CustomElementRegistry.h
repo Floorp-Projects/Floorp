@@ -209,41 +209,6 @@ protected:
 #endif
 };
 
-class CustomElementUpgradeReaction final : public CustomElementReaction
-{
-public:
-  explicit CustomElementUpgradeReaction(CustomElementDefinition* aDefinition)
-    : mDefinition(aDefinition)
-  {
-#if DEBUG
-    mIsUpgradeReaction = true;
-#endif
-  }
-
-private:
-   virtual void Invoke(Element* aElement, ErrorResult& aRv) override;
-
-   CustomElementDefinition* mDefinition;
-};
-
-class CustomElementCallbackReaction final : public CustomElementReaction
-{
-  public:
-    explicit CustomElementCallbackReaction(UniquePtr<CustomElementCallback> aCustomElementCallback)
-      : mCustomElementCallback(Move(aCustomElementCallback))
-    {
-    }
-
-    virtual void Traverse(nsCycleCollectionTraversalCallback& aCb) const override
-    {
-      mCustomElementCallback->Traverse(aCb);
-    }
-
-  private:
-    virtual void Invoke(Element* aElement, ErrorResult& aRv) override;
-    UniquePtr<CustomElementCallback> mCustomElementCallback;
-};
-
 // https://html.spec.whatwg.org/multipage/scripting.html#custom-element-reactions-stack
 class CustomElementReactionsStack
 {
