@@ -155,10 +155,10 @@ endif
 ident:
 	@printf 'fx_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
-	    $(STAGEDIST)/application.ini App SourceStamp
+	    '$(STAGEDIST)'/application.ini App SourceStamp
 	@printf 'buildid '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
-	    $(STAGEDIST)/application.ini App BuildID
+	    '$(STAGEDIST)'/application.ini App BuildID
 
 # test target, depends on make package
 # try to repack x-test, with just toolkit/defines.inc being there
