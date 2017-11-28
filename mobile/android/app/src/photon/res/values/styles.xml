@@ -981,7 +981,7 @@
     </style>
 
     <style name="PwaConfirm.Title">
-        <item name="android:layout_toRightOf">@id/pwa_confirm_icon_wrap</item>
+        <item name="android:layout_toRightOf">@id/pwa_confirm_icon</item>
         <item name="android:layout_toLeftOf">@id/pwa_confirm_cancel</item>
     </style>
 
