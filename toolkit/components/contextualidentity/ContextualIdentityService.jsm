@@ -162,6 +162,10 @@ _ContextualIdentityService.prototype = {
 
     this._dataReady = true;
 
+    // Let's delete all the data of any userContextId. 1 is the first valid
+    // userContextId value.
+    this.deleteContainerData();
+
     this.saveSoon();
   },
 
@@ -460,26 +464,30 @@ _ContextualIdentityService.prototype = {
     return new _ContextualIdentityService(path);
   },
 
+  deleteContainerData() {
+    let minUserContextId = 1;
+    let maxUserContextId = minUserContextId;
+    const enumerator = Services.cookies.enumerator;
+    while (enumerator.hasMoreElements()) {
+      const cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+      if (cookie.originAttributes.userContextId > maxUserContextId) {
+        maxUserContextId = cookie.originAttributes.userContextId;
+      }
+    }
+
+    for (let i = minUserContextId; i <= maxUserContextId; ++i) {
+      Services.obs.notifyObservers(null, "clear-origin-attributes-data",
+                                   JSON.stringify({ userContextId: i }));
+    }
+  },
+
   migrate2to3(data) {
     // migrating from 2 to 3 is basically just increasing the version id.
     data.version = 3;
 
     // *Only in nightly* we delete data of the all non-default containers.
     if (AppConstants.NIGHTLY_BUILD) {
-      const minUserContextId = 1; // the first valid userContextId
-      let maxUserContextId = minUserContextId;
-      const enumerator = Services.cookies.enumerator;
-      while (enumerator.hasMoreElements()) {
-        const cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-        if (cookie.originAttributes.userContextId > maxUserContextId) {
-          maxUserContextId = cookie.originAttributes.userContextId;
-        }
-      }
-
-      for (let i = minUserContextId; i <= maxUserContextId; ++i) {
-        Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                     JSON.stringify({ userContextId: i }));
-      }
+      this.deleteContainerData();
     }
 
     return data;
