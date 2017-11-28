@@ -44,9 +44,9 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
   const EXT_2_ID = "ext2@tests.mozilla.org";
   const EXT_3_ID = "ext3@tests.mozilla.org";
 
-  const CONTROLLABLE = "controllable_by_this_extension";
   const CONTROLLED_BY_THIS = "controlled_by_this_extension";
   const CONTROLLED_BY_OTHER = "controlled_by_other_extensions";
+  const NOT_CONTROLLABLE = "not_controllable";
 
   function background() {
     browser.test.onMessage.addListener(async msg => {
@@ -56,11 +56,13 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
           browser.test.sendMessage("newTabPage", newTabPage);
           break;
         case "trySet":
-          await browser.browserSettings.newTabPageOverride.set({value: "foo"});
+          let setResult = await browser.browserSettings.newTabPageOverride.set({value: "foo"});
+          browser.test.assertFalse(setResult, "Calling newTabPageOverride.set returns false.");
           browser.test.sendMessage("newTabPageSet");
           break;
         case "tryClear":
-          await browser.browserSettings.newTabPageOverride.clear({});
+          let clearResult = await browser.browserSettings.newTabPageOverride.clear({});
+          browser.test.assertFalse(clearResult, "Calling newTabPageOverride.clear returns false.");
           browser.test.sendMessage("newTabPageCleared");
           break;
       }
@@ -105,7 +107,7 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
   equal(aboutNewTabService.newTabURL, DEFAULT_NEW_TAB_URL,
        "newTabURL is still set to the default.");
 
-  await checkNewTabPageOverride(ext1, aboutNewTabService.newTabURL, CONTROLLABLE);
+  await checkNewTabPageOverride(ext1, aboutNewTabService.newTabURL, NOT_CONTROLLABLE);
 
   await ext2.startup();
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_2),
@@ -128,7 +130,7 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
   await disabledPromise;
   equal(aboutNewTabService.newTabURL, DEFAULT_NEW_TAB_URL,
         "newTabURL url is reset to the default after second extension is disabled.");
-  await checkNewTabPageOverride(ext1, aboutNewTabService.newTabURL, CONTROLLABLE);
+  await checkNewTabPageOverride(ext1, aboutNewTabService.newTabURL, NOT_CONTROLLABLE);
 
   // Re-enable the second extension.
   let enabledPromise = awaitEvent("ready");
