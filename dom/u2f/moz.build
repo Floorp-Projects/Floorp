@@ -15,7 +15,6 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'U2F.cpp',
-    'U2FManager.cpp',
     'U2FTransactionChild.cpp',
     'U2FTransactionParent.cpp',
 ]
