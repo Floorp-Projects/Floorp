@@ -28,7 +28,6 @@ ServoStyleRuleDeclaration::ServoStyleRuleDeclaration(
 
 ServoStyleRuleDeclaration::~ServoStyleRuleDeclaration()
 {
-  mDecls->SetOwningRule(nullptr);
 }
 
 // QueryInterface implementation for ServoStyleRuleDeclaration

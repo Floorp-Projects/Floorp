@@ -234,8 +234,6 @@ ServoCSSRuleList::GetDOMCSSRuleType(uint32_t aIndex) const
 
 ServoCSSRuleList::~ServoCSSRuleList()
 {
-  MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
-  MOZ_ASSERT(!mParentRule, "Backpointer should have been cleared");
   DropAllRules();
 }
 
