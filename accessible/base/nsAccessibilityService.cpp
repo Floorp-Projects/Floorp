@@ -1904,6 +1904,11 @@ nsAccessibilityService::NotifyOfConsumersChange()
 nsAccessibilityService*
 GetOrCreateAccService(uint32_t aNewConsumer)
 {
+  // Do not initialize accessibility if it is force disabled.
+  if (PlatformDisabledState() == ePlatformIsDisabled) {
+    return nullptr;
+  }
+
   if (!nsAccessibilityService::gAccessibilityService) {
     RefPtr<nsAccessibilityService> service = new nsAccessibilityService();
     if (!service->Init()) {
