@@ -169,6 +169,7 @@ private:
   RefPtr<impl::VRDisplayOpenVR> mOpenVRHMD;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;
   ::vr::IVRSystem *mVRSystem;
+  bool mIsWindowsMR;
 };
 
 } // namespace gfx
