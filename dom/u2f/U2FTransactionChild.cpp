@@ -13,7 +13,9 @@ mozilla::ipc::IPCResult
 U2FTransactionChild::RecvConfirmRegister(const uint64_t& aTransactionId,
                                          nsTArray<uint8_t>&& aRegBuffer)
 {
-  mU2F->FinishRegister(aTransactionId, aRegBuffer);
+  RefPtr<U2FManager> mgr = U2FManager::Get();
+  MOZ_ASSERT(mgr);
+  mgr->FinishRegister(aTransactionId, aRegBuffer);
   return IPC_OK();
 }
 
@@ -22,7 +24,9 @@ U2FTransactionChild::RecvConfirmSign(const uint64_t& aTransactionId,
                                      nsTArray<uint8_t>&& aCredentialId,
                                      nsTArray<uint8_t>&& aBuffer)
 {
-  mU2F->FinishSign(aTransactionId, aCredentialId, aBuffer);
+  RefPtr<U2FManager> mgr = U2FManager::Get();
+  MOZ_ASSERT(mgr);
+  mgr->FinishSign(aTransactionId, aCredentialId, aBuffer);
   return IPC_OK();
 }
 
@@ -30,14 +34,20 @@ mozilla::ipc::IPCResult
 U2FTransactionChild::RecvAbort(const uint64_t& aTransactionId,
                                const nsresult& aError)
 {
-  mU2F->RequestAborted(aTransactionId, aError);
+  RefPtr<U2FManager> mgr = U2FManager::Get();
+  MOZ_ASSERT(mgr);
+  mgr->RequestAborted(aTransactionId, aError);
   return IPC_OK();
 }
 
 void
 U2FTransactionChild::ActorDestroy(ActorDestroyReason why)
 {
-  mU2F->ActorDestroyed();
+  RefPtr<U2FManager> mgr = U2FManager::Get();
+  // This could happen after the U2FManager has been shut down.
+  if (mgr) {
+    mgr->ActorDestroyed();
+  }
 }
 
 } // namespace dom
