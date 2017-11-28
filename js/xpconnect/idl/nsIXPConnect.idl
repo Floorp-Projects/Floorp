@@ -445,12 +445,6 @@ interface nsIXPConnect : nsISupports
                                          in JSContextPtr cx,
                                          in JSObjectPtr sandbox);
 
-    /**
-     * Signals a good place to do an incremental GC slice, because the
-     * browser is drawing a frame.
-     */
-    void NotifyDidPaint();
-
     [noscript] void writeScript(in nsIObjectOutputStream aStream,
                                 in JSContextPtr aJSContext,
                                 in JSScriptPtr aJSScript);
