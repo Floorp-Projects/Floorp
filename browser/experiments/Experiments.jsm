@@ -1629,12 +1629,6 @@ Experiments.ExperimentEntry.prototype = {
    *                   a Promise<string> which contains the reason.
    */
   isApplicable() {
-    let versionCmp = Cc["@mozilla.org/xpcom/version-comparator;1"]
-                              .getService(Ci.nsIVersionComparator);
-    let app = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-    let runtime = Cc["@mozilla.org/xre/app-info;1"]
-                    .getService(Ci.nsIXULRuntime);
-
     let locale = this._policy.locale();
     let channel = this._policy.updatechannel();
     let data = this._manifestData;
@@ -1670,15 +1664,15 @@ Experiments.ExperimentEntry.prototype = {
       { name: "maxActiveSeconds",
         condition: () => !this._startDate || now <= (startSec + maxActive) },
       { name: "appName",
-        condition: () => !data.appName || data.appName.indexOf(app.name) != -1 },
+        condition: () => !data.appName || data.appName.indexOf(Services.appinfo.name) != -1 },
       { name: "minBuildID",
-        condition: () => !data.minBuildID || app.platformBuildID >= data.minBuildID },
+        condition: () => !data.minBuildID || Services.appinfo.platformBuildID >= data.minBuildID },
       { name: "maxBuildID",
-        condition: () => !data.maxBuildID || app.platformBuildID <= data.maxBuildID },
+        condition: () => !data.maxBuildID || Services.appinfo.platformBuildID <= data.maxBuildID },
       { name: "buildIDs",
-        condition: () => !data.buildIDs || data.buildIDs.indexOf(app.platformBuildID) != -1 },
+        condition: () => !data.buildIDs || data.buildIDs.indexOf(Services.appinfo.platformBuildID) != -1 },
       { name: "os",
-        condition: () => !data.os || data.os.indexOf(runtime.OS) != -1 },
+        condition: () => !data.os || data.os.indexOf(Services.appinfo.OS) != -1 },
       { name: "channel",
         condition: () => !data.channel || data.channel.indexOf(channel) != -1 },
       { name: "locale",
@@ -1686,11 +1680,11 @@ Experiments.ExperimentEntry.prototype = {
       { name: "sample",
         condition: () => data.sample === undefined || this._randomValue <= data.sample },
       { name: "version",
-        condition: () => !data.version || data.version.indexOf(app.version) != -1 },
+        condition: () => !data.version || data.version.indexOf(Services.appinfo.version) != -1 },
       { name: "minVersion",
-        condition: () => !data.minVersion || versionCmp.compare(app.version, data.minVersion) >= 0 },
+        condition: () => !data.minVersion || Services.vc.compare(Services.appinfo.version, data.minVersion) >= 0 },
       { name: "maxVersion",
-        condition: () => !data.maxVersion || versionCmp.compare(app.version, data.maxVersion) <= 0 },
+        condition: () => !data.maxVersion || Services.vc.compare(Services.appinfo.version, data.maxVersion) <= 0 },
     ];
 
     for (let check of simpleChecks) {

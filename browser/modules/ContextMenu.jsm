@@ -235,10 +235,8 @@ class ContextMenu {
     this.global = global;
     this.content = global.content;
 
-    Cc["@mozilla.org/eventlistenerservice;1"]
-      .getService(Ci.nsIEventListenerService)
-      .addSystemEventListener(global, "contextmenu",
-                              this._handleContentContextMenu.bind(this), false);
+    Services.els.addSystemEventListener(global, "contextmenu",
+                                        this._handleContentContextMenu.bind(this), false);
 
     Object.keys(messageListeners).forEach(key =>
       global.addMessageListener(key, messageListeners[key].bind(this))

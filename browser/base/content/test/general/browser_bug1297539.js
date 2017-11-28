@@ -32,8 +32,7 @@ function getTransferableFromClipboard(asHTML) {
   } else {
     trans.addDataFlavor("text/unicode");
   }
-  let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-  clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
+  Services.clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
   return trans;
 }
 

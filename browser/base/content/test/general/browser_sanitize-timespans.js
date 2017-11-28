@@ -11,8 +11,7 @@ const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;
 
 var tempScope = {};
-Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
-                                           .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
+Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 var Sanitizer = tempScope.Sanitizer;
 
 var FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
