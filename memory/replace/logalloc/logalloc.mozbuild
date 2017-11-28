@@ -10,7 +10,6 @@ SOURCES += [
 ]
 
 DisableStlWrapping()
-USE_STATIC_LIBS = True
 NO_PGO = True
 DEFINES['MOZ_NO_MOZALLOC'] = True
 # Avoid Lock_impl code depending on mozilla::Logger.
