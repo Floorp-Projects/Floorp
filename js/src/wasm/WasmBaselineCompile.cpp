@@ -9528,7 +9528,8 @@ js::wasm::BaselineCanCompile()
         return false;
 #endif
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM) || \
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || \\
+    defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \\
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     return true;
 #else
