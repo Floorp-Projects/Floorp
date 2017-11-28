@@ -145,6 +145,11 @@ GPATH
 ^testing/talos/talos/mitmproxy/mitmproxy
 ^testing/talos/talos/mitmproxy/mitmweb
 
+# Ignore talos speedometer files; source is copied from in-tree /third_party
+# into testing/talos/talos/tests/webkit/PerformanceTests/Speedometer when
+# talos speedometer test is run locally
+^testing/talos/talos/tests/webkit/PerformanceTests/Speedometer
+
 # Ignore toolchains.json created by tooltool.
 ^toolchains\.json
 
