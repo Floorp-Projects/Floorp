@@ -14,6 +14,11 @@ createHTML({
 });
 
 runTest(async () => {
+  await pushPrefs(
+    ["media.getusermedia.camera.stop_on_disable.enabled", true],
+    ["media.getusermedia.camera.stop_on_disable.delay_ms", 0],
+    ["media.getusermedia.microphone.stop_on_disable.enabled", true],
+    ["media.getusermedia.microphone.stop_on_disable.delay_ms", 0]);
 
   let stream = await getUserMedia({audio: true, video: true});
   info("Test clone()ing an audio/video gUM stream");
