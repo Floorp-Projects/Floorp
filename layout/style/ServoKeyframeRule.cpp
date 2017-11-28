@@ -35,7 +35,10 @@ public:
     return NS_OK;
   }
 
-  void DropReference() { mRule = nullptr; }
+  void DropReference() {
+    mRule = nullptr;
+    mDecls->SetOwningRule(nullptr);
+  }
 
   DeclarationBlock* GetCSSDeclaration(Operation aOperation) final
   {
@@ -83,7 +86,9 @@ public:
   }
 
 private:
-  virtual ~ServoKeyframeDeclaration() {}
+  virtual ~ServoKeyframeDeclaration() {
+    MOZ_ASSERT(!mRule, "Backpointer should have been cleared");
+  }
 
   ServoKeyframeRule* mRule;
   RefPtr<ServoDeclarationBlock> mDecls;
@@ -104,6 +109,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 
 ServoKeyframeRule::~ServoKeyframeRule()
 {
+  if (mDeclaration) {
+    mDeclaration->DropReference();
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(ServoKeyframeRule, dom::CSSKeyframeRule)
