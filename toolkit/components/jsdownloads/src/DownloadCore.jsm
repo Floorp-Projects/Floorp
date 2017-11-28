@@ -1273,8 +1273,10 @@ this.DownloadSource.prototype = {
  *          isPrivate: Indicates whether the download originated from a private
  *                     window.  If omitted, the download is public.
  *          referrer: String containing the referrer URI of the download source.
- *                    Can be omitted or null if no referrer should be sent or
- *                    the download source is not HTTP.
+ *                    This is the value that will be sent on the network,
+ *                    meaning that any referrer policy should be computed in
+ *                    advance.  Can be omitted or null if no referrer should be
+ *                    sent or the download source is not HTTP.
  *          adjustChannel: For downloads handled by (default) DownloadCopySaver,
  *                         this function can adjust the network channel before
  *                         it is opened, for example to change the HTTP headers
@@ -1916,7 +1918,13 @@ this.DownloadCopySaver.prototype = {
       }
       if (channel instanceof Ci.nsIHttpChannel &&
           download.source.referrer) {
-        channel.referrer = NetUtil.newURI(download.source.referrer);
+        // Sending Referrer header is computed at the time we initialize a
+        // download (eg. user clicks on "Save Link As"). We use
+        // REFERRER_POLICY_UNSAFE_URL to keep the referrer header the same
+        // here.
+        channel.setReferrerWithPolicy(
+          NetUtil.newURI(download.source.referrer),
+          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL);
       }
 
       // This makes the channel be corretly throttled during page loads
