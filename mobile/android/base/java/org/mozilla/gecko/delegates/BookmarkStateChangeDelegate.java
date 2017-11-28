@@ -31,6 +31,7 @@ import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
@@ -192,9 +193,15 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
             }
         });
 
-        final PromptListItem[] items = new PromptListItem[2];
-        items[0] = new PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
-        items[1] = new PromptListItem(res.getString(R.string.contextmenu_add_page_shortcut));
+        final PromptListItem[] items;
+        if  (ShortcutUtils.isPinShortcutSupported()) {
+            items = new PromptListItem[2];
+            items[0] = new PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
+            items[1] = new PromptListItem(res.getString(R.string.contextmenu_add_page_shortcut));
+        } else {
+            items = new PromptListItem[1];
+            items[0] = new PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
+        }
 
         ps.show("", "", items, ListView.CHOICE_MODE_NONE);
     }

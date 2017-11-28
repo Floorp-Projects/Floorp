@@ -11,11 +11,12 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.util.DrawableUtil;
-import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
+import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
@@ -169,7 +170,7 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
         if (UUID_PAGE_ACTION_PWA.equals(id)) {
             final SharedPreferences prefs = GeckoSharedPrefs.forApp(getContext());
             final boolean show = prefs.getBoolean(PREF_PWA_ONBOARDING, true);
-            if (show) {
+            if (show && ShortcutUtils.isPinShortcutSupported()) {
                 PwaOnboarding.show(getContext());
                 prefs.edit().putBoolean(PREF_PWA_ONBOARDING, false).apply();
             }
