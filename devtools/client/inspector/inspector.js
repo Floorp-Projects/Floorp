@@ -298,7 +298,6 @@ Inspector.prototype = {
     this._defaultNode = null;
     this.selection.setNodeFront(null);
     this._destroyMarkup();
-    this.isDirty = false;
     this._pendingSelection = null;
   },
 
@@ -374,15 +373,6 @@ Inspector.prototype = {
    */
   set target(value) {
     this._target = value;
-  },
-
-  /**
-   * Indicate that a tool has modified the state of the page.  Used to
-   * decide whether to show the "are you sure you want to navigate"
-   * notification.
-   */
-  markDirty: function () {
-    this.isDirty = true;
   },
 
   /**
@@ -1044,7 +1034,6 @@ Inspector.prototype = {
     this._defaultNode = null;
     this.selection.setNodeFront(null);
     this._destroyMarkup();
-    this.isDirty = false;
 
     let onNodeSelected = defaultNode => {
       // Cancel this promise resolution as a new one had
