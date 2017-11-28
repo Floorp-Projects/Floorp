@@ -793,11 +793,14 @@ CSS_PROP_BORDER(
     nullptr,
     offsetof(nsStyleBorder, mBorderBottomColor),
     eStyleAnimType_ComplexColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     -moz-border-bottom-colors,
     _moz_border_bottom_colors,
     CSS_PROP_DOMPROP_PREFIXED(BorderBottomColors),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
@@ -805,6 +808,7 @@ CSS_PROP_BORDER(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
+#endif
 CSS_PROP_BORDER(
     border-bottom-left-radius,
     border_bottom_left_radius,
@@ -1057,11 +1061,14 @@ CSS_PROP_BORDER(
     nullptr,
     offsetof(nsStyleBorder, mBorderLeftColor),
     eStyleAnimType_ComplexColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     -moz-border-left-colors,
     _moz_border_left_colors,
     CSS_PROP_DOMPROP_PREFIXED(BorderLeftColors),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
@@ -1069,6 +1076,7 @@ CSS_PROP_BORDER(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
+#endif
 CSS_PROP_BORDER(
     border-left-style,
     border_left_style,
@@ -1119,11 +1127,14 @@ CSS_PROP_BORDER(
     nullptr,
     offsetof(nsStyleBorder, mBorderRightColor),
     eStyleAnimType_ComplexColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     -moz-border-right-colors,
     _moz_border_right_colors,
     CSS_PROP_DOMPROP_PREFIXED(BorderRightColors),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
@@ -1131,6 +1142,7 @@ CSS_PROP_BORDER(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
+#endif
 CSS_PROP_BORDER(
     border-right-style,
     border_right_style,
@@ -1193,11 +1205,14 @@ CSS_PROP_BORDER(
     nullptr,
     offsetof(nsStyleBorder, mBorderTopColor),
     eStyleAnimType_ComplexColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     -moz-border-top-colors,
     _moz_border_top_colors,
     CSS_PROP_DOMPROP_PREFIXED(BorderTopColors),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
@@ -1205,6 +1220,7 @@ CSS_PROP_BORDER(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
+#endif
 CSS_PROP_BORDER(
     border-top-left-radius,
     border_top_left_radius,
