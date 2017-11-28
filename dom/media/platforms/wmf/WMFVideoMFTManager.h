@@ -89,6 +89,7 @@ private:
   const VideoInfo mVideoInfo;
   const gfx::IntSize mImageSize;
   uint32_t mVideoStride;
+  YUVColorSpace mYUVColorSpace;
 
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
