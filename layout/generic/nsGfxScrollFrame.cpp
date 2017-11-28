@@ -2107,6 +2107,9 @@ ScrollFrameHelper::~ScrollFrameHelper()
   if (mScrollEvent) {
     mScrollEvent->Revoke();
   }
+  if (mScrollEndEvent) {
+    mScrollEndEvent->Revoke();
+  }
 }
 
 /*
@@ -2186,7 +2189,7 @@ ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsAtom* aOrigin)
   // We are done scrolling, set our destination to wherever we actually ended
   // up scrolling to.
   mDestination = GetScrollPosition();
-  FireScrollEndEvent();
+  PostScrollEndEvent();
 }
 
 bool
@@ -4423,9 +4426,24 @@ ScrollFrameHelper::FireScrollPortEvent()
 }
 
 void
+ScrollFrameHelper::PostScrollEndEvent()
+{
+  if (mScrollEndEvent) {
+    return;
+  }
+
+  // The ScrollEndEvent constructor registers itself with the refresh driver.
+  mScrollEndEvent = new ScrollEndEvent(this);
+}
+
+void
 ScrollFrameHelper::FireScrollEndEvent()
 {
   MOZ_ASSERT(mOuter->GetContent());
+  MOZ_ASSERT(mScrollEndEvent);
+  mScrollEndEvent->Revoke();
+  mScrollEndEvent = nullptr;
+
   nsContentUtils::DispatchEventOnlyToChrome(mOuter->GetContent()->OwnerDoc(),
                                             mOuter->GetContent(),
                                             NS_LITERAL_STRING("scrollend"),
@@ -4817,6 +4835,22 @@ ScrollFrameHelper::ScrollEvent::Run()
 {
   if (mHelper) {
     mHelper->FireScrollEvent();
+  }
+  return NS_OK;
+}
+
+ScrollFrameHelper::ScrollEndEvent::ScrollEndEvent(ScrollFrameHelper* aHelper)
+  : Runnable("ScrollFrameHelper::ScrollEndEvent")
+  , mHelper(aHelper)
+{
+  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this);
+}
+
+NS_IMETHODIMP
+ScrollFrameHelper::ScrollEndEvent::Run()
+{
+  if (mHelper) {
+    mHelper->FireScrollEndEvent();
   }
   return NS_OK;
 }
