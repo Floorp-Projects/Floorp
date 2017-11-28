@@ -21,8 +21,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "perfService", "resource://activity-stre
 const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
 const STORIES_NOW_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
+const MIN_DOMAIN_AFFINITIES_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
+const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
 const SECTION_ID = "topstories";
 const SPOC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.spoc.impressions";
+const REC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.rec.impressions";
 const MAX_LIFETIME_CAP = 100; // Guard against misconfiguration on the server
 
 this.TopStoriesFeed = class TopStoriesFeed {
@@ -50,6 +53,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.maxHistoryQueryResults = options.maxHistoryQueryResults;
         this.storiesLastUpdated = 0;
         this.topicsLastUpdated = 0;
+        this.domainAffinitiesLastUpdated = 0;
 
         this.loadCachedData();
         this.fetchStories();
@@ -89,6 +93,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       const body = await response.json();
       this.updateSettings(body.settings);
       this.stories = this.rotate(this.transform(body.recommendations));
+      this.cleanUpTopRecImpressionPref();
 
       if (this.show_spocs && body.spocs) {
         this.spocCampaignMap = new Map(body.spocs.map(s => [s.id, `${s.campaign_id}`]));
@@ -115,6 +120,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
     if (this.personalized && affinities && affinities.scores) {
       this.affinityProvider = new UserDomainAffinityProvider(affinities.timeSegments,
         affinities.parameterSets, affinities.maxHistoryQueryResults, affinities.version, affinities.scores);
+      this.domainAffinitiesLastUpdated = affinities._timestamp;
     }
     if (stories && stories.length > 0 && this.storiesLastUpdated === 0) {
       this.updateSettings(data.stories.settings);
@@ -190,6 +196,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.spocsPerNewTabs = settings.spocsPerNewTabs;
     this.timeSegments = settings.timeSegments;
     this.domainAffinityParameterSets = settings.domainAffinityParameterSets;
+    this.recsExpireTime = settings.recsExpireTime;
     this.version = settings.version;
 
     if (this.affinityProvider && (this.affinityProvider.version !== this.version)) {
@@ -198,7 +205,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
   }
 
   updateDomainAffinityScores() {
-    if (!this.personalized || !this.domainAffinityParameterSets) {
+    if (!this.personalized || !this.domainAffinityParameterSets ||
+      Date.now() - this.domainAffinitiesLastUpdated < MIN_DOMAIN_AFFINITIES_UPDATE_TIME) {
       return;
     }
 
@@ -215,7 +223,9 @@ this.TopStoriesFeed = class TopStoriesFeed {
       value: Math.round(perfService.absNow() - start)
     }));
 
-    this.cache.set("domainAffinities", this.affinityProvider.getAffinities());
+    const affinities = this.affinityProvider.getAffinities();
+    affinities._timestamp = this.domainAffinitiesLastUpdated = Date.now();
+    this.cache.set("domainAffinities", affinities);
   }
 
   resetDomainAffinityScores() {
@@ -223,37 +233,26 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.cache.set("domainAffinities", {});
   }
 
-  // If personalization is turned on we have to rotate stories on the client.
-  // An item can only be on top for two iterations (1hr) before it gets moved
-  // to the end. This will later be improved based on interactions/impressions.
+  // If personalization is turned on, we have to rotate stories on the client so that
+  // active stories are at the front of the list, followed by stories that have expired
+  // impressions i.e. have been displayed for longer than recsExpireTime.
   rotate(items) {
     if (!this.personalized || items.length <= 3) {
       return items;
     }
 
-    if (!this.topItems) {
-      this.topItems = new Map();
-    }
-
-    // This avoids an infinite recursion if for some reason the feed stops
-    // changing. Otherwise, there's a chance we'd be rotating forever to
-    // find an item we haven't displayed on top yet.
-    if (this.topItems.size >= items.length) {
-      this.topItems.clear();
-    }
-
-    const guid = items[0].guid;
-    if (!this.topItems.has(guid)) {
-      this.topItems.set(guid, 0);
-    } else {
-      const val = this.topItems.get(guid) + 1;
-      this.topItems.set(guid, val);
-      if (val >= 2) {
-        items.push(items.shift());
-        this.rotate(items);
+    const maxImpressionAge = Math.max(this.recsExpireTime * 1000 || DEFAULT_RECS_EXPIRE_TIME, DEFAULT_RECS_EXPIRE_TIME);
+    const impressions = this.readImpressionsPref(REC_IMPRESSION_TRACKING_PREF);
+    const expired = [];
+    const active = [];
+    for (const item of items) {
+      if (impressions[item.guid] && Date.now() - impressions[item.guid] >= maxImpressionAge) {
+        expired.push(item);
+      } else {
+        active.push(item);
       }
     }
-    return items;
+    return active.concat(expired);
   }
 
   getApiKeyFromPref(apiKeyPref) {
@@ -301,7 +300,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         }
 
         // Filter spocs based on frequency caps
-        const impressions = this.readCampaignImpressionsPref();
+        const impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
         const spocs = this.spocs.filter(s => this.isBelowFrequencyCap(impressions, s));
 
         if (!spocs.length) {
@@ -368,43 +367,80 @@ this.TopStoriesFeed = class TopStoriesFeed {
   // Clean up campaign impression pref by removing all campaigns that are no
   // longer part of the response, and are therefore considered inactive.
   cleanUpCampaignImpressionPref() {
-    const impressions = this.readCampaignImpressionsPref();
     const campaignIds = new Set(this.spocCampaignMap.values());
+    this.cleanUpImpressionPref(id => !campaignIds.has(id), SPOC_IMPRESSION_TRACKING_PREF);
+  }
+
+  // Clean up rec impression pref by removing all stories that are no
+  // longer part of the response.
+  cleanUpTopRecImpressionPref() {
+    const activeStories = new Set(this.stories.map(s => `${s.guid}`));
+    this.cleanUpImpressionPref(id => !activeStories.has(id), REC_IMPRESSION_TRACKING_PREF);
+  }
+
+  /**
+   * Cleans up the provided impression pref (spocs or recs).
+   *
+   * @param isExpired predicate (boolean-valued function) that returns whether or not
+   * the impression for the given key is expired.
+   * @param pref the impression pref to clean up.
+   */
+  cleanUpImpressionPref(isExpired, pref) {
+    const impressions = this.readImpressionsPref(pref);
     let changed = false;
 
     Object
       .keys(impressions)
-      .forEach(cId => {
-        if (!campaignIds.has(cId)) {
+      .forEach(id => {
+        if (isExpired(id)) {
           changed = true;
-          delete impressions[cId];
+          delete impressions[id];
         }
       });
 
     if (changed) {
-      this.writeCampaignImpressionsPref(impressions);
+      this.writeImpressionsPref(pref, impressions);
     }
   }
 
   // Sets a pref mapping campaign IDs to timestamp arrays.
-  // The timestamps represent impressions which we use to calculate frequency caps.
+  // The timestamps represent impressions which are used to calculate frequency caps.
   recordCampaignImpression(campaignId) {
-    let impressions = this.readCampaignImpressionsPref();
+    let impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
 
     const timeStamps = impressions[campaignId] || [];
     timeStamps.push(Date.now());
     impressions = Object.assign(impressions, {[campaignId]: timeStamps});
 
-    this.writeCampaignImpressionsPref(impressions);
+    this.writeImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF, impressions);
   }
 
-  readCampaignImpressionsPref() {
-    const prefVal = this._prefs.get(SPOC_IMPRESSION_TRACKING_PREF);
+  // Sets a pref mapping story (rec) IDs to a single timestamp (time of first impression).
+  // We use these timestamps to guarantee a story doesn't stay on top for longer than
+  // configured in the feed settings (settings.recsExpireTime).
+  recordTopRecImpressions(topItems) {
+    let impressions = this.readImpressionsPref(REC_IMPRESSION_TRACKING_PREF);
+    let changed = false;
+
+    topItems.forEach(t => {
+      if (!impressions[t]) {
+        changed = true;
+        impressions = Object.assign(impressions, {[t]: Date.now()});
+      }
+    });
+
+    if (changed) {
+      this.writeImpressionsPref(REC_IMPRESSION_TRACKING_PREF, impressions);
+    }
+  }
+
+  readImpressionsPref(pref) {
+    const prefVal = this._prefs.get(pref);
     return prefVal ? JSON.parse(prefVal) : {};
   }
 
-  writeCampaignImpressionsPref(impressions) {
-    this._prefs.set(SPOC_IMPRESSION_TRACKING_PREF, JSON.stringify(impressions));
+  writeImpressionsPref(pref, impressions) {
+    this._prefs.set(pref, JSON.stringify(impressions));
   }
 
   onAction(action) {
@@ -445,12 +481,20 @@ this.TopStoriesFeed = class TopStoriesFeed {
       case at.TELEMETRY_IMPRESSION_STATS: {
         const payload = action.data;
         const viewImpression = !("click" in payload || "block" in payload || "pocket" in payload);
-        if (this.shouldShowSpocs() && payload.tiles && viewImpression) {
-          payload.tiles.forEach(t => {
-            if (this.spocCampaignMap.has(t.id)) {
-              this.recordCampaignImpression(this.spocCampaignMap.get(t.id));
-            }
-          });
+        if (payload.tiles && viewImpression) {
+          if (this.shouldShowSpocs()) {
+            payload.tiles.forEach(t => {
+              if (this.spocCampaignMap.has(t.id)) {
+                this.recordCampaignImpression(this.spocCampaignMap.get(t.id));
+              }
+            });
+          }
+          if (this.personalized) {
+            const topRecs = payload.tiles
+              .filter(t => !this.spocCampaignMap.has(t.id))
+              .map(t => t.id);
+            this.recordTopRecImpressions(topRecs);
+          }
         }
         break;
       }
@@ -462,4 +506,7 @@ this.STORIES_UPDATE_TIME = STORIES_UPDATE_TIME;
 this.TOPICS_UPDATE_TIME = TOPICS_UPDATE_TIME;
 this.SECTION_ID = SECTION_ID;
 this.SPOC_IMPRESSION_TRACKING_PREF = SPOC_IMPRESSION_TRACKING_PREF;
-this.EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "SECTION_ID", "SPOC_IMPRESSION_TRACKING_PREF"];
+this.REC_IMPRESSION_TRACKING_PREF = REC_IMPRESSION_TRACKING_PREF;
+this.MIN_DOMAIN_AFFINITIES_UPDATE_TIME = MIN_DOMAIN_AFFINITIES_UPDATE_TIME;
+this.DEFAULT_RECS_EXPIRE_TIME = DEFAULT_RECS_EXPIRE_TIME;
+this.EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "SECTION_ID", "SPOC_IMPRESSION_TRACKING_PREF", "MIN_DOMAIN_AFFINITIES_UPDATE_TIME", "REC_IMPRESSION_TRACKING_PREF", "DEFAULT_RECS_EXPIRE_TIME"];
