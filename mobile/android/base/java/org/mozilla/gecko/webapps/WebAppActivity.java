@@ -33,6 +33,7 @@ import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.DoorHangerPopup;
+import org.mozilla.gecko.FormAssistPopup;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoSession;
@@ -61,6 +62,8 @@ public class WebAppActivity extends AppCompatActivity
 
     private GeckoSession mGeckoSession;
     private GeckoView mGeckoView;
+    private FormAssistPopup mFormAssistPopup;
+
     private PromptService mPromptService;
     private DoorHangerPopup mDoorHangerPopup;
 
@@ -93,8 +96,9 @@ public class WebAppActivity extends AppCompatActivity
         }
 
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.webapp_activity);
+        mGeckoView = (GeckoView) findViewById(R.id.pwa_gecko_view);
 
-        mGeckoView = new GeckoView(this);
         mGeckoSession = new GeckoSession();
         mGeckoView.setSession(mGeckoSession);
 
@@ -138,7 +142,11 @@ public class WebAppActivity extends AppCompatActivity
 
         mGeckoSession.loadUri(mManifest.getStartUri().toString());
 
-        setContentView(mGeckoView);
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.pwa_form_assist_popup);
+        mFormAssistPopup.create(mGeckoView);
+
+
+
     }
 
     @Override
@@ -158,7 +166,7 @@ public class WebAppActivity extends AppCompatActivity
         mTextSelection.destroy();
         mDoorHangerPopup.destroy();
         mPromptService.destroy();
-
+        mFormAssistPopup.destroy();
         super.onDestroy();
     }
 
