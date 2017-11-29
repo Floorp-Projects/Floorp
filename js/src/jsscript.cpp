@@ -800,6 +800,11 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             if (mode == XDR_DECODE)
                 vector[i].init(scope);
         }
+
+        // Verify marker to detect data corruption after decoding scope data. A
+        // mismatch here indicates we will almost certainly crash in release.
+        if (!xdr->codeMarker(0x48922BAB))
+            return false;
     }
 
     /*
@@ -891,6 +896,11 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
           }
         }
     }
+
+    // Verify marker to detect data corruption after decoding object data. A
+    // mismatch here indicates we will almost certainly crash in release.
+    if (!xdr->codeMarker(0xF83B989A))
+        return false;
 
     if (ntrynotes != 0) {
         JSTryNote* tnfirst = script->trynotes()->vector;
