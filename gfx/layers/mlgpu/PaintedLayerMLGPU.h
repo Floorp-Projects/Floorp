@@ -79,6 +79,18 @@ protected:
                     RenderViewMLGPU* aView,
                     Maybe<Polygon>&& aGeometry) override;
 
+  void AssignHighResTilesToView(FrameBuilder* aBuilder,
+                                RenderViewMLGPU* aView,
+                                TiledContentHost* aTileHost,
+                                const Maybe<Polygon>& aGeometry);
+
+  // Helper for Assign*TilesToView.
+  void AssignTileBufferToView(FrameBuilder* aBuilder,
+                              RenderViewMLGPU* aView,
+                              TiledLayerBufferComposite& aTiles,
+                              const LayerIntRegion& aCompositeRegion,
+                              const Maybe<Polygon>& aGeometry);
+
   void CleanupResources();
 
 private:
