@@ -380,6 +380,9 @@ waitForAllPaints(() => {
 
     await waitForWheelEvent(parentElement);
 
+    // Make sure we are ready to restyle before counting restyles.
+    await waitForFrame();
+
     markers = await observeStyling(5);
     is(markers.length, 5,
        'Animations running on the main-thread which were in scrolled out ' +
@@ -423,6 +426,8 @@ waitForAllPaints(() => {
        'which are scrolled out should never cause restyles');
 
     await waitForWheelEvent(grandParent);
+
+    await waitForFrame();
 
     markers = await observeStyling(5);
     is(markers.length, 5,
@@ -475,6 +480,8 @@ waitForAllPaints(() => {
     await animation.ready;
 
     await waitForWheelEvent(parentElement);
+
+    await waitForFrame();
 
     var markers = await observeStyling(5);
 
