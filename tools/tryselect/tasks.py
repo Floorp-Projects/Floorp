@@ -33,11 +33,11 @@ https://firefox-source-docs.mozilla.org/taskcluster/taskcluster/mach.html#parame
 """
 
 
-def invalidate(cache):
+def invalidate(cache, root):
     if not os.path.isfile(cache):
         return
 
-    tc_dir = os.path.join(build.topsrcdir, 'taskcluster')
+    tc_dir = os.path.join(root, 'taskcluster')
     tmod = max(os.path.getmtime(os.path.join(tc_dir, p)) for p, _ in FileFinder(tc_dir))
     cmod = os.path.getmtime(cache)
 
@@ -45,14 +45,14 @@ def invalidate(cache):
         os.remove(cache)
 
 
-def generate_tasks(params=None, full=False):
+def generate_tasks(params, full, root):
     params = params or "project=mozilla-central"
 
     cache_dir = os.path.join(get_state_dir()[0], 'cache', 'taskgraph')
     attr = 'full_task_set' if full else 'target_task_set'
     cache = os.path.join(cache_dir, attr)
 
-    invalidate(cache)
+    invalidate(cache, root)
     if os.path.isfile(cache):
         with open(cache, 'r') as fh:
             return fh.read().splitlines()
@@ -71,7 +71,7 @@ def generate_tasks(params=None, full=False):
     cwd = os.getcwd()
     os.chdir(build.topsrcdir)
 
-    root = os.path.join(build.topsrcdir, 'taskcluster', 'ci')
+    root = os.path.join(root, 'taskcluster', 'ci')
     tg = getattr(TaskGraphGenerator(root_dir=root, parameters=params), attr)
     labels = [label for label in tg.graph.visit_postorder()]
 

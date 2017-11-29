@@ -16,6 +16,7 @@
 #include "Factory.h"
 #include "HandlerData.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/a11y/HandlerDataCleanup.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/UniquePtr.h"
 
@@ -92,6 +93,8 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
 
 AccessibleHandler::~AccessibleHandler()
 {
+  // No need to zero memory, since we're being destroyed anyway.
+  CleanupDynamicIA2Data(mCachedData.mDynamicData, false);
   if (mCachedData.mGeckoBackChannel) {
     mCachedData.mGeckoBackChannel->Release();
   }
@@ -393,6 +396,9 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
   if (!deserializer.Read(&newData, &IA2Payload_Decode)) {
     return E_FAIL;
   }
+  // Clean up the old data.
+  // No need to zero memory, since we're about to completely replace this.
+  CleanupDynamicIA2Data(mCachedData.mDynamicData, false);
   mCachedData = newData;
 
   // These interfaces have been aggregated into the proxy manager.
@@ -404,27 +410,7 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
   // Note that if pointers to other objects (in contrast to
   // interfaces of *this* object) are added in future, we should not release
   // those pointers.
-  if (mCachedData.mStaticData.mIA2) {
-    mCachedData.mStaticData.mIA2->Release();
-  }
-  if (mCachedData.mStaticData.mIEnumVARIANT) {
-    mCachedData.mStaticData.mIEnumVARIANT->Release();
-  }
-  if (mCachedData.mStaticData.mIAHypertext) {
-    mCachedData.mStaticData.mIAHypertext->Release();
-  }
-  if (mCachedData.mStaticData.mIAHyperlink) {
-    mCachedData.mStaticData.mIAHyperlink->Release();
-  }
-  if (mCachedData.mStaticData.mIATable) {
-    mCachedData.mStaticData.mIATable->Release();
-  }
-  if (mCachedData.mStaticData.mIATable2) {
-    mCachedData.mStaticData.mIATable2->Release();
-  }
-  if (mCachedData.mStaticData.mIATableCell) {
-    mCachedData.mStaticData.mIATableCell->Release();
-  }
+  ReleaseStaticIA2DataInterfaces(mCachedData.mStaticData);
 
   if (!mCachedData.mGeckoBackChannel) {
     return S_OK;

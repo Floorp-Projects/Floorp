@@ -1,0 +1,1707 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1290948",
+    title: "Transceivers API tests"
+  });
+
+  let checkThrows = async (func, exceptionName, description) => {
+    try {
+      await func();
+      ok(false, description + " throws " + exceptionName);
+    } catch (e) {
+      is(e.name, exceptionName, description + " throws " + exceptionName);
+    }
+  };
+
+  let stopTracks = (...streams) => {
+    streams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
+  };
+
+  let setRemoteDescriptionReturnTrackEvents = async (pc, desc) => {
+    let trackEvents = [];
+    let listener = e => trackEvents.push(e);
+    pc.addEventListener("track", listener);
+    await pc.setRemoteDescription(desc);
+    pc.removeEventListener("track", listener);
+
+    // basic sanity-check, simplifies testing elsewhere
+    for (let e of trackEvents) {
+      ok(e.track, "Track is set on event");
+      ok(e.receiver, "Receiver is set on event");
+      ok(e.transceiver, "Transceiver is set on event");
+      ok(e.streams, "Streams is set on event");
+      is(e.receiver, e.transceiver.receiver, "Receiver belongs to transceiver");
+      is(e.track, e.receiver.track, "Track belongs to receiver");
+    }
+
+    return trackEvents;
+  };
+
+  let trickle = (pc1, pc2) => {
+    pc1.onicecandidate = async e => {
+      info("Adding ICE candidate: " + JSON.stringify(e.candidate));
+      try {
+        await pc2.addIceCandidate(e.candidate);
+      } catch(e) {
+        ok(false, "addIceCandidate threw error: " + e.name);
+      }
+    };
+  };
+
+  let iceConnected = pc => {
+    info("Waiting for ICE connected...");
+    return new Promise((resolve, reject) => {
+      let iceCheck = () => {
+        if (pc.iceConnectionState == "connected") {
+          ok(true, "ICE connected");
+          resolve();
+        }
+
+        if (pc.iceConnectionState == "failed") {
+          ok(false, "ICE failed");
+          reject();
+        }
+      };
+
+      iceCheck();
+      pc.oniceconnectionstatechange = iceCheck;
+    });
+  };
+
+  let negotiationNeeded = pc => {
+    return new Promise(resolve => pc.onnegotiationneeded = resolve);
+  };
+
+  let logExpected = expected => {
+    info("(expected " + JSON.stringify(expected) + ")");
+  };
+
+  let hasProps = (observed, expected) => {
+
+    if (observed === expected) {
+      return true;
+    }
+
+    // If we are expecting an array, iterate over it
+    if (Array.isArray(expected)) {
+      if (!Array.isArray(observed)) {
+        ok(false, "Expected an array, but didn't get one.");
+        logExpected(expected);
+        return false;
+      }
+
+      if (observed.length !== expected.length) {
+        ok(false, "Expected array to be " + expected.length + " long, but it was " + observed.length + " long instead");
+        logExpected(expected);
+        return false;
+      }
+
+      for (let i = 0; i < expected.length; i++) {
+        if (!hasProps(observed[i], expected[i])) {
+          logExpected(expected);
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    // If we are expecting an object, check its props
+    if (typeof expected === "object" && expected !== null) {
+      let propsWeCareAbout = Object.getOwnPropertyNames(expected);
+      for (let i in propsWeCareAbout) {
+        let prop = propsWeCareAbout[i];
+        if (!hasProps(observed[prop], expected[prop])) {
+          logExpected(expected);
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    ok(false, "Expected (" + JSON.stringify(expected) + ") did not match " +
+              "observed (" + JSON.stringify(observed) + ")");
+    return false;
+  };
+
+  let checkAddTransceiverNoTrack = async () => {
+    let pc = new RTCPeerConnection();
+    hasProps(pc.getTransceivers(), []);
+
+    pc.addTransceiver("audio");
+    pc.addTransceiver("video");
+
+    // NOTE: the w3c spec doesn't say anything about transceiver order, so this
+    // may not necessarily be the same order we see on other browsers.
+    hasProps(pc.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio", readyState: "live"}},
+          sender: {track: null},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        },
+        {
+          receiver: {track: {kind: "video", readyState: "live"}},
+          sender: {track: null},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    pc.close();
+  };
+
+  let checkAddTransceiverWithTrack = async () => {
+    let pc = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true, video: true});
+    let audio = stream.getAudioTracks()[0];
+    let video = stream.getVideoTracks()[0];
+
+    pc.addTransceiver(audio);
+    pc.addTransceiver(video);
+
+    hasProps(pc.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: audio},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        },
+        {
+          receiver: {track: {kind: "video"}},
+          sender: {track: video},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    pc.close();
+    stopTracks(stream);
+  };
+
+  let checkAddTransceiverWithAddTrack = async () => {
+    let pc = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true, video: true});
+    let audio = stream.getAudioTracks()[0];
+    let video = stream.getVideoTracks()[0];
+
+    pc.addTrack(audio, stream);
+    pc.addTrack(video, stream);
+
+    hasProps(pc.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: audio},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        },
+        {
+          receiver: {track: {kind: "video"}},
+          sender: {track: video},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    pc.close();
+    stopTracks(stream);
+  };
+
+  let checkAddTransceiverWithDirection = async () => {
+    let pc = new RTCPeerConnection();
+
+    pc.addTransceiver("audio", {direction: "recvonly"});
+    pc.addTransceiver("video", {direction: "recvonly"});
+
+    hasProps(pc.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: null},
+          direction: "recvonly",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        },
+        {
+          receiver: {track: {kind: "video"}},
+          sender: {track: null},
+          direction: "recvonly",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    pc.close();
+  };
+
+  let checkAddTransceiverWithStream = async () => {
+    let pc = new RTCPeerConnection();
+
+    let audioStream = await getUserMedia({audio: true});
+    let videoStream = await getUserMedia({video: true});
+    let audio = audioStream.getAudioTracks()[0];
+    let video = videoStream.getVideoTracks()[0];
+
+    pc.addTransceiver(audio, {streams: [audioStream]});
+    pc.addTransceiver(video, {streams: [videoStream]});
+
+    hasProps(pc.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: audio},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        },
+        {
+          receiver: {track: {kind: "video"}},
+          sender: {track: video},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    let offer = await pc.createOffer();
+    ok(offer.sdp.includes("a=msid:" + audioStream.id + " " + audio.id),
+      "offer contains the expected audio msid");
+    ok(offer.sdp.includes("a=msid:" + videoStream.id + " " + video.id),
+      "offer contains the expected video msid");
+
+    pc.close();
+    stopTracks(audioStream, videoStream);
+  };
+
+  let checkAddTransceiverWithOfferToReceive = async kinds => {
+    let pc = new RTCPeerConnection();
+
+    let options = {};
+
+    for (let kind of kinds) {
+      if (kind == "audio") {
+        options.offerToReceiveAudio = true;
+      } else if (kind == "video") {
+        options.offerToReceiveVideo = true;
+      }
+    }
+
+    let offer = await pc.createOffer(options);
+
+    let expected = [];
+
+    // NOTE: The ordering here is not laid out in the spec at all, this is
+    // firefox specific.
+    if (options.offerToReceiveVideo) {
+      expected.push(
+        {
+          receiver: {track: {kind: "video"}},
+          sender: {track: null},
+          direction: "recvonly",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        });
+    }
+
+    if (options.offerToReceiveAudio) {
+      expected.push(
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: null},
+          direction: "recvonly",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        });
+    }
+
+    hasProps(pc.getTransceivers(), expected);
+
+    pc.close();
+  };
+
+  let checkAddTransceiverWithSetRemoteOfferSending = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTransceiver(track, {streams: [stream]});
+
+    let offer = await pc1.createOffer();
+
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: null},
+          direction: "recvonly",
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkAddTransceiverWithSetRemoteOfferNoSend = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTransceiver(track);
+    pc1.getTransceivers()[0].direction = "recvonly";
+
+    let offer = await pc1.createOffer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents, []);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: null},
+          // rtcweb-jsep says this is recvonly, w3c-webrtc does not...
+          direction: "recvonly",
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkAddTransceiverBadKind = async () => {
+    let pc = new RTCPeerConnection();
+    try {
+      pc.addTransceiver("foo");
+      ok(false, 'addTransceiver("foo") throws');
+    }
+    catch (e if e instanceof TypeError) {
+      ok(true, 'addTransceiver("foo") throws a TypeError');
+    }
+    catch (e) {
+      ok(false, 'addTransceiver("foo") throws a TypeError');
+    }
+
+    hasProps(pc.getTransceivers(), []);
+
+    pc.close();
+  };
+
+  let checkAddTransceiverNoTrackDoesntPair = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    pc1.addTransceiver("audio");
+    pc2.addTransceiver("audio");
+
+    let offer = await pc1.createOffer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[1].receiver.track,
+          streams: []
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {mid: null}, // no addTrack magic, doesn't auto-pair
+        {mid: "sdparta_0"} // Created by SRD
+      ]);
+
+    pc1.close();
+    pc2.close();
+  };
+
+  let checkAddTransceiverWithTrackDoesntPair = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    pc1.addTransceiver("audio");
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc2.addTransceiver(track);
+
+    let offer = await pc1.createOffer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[1].receiver.track,
+          streams: []
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {mid: null, sender: {track}},
+        {mid: "sdparta_0", sender: {track: null}} // Created by SRD
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkAddTransceiverThenReplaceTrackDoesntPair = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    pc1.addTransceiver("audio");
+    pc2.addTransceiver("audio");
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc2.getTransceivers()[0].sender.replaceTrack(track);
+
+    let offer = await pc1.createOffer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[1].receiver.track,
+          streams: []
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {mid: null, sender: {track}},
+        {mid: "sdparta_0", sender: {track: null}} // Created by SRD
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkAddTransceiverThenAddTrackPairs = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    pc1.addTransceiver("audio");
+    pc2.addTransceiver("audio");
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: []
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {mid: "sdparta_0", sender: {track}}
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkAddTrackPairs = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    pc1.addTransceiver("audio");
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: []
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {mid: "sdparta_0", sender: {track}}
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkReplaceTrackNullDoesntPreventPairing = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    pc1.addTransceiver("audio");
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc2.addTrack(track, stream);
+    pc2.getTransceivers()[0].sender.replaceTrack(null);
+
+    let offer = await pc1.createOffer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: []
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {mid: "sdparta_0", sender: {track}}
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkSetDirection = async () => {
+    let pc = new RTCPeerConnection();
+    pc.addTransceiver("audio");
+
+    pc.getTransceivers()[0].direction = "sendonly";
+    hasProps(pc.getTransceivers(),[{direction: "sendonly"}]);
+    pc.getTransceivers()[0].direction = "recvonly";
+    hasProps(pc.getTransceivers(),[{direction: "recvonly"}]);
+    pc.getTransceivers()[0].direction = "inactive";
+    hasProps(pc.getTransceivers(),[{direction: "inactive"}]);
+    pc.getTransceivers()[0].direction = "sendrecv";
+    hasProps(pc.getTransceivers(),[{direction: "sendrecv"}]);
+
+    pc.close();
+  };
+
+  let checkCurrentDirection = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+    pc2.addTrack(track, stream);
+    hasProps(pc1.getTransceivers(), [{currentDirection: null}]);
+
+    let offer = await pc1.createOffer();
+    hasProps(pc1.getTransceivers(), [{currentDirection: null}]);
+
+    await pc1.setLocalDescription(offer);
+    hasProps(pc1.getTransceivers(), [{currentDirection: null}]);
+
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(), [{currentDirection: null}]);
+
+    let answer = await pc2.createAnswer();
+    hasProps(pc2.getTransceivers(), [{currentDirection: null}]);
+
+    await pc2.setLocalDescription(answer);
+    hasProps(pc2.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc1.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    hasProps(pc1.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    pc2.getTransceivers()[0].direction = "sendonly";
+
+    offer = await pc2.createOffer();
+    hasProps(pc2.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    await pc2.setLocalDescription(offer);
+    hasProps(pc2.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, offer);
+    hasProps(trackEvents, []);
+
+    hasProps(pc1.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    answer = await pc1.createAnswer();
+    hasProps(pc1.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    // TODO(bug 1400363): Check onmute/muted
+    await pc1.setLocalDescription(answer);
+    hasProps(pc1.getTransceivers(), [{currentDirection: "recvonly"}]);
+
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, answer);
+    hasProps(trackEvents, []);
+
+    hasProps(pc2.getTransceivers(), [{currentDirection: "sendonly"}]);
+
+    pc2.getTransceivers()[0].direction = "sendrecv";
+
+    offer = await pc2.createOffer();
+    hasProps(pc2.getTransceivers(), [{currentDirection: "sendonly"}]);
+
+    await pc2.setLocalDescription(offer);
+    hasProps(pc2.getTransceivers(), [{currentDirection: "sendonly"}]);
+
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, offer);
+    hasProps(trackEvents, []);
+
+    hasProps(pc1.getTransceivers(), [{currentDirection: "recvonly"}]);
+
+    answer = await pc1.createAnswer();
+    hasProps(pc1.getTransceivers(), [{currentDirection: "recvonly"}]);
+
+    // TODO(bug 1400363): Check onunmute/muted
+    await pc1.setLocalDescription(answer);
+    hasProps(pc1.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, answer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkSendrecvWithNoSendTrack = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTransceiver("audio");
+    pc1.getTransceivers()[0].direction = "sendrecv";
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: []
+        }
+      ]);
+
+    trickle(pc1, pc2);
+    await pc1.setLocalDescription(offer);
+
+    let answer = await pc2.createAnswer();
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    // Spec language doesn't say anything about checking whether the transceiver
+    // is stopped here.
+    hasProps(trackEvents,
+      [
+        {
+          track: pc1.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    trickle(pc2, pc1);
+    await pc2.setLocalDescription(answer);
+
+    await iceConnected(pc1);
+    await iceConnected(pc2);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkStop = async () => {
+    let pc1 = new RTCPeerConnection();
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+
+    let pc2 = new RTCPeerConnection();
+    await pc2.setRemoteDescription(offer);
+
+    pc2.addTrack(track, stream);
+
+    let answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    let stoppedTransceiver = pc1.getTransceivers()[0];
+    let onended = new Promise(resolve => {
+      stoppedTransceiver.receiver.track.onended = resolve;
+    });
+    stoppedTransceiver.stop();
+
+    await onended;
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          sender: {track: {kind: "audio"}},
+          receiver: {track: {kind: "audio", readyState: "ended"}},
+          stopped: true,
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          direction: "sendrecv"
+        }
+      ]);
+
+    let transceiver = pc1.getTransceivers()[0];
+
+    checkThrows(() => transceiver.sender.setParameters(
+                        transceiver.sender.getParameters()),
+                "InvalidStateError", "setParameters on stopped transceiver");
+
+    let stream2 = await getUserMedia({audio: true});
+    let track2 = stream.getAudioTracks()[0];
+    checkThrows(() => transceiver.sender.replaceTrack(track2),
+                "InvalidStateError", "replaceTrack on stopped transceiver");
+
+    checkThrows(() => transceiver.direction = "sendrecv",
+                "InvalidStateError", "setDirection on stopped transceiver");
+
+    checkThrows(() => transceiver.sender.dtmf.insertDTMF("111"),
+                "InvalidStateError", "insertDTMF on stopped transceiver");
+
+    // Shouldn't throw
+    stoppedTransceiver.stop();
+
+    offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+
+    stoppedTransceiver = pc2.getTransceivers()[0];
+    onended = new Promise(resolve => {
+      stoppedTransceiver.receiver.track.onended = resolve;
+    });
+
+    await pc2.setRemoteDescription(offer);
+
+    await onended;
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          sender: {track: {kind: "audio"}},
+          receiver: {track: {kind: "audio", readyState: "ended"}},
+          stopped: true,
+          mid: null,
+          currentDirection: null,
+          direction: "sendrecv"
+        }
+      ]);
+
+    // Shouldn't throw either
+    stoppedTransceiver.stop();
+
+    pc1.close();
+    pc2.close();
+
+    // Still shouldn't throw
+    stoppedTransceiver.stop();
+
+    stopTracks(stream);
+  };
+
+  let checkStopAfterCreateOffer = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+
+    pc1.getTransceivers()[0].stop();
+
+    await pc2.setRemoteDescription(offer)
+    trickle(pc1, pc2);
+    await pc1.setLocalDescription(offer);
+
+    let answer = await pc2.createAnswer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    // Spec language doesn't say anything about checking whether the transceiver
+    // is stopped here.
+    hasProps(trackEvents,
+      [
+        {
+          track: pc1.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: "sdparta_0"
+        }
+      ]);
+
+    trickle(pc2, pc1);
+    await pc2.setLocalDescription(answer);
+
+    await negotiationNeeded(pc1);
+    await iceConnected(pc1);
+    await iceConnected(pc2);
+
+    offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkStopAfterSetLocalOffer = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+
+    await pc2.setRemoteDescription(offer)
+    trickle(pc1, pc2);
+    await pc1.setLocalDescription(offer);
+
+    pc1.getTransceivers()[0].stop();
+
+    let answer = await pc2.createAnswer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    // Spec language doesn't say anything about checking whether the transceiver
+    // is stopped here.
+    hasProps(trackEvents,
+      [
+        {
+          track: pc1.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: "sdparta_0"
+        }
+      ]);
+
+    trickle(pc2, pc1);
+    await pc2.setLocalDescription(answer);
+
+    await negotiationNeeded(pc1);
+    await iceConnected(pc1);
+    await iceConnected(pc2);
+
+    offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkStopAfterSetRemoteOffer = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+
+    await pc2.setRemoteDescription(offer)
+    await pc1.setLocalDescription(offer);
+
+    // Stop on _answerer_side now. Should take effect in answer.
+    pc2.getTransceivers()[0].stop();
+
+    let answer = await pc2.createAnswer();
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    hasProps(trackEvents, []);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    await pc2.setLocalDescription(answer);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkStopAfterCreateAnswer = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+
+    await pc2.setRemoteDescription(offer)
+    trickle(pc1, pc2);
+    await pc1.setLocalDescription(offer);
+
+    let answer = await pc2.createAnswer();
+
+    // Too late for this to go in the answer. ICE should succeed.
+    pc2.getTransceivers()[0].stop();
+
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc1.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: "sdparta_0"
+        }
+      ]);
+
+    trickle(pc2, pc1);
+    await pc2.setLocalDescription(answer);
+
+    await negotiationNeeded(pc2);
+    await iceConnected(pc1);
+    await iceConnected(pc2);
+
+    offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkStopAfterSetLocalAnswer = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+
+    await pc2.setRemoteDescription(offer)
+    trickle(pc1, pc2);
+    await pc1.setLocalDescription(offer);
+
+    let answer = await pc2.createAnswer();
+
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc1.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    trickle(pc2, pc1);
+    await pc2.setLocalDescription(answer);
+
+    // ICE should succeed.
+    pc2.getTransceivers()[0].stop();
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: "sdparta_0"
+        }
+      ]);
+
+    await negotiationNeeded(pc2);
+    await iceConnected(pc1);
+    await iceConnected(pc2);
+
+    offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          stopped: true,
+          mid: null
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkStopAfterClose = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+    pc2.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+    await pc2.setRemoteDescription(offer)
+    await pc1.setLocalDescription(offer);
+    let answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    pc1.close();
+    pc2.close();
+    await checkThrows(() => pc1.getTransceivers()[0].stop(),
+                      "InvalidStateError",
+                      "Stopping a transceiver on a closed PC should throw.");
+    stopTracks(stream);
+  };
+
+  let checkLocalRollback = async () => {
+    let pc = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc.addTrack(track, stream);
+
+    let offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    hasProps(pc.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track},
+          direction: "sendrecv",
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    // Verify that rollback doesn't stomp things it should not
+    pc.getTransceivers()[0].direction = "sendonly";
+    let stream2 = await getUserMedia({audio: true});
+    let track2 = stream2.getAudioTracks()[0];
+    await pc.getTransceivers()[0].sender.replaceTrack(track2);
+
+    await pc.setLocalDescription({type: "rollback"});
+
+    hasProps(pc.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: track2},
+          direction: "sendonly",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    // Make sure stop() isn't rolled back either.
+    offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    pc.getTransceivers()[0].stop();
+    await pc.setLocalDescription({type: "rollback"});
+
+    hasProps(pc.getTransceivers(), [{ stopped: true }]);
+
+    stopTracks(stream);
+    pc.close();
+  };
+
+  let checkRemoteRollback = async () => {
+    let pc1 = new RTCPeerConnection();
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+
+    let pc2 = new RTCPeerConnection();
+    await pc2.setRemoteDescription(offer);
+
+    let removedTransceiver = pc2.getTransceivers()[0];
+
+    let onended = new Promise(resolve => {
+      removedTransceiver.receiver.track.onended = resolve;
+    });
+
+    await pc2.setRemoteDescription({type: "rollback"});
+
+    // Transceiver should be _gone_
+    hasProps(pc2.getTransceivers(), []);
+
+    hasProps(removedTransceiver,
+      {
+        stopped: true,
+        mid: null,
+        currentDirection: null
+      }
+    );
+
+    await onended;
+
+    hasProps(removedTransceiver,
+      {
+        receiver: {track: {readyState: "ended"}},
+        stopped: true,
+        mid: null,
+        currentDirection: null
+      }
+    );
+
+    // Setting the same offer again should do the same thing as before
+    await pc2.setRemoteDescription(offer);
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: null},
+          direction: "recvonly",
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    // Give pc2 a track with replaceTrack
+    let stream2 = await getUserMedia({audio: true});
+    let track2 = stream2.getAudioTracks()[0];
+    await pc2.getTransceivers()[0].sender.replaceTrack(track2);
+    pc2.getTransceivers()[0].direction = "sendrecv";
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: track2},
+          direction: "sendrecv",
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    await pc2.setRemoteDescription({type: "rollback"});
+
+    // Transceiver should be _gone_, again. replaceTrack doesn't prevent this,
+    // nor does setDirection.
+    hasProps(pc2.getTransceivers(), []);
+
+    // Setting the same offer for a _third_ time should do the same thing
+    await pc2.setRemoteDescription(offer);
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: null},
+          direction: "recvonly",
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    // We should be able to add the same track again
+    pc2.addTrack(track2, stream2);
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: track2},
+          direction: "sendrecv",
+          mid: "sdparta_0", // Firefox-specific
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    await pc2.setRemoteDescription({type: "rollback"});
+    // Transceiver should _not_ be gone this time, because addTrack touched it.
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: track2},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: false
+        }
+      ]);
+
+    // Complete negotiation so we can test interactions with transceiver.stop()
+    await pc1.setLocalDescription(offer);
+
+    // After all this SRD/rollback, we should still get the track event
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    let answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+
+    // Make sure all this rollback hasn't messed up the signaling
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc1.getTransceivers()[0].receiver.track,
+          streams: [{id: stream2.id}]
+        }
+      ]);
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track},
+          direction: "sendrecv",
+          mid: "sdparta_0",
+          currentDirection: "sendrecv",
+          stopped: false
+        }
+      ]);
+
+    // Don't bother waiting for ICE and such
+
+    // Check to see whether rolling back a remote track removal works
+    pc1.getTransceivers()[0].direction = "recvonly";
+    offer = await pc1.createOffer();
+
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents, []);
+
+    trackEvents =
+      await setRemoteDescriptionReturnTrackEvents(pc2, {type: "rollback"});
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    // Check to see that stop() cannot be rolled back
+    pc1.getTransceivers()[0].stop();
+    offer = await pc1.createOffer();
+
+    await pc2.setRemoteDescription(offer);
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: track2},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: true
+        }
+      ]);
+
+    // stop() cannot be rolled back!
+    await pc2.setRemoteDescription({type: "rollback"});
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          receiver: {track: {kind: "audio"}},
+          sender: {track: {kind: "audio"}},
+          direction: "sendrecv",
+          mid: null,
+          currentDirection: null,
+          stopped: true
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream, stream2);
+  };
+
+  let checkMsectionReuse = async () => {
+    // Use max-compat to make it easier to check for disabled m-sections
+    let pc1 = new RTCPeerConnection({ bundlePolicy: "max-compat" });
+    let pc2 = new RTCPeerConnection({ bundlePolicy: "max-compat" });
+
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+
+    let offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+
+    // answerer stops transceiver to reject m-section
+    pc2.getTransceivers()[0].stop();
+
+    let answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          mid: null,
+          currentDirection: null,
+          stopped: true
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          mid: null,
+          currentDirection: null,
+          stopped: true
+        }
+      ]);
+
+    // Check that m-section is reused on both ends
+    let stream2 = await getUserMedia({audio: true});
+    let track2 = stream2.getAudioTracks()[0];
+
+    pc1.addTrack(track2, stream2);
+    offer = await pc1.createOffer();
+    is(offer.sdp.match(/m=/g).length, 1, "Exactly one m-line in offer, because it was reused");
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          stopped: true
+        },
+        {
+          sender: {track: track2}
+        }
+      ]);
+
+
+    pc2.addTrack(track, stream);
+    offer = await pc2.createOffer();
+    is(offer.sdp.match(/m=/g).length, 1, "Exactly one m-line in offer, because it was reused");
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          stopped: true
+        },
+        {
+          sender: {track}
+        }
+      ]);
+
+    await pc2.setLocalDescription(offer);
+    await pc1.setRemoteDescription(offer);
+    answer = await pc1.createAnswer();
+    await pc1.setLocalDescription(answer);
+    await pc2.setRemoteDescription(answer);
+    hasProps(pc1.getTransceivers(),
+      [
+        {},
+        {
+          sender: {track: track2},
+          currentDirection: "sendrecv"
+        }
+      ]);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {},
+        {
+          sender: {track},
+          currentDirection: "sendrecv"
+        }
+      ]);
+
+    // stop the transceiver, and add a track. Verify that we don't reuse
+    // prematurely in our offer. (There should be one rejected m-section, and a
+    // new one for the new track)
+    pc1.getTransceivers()[1].stop();
+    let stream3 = await getUserMedia({audio: true});
+    let track3 = stream3.getAudioTracks()[0];
+    pc1.addTrack(track3, stream3);
+    offer = await pc1.createOffer();
+    is(offer.sdp.match(/m=/g).length, 2, "Exactly 2 m-lines in offer, because it is too early to reuse");
+    is(offer.sdp.match(/m=audio 0 /g).length, 1, "One m-line is rejected");
+
+    await pc1.setLocalDescription(offer);
+
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[2].receiver.track,
+          streams: [{id: stream3.id}]
+        }
+      ]);
+
+    answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+
+    trackEvents = await setRemoteDescriptionReturnTrackEvents(pc1, answer);
+    hasProps(trackEvents, []);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {},
+        {
+          stopped: true
+        },
+        {
+          mid: "sdparta_1", // Firefox-specific
+          sender: {track: null},
+          currentDirection: "recvonly"
+        }
+      ]);
+
+    pc2.addTrack(track3, stream3);
+    // There are two ways to handle this new track; reuse the recvonly
+    // transceiver created above, or create a new transceiver and reuse the
+    // disabled m-section. We're supposed to do the former.
+    offer = await pc2.createOffer();
+    is(offer.sdp.match(/m=/g).length, 2, "Exactly 2 m-lines in offer");
+    is(offer.sdp.match(/m=audio 0 /g).length, 1, "One m-line is rejected, because the other was used");
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {},
+        {
+          stopped: true
+        },
+        {
+          mid: "sdparta_1", // Firefox-specific
+          sender: {track: track3},
+          currentDirection: "recvonly",
+          direction: "sendrecv"
+        }
+      ]);
+
+    // Add _another_ track; this should reuse the disabled m-section
+    let stream4 = await getUserMedia({audio: true});
+    let track4 = stream4.getAudioTracks()[0];
+    pc2.addTrack(track4, stream4);
+    offer = await pc2.createOffer();
+    await pc2.setLocalDescription(offer);
+    hasProps(pc2.getTransceivers(),
+      [
+        {}, {},
+        {
+          mid: "sdparta_1", // Firefox-specific
+        },
+        {
+          sender: {track: track4},
+          mid: "sdparta_0" // Firefox-specific
+        }
+      ]);
+    is(offer.sdp.match(/m=/g).length, 2, "Exactly 2 m-lines in offer, because m-section was reused");
+    is(offer.sdp.match(/m=audio 0 /g), null, "No rejected m-line, because it was reused");
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream, stream2, stream3, stream4);
+  };
+
+  runNetworkTest(async () => {
+    await checkAddTransceiverNoTrack();
+    await checkAddTransceiverWithTrack();
+    await checkAddTransceiverWithAddTrack();
+    await checkAddTransceiverWithDirection();
+    await checkAddTransceiverWithStream();
+    await checkAddTransceiverWithOfferToReceive(["audio"]);
+    await checkAddTransceiverWithOfferToReceive(["video"]);
+    await checkAddTransceiverWithOfferToReceive(["audio", "video"]);
+    await checkAddTransceiverWithSetRemoteOfferSending();
+    await checkAddTransceiverWithSetRemoteOfferNoSend();
+    await checkAddTransceiverBadKind();
+    await checkSetDirection();
+    await checkCurrentDirection();
+    await checkSendrecvWithNoSendTrack();
+    await checkAddTransceiverNoTrackDoesntPair();
+    await checkAddTransceiverWithTrackDoesntPair();
+    await checkAddTransceiverThenReplaceTrackDoesntPair();
+    await checkAddTransceiverThenAddTrackPairs();
+    await checkAddTrackPairs();
+    await checkReplaceTrackNullDoesntPreventPairing();
+    await checkStop();
+    await checkStopAfterCreateOffer();
+    await checkStopAfterSetLocalOffer();
+    await checkStopAfterSetRemoteOffer();
+    await checkStopAfterCreateAnswer();
+    await checkStopAfterSetLocalAnswer();
+    await checkStopAfterClose();
+    await checkLocalRollback();
+    await checkRemoteRollback();
+    await checkMsectionReuse();
+    return SimpleTest.finish();
+  });
+</script>
+</pre>
+</body>
+</html>

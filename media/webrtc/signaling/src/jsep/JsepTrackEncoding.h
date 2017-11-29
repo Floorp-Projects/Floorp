@@ -19,6 +19,16 @@ namespace mozilla {
 class JsepTrackEncoding
 {
 public:
+  JsepTrackEncoding() = default;
+  JsepTrackEncoding(const JsepTrackEncoding& orig) :
+    mConstraints(orig.mConstraints),
+    mRid(orig.mRid)
+  {
+    for (const JsepCodecDescription* codec : orig.mCodecs.values) {
+      mCodecs.values.push_back(codec->Clone());
+    }
+  }
+
   const std::vector<JsepCodecDescription*>& GetCodecs() const
   {
     return mCodecs.values;

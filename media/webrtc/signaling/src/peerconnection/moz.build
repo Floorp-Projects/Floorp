@@ -22,12 +22,11 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    'MediaPipelineFactory.cpp',
-    'MediaStreamList.cpp',
     'PacketDumper.cpp',
     'PeerConnectionCtx.cpp',
     'PeerConnectionImpl.cpp',
     'PeerConnectionMedia.cpp',
+    'TransceiverImpl.cpp',
     'WebrtcGlobalInformation.cpp',
 ]
 
