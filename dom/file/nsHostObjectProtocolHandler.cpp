@@ -662,8 +662,6 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
 /* static */ void
 nsHostObjectProtocolHandler::RemoveDataEntries()
 {
-  MOZ_ASSERT(XRE_IsContentProcess());
-
   if (!gDataTable) {
     return;
   }
