@@ -260,8 +260,7 @@ CrossCompartmentWrapper::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObjec
 static bool
 CanReify(HandleObject obj)
 {
-    return obj->is<PropertyIteratorObject>() &&
-           (obj->as<PropertyIteratorObject>().getNativeIterator()->flags & JSITER_ENUMERATE);
+    return obj->is<PropertyIteratorObject>();
 }
 
 struct AutoCloseIterator
@@ -315,7 +314,7 @@ Reify(JSContext* cx, JSCompartment* origin, HandleObject objp)
         close.clear();
         CloseIterator(iterObj);
 
-        obj = EnumeratedIdVectorToIterator(cx, obj, ni->flags, keys);
+        obj = EnumeratedIdVectorToIterator(cx, obj, keys);
     }
     return obj;
 }

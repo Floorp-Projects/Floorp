@@ -2305,7 +2305,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_copylexicalenv(false);
 
       case JSOP_ITER:
-        return jsop_iter(GET_INT8(pc));
+        return jsop_iter();
 
       case JSOP_MOREITER:
         return jsop_itermore();
@@ -12577,7 +12577,7 @@ IonBuilder::jsop_toid()
 }
 
 AbortReasonOr<Ok>
-IonBuilder::jsop_iter(uint8_t flags)
+IonBuilder::jsop_iter()
 {
     MDefinition* obj = current->pop();
     MInstruction* ins = MGetIteratorCache::New(alloc(), obj);
