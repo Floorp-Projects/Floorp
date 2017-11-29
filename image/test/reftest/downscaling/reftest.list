@@ -205,3 +205,6 @@ fuzzy(18,128) == downscale-32px.html?-png-in.ico downscale-32px-ref.html
 == huge-1.html?100x32768.jpg,100,32768 huge-1.html?100x100.jpg,100,32768
 == huge-1.html?32768x100.jpg,100,100 huge-1.html?100x100.jpg,100,100
 == huge-1.html?32768x100.jpg,32768,100 huge-1.html?100x100.jpg,32768,100
+
+# Only need to run this with downscaling on
+!= 1421191-1.html about:blank
