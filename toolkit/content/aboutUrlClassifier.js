@@ -174,9 +174,11 @@ var Provider = {
                       .getService(Ci.nsIUrlListManager);
 
     let pref = "browser.safebrowsing.provider." + provider + ".lists";
-    let tables = Services.prefs.getCharPref(pref, "");
+    let tables = Services.prefs.getCharPref(pref, "").split(",");
+    let table = tables.find(t => listmanager.getUpdateUrl(t) != "");
 
-    if (!listmanager.forceUpdates(tables)) {
+    let updateUrl = listmanager.getUpdateUrl(table);
+    if (!listmanager.checkForUpdates(updateUrl)) {
       // This may because of back-off algorithm.
       let elem = document.getElementById(provider + "-col-lastupdateresult");
       elem.childNodes[0].nodeValue = bundle.GetStringFromName("CannotUpdate");
