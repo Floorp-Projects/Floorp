@@ -247,7 +247,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "3569956db03b"
+        "revision": "e542b02f422e"
     }, 
     "es-CL": {
         "platforms": [
@@ -257,7 +257,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "4bc4143f714f"
+        "revision": "ed7233b876ad"
     }, 
     "es-ES": {
         "platforms": [
@@ -277,7 +277,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "df41cbcfc4d3"
+        "revision": "326cdf87fade"
     }, 
     "et": {
         "platforms": [
