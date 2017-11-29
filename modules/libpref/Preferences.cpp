@@ -401,22 +401,18 @@ public:
       return NS_ERROR_UNEXPECTED;
     }
 
-    const char* stringVal = nullptr;
     if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
       // Do we have a default?
       if (!mHasDefaultValue) {
         return NS_ERROR_UNEXPECTED;
       }
-      stringVal = mDefaultValue.mStringVal;
+      MOZ_ASSERT(mDefaultValue.mStringVal);
+      aResult = mDefaultValue.mStringVal;
     } else {
-      stringVal = mUserValue.mStringVal;
+      MOZ_ASSERT(mUserValue.mStringVal);
+      aResult = mUserValue.mStringVal;
     }
 
-    if (!stringVal) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    aResult = stringVal;
     return NS_OK;
   }
 
