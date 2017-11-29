@@ -864,7 +864,6 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     mIdleCallbackIndex(-1),
     mCurrentlyIdle(false),
     mAddActiveEventFuzzTime(true),
-    mIsSecureContextIfOpenerIgnored(false),
     mWasOffline(false),
     mHasHadSlowScript(false),
     mNotifyIdleObserversIdleOnThaw(false),
@@ -2239,12 +2238,6 @@ bool
 nsPIDOMWindowInner::IsSecureContext() const
 {
   return nsGlobalWindowInner::Cast(this)->IsSecureContext();
-}
-
-bool
-nsPIDOMWindowInner::IsSecureContextIfOpenerIgnored() const
-{
-  return nsGlobalWindowInner::Cast(this)->IsSecureContextIfOpenerIgnored();
 }
 
 void
@@ -7237,12 +7230,6 @@ bool
 nsGlobalWindowInner::IsSecureContext() const
 {
   return JS_GetIsSecureContext(js::GetObjectCompartment(GetWrapperPreserveColor()));
-}
-
-bool
-nsGlobalWindowInner::IsSecureContextIfOpenerIgnored() const
-{
-  return mIsSecureContextIfOpenerIgnored;
 }
 
 already_AddRefed<External>
