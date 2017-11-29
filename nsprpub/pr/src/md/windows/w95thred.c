@@ -35,6 +35,10 @@ _PR_MD_EARLY_INIT()
     _pr_lastThreadIndex = TlsAlloc();
     _pr_currentCPUIndex = TlsAlloc();
 #endif
+
+#if defined(_WIN64) && defined(WIN95)
+    _fd_waiting_for_overlapped_done_lock = PR_NewLock();
+#endif
 }
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
@@ -49,6 +53,29 @@ void _PR_MD_CLEANUP_BEFORE_EXIT(void)
     TlsFree(_pr_currentThreadIndex);
     TlsFree(_pr_lastThreadIndex);
     TlsFree(_pr_currentCPUIndex);
+#endif
+
+#if defined(_WIN64) && defined(WIN95)
+    // For each iteration check if TFO overlapped IOs are down.
+    if (_fd_waiting_for_overlapped_done_lock) {
+        PRIntervalTime delay = PR_MillisecondsToInterval(1000);
+        PRFileDescList *cur;
+        do {
+            CheckOverlappedPendingSocketsAreDone();
+
+            PR_Lock(_fd_waiting_for_overlapped_done_lock);
+            cur = _fd_waiting_for_overlapped_done;
+            PR_Unlock(_fd_waiting_for_overlapped_done_lock);
+#if defined(DO_NOT_WAIT_FOR_CONNECT_OVERLAPPED_OPERATIONS)
+            cur = NULL;
+#endif
+            if (cur) {
+                PR_Sleep(delay); // wait another 1s.
+            }
+        } while (cur);
+
+        PR_DestroyLock(_fd_waiting_for_overlapped_done_lock);
+    }
 #endif
 }
 

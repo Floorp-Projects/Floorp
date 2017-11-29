@@ -19,7 +19,7 @@ function test() {
     "<script type='text/javascript'>",
     "let b = 42;",
     "</script>",
-    "<script type='text/javascript;version=1.8'>",
+    "<script type='text/javascript'>",
     "let c = 42;",
     "</script>",
     "</head>"
@@ -44,14 +44,14 @@ function test() {
     "The first script was located correctly.");
   is(parsed.getScriptInfo(source.indexOf("let b")).toSource(), "({start:85, length:13, index:1})",
     "The second script was located correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c")).toSource(), "({start:151, length:13, index:2})",
+  is(parsed.getScriptInfo(source.indexOf("let c")).toSource(), "({start:139, length:13, index:2})",
     "The third script was located correctly.");
 
   is(parsed.getScriptInfo(source.indexOf("let a") - 1).toSource(), "({start:31, length:13, index:0})",
     "The left edge of the first script was interpreted correctly.");
   is(parsed.getScriptInfo(source.indexOf("let b") - 1).toSource(), "({start:85, length:13, index:1})",
     "The left edge of the second script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c") - 1).toSource(), "({start:151, length:13, index:2})",
+  is(parsed.getScriptInfo(source.indexOf("let c") - 1).toSource(), "({start:139, length:13, index:2})",
     "The left edge of the third script was interpreted correctly.");
 
   is(parsed.getScriptInfo(source.indexOf("let a") - 2).toSource(), "({start:-1, length:-1, index:-1})",
@@ -65,7 +65,7 @@ function test() {
     "The right edge of the first script was interpreted correctly.");
   is(parsed.getScriptInfo(source.indexOf("let b") + 12).toSource(), "({start:85, length:13, index:1})",
     "The right edge of the second script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c") + 12).toSource(), "({start:151, length:13, index:2})",
+  is(parsed.getScriptInfo(source.indexOf("let c") + 12).toSource(), "({start:139, length:13, index:2})",
     "The right edge of the third script was interpreted correctly.");
 
   is(parsed.getScriptInfo(source.indexOf("let a") + 13).toSource(), "({start:-1, length:-1, index:-1})",

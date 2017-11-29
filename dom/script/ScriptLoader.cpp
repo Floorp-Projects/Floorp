@@ -1207,10 +1207,20 @@ ParseTypeAttribute(const nsAString& aType, ValidJSVersion* aVersion)
   nsAutoString versionName;
   rv = parser.GetParameter("version", versionName);
 
-  if (NS_SUCCEEDED(rv)) {
-    *aVersion = ParseJavascriptVersion(versionName);
-  } else if (rv != NS_ERROR_INVALID_ARG) {
+  if (rv == NS_ERROR_INVALID_ARG) {
+    Telemetry::Accumulate(Telemetry::SCRIPT_LOADED_WITH_VERSION, false);
+    // Argument not set.
+    return true;
+  }
+
+  if (NS_FAILED(rv)) {
     return false;
+  }
+
+  *aVersion = ParseJavascriptVersion(versionName);
+  if (*aVersion == ValidJSVersion::Valid) {
+    Telemetry::Accumulate(Telemetry::SCRIPT_LOADED_WITH_VERSION, true);
+    return true;
   }
 
   return true;

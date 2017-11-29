@@ -9291,9 +9291,6 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
 
     LoadNativeIterator(masm, obj, temp1, ool->entry());
 
-    masm.branchTest32(Assembler::Zero, Address(temp1, offsetof(NativeIterator, flags)),
-                      Imm32(JSITER_ENUMERATE), ool->entry());
-
     // Clear active bit.
     masm.and32(Imm32(~JSITER_ACTIVE), Address(temp1, offsetof(NativeIterator, flags)));
 

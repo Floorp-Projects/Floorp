@@ -109,6 +109,7 @@ pub unsafe extern "C" fn rust_u2f_res_free(res: *mut U2FResult) {
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_mgr_register(
     mgr: *mut U2FManager,
+    flags: u64,
     timeout: u64,
     callback: U2FCallback,
     challenge_ptr: *const u8,
@@ -126,20 +127,28 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
         return 0;
     }
 
+    let flags = ::RegisterFlags::from_bits_truncate(flags);
     let challenge = from_raw(challenge_ptr, challenge_len);
     let application = from_raw(application_ptr, application_len);
     let key_handles = (*khs).clone();
 
     let tid = new_tid();
-    let res = (*mgr).register(timeout, challenge, application, key_handles, move |rv| {
-        if let Ok(registration) = rv {
-            let mut result = U2FResult::new();
-            result.insert(RESBUF_ID_REGISTRATION, registration);
-            callback(tid, Box::into_raw(Box::new(result)));
-        } else {
-            callback(tid, ptr::null_mut());
-        };
-    });
+    let res = (*mgr).register(
+        flags,
+        timeout,
+        challenge,
+        application,
+        key_handles,
+        move |rv| {
+            if let Ok(registration) = rv {
+                let mut result = U2FResult::new();
+                result.insert(RESBUF_ID_REGISTRATION, registration);
+                callback(tid, Box::into_raw(Box::new(result)));
+            } else {
+                callback(tid, ptr::null_mut());
+            };
+        },
+    );
 
     if res.is_ok() { tid } else { 0 }
 }

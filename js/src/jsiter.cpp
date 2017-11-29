@@ -537,36 +537,32 @@ js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
 }
 
 static inline PropertyIteratorObject*
-NewPropertyIteratorObject(JSContext* cx, unsigned flags)
+NewPropertyIteratorObject(JSContext* cx)
 {
-    if (flags & JSITER_ENUMERATE) {
-        RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &PropertyIteratorObject::class_,
-                                                                 TaggedProto(nullptr)));
-        if (!group)
-            return nullptr;
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &PropertyIteratorObject::class_,
+                                                             TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
 
-        const Class* clasp = &PropertyIteratorObject::class_;
-        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(nullptr),
-                                                          ITERATOR_FINALIZE_KIND));
-        if (!shape)
-            return nullptr;
+    const Class* clasp = &PropertyIteratorObject::class_;
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(nullptr),
+                                                      ITERATOR_FINALIZE_KIND));
+    if (!shape)
+        return nullptr;
 
-        JSObject* obj;
-        JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::create(cx, ITERATOR_FINALIZE_KIND,
-                                                                GetInitialHeap(GenericObject, clasp),
-                                                                shape, group));
+    JSObject* obj;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::create(cx, ITERATOR_FINALIZE_KIND,
+                                                            GetInitialHeap(GenericObject, clasp),
+                                                            shape, group));
 
-        PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
+    PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 
-        // CodeGenerator::visitIteratorStartO assumes the iterator object is not
-        // inside the nursery when deciding whether a barrier is necessary.
-        MOZ_ASSERT(!js::gc::IsInsideNursery(res));
+    // CodeGenerator::visitIteratorStartO assumes the iterator object is not
+    // inside the nursery when deciding whether a barrier is necessary.
+    MOZ_ASSERT(!js::gc::IsInsideNursery(res));
 
-        MOZ_ASSERT(res->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
-        return res;
-    }
-
-    return NewBuiltinClassInstance<PropertyIteratorObject>(cx);
+    MOZ_ASSERT(res->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
+    return res;
 }
 
 NativeIterator*
@@ -607,11 +603,11 @@ NativeIterator::allocateSentinel(JSContext* maybecx)
 }
 
 inline void
-NativeIterator::init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t numGuards, uint32_t key)
+NativeIterator::init(JSObject* obj, JSObject* iterObj, uint32_t numGuards, uint32_t key)
 {
     this->obj.init(obj);
     this->iterObj_ = iterObj;
-    this->flags = flags;
+    this->flags = 0;
     this->guard_array = (HeapReceiverGuard*) this->props_end;
     this->guard_length = numGuards;
     this->guard_key = key;
@@ -642,23 +638,20 @@ static inline void
 RegisterEnumerator(JSContext* cx, PropertyIteratorObject* iterobj, NativeIterator* ni)
 {
     /* Register non-escaping native enumerators (for-in) with the current context. */
-    if (ni->flags & JSITER_ENUMERATE) {
-        ni->link(cx->compartment()->enumerators);
+    ni->link(cx->compartment()->enumerators);
 
-        MOZ_ASSERT(!(ni->flags & JSITER_ACTIVE));
-        ni->flags |= JSITER_ACTIVE;
-    }
+    MOZ_ASSERT(!(ni->flags & JSITER_ACTIVE));
+    ni->flags |= JSITER_ACTIVE;
 }
 
 static inline PropertyIteratorObject*
-VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& keys,
-                    uint32_t numGuards)
+VectorToKeyIterator(JSContext* cx, HandleObject obj, AutoIdVector& keys, uint32_t numGuards)
 {
     if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj))
         return nullptr;
     MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
 
-    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx, flags));
+    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx));
     if (!iterobj)
         return nullptr;
 
@@ -667,7 +660,7 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
         return nullptr;
 
     iterobj->setNativeIterator(ni);
-    ni->init(obj, iterobj, flags, numGuards, 0);
+    ni->init(obj, iterobj, numGuards, 0);
     if (!ni->initProperties(cx, iterobj, keys))
         return nullptr;
 
@@ -699,17 +692,16 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
 
 
 JSObject*
-js::EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, unsigned flags,
-                                 AutoIdVector& props)
+js::EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, AutoIdVector& props)
 {
-    return VectorToKeyIterator(cx, obj, flags, props, 0);
+    return VectorToKeyIterator(cx, obj, props, 0);
 }
 
 // Mainly used for .. in over null/undefined
 JSObject*
-js::NewEmptyPropertyIterator(JSContext* cx, unsigned flags)
+js::NewEmptyPropertyIterator(JSContext* cx)
 {
-    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx, flags));
+    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx));
     if (!iterobj)
         return nullptr;
 
@@ -719,7 +711,7 @@ js::NewEmptyPropertyIterator(JSContext* cx, unsigned flags)
         return nullptr;
 
     iterobj->setNativeIterator(ni);
-    ni->init(nullptr, iterobj, flags, 0, 0);
+    ni->init(nullptr, iterobj, 0, 0);
     if (!ni->initProperties(cx, iterobj, keys))
         return nullptr;
 
@@ -765,10 +757,6 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject*
 LookupInIteratorCache(JSContext* cx, JSObject* obj, uint32_t* numGuards)
 {
     MOZ_ASSERT(*numGuards == 0);
-
-    // The iterator object for JSITER_ENUMERATE never escapes, so we don't
-    // care that the "proper" prototype is set.  This also lets us reuse an
-    // old, inactive iterator object.
 
     ReceiverGuardVector guards(cx);
     uint32_t key = 0;
@@ -861,39 +849,29 @@ StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* itero
 }
 
 JSObject*
-js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
+js::GetIterator(JSContext* cx, HandleObject obj)
 {
     uint32_t numGuards = 0;
-    if (flags == JSITER_ENUMERATE) {
-        if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, &numGuards)) {
-            NativeIterator* ni = iterobj->getNativeIterator();
-            UpdateNativeIterator(ni, obj);
-            RegisterEnumerator(cx, iterobj, ni);
-            return iterobj;
-        }
-
-        if (numGuards > 0 && !CanStoreInIteratorCache(cx, obj))
-            numGuards = 0;
+    if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, &numGuards)) {
+        NativeIterator* ni = iterobj->getNativeIterator();
+        UpdateNativeIterator(ni, obj);
+        RegisterEnumerator(cx, iterobj, ni);
+        return iterobj;
     }
 
-    if (MOZ_UNLIKELY(obj->is<PropertyIteratorObject>()))
-        return obj;
+    if (numGuards > 0 && !CanStoreInIteratorCache(cx, obj))
+        numGuards = 0;
 
-    // We should only call the enumerate trap for "for-in".
-    // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
-    // JSITER_ENUMERATE is just an optimization and the same
-    // as flags == 0 otherwise.
-    if (flags == 0 || flags == JSITER_ENUMERATE) {
-        if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
-            return Proxy::enumerate(cx, obj);
-    }
+    MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
 
+    if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
+        return Proxy::enumerate(cx, obj);
 
     AutoIdVector keys(cx);
-    if (!Snapshot(cx, obj, flags, &keys))
+    if (!Snapshot(cx, obj, 0, &keys))
         return nullptr;
 
-    JSObject* res = VectorToKeyIterator(cx, obj, flags, keys, numGuards);
+    JSObject* res = VectorToKeyIterator(cx, obj, keys, numGuards);
     if (!res)
         return nullptr;
 
@@ -997,17 +975,15 @@ JSCompartment::getOrCreateIterResultTemplateObject(JSContext* cx)
 
 /*** Iterator objects ****************************************************************************/
 
-MOZ_ALWAYS_INLINE bool
-NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval)
+MOZ_ALWAYS_INLINE void
+NativeIteratorNext(NativeIterator* ni, MutableHandleValue rval)
 {
     if (ni->props_cursor >= ni->props_end) {
         rval.setMagic(JS_NO_ITER_VALUE);
-        return true;
+    } else {
+        rval.setString(*ni->current());
+        ni->incCursor();
     }
-
-    rval.setString(*ni->current());
-    ni->incCursor();
-    return true;
 }
 
 bool
@@ -1122,26 +1098,26 @@ js::NewStringIteratorObject(JSContext* cx, NewObjectKind newKind)
 }
 
 JSObject*
-js::ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp)
+js::ValueToIterator(JSContext* cx, HandleValue vp)
 {
     RootedObject obj(cx);
     if (vp.isObject()) {
         /* Common case. */
         obj = &vp.toObject();
-    } else if ((flags & JSITER_ENUMERATE) && vp.isNullOrUndefined()) {
+    } else if (vp.isNullOrUndefined()) {
         /*
          * Enumerating over null and undefined gives an empty enumerator, so
          * that |for (var p in <null or undefined>) <loop>;| never executes
          * <loop>, per ES5 12.6.4.
          */
-        return NewEmptyPropertyIterator(cx, flags);
+        return NewEmptyPropertyIterator(cx);
     } else {
         obj = ToObject(cx, vp);
         if (!obj)
             return nullptr;
     }
 
-    return GetIterator(cx, obj, flags);
+    return GetIterator(cx, obj);
 }
 
 void
@@ -1151,18 +1127,16 @@ js::CloseIterator(JSObject* obj)
         /* Remove enumerators from the active list, which is a stack. */
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
 
-        if (ni->flags & JSITER_ENUMERATE) {
-            ni->unlink();
+        ni->unlink();
 
-            MOZ_ASSERT(ni->flags & JSITER_ACTIVE);
-            ni->flags &= ~JSITER_ACTIVE;
+        MOZ_ASSERT(ni->flags & JSITER_ACTIVE);
+        ni->flags &= ~JSITER_ACTIVE;
 
-            /*
-             * Reset the enumerator; it may still be in the cached iterators
-             * for this thread, and can be reused.
-             */
-            ni->props_cursor = ni->props_array;
-        }
+        /*
+         * Reset the enumerator; it may still be in the cached iterators
+         * for this thread, and can be reused.
+         */
+        ni->props_cursor = ni->props_array;
     }
 }
 
@@ -1221,8 +1195,7 @@ js::UnwindIteratorForUncatchableException(JSContext* cx, JSObject* obj)
 {
     if (obj->is<PropertyIteratorObject>()) {
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
-        if (ni->flags & JSITER_ENUMERATE)
-            ni->unlink();
+        ni->unlink();
     }
 }
 
@@ -1371,7 +1344,8 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     // Fast path for native iterators.
     if (MOZ_LIKELY(iterobj->is<PropertyIteratorObject>())) {
         NativeIterator* ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        return NativeIteratorNext(cx, ni, rval);
+        NativeIteratorNext(ni, rval);
+        return true;
     }
 
     if (JS_IsDeadWrapper(iterobj)) {
@@ -1389,8 +1363,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     {
         AutoCompartment ac(cx, obj);
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
-        if (!NativeIteratorNext(cx, ni, rval))
-            return false;
+        NativeIteratorNext(ni, rval);
     }
     return cx->compartment()->wrap(cx, rval);
 }

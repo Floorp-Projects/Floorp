@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>W3C Web Authentication - Authenticator Selection Criteria</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>W3C Web Authentication - Authenticator Selection Criteria</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1406462">Mozilla Bug 1406462</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    function arrivingHereIsGood(aResult) {
+      ok(true, "Good result! Received a: " + aResult);
+    }
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectNotAllowedError(aResult) {
+      ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError, got " + aResult);
+    }
+
+    add_task(() => {
+      // Enable the softtoken.
+      return SpecialPowers.pushPrefEnv({"set": [
+        ["security.webauth.webauthn", true],
+        ["security.webauth.webauthn_enable_softtoken", true],
+        ["security.webauth.webauthn_enable_usbtoken", false],
+      ]});
+    });
+
+    // Start a new MakeCredential() request.
+    function requestMakeCredential(authenticatorSelection) {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+        authenticatorSelection,
+      };
+
+      return navigator.credentials.create({publicKey});
+    }
+
+    // Test success cases.
+    add_task(async () => {
+      // No selection criteria.
+      await requestMakeCredential({})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Request a cross-platform authenticator.
+      await requestMakeCredential({authenticatorAttachment: "cross-platform"})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Don't require a resident key.
+      await requestMakeCredential({requireResidentKey: false})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Prefer user verification.
+      await requestMakeCredential({userVerification: "preferred"})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Discourage user verification.
+      await requestMakeCredential({userVerification: "discouraged"})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+    });
+
+    // Test the failure cases.
+    add_task(async () => {
+      // Request a platform authenticator.
+      await requestMakeCredential({authenticatorAttachment: "platform"})
+        .then(arrivingHereIsBad)
+        .catch(expectNotAllowedError);
+
+      // Require a resident key.
+      await requestMakeCredential({requireResidentKey: true})
+        .then(arrivingHereIsBad)
+        .catch(expectNotAllowedError);
+
+      // Require user verification.
+      await requestMakeCredential({userVerification: "required"})
+        .then(arrivingHereIsBad)
+        .catch(expectNotAllowedError);
+    });
+  </script>
+
+</body>
+</html>

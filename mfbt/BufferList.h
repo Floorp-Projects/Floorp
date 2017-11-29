@@ -342,6 +342,21 @@ class BufferList : private AllocPolicy
     return start.BytesUntil(*this, end);
   }
 
+  // This takes ownership of the data
+  void* WriteBytesZeroCopy(char *aData, size_t aSize, size_t aCapacity)
+  {
+    MOZ_ASSERT(aCapacity != 0);
+    MOZ_ASSERT(aSize <= aCapacity);
+    MOZ_ASSERT(mOwning);
+
+    if (!mSegments.append(Segment(aData, aSize, aCapacity))) {
+      this->free_(aData);
+      return nullptr;
+    }
+    mSize += aSize;
+    return aData;
+  }
+
 private:
   explicit BufferList(AllocPolicy aAP)
    : AllocPolicy(aAP),
