@@ -8,7 +8,6 @@ const CONTENT_LIST_ID = "content";
 const TRACK_SUFFIX = "-track-digest256";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const LISTS_PREF_BRANCH = "browser.safebrowsing.provider.mozilla.lists.";
-const UPDATE_TIME_PREF = "browser.safebrowsing.provider.mozilla.nextupdatetime";
 
 var gBlocklistManager = {
   _type: "",
@@ -119,7 +118,13 @@ var gBlocklistManager = {
         trackingTable += "," + CONTENT_LIST_ID + TRACK_SUFFIX;
       }
       Services.prefs.setCharPref(TRACKING_TABLE_PREF, trackingTable);
-      Services.prefs.setCharPref(UPDATE_TIME_PREF, 42);
+
+      // Force an update after changing the tracking protection table.
+      let listmanager = Components.classes["@mozilla.org/url-classifier/listmanager;1"]
+                        .getService(Components.interfaces.nsIUrlListManager);
+      if (listmanager) {
+        listmanager.forceUpdates(trackingTable);
+      }
     }
 
     window.close();
