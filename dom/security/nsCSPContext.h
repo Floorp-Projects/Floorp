@@ -144,6 +144,8 @@ class nsCSPContext : public nsIContentSecurityPolicy
       return std::max(sScriptSampleMaxLength, 0);
     }
 
+    static bool sViolationEventsEnabled;
+
     nsString                                   mReferrer;
     uint64_t                                   mInnerWindowID; // used for web console logging
     nsTArray<nsCSPPolicy*>                     mPolicies;

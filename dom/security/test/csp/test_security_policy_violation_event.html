@@ -4,6 +4,11 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script>
 SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["security.csp.enable_violation_events", true]
+  ]
+});
 document.addEventListener("securitypolicyviolation", (e) => {
   SimpleTest.is(e.blockedURI, "http://mochi.test:8888/foo/bar.jpg", "blockedURI");
   SimpleTest.todo_is(e.violatedDirective, "img-src", "violatedDirective")
