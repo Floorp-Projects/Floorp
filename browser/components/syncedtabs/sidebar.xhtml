@@ -81,13 +81,14 @@
           <button class="button sync-prefs">&fxaSignIn.label;</button>
         </div>
         <div class="singleDeviceInfo sync-state">
-          <p>&syncedTabs.sidebar.noclients.title;</p>
-          <p>&syncedTabs.sidebar.noclients.subtitle;</p>
-          <p class="device-promo" fxAccountsBrand="&syncBrand.fxAccount.label;"></p>
+          <div class="syncIllustrationIssue"></div>
+          <p class="instructions">&syncedTabs.sidebar.noclients.subtitle;</p>
+          <p class="instructions device-promo" fxAccountsBrand="&syncBrand.fxAccount.label;"></p>
         </div>
         <div class="tabs-disabled sync-state">
-          <p>&syncedTabs.sidebar.tabsnotsyncing.label;</p>
-          <p><a href="#" class="sync-prefs text-link">&syncedTabs.sidebar.openprefs.label;</a></p>
+          <div class="syncIllustrationIssue"></div>
+          <p class="instructions">&syncedTabs.sidebar.tabsnotsyncing.label;</p>
+          <button class="button sync-prefs">&syncedTabs.sidebar.openprefs.label;</button>
         </div>
       </div>
     </template>

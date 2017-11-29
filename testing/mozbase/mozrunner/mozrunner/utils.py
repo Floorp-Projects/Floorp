@@ -84,7 +84,7 @@ def _raw_log():
 
 
 def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
-                     dmdPath=None, lsanPath=None, ubsanPath=None, log=None):
+                     lsanPath=None, ubsanPath=None, log=None):
     """
     populate OS environment variables for mochitest and reftests.
 
@@ -102,28 +102,17 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
         ldLibraryPath = xrePath
 
     envVar = None
-    dmdLibrary = None
-    preloadEnvVar = None
     if mozinfo.isUnix:
         envVar = "LD_LIBRARY_PATH"
-        dmdLibrary = "libdmd.so"
-        preloadEnvVar = "LD_PRELOAD"
     elif mozinfo.isMac:
         envVar = "DYLD_LIBRARY_PATH"
-        dmdLibrary = "libdmd.dylib"
-        preloadEnvVar = "DYLD_INSERT_LIBRARIES"
     elif mozinfo.isWin:
         envVar = "PATH"
-        dmdLibrary = "dmd.dll"
-        preloadEnvVar = "MOZ_REPLACE_MALLOC_LIB"
     if envVar:
         envValue = ((env.get(envVar), str(ldLibraryPath))
                     if mozinfo.isWin
-                    else (ldLibraryPath, dmdPath, env.get(envVar)))
+                    else (ldLibraryPath, env.get(envVar)))
         env[envVar] = os.path.pathsep.join([path for path in envValue if path])
-
-    if dmdPath and dmdLibrary and preloadEnvVar:
-        env[preloadEnvVar] = os.path.join(dmdPath, dmdLibrary)
 
     # crashreporter
     env['GNOME_DISABLE_CRASH_DIALOG'] = '1'

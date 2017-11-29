@@ -453,9 +453,9 @@ SdpHelper::SetDefaultAddresses(const std::string& defaultCandidateAddr,
 
 nsresult
 SdpHelper::GetIdsFromMsid(const Sdp& sdp,
-                                const SdpMediaSection& msection,
-                                std::string* streamId,
-                                std::string* trackId)
+                          const SdpMediaSection& msection,
+                          std::vector<std::string>* streamIds,
+                          std::string* trackId)
 {
   if (!sdp.GetAttributeList().HasAttribute(
         SdpAttribute::kMsidSemanticAttribute)) {
@@ -493,13 +493,18 @@ SdpHelper::GetIdsFromMsid(const Sdp& sdp,
         return NS_ERROR_INVALID_ARG;
       }
       if (!found) {
-        *streamId = i->identifier;
         *trackId = i->appdata;
+        streamIds->clear();
         found = true;
-      } else if ((*streamId != i->identifier) || (*trackId != i->appdata)) {
-        MOZ_MTLOG(ML_WARNING, "Found multiple different webrtc msids in "
-                       "m-section " << msection.GetLevel() << ". The "
-                       "behavior w/o transceivers is undefined.");
+      } else if ((*trackId != i->appdata)) {
+        SDP_SET_ERROR("Found multiple different webrtc track ids in m-section "
+                       << msection.GetLevel() << ". The behavior here is "
+                       "undefined.");
+        return NS_ERROR_INVALID_ARG;
+      }
+      // "-" means no stream, see draft-ietf-mmusic-msid
+      if (i->identifier != "-") {
+        streamIds->push_back(i->identifier);
       }
     }
   }

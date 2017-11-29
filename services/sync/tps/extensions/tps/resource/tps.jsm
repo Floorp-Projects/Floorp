@@ -865,6 +865,8 @@ var TPS = {
         this.waitForEvent("weave:service:ready");
       }
 
+      await Weave.Service.promiseInitialized;
+
       // We only want to do this if we modified the bookmarks this phase.
       this.shouldValidateBookmarks = false;
 

@@ -75,7 +75,6 @@ private:
                            StaticIA2Data* aOutStaticData,
                            DynamicIA2Data* aOutDynamicData);
   static void CleanupStaticIA2Data(StaticIA2Data& aData);
-  static void CleanupDynamicIA2Data(DynamicIA2Data& aData);
   bool IsTargetInterfaceCacheable();
   // Replace a raw object from the main thread with a wrapped, intercepted
   // object suitable for calling from the MTA.
