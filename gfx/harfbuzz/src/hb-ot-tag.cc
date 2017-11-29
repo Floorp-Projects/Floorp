@@ -879,9 +879,11 @@ static const LangTagLong ot_languages_zh[] = {
 };
 
 static int
-lang_compare_first_component (const char *a,
-			      const char *b)
+lang_compare_first_component (const void *pa,
+			      const void *pb)
 {
+  const char *a = (const char *) pa;
+  const char *b = (const char *) pb;
   unsigned int da, db;
   const char *p;
 
@@ -923,7 +925,7 @@ hb_ot_tag_from_language (hb_language_t language)
     if (i) {
       for (; i < 4; i++)
 	tag[i] = ' ';
-      return HB_TAG_CHAR4 (tag);
+      return HB_TAG (tag[0], tag[1], tag[2], tag[3]);
     }
   }
 
@@ -972,7 +974,7 @@ hb_ot_tag_from_language (hb_language_t language)
     const LangTag *lang_tag;
     lang_tag = (LangTag *) bsearch (lang_str, ot_languages,
 				    ARRAY_LENGTH (ot_languages), sizeof (LangTag),
-				    (hb_compare_func_t) lang_compare_first_component);
+				    lang_compare_first_component);
     if (lang_tag)
       return lang_tag->tag;
   }

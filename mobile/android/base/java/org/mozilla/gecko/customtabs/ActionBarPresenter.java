@@ -219,7 +219,7 @@ public class ActionBarPresenter {
             }
 
             mIconView.setVisibility(View.VISIBLE);
-            mIconView.setImageLevel(SecurityModeUtil.getImageLevel(icon));
+            mIconView.setImageLevel(icon.getImageLevel());
             mIdentityPopup.setSecurityInformation(security);
 
             if (icon == SecurityModeUtil.IconType.LOCK_SECURE) {

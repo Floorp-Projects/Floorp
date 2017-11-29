@@ -22,20 +22,13 @@ this directory has a number of test requirements specific to it:
    `css` directory.
 
 
-Odd Directories
----------------
-
-There are a few special directories that do not map to specifications:
+vendor-imports/ Directory
+-------------------------
 
 vendor-imports/ is a legacy directory where third parties historically imported
 their tests that originate and are maintained in an external repo. Files in
 this directory should never be modified in this repo, but should go through the
 vendor's process to be imported here.
-
-work-in-progress/ is a legacy directory that contains all the work that was
-once submitted to the repo, but was not yet ready for review. As pull requests
-are now used, no new files should be added here. The subdirectories here are
-named by test author or contributing organization.
 
 
 Importing Old Branches

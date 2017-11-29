@@ -1698,7 +1698,7 @@ protected:
     void Invalidate();
     void DestroyResourcesAndContext();
 
-    void MakeContextCurrent() const;
+    void MakeContextCurrent() const { } // MakeCurrent is implicit now.
 
     // helpers
 

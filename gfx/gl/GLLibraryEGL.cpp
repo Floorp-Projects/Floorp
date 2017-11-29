@@ -146,6 +146,35 @@ GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
     return display;
 }
 
+static EGLDisplay
+GetAndInitDisplayForWebRender(GLLibraryEGL& egl, void* displayType)
+{
+    const EGLint attrib_list[] = {  LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
+                                    LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE,
+                                    LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+                                    LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+                                    LOCAL_EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE,
+                                    LOCAL_EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE,
+                                    LOCAL_EGL_NONE };
+    EGLDisplay display = egl.fGetPlatformDisplayEXT(LOCAL_EGL_PLATFORM_ANGLE_ANGLE,
+                                                    displayType,
+                                                    attrib_list);
+
+    if (display == EGL_NO_DISPLAY) {
+        const EGLint err = egl.fGetError();
+        if (err != LOCAL_EGL_SUCCESS) {
+            gfxCriticalError() << "Unexpected GL error: " << gfx::hexa(err);
+            MOZ_CRASH("GFX: Unexpected GL error.");
+        }
+        return EGL_NO_DISPLAY;
+    }
+
+    if (!egl.fInitialize(display, nullptr, nullptr))
+        return EGL_NO_DISPLAY;
+
+    return display;
+}
+
 static bool
 IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                       nsACString* const out_failureId)
@@ -241,7 +270,7 @@ GetAndInitDisplayForAccelANGLE(GLLibraryEGL& egl, nsACString* const out_failureI
     EGLDisplay ret = 0;
 
     if (wr::RenderThread::IsInRenderThread()) {
-        return GetAndInitDisplay(egl, LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
+        return GetAndInitDisplayForWebRender(egl, EGL_DEFAULT_DISPLAY);
     }
 
     FeatureState& d3d11ANGLE = gfxConfig::GetFeature(Feature::D3D11_HW_ANGLE);

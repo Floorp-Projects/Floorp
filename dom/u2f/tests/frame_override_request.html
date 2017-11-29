@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for overriding U2F requests</title>
+  <script type="text/javascript" src="frame_utils.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Test for overriding U2F requests</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1420906">Mozilla Bug 1420906</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    // Last request status.
+    let status = "";
+
+    // Start a new MakeCredential() request.
+    async function requestMakeCredential(status_value) {
+      let appId = window.location.origin;
+      let challenge = crypto.getRandomValues(new Uint8Array(16));
+
+      let request = {
+        version: "U2F_V2",
+        challenge: bytesToBase64UrlSafe(challenge),
+      };
+
+      u2f.register(appId, [request], [], result => {
+        local_ok(result.errorCode, "request aborted");
+        status = status_value;
+      });
+
+      // Wait a tick to let the statemachine start.
+      await Promise.resolve();
+    }
+
+    // Start a new GetAssertion() request.
+    async function requestGetAssertion(status_value) {
+      let appId = window.location.origin;
+      let challenge = crypto.getRandomValues(new Uint8Array(16));
+      let keyHandle = crypto.getRandomValues(new Uint8Array(16));
+
+      let key = {
+        version: "U2F_V2",
+        keyHandle: bytesToBase64UrlSafe(keyHandle)
+      };
+
+      u2f.sign(appId, bytesToBase64UrlSafe(challenge), [key], result => {
+        local_ok(result.errorCode, "request aborted");
+        status = status_value;
+      });
+
+      // Wait a tick to let the statemachine start.
+      await Promise.resolve();
+    }
+
+    // Test that .create() and .get() requests override any pending requests.
+    (async function () {
+      // Request a new credential.
+      await requestMakeCredential("aborted1");
+
+      // Request another credential, the first request will abort.
+      await requestMakeCredential("aborted2");
+      local_is(status, "aborted1", "first request aborted");
+
+      // Request an assertion, the second request will abort.
+      await requestGetAssertion("aborted3");
+      local_is(status, "aborted2", "second request aborted");
+
+      // Request another assertion, the third request will abort.
+      await requestGetAssertion("aborted4");
+      local_is(status, "aborted3", "third request aborted");
+
+      // Request another credential, the fourth request will abort.
+      await requestMakeCredential("aborted5");
+      local_is(status, "aborted4", "fourth request aborted");
+
+      local_finished();
+    })();
+  </script>
+
+</body>
+</html>

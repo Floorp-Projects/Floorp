@@ -169,7 +169,6 @@ disable_otl_hebrew (const hb_ot_shape_plan_t *plan)
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_hebrew =
 {
-  "hebrew",
   nullptr, /* collect_features */
   nullptr, /* override_features */
   nullptr, /* data_create */

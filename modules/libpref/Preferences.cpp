@@ -123,6 +123,7 @@ static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
 
 enum class PrefType : uint8_t
 {
+  None = 0, // only used when neither the default nor user value is set
   String = 1,
   Int = 2,
   Bool = 3,
@@ -154,6 +155,49 @@ union PrefValue {
 
       default:
         MOZ_CRASH("Unhandled enum value");
+    }
+  }
+
+  void Init(PrefType aNewType, PrefValue aNewValue)
+  {
+    if (aNewType == PrefType::String) {
+      MOZ_ASSERT(aNewValue.mStringVal);
+      aNewValue.mStringVal = moz_xstrdup(aNewValue.mStringVal);
+    }
+    *this = aNewValue;
+  }
+
+  void Clear(PrefType aType)
+  {
+    if (aType == PrefType::String) {
+      free(const_cast<char*>(mStringVal));
+      mStringVal = nullptr;
+    }
+  }
+
+  void Replace(PrefType aOldType, PrefType aNewType, PrefValue aNewValue)
+  {
+    Clear(aOldType);
+    Init(aNewType, aNewValue);
+  }
+
+  void ToDomPrefValue(PrefType aType, dom::PrefValue* aDomValue)
+  {
+    switch (aType) {
+      case PrefType::String:
+        *aDomValue = nsDependentCString(mStringVal);
+        return;
+
+      case PrefType::Int:
+        *aDomValue = mIntVal;
+        return;
+
+      case PrefType::Bool:
+        *aDomValue = mBoolVal;
+        return;
+
+      default:
+        MOZ_CRASH();
     }
   }
 };
@@ -226,35 +270,26 @@ StrEscape(const char* aOriginal, nsCString& aResult)
   aResult.Append('"');
 }
 
-enum
-{
-  kPrefSetDefault = 1,
-  kPrefForceSet = 2,
-  kPrefSticky = 4,
-};
-
 static ArenaAllocator<8192, 1> gPrefNameArena;
 
-class PrefHashEntry : public PLDHashEntryHdr
+class Pref : public PLDHashEntryHdr
 {
 public:
-  PrefHashEntry(const char* aName, PrefType aType)
+  explicit Pref(const char* aName)
   {
     mName = ArenaStrdup(aName, gPrefNameArena);
-    SetType(aType);
+
     // We don't set the other fields because PLDHashTable always zeroes new
     // entries.
   }
 
-  ~PrefHashEntry()
+  ~Pref()
   {
     // There's no need to free mName because it's allocated in memory owned by
     // gPrefNameArena.
 
-    if (IsTypeString()) {
-      free(const_cast<char*>(mDefaultValue.mStringVal));
-      free(const_cast<char*>(mUserValue.mStringVal));
-    }
+    mDefaultValue.Clear(Type());
+    mUserValue.Clear(Type());
   }
 
   const char* Name() { return mName; }
@@ -281,7 +316,7 @@ public:
 
   static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
   {
-    auto pref = static_cast<const PrefHashEntry*>(aEntry);
+    auto pref = static_cast<const Pref*>(aEntry);
     auto key = static_cast<const char*>(aKey);
 
     if (pref->mName == aKey) {
@@ -297,9 +332,9 @@ public:
 
   static void ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   {
-    auto pref = static_cast<PrefHashEntry*>(aEntry);
-    pref->~PrefHashEntry();
-    memset(pref, 0, sizeof(PrefHashEntry)); // zero just to be extra safe
+    auto pref = static_cast<Pref*>(aEntry);
+    pref->~Pref();
+    memset(pref, 0, sizeof(Pref)); // zero just to be extra safe
   }
 
   nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
@@ -365,55 +400,30 @@ public:
     return NS_OK;
   }
 
-private:
-  static void AssignPrefValueToDomPrefValue(PrefType aType,
-                                            PrefValue* aValue,
-                                            dom::PrefValue* aDomValue)
+  void ToDomPref(dom::Pref* aDomPref)
   {
-    switch (aType) {
-      case PrefType::String:
-        *aDomValue = nsDependentCString(aValue->mStringVal);
-        return;
-
-      case PrefType::Int:
-        *aDomValue = aValue->mIntVal;
-        return;
-
-      case PrefType::Bool:
-        *aDomValue = !!aValue->mBoolVal;
-        return;
-
-      default:
-        MOZ_CRASH();
-    }
-  }
-
-public:
-  void ToSetting(dom::PrefSetting* aSetting)
-  {
-    aSetting->name() = mName;
+    aDomPref->name() = mName;
 
     if (mHasDefaultValue) {
-      aSetting->defaultValue() = dom::PrefValue();
-      AssignPrefValueToDomPrefValue(
-        Type(), &mDefaultValue, &aSetting->defaultValue().get_PrefValue());
+      aDomPref->defaultValue() = dom::PrefValue();
+      mDefaultValue.ToDomPrefValue(Type(),
+                                   &aDomPref->defaultValue().get_PrefValue());
     } else {
-      aSetting->defaultValue() = null_t();
+      aDomPref->defaultValue() = null_t();
     }
 
     if (mHasUserValue) {
-      aSetting->userValue() = dom::PrefValue();
-      AssignPrefValueToDomPrefValue(
-        Type(), &mUserValue, &aSetting->userValue().get_PrefValue());
+      aDomPref->userValue() = dom::PrefValue();
+      mUserValue.ToDomPrefValue(Type(), &aDomPref->userValue().get_PrefValue());
     } else {
-      aSetting->userValue() = null_t();
+      aDomPref->userValue() = null_t();
     }
 
-    MOZ_ASSERT(aSetting->defaultValue().type() ==
+    MOZ_ASSERT(aDomPref->defaultValue().type() ==
                  dom::MaybePrefValue::Tnull_t ||
-               aSetting->userValue().type() == dom::MaybePrefValue::Tnull_t ||
-               (aSetting->defaultValue().get_PrefValue().type() ==
-                aSetting->userValue().get_PrefValue().type()));
+               aDomPref->userValue().type() == dom::MaybePrefValue::Tnull_t ||
+               (aDomPref->defaultValue().get_PrefValue().type() ==
+                aDomPref->userValue().get_PrefValue().type()));
   }
 
   bool HasAdvisablySizedValues()
@@ -441,32 +451,12 @@ public:
   }
 
 private:
-  // Overwrite the type and value of an existing preference. Caller must ensure
-  // that they are not changing the type of a preference that has a default
-  // value.
-  void ReplaceValue(PrefValueKind aKind, PrefType aNewType, PrefValue aNewValue)
+  bool ValueMatches(PrefValueKind aKind, PrefType aType, PrefValue aValue)
   {
-    PrefValue* value =
-      aKind == PrefValueKind::Default ? &mDefaultValue : &mUserValue;
-
-    if (Type() == PrefType::String) {
-      free(const_cast<char*>(value->mStringVal));
-    }
-
-    SetType(aNewType);
-
-    if (aNewType == PrefType::String) {
-      MOZ_ASSERT(aNewValue.mStringVal);
-      value->mStringVal = moz_xstrdup(aNewValue.mStringVal);
-    } else {
-      *value = aNewValue;
-    }
-
-    if (aKind == PrefValueKind::Default) {
-      mHasDefaultValue = true;
-    } else {
-      mHasUserValue = true;
-    }
+    return IsType(aType) &&
+           (aKind == PrefValueKind::Default
+              ? mHasDefaultValue && mDefaultValue.Equals(aType, aValue)
+              : mHasUserValue && mUserValue.Equals(aType, aValue));
   }
 
 public:
@@ -481,30 +471,32 @@ public:
   }
 
   nsresult SetValue(PrefType aType,
+                    PrefValueKind aKind,
                     PrefValue aValue,
-                    uint32_t aFlags,
+                    bool aIsSticky,
+                    bool aForceSet,
                     bool* aValueChanged,
                     bool* aDirty)
   {
-    if (aFlags & kPrefSetDefault) {
+    if (aKind == PrefValueKind::Default) {
       // Types must always match when setting the default value.
       if (!IsType(aType)) {
         return NS_ERROR_UNEXPECTED;
       }
 
-      if (!IsLocked()) {
-        // ?? change of semantics?
-        if (!mHasDefaultValue || !mDefaultValue.Equals(aType, aValue)) {
-          ReplaceValue(PrefValueKind::Default, aType, aValue);
-          if (aFlags & kPrefSticky) {
-            mIsSticky = true;
-          }
-          if (!mHasUserValue) {
-            *aValueChanged = true;
-          }
+      // Should we set the default value? Only if the pref is not locked, and
+      // doing so would change the default value.
+      if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
+        mDefaultValue.Replace(Type(), aType, aValue);
+        mHasDefaultValue = true;
+        if (aIsSticky) {
+          mIsSticky = true;
+        }
+        if (!mHasUserValue) {
+          *aValueChanged = true;
         }
         // What if we change the default to be the same as the user value?
-        // Should we clear the user value?
+        // Should we clear the user value? Currently we don't.
       }
     } else {
       // If we have a default value, types must match when setting the user
@@ -513,11 +505,11 @@ public:
         return NS_ERROR_UNEXPECTED;
       }
 
-      // If new value is same as the default value and it's not a "sticky"
-      // pref, then un-set the user value. Otherwise, set the user value only
-      // if it has changed.
-      if (mHasDefaultValue && !mIsSticky &&
-          mDefaultValue.Equals(aType, aValue) && !(aFlags & kPrefForceSet)) {
+      // Should we clear the user value, if present? Only if the new user value
+      // matches the default value, and the pref isn't sticky, and we aren't
+      // force-setting it.
+      if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
+          !aForceSet) {
         if (mHasUserValue) {
           ClearUserValue();
           if (!IsLocked()) {
@@ -525,9 +517,13 @@ public:
             *aValueChanged = true;
           }
         }
-      } else if (!mHasUserValue || !IsType(aType) ||
-                 !mUserValue.Equals(aType, aValue)) {
-        ReplaceValue(PrefValueKind::User, aType, aValue);
+
+        // Otherwise, should we set the user value? Only if doing so would
+        // change the user value.
+      } else if (!ValueMatches(PrefValueKind::User, aType, aValue)) {
+        mUserValue.Replace(Type(), aType, aValue);
+        SetType(aType);   // needed because we may have changed the type
+        mHasUserValue = true;
         if (!IsLocked()) {
           *aDirty = true;
           *aValueChanged = true;
@@ -540,8 +536,11 @@ public:
   // Returns false if this pref doesn't have a user value worth saving.
   bool UserValueToStringForSaving(nsCString& aStr)
   {
-    if (mHasUserValue && (!mHasDefaultValue || mIsSticky ||
-                          !mDefaultValue.Equals(Type(), mUserValue))) {
+    // Should we save the user value, if present? Only if it does not match the
+    // default value, or it is sticky.
+    if (mHasUserValue &&
+        (!ValueMatches(PrefValueKind::Default, Type(), mUserValue) ||
+         mIsSticky)) {
       if (IsTypeString()) {
         StrEscape(mUserValue.mStringVal, aStr);
 
@@ -629,15 +628,15 @@ static bool gShouldCleanupDeadNodes = false;
 
 static PLDHashTableOps pref_HashTableOps = {
   PLDHashTable::HashStringKey,
-  PrefHashEntry::MatchEntry,
+  Pref::MatchEntry,
   PLDHashTable::MoveEntryStub,
-  PrefHashEntry::ClearEntry,
+  Pref::ClearEntry,
   nullptr,
 };
 
 //---------------------------------------------------------------------------
 
-static PrefHashEntry*
+static Pref*
 pref_HashTableLookup(const char* aPrefName);
 
 static void
@@ -651,7 +650,7 @@ pref_savePrefs()
   PrefSaveData savedPrefs(gHashTable->EntryCount());
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     nsAutoCString prefValueStr;
     if (!pref->UserValueToStringForSaving(prefValueStr)) {
@@ -719,7 +718,7 @@ public:
 
 #endif // DEBUG
 
-static PrefHashEntry*
+static Pref*
 pref_HashTableLookup(const char* aKey)
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
@@ -742,14 +741,16 @@ pref_HashTableLookup(const char* aKey)
   }
 #endif
 
-  return static_cast<PrefHashEntry*>(gHashTable->Search(aKey));
+  return static_cast<Pref*>(gHashTable->Search(aKey));
 }
 
 static nsresult
 pref_SetPref(const char* aPrefName,
-             PrefValue aValue,
              PrefType aType,
-             uint32_t aFlags)
+             PrefValueKind aKind,
+             PrefValue aValue,
+             bool aIsSticky,
+             bool aForceSet)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -757,25 +758,26 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto pref = static_cast<PrefHashEntry*>(gHashTable->Add(aPrefName, fallible));
+  auto pref = static_cast<Pref*>(gHashTable->Add(aPrefName, fallible));
   if (!pref) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (!pref->Name()) {
     // New (zeroed) entry. Initialize it.
-    new (pref) PrefHashEntry(aPrefName, aType);
+    new (pref) Pref(aPrefName);
+    pref->SetType(aType);
   }
 
   bool valueChanged = false, handleDirty = false;
-  nsresult rv =
-    pref->SetValue(aType, aValue, aFlags, &valueChanged, &handleDirty);
+  nsresult rv = pref->SetValue(
+    aType, aKind, aValue, aIsSticky, aForceSet, &valueChanged, &handleDirty);
   if (NS_FAILED(rv)) {
     NS_WARNING(
       nsPrintfCString(
         "Rejected attempt to change type of pref %s's %s value from %s to %s",
         aPrefName,
-        (aFlags & kPrefSetDefault) ? "default" : "user",
+        (aKind == PrefValueKind::Default) ? "default" : "user",
         PrefTypeToString(pref->Type()),
         PrefTypeToString(aType))
         .get());
@@ -996,16 +998,16 @@ Parser::HandleValue(const char* aPrefName,
                     bool aIsDefault,
                     bool aIsSticky)
 {
-  uint32_t flags = 0;
+  PrefValueKind kind;
+  bool forceSet;
   if (aIsDefault) {
-    flags |= kPrefSetDefault;
-    if (aIsSticky) {
-      flags |= kPrefSticky;
-    }
+    kind = PrefValueKind::Default;
+    forceSet = false;
   } else {
-    flags |= kPrefForceSet;
+    kind = PrefValueKind::User;
+    forceSet = true;
   }
-  pref_SetPref(aPrefName, aValue, aType, flags);
+  pref_SetPref(aPrefName, aType, kind, aValue, aIsSticky, forceSet);
 }
 
 // Report an error or a warning. If not specified, just dump to stderr.
@@ -1816,7 +1818,7 @@ nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& prefName = GetPrefName(aPrefName);
-  PrefHashEntry* pref;
+  Pref* pref;
   if (gHashTable && (pref = pref_HashTableLookup(prefName.get()))) {
     switch (pref->Type()) {
       case PrefType::String:
@@ -2361,7 +2363,7 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
     Substring(branchName, 0, branchName.Length() - 1);
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     // The first disjunct matches branches: e.g. a branch name "foo.bar."
     // matches a name "foo.bar.baz" (but it won't match "foo.barrel.baz").
@@ -2400,7 +2402,7 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
     if (strncmp(pref->Name(), parent.get(), parentLen) == 0) {
       prefArray.AppendElement(pref->Name());
     }
@@ -3053,7 +3055,7 @@ PreferenceServiceReporter::CollectReports(
   if (gHashTable) {
     sizes.mHashTable += gHashTable->ShallowSizeOfIncludingThis(mallocSizeOf);
     for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-      auto pref = static_cast<PrefHashEntry*>(iter.Get());
+      auto pref = static_cast<Pref*>(iter.Get());
       sizes.mStringValues += pref->SizeOfExcludingThis(mallocSizeOf);
     }
   }
@@ -3222,7 +3224,7 @@ public:
 
 } // namespace
 
-static InfallibleTArray<Preferences::PrefSetting>* gInitSettings;
+static InfallibleTArray<dom::Pref>* gInitDomPrefs;
 
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
@@ -3240,7 +3242,7 @@ Preferences::GetInstanceForService()
 
   MOZ_ASSERT(!gHashTable);
   gHashTable = new PLDHashTable(
-    &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
+    &pref_HashTableOps, sizeof(Pref), PREF_HASHTABLE_INITIAL_LENGTH);
 
   Result<Ok, const char*> res = InitInitialObjects();
   if (res.isErr()) {
@@ -3250,12 +3252,12 @@ Preferences::GetInstanceForService()
   }
 
   if (!XRE_IsParentProcess()) {
-    MOZ_ASSERT(gInitSettings);
-    for (unsigned int i = 0; i < gInitSettings->Length(); i++) {
-      Preferences::SetPreference(gInitSettings->ElementAt(i));
+    MOZ_ASSERT(gInitDomPrefs);
+    for (unsigned int i = 0; i < gInitDomPrefs->Length(); i++) {
+      Preferences::SetPreference(gInitDomPrefs->ElementAt(i));
     }
-    delete gInitSettings;
-    gInitSettings = nullptr;
+    delete gInitDomPrefs;
+    gInitDomPrefs = nullptr;
 
   } else {
     // Check if there is a deployment configuration file. If so, set up the
@@ -3395,9 +3397,9 @@ NS_INTERFACE_MAP_END
 //
 
 /* static */ void
-Preferences::SetInitPreferences(nsTArray<PrefSetting>* aSettings)
+Preferences::SetInitPreferences(nsTArray<dom::Pref>* aDomPrefs)
 {
-  gInitSettings = new InfallibleTArray<PrefSetting>(mozilla::Move(*aSettings));
+  gInitDomPrefs = new InfallibleTArray<dom::Pref>(mozilla::Move(*aDomPrefs));
 }
 
 /* static */ void
@@ -3503,7 +3505,7 @@ Preferences::ResetUserPrefs()
 
   Vector<const char*> prefNames;
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     if (pref->HasUserValue()) {
       if (!prefNames.append(pref->Name())) {
@@ -3596,11 +3598,11 @@ Preferences::SetValueFromDom(const char* aPrefName,
 }
 
 void
-Preferences::SetPreference(const PrefSetting& aSetting)
+Preferences::SetPreference(const dom::Pref& aDomPref)
 {
-  const char* prefName = aSetting.name().get();
-  const dom::MaybePrefValue& defaultValue = aSetting.defaultValue();
-  const dom::MaybePrefValue& userValue = aSetting.userValue();
+  const char* prefName = aDomPref.name().get();
+  const dom::MaybePrefValue& defaultValue = aDomPref.defaultValue();
+  const dom::MaybePrefValue& userValue = aDomPref.userValue();
 
   if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
     nsresult rv = SetValueFromDom(
@@ -3621,24 +3623,24 @@ Preferences::SetPreference(const PrefSetting& aSetting)
 }
 
 void
-Preferences::GetPreference(PrefSetting* aSetting)
+Preferences::GetPreference(dom::Pref* aDomPref)
 {
-  PrefHashEntry* pref = pref_HashTableLookup(aSetting->name().get());
+  Pref* pref = pref_HashTableLookup(aDomPref->name().get());
   if (pref && pref->HasAdvisablySizedValues()) {
-    pref->ToSetting(aSetting);
+    pref->ToDomPref(aDomPref);
   }
 }
 
 void
-Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aSettings)
+Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 {
-  aSettings->SetCapacity(gHashTable->Capacity());
+  aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+    auto pref = static_cast<Pref*>(iter.Get());
 
     if (pref->HasAdvisablySizedValues()) {
-      dom::PrefSetting* setting = aSettings->AppendElement();
-      pref->ToSetting(setting);
+      dom::Pref* setting = aDomPrefs->AppendElement();
+      pref->ToDomPref(setting);
     }
   }
 }
@@ -4290,7 +4292,7 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref ? pref->GetBoolValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
@@ -4302,7 +4304,7 @@ Preferences::GetInt(const char* aPrefName,
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref ? pref->GetIntValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
@@ -4330,7 +4332,7 @@ Preferences::GetCString(const char* aPrefName,
 
   aResult.SetIsVoid(true);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref ? pref->GetCStringValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
@@ -4405,9 +4407,11 @@ Preferences::SetCStringInAnyProcess(const char* aPrefName,
   const nsCString& flat = PromiseFlatCString(aValue);
   prefValue.mStringVal = flat.get();
   return pref_SetPref(aPrefName,
-                      prefValue,
                       PrefType::String,
-                      aKind == PrefValueKind::Default ? kPrefSetDefault : 0);
+                      aKind,
+                      prefValue,
+                      /* isSticky */ false,
+                      /* forceSet */ false);
 }
 
 /* static */ nsresult
@@ -4429,9 +4433,11 @@ Preferences::SetBoolInAnyProcess(const char* aPrefName,
   PrefValue prefValue;
   prefValue.mBoolVal = aValue;
   return pref_SetPref(aPrefName,
-                      prefValue,
                       PrefType::Bool,
-                      aKind == PrefValueKind::Default ? kPrefSetDefault : 0);
+                      aKind,
+                      prefValue,
+                      /* isSticky */ false,
+                      /* forceSet */ false);
 }
 
 /* static */ nsresult
@@ -4451,9 +4457,11 @@ Preferences::SetIntInAnyProcess(const char* aPrefName,
   PrefValue prefValue;
   prefValue.mIntVal = aValue;
   return pref_SetPref(aPrefName,
-                      prefValue,
                       PrefType::Int,
-                      aKind == PrefValueKind::Default ? kPrefSetDefault : 0);
+                      aKind,
+                      prefValue,
+                      /* isSticky */ false,
+                      /* forceSet */ false);
 }
 
 /* static */ nsresult
@@ -4478,7 +4486,7 @@ Preferences::LockInAnyProcess(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   if (!pref) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -4505,7 +4513,7 @@ Preferences::Unlock(const char* aPrefName)
   ENSURE_PARENT_PROCESS("Unlock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   if (!pref) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -4524,7 +4532,7 @@ Preferences::IsLocked(const char* aPrefName)
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
   if (gIsAnyPrefLocked) {
-    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+    Pref* pref = pref_HashTableLookup(aPrefName);
     if (pref && pref->IsLocked()) {
       return true;
     }
@@ -4538,7 +4546,7 @@ Preferences::ClearUserInAnyProcess(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   if (pref && pref->HasUserValue()) {
     pref->ClearUserValue();
 
@@ -4564,7 +4572,7 @@ Preferences::HasUserValue(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  Pref* pref = pref_HashTableLookup(aPrefName);
   return pref && pref->HasUserValue();
 }
 

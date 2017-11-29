@@ -21,6 +21,10 @@ namespace dom {
 class U2FTransactionChild final : public WebAuthnTransactionChildBase
 {
 public:
+  explicit U2FTransactionChild(U2F* aU2F) : mU2F(aU2F) {
+    MOZ_ASSERT(mU2F);
+  }
+
   mozilla::ipc::IPCResult
   RecvConfirmRegister(const uint64_t& aTransactionId,
                       nsTArray<uint8_t>&& aRegBuffer) override;
@@ -34,6 +38,10 @@ public:
   RecvAbort(const uint64_t& aTransactionId, const nsresult& aError) override;
 
   void ActorDestroy(ActorDestroyReason why) override;
+
+private:
+  // ~U2F() will destroy child actors.
+  U2F* mU2F;
 };
 
 }

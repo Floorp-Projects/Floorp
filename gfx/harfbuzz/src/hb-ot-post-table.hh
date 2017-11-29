@@ -28,49 +28,15 @@
 #define HB_OT_POST_TABLE_HH
 
 #include "hb-open-type-private.hh"
+#include "hb-dsalgs.hh"
+
+#define HB_STRING_ARRAY_NAME format1_names
+#define HB_STRING_ARRAY_LIST "hb-ot-post-macroman.hh"
+#include "hb-string-array.hh"
+#undef HB_STRING_ARRAY_LIST
+#undef HB_STRING_ARRAY_NAME
 
 #define NUM_FORMAT1_NAMES 258
-
-static const char* const format1_names[NUM_FORMAT1_NAMES] =
-{
-  ".notdef", ".null", "nonmarkingreturn", "space", "exclam", "quotedbl",
-  "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft",
-  "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash",
-  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
-  "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at",
-  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-  "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft",
-  "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b",
-  "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
-  "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar",
-  "braceright", "asciitilde", "Adieresis", "Aring", "Ccedilla", "Eacute",
-  "Ntilde", "Odieresis", "Udieresis", "aacute", "agrave", "acircumflex",
-  "adieresis", "atilde", "aring", "ccedilla", "eacute", "egrave",
-  "ecircumflex", "edieresis", "iacute", "igrave", "icircumflex", "idieresis",
-  "ntilde", "oacute", "ograve", "ocircumflex", "odieresis", "otilde", "uacute",
-  "ugrave", "ucircumflex", "udieresis", "dagger", "degree", "cent", "sterling",
-  "section", "bullet", "paragraph", "germandbls", "registered", "copyright",
-  "trademark", "acute", "dieresis", "notequal", "AE", "Oslash", "infinity",
-  "plusminus", "lessequal", "greaterequal", "yen", "mu", "partialdiff",
-  "summation", "product", "pi", "integral", "ordfeminine", "ordmasculine",
-  "Omega", "ae", "oslash", "questiondown", "exclamdown", "logicalnot",
-  "radical", "florin", "approxequal", "Delta", "guillemotleft",
-  "guillemotright", "ellipsis", "nonbreakingspace", "Agrave", "Atilde",
-  "Otilde", "OE", "oe", "endash", "emdash", "quotedblleft", "quotedblright",
-  "quoteleft", "quoteright", "divide", "lozenge", "ydieresis", "Ydieresis",
-  "fraction", "currency", "guilsinglleft", "guilsinglright", "fi", "fl",
-  "daggerdbl", "periodcentered", "quotesinglbase", "quotedblbase",
-  "perthousand", "Acircumflex", "Ecircumflex", "Aacute", "Edieresis", "Egrave",
-  "Iacute", "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex",
-  "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave", "dotlessi",
-  "circumflex", "tilde", "macron", "breve", "dotaccent", "ring", "cedilla",
-  "hungarumlaut", "ogonek", "caron", "Lslash", "lslash", "Scaron", "scaron",
-  "Zcaron", "zcaron", "brokenbar", "Eth", "eth", "Yacute", "yacute", "Thorn",
-  "thorn", "minus", "multiply", "onesuperior", "twosuperior", "threesuperior",
-  "onehalf", "onequarter", "threequarters", "franc", "Gbreve", "gbreve",
-  "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute", "Ccaron", "ccaron",
-  "dcroat",
-};
 
 namespace OT {
 
@@ -87,13 +53,10 @@ struct postV2Tail
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (numberOfGlyphs.sanitize (c) &&
-		  c->check_array (glyphNameIndex, sizeof (USHORT), numberOfGlyphs));
+    return_trace (glyphNameIndex.sanitize (c));
   }
 
-  USHORT	numberOfGlyphs;		/* Number of glyphs (this should be the
-					 * same as numGlyphs in 'maxp' table). */
-  USHORT	glyphNameIndex[VAR];	/* This is not an offset, but is the
+  ArrayOf<USHORT>glyphNameIndex;	/* This is not an offset, but is the
 					 * ordinal number of the glyph in 'post'
 					 * string tables. */
   BYTE		namesX[VAR];		/* Glyph names with length bytes [variable]
@@ -119,134 +82,157 @@ struct post
     return_trace (true);
   }
 
-  inline bool get_glyph_name (hb_codepoint_t glyph,
-			      char *buffer, unsigned int buffer_length,
-			      unsigned int blob_len) const
+  struct accelerator_t
   {
-    if (version.to_int () == 0x00010000)
+    inline void init (const post *table, unsigned int post_len)
     {
-      if (glyph >= NUM_FORMAT1_NAMES)
-	return false;
+      version = table->version.to_int ();
+      index_to_offset.init ();
+      if (version != 0x00020000)
+        return;
 
-      if (!buffer_length)
+      const postV2Tail &v2 = StructAfter<postV2Tail> (*table);
+
+      glyphNameIndex = &v2.glyphNameIndex;
+      pool = &StructAfter<uint8_t> (v2.glyphNameIndex);
+
+      const uint8_t *end = (uint8_t *) table + post_len;
+      for (const uint8_t *data = pool; data < end && data + *data <= end; data += 1 + *data)
+      {
+	uint32_t *offset = index_to_offset.push ();
+	if (unlikely (!offset))
+	  break;
+	*offset = data - pool;
+      }
+    }
+    inline void fini (void)
+    {
+      index_to_offset.finish ();
+      free (gids_sorted_by_name);
+    }
+
+    inline bool get_glyph_name (hb_codepoint_t glyph,
+				char *buf, unsigned int buf_len) const
+    {
+      hb_string_t s = find_glyph_name (glyph);
+      if (!s.len)
+        return false;
+      if (!buf_len)
 	return true;
-      strncpy (buffer, format1_names[glyph], buffer_length);
-      buffer[buffer_length - 1] = '\0';
+      if (buf_len <= s.len) /* What to do with truncation? Returning false for now. */
+        return false;
+      strncpy (buf, s.bytes, s.len);
+      buf[s.len] = '\0';
       return true;
     }
 
-    if (version.to_int () == 0x00020000)
+    inline bool get_glyph_from_name (const char *name, int len,
+				     hb_codepoint_t *glyph) const
     {
-      const postV2Tail &v2 = StructAfter<postV2Tail> (*this);
+      unsigned int count = get_glyph_count ();
+      if (unlikely (!count))
+        return false;
 
-      if (glyph >= v2.numberOfGlyphs)
+      if (len < 0)
+	len = strlen (name);
+
+      if (unlikely (!len))
 	return false;
 
-      if (!buffer_length)
-	return true;
+    retry:
+      uint16_t *gids = (uint16_t *) hb_atomic_ptr_get (&gids_sorted_by_name);
 
-      unsigned int index = v2.glyphNameIndex[glyph];
-      if (index < NUM_FORMAT1_NAMES)
+      if (unlikely (!gids))
       {
-	if (!buffer_length)
-	  return true;
-	strncpy (buffer, format1_names[index], buffer_length);
-	buffer[buffer_length - 1] = '\0';
+	gids = (uint16_t *) malloc (count * sizeof (gids[0]));
+	if (unlikely (!gids))
+	  return false; /* Anything better?! */
+
+	for (unsigned int i = 0; i < count; i++)
+	  gids[i] = i;
+	hb_sort_r (gids, count, sizeof (gids[0]), cmp_gids, (void *) this);
+
+	if (!hb_atomic_ptr_cmpexch (&gids_sorted_by_name, nullptr, gids)) {
+	  free (gids);
+	  goto retry;
+	}
+      }
+
+      hb_string_t st (name, len);
+      const uint16_t *gid = (const uint16_t *) hb_bsearch_r (&st, gids, count, sizeof (gids[0]), cmp_key, (void *) this);
+      if (gid)
+      {
+	*glyph = *gid;
 	return true;
       }
+
+      return false;
+    }
+
+    protected:
+
+    inline unsigned int get_glyph_count (void) const
+    {
+      if (version == 0x00010000)
+        return NUM_FORMAT1_NAMES;
+
+      if (version == 0x00020000)
+        return glyphNameIndex->len;
+
+      return 0;
+    }
+
+    static inline int cmp_gids (const void *pa, const void *pb, void *arg)
+    {
+      const accelerator_t *thiz = (const accelerator_t *) arg;
+      uint16_t a = * (const uint16_t *) pa;
+      uint16_t b = * (const uint16_t *) pb;
+      return thiz->find_glyph_name (b).cmp (thiz->find_glyph_name (a));
+    }
+
+    static inline int cmp_key (const void *pk, const void *po, void *arg)
+    {
+      const accelerator_t *thiz = (const accelerator_t *) arg;
+      const hb_string_t *key = (const hb_string_t *) pk;
+      uint16_t o = * (const uint16_t *) po;
+      return thiz->find_glyph_name (o).cmp (*key);
+    }
+
+    inline hb_string_t find_glyph_name (hb_codepoint_t glyph) const
+    {
+      if (version == 0x00010000)
+      {
+	if (glyph >= NUM_FORMAT1_NAMES)
+	  return hb_string_t ();
+
+	return format1_names (glyph);
+      }
+
+      if (version != 0x00020000 || glyph >= glyphNameIndex->len)
+	return hb_string_t ();
+
+      unsigned int index = glyphNameIndex->array[glyph];
+      if (index < NUM_FORMAT1_NAMES)
+	return format1_names (index);
       index -= NUM_FORMAT1_NAMES;
 
-      unsigned int offset = min_size + v2.min_size + 2 * v2.numberOfGlyphs;
-      unsigned char *data = (unsigned char *) this + offset;
-      unsigned char *end = (unsigned char *) this + blob_len;
-      for (unsigned int i = 0; data < end; i++)
-      {
-	unsigned int name_length = data[0];
-	data++;
-	if (i == index)
-	{
-	  if (unlikely (!name_length))
-	    return false;
+      if (index >= index_to_offset.len)
+	return hb_string_t ();
+      unsigned int offset = index_to_offset.array[index];
 
-	  unsigned int remaining = end - data;
-	  name_length = MIN (name_length, buffer_length - 1);
-	  name_length = MIN (name_length, remaining);
-	  memcpy (buffer, data, name_length);
-	  buffer[name_length] = '\0';
-	  return true;
-	}
-	data += name_length;
-      }
+      const uint8_t *data = pool + offset;
+      unsigned int name_length = *data;
+      data++;
 
-      return false;
+      return hb_string_t ((const char *) data, name_length);
     }
 
-    return false;
-  }
-
-  inline bool get_glyph_from_name (const char *name, int len,
-				   hb_codepoint_t *glyph,
-				   unsigned int blob_len) const
-  {
-    if (len < 0)
-      len = strlen (name);
-
-    if (version.to_int () == 0x00010000)
-    {
-      for (int i = 0; i < NUM_FORMAT1_NAMES; i++)
-      {
-	if (strncmp (name, format1_names[i], len) == 0 && format1_names[i][len] == '\0')
-	{
-	  *glyph = i;
-	  return true;
-	}
-      }
-      return false;
-    }
-
-    if (version.to_int () == 0x00020000)
-    {
-      const postV2Tail &v2 = StructAfter<postV2Tail> (*this);
-      unsigned int offset = min_size + v2.min_size + 2 * v2.numberOfGlyphs;
-      char* data = (char*) this + offset;
-
-
-      /* XXX The following code is wrong. */
-      return false;
-      for (hb_codepoint_t gid = 0; gid < v2.numberOfGlyphs; gid++)
-      {
-	unsigned int index = v2.glyphNameIndex[gid];
-	if (index < NUM_FORMAT1_NAMES)
-	{
-	  if (strncmp (name, format1_names[index], len) == 0 && format1_names[index][len] == '\0')
-	  {
-	    *glyph = gid;
-	    return true;
-	  }
-	  continue;
-	}
-	index -= NUM_FORMAT1_NAMES;
-
-	for (unsigned int i = 0; data < (char*) this + blob_len; i++)
-	{
-	  unsigned int name_length = data[0];
-	  unsigned int remaining = (char*) this + blob_len - data - 1;
-	  name_length = MIN (name_length, remaining);
-	  if (name_length == (unsigned int) len && strncmp (name, data + 1, len) == 0)
-	  {
-	    *glyph = gid;
-	    return true;
-	  }
-	  data += name_length + 1;
-	}
-	return false;
-      }
-
-      return false;
-    }
-
-    return false;
-  }
+    uint32_t version;
+    const ArrayOf<USHORT> *glyphNameIndex;
+    hb_prealloced_array_t<uint32_t, 1> index_to_offset;
+    const uint8_t *pool;
+    mutable uint16_t *gids_sorted_by_name;
+  };
 
   public:
   FixedVersion<>version;		/* 0x00010000 for version 1.0

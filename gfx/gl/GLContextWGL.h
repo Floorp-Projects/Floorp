@@ -45,9 +45,9 @@ public:
 
     bool Init() override;
 
-    virtual bool MakeCurrentImpl(bool aForce) override;
+    virtual bool MakeCurrentImpl() const override;
 
-    virtual bool IsCurrent() override;
+    virtual bool IsCurrentImpl() const override;
 
     void SetIsDoubleBuffered(bool aIsDB);
 

@@ -687,14 +687,6 @@ nsGlobalWindowInner::ResumeIdleRequests()
 }
 
 void
-nsGlobalWindowInner::InsertIdleCallback(IdleRequest* aRequest)
-{
-  AssertIsOnMainThread();
-  mIdleRequestCallbacks.insertBack(aRequest);
-  aRequest->AddRef();
-}
-
-void
 nsGlobalWindowInner::RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest)
 {
   AssertIsOnMainThread();
@@ -705,7 +697,6 @@ nsGlobalWindowInner::RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest)
   }
 
   aRequest->removeFrom(mIdleRequestCallbacks);
-  aRequest->Release();
 }
 
 nsresult
@@ -823,8 +814,7 @@ nsGlobalWindowInner::RequestIdleCallback(JSContext* aCx,
     request->SetTimeoutHandle(timeoutHandle);
   }
 
-  // mIdleRequestCallbacks now owns request
-  InsertIdleCallback(request);
+  mIdleRequestCallbacks.insertBack(request);
 
   if (!IsSuspended()) {
     ScheduleIdleRequestDispatch();
@@ -1546,6 +1536,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
   }
 
+  // Here the Timeouts list would've been unlinked, but we rely on
+  // that Timeout objects have been traced and will remove themselves
+  // while unlinking.
+
   tmp->UpdateTopInnerWindow();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTopInnerWindow)
 
@@ -1593,7 +1587,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   tmp->UnlinkHostObjectURIs();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleRequestExecutor)
-  tmp->DisableIdleCallbackRequests();
+
+  // Here the IdleRequest list would've been unlinked, but we rely on
+  // that IdleRequest objects have been traced and will remove
+  // themselves while unlinking.
 
   tmp->mClientSource.reset();
 
@@ -1749,6 +1746,14 @@ nsGlobalWindowInner::EnsureClientSource()
   nsCOMPtr<nsIChannel> channel = mDoc->GetChannel();
   nsCOMPtr<nsILoadInfo> loadInfo = channel ? channel->GetLoadInfo() : nullptr;
 
+  // Take the initial client source from the docshell immediately.  Even if we
+  // don't end up using it here we should consume it.
+  UniquePtr<ClientSource> initialClientSource;
+  nsIDocShell* docshell = GetDocShell();
+  if (docshell) {
+    initialClientSource = docshell->TakeInitialClientSource();
+  }
+
   // Try to get the reserved client from the LoadInfo.  A Client is
   // reserved at the start of the channel load if there is not an
   // initial about:blank document that will be reused.  It is also
@@ -1769,12 +1774,9 @@ nsGlobalWindowInner::EnsureClientSource()
   // and it created an initial Client as a placeholder for the document.
   // In this case we want to inherit this placeholder Client here.
   if (!mClientSource) {
-    nsIDocShell* docshell = GetDocShell();
-    if (docshell) {
-      mClientSource = docshell->TakeInitialClientSource();
-      if (mClientSource) {
-        newClientSource = true;
-      }
+    mClientSource = Move(initialClientSource);
+    if (mClientSource) {
+      newClientSource = true;
     }
   }
 

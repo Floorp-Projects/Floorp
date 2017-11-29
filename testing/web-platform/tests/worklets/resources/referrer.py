@@ -3,7 +3,7 @@ def main(request, response):
     referrer = request.headers.get("referer", None)
     referrer_policy = request.GET.first("referrer_policy")
     source_origin = request.GET.first("source_origin")
-    is_cross_origin = request.GET.first("is_cross_origin", False)
+    is_cross_origin = request.GET.first("is_cross_origin")
 
     response_headers = [("Content-Type", "text/javascript"),
                         ("Access-Control-Allow-Origin", source_origin)];
@@ -22,9 +22,9 @@ def main(request, response):
     # When the referrer policy is "same-origin", the referrer header should be
     # sent only for a same-origin request.
     if referrer_policy == "same-origin":
-        if is_cross_origin and not referrer:
+        if is_cross_origin == "true" and not referrer:
             return (200, response_headers, "")
-        if not is_cross_origin and referrer:
+        if is_cross_origin == "false" and referrer:
             return (200, response_headers, "")
 
     return (404)

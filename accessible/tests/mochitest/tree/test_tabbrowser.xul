@@ -224,12 +224,14 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Test
-    //gA11yEventDumpToConsole = true;
+    gA11yEventDumpToConsole = true;
     //enableLogging("tree,verbose,stack");
 
     var gQueue = null;
     function doTest()
     {
+      SimpleTest.requestCompleteLog();
+
       // Load documents into tabs and wait for docLoadComplete events caused by these
       // documents load before we start the test.
       gQueue = new eventQueue();

@@ -364,22 +364,44 @@ hb_glib_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   return utf8_decomposed_len;
 }
 
+static hb_unicode_funcs_t *static_glib_funcs = nullptr;
+
+#ifdef HB_USE_ATEXIT
+static
+void free_static_glib_funcs (void)
+{
+  hb_unicode_funcs_destroy (static_glib_funcs);
+}
+#endif
+
 hb_unicode_funcs_t *
 hb_glib_get_unicode_funcs (void)
 {
-  static const hb_unicode_funcs_t _hb_glib_unicode_funcs = {
-    HB_OBJECT_HEADER_STATIC,
+retry:
+  hb_unicode_funcs_t *funcs = (hb_unicode_funcs_t *) hb_atomic_ptr_get (&static_glib_funcs);
 
-    nullptr, /* parent */
-    true, /* immutable */
-    {
-#define HB_UNICODE_FUNC_IMPLEMENT(name) hb_glib_unicode_##name,
+  if (unlikely (!funcs))
+  {
+    funcs = hb_unicode_funcs_create (nullptr);
+
+#define HB_UNICODE_FUNC_IMPLEMENT(name) \
+    hb_unicode_funcs_set_##name##_func (funcs, hb_glib_unicode_##name, nullptr, nullptr);
       HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_UNICODE_FUNC_IMPLEMENT
+
+    hb_unicode_funcs_make_immutable (funcs);
+
+    if (!hb_atomic_ptr_cmpexch (&static_glib_funcs, nullptr, funcs)) {
+      hb_unicode_funcs_destroy (funcs);
+      goto retry;
     }
+
+#ifdef HB_USE_ATEXIT
+    atexit (free_static_glib_funcs); /* First person registers atexit() callback. */
+#endif
   };
 
-  return const_cast<hb_unicode_funcs_t *> (&_hb_glib_unicode_funcs);
+  return hb_unicode_funcs_reference (funcs);
 }
 
 #if GLIB_CHECK_VERSION(2,31,10)

@@ -414,7 +414,6 @@ setup_masks_hangul (const hb_ot_shape_plan_t *plan,
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_hangul =
 {
-  "hangul",
   collect_features_hangul,
   override_features_hangul,
   data_create_hangul,

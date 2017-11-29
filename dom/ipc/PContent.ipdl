@@ -154,7 +154,7 @@ union MaybePrefValue {
   null_t;
 };
 
-struct PrefSetting {
+struct Pref {
   nsCString name;
   MaybePrefValue defaultValue;
   MaybePrefValue userValue;
@@ -270,7 +270,7 @@ struct XPCOMInitData
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
     OptionalURIParams userContentSheetURL;
-    PrefSetting[] prefs;
+    Pref[] prefs;
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
@@ -424,7 +424,7 @@ child:
 
     async NotifyVisited(URIParams uri);
 
-    async PreferenceUpdate(PrefSetting pref);
+    async PreferenceUpdate(Pref pref);
     async VarUpdate(GfxVarUpdate var);
 
     async DataStoragePut(nsString aFilename, DataStorageItem aItem);

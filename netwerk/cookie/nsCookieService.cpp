@@ -4919,23 +4919,19 @@ nsCookieService::RemoveCookiesWithOriginAttributes(
     }
 
     // Pattern matches. Delete all cookies within this nsCookieEntry.
-    const nsCookieEntry::ArrayType& cookies = entry->GetCookies();
+    uint32_t cookiesCount = entry->GetCookies().Length();
 
-    while (!cookies.IsEmpty()) {
-      nsCookie *cookie = cookies.LastElement();
-
-      nsAutoCString host;
-      cookie->GetHost(host);
-
-      nsAutoCString name;
-      cookie->GetName(name);
-
-      nsAutoCString path;
-      cookie->GetPath(path);
+    for (nsCookieEntry::IndexType i = 0 ; i < cookiesCount; ++i) {
+      // Remove the first cookie from the list.
+      nsListIter iter(entry, 0);
+      RefPtr<nsCookie> cookie = iter.Cookie();
 
       // Remove the cookie.
-      nsresult rv = Remove(host, entry->mOriginAttributes, name, path, false);
-      NS_ENSURE_SUCCESS(rv, rv);
+      RemoveCookieFromList(iter);
+
+      if (cookie) {
+        NotifyChanged(cookie, u"deleted");
+      }
     }
   }
   DebugOnly<nsresult> rv = transaction.Commit();

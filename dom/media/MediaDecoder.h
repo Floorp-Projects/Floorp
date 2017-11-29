@@ -100,6 +100,9 @@ public:
     PLAY_STATE_SHUTDOWN
   };
 
+  // Must be called exactly once, on the main thread, during startup.
+  static void InitStatics();
+
   explicit MediaDecoder(MediaDecoderInit& aInit);
 
   // Returns the container content type of the resource.
