@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="img-src 'none'">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+SimpleTest.waitForExplicitFinish();
+document.addEventListener("securitypolicyviolation", (e) => {
+  SimpleTest.is(e.blockedURI, "http://mochi.test:8888/foo/bar.jpg", "blockedURI");
+  SimpleTest.todo_is(e.violatedDirective, "img-src", "violatedDirective")
+  SimpleTest.is(e.originalPolicy, "img-src 'none'", "originalPolicy");
+  SimpleTest.finish();
+});
+</script>
+<img src="http://mochi.test:8888/foo/bar.jpg">
