@@ -4245,6 +4245,9 @@ ExtractComputedValueFromShapeSource(const StyleShapeSource& aShapeSource,
     aComputedValue.SetCSSValueArrayValue(result,
                                          StyleAnimationValue::eUnit_Shape);
 
+  } else if (type == StyleShapeSourceType::Image) {
+    // XXX: Won't implement because Gecko style system will be removed.
+    return false;
   } else {
     MOZ_ASSERT(type == StyleShapeSourceType::None, "unknown type");
     aComputedValue.SetNoneValue();

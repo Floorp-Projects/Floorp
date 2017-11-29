@@ -26,9 +26,7 @@ add_task(async function() {
 
   await withSnippetsMap(
     () => {
-      Cc["@mozilla.org/observer-service;1"]
-        .getService(Ci.nsIObserverService)
-        .notifyObservers(null, "cookie-changed", "cleared");
+      Services.obs.notifyObservers(null, "cookie-changed", "cleared");
     },
     function() {
       isnot(content.gSnippetsMap.get("snippets-last-update"), null,
@@ -235,4 +233,3 @@ async function withSnippetsMap(setupFn, testFn, testArgs = null, parentFn = null
     }
   });
 }
-

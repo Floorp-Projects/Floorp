@@ -11,8 +11,7 @@ var texts = [
   "To err is human; to forgive is not company policy."
 ];
 
-var Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-var HasFindClipboard = Clipboard.supportsFindClipboard();
+var HasFindClipboard = Services.clipboard.supportsFindClipboard();
 
 function addTabWithText(aText, aCallback) {
   let newTab = BrowserTestUtils.addTab(gBrowser, "data:text/html;charset=utf-8,<h1 id='h1'>" +

@@ -25,7 +25,10 @@
 
 html, body {
   min-width: 600px;
-  height: 100%;
+}
+
+body {
+  margin-top: 17vh;
 }
 
 p {
@@ -33,23 +36,15 @@ p {
 }
 
 .box {
-  width: 100%;
   max-width: 850px;
   display: flex;
   flex-shrink: 0;
-}
-
-#install-page .box {
-  padding: 17% 0 50px 0;
-}
-
-#welcome-page .box {
-  padding: 50px 0;
+  padding: 0 0 50px 0;
+  /* Compensate for the optional scrollbar. */
+  margin-right: calc(100% - 100vw);
 }
 
 .wrapper {
-  width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;

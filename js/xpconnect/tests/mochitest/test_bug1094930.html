@@ -15,15 +15,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1094930
 <p id="display"></p>
 <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
-  var proto = { 
-    connectedCallback: function() {
+  class XFoo extends frames[0].HTMLElement {
+    connectedCallback() {
       ok(true, "connectedCallback was called");
-      SimpleTest.finish()
+      SimpleTest.finish();
     }
   };
 
-  var f = document.registerElement.call(frames[0].document, "x-foo", { prototype: proto });
-  frames[0].document.firstChild.appendChild(new f());
+  customElements.define.call(frames[0].customElements, "x-foo", XFoo);
+  frames[0].document.firstChild.appendChild(new XFoo());
 </script>
 </body>
 </html>

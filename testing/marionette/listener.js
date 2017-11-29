@@ -53,6 +53,14 @@ let listenerId = null; // unique ID of this listener
 let curContainer = {frame: content, shadowRoot: null};
 let previousContainer = null;
 
+
+// Listen for click event to indicate one click has happened, so actions
+// code can send dblclick event, also resetClick and cancelTimer
+// after dblclick has happened.
+addEventListener("click", event.DoubleClickTracker.setClick);
+addEventListener("dblclick", event.DoubleClickTracker.resetClick);
+addEventListener("dblclick", event.DoubleClickTracker.cancelTimer);
+
 const seenEls = new element.Store();
 const SUPPORTED_STRATEGIES = new Set([
   element.Strategy.ClassName,
@@ -152,7 +160,6 @@ const loadListener = {
       let readyState = content.document.readyState;
       let documentURI = content.document.documentURI;
       logger.debug(`Check readyState "${readyState} for "${documentURI}"`);
-
       // If the page load has already finished, don't setup listeners and
       // timers but return immediatelly.
       if (this.handleReadyState(readyState, documentURI)) {

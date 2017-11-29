@@ -10349,33 +10349,6 @@ nsContentUtils::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
                                                   aDefinition);
 }
 
-/* static */ void
-nsContentUtils::GetCustomPrototype(nsIDocument* aDoc,
-                                   int32_t aNamespaceID,
-                                   nsAtom* aAtom,
-                                   JS::MutableHandle<JSObject*> aPrototype)
-{
-  MOZ_ASSERT(aDoc);
-
-  if ((aNamespaceID != kNameSpaceID_XHTML &&
-       aNamespaceID != kNameSpaceID_XUL) ||
-      !aDoc->GetDocShell()) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> window(aDoc->GetInnerWindow());
-  if (!window) {
-    return;
-  }
-
-  RefPtr<CustomElementRegistry> registry(window->CustomElements());
-  if (!registry) {
-    return;
-  }
-
-  return registry->GetCustomPrototype(aAtom, aPrototype);
-}
-
 /* static */ bool
 nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
 {

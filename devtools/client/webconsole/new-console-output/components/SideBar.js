@@ -3,10 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
 
 class SideBar extends Component {
   static get propTypes() {
@@ -22,9 +23,14 @@ class SideBar extends Component {
 
     return (
       sidebarVisible ?
-        dom.aside({
+        SplitBox({
           className: "sidebar",
-        }, "Sidebar WIP")
+          endPanel: dom.aside({}, "Sidebar WIP"),
+          endPanelControl: true,
+          initialSize: "200px",
+          minSize: "100px",
+          vert: true,
+        })
         : null
     );
   }

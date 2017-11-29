@@ -459,9 +459,7 @@ AboutBlockedSiteListener.init(this);
 
 var ClickEventHandler = {
   init: function init() {
-    Cc["@mozilla.org/eventlistenerservice;1"]
-      .getService(Ci.nsIEventListenerService)
-      .addSystemEventListener(global, "click", this, true);
+    Services.els.addSystemEventListener(global, "click", this, true);
   },
 
   handleEvent(event) {

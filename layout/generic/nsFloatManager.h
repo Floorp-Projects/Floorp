@@ -381,6 +381,12 @@ private:
       mozilla::WritingMode aWM,
       const nsSize& aContainerSize);
 
+    static mozilla::UniquePtr<ShapeInfo> CreateBasicShape(
+      const mozilla::UniquePtr<mozilla::StyleBasicShape>& aBasicShape,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
     static mozilla::UniquePtr<ShapeInfo> CreateInset(
       const mozilla::UniquePtr<mozilla::StyleBasicShape>& aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,

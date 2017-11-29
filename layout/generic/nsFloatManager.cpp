@@ -756,46 +756,38 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 
   const StyleShapeSource& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
 
-  if (shapeOutside.GetType() == StyleShapeSourceType::None) {
-    return;
-  }
+  switch (shapeOutside.GetType()) {
+    case StyleShapeSourceType::None:
+      // No need to create shape info.
+      return;
 
-  if (shapeOutside.GetType() == StyleShapeSourceType::URL) {
-    // Bug 1265343: Implement 'shape-image-threshold'. Early return
-    // here because shape-outside with url() value doesn't have a
-    // reference box, and GetReferenceBox() asserts that.
-    return;
-  }
+    case StyleShapeSourceType::URL:
+      MOZ_ASSERT_UNREACHABLE("shape-outside doesn't have URL source type!");
+      return;
 
-  // Initialize <shape-box>'s reference rect.
-  LogicalRect shapeBoxRect =
-    ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
+    case StyleShapeSourceType::Image:
+      // Bug 1265343: Implement 'shape-image-threshold'
+      // Bug 1404222: Support shape-outside: <image>
+      return;
 
-  if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
-    mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeBoxRect, aWM,
-                                           aContainerSize);
-  } else if (shapeOutside.GetType() == StyleShapeSourceType::Shape) {
-    const UniquePtr<StyleBasicShape>& basicShape = shapeOutside.GetBasicShape();
-
-    switch (basicShape->GetShapeType()) {
-      case StyleBasicShapeType::Polygon:
-        mShapeInfo =
-          ShapeInfo::CreatePolygon(basicShape, shapeBoxRect, aWM,
-                                   aContainerSize);
-        break;
-      case StyleBasicShapeType::Circle:
-      case StyleBasicShapeType::Ellipse:
-        mShapeInfo =
-          ShapeInfo::CreateCircleOrEllipse(basicShape, shapeBoxRect, aWM,
-                                           aContainerSize);
-        break;
-      case StyleBasicShapeType::Inset:
-        mShapeInfo =
-          ShapeInfo::CreateInset(basicShape, shapeBoxRect, aWM, aContainerSize);
-        break;
+    case StyleShapeSourceType::Box: {
+      // Initialize <shape-box>'s reference rect.
+      LogicalRect shapeBoxRect =
+        ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
+      mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeBoxRect, aWM,
+                                             aContainerSize);
+      break;
     }
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Unknown StyleShapeSourceType!");
+
+    case StyleShapeSourceType::Shape: {
+      const UniquePtr<StyleBasicShape>& basicShape = shapeOutside.GetBasicShape();
+      // Initialize <shape-box>'s reference rect.
+      LogicalRect shapeBoxRect =
+        ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
+      mShapeInfo = ShapeInfo::CreateBasicShape(basicShape, shapeBoxRect, aWM,
+                                               aContainerSize);
+      break;
+    }
   }
 
   MOZ_ASSERT(mShapeInfo,
@@ -958,6 +950,26 @@ nsFloatManager::ShapeInfo::CreateShapeBox(
   return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
                                          ConvertToFloatLogical(physicalRadii,
                                                                aWM));
+}
+
+/* static */ UniquePtr<nsFloatManager::ShapeInfo>
+nsFloatManager::ShapeInfo::CreateBasicShape(
+  const UniquePtr<StyleBasicShape>& aBasicShape,
+  const LogicalRect& aShapeBoxRect,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  switch (aBasicShape->GetShapeType()) {
+    case StyleBasicShapeType::Polygon:
+      return CreatePolygon(aBasicShape, aShapeBoxRect, aWM, aContainerSize);
+    case StyleBasicShapeType::Circle:
+    case StyleBasicShapeType::Ellipse:
+      return CreateCircleOrEllipse(aBasicShape, aShapeBoxRect, aWM,
+                                   aContainerSize);
+    case StyleBasicShapeType::Inset:
+      return CreateInset(aBasicShape, aShapeBoxRect, aWM, aContainerSize);
+  }
+  return nullptr;
 }
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>

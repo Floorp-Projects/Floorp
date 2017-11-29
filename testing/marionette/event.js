@@ -14,6 +14,11 @@ Cu.import("chrome://marionette/content/element.js");
 const {ElementNotInteractableError} =
     Cu.import("chrome://marionette/content/error.js", {});
 
+const dblclickTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+//  Max interval between two clicks that should result in a dblclick (in ms)
+const DBLCLICK_INTERVAL = 640;
+
 this.EXPORTED_SYMBOLS = ["event"];
 
 // TODO(ato): Document!
@@ -57,6 +62,29 @@ event.MouseButton = {
   },
   isSecondary(button) {
     return button === 2;
+  },
+};
+
+event.DoubleClickTracker = {
+  firstClick: false,
+  isClicked() {
+    return event.DoubleClickTracker.firstClick;
+  },
+  setClick() {
+    if (!event.DoubleClickTracker.firstClick) {
+      event.DoubleClickTracker.firstClick = true;
+      event.DoubleClickTracker.startTimer();
+    }
+  },
+  resetClick() {
+    event.DoubleClickTracker.firstClick = false;
+  },
+  startTimer() {
+    dblclickTimer.initWithCallback(event.DoubleClickTracker.resetClick,
+        DBLCLICK_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+  cancelTimer() {
+    dblclickTimer.cancel();
   },
 };
 
