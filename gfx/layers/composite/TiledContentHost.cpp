@@ -48,6 +48,26 @@ TileHost::GetFadeInOpacity(float aOpacity)
   return aOpacity * (elapsed / duration);
 }
 
+RefPtr<TextureSource>
+TileHost::AcquireTextureSource() const
+{
+  if (!mTextureHost || !mTextureHost->AcquireTextureSource(mTextureSource)) {
+    return nullptr;
+  }
+  return mTextureSource.get();
+}
+
+RefPtr<TextureSource>
+TileHost::AcquireTextureSourceOnWhite() const
+{
+  if (!mTextureHostOnWhite ||
+      !mTextureHostOnWhite->AcquireTextureSource(mTextureSourceOnWhite))
+  {
+    return nullptr;
+  }
+  return mTextureSourceOnWhite.get();
+}
+
 TiledLayerBufferComposite::TiledLayerBufferComposite()
   : mFrameResolution()
 {}
