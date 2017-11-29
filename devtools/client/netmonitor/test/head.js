@@ -488,8 +488,8 @@ function* verifyRequestItemTarget(document, requestList, requestItem, method,
     latency, "The tooltip latency is correct.");
 
   if (status !== undefined) {
-    let value = target.querySelector(".requests-list-status-icon")
-                      .getAttribute("data-code");
+    let value = target.querySelector(".requests-list-status-code")
+                      .getAttribute("data-status-code");
     let codeValue = target.querySelector(".requests-list-status-code").textContent;
     let tooltip = target.querySelector(".requests-list-status").getAttribute("title");
     info("Displayed status: " + value);
