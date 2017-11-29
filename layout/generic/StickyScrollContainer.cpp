@@ -45,7 +45,7 @@ StickyScrollContainer::GetStickyScrollContainerForFrame(nsIFrame* aFrame)
     // <html style="position: fixed">
     return nullptr;
   }
-  auto frame = static_cast<nsIFrame*>(do_QueryFrame(scrollFrame));
+  nsIFrame* frame = do_QueryFrame(scrollFrame);
   StickyScrollContainer* s =
     frame->GetProperty(StickyScrollContainerProperty());
   if (!s) {
