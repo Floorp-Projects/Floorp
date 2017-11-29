@@ -36,9 +36,7 @@ float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
 varying vec3 vClipMaskUv;
-#ifdef WR_FEATURE_TRANSFORM
-    flat varying vec4 vLocalBounds;
-#endif
+flat varying vec4 vLocalBounds;
 
 // TODO(gw): This is here temporarily while we have
 //           both GPU store and cache. When the GPU
@@ -71,7 +69,7 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 
 #ifdef WR_VERTEX_SHADER
 
-#define VECS_PER_LAYER              10
+#define VECS_PER_LAYER              11
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_HEADER        2
 #define VECS_PER_TEXT_RUN           3
@@ -149,6 +147,7 @@ struct ClipScrollNode {
     vec4 local_clip_rect;
     vec2 reference_frame_relative_scroll_offset;
     vec2 scroll_offset;
+    bool is_axis_aligned;
 };
 
 ClipScrollNode fetch_clip_scroll_node(int index) {
@@ -179,6 +178,9 @@ ClipScrollNode fetch_clip_scroll_node(int index) {
     node.reference_frame_relative_scroll_offset = offsets.xy;
     node.scroll_offset = offsets.zw;
 
+    vec4 misc = TEXEL_FETCH(sClipScrollNodes, uv1, 0, ivec2(2, 0));
+    node.is_axis_aligned = misc.x == 0.0;
+
     return node;
 }
 
@@ -186,6 +188,7 @@ struct Layer {
     mat4 transform;
     mat4 inv_transform;
     RectWithSize local_clip_rect;
+    bool is_axis_aligned;
 };
 
 Layer fetch_layer(int clip_node_id, int scroll_node_id) {
@@ -202,6 +205,7 @@ Layer fetch_layer(int clip_node_id, int scroll_node_id) {
     local_clip_rect.xy -= scroll_node.scroll_offset;
 
     layer.local_clip_rect = RectWithSize(local_clip_rect.xy, local_clip_rect.zw);
+    layer.is_axis_aligned = scroll_node.is_axis_aligned;
 
     return layer;
 }
@@ -615,8 +619,6 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     return vi;
 }
 
-#ifdef WR_FEATURE_TRANSFORM
-
 float cross2(vec2 v0, vec2 v1) {
     return v0.x * v1.y - v0.y * v1.x;
 }
@@ -636,7 +638,8 @@ vec2 intersect_lines(vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
     return vec2(nx / d, ny / d);
 }
 
-VertexInfo write_transform_vertex(RectWithSize instance_rect,
+VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
+                                  RectWithSize local_prim_rect,
                                   RectWithSize local_clip_rect,
                                   vec4 clip_edge_mask,
                                   float z,
@@ -648,9 +651,14 @@ VertexInfo write_transform_vertex(RectWithSize instance_rect,
     clip_rect.p1 = clamp_rect(clip_rect.p1, layer.local_clip_rect);
 
     // Calculate a clip rect from local_rect + local clip + layer clip.
-    RectWithEndpoint local_rect = to_rect_with_endpoint(instance_rect);
-    local_rect.p0 = clamp(local_rect.p0, clip_rect.p0, clip_rect.p1);
-    local_rect.p1 = clamp(local_rect.p1, clip_rect.p0, clip_rect.p1);
+    RectWithEndpoint segment_rect = to_rect_with_endpoint(local_segment_rect);
+    segment_rect.p0 = clamp(segment_rect.p0, clip_rect.p0, clip_rect.p1);
+    segment_rect.p1 = clamp(segment_rect.p1, clip_rect.p0, clip_rect.p1);
+
+    // Calculate a clip rect from local_rect + local clip + layer clip.
+    RectWithEndpoint prim_rect = to_rect_with_endpoint(local_prim_rect);
+    prim_rect.p0 = clamp(prim_rect.p0, clip_rect.p0, clip_rect.p1);
+    prim_rect.p1 = clamp(prim_rect.p1, clip_rect.p0, clip_rect.p1);
 
     // As this is a transform shader, extrude by 2 (local space) pixels
     // in each direction. This gives enough space around the edge to
@@ -661,11 +669,11 @@ VertexInfo write_transform_vertex(RectWithSize instance_rect,
     // can do some math on the projection matrix to work out a variable
     // amount to extrude.
     float extrude_distance = 2.0;
-    instance_rect.p0 -= vec2(extrude_distance);
-    instance_rect.size += vec2(2.0 * extrude_distance);
+    local_segment_rect.p0 -= vec2(extrude_distance);
+    local_segment_rect.size += vec2(2.0 * extrude_distance);
 
     // Select the corner of the local rect that we are processing.
-    vec2 local_pos = instance_rect.p0 + instance_rect.size * aPosition.xy;
+    vec2 local_pos = local_segment_rect.p0 + local_segment_rect.size * aPosition.xy;
 
     // Transform the current vertex to the world cpace.
     vec4 world_pos = layer.transform * vec4(local_pos, 0.0, 1.0);
@@ -683,8 +691,8 @@ VertexInfo write_transform_vertex(RectWithSize instance_rect,
     gl_Position = uTransform * final_pos;
 
     vLocalBounds = mix(
-        vec4(clip_rect.p0, clip_rect.p1),
-        vec4(local_rect.p0, local_rect.p1),
+        vec4(prim_rect.p0, prim_rect.p1),
+        vec4(segment_rect.p0, segment_rect.p1),
         clip_edge_mask
     );
 
@@ -695,15 +703,14 @@ VertexInfo write_transform_vertex(RectWithSize instance_rect,
 VertexInfo write_transform_vertex_primitive(Primitive prim) {
     return write_transform_vertex(
         prim.local_rect,
+        prim.local_rect,
         prim.local_clip_rect,
-        vec4(1.0),
+        vec4(0.0),
         prim.z,
         prim.layer,
         prim.task
     );
 }
-
-#endif //WR_FEATURE_TRANSFORM
 
 struct GlyphResource {
     vec4 uv_rect;
@@ -809,7 +816,6 @@ float distance_aa(float aa_range, float signed_distance) {
     return 1.0 - smoothstep(-aa_range, aa_range, signed_distance);
 }
 
-#ifdef WR_FEATURE_TRANSFORM
 float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
     vec2 d = max(p0 - pos, pos - p1);
     return length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y));
@@ -829,7 +835,6 @@ float init_transform_fs(vec2 local_pos) {
     // Only apply AA to fragments outside the signed distance field.
     return distance_aa(aa_range, d);
 }
-#endif //WR_FEATURE_TRANSFORM
 
 float do_clip() {
     // anything outside of the mask is considered transparent

@@ -10,24 +10,15 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console subresource STS " +
                  "warning test";
 const TEST_DOC = "https://example.com/browser/devtools/client/webconsole/" +
-                 "test/test_bug1092055_shouldwarn.html";
+                 "new-console-output/test/mochitest/test-subresource-security-error.html";
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
-add_task(function* () {
-  let { browser } = yield loadTab(TEST_URI);
-
-  let hud = yield openConsole();
-
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
+  await loadDocument(TEST_DOC);
 
-  let loaded = loadBrowser(browser);
-  BrowserTestUtils.loadURI(browser, TEST_DOC);
-  yield loaded;
+  await waitFor(() => findMessage(hud, SAMPLE_MSG, ".message.warn"));
 
-  yield waitForSuccess({
-    name: "Subresource STS warning displayed successfully",
-    validator: function () {
-      return hud.outputNode.textContent.indexOf(SAMPLE_MSG) > -1;
-    }
-  });
+  ok(true, "non-toplevel security warning message was displayed");
 });

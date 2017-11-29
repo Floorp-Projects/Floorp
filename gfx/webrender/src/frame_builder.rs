@@ -14,7 +14,7 @@ use api::{ScrollSensitivity, Shadow, TileOffset, TransformStyle};
 use api::{PremultipliedColorF, WorldPoint, YuvColorSpace, YuvData};
 use app_units::Au;
 use border::ImageBorderSegment;
-use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains, MAX_CLIP};
+use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains};
 use clip_scroll_node::{ClipScrollNode, NodeType};
 use clip_scroll_tree::ClipScrollTree;
 use euclid::{SideOffsets2D, vec2};
@@ -36,7 +36,7 @@ use std::{mem, usize, f32};
 use tiling::{CompositeOps, Frame};
 use tiling::{RenderPass, RenderPassKind, RenderTargetKind};
 use tiling::{RenderTargetContext, ScrollbarPrimitive};
-use util::{self, pack_as_float, RectHelpers, recycle_vec};
+use util::{self, MaxRect, pack_as_float, RectHelpers, recycle_vec};
 
 #[derive(Debug)]
 pub struct ScrollbarInfo(pub ClipId, pub LayerRect);
@@ -300,10 +300,7 @@ impl FrameBuilder {
         // primitives, we can apply any kind of clip mask
         // to them, as for a normal primitive. This is needed
         // to correctly handle some CSS cases (see #1957).
-        let max_clip = LayerRect::new(
-            LayerPoint::new(-MAX_CLIP, -MAX_CLIP),
-            LayerSize::new(2.0 * MAX_CLIP, 2.0 * MAX_CLIP),
-        );
+        let max_clip = LayerRect::max_rect();
 
         // If there is no root picture, create one for the main framebuffer.
         if self.sc_stack.is_empty() {
@@ -1564,9 +1561,7 @@ impl FrameBuilder {
         );
 
         let mut child_tasks = Vec::new();
-
         self.prim_store.reset_prim_visibility();
-
         self.prim_store.prepare_prim_runs(
             &prim_run_cmds,
             root_clip_scroll_node.pipeline_id,
@@ -1583,6 +1578,7 @@ impl FrameBuilder {
             None,
             scene_properties,
             SpecificPrimitiveIndex(0),
+            &self.screen_rect.to_i32(),
         );
 
         let pic = &mut self.prim_store.cpu_pictures[0];
@@ -1663,7 +1659,6 @@ impl FrameBuilder {
         gpu_cache.begin_frame();
 
         let mut node_data = Vec::new();
-
         clip_scroll_tree.update_tree(
             &self.screen_rect.to_i32(),
             device_pixel_ratio,

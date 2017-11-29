@@ -3036,6 +3036,7 @@ ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
 PContentPermissionRequestChild*
 ContentChild::AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
                                                   const IPC::Principal& aPrincipal,
+                                                  const bool& aIsHandlingUserInput,
                                                   const TabId& aTabId)
 {
   MOZ_CRASH("unused");

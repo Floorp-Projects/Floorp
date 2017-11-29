@@ -201,7 +201,7 @@ def run_tests(config, test_paths, product, **kwargs):
                     logger.info("Repetition %i / %i" % (repeat_count, repeat))
 
                 unexpected_count = 0
-                logger.suite_start(test_loader.test_ids, run_info)
+                logger.suite_start(test_loader.test_ids, run_info=run_info)
                 for test_type in kwargs["test_types"]:
                     logger.info("Running %s tests" % test_type)
 

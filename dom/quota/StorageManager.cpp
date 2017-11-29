@@ -11,6 +11,7 @@
 #include "mozilla/dom/StorageManagerBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentPermissionHelper.h"
 #include "nsIQuotaCallbacks.h"
@@ -167,15 +168,18 @@ class PersistentStoragePermissionRequest final
 {
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  bool mIsHandlingUserInput;
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
 
 public:
   PersistentStoragePermissionRequest(nsIPrincipal* aPrincipal,
                                      nsPIDOMWindowInner* aWindow,
+                                     bool aIsHandlingUserInput,
                                      Promise* aPromise)
     : mPrincipal(aPrincipal)
     , mWindow(aWindow)
+    , mIsHandlingUserInput(aIsHandlingUserInput)
     , mPromise(aPromise)
   {
     MOZ_ASSERT(aPrincipal);
@@ -303,7 +307,10 @@ ExecuteOpOnMainOrWorkerThread(nsIGlobalObject* aGlobal,
 
       case RequestResolver::Type::Persist: {
         RefPtr<PersistentStoragePermissionRequest> request =
-          new PersistentStoragePermissionRequest(principal, window, promise);
+          new PersistentStoragePermissionRequest(principal,
+                                                 window,
+                                                 EventStateManager::IsHandlingUserInput(),
+                                                 promise);
 
         // In private browsing mode, no permission prompt.
         if (nsContentUtils::IsInPrivateBrowsing(doc)) {
@@ -713,6 +720,13 @@ PersistentStoragePermissionRequest::GetPrincipal(nsIPrincipal** aPrincipal)
 
   NS_ADDREF(*aPrincipal = mPrincipal);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PersistentStoragePermissionRequest::GetIsHandlingUserInput(bool* aIsHandlingUserInput)
+{
+  *aIsHandlingUserInput = mIsHandlingUserInput;
   return NS_OK;
 }
 

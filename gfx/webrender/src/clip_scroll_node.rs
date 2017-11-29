@@ -17,15 +17,13 @@ use resource_cache::ResourceCache;
 use scene::SceneProperties;
 use spring::{DAMPING, STIFFNESS, Spring};
 use std::rc::Rc;
-use util::{MatrixHelpers, MaxRect};
+use util::{MatrixHelpers, MaxRect, TransformedRectKind};
 
 #[cfg(target_os = "macos")]
 const CAN_OVERSCROLL: bool = true;
 
 #[cfg(not(target_os = "macos"))]
 const CAN_OVERSCROLL: bool = false;
-
-const MAX_LOCAL_VIEWPORT: f32 = 1000000.0;
 
 #[derive(Debug)]
 pub struct StickyFrameInfo {
@@ -294,16 +292,19 @@ impl ClipScrollNode {
         );
 
         let local_clip_rect = if self.world_content_transform.has_perspective_component() {
-            LayerRect::new(
-                LayerPoint::new(-MAX_LOCAL_VIEWPORT, -MAX_LOCAL_VIEWPORT),
-                LayerSize::new(2.0 * MAX_LOCAL_VIEWPORT, 2.0 * MAX_LOCAL_VIEWPORT)
-            )
+            LayerRect::max_rect()
         } else {
             self.combined_local_viewport_rect
         };
 
         let data = match self.world_content_transform.inverse() {
             Some(inverse) => {
+                let transform_kind = if self.world_content_transform.preserves_2d_axis_alignment() {
+                    TransformedRectKind::AxisAligned
+                } else {
+                    TransformedRectKind::Complex
+                };
+
                 ClipScrollNodeData {
                     transform: self.world_content_transform,
                     inv_transform: inverse,
@@ -311,6 +312,8 @@ impl ClipScrollNode {
                     reference_frame_relative_scroll_offset:
                         self.reference_frame_relative_scroll_offset,
                     scroll_offset: self.scroll_offset(),
+                    transform_kind: transform_kind as u32 as f32,
+                    padding: [0.0; 3],
                 }
             }
             None => {
@@ -332,7 +335,7 @@ impl ClipScrollNode {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
     ) {
-        let current_clip_chain = state.parent_clip_chain.clone();
+        let mut current_clip_chain = state.parent_clip_chain.clone();
         let clip_sources_handle = match self.node_type {
             NodeType::Clip(ref handle) => handle,
             _ => {
@@ -343,32 +346,53 @@ impl ClipScrollNode {
         };
 
         let clip_sources = clip_store.get_mut(clip_sources_handle);
-        clip_sources.update(
-            &self.world_viewport_transform,
-            gpu_cache,
-            resource_cache,
-            device_pixel_ratio,
-        );
+        clip_sources.update(gpu_cache, resource_cache);
+        let (screen_inner_rect, screen_outer_rect) =
+            clip_sources.get_screen_bounds(&self.world_viewport_transform, device_pixel_ratio);
 
-        let outer_bounds = clip_sources.bounds.outer.as_ref().map_or_else(
-            DeviceIntRect::zero,
-            |rect| rect.device_rect
-        );
+        // If this clip's inner rectangle completely surrounds the existing clip
+        // chain's outer rectangle, we can discard this clip entirely since it isn't
+        // going to affect anything.
+        if screen_inner_rect.contains_rect(&state.combined_outer_clip_bounds) {
+            self.clip_chain_node = current_clip_chain;
+            self.combined_clip_outer_bounds = state.combined_outer_clip_bounds;
+            return;
+        }
 
-        self.combined_clip_outer_bounds = outer_bounds.intersection(
-            &state.combined_outer_clip_bounds).unwrap_or_else(DeviceIntRect::zero);
+        let combined_outer_screen_rect = match screen_outer_rect {
+            Some(outer_rect) => {
+                // If this clips outer rectangle is completely enclosed by the clip
+                // chain's inner rectangle, then the only clip that matters from this point
+                // on is this clip. We can disconnect this clip from the parent clip chain.
+                if state.combined_inner_clip_bounds.contains_rect(&outer_rect) {
+                    current_clip_chain = None;
+                }
+                outer_rect.intersection(&state.combined_outer_clip_bounds)
+                    .unwrap_or_else(DeviceIntRect::zero)
+            }
+            None => state.combined_outer_clip_bounds,
+        };
 
-        // TODO: Combine rectangles in the same axis-aligned clip space here?
+        let combined_inner_screen_rect =
+            state.combined_inner_clip_bounds.intersection(&screen_inner_rect)
+            .unwrap_or_else(DeviceIntRect::zero);
+
+        state.combined_outer_clip_bounds = combined_outer_screen_rect;
+        state.combined_inner_clip_bounds = combined_inner_screen_rect;
+        self.combined_clip_outer_bounds = combined_outer_screen_rect;
+
         self.clip_chain_node = Some(Rc::new(ClipChainNode {
             work_item: ClipWorkItem {
                 scroll_node_data_index: self.node_data_index,
                 clip_sources: clip_sources_handle.weak(),
                 coordinate_system_id: state.current_coordinate_system_id,
             },
+            screen_inner_rect,
+            combined_outer_screen_rect,
+            combined_inner_screen_rect,
             prev: current_clip_chain,
         }));
 
-        state.combined_outer_clip_bounds = self.combined_clip_outer_bounds;
         state.parent_clip_chain = self.clip_chain_node.clone();
     }
 

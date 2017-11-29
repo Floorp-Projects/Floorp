@@ -7,6 +7,7 @@
 #include "mozilla/dom/DesktopNotificationBinding.h"
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/EventStateManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentPermissionHelper.h"
 #include "nsXULAppAPI.h"
@@ -112,12 +113,14 @@ DesktopNotification::DesktopNotification(const nsAString & title,
                                          const nsAString & description,
                                          const nsAString & iconURL,
                                          nsPIDOMWindowInner* aWindow,
+                                         bool aIsHandlingUserInput,
                                          nsIPrincipal* principal)
   : DOMEventTargetHelper(aWindow)
   , mTitle(title)
   , mDescription(description)
   , mIconURL(iconURL)
   , mPrincipal(principal)
+  , mIsHandlingUserInput(aIsHandlingUserInput)
   , mAllow(false)
   , mShowHasBeenCalled(false)
 {
@@ -232,6 +235,7 @@ DesktopNotificationCenter::CreateNotification(const nsAString& aTitle,
                             aDescription,
                             aIconURL,
                             mOwner,
+                            EventStateManager::IsHandlingUserInput(),
                             mPrincipal);
   notification->Init();
   return notification.forget();
@@ -277,6 +281,13 @@ DesktopNotificationRequest::GetElement(nsIDOMElement * *aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   *aElement = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DesktopNotificationRequest::GetIsHandlingUserInput(bool *aIsHandlingUserInput)
+{
+  *aIsHandlingUserInput = mDesktopNotification->mIsHandlingUserInput;
   return NS_OK;
 }
 

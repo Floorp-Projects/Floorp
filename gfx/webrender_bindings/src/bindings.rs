@@ -506,7 +506,7 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                                      width: u32,
                                      height: u32) -> bool {
     match renderer.render(DeviceUintSize::new(width, height)) {
-        Ok(()) => true,
+        Ok(_) => true,
         Err(errors) => {
             for e in errors {
                 println!(" Failed to render: {:?}", e);

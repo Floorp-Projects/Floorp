@@ -211,7 +211,7 @@
 }
 
 #identity-box.extensionPage > #extension-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/extension.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
   visibility: visible;
 }
 
