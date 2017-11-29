@@ -44,15 +44,6 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
         val backgroundDrawable = backgroundDrawableArray.getDrawable(0)
         backgroundDrawableArray.recycle()
         learnMoreLink.background = backgroundDrawable
-
-        val switchView = view.findViewById<Switch>(android.R.id.switch_widget)
-
-        // We still want to allow toggling the pref by touching any part of the pref (except for
-        // the "learn more" link)
-        onPreferenceClickListener = OnPreferenceClickListener {
-            switchView.toggle()
-            true
-        }
     }
 
     open fun getDescription(): String? = null
