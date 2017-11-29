@@ -87,6 +87,22 @@ public:
   {
   }
 
+  JsepTransport(const JsepTransport& orig)
+  {
+    *this = orig;
+  }
+
+  JsepTransport& operator=(const JsepTransport& orig)
+  {
+    if (this != &orig) {
+      mIce.reset(orig.mIce ? new JsepIceTransport(*orig.mIce) : nullptr);
+      mDtls.reset(orig.mDtls ? new JsepDtlsTransport(*orig.mDtls) : nullptr);
+      mTransportId = orig.mTransportId;
+      mComponents = orig.mComponents;
+    }
+    return *this;
+  }
+
   void Close()
   {
     mComponents = 0;

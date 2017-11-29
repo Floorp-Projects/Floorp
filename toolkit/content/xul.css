@@ -796,45 +796,8 @@ textbox[type="number"] {
 
 /********** autocomplete textbox **********/
 
-/* SeaMonkey does not use the new toolkit's autocomplete widget */
-%ifdef MOZ_SUITE
-
-textbox[type="autocomplete"] {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
-}
-
-panel[type="autocomplete"] {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
-}
-
-.autocomplete-history-popup {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup");
-}
-
-.autocomplete-treebody {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treebody");
-}
-
-panel[type="autocomplete-richlistbox"] {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup");
-}
-
-.autocomplete-richlistbox {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistbox");
-  -moz-user-focus: ignore;
-}
-
-.autocomplete-richlistbox > scrollbox {
-  overflow-x: hidden !important;
-}
-
-.autocomplete-richlistitem {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem");
-  -moz-box-orient: vertical;
-  overflow: -moz-hidden-unscrollable;
-}
-
-%else
+/* SeaMonkey uses its own autocomplete and the toolkit's autocomplete widget */
+%ifndef MOZ_SUITE
 
 textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete");

@@ -198,7 +198,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
     vcs = VCSHelper.create()
     vcs.check_working_directory(push)
 
-    all_tasks = generate_tasks(parameters, full)
+    all_tasks = generate_tasks(parameters, full, root=vcs.root)
 
     key_shortcuts = [k + ':' + v for k, v in fzf_shortcuts.iteritems()]
     cmd = [

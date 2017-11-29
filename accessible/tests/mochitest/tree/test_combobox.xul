@@ -123,43 +123,6 @@
         ]
       };
 
-      // XPFE and Toolkit autocomplete widgets differ.
-      var ac1h = document.getElementById("autocomplete");
-      if ("clearResults" in ac1h) {
-        SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget. (ac1h)");
-
-        // Popup is always created.
-        accTree.children.push(
-          {
-            // xul:panel
-            role: ROLE_COMBOBOX_LIST,
-            children: [
-              {
-                // xul:tree
-                role: ROLE_TABLE,
-                children: [
-                  {
-                    // xul:treecols
-                    role: ROLE_LIST,
-                    children: [
-                      {
-                        // xul:treecol
-                        role: ROLE_COLUMNHEADER,
-                        children: []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-          );
-      } else {
-        SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget. (ac1h)");
-
-        // Popup is lazily created, so not present in this case.
-      }
-
       testAccessibleTree("autocomplete", accTree);
 
       //////////////////////////////////////////////////////////////////////////
@@ -194,43 +157,6 @@
           }
         ]
       };
-
-      // XPFE and Toolkit autocomplete widgets differ.
-      var ac2cmp = document.getElementById("autocomplete2");
-      if ("clearResults" in ac2cmp) {
-        SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget. (ac2mp)");
-
-        // Popup is always created.
-        accTree.children.push(
-          {
-            // xul:panel
-            role: ROLE_COMBOBOX_LIST,
-            children: [
-              {
-                // xul:tree
-                role: ROLE_TABLE,
-                children: [
-                  {
-                    // xul:treecols
-                    role: ROLE_LIST,
-                    children: [
-                      {
-                        // xul:treecol
-                        role: ROLE_COLUMNHEADER,
-                        children: []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-          );
-      } else {
-        SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget. (ac2mp)");
-
-        // Popup is lazily created, so not present in this case.
-      }
 
       testAccessibleTree("autocomplete2", accTree);
 

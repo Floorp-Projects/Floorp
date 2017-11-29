@@ -26,6 +26,7 @@
 #include "MediaStreamVideoSink.h"
 #include "VideoUtils.h"
 #include "VideoStreamTrack.h"
+#include "MediaEngine.h"
 
 #include "nsError.h"
 #include "AudioSegment.h"
@@ -565,19 +566,12 @@ MediaPipeline::MediaPipeline(const std::string& pc,
                              Direction direction,
                              nsCOMPtr<nsIEventTarget> main_thread,
                              nsCOMPtr<nsIEventTarget> sts_thread,
-                             const std::string& track_id,
-                             int level,
-                             RefPtr<MediaSessionConduit> conduit,
-                             RefPtr<TransportFlow> rtp_transport,
-                             RefPtr<TransportFlow> rtcp_transport,
-                             nsAutoPtr<MediaPipelineFilter> filter)
+                             RefPtr<MediaSessionConduit> conduit)
   : direction_(direction),
-    track_id_(track_id),
-    level_(level),
+    level_(0),
     conduit_(conduit),
-    rtp_(rtp_transport, rtcp_transport ? RTP : MUX),
-    rtcp_(rtcp_transport ? rtcp_transport : rtp_transport,
-          rtcp_transport ? RTCP : MUX),
+    rtp_(nullptr, RTP),
+    rtcp_(nullptr, RTCP),
     main_thread_(main_thread),
     sts_thread_(sts_thread),
     rtp_packets_sent_(0),
@@ -588,24 +582,9 @@ MediaPipeline::MediaPipeline(const std::string& pc,
     rtp_bytes_received_(0),
     pc_(pc),
     description_(),
-    filter_(filter),
     rtp_parser_(webrtc::RtpHeaderParser::Create()){
-  // To indicate rtcp-mux rtcp_transport should be nullptr.
-  // Therefore it's an error to send in the same flow for
-  // both rtp and rtcp.
-  MOZ_ASSERT(rtp_transport != rtcp_transport);
-
   // PipelineTransport() will access this->sts_thread_; moved here for safety
   transport_ = new PipelineTransport(this);
-}
-
-MediaPipeline::~MediaPipeline() {
-  ASSERT_ON_THREAD(main_thread_);
-  CSFLogInfo(LOGTAG, "Destroying MediaPipeline: %s", description_.c_str());
-}
-
-nsresult MediaPipeline::Init() {
-  ASSERT_ON_THREAD(main_thread_);
   packet_dumper_ = new PacketDumper(pc_);
 
   if (direction_ == RECEIVE) {
@@ -613,26 +592,30 @@ nsresult MediaPipeline::Init() {
   } else {
     conduit_->SetTransmitterTransport(transport_);
   }
+}
+
+MediaPipeline::~MediaPipeline() {
+  CSFLogInfo(LOGTAG, "Destroying MediaPipeline: %s", description_.c_str());
+  // MediaSessionConduit insists that it be released on main.
+  RUN_ON_THREAD(main_thread_, WrapRelease(conduit_.forget()),
+      NS_DISPATCH_NORMAL);
+}
+
+void
+MediaPipeline::Shutdown_m()
+{
+  CSFLogInfo(LOGTAG, "%s in %s", description_.c_str(), __FUNCTION__);
+
+  Stop();
+  DetachMedia();
 
   RUN_ON_THREAD(sts_thread_,
                 WrapRunnable(
                     RefPtr<MediaPipeline>(this),
-                    &MediaPipeline::Init_s),
+                    &MediaPipeline::DetachTransport_s),
                 NS_DISPATCH_NORMAL);
-
-  return NS_OK;
 }
 
-nsresult MediaPipeline::Init_s() {
-  ASSERT_ON_THREAD(sts_thread_);
-
-  return AttachTransport_s();
-}
-
-
-// Disconnect us from the transport so that we can cleanly destruct the
-// pipeline on the main thread.  ShutdownMedia_m() must have already been
-// called
 void
 MediaPipeline::DetachTransport_s()
 {
@@ -672,16 +655,14 @@ MediaPipeline::AttachTransport_s()
 }
 
 void
-MediaPipeline::UpdateTransport_m(int level,
-                                 RefPtr<TransportFlow> rtp_transport,
+MediaPipeline::UpdateTransport_m(RefPtr<TransportFlow> rtp_transport,
                                  RefPtr<TransportFlow> rtcp_transport,
                                  nsAutoPtr<MediaPipelineFilter> filter)
 {
   RUN_ON_THREAD(sts_thread_,
                 WrapRunnable(
-                    this,
+                    RefPtr<MediaPipeline>(this),
                     &MediaPipeline::UpdateTransport_s,
-                    level,
                     rtp_transport,
                     rtcp_transport,
                     filter),
@@ -689,8 +670,7 @@ MediaPipeline::UpdateTransport_m(int level,
 }
 
 void
-MediaPipeline::UpdateTransport_s(int level,
-                                 RefPtr<TransportFlow> rtp_transport,
+MediaPipeline::UpdateTransport_s(RefPtr<TransportFlow> rtp_transport,
                                  RefPtr<TransportFlow> rtcp_transport,
                                  nsAutoPtr<MediaPipelineFilter> filter)
 {
@@ -706,12 +686,12 @@ MediaPipeline::UpdateTransport_s(int level,
     transport_->Detach();
     rtp_.Detach();
     rtcp_.Detach();
-    rtp_ = TransportInfo(rtp_transport, rtcp_mux ? MUX : RTP);
-    rtcp_ = TransportInfo(rtcp_transport, rtcp_mux ? MUX : RTCP);
-    AttachTransport_s();
+    if (rtp_transport && rtcp_transport) {
+      rtp_ = TransportInfo(rtp_transport, rtcp_mux ? MUX : RTP);
+      rtcp_ = TransportInfo(rtcp_transport, rtcp_mux ? MUX : RTCP);
+      AttachTransport_s();
+    }
   }
-
-  level_ = level;
 
   if (filter_ && filter) {
     // Use the new filter, but don't forget any remote SSRCs that we've learned
@@ -888,27 +868,29 @@ nsresult MediaPipeline::TransportReady_s(TransportInfo &info) {
     return NS_ERROR_FAILURE;
   }
 
-  CSFLogInfo(LOGTAG, "Listening for %s packets received on %p",
-             ToString(info.type_), dtls->downward());
+  if (direction_ == RECEIVE) {
+    CSFLogInfo(LOGTAG, "Listening for %s packets received on %p",
+               ToString(info.type_), dtls->downward());
 
-  switch (info.type_) {
-    case RTP:
-      dtls->downward()->SignalPacketReceived.connect(
-          this,
-          &MediaPipeline::RtpPacketReceived);
-      break;
-    case RTCP:
-      dtls->downward()->SignalPacketReceived.connect(
-          this,
-          &MediaPipeline::RtcpPacketReceived);
-      break;
-    case MUX:
-      dtls->downward()->SignalPacketReceived.connect(
-          this,
-          &MediaPipeline::PacketReceived);
-      break;
-    default:
-      MOZ_CRASH();
+    switch (info.type_) {
+      case RTP:
+        dtls->downward()->SignalPacketReceived.connect(
+            this,
+            &MediaPipeline::RtpPacketReceived);
+        break;
+      case RTCP:
+        dtls->downward()->SignalPacketReceived.connect(
+            this,
+            &MediaPipeline::RtcpPacketReceived);
+        break;
+      case MUX:
+        dtls->downward()->SignalPacketReceived.connect(
+            this,
+            &MediaPipeline::PacketReceived);
+        break;
+      default:
+        MOZ_CRASH();
+    }
   }
 
   info.state_ = MP_OPEN;
@@ -1013,6 +995,10 @@ void MediaPipeline::increment_rtcp_packets_received() {
 void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
                                       const unsigned char *data,
                                       size_t len) {
+  if (direction_ == TRANSMIT) {
+    return;
+  }
+
   if (!transport_->pipeline()) {
     CSFLogError(LOGTAG, "Discarding incoming packet; transport disconnected");
     return;
@@ -1035,10 +1021,6 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
 
   // This should never happen.
   MOZ_ASSERT(rtp_.recv_srtp_);
-
-  if (direction_ == TRANSMIT) {
-    return;
-  }
 
   if (!len) {
     return;
@@ -1162,14 +1144,12 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
     return;
   }
 
-  // We do not filter RTCP for send pipelines, since the webrtc.org code for
+  // We do not filter receiver reports, since the webrtc.org code for
   // senders already has logic to ignore RRs that do not apply.
   // TODO bug 1279153: remove SR check for reduced size RTCP
-  if (filter_ && direction_ == RECEIVE) {
-    if (!filter_->FilterSenderReport(data, len)) {
-      CSFLogWarn(LOGTAG, "Dropping incoming RTCP packet; filtered out");
-      return;
-    }
+  if (filter_ && !filter_->FilterSenderReport(data, len)) {
+    CSFLogWarn(LOGTAG, "Dropping incoming RTCP packet; filtered out");
+    return;
   }
 
   packet_dumper_->Dump(
@@ -1311,14 +1291,14 @@ public:
                              VideoType aVideoType,
                              uint64_t aCaptureTime)
   {
-    MOZ_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
+    MOZ_RELEASE_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
     static_cast<VideoSessionConduit*>(conduit_.get())->SendVideoFrame(
       aVideoFrame, aVideoFrameLength, aWidth, aHeight, aVideoType, aCaptureTime);
   }
 
   void OnVideoFrameConverted(webrtc::VideoFrame& aVideoFrame)
   {
-    MOZ_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
+    MOZ_RELEASE_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
     static_cast<VideoSessionConduit*>(conduit_.get())->SendVideoFrame(aVideoFrame);
   }
 
@@ -1433,18 +1413,16 @@ MediaPipelineTransmit::MediaPipelineTransmit(
     const std::string& pc,
     nsCOMPtr<nsIEventTarget> main_thread,
     nsCOMPtr<nsIEventTarget> sts_thread,
+    bool is_video,
     dom::MediaStreamTrack* domtrack,
-    const std::string& track_id,
-    int level,
-    RefPtr<MediaSessionConduit> conduit,
-    RefPtr<TransportFlow> rtp_transport,
-    RefPtr<TransportFlow> rtcp_transport,
-    nsAutoPtr<MediaPipelineFilter> filter) :
-  MediaPipeline(pc, TRANSMIT, main_thread, sts_thread, track_id, level,
-                conduit, rtp_transport, rtcp_transport, filter),
+    RefPtr<MediaSessionConduit> conduit) :
+  MediaPipeline(pc, TRANSMIT, main_thread, sts_thread, conduit),
   listener_(new PipelineListener(conduit)),
-  domtrack_(domtrack)
+  is_video_(is_video),
+  domtrack_(domtrack),
+  transmitting_(false)
 {
+  SetDescription();
   if (!IsVideo()) {
     audio_processing_ = MakeAndAddRef<AudioProxyThread>(static_cast<AudioSessionConduit*>(conduit.get()));
     listener_->SetAudioProxy(audio_processing_);
@@ -1467,22 +1445,58 @@ MediaPipelineTransmit::~MediaPipelineTransmit()
   if (feeder_) {
     feeder_->Detach();
   }
+
+  MOZ_ASSERT(!domtrack_);
 }
 
-nsresult MediaPipelineTransmit::Init() {
-  AttachToTrack(track_id_);
-
-  return MediaPipeline::Init();
-}
-
-void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
-  ASSERT_ON_THREAD(main_thread_);
-
+void MediaPipelineTransmit::SetDescription() {
   description_ = pc_ + "| ";
   description_ += conduit_->type() == MediaSessionConduit::AUDIO ?
       "Transmit audio[" : "Transmit video[";
+
+  if (!domtrack_) {
+    description_ += "no track]";
+    return;
+  }
+
+  nsString nsTrackId;
+  domtrack_->GetId(nsTrackId);
+  std::string track_id(NS_ConvertUTF16toUTF8(nsTrackId).get());
   description_ += track_id;
   description_ += "]";
+}
+
+void MediaPipelineTransmit::Stop() {
+  ASSERT_ON_THREAD(main_thread_);
+
+  if (!domtrack_ || !transmitting_) {
+    return;
+  }
+
+  transmitting_ = false;
+
+  if (domtrack_->AsAudioStreamTrack()) {
+    domtrack_->RemoveDirectListener(listener_);
+    domtrack_->RemoveListener(listener_);
+  } else if (VideoStreamTrack* video = domtrack_->AsVideoStreamTrack()) {
+    video->RemoveVideoOutput(listener_);
+  } else {
+    MOZ_ASSERT(false, "Unknown track type");
+  }
+
+  conduit_->StopTransmitting();
+}
+
+void MediaPipelineTransmit::Start() {
+  ASSERT_ON_THREAD(main_thread_);
+
+  if (!domtrack_ || transmitting_) {
+    return;
+  }
+
+  transmitting_ = true;
+
+  conduit_->StartTransmitting();
 
   // TODO(ekr@rtfm.com): Check for errors
   CSFLogDebug(LOGTAG, "Attaching pipeline to track %p conduit type=%s", this,
@@ -1516,7 +1530,7 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
 bool
 MediaPipelineTransmit::IsVideo() const
 {
-  return !!domtrack_->AsVideoStreamTrack();
+  return is_video_;
 }
 
 void MediaPipelineTransmit::UpdateSinkIdentity_m(MediaStreamTrack* track,
@@ -1550,17 +1564,7 @@ void
 MediaPipelineTransmit::DetachMedia()
 {
   ASSERT_ON_THREAD(main_thread_);
-  if (domtrack_) {
-    if (domtrack_->AsAudioStreamTrack()) {
-      domtrack_->RemoveDirectListener(listener_);
-      domtrack_->RemoveListener(listener_);
-    } else if (VideoStreamTrack* video = domtrack_->AsVideoStreamTrack()) {
-      video->RemoveVideoOutput(listener_);
-    } else {
-      MOZ_ASSERT(false, "Unknown track type");
-    }
-    domtrack_ = nullptr;
-  }
+  domtrack_ = nullptr;
   // Let the listener be destroyed with the pipeline (or later).
 }
 
@@ -1577,36 +1581,32 @@ nsresult MediaPipelineTransmit::TransportReady_s(TransportInfo &info) {
   return NS_OK;
 }
 
-nsresult MediaPipelineTransmit::ReplaceTrack(MediaStreamTrack& domtrack) {
+nsresult MediaPipelineTransmit::ReplaceTrack(RefPtr<MediaStreamTrack>& domtrack) {
   // MainThread, checked in calls we make
-  nsString nsTrackId;
-  domtrack.GetId(nsTrackId);
-  std::string track_id(NS_ConvertUTF16toUTF8(nsTrackId).get());
-  CSFLogDebug(LOGTAG, "Reattaching pipeline %s to track %p track %s conduit type: %s",
-              description_.c_str(), &domtrack, track_id.c_str(),
-              (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
+  if (domtrack) {
+    nsString nsTrackId;
+    domtrack->GetId(nsTrackId);
+    std::string track_id(NS_ConvertUTF16toUTF8(nsTrackId).get());
+    CSFLogDebug(LOGTAG, "Reattaching pipeline %s to track %p track %s conduit type: %s",
+                description_.c_str(), &domtrack, track_id.c_str(),
+                (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
+  }
 
-  DetachMedia();
-  domtrack_ = &domtrack; // Detach clears it
-  // Unsets the track id after RemoveListener() takes effect.
-  listener_->UnsetTrackId(domtrack_->GraphImpl());
-  track_id_ = track_id;
-  AttachToTrack(track_id);
+  RefPtr<dom::MediaStreamTrack> oldTrack = domtrack_;
+  bool wasTransmitting = oldTrack && transmitting_;
+  Stop();
+  domtrack_ = domtrack;
+  SetDescription();
+
+  if (oldTrack) {
+    // Unsets the track id after RemoveListener() takes effect.
+    listener_->UnsetTrackId(oldTrack->GraphImpl());
+  }
+
+  if (wasTransmitting) {
+    Start();
+  }
   return NS_OK;
-}
-
-void MediaPipeline::DisconnectTransport_s(TransportInfo &info) {
-  MOZ_ASSERT(info.transport_);
-  ASSERT_ON_THREAD(sts_thread_);
-
-  info.transport_->SignalStateChange.disconnect(this);
-  // We do this even if we're a transmitter, since we are still possibly
-  // registered to receive RTCP.
-  TransportLayerDtls *dtls = static_cast<TransportLayerDtls *>(
-      info.transport_->GetLayer(TransportLayerDtls::ID()));
-  MOZ_ASSERT(dtls);  // DTLS is mandatory
-  MOZ_ASSERT(dtls->downward());
-  dtls->downward()->SignalPacketReceived.disconnect(this);
 }
 
 nsresult MediaPipeline::ConnectTransport_s(TransportInfo &info) {
@@ -1889,28 +1889,6 @@ class GenericReceiveCallback : public TrackAddedCallback
   RefPtr<GenericReceiveListener> listener_;
 };
 
-// Add a listener on the MSG thread using the MSG command queue
-static void AddListener(MediaStream* source, MediaStreamListener* listener) {
-  class Message : public ControlMessage {
-   public:
-    Message(MediaStream* stream, MediaStreamListener* listener)
-      : ControlMessage(stream),
-        listener_(listener) {}
-
-    virtual void Run() override {
-      mStream->AddListenerImpl(listener_.forget());
-    }
-   private:
-    RefPtr<MediaStreamListener> listener_;
-  };
-
-  MOZ_ASSERT(listener);
-
-  if (source->GraphImpl()) {
-    source->GraphImpl()->AppendMessage(MakeUnique<Message>(source, listener));
-  }
-}
-
 class GenericReceiveListener : public MediaStreamListener
 {
  public:
@@ -1919,18 +1897,56 @@ class GenericReceiveListener : public MediaStreamListener
       track_id_(track_id),
       played_ticks_(0),
       last_log_(0),
-      principal_handle_(PRINCIPAL_HANDLE_NONE) {}
+      principal_handle_(PRINCIPAL_HANDLE_NONE),
+      listening_(false)
+  {
+    MOZ_ASSERT(source);
+  }
 
   virtual ~GenericReceiveListener() {}
 
   void AddSelf()
   {
-    AddListener(source_, this);
+    if (!listening_) {
+      listening_ = true;
+      source_->AddListener(this);
+    }
+  }
+
+  void RemoveSelf()
+  {
+    if (listening_) {
+      listening_ = false;
+      source_->RemoveListener(this);
+    }
   }
 
   void EndTrack()
   {
-    source_->EndTrack(track_id_);
+    CSFLogDebug(LOGTAG, "GenericReceiveListener ending track");
+
+    // We do this on MSG to avoid it racing against StartTrack.
+    class Message : public ControlMessage
+    {
+    public:
+      Message(SourceMediaStream* stream,
+              TrackID track_id)
+        : ControlMessage(stream),
+          source_(stream),
+          track_id_(track_id)
+      {}
+
+      void Run() override {
+        source_->EndTrack(track_id_);
+      }
+
+      RefPtr<SourceMediaStream> source_;
+      const TrackID track_id_;
+    };
+
+    source_->GraphImpl()->AppendMessage(MakeUnique<Message>(source_, track_id_));
+    // This breaks the cycle with source_
+    source_->RemoveListener(this);
   }
 
   // Must be called on the main thread
@@ -1965,45 +1981,35 @@ class GenericReceiveListener : public MediaStreamListener
   }
 
  protected:
-  SourceMediaStream *source_;
+  RefPtr<SourceMediaStream> source_;
   const TrackID track_id_;
   TrackTicks played_ticks_;
   TrackTicks last_log_; // played_ticks_ when we last logged
   PrincipalHandle principal_handle_;
+  bool listening_;
 };
 
 MediaPipelineReceive::MediaPipelineReceive(
     const std::string& pc,
     nsCOMPtr<nsIEventTarget> main_thread,
     nsCOMPtr<nsIEventTarget> sts_thread,
-    SourceMediaStream *stream,
-    const std::string& track_id,
-    int level,
-    RefPtr<MediaSessionConduit> conduit,
-    RefPtr<TransportFlow> rtp_transport,
-    RefPtr<TransportFlow> rtcp_transport,
-    nsAutoPtr<MediaPipelineFilter> filter) :
-  MediaPipeline(pc, RECEIVE, main_thread, sts_thread,
-                track_id, level, conduit, rtp_transport,
-                rtcp_transport, filter),
-  stream_(stream),
+    RefPtr<MediaSessionConduit> conduit) :
+  MediaPipeline(pc, RECEIVE, main_thread, sts_thread, conduit),
   segments_added_(0)
 {
-  MOZ_ASSERT(stream_);
 }
 
 MediaPipelineReceive::~MediaPipelineReceive()
 {
-  MOZ_ASSERT(!stream_);  // Check that we have shut down already.
 }
 
 class MediaPipelineReceiveAudio::PipelineListener
   : public GenericReceiveListener
 {
 public:
-  PipelineListener(SourceMediaStream * source, TrackID track_id,
+  PipelineListener(SourceMediaStream * source,
                    const RefPtr<MediaSessionConduit>& conduit)
-    : GenericReceiveListener(source, track_id),
+    : GenericReceiveListener(source, kAudioTrack),
       conduit_(conduit)
   {
   }
@@ -2119,57 +2125,53 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     const std::string& pc,
     nsCOMPtr<nsIEventTarget> main_thread,
     nsCOMPtr<nsIEventTarget> sts_thread,
-    SourceMediaStream* stream,
-    const std::string& media_stream_track_id,
-    TrackID numeric_track_id,
-    int level,
     RefPtr<AudioSessionConduit> conduit,
-    RefPtr<TransportFlow> rtp_transport,
-    RefPtr<TransportFlow> rtcp_transport,
-    nsAutoPtr<MediaPipelineFilter> filter) :
-  MediaPipelineReceive(pc, main_thread, sts_thread,
-                       stream, media_stream_track_id, level, conduit,
-                       rtp_transport, rtcp_transport, filter),
-  listener_(new PipelineListener(stream, numeric_track_id, conduit))
-{}
+    SourceMediaStream* aStream) :
+  MediaPipelineReceive(pc, main_thread, sts_thread, conduit),
+  listener_(aStream ? new PipelineListener(aStream, conduit_) : nullptr)
+{
+  description_ = pc_ + "| Receive audio";
+}
 
 void MediaPipelineReceiveAudio::DetachMedia()
 {
   ASSERT_ON_THREAD(main_thread_);
-  if (stream_ && listener_) {
+  if (listener_) {
     listener_->EndTrack();
-
-    if (stream_->GraphImpl()) {
-      stream_->RemoveListener(listener_);
-    }
-    stream_ = nullptr;
+    listener_ = nullptr;
   }
-}
-
-nsresult MediaPipelineReceiveAudio::Init()
-{
-  ASSERT_ON_THREAD(main_thread_);
-  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
-
-  description_ = pc_ + "| Receive audio[";
-  description_ += track_id_;
-  description_ += "]";
-
-  listener_->AddSelf();
-
-  return MediaPipelineReceive::Init();
 }
 
 void MediaPipelineReceiveAudio::SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
 {
-  listener_->SetPrincipalHandle_m(principal_handle);
+  if (listener_) {
+    listener_->SetPrincipalHandle_m(principal_handle);
+  }
+}
+
+void
+MediaPipelineReceiveAudio::Start()
+{
+  conduit_->StartReceiving();
+  if (listener_) {
+    listener_->AddSelf();
+  }
+}
+
+void
+MediaPipelineReceiveAudio::Stop()
+{
+  if (listener_) {
+    listener_->RemoveSelf();
+  }
+  conduit_->StopReceiving();
 }
 
 class MediaPipelineReceiveVideo::PipelineListener
   : public GenericReceiveListener {
 public:
-  PipelineListener(SourceMediaStream* source, TrackID track_id)
-    : GenericReceiveListener(source, track_id)
+  explicit PipelineListener(SourceMediaStream* source)
+    : GenericReceiveListener(source, kVideoTrack)
     , image_container_()
     , image_()
     , mutex_("Video PipelineListener")
@@ -2298,20 +2300,15 @@ MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     const std::string& pc,
     nsCOMPtr<nsIEventTarget> main_thread,
     nsCOMPtr<nsIEventTarget> sts_thread,
-    SourceMediaStream *stream,
-    const std::string& media_stream_track_id,
-    TrackID numeric_track_id,
-    int level,
     RefPtr<VideoSessionConduit> conduit,
-    RefPtr<TransportFlow> rtp_transport,
-    RefPtr<TransportFlow> rtcp_transport,
-    nsAutoPtr<MediaPipelineFilter> filter) :
-  MediaPipelineReceive(pc, main_thread, sts_thread,
-                       stream, media_stream_track_id, level, conduit,
-                       rtp_transport, rtcp_transport, filter),
+    SourceMediaStream* aStream) :
+  MediaPipelineReceive(pc, main_thread, sts_thread, conduit),
   renderer_(new PipelineRenderer(this)),
-  listener_(new PipelineListener(stream, numeric_track_id))
-{}
+  listener_(aStream ? new PipelineListener(aStream) : nullptr)
+{
+  description_ = pc_ + "| Receive video";
+  conduit->AttachRenderer(renderer_);
+}
 
 void MediaPipelineReceiveVideo::DetachMedia()
 {
@@ -2322,33 +2319,35 @@ void MediaPipelineReceiveVideo::DetachMedia()
   // avoid cycles, and the render callbacks are invoked from a different
   // thread so simple null-checks would cause TSAN bugs without locks.
   static_cast<VideoSessionConduit*>(conduit_.get())->DetachRenderer();
-  if (stream_ && listener_) {
+  if (listener_) {
     listener_->EndTrack();
-    stream_->RemoveListener(listener_);
-    stream_ = nullptr;
+    listener_ = nullptr;
   }
-}
-
-nsresult MediaPipelineReceiveVideo::Init() {
-  ASSERT_ON_THREAD(main_thread_);
-  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
-
-  description_ = pc_ + "| Receive video[";
-  description_ += track_id_;
-  description_ += "]";
-
-  listener_->AddSelf();
-
-  // Always happens before we can DetachMedia()
-  static_cast<VideoSessionConduit *>(conduit_.get())->
-      AttachRenderer(renderer_);
-
-  return MediaPipelineReceive::Init();
 }
 
 void MediaPipelineReceiveVideo::SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
 {
-  listener_->SetPrincipalHandle_m(principal_handle);
+  if (listener_) {
+    listener_->SetPrincipalHandle_m(principal_handle);
+  }
+}
+
+void
+MediaPipelineReceiveVideo::Start()
+{
+  conduit_->StartReceiving();
+  if (listener_) {
+    listener_->AddSelf();
+  }
+}
+
+void
+MediaPipelineReceiveVideo::Stop()
+{
+  if (listener_) {
+    listener_->RemoveSelf();
+  }
+  conduit_->StopReceiving();
 }
 
 DOMHighResTimeStamp MediaPipeline::GetNow() {

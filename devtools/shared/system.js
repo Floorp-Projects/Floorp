@@ -132,9 +132,6 @@ function* getSystemInfo() {
     // The application's build ID/date, for example "2004051604".
     appbuildid: appInfo.appBuildID,
 
-    // The application's changeset.
-    changeset: exports.getAppIniString("App", "SourceStamp"),
-
     // The build ID/date of Gecko and the XULRunner platform.
     platformbuildid: appInfo.platformBuildID,
     geckobuildid: appInfo.platformBuildID,
@@ -214,28 +211,6 @@ function getProfileLocation() {
     return profd.leafName;
   } catch (e) {
     return "";
-  }
-}
-
-function getAppIniString(section, key) {
-  let inifile = Services.dirsvc.get("GreD", Ci.nsIFile);
-  inifile.append("application.ini");
-
-  if (!inifile.exists()) {
-    inifile = Services.dirsvc.get("CurProcD", Ci.nsIFile);
-    inifile.append("application.ini");
-  }
-
-  if (!inifile.exists()) {
-    return undefined;
-  }
-
-  let iniParser = Cc["@mozilla.org/xpcom/ini-parser-factory;1"]
-                    .getService(Ci.nsIINIParserFactory).createINIParser(inifile);
-  try {
-    return iniParser.getString(section, key);
-  } catch (e) {
-    return undefined;
   }
 }
 
@@ -350,7 +325,6 @@ function getSetting(name) {
 }
 
 exports.getSystemInfo = Task.async(getSystemInfo);
-exports.getAppIniString = getAppIniString;
 exports.getSetting = getSetting;
 exports.getScreenDimensions = getScreenDimensions;
 exports.getOSCPU = getOSCPU;

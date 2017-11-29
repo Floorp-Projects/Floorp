@@ -136,7 +136,7 @@ function run_test() {
   // in-place (to fix stacks) when it runs dmd.py, and that's not safe to do
   // asynchronously.
 
-  gEnv.set(gEnv.get("DMD_PRELOAD_VAR"), gEnv.get("DMD_PRELOAD_VALUE"));
+  gEnv.set('DMD', '1');
 
   runProcess(gDmdTestFile, []);
 

@@ -128,8 +128,12 @@ interface RTCPeerConnection : EventTarget  {
                         MediaStream... moreStreams);
   void removeTrack(RTCRtpSender sender);
 
+  RTCRtpTransceiver addTransceiver((MediaStreamTrack or DOMString) trackOrKind,
+                                   optional RTCRtpTransceiverInit init);
+
   sequence<RTCRtpSender> getSenders();
   sequence<RTCRtpReceiver> getReceivers();
+  sequence<RTCRtpTransceiver> getTransceivers();
 
   [ChromeOnly]
   void mozAddRIDExtension(RTCRtpReceiver receiver, unsigned short extensionId);

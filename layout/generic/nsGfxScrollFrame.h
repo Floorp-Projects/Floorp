@@ -69,6 +69,7 @@ public:
     nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements);
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter);
   nsresult FireScrollPortEvent();
+  void PostScrollEndEvent();
   void FireScrollEndEvent();
   void PostOverflowEvent();
   using PostDestroyData = nsIFrame::PostDestroyData;
@@ -126,6 +127,15 @@ public:
   public:
     NS_DECL_NSIRUNNABLE
     explicit ScrollEvent(ScrollFrameHelper* aHelper);
+    void Revoke() { mHelper = nullptr; }
+  private:
+    ScrollFrameHelper* mHelper;
+  };
+
+  class ScrollEndEvent : public Runnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    explicit ScrollEndEvent(ScrollFrameHelper* aHelper);
     void Revoke() { mHelper = nullptr; }
   private:
     ScrollFrameHelper* mHelper;
@@ -402,7 +412,7 @@ public:
 
   void SetTransformingByAPZ(bool aTransforming) {
     if (mTransformingByAPZ && !aTransforming) {
-      FireScrollEndEvent();
+      PostScrollEndEvent();
     }
     mTransformingByAPZ = aTransforming;
     if (!mozilla::css::TextOverflow::HasClippedOverflow(mOuter)) {
@@ -495,6 +505,7 @@ public:
   nsCOMPtr<nsIContent> mResizerContent;
 
   RefPtr<ScrollEvent> mScrollEvent;
+  RefPtr<ScrollEndEvent> mScrollEndEvent;
   nsRevocableEventPtr<AsyncScrollPortEvent> mAsyncScrollPortEvent;
   nsRevocableEventPtr<ScrolledAreaEvent> mScrolledAreaEvent;
   nsIFrame* mHScrollbarBox;
