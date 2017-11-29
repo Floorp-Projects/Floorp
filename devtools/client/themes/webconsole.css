@@ -767,6 +767,8 @@ a.learn-more-link.webconsole-learn-more-link {
   --icon-top-margin: 3px;
   --object-inspector-hover-background: transparent;
   --attachment-margin-block-end: 3px;
+  --primary-toolbar-height: 29px;
+  --close-button-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 /* Webconsole specific theme variables */
@@ -1209,4 +1211,31 @@ body #output-container {
 .split-box.vert.sidebar {
   /* Set to prevent the sidebar from extending past the right edge of the page */
   width: unset;
+}
+
+.sidebar-wrapper {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+}
+
+.webconsole-sidebar-toolbar {
+  grid-row: 1 / 2;
+  min-height: var(--primary-toolbar-height);
+  display: flex;
+  justify-content: end;
+}
+
+.sidebar-contents {
+  grid-row: 2 / 3;
+}
+
+.webconsole-sidebar-toolbar .sidebar-close-button {
+  padding: 4px 0;
+  margin: 0;
+  margin-inline-end: -3px;
+}
+
+.sidebar-close-button::before {
+  background-image: var(--close-button-image);
 }

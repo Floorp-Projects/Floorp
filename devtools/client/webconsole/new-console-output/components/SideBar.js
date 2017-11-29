@@ -7,13 +7,24 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
 
 class SideBar extends Component {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       sidebarVisible: PropTypes.bool
     };
+  }
+
+  constructor(props) {
+    super(props);
+    this.onClickSidebarToggle = this.onClickSidebarToggle.bind(this);
+  }
+
+  onClickSidebarToggle() {
+    this.props.dispatch(actions.sidebarToggle());
   }
 
   render() {
@@ -21,11 +32,27 @@ class SideBar extends Component {
       sidebarVisible,
     } = this.props;
 
+    let endPanel = dom.aside({
+      className: "sidebar-wrapper"
+    },
+      dom.header({
+        className: "devtools-toolbar webconsole-sidebar-toolbar"
+      },
+        dom.button({
+          className: "devtools-button sidebar-close-button",
+          onClick: this.onClickSidebarToggle
+        })
+      ),
+      dom.aside({
+        className: "sidebar-contents"
+      }, "Sidebar WIP")
+    );
+
     return (
       sidebarVisible ?
         SplitBox({
           className: "sidebar",
-          endPanel: dom.aside({}, "Sidebar WIP"),
+          endPanel,
           endPanelControl: true,
           initialSize: "200px",
           minSize: "100px",
