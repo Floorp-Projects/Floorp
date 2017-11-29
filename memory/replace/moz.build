@@ -4,14 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-@template
-def ReplaceMalloc(name):
-    if CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
-        DEFINES['MOZ_REPLACE_MALLOC_PREFIX'] = name.replace('-', '_')
-        FINAL_LIBRARY = 'memory'
-    else:
-        SharedLibrary(name)
-
 DIRS += [
     'logalloc',
 ]
