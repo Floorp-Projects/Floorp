@@ -741,9 +741,11 @@ public:
 
   void NotifyCueDisplayStatesChanged();
 
-  bool IsBlessed() const
+  bool GetAndClearHasUserInteractedLoadOrSeek()
   {
-    return mIsBlessed;
+    bool result = mHasUserInteractedLoadOrSeek;
+    mHasUserInteractedLoadOrSeek = false;
+    return result;
   }
 
   // A method to check whether we are currently playing.
@@ -1783,9 +1785,9 @@ private:
   // Total time a video has (or would have) spent in video-decode-suspend mode.
   TimeDurationAccumulator mVideoDecodeSuspendTime;
 
-  // True if user has called load(), seek() or element has started playing before.
+  // True if user has called load() or seek() via user input.
   // It's *only* use for checking autoplay policy
-  bool mIsBlessed = false;
+  bool mHasUserInteractedLoadOrSeek;
 
   // True if the first frame has been successfully loaded.
   bool mFirstFrameLoaded;
