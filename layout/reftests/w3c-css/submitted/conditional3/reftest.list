@@ -24,8 +24,8 @@
 == css-supports-024.xht support/pass.xht
 == css-supports-025.xht support/pass.xht
 == css-supports-026.xht support/pass.xht
-== css-supports-027.xht support/pass.xht
-== css-supports-028.xht support/pass.xht
+pref(layout.css.moz-document.content.enabled,true) == css-supports-027.xht support/pass.xht
+pref(layout.css.moz-document.content.enabled,true) == css-supports-028.xht support/pass.xht
 == css-supports-029.xht support/pass.xht
 == css-supports-030.xht support/pass.xht
 == css-supports-031.xht support/pass.xht
