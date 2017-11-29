@@ -95,6 +95,9 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
   if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+    ServiceWorkerManager::LocalizeAndReportToAllClients(
+      mInfo->Scope(), "ServiceWorkerPostMessageStorageError",
+      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mInfo->Scope()) });
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
