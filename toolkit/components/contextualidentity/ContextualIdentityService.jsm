@@ -35,8 +35,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
 
 function _TabRemovalObserver(resolver, tabParentIds) {
   this._resolver = resolver;
@@ -162,10 +160,6 @@ _ContextualIdentityService.prototype = {
 
     this._dataReady = true;
 
-    // Let's delete all the data of any userContextId. 1 is the first valid
-    // userContextId value.
-    this.deleteContainerData();
-
     this.saveSoon();
   },
 
@@ -207,7 +201,7 @@ _ContextualIdentityService.prototype = {
     this._saverCallback = null;
 
     let object = {
-      version: 3,
+      version: 2,
       lastUserContextId: this._lastUserContextId,
       identities: this._identities
     };
@@ -291,17 +285,8 @@ _ContextualIdentityService.prototype = {
     let data = JSON.parse(gTextDecoder.decode(bytes));
     if (data.version == 1) {
       this.resetDefault();
-      return;
     }
-
-    let saveNeeded = false;
-
-    if (data.version == 2) {
-      data = this.migrate2to3(data);
-      saveNeeded = true;
-    }
-
-    if (data.version != 3) {
+    if (data.version != 2) {
       dump("ERROR - ContextualIdentityService - Unknown version found in " + this._path + "\n");
       this.loadError(null);
       return;
@@ -309,11 +294,6 @@ _ContextualIdentityService.prototype = {
 
     this._identities = data.identities;
     this._lastUserContextId = data.lastUserContextId;
-
-    // If we had a migration, let's force the saving of the file.
-    if (saveNeeded) {
-      this.saveSoon();
-    }
 
     this._dataReady = true;
   },
@@ -462,35 +442,6 @@ _ContextualIdentityService.prototype = {
 
   createNewInstanceForTesting(path) {
     return new _ContextualIdentityService(path);
-  },
-
-  deleteContainerData() {
-    let minUserContextId = 1;
-    let maxUserContextId = minUserContextId;
-    const enumerator = Services.cookies.enumerator;
-    while (enumerator.hasMoreElements()) {
-      const cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-      if (cookie.originAttributes.userContextId > maxUserContextId) {
-        maxUserContextId = cookie.originAttributes.userContextId;
-      }
-    }
-
-    for (let i = minUserContextId; i <= maxUserContextId; ++i) {
-      Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                   JSON.stringify({ userContextId: i }));
-    }
-  },
-
-  migrate2to3(data) {
-    // migrating from 2 to 3 is basically just increasing the version id.
-    data.version = 3;
-
-    // *Only in nightly* we delete data of the all non-default containers.
-    if (AppConstants.NIGHTLY_BUILD) {
-      this.deleteContainerData();
-    }
-
-    return data;
   },
 };
 
