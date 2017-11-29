@@ -31,7 +31,7 @@ var { require: browserRequire } = BrowserLoader({
 let React = browserRequire("devtools/client/shared/vendor/react");
 let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 let dom = browserRequire("devtools/client/shared/vendor/react-dom-factories");
-var TestUtils = React.addons.TestUtils;
+let TestUtils = ReactDOM.TestUtils;
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 

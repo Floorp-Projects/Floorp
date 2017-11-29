@@ -5,9 +5,7 @@ const NOW = Date.now() * 1000;
 const URL = "http://fake-site.com/";
 
 var tmp = {};
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://browser/content/sanitize.js", tmp);
+Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
 
 var {Sanitizer} = tmp;
 

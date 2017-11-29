@@ -12,6 +12,7 @@ const {
   SELECT_NETWORK_MESSAGE_TAB,
   SIDEBAR_TOGGLE,
   TIMESTAMPS_TOGGLE,
+  MESSAGES_CLEAR,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 const {
@@ -41,6 +42,8 @@ function ui(state = UiState(), action) {
       return Object.assign({}, state, {sidebarVisible: !state.sidebarVisible});
     case INITIALIZE:
       return Object.assign({}, state, {initialized: true});
+    case MESSAGES_CLEAR:
+      return Object.assign({}, state, {sidebarVisible: false});
   }
 
   return state;

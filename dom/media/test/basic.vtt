@@ -1,8 +1,8 @@
 WEBVTT
 REGION
-id=testOne lines=2 width=30%
+id:testOne lines:2 width:30%
 REGION
-id=testTwo lines=4 width=20%
+id:testTwo lines:4 width:20%
 
 1
 00:00.500 --> 00:00.700 region:testOne

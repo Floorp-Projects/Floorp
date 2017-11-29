@@ -1244,7 +1244,7 @@ DXVA2Manager::IsUnsupportedResolution(const uint32_t& aWidth,
   // AMD cards with UVD3 or earlier perform poorly trying to decode 1080p60 in
   // hardware, so use software instead. Pick 45 as an arbitrary upper bound for
   // the framerate we can handle.
-  return mIsAMDPreUVD4 &&
+  return !gfxPrefs::PDMWMFAMDHighResEnabled() && mIsAMDPreUVD4 &&
          (aWidth >= 1920 || aHeight >= 1088) &&
          aFramerate > 45;
 }

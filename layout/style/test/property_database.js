@@ -6443,9 +6443,19 @@ if (IsCSSPropertyPrefEnabled("layout.css.shape-outside.enabled")) {
     initial_values: [ "none" ],
     other_values: [
       "url(#my-shape-outside)",
-    ].concat(basicShapeOtherValues),
-    invalid_values: basicShapeSVGBoxValues.concat(basicShapeInvalidValues),
-    unbalanced_values: basicShapeUnbalancedValues,
+    ].concat(
+      basicShapeOtherValues,
+      validGradientAndElementValues
+    ),
+    invalid_values: [].concat(
+      basicShapeSVGBoxValues,
+      basicShapeInvalidValues,
+      invalidGradientAndElementValues
+    ),
+    unbalanced_values: [].concat(
+      basicShapeUnbalancedValues,
+      unbalancedGradientAndElementValues
+    )
   };
 }
 

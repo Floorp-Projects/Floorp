@@ -1384,13 +1384,11 @@ ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
   }
 
   // When the composition is committed synchronously, the commit string will be
-  // returned to the remote process. Then, PuppetWidget will dispatch
+  // returned to the remote process.  Then, PuppetWidget will dispatch
   // eCompositionCommit event with the returned commit string (i.e., the value
-  // is aCommittedString of this method).  Finally, TextComposition instance in
-  // the remote process will be destroyed by
-  // IMEStateManager::DispatchCompositionEvent() at receiving the
-  // eCompositionCommit event (Note that TextComposition instance in this
-  // process was already destroyed).
+  // is aCommittedString of this method) and that causes destroying
+  // TextComposition instance in the remote process (Note that TextComposition
+  // instance in this process was already destroyed).
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mRequestIMEToCommitCompositionResults.
     AppendElement(RequestIMEToCommitCompositionResult::eHandledSynchronously);

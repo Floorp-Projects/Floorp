@@ -245,6 +245,11 @@ static const wchar_t* gBlockedInprocDlls[] = {
 bool
 LazyInstantiator::IsBlockedInjection()
 {
+  // Check debugging options see if we should disable the blocklist.
+  if (PR_GetEnv("MOZ_DISABLE_ACCESSIBLE_BLOCKLIST")) {
+    return false;
+  }
+
   if (Compatibility::HasKnownNonUiaConsumer()) {
     // If we already see a known AT, don't block a11y instantiation
     return false;

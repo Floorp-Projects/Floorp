@@ -29,8 +29,6 @@ const Types = require("devtools/client/responsive.html/types");
 addRDMTask(TEST_URL, function* ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
 
   // Wait until the viewport has been added and the device list has been loaded
   yield waitUntilState(store, state => state.viewports.length == 1
@@ -43,7 +41,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Reveal device adder form, check that defaults match the viewport");
   let adderShow = document.querySelector("#device-adder-show");
-  Simulate.click(adderShow);
+  adderShow.click();
   testDeviceAdder(ui, {
     name: "Custom Device",
     width: 320,
@@ -62,7 +60,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   });
   ok(deviceCb, "Custom device checkbox added to modal");
   ok(deviceCb.checked, "Custom device enabled");
-  Simulate.click(submitButton);
+  submitButton.click();
 
   info("Look for custom device in device selector");
   let selectorOption = [...deviceSelector.options].find(opt => opt.value == device.name);
@@ -72,8 +70,6 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 addRDMTask(TEST_URL, function* ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
 
   // Wait until the viewport has been added and the device list has been loaded
   yield waitUntilState(store, state => state.viewports.length == 1
@@ -89,7 +85,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Reveal device adder form, check that defaults are based on selected device");
   let adderShow = document.querySelector("#device-adder-show");
-  Simulate.click(adderShow);
+  adderShow.click();
   testDeviceAdder(ui, Object.assign({}, device, {
     name: "Test Device (Custom)",
   }));
@@ -100,9 +96,9 @@ addRDMTask(TEST_URL, function* ({ ui }) {
     waitUntilState(store, state => state.devices.custom.length == 0),
     once(ui, "device-association-removed")
   ]);
-  Simulate.click(deviceRemoveButton);
+  deviceRemoveButton.click();
   yield removed;
-  Simulate.click(submitButton);
+  submitButton.click();
 
   info("Ensure custom device was removed from device selector");
   yield waitUntilState(store, state => state.viewports[0].device == "");
@@ -117,8 +113,6 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 addRDMTask(TEST_URL, function* ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
 
   // Wait until the viewport has been added and the device list has been loaded
   yield waitUntilState(store, state => state.viewports.length == 1
@@ -131,7 +125,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Reveal device adder form");
   let adderShow = document.querySelector("#device-adder-show");
-  Simulate.click(adderShow);
+  adderShow.click();
 
   info("Fill out device adder form by setting details to unicode device and save");
   yield addDeviceInModal(ui, unicodeDevice);
@@ -142,7 +136,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   });
   ok(deviceCb, "Custom unicode device checkbox added to modal");
   ok(deviceCb.checked, "Custom unicode device enabled");
-  Simulate.click(submitButton);
+  submitButton.click();
 
   info("Look for custom unicode device in device selector");
   let selectorOption = [...deviceSelector.options].find(opt =>

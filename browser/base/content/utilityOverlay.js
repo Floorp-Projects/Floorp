@@ -822,9 +822,7 @@ function openTroubleshootingPage() {
  * Opens the feedback page for this version of the application.
  */
 function openFeedbackPage() {
-  var url = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                      .getService(Components.interfaces.nsIURLFormatter)
-                      .formatURLPref("app.feedback.baseURL");
+  var url = Services.urlFormatter.formatURLPref("app.feedback.baseURL");
   openUILinkIn(url, "tab");
 }
 
@@ -918,9 +916,7 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
 }
 
 function getHelpLinkURL(aHelpTopic) {
-  var url = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                      .getService(Components.interfaces.nsIURLFormatter)
-                      .formatURLPref("app.support.baseURL");
+  var url = Services.urlFormatter.formatURLPref("app.support.baseURL");
   return url + aHelpTopic;
 }
 

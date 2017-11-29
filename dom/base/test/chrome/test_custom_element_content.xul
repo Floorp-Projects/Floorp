@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1130028"
      target="_blank">Mozilla Bug 1130028</a>
-  <iframe onload="startTests()" id="frame" src="http://example.com/chrome/dom/base/test/chrome/frame_registerElement_content.html"></iframe>
+  <iframe onload="startTests()" id="frame" src="http://example.com/chrome/dom/base/test/chrome/frame_custom_element_content.html"></iframe>
   </body>
 
   <!-- test code goes here -->
@@ -23,25 +23,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
   /** Test for Bug 1130028 **/
   var connectedCallbackCount = 0;
 
-  // Callback should be called only once by element created in content.
-  function connectedCallbackCalled() {
-    connectedCallbackCount++;
-    is(connectedCallbackCount, 1, "Connected callback called, should be called once in test.");
-    is(this.magicNumber, 42, "Callback should be able to see the custom prototype.");
-  }
-
   function startTests() {
     var frame = $("frame");
 
-    var c = frame.contentDocument.registerElement("x-foo");
-    var elem = new c();
+    class XFoo extends frame.contentWindow.HTMLElement {};
+    frame.contentWindow.customElements.define("x-foo", XFoo);
+    var elem = new XFoo();
     is(elem.tagName, "X-FOO", "Constructor should create an x-foo element.");
 
-    var proto = Object.create(frame.contentWindow.HTMLElement.prototype);
-    proto.magicNumber = 42;
-    proto.connectedCallback = connectedCallbackCalled;
+    class XBar extends frame.contentWindow.HTMLElement {
+      constructor() {
+        super();
+        this.magicNumber = 42;
+      }
 
-    frame.contentDocument.registerElement("x-bar", { prototype: proto });
+      connectedCallback() {
+        connectedCallbackCount++;
+        // Callback should be called only once by element created in content.
+        is(connectedCallbackCount, 1, "Connected callback called, should be called once in test.");
+        is(this.magicNumber, 42, "Callback should be able to see the custom prototype.");
+      }
+    };
+
+    frame.contentWindow.customElements.define("x-bar", XBar);
     is(connectedCallbackCount, 1, "Connected callback should be called by element created in content.");
 
     var element = frame.contentDocument.createElement("x-bar");

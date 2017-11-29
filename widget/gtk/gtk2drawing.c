@@ -1366,6 +1366,51 @@ moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
 }
 
 static gint
+moz_gtk_inner_spin_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                         GtkWidgetState* state,
+                         GtkTextDirection direction)
+{
+    GdkRectangle arrow_rect;
+    GtkStateType state_type = ConvertGtkState(state);
+    GtkShadowType shadow_type = state_type == GTK_STATE_ACTIVE ?
+                                  GTK_SHADOW_IN : GTK_SHADOW_OUT;
+    GtkStyle* style;
+
+    ensure_spin_widget();
+    style = gSpinWidget->style;
+    gtk_widget_set_direction(gSpinWidget, direction);
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_paint_box(style, drawable, state_type, shadow_type, NULL, gSpinWidget,
+                  "spinbutton", rect->x, rect->y, rect->width, rect->height);
+
+    /* hard code these values */
+    arrow_rect.width = 6;
+    arrow_rect.height = 6;
+
+    // align spin to the left
+    arrow_rect.x = rect->x;
+
+    // up button
+    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2 - 3;
+    gtk_paint_arrow(style, drawable, state_type, shadow_type, NULL,
+                    gSpinWidget, "spinbutton",
+                    GTK_ARROW_UP, TRUE,
+                    arrow_rect.x, arrow_rect.y,
+                    arrow_rect.width, arrow_rect.height);
+
+    // down button
+    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2 + 3;
+    gtk_paint_arrow(style, drawable, state_type, shadow_type, NULL,
+                    gSpinWidget, "spinbutton",
+                    GTK_ARROW_DOWN,
+                    arrow_rect.x, arrow_rect.y,
+                    arrow_rect.width, arrow_rect.height);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_spin_paint(GdkDrawable* drawable, GdkRectangle* rect,
                    GtkTextDirection direction)
 {
@@ -2984,6 +3029,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
     /* These widgets have no borders.*/
+    case MOZ_GTK_INNER_SPIN_BUTTON:
     case MOZ_GTK_SPINBUTTON:
     case MOZ_GTK_WINDOW:
     case MOZ_GTK_RESIZER:
@@ -3246,6 +3292,9 @@ moz_gtk_widget_paint(WidgetNodeType widget, GdkDrawable* drawable,
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
         return moz_gtk_scale_thumb_paint(drawable, rect, cliprect, state,
                                          (GtkOrientation) flags, direction);
+        break;
+    case MOZ_GTK_INNER_SPIN_BUTTON:
+        return moz_gtk_inner_spin_paint(drawable, rect, state, direction);
         break;
     case MOZ_GTK_SPINBUTTON:
         return moz_gtk_spin_paint(drawable, rect, direction);

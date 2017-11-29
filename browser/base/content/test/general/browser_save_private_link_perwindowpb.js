@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function createTemporarySaveDirectory() {
-  var saveDir = Cc["@mozilla.org/file/directory_service;1"]
-                  .getService(Ci.nsIProperties)
-                  .get("TmpD", Ci.nsIFile);
+  var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   saveDir.append("testsavedir");
   if (!saveDir.exists())
     saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
@@ -29,10 +27,8 @@ function promiseNoCacheEntry(filename) {
     };
     function Visitor() {}
 
-    let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                .getService(Ci.nsICacheStorageService);
     let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
-    let storage = cache.diskCacheStorage(LoadContextInfo.default, false);
+    let storage = Services.cache2.diskCacheStorage(LoadContextInfo.default, false);
     storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
   });
 }
@@ -89,9 +85,7 @@ add_task(async function() {
   }, tab.linkedBrowser);
   await popupShown;
 
-  let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-              .getService(Ci.nsICacheStorageService);
-  cache.clear();
+  Services.cache2.clear();
 
   let imageDownloaded = promiseImageDownloaded();
   // Select "Save Image As" option from context menu
@@ -108,7 +102,5 @@ add_task(async function() {
 });
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
                  this);

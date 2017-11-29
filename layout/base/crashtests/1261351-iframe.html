@@ -3,24 +3,26 @@
   'use strict';
   // -sp-context: content
   (function () {
-    let proto = Object.create(HTMLDivElement.prototype);
-    proto.template = `<style></style>`;
-    proto.createdCallback = function() {
-    let shadow = this.createShadowRoot();
-    if (this.template) {
-      let te = document.createElement('template');
-      te.innerHTML = this.template;
-      shadow.appendChild(document.importNode(te.content, true));
-    }
-  };
+    class UiComponentTest extends HTMLDivElement {
+      constructor() {
+        super();
+        this.template = `<style></style>`;
+      }
 
-  let UiComponentTest = document.registerElement('ui-component-test', {
-    prototype: proto,
-  });
+      connectedCallback() {
+        let shadow = this.createShadowRoot();
+        if (this.template) {
+          let te = document.createElement('template');
+          te.innerHTML = this.template;
+          shadow.appendChild(document.importNode(te.content, true));
+        }
+      }
+    };
 
-  let uic = new UiComponentTest();
-  document.body.appendChild(uic);
+    customElements.define('ui-component-test', UiComponentTest, { extend: 'div'} );
 
+    let uic = new UiComponentTest();
+    document.body.appendChild(uic);
   })();
 </script>
 </body>
