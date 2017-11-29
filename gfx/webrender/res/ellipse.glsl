@@ -72,12 +72,12 @@ float clip_against_ellipse_if_needed(
     vec4 ellipse_center_radius,
     vec2 sign_modifier
 ) {
-    float ellipse_distance = distance_to_ellipse(pos - ellipse_center_radius.xy,
-                                                 ellipse_center_radius.zw);
+    if (!all(lessThan(sign_modifier * pos, sign_modifier * ellipse_center_radius.xy))) {
+      return current_distance;
+    }
 
-    return mix(current_distance,
-               ellipse_distance,
-               all(lessThan(sign_modifier * pos, sign_modifier * ellipse_center_radius.xy)));
+    return distance_to_ellipse(pos - ellipse_center_radius.xy,
+                               ellipse_center_radius.zw);
 }
 
 float rounded_rect(vec2 pos,

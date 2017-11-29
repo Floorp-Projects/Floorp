@@ -7,9 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("abouthealthreport/**"):
-    BUG_COMPONENT = ("Firefox Health Report", "Client: Desktop")
-
 with Files("defaultthemes/**"):
     BUG_COMPONENT = ("Firefox", "Theme")
 

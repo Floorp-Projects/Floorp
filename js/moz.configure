@@ -241,12 +241,25 @@ with only_when('--enable-compile-environment'):
         if value:
             return True
 
-    @depends(enable_fuzzing,
-             try_compile(body='__AFL_COMPILER;',
+    @depends(try_compile(body='__AFL_COMPILER;',
                          check_msg='for AFL compiler',
                          when='--enable-fuzzing'))
-    def enable_libfuzzer(fuzzing, afl):
-        if fuzzing and not afl:
+    def enable_aflfuzzer(afl):
+        if afl:
+            return True
+
+    @depends(enable_fuzzing,
+             enable_aflfuzzer,
+             c_compiler)
+    def enable_libfuzzer(fuzzing, afl, c_compiler):
+        if fuzzing and not afl and c_compiler.type == 'clang':
+            return True
+
+    @depends(enable_fuzzing,
+             enable_aflfuzzer,
+             enable_libfuzzer)
+    def enable_fuzzing_interfaces(fuzzing, afl, libfuzzer):
+        if fuzzing and (afl or libfuzzer):
             return True
 
     set_config('FUZZING', enable_fuzzing)
@@ -254,6 +267,9 @@ with only_when('--enable-compile-environment'):
 
     set_config('LIBFUZZER', enable_libfuzzer)
     set_define('LIBFUZZER', enable_libfuzzer)
+
+    set_config('FUZZING_INTERFACES', enable_fuzzing_interfaces)
+    set_define('FUZZING_INTERFACES', enable_fuzzing_interfaces)
 
 # Enable pipeline operator
 # ===================================================

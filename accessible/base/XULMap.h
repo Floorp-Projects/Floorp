@@ -3,4 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 XULMAP(image, New_MaybeImageOrToolbarButtonAccessible)
+XULMAP(statusbar, New_StatusBarAccessible)
 XULMAP(menuseparator, New_MenuSeparator)

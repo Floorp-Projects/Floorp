@@ -25,7 +25,7 @@ function confirmExtensionPage() {
 
   let extensionIconEl = document.getElementById("extension-icon");
   let extensionIconURL = getComputedStyle(extensionIconEl).listStyleImage;
-  is(extensionIconURL, "url(\"chrome://browser/skin/controlcenter/extension.svg\")", "Extension icon should be the default extension icon");
+  is(extensionIconURL, "url(\"chrome://mozapps/skin/extensions/extensionGeneric-16.svg\")", "Extension icon should be the default extension icon");
   let tooltip = extensionIconEl.tooltipText;
   is(tooltip, "Loaded by extension: Test Extension", "The correct tooltip should be used");
 

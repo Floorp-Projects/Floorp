@@ -154,7 +154,7 @@ function requestsReducer(state = Requests(), action) {
       // When a new request with a given id is added in future, select it immediately.
       // where we know in advance the ID of the request, at a time when it
       // wasn't sent yet.
-      return closeCustomRequest(state.set("preselectedId", action.id));
+      return closeCustomRequest({...state, preselectedId: action.id});
     }
 
     // Pause/resume button clicked.

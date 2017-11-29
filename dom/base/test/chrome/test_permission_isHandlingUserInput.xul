@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Tests that the isHandlingUserInput attribute on permission requests is set correctly.
+-->
+<window title="isHandlingUserInput test" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <iframe id="frame" src="https://example.com/chrome/dom/base/test/chrome/dummy.html" />
+  </body>
+
+  <script type="application/javascript">
+  <![CDATA[
+  let Cu = Components.utils;
+
+  Cu.import("resource://gre/modules/Integration.jsm");
+  Cu.import("resource:///modules/E10SUtils.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  let frame = document.getElementById("frame");
+
+  function checkPermissionRequest(permission, isHandlingUserInput) {
+    return new Promise(function(resolve) {
+      let TestIntegration = (base) => ({
+        __proto__: base,
+        createPermissionPrompt(type, request) {
+          is(type, permission, `Has correct permission type ${permission}.`);
+          is(request.isHandlingUserInput, isHandlingUserInput,
+             "The isHandlingUserInput attribute is set correctly.");
+          Integration.contentPermission.unregister(TestIntegration);
+          resolve();
+          return { prompt() {} };
+        },
+      });
+      Integration.contentPermission.register(TestIntegration);
+    });
+  }
+
+  async function runTest() {
+    // Test programmatic request for persistent storage.
+    let request = checkPermissionRequest("persistent-storage", false);
+    navigator.storage.persist();
+    await request;
+
+    // Test user-initiated request for persistent storage.
+    request = checkPermissionRequest("persistent-storage", true);
+    E10SUtils.wrapHandlingUserInput(content, true, function() {
+      navigator.storage.persist();
+    });
+    await request;
+
+    // Test programmatic request for geolocation.
+    request = checkPermissionRequest("geolocation", false);
+    navigator.geolocation.getCurrentPosition(() => {});
+    await request;
+
+    // Test user-initiated request for geolocation.
+    request = checkPermissionRequest("geolocation", true);
+    E10SUtils.wrapHandlingUserInput(content, true, function() {
+      navigator.geolocation.getCurrentPosition(() => {});
+    });
+    await request;
+
+    // Notifications need to be tested in an HTTPS frame, because
+    // chrome:// URLs are whitelisted.
+    let frameWin = frame.contentWindow;
+
+    // Test programmatic request for notifications.
+    request = checkPermissionRequest("desktop-notification", false);
+    frameWin.Notification.requestPermission();
+    await request;
+
+    // Test user-initiated request for notifications.
+    request = checkPermissionRequest("desktop-notification", true);
+    E10SUtils.wrapHandlingUserInput(content, true, function() {
+      frameWin.Notification.requestPermission();
+    });
+    await request;
+  }
+
+  frame.addEventListener("load", function() {
+    runTest().then(() => SimpleTest.finish());
+  });
+  ]]>
+  </script>
+</window>

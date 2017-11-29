@@ -90,31 +90,6 @@ iframe {
   min-height: 10px;
 }
 
-/* ::::: statusbar ::::: */
-
-statusbar {
-  -moz-appearance: statusbar;
-  min-height: 22px;
-}
-
-statusbar:-moz-lwtheme {
-  -moz-appearance: none;
-}
-
-statusbarpanel {
-  -moz-appearance: statusbarpanel;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  padding: 0 4px;
-}
-
-.statusbar-resizerpanel {
-  -moz-box-align: end;
-  -moz-box-pack: end;
-  -moz-appearance: resizerpanel;
-  padding: 0;
-}
-
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {
@@ -137,8 +112,7 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: miscellaneous formatting ::::: */
 
-:root:-moz-lwtheme,
-statusbarpanel:-moz-lwtheme {
+:root:-moz-lwtheme {
   -moz-appearance: none;
 }
 
