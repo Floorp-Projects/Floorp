@@ -9,18 +9,12 @@ prefwindow,
   font: message-box !important;
 }
 
-label:not(.menu-text),
+label,
 textbox,
 description,
 .tab-text,
-caption label {
+menulist label {
   font-size: 1.36rem;
-}
-
-/* Create a separate rule to unset these styles on .tree-input instead of
-   using :not(.tree-input) so the selector specifity doesn't change. */
-textbox.tree-input {
-  font-size: unset;
 }
 
 caption {

@@ -47,6 +47,7 @@ JOB_NAME_WHITELIST = set([
     'linux64-base-toolchains-debug',
     'linux64-base-toolchains-opt',
     'linux64-fuzzing-asan-opt',
+    'linux64-fuzzing-debug',
     'linux64-ccov-opt',
     'linux64-clang-tidy',
     'linux64-debug',

@@ -798,6 +798,40 @@ moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
 }
 
 static gint
+moz_gtk_inner_spin_paint(cairo_t *cr, GdkRectangle* rect,
+                         GtkWidgetState* state,
+                         GtkTextDirection direction)
+{
+    GtkStyleContext* style = GetStyleContext(MOZ_GTK_SPINBUTTON, direction,
+                                 GetStateFlagsFromGtkWidgetState(state));
+
+    gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+
+    /* hard code these values */
+    GdkRectangle arrow_rect;
+    arrow_rect.width = 6;
+    arrow_rect.height = 6;
+
+    // align spin to the left
+    arrow_rect.x = rect->x;
+
+    // up button
+    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2 - 3;
+    gtk_render_arrow(style, cr, ARROW_UP,
+                    arrow_rect.x, arrow_rect.y,
+                    arrow_rect.width);
+
+    // down button
+    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2 + 3;
+    gtk_render_arrow(style, cr, ARROW_DOWN,
+                    arrow_rect.x, arrow_rect.y,
+                    arrow_rect.width);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_spin_paint(cairo_t *cr, GdkRectangle* rect,
                    GtkTextDirection direction)
 {
@@ -2283,6 +2317,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
     /* These widgets have no borders.*/
+    case MOZ_GTK_INNER_SPIN_BUTTON:
     case MOZ_GTK_SPINBUTTON:
     case MOZ_GTK_WINDOW:
     case MOZ_GTK_RESIZER:
@@ -2844,6 +2879,9 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
         return moz_gtk_scale_thumb_paint(cr, rect, state,
                                          (GtkOrientation) flags, direction);
+        break;
+    case MOZ_GTK_INNER_SPIN_BUTTON:
+        return moz_gtk_inner_spin_paint(cr, rect, state, direction);
         break;
     case MOZ_GTK_SPINBUTTON:
         return moz_gtk_spin_paint(cr, rect, direction);

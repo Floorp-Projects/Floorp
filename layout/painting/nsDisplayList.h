@@ -3882,6 +3882,7 @@ public:
   nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             const nsRect& aBackgroundRect);
   virtual ~nsDisplayThemedBackground();
+  void Init(nsDisplayListBuilder* aBuilder);
 
   void Destroy(nsDisplayListBuilder* aBuilder) override
   {
@@ -3942,6 +3943,30 @@ protected:
   nsRect mBounds;
   nsITheme::Transparency mThemeTransparency;
   uint8_t mAppearance;
+};
+
+class nsDisplayTableThemedBackground : public nsDisplayThemedBackground {
+public:
+  nsDisplayTableThemedBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                                 const nsRect& aBackgroundRect,
+                                 nsIFrame* aAncestorFrame)
+    : nsDisplayThemedBackground(aBuilder, aFrame, aBackgroundRect)
+    , mAncestorFrame(aAncestorFrame)
+    , mTableType(GetTableTypeFromFrame(aAncestorFrame))
+  { }
+
+  virtual uint32_t GetPerFrameKey() const override {
+    return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
+           nsDisplayItem::GetPerFrameKey();
+  }
+
+  virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
+
+  NS_DISPLAY_DECL_NAME("TableThemedBackground", TYPE_TABLE_BACKGROUND_IMAGE)
+protected:
+  virtual nsIFrame* StyleFrame() const override { return mAncestorFrame; }
+  nsIFrame* mAncestorFrame;
+  TableType mTableType;
 };
 
 class nsDisplayBackgroundColor : public nsDisplayItem

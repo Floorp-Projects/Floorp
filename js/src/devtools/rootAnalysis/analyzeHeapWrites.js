@@ -223,6 +223,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_DestroyShapeSource", "aShape", null],
         ["Gecko_StyleShapeSource_SetURLValue", "aShape", null],
         ["Gecko_NewBasicShape", "aShape", null],
+        ["Gecko_NewShapeImage", "aShape", null],
         ["Gecko_nsFont_InitSystem", "aDest", null],
         ["Gecko_nsFont_SetFontFeatureValuesLookup", "aFont", null],
         ["Gecko_nsFont_ResetFontFeatureValuesLookup", "aFont", null],

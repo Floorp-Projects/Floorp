@@ -16,8 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 function promiseInitContentBlocklistSvc(aBrowser) {
   return ContentTask.spawn(aBrowser, {}, async function() {
     try {
-      Cc["@mozilla.org/extensions/blocklist;1"]
-        .getService(Ci.nsIBlocklistService);
+      // eslint-disable-next-line no-unused-expressions
+      Services.blocklist;
     } catch (ex) {
       return ex.message;
     }

@@ -27,8 +27,6 @@ const device2 = Object.assign({}, device, {
 addRDMTask(TEST_URL, function* ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
-  let React = toolWindow.require("devtools/client/shared/vendor/react");
-  let { Simulate } = React.addons.TestUtils;
 
   info("Verify that remove buttons affect the correct device");
 
@@ -43,14 +41,14 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Reveal device adder form");
   let adderShow = document.querySelector("#device-adder-show");
-  Simulate.click(adderShow);
+  adderShow.click();
 
   info("Add test device 1");
   yield addDeviceInModal(ui, device1);
 
   info("Reveal device adder form");
   adderShow = document.querySelector("#device-adder-show");
-  Simulate.click(adderShow);
+  adderShow.click();
 
   info("Add test device 2");
   yield addDeviceInModal(ui, device2);
@@ -62,7 +60,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   for (let cb of deviceCbs) {
     ok(cb.checked, "Custom device enabled");
   }
-  Simulate.click(submitButton);
+  submitButton.click();
 
   info("Look for device 1 in device selector");
   let deviceOption1 = [...deviceSelector.options].find(opt => opt.value == device1.name);
@@ -78,9 +76,9 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   let deviceRemoveButtons = [...document.querySelectorAll(".device-remove-button")];
   is(deviceRemoveButtons.length, 2, "Both devices have a remove button in modal");
   let removed = waitUntilState(store, state => state.devices.custom.length == 1);
-  Simulate.click(deviceRemoveButtons[1]);
+  deviceRemoveButtons[1].click();
   yield removed;
-  Simulate.click(submitButton);
+  submitButton.click();
 
   info("Ensure device 1 is still in device selector");
   deviceOption1 = [...deviceSelector.options].find(opt => opt.value == device1.name);

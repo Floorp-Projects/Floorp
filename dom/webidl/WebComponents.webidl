@@ -25,8 +25,3 @@ dictionary LifecycleCallbacks {
   LifecycleAdoptedCallback? adoptedCallback;
   LifecycleAttributeChangedCallback? attributeChangedCallback;
 };
-
-dictionary ElementRegistrationOptions {
-  object? prototype = null;
-  DOMString? extends = null;
-};

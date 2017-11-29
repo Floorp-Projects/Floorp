@@ -60,10 +60,8 @@ function dropText(text, expectedTabOpenCount = 0) {
 async function drop(dragData, expectedTabOpenCount = 0) {
   let dragDataString = JSON.stringify(dragData);
   info(`Starting test for datagData:${dragDataString}; expectedTabOpenCount:${expectedTabOpenCount}`);
-  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                     getService(Ci.mozIJSSubScriptLoader);
   let EventUtils = {};
-  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
   // Since synthesizeDrop triggers the srcElement, need to use another button.
   let dragSrcElement = document.getElementById("downloads-button");

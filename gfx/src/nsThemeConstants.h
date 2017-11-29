@@ -135,6 +135,9 @@ enum ThemeWidgetType : uint8_t {
   // A tooltip
   NS_THEME_TOOLTIP,
 
+  // A inner-spin control
+  NS_THEME_INNER_SPIN_BUTTON,
+
   // A spin control (up/down control for time/date pickers)
   NS_THEME_SPINNER,
 

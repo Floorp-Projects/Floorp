@@ -983,10 +983,8 @@ this.FormAutofillHeuristics = {
 
 XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "RULES", () => {
   let sandbox = {};
-  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                       .getService(Ci.mozIJSSubScriptLoader);
   const HEURISTICS_REGEXP = "chrome://formautofill/content/heuristicsRegexp.js";
-  scriptLoader.loadSubScript(HEURISTICS_REGEXP, sandbox, "utf-8");
+  Services.scriptloader.loadSubScript(HEURISTICS_REGEXP, sandbox, "utf-8");
   return sandbox.HeuristicsRegExp.RULES;
 });
 
@@ -1005,4 +1003,3 @@ XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "_sectionEnabled", () =
 Services.prefs.addObserver(PREF_SECTION_ENABLED, () => {
   this.FormAutofillHeuristics._sectionEnabled = Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
 });
-

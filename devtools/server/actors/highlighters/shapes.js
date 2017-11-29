@@ -14,15 +14,25 @@ const {
   clickedOnEllipseEdge,
   distanceToLine,
   projection,
-  clickedOnPoint,
-  scalePoint
+  clickedOnPoint
 } = require("devtools/server/actors/utils/shapes-utils");
+const {
+  identity,
+  apply,
+  translate,
+  multiply,
+  scale,
+  rotate,
+  changeMatrixBase,
+  getBasis
+} = require("devtools/shared/layout/dom-matrix-2d");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
 
 const BASE_MARKER_SIZE = 5;
 // the width of the area around highlighter lines that can be clicked, in px
 const LINE_CLICK_WIDTH = 5;
+const ROTATE_LINE_LENGTH = 50;
 const DOM_EVENTS = ["mousedown", "mousemove", "mouseup", "dblclick"];
 const _dragging = Symbol("shapes/dragging");
 
@@ -30,6 +40,32 @@ const _dragging = Symbol("shapes/dragging");
  * The ShapesHighlighter draws an outline shapes in the page.
  * The idea is to have something that is able to wrap complex shapes for css properties
  * such as shape-outside/inside, clip-path but also SVG elements.
+ *
+ * Notes on shape transformation:
+ *
+ * When using transform mode to translate, scale, and rotate shapes, a transformation
+ * matrix keeps track of the transformations done to the original shape. When the
+ * highlighter is toggled on/off or between transform mode and point editing mode,
+ * the transformations applied to the shape become permanent.
+ *
+ * While transformations are being performed on a shape, there is an "original" and
+ * a "transformed" coordinate system. This is used when scaling or rotating a rotated
+ * shape.
+ *
+ * The "original" coordinate system is the one where (0,0) is at the top left corner
+ * of the page, the x axis is horizontal, and the y axis is vertical.
+ *
+ * The "transformed" coordinate system is the one where (0,0) is at the top left
+ * corner of the current shape. The x axis follows the north edge of the shape
+ * (from the northwest corner to the northeast corner) and the y axis follows
+ * the west edge of the shape (from the northwest corner to the southwest corner).
+ *
+ * Because of rotation, the "north" and "west" edges might not actually be at the
+ * top and left of the transformed shape. Imagine that the compass directions are
+ * also rotated along with the shape.
+ *
+ * A refresher for coordinates and change of basis that may be helpful:
+ * https://www.math.ubc.ca/~behrend/math221/Coords.pdf
  */
 class ShapesHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
@@ -84,10 +120,19 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
+    let mainGroup = createSVGNode(this.win, {
+      nodeType: "g",
+      parent: mainSvg,
+      attributes: {
+        "id": "group",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
     // Append a polygon for polygon shapes.
     createSVGNode(this.win, {
       nodeType: "polygon",
-      parent: mainSvg,
+      parent: mainGroup,
       attributes: {
         "id": "polygon",
         "class": "polygon",
@@ -99,7 +144,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // Append an ellipse for circle/ellipse shapes.
     createSVGNode(this.win, {
       nodeType: "ellipse",
-      parent: mainSvg,
+      parent: mainGroup,
       attributes: {
         "id": "ellipse",
         "class": "ellipse",
@@ -111,7 +156,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // Append a rect for inset().
     createSVGNode(this.win, {
       nodeType: "rect",
-      parent: mainSvg,
+      parent: mainGroup,
       attributes: {
         "id": "rect",
         "class": "rect",
@@ -121,8 +166,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     });
 
     createSVGNode(this.win, {
-      nodeType: "rect",
-      parent: mainSvg,
+      nodeType: "path",
+      parent: mainGroup,
       attributes: {
         "id": "bounding-box",
         "class": "bounding-box",
@@ -132,10 +177,20 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
+    createSVGNode(this.win, {
+      nodeType: "path",
+      parent: mainGroup,
+      attributes: {
+        "id": "rotate-line",
+        "class": "rotate-line",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
     // Append a path to display the markers for the shape.
     createSVGNode(this.win, {
       nodeType: "path",
-      parent: mainSvg,
+      parent: mainGroup,
       attributes: {
         "id": "markers-outline",
         "class": "markers-outline",
@@ -145,7 +200,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     createSVGNode(this.win, {
       nodeType: "path",
-      parent: mainSvg,
+      parent: mainGroup,
       attributes: {
         "id": "markers",
         "class": "markers",
@@ -155,7 +210,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     createSVGNode(this.win, {
       nodeType: "path",
-      parent: mainSvg,
+      parent: mainGroup,
       attributes: {
         "id": "marker-hover",
         "class": "marker-hover",
@@ -168,7 +223,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   get currentDimensions() {
-    let { top, left, width, height } = this.currentQuads[this.referenceBox][0].bounds;
+    let dims = this.currentQuads[this.referenceBox][0].bounds;
+    let zoom = getCurrentZoom(this.win);
 
     // If an SVG element has a stroke, currentQuads will return the stroke bounding box.
     // However, clip-path always uses the object bounding box unless "stroke-box" is
@@ -177,29 +233,32 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // getBBox, which only exists for SVG, to check if currentNode is an SVG element.
     if (this.currentNode.getBBox &&
         getComputedStyle(this.currentNode).stroke !== "none" && !this.useStrokeBox) {
-      return getObjectBoundingBox(top, left, width, height, this.currentNode);
+      dims = getObjectBoundingBox(dims.top, dims.left,
+        dims.width, dims.height, this.currentNode);
     }
-    return { top, left, width, height };
-  }
 
-  get zoomAdjustedDimensions() {
-    let { top, left, width, height } = this.currentDimensions;
-    let zoom = getCurrentZoom(this.win);
     return {
-      top: top / zoom,
-      left: left / zoom,
-      width: width / zoom,
-      height: height / zoom
+      top: dims.top / zoom,
+      left: dims.left / zoom,
+      width: dims.width / zoom,
+      height: dims.height / zoom
     };
   }
 
   get frameDimensions() {
-    // In an iframe, we get the node's quads relative to the frame,
-    // instead of the parent document.
-    let dims = getAdjustedQuads(this.currentNode.ownerGlobal,
-      this.currentNode, this.referenceBox)[0].bounds;
+    // In an iframe, we get the node's quads relative to the frame, instead of the parent
+    // document.
+    let dims = this.highlighterEnv.window.document === this.currentNode.ownerDocument ?
+               this.currentQuads[this.referenceBox][0].bounds :
+               getAdjustedQuads(this.currentNode.ownerGlobal,
+                                this.currentNode, this.referenceBox)[0].bounds;
     let zoom = getCurrentZoom(this.win);
 
+    // If an SVG element has a stroke, currentQuads will return the stroke bounding box.
+    // However, clip-path always uses the object bounding box unless "stroke-box" is
+    // specified. So, we must calculate the object bounding box if there is a stroke
+    // and "stroke-box" is not specified. stroke only applies to SVG elements, so use
+    // getBBox, which only exists for SVG, to check if currentNode is an SVG element.
     if (this.currentNode.getBBox &&
         getComputedStyle(this.currentNode).stroke !== "none" && !this.useStrokeBox) {
       dims = getObjectBoundingBox(dims.top, dims.left,
@@ -240,7 +299,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let style = container.getAttribute("style");
     // remove existing cursor definitions in the style
     style = style.replace(/cursor:.*?;/g, "");
-    container.setAttribute("style", `${style}cursor:${cursorType};`);
+    style = style.replace(/pointer-events:.*?;/g, "");
+    let pointerEvents = cursorType === "auto" ? "none" : "auto";
+    container.setAttribute("style",
+      `${style}pointer-events:${pointerEvents};cursor:${cursorType};`);
   }
 
   handleEvent(event, id) {
@@ -363,10 +425,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {String} type the type of transform handle that was clicked.
    */
   _handlePolygonTransformClick(pageX, pageY, type) {
-    let { width, height } = this.zoomAdjustedDimensions;
-    let pointsInfo = this.coordUnits.map(([x, y], i) => {
-      let xComputed = this.coordinates[i][0] / 100 * width;
-      let yComputed = this.coordinates[i][1] / 100 * height;
+    let { width, height } = this.currentDimensions;
+    let pointsInfo = this.origCoordUnits.map(([x, y], i) => {
+      let xComputed = this.origCoordinates[i][0] / 100 * width;
+      let yComputed = this.origCoordinates[i][1] / 100 * height;
       let unitX = getUnit(x);
       let unitY = getUnit(y);
       let valueX = (isUnitless(x)) ? xComputed : parseFloat(x);
@@ -376,7 +438,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let ratioY = (valueY / yComputed) || 1;
       return { unitX, unitY, valueX, valueY, ratioX, ratioY };
     });
-    this[_dragging] = { type, pointsInfo, x: pageX, y: pageY, bb: this.boundingBox };
+    this[_dragging] = { type, pointsInfo, x: pageX, y: pageY, bb: this.boundingBox,
+                        matrix: this.transformMatrix,
+                        transformedBB: this.transformedBoundingBox };
   }
 
   /**
@@ -386,10 +450,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {String} type the type of transform handle that was clicked.
    */
   _handleCircleTransformClick(pageX, pageY, type) {
-    let { width, height } = this.zoomAdjustedDimensions;
-    let { cx, cy } = this.coordUnits;
-    let cxComputed = this.coordinates.cx / 100 * width;
-    let cyComputed = this.coordinates.cy / 100 * height;
+    let { width, height } = this.currentDimensions;
+    let { cx, cy } = this.origCoordUnits;
+    let cxComputed = this.origCoordinates.cx / 100 * width;
+    let cyComputed = this.origCoordinates.cy / 100 * height;
     let unitX = getUnit(cx);
     let unitY = getUnit(cy);
     let valueX = (isUnitless(cx)) ? cxComputed : parseFloat(cx);
@@ -398,17 +462,18 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let ratioX = (valueX / cxComputed) || 1;
     let ratioY = (valueY / cyComputed) || 1;
 
-    let { radius } = this.coordinates;
+    let { radius } = this.origCoordinates;
     let computedSize = Math.sqrt((width ** 2) + (height ** 2)) / Math.sqrt(2);
     radius = radius / 100 * computedSize;
-    let valueRad = this.coordUnits.radius;
+    let valueRad = this.origCoordUnits.radius;
     let unitRad = getUnit(valueRad);
     valueRad = (isUnitless(valueRad)) ? radius : parseFloat(valueRad);
     let ratioRad = (valueRad / radius) || 1;
 
     this[_dragging] = { type, unitX, unitY, unitRad, valueX, valueY,
                         ratioX, ratioY, ratioRad, x: pageX, y: pageY,
-                        bb: this.boundingBox };
+                        bb: this.boundingBox, matrix: this.transformMatrix,
+                        transformedBB: this.transformedBoundingBox };
   }
 
   /**
@@ -418,10 +483,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {String} type the type of transform handle that was clicked.
    */
   _handleEllipseTransformClick(pageX, pageY, type) {
-    let { width, height } = this.zoomAdjustedDimensions;
-    let { cx, cy } = this.coordUnits;
-    let cxComputed = this.coordinates.cx / 100 * width;
-    let cyComputed = this.coordinates.cy / 100 * height;
+    let { width, height } = this.currentDimensions;
+    let { cx, cy } = this.origCoordUnits;
+    let cxComputed = this.origCoordinates.cx / 100 * width;
+    let cyComputed = this.origCoordinates.cy / 100 * height;
     let unitX = getUnit(cx);
     let unitY = getUnit(cy);
     let valueX = (isUnitless(cx)) ? cxComputed : parseFloat(cx);
@@ -430,21 +495,23 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let ratioX = (valueX / cxComputed) || 1;
     let ratioY = (valueY / cyComputed) || 1;
 
-    let { rx, ry } = this.coordinates;
+    let { rx, ry } = this.origCoordinates;
     rx = rx / 100 * width;
-    let valueRX = this.coordUnits.rx;
+    let valueRX = this.origCoordUnits.rx;
     let unitRX = getUnit(valueRX);
     valueRX = (isUnitless(valueRX)) ? rx : parseFloat(valueRX);
     let ratioRX = (valueRX / rx) || 1;
     ry = ry / 100 * height;
-    let valueRY = this.coordUnits.ry;
+    let valueRY = this.origCoordUnits.ry;
     let unitRY = getUnit(valueRY);
     valueRY = (isUnitless(valueRY)) ? ry : parseFloat(valueRY);
     let ratioRY = (valueRY / ry) || 1;
 
     this[_dragging] = { type, unitX, unitY, unitRX, unitRY,
                         valueX, valueY, ratioX, ratioY, ratioRX, ratioRY,
-                        x: pageX, y: pageY, bb: this.boundingBox };
+                        x: pageX, y: pageY, bb: this.boundingBox,
+                        matrix: this.transformMatrix,
+                        transformedBB: this.transformedBoundingBox };
   }
 
   /**
@@ -454,18 +521,21 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {String} type the type of transform handle that was clicked.
    */
   _handleInsetTransformClick(pageX, pageY, type) {
-    let { width, height } = this.zoomAdjustedDimensions;
-    let pointsInfo = ["top", "right", "bottom", "left"].map(point => {
-      let value = this.coordUnits[point];
+    let { width, height } = this.currentDimensions;
+    let pointsInfo = {};
+    ["top", "right", "bottom", "left"].forEach(point => {
+      let value = this.origCoordUnits[point];
       let size = (point === "left" || point === "right") ? width : height;
-      let computedValue = this.coordinates[point] / 100 * size;
+      let computedValue = this.origCoordinates[point] / 100 * size;
       let unit = getUnit(value);
       value = (isUnitless(value)) ? computedValue : parseFloat(value);
       let ratio = (value / computedValue) || 1;
 
-      return { point, value, unit, ratio };
+      pointsInfo[point] = { value, unit, ratio };
     });
-    this[_dragging] = { type, pointsInfo, x: pageX, y: pageY, bb: this.boundingBox };
+    this[_dragging] = { type, pointsInfo, x: pageX, y: pageY, bb: this.boundingBox,
+                        matrix: this.transformMatrix,
+                        transformedBB: this.transformedBoundingBox };
   }
 
   /**
@@ -474,115 +544,168 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} pageY the y coordinate of the mouse
    */
   _handleTransformMove(pageX, pageY) {
-    let { type, pointsInfo, x, y } = this[_dragging];
+    let { type } = this[_dragging];
     if (type === "translate") {
-      if (this.shapeType === "polygon") {
-        let polygonDef = (this.fillRule) ? `${this.fillRule}, ` : "";
-        polygonDef += pointsInfo.map(({ unitX, unitY, valueX,
-                                        valueY, ratioX, ratioY }) => {
-          let deltaX = (pageX - x) * ratioX;
-          let deltaY = (pageY - y) * ratioY;
-          let newX = `${valueX + deltaX}${unitX}`;
-          let newY = `${valueY + deltaY}${unitY}`;
-          return `${newX} ${newY}`;
-        }).join(", ");
-        polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
-                                          `polygon(${polygonDef})`;
-
-        this.currentNode.style.setProperty(this.property, polygonDef, "important");
-      } else if (this.shapeType === "circle") {
-        this._handleCircleMove("center", pageX, pageY);
-      } else if (this.shapeType === "ellipse") {
-        this._handleEllipseMove("center", pageX, pageY);
-      } else if (this.shapeType === "inset") {
-        let newCoords = {};
-        pointsInfo.forEach(({point, value, unit, ratio}) => {
-          let delta = (point === "top" || point === "bottom") ? pageY - y : pageX - x;
-          let newCoord = (point === "top" || point === "left") ?
-            `${value + delta * ratio}${unit}` : `${value - delta * ratio}${unit}`;
-          newCoords[point] = newCoord;
-        });
-        let { top, right, bottom, left } = newCoords;
-        let round = this.insetRound;
-        let insetDef = (round) ?
-          `inset(${top} ${right} ${bottom} ${left} round ${round})` :
-          `inset(${top} ${right} ${bottom} ${left})`;
-        insetDef += (this.geometryBox) ? this.geometryBox : "";
-
-        this.currentNode.style.setProperty(this.property, insetDef, "important");
-      }
+      this._translateShape(pageX, pageY);
     } else if (type.includes("scale")) {
-      // To scale a shape:
-      // 1) Calculate the scaling proportion by getting the proportion of the distance
-      //    between the original click and the current mouse position on each axis to
-      //    the width/height of the shape and taking the average.
-      // 2) Translate the shape such that the anchor (the corner diagonally opposite
-      //    to the one being dragged) is at the top left of the element.
-      // 3) Scale each point by multiplying by the scaling proportion.
-      // 4) Translate the shape back such that the anchor is in its original position.
+      this._scaleShape(pageX, pageY);
+    } else if (type === "rotate" && this.shapeType === "polygon") {
+      this._rotateShape(pageX, pageY);
+    }
 
-      let { bb } = this[_dragging];
-      let { minX, minY, maxX, maxY } = bb;
-      let { width, height } = this.zoomAdjustedDimensions;
+    this.transformedBoundingBox = this.calculateTransformedBoundingBox();
+  }
 
-      // How much points on each axis should be translated before scaling
-      let transX = (type === "scale-se" || type === "scale-ne" || type === "scale-e") ?
-      minX / 100 * width : maxX / 100 * width;
-      let transY = (type === "scale-se" || type === "scale-sw" || type === "scale-s") ?
-      minY / 100 * height : maxY / 100 * height;
+  /**
+   * Translates a shape based on the current mouse position.
+   * @param {Number} pageX the x coordinate of the mouse.
+   * @param {Number} pageY the y coordinate of the mouse.
+   */
+  _translateShape(pageX, pageY) {
+    let { x, y, matrix } = this[_dragging];
+    let deltaX = pageX - x;
+    let deltaY = pageY - y;
+    this.transformMatrix = multiply(translate(deltaX, deltaY), matrix);
 
-      let { percentX, percentY } = this.convertPageCoordsToPercent(x, y);
-      let { percentX: percentPageX,
-          percentY: percentPageY } = this.convertPageCoordsToPercent(pageX, pageY);
-      // distance from original click to current mouse position, in %
-      let distanceX = (type === "scale-se" || type === "scale-ne" || type === "scale-e") ?
-      percentPageX - percentX : percentX - percentPageX;
-      let distanceY = (type === "scale-se" || type === "scale-sw" || type === "scale-s") ?
-      percentPageY - percentY : percentY - percentPageY;
-
-      // scale = 1 + proportion of distance to bounding box width/height of shape
-      let scaleX = 1 + distanceX / (maxX - minX);
-      let scaleY = 1 + distanceY / (maxY - minY);
-      let scale = (scaleX + scaleY) / 2;
-      let axis = "xy";
-      if (type === "scale-e" || type === "scale-w") {
-        scale = scaleX;
-        axis = "x";
-      } else if (type === "scale-n" || type === "scale-s") {
-        scale = scaleY;
-        axis = "y";
-      }
-
-      if (this.shapeType === "polygon") {
-        this._scalePolygon(pageX, pageY, transX, transY, scale, axis);
-      } else if (this.shapeType === "circle") {
-        this._scaleCircle(pageX, pageY, transX, transY, scale);
-      } else if (this.shapeType === "ellipse") {
-        this._scaleEllipse(pageX, pageY, transX, transY, scale, axis);
-      } else if (this.shapeType === "inset") {
-        this._scaleInset(pageX, pageY, transX, transY, scale);
-      }
+    if (this.shapeType === "polygon") {
+      this._transformPolygon();
+    } else if (this.shapeType === "circle") {
+      this._transformCircle();
+    } else if (this.shapeType === "ellipse") {
+      this._transformEllipse();
+    } else if (this.shapeType === "inset") {
+      this._transformInset();
     }
   }
 
   /**
-   * Scale a polygon depending on mouse position after clicking on a corner handle.
-   * @param {Number} pageX the x coordinate of the mouse
-   * @param {Number} pageY the y coordinate of the mouse
-   * @param {Number} transX the number of pixels to translate on the x axis before scaling
-   * @param {Number} transY the number of pixels to translate on the y axis before scaling
-   * @param {Number} scale the proportion to scale by
-   * @param {String} axis the axis to scale on. "x", "y", or "xy" for both.
+   * Scales a shape according to the current mouse position.
+   * @param {Number} pageX the x coordinate of the mouse.
+   * @param {Number} pageY the y coordinate of the mouse.
    */
-  _scalePolygon(pageX, pageY, transX, transY, scale, axis) {
+  _scaleShape(pageX, pageY) {
+    /**
+     * To scale a shape:
+     * 1) Get the change of basis matrix corresponding to the current transformation
+     *    matrix of the shape.
+     * 2) Convert the mouse x/y deltas to the "transformed" coordinate system, using
+     *    the change of base matrix.
+     * 3) Calculate the proportion to which the shape should be scaled to, using the
+     *    mouse x/y deltas and the width/height of the transformed shape.
+     * 4) Translate the shape such that the anchor (the point opposite to the one
+     *    being dragged) is at the top left of the element.
+     * 5) Scale each point by multiplying by the scaling proportion.
+     * 6) Translate the shape back such that the anchor is in its original position.
+     */
+    let { type, x, y, matrix } = this[_dragging];
+    let { width, height } = this.currentDimensions;
+    // The point opposite to the one being dragged
+    let anchor = getAnchorPoint(type);
+
+    let { ne, nw, sw } = this[_dragging].transformedBB;
+    // u/v are the basis vectors of the transformed coordinate system.
+    let u = [(ne[0] - nw[0]) / 100 * width, (ne[1] - nw[1]) / 100 * height];
+    let v = [(sw[0] - nw[0]) / 100 * width, (sw[1] - nw[1]) / 100 * height];
+    // uLength/vLength represent the width/height of the shape in the
+    // transformed coordinate system.
+    let { basis, invertedBasis, uLength, vLength } = getBasis(u, v);
+
+    // How much points on each axis should be translated before scaling
+    let transX = this[_dragging].transformedBB[anchor][0] / 100 * width;
+    let transY = this[_dragging].transformedBB[anchor][1] / 100 * height;
+
+    // Distance from original click to current mouse position
+    let distanceX = pageX - x;
+    let distanceY = pageY - y;
+    // Convert from original coordinate system to transformed coordinate system
+    let tDistanceX = invertedBasis[0] * distanceX + invertedBasis[1] * distanceY;
+    let tDistanceY = invertedBasis[3] * distanceX + invertedBasis[4] * distanceY;
+
+    // Proportion of distance to bounding box width/height of shape
+    let proportionX = tDistanceX / uLength;
+    let proportionY = tDistanceY / vLength;
+    // proportionX is positive for size reductions dragging on w/nw/sw,
+    // negative for e/ne/se.
+    let scaleX = (type.includes("w")) ? 1 - proportionX : 1 + proportionX;
+    // proportionT is positive for size reductions dragging on n/nw/ne,
+    // negative for s/sw/se.
+    let scaleY = (type.includes("n")) ? 1 - proportionY : 1 + proportionY;
+    // Take the average of scaleX/scaleY for scaling on two axes
+    let scaleXY = (scaleX + scaleY) / 2;
+
+    let translateMatrix = translate(-transX, -transY);
+    let scaleMatrix = identity();
+    // The scale matrices are in the transformed coordinate system. We must convert
+    // them to the original coordinate system before applying it to the transformation
+    // matrix.
+    if (type === "scale-e" || type === "scale-w") {
+      scaleMatrix = changeMatrixBase(scale(scaleX, 1), invertedBasis, basis);
+    } else if (type === "scale-n" || type === "scale-s") {
+      scaleMatrix = changeMatrixBase(scale(1, scaleY), invertedBasis, basis);
+    } else {
+      scaleMatrix = changeMatrixBase(scale(scaleXY, scaleXY), invertedBasis, basis);
+    }
+    let translateBackMatrix = translate(transX, transY);
+    this.transformMatrix = multiply(translateBackMatrix,
+                              multiply(scaleMatrix,
+                              multiply(translateMatrix, matrix)));
+
+    if (this.shapeType === "polygon") {
+      this._transformPolygon();
+    } else if (this.shapeType === "circle") {
+      this._transformCircle(transX);
+    } else if (this.shapeType === "ellipse") {
+      this._transformEllipse(transX, transY);
+    } else if (this.shapeType === "inset") {
+      this._transformInset();
+    }
+  }
+
+  /**
+   * Rotates a polygon based on the current mouse position.
+   * @param {Number} pageX the x coordinate of the mouse.
+   * @param {Number} pageY the y coordinate of the mouse.
+   */
+  _rotateShape(pageX, pageY) {
+    let { matrix } = this[_dragging];
+    let { center, ne, nw, sw } = this[_dragging].transformedBB;
+    let { width, height } = this.currentDimensions;
+    let centerX = center[0] / 100 * width;
+    let centerY = center[1] / 100 * height;
+    let { x: pageCenterX, y: pageCenterY } = this.convertPercentToPageCoords(...center);
+
+    let dx = pageCenterX - pageX;
+    let dy = pageCenterY - pageY;
+
+    let u = [(ne[0] - nw[0]) / 100 * width, (ne[1] - nw[1]) / 100 * height];
+    let v = [(sw[0] - nw[0]) / 100 * width, (sw[1] - nw[1]) / 100 * height];
+    let { invertedBasis } = getBasis(u, v);
+
+    let tdx = invertedBasis[0] * dx + invertedBasis[1] * dy;
+    let tdy = invertedBasis[3] * dx + invertedBasis[4] * dy;
+    let angle = Math.atan2(tdx, tdy);
+    let translateMatrix = translate(-centerX, -centerY);
+    let rotateMatrix = rotate(angle);
+    let translateBackMatrix = translate(centerX, centerY);
+    this.transformMatrix = multiply(translateBackMatrix,
+                           multiply(rotateMatrix,
+                           multiply(translateMatrix, matrix)));
+
+    this._transformPolygon();
+  }
+
+  /**
+   * Transform a polygon depending on the current transformation matrix.
+   */
+  _transformPolygon() {
     let { pointsInfo } = this[_dragging];
 
     let polygonDef = (this.fillRule) ? `${this.fillRule}, ` : "";
     polygonDef += pointsInfo.map(point => {
       let { unitX, unitY, valueX, valueY, ratioX, ratioY } = point;
-      let [newX, newY] = scalePoint(valueX, valueY, transX * ratioX,
-                                    transY * ratioY, scale, axis);
-      return `${newX}${unitX} ${newY}${unitY}`;
+      let vector = [valueX / ratioX, valueY / ratioY];
+      let [newX, newY] = apply(this.transformMatrix, vector);
+      return `${newX * ratioX}${unitX} ${newY * ratioY}${unitY}`;
     }).join(", ");
     polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
                                       `polygon(${polygonDef})`;
@@ -591,100 +714,84 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Scale a circle depending on mouse position after clicking on a corner handle.
-   * @param {Number} pageX the x coordinate of the mouse
-   * @param {Number} pageY the y coordinate of the mouse
-   * @param {Number} transX the number of pixels to translate on the x axis before scaling
-   * @param {Number} transY the number of pixels to translate on the y axis before scaling
-   * @param {Number} scale the proportion to scale by
+   * Transform a circle depending on the current transformation matrix.
+   * @param {Number} transX the number of pixels the shape is translated on the x axis
+   *                 before scaling
    */
-  _scaleCircle(pageX, pageY, transX, transY, scale) {
+  _transformCircle(transX = null) {
     let { unitX, unitY, unitRad, valueX, valueY,
           ratioX, ratioY, ratioRad } = this[_dragging];
+    let { radius } = this.coordUnits;
 
-    let [newCx, newCy] = scalePoint(valueX, valueY, transX * ratioX,
-                                    transY * ratioY, scale);
-    // As part of scaling, the center is translated to be tangent to the line y=0.
-    // To get the new radius, we scale the new cx back to that point and get the distance
-    // to the line y=0.
-    let newRadius = `${Math.abs((newCx / ratioX - transX) * ratioRad)}${unitRad}`;
+    let [newCx, newCy] = apply(this.transformMatrix, [valueX / ratioX, valueY / ratioY]);
+    if (transX !== null) {
+      // As part of scaling, the shape is translated to be tangent to the line y=0.
+      // To get the new radius, we translate the new cx back to that point and get
+      // the distance to the line y=0.
+      radius = `${Math.abs((newCx - transX) * ratioRad)}${unitRad}`;
+    }
 
     let circleDef = (this.geometryBox) ?
-      `circle(${newRadius} at ${newCx}${unitX} ${newCy}${unitY} ${this.geometryBox}` :
-      `circle(${newRadius} at ${newCx}${unitX} ${newCy}${unitY}`;
+      `circle(${radius} at ${newCx * ratioX}${unitX} ` +
+        `${newCy * ratioY}${unitY} ${this.geometryBox}` :
+      `circle(${radius} at ${newCx * ratioX}${unitX} ${newCy * ratioY}${unitY}`;
     this.currentNode.style.setProperty(this.property, circleDef, "important");
   }
 
   /**
-   * Scale an ellipse depending on mouse position after clicking on a corner handle.
-   * @param {Number} pageX the x coordinate of the mouse
-   * @param {Number} pageY the y coordinate of the mouse
-   * @param {Number} transX the number of pixels to translate on the x axis before scaling
-   * @param {Number} transY the number of pixels to translate on the y axis before scaling
-   * @param {Number} scale the proportion to scale by
-   * @param {String} axis the axis to scale on. "x", "y", or "xy" for both.
+   * Transform an ellipse depending on the current transformation matrix.
+   * @param {Number} transX the number of pixels the shape is translated on the x axis
+   *                 before scaling
+   * @param {Number} transY the number of pixels the shape is translated on the y axis
+   *                 before scaling
    */
-  _scaleEllipse(pageX, pageY, transX, transY, scale, axis) {
+  _transformEllipse(transX = null, transY = null) {
     let { unitX, unitY, unitRX, unitRY, valueX, valueY,
           ratioX, ratioY, ratioRX, ratioRY } = this[_dragging];
+    let { rx, ry } = this.coordUnits;
 
-    let [newCx, newCy] = scalePoint(valueX, valueY, transX * ratioX,
-                                    transY * ratioY, scale, axis);
-    // As part of scaling, the center is translated to be tangent to the lines y=0 & x=0.
-    // To get the new radii, we scale the new center back to that point and get the
-    // distances to the line x=0 and y=0.
-    let newRx = `${Math.abs((newCx / ratioX - transX) * ratioRX)}${unitRX}`;
-    let newRy = `${Math.abs((newCy / ratioY - transY) * ratioRY)}${unitRY}`;
-    newCx = `${newCx}${unitX}`;
-    newCy = `${newCy}${unitY}`;
+    let [newCx, newCy] = apply(this.transformMatrix, [valueX / ratioX, valueY / ratioY]);
+    if (transX !== null && transY !== null) {
+      // As part of scaling, the shape is translated to be tangent to the lines y=0 & x=0.
+      // To get the new radii, we translate the new center back to that point and get the
+      // distances to the line x=0 and y=0.
+      rx = `${Math.abs((newCx - transX) * ratioRX)}${unitRX}`;
+      ry = `${Math.abs((newCy - transY) * ratioRY)}${unitRY}`;
+    }
 
     let ellipseDef = (this.geometryBox) ?
-        `ellipse(${newRx} ${newRy} at ${newCx} ${newCy}) ${this.geometryBox}` :
-        `ellipse(${newRx} ${newRy} at ${newCx} ${newCy})`;
+        `ellipse(${rx} ${ry} at ${newCx * ratioX}${unitX} ` +
+          `${newCy * ratioY}${unitY}) ${this.geometryBox}` :
+        `ellipse(${rx} ${ry} at ${newCx * ratioX}${unitX} ` +
+          `${newCy * ratioY}${unitY})`;
     this.currentNode.style.setProperty(this.property, ellipseDef, "important");
   }
 
   /**
-   * Scale an inset depending on mouse position after clicking on a corner handle.
-   * @param {Number} pageX the x coordinate of the mouse
-   * @param {Number} pageY the y coordinate of the mouse
-   * @param {Number} transX the number of pixels to translate on the x axis before scaling
-   * @param {Number} transY the number of pixels to translate on the y axis before scaling
-   * @param {Number} scale the proportion to scale by
+   * Transform an inset depending on the current transformation matrix.
    */
-  _scaleInset(pageX, pageY, transX, transY, scale) {
-    let { pointsInfo } = this[_dragging];
-    let { width, height } = this.zoomAdjustedDimensions;
+  _transformInset() {
+    let { top, left, right, bottom } = this[_dragging].pointsInfo;
+    let { width, height } = this.currentDimensions;
 
-    let newCoords = {};
-    pointsInfo.forEach(({ point, value, unit, ratio }) => {
-      let transValue = (point === "left" || point === "right") ?
-        transX * ratio : transY * ratio;
+    let topLeft = [ left.value / left.ratio, top.value / top.ratio ];
+    let [newLeft, newTop] = apply(this.transformMatrix, topLeft);
+    newLeft = `${newLeft * left.ratio}${left.unit}`;
+    newTop = `${newTop * top.ratio}${top.unit}`;
 
-      // Right and bottom values are relative to the right and bottom edges of the
-      // element, so convert to the value relative to the left/top edges before scaling
-      // and convert back.
-      if (point === "right") {
-        value = width * ratio - value;
-        let newPoint = (value - transValue) * scale + transValue;
-        newPoint = width * ratio - newPoint;
-        newCoords[point] = `${newPoint}${unit}`;
-      } else if (point === "bottom") {
-        value = height * ratio - value;
-        let newPoint = (value - transValue) * scale + transValue;
-        newPoint = height * ratio - newPoint;
-        newCoords[point] = `${newPoint}${unit}`;
-      } else {
-        let newPoint = (value - transValue) * scale + transValue;
-        newCoords[point] = `${newPoint}${unit}`;
-      }
-    });
+    // Right and bottom values are relative to the right and bottom edges of the
+    // element, so convert to the value relative to the left/top edges before scaling
+    // and convert back.
+    let bottomRight = [ width - right.value / right.ratio,
+                        height - bottom.value / bottom.ratio ];
+    let [newRight, newBottom] = apply(this.transformMatrix, bottomRight);
+    newRight = `${(width - newRight) * right.ratio}${right.unit}`;
+    newBottom = `${(height - newBottom) * bottom.ratio}${bottom.unit}`;
 
-    let { top, right, bottom, left } = newCoords;
     let round = this.insetRound;
     let insetDef = (round) ?
-          `inset(${top} ${right} ${bottom} ${left} round ${round})` :
-          `inset(${top} ${right} ${bottom} ${left})`;
+          `inset(${newTop} ${newRight} ${newBottom} ${newLeft} round ${round})` :
+          `inset(${newTop} ${newRight} ${newBottom} ${newLeft})`;
     insetDef += (this.geometryBox) ? this.geometryBox : "";
 
     this.currentNode.style.setProperty(this.property, insetDef, "important");
@@ -696,7 +803,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} pageY the y coordinate of the click
    */
   _handlePolygonClick(pageX, pageY) {
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
     let point = this.getPolygonPointAt(percentX, percentY);
     if (point === -1) {
@@ -786,7 +893,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} pageY the y coordinate of the click
    */
   _handleCircleClick(pageX, pageY) {
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
     let point = this.getCirclePointAt(percentX, percentY);
     if (!point) {
@@ -868,7 +975,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} pageY the y coordinate of the click
    */
   _handleEllipseClick(pageX, pageY) {
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
     let point = this.getEllipsePointAt(percentX, percentY);
     if (!point) {
@@ -938,7 +1045,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     } else if (point === "rx") {
       let { value, unit, origRadius, ratio } = this[_dragging];
       let newRadiusPercent = Math.abs(percentX - this.coordinates.cx);
-      let { width } = this.zoomAdjustedDimensions;
+      let { width } = this.currentDimensions;
       let delta = ((newRadiusPercent / 100 * width) - origRadius) * ratio;
       let newRadius = `${value + delta}${unit}`;
 
@@ -950,7 +1057,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     } else if (point === "ry") {
       let { value, unit, origRadius, ratio } = this[_dragging];
       let newRadiusPercent = Math.abs(percentY - this.coordinates.cy);
-      let { height } = this.zoomAdjustedDimensions;
+      let { height } = this.currentDimensions;
       let delta = ((newRadiusPercent / 100 * height) - origRadius) * ratio;
       let newRadius = `${value + delta}${unit}`;
 
@@ -968,7 +1075,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} pageY the y coordinate of the click
    */
   _handleInsetClick(pageX, pageY) {
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
     let point = this.getInsetPointAt(percentX, percentY);
     if (!point) {
@@ -1082,26 +1189,39 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let hoverCursor = (this[_dragging]) ? "grabbing" : "grab";
 
     if (this.transformMode) {
-      let { minX, minY, maxX, maxY } = this.boundingBox;
-      let centerX = (minX + maxX) / 2;
-      let centerY = (minY + maxY) / 2;
+      if (!point) {
+        this.setCursor("auto");
+        return;
+      }
+      let { nw, ne, sw, se, n, w, s, e,
+            rotatePoint, center } = this.transformedBoundingBox;
 
       const points = [
-        { pointName: "translate", x: centerX, y: centerY, cursor: "move" },
-        { pointName: "scale-se", x: maxX, y: maxY, cursor: "nwse-resize" },
-        { pointName: "scale-ne", x: maxX, y: minY, cursor: "nesw-resize" },
-        { pointName: "scale-sw", x: minX, y: maxY, cursor: "nesw-resize" },
-        { pointName: "scale-nw", x: minX, y: minY, cursor: "nwse-resize" },
-        { pointName: "scale-n", x: centerX, y: minY, cursor: "ns-resize" },
-        { pointName: "scale-s", x: centerX, y: maxY, cursor: "ns-resize" },
-        { pointName: "scale-e", x: maxX, y: centerY, cursor: "ew-resize" },
-        { pointName: "scale-w", x: minX, y: centerY, cursor: "ew-resize" }
+        { pointName: "translate", x: center[0], y: center[1], cursor: "move" },
+        { pointName: "scale-se", x: se[0], y: se[1], anchor: "nw" },
+        { pointName: "scale-ne", x: ne[0], y: ne[1], anchor: "sw" },
+        { pointName: "scale-sw", x: sw[0], y: sw[1], anchor: "ne" },
+        { pointName: "scale-nw", x: nw[0], y: nw[1], anchor: "se" },
+        { pointName: "scale-n", x: n[0], y: n[1], anchor: "s" },
+        { pointName: "scale-s", x: s[0], y: s[1], anchor: "n" },
+        { pointName: "scale-e", x: e[0], y: e[1], anchor: "w" },
+        { pointName: "scale-w", x: w[0], y: w[1], anchor: "e" },
+        { pointName: "rotate", x: rotatePoint[0], y: rotatePoint[1], cursor: "grab" },
       ];
 
-      for (let { pointName, x, y, cursor } of points) {
+      for (let { pointName, x, y, cursor, anchor } of points) {
         if (point === pointName) {
           this._drawHoverMarker([[x, y]]);
-          this.setCursor(cursor);
+
+          // If the point is a scale handle, we will need to determine the direction
+          // of the resize cursor based on the position of the handle relative to its
+          // "anchor" (the handle opposite to it).
+          if (pointName.includes("scale")) {
+            let direction = this.getRoughDirection(pointName, anchor);
+            this.setCursor(`${direction}-resize`);
+          } else {
+            this.setCursor(cursor);
+          }
         }
       }
     } else if (this.shapeType === "polygon") {
@@ -1158,7 +1278,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   _drawHoverMarker(points) {
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let zoom = getCurrentZoom(this.win);
     let path = points.map(([x, y]) => {
       return getCirclePath(BASE_MARKER_SIZE, x, y, width, height, zoom);
@@ -1192,8 +1312,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   convertPageCoordsToPercent(pageX, pageY) {
     // If the current node is in an iframe, we get dimensions relative to the frame.
-    let dims = this.highlighterEnv.window.document === this.currentNode.ownerDocument ?
-               this.zoomAdjustedDimensions : this.frameDimensions;
+    let dims = this.frameDimensions;
     let { top, left, width, height } = dims;
     pageX -= left;
     pageY -= top;
@@ -1213,8 +1332,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @memberof ShapesHighlighter
    */
   convertPercentToPageCoords(x, y) {
-    let dims = this.highlighterEnv.window.document === this.currentNode.ownerDocument ?
-               this.zoomAdjustedDimensions : this.frameDimensions;
+    let dims = this.frameDimensions;
     let { top, left, width, height } = dims;
     x = x * width / 100;
     y = y * height / 100;
@@ -1231,34 +1349,40 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    *          to the shape.
    */
   getTransformPointAt(pageX, pageY) {
-    let { minX, minY, maxX, maxY } = this.boundingBox;
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { nw, ne, sw, se, n, w, s, e, rotatePoint, center } = this.transformedBoundingBox;
+    let { width, height } = this.currentDimensions;
     let zoom = getCurrentZoom(this.win);
     let clickRadiusX = BASE_MARKER_SIZE / zoom * 100 / width;
     let clickRadiusY = BASE_MARKER_SIZE / zoom * 100 / height;
 
-    let centerX = (minX + maxX) / 2;
-    let centerY = (minY + maxY) / 2;
-
     let points = [
-      { point: "translate", x: centerX, y: centerY },
-      { point: "scale-se", x: maxX, y: maxY },
-      { point: "scale-ne", x: maxX, y: minY },
-      { point: "scale-sw", x: minX, y: maxY },
-      { point: "scale-nw", x: minX, y: minY },
+      { pointName: "translate", x: center[0], y: center[1] },
+      { pointName: "scale-se", x: se[0], y: se[1] },
+      { pointName: "scale-ne", x: ne[0], y: ne[1] },
+      { pointName: "scale-sw", x: sw[0], y: sw[1] },
+      { pointName: "scale-nw", x: nw[0], y: nw[1] },
     ];
 
     if (this.shapeType === "polygon" || this.shapeType === "ellipse") {
-      points.push({ point: "scale-n", x: centerX, y: minY },
-                  { point: "scale-s", x: centerX, y: maxY },
-                  { point: "scale-e", x: maxX, y: centerY },
-                  { point: "scale-w", x: minX, y: centerY });
+      points.push({ pointName: "scale-n", x: n[0], y: n[1] },
+                  { pointName: "scale-s", x: s[0], y: s[1] },
+                  { pointName: "scale-e", x: e[0], y: e[1] },
+                  { pointName: "scale-w", x: w[0], y: w[1] });
     }
 
-    for (let { point, x, y } of points) {
+    if (this.shapeType === "polygon") {
+      let x = rotatePoint[0];
+      let y = rotatePoint[1];
       if (pageX >= x - clickRadiusX && pageX <= x + clickRadiusX &&
           pageY >= y - clickRadiusY && pageY <= y + clickRadiusY) {
-        return point;
+        return "rotate";
+      }
+    }
+
+    for (let { pointName, x, y } of points) {
+      if (pageX >= x - clickRadiusX && pageX <= x + clickRadiusX &&
+          pageY >= y - clickRadiusY && pageY <= y + clickRadiusY) {
+        return pointName;
       }
     }
 
@@ -1274,7 +1398,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   getPolygonPointAt(pageX, pageY) {
     let { coordinates } = this;
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let zoom = getCurrentZoom(this.win);
     let clickRadiusX = BASE_MARKER_SIZE / zoom * 100 / width;
     let clickRadiusY = BASE_MARKER_SIZE / zoom * 100 / height;
@@ -1298,7 +1422,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   getPolygonClickedLine(pageX, pageY) {
     let { coordinates } = this;
-    let { width } = this.zoomAdjustedDimensions;
+    let { width } = this.currentDimensions;
     let clickWidth = LINE_CLICK_WIDTH * 100 / width;
 
     for (let i = 0; i < coordinates.length; i++) {
@@ -1329,7 +1453,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   getCirclePointAt(pageX, pageY) {
     let { cx, cy, rx, ry } = this.coordinates;
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let zoom = getCurrentZoom(this.win);
     let clickRadiusX = BASE_MARKER_SIZE / zoom * 100 / width;
     let clickRadiusY = BASE_MARKER_SIZE / zoom * 100 / height;
@@ -1358,7 +1482,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   getEllipsePointAt(pageX, pageY) {
     let { cx, cy, rx, ry } = this.coordinates;
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let zoom = getCurrentZoom(this.win);
     let clickRadiusX = BASE_MARKER_SIZE / zoom * 100 / width;
     let clickRadiusY = BASE_MARKER_SIZE / zoom * 100 / height;
@@ -1388,7 +1512,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   getInsetPointAt(pageX, pageY) {
     let { top, left, right, bottom } = this.coordinates;
     let zoom = getCurrentZoom(this.win);
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let clickWidthX = LINE_CLICK_WIDTH * 100 / width;
     let clickWidthY = LINE_CLICK_WIDTH * 100 / height;
     let clickRadiusX = BASE_MARKER_SIZE / zoom * 100 / width;
@@ -1487,6 +1611,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   polygonPoints(definition) {
     this.coordUnits = this.polygonRawPoints();
+    if (!this.origCoordUnits) {
+      this.origCoordUnits = this.coordUnits;
+    }
     let splitDef = definition.split(", ");
     if (splitDef[0] === "evenodd" || splitDef[0] === "nonzero") {
       splitDef.shift();
@@ -1512,6 +1639,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       return [x, y];
     });
     this.boundingBox = { minX, minY, maxX, maxY };
+    if (!this.origBoundingBox) {
+      this.origBoundingBox = this.boundingBox;
+    }
     return coordinates;
   }
 
@@ -1521,7 +1651,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   polygonRawPoints() {
     let definition = getDefinedShapeProperties(this.currentNode, this.property);
-    if (definition === this.rawDefinition) {
+    if (definition === this.rawDefinition && this.coordUnits) {
       return this.coordUnits;
     }
     this.rawDefinition = definition;
@@ -1551,10 +1681,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   circlePoints(definition) {
     this.coordUnits = this.circleRawPoints();
+    if (!this.origCoordUnits) {
+      this.origCoordUnits = this.coordUnits;
+    }
     // The computed value of circle() always has the keyword "at".
     let values = definition.split(" at ");
     let radius = values[0];
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let center = splitCoords(values[1]).map(this.convertCoordsToPercent.bind(this));
 
     // Percentage values for circle() are resolved from the
@@ -1582,6 +1715,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     this.boundingBox = { minX: center[0] - radiusX, maxX: center[0] + radiusX,
                          minY: center[1] - radiusY, maxY: center[1] + radiusY };
+    if (!this.origBoundingBox) {
+      this.origBoundingBox = this.boundingBox;
+    }
     return { radius, rx: radiusX, ry: radiusY, cx: center[0], cy: center[1] };
   }
 
@@ -1592,7 +1728,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   circleRawPoints() {
     let definition = getDefinedShapeProperties(this.currentNode, this.property);
-    if (definition === this.rawDefinition) {
+    if (definition === this.rawDefinition && this.coordUnits) {
       return this.coordUnits;
     }
     this.rawDefinition = definition;
@@ -1617,6 +1753,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   ellipsePoints(definition) {
     this.coordUnits = this.ellipseRawPoints();
+    if (!this.origCoordUnits) {
+      this.origCoordUnits = this.coordUnits;
+    }
     let values = definition.split(" at ");
     let center = splitCoords(values[1]).map(this.convertCoordsToPercent.bind(this));
 
@@ -1635,6 +1774,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     this.boundingBox = { minX: center[0] - radii[0], maxX: center[0] + radii[0],
                          minY: center[1] - radii[1], maxY: center[1] + radii[1] };
+    if (!this.origBoundingBox) {
+      this.origBoundingBox = this.boundingBox;
+    }
     return { rx: radii[0], ry: radii[1], cx: center[0], cy: center[1] };
   }
 
@@ -1645,7 +1787,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   ellipseRawPoints() {
     let definition = getDefinedShapeProperties(this.currentNode, this.property);
-    if (definition === this.rawDefinition) {
+    if (definition === this.rawDefinition && this.coordUnits) {
       return this.coordUnits;
     }
     this.rawDefinition = definition;
@@ -1673,11 +1815,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   insetPoints(definition) {
     this.coordUnits = this.insetRawPoints();
+    if (!this.origCoordUnits) {
+      this.origCoordUnits = this.coordUnits;
+    }
     let values = definition.split(" round ");
     let offsets = splitCoords(values[0]).map(this.convertCoordsToPercent.bind(this));
 
-    let top, left = 0;
-    let { width: right, height: bottom } = this.currentDimensions;
+    let top, left, right, bottom;
     // The offsets, like margin/padding/border, are in order: top, right, bottom, left.
     if (offsets.length === 1) {
       top = left = right = bottom = offsets[0];
@@ -1698,6 +1842,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // maxX/maxY are found by subtracting the right/bottom edges from 100
     // (the width/height of the element in %)
     this.boundingBox = { minX: left, maxX: 100 - right, minY: top, maxY: 100 - bottom};
+    if (!this.origBoundingBox) {
+      this.origBoundingBox = this.boundingBox;
+    }
     return { top, left, right, bottom };
   }
 
@@ -1708,7 +1855,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   insetRawPoints() {
     let definition = getDefinedShapeProperties(this.currentNode, this.property);
-    if (definition === this.rawDefinition) {
+    if (definition === this.rawDefinition && this.coordUnits) {
       return this.coordUnits;
     }
     this.rawDefinition = definition;
@@ -1743,7 +1890,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   convertCoordsToPercent(coord, i) {
-    let { width, height } = this.zoomAdjustedDimensions;
+    let { width, height } = this.currentDimensions;
     let size = i % 2 === 0 ? width : height;
     if (coord.includes("calc(")) {
       return evalCalcExpression(coord.substring(5, coord.length - 1), size);
@@ -1789,6 +1936,18 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _show() {
     this.hoveredPoint = this.options.hoverPoint;
     this.transformMode = this.options.transformMode;
+    this.coordinates = null;
+    this.coordUnits = null;
+    this.origBoundingBox = null;
+    this.origCoordUnits = null;
+    this.origCoordinates = null;
+    this.transformedBoundingBox = null;
+    if (this.transformMode) {
+      this.transformMatrix = identity();
+    }
+    if (this._hasMoved() && this.transformMode) {
+      this.transformedBoundingBox = this.calculateTransformedBoundingBox();
+    }
     return this._update();
   }
 
@@ -1799,6 +1958,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   _hasMoved() {
     let hasMoved = AutoRefreshHighlighter.prototype._hasMoved.call(this);
+
+    if (hasMoved) {
+      this.origBoundingBox = null;
+      this.origCoordUnits = null;
+      this.origCoordinates = null;
+      if (this.transformMode) {
+        this.transformMatrix = identity();
+      }
+    }
 
     let oldShapeCoordinates = JSON.stringify(this.coordinates);
 
@@ -1817,13 +1985,20 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       } else {
         let { coordinates, shapeType } = this._parseCSSShapeValue(style);
         this.coordinates = coordinates;
+        if (!this.origCoordinates) {
+          this.origCoordinates = coordinates;
+        }
         this.shapeType = shapeType;
       }
     }
 
     let newShapeCoordinates = JSON.stringify(this.coordinates);
+    hasMoved = hasMoved || oldShapeCoordinates !== newShapeCoordinates;
+    if (this.transformMode && hasMoved) {
+      this.transformedBoundingBox = this.calculateTransformedBoundingBox();
+    }
 
-    return hasMoved || oldShapeCoordinates !== newShapeCoordinates;
+    return hasMoved;
   }
 
   /**
@@ -1836,6 +2011,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this.getElement("bounding-box").setAttribute("hidden", true);
     this.getElement("markers").setAttribute("d", "");
     this.getElement("markers-outline").setAttribute("d", "");
+    this.getElement("rotate-line").setAttribute("d", "");
   }
 
   /**
@@ -1845,10 +2021,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   _update() {
     setIgnoreLayoutChanges(true);
+    this.getElement("group").setAttribute("transform", "");
     let root = this.getElement("root");
     root.setAttribute("hidden", true);
 
-    let { top, left, width, height } = this.zoomAdjustedDimensions;
+    let { top, left, width, height } = this.currentDimensions;
     let zoom = getCurrentZoom(this.win);
 
     // Size the SVG like the current node.
@@ -1888,21 +2065,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} zoom the zoom level of the window
    */
   _updateTransformMode(width, height, zoom) {
-    let { minX, minY, maxX, maxY } = this.boundingBox;
+    let { nw, ne, sw, se, n, w, s, e, rotatePoint, center } = this.transformedBoundingBox;
     let boundingBox = this.getElement("bounding-box");
-    boundingBox.setAttribute("x", minX);
-    boundingBox.setAttribute("y", minY);
-    boundingBox.setAttribute("width", maxX - minX);
-    boundingBox.setAttribute("height", maxY - minY);
+    let path = `M${nw.join(" ")} L${ne.join(" ")} L${se.join(" ")} L${sw.join(" ")} Z`;
+    boundingBox.setAttribute("d", path);
     boundingBox.removeAttribute("hidden");
 
-    let centerX = (minX + maxX) / 2;
-    let centerY = (minY + maxY) / 2;
-    let markerPoints = [[centerX, centerY], [minX, minY],
-                        [maxX, minY], [minX, maxY], [maxX, maxY]];
+    let markerPoints = [center, nw, ne, se, sw];
     if (this.shapeType === "polygon" || this.shapeType === "ellipse") {
-      markerPoints.push([minX, centerY], [maxX, centerY],
-                        [centerX, minY], [centerX, maxY]);
+      markerPoints.push(n, s, w, e);
     }
     this._drawMarkers(markerPoints, width, height, zoom);
 
@@ -1912,6 +2083,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let polygonEl = this.getElement("polygon");
       polygonEl.setAttribute("points", points);
       polygonEl.removeAttribute("hidden");
+
+      markerPoints.push(rotatePoint);
+      let rotateLine = `M ${center.join(" ")} L ${rotatePoint.join(" ")}`;
+      this.getElement("rotate-line").setAttribute("d", rotateLine);
     } else if (this.shapeType === "circle" || this.shapeType === "ellipse") {
       let { rx, ry, cx, cy } = this.coordinates;
       let ellipseEl = this.getElement("ellipse");
@@ -1921,6 +2096,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       ellipseEl.setAttribute("cy", cy);
       ellipseEl.removeAttribute("hidden");
     }
+    this._drawMarkers(markerPoints, width, height, zoom);
   }
 
   /**
@@ -2019,6 +2195,43 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
+   * Calculate the bounding box of the shape after it is transformed according to
+   * the transformation matrix.
+   * @returns {Object} of form { nw, ne, sw, se, n, s, w, e, rotatePoint, center }.
+   *          Each element in the object is an array of form [x,y], denoting the x/y
+   *          coordinates of the given point.
+   */
+  calculateTransformedBoundingBox() {
+    let { minX, minY, maxX, maxY } = this.origBoundingBox;
+    let { width, height } = this.currentDimensions;
+    let toPixel = scale(width / 100, height / 100);
+    let toPercent = scale(100 / width, 100 / height);
+    let matrix = multiply(toPercent, multiply(this.transformMatrix, toPixel));
+    let centerX = (minX + maxX) / 2;
+    let centerY = (minY + maxY) / 2;
+    let nw = apply(matrix, [minX, minY]);
+    let ne = apply(matrix, [maxX, minY]);
+    let sw = apply(matrix, [minX, maxY]);
+    let se = apply(matrix, [maxX, maxY]);
+    let n = apply(matrix, [centerX, minY]);
+    let s = apply(matrix, [centerX, maxY]);
+    let w = apply(matrix, [minX, centerY]);
+    let e = apply(matrix, [maxX, centerY]);
+    let center = apply(matrix, [centerX, centerY]);
+
+    let u = [(ne[0] - nw[0]) / 100 * width, (ne[1] - nw[1]) / 100 * height];
+    let v = [(sw[0] - nw[0]) / 100 * width, (sw[1] - nw[1]) / 100 * height];
+    let { basis, invertedBasis } = getBasis(u, v);
+    let rotatePointMatrix = changeMatrixBase(translate(0, -ROTATE_LINE_LENGTH),
+                                             invertedBasis, basis);
+    rotatePointMatrix = multiply(toPercent,
+                        multiply(rotatePointMatrix,
+                        multiply(this.transformMatrix, toPixel)));
+    let rotatePoint = apply(rotatePointMatrix, [centerX, centerY]);
+    return { nw, ne, sw, se, n, s, w, e, rotatePoint, center };
+  }
+
+  /**
    * Hide the highlighter, the outline and the infobar.
    */
   _hide() {
@@ -2026,6 +2239,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     this._hideShapes();
     this.getElement("markers").setAttribute("d", "");
+    this.getElement("root").setAttribute("style", "");
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
   }
@@ -2036,6 +2250,35 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     if (target.defaultView === this.win) {
       this.hide();
     }
+  }
+
+  /**
+   * Get the rough direction of the point relative to the anchor.
+   * If the handle is roughly horizontal relative to the anchor, return "ew".
+   * If the handle is roughly vertical relative to the anchor, return "ns"
+   * If the handle is roughly above/right or below/left, return "nesw"
+   * If the handle is roughly above/left or below/right, return "nwse"
+   * @param {String} pointName the name of the point being hovered
+   * @param {String} anchor the name of the anchor point
+   * @returns {String} The rough direction of the point relative to the anchor
+   */
+  getRoughDirection(pointName, anchor) {
+    let scalePoint = pointName.split("-")[1];
+    let anchorPos = this.transformedBoundingBox[anchor];
+    let scalePos = this.transformedBoundingBox[scalePoint];
+    let { minX, minY, maxX, maxY } = this.boundingBox;
+    let width = maxX - minX;
+    let height = maxY - minY;
+    let dx = (scalePos[0] - anchorPos[0]) / width;
+    let dy = (scalePos[1] - anchorPos[1]) / height;
+    if (dx >= -0.33 && dx <= 0.33) {
+      return "ns";
+    } else if (dy >= -0.33 && dy <= 0.33) {
+      return "ew";
+    } else if ((dx > 0.33 && dy < -0.33) || (dx < -0.33 && dy > 0.33)) {
+      return "nesw";
+    }
+    return "nwse";
   }
 }
 
@@ -2234,6 +2477,33 @@ const isUnitless = (point) => {
          point.includes("(") ||
          point === "closest-side" ||
          point === "farthest-side";
+};
+
+/**
+ * Return the anchor corresponding to the given scale type.
+ * @param {String} type a scale type, of form "scale-[direction]"
+ * @returns {String} a string describing the anchor, one of the 8 cardinal directions.
+ */
+const getAnchorPoint = (type) => {
+  let anchor = type.split("-")[1];
+  if (anchor.includes("n")) {
+    anchor = anchor.replace("n", "s");
+  } else if (anchor.includes("s")) {
+    anchor = anchor.replace("s", "n");
+  }
+  if (anchor.includes("w")) {
+    anchor = anchor.replace("w", "e");
+  } else if (anchor.includes("e")) {
+    anchor = anchor.replace("e", "w");
+  }
+
+  if (anchor === "e" || anchor === "w") {
+    anchor = "n" + anchor;
+  } else if (anchor === "n" || anchor === "s") {
+    anchor = anchor + "w";
+  }
+
+  return anchor;
 };
 
 exports.ShapesHighlighter = ShapesHighlighter;
