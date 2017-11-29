@@ -249,12 +249,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
     void visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins);
-    void visitWasmCompareExchangeCallout(LWasmCompareExchangeCallout* ins);
     void visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins);
-    void visitWasmAtomicExchangeCallout(LWasmAtomicExchangeCallout* ins);
     void visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins);
     void visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* ins);
-    void visitWasmAtomicBinopCallout(LWasmAtomicBinopCallout* ins);
     void visitWasmStackArg(LWasmStackArg* ins);
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);
     void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
