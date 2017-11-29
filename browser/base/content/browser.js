@@ -2372,10 +2372,21 @@ function BrowserOpenFileWindow() {
   }
 }
 
-function BrowserCloseTabOrWindow() {
-  // If we're not a browser window, just close the window
+function BrowserCloseTabOrWindow(event) {
+  // If we're not a browser window, just close the window.
   if (window.location.href != getBrowserURL()) {
     closeWindow(true);
+    return;
+  }
+
+  // Keyboard shortcuts that would close a tab that is pinned select the first
+  // unpinned tab instead.
+  if (event &&
+      (event.ctrlKey || event.metaKey || event.altKey) &&
+      gBrowser.selectedTab.pinned) {
+    if (gBrowser.visibleTabs.length > gBrowser._numPinnedTabs) {
+      gBrowser.tabContainer.selectedIndex = gBrowser._numPinnedTabs;
+    }
     return;
   }
 
