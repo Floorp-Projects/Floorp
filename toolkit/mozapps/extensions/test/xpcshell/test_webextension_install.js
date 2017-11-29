@@ -80,7 +80,7 @@ add_task(async function test_unsigned_no_id_temp_install() {
   };
 
   const addonDir = await promiseWriteWebManifestForExtension(manifest, gTmpD,
-                                                "the-addon-sub-dir");
+                                                             "the-addon-sub-dir");
   const testDate = new Date();
   const [addon] = await Promise.all([
     AddonManager.installTemporaryAddon(addonDir),

@@ -10,6 +10,7 @@
 ]>
 
 <!-- import-globals-from extensions.js -->
+<!-- eslint-disable indent -->
 
 <bindings id="addonBindings"
           xmlns="http://www.mozilla.org/xbl"

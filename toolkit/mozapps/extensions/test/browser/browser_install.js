@@ -45,13 +45,13 @@ function get_node(parent, anonid) {
 function installAddon(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_2.xpi",
                                 function(aInstall) {
-    aInstall.addListener({
-      onInstallEnded() {
-        executeSoon(aCallback);
-      }
-    });
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.addListener({
+                                    onInstallEnded() {
+                                      executeSoon(aCallback);
+                                    }
+                                  });
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 }
 
 function installUpgrade(aCallback) {
@@ -77,17 +77,17 @@ function installUpgrade(aCallback) {
 function cancelInstall(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_2.xpi",
                                 function(aInstall) {
-    aInstall.addListener({
-      onDownloadEnded(aInstall) {
-        executeSoon(function() {
-          aInstall.cancel();
-          aCallback();
-        });
-        return false;
-      }
-    });
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.addListener({
+                                    onDownloadEnded(aInstall) {
+                                      executeSoon(function() {
+                                        aInstall.cancel();
+                                        aCallback();
+                                      });
+                                      return false;
+                                    }
+                                  });
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 }
 
 function installSearchResult(aCallback) {
@@ -206,7 +206,7 @@ add_test(function() {
 add_test(function() {
   installSearchResult(function() {
     close_manager(gManagerWindow, function() {
-        open_manager("addons://list/extension", function(aWindow) {
+      open_manager("addons://list/extension", function(aWindow) {
         gManagerWindow = aWindow;
         gCategoryUtilities = new CategoryUtilities(gManagerWindow);
         check_undo_install();
@@ -244,11 +244,11 @@ add_test(function() {
 add_test(function() {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_1.xpi",
                                 function(aInstall) {
-    aInstall.addListener({
-      onInstallEnded: run_next_test
-    });
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.addListener({
+                                    onInstallEnded: run_next_test
+                                  });
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 });
 
 // Install an upgrade through the API with the manager open

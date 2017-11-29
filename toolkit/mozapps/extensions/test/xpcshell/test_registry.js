@@ -55,7 +55,7 @@ function run_test() {
 // Tests whether basic registry install works
 function run_test_1() {
   registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                   "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon1@tests.mozilla.org", addon1Dir.path);
   registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",

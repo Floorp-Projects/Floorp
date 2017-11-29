@@ -153,25 +153,25 @@ function providerName(aProvider) {
  * parent 'addons' level logger accordingly.
  */
 var PrefObserver = {
-    init() {
-      Services.prefs.addObserver(PREF_LOGGING_ENABLED, this);
-      Services.obs.addObserver(this, "xpcom-shutdown");
-      this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
-    },
+  init() {
+    Services.prefs.addObserver(PREF_LOGGING_ENABLED, this);
+    Services.obs.addObserver(this, "xpcom-shutdown");
+    this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
+  },
 
-    observe(aSubject, aTopic, aData) {
-      if (aTopic == "xpcom-shutdown") {
-        Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
-        Services.obs.removeObserver(this, "xpcom-shutdown");
-      } else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
-        let debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED, false);
-        if (debugLogEnabled) {
-          parentLogger.level = Log.Level.Debug;
-        } else {
-          parentLogger.level = Log.Level.Warn;
-        }
+  observe(aSubject, aTopic, aData) {
+    if (aTopic == "xpcom-shutdown") {
+      Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+    } else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
+      let debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED, false);
+      if (debugLogEnabled) {
+        parentLogger.level = Log.Level.Debug;
+      } else {
+        parentLogger.level = Log.Level.Warn;
       }
     }
+  }
 };
 
 PrefObserver.init();
@@ -750,7 +750,8 @@ var AddonManagerInternal = {
           this.pendingProviders.add(aProvider);
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise(
+          (resolve, reject) => {
             logger.debug("Calling shutdown blocker for " + name);
             resolve(aProvider.shutdown());
           })
@@ -1450,8 +1451,8 @@ var AddonManagerInternal = {
           if (Services.vc.compare(hotfixVersion, update.version) < 0) {
             logger.debug("Downloading hotfix version " + update.version);
             let aInstall = await AddonManagerInternal.getInstallForURL(
-                update.updateURL, "application/x-xpinstall", update.updateHash,
-                null, null, update.version);
+              update.updateURL, "application/x-xpinstall", update.updateHash,
+              null, null, update.version);
 
             aInstall.addListener({
               onDownloadEnded(aInstall) {
@@ -1619,7 +1620,7 @@ var AddonManagerInternal = {
    * @return false if any of the listeners returned false, true otherwise
    */
   callInstallListeners(aMethod,
-                                 aExtraListeners, ...aArgs) {
+                       aExtraListeners, ...aArgs) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1776,7 +1777,7 @@ var AddonManagerInternal = {
    * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
   getInstallForURL(aUrl, aMimetype, aHash, aName,
-                             aIcons, aVersion, aBrowser) {
+                   aIcons, aVersion, aBrowser) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2051,7 +2052,7 @@ var AddonManagerInternal = {
         if (install.addon.type == "theme" &&
             install.addon.userDisabled == true &&
             install.addon.appDisabled == false) {
-              install.addon.userDisabled = false;
+          install.addon.userDisabled = false;
         }
 
         let needsRestart = (install.addon.pendingOperations != AddonManager.PENDING_NONE);
@@ -2085,7 +2086,7 @@ var AddonManagerInternal = {
    *         The AddonInstall to be installed
    */
   installAddonFromWebpage(aMimetype, aBrowser,
-                                    aInstallingPrincipal, aInstall) {
+                          aInstallingPrincipal, aInstall) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2187,7 +2188,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aListener must be a InstallListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-      this.installListeners.add(aListener);
+    this.installListeners.add(aListener);
   },
 
   /**
@@ -2213,22 +2214,22 @@ var AddonManagerInternal = {
    * @throws if there is no addon matching the instanceID
    */
   addUpgradeListener(aInstanceID, aCallback) {
-   if (!aInstanceID || typeof aInstanceID != "symbol")
-     throw Components.Exception("aInstanceID must be a symbol",
-                                Cr.NS_ERROR_INVALID_ARG);
+    if (!aInstanceID || typeof aInstanceID != "symbol")
+      throw Components.Exception("aInstanceID must be a symbol",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
-  if (!aCallback || typeof aCallback != "function")
-    throw Components.Exception("aCallback must be a function",
-                               Cr.NS_ERROR_INVALID_ARG);
+    if (!aCallback || typeof aCallback != "function")
+      throw Components.Exception("aCallback must be a function",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
-   this.getAddonByInstanceID(aInstanceID).then(wrapper => {
-     if (!wrapper) {
-       throw Error(`No addon matching instanceID: ${aInstanceID}`);
-     }
-     let addonId = wrapper.id;
-     logger.debug(`Registering upgrade listener for ${addonId}`);
-     this.upgradeListeners.set(addonId, aCallback);
-   });
+    this.getAddonByInstanceID(aInstanceID).then(wrapper => {
+      if (!wrapper) {
+        throw Error(`No addon matching instanceID: ${aInstanceID}`);
+      }
+      let addonId = wrapper.id;
+      logger.debug(`Registering upgrade listener for ${addonId}`);
+      this.upgradeListeners.set(addonId, aCallback);
+    });
   },
 
   /**
@@ -2299,18 +2300,18 @@ var AddonManagerInternal = {
    * @throws if the aInstanceID argument is not specified
    *         or the AddonManager is not initialized
    */
-   getAddonByInstanceID(aInstanceID) {
-     if (!gStarted)
-       throw Components.Exception("AddonManager is not initialized",
-                                  Cr.NS_ERROR_NOT_INITIALIZED);
+  getAddonByInstanceID(aInstanceID) {
+    if (!gStarted)
+      throw Components.Exception("AddonManager is not initialized",
+                                 Cr.NS_ERROR_NOT_INITIALIZED);
 
-     if (!aInstanceID || typeof aInstanceID != "symbol")
-       throw Components.Exception("aInstanceID must be a Symbol()",
-                                  Cr.NS_ERROR_INVALID_ARG);
+    if (!aInstanceID || typeof aInstanceID != "symbol")
+      throw Components.Exception("aInstanceID must be a Symbol()",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
-     return AddonManagerInternal._getProviderByName("XPIProvider")
-                                .getAddonByInstanceID(aInstanceID);
-   },
+    return AddonManagerInternal._getProviderByName("XPIProvider")
+                               .getAddonByInstanceID(aInstanceID);
+  },
 
   /**
    * Gets an icon from the icon set provided by the add-on
@@ -2404,7 +2405,7 @@ var AddonManagerInternal = {
                                  Cr.NS_ERROR_INVALID_ARG);
 
     let promises = Array.from(this.providers,
-      p => promiseCallProvider(p, "getAddonByID", aID));
+                              p => promiseCallProvider(p, "getAddonByID", aID));
     return Promise.all(promises).then(aAddons => {
       return aAddons.find(a => !!a) || null;
     });
@@ -2997,19 +2998,19 @@ var AddonManagerInternal = {
       }
 
       return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall", options.hash)
-                                 .then(install => {
-        AddonManagerInternal.setupPromptHandler(target, null, install, false, "AMO");
+        .then(install => {
+          AddonManagerInternal.setupPromptHandler(target, null, install, false, "AMO");
 
-        let id = this.nextInstall++;
-        let {listener, installPromise} = this.makeListener(id, target.messageManager);
-        install.addListener(listener);
+          let id = this.nextInstall++;
+          let {listener, installPromise} = this.makeListener(id, target.messageManager);
+          install.addListener(listener);
 
-        this.installs.set(id, {install, target, listener, installPromise});
+          this.installs.set(id, {install, target, listener, installPromise});
 
-        let result = {id};
-        this.copyProps(install, result);
-        return result;
-      });
+          let result = {id};
+          this.copyProps(install, result);
+          return result;
+        });
     },
 
     async addonUninstall(target, id) {
@@ -3267,13 +3268,13 @@ this.AddonManagerPrivate = {
    * might have been generated by XPIProvider.
    */
   isTemporaryInstallID(extensionId) {
-     if (!gStarted)
-       throw Components.Exception("AddonManager is not initialized",
-                                  Cr.NS_ERROR_NOT_INITIALIZED);
+    if (!gStarted)
+      throw Components.Exception("AddonManager is not initialized",
+                                 Cr.NS_ERROR_NOT_INITIALIZED);
 
-     if (!extensionId || typeof extensionId != "string")
-       throw Components.Exception("extensionId must be a string",
-                                  Cr.NS_ERROR_INVALID_ARG);
+    if (!extensionId || typeof extensionId != "string")
+      throw Components.Exception("extensionId must be a string",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
     return AddonManagerInternal._getProviderByName("XPIProvider")
                                .isTemporaryInstallID(extensionId);
@@ -3551,8 +3552,8 @@ this.AddonManager = {
   },
 
   getInstallForURL(aUrl, aCallback, aMimetype,
-                                                 aHash, aName, aIcons,
-                                                 aVersion, aBrowser) {
+                   aHash, aName, aIcons,
+                   aVersion, aBrowser) {
     return promiseOrCallback(
       AddonManagerInternal.getInstallForURL(aUrl, aMimetype, aHash,
                                             aName, aIcons, aVersion, aBrowser),
