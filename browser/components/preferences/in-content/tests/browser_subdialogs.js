@@ -297,7 +297,9 @@ add_task(async function wrapped_text_in_dialog_should_have_expected_scrollHeight
     Assert.ok(docEl.scrollHeight > contentOldHeight,
       "Content height increased (from " + contentOldHeight + " to " + docEl.scrollHeight + ").");
     Assert.equal(frame.style.height, docEl.scrollHeight + "px",
-      "Height on the frame should be higher now");
+      "Height on the frame should be higher now. " +
+      "This test may fail on certain screen resoluition. " +
+      "See bug 1420576 and bug 1205717.");
   });
 
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
