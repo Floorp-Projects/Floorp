@@ -11,14 +11,11 @@
 #include <map>
 #include <set>
 
-#include <mozilla/RefPtr.h>
 #include <mozilla/UniquePtr.h>
-#include <mozilla/Maybe.h>
-#include "nsISupportsImpl.h"
 #include "nsError.h"
 
-#include "signaling/src/jsep/JsepTransport.h"
 #include "signaling/src/jsep/JsepTrackEncoding.h"
+#include "signaling/src/jsep/SsrcGenerator.h"
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SdpAttribute.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
@@ -32,6 +29,16 @@ public:
   JsepTrackNegotiatedDetails() :
     mTias(0)
   {}
+
+  JsepTrackNegotiatedDetails(const JsepTrackNegotiatedDetails& orig) :
+    mExtmap(orig.mExtmap),
+    mUniquePayloadTypes(orig.mUniquePayloadTypes),
+    mTias(orig.mTias)
+  {
+    for (const JsepTrackEncoding* encoding : orig.mEncodings.values) {
+      mEncodings.values.push_back(new JsepTrackEncoding(*encoding));
+    }
+  }
 
   size_t
   GetEncodingCount() const
@@ -88,15 +95,81 @@ class JsepTrack
 {
 public:
   JsepTrack(mozilla::SdpMediaSection::MediaType type,
-            const std::string& streamid,
-            const std::string& trackid,
-            sdp::Direction direction = sdp::kSend)
+            sdp::Direction direction)
       : mType(type),
-        mStreamId(streamid),
-        mTrackId(trackid),
         mDirection(direction),
         mActive(false)
-  {}
+  {
+  }
+
+  virtual ~JsepTrack() {}
+
+  void UpdateTrackIds(const std::vector<std::string>& streamIds,
+                      const std::string& trackId)
+  {
+    mStreamIds = streamIds;
+    mTrackId = trackId;
+  }
+
+  void ClearTrackIds()
+  {
+    mStreamIds.clear();
+    mTrackId.clear();
+  }
+
+  void UpdateRecvTrack(const Sdp& sdp, const SdpMediaSection& msection)
+  {
+    MOZ_ASSERT(mDirection == sdp::kRecv);
+    MOZ_ASSERT(
+        msection.GetMediaType() != SdpMediaSection::MediaType::kApplication);
+    std::string error;
+    SdpHelper helper(&error);
+
+    if (msection.IsSending()) {
+      (void)helper.GetIdsFromMsid(sdp, msection, &mStreamIds, &mTrackId);
+    }
+
+    // We do this whether or not the track is active
+    SetCNAME(helper.GetCNAME(msection));
+    mSsrcs.clear();
+    if (msection.GetAttributeList().HasAttribute(
+          SdpAttribute::kSsrcAttribute)) {
+      for (auto& ssrcAttr : msection.GetAttributeList().GetSsrc().mSsrcs) {
+        mSsrcs.push_back(ssrcAttr.ssrc);
+      }
+    }
+  }
+
+  JsepTrack(const JsepTrack& orig)
+  {
+    *this = orig;
+  }
+
+  JsepTrack(JsepTrack&& orig) = default;
+  JsepTrack& operator=(JsepTrack&& rhs) = default;
+
+  JsepTrack& operator=(const JsepTrack& rhs)
+  {
+    if (this != &rhs) {
+      mType = rhs.mType;
+      mStreamIds = rhs.mStreamIds;
+      mTrackId = rhs.mTrackId;
+      mCNAME = rhs.mCNAME;
+      mDirection = rhs.mDirection;
+      mJsEncodeConstraints = rhs.mJsEncodeConstraints;
+      mSsrcs = rhs.mSsrcs;
+      mActive = rhs.mActive;
+
+      for (const JsepCodecDescription* codec : rhs.mPrototypeCodecs.values) {
+        mPrototypeCodecs.values.push_back(codec->Clone());
+      }
+      if (rhs.mNegotiatedDetails) {
+        mNegotiatedDetails.reset(
+          new JsepTrackNegotiatedDetails(*rhs.mNegotiatedDetails));
+      }
+    }
+    return *this;
+  }
 
   virtual mozilla::SdpMediaSection::MediaType
   GetMediaType() const
@@ -104,28 +177,16 @@ public:
     return mType;
   }
 
-  virtual const std::string&
-  GetStreamId() const
+  virtual const std::vector<std::string>&
+  GetStreamIds() const
   {
-    return mStreamId;
-  }
-
-  virtual void
-  SetStreamId(const std::string& id)
-  {
-    mStreamId = id;
+    return mStreamIds;
   }
 
   virtual const std::string&
   GetTrackId() const
   {
     return mTrackId;
-  }
-
-  virtual void
-  SetTrackId(const std::string& id)
-  {
-    mTrackId = id;
   }
 
   virtual const std::string&
@@ -152,13 +213,7 @@ public:
     return mSsrcs;
   }
 
-  virtual void
-  AddSsrc(uint32_t ssrc)
-  {
-    if (mType != SdpMediaSection::kApplication) {
-      mSsrcs.push_back(ssrc);
-    }
-  }
+  virtual void EnsureSsrcs(SsrcGenerator& ssrcGenerator);
 
   bool
   GetActive() const
@@ -189,14 +244,18 @@ public:
                      mPrototypeCodecs.values.end(), sorter);
   }
 
-  virtual void AddToOffer(SdpMediaSection* offer) const;
+  // These two are non-const because this is where ssrcs are chosen.
+  virtual void AddToOffer(SsrcGenerator& ssrcGenerator,
+                          SdpMediaSection* offer);
   virtual void AddToAnswer(const SdpMediaSection& offer,
-                           SdpMediaSection* answer) const;
+                           SsrcGenerator& ssrcGenerator,
+                           SdpMediaSection* answer);
+
   virtual void Negotiate(const SdpMediaSection& answer,
                          const SdpMediaSection& remote);
-  static void SetUniquePayloadTypes(
-      const std::vector<RefPtr<JsepTrack>>& tracks);
-  virtual void GetNegotiatedPayloadTypes(std::vector<uint16_t>* payloadTypes);
+  static void SetUniquePayloadTypes(std::vector<JsepTrack*>& tracks);
+  virtual void GetNegotiatedPayloadTypes(
+      std::vector<uint16_t>* payloadTypes) const;
 
   // This will be set when negotiation is carried out.
   virtual const JsepTrackNegotiatedDetails*
@@ -223,18 +282,13 @@ public:
     mNegotiatedDetails.reset();
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(JsepTrack);
-
   struct JsConstraints
   {
     std::string rid;
     EncodingConstraints constraints;
   };
 
-  void SetJsConstraints(const std::vector<JsConstraints>& constraintsList)
-  {
-    mJsEncodeConstraints = constraintsList;
-  }
+  void SetJsConstraints(const std::vector<JsConstraints>& constraintsList);
 
   void GetJsConstraints(std::vector<JsConstraints>* outConstraintsList) const
   {
@@ -242,12 +296,11 @@ public:
     *outConstraintsList = mJsEncodeConstraints;
   }
 
-  static void AddToMsection(const std::vector<JsConstraints>& constraintsList,
-                            sdp::Direction direction,
-                            SdpMediaSection* msection);
+  void AddToMsection(const std::vector<JsConstraints>& constraintsList,
+                     sdp::Direction direction,
+                     SsrcGenerator& ssrcGenerator,
+                     SdpMediaSection* msection);
 
-protected:
-  virtual ~JsepTrack() {}
 
 private:
   std::vector<JsepCodecDescription*> GetCodecClones() const;
@@ -259,7 +312,7 @@ private:
   static void EnsurePayloadTypeIsUnique(std::set<uint16_t>* uniquePayloadTypes,
                                         JsepCodecDescription* codec);
   void AddToMsection(const std::vector<JsepCodecDescription*>& codecs,
-                     SdpMediaSection* msection) const;
+                     SdpMediaSection* msection);
   void GetRids(const SdpMediaSection& msection,
                sdp::Direction direction,
                std::vector<SdpRidAttributeList::Rid>* rids) const;
@@ -281,12 +334,14 @@ private:
       std::vector<JsConstraints>& constraintsList) const;
   void NegotiateRids(const std::vector<SdpRidAttributeList::Rid>& rids,
                      std::vector<JsConstraints>* constraints) const;
+  void UpdateSsrcs(SsrcGenerator& ssrcGenerator, size_t encodings);
 
-  const mozilla::SdpMediaSection::MediaType mType;
-  std::string mStreamId;
+  mozilla::SdpMediaSection::MediaType mType;
+  // These are the ids that everyone outside of JsepSession care about
+  std::vector<std::string> mStreamIds;
   std::string mTrackId;
   std::string mCNAME;
-  const sdp::Direction mDirection;
+  sdp::Direction mDirection;
   PtrVector<JsepCodecDescription> mPrototypeCodecs;
   // Holds encoding params/constraints from JS. Simulcast happens when there are
   // multiple of these. If there are none, we assume unconstrained unicast with
@@ -295,32 +350,6 @@ private:
   UniquePtr<JsepTrackNegotiatedDetails> mNegotiatedDetails;
   std::vector<uint32_t> mSsrcs;
   bool mActive;
-};
-
-// Need a better name for this.
-struct JsepTrackPair {
-  size_t mLevel;
-  // Is this track pair sharing a transport with another?
-  size_t mBundleLevel = SIZE_MAX; // SIZE_MAX if no bundle level
-  uint32_t mRecvonlySsrc;
-  RefPtr<JsepTrack> mSending;
-  RefPtr<JsepTrack> mReceiving;
-  RefPtr<JsepTransport> mRtpTransport;
-  RefPtr<JsepTransport> mRtcpTransport;
-
-  bool HasBundleLevel() const {
-    return mBundleLevel != SIZE_MAX;
-  }
-
-  size_t BundleLevel() const {
-    MOZ_ASSERT(HasBundleLevel());
-    return mBundleLevel;
-  }
-
-  void SetBundleLevel(size_t aBundleLevel) {
-    MOZ_ASSERT(aBundleLevel != SIZE_MAX);
-    mBundleLevel = aBundleLevel;
-  }
 };
 
 } // namespace mozilla

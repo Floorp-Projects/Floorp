@@ -4,6 +4,7 @@
 Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
@@ -253,13 +254,12 @@ async function test_restoreOrImport(aReplace) {
     });
     _(`Get Firefox!: ${bmk1.guid}`);
 
-    let backupFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
+    let backupFilePath = OS.Path.join(
+      OS.Constants.Path.tmpDir, `t_b_e_${Date.now()}.json`);
 
     _("Make a backup.");
-    backupFile.append("t_b_e_" + Date.now() + ".json");
 
-    _(`Backing up to file ${backupFile.path}`);
-    await bookmarkUtils.exportToFile(backupFile.path);
+    await bookmarkUtils.exportToFile(backupFilePath);
 
     _("Create a different record and sync.");
     let bmk2 = await PlacesUtils.bookmarks.insert({
@@ -289,7 +289,7 @@ async function test_restoreOrImport(aReplace) {
     do_check_eq(wbos[0], bmk2.guid);
 
     _(`Now ${verb} from a backup.`);
-    await bookmarkUtils.importFromFile(backupFile, aReplace);
+    await bookmarkUtils.importFromFile(backupFilePath, aReplace);
 
     let bookmarksCollection = server.user("foo").collection("bookmarks");
     if (aReplace) {

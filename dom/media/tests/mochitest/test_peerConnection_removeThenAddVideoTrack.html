@@ -33,23 +33,28 @@
         function PC_LOCAL_ADD_VIDEO_TRACK(test) {
           // Use fake:true here since the native fake device on linux doesn't
           // change color as needed by checkVideoPlaying() below.
-          return test.pcLocal.getAllUserMedia([{video: true, fake: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{video: true, fake: true}]);
         },
       ],
       [
         function PC_REMOTE_CHECK_ADDED_TRACK(test) {
-          is(test.pcRemote._pc.getReceivers().length, 1,
-              "pcRemote should still have one receiver");
-          const track = test.pcRemote._pc.getReceivers()[0].track;
-          isnot(originalTrack.id, track.id, "Receiver should have changed");
+          is(test.pcRemote._pc.getTransceivers().length, 2,
+              "pcRemote should have two transceivers");
+          const track = test.pcRemote._pc.getTransceivers()[1].receiver.track;
 
-          const vOriginal = test.pcRemote.remoteMediaElements.find(
-              elem => elem.id.includes(originalTrack.id));
           const vAdded = test.pcRemote.remoteMediaElements.find(
               elem => elem.id.includes(track.id));
-          ok(vOriginal.ended, "Original video element should have ended");
           return helper.checkVideoPlaying(vAdded);
         },
+        function PC_REMOTE_CHECK_REMOVED_TRACK(test) {
+          is(test.pcRemote._pc.getTransceivers().length, 2,
+              "pcRemote should have two transceivers");
+          const track = test.pcRemote._pc.getTransceivers()[0].receiver.track;
+
+          const vAdded = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(track.id));
+          return helper.checkVideoPaused(vAdded, 10, 10, 16, 5000);
+        }
       ]
     );
 

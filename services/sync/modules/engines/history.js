@@ -97,6 +97,10 @@ HistoryStore.prototype = {
   __proto__: Store.prototype,
 
   __asyncHistory: null,
+
+  // We try and only update this many visits at one time.
+  MAX_VISITS_PER_INSERT: 500,
+
   get _asyncHistory() {
     if (!this.__asyncHistory) {
       this.__asyncHistory = Cc["@mozilla.org/browser/history;1"]
@@ -212,10 +216,45 @@ HistoryStore.prototype = {
     records.length = k; // truncate array
 
     if (records.length) {
-      await PlacesUtils.history.insertMany(records);
+      for (let chunk of this._generateChunks(records)) {
+        await PlacesUtils.history.insertMany(chunk);
+      }
     }
 
     return failed;
+  },
+
+  /**
+   * Returns a generator that splits records into sanely sized chunks suitable
+   * for passing to places to prevent places doing bad things at shutdown.
+   */
+  * _generateChunks(records) {
+    // We chunk based on the number of *visits* inside each record. However,
+    // we do not split a single record into multiple records, because at some
+    // time in the future, we intend to ensure these records are ordered by
+    // lastModified, and advance the engine's timestamp as we process them,
+    // meaning we can resume exactly where we left off next sync - although
+    // currently that's not done, so we will retry the entire batch next sync
+    // if interrupted.
+    // ie, this means that if a single record has more than MAX_VISITS_PER_INSERT
+    // visits, we will call insertMany() with exactly 1 record, but with
+    // more than MAX_VISITS_PER_INSERT visits.
+    let curIndex = 0;
+    this._log.debug(`adding ${records.length} records to history`);
+    while (curIndex < records.length) {
+      Async.checkAppReady(); // may throw if we are shutting down.
+      let toAdd = []; // what we are going to insert.
+      let count = 0; // a counter which tells us when toAdd is full.
+      do {
+        let record = records[curIndex];
+        curIndex += 1;
+        toAdd.push(record);
+        count += record.visits.length;
+      } while (curIndex < records.length &&
+               count + records[curIndex].visits.length <= this.MAX_VISITS_PER_INSERT);
+      this._log.trace(`adding ${toAdd.length} items in this chunk`);
+      yield toAdd;
+    }
   },
 
   /**

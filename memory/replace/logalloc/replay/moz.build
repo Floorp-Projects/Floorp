@@ -7,11 +7,23 @@
 Program('logalloc-replay')
 
 SOURCES += [
-    '../FdPrintf.cpp',
     '/mfbt/Assertions.cpp',
     '/mfbt/Unused.cpp',
     'Replay.cpp',
 ]
+
+if CONFIG['MOZ_REPLACE_MALLOC_STATIC'] and CONFIG['MOZ_DMD']:
+    UNIFIED_SOURCES += [
+        '/mfbt/HashFunctions.cpp',
+        '/mfbt/JSONWriter.cpp',
+        '/mfbt/Poison.cpp',
+        '/mozglue/misc/StackWalk.cpp',
+    ]
+
+if not CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
+    SOURCES += [
+        '../FdPrintf.cpp',
+    ]
 
 LOCAL_INCLUDES += [
     '..',

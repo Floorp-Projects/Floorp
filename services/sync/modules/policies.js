@@ -196,7 +196,7 @@ SyncScheduler.prototype = {
         if (this.shouldSyncWhenLinkComesUp && !this.offline) {
           this._log.debug("Network link is up for the first time since we woke-up. Syncing.");
           this.shouldSyncWhenLinkComesUp = false;
-          this.scheduleNextSync(0);
+          this.scheduleNextSync(0, {why: topic});
           break;
         }
         // Intended fallthrough
@@ -252,7 +252,7 @@ SyncScheduler.prototype = {
           this._log.trace("Scheduling a sync at interval NO_SYNC_NODE_FOUND.");
           sync_interval = NO_SYNC_NODE_INTERVAL;
         }
-        this.scheduleNextSync(sync_interval);
+        this.scheduleNextSync(sync_interval, {why: "schedule"});
         break;
       case "weave:engine:sync:finish":
         if (data == "clients") {
@@ -364,7 +364,7 @@ SyncScheduler.prototype = {
           this._log.trace("Genuine return from idle. Syncing.");
           // Trigger a sync if we have multiple clients.
           if (this.numClients > 1) {
-            this.scheduleNextSync(0);
+            this.scheduleNextSync(0, {why: topic});
           }
         }, IDLE_OBSERVER_BACK_DELAY, this, "idleDebouncerTimer");
         break;
@@ -377,7 +377,7 @@ SyncScheduler.prototype = {
           if (this.numClients > 1) {
             if (!this.offline) {
               this._log.debug("Online, will sync in 2s.");
-              this.scheduleNextSync(2000);
+              this.scheduleNextSync(2000, {why: topic});
             } else {
               this._log.debug("Offline, will sync when link comes up.");
               this.shouldSyncWhenLinkComesUp = true;
@@ -389,12 +389,13 @@ SyncScheduler.prototype = {
         this.shouldSyncWhenLinkComesUp = false;
         this._log.debug("Captive portal login success. Scheduling a sync.");
         CommonUtils.nextTick(() => {
-          this.scheduleNextSync(3000);
+          this.scheduleNextSync(3000, {why: topic});
         });
+        break;
       case "sleep_notification":
         if (this.service.engineManager.get("tabs")._tracker.modified) {
           this._log.debug("Going to sleep, doing a quick sync.");
-          this.scheduleNextSync(0, ["tabs"], "sleep");
+          this.scheduleNextSync(0, {engines: ["tabs"], why: "sleep"});
         }
         break;
     }
@@ -483,13 +484,15 @@ SyncScheduler.prototype = {
       return;
     }
 
+    let why = "schedule";
     // Only set the wait time to 0 if we need to sync right away
     let wait;
     if (this.globalScore > this.syncThreshold) {
       this._log.debug("Global Score threshold hit, triggering sync.");
       wait = 0;
+      why = "score";
     }
-    this.scheduleNextSync(wait);
+    this.scheduleNextSync(wait, {why});
   },
 
   /**
@@ -521,7 +524,7 @@ SyncScheduler.prototype = {
   /**
    * Set a timer for the next sync
    */
-  scheduleNextSync(interval, engines = null, why = null) {
+  scheduleNextSync(interval, {engines = null, why = null} = {}) {
     // If no interval was specified, use the current sync interval.
     if (interval == null) {
       interval = this.syncInterval;
@@ -551,12 +554,12 @@ SyncScheduler.prototype = {
 
     // Start the sync right away if we're already late.
     if (interval <= 0) {
-      this._log.trace("Requested sync should happen right away.");
+      this._log.trace(`Requested sync should happen right away. (why=${why})`);
       this.syncIfMPUnlocked(engines, why);
       return;
     }
 
-    this._log.debug("Next sync in " + interval + " ms.");
+    this._log.debug(`Next sync in ${interval} ms. (why=${why})`);
     CommonUtils.namedTimer(() => { this.syncIfMPUnlocked(engines, why); },
                            interval, this, "syncTimer");
 
@@ -579,7 +582,7 @@ SyncScheduler.prototype = {
 
     this._log.debug("Starting client-initiated backoff. Next sync in " +
                     interval + " ms.");
-    this.scheduleNextSync(interval);
+    this.scheduleNextSync(interval, {why: "client-backoff-schedule"});
   },
 
  /**
@@ -601,7 +604,7 @@ SyncScheduler.prototype = {
       // Schedule a sync based on when a previous sync was scheduled.
       // scheduleNextSync() will do the right thing if that time lies in
       // the past.
-      this.scheduleNextSync(this.nextSync - Date.now());
+      this.scheduleNextSync(this.nextSync - Date.now(), {why: "startup"});
     }
 
     // Once autoConnect is called we no longer need _autoTimer.
@@ -622,7 +625,7 @@ SyncScheduler.prototype = {
     // backoff due to 5xx errors.
     if (!Status.enforceBackoff) {
       if (this._syncErrors < MAX_ERROR_COUNT_BEFORE_BACKOFF) {
-        this.scheduleNextSync();
+        this.scheduleNextSync(null, {why: "reschedule"});
         return;
       }
       this._log.debug("Sync error count has exceeded " +
@@ -817,7 +820,9 @@ ErrorHandler.prototype = {
     this._log.debug("Beginning user-triggered sync.");
 
     this.dontIgnoreErrors = true;
-    CommonUtils.nextTick(this.service.sync, this.service);
+    CommonUtils.nextTick(() => {
+      this.service.sync({why: "user"});
+    }, this);
   },
 
   async _dumpAddons() {
@@ -1062,7 +1067,7 @@ ErrorHandler.prototype = {
           Svc.Prefs.set("lastSyncReassigned", true);
         }
         this._log.info("Attempting to schedule another sync.");
-        this.service.scheduler.scheduleNextSync(delay);
+        this.service.scheduler.scheduleNextSync(delay, {why: "reschedule"});
         break;
 
       case 500:

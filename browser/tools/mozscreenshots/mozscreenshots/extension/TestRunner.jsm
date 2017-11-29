@@ -209,7 +209,13 @@ this.TestRunner = {
                         .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIBaseWindow)
                         .devicePixelsPerDesktopPixel;
 
-    let finalRect = undefined;
+    const windowLeft = browserWindow.screenX * scale;
+    const windowTop = browserWindow.screenY * scale;
+    const windowWidth = browserWindow.outerWidth * scale;
+    const windowHeight = browserWindow.outerHeight * scale;
+
+    let bounds;
+    const rects = [];
     // Grab bounding boxes and find the union
     for (let selector of selectors) {
       let element;
@@ -226,31 +232,23 @@ this.TestRunner = {
 
       // Calculate box region, convert to Rect
       let box = element.ownerDocument.getBoxObjectFor(element);
-      let newRect = new Rect(box.screenX * scale, box.screenY * scale,
+      let rect = new Rect(box.screenX * scale, box.screenY * scale,
                              box.width * scale, box.height * scale);
+      rect.inflateFixed(this.croppingPadding * scale);
+      rect.left = Math.max(rect.left, windowLeft);
+      rect.top = Math.max(rect.top, windowTop);
+      rect.right = Math.min(rect.right, windowLeft + windowWidth);
+      rect.bottom = Math.min(rect.bottom, windowTop + windowHeight);
+      rects.push(rect);
 
-      if (!finalRect) {
-        finalRect = newRect;
+      if (!bounds) {
+        bounds = rect;
       } else {
-        finalRect = finalRect.union(newRect);
+        bounds = bounds.union(rect);
       }
     }
 
-    // Add fixed padding
-    finalRect = finalRect.inflateFixed(this.croppingPadding * scale);
-
-    let windowLeft = browserWindow.screenX * scale;
-    let windowTop = browserWindow.screenY * scale;
-    let windowWidth = browserWindow.outerWidth * scale;
-    let windowHeight = browserWindow.outerHeight * scale;
-
-    // Clip dimensions to window only
-    finalRect.left = Math.max(finalRect.left, windowLeft);
-    finalRect.top = Math.max(finalRect.top, windowTop);
-    finalRect.right = Math.min(finalRect.right, windowLeft + windowWidth);
-    finalRect.bottom = Math.min(finalRect.bottom, windowTop + windowHeight);
-
-    return finalRect;
+    return {bounds, rects};
   },
 
   async _performCombo(combo) {
@@ -332,21 +330,21 @@ this.TestRunner = {
       }
     }
 
-    const rect = this._findBoundingBox(finalSelectors, windowType);
-    this.mochitestScope.ok(rect, "A valid bounding box was found");
-    if (!rect) {
+    const {bounds, rects} = this._findBoundingBox(finalSelectors, windowType);
+    this.mochitestScope.ok(bounds, "A valid bounding box was found");
+    if (!bounds) {
       return;
     }
-    await this._onConfigurationReady(combo, rect);
+    await this._onConfigurationReady(combo, bounds, rects);
   },
 
-  async _onConfigurationReady(combo, rect) {
+  async _onConfigurationReady(combo, bounds, rects) {
     let filename = padLeft(this.currentComboIndex + 1,
                            String(this.combos.length).length) + this._comboName(combo);
     const imagePath = await Screenshot.captureExternal(filename);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    await this._cropImage(browserWindow, OS.Path.toFileURI(imagePath), rect, imagePath).catch((msg) => {
+    await this._cropImage(browserWindow, OS.Path.toFileURI(imagePath), bounds, rects, imagePath).catch((msg) => {
       throw `Cropping combo [${combo.map((e) => e.name).join(", ")}] failed: ${msg}`;
     });
     this.completedCombos++;
@@ -359,33 +357,50 @@ this.TestRunner = {
     }, "");
   },
 
-  async _cropImage(window, srcPath, rect, targetPath) {
+  async _cropImage(window, srcPath, bounds, rects, targetPath) {
     const { document, Image } = window;
     const promise = new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = function() {
+      img.onload = () => {
         // Clip the cropping region to the size of the screenshot
         // This is necessary mostly to deal with offscreen windows, since we
         // are capturing an image of the operating system's desktop.
-        rect.left = Math.max(0, rect.left);
-        rect.right = Math.min(img.naturalWidth, rect.right);
-        rect.top = Math.max(0, rect.top);
-        rect.bottom = Math.min(img.naturalHeight, rect.bottom);
+        bounds.left = Math.max(0, bounds.left);
+        bounds.right = Math.min(img.naturalWidth, bounds.right);
+        bounds.top = Math.max(0, bounds.top);
+        bounds.bottom = Math.min(img.naturalHeight, bounds.bottom);
 
         // Create a new offscreen canvas with the width and height given by the
         // size of the region we want to crop to
         const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        canvas.width = bounds.width;
+        canvas.height = bounds.height;
         const ctx = canvas.getContext("2d");
-        // By drawing the image with the negative offset, the unwanted regions
-        // are drawn off canvas, and are not captured when the canvas is saved.
-        ctx.drawImage(img, -rect.x, -rect.y);
+
+        for (const rect of rects) {
+          rect.left = Math.max(0, rect.left);
+          rect.right = Math.min(img.naturalWidth, rect.right);
+          rect.top = Math.max(0, rect.top);
+          rect.bottom = Math.min(img.naturalHeight, rect.bottom);
+
+          const width = rect.width;
+          const height = rect.height;
+
+          const screenX = rect.left;
+          const screenY = rect.top;
+
+          const imageX = screenX - bounds.left;
+          const imageY = screenY - bounds.top;
+          ctx.drawImage(img,
+            screenX, screenY, width, height,
+            imageX, imageY, width, height);
+        }
+
         // Converts the canvas to a binary blob, which can be saved to a png
         canvas.toBlob((blob) => {
           // Use a filereader to convert the raw binary blob into a writable buffer
           const fr = new FileReader();
-          fr.onload = function(e) {
+          fr.onload = (e) => {
             const buffer = new Uint8Array(e.target.result);
             // Save the file and complete the promise
             OS.File.writeAtomic(targetPath, buffer, {}).then(resolve);
