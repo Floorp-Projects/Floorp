@@ -64,6 +64,10 @@
         "$ref": "types.Setting",
         "description": "This boolean setting controls whether bookmarks are opened in the current tab or in a new tab."
       },
+      "openSearchResultsInNewTabs": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether search results are opened in the current tab or in a new tab."
+      },
       "webNotificationsDisabled": {
         "$ref": "types.Setting",
         "description": "Disables webAPI notifications."
