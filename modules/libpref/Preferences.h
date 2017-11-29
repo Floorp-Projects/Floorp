@@ -30,22 +30,6 @@ class nsIFile;
 // and the void* data which was passed to the registered callback function.
 typedef void (*PrefChangedFunc)(const char* aPref, void* aData);
 
-#ifdef DEBUG
-enum pref_initPhase
-{
-  START,
-  BEGIN_INIT_PREFS,
-  END_INIT_PREFS,
-  BEGIN_ALL_PREFS,
-  END_ALL_PREFS
-};
-#define SET_PREF_PHASE(p) Preferences::SetInitPhase(p)
-#else
-#define SET_PREF_PHASE(p)                                                      \
-  do {                                                                         \
-  } while (0)
-#endif
-
 class nsPrefBranch;
 
 namespace mozilla {
@@ -339,18 +323,21 @@ public:
                                    float aDefault = 0.0f);
 
   // When a content process is created these methods are used to pass prefs in
-  // bulk from the parent process.
+  // bulk from the parent process. "Early" preferences are ones that are needed
+  // very early on in the content process's lifetime; they are passed via the
+  // command line. "Late" preferences are the remainder, which are passed via
+  // IPC message.
   static void GetPreferences(InfallibleTArray<dom::Pref>* aSettings);
-  static void SetInitPreferences(nsTArray<dom::Pref>* aSettings);
+  static void SetEarlyPreferences(const nsTArray<dom::Pref>* aSettings);
+  static void SetLatePreferences(const nsTArray<dom::Pref>* aSettings);
 
-  // When a pref is changed in the parent process, these methods are used to
-  // pass the update to content processes.
+  // When a single pref is changed in the parent process, these methods are
+  // used to pass the update to content processes.
   static void GetPreference(dom::Pref* aPref);
   static void SetPreference(const dom::Pref& aPref);
 
 #ifdef DEBUG
-  static void SetInitPhase(pref_initPhase phase);
-  static pref_initPhase InitPhase();
+  static bool AreAllPrefsSetInContentProcess();
 #endif
 
   static void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,

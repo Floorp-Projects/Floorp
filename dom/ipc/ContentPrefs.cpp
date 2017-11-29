@@ -18,7 +18,7 @@
  *
  ******************************************************************************/
 
-const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
+const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "accessibility.monoaudio.enable",
   "accessibility.mouse_focuses_formcontrol",
   "accessibility.tabfocus_applies_to_xul",
@@ -237,14 +237,14 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "ui.use_activity_cursor",
   "view_source.editor.external"};
 
-const char** mozilla::dom::ContentPrefs::GetContentPrefs(size_t* aCount)
+const char** mozilla::dom::ContentPrefs::GetEarlyPrefs(size_t* aCount)
 {
-  *aCount = ArrayLength(ContentPrefs::gInitPrefs);
-  return gInitPrefs;
+  *aCount = ArrayLength(ContentPrefs::gEarlyPrefs);
+  return gEarlyPrefs;
 }
 
-const char*  mozilla::dom::ContentPrefs::GetContentPref(size_t aIndex)
+const char* mozilla::dom::ContentPrefs::GetEarlyPref(size_t aIndex)
 {
-  MOZ_ASSERT(aIndex < ArrayLength(ContentPrefs::gInitPrefs));
-  return gInitPrefs[aIndex];
+  MOZ_ASSERT(aIndex < ArrayLength(ContentPrefs::gEarlyPrefs));
+  return gEarlyPrefs[aIndex];
 }
