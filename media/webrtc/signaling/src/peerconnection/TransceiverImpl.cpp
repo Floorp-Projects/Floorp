@@ -120,9 +120,6 @@ TransceiverImpl::Shutdown_m()
   mReceivePipeline = nullptr;
   mTransmitPipeline = nullptr;
   mSendTrack = nullptr;
-  if (mConduit) {
-    mConduit->DeleteStreams();
-  }
   mConduit = nullptr;
   RUN_ON_THREAD(mStsThread, WrapRelease(mRtpFlow.forget()), NS_DISPATCH_NORMAL);
   RUN_ON_THREAD(mStsThread, WrapRelease(mRtcpFlow.forget()), NS_DISPATCH_NORMAL);

@@ -540,8 +540,6 @@ class TransportConduitTest : public ::testing::Test
 
     err = videoSession->ConfigureSendMediaCodec(nullptr);
     EXPECT_TRUE(err != mozilla::kMediaConduitNoError);
-
-    videoSession->DeleteStreams();
   }
 
  private:
