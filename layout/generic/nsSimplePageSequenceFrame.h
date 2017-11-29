@@ -72,11 +72,6 @@ public:
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         const nsDisplayListSet& aLists) override;
 
-  // nsIPageSequenceFrame
-  NS_IMETHOD SetPageNo(int32_t aPageNo) { return NS_OK;}
-  NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) override { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
-  NS_IMETHOD SetTotalNumPages(int32_t aTotal) override { mTotalPages = aTotal; return NS_OK; }
-
   // For Shrink To Fit
   NS_IMETHOD GetSTFPercent(float& aSTFPercent) override;
 
@@ -149,15 +144,9 @@ protected:
   nsTArray<int32_t> mPageRanges;
   nsTArray<RefPtr<mozilla::dom::HTMLCanvasElement> > mCurrentCanvasList;
 
-  // Selection Printing Info
-  nscoord      mSelectionHeight;
-  nscoord      mYSelOffset;
-
   // Asynch Printing
   bool mPrintThisPage;
   bool mDoingPageRange;
-
-  bool mIsPrintingSelection;
 
   bool mCalledBeginPage;
 
