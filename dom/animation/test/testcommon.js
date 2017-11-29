@@ -237,12 +237,14 @@ function waitForNextFrame() {
  * @param onFrame  An optional function to be processed in each animation frame.
  */
 function waitForAnimationFrames(frameCount, onFrame) {
+  const timeAtStart = document.timeline.currentTime;
   return new Promise(function(resolve, reject) {
     function handleFrame() {
       if (onFrame && typeof onFrame === 'function') {
         onFrame();
       }
-      if (--frameCount <= 0) {
+      if (timeAtStart != document.timeline.currentTime &&
+          --frameCount <= 0) {
         resolve();
       } else {
         window.requestAnimationFrame(handleFrame); // wait another frame
