@@ -310,6 +310,8 @@ class MachCommands(MachCommandBase):
         if not kwargs.get('log'):
             # Create shared logger
             formatter = log_formatters[self._mach_context.settings['test']['format']][0]()
+            formatter.summary_on_shutdown = True
+
             level = self._mach_context.settings['test']['level']
             kwargs['log'] = StructuredLogger('mach-mochitest')
             kwargs['log'].add_handler(StreamHandler(sys.stdout, LogLevelFilter(formatter, level)))
