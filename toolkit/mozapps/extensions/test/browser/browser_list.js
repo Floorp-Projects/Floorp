@@ -7,7 +7,7 @@
 var tempScope = {};
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
 var LightweightThemeManager = tempScope.LightweightThemeManager;
- Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 var gProvider;
 var gManagerWindow;
@@ -21,16 +21,16 @@ var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsi
 const EXPECTED_ADDONS = 13;
 
 var gLWTheme = {
-                id: "4",
-                version: "1",
-                name: "Bling",
-                description: "SO MUCH BLING!",
-                author: "Pixel Pusher",
-                homepageURL: "http://mochi.test:8888/data/index.html",
-                headerURL: "http://mochi.test:8888/data/header.png",
-                previewURL: "http://mochi.test:8888/data/preview.png",
-                iconURL: "http://mochi.test:8888/data/icon.png"
-              };
+  id: "4",
+  version: "1",
+  name: "Bling",
+  description: "SO MUCH BLING!",
+  author: "Pixel Pusher",
+  homepageURL: "http://mochi.test:8888/data/index.html",
+  headerURL: "http://mochi.test:8888/data/header.png",
+  previewURL: "http://mochi.test:8888/data/preview.png",
+  iconURL: "http://mochi.test:8888/data/icon.png"
+};
 
 add_task(async function() {
   gProvider = new MockProvider();

@@ -100,48 +100,49 @@ async function run_test() {
 
   await promiseRestartManager();
 
-  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                               "addon2@tests.mozilla.org",
-                               "addon3@tests.mozilla.org",
-                               "addon4@tests.mozilla.org",
-                               "addon5@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(
+    ["addon1@tests.mozilla.org",
+     "addon2@tests.mozilla.org",
+     "addon3@tests.mozilla.org",
+     "addon4@tests.mozilla.org",
+     "addon5@tests.mozilla.org"],
+    function([a1, a2, a3, a4, a5]) {
 
-    do_check_neq(a1, null);
-    do_check_false(a1.appDisabled);
-    do_check_true(a1.isPlatformCompatible);
-    do_check_true(a1.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
-    do_check_in_crash_annotation(addon1.id, addon1.version);
+      do_check_neq(a1, null);
+      do_check_false(a1.appDisabled);
+      do_check_true(a1.isPlatformCompatible);
+      do_check_true(a1.isActive);
+      do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+      do_check_in_crash_annotation(addon1.id, addon1.version);
 
-    do_check_neq(a2, null);
-    do_check_false(a2.appDisabled);
-    do_check_true(a2.isPlatformCompatible);
-    do_check_true(a2.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
-    do_check_in_crash_annotation(addon2.id, addon2.version);
+      do_check_neq(a2, null);
+      do_check_false(a2.appDisabled);
+      do_check_true(a2.isPlatformCompatible);
+      do_check_true(a2.isActive);
+      do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+      do_check_in_crash_annotation(addon2.id, addon2.version);
 
-    do_check_neq(a3, null);
-    do_check_false(a3.appDisabled);
-    do_check_true(a3.isPlatformCompatible);
-    do_check_true(a3.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
-    do_check_in_crash_annotation(addon3.id, addon3.version);
+      do_check_neq(a3, null);
+      do_check_false(a3.appDisabled);
+      do_check_true(a3.isPlatformCompatible);
+      do_check_true(a3.isActive);
+      do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+      do_check_in_crash_annotation(addon3.id, addon3.version);
 
-    do_check_neq(a4, null);
-    do_check_true(a4.appDisabled);
-    do_check_false(a4.isPlatformCompatible);
-    do_check_false(a4.isActive);
-    do_check_false(isExtensionInAddonsList(profileDir, a4.id));
-    do_check_not_in_crash_annotation(addon4.id, addon4.version);
+      do_check_neq(a4, null);
+      do_check_true(a4.appDisabled);
+      do_check_false(a4.isPlatformCompatible);
+      do_check_false(a4.isActive);
+      do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+      do_check_not_in_crash_annotation(addon4.id, addon4.version);
 
-    do_check_neq(a5, null);
-    do_check_true(a5.appDisabled);
-    do_check_false(a5.isPlatformCompatible);
-    do_check_false(a5.isActive);
-    do_check_false(isExtensionInAddonsList(profileDir, a5.id));
-    do_check_not_in_crash_annotation(addon5.id, addon5.version);
+      do_check_neq(a5, null);
+      do_check_true(a5.appDisabled);
+      do_check_false(a5.isPlatformCompatible);
+      do_check_false(a5.isActive);
+      do_check_false(isExtensionInAddonsList(profileDir, a5.id));
+      do_check_not_in_crash_annotation(addon5.id, addon5.version);
 
-    do_execute_soon(do_test_finished);
-  });
+      do_execute_soon(do_test_finished);
+    });
 }

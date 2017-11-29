@@ -81,7 +81,7 @@ amManager.prototype = {
   },
 
   installAddonFromWebpage(aMimetype, aBrowser, aInstallingPrincipal,
-                                    aUri, aHash, aName, aIcon, aCallback) {
+                          aUri, aHash, aName, aIcon, aCallback) {
     let retval = true;
     if (!AddonManager.isInstallAllowed(aMimetype, aInstallingPrincipal)) {
       aCallback = null;
@@ -195,7 +195,8 @@ amManager.prototype = {
           };
         }
 
-        return this.installAddonFromWebpage(payload.mimetype,
+        return this.installAddonFromWebpage(
+          payload.mimetype,
           aMessage.target, payload.triggeringPrincipal, payload.uri,
           payload.hash, payload.name, payload.icon, callback);
       }

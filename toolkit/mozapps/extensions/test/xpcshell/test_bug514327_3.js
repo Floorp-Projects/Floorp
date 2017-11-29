@@ -19,25 +19,29 @@ var gTestserver = null;
 var gNextTestPart = null;
 
 
-var PLUGINS = [{
-  // Tests a plugin whose state goes from not-blocked, to outdated
-  name: "test_bug514327_outdated",
-  version: "5",
-  disabled: false,
-  blocklisted: false
-}, {
-  // Used to trigger the blocklist dialog, which indicates the blocklist has updated
-  name: "test_bug514327_1",
-  version: "5",
-  disabled: false,
-  blocklisted: false
-}, {
-  // Used to trigger the blocklist dialog, which indicates the blocklist has updated
-  name: "test_bug514327_2",
-  version: "5",
-  disabled: false,
-  blocklisted: false
-} ];
+var PLUGINS = [
+  {
+    // Tests a plugin whose state goes from not-blocked, to outdated
+    name: "test_bug514327_outdated",
+    version: "5",
+    disabled: false,
+    blocklisted: false
+  },
+  {
+    // Used to trigger the blocklist dialog, which indicates the blocklist has updated
+    name: "test_bug514327_1",
+    version: "5",
+    disabled: false,
+    blocklisted: false
+  },
+  {
+    // Used to trigger the blocklist dialog, which indicates the blocklist has updated
+    name: "test_bug514327_2",
+    version: "5",
+    disabled: false,
+    blocklisted: false
+  },
+];
 
 
 // A fake plugin host for the blocklist service to use

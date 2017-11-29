@@ -208,7 +208,7 @@ AddonSearchResult.prototype = {
     return this.icons && this.icons[32];
   },
 
-   /**
+  /**
    * The URLs of the add-on's icons, as an object with icon size as key
    */
   icons: null,
@@ -1241,7 +1241,7 @@ this.AddonRepository = {
   _parseAddonCompatElement(aResultObj, aElement) {
     let guid = this._getDescendantTextContent(aElement, "guid");
     if (!guid) {
-        logger.debug("Compatibility override is missing guid.");
+      logger.debug("Compatibility override is missing guid.");
       return;
     }
 
@@ -1395,9 +1395,9 @@ this.AddonRepository = {
   // Find a AddonCompatibilityOverride that matches a given aAddonVersion and
   // application/platform version.
   findMatchingCompatOverride(aAddonVersion,
-                                                                     aCompatOverrides,
-                                                                     aAppVersion,
-                                                                     aPlatformVersion) {
+                             aCompatOverrides,
+                             aAppVersion,
+                             aPlatformVersion) {
     for (let override of aCompatOverrides) {
 
       let appVersion = null;
@@ -1434,7 +1434,7 @@ var AddonDatabase = {
    */
   get jsonFile() {
     return OS.Path.join(OS.Constants.Path.profileDir, FILE_DATABASE);
- },
+  },
 
   /**
    * Asynchronously opens a new connection to the database file.
@@ -1443,55 +1443,55 @@ var AddonDatabase = {
    */
   openConnection() {
     if (!this.connectionPromise) {
-     this.connectionPromise = (async () => {
-       this.DB = BLANK_DB();
+      this.connectionPromise = (async () => {
+        this.DB = BLANK_DB();
 
-       let inputDB, schema;
+        let inputDB, schema;
 
-       try {
-         let data = await OS.File.read(this.jsonFile, { encoding: "utf-8"});
-         inputDB = JSON.parse(data);
+        try {
+          let data = await OS.File.read(this.jsonFile, { encoding: "utf-8"});
+          inputDB = JSON.parse(data);
 
-         if (!inputDB.hasOwnProperty("addons") ||
+          if (!inputDB.hasOwnProperty("addons") ||
              !Array.isArray(inputDB.addons)) {
-           throw new Error("No addons array.");
-         }
+            throw new Error("No addons array.");
+          }
 
-         if (!inputDB.hasOwnProperty("schema")) {
-           throw new Error("No schema specified.");
-         }
+          if (!inputDB.hasOwnProperty("schema")) {
+            throw new Error("No schema specified.");
+          }
 
-         schema = parseInt(inputDB.schema, 10);
+          schema = parseInt(inputDB.schema, 10);
 
-         if (!Number.isInteger(schema) ||
+          if (!Number.isInteger(schema) ||
              schema < DB_MIN_JSON_SCHEMA) {
-           throw new Error("Invalid schema value.");
-         }
-       } catch (e) {
-         if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
-           logger.debug("No " + FILE_DATABASE + " found.");
-         } else {
-           logger.error(`Malformed ${FILE_DATABASE}: ${e} - resetting to empty`);
-         }
+            throw new Error("Invalid schema value.");
+          }
+        } catch (e) {
+          if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
+            logger.debug("No " + FILE_DATABASE + " found.");
+          } else {
+            logger.error(`Malformed ${FILE_DATABASE}: ${e} - resetting to empty`);
+          }
 
-         // Create a blank addons.json file
-         this.save();
+          // Create a blank addons.json file
+          this.save();
 
-         Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
-         return this.DB;
-       }
+          Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
+          return this.DB;
+        }
 
-       Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
+        Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
 
-       // We use _insertAddon manually instead of calling
-       // insertAddons to avoid the write to disk which would
-       // be a waste since this is the data that was just read.
-       for (let addon of inputDB.addons) {
-         this._insertAddon(addon);
-       }
+        // We use _insertAddon manually instead of calling
+        // insertAddons to avoid the write to disk which would
+        // be a waste since this is the data that was just read.
+        for (let addon of inputDB.addons) {
+          this._insertAddon(addon);
+        }
 
-       return this.DB;
-     })();
+        return this.DB;
+      })();
     }
 
     return this.connectionPromise;

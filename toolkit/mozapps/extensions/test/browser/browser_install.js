@@ -41,13 +41,13 @@ function get_node(parent, anonid) {
 function installAddon(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_2.xpi",
                                 function(aInstall) {
-    aInstall.addListener({
-      onInstallEnded() {
-        executeSoon(aCallback);
-      }
-    });
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.addListener({
+                                    onInstallEnded() {
+                                      executeSoon(aCallback);
+                                    }
+                                  });
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 }
 
 function installUpgrade(aCallback) {
@@ -73,17 +73,17 @@ function installUpgrade(aCallback) {
 function cancelInstall(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_2.xpi",
                                 function(aInstall) {
-    aInstall.addListener({
-      onDownloadEnded(aInstall) {
-        executeSoon(function() {
-          aInstall.cancel();
-          aCallback();
-        });
-        return false;
-      }
-    });
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.addListener({
+                                    onDownloadEnded(aInstall) {
+                                      executeSoon(function() {
+                                        aInstall.cancel();
+                                        aCallback();
+                                      });
+                                      return false;
+                                    }
+                                  });
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 }
 
 function get_list_item_count() {
@@ -179,11 +179,11 @@ add_test(function() {
 add_test(function() {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_1.xpi",
                                 function(aInstall) {
-    aInstall.addListener({
-      onInstallEnded: run_next_test
-    });
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.addListener({
+                                    onInstallEnded: run_next_test
+                                  });
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 });
 
 // Install an upgrade through the API with the manager open

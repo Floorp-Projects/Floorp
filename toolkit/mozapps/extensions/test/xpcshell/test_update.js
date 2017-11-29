@@ -535,50 +535,50 @@ for (let test of testParams) {
         do_check_eq(req_version, "2");
 
         switch (item_id) {
-        case "addon1@tests.mozilla.org":
-          do_check_eq(item_version, "5.0");
-          do_check_eq(item_maxappversion, "2");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "97");
-          break;
-        case "addon2@tests.mozilla.org":
-          do_check_eq(item_version, "67.0.5b1");
-          do_check_eq(item_maxappversion, "3");
-          do_check_eq(item_status, "userDisabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "49");
-          break;
-        case "addon3@tests.mozilla.org":
-          do_check_eq(item_version, "1.3+");
-          do_check_eq(item_maxappversion, "0");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "112");
-          break;
-        case "addon4@tests.mozilla.org":
-          do_check_eq(item_version, "0.5ab6");
-          do_check_eq(item_maxappversion, "5");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "2");
-          do_check_eq(update_type, "98");
-          break;
-        case "addon5@tests.mozilla.org":
-          do_check_eq(item_version, "1.0");
-          do_check_eq(item_maxappversion, "1");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "35");
-          break;
-        case "addon6@tests.mozilla.org":
-          do_check_eq(item_version, "1.0");
-          do_check_eq(item_maxappversion, "1");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "99");
-          break;
-        default:
-          ok(false, "Update request for unexpected add-on " + item_id);
+          case "addon1@tests.mozilla.org":
+            do_check_eq(item_version, "5.0");
+            do_check_eq(item_maxappversion, "2");
+            do_check_eq(item_status, "userEnabled");
+            do_check_eq(app_version, "1");
+            do_check_eq(update_type, "97");
+            break;
+          case "addon2@tests.mozilla.org":
+            do_check_eq(item_version, "67.0.5b1");
+            do_check_eq(item_maxappversion, "3");
+            do_check_eq(item_status, "userDisabled");
+            do_check_eq(app_version, "1");
+            do_check_eq(update_type, "49");
+            break;
+          case "addon3@tests.mozilla.org":
+            do_check_eq(item_version, "1.3+");
+            do_check_eq(item_maxappversion, "0");
+            do_check_eq(item_status, "userEnabled");
+            do_check_eq(app_version, "1");
+            do_check_eq(update_type, "112");
+            break;
+          case "addon4@tests.mozilla.org":
+            do_check_eq(item_version, "0.5ab6");
+            do_check_eq(item_maxappversion, "5");
+            do_check_eq(item_status, "userEnabled");
+            do_check_eq(app_version, "2");
+            do_check_eq(update_type, "98");
+            break;
+          case "addon5@tests.mozilla.org":
+            do_check_eq(item_version, "1.0");
+            do_check_eq(item_maxappversion, "1");
+            do_check_eq(item_status, "userEnabled");
+            do_check_eq(app_version, "1");
+            do_check_eq(update_type, "35");
+            break;
+          case "addon6@tests.mozilla.org":
+            do_check_eq(item_version, "1.0");
+            do_check_eq(item_maxappversion, "1");
+            do_check_eq(item_status, "userEnabled");
+            do_check_eq(app_version, "1");
+            do_check_eq(update_type, "99");
+            break;
+          default:
+            ok(false, "Update request for unexpected add-on " + item_id);
         }
 
         do_check_eq(app_id, "xpcshell@tests.mozilla.org");
@@ -590,52 +590,53 @@ for (let test of testParams) {
         request.setStatusLine(null, 500, "Server Error");
       });
 
-      AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                   "addon2@tests.mozilla.org",
-                                   "addon3@tests.mozilla.org",
-                                   "addon4@tests.mozilla.org",
-                                   "addon5@tests.mozilla.org",
-                                   "addon6@tests.mozilla.org"],
-                                   function([a1_2, a2_2, a3_2, a4_2, a5_2, a6_2]) {
-        let count = 6;
+      AddonManager.getAddonsByIDs(
+        ["addon1@tests.mozilla.org",
+         "addon2@tests.mozilla.org",
+         "addon3@tests.mozilla.org",
+         "addon4@tests.mozilla.org",
+         "addon5@tests.mozilla.org",
+         "addon6@tests.mozilla.org"],
+        function([a1_2, a2_2, a3_2, a4_2, a5_2, a6_2]) {
+          let count = 6;
 
-        function next_test() {
-          a1_2.uninstall();
-          a2_2.uninstall();
-          a3_2.uninstall();
-          a4_2.uninstall();
-          a5_2.uninstall();
-          a6_2.uninstall();
+          function next_test() {
+            a1_2.uninstall();
+            a2_2.uninstall();
+            a3_2.uninstall();
+            a4_2.uninstall();
+            a5_2.uninstall();
+            a6_2.uninstall();
 
-          restartManager();
-          run_next_test();
-        }
-
-        let compatListener = {
-          onUpdateFinished(addon, error) {
-            if (--count == 0)
-              do_execute_soon(next_test);
+            restartManager();
+            run_next_test();
           }
-        };
 
-        let updateListener = {
-          onUpdateAvailable(addon, update) {
-            // Dummy so the update checker knows we care about new versions
-          },
+          let compatListener = {
+            onUpdateFinished(addon, error) {
+              if (--count == 0)
+                do_execute_soon(next_test);
+            }
+          };
 
-          onUpdateFinished(addon, error) {
-            if (--count == 0)
-              do_execute_soon(next_test);
-          }
-        };
+          let updateListener = {
+            onUpdateAvailable(addon, update) {
+              // Dummy so the update checker knows we care about new versions
+            },
 
-        a1_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
-        a2_2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
-        a3_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-        a4_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "2");
-        a5_2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
-        a6_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
-      });
+            onUpdateFinished(addon, error) {
+              if (--count == 0)
+                do_execute_soon(next_test);
+            }
+          };
+
+          a1_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+          a2_2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
+          a3_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+          a4_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "2");
+          a5_2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+          a6_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+        });
     }));
   });
 
@@ -971,34 +972,34 @@ for (let test of testParams) {
     AddonManager.getInstallForURL(url, function(aInstall) {
       aInstall.addListener({
         onInstallEnded() {
-         do_execute_soon(function install_2_1_ended() {
-          restartManager();
+          do_execute_soon(function install_2_1_ended() {
+            restartManager();
 
-          AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a1) {
-            do_check_neq(a1.syncGUID, null);
-            let oldGUID = a1.syncGUID;
+            AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a1) {
+              do_check_neq(a1.syncGUID, null);
+              let oldGUID = a1.syncGUID;
 
-            let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-            AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-              aInstall_2.addListener({
-                onInstallEnded() {
-                 do_execute_soon(function install_2_2_ended() {
-                  restartManager();
+              let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
+              AddonManager.getInstallForURL(url_2, function(aInstall_2) {
+                aInstall_2.addListener({
+                  onInstallEnded() {
+                    do_execute_soon(function install_2_2_ended() {
+                      restartManager();
 
-                  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-                    do_check_neq(a2.syncGUID, null);
-                    do_check_eq(oldGUID, a2.syncGUID);
+                      AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+                        do_check_neq(a2.syncGUID, null);
+                        do_check_eq(oldGUID, a2.syncGUID);
 
-                    a2.uninstall();
-                    run_next_test();
-                  });
-                 });
-                }
-              });
-              aInstall_2.install();
-            }, "application/x-xpinstall");
+                        a2.uninstall();
+                        run_next_test();
+                      });
+                    });
+                  }
+                });
+                aInstall_2.install();
+              }, "application/x-xpinstall");
+            });
           });
-         });
         }
       });
       aInstall.install();
@@ -1116,7 +1117,7 @@ for (let test of testParams) {
           a11.uninstall();
           run_next_test();
         }
-     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+      }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
     });
   });
 

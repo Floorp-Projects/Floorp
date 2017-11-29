@@ -1294,7 +1294,7 @@ var AddonTestUtils = {
     let file = FileUtils.getFile("TmpD", "override.txt");
     let manifest = Services.io.newFileURI(file);
     await OS.File.writeAtomic(file.path,
-      new TextEncoder().encode(JSON.stringify(data)));
+                              new TextEncoder().encode(JSON.stringify(data)));
     this.overrideEntry = aomStartup.registerChrome(manifest, [
       ["override", "chrome://browser/content/built_in_addons.json",
        Services.io.newFileURI(file).spec],
