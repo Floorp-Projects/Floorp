@@ -19,8 +19,8 @@ function test() {
 add_test(function() {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_update1_1.xpi",
                                 function(aInstall) {
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 
   Services.ppmm.addMessageListener("my-addon-1", function messageListener() {
     Services.ppmm.removeMessageListener("my-addon-1", messageListener);
@@ -33,8 +33,8 @@ add_test(function() {
 add_test(function() {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_update1_2.xpi",
                                 function(aInstall) {
-    aInstall.install();
-  }, "application/x-xpinstall");
+                                  aInstall.install();
+                                }, "application/x-xpinstall");
 
   Services.ppmm.addMessageListener("my-addon-2", function messageListener() {
     Services.ppmm.removeMessageListener("my-addon-2", messageListener);

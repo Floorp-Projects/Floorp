@@ -62,25 +62,27 @@ function test() {
   Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL);
 
   SpecialPowers.pushPrefEnv({"set": [
-      ["dom.ipc.processCount", 1],
-    ]}, () => {
+    ["dom.ipc.processCount", 1],
+  ]}, () => {
     var gProvider = new MockProvider();
-    gProvider.createAddons([{
-      id: "test1@tests.mozilla.org",
-      name: "Test add-on 1",
-      description: "foo"
-    },
-    {
-      id: "test2@tests.mozilla.org",
-      name: "Test add-on 2",
-      description: "bar"
-    },
-    {
-      id: "test3@tests.mozilla.org",
-      name: "Test add-on 3",
-      type: "theme",
-      description: "bar"
-    }]);
+    gProvider.createAddons([
+      {
+        id: "test1@tests.mozilla.org",
+        name: "Test add-on 1",
+        description: "foo"
+      },
+      {
+        id: "test2@tests.mozilla.org",
+        name: "Test add-on 2",
+        description: "bar"
+      },
+      {
+        id: "test3@tests.mozilla.org",
+        name: "Test add-on 3",
+        type: "theme",
+        description: "bar"
+      },
+    ]);
   });
 
   run_next_test();
@@ -95,11 +97,11 @@ function go_back() {
 }
 
 function go_back_backspace() {
-    EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+  EventUtils.synthesizeKey("VK_BACK_SPACE", {});
 }
 
 function go_forward_backspace() {
-    EventUtils.synthesizeKey("VK_BACK_SPACE", {shiftKey: true});
+  EventUtils.synthesizeKey("VK_BACK_SPACE", {shiftKey: true});
 }
 
 function go_forward() {
@@ -556,7 +558,7 @@ add_test(function() {
 
             go_back();
             gBrowser.addEventListener("pageshow", function listener(event) {
-                if (event.target.location != "about:addons")
+              if (event.target.location != "about:addons")
                 return;
               gBrowser.removeEventListener("pageshow", listener);
 

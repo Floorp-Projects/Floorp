@@ -9,7 +9,7 @@ function test() {
   Harness.setup();
 
   Services.cookies.add("example.org", "/browser/" + RELATIVE_DIR, "xpinstall",
-    "true", false, false, true, (Date.now() / 1000) + 60, {});
+                       "true", false, false, true, (Date.now() / 1000) + 60, {});
 
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
@@ -31,7 +31,7 @@ function finish_test(count) {
   is(count, 0, "No add-ons should have been installed");
 
   Services.cookies.remove("example.org", "xpinstall", "/browser/" + RELATIVE_DIR,
-    false, {});
+                          false, {});
 
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
   Services.perms.remove(makeURI("http://example.com"), "install");

@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
-  () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
+                            () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
@@ -19,13 +19,13 @@ var gMockEmeAddons = new Map();
 
 for (let plugin of GMPScope.GMP_PLUGINS) {
   let mockAddon = Object.freeze({
-      id: plugin.id,
-      isValid: true,
-      isInstalled: false,
-      nameId: plugin.name,
-      descriptionId: plugin.description,
-      missingKey: plugin.missingKey,
-      missingFilesKey: plugin.missingFilesKey,
+    id: plugin.id,
+    isValid: true,
+    isInstalled: false,
+    nameId: plugin.name,
+    descriptionId: plugin.description,
+    missingKey: plugin.missingKey,
+    missingFilesKey: plugin.missingFilesKey,
   });
   gMockAddons.set(mockAddon.id, mockAddon);
   if (mockAddon.id == "gmp-widevinecdm" ||
@@ -147,7 +147,7 @@ add_task(async function test_installed() {
     gPrefs.setIntPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, mockAddon.id),
                       TEST_TIME_SEC);
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, mockAddon.id),
-                      TEST_VERSION);
+                       TEST_VERSION);
 
     Assert.ok(addon.isInstalled);
     Assert.equal(addon.type, "plugin");
@@ -353,7 +353,7 @@ add_task(async function test_pluginRegistration() {
     file2.append(addon.id);
     file2.append(TEST_VERSION_2);
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
-                      TEST_VERSION_2);
+                       TEST_VERSION_2);
     Assert.deepEqual(addedPaths, [file2.path]);
     Assert.deepEqual(removedPaths, [file.path]);
 
@@ -407,7 +407,7 @@ add_task(async function test_periodicUpdate() {
     Assert.strictEqual(result, false);
 
     gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK,
-                     Date.now() / 1000 - 2 * GMPScope.SEC_IN_A_DAY);
+                      Date.now() / 1000 - 2 * GMPScope.SEC_IN_A_DAY);
     gInstalledAddonId = "";
     result =
       await addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);

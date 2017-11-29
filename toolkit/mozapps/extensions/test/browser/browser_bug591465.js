@@ -18,16 +18,16 @@ var gManagerWindow;
 var gProvider;
 var gContextMenu;
 var gLWTheme = {
-                id: "4",
-                version: "1",
-                name: "Bling",
-                description: "SO MUCH BLING!",
-                author: "Pixel Pusher",
-                homepageURL: "http://mochi.test:8888/data/index.html",
-                headerURL: "http://mochi.test:8888/data/header.png",
-                previewURL: "http://mochi.test:8888/data/preview.png",
-                iconURL: "http://mochi.test:8888/data/icon.png"
-              };
+  id: "4",
+  version: "1",
+  name: "Bling",
+  description: "SO MUCH BLING!",
+  author: "Pixel Pusher",
+  homepageURL: "http://mochi.test:8888/data/index.html",
+  headerURL: "http://mochi.test:8888/data/header.png",
+  previewURL: "http://mochi.test:8888/data/preview.png",
+  iconURL: "http://mochi.test:8888/data/icon.png"
+};
 
 
 function test() {
@@ -55,7 +55,7 @@ function test() {
     version: "1.0",
     type: "theme",
     _userDisabled: true
-   }, {
+  }, {
     id: "theme3@tests.mozilla.org",
     name: "theme 3",
     version: "1.0",
@@ -80,28 +80,28 @@ function end_test() {
 function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote, aIsDetails, aIsSingleItemCase) {
   if (aIsTheme || aIsEnabled || aIsRemote)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_enableItem"),
-                       "'Enable' should be hidden");
+                      "'Enable' should be hidden");
   else
     is_element_visible(gManagerWindow.document.getElementById("menuitem_enableItem"),
                        "'Enable' should be visible");
 
   if (aIsTheme || !aIsEnabled || aIsRemote)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_disableItem"),
-                       "'Disable' should be hidden");
+                      "'Disable' should be hidden");
   else
     is_element_visible(gManagerWindow.document.getElementById("menuitem_disableItem"),
                        "'Disable' should be visible");
 
   if (!aIsTheme || aIsEnabled || aIsRemote || aIsSingleItemCase)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_enableTheme"),
-                       "'Wear Theme' should be hidden");
+                      "'Wear Theme' should be hidden");
   else
     is_element_visible(gManagerWindow.document.getElementById("menuitem_enableTheme"),
                        "'Wear Theme' should be visible");
 
   if (!aIsTheme || !aIsEnabled || aIsRemote || aIsSingleItemCase)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_disableTheme"),
-                       "'Stop Wearing Theme' should be hidden");
+                      "'Stop Wearing Theme' should be hidden");
   else
     is_element_visible(gManagerWindow.document.getElementById("menuitem_disableTheme"),
                        "'Stop Wearing Theme' should be visible");
@@ -111,18 +111,18 @@ function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote, aIsDetails, aIsSingl
                        "'Install' should be visible");
   else
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_installItem"),
-                       "'Install' should be hidden");
+                      "'Install' should be hidden");
 
   if (aIsDetails)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_showDetails"),
-                       "'Show More Information' should be hidden in details view");
+                      "'Show More Information' should be hidden in details view");
   else
     is_element_visible(gManagerWindow.document.getElementById("menuitem_showDetails"),
                        "'Show More Information' should be visible in list view");
 
   if (aIsSingleItemCase)
     is_element_hidden(gManagerWindow.document.getElementById("addonitem-menuseparator"),
-                       "Menu separator should be hidden with only one menu item");
+                      "Menu separator should be hidden with only one menu item");
   else
     is_element_visible(gManagerWindow.document.getElementById("addonitem-menuseparator"),
                        "Menu separator should be visible with multiple menu items");

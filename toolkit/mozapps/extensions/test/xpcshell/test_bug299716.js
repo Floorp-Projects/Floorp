@@ -13,8 +13,8 @@ const checkListener = {
   onUpdateAvailable: function onUpdateAvailable(aAddon, aInstall) {
     for (let currentAddon of ADDONS) {
       if (currentAddon.id == aAddon.id) {
-       currentAddon.newInstall = aInstall;
-       return;
+        currentAddon.newInstall = aInstall;
+        return;
       }
     }
   },
