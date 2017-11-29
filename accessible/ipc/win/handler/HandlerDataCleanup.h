@@ -16,8 +16,10 @@ namespace a11y {
 inline void
 ReleaseStaticIA2DataInterfaces(StaticIA2Data& aData)
 {
-  // Only interfaces of the IA2 object should be released here, never other
-  // objects!
+  // Only interfaces of the proxied object wrapped by this handler should be
+  // released here, never other objects!
+  // For example, if StaticIA2Data were to include accParent in future,
+  // that must not be released here.
   if (aData.mIA2) {
     aData.mIA2->Release();
   }
