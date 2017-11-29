@@ -340,6 +340,14 @@ public:
     return mImpl.unwrap();
   }
 
+  /**
+   *  Get the success value from this Result, which must be a success result.
+   *  If it is an error result, then return the aValue.
+   */
+  V unwrapOr(V aValue) const {
+    return isOk() ? mImpl.unwrap() : aValue;
+  }
+
   /** Get the error value from this Result, which must be an error result. */
   E unwrapErr() const {
     MOZ_ASSERT(isErr());

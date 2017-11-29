@@ -523,7 +523,7 @@ private:
   // when mDidNotifyDataEnded is true.
   nsresult          mNotifyDataEndedStatus;
   // The last reported read mode
-  ReadMode          mCurrentMode;
+  ReadMode mCurrentMode = MODE_METADATA;
   // True if some data in mPartialBlockBuffer has been read as metadata
   bool              mMetadataInPartialBlockBuffer;
   // The load ID of the current channel. Used to check whether the data is

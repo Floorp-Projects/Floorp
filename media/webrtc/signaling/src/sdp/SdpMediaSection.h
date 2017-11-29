@@ -108,19 +108,19 @@ public:
   inline bool
   IsReceiving() const
   {
-    return GetDirectionAttribute().mValue & sdp::kRecv;
+    return GetDirection() & sdp::kRecv;
   }
 
   inline bool
   IsSending() const
   {
-    return GetDirectionAttribute().mValue & sdp::kSend;
+    return GetDirection() & sdp::kSend;
   }
 
   inline void
   SetReceiving(bool receiving)
   {
-    auto direction = GetDirectionAttribute().mValue;
+    auto direction = GetDirection();
     if (direction & sdp::kSend) {
       SetDirection(receiving ?
                    SdpDirectionAttribute::kSendrecv :
@@ -135,7 +135,7 @@ public:
   inline void
   SetSending(bool sending)
   {
-    auto direction = GetDirectionAttribute().mValue;
+    auto direction = GetDirection();
     if (direction & sdp::kRecv) {
       SetDirection(sending ?
                    SdpDirectionAttribute::kSendrecv :
@@ -150,6 +150,11 @@ public:
   inline void SetDirection(SdpDirectionAttribute::Direction direction)
   {
     GetAttributeList().SetAttribute(new SdpDirectionAttribute(direction));
+  }
+
+  inline SdpDirectionAttribute::Direction GetDirection() const
+  {
+    return GetDirectionAttribute().mValue;
   }
 
   const SdpFmtpAttributeList::Parameters* FindFmtp(const std::string& pt) const;

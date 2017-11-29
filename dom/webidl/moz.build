@@ -202,9 +202,6 @@ with Files("MediaKey*"):
 with Files("Media*List*"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-with Files("MediaStreamList.webidl"):
-    BUG_COMPONENT = ("Core", "Web Audio")
-
 with Files("*Record*"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
 
@@ -985,7 +982,6 @@ WEBIDL_FILES = [
 if CONFIG['MOZ_WEBRTC']:
     WEBIDL_FILES += [
         'DataChannel.webidl',
-        'MediaStreamList.webidl',
         'PeerConnectionImpl.webidl',
         'PeerConnectionImplEnums.webidl',
         'PeerConnectionObserver.webidl',
@@ -1000,7 +996,9 @@ if CONFIG['MOZ_WEBRTC']:
         'RTCPeerConnectionStatic.webidl',
         'RTCRtpReceiver.webidl',
         'RTCRtpSender.webidl',
+        'RTCRtpTransceiver.webidl',
         'RTCSessionDescription.webidl',
+        'TransceiverImpl.webidl',
         'WebrtcDeprecated.webidl',
         'WebrtcGlobalInformation.webidl',
     ]

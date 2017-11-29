@@ -91,13 +91,16 @@ BasicTests()
   // MOZ_TRY works.
   MOZ_RELEASE_ASSERT(Task2(true, 3).isOk());
   MOZ_RELEASE_ASSERT(Task2(true, 3).unwrap() == 3);
+  MOZ_RELEASE_ASSERT(Task2(true, 3).unwrapOr(6) == 3);
   MOZ_RELEASE_ASSERT(Task2(false, 3).isErr());
+  MOZ_RELEASE_ASSERT(Task2(false, 3).unwrapOr(6) == 6);
 
   // MOZ_TRY_VAR works.
   MOZ_RELEASE_ASSERT(Task3(true, true, 3).isOk());
   MOZ_RELEASE_ASSERT(Task3(true, true, 3).unwrap() == 6);
   MOZ_RELEASE_ASSERT(Task3(true, false, 3).isErr());
   MOZ_RELEASE_ASSERT(Task3(false, true, 3).isErr());
+  MOZ_RELEASE_ASSERT(Task3(false, true, 3).unwrapOr(6) == 6);
 
   // Lvalues should work too.
   {
