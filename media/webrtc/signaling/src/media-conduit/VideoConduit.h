@@ -256,6 +256,8 @@ public:
     mPCHandle = aPCHandle;
   }
 
+  virtual void DeleteStreams() override;
+
   unsigned int SendingMaxFs() override {
     if(mCurSendCodecConfig) {
       return mCurSendCodecConfig->mEncodingConstraints.maxFs;
@@ -292,7 +294,6 @@ public:
 
   MediaConduitErrorCode InitMain();
   virtual MediaConduitErrorCode Init();
-  virtual void Destroy();
 
   std::vector<unsigned int> GetLocalSSRCs() const override;
   bool SetLocalSSRCs(const std::vector<unsigned int> & ssrcs) override;
