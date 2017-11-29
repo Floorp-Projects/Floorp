@@ -7138,6 +7138,8 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     TokenKind tk;
     if (!tokenStream.getToken(&tk, TokenStream::Operand))
         return false;
+    if (tk == TOK_MUL)
+        return m.failCurrentOffset("unexpected generator function");
     if (!TokenKindIsPossibleIdentifier(tk))
         return false;  // The regular parser will throw a SyntaxError, no need to m.fail.
 
