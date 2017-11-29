@@ -19,6 +19,7 @@
       "r316048.patch",
       "r317705.patch",
       "r317709.patch",
-      "hide-gcda-profiling-symbols.patch"
+      "hide-gcda-profiling-symbols.patch",
+      "fflush-before-unlocking.patch"
     ]
 }
