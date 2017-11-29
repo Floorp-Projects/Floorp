@@ -4,39 +4,39 @@
 
 "use strict";
 
-const I = require("devtools/client/shared/vendor/immutable");
 const {
   ADD_TIMING_MARKER,
   CLEAR_TIMING_MARKERS,
   CLEAR_REQUESTS,
 } = require("../constants");
 
-const TimingMarkers = I.Record({
-  firstDocumentDOMContentLoadedTimestamp: -1,
-  firstDocumentLoadTimestamp: -1,
-});
+function TimingMarkers() {
+  return {
+    firstDocumentDOMContentLoadedTimestamp: -1,
+    firstDocumentLoadTimestamp: -1,
+  };
+}
 
 function addTimingMarker(state, action) {
+  state = { ...state };
+
   if (action.marker.name === "document::DOMContentLoaded" &&
       state.firstDocumentDOMContentLoadedTimestamp === -1) {
-    return state.set("firstDocumentDOMContentLoadedTimestamp",
-                     action.marker.unixTime / 1000);
+    state.firstDocumentDOMContentLoadedTimestamp = action.marker.unixTime / 1000;
+    return state;
   }
 
   if (action.marker.name === "document::Load" &&
       state.firstDocumentLoadTimestamp === -1) {
-    return state.set("firstDocumentLoadTimestamp",
-                     action.marker.unixTime / 1000);
+    state.firstDocumentLoadTimestamp = action.marker.unixTime / 1000;
+    return state;
   }
 
   return state;
 }
 
 function clearTimingMarkers(state) {
-  return state.withMutations(st => {
-    st.remove("firstDocumentDOMContentLoadedTimestamp");
-    st.remove("firstDocumentLoadTimestamp");
-  });
+  return new TimingMarkers();
 }
 
 function timingMarkers(state = new TimingMarkers(), action) {
