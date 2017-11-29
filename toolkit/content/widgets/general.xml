@@ -95,35 +95,6 @@
     </implementation>
   </binding>
 
-  <binding id="statusbarpanel" display="xul:button">
-    <content>
-      <children>
-        <xul:label xbl:inherits="value=label,crop" crop="right" flex="1"/>
-      </children>
-    </content>
-
-    <implementation>
-      <property name="label"
-                onget="return this.getAttribute('label');"
-                onset="this.setAttribute('label',val); return val;"/>
-      <property name="image"
-                onget="return this.getAttribute('image');"
-                onset="this.setAttribute('image',val); return val;"/>
-      <property name="src"
-                onget="return this.getAttribute('src');"
-                onset="this.setAttribute('src',val); return val;"/>
-    </implementation>
-  </binding>
-
-  <binding id="statusbar" role="xul:statusbar">
-    <content>
-      <children/>
-      <xul:statusbarpanel class="statusbar-resizerpanel">
-        <xul:resizer dir="bottomend"/>
-      </xul:statusbarpanel>
-    </content>
-  </binding>
-
   <binding id="deck">
     <implementation>
       <property name="selectedIndex"

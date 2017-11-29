@@ -9,7 +9,7 @@ use api::{ClipMode, LayerSize, LayerVector2D, LayerToWorldTransform, LineOrienta
 use api::{ClipAndScrollInfo, EdgeAaSegmentMask, PremultipliedColorF, TileOffset};
 use api::{ClipId, LayerTransform, PipelineId, YuvColorSpace, YuvFormat};
 use border::BorderCornerInstance;
-use clip_scroll_tree::ClipScrollTree;
+use clip_scroll_tree::{CoordinateSystemId, ClipScrollTree};
 use clip::{ClipSourcesHandle, ClipStore};
 use frame_builder::PrimitiveContext;
 use glyph_rasterizer::{FontInstance, FontTransform};
@@ -18,8 +18,8 @@ use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuData
                 ToGpuBlocks};
 use picture::{PictureKind, PicturePrimitive, RasterizationSpace};
 use profiler::FrameProfileCounters;
-use render_task::{ClipWorkItem, ClipChainNode};
-use render_task::{RenderTask, RenderTaskId, RenderTaskTree};
+use render_task::{ClipChainNode, ClipChainNodeIter, ClipWorkItem, RenderTask, RenderTaskId};
+use render_task::RenderTaskTree;
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use resource_cache::{ImageProperties, ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
@@ -599,15 +599,13 @@ impl TextRunPrimitiveCpu {
     ) -> FontInstance {
         let mut font = self.font.clone();
         font.size = font.size.scale_by(device_pixel_ratio);
-        match (font.render_mode, rasterization_kind) {
-            (FontRenderMode::Subpixel, RasterizationSpace::Screen) => {
-                if transform.has_perspective_component() || !transform.has_2d_inverse() {
-                    font.render_mode = FontRenderMode::Alpha;
-                } else {
-                    font.transform = FontTransform::from(transform).quantize();
-                }
+        if font.render_mode != FontRenderMode::Bitmap &&
+           rasterization_kind == RasterizationSpace::Screen {
+            if transform.has_perspective_component() || !transform.has_2d_inverse() {
+                font.render_mode = font.render_mode.limit_by(FontRenderMode::Alpha);
+            } else {
+                font.transform = FontTransform::from(transform).quantize();
             }
-            _ => {}
         }
         font
     }
@@ -1235,7 +1233,8 @@ impl PrimitiveStore {
         &mut self,
         prim_index: PrimitiveIndex,
         prim_context: &PrimitiveContext,
-        prim_screen_rect: DeviceIntRect,
+        prim_screen_rect: &DeviceIntRect,
+        screen_rect: &DeviceIntRect,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
@@ -1244,64 +1243,119 @@ impl PrimitiveStore {
     ) -> bool {
         let metadata = &mut self.cpu_metadata[prim_index.0];
         metadata.clip_task_id = None;
+
+        let prim_screen_rect = match prim_screen_rect.intersection(screen_rect) {
+            Some(rect) => rect,
+            None => {
+                metadata.screen_rect = None;
+                return false;
+            }
+        };
+
+        let clip_chain = prim_context.clip_node.clip_chain_node.clone();
+        let mut combined_outer_rect = match clip_chain {
+            Some(ref node) => prim_screen_rect.intersection(&node.combined_outer_screen_rect),
+            None => Some(prim_screen_rect),
+        };
+
+        let prim_coordinate_system_id = prim_context.scroll_node.coordinate_system_id;
         let transform = &prim_context.scroll_node.world_content_transform;
+        let extra_clip =  {
+            let prim_clips = clip_store.get_mut(&metadata.clip_sources);
+            if prim_clips.has_clips() {
+                prim_clips.update(gpu_cache, resource_cache);
+                let (screen_inner_rect, screen_outer_rect) =
+                    prim_clips.get_screen_bounds(transform, prim_context.device_pixel_ratio);
 
-        clip_store.get_mut(&metadata.clip_sources).update(
-            transform,
-            gpu_cache,
-            resource_cache,
-            prim_context.device_pixel_ratio,
-        );
+                if let Some(outer) = screen_outer_rect {
+                    combined_outer_rect = combined_outer_rect.and_then(|r| r.intersection(&outer));
+                }
 
-        // Try to create a mask if we may need to.
-        let prim_clips = clip_store.get(&metadata.clip_sources);
-        let is_axis_aligned = transform.transform_kind() == TransformedRectKind::AxisAligned;
-
-        let has_clips = prim_context.clip_node.clip_chain_node.is_some() || prim_clips.has_clips();
-        let clip_task = if has_clips {
-            // Take into account the actual clip info of the primitive, and
-            // mutate the current bounds accordingly.
-            let mask_rect = match prim_clips.bounds.outer {
-                Some(ref outer) => match prim_screen_rect.intersection(&outer.device_rect) {
-                    Some(rect) => rect,
-                    None => {
-                        metadata.screen_rect = None;
-                        return false;
-                    }
-                },
-                _ => prim_screen_rect,
-            };
-
-            let extra_clip = if prim_clips.has_clips() {
                 Some(Rc::new(ClipChainNode {
                     work_item: ClipWorkItem {
                         scroll_node_data_index: prim_context.scroll_node.node_data_index,
                         clip_sources: metadata.clip_sources.weak(),
-                        coordinate_system_id: prim_context.scroll_node.coordinate_system_id,
+                        coordinate_system_id: prim_coordinate_system_id,
                     },
+                    screen_inner_rect,
+                    combined_outer_screen_rect:
+                        combined_outer_rect.unwrap_or_else(DeviceIntRect::zero),
+                    combined_inner_screen_rect: DeviceIntRect::zero(),
                     prev: None,
                 }))
             } else {
                 None
-            };
-
-            RenderTask::new_mask(
-                None,
-                mask_rect,
-                prim_context.clip_node.clip_chain_node.clone(),
-                extra_clip,
-                prim_screen_rect,
-                clip_store,
-                is_axis_aligned,
-                prim_context.scroll_node.coordinate_system_id,
-            )
-        } else {
-            None
+            }
         };
+
+        // If everything is clipped out, then we don't need to render this primitive.
+        let combined_outer_rect = match combined_outer_rect {
+            Some(rect) if !rect.is_empty() => rect,
+            _ => {
+                metadata.screen_rect = None;
+                return false;
+            }
+        };
+
+        // Filter out all the clip instances that don't contribute to the result.
+        let mut combined_inner_rect = *screen_rect;
+        let clips: Vec<_> = ClipChainNodeIter { current: extra_clip }
+            .chain(ClipChainNodeIter { current: clip_chain })
+            .take_while(|node| {
+                !node.combined_inner_screen_rect.contains_rect(&combined_outer_rect)
+            })
+            .filter_map(|node| {
+                combined_inner_rect = if !node.screen_inner_rect.is_empty() {
+                    // If this clip's inner area contains the area of the primitive clipped
+                    // by previous clips, then it's not going to affect rendering in any way.
+                    if node.screen_inner_rect.contains_rect(&combined_outer_rect) {
+                        return None;
+                    }
+                    combined_inner_rect.intersection(&node.screen_inner_rect)
+                        .unwrap_or_else(DeviceIntRect::zero)
+                } else {
+                    DeviceIntRect::zero()
+                };
+
+                Some(node.work_item.clone())
+            })
+            .collect();
+
+        if clips.is_empty() {
+            // If this item is in the root coordinate system, then
+            // we know that the local_clip_rect in the clip node
+            // will take care of applying this clip, so no need
+            // for a mask.
+            if prim_coordinate_system_id == CoordinateSystemId::root() {
+                return true;
+            }
+
+            // If we have filtered all clips and the screen rect isn't any smaller, we can just
+            // skip masking entirely.
+            if combined_outer_rect == prim_screen_rect {
+                return true;
+            }
+            // Otherwise we create an empty mask, but with an empty inner rect to avoid further
+            // optimization of the empty mask.
+            combined_inner_rect = DeviceIntRect::zero();
+        }
+
+        if combined_inner_rect.contains_rect(&prim_screen_rect) {
+           return true;
+        }
+
+        let clip_task = RenderTask::new_mask(
+            None,
+            combined_outer_rect,
+            combined_inner_rect,
+            clips,
+            clip_store,
+            transform.transform_kind() == TransformedRectKind::AxisAligned,
+            prim_coordinate_system_id,
+        );
 
         if let Some(clip_task) = clip_task {
             let clip_task_id = render_tasks.add(clip_task);
-
             metadata.clip_task_id = Some(clip_task_id);
             tasks.push(clip_task_id);
         }
@@ -1324,11 +1378,12 @@ impl PrimitiveStore {
         scene_properties: &SceneProperties,
         profile_counters: &mut FrameProfileCounters,
         pic_index: SpecificPrimitiveIndex,
+        screen_rect: &DeviceIntRect,
     ) -> Option<LayerRect> {
         // Reset the visibility of this primitive.
         // Do some basic checks first, that can early out
         // without even knowing the local rect.
-        let (cpu_prim_index, dependencies, cull_children) = {
+        let (cpu_prim_index, dependencies, cull_children, may_need_clip_mask) = {
             let metadata = &mut self.cpu_metadata[prim_index.0];
             metadata.screen_rect = None;
 
@@ -1338,7 +1393,7 @@ impl PrimitiveStore {
                 return None;
             }
 
-            let (dependencies, cull_children) = match metadata.prim_kind {
+            let (dependencies, cull_children, may_need_clip_mask) = match metadata.prim_kind {
                 PrimitiveKind::Picture => {
                     let pic = &mut self.cpu_pictures[metadata.cpu_prim_index.0];
 
@@ -1346,18 +1401,24 @@ impl PrimitiveStore {
                         return None;
                     }
 
-                    let rfid = match pic.kind {
-                        PictureKind::Image { reference_frame_id, .. } => Some(reference_frame_id),
-                        _ => None,
+                    let (rfid, may_need_clip_mask) = match pic.kind {
+                        PictureKind::Image { reference_frame_id, .. } => {
+                            (Some(reference_frame_id), false)
+                        }
+                        _ => {
+                            (None, true)
+                        }
                     };
-                    (Some((pic.pipeline_id, mem::replace(&mut pic.runs, Vec::new()), rfid)), pic.cull_children)
+                    (Some((pic.pipeline_id, mem::replace(&mut pic.runs, Vec::new()), rfid)),
+                     pic.cull_children,
+                     may_need_clip_mask)
                 }
                 _ => {
-                    (None, true)
+                    (None, true, true)
                 }
             };
 
-            (metadata.cpu_prim_index, dependencies, cull_children)
+            (metadata.cpu_prim_index, dependencies, cull_children, may_need_clip_mask)
         };
 
         // If we have dependencies, we need to prepare them first, in order
@@ -1383,6 +1444,7 @@ impl PrimitiveStore {
                 rfid,
                 scene_properties,
                 cpu_prim_index,
+                screen_rect,
             );
 
             let metadata = &mut self.cpu_metadata[prim_index.0];
@@ -1397,7 +1459,7 @@ impl PrimitiveStore {
             );
         }
 
-        let (local_rect, device_rect) = {
+        let (local_rect, unclipped_device_rect) = {
             let metadata = &mut self.cpu_metadata[prim_index.0];
             if metadata.local_rect.size.width <= 0.0 ||
                metadata.local_rect.size.height <= 0.0 {
@@ -1405,10 +1467,7 @@ impl PrimitiveStore {
                 return None;
             }
 
-            let local_rect = metadata
-                .local_rect
-                .intersection(&metadata.local_clip_rect);
-
+            let local_rect = metadata.local_rect.intersection(&metadata.local_clip_rect);
             let local_rect = match local_rect {
                 Some(local_rect) => local_rect,
                 None if perform_culling => return None,
@@ -1422,33 +1481,26 @@ impl PrimitiveStore {
             );
 
             let clip_bounds = &prim_context.clip_node.combined_clip_outer_bounds;
-            metadata.screen_rect = xf_rect.bounding_rect
-                                          .intersection(clip_bounds);
+            metadata.screen_rect = xf_rect.bounding_rect.intersection(clip_bounds);
 
-            let device_rect = match metadata.screen_rect {
-                Some(device_rect) => device_rect,
-                None => {
-                    if perform_culling {
-                        return None
-                    } else {
-                        DeviceIntRect::zero()
-                    }
-                }
-            };
+            if metadata.screen_rect.is_none() && perform_culling {
+                return None;
+            }
 
-            (local_rect, device_rect)
+            (local_rect, xf_rect.bounding_rect)
         };
 
-        if !self.update_clip_task(
+        if perform_culling && may_need_clip_mask && !self.update_clip_task(
             prim_index,
             prim_context,
-            device_rect,
+            &unclipped_device_rect,
+            screen_rect,
             resource_cache,
             gpu_cache,
             render_tasks,
             clip_store,
             parent_tasks,
-        ) && perform_culling {
+        ) {
             return None;
         }
 
@@ -1491,6 +1543,7 @@ impl PrimitiveStore {
         original_reference_frame_id: Option<ClipId>,
         scene_properties: &SceneProperties,
         pic_index: SpecificPrimitiveIndex,
+        screen_rect: &DeviceIntRect,
     ) -> PrimitiveRunLocalRect {
         let mut result = PrimitiveRunLocalRect {
             local_rect_in_actual_parent_space: LayerRect::zero(),
@@ -1557,6 +1610,7 @@ impl PrimitiveStore {
                     scene_properties,
                     profile_counters,
                     pic_index,
+                    screen_rect,
                 ) {
                     profile_counters.visible_primitives.inc();
 

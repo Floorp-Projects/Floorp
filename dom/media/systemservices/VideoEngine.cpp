@@ -43,12 +43,15 @@ int VideoEngine::SetAndroidObjects(JavaVM* javaVM) {
 void
 VideoEngine::CreateVideoCapture(int32_t& id, const char* deviceUniqueIdUTF8) {
   LOG((__PRETTY_FUNCTION__));
+  MOZ_ASSERT(deviceUniqueIdUTF8);
 
   id = GenerateId();
   LOG(("CaptureDeviceInfo.type=%s id=%d",mCaptureDevInfo.TypeName(),id));
 
   for (auto &it : mCaps) {
-    if (strcmp(it.second.VideoCapture()->CurrentDeviceName(), deviceUniqueIdUTF8) == 0) {
+    if (it.second.VideoCapture() &&
+        it.second.VideoCapture()->CurrentDeviceName() &&
+        strcmp(it.second.VideoCapture()->CurrentDeviceName(), deviceUniqueIdUTF8) == 0) {
       mIdMap.emplace(id, it.first);
       return;
     }

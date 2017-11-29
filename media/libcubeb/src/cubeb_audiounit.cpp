@@ -755,7 +755,7 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
   if (has_input(stm)) {
     switch_side |= DEV_INPUT;
   }
-  if (has_input(stm)) {
+  if (has_output(stm)) {
     switch_side |= DEV_OUTPUT;
   }
 

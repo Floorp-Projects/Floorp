@@ -39,8 +39,15 @@
   --sort-descending-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
 }
 
-/* Icons */
 :root {
+  /* Icons */
   --play-icon-url: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
   --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");
+
+  /* HTTP status codes */
+  --status-code-color-1xx: var(--theme-highlight-blue);
+  --status-code-color-2xx: var(--theme-highlight-green);
+  --status-code-color-3xx: transparent;
+  --status-code-color-4xx: var(--theme-highlight-pink);
+  --status-code-color-5xx: var(--theme-highlight-red);
 }

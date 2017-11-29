@@ -67,22 +67,41 @@ void main(void) {
         // Write the final position transformed by the orthographic device-pixel projection.
         gl_Position = uTransform * vec4(device_pos, 0.0, 1.0);
     } else {
+        VertexInfo vi;
         Layer layer = fetch_layer(brush.clip_node_id, brush.scroll_node_id);
         ClipArea clip_area = fetch_clip_area(brush.clip_address);
 
         // Write the normal vertex information out.
-        // TODO(gw): Support transform types in brushes. For now,
-        //           the old cache image shader didn't support
-        //           them yet anyway, so we're not losing any
-        //           existing functionality.
-        VertexInfo vi = write_vertex(
-            geom.local_rect,
-            geom.local_clip_rect,
-            float(brush.z),
-            layer,
-            pic_task,
-            geom.local_rect
-        );
+        if (layer.is_axis_aligned) {
+            vi = write_vertex(
+                geom.local_rect,
+                geom.local_clip_rect,
+                float(brush.z),
+                layer,
+                pic_task,
+                geom.local_rect
+            );
+
+            // TODO(gw): vLocalBounds may be referenced by
+            //           the fragment shader when running in
+            //           the alpha pass, even on non-transformed
+            //           items. For now, just ensure it has no
+            //           effect. We can tidy this up as we move
+            //           more items to be brush shaders.
+            vLocalBounds = vec4(
+                geom.local_clip_rect.p0,
+                geom.local_clip_rect.p0 + geom.local_clip_rect.size
+            );
+        } else {
+            vi = write_transform_vertex(geom.local_rect,
+                geom.local_rect,
+                geom.local_clip_rect,
+                vec4(1.0),
+                float(brush.z),
+                layer,
+                pic_task
+            );
+        }
 
         local_pos = vi.local_pos;
 
