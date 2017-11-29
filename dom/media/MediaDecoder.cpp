@@ -462,6 +462,9 @@ MediaDecoder::Shutdown()
 
   DiscardOngoingSeekIfExists();
 
+#ifdef NIGHTLY_BUILD
+  DUMP("[DEBUG SHUTDOWN] %s: decoder=%p state machine=%p", __func__, this, mDecoderStateMachine.get());
+#endif
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
