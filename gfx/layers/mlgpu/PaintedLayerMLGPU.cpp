@@ -36,11 +36,17 @@ PaintedLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
     return false;
   }
 
-  mTexture = mHost->AcquireTextureSource();
+  ContentHostTexture* single = mHost->AsContentHostTexture();
+  if (!single) {
+    return false;
+  }
+
+  mTexture = single->AcquireTextureSource();
   if (!mTexture) {
     return false;
   }
-  mTextureOnWhite = mHost->AcquireTextureSourceOnWhite();
+  mTextureOnWhite = single->AcquireTextureSourceOnWhite();
+  mDestOrigin = single->GetOriginOffset();
   return true;
 }
 
@@ -77,9 +83,10 @@ bool
 PaintedLayerMLGPU::SetCompositableHost(CompositableHost* aHost)
 {
   switch (aHost->GetType()) {
+    case CompositableType::CONTENT_TILED:
     case CompositableType::CONTENT_SINGLE:
     case CompositableType::CONTENT_DOUBLE:
-      mHost = static_cast<ContentHostBase*>(aHost)->AsContentHostTexture();
+      mHost = aHost->AsContentHost();
       if (!mHost) {
         gfxWarning() << "ContentHostBase is not a ContentHostTexture";
       }
@@ -93,6 +100,12 @@ CompositableHost*
 PaintedLayerMLGPU::GetCompositableHost()
 {
   return mHost;
+}
+
+gfx::Point
+PaintedLayerMLGPU::GetDestOrigin() const
+{
+  return mDestOrigin;
 }
 
 void
