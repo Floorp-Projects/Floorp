@@ -476,9 +476,6 @@ interface nsIXPConnect : nsISupports
      */
     virtual nsIPrincipal* GetPrincipal(JSObject* obj,
                                        bool allowShortCircuit) const = 0;
-    virtual char* DebugPrintJSStack(bool showArgs,
-                                    bool showLocals,
-                                    bool showThisProps) = 0;
 %}
 
     [noscript] void writeScript(in nsIObjectOutputStream aStream,
