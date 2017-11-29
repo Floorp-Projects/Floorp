@@ -19,6 +19,12 @@ extern LazyLogModule gMediaDecoderLog;
 #define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 #define LOGW(...) NS_WARNING(nsPrintfCString(__VA_ARGS__).get())
 
+#ifdef NIGHTLY_BUILD
+#define DEBUG_SHUTDOWN(fmt, ...) printf_stderr("[DEBUG SHUTDOWN] %s: " fmt "\n", __func__, ##__VA_ARGS__)
+#else
+#define DEBUG_SHUTDOWN(...) do { } while (0)
+#endif
+
 NS_IMPL_ISUPPORTS(MediaShutdownManager, nsIAsyncShutdownBlocker)
 
 MediaShutdownManager::MediaShutdownManager()
@@ -118,6 +124,7 @@ MediaShutdownManager::Register(MediaDecoder* aDecoder)
   // that's not going to work.
   MOZ_ASSERT(!mDecoders.Contains(aDecoder));
   mDecoders.PutEntry(aDecoder);
+  DEBUG_SHUTDOWN("decoder=%p, count=%d", aDecoder, mDecoders.Count());
   MOZ_ASSERT(mDecoders.Contains(aDecoder));
   MOZ_ASSERT(mDecoders.Count() > 0);
   return NS_OK;
@@ -131,6 +138,7 @@ MediaShutdownManager::Unregister(MediaDecoder* aDecoder)
     return;
   }
   mDecoders.RemoveEntry(aDecoder);
+  DEBUG_SHUTDOWN("decoder=%p, count=%d", aDecoder, mDecoders.Count());
   if (sInitPhase == XPCOMShutdownStarted && mDecoders.Count() == 0) {
     RemoveBlocker();
   }
