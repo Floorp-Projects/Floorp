@@ -228,7 +228,33 @@
 
 .requests-list-status-code {
   margin-inline-start: 3px;
-  width: 3em;
+  padding: 0 2px;
+  border-radius: 3px;
+  font-family: var(--monospace-font-family);
+}
+
+.status-code[data-code^="1"] {
+  background-color: var(--status-code-color-1xx);
+}
+
+.status-code[data-code^="2"] {
+  background-color: var(--status-code-color-2xx);
+}
+
+.status-code[data-code^="3"] {
+  background-color: var(--status-code-color-3xx);
+}
+
+.status-code[data-code^="4"] {
+  background-color: var(--status-code-color-4xx);
+}
+
+.status-code[data-code^="5"] {
+  background-color: var(--status-code-color-5xx);
+}
+
+.status-code:not([data-code^="3"]) {
+  color: var(--theme-body-background);
 }
 
 .requests-list-status-icon {

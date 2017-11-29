@@ -54,10 +54,20 @@ class RequestListColumnStatus extends Component {
           }
         },
       },
-      div({ className: "requests-list-status-icon", "data-code": code }),
-        div({ className: "requests-list-status-code" }, status)
-      )
-    );
+
+      /*
+        `data-code` refers to the status-code
+        `data-status-code` can be one of "cached", "service worker"
+        or the status-code itself
+        For example - if a resource is cached, `data-code` would be 200
+        and the `data-status-code` would be "cached"
+      */
+      div({
+        className: "requests-list-status-code status-code",
+        "data-status-code": code,
+        "data-code": status,
+      }, status)
+    ));
   }
 }
 
