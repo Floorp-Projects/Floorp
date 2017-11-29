@@ -161,15 +161,15 @@ void
 UseTileTexture(CompositableTextureHostRef& aTexture,
                CompositableTextureSourceRef& aTextureSource,
                const IntRect& aUpdateRect,
-               Compositor* aCompositor)
+               TextureSourceProvider* aProvider)
 {
   MOZ_ASSERT(aTexture);
   if (!aTexture) {
     return;
   }
 
-  if (aCompositor) {
-    aTexture->SetTextureSourceProvider(aCompositor);
+  if (aProvider) {
+    aTexture->SetTextureSourceProvider(aProvider);
   }
 
   if (!aUpdateRect.IsEmpty()) {
@@ -358,13 +358,13 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     UseTileTexture(tile.mTextureHost,
                    tile.mTextureSource,
                    texturedDesc.updateRect(),
-                   aLayerManager->GetCompositor());
+                   aLayerManager->GetTextureSourceProvider());
 
     if (tile.mTextureHostOnWhite) {
       UseTileTexture(tile.mTextureHostOnWhite,
                      tile.mTextureSourceOnWhite,
                      texturedDesc.updateRect(),
-                     aLayerManager->GetCompositor());
+                     aLayerManager->GetTextureSourceProvider());
     }
   }
 
