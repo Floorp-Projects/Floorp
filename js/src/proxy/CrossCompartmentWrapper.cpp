@@ -302,11 +302,13 @@ Reify(JSContext* cx, JSCompartment* origin, HandleObject objp)
         if (length > 0) {
             if (!keys.reserve(length))
                 return nullptr;
+            RootedId id(cx);
+            RootedValue v(cx);
             for (size_t i = 0; i < length; ++i) {
-                RootedId id(cx);
-                RootedValue v(cx, StringValue(ni->begin()[i]));
+                v.setString(ni->begin()[i]);
                 if (!ValueToId<CanGC>(cx, v, &id))
                     return nullptr;
+                cx->markId(id);
                 keys.infallibleAppend(id);
             }
         }
