@@ -417,28 +417,6 @@ MediaConstraintsHelper::FitnessDistance(ValueType aN,
                             std::max(std::abs(aN), std::abs(aRange.mIdeal.value()))));
 }
 
-template<class ValueType, class NormalizedRange>
-/* static */ uint32_t
-MediaConstraintsHelper::FeasibilityDistance(ValueType aN,
-                                            const NormalizedRange& aRange)
-{
-  if (aRange.mMin > aN) {
-    return UINT32_MAX;
-  }
-  // We prefer larger resolution because now we support downscaling
-  if (aN == aRange.mIdeal.valueOr(aN)) {
-    return 0;
-  }
-
-  if (aN > aRange.mIdeal.value()) {
-    return uint32_t(ValueType((std::abs(aN - aRange.mIdeal.value()) * 1000) /
-      std::max(std::abs(aN), std::abs(aRange.mIdeal.value()))));
-  }
-
-  return 10000 + uint32_t(ValueType((std::abs(aN - aRange.mIdeal.value()) * 1000) /
-    std::max(std::abs(aN), std::abs(aRange.mIdeal.value()))));
-}
-
 // Fitness distance returned as integer math * 1000. Infinity = UINT32_MAX
 
 /* static */ uint32_t
