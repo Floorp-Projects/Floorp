@@ -997,17 +997,15 @@ JSCompartment::getOrCreateIterResultTemplateObject(JSContext* cx)
 
 /*** Iterator objects ****************************************************************************/
 
-MOZ_ALWAYS_INLINE bool
-NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval)
+MOZ_ALWAYS_INLINE void
+NativeIteratorNext(NativeIterator* ni, MutableHandleValue rval)
 {
     if (ni->props_cursor >= ni->props_end) {
         rval.setMagic(JS_NO_ITER_VALUE);
-        return true;
+    } else {
+        rval.setString(*ni->current());
+        ni->incCursor();
     }
-
-    rval.setString(*ni->current());
-    ni->incCursor();
-    return true;
 }
 
 bool
@@ -1371,7 +1369,8 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     // Fast path for native iterators.
     if (MOZ_LIKELY(iterobj->is<PropertyIteratorObject>())) {
         NativeIterator* ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        return NativeIteratorNext(cx, ni, rval);
+        NativeIteratorNext(ni, rval);
+        return true;
     }
 
     if (JS_IsDeadWrapper(iterobj)) {
@@ -1389,8 +1388,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     {
         AutoCompartment ac(cx, obj);
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
-        if (!NativeIteratorNext(cx, ni, rval))
-            return false;
+        NativeIteratorNext(ni, rval);
     }
     return cx->compartment()->wrap(cx, rval);
 }
