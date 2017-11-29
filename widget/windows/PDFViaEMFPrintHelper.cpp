@@ -36,7 +36,7 @@ PDFViaEMFPrintHelper::~PDFViaEMFPrintHelper()
 }
 
 nsresult
-PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
+PDFViaEMFPrintHelper::OpenDocument(nsIFile* aFile)
 {
   MOZ_ASSERT(aFile);
 
