@@ -138,7 +138,9 @@ float { float:left; margin-right:20px; }
 <float>
 <div class="grid c1 t1 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
 <div class="grid c2 t1 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<!-- bug 1416350
 <div class="grid c3 t1 n"><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+-->
 
 <div class="grid c1 t2 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
 <div class="grid c2 t2 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
@@ -167,7 +169,7 @@ var a1 = [
 "3px [a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px 3px",
 "3px [a b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c d] 20px",
 "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c d] 20px 3px",
-"3px [a b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c d] 20px 3px"
+// bug 1416350 "3px [a b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c d] 20px 3px"
 ];
 var a2 = [
 "3px [a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c d]",
