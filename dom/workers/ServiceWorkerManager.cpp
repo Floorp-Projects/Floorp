@@ -722,15 +722,22 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
 
   auto* window = nsPIDOMWindowInner::From(aWindow);
 
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  MOZ_ASSERT(doc);
+
   // Don't allow a service worker to be registered if storage is restricted
   // for the window.
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
   if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+    NS_ConvertUTF8toUTF16 reportScope(aScopeURI->GetSpecOrDefault());
+    const char16_t* param[] = { reportScope.get() };
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"), doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerRegisterStorageError", param,
+                                    1);
     return NS_ERROR_DOM_SECURITY_ERR;
   }
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  MOZ_ASSERT(doc);
 
   // Don't allow service workers to register when the *document* is chrome.
   if (NS_WARN_IF(nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()))) {
@@ -970,6 +977,11 @@ ServiceWorkerManager::GetRegistrations(mozIDOMWindow* aWindow,
   // block via postMessage(), etc.
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
   if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"), doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerGetRegistrationStorageError");
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -1088,6 +1100,11 @@ ServiceWorkerManager::GetRegistration(mozIDOMWindow* aWindow,
   // block via postMessage(), etc.
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
   if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"), doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerGetRegistrationStorageError");
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -3180,6 +3197,7 @@ ServiceWorkerManager::GetClient(nsIPrincipal* aPrincipal,
                                 const nsAString& aClientId,
                                 ErrorResult& aRv)
 {
+  AssertIsOnMainThread();
   UniquePtr<ServiceWorkerClientInfo> clientInfo;
   nsCOMPtr<nsISupportsInterfacePointer> ifptr =
     do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
@@ -3220,6 +3238,10 @@ ServiceWorkerManager::GetClient(nsIPrincipal* aPrincipal,
   auto storageAccess =
     nsContentUtils::StorageAllowedForWindow(doc->GetInnerWindow());
   if (storageAccess != nsContentUtils::StorageAccess::eAllow) {
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"), doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerGetClientStorageError");
     return clientInfo;
   }
 
@@ -3234,6 +3256,7 @@ ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
                                     bool aIncludeUncontrolled,
                                     nsTArray<ServiceWorkerClientInfo>& aDocuments)
 {
+  AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
@@ -3290,6 +3313,10 @@ ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
     auto storageAccess =
       nsContentUtils::StorageAllowedForWindow(doc->GetInnerWindow());
     if (storageAccess != nsContentUtils::StorageAccess::eAllow) {
+      nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                      NS_LITERAL_CSTRING("Service Workers"),
+                                      doc, nsContentUtils::eDOM_PROPERTIES,
+                                      "ServiceWorkerGetClientStorageError");
       continue;
     }
 
