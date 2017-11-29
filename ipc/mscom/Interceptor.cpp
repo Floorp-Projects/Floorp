@@ -26,7 +26,14 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
-#if defined(MOZ_CRASHREPORTER)
+#if defined(MOZ_DEV_EDITION) || defined(RELEASE_OR_BETA) || !defined(MOZ_CRASHREPORTER)
+
+#define ENSURE_HR_SUCCEEDED(hr) \
+  if (FAILED((HRESULT)hr)) { \
+    return hr; \
+  }
+
+#else
 
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
@@ -40,14 +47,7 @@
     return hr; \
   }
 
-#else
-
-#define ENSURE_HR_SUCCEEDED(hr) \
-  if (FAILED((HRESULT)hr)) { \
-    return hr; \
-  }
-
-#endif // defined(MOZ_CRASHREPORTER)
+#endif // defined(MOZ_DEV_EDITION) || defined(RELEASE_OR_BETA) || !defined(MOZ_CRASHREPORTER)
 
 namespace mozilla {
 namespace mscom {
