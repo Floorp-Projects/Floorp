@@ -321,7 +321,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
      *
      * @param result Result URI to be turned into autocomplete text
      */
-    public final void onAutocomplete(final AutocompleteResult result) {
+    public void onAutocomplete(final AutocompleteResult result) {
         // If mDiscardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
         if (mDiscardAutoCompleteResult) {

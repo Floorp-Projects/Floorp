@@ -5,21 +5,20 @@
 
 package org.mozilla.focus.autocomplete
 
-import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
 import org.mozilla.focus.widget.InlineAutocompleteEditText
+import org.mozilla.focus.widget.InlineAutocompleteEditText.AutocompleteResult
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-
-import java.util.Collections
-import java.util.HashSet
 
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class, packageName = "org.mozilla.focus")
@@ -98,13 +97,20 @@ class UrlAutoCompleteFilterTest {
         val view = mock(InlineAutocompleteEditText::class.java)
         filter.onFilter(text, view)
 
-        verify(view).onAutocomplete(completion)
+        val captor = ArgumentCaptor.forClass(AutocompleteResult::class.java)
+        verify(view).onAutocomplete(captor.capture())
+
+        assertFalse(captor.value.isEmpty)
+        assertEquals(completion, captor.value.text)
     }
 
     private fun assertNoAutocompletion(filter: UrlAutoCompleteFilter, text: String) {
         val view = mock(InlineAutocompleteEditText::class.java)
         filter.onFilter(text, view)
 
-        verifyZeroInteractions(view)
+        val captor = ArgumentCaptor.forClass(AutocompleteResult::class.java)
+        verify(view).onAutocomplete(captor.capture())
+
+        assertTrue(captor.value.isEmpty)
     }
 }
