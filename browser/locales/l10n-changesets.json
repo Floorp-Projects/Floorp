@@ -327,7 +327,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f7056e3ecbe5"
+        "revision": "e651d4b53f7b"
     }, 
     "fr": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "079beb46523a"
+        "revision": "10052ea49364"
     }, 
     "kab": {
         "platforms": [
