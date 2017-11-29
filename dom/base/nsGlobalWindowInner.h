@@ -685,7 +685,6 @@ public:
 
   // https://w3c.github.io/webappsec-secure-contexts/#dom-window-issecurecontext
   bool IsSecureContext() const;
-  bool IsSecureContextIfOpenerIgnored() const;
 
   void GetSidebar(mozilla::dom::OwningExternalOrWindowProxy& aResult,
                   mozilla::ErrorResult& aRv);
@@ -1257,7 +1256,6 @@ public:
   void RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest);
 
 protected:
-  bool                          mIsSecureContextIfOpenerIgnored : 1;
 
   // Window offline status. Checked to see if we need to fire offline event
   bool                          mWasOffline : 1;
