@@ -6,13 +6,10 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIURI;
-interface nsIChannel;
 interface nsIDocShell;
 interface nsIDOMDocument;
 interface nsIEventTarget;
 interface nsIPrincipal;
-interface nsIScriptElement;
-interface nsIURI;
 
 /**
  * nsIContentSecurityPolicy
