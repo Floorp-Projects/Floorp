@@ -503,24 +503,31 @@ TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
 
   // currentDirection from JSEP, but not if "this transceiver has never been
   // represented in an offer/answer exchange"
-  if (mJsepTransceiver->HasLevel()) {
-    dom::RTCRtpTransceiverDirection currentDirection;
-    if (mJsepTransceiver->mSendTrack.GetActive()) {
-      if (mJsepTransceiver->mRecvTrack.GetActive()) {
-        currentDirection = dom::RTCRtpTransceiverDirection::Sendrecv;
+  if (mJsepTransceiver->HasLevel() && mJsepTransceiver->IsNegotiated()) {
+    if (mJsepTransceiver->mRecvTrack.GetActive()) {
+      if (mJsepTransceiver->mSendTrack.GetActive()) {
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Sendrecv, aRv);
       } else {
-        currentDirection = dom::RTCRtpTransceiverDirection::Sendonly;
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Recvonly, aRv);
       }
     } else {
-      if (mJsepTransceiver->mRecvTrack.GetActive()) {
-        currentDirection = dom::RTCRtpTransceiverDirection::Recvonly;
+      if (mJsepTransceiver->mSendTrack.GetActive()) {
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Sendonly, aRv);
       } else {
-        currentDirection = dom::RTCRtpTransceiverDirection::Inactive;
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Inactive, aRv);
       }
-    }
 
-    if (mJsepTransceiver->IsNegotiated()) {
-      aJsTransceiver.SetCurrentDirection(currentDirection, aRv);
+      // If negotiation stops a track from receiving (ie; m-section is
+      // negotiated "sendonly" or "inactive"), we mark the track muted.  We do
+      // _not_ do the reverse; we need to wait for RTP to unmute according to
+      // the spec. That happens in MediaPipeline.
+      if (!mReceiveTrack->Muted()) {
+        mReceiveTrack->MutedChanged(true);
+      }
     }
 
     if (aRv.Failed()) {
