@@ -8,6 +8,7 @@ package org.mozilla.focus.widget;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.NoCopySpan;
@@ -49,6 +50,40 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
         void onTextChange(String originalText, String autocompleteText);
     }
 
+    public static class AutocompleteResult {
+        public static AutocompleteResult emptyResult() {
+            return new AutocompleteResult(null, null);
+        }
+
+        public final String text;
+        public final String source;
+
+        public AutocompleteResult(String text, String source) {
+            this.text = text;
+            this.source = source;
+        }
+
+        public boolean isEmpty() {
+            return text == null;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public int getLength() {
+            return text.length();
+        }
+
+        public boolean startsWith(String text) {
+            return this.text.startsWith(text);
+        }
+    }
+
     private static final String LOGTAG = "GeckoToolbarEditText";
     private static final NoCopySpan AUTOCOMPLETE_SPAN = new NoCopySpan.Concrete();
 
@@ -60,7 +95,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
     private OnTextChangeListener mTextChangeListener;
 
     // The previous autocomplete result returned to us
-    private String mAutoCompleteResult = "";
+    private AutocompleteResult mAutoCompleteResult = AutocompleteResult.emptyResult();
     // Length of the user-typed portion of the result
     private int mAutoCompletePrefixLength;
     // If text change is due to us setting autocomplete
@@ -182,7 +217,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
                         ContextCompat.getColor(getContext(), R.color.colorAccent))
         };
 
-        mAutoCompleteResult = "";
+        mAutoCompleteResult = AutocompleteResult.emptyResult();
 
         // Pretend we already autocompleted the existing text,
         // so that actions like backspacing don't trigger autocompletion.
@@ -231,7 +266,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
         // Keep mAutoCompletePrefixLength the same because the prefix has not changed.
         // Clear mAutoCompleteResult to make sure we get fresh autocomplete text next time.
-        mAutoCompleteResult = "";
+        mAutoCompleteResult = AutocompleteResult.emptyResult();
 
         // Reshow the cursor.
         setCursorVisible(true);
@@ -280,21 +315,21 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
      *
      * @param result Result URI to be turned into autocomplete text
      */
-    public final void onAutocomplete(final String result) {
+    public final void onAutocomplete(final AutocompleteResult result) {
         // If mDiscardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
         if (mDiscardAutoCompleteResult) {
             return;
         }
 
-        if (!isEnabled() || result == null) {
-            mAutoCompleteResult = "";
+        if (!isEnabled() || result == null || result.isEmpty()) {
+            mAutoCompleteResult = AutocompleteResult.emptyResult();
             return;
         }
 
         final Editable text = getText();
         final int textLength = text.length();
-        final int resultLength = result.length();
+        final int resultLength = result.getLength();
         final int autoCompleteStart = text.getSpanStart(AUTOCOMPLETE_SPAN);
         mAutoCompleteResult = result;
 
@@ -303,7 +338,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
             // If the result and the current text don't have the same prefixes,
             // the result is stale and we should wait for the another result to come in.
-            if (!TextUtils.regionMatches(result, 0, text, 0, autoCompleteStart)) {
+            if (!TextUtils.regionMatches(result.getText(), 0, text, 0, autoCompleteStart)) {
                 return;
             }
 
@@ -311,7 +346,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
             // Replace the existing autocomplete text with new one.
             // replace() preserves the autocomplete spans that we set before.
-            text.replace(autoCompleteStart, textLength, result, autoCompleteStart, resultLength);
+            text.replace(autoCompleteStart, textLength, result.getText(), autoCompleteStart, resultLength);
 
             // Reshow the cursor if there is no longer any autocomplete text.
             if (autoCompleteStart == resultLength) {
@@ -326,7 +361,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
             // If the result prefix doesn't match the current text,
             // the result is stale and we should wait for the another result to come in.
             if (resultLength <= textLength ||
-                    !TextUtils.regionMatches(result, 0, text, 0, textLength)) {
+                    !TextUtils.regionMatches(result.getText(), 0, text, 0, textLength)) {
                 return;
             }
 
@@ -356,7 +391,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
             beginSettingAutocomplete();
 
             // First add trailing text.
-            text.append(result, textLength, resultLength);
+            text.append(result.getText(), textLength, resultLength);
 
             // Restore selection/composing spans.
             for (int i = 0; i < spans.length; i++) {

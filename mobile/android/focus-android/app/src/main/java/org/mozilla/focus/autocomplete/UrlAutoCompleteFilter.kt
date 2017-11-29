@@ -13,6 +13,7 @@ import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.widget.InlineAutocompleteEditText
+import org.mozilla.focus.widget.InlineAutocompleteEditText.AutocompleteResult
 import java.io.IOException
 import java.util.*
 import kotlin.collections.LinkedHashSet
@@ -20,6 +21,11 @@ import kotlin.collections.LinkedHashSet
 class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
     companion object {
         private val LOG_TAG = "UrlAutoCompleteFilter"
+    }
+
+    object AutocompleteSource {
+        const val DEFAULT_LIST = "default"
+        const val CUSTOM_LIST = "custom"
     }
 
     private var settings : Settings? = null
@@ -39,7 +45,10 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
             if (it.shouldAutocompleteFromCustomDomainList()) {
                 val autocomplete = tryToAutocomplete(searchText, customDomains)
                 if (autocomplete != null) {
-                    view.onAutocomplete(prepareAutocompleteResult(rawSearchText, autocomplete))
+                    view.onAutocomplete(prepareAutocompleteResult(
+                            rawSearchText,
+                            autocomplete,
+                            AutocompleteSource.CUSTOM_LIST))
                     return
                 }
             }
@@ -47,11 +56,16 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
             if (it.shouldAutocompleteFromShippedDomainList()) {
                 val autocomplete = tryToAutocomplete(searchText, preInstalledDomains)
                 if (autocomplete != null) {
-                    view.onAutocomplete(prepareAutocompleteResult(rawSearchText, autocomplete))
+                    view.onAutocomplete(prepareAutocompleteResult(
+                            rawSearchText,
+                            autocomplete,
+                            AutocompleteSource.DEFAULT_LIST))
                     return
                 }
             }
         }
+
+        view.onAutocomplete(AutocompleteResult.emptyResult())
     }
 
     private fun tryToAutocomplete(searchText: String, domains: List<String>): String? {
@@ -134,6 +148,12 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
      * doesn't exactly match searchText (ie. if casing differs). It's simplest to just build a suggestion
      * that exactly matches the search text - which is what this method is for:
      */
-    private fun prepareAutocompleteResult(rawSearchText: String, lowerCaseResult: String) =
-            rawSearchText + lowerCaseResult.substring(rawSearchText.length)
+    private fun prepareAutocompleteResult(
+            rawSearchText: String,
+            lowerCaseResult: String,
+            source: String
+    ) =
+            AutocompleteResult(
+                rawSearchText + lowerCaseResult.substring(rawSearchText.length),
+                source)
 }
