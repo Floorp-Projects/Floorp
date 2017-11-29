@@ -112,11 +112,13 @@ class Simulator
     explicit Simulator(JSContext* cx);
     ~Simulator();
 
+    static bool supportsAtomics() { return HasLDSTREXBHD(); }
+
     // The currently executing Simulator instance. Potentially there can be one
     // for each native thread.
     static Simulator* Current();
 
-    static inline uintptr_t StackLimit() {
+    static uintptr_t StackLimit() {
         return Simulator::Current()->stackLimit();
     }
 
