@@ -73,6 +73,9 @@ static egl::Stream::GLTextureDescription getGLDescFromTex(ID3D11Texture2D* tex,
     case DXGI_FORMAT_R8G8B8A8_UNORM:
         ret.internalFormat = GL_RGBA8;
         break;
+    case DXGI_FORMAT_B8G8R8A8_UNORM:
+        ret.internalFormat = GL_BGRA8_EXT;
+        break;
 
     default:
         *out_error = "Unsupported format";
@@ -119,7 +122,7 @@ egl::Error StreamProducerNV12::validateD3DNV12Texture(void *pointer, const egl::
     {
         return egl::EglBadParameter() << errorText;
     }
-    
+
     return egl::NoError();
 }
 

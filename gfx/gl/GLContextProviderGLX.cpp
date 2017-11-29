@@ -606,40 +606,30 @@ GLContextGLX::Init()
 }
 
 bool
-GLContextGLX::MakeCurrentImpl(bool aForce)
+GLContextGLX::MakeCurrentImpl() const
 {
-    bool succeeded = true;
-
-    // With the ATI FGLRX driver, glxMakeCurrent is very slow even when the context doesn't change.
-    // (This is not the case with other drivers such as NVIDIA).
-    // So avoid calling it more than necessary. Since GLX documentation says that:
-    //     "glXGetCurrentContext returns client-side information.
-    //      It does not make a round trip to the server."
-    // I assume that it's not worth using our own TLS slot here.
-    if (aForce || mGLX->fGetCurrentContext() != mContext) {
-        if (mGLX->IsMesa()) {
-          // Read into the event queue to ensure that Mesa receives a
-          // DRI2InvalidateBuffers event before drawing. See bug 1280653.
-          Unused << XPending(mDisplay);
-        }
-
-        succeeded = mGLX->fMakeCurrent(mDisplay, mDrawable, mContext);
-        NS_ASSERTION(succeeded, "Failed to make GL context current!");
-
-        if (!IsOffscreen() && mGLX->SupportsSwapControl()) {
-            // Many GLX implementations default to blocking until the next
-            // VBlank when calling glXSwapBuffers. We want to run unthrottled
-            // in ASAP mode. See bug 1280744.
-            const bool isASAP = (gfxPrefs::LayoutFrameRate() == 0);
-            mGLX->fSwapInterval(mDisplay, mDrawable, isASAP ? 0 : 1);
-        }
+    if (mGLX->IsMesa()) {
+        // Read into the event queue to ensure that Mesa receives a
+        // DRI2InvalidateBuffers event before drawing. See bug 1280653.
+        Unused << XPending(mDisplay);
     }
 
+    const bool succeeded = mGLX->fMakeCurrent(mDisplay, mDrawable, mContext);
+    NS_ASSERTION(succeeded, "Failed to make GL context current!");
+
+    if (!IsOffscreen() && mGLX->SupportsSwapControl()) {
+        // Many GLX implementations default to blocking until the next
+        // VBlank when calling glXSwapBuffers. We want to run unthrottled
+        // in ASAP mode. See bug 1280744.
+        const bool isASAP = (gfxPrefs::LayoutFrameRate() == 0);
+        mGLX->fSwapInterval(mDisplay, mDrawable, isASAP ? 0 : 1);
+    }
     return succeeded;
 }
 
 bool
-GLContextGLX::IsCurrent() {
+GLContextGLX::IsCurrentImpl() const
+{
     return mGLX->fGetCurrentContext() == mContext;
 }
 

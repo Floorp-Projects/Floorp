@@ -63,8 +63,12 @@ struct hb_ot_map_t
     unsigned short auto_zwj : 1;
     hb_mask_t mask;
 
-    static int cmp (const lookup_map_t *a, const lookup_map_t *b)
-    { return a->index < b->index ? -1 : a->index > b->index ? 1 : 0; }
+    static int cmp (const void *pa, const void *pb)
+    {
+      const lookup_map_t *a = (const lookup_map_t *) pa;
+      const lookup_map_t *b = (const lookup_map_t *) pb;
+      return a->index < b->index ? -1 : a->index > b->index ? 1 : 0;
+    }
   };
 
   typedef void (*pause_func_t) (const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer);
@@ -210,9 +214,13 @@ struct hb_ot_map_builder_t
     unsigned int default_value; /* for non-global features, what should the unset glyphs take */
     unsigned int stage[2]; /* GSUB/GPOS */
 
-    static int cmp (const feature_info_t *a, const feature_info_t *b)
-    { return (a->tag != b->tag) ?  (a->tag < b->tag ? -1 : 1) :
-	     (a->seq < b->seq ? -1 : a->seq > b->seq ? 1 : 0); }
+    static int cmp (const void *pa, const void *pb)
+    {
+      const feature_info_t *a = (const feature_info_t *) pa;
+      const feature_info_t *b = (const feature_info_t *) pb;
+      return (a->tag != b->tag) ?  (a->tag < b->tag ? -1 : 1) :
+	     (a->seq < b->seq ? -1 : a->seq > b->seq ? 1 : 0);
+    }
   };
 
   struct stage_info_t {

@@ -4054,20 +4054,6 @@ js::NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_
     return NewCopiedArrayTryUseGroup(cx, group, vp, length);
 }
 
-bool
-js::NewValuePair(JSContext* cx, const Value& val1, const Value& val2, MutableHandleValue rval)
-{
-    JS::AutoValueArray<2> vec(cx);
-    vec[0].set(val1);
-    vec[1].set(val2);
-
-    JSObject* aobj = js::NewDenseCopiedArray(cx, 2, vec.begin());
-    if (!aobj)
-        return false;
-    rval.setObject(*aobj);
-    return true;
-}
-
 #ifdef DEBUG
 bool
 js::ArrayInfo(JSContext* cx, unsigned argc, Value* vp)

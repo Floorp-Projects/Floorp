@@ -595,7 +595,6 @@ compose_use (const hb_ot_shape_normalize_context_t *c,
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_use =
 {
-  "use",
   collect_features_use,
   nullptr, /* override_features */
   data_create_use,

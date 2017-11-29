@@ -11586,13 +11586,15 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
   if (sc) {
     if (sc->IsServo() && parentFrame->IsLineFrame()) {
-      ServoStyleContext* parentStyleIgnoringFirstLine =
-        aBlockFrame->StyleContext()->AsServo();
+      nsIFrame* parentIgnoringFirstLine =
+        nsFrame::CorrectStyleParentFrame(aBlockFrame,
+                                         nsCSSPseudoElements::firstLetter);
+
       sc =
         mPresShell->StyleSet()->AsServo()->ReparentStyleContext(
           sc->AsServo(),
           parentStyleContext->AsServo(),
-          parentStyleIgnoringFirstLine,
+          parentIgnoringFirstLine->StyleContext()->AsServo(),
           parentStyleContext->AsServo(),
           blockContent->AsElement());
     }

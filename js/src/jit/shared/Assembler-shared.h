@@ -778,6 +778,7 @@ class MemoryAccessDesc
     bool isPlainAsmJS() const { return !hasTrap(); }
 
     void clearOffset() { offset_ = 0; }
+    void setOffset(uint32_t offset) { offset_ = offset; }
 };
 
 // Summarizes a global access for a mutable (in asm.js) or immutable value (in

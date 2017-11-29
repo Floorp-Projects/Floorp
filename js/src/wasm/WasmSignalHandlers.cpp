@@ -1574,6 +1574,9 @@ ProcessHasSignalHandlers()
     }
 #endif // defined(XP_WIN)
 
+    // Initalize ThreadLocal flag used by WasmFaultHandler
+    sAlreadyInSignalHandler.infallibleInit();
+
     // Install a SIGSEGV handler to handle safely-out-of-bounds asm.js heap
     // access and/or unaligned accesses.
 # if defined(XP_WIN)

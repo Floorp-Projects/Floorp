@@ -4421,6 +4421,7 @@ LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins)
 {
     MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
     MOZ_ASSERT(ins->type() == MIRType::Int32);
+    MOZ_ASSERT(ins->offset());
     define(new(alloc()) LWasmAddOffset(useRegisterAtStart(ins->base())), ins);
 }
 

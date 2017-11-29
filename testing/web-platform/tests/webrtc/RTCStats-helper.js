@@ -525,43 +525,43 @@ function validateMediaStreamStats(statsReport, stats) {
       framesReceived, framesDecoded, framesDropped, framesCorrupted, audioLevel
  */
 
-function validateMediaStreamTrackStats(stats, stat) {
+function validateMediaStreamTrackStats(statsReport, stats) {
   validateRtcStats(statsReport, stats);
 
-  assert_string_field(stat, 'trackIdentifier');
-  assert_boolean_field(stat, 'remoteSource');
-  assert_boolean_field(stat, 'ended');
-  assert_boolean_field(stat, 'detached');
+  assert_string_field(stats, 'trackIdentifier');
+  assert_boolean_field(stats, 'remoteSource');
+  assert_boolean_field(stats, 'ended');
+  assert_boolean_field(stats, 'detached');
 
-  assert_optional_string_field(stat, 'kind');
-  assert_optional_number_field(stat, 'estimatedPlayoutTimestamp');
+  assert_optional_string_field(stats, 'kind');
+  assert_optional_number_field(stats, 'estimatedPlayoutTimestamp');
 
-  assert_unsigned_int_field(stat, 'frameWidth');
-  assert_unsigned_int_field(stat, 'frameHeight');
-  assert_number_field(stat, 'framesPerSecond');
+  assert_unsigned_int_field(stats, 'frameWidth');
+  assert_unsigned_int_field(stats, 'frameHeight');
+  assert_number_field(stats, 'framesPerSecond');
 
-  assert_optional_unsigned_int_field(stat, 'framesCaptured');
-  assert_unsigned_int_field(stat, 'frameSent');
-  assert_unsigned_int_field(stat, 'frameReceived');
-  assert_unsigned_int_field(stat, 'frameDecoded');
-  assert_unsigned_int_field(stat, 'frameDropped');
-  assert_unsigned_int_field(stat, 'frameCorrupted');
+  assert_optional_unsigned_int_field(stats, 'framesCaptured');
+  assert_unsigned_int_field(stats, 'frameSent');
+  assert_unsigned_int_field(stats, 'frameReceived');
+  assert_unsigned_int_field(stats, 'frameDecoded');
+  assert_unsigned_int_field(stats, 'frameDropped');
+  assert_unsigned_int_field(stats, 'frameCorrupted');
 
-  assert_optional_unsigned_int_field(stat, 'partialFramesLost');
-  assert_optional_unsigned_int_field(stat, 'fullFramesLost');
+  assert_optional_unsigned_int_field(stats, 'partialFramesLost');
+  assert_optional_unsigned_int_field(stats, 'fullFramesLost');
 
-  assert_number_field(stat, 'audioLevel');
-  assert_optional_number_field(stat, 'totalAudioEnergy');
-  assert_optional_boolean_field(stat, 'voiceActivityFlag');
-  assert_optional_number_field(stat, 'echoReturnLoss');
-  assert_optional_number_field(stat, 'echoReturnLossEnhancement');
+  assert_number_field(stats, 'audioLevel');
+  assert_optional_number_field(stats, 'totalAudioEnergy');
+  assert_optional_boolean_field(stats, 'voiceActivityFlag');
+  assert_optional_number_field(stats, 'echoReturnLoss');
+  assert_optional_number_field(stats, 'echoReturnLossEnhancement');
 
-  assert_optional_unsigned_int_field(stat, 'totalSamplesSent');
-  assert_optional_unsigned_int_field(stat, 'totalSamplesReceived');
-  assert_optional_number_field(stat, 'totalSamplesDuration');
-  assert_optional_unsigned_int_field(stat, 'concealedSamples');
-  assert_optional_unsigned_int_field(stat, 'concealmentEvents');
-  assert_optional_number_field(stat, 'jitterBufferDelay');
+  assert_optional_unsigned_int_field(stats, 'totalSamplesSent');
+  assert_optional_unsigned_int_field(stats, 'totalSamplesReceived');
+  assert_optional_number_field(stats, 'totalSamplesDuration');
+  assert_optional_unsigned_int_field(stats, 'concealedSamples');
+  assert_optional_unsigned_int_field(stats, 'concealmentEvents');
+  assert_optional_number_field(stats, 'jitterBufferDelay');
 
   assert_optional_enum_field(stats, 'priority',
     ['very-low', 'low', 'medium', 'high']);
@@ -682,8 +682,8 @@ function validateTransportStats(statsReport, stats) {
     ['new', 'connecting', 'connected', 'closed', 'failed']);
 
   validateIdField(statsReport, stats, 'selectedCandidatePairId', 'candidate-pair');
-  validateIdField(stateReport, stats, 'localCertificateId', 'certificate');
-  validateIdField(stateReport, stats, 'remoteCertificateId', 'certificate');
+  validateIdField(statsReport, stats, 'localCertificateId', 'certificate');
+  validateIdField(statsReport, stats, 'remoteCertificateId', 'certificate');
 }
 
 /*

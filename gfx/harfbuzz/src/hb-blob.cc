@@ -30,6 +30,7 @@
 #endif
 
 #include "hb-private.hh"
+#include "hb-debug.hh"
 
 #include "hb-object-private.hh"
 
@@ -42,12 +43,6 @@
 
 #include <stdio.h>
 #include <errno.h>
-
-
-
-#ifndef HB_DEBUG_BLOB
-#define HB_DEBUG_BLOB (HB_DEBUG+0)
-#endif
 
 
 struct hb_blob_t {

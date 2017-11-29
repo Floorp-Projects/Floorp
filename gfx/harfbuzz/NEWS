@@ -1,3 +1,23 @@
+Overview of changes leading to 1.7.1
+Tuesday, November 14, 2017
+====================================
+
+- Fix atexit object destruction regression.
+- Fix minor integer-overflow.
+
+
+Overview of changes leading to 1.7.0
+Monday, November 13, 2017
+====================================
+
+- Minor Indic fixes.
+- Implement kerning and glyph names in hb-ot-font.
+- Various DSO optimization re .data and .bss sizes.
+- Make C++11 optional; build fixes.
+- Mark all other backends "unsafe-to-break".
+- Graphite fix.
+
+
 Overview of changes leading to 1.6.3
 Thursday, October 26th, 2017
 ====================================
@@ -809,7 +829,7 @@ Wednesday, July 16, 2014
   U+FFFD REPLACEMENT CHARACTER now.
 - With all changes in this release, the buffer will contain fully
   valid Unicode after hb_buffer_add_utf8/16/32 no matter how
-  broken the input is.  This can be overriden though.  See below.
+  broken the input is.  This can be overridden though.  See below.
 - Fix Mongolian Variation Selectors for fonts without GDEF.
 - Fix minor invalid buffer access.
 - Accept zh-Hant and zh-Hans language tags.  hb_ot_tag_to_language()

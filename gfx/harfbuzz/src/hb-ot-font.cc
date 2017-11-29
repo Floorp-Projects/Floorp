@@ -36,9 +36,10 @@
 #include "hb-ot-head-table.hh"
 #include "hb-ot-hhea-table.hh"
 #include "hb-ot-hmtx-table.hh"
+#include "hb-ot-kern-table.hh"
 #include "hb-ot-os2-table.hh"
-#include "hb-ot-var-hvar-table.hh"
 #include "hb-ot-post-table.hh"
+#include "hb-ot-var-hvar-table.hh"
 
 
 struct hb_ot_face_metrics_accelerator_t
@@ -304,25 +305,24 @@ struct hb_ot_face_cbdt_accelerator_t
 struct hb_ot_face_post_accelerator_t
 {
   hb_blob_t *post_blob;
-  unsigned int post_len;
-  const OT::post *post;
+  OT::post::accelerator_t accel;
 
   inline void init (hb_face_t *face)
   {
-    this->post_blob = OT::Sanitizer<OT::post>::sanitize (face->reference_table (HB_OT_TAG_post));
-    this->post = OT::Sanitizer<OT::post>::lock_instance (this->post_blob);
-    this->post_len = hb_blob_get_length (this->post_blob);
+    hb_blob_t *blob = this->post_blob = OT::Sanitizer<OT::post>::sanitize (face->reference_table (HB_OT_TAG_post));
+    accel.init (OT::Sanitizer<OT::post>::lock_instance (blob), hb_blob_get_length (blob));
   }
 
   inline void fini (void)
   {
+    accel.fini ();
     hb_blob_destroy (this->post_blob);
   }
 
   inline bool get_glyph_name (hb_codepoint_t glyph,
 			      char *name, unsigned int size) const
   {
-    return this->post->get_glyph_name (glyph, name, size, this->post_len);
+    return this->accel.get_glyph_name (glyph, name, size);
   }
 
   inline bool get_glyph_from_name (const char *name, int len,
@@ -331,8 +331,29 @@ struct hb_ot_face_post_accelerator_t
     if (unlikely (!len))
       return false;
 
-    return this->post->get_glyph_from_name (name, len, glyph, this->post_len);
+    return this->accel.get_glyph_from_name (name, len, glyph);
   }
+};
+
+struct hb_ot_face_kern_accelerator_t
+{
+  hb_blob_t *kern_blob;
+  OT::kern::accelerator_t accel;
+
+  inline void init (hb_face_t *face)
+  {
+    hb_blob_t *blob = this->kern_blob = OT::Sanitizer<OT::kern>::sanitize (face->reference_table (HB_OT_TAG_kern));
+    accel.init (OT::Sanitizer<OT::kern>::lock_instance (blob), hb_blob_get_length (blob));
+  }
+
+  inline void fini (void)
+  {
+    accel.fini ();
+    hb_blob_destroy (this->kern_blob);
+  }
+
+  inline int get_h_kerning (hb_codepoint_t left, hb_codepoint_t right) const
+  { return accel.get_h_kerning (left, right); }
 };
 
 typedef bool (*hb_cmap_get_glyph_func_t) (const void *obj,
@@ -471,6 +492,7 @@ struct hb_ot_font_t
   OT::hb_lazy_loader_t<hb_ot_face_glyf_accelerator_t> glyf;
   OT::hb_lazy_loader_t<hb_ot_face_cbdt_accelerator_t> cbdt;
   OT::hb_lazy_loader_t<hb_ot_face_post_accelerator_t> post;
+  OT::hb_lazy_loader_t<hb_ot_face_kern_accelerator_t> kern;
 };
 
 
@@ -489,6 +511,7 @@ _hb_ot_font_create (hb_face_t *face)
   ot_font->glyf.init (face);
   ot_font->cbdt.init (face);
   ot_font->post.init (face);
+  ot_font->kern.init (face);
 
   return ot_font;
 }
@@ -504,6 +527,7 @@ _hb_ot_font_destroy (void *data)
   ot_font->glyf.fini ();
   ot_font->cbdt.fini ();
   ot_font->post.fini ();
+  ot_font->kern.fini ();
 
   free (ot_font);
 }
@@ -551,6 +575,17 @@ hb_ot_get_glyph_v_advance (hb_font_t *font,
 {
   const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
   return font->em_scale_y (-(int) ot_font->v_metrics.get_advance (glyph, font));
+}
+
+static hb_position_t
+hb_ot_get_glyph_h_kerning (hb_font_t *font,
+			   void *font_data,
+			   hb_codepoint_t left_glyph,
+			   hb_codepoint_t right_glyph,
+			   void *user_data HB_UNUSED)
+{
+  const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
+  return font->em_scale_x (ot_font->kern->get_h_kerning (left_glyph, right_glyph));
 }
 
 static hb_bool_t
@@ -650,7 +685,7 @@ retry:
     hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ot_get_glyph_v_advance, nullptr, nullptr);
     //hb_font_funcs_set_glyph_h_origin_func (funcs, hb_ot_get_glyph_h_origin, nullptr, nullptr);
     //hb_font_funcs_set_glyph_v_origin_func (funcs, hb_ot_get_glyph_v_origin, nullptr, nullptr);
-    //hb_font_funcs_set_glyph_h_kerning_func (funcs, hb_ot_get_glyph_h_kerning, nullptr, nullptr); TODO
+    hb_font_funcs_set_glyph_h_kerning_func (funcs, hb_ot_get_glyph_h_kerning, nullptr, nullptr);
     //hb_font_funcs_set_glyph_v_kerning_func (funcs, hb_ot_get_glyph_v_kerning, nullptr, nullptr);
     hb_font_funcs_set_glyph_extents_func (funcs, hb_ot_get_glyph_extents, nullptr, nullptr);
     //hb_font_funcs_set_glyph_contour_point_func (funcs, hb_ot_get_glyph_contour_point, nullptr, nullptr); TODO

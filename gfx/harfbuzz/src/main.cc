@@ -38,6 +38,7 @@
 
 using namespace OT;
 
+const void * const OT::_hb_NullPool[HB_NULL_POOL_SIZE / sizeof (void *)] = {};
 
 int
 main (int argc, char **argv)

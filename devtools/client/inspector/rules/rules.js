@@ -1588,12 +1588,10 @@ function RuleViewTool(inspector, window) {
   this.refresh = this.refresh.bind(this);
   this.onMutations = this.onMutations.bind(this);
   this.onPanelSelected = this.onPanelSelected.bind(this);
-  this.onPropertyChanged = this.onPropertyChanged.bind(this);
   this.onResized = this.onResized.bind(this);
   this.onSelected = this.onSelected.bind(this);
   this.onViewRefreshed = this.onViewRefreshed.bind(this);
 
-  this.view.on("ruleview-changed", this.onPropertyChanged);
   this.view.on("ruleview-refreshed", this.onViewRefreshed);
 
   this.inspector.selection.on("detached-front", this.onSelected);
@@ -1666,10 +1664,6 @@ RuleViewTool.prototype = {
     }
   },
 
-  onPropertyChanged: function () {
-    this.inspector.markDirty();
-  },
-
   onViewRefreshed: function () {
     this.inspector.emit("rule-view-refreshed");
   },
@@ -1708,7 +1702,6 @@ RuleViewTool.prototype = {
       this.inspector.pageStyle.off("stylesheet-updated", this.refresh);
     }
 
-    this.view.off("ruleview-changed", this.onPropertyChanged);
     this.view.off("ruleview-refreshed", this.onViewRefreshed);
 
     this.view.destroy();

@@ -34,7 +34,7 @@ grep -v 'hb-private[.]hh:' |
 grep . >&2 && stat=1
 
 
-echo 'Checking that there is no #include <hb.*.h>'
+echo 'Checking that there is no #include <hb-*.h>'
 for x in $HBHEADERS $HBSOURCES; do
 	test -f "$srcdir/$x" && x="$srcdir/$x"
 	grep '#.*\<include\>.*<.*hb' "$x" /dev/null >&2 && stat=1

@@ -17,12 +17,14 @@
 #include "nsProxyRelease.h"
 #include "nsWrapperCache.h"
 #include "U2FAuthenticator.h"
+#include "nsIDOMEventListener.h"
 
 class nsISerialEventTarget;
 
 namespace mozilla {
 namespace dom {
 
+class U2FTransactionChild;
 class U2FRegisterCallback;
 class U2FSignCallback;
 
@@ -30,11 +32,38 @@ class U2FSignCallback;
 struct RegisterRequest;
 struct RegisteredKey;
 
-// The U2F Class is used by the JS engine to initiate U2F operations.
-class U2F final : public nsISupports
+class U2FTransaction
+{
+public:
+  explicit U2FTransaction(const nsCString& aClientData)
+    : mClientData(aClientData)
+    , mId(NextId())
+  {
+    MOZ_ASSERT(mId > 0);
+  }
+
+  // Client data used to assemble reply objects.
+  nsCString mClientData;
+
+  // Unique transaction id.
+  uint64_t mId;
+
+private:
+  // Generates a unique id for new transactions. This doesn't have to be unique
+  // forever, it's sufficient to differentiate between temporally close
+  // transactions, where messages can intersect. Can overflow.
+  static uint64_t NextId() {
+    static uint64_t id = 0;
+    return ++id;
+  }
+};
+
+class U2F final : public nsIDOMEventListener
                 , public nsWrapperCache
 {
 public:
+  NS_DECL_NSIDOMEVENTLISTENER
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(U2F)
 
@@ -68,18 +97,48 @@ public:
        const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
        ErrorResult& aRv);
 
-private:
   void
-  Cancel();
+  FinishRegister(const uint64_t& aTransactionId, nsTArray<uint8_t>& aRegBuffer);
+
+  void
+  FinishSign(const uint64_t& aTransactionId,
+             nsTArray<uint8_t>& aCredentialId,
+             nsTArray<uint8_t>& aSigBuffer);
+
+  void
+  RequestAborted(const uint64_t& aTransactionId, const nsresult& aError);
+
+  void ActorDestroyed();
+
+private:
+  ~U2F();
+
+  // Visibility event handling.
+  void ListenForVisibilityEvents();
+  void StopListeningForVisibilityEvents();
+
+  // Clears all information we have about the current transaction.
+  void ClearTransaction();
+  // Rejects the current transaction and calls ClearTransaction().
+  void RejectTransaction(const nsresult& aError);
+  // Cancels the current transaction (by sending a Cancel message to the
+  // parent) and rejects it by calling RejectTransaction().
+  void CancelTransaction(const nsresult& aError);
+
+  bool MaybeCreateBackgroundActor();
 
   nsString mOrigin;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
-  nsCOMPtr<nsISerialEventTarget> mEventTarget;
+
+  // U2F API callbacks.
   Maybe<nsMainThreadPtrHandle<U2FRegisterCallback>> mRegisterCallback;
   Maybe<nsMainThreadPtrHandle<U2FSignCallback>> mSignCallback;
-  MozPromiseRequestHolder<U2FPromise> mPromiseHolder;
 
-  ~U2F();
+  // IPC Channel to the parent process.
+  RefPtr<U2FTransactionChild> mChild;
+
+  // The current transaction, if any.
+  Maybe<U2FTransaction> mTransaction;
 };
 
 } // namespace dom

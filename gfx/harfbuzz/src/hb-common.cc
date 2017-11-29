@@ -85,7 +85,7 @@ hb_tag_from_string (const char *str, int len)
   for (; i < 4; i++)
     tag[i] = ' ';
 
-  return HB_TAG_CHAR4 (tag);
+  return HB_TAG (tag[0], tag[1], tag[2], tag[3]);
 }
 
 /**
@@ -699,34 +699,43 @@ parse_uint32 (const char **pp, const char *end, uint32_t *pv)
 
 #if defined (HAVE_NEWLOCALE) && defined (HAVE_STRTOD_L)
 #define USE_XLOCALE 1
+#define HB_LOCALE_T locale_t
+#define HB_CREATE_LOCALE(locName) newlocale (LC_ALL_MASK, locName, nullptr)
+#define HB_FREE_LOCALE(loc) freelocale (loc)
+#elif defined(_MSC_VER)
+#define USE_XLOCALE 1
+#define HB_LOCALE_T _locale_t
+#define HB_CREATE_LOCALE(locName) _create_locale (LC_ALL, locName)
+#define HB_FREE_LOCALE(loc) _free_locale (loc)
+#define strtod_l(a, b, c) _strtod_l ((a), (b), (c))
 #endif
 
 #ifdef USE_XLOCALE
 
-static locale_t C_locale;
+static HB_LOCALE_T C_locale;
 
 #ifdef HB_USE_ATEXIT
 static void
 free_C_locale (void)
 {
   if (C_locale)
-    freelocale (C_locale);
+    HB_FREE_LOCALE (C_locale);
 }
 #endif
 
-static locale_t
+static HB_LOCALE_T
 get_C_locale (void)
 {
 retry:
-  locale_t C = (locale_t) hb_atomic_ptr_get (&C_locale);
+  HB_LOCALE_T C = (HB_LOCALE_T) hb_atomic_ptr_get (&C_locale);
 
   if (unlikely (!C))
   {
-    C = newlocale (LC_ALL_MASK, "C", nullptr);
+    C = HB_CREATE_LOCALE ("C");
 
     if (!hb_atomic_ptr_cmpexch (&C_locale, nullptr, C))
     {
-      freelocale (C_locale);
+      HB_FREE_LOCALE (C_locale);
       goto retry;
     }
 

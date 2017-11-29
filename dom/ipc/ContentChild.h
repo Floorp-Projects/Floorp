@@ -365,7 +365,7 @@ public:
   // auto remove when alertfinished is received.
   nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);
 
-  virtual mozilla::ipc::IPCResult RecvPreferenceUpdate(const PrefSetting& aPref) override;
+  virtual mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref) override;
   virtual mozilla::ipc::IPCResult RecvVarUpdate(const GfxVarUpdate& pref) override;
 
   virtual mozilla::ipc::IPCResult RecvDataStoragePut(const nsString& aFilename,

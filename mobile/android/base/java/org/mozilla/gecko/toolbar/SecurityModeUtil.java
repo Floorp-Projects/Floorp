@@ -25,33 +25,34 @@ public class SecurityModeUtil {
 
     /**
      * Abstract icon type for SiteIdentity resolving algorithm. Hence no need to worry about
-     * Drawable level value.
+     * Drawable level value.  Reference:
+     * http://dxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_icon.xml
      */
     public enum IconType {
-        UNKNOWN,
-        DEFAULT,
-        SEARCH,
-        LOCK_SECURE,
-        LOCK_WARNING, // not used for now. reserve for MixedDisplayContent icon, if any.
-        LOCK_INSECURE,
-        WARNING,
-        TRACKING_CONTENT_BLOCKED,
-        TRACKING_CONTENT_LOADED
-    }
+        UNKNOWN(0),
+        DEFAULT(0),
+        SEARCH(6),
+        LOCK_SECURE(1),
+        LOCK_WARNING(-1), // not used for now. reserve for MixedDisplayContent icon, if any.
+        LOCK_INSECURE(3),
+        WARNING(2),
+        TRACKING_CONTENT_BLOCKED(4),
+        TRACKING_CONTENT_LOADED(5);
 
-    // Defined mapping between IconType and Drawable image-level
-    private static final Map<IconType, Integer> imgLevelMap = new HashMap<>();
+        private final int imageLevel;
 
-    // http://dxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_icon.xml
-    static {
-        imgLevelMap.put(IconType.UNKNOWN, 0);
-        imgLevelMap.put(IconType.DEFAULT, 0);
-        imgLevelMap.put(IconType.LOCK_SECURE, 1);
-        imgLevelMap.put(IconType.WARNING, 2);
-        imgLevelMap.put(IconType.LOCK_INSECURE, 3);
-        imgLevelMap.put(IconType.TRACKING_CONTENT_BLOCKED, 4);
-        imgLevelMap.put(IconType.TRACKING_CONTENT_LOADED, 5);
-        imgLevelMap.put(IconType.SEARCH, 6);
+        private IconType(int imageLevel) {
+            this.imageLevel = imageLevel;
+        }
+
+        /**
+         * Get image level from IconType, and to use in ImageView.setImageLevel().
+         *
+         * @return the image level which defined in Drawable
+         */
+        public int getImageLevel() {
+            return imageLevel;
+        }
     }
 
     // defined basic mapping between SecurityMode and SecurityModeUtil.IconType
@@ -63,18 +64,6 @@ public class SecurityModeUtil {
         securityModeMap.put(SecurityMode.IDENTIFIED, IconType.LOCK_SECURE);
         securityModeMap.put(SecurityMode.VERIFIED, IconType.LOCK_SECURE);
         securityModeMap.put(SecurityMode.CHROMEUI, IconType.UNKNOWN);
-    }
-
-    /**
-     * Get image level from IconType, and to use in ImageView.setImageLevel().
-     *
-     * @param type IconType which is resolved by method resolve()
-     * @return the image level which defined in Drawable
-     */
-    public static int getImageLevel(@NonNull final IconType type) {
-        return imgLevelMap.containsKey(type)
-                ? imgLevelMap.get(type)
-                : imgLevelMap.get(IconType.UNKNOWN);
     }
 
     /**

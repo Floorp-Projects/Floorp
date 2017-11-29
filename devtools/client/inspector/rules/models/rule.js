@@ -46,7 +46,6 @@ function Rule(elementStyle, options) {
   this.isUnmatched = options.isUnmatched || false;
   this.inherited = options.inherited || null;
   this.keyframes = options.keyframes || null;
-  this._modificationDepth = 0;
 
   if (this.domRule && this.domRule.mediaText) {
     this.mediaText = this.domRule.mediaText;

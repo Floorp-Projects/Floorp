@@ -24,11 +24,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "hb-private.hh"
 
 #include "hb.h"
+#include "hb-ot.h"
 #ifdef HAVE_FREETYPE
 #include "hb-ft.h"
 #endif
@@ -92,8 +91,9 @@ main (int argc, char **argv)
   hb_font_t *font = hb_font_create (face);
   hb_face_destroy (face);
   hb_font_set_scale (font, upem, upem);
+  hb_ot_font_set_funcs (font);
 #ifdef HAVE_FREETYPE
-  hb_ft_font_set_funcs (font);
+  //hb_ft_font_set_funcs (font);
 #endif
 
   hb_buffer_t *buf;

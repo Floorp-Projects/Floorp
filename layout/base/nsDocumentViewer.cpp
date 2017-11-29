@@ -549,6 +549,12 @@ nsDocumentViewer::~nsDocumentViewer()
     mDocument->Destroy();
   }
 
+  if (mPrintEngine) {
+    mPrintEngine->Destroy();
+    mPrintEngine = nullptr;
+  }
+
+  MOZ_RELEASE_ASSERT(mDestroyRefCount == 0);
   NS_ASSERTION(!mPresShell && !mPresContext,
                "User did not call nsIContentViewer::Destroy");
   if (mPresShell || mPresContext) {

@@ -20,7 +20,7 @@ async function attemptFakeRefresh(browser, expectRefresh) {
   await ContentTask.spawn(browser, expectRefresh, async function(contentExpectRefresh) {
     let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
     let refresher = docShell.QueryInterface(Ci.nsIRefreshURI);
-    refresher.refreshURI(URI, 0, false, true);
+    refresher.refreshURI(URI, null, 0, false, true);
 
     Assert.equal(refresher.refreshPending, contentExpectRefresh,
       "Got the right refreshPending state");
