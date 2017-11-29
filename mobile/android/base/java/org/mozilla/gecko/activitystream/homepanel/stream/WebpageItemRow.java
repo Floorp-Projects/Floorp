@@ -41,6 +41,7 @@ public class WebpageItemRow extends StreamViewHolder {
     private final TextView pageTitleView;
     private final ImageView pageSourceIconView;
     private final TextView pageSourceView;
+    private final ImageView menuButton;
 
     public WebpageItemRow(final View itemView, final OnMenuButtonClickListener onMenuButtonClickListener) {
         super(itemView);
@@ -51,7 +52,7 @@ public class WebpageItemRow extends StreamViewHolder {
         pageDomainView = (TextView) itemView.findViewById(R.id.page_domain);
         pageSourceIconView = (ImageView) itemView.findViewById(R.id.page_source_icon);
 
-        final ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
+        menuButton = (ImageView) itemView.findViewById(R.id.menu);
         menuButton.setImageDrawable(
                 DrawableUtil.tintDrawable(menuButton.getContext(), R.drawable.menu, Color.LTGRAY));
         TouchTargetUtil.ensureTargetHitArea(menuButton, itemView);
@@ -169,6 +170,10 @@ public class WebpageItemRow extends StreamViewHolder {
         private boolean isTagSameAsStartTag(final View viewToCheck) {
             return viewTagAtStart.equals(viewToCheck.getTag(VIEW_TAG_ID));
         }
+    }
+
+    public View getTabletContextMenuAnchor() {
+        return menuButton;
     }
 
     public interface OnMenuButtonClickListener {
