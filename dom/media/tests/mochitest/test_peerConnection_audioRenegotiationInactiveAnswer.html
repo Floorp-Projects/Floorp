@@ -18,8 +18,18 @@
 
     test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}], []);
+    var haveFirstUnmuteEvent;
+
+    test.chain.insertBefore("PC_REMOTE_SET_LOCAL_DESCRIPTION", [
+      function PC_REMOTE_SETUP_ONUNMUTE_1() {
+        haveFirstUnmuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[0].track, "unmute");
+      }
+    ]);
 
     test.chain.append([
+      function PC_REMOTE_CHECK_AUDIO_UNMUTED() {
+        return haveFirstUnmuteEvent;
+      },
       function PC_REMOTE_CHECK_AUDIO_FLOWING() {
         return helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[0]);
       }
