@@ -65,6 +65,19 @@ GetPixbufFromImgRequest(imgIRequest* aRequest)
     return nullptr;
   }
 
+  int32_t width = 0, height = 0;
+  const int32_t kBytesPerPixel = 4;
+  // DBUS_MAXIMUM_ARRAY_LENGTH is 64M, there is 60 bytes overhead
+  // for the hints array with only the image payload, 256 is used to give
+  // some breathing room.
+  const int32_t kMaxImageBytes = 64*1024*1024 - 256;
+  image->GetWidth(&width);
+  image->GetHeight(&height);
+  if (width * height * kBytesPerPixel > kMaxImageBytes) {
+    // The image won't fit in a dbus array
+    return nullptr;
+  }
+
   nsCOMPtr<nsIImageToPixbuf> imgToPixbuf =
     do_GetService("@mozilla.org/widget/image-to-gdk-pixbuf;1");
 
