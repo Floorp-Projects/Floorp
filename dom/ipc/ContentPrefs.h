@@ -14,11 +14,11 @@ namespace dom {
 
 class ContentPrefs {
 public:
-  static const char** GetContentPrefs(size_t* aCount);
-  static const char* GetContentPref(size_t aIndex);
+  static const char** GetEarlyPrefs(size_t* aCount);
+  static const char* GetEarlyPref(size_t aIndex);
 
 private:
-  static const char* gInitPrefs[];
+  static const char* gEarlyPrefs[];
 };
 
 }
