@@ -79,6 +79,10 @@ html {
   text-align: left;
 }
 
+.peer-connection table.raw-candidate {
+  text-align: left;
+}
+
 .trickled {
   background-color: #bdf;
 }

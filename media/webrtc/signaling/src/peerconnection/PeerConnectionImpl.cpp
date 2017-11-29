@@ -1970,6 +1970,8 @@ public:
     mCodecStats.Construct();
     mTimestamp.Construct(now);
     mTrickledIceCandidateStats.Construct();
+    mRawLocalCandidates.Construct();
+    mRawRemoteCandidates.Construct();
   }
 };
 
@@ -2037,6 +2039,7 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
     // the remote SDP.
     if (mSignalingState == PCImplSignalingState::SignalingStable) {
       mMedia->AddIceCandidate(aCandidate, aMid, aLevel);
+      mRawTrickledCandidates.push_back(aCandidate);
     }
     pco->OnAddIceCandidateSuccess(rv);
   } else {
@@ -3340,6 +3343,10 @@ PeerConnectionImpl::BuildStatsQuery_m(
       query->report->mRemoteSdp.Construct(
           NS_ConvertASCIItoUTF16(remoteDescription.c_str()));
       query->report->mOfferer.Construct(mJsepSession->IsOfferer());
+      for (const auto& candidate : mRawTrickledCandidates) {
+        query->report->mRawRemoteCandidates.Value().AppendElement(
+            NS_ConvertASCIItoUTF16(candidate.c_str()), fallible);
+      }
     }
   }
 
@@ -3436,6 +3443,11 @@ static void RecordIceStats_s(
                            transportId,
                            now,
                            report);
+    // add the local candidates unparsed string to a sequence
+    for (const auto& candidate : candidates) {
+      report->mRawLocalCandidates.Value().AppendElement(
+          NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible);
+    }
   }
   candidates.clear();
 
@@ -3445,6 +3457,11 @@ static void RecordIceStats_s(
                            transportId,
                            now,
                            report);
+    // add the remote candidates unparsed string to a sequence
+    for (const auto& candidate : candidates) {
+      report->mRawRemoteCandidates.Value().AppendElement(
+          NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible);
+    }
   }
 }
 
