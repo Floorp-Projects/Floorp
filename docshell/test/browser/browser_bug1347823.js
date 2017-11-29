@@ -52,8 +52,10 @@ add_task(async function testExpiredCache() {
       await BrowserTestUtils.browserLoaded(browser);
 
       // Wait for 3 times of expiration timeout, hopefully it's evicted...
-      await new Promise(resolve => {
-        setTimeout(resolve, 3000);
+      await ContentTask.spawn(browser, null, () => {
+        return new Promise(resolve => {
+          content.setTimeout(resolve, 3000);
+        });
       });
 
       // Go back and verify text content.

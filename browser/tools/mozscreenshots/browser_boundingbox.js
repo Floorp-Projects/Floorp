@@ -8,7 +8,7 @@ add_task(async function() {
   const scale = window.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIBaseWindow)
                       .devicePixelsPerDesktopPixel;
-  let rect = TestRunner._findBoundingBox(["#tabbrowser-tabs"]);
+  let {bounds, rects} = TestRunner._findBoundingBox(["#tabbrowser-tabs"]);
   let element = document.querySelector("#tabbrowser-tabs");
   let tabBar = element.ownerDocument.getBoxObjectFor(element);
 
@@ -30,13 +30,24 @@ add_task(async function() {
   expectedRight = Math.min(expectedRight, windowRight);
   expectedBottom = Math.min(expectedBottom, windowBottom);
   // Check width calculation on simple example
-  is(rect.width, expectedRight - expectedLeft,
+  is(bounds.width, expectedRight - expectedLeft,
      "Checking _findBoundingBox width calculation");
   // Check height calculation on simple example
-  is(rect.height, expectedBottom - expectedTop,
+  is(bounds.height, expectedBottom - expectedTop,
      "Checking _findBoundingBox height caclulation");
+  is(bounds.left, rects[0].left,
+    "Checking _findBoundingBox union.left and rect.left is the same for a single selector");
+  is(bounds.right, rects[0].right,
+    "Checking _findBoundingBox union.right and rect.right is the same for a single selector");
+  is(bounds.top, rects[0].top,
+    "Checking _findBoundingBox union.top and rect.top is the same for a single selector");
+  is(bounds.bottom, rects[0].bottom,
+    "Checking _findBoundingBox union.bottom and rect.bottom is the same for a single selector");
 
-  rect = TestRunner._findBoundingBox(["#forward-button", "#TabsToolbar"]);
+  let result = TestRunner._findBoundingBox(["#forward-button", "#TabsToolbar"]);
+  bounds = result.bounds;
+  rects = result.rects;
+
   element = document.querySelector("#TabsToolbar");
   let tabToolbar = element.ownerDocument.getBoxObjectFor(element);
   element = document.querySelector("#forward-button");
@@ -61,11 +72,23 @@ add_task(async function() {
   expectedBottom = Math.min(expectedBottom, windowBottom);
 
   // Check width calculation on union
-  is(rect.width, expectedRight - expectedLeft,
+  is(bounds.width, expectedRight - expectedLeft,
      "Checking _findBoundingBox union width calculation");
   // Check height calculation on union
-  is(rect.height, expectedBottom - expectedTop,
+  is(bounds.height, expectedBottom - expectedTop,
      "Checking _findBoundingBox union height calculation");
+  // Check single selector's left position
+  is(rects[0].left, Math.max(scale * (fButton.screenX - TestRunner.croppingPadding), windowLeft),
+    "Checking single selector's left position when _findBoundingBox has multiple selectors");
+  // Check single selector's right position
+  is(rects[0].right, Math.min(scale * (fButton.width + fButton.screenX + TestRunner.croppingPadding), windowRight),
+    "Checking single selector's right position when _findBoundingBox has multiple selectors");
+  // Check single selector's top position
+  is(rects[0].top, Math.max(scale * (fButton.screenY - TestRunner.croppingPadding), windowTop),
+    "Checking single selector's top position when _findBoundingBox has multiple selectors");
+  // Check single selector's bottom position
+  is(rects[0].bottom, Math.min(scale * (fButton.height + fButton.screenY + TestRunner.croppingPadding), windowBottom),
+    "Checking single selector's bottom position when _findBoundingBox has multiple selectors");
 
     // Check that nonexistent selectors throws an exception
   Assert.throws(() => {
@@ -74,7 +97,6 @@ add_task(async function() {
 
   // Check that no selectors throws an exception
   Assert.throws(() => {
-    rect = TestRunner._findBoundingBox([]);
-
+    TestRunner._findBoundingBox([]);
   }, "No selectors specified.", "Checking that no selectors throws an exception");
 });

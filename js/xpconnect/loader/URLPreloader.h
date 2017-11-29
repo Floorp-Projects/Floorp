@@ -77,8 +77,6 @@ public:
 
     static Result<const nsCString, nsresult> ReadFile(nsIFile* file, ReadType readType = Forget);
 
-    static Result<const nsCString, nsresult> ReadFile(const nsACString& path, ReadType readType = Forget);
-
     static Result<const nsCString, nsresult> ReadZip(nsZipArchive* archive,
                                                      const nsACString& path,
                                                      ReadType readType = Forget);
@@ -159,7 +157,9 @@ private:
         explicit CacheKey(nsIFile* file)
           : mType(TypeFile)
         {
-            MOZ_ALWAYS_SUCCEEDS(file->GetNativePath(mPath));
+            nsString path;
+            MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
+            CopyUTF16toUTF8(path, mPath);
         }
 
         explicit inline CacheKey(InputBuffer& buffer);

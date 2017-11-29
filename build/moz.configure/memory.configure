@@ -62,3 +62,14 @@ def replace_malloc(value, jemalloc, milestone, build_project):
 set_config('MOZ_REPLACE_MALLOC', replace_malloc)
 set_define('MOZ_REPLACE_MALLOC', replace_malloc)
 add_old_configure_assignment('MOZ_REPLACE_MALLOC', replace_malloc)
+
+
+@depends(replace_malloc, build_project)
+def replace_malloc_static(replace_malloc, build_project):
+    # Default to statically linking replace-malloc libraries that can be
+    # statically linked, except when building with --enable-project=memory.
+    if replace_malloc and build_project != 'memory':
+        return True
+
+
+set_config('MOZ_REPLACE_MALLOC_STATIC', replace_malloc_static)
