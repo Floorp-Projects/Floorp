@@ -296,7 +296,6 @@ class Test_get_config(object):
         assert test_config['gecko_profile_startup'] is True
         assert test_config['gecko_profile_entries'] == 10000000
         assert test_config['url'] != 'startup_test/tspaint_test.html'  # interpolation was done
-        assert test_config['shutdown'] is False
         assert test_config['xperf_counters'] == []
         # TODO: these don't work; is this a bug?
         # assert test_config['win7_counters'] == []
@@ -316,7 +315,6 @@ class Test_get_config(object):
         assert test_config['gecko_profile_startup'] is True
         assert test_config['gecko_profile_entries'] == 10000000
         assert test_config['url'] != 'startup_test/tspaint_test.html'  # interpolation was done
-        assert test_config['shutdown'] is False
         assert test_config['xperf_counters'] == []
         # TODO: these don't work; is this a bug?
         # assert test_config['win7_counters'] == []
@@ -339,7 +337,6 @@ class Test_get_config(object):
         assert test_config['gecko_profile_startup'] is True
         assert test_config['gecko_profile_entries'] == 10000000
         assert test_config['url'] != 'startup_test/tspaint_test.html'  # interpolation was done
-        assert test_config['shutdown'] is False
         assert test_config['xperf_counters'] == []
         # TODO: this doesn't work; is this a bug?
         # assert test_config['win7_counters'] == []
@@ -359,7 +356,6 @@ class Test_get_config(object):
         assert test_config['timeout'] == 900
         assert test_config['gecko_profile_startup'] is True
         assert test_config['gecko_profile_entries'] == 10000000
-        assert test_config['shutdown'] is False
         assert test_config['reinstall'] == [
             'sessionstore.jsonlz4', 'sessionstore.js', 'sessionCheckpoints.json']
         assert test_config['url'] == 'about:home'
@@ -375,7 +371,6 @@ class Test_get_config(object):
         assert test_config['timeout'] == 900
         assert test_config['gecko_profile_startup'] is True
         assert test_config['gecko_profile_entries'] == 10000000
-        assert test_config['shutdown'] is False
         assert test_config['reinstall'] == [
             'sessionstore.jsonlz4', 'sessionstore.js', 'sessionCheckpoints.json']
         assert test_config['url'] == 'about:home'
@@ -391,7 +386,6 @@ class Test_get_config(object):
         assert test_config['timeout'] == 900
         assert test_config['gecko_profile_startup'] is True
         assert test_config['gecko_profile_entries'] == 10000000
-        assert test_config['shutdown'] is False
         assert test_config['reinstall'] == [
             'sessionstore.jsonlz4', 'sessionstore.js', 'sessionCheckpoints.json']
         assert test_config['url'] == 'about:home'
@@ -603,7 +597,6 @@ class Test_get_config(object):
 
         assert test_config['name'] == 'tp5n'
         assert test_config['resolution'] == 20
-        assert test_config['shutdown'] is False
         assert test_config['tpmanifest'] != '${talos}/tests/tp5n/tp5n.manifest'
         assert test_config['tpcycles'] == 1
         assert test_config['tppagecycles'] == 1

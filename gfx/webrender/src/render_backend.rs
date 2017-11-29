@@ -28,7 +28,6 @@ use std::sync::Arc;
 use std::sync::mpsc::Sender;
 use std::u32;
 use texture_cache::TextureCache;
-use thread_profiler::register_thread_with_profiler;
 use time::precise_time_ns;
 
 struct Document {
@@ -183,8 +182,6 @@ impl RenderBackend {
         NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
 
         let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer);
-
-        register_thread_with_profiler("Backend".to_string());
 
         RenderBackend {
             api_rx,

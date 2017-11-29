@@ -27,7 +27,6 @@ class GeckoInstance(object):
 
         # Do not send Firefox health reports to the production server
         "datareporting.healthreport.documentServerURI": "http://%(server)s/dummy/healthreport/",
-        "datareporting.healthreport.about.reportUrl": "http://%(server)s/dummy/abouthealthreport/",
 
         # Do not show datareporting policy notifications which can interfer with tests
         "datareporting.policy.dataSubmissionPolicyBypassNotification": True,

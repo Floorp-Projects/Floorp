@@ -19,7 +19,7 @@ use freetype::freetype::{FT_LOAD_COLOR, FT_LOAD_DEFAULT, FT_LOAD_FORCE_AUTOHINT}
 use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHINT};
 use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL_LAYOUT};
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES, FT_Err_Cannot_Render_Glyph};
-use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::{cmp, mem, ptr, slice};
 use std::cmp::max;
@@ -534,23 +534,19 @@ impl FontContext {
             dimensions
         );
 
-        let (format, actual_width, actual_height) = match pixel_mode {
+        let (actual_width, actual_height) = match pixel_mode {
             FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
                 assert!(bitmap.width % 3 == 0);
-                (font.get_subpixel_glyph_format(), (bitmap.width / 3) as i32, bitmap.rows as i32)
+                ((bitmap.width / 3) as i32, bitmap.rows as i32)
             }
             FT_Pixel_Mode::FT_PIXEL_MODE_LCD_V => {
                 assert!(bitmap.rows % 3 == 0);
-                (font.get_subpixel_glyph_format(), bitmap.width as i32, (bitmap.rows / 3) as i32)
+                (bitmap.width as i32, (bitmap.rows / 3) as i32)
             }
-            FT_Pixel_Mode::FT_PIXEL_MODE_MONO => {
-                (GlyphFormat::Alpha, bitmap.width as i32, bitmap.rows as i32)
-            }
-            FT_Pixel_Mode::FT_PIXEL_MODE_GRAY => {
-                (GlyphFormat::Alpha, bitmap.width as i32, bitmap.rows as i32)
-            }
+            FT_Pixel_Mode::FT_PIXEL_MODE_MONO |
+            FT_Pixel_Mode::FT_PIXEL_MODE_GRAY |
             FT_Pixel_Mode::FT_PIXEL_MODE_BGRA => {
-                (GlyphFormat::ColorBitmap, bitmap.width as i32, bitmap.rows as i32)
+                (bitmap.width as i32, bitmap.rows as i32)
             }
             _ => panic!("Unsupported {:?}", pixel_mode),
         };
@@ -644,7 +640,7 @@ impl FontContext {
             width: actual_width as u32,
             height: actual_height as u32,
             scale,
-            format,
+            format: font.get_glyph_format(pixel_mode == FT_Pixel_Mode::FT_PIXEL_MODE_BGRA),
             bytes: final_buffer,
         })
     }

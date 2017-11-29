@@ -4431,6 +4431,7 @@ ContentParent::RecvUpdateDropEffect(const uint32_t& aDragAction,
 PContentPermissionRequestParent*
 ContentParent::AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
                                                     const IPC::Principal& aPrincipal,
+                                                    const bool& aIsHandlingUserInput,
                                                     const TabId& aTabId)
 {
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
@@ -4443,6 +4444,7 @@ ContentParent::AllocPContentPermissionRequestParent(const InfallibleTArray<Permi
   return nsContentPermissionUtils::CreateContentPermissionRequestParent(aRequests,
                                                                         tp->GetOwnerElement(),
                                                                         aPrincipal,
+                                                                        aIsHandlingUserInput,
                                                                         aTabId);
 }
 

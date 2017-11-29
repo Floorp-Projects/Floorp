@@ -10,12 +10,10 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 618078";
 const TEST_URI2 = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/test-bug-618078-network-exceptions.html";
+                  "new-console-output/test/mochitest/test-network-exceptions.html";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-
-  let hud = yield openConsole();
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
 
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
@@ -23,14 +21,9 @@ add_task(function* () {
     expectUncaughtException();
   }
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI2);
-
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "bug618078exception",
-      category: CATEGORY_JS,
-      severity: SEVERITY_ERROR,
-    }],
-  });
+  let onMessage = waitForMessage(hud, "bug618078exception");
+  await loadDocument(TEST_URI2);
+  let { node } = await onMessage;
+  ok(true, "Network exception logged as expected.");
+  ok(node.classList.contains("error"), "Network exception is logged as error.");
 });
