@@ -204,43 +204,9 @@ function* testCPOWInspection(hud) {
   // But it's only a CPOW in e10s.
   let e10sCheck = yield hud.jsterm.requestEvaluation(
     "Cu.isCrossProcessWrapper(gBrowser.selectedBrowser._contentWindow)");
-  if (!e10sCheck.result) {
+  if (e10sCheck.result) {
+    is(cpow.class, "CPOW: Window", "The CPOW grip has the right class.");
+  } else {
     is(cpow.class, "Window", "The object is not a CPOW.");
-    return;
   }
-
-  is(cpow.class, "CPOW: Window", "The CPOW grip has the right class.");
-
-  // Check that various protocol request methods work for the CPOW.
-  let response, slice;
-  let objClient = new ObjectClient(hud.jsterm.hud.proxy.client, cpow);
-
-  response = yield objClient.getPrototypeAndProperties();
-  is(Reflect.ownKeys(response.ownProperties).length, 0, "No property was retrieved.");
-  is(response.ownSymbols.length, 0, "No symbol property was retrieved.");
-  is(response.prototype.type, "null", "The prototype is null.");
-
-  response = yield objClient.enumProperties({ignoreIndexedProperties: true});
-  slice = yield response.iterator.slice(0, response.iterator.count);
-  is(Reflect.ownKeys(slice.ownProperties).length, 0, "No property was retrieved.");
-
-  response = yield objClient.enumProperties({});
-  slice = yield response.iterator.slice(0, response.iterator.count);
-  is(Reflect.ownKeys(slice.ownProperties).length, 0, "No property was retrieved.");
-
-  response = yield objClient.getOwnPropertyNames();
-  is(response.ownPropertyNames.length, 0, "No property was retrieved.");
-
-  response = yield objClient.getProperty("x");
-  is(response.descriptor, undefined, "The property does not exist.");
-
-  response = yield objClient.enumSymbols();
-  slice = yield response.iterator.slice(0, response.iterator.count);
-  is(slice.ownSymbols.length, 0, "No symbol property was retrieved.");
-
-  response = yield objClient.getPrototype();
-  is(response.prototype.type, "null", "The prototype is null.");
-
-  response = yield objClient.getDisplayString();
-  is(response.displayString, "<cpow>", "The CPOW stringifies to <cpow>");
 }
