@@ -273,9 +273,6 @@ public:
                                        bool allowShortCircuit) const override;
 
     void RecordTraversal(void* p, nsISupports* s);
-    virtual char* DebugPrintJSStack(bool showArgs,
-                                    bool showLocals,
-                                    bool showThisProps) override;
 
 protected:
     virtual ~nsXPConnect();
