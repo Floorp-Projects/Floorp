@@ -13,7 +13,7 @@ namespace dom {
 
 mozilla::ipc::IPCResult
 U2FTransactionParent::RecvRequestRegister(const uint64_t& aTransactionId,
-                                          const WebAuthnTransactionInfo& aTransactionInfo)
+                                          const WebAuthnMakeCredentialInfo& aTransactionInfo)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
@@ -23,7 +23,7 @@ U2FTransactionParent::RecvRequestRegister(const uint64_t& aTransactionId,
 
 mozilla::ipc::IPCResult
 U2FTransactionParent::RecvRequestSign(const uint64_t& aTransactionId,
-                                      const WebAuthnTransactionInfo& aTransactionInfo)
+                                      const WebAuthnGetAssertionInfo& aTransactionInfo)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();

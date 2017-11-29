@@ -8,6 +8,8 @@ var initialPageZoom = ZoomManager.zoom;
 const kTimeoutInMS = 20000;
 
 async function testZoomButtonAppearsAndDisappearsBasedOnZoomChanges(zoomEventType) {
+  let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser, waitForStateStop: true });
+
   info("Running this test with " + zoomEventType.substring(0, 9));
   info("Confirm whether the browser zoom is set to the default level");
   is(initialPageZoom, 1, "Page zoom is set to default (100%)");
@@ -32,6 +34,8 @@ async function testZoomButtonAppearsAndDisappearsBasedOnZoomChanges(zoomEventTyp
   expectedZoomLevel = 100;
   is(pageZoomLevel, expectedZoomLevel, "Clicking zoom button successfully resets browser zoom to 100%");
   is(zoomResetButton.hidden, true, "Zoom reset button returns to being hidden");
+
+  await BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function() {

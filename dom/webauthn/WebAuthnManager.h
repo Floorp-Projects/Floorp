@@ -65,12 +65,12 @@ class WebAuthnTransaction
 public:
   WebAuthnTransaction(nsPIDOMWindowInner* aParent,
                       const RefPtr<Promise>& aPromise,
-                      const WebAuthnTransactionInfo&& aInfo,
-                      const nsAutoCString&& aClientData,
+                      const nsTArray<uint8_t>& aRpIdHash,
+                      const nsCString& aClientData,
                       AbortSignal* aSignal)
     : mParent(aParent)
     , mPromise(aPromise)
-    , mInfo(aInfo)
+    , mRpIdHash(aRpIdHash)
     , mClientData(aClientData)
     , mSignal(aSignal)
     , mId(NextId())
@@ -84,9 +84,8 @@ public:
   // JS Promise representing the transaction status.
   RefPtr<Promise> mPromise;
 
-  // Holds the parameters of the current transaction, as we need them both
-  // before the transaction request is sent, and on successful return.
-  WebAuthnTransactionInfo mInfo;
+  // The RP ID hash.
+  nsTArray<uint8_t> mRpIdHash;
 
   // Client data used to assemble reply objects.
   nsCString mClientData;

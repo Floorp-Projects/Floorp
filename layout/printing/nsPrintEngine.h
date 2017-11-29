@@ -222,29 +222,6 @@ protected:
                                                    nsIFrame*&      aSeqFrame,
                                                    int32_t&        aCount);
 
-  static nsresult FindSelectionBoundsWithList(nsFrameList::Enumerator& aChildFrames,
-                                              nsIFrame *      aParentFrame,
-                                              nsRect&         aRect,
-                                              nsIFrame *&     aStartFrame,
-                                              nsRect&         aStartRect,
-                                              nsIFrame *&     aEndFrame,
-                                              nsRect&         aEndRect);
-
-  static nsresult FindSelectionBounds(nsIFrame *      aParentFrame,
-                                      nsRect&         aRect,
-                                      nsIFrame *&     aStartFrame,
-                                      nsRect&         aStartRect,
-                                      nsIFrame *&     aEndFrame,
-                                      nsRect&         aEndRect);
-
-  static nsresult GetPageRangeForSelection(nsIPageSequenceFrame* aPageSeqFrame,
-                                           nsIFrame**            aStartFrame,
-                                           int32_t&              aStartPageNum,
-                                           nsRect&               aStartRect,
-                                           nsIFrame**            aEndFrame,
-                                           int32_t&              aEndPageNum,
-                                           nsRect&               aEndRect);
-
   static void MapContentForPO(const mozilla::UniquePtr<nsPrintObject>& aPO,
                               nsIContent* aContent);
 

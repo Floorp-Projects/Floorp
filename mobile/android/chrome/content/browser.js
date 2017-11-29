@@ -4477,14 +4477,20 @@ Tab.prototype = {
       let originHost = "";
       try {
         originHost = Services.io.newURI(appOrigin).host;
-      } catch (e if (e.result == Cr.NS_ERROR_FAILURE)) {
+      } catch (e) {
+        if (e.result != Cr.NS_ERROR_FAILURE) {
+          throw e;
+        }
         // NS_ERROR_FAILURE can be thrown by nsIURI.host if the URI scheme does not possess a host -
         // in this case we just act as if we have an empty host.
       }
       let locationHost = "";
       try {
         locationHost = aLocationURI.host;
-      } catch (e if (e.result == Cr.NS_ERROR_FAILURE)) {
+      } catch (e) {
+        if (e.result != Cr.NS_ERROR_FAILURE) {
+          throw e;
+        }
         // Ditto.
       }
       if (originHost != locationHost || originHost == "") {
