@@ -26,11 +26,11 @@ public:
 
   virtual mozilla::ipc::IPCResult
   RecvRequestRegister(const uint64_t& aTransactionId,
-                      const WebAuthnTransactionInfo& aTransactionInfo) override;
+                      const WebAuthnMakeCredentialInfo& aTransactionInfo) override;
 
   virtual mozilla::ipc::IPCResult
   RecvRequestSign(const uint64_t& aTransactionId,
-                  const WebAuthnTransactionInfo& aTransactionInfo) override;
+                  const WebAuthnGetAssertionInfo& aTransactionInfo) override;
 
   virtual mozilla::ipc::IPCResult
   RecvRequestCancel(const uint64_t& aTransactionId) override;
