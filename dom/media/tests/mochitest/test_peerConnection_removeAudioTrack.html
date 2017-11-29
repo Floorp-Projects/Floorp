@@ -37,10 +37,11 @@
       ],
       [
         function PC_REMOTE_CHECK_FLOW_STOPPED(test) {
-          is(test.pcRemote._pc.getReceivers().length, 0,
-             "pcRemote should have no more receivers");
-          is(receivedTrack.readyState, "ended",
-             "The received track should have ended");
+          // Simply removing a track is not enough to cause it to be
+          // signaled as ended. Spec may change though.
+          // TODO: One last check of the spec is in order
+          is(receivedTrack.readyState, "live",
+             "The received track should not have ended");
 
           return analyser.waitForAnalysisSuccess(arr => arr[freq] < 50);
         },

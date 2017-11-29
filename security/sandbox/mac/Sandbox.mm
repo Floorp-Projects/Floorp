@@ -179,8 +179,6 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
       params.push_back(getenv("HOME"));
       params.push_back("HAS_SANDBOXED_PROFILE");
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
-      params.push_back("HAS_FILE_PRIVILEGES");
-      params.push_back(aInfo.hasFilePrivileges ? "TRUE" : "FALSE");
       if (!aInfo.testingReadPath1.empty()) {
         params.push_back("TESTING_READ_PATH1");
         params.push_back(aInfo.testingReadPath1.c_str());
@@ -203,6 +201,14 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
         params.push_back(aInfo.debugWriteDir.c_str());
       }
 #endif // DEBUG
+
+      if (aInfo.hasFilePrivileges) {
+        char *fileContentProfile = NULL;
+        asprintf(&fileContentProfile, "%s%s", profile,
+          fileContentProcessAddend);
+        profile = fileContentProfile;
+        profile_needs_free = true;
+      }
     } else {
       fprintf(stderr,
         "Content sandbox disabled due to sandbox level setting\n");

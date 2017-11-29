@@ -434,12 +434,6 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "help": "Run tests with DMD active.",
           }],
-        [["--dmd-path"],
-         {"default": None,
-          "dest": "dmdPath",
-          "help": "Specifies the path to the directory containing the shared library for DMD.",
-          "suppress": True,
-          }],
         [["--dump-output-directory"],
          {"default": None,
           "dest": "dumpOutputDirectory",
@@ -700,16 +694,6 @@ class MochitestArguments(ArgumentContainer):
 
         if options.profilePath:
             options.profilePath = self.get_full_path(options.profilePath, parser.oldcwd)
-
-        if options.dmdPath:
-            options.dmdPath = self.get_full_path(options.dmdPath, parser.oldcwd)
-
-        if options.dmd and not options.dmdPath:
-            if build_obj:
-                options.dmdPath = build_obj.bindir
-            else:
-                parser.error(
-                    "could not find dmd libraries, specify them with --dmd-path")
 
         if options.utilityPath:
             options.utilityPath = self.get_full_path(options.utilityPath, parser.oldcwd)

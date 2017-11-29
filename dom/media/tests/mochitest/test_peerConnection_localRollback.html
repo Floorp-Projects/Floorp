@@ -23,6 +23,9 @@
         },
 
         function PC_REMOTE_ROLLBACK(test) {
+          // the negotiationNeeded slot should have been true both before and
+          // after this SLD, so the event should fire again.
+          test.pcRemote.expectNegotiationNeeded();
           return test.setLocalDescription(test.pcRemote,
                                           { type: "rollback", sdp: "" },
                                           STABLE);

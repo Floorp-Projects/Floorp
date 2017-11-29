@@ -108,6 +108,7 @@
 * skin/classic/browser/preferences/containers.css              (../shared/preferences/containers.css)
   skin/classic/browser/fxa/default-avatar.svg                  (../shared/fxa/default-avatar.svg)
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
+  skin/classic/browser/fxa/sync-illustration-issue.svg         (../shared/fxa/sync-illustration-issue.svg)
 
 
   skin/classic/browser/accessibility.svg              (../shared/icons/accessibility.svg)

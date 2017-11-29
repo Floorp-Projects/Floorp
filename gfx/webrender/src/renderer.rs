@@ -596,6 +596,16 @@ impl SourceTextureResolver {
         }
     }
 
+    fn begin_frame(&self) {
+        assert!(self.cache_rgba8_texture.is_none());
+        assert!(self.cache_a8_texture.is_none());
+    }
+
+    fn end_frame(&mut self, pool: &mut Vec<Texture>) {
+        // return the cached targets to the pool
+        self.end_pass(None, None, pool)
+    }
+
     fn end_pass(
         &mut self,
         a8_texture: Option<Texture>,
@@ -3697,6 +3707,7 @@ impl Renderer {
         self.device.set_blend(false);
 
         self.bind_frame_data(frame);
+        self.texture_resolver.begin_frame();
 
         for (pass_index, pass) in frame.passes.iter_mut().enumerate() {
             self.gpu_profile.place_marker(&format!("pass {}", pass_index));
@@ -3813,6 +3824,7 @@ impl Renderer {
             }
         }
 
+        self.texture_resolver.end_frame(&mut self.render_target_pool);
         self.draw_render_target_debug(framebuffer_size);
         self.draw_texture_cache_debug(framebuffer_size);
 

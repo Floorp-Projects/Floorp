@@ -152,6 +152,8 @@ class MachCommands(MachCommandBase):
                      help='SCM level of this repository')
     @CommandArgument('--target-tasks-method',
                      help='method for selecting the target tasks to generate')
+    @CommandArgument('--try-task-config-file',
+                     help='path to try task configuration file')
     def taskgraph_decision(self, **options):
         """Run the decision task: generate a task graph and submit to
         TaskCluster.  This is only meant to be called within decision tasks,
@@ -334,8 +336,8 @@ class MachCommands(MachCommandBase):
             sys.exit(1)
 
     def show_taskgraph_labels(self, taskgraph):
-        for label in taskgraph.graph.visit_postorder():
-            print(label)
+        for index in taskgraph.graph.visit_postorder():
+            print(taskgraph.tasks[index].label)
 
     def show_taskgraph_json(self, taskgraph):
         print(json.dumps(taskgraph.to_json(),

@@ -125,65 +125,30 @@
         SimpleTest.finish();
       }
 
-      // XPFE and Toolkit autocomplete widgets differ.
       var txc = document.getElementById("txc_autocomplete");
-      if ("clearResults" in txc) {
-        SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget.");
+      SimpleTest.ok(txc, "Testing (New) Toolkit autocomplete widget.");
 
-        // Popup is always created. (See code below.)
+      // Dumb access to trigger popup lazy creation.
+      dump("Trigget popup lazy creation");
+      waitForEvent(EVENT_REORDER, txc, test_AutocompleteControl);
+      txc.popup;
 
-        accTree.children.push(
-          {
-            // xul:panel
-            role: ROLE_COMBOBOX_LIST,
-            children: [
-              {
-                // xul:tree
-                role: ROLE_TABLE,
-                children: [
-                  {
-                    // xul:treecols
-                    role: ROLE_LIST,
-                    children: [
-                      {
-                        // xul:treecol
-                        role: ROLE_COLUMNHEADER,
-                        children: []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        );
-        test_AutocompleteControl();
-
-      } else {
-        SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget.");
-
-        // Dumb access to trigger popup lazy creation.
-        dump("Trigget popup lazy creation");
-        waitForEvent(EVENT_REORDER, txc, test_AutocompleteControl);
-        txc.popup;
-
-        accTree.children.push(
-          {
-            role: ROLE_LIST,
-            children: [
-              {
-                role: ROLE_LIST,
-                children: [
-                  {
-                    role: ROLE_COLUMNHEADER,
-                    children: []
-                  }
-                ]
-              }
-            ]
-          }
-        );
-      }
+      accTree.children.push(
+        {
+          role: ROLE_LIST,
+          children: [
+            {
+              role: ROLE_LIST,
+              children: [
+                {
+                  role: ROLE_COLUMNHEADER,
+                  children: []
+                }
+              ]
+            }
+          ]
+        }
+      );
     }
 
     SimpleTest.waitForExplicitFinish();

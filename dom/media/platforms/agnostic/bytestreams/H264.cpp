@@ -811,10 +811,10 @@ H264::GetFrameType(const mozilla::MediaRawData* aSample)
   while (reader.Remaining() >= nalLenSize) {
     uint32_t nalLen = 0;
     switch (nalLenSize) {
-      case 1: Unused << reader.ReadU8().map([&] (uint8_t x) mutable { return nalLen = x; }); break;
-      case 2: Unused << reader.ReadU16().map([&] (uint16_t x) mutable { return nalLen = x; }); break;
-      case 3: Unused << reader.ReadU24().map([&] (uint32_t x) mutable { return nalLen = x; }); break;
-      case 4: Unused << reader.ReadU32().map([&] (uint32_t x) mutable { return nalLen = x; }); break;
+      case 1: nalLen = reader.ReadU8().unwrapOr(0); break;
+      case 2: nalLen = reader.ReadU16().unwrapOr(0); break;
+      case 3: nalLen = reader.ReadU24().unwrapOr(0); break;
+      case 4: nalLen = reader.ReadU32().unwrapOr(0); break;
     }
     if (!nalLen) {
       continue;
