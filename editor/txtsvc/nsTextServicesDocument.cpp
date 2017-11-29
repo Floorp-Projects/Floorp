@@ -22,7 +22,6 @@
 #include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
 #include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc
-#include "nsIDOMRange.h"                // for nsIDOMRange, etc
 #include "nsIEditor.h"                  // for nsIEditor, etc
 #include "nsINode.h"                    // for nsINode
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor
@@ -193,9 +192,9 @@ nsTextServicesDocument::GetDocument(nsIDOMDocument **aDoc)
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::SetExtent(nsIDOMRange* aDOMRange)
+nsTextServicesDocument::SetExtent(nsRange* aRange)
 {
-  NS_ENSURE_ARG_POINTER(aDOMRange);
+  NS_ENSURE_ARG_POINTER(aRange);
   NS_ENSURE_TRUE(mDOMDocument, NS_ERROR_FAILURE);
 
   LOCK_DOC(this);
@@ -203,7 +202,7 @@ nsTextServicesDocument::SetExtent(nsIDOMRange* aDOMRange)
   // We need to store a copy of aDOMRange since we don't
   // know where it came from.
 
-  mExtent = static_cast<nsRange*>(aDOMRange)->CloneRange();
+  mExtent = aRange->CloneRange();
 
   // Create a new iterator based on our new extent range.
 
@@ -227,17 +226,16 @@ nsTextServicesDocument::SetExtent(nsIDOMRange* aDOMRange)
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
+nsTextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange)
 {
   NS_ENSURE_ARG_POINTER(aRange);
-  RefPtr<nsRange> range = static_cast<nsRange*>(aRange);
 
   // Get the end points of the range.
 
   nsCOMPtr<nsINode> rngStartNode, rngEndNode;
   int32_t rngStartOffset, rngEndOffset;
 
-  nsresult rv = GetRangeEndPoints(range, getter_AddRefs(rngStartNode),
+  nsresult rv = GetRangeEndPoints(aRange, getter_AddRefs(rngStartNode),
                                   &rngStartOffset,
                                   getter_AddRefs(rngEndNode),
                                   &rngEndOffset);
@@ -247,7 +245,7 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
   // Create a content iterator based on the range.
 
   nsCOMPtr<nsIContentIterator> iter;
-  rv = CreateContentIterator(range, getter_AddRefs(iter));
+  rv = CreateContentIterator(aRange, getter_AddRefs(iter));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -372,8 +370,8 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
 
   // Now adjust the range so that it uses our new
   // end points.
-  rv = range->SetStartAndEnd(rngStartNode, rngStartOffset,
-                             rngEndNode, rngEndOffset);
+  rv = aRange->SetStartAndEnd(rngStartNode, rngStartOffset,
+                              rngEndNode, rngEndOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
