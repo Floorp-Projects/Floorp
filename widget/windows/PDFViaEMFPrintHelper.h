@@ -50,11 +50,14 @@ public:
 
   int GetPageCount() const { return mPDFiumEngine->GetPageCount(mPDFDoc); }
 
-  /** Convert specified PDF page to EMF and draw the EMF onto the given DC. */
+  /**
+   * Convert the specified PDF page to EMF and draw the EMF onto the
+   * given DC.
+   */
   bool DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
                 int aPageWidth, int aPageHeight);
 
-  /** Convert a specified PDF page to EMF and save it to file. */
+  /** Convert the specified PDF page to EMF and save it to file. */
   bool SavePageToFile(const wchar_t* aFilePath, unsigned int aPageIndex,
                       int aPageWidth, int aPageHeight);
 
