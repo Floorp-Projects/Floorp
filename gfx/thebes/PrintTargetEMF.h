@@ -12,6 +12,12 @@
 #include <windows.h>
 
 namespace mozilla {
+namespace widget {
+  class PDFiumProcessParent;
+}
+}
+
+namespace mozilla {
 namespace gfx {
 
 /**
@@ -26,6 +32,7 @@ class PrintTargetEMF final : public mozilla::gfx::PrintTarget
 {
 public:
   typedef gfx::IntSize IntSize;
+  typedef mozilla::widget::PDFiumProcessParent PDFiumProcessParent;
 
   static already_AddRefed<PrintTargetEMF>
   CreateOrNull(HDC aDC, const IntSize& aSizeInPoints);
@@ -48,11 +55,13 @@ public:
 
 private:
   PrintTargetEMF(HDC aDC, const IntSize& aSize);
+  ~PrintTargetEMF() override;
 
   nsString mTitle;
   RefPtr<PrintTargetSkPDF> mTargetForCurrentPage;
   nsCOMPtr<nsIFile>        mPDFFileForOnePage;
   RefPtr<PrintTargetSkPDF> mRefTarget;
+  PDFiumProcessParent*     mPDFiumProcess;
   HDC mPrinterDC;
 };
 
