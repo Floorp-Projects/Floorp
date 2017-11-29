@@ -2286,8 +2286,16 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
     case eQueryTextRect:
     case eQueryCaretRect:
     case eQueryEditorRect:
+    {
+      nsCOMPtr<nsIWidget> widget = GetWidget();
+      nsCOMPtr<nsIWidget> docWidget = GetDocWidget();
+      if (widget != docWidget) {
+        aEvent.mReply.mRect +=
+          nsLayoutUtils::WidgetToWidgetOffset(widget, docWidget);
+      }
       aEvent.mReply.mRect -= GetChildProcessOffset();
       break;
+    }
     default:
       break;
   }
