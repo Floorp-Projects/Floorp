@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 279859 2015-03-10 19:49:25Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 325370 2017-11-03 20:46:12Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_PCB_H_
@@ -109,7 +111,7 @@ struct sctp_ifa {
 				 * appropriate locks. This is for V6.
 				 */
 	union sctp_sockstore address;
-	uint32_t refcount;	/* number of folks refering to this */
+	uint32_t refcount;	/* number of folks referring to this */
 	uint32_t flags;
 	uint32_t localifa_flags;
 	uint32_t vrf_id;	/* vrf_id of this addr (for deleting) */
@@ -311,25 +313,37 @@ struct sctp_base_info {
 	userland_thread_t timer_thread;
 	uint8_t timer_thread_should_exit;
 #if !defined(__Userspace_os_Windows)
+	pthread_mutexattr_t mtx_attr;
 #if defined(INET) || defined(INET6)
 	int userspace_route;
 	userland_thread_t recvthreadroute;
 #endif
 #endif
 #ifdef INET
+#if defined(__Userspace_os_Windows)
+	SOCKET userspace_rawsctp;
+	SOCKET userspace_udpsctp;
+#else
 	int userspace_rawsctp;
 	int userspace_udpsctp;
+#endif
 	userland_thread_t recvthreadraw;
 	userland_thread_t recvthreadudp;
 #endif
 #ifdef INET6
+#if defined(__Userspace_os_Windows)
+	SOCKET userspace_rawsctp6;
+	SOCKET userspace_udpsctp6;
+#else
 	int userspace_rawsctp6;
 	int userspace_udpsctp6;
+#endif
 	userland_thread_t recvthreadraw6;
 	userland_thread_t recvthreadudp6;
 #endif
 	int (*conn_output)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df);
 	void (*debug_printf)(const char *format, ...);
+	int crc32c_offloaded;
 #endif
 };
 
@@ -361,6 +375,7 @@ struct sctp_pcb {
 	sctp_auth_chklist_t *local_auth_chunks;
 	sctp_hmaclist_t *local_hmacs;
 	uint16_t default_keyid;
+	uint32_t default_mtu;
 
 	/* various thresholds */
 	/* Max times I will init at a guy */
@@ -388,10 +403,6 @@ struct sctp_pcb {
 	 */
 	struct sctp_timer signature_change;
 
-	/* Zero copy full buffer timer */
-	struct sctp_timer zero_copy_timer;
-        /* Zero copy app to transport (sendq) read repulse timer */
-	struct sctp_timer zero_copy_sendq_timer;
 	uint32_t def_cookie_life;
 	/* defaults to 0 */
 	int auto_close_time;
@@ -433,7 +444,7 @@ struct sctp_pcbtsn_rlog {
 struct sctp_inpcb {
 	/*-
 	 * put an inpcb in front of it all, kind of a waste but we need to
-	 * for compatability with all the other stuff.
+	 * for compatibility with all the other stuff.
 	 */
 	union {
 		struct inpcb inp;
@@ -484,6 +495,7 @@ struct sctp_inpcb {
 	uint8_t ecn_supported;
 	uint8_t prsctp_supported;
 	uint8_t auth_supported;
+	uint8_t idata_supported;
 	uint8_t asconf_supported;
 	uint8_t reconfig_supported;
 	uint8_t nrsack_supported;
@@ -564,6 +576,7 @@ struct sctp_inpcb {
 	uint32_t i_am_here_line;
 #endif
 	uint32_t def_vrf_id;
+	uint16_t fibnum;
 #ifdef SCTP_MVRF
 	uint32_t *m_vrf_ids;
 	uint32_t num_vrfs;
@@ -793,16 +806,16 @@ void sctp_inpcb_free(struct sctp_inpcb *, int, int);
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
-                int *, uint32_t, uint32_t, struct thread *);
+                int *, uint32_t, uint32_t, uint16_t, uint16_t, struct thread *);
 #elif defined(__Windows__)
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
-                int *, uint32_t, uint32_t, PKTHREAD);
+                int *, uint32_t, uint32_t, uint16_t, uint16_t, PKTHREAD);
 #else
 /* proc will be NULL for __Userspace__ */
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
-                int *, uint32_t, uint32_t, struct proc *);
+                int *, uint32_t, uint32_t, uint16_t, uint16_t, struct proc *);
 #endif
 
 int sctp_free_assoc(struct sctp_inpcb *, struct sctp_tcb *, int, int);
@@ -817,13 +830,9 @@ sctp_add_vtag_to_timewait(uint32_t tag, uint32_t time, uint16_t lport, uint16_t 
 
 void sctp_add_local_addr_ep(struct sctp_inpcb *, struct sctp_ifa *, uint32_t);
 
-int sctp_insert_laddr(struct sctpladdr *, struct sctp_ifa *, uint32_t);
-
-void sctp_remove_laddr(struct sctp_laddr *);
-
 void sctp_del_local_addr_ep(struct sctp_inpcb *, struct sctp_ifa *);
 
-int sctp_add_remote_addr(struct sctp_tcb *, struct sockaddr *, struct sctp_nets **, int, int);
+int sctp_add_remote_addr(struct sctp_tcb *, struct sockaddr *, struct sctp_nets **, uint16_t, int, int);
 
 void sctp_remove_net(struct sctp_tcb *, struct sctp_nets *);
 
@@ -838,7 +847,7 @@ void sctp_del_local_addr_restricted(struct sctp_tcb *, struct sctp_ifa *);
 
 int
 sctp_load_addresses_from_init(struct sctp_tcb *, struct mbuf *, int, int,
-    struct sockaddr *, struct sockaddr *, struct sockaddr *);
+    struct sockaddr *, struct sockaddr *, struct sockaddr *, uint16_t);
 
 int
 sctp_set_primary_addr(struct sctp_tcb *, struct sockaddr *,
@@ -846,10 +855,13 @@ sctp_set_primary_addr(struct sctp_tcb *, struct sockaddr *,
 
 int sctp_is_vtag_good(uint32_t, uint16_t lport, uint16_t rport, struct timeval *);
 
+/* void sctp_drain(void); */
 
 int sctp_destination_is_reachable(struct sctp_tcb *, struct sockaddr *);
 
 int sctp_swap_inpcb_for_listen(struct sctp_inpcb *inp);
+
+void sctp_clean_up_stream(struct sctp_tcb *stcb, struct sctp_readhead *rh);
 
 /*-
  * Null in last arg inpcb indicate run on ALL ep's. Specific inp in last arg
@@ -869,11 +881,6 @@ sctp_initiate_iterator(inp_func inpf,
 void
 sctp_queue_to_mcore(struct mbuf *m, int off, int cpu_to_use);
 
-#endif
-
-#ifdef INVARIANTS
-void
-sctp_validate_no_locks(struct sctp_inpcb *inp);
 #endif
 
 #endif				/* _KERNEL */
