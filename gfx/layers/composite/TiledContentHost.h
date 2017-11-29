@@ -99,9 +99,6 @@ public:
     CompositableHost::DumpTextureHost(aStream, mTextureHost);
   }
 
-  RefPtr<TextureSource> AcquireTextureSource() const;
-  RefPtr<TextureSource> AcquireTextureSourceOnWhite() const;
-
   /**
    * This does a linear tween of the passed opacity (which is assumed
    * to be between 0.0 and 1.0). The duration of the fade is controlled
@@ -236,10 +233,6 @@ public:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   virtual void AddAnimationInvalidation(nsIntRegion& aRegion) override;
-
-  TiledLayerBufferComposite& GetHighResBuffer() {
-    return mTiledBuffer;
-  }
 
 private:
 

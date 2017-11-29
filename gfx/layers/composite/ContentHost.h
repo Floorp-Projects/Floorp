@@ -68,7 +68,6 @@ public:
     MOZ_ASSERT_UNREACHABLE("Must be implemented in derived class");
     return gfx::IntRect();
   }
-  virtual ContentHost* AsContentHost() { return this; }
 
 protected:
   explicit ContentHost(const TextureInfo& aTextureInfo)

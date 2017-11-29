@@ -424,8 +424,7 @@ private:
   }
 
 private:
-  float mOpacity;
-  SamplerMode mSamplerMode;
+  PaintedLayerMLGPU* mAssignedLayer;
   RefPtr<TextureSource> mTextureOnBlack;
   RefPtr<TextureSource> mTextureOnWhite;
 };
