@@ -85,19 +85,12 @@ public:
       return mMax >= aOther.mMin && mMin <= aOther.mMax;
     }
     void Intersect(const Range& aOther) {
+      MOZ_ASSERT(Intersects(aOther));
       mMin = std::max(mMin, aOther.mMin);
-      if (Intersects(aOther)) {
-        mMax = std::min(mMax, aOther.mMax);
-      } else {
-        // If there is no intersection, we will down-scale or drop frame
-        mMax = std::max(mMax, aOther.mMax);
-      }
+      mMax = std::min(mMax, aOther.mMax);
     }
     bool Merge(const Range& aOther) {
-      if (strcmp(mName, "width") != 0 &&
-          strcmp(mName, "height") != 0 &&
-          strcmp(mName, "frameRate") != 0 &&
-          !Intersects(aOther)) {
+      if (!Intersects(aOther)) {
         return false;
       }
       Intersect(aOther);
@@ -304,8 +297,6 @@ class MediaConstraintsHelper
 protected:
   template<class ValueType, class NormalizedRange>
   static uint32_t FitnessDistance(ValueType aN, const NormalizedRange& aRange);
-  template<class ValueType, class NormalizedRange>
-  static uint32_t FeasibilityDistance(ValueType aN, const NormalizedRange& aRange);
   static uint32_t FitnessDistance(nsString aN,
       const NormalizedConstraintSet::StringRange& aConstraint);
 
