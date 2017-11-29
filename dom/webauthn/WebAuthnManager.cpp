@@ -475,11 +475,28 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   // TODO: Add extension list building
   nsTArray<WebAuthnExtension> extensions;
 
-  WebAuthnTransactionInfo info(rpIdHash,
-                               clientDataHash,
-                               adjustedTimeout,
-                               excludeList,
-                               extensions);
+  const auto& selection = aOptions.mAuthenticatorSelection;
+  const auto& attachment = selection.mAuthenticatorAttachment;
+
+  // Does the RP require attachment == "platform"?
+  bool requirePlatformAttachment =
+    attachment.WasPassed() && attachment.Value() == AuthenticatorAttachment::Platform;
+
+  // Does the RP require user verification?
+  bool requireUserVerification =
+    selection.mUserVerification == UserVerificationRequirement::Required;
+
+  // Create and forward authenticator selection criteria.
+  WebAuthnAuthenticatorSelection authSelection(selection.mRequireResidentKey,
+                                               requireUserVerification,
+                                               requirePlatformAttachment);
+
+  WebAuthnMakeCredentialInfo info(rpIdHash,
+                                  clientDataHash,
+                                  adjustedTimeout,
+                                  excludeList,
+                                  extensions,
+                                  authSelection);
 
   ListenForVisibilityEvents(aParent, this);
 
@@ -492,11 +509,11 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(WebAuthnTransaction(aParent,
                                           promise,
-                                          Move(info),
-                                          Move(clientDataJSON),
+                                          rpIdHash,
+                                          clientDataJSON,
                                           signal));
 
-  mChild->SendRequestRegister(mTransaction.ref().mId, mTransaction.ref().mInfo);
+  mChild->SendRequestRegister(mTransaction.ref().mId, info);
   return promise.forget();
 }
 
@@ -638,11 +655,11 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   // result of this processing clientExtensions.
   nsTArray<WebAuthnExtension> extensions;
 
-  WebAuthnTransactionInfo info(rpIdHash,
-                               clientDataHash,
-                               adjustedTimeout,
-                               allowList,
-                               extensions);
+  WebAuthnGetAssertionInfo info(rpIdHash,
+                                clientDataHash,
+                                adjustedTimeout,
+                                allowList,
+                                extensions);
 
   ListenForVisibilityEvents(aParent, this);
 
@@ -655,11 +672,11 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(WebAuthnTransaction(aParent,
                                           promise,
-                                          Move(info),
-                                          Move(clientDataJSON),
+                                          rpIdHash,
+                                          clientDataJSON,
                                           signal));
 
-  mChild->SendRequestSign(mTransaction.ref().mId, mTransaction.ref().mInfo);
+  mChild->SendRequestSign(mTransaction.ref().mId, info);
   return promise.forget();
 }
 
@@ -743,7 +760,7 @@ WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
   }
 
   CryptoBuffer rpIdHashBuf;
-  if (!rpIdHashBuf.Assign(mTransaction.ref().mInfo.RpIdHash())) {
+  if (!rpIdHashBuf.Assign(mTransaction.ref().mRpIdHash)) {
     RejectTransaction(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -840,7 +857,7 @@ WebAuthnManager::FinishGetAssertion(const uint64_t& aTransactionId,
   }
 
   CryptoBuffer rpIdHashBuf;
-  if (!rpIdHashBuf.Assign(mTransaction.ref().mInfo.RpIdHash())) {
+  if (!rpIdHashBuf.Assign(mTransaction.ref().mRpIdHash)) {
     RejectTransaction(NS_ERROR_OUT_OF_MEMORY);
     return;
   }

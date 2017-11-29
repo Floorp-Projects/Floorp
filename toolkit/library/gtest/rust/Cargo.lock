@@ -1402,6 +1402,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "u2fhid"
 version = "0.1.0"
 dependencies = [
+ "bitflags 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "boxfnonce 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation-sys 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",

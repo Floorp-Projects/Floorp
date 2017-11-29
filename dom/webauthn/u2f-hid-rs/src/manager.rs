@@ -11,8 +11,9 @@ use statemachine::StateMachine;
 use runloop::RunLoop;
 use util::{to_io_err, OnceCallback};
 
-pub enum QueueAction {
+enum QueueAction {
     Register {
+        flags: ::RegisterFlags,
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
@@ -45,6 +46,7 @@ impl U2FManager {
             while alive() {
                 match rx.recv_timeout(Duration::from_millis(50)) {
                     Ok(QueueAction::Register {
+                           flags,
                            timeout,
                            challenge,
                            application,
@@ -52,7 +54,14 @@ impl U2FManager {
                            callback,
                        }) => {
                         // This must not block, otherwise we can't cancel.
-                        sm.register(timeout, challenge, application, key_handles, callback);
+                        sm.register(
+                            flags,
+                            timeout,
+                            challenge,
+                            application,
+                            key_handles,
+                            callback,
+                        );
                     }
                     Ok(QueueAction::Sign {
                            timeout,
@@ -88,6 +97,7 @@ impl U2FManager {
 
     pub fn register<F>(
         &self,
+        flags: ::RegisterFlags,
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
@@ -116,6 +126,7 @@ impl U2FManager {
 
         let callback = OnceCallback::new(callback);
         let action = QueueAction::Register {
+            flags,
             timeout,
             challenge,
             application,
