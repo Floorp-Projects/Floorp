@@ -99,9 +99,9 @@ add_task(async function test_missing_app_dir() {
   startupManager();
 
   let conditions = [
-      { isUpgrade: false, version: null },
-      { isUpgrade: false, version: null },
-      { isUpgrade: false, version: null },
+    { isUpgrade: false, version: null },
+    { isUpgrade: false, version: null },
+    { isUpgrade: false, version: null },
   ];
 
   await check_installed(conditions);
@@ -119,9 +119,9 @@ add_task(async function test_new_version() {
   startupManager();
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: null },
   ];
 
   await check_installed(conditions);
@@ -139,9 +139,9 @@ add_task(async function test_upgrade() {
   startupManager();
 
   let conditions = [
-      { isUpgrade: false, version: "2.0" },
-      { isUpgrade: false, version: null },
-      { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "2.0" },
+    { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
   ];
 
   await check_installed(conditions);
@@ -159,9 +159,9 @@ add_task(async function test_downgrade() {
   startupManager();
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: null },
   ];
 
   await check_installed(conditions);
@@ -203,9 +203,9 @@ add_task(async function test_updated() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: true, version: "2.0" },
-      { isUpgrade: true, version: "2.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: true, version: "2.0" },
+    { isUpgrade: true, version: "2.0" },
   ];
 
   await check_installed(conditions);
@@ -221,9 +221,9 @@ add_task(async function safe_mode_disabled() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: null },
   ];
 
   await check_installed(conditions);
@@ -238,9 +238,9 @@ add_task(async function normal_mode_enabled() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: true, version: "2.0" },
-      { isUpgrade: true, version: "2.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: true, version: "2.0" },
+    { isUpgrade: true, version: "2.0" },
   ];
 
   await check_installed(conditions);
@@ -258,9 +258,9 @@ add_task(async function test_skips_additional() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: true, version: "2.0" },
-      { isUpgrade: true, version: "2.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: true, version: "2.0" },
+    { isUpgrade: true, version: "2.0" },
   ];
 
   await check_installed(conditions);
@@ -281,9 +281,9 @@ add_task(async function test_revert() {
   // With system add-on 2 gone the updated set is now invalid so it reverts to
   // the default set which is system add-ons 1 and 2.
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: null },
   ];
 
   await check_installed(conditions);
@@ -300,9 +300,9 @@ add_task(async function test_reuse() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: true, version: "2.0" },
-      { isUpgrade: true, version: "2.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: true, version: "2.0" },
+    { isUpgrade: true, version: "2.0" },
   ];
 
   await check_installed(conditions);
@@ -318,9 +318,9 @@ add_task(async function test_corrupt_pref() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: null },
   ];
 
   await check_installed(conditions);
@@ -355,9 +355,9 @@ add_task(async function test_bad_profile_cert() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: null },
   ];
 
   await check_installed(conditions);
@@ -382,9 +382,9 @@ add_task(async function test_bad_app_cert() {
   do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
-      { isUpgrade: false, version: null },
-      { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: null },
+    { isUpgrade: false, version: "1.0" },
   ];
 
   await check_installed(conditions);
@@ -424,7 +424,7 @@ add_task(async function test_updated_bad_update_set() {
   startupManager(false);
 
   let conditions = [
-      { isUpgrade: false, version: "1.0" },
+    { isUpgrade: false, version: "1.0" },
   ];
 
   await check_installed(conditions);

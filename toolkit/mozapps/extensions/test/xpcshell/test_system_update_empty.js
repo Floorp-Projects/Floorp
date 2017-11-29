@@ -139,12 +139,12 @@ const TESTS = {
 add_task(async function() {
   for (let setupName of Object.keys(TEST_CONDITIONS)) {
     for (let testName of Object.keys(TESTS)) {
-        do_print("Running test " + setupName + " " + testName);
+      do_print("Running test " + setupName + " " + testName);
 
-        let setup = TEST_CONDITIONS[setupName];
-        let test = TESTS[testName];
+      let setup = TEST_CONDITIONS[setupName];
+      let test = TESTS[testName];
 
-        await execSystemAddonTest(setupName, setup, test, distroDir, root, testserver);
+      await execSystemAddonTest(setupName, setup, test, distroDir, root, testserver);
     }
   }
 });

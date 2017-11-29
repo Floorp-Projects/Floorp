@@ -79,14 +79,14 @@ function bug523784_test2(win) {
     let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener("load", function() {
       executeSoon(function() {
-      let moreInfoLink = win.document.getElementById("moreInfo");
-      let cancelButton = win.document.documentElement.getButton("cancel");
-      is(moreInfoLink.getAttribute("href"),
-         Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL"),
-         "More Info link should link to the general blocklist page.");
-      cancelButton.doCommand();
-      executeSoon(finish);
-    });
+        let moreInfoLink = win.document.getElementById("moreInfo");
+        let cancelButton = win.document.documentElement.getButton("cancel");
+        is(moreInfoLink.getAttribute("href"),
+           Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL"),
+           "More Info link should link to the general blocklist page.");
+        cancelButton.doCommand();
+        executeSoon(finish);
+      });
     }, {once: true});
   };
   Services.ww.registerNotification(windowObserver);

@@ -111,43 +111,43 @@ function do_check_compat_status(aStrict, aAddonCompat, aCallback) {
                                "addon6@tests.mozilla.org",
                                "addon7@tests.mozilla.org"],
                               function([a1, a2, a3, a4, a5, a6, a7]) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.isCompatible, aAddonCompat[0]);
-    do_check_eq(a1.appDisabled, !aAddonCompat[0]);
-    do_check_false(a1.strictCompatibility);
+                                do_check_neq(a1, null);
+                                do_check_eq(a1.isCompatible, aAddonCompat[0]);
+                                do_check_eq(a1.appDisabled, !aAddonCompat[0]);
+                                do_check_false(a1.strictCompatibility);
 
-    do_check_neq(a2, null);
-    do_check_eq(a2.isCompatible, aAddonCompat[1]);
-    do_check_eq(a2.appDisabled, !aAddonCompat[1]);
-    do_check_false(a2.strictCompatibility);
+                                do_check_neq(a2, null);
+                                do_check_eq(a2.isCompatible, aAddonCompat[1]);
+                                do_check_eq(a2.appDisabled, !aAddonCompat[1]);
+                                do_check_false(a2.strictCompatibility);
 
-    do_check_neq(a3, null);
-    do_check_eq(a3.isCompatible, aAddonCompat[2]);
-    do_check_eq(a3.appDisabled, !aAddonCompat[2]);
-    do_check_true(a3.strictCompatibility);
+                                do_check_neq(a3, null);
+                                do_check_eq(a3.isCompatible, aAddonCompat[2]);
+                                do_check_eq(a3.appDisabled, !aAddonCompat[2]);
+                                do_check_true(a3.strictCompatibility);
 
-    do_check_neq(a4, null);
-    do_check_eq(a4.isCompatible, aAddonCompat[3]);
-    do_check_eq(a4.appDisabled, !aAddonCompat[3]);
-    do_check_true(a4.strictCompatibility);
+                                do_check_neq(a4, null);
+                                do_check_eq(a4.isCompatible, aAddonCompat[3]);
+                                do_check_eq(a4.appDisabled, !aAddonCompat[3]);
+                                do_check_true(a4.strictCompatibility);
 
-    do_check_neq(a5, null);
-    do_check_eq(a5.isCompatible, aAddonCompat[4]);
-    do_check_eq(a5.appDisabled, !aAddonCompat[4]);
-    do_check_false(a5.strictCompatibility);
+                                do_check_neq(a5, null);
+                                do_check_eq(a5.isCompatible, aAddonCompat[4]);
+                                do_check_eq(a5.appDisabled, !aAddonCompat[4]);
+                                do_check_false(a5.strictCompatibility);
 
-    do_check_neq(a6, null);
-    do_check_eq(a6.isCompatible, aAddonCompat[5]);
-    do_check_eq(a6.appDisabled, !aAddonCompat[5]);
-    do_check_false(a6.strictCompatibility);
+                                do_check_neq(a6, null);
+                                do_check_eq(a6.isCompatible, aAddonCompat[5]);
+                                do_check_eq(a6.appDisabled, !aAddonCompat[5]);
+                                do_check_false(a6.strictCompatibility);
 
-    do_check_neq(a7, null);
-    do_check_eq(a7.isCompatible, aAddonCompat[6]);
-    do_check_eq(a7.appDisabled, !aAddonCompat[6]);
-    do_check_false(a7.strictCompatibility);
+                                do_check_neq(a7, null);
+                                do_check_eq(a7.isCompatible, aAddonCompat[6]);
+                                do_check_eq(a7.appDisabled, !aAddonCompat[6]);
+                                do_check_false(a7.strictCompatibility);
 
-    do_execute_soon(aCallback);
-  });
+                                do_execute_soon(aCallback);
+                              });
 }
 
 
