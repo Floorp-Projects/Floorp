@@ -92,7 +92,7 @@ add_task(async function test_sidebar() {
 
   let syncedTabsDeckComponent = SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
 
-  syncedTabsDeckComponent._accountStatus = () => Promise.resolve(true);
+  syncedTabsDeckComponent._getSignedInUser = () => Promise.resolve({verified: true});
 
   // Once the tabs container has been selected (which here means "'selected'
   // added to the class list") we are ready to test.

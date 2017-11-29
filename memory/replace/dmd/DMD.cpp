@@ -91,9 +91,6 @@ StatusMsg(const char* aFmt, ...)
 
 static malloc_table_t gMallocTable;
 
-// Whether DMD finished initializing.
-static bool gIsDMDInitialized = false;
-
 // This provides infallible allocations (they abort on OOM).  We use it for all
 // of DMD's own allocations, which fall into the following three cases.
 //
@@ -1259,33 +1256,15 @@ FreeCallback(void* aPtr, Thread* aT, DeadBlock* aDeadBlock)
 // malloc/free interception
 //---------------------------------------------------------------------------
 
-static void Init(malloc_table_t* aMallocTable);
+static bool Init(malloc_table_t* aMallocTable);
 
 } // namespace dmd
 } // namespace mozilla
 
-void
-replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge)
-{
-  mozilla::dmd::Init(aMallocTable);
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
-#define MALLOC_DECL(name, ...) aMallocTable->name = replace_ ## name;
-#include "malloc_decls.h"
-  *aBridge = mozilla::dmd::gDMDBridge;
-}
-
-void*
+static void*
 replace_malloc(size_t aSize)
 {
   using namespace mozilla::dmd;
-
-  if (!gIsDMDInitialized) {
-    // DMD hasn't started up, either because it wasn't enabled by the user, or
-    // we're still in Init() and something has indirectly called malloc.  Do a
-    // vanilla malloc.  (In the latter case, if it fails we'll crash.  But
-    // OOM is highly unlikely so early on.)
-    return gMallocTable.malloc(aSize);
-  }
 
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
@@ -1300,14 +1279,10 @@ replace_malloc(size_t aSize)
   return ptr;
 }
 
-void*
+static void*
 replace_calloc(size_t aCount, size_t aSize)
 {
   using namespace mozilla::dmd;
-
-  if (!gIsDMDInitialized) {
-    return gMallocTable.calloc(aCount, aSize);
-  }
 
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
@@ -1319,14 +1294,10 @@ replace_calloc(size_t aCount, size_t aSize)
   return ptr;
 }
 
-void*
+static void*
 replace_realloc(void* aOldPtr, size_t aSize)
 {
   using namespace mozilla::dmd;
-
-  if (!gIsDMDInitialized) {
-    return gMallocTable.realloc(aOldPtr, aSize);
-  }
 
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
@@ -1360,14 +1331,10 @@ replace_realloc(void* aOldPtr, size_t aSize)
   return ptr;
 }
 
-void*
+static void*
 replace_memalign(size_t aAlignment, size_t aSize)
 {
   using namespace mozilla::dmd;
-
-  if (!gIsDMDInitialized) {
-    return gMallocTable.memalign(aAlignment, aSize);
-  }
 
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
@@ -1379,15 +1346,10 @@ replace_memalign(size_t aAlignment, size_t aSize)
   return ptr;
 }
 
-void
+static void
 replace_free(void* aPtr)
 {
   using namespace mozilla::dmd;
-
-  if (!gIsDMDInitialized) {
-    gMallocTable.free(aPtr);
-    return;
-  }
 
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
@@ -1401,6 +1363,17 @@ replace_free(void* aPtr)
   FreeCallback(aPtr, t, &db);
   MaybeAddToDeadBlockTable(db);
   gMallocTable.free(aPtr);
+}
+
+void
+replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge)
+{
+  if (mozilla::dmd::Init(aMallocTable)) {
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
+#define MALLOC_DECL(name, ...) aMallocTable->name = replace_ ## name;
+#include "malloc_decls.h"
+    *aBridge = mozilla::dmd::gDMDBridge;
+  }
 }
 
 namespace mozilla {
@@ -1467,9 +1440,6 @@ Options::Options(const char* aDMDEnvVar)
   , mStacks(Stacks::Partial)
   , mShowDumpStats(false)
 {
-  // It's no longer necessary to set the DMD env var to "1" if you want default
-  // options (you can leave it undefined) but we still accept "1" for
-  // backwards compatibility.
   char* e = mDMDEnvVar;
   if (e && strcmp(e, "1") != 0) {
     bool isEnd = false;
@@ -1579,10 +1549,21 @@ postfork()
 // have run.  For this reason, non-scalar globals such as gStateLock and
 // gStackTraceTable are allocated dynamically (so we can guarantee their
 // construction in this function) rather than statically.
-static void
+static bool
 Init(malloc_table_t* aMallocTable)
 {
+  // DMD is controlled by the |DMD| environment variable.
+  const char* e = getenv("DMD");
+
+  if (!e) {
+    return false;
+  }
+  // Initialize the function table first, because StatusMsg uses
+  // InfallibleAllocPolicy::malloc_, which uses it.
   gMallocTable = *aMallocTable;
+
+  StatusMsg("$DMD = '%s'\n", e);
+
   gDMDBridge = InfallibleAllocPolicy::new_<DMDBridge>();
 
 #ifndef XP_WIN
@@ -1594,16 +1575,6 @@ Init(malloc_table_t* aMallocTable)
   // system malloc a chance to insert its own atfork handler.
   pthread_atfork(prefork, postfork, postfork);
 #endif
-
-  // DMD is controlled by the |DMD| environment variable.
-  const char* e = getenv("DMD");
-
-  if (e) {
-    StatusMsg("$DMD = '%s'\n", e);
-  } else {
-    StatusMsg("$DMD is undefined\n");
-  }
-
   // Parse $DMD env var.
   gOptions = InfallibleAllocPolicy::new_<Options>(e);
 
@@ -1632,7 +1603,7 @@ Init(malloc_table_t* aMallocTable)
     MOZ_ALWAYS_TRUE(gDeadBlockTable->init(tableSize));
   }
 
-  gIsDMDInitialized = true;
+  return true;
 }
 
 //---------------------------------------------------------------------------

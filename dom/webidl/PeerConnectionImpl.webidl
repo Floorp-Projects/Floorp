@@ -41,27 +41,23 @@ interface PeerConnectionImpl  {
 
   /* Adds the tracks created by GetUserMedia */
   [Throws]
-  void addTrack(MediaStreamTrack track, MediaStream... streams);
-  [Throws]
   void removeTrack(MediaStreamTrack track);
   [Throws]
-  void insertDTMF(RTCRtpSender sender, DOMString tones,
+  TransceiverImpl createTransceiverImpl(DOMString kind,
+                                        MediaStreamTrack? track);
+  [Throws]
+  boolean checkNegotiationNeeded();
+  [Throws]
+  void insertDTMF(TransceiverImpl transceiver, DOMString tones,
                   optional unsigned long duration = 100,
                   optional unsigned long interToneGap = 70);
   [Throws]
   DOMString getDTMFToneBuffer(RTCRtpSender sender);
   [Throws]
-  void replaceTrack(MediaStreamTrack thisTrack, MediaStreamTrack withTrack);
-  [Throws]
-  void setParameters(MediaStreamTrack track,
-                     optional RTCRtpParameters parameters);
-  [Throws]
-  RTCRtpParameters getParameters(MediaStreamTrack track);
+  void replaceTrackNoRenegotiation(TransceiverImpl transceiverImpl,
+                                   MediaStreamTrack? withTrack);
   [Throws]
   void closeStreams();
-
-  sequence<MediaStream> getLocalStreams();
-  sequence<MediaStream> getRemoteStreams();
 
   void addRIDExtension(MediaStreamTrack recvTrack, unsigned short extensionId);
   void addRIDFilter(MediaStreamTrack recvTrack, DOMString rid);

@@ -434,7 +434,7 @@
             <hbox id="PanelUI-remotetabs-tabsdisabledpane" pack="center" flex="1">
               <vbox class="PanelUI-remotetabs-instruction-box" align="center">
                 <hbox pack="center">
-                  <image class="fxaSyncIllustration"/>
+                  <image class="fxaSyncIllustrationIssue"/>
                 </hbox>
                 <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.tabsnotsyncing.label;</label>
                 <hbox pack="center">
@@ -452,9 +452,8 @@
             <hbox id="PanelUI-remotetabs-nodevicespane" pack="center" flex="1">
               <vbox class="PanelUI-remotetabs-instruction-box">
                 <hbox pack="center">
-                  <image class="fxaSyncIllustration"/>
+                  <image class="fxaSyncIllustrationIssue"/>
                 </hbox>
-                <label class="PanelUI-remotetabs-instruction-title">&appMenuRemoteTabs.noclients.title;</label>
                 <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.noclients.subtitle;</label>
                 <!-- The inner HTML for PanelUI-remotetabs-mobile-promo is built at runtime -->
                 <label id="PanelUI-remotetabs-mobile-promo" fxAccountsBrand="&syncBrand.fxAccount.label;"/>
@@ -484,7 +483,7 @@
                 align="center"
                 class="PanelUI-remotetabs-instruction-box"
                 observes="sync-reauth-state">
-            <image class="fxaSyncIllustration"/>
+            <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-prefs-button"
                            label="&appMenuRemoteTabs.signin.label;"

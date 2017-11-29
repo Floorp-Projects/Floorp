@@ -137,7 +137,7 @@ add_task(async function testPanelStatus() {
   let listStore = new SyncedTabsListStore();
   let listComponent = {};
   let fxAccounts = {
-    accountStatus() {}
+    getSignedInUser() {}
   };
   let SyncedTabsMock = {
     getTabClients() {}
@@ -153,12 +153,17 @@ add_task(async function testPanelStatus() {
     SyncedTabs: SyncedTabsMock
   });
 
-  let isAuthed = false;
-  sinon.stub(fxAccounts, "accountStatus", () => Promise.resolve(isAuthed));
+  let account = null;
+  sinon.stub(fxAccounts, "getSignedInUser", () => Promise.resolve(account));
   let result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
 
-  isAuthed = true;
+  account = {verified: false};
+
+  result = await component.getPanelStatus();
+  Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
+
+  account = {verified: true};
 
   SyncedTabsMock.loginFailed = true;
   result = await component.getPanelStatus();
@@ -186,8 +191,8 @@ add_task(async function testPanelStatus() {
   result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.TABS_CONTAINER);
 
-  fxAccounts.accountStatus.restore();
-  sinon.stub(fxAccounts, "accountStatus", () => Promise.reject("err"));
+  fxAccounts.getSignedInUser.restore();
+  sinon.stub(fxAccounts, "getSignedInUser", () => Promise.reject("err"));
   result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
 

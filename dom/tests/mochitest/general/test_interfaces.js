@@ -815,6 +815,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "RTCRtpSender",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCRtpTransceiver",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "RTCSessionDescription",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "RTCStatsReport",

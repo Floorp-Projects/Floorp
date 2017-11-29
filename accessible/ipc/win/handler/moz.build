@@ -6,7 +6,10 @@
 
 SharedLibrary('AccessibleHandler')
 
-EXPORTS.mozilla.a11y += ['AccessibleHandler.h']
+EXPORTS.mozilla.a11y += [
+    'AccessibleHandler.h',
+    'HandlerDataCleanup.h',
+]
 
 LOCAL_INCLUDES += [
     '/accessible/interfaces/ia2',
