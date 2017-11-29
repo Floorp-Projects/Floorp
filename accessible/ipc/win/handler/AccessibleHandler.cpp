@@ -181,7 +181,7 @@ AccessibleHandler::ResolveIAHypertext()
     return E_UNEXPECTED;
   }
 
-  HRESULT hr = proxy->QueryInterface(IID_IAccessibleHypertext,
+  HRESULT hr = proxy->QueryInterface(IID_IAccessibleHypertext2,
     reinterpret_cast<void**>(&mIAHypertextPassThru));
   if (SUCCEEDED(hr)) {
     // mIAHypertextPassThru is a weak reference

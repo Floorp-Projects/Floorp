@@ -3012,34 +3012,28 @@ var AddonManagerInternal = {
       });
     },
 
-    addonUninstall(target, id) {
-      return new Promise(resolve => {
-        AddonManager.getAddonByID(id, addon => {
-          if (!addon) {
-            resolve(false);
-          }
+    async addonUninstall(target, id) {
+      let addon = await AddonManager.getAddonByID(id);
+      if (!addon) {
+        return false;
+      }
 
-          try {
-            addon.uninstall();
-            resolve(true);
-          } catch (err) {
-            Cu.reportError(err);
-            resolve(false);
-          }
-        });
-      });
+      try {
+        addon.uninstall();
+        return true;
+      } catch (err) {
+        Cu.reportError(err);
+        return false;
+      }
     },
 
-    addonSetEnabled(target, id, value) {
-      return new Promise((resolve, reject) => {
-        AddonManager.getAddonByID(id, addon => {
-          if (!addon) {
-            reject({message: `No such addon ${id}`});
-          }
-          addon.userDisabled = !value;
-          resolve();
-        });
-      });
+    async addonSetEnabled(target, id, value) {
+      let addon = await AddonManager.getAddonByID(id);
+      if (!addon) {
+        throw new Error(`No such addon ${id}`);
+      }
+
+      addon.userDisabled = !value;
     },
 
     addonInstallDoInstall(target, id) {

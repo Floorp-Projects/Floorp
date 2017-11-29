@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783129
+-->
+<head>
+  <title>Test for customElements.define</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
+<div>
+<x-unresolved id="unresolved"></x-unresolved>
+</div>
+
+<script>
+
+function testDefineExtend(tag, extend, definition, expectException) {
+  try {
+    customElements.define(tag, definition, { extends: extend });
+    ok(!expectException, "Defined " + tag + " extending " + extend + ".");
+  } catch (ex) {
+    ok(expectException, "Did not define " + tag + " extending " + extend + ".");
+  }
+}
+
+function testDefineSimple(tag, definition, expectException) {
+  try {
+    customElements.define(tag, definition);
+    ok(!expectException, "Defined " + tag + " extending HTMLElement.");
+  } catch (ex) {
+    ok(expectException, "Did not define " + tag + " extending HTMLElement.");
+  }
+}
+
+function startTest() {
+  // Test defining some simple definition.
+  testDefineSimple("x-html-obj-elem", class extends HTMLElement {}, false);
+  testDefineSimple("x-html-obj-p", class extends HTMLParagraphElement {}, false);
+
+  // Make sure the prototype on unresolved elements is HTMLElement not HTMLUnknownElement.
+  var unresolved = document.getElementById("unresolved");
+  is(unresolved.__proto__, HTMLElement.prototype, "Unresolved custom elements should have HTMLElement as prototype.");
+
+  var anotherUnresolved = document.createElement("maybe-custom-element");
+  is(anotherUnresolved.__proto__, HTMLElement.prototype, "Unresolved custom elements should have HTMLElement as prototype.");
+
+  // Test defining some invalid definition.
+  testDefineSimple("x-invalid-number", 42, true);
+  testDefineSimple("x-invalid-boolean", false, true);
+  testDefineSimple("x-invalid-float", 1.0, true);
+
+  // Test invalid custom element names.
+  testDefineSimple("invalid", class extends HTMLElement {}, true);
+  testDefineSimple("annotation-xml", class extends HTMLElement {}, true);
+  testDefineSimple("color-profile", class extends HTMLElement {}, true);
+  testDefineSimple("font-face", class extends HTMLElement {}, true);
+  testDefineSimple("font-face-src", class extends HTMLElement {}, true);
+  testDefineSimple("font-face-uri", class extends HTMLElement {}, true);
+  testDefineSimple("font-face-format", class extends HTMLElement {}, true);
+  testDefineSimple("font-face-name", class extends HTMLElement {}, true);
+  testDefineSimple("missing-glyph", class extends HTMLElement {}, true);
+
+  // Test defining elements that extend from an existing element.
+  testDefineExtend("x-extend-span", "span", class extends HTMLElement {}, false);
+  testDefineExtend("x-extend-span-caps", "SPAN", class extends HTMLElement {}, true);
+
+  // Test defining elements that extend from a non-existing element.
+  testDefineExtend("x-extend-span-nonexist", "nonexisting", class extends HTMLElement {}, true);
+
+  // Test registration with duplicate type.
+  testDefineSimple("x-dupe-me", class extends HTMLElement {}, false);
+  testDefineSimple("x-dupe-me", class extends HTMLElement {}, true);
+  testDefineSimple("X-DUPE-ME", class extends HTMLElement {}, true);
+  testDefineExtend("x-dupe-me", "span", class extends HTMLElement {}, true);
+
+  // customElements.define with extended type.
+  class ExtendButton extends HTMLButtonElement {};
+  customElements.define("x-extended-button", ExtendButton, { extends: "button" });
+  var extendedButton = document.createElement("button", {is: "x-extended-button"});
+  is(extendedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
+  is(extendedButton.__proto__, ExtendButton.prototype, "Created element should have the prototype of the extended type.");
+  is(extendedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
+  is(extendedButton.type, "submit", "Created element should be a button with type of \"submit\"");
+
+  // Custom element constructor.
+  var constructedButton = new ExtendButton();
+  is(constructedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
+  is(constructedButton.__proto__, ExtendButton.prototype, "Created element should have the prototype of the extended type.");
+
+  // Try creating an element with a custom element name, but not in the html namespace.
+  class XInHTMLNamespace extends HTMLElement {};
+  customElements.define("x-in-html-namespace", XInHTMLNamespace);
+  var wrongNamespaceElem = document.createElementNS("http://www.w3.org/2000/svg", "x-in-html-namespace");
+  isnot(wrongNamespaceElem.__proto__, XInHTMLNamespace.prototype, "Definition for element in html namespace should not apply to SVG elements.");
+}
+
+startTest();
+
+</script>
+</body>
+</html>

@@ -4,8 +4,7 @@
 
 var {Ci: interfaces, Cc: classes} = Components;
 
-var Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-var HasFindClipboard = Clipboard.supportsFindClipboard();
+var HasFindClipboard = Services.clipboard.supportsFindClipboard();
 
 add_task(async function() {
   let newwindow = await BrowserTestUtils.openNewBrowserWindow();
@@ -47,4 +46,3 @@ add_task(async function() {
   findBar.close();
   await promiseWindowClosed(newwindow);
 });
-

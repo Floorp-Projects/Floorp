@@ -1209,6 +1209,10 @@ function dispatchPointerDown(a, inputState, window) {
       case action.PointerType.Mouse:
         let mouseEvent = new action.Mouse("mousedown", a.button);
         mouseEvent.update(inputState);
+        if (event.DoubleClickTracker.isClicked()) {
+          mouseEvent = Object.assign({},
+              mouseEvent, {clickCount: 2});
+        }
         event.synthesizeMouseAtPoint(
             inputState.x,
             inputState.y,
@@ -1264,6 +1268,10 @@ function dispatchPointerUp(a, inputState, window) {
       case action.PointerType.Mouse:
         let mouseEvent = new action.Mouse("mouseup", a.button);
         mouseEvent.update(inputState);
+        if (event.DoubleClickTracker.isClicked()) {
+          mouseEvent = Object.assign({},
+              mouseEvent, {clickCount: 2});
+        }
         event.synthesizeMouseAtPoint(
             inputState.x, inputState.y, mouseEvent, window);
         break;

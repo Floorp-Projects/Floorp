@@ -105,13 +105,13 @@ attributeChangedCallbackCount = 0;
 shadow = container.shadowRoot;
 shadow.innerHTML = "<x-bar></x-bar>";
 
-var p2 = Object.create(HTMLElement.prototype);
-
-p2.connectedCallback = function() {
-  connectedCallbackCount++;
+class Bar extends HTMLElement {
+  connectedCallback() {
+    connectedCallbackCount++;
+  }
 };
 
-document.registerElement("x-bar", { prototype: p2 });
+customElements.define("x-bar", Bar);
 is(connectedCallbackCount, 1, "connectedCallback should be called after upgrading element in composed document.");
 
 </script>

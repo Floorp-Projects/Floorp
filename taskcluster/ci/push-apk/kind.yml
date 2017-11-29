@@ -20,12 +20,17 @@ jobs:
             nightly: true
         shipping-phase: ship
         shipping-product: fennec
-        worker-type: scriptworker-prov-v1/pushapk-v1
+        worker-type:
+            by-project:
+                mozilla-central: scriptworker-prov-v1/pushapk-v1
+                mozilla-beta: scriptworker-prov-v1/pushapk-v1
+                mozilla-release: scriptworker-prov-v1/pushapk-v1
+                default: scriptworker-prov-v1/dep-pushapk
         worker:
             upstream-artifacts:  # see transforms
             google-play-track:  # see transforms
             implementation: push-apk
-            dry-run:  # see transforms
+            commit:  # see transforms
         scopes:  # see transforms
         treeherder:
             symbol: pub(gp)

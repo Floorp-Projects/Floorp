@@ -20,9 +20,8 @@ Test that when an item in the Tree component is expanded or collapsed the approp
 window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    const React = browserRequire("devtools/client/shared/vendor/react");
-    const { Simulate } = React.addons.TestUtils;
-    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/Tree"));
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = createFactory(browserRequire("devtools/client/shared/components/Tree"));
 
     function renderTree(props) {
       const treeProps = Object.assign({},

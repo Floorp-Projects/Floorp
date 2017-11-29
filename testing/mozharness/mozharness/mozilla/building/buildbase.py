@@ -419,6 +419,7 @@ class BuildOptionParser(object):
         'cross-noopt-debug': 'builds/releng_sub_%s_configs/%s_cross_noopt_debug.py',
         'cross-artifact': 'builds/releng_sub_%s_configs/%s_cross_artifact.py',
         'debug': 'builds/releng_sub_%s_configs/%s_debug.py',
+        'fuzzing-debug': 'builds/releng_sub_%s_configs/%s_fuzzing_debug.py',
         'asan-and-debug': 'builds/releng_sub_%s_configs/%s_asan_and_debug.py',
         'asan-tc-and-debug': 'builds/releng_sub_%s_configs/%s_asan_tc_and_debug.py',
         'stat-and-debug': 'builds/releng_sub_%s_configs/%s_stat_and_debug.py',

@@ -13,8 +13,10 @@
     SimpleTest.waitForExplicitFinish();
 
     function startTests() {
-      var c = document.getElementById("fooframe").contentDocument.registerElement("x-foo");
-      var elem = new c();
+      var frame = document.getElementById("fooframe");
+      class XFoo extends frame.contentWindow.HTMLElement {};
+      frame.contentWindow.customElements.define("x-foo", XFoo);
+      var elem = new XFoo();
       is(elem.tagName, "X-FOO", "Constructor should create an x-foo element.");
 
       var anotherElem = $("fooframe").contentDocument.createElement("x-foo");

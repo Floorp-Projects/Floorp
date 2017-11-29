@@ -10,17 +10,12 @@
 #include "nsIPrefService.h"
 #include "MediaTrackConstraints.h"
 #include "CamerasChild.h"
-#include "VideoFrameUtils.h"
-#include "webrtc/api/video/i420_buffer.h"
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 extern mozilla::LogModule* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 #define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 
 namespace mozilla {
-
-uint64_t MediaEngineCameraVideoSource::AllocationHandle::sId = 0;
 
 // These need a definition somewhere because template
 // code is allowed to take their address, and they aren't
@@ -85,9 +80,6 @@ MediaEngineRemoteVideoSource::Shutdown()
         empty = mSources.IsEmpty();
         if (empty) {
           MOZ_ASSERT(mPrincipalHandles.IsEmpty());
-          MOZ_ASSERT(mTargetCapabilities.IsEmpty());
-          MOZ_ASSERT(mHandleIds.IsEmpty());
-          MOZ_ASSERT(mImages.IsEmpty());
           break;
         }
         source = mSources[0];
@@ -134,9 +126,6 @@ MediaEngineRemoteVideoSource::Allocate(
     MonitorAutoLock lock(mMonitor);
     if (mSources.IsEmpty()) {
       MOZ_ASSERT(mPrincipalHandles.IsEmpty());
-      MOZ_ASSERT(mTargetCapabilities.IsEmpty());
-      MOZ_ASSERT(mHandleIds.IsEmpty());
-      MOZ_ASSERT(mImages.IsEmpty());
       LOG(("Video device %d reallocated", mCaptureIndex));
     } else {
       LOG(("Video device %d allocated shared", mCaptureIndex));
@@ -179,21 +168,11 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
     return NS_ERROR_FAILURE;
   }
 
-  mImageContainer =
-    layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
-
   {
     MonitorAutoLock lock(mMonitor);
     mSources.AppendElement(aStream);
     mPrincipalHandles.AppendElement(aPrincipalHandle);
-    mTargetCapabilities.AppendElement(mTargetCapability);
-    mHandleIds.AppendElement(mHandleId);
-    mImages.AppendElement(mImageContainer->CreatePlanarYCbCrImage());
-
     MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
-    MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
-    MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
-    MOZ_ASSERT(mSources.Length() == mImages.Length());
   }
 
   aStream->AddTrack(aID, 0, new VideoSegment(), SourceMediaStream::ADDTRACK_QUEUED);
@@ -201,6 +180,8 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
   if (mState == kStarted) {
     return NS_OK;
   }
+  mImageContainer =
+    layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
 
   mState = kStarted;
   mTrackID = aID;
@@ -237,14 +218,8 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
     }
 
     MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
-    MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
-    MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
-    MOZ_ASSERT(mSources.Length() == mImages.Length());
     mSources.RemoveElementAt(i);
     mPrincipalHandles.RemoveElementAt(i);
-    mTargetCapabilities.RemoveElementAt(i);
-    mHandleIds.RemoveElementAt(i);
-    mImages.RemoveElementAt(i);
 
     aSource->EndTrack(aID);
 
@@ -287,21 +262,18 @@ nsresult
 MediaEngineRemoteVideoSource::UpdateSingleSource(
     const AllocationHandle* aHandle,
     const NormalizedConstraints& aNetConstraints,
-    const NormalizedConstraints& aNewConstraint,
     const MediaEnginePrefs& aPrefs,
     const nsString& aDeviceId,
     const char** aOutBadConstraint)
 {
+  if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId)) {
+    *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
+    return NS_ERROR_FAILURE;
+  }
+
   switch (mState) {
     case kReleased:
       MOZ_ASSERT(aHandle);
-      mHandleId = aHandle->mId;
-      if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId, mCapability, kFitness)) {
-        *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
-        return NS_ERROR_FAILURE;
-      }
-      mTargetCapability = mCapability;
-
       if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
                                   mCapEngine, GetUUID().get(),
                                   kMaxUniqueIdLength, mCaptureIndex,
@@ -314,47 +286,18 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
       break;
 
     case kStarted:
-      {
-        size_t index = mHandleIds.NoIndex;
-        if (aHandle) {
-          mHandleId = aHandle->mId;
-          index = mHandleIds.IndexOf(mHandleId);
-        }
-
-        if (!ChooseCapability(aNewConstraint, aPrefs, aDeviceId, mTargetCapability,
-                              kFitness)) {
-          *aOutBadConstraint = FindBadConstraint(aNewConstraint, *this, aDeviceId);
+      if (mCapability != mLastCapability) {
+        camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
+                                mCapEngine, mCaptureIndex);
+        if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
+                                    mCapEngine, mCaptureIndex, mCapability,
+                                    this)) {
+          LOG(("StartCapture failed"));
           return NS_ERROR_FAILURE;
         }
-
-        if (index != mHandleIds.NoIndex) {
-          MonitorAutoLock lock(mMonitor);
-          mTargetCapabilities[index] = mTargetCapability;
-          MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
-          MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
-          MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
-          MOZ_ASSERT(mSources.Length() == mImages.Length());
-        }
-
-        if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId, mCapability,
-                              kFeasibility)) {
-          *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
-          return NS_ERROR_FAILURE;
-        }
-
-        if (mCapability != mLastCapability) {
-          camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
-                                  mCapEngine, mCaptureIndex);
-          if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
-                                      mCapEngine, mCaptureIndex, mCapability,
-                                      this)) {
-            LOG(("StartCapture failed"));
-            return NS_ERROR_FAILURE;
-          }
-          SetLastCapability(mCapability);
-        }
-        break;
+        SetLastCapability(mCapability);
       }
+      break;
 
     default:
       LOG(("Video device %d in ignored state %d", mCaptureIndex, mState));
@@ -400,22 +343,18 @@ MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                          TrackID aID, StreamTime aDesiredTime,
                                          const PrincipalHandle& aPrincipalHandle)
 {
-  StreamTime delta = 0;
-  size_t i;
+  VideoSegment segment;
+
   MonitorAutoLock lock(mMonitor);
   if (mState != kStarted) {
     return;
   }
 
-  i = mSources.IndexOf(aSource);
-  if (i == mSources.NoIndex) {
-    return;
-  }
-
-  delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
+  StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
 
   if (delta > 0) {
-    AppendToTrack(aSource, mImages[i], aID, delta, aPrincipalHandle);
+    // nullptr images are allowed
+    AppendToTrack(aSource, mImage, aID, delta, aPrincipalHandle);
   }
 }
 
@@ -438,12 +377,11 @@ MediaEngineRemoteVideoSource::FrameSizeChange(unsigned int w, unsigned int h)
 }
 
 int
-MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
+MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer ,
                                     const camera::VideoFrameProperties& aProps)
 {
-  MonitorAutoLock lock(mMonitor);
   // Check for proper state.
-  if (mState != kStarted || !mImageContainer) {
+  if (mState != kStarted) {
     LOG(("DeliverFrame: video not started"));
     return 0;
   }
@@ -451,114 +389,51 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
   // Update the dimensions
   FrameSizeChange(aProps.width(), aProps.height());
 
-  MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
-  MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
-  MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
-  MOZ_ASSERT(mSources.Length() == mImages.Length());
-
-  for (uint32_t i = 0; i < mTargetCapabilities.Length(); i++ ) {
-    int32_t req_max_width = mTargetCapabilities[i].width & 0xffff;
-    int32_t req_max_height = mTargetCapabilities[i].height & 0xffff;
-    int32_t req_ideal_width = (mTargetCapabilities[i].width >> 16) & 0xffff;
-    int32_t req_ideal_height = (mTargetCapabilities[i].height >> 16) & 0xffff;
-
-    int32_t dest_max_width = std::min(req_max_width, mWidth);
-    int32_t dest_max_height = std::min(req_max_height, mHeight);
-    // This logic works for both camera and screen sharing case.
-    // for camera case, req_ideal_width and req_ideal_height is 0.
-    // The following snippet will set dst_width to dest_max_width and dst_height to dest_max_height
-    int32_t dst_width = std::min(req_ideal_width > 0 ? req_ideal_width : mWidth, dest_max_width);
-    int32_t dst_height = std::min(req_ideal_height > 0 ? req_ideal_height : mHeight, dest_max_height);
-
-    int dst_stride_y = dst_width;
-    int dst_stride_uv = (dst_width + 1) / 2;
-
-    camera::VideoFrameProperties properties;
-    uint8_t* frame;
-    bool needReScale = !((dst_width == mWidth && dst_height == mHeight) ||
-                         (dst_width > mWidth || dst_height > mHeight));
-
-    if (!needReScale) {
-      dst_width = mWidth;
-      dst_height = mHeight;
-      frame = aBuffer;
-    } else {
-      rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer;
-      i420Buffer = webrtc::I420Buffer::Create(mWidth, mHeight, mWidth,
-                                              (mWidth + 1) / 2, (mWidth + 1) / 2);
-
-      const int conversionResult = webrtc::ConvertToI420(webrtc::kI420,
-                                                         aBuffer,
-                                                         0, 0,  // No cropping
-                                                         mWidth, mHeight,
-                                                         mWidth * mHeight * 3 / 2,
-                                                         webrtc::kVideoRotation_0,
-                                                         i420Buffer.get());
-
-      webrtc::VideoFrame captureFrame(i420Buffer, 0, 0, webrtc::kVideoRotation_0);
-      if (conversionResult < 0) {
-        return 0;
-      }
-
-      rtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer;
-      scaledBuffer = webrtc::I420Buffer::Create(dst_width, dst_height, dst_stride_y,
-                                                dst_stride_uv, dst_stride_uv);
-
-      scaledBuffer->CropAndScaleFrom(*captureFrame.video_frame_buffer().get());
-      webrtc::VideoFrame scaledFrame(scaledBuffer, 0, 0, webrtc::kVideoRotation_0);
-
-      VideoFrameUtils::InitFrameBufferProperties(scaledFrame, properties);
-      frame = new unsigned char[properties.bufferSize()];
-
-      if (!frame) {
-        return 0;
-      }
-
-      VideoFrameUtils::CopyVideoFrameBuffers(frame,
-                                             properties.bufferSize(), scaledFrame);
+  layers::PlanarYCbCrData data;
+  RefPtr<layers::PlanarYCbCrImage> image;
+  {
+    // We grab the lock twice, but don't hold it across the (long) CopyData
+    MonitorAutoLock lock(mMonitor);
+    if (!mImageContainer) {
+      LOG(("DeliverFrame() called after Stop()!"));
+      return 0;
     }
-
     // Create a video frame and append it to the track.
-    RefPtr<layers::PlanarYCbCrImage> image = mImageContainer->CreatePlanarYCbCrImage();
+    image = mImageContainer->CreatePlanarYCbCrImage();
 
+    uint8_t* frame = static_cast<uint8_t*> (aBuffer);
     const uint8_t lumaBpp = 8;
     const uint8_t chromaBpp = 4;
 
-    layers::PlanarYCbCrData data;
-
     // Take lots of care to round up!
     data.mYChannel = frame;
-    data.mYSize = IntSize(dst_width, dst_height);
-    data.mYStride = (dst_width * lumaBpp + 7) / 8;
-    data.mCbCrStride = (dst_width * chromaBpp + 7) / 8;
-    data.mCbChannel = frame + dst_height * data.mYStride;
-    data.mCrChannel = data.mCbChannel + ((dst_height + 1) / 2) * data.mCbCrStride;
-    data.mCbCrSize = IntSize((dst_width + 1) / 2, (dst_height + 1) / 2);
+    data.mYSize = IntSize(mWidth, mHeight);
+    data.mYStride = (mWidth * lumaBpp + 7)/ 8;
+    data.mCbCrStride = (mWidth * chromaBpp + 7) / 8;
+    data.mCbChannel = frame + mHeight * data.mYStride;
+    data.mCrChannel = data.mCbChannel + ((mHeight+1)/2) * data.mCbCrStride;
+    data.mCbCrSize = IntSize((mWidth+1)/ 2, (mHeight+1)/ 2);
     data.mPicX = 0;
     data.mPicY = 0;
-    data.mPicSize = IntSize(dst_width, dst_height);
+    data.mPicSize = IntSize(mWidth, mHeight);
     data.mStereoMode = StereoMode::MONO;
+  }
 
-    if (!image->CopyData(data)) {
-      MOZ_ASSERT(false);
-      return 0;
-    }
+  if (!image->CopyData(data)) {
+    MOZ_ASSERT(false);
+    return 0;
+  }
 
-    if (needReScale && frame) {
-      delete frame;
-      frame = nullptr;
-    }
-
+  MonitorAutoLock lock(mMonitor);
 #ifdef DEBUG
-    static uint32_t frame_num = 0;
-    LOGFRAME(("frame %d (%dx%d); timeStamp %u, ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
-              frame_num++, mWidth, mHeight,
-              aProps.timeStamp(), aProps.ntpTimeMs(), aProps.renderTimeMs()));
+  static uint32_t frame_num = 0;
+  LOGFRAME(("frame %d (%dx%d); timeStamp %u, ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
+            frame_num++, mWidth, mHeight,
+            aProps.timeStamp(), aProps.ntpTimeMs(), aProps.renderTimeMs()));
 #endif
 
-    // implicitly releases last image
-    mImages[i] = image.forget();
-  }
+  // implicitly releases last image
+  mImage = image.forget();
 
   // We'll push the frame into the MSG on the next NotifyPull. This will avoid
   // swamping the MSG with frames should it be taking longer than normal to run
@@ -589,9 +464,7 @@ bool
 MediaEngineRemoteVideoSource::ChooseCapability(
     const NormalizedConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs,
-    const nsString& aDeviceId,
-    webrtc::CaptureCapability& aCapability,
-    const DistanceCalculation aCalculate)
+    const nsString& aDeviceId)
 {
   AssertIsOnOwningThread();
 
@@ -604,16 +477,15 @@ MediaEngineRemoteVideoSource::ChooseCapability(
       // time (and may in fact change over time), so as a hack, we push ideal
       // and max constraints down to desktop_capture_impl.cc and finish the
       // algorithm there.
-      aCapability.width =
-        (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 | (c.mWidth.mMax & 0xffff);
-      aCapability.height =
-        (c.mHeight.mIdeal.valueOr(0) & 0xffff) << 16 | (c.mHeight.mMax & 0xffff);
-      aCapability.maxFPS =
-        c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
+      mCapability.width = (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 |
+                          (c.mWidth.mMax & 0xffff);
+      mCapability.height = (c.mHeight.mIdeal.valueOr(0) & 0xffff) << 16 |
+                           (c.mHeight.mMax & 0xffff);
+      mCapability.maxFPS = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
       return true;
     }
     default:
-      return MediaEngineCameraVideoSource::ChooseCapability(aConstraints, aPrefs, aDeviceId, aCapability, aCalculate);
+      return MediaEngineCameraVideoSource::ChooseCapability(aConstraints, aPrefs, aDeviceId);
   }
 
 }

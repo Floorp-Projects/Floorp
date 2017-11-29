@@ -191,7 +191,7 @@ NewConsoleOutputWrapper.prototype = {
       });
 
       let sideBar = SideBar({
-        serviceContainer
+        serviceContainer,
       });
 
       let provider = createElement(
@@ -199,10 +199,10 @@ NewConsoleOutputWrapper.prototype = {
         { store },
         dom.div(
           {className: "webconsole-output-wrapper"},
-          filterBar,
           consoleOutput,
+          filterBar,
           sideBar
-      ));
+        ));
       this.body = ReactDOM.render(provider, this.parentNode);
 
       this.jsterm.focus();
