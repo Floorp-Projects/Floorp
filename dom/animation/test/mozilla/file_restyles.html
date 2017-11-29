@@ -609,7 +609,7 @@ waitForAllPaints(() => {
     div.style.display = 'none';
 
     // We need to wait a frame to apply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     is(animation.playState, 'running',
        'Script animations keep running even when the target element has ' +
@@ -626,7 +626,7 @@ waitForAllPaints(() => {
     div.style.display = '';
 
     // We need to wait a frame to unapply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     var markers = await observeStyling(5);
     is(markers.length, 5,
@@ -645,7 +645,7 @@ waitForAllPaints(() => {
     div.style.display = 'none';
 
     // We need to wait a frame to apply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     is(animation.playState, 'running',
        'Opacity script animations keep running even when the target element ' +
@@ -663,7 +663,7 @@ waitForAllPaints(() => {
     div.style.display = '';
 
     // We need to wait a frame to unapply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
        'Opacity script animations restored from "display: none" should be ' +
@@ -836,7 +836,7 @@ waitForAllPaints(() => {
 
       // Need a frame to give the animation a chance to be sent to the
       // compositor.
-      await waitForFrame();
+      await waitForNextFrame();
 
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation which is no longer overridden by the ' +
