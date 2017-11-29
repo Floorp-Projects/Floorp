@@ -92,7 +92,7 @@ const GPU_TAG_CACHE_LINE: GpuProfileTag = GpuProfileTag {
     color: debug_colors::BROWN,
 };
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag {
-    label: "target",
+    label: "target init",
     color: debug_colors::SLATEGREY,
 };
 const GPU_TAG_SETUP_DATA: GpuProfileTag = GpuProfileTag {
@@ -282,7 +282,7 @@ impl Into<ShaderMode> for TextShaderMode {
 impl From<GlyphFormat> for TextShaderMode {
     fn from(format: GlyphFormat) -> TextShaderMode {
         match format {
-            GlyphFormat::Alpha => TextShaderMode::Alpha,
+            GlyphFormat::Alpha | GlyphFormat::TransformedAlpha => TextShaderMode::Alpha,
             GlyphFormat::Subpixel | GlyphFormat::TransformedSubpixel => {
                 panic!("Subpixel glyph formats must be handled separately.");
             }
@@ -600,12 +600,11 @@ impl SourceTextureResolver {
         &mut self,
         a8_texture: Option<Texture>,
         rgba8_texture: Option<Texture>,
-        a8_pool: &mut Vec<Texture>,
-        rgba8_pool: &mut Vec<Texture>,
+        pool: &mut Vec<Texture>,
     ) {
         // If we have cache textures from previous pass, return them to the pool.
-        rgba8_pool.extend(self.cache_rgba8_texture.take());
-        a8_pool.extend(self.cache_a8_texture.take());
+        pool.extend(self.cache_rgba8_texture.take());
+        pool.extend(self.cache_a8_texture.take());
 
         // We have another pass to process, make these textures available
         // as inputs to the next pass.
@@ -1192,6 +1191,7 @@ impl TextShader {
                     }
                 }
             }
+            GlyphFormat::TransformedAlpha |
             GlyphFormat::TransformedSubpixel => {
                 self.glyph_transform.bind(device, projection, mode, renderer_errors)
             }
@@ -1301,6 +1301,13 @@ struct FrameOutput {
     fbo_id: FBOId,
 }
 
+#[derive(PartialEq)]
+struct TargetSelector {
+    size: DeviceUintSize,
+    num_layers: usize,
+    format: ImageFormat,
+}
+
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
 pub struct Renderer {
@@ -1370,8 +1377,7 @@ pub struct Renderer {
     profiler: Profiler,
     last_time: u64,
 
-    color_render_targets: Vec<Texture>,
-    alpha_render_targets: Vec<Texture>,
+    render_target_pool: Vec<Texture>,
 
     gpu_profile: GpuProfiler<GpuProfileTag>,
     prim_vao: VAO,
@@ -2011,8 +2017,7 @@ impl Renderer {
             clear_color: options.clear_color,
             enable_clear_scissor: options.enable_clear_scissor,
             last_time: 0,
-            color_render_targets: Vec::new(),
-            alpha_render_targets: Vec::new(),
+            render_target_pool: Vec::new(),
             gpu_profile,
             prim_vao,
             blur_vao,
@@ -2319,14 +2324,18 @@ impl Renderer {
     ///
     /// A Frame is supplied by calling [`generate_frame()`][genframe].
     /// [genframe]: ../../webrender_api/struct.DocumentApi.html#method.generate_frame
-    pub fn render(&mut self, framebuffer_size: DeviceUintSize) -> Result<(), Vec<RendererError>> {
+    pub fn render(
+        &mut self,
+        framebuffer_size: DeviceUintSize
+    ) -> Result<RendererStats, Vec<RendererError>> {
         profile_scope!("render");
 
         if self.active_documents.is_empty() {
             self.last_time = precise_time_ns();
-            return Ok(())
+            return Ok(RendererStats::empty());
         }
 
+        let mut stats = RendererStats::empty();
         let mut frame_profiles = Vec::new();
         let mut profile_timers = RendererProfileTimers::new();
 
@@ -2388,10 +2397,21 @@ impl Renderer {
                 self.device.clear_target(clear_color, None);
             }
 
+            // Re-use whatever targets possible from the pool, before
+            // they get changed/re-allocated by the rendered frames.
+            for doc_with_id in &mut active_documents {
+                self.prepare_tile_frame(&mut doc_with_id.1.frame);
+            }
+
             for &mut (_, RenderedDocument { ref mut frame, .. }) in &mut active_documents {
                 self.update_gpu_cache(frame);
 
-                self.draw_tile_frame(frame, framebuffer_size, cpu_frame_id);
+                self.draw_tile_frame(
+                    frame,
+                    framebuffer_size,
+                    cpu_frame_id,
+                    &mut stats
+                );
 
                 if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
                     frame_profiles.push(frame.profile_counters.clone());
@@ -2445,7 +2465,7 @@ impl Renderer {
         self.last_time = current_time;
 
         if self.renderer_errors.is_empty() {
-            Ok(())
+            Ok(stats)
         } else {
             Err(mem::replace(&mut self.renderer_errors, Vec::new()))
         }
@@ -2573,6 +2593,7 @@ impl Renderer {
         data: &[T],
         vertex_array_kind: VertexArrayKind,
         textures: &BatchTextures,
+        stats: &mut RendererStats,
     ) {
         for i in 0 .. textures.colors.len() {
             self.texture_resolver.bind(
@@ -2603,12 +2624,14 @@ impl Renderer {
             self.device
                 .draw_indexed_triangles_instanced_u16(6, data.len() as i32);
             self.profile_counters.draw_calls.inc();
+            stats.total_draw_calls += 1;
         } else {
             for i in 0 .. data.len() {
                 self.device
                     .update_vao_instances(vao, &data[i .. i + 1], VertexUsageHint::Stream);
                 self.device.draw_triangles_u16(0, 6);
                 self.profile_counters.draw_calls.inc();
+                stats.total_draw_calls += 1;
             }
         }
 
@@ -2623,6 +2646,7 @@ impl Renderer {
         render_tasks: &RenderTaskTree,
         render_target: Option<(&Texture, i32)>,
         framebuffer_size: DeviceUintSize,
+        stats: &mut RendererStats,
     ) {
         match key.kind {
             BatchKind::Composite { .. } => {
@@ -2841,7 +2865,12 @@ impl Renderer {
         }
 
         let _timer = self.gpu_profile.start_timer(key.kind.gpu_sampler_tag());
-        self.draw_instanced_batch(instances, VertexArrayKind::Primitive, &key.textures);
+        self.draw_instanced_batch(
+            instances,
+            VertexArrayKind::Primitive,
+            &key.textures,
+            stats
+        );
     }
 
     fn handle_scaling(
@@ -2878,7 +2907,10 @@ impl Renderer {
         render_tasks: &RenderTaskTree,
         projection: &Transform3D<f32>,
         frame_id: FrameId,
+        stats: &mut RendererStats,
     ) {
+        let _gm = self.gpu_profile.start_marker("color target");
+
         // sanity check for the depth buffer
         if let Some((texture, _)) = render_target {
             assert!(texture.has_depth() >= target.needs_depth());
@@ -2947,6 +2979,7 @@ impl Renderer {
                     &target.vertical_blurs,
                     VertexArrayKind::Blur,
                     &BatchTextures::no_texture(),
+                    stats,
                 );
             }
 
@@ -2955,6 +2988,7 @@ impl Renderer {
                     &target.horizontal_blurs,
                     VertexArrayKind::Blur,
                     &BatchTextures::no_texture(),
+                    stats,
                 );
             }
         }
@@ -2979,6 +3013,7 @@ impl Renderer {
                     instances,
                     VertexArrayKind::Primitive,
                     &BatchTextures::color(*texture_id),
+                    stats,
                 );
             }
         }
@@ -2995,6 +3030,7 @@ impl Renderer {
                 &target.line_cache_prims,
                 VertexArrayKind::Primitive,
                 &BatchTextures::no_texture(),
+                stats,
             );
         }
 
@@ -3030,6 +3066,7 @@ impl Renderer {
                         render_tasks,
                         render_target,
                         target_size,
+                        stats,
                     );
                 }
 
@@ -3083,7 +3120,8 @@ impl Renderer {
                                 self.draw_instanced_batch(
                                     &batch.instances,
                                     VertexArrayKind::Primitive,
-                                    &batch.key.textures
+                                    &batch.key.textures,
+                                    stats,
                                 );
                             }
                             BlendMode::SubpixelConstantTextColor(color) => {
@@ -3101,7 +3139,8 @@ impl Renderer {
                                 self.draw_instanced_batch(
                                     &batch.instances,
                                     VertexArrayKind::Primitive,
-                                    &batch.key.textures
+                                    &batch.key.textures,
+                                    stats,
                                 );
                             }
                             BlendMode::SubpixelVariableTextColor => {
@@ -3123,7 +3162,8 @@ impl Renderer {
                                 self.draw_instanced_batch(
                                     &batch.instances,
                                     VertexArrayKind::Primitive,
-                                    &batch.key.textures
+                                    &batch.key.textures,
+                                    stats,
                                 );
 
                                 self.device.set_blend_mode_subpixel_pass1();
@@ -3164,7 +3204,8 @@ impl Renderer {
                                 self.draw_instanced_batch(
                                     &batch.instances,
                                     VertexArrayKind::Primitive,
-                                    &batch.key.textures
+                                    &batch.key.textures,
+                                    stats,
                                 );
 
                                 self.device.set_blend_mode_subpixel_with_bg_color_pass1();
@@ -3237,6 +3278,7 @@ impl Renderer {
                             render_tasks,
                             render_target,
                             target_size,
+                            stats,
                         );
                     }
                 }
@@ -3287,7 +3329,9 @@ impl Renderer {
         target_size: DeviceUintSize,
         projection: &Transform3D<f32>,
         render_tasks: &RenderTaskTree,
+        stats: &mut RendererStats,
     ) {
+        let _gm = self.gpu_profile.start_marker("alpha target");
         let alpha_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_ALPHA);
 
         {
@@ -3332,6 +3376,7 @@ impl Renderer {
                     &target.vertical_blurs,
                     VertexArrayKind::Blur,
                     &BatchTextures::no_texture(),
+                    stats,
                 );
             }
 
@@ -3340,6 +3385,7 @@ impl Renderer {
                     &target.horizontal_blurs,
                     VertexArrayKind::Blur,
                     &BatchTextures::no_texture(),
+                    stats,
                 );
             }
         }
@@ -3356,6 +3402,7 @@ impl Renderer {
                 &target.brush_mask_corners,
                 VertexArrayKind::Primitive,
                 &BatchTextures::no_texture(),
+                stats,
             );
         }
 
@@ -3369,6 +3416,7 @@ impl Renderer {
                 &target.brush_mask_rounded_rects,
                 VertexArrayKind::Primitive,
                 &BatchTextures::no_texture(),
+                stats,
             );
         }
 
@@ -3380,7 +3428,7 @@ impl Renderer {
             // area in the clip mask. This allows drawing multiple invididual clip
             // in regions below.
             if !target.clip_batcher.border_clears.is_empty() {
-                let _gm = self.gpu_profile.start_marker("clip borders [clear]");
+                let _gm2 = self.gpu_profile.start_marker("clip borders [clear]");
                 self.device.set_blend(false);
                 self.cs_clip_border
                     .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
@@ -3388,12 +3436,13 @@ impl Renderer {
                     &target.clip_batcher.border_clears,
                     VertexArrayKind::Clip,
                     &BatchTextures::no_texture(),
+                    stats,
                 );
             }
 
             // Draw any dots or dashes for border corners.
             if !target.clip_batcher.borders.is_empty() {
-                let _gm = self.gpu_profile.start_marker("clip borders");
+                let _gm2 = self.gpu_profile.start_marker("clip borders");
                 // We are masking in parts of the corner (dots or dashes) here.
                 // Blend mode is set to max to allow drawing multiple dots.
                 // The individual dots and dashes in a border never overlap, so using
@@ -3406,6 +3455,7 @@ impl Renderer {
                     &target.clip_batcher.borders,
                     VertexArrayKind::Clip,
                     &BatchTextures::no_texture(),
+                    stats,
                 );
             }
 
@@ -3415,7 +3465,7 @@ impl Renderer {
 
             // draw rounded cornered rectangles
             if !target.clip_batcher.rectangles.is_empty() {
-                let _gm = self.gpu_profile.start_marker("clip rectangles");
+                let _gm2 = self.gpu_profile.start_marker("clip rectangles");
                 self.cs_clip_rectangle.bind(
                     &mut self.device,
                     projection,
@@ -3426,11 +3476,12 @@ impl Renderer {
                     &target.clip_batcher.rectangles,
                     VertexArrayKind::Clip,
                     &BatchTextures::no_texture(),
+                    stats,
                 );
             }
             // draw image masks
             for (mask_texture_id, items) in target.clip_batcher.images.iter() {
-                let _gm = self.gpu_profile.start_marker("clip images");
+                let _gm2 = self.gpu_profile.start_marker("clip images");
                 let textures = BatchTextures {
                     colors: [
                         mask_texture_id.clone(),
@@ -3440,7 +3491,12 @@ impl Renderer {
                 };
                 self.cs_clip_image
                     .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-                self.draw_instanced_batch(items, VertexArrayKind::Clip, &textures);
+                self.draw_instanced_batch(
+                    items,
+                    VertexArrayKind::Clip,
+                    &textures,
+                    stats,
+                );
             }
         }
 
@@ -3529,25 +3585,50 @@ impl Renderer {
     }
 
     fn prepare_target_list<T: RenderTarget>(
+        &mut self,
         list: &mut RenderTargetList<T>,
-        device: &mut Device,
-        target_pool: &mut Vec<Texture>,
-        format: ImageFormat,
+        perfect_only: bool,
     ) {
         debug_assert_ne!(list.max_size, DeviceUintSize::zero());
-        debug_assert!(list.texture.is_none());
         if list.targets.is_empty() {
             return;
         }
-        let mut texture = match target_pool.pop() {
-            Some(texture) => texture,
-            None => device.create_texture(TextureTarget::Array),
+        let mut texture = if perfect_only {
+            debug_assert!(list.texture.is_none());
+
+            let selector = TargetSelector {
+                size: list.max_size,
+                num_layers: list.targets.len() as _,
+                format: list.format,
+            };
+            let index = self.render_target_pool
+                .iter()
+                .position(|texture| {
+                    selector == TargetSelector {
+                        size: texture.get_dimensions(),
+                        num_layers: texture.get_render_target_layer_count(),
+                        format: texture.get_format(),
+                    }
+                });
+            match index {
+                Some(pos) => self.render_target_pool.swap_remove(pos),
+                None => return,
+            }
+        } else {
+            if list.texture.is_some() {
+                return
+            }
+            match self.render_target_pool.pop() {
+                Some(texture) => texture,
+                None => self.device.create_texture(TextureTarget::Array),
+            }
         };
-        device.init_texture(
+
+        self.device.init_texture(
             &mut texture,
             list.max_size.width,
             list.max_size.height,
-            format,
+            list.format,
             TextureFilter::Linear,
             Some(RenderTargetInfo {
                 has_depth: list.needs_depth(),
@@ -3558,15 +3639,27 @@ impl Renderer {
         list.texture = Some(texture);
     }
 
-    fn prepare_frame(&mut self, frame: &mut Frame) {
+    fn prepare_tile_frame(&mut self, frame: &mut Frame) {
+        // Init textures and render targets to match this scene.
+        // First pass grabs all the perfectly matching targets from the pool.
+        for pass in &mut frame.passes {
+            if let RenderPassKind::OffScreen { ref mut alpha, ref mut color } = pass.kind {
+                self.prepare_target_list(alpha, true);
+                self.prepare_target_list(color, true);
+            }
+        }
+    }
+
+    fn bind_frame_data(&mut self, frame: &mut Frame) {
         let _timer = self.gpu_profile.start_timer(GPU_TAG_SETUP_DATA);
         self.device.device_pixel_ratio = frame.device_pixel_ratio;
 
-        // Init textures and render targets to match this scene.
+        // Some of the textures are already assigned by `prepare_frame`.
+        // Now re-allocate the space for the rest of the target textures.
         for pass in &mut frame.passes {
             if let RenderPassKind::OffScreen { ref mut alpha, ref mut color } = pass.kind {
-                Self::prepare_target_list(alpha, &mut self.device, &mut self.alpha_render_targets, ImageFormat::A8);
-                Self::prepare_target_list(color, &mut self.device, &mut self.color_render_targets, ImageFormat::BGRA8);
+                self.prepare_target_list(alpha, false);
+                self.prepare_target_list(color, false);
             }
         }
 
@@ -3591,6 +3684,7 @@ impl Renderer {
         frame: &mut Frame,
         framebuffer_size: DeviceUintSize,
         frame_id: FrameId,
+        stats: &mut RendererStats,
     ) {
         let _gm = self.gpu_profile.start_marker("tile frame draw");
 
@@ -3602,12 +3696,11 @@ impl Renderer {
         self.device.disable_stencil();
         self.device.set_blend(false);
 
-        self.prepare_frame(frame);
-
-        let base_color_target_count = self.color_render_targets.len();
-        let base_alpha_target_count = self.alpha_render_targets.len();
+        self.bind_frame_data(frame);
 
         for (pass_index, pass) in frame.passes.iter_mut().enumerate() {
+            self.gpu_profile.place_marker(&format!("pass {}", pass_index));
+
             self.texture_resolver.bind(
                 &SourceTexture::CacheA8,
                 TextureSampler::CacheA8,
@@ -3621,6 +3714,8 @@ impl Renderer {
 
             let (cur_alpha, cur_color) = match pass.kind {
                 RenderPassKind::MainFramebuffer(ref target) => {
+                    stats.color_target_count += 1;
+
                     let clear_color = frame.background_color.map(|color| color.to_array());
                     let projection = Transform3D::ortho(
                         0.0,
@@ -3640,6 +3735,7 @@ impl Renderer {
                         &frame.render_tasks,
                         &projection,
                         frame_id,
+                        stats,
                     );
 
                     (None, None)
@@ -3649,6 +3745,8 @@ impl Renderer {
                     assert!(color.targets.is_empty() || color.texture.is_some());
 
                     for (target_index, target) in alpha.targets.iter().enumerate() {
+                        stats.alpha_target_count += 1;
+
                         let projection = Transform3D::ortho(
                             0.0,
                             alpha.max_size.width as f32,
@@ -3664,10 +3762,13 @@ impl Renderer {
                             alpha.max_size,
                             &projection,
                             &frame.render_tasks,
+                            stats,
                         );
                     }
 
                     for (target_index, target) in color.targets.iter().enumerate() {
+                        stats.color_target_count += 1;
+
                         let projection = Transform3D::ortho(
                             0.0,
                             color.max_size.width as f32,
@@ -3686,6 +3787,7 @@ impl Renderer {
                             &frame.render_tasks,
                             &projection,
                             frame_id,
+                            stats,
                         );
                     }
 
@@ -3696,8 +3798,7 @@ impl Renderer {
             self.texture_resolver.end_pass(
                 cur_alpha,
                 cur_color,
-                &mut self.alpha_render_targets,
-                &mut self.color_render_targets,
+                &mut self.render_target_pool,
             );
 
             // After completing the first pass, make the A8 target available as an
@@ -3712,8 +3813,6 @@ impl Renderer {
             }
         }
 
-        self.color_render_targets[base_color_target_count..].reverse();
-        self.alpha_render_targets[base_alpha_target_count..].reverse();
         self.draw_render_target_debug(framebuffer_size);
         self.draw_texture_cache_debug(framebuffer_size);
 
@@ -3779,9 +3878,8 @@ impl Renderer {
         let mut spacing = 16;
         let mut size = 512;
         let fb_width = framebuffer_size.width as i32;
-        let num_layers: i32 = self.color_render_targets
+        let num_layers: i32 = self.render_target_pool
             .iter()
-            .chain(self.alpha_render_targets.iter())
             .map(|texture| texture.get_render_target_layer_count() as i32)
             .sum();
 
@@ -3792,10 +3890,7 @@ impl Renderer {
         }
 
         let mut target_index = 0;
-        for texture in self.color_render_targets
-            .iter()
-            .chain(self.alpha_render_targets.iter())
-        {
+        for texture in &self.render_target_pool {
             let dimensions = texture.get_dimensions();
             let src_rect = DeviceIntRect::new(DeviceIntPoint::zero(), dimensions.to_i32());
 
@@ -3906,10 +4001,7 @@ impl Renderer {
         }
         self.node_data_texture.deinit(&mut self.device);
         self.render_task_texture.deinit(&mut self.device);
-        for texture in self.alpha_render_targets {
-            self.device.delete_texture(texture);
-        }
-        for texture in self.color_render_targets {
+        for texture in self.render_target_pool {
             self.device.delete_texture(texture);
         }
         self.device.delete_pbo(self.texture_cache_upload_pbo);
@@ -4076,4 +4168,24 @@ impl DebugServer {
     }
 
     pub fn send(&mut self, _: String) {}
+}
+
+// Some basic statistics about the rendered scene
+// that we can use in wrench reftests to ensure that
+// tests are batching and/or allocating on render
+// targets as we expect them to.
+pub struct RendererStats {
+    pub total_draw_calls: usize,
+    pub alpha_target_count: usize,
+    pub color_target_count: usize,
+}
+
+impl RendererStats {
+    pub fn empty() -> RendererStats {
+        RendererStats {
+            total_draw_calls: 0,
+            alpha_target_count: 0,
+            color_target_count: 0,
+        }
+    }
 }

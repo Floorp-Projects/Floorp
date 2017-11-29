@@ -87,6 +87,8 @@ interface nsIContentPermissionRequest : nsISupports {
   readonly attribute mozIDOMWindow window;
   readonly attribute nsIDOMElement element;
 
+  readonly attribute boolean isHandlingUserInput;
+
   /**
    *  The requester to get the required information of
    *  the window.

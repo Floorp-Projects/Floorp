@@ -54,7 +54,6 @@ FAILURE_STR = "Failed"
 # it's a list of values that are already known before starting a build
 configuration_tokens = ('branch',
                         'platform',
-                        'update_platform',
                         'update_channel',
                         'ssh_key_dir',
                         'stage_product',

@@ -4,7 +4,6 @@ import sys
 config = {
     "platform": "win32",
     "stage_product": "firefox",
-    "update_platform": "WINNT_x86-msvc",
     "mozconfig": "%(branch)s/browser/config/mozconfigs/win32/l10n-mozconfig-devedition",
     "bootstrap_env": {
         "MOZ_OBJDIR": "obj-firefox",
@@ -24,7 +23,6 @@ config = {
     "ssh_key_dir": "~/.ssh",
     "log_name": "single_locale",
     "objdir": "obj-firefox",
-    "js_src_dir": "js/src",
     "vcs_share_base": "c:/builds/hg-shared",
 
     # tooltool
@@ -43,27 +41,12 @@ config = {
     "hg_l10n_tag": "default",
 
     # MAR
-    "previous_mar_dir": "dist\\previous",
-    "current_mar_dir": "dist\\current",
     "update_mar_dir": "dist\\update",  # sure?
-    "previous_mar_filename": "previous.mar",
-    "current_work_mar_dir": "current.work",
-    "package_base_dir": "dist\\l10n-stage",
     "application_ini": "application.ini",
-    "buildid_section": 'App',
-    "buildid_option": "BuildID",
-    "unpack_script": "tools\\update-packaging\\unwrap_full_update.pl",
-    "incremental_update_script": "tools\\update-packaging\\make_incremental_update.sh",
-    "balrog_release_pusher_script": "scripts\\updates\\balrog-release-pusher.py",
-    "update_packaging_dir": "tools\\update-packaging",
     "local_mar_tool_dir": "dist\\host\\bin",
     "mar": "mar.exe",
     "mbsdiff": "mbsdiff.exe",
-    "current_mar_filename": "firefox-%(version)s.%(locale)s.win32.complete.mar",
-    "complete_mar": "firefox-%(version)s.en-US.win32.complete.mar",
     "localized_mar": "firefox-%(version)s.%(locale)s.win32.complete.mar",
-    "partial_mar": "firefox-%(version)s.%(locale)s.win32.partial.%(from_buildid)s-%(to_buildid)s.mar",
-    'installer_file': "firefox-%(version)s.en-US.win32.installer.exe",
 
     # use mozmake?
     "enable_mozmake": True,
