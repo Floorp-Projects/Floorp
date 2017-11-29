@@ -477,9 +477,6 @@ struct nsGridContainerFrame::LineRange
                  mEnd > mStart, "invalid line range");
       mEnd -= aNumRemovedTracks[mEnd];
     }
-    if (mStart == mEnd) {
-      mEnd = nsGridContainerFrame::kAutoLine;
-    }
   }
   /**
    * Return the contribution of this line range for step 2 in
@@ -4839,10 +4836,15 @@ nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
                             : GridLineSide::eBeforeGridGap;
       nscoord endPos = aTracks.GridLineEdge(mEnd, side);
       *aLength = std::max(aGridOrigin + endPos, 0);
-    } else {
+    } else if (MOZ_LIKELY(mStart != mEnd)) {
       nscoord pos;
       ToPositionAndLength(aTracks.mSizes, &pos, aLength);
       *aPos = aGridOrigin + pos;
+    } else {
+      // The grid area only covers removed 'auto-fit' tracks.
+      nscoord pos = aTracks.GridLineEdge(mStart, GridLineSide::eBeforeGridGap);
+      *aPos = aGridOrigin + pos;
+      *aLength = nscoord(0);
     }
   }
 }

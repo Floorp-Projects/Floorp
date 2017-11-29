@@ -578,7 +578,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_toasyncgen();
     AbortReasonOr<Ok> jsop_toasynciter();
     AbortReasonOr<Ok> jsop_toid();
-    AbortReasonOr<Ok> jsop_iter(uint8_t flags);
+    AbortReasonOr<Ok> jsop_iter();
     AbortReasonOr<Ok> jsop_itermore();
     AbortReasonOr<Ok> jsop_isnoiter();
     AbortReasonOr<Ok> jsop_iterend();

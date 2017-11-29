@@ -4087,7 +4087,6 @@ static bool
 DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame, ICGetIterator_Fallback* stub,
                       HandleValue value, MutableHandleValue res)
 {
-    jsbytecode* pc = stub->icEntry()->pc(frame->script());
     FallbackICSpew(cx, stub, "GetIterator");
 
     if (stub->state().maybeTransition())
@@ -4111,8 +4110,7 @@ DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame, ICGetIterator_Fallbac
             stub->state().trackNotAttached();
     }
 
-    uint8_t flags = GET_UINT8(pc);
-    JSObject* iterobj = ValueToIterator(cx, flags, value);
+    JSObject* iterobj = ValueToIterator(cx, value);
     if (!iterobj)
         return false;
 

@@ -560,6 +560,9 @@ class _ConvertToCxxType(TypeVisitor):
     def visitShmemType(self, s):
         return Type(self.typename(s))
 
+    def visitByteBufType(self, s):
+        return Type(self.typename(s))
+
     def visitFDType(self, s):
         return Type(self.typename(s))
 
@@ -586,6 +589,9 @@ def _cxxConstRefType(ipdltype, side):
     if ipdltype.isIPDL() and ipdltype.isShmem():
         t.ref = 1
         return t
+    if ipdltype.isIPDL() and ipdltype.isByteBuf():
+        t.ref = 1
+        return t
     t.const = 1
     t.ref = 1
     return t
@@ -593,6 +599,7 @@ def _cxxConstRefType(ipdltype, side):
 def _cxxTypeNeedsMove(ipdltype):
     return ipdltype.isIPDL() and (ipdltype.isArray() or
                                   ipdltype.isShmem() or
+                                  ipdltype.isByteBuf() or
                                   ipdltype.isEndpoint())
 
 def _cxxMoveRefType(ipdltype, side):
@@ -768,6 +775,8 @@ class _StructField(_CompoundTypeComponent):
         refexpr = self.refExpr(thisexpr)
         if 'Shmem' == self.ipdltype.name():
             refexpr = ExprCast(refexpr, Type('Shmem', ref=1), const=1)
+        if 'ByteBuf' == self.ipdltype.name():
+            refexpr = ExprCast(refexpr, Type('ByteBuf', ref=1), const=1)
         if 'FileDescriptor' == self.ipdltype.name():
             refexpr = ExprCast(refexpr, Type('FileDescriptor', ref=1), const=1)
         return refexpr
@@ -931,6 +940,8 @@ IPDL union type."""
     def getConstValue(self):
         v = ExprDeref(self.callGetConstPtr())
         # sigh
+        if 'ByteBuf' == self.ipdltype.name():
+            v = ExprCast(v, Type('ByteBuf', ref=1), const=1)
         if 'Shmem' == self.ipdltype.name():
             v = ExprCast(v, Type('Shmem', ref=1), const=1)
         if 'FileDescriptor' == self.ipdltype.name():
@@ -1869,6 +1880,11 @@ stmt.  Some types generate both kinds.'''
         if s in self.visited: return
         self.visited.add(s)
         self.maybeTypedef('mozilla::ipc::Shmem', 'Shmem')
+
+    def visitByteBufType(self, s):
+        if s in self.visited: return
+        self.visited.add(s)
+        self.maybeTypedef('mozilla::ipc::ByteBuf', 'ByteBuf')
 
     def visitFDType(self, s):
         if s in self.visited: return
@@ -3384,6 +3400,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         class findSpecialTypes(TypeVisitor):
             def visitActorType(self, a): specialtypes.add(a)
             def visitShmemType(self, s): specialtypes.add(s)
+            def visitByteBufType(self, s): specialtypes.add(s)
             def visitFDType(self, s): specialtypes.add(s)
             def visitStructType(self, s):
                 specialtypes.add(s)
@@ -3408,12 +3425,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ret.ipdltype.accept(findSpecialTypes())
 
         for t in specialtypes:
-            if t.isActor():    self.implementActorPickling(t)
-            elif t.isArray():  self.implementSpecialArrayPickling(t)
-            elif t.isShmem():  self.implementShmemPickling(t)
-            elif t.isFD():     self.implementFDPickling(t)
-            elif t.isStruct(): self.implementStructPickling(t)
-            elif t.isUnion():  self.implementUnionPickling(t)
+            if t.isActor():     self.implementActorPickling(t)
+            elif t.isArray():   self.implementSpecialArrayPickling(t)
+            elif t.isShmem():   self.implementShmemPickling(t)
+            elif t.isByteBuf(): self.implementByteBufPickling(t)
+            elif t.isFD():      self.implementFDPickling(t)
+            elif t.isStruct():  self.implementStructPickling(t)
+            elif t.isUnion():   self.implementUnionPickling(t)
             else:
                 assert 0 and 'unknown special type'
 
@@ -3433,6 +3451,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          args=[ msgvar, itervar, var ])))
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
+
+    def implementByteBufPickling(self, bytebuftype):
+        var = self.var
+        msgvar = self.msgvar
+        itervar = self.itervar
+        intype = _cxxRefType(bytebuftype, self.side)
+
+        write = MethodDefn(self.writeMethodDecl(intype, var))
+        write.addstmt(StmtExpr(ExprCall(ExprVar('IPC::WriteParam'),
+                                        args=[ msgvar, var ])))
+
+        self.cls.addstmts([ write, Whitespace.NL ])
+        # the rest of generic pickling will work fine for us
 
     def implementActorPickling(self, actortype):
         # Note that we pickle based on *protocol* type and *not* actor

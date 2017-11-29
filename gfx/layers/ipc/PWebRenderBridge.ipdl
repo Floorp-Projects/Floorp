@@ -50,7 +50,7 @@ parent:
   sync Create(IntSize aSize);
   async DeleteCompositorAnimations(uint64_t[] aIds);
   async SetDisplayList(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-                       LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
+                       LayoutSize aContentSize, ByteBuf aDL, BuiltDisplayListDescriptor aDLDesc,
                        WebRenderScrollData aScrollData,
                        OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
                        IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);

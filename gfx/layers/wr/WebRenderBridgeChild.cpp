@@ -144,7 +144,9 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
 
-  ByteBuffer dlData(Move(aDL.dl));
+  ByteBuf dlData(aDL.dl.inner.data, aDL.dl.inner.length, aDL.dl.inner.capacity);
+  aDL.dl.inner.capacity = 0;
+  aDL.dl.inner.data = nullptr;
 
   TimeStamp fwdTime;
 #if defined(ENABLE_FRAME_LATENCY_LOG)

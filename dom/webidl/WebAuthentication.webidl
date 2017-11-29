@@ -75,12 +75,18 @@ dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
 dictionary AuthenticatorSelectionCriteria {
     AuthenticatorAttachment      authenticatorAttachment;
     boolean                      requireResidentKey = false;
-    boolean                      requireUserVerification = false;
+    UserVerificationRequirement  userVerification = "preferred";
 };
 
 enum AuthenticatorAttachment {
     "platform",       // Platform attachment
     "cross-platform"  // Cross-platform attachment
+};
+
+enum UserVerificationRequirement {
+    "required",
+    "preferred",
+    "discouraged"
 };
 
 dictionary PublicKeyCredentialRequestOptions {
