@@ -2414,6 +2414,8 @@ PeerConnectionImpl::CreateReceiveTrack(SdpMediaSection::MediaType type)
   }
 
   stream->AddTrackInternal(track);
+  // Spec says remote tracks start out muted.
+  track->MutedChanged(true);
 
   return OwningNonNull<dom::MediaStreamTrack>(*track);
 }
