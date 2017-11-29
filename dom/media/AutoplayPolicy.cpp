@@ -38,9 +38,8 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
 
   // TODO : this old way would be removed when user-gestures-needed becomes
   // as a default option to block autoplay.
-  // If user triggers load() or seek() before play(), we would also allow the
-  // following play().
-  return aElement->GetAndClearHasUserInteractedLoadOrSeek() ||
+  // If elelement is blessed, it would always be allowed to play().
+  return aElement->IsBlessed() ||
          EventStateManager::IsHandlingUserInput();
 }
 
