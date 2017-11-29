@@ -688,7 +688,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "42a17c31b288"
+        "revision": "827143849c87"
     }, 
     "uk": {
         "platforms": [
@@ -719,7 +719,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "cd9f8719e37b"
+        "revision": "61f2f263b003"
     }, 
     "wo": {
         "platforms": [
