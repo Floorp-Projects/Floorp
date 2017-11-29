@@ -64,7 +64,7 @@ public:
   // Resume any downloads that have been suspended.
   virtual void Resume() = 0;
 
-  // The mode is initially MODE_PLAYBACK.
+  // The mode is initially MODE_METADATA.
   virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
 
   // Returns true if the resource can be seeked to unbuffered ranges, i.e.

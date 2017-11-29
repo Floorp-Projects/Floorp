@@ -213,12 +213,20 @@ body {
   opacity: 100;
 }
 
-.deck .syncIllustration {
+.deck .syncIllustration,
+.deck .syncIllustrationIssue {
   height: 150px;
   margin-top: 20px;
-  background-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.deck .syncIllustration {
+  background-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
+}
+
+.deck .syncIllustrationIssue {
+  background-image: url(chrome://browser/skin/fxa/sync-illustration-issue.svg);
 }
 
 .deck .instructions {

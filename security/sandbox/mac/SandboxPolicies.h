@@ -56,7 +56,6 @@ static const char contentSandboxRules[] = R"(
   (define hasProfileDir (param "HAS_SANDBOXED_PROFILE"))
   (define profileDir (param "PROFILE_DIR"))
   (define home-path (param "HOME_PATH"))
-  (define hasFilePrivileges (param "HAS_FILE_PRIVILEGES"))
   (define debugWriteDir (param "DEBUG_WRITE_DIR"))
   (define testingReadPath1 (param "TESTING_READ_PATH1"))
   (define testingReadPath2 (param "TESTING_READ_PATH2"))
@@ -192,12 +191,6 @@ static const char contentSandboxRules[] = R"(
   (if (= macosMinorVersion 9)
      (allow mach-lookup (global-name "com.apple.xpcd")))
 
-  ; File content processes need access to iconservices to draw file icons in
-  ; directory listings
-  (if (string=? hasFilePrivileges "TRUE")
-    (allow mach-lookup
-      (global-name "com.apple.iconservices")))
-
   (allow iokit-open
      (iokit-user-client-class "IOHIDParamUserClient")
      (iokit-user-client-class "IOAudioEngineUserClient"))
@@ -299,9 +292,6 @@ static const char contentSandboxRules[] = R"(
   ; level 3: Does not have any of it's own rules. The global rules provide:
   ;          no global read/write access,
   ;          read access permitted to $PROFILE/{extensions,chrome}
-  (if (string=? hasFilePrivileges "TRUE")
-    ; This process has blanket file read privileges
-    (allow file-read*))
 
   (if (string=? hasProfileDir "TRUE")
     ; we have a profile dir
@@ -353,6 +343,16 @@ static const char contentSandboxRules[] = R"(
   ; Read access (recursively) within directories ending in .fontvault
   (allow file-read* (regex #"\.fontvault/"))
 )";
+
+static const char fileContentProcessAddend[] = R"(
+  ; This process has blanket file read privileges
+  (allow file-read*)
+
+  ; File content processes need access to iconservices to draw file icons in
+  ; directory listings
+  (allow mach-lookup (global-name "com.apple.iconservices"))
+)";
+
 
 }
 

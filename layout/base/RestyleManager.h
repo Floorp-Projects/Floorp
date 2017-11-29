@@ -38,12 +38,12 @@ public:
 
   // Get an integer that increments every time we process pending restyles.
   // The value is never 0.
-  uint32_t GetRestyleGeneration() const { return mRestyleGeneration; }
+  uint64_t GetRestyleGeneration() const { return mRestyleGeneration; }
   // Unlike GetRestyleGeneration, which means the actual restyling count,
   // GetUndisplayedRestyleGeneration represents any possible DOM changes that
   // can cause restyling. This is needed for getComputedStyle to work with
   // non-styled (e.g. display: none) elements.
-  uint32_t GetUndisplayedRestyleGeneration() const {
+  uint64_t GetUndisplayedRestyleGeneration() const {
     return mUndisplayedRestyleGeneration;
   }
 
@@ -263,8 +263,8 @@ protected:
 
 private:
   nsPresContext* mPresContext; // weak, can be null after Disconnect().
-  uint32_t mRestyleGeneration;
-  uint32_t mUndisplayedRestyleGeneration;
+  uint64_t mRestyleGeneration;
+  uint64_t mUndisplayedRestyleGeneration;
   uint32_t mHoverGeneration;
 
   // Used to keep track of frames that have been destroyed during

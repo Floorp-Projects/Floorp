@@ -76,6 +76,7 @@
 // Implementing a replace-malloc library is incompatible with using mozalloc.
 #define MOZ_NO_MOZALLOC 1
 
+#include "mozilla/MacroArgs.h"
 #include "mozilla/Types.h"
 
 MOZ_BEGIN_EXTERN_C
@@ -86,14 +87,19 @@ MOZ_BEGIN_EXTERN_C
 #define MOZ_REPLACE_WEAK
 #endif
 
-// Replace-malloc library initialization function. See top of this file
-MOZ_EXPORT void
-replace_init(malloc_table_t*, struct ReplaceMallocBridge**) MOZ_REPLACE_WEAK;
+// When building a replace-malloc library for static linking, we want
+// each to have a different name for their "public" functions.
+// The build system defines MOZ_REPLACE_MALLOC_PREFIX in that case.
+#ifdef MOZ_REPLACE_MALLOC_PREFIX
+#define replace_init MOZ_CONCAT(MOZ_REPLACE_MALLOC_PREFIX, _init)
+#define MOZ_REPLACE_PUBLIC
+#else
+#define MOZ_REPLACE_PUBLIC MOZ_EXPORT
+#endif
 
-// Define the replace_* functions as not exported.
-#define MALLOC_DECL(name, return_type, ...)                                    \
-  return_type replace_##name(__VA_ARGS__);
-#include "malloc_decls.h"
+// Replace-malloc library initialization function. See top of this file
+MOZ_REPLACE_PUBLIC void
+replace_init(malloc_table_t*, struct ReplaceMallocBridge**) MOZ_REPLACE_WEAK;
 
 MOZ_END_EXTERN_C
 

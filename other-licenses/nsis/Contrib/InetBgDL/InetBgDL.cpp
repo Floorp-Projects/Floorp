@@ -491,6 +491,11 @@ die:
     {
       ec = GetLastError();
       TRACE(_T("InetBgDl: InternetReadFile failed, gle=%u\n"), ec);
+      if (ERROR_INTERNET_CONNECTION_ABORTED == ec ||
+          ERROR_INTERNET_CONNECTION_RESET == ec)
+      {
+        ec = ERROR_BROKEN_PIPE;
+      }
       break;
     }
 

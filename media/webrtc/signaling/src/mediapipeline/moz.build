@@ -6,7 +6,9 @@
 include('/media/webrtc/webrtc.mozbuild')
 
 LOCAL_INCLUDES += [
+    '!/ipc/ipdl/_ipdlheaders',
     '/dom/media',
+    '/ipc/chromium/src',
     '/media/libyuv/libyuv/include',
     '/media/mtransport',
     '/media/webrtc',

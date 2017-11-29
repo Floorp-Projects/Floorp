@@ -11,7 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import requests
 from redo import retry
-from mozpack.path import match as mozpackmatch
+from mozpack.path import match as mozpackmatch, join as join_path
 
 logger = logging.getLogger(__name__)
 _cache = {}
@@ -56,6 +56,19 @@ def check(params, file_patterns):
         return True
 
     changed_files = get_changed_files(repository, revision)
+
+    if 'comm_repository' in params:
+        repository = params.get('comm_head_repository')
+        revision = params.get('comm_head_rev')
+        if not revision:
+            logger.warning("Missing `comm_head_rev` parameters; "
+                           "assuming all files have changed")
+            return True
+
+        changed_files |= {
+            join_path("comm", file) for file in
+            get_changed_files(repository, revision)
+        }
 
     for pattern in file_patterns:
         for path in changed_files:
