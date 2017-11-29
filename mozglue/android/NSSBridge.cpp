@@ -37,6 +37,10 @@ NSS_WRAPPER_INT(PL_Base64Encode)
 NSS_WRAPPER_INT(PL_Base64Decode)
 NSS_WRAPPER_INT(PL_strfree)
 
+SECStatus doCrypto(JNIEnv* jenv, const char *path, const char *value, char** result, bool doEncrypt);
+SECStatus encode(const uint8_t* data, uint32_t srclen, char** result);
+SECStatus decode(const char* data, uint8_t** result, uint32_t* length);
+
 int
 setup_nss_functions(void *nss_handle,
                         void *nspr_handle,
@@ -189,41 +193,40 @@ doCrypto(JNIEnv* jenv, const char *path, const char *value, char** result, bool 
       keyid.len = 0;
       rv = f_PK11SDR_Encrypt(&keyid, &request, &reply, nullptr);
 
-      if (rv != SECSuccess) {
+      if (rv == SECSuccess) {
+        rv = encode(reply.data, reply.len, result);
+        if (rv == SECSuccess) {
+          LOG("Encrypted: %s\n", *result);
+        } else {
+          throwError(jenv, "encode");
+        }
+      } else {
         throwError(jenv, "PK11SDR_Encrypt");
-        goto done;
       }
 
-      rv = encode(reply.data, reply.len, result);
-      if (rv != SECSuccess) {
-          throwError(jenv, "encode");
-          goto done;
-      }
-      LOG("Encrypted: %s\n", *result);
     } else {
       LOG("Decoding: %s\n", value);
-      rv = decode(value, &request.data, (int32_t*)&request.len);
+      rv = decode(value, &request.data, &request.len);
       if (rv != SECSuccess) {
           throwError(jenv, "decode");
           return rv;
       }
 
       rv = f_PK11SDR_Decrypt(&request, &reply, nullptr);
-      if (rv != SECSuccess) {
+
+      if (rv == SECSuccess) {
+        *result = static_cast<char*>(malloc(reply.len + 1));
+        strncpy(*result, reinterpret_cast<char*>(reply.data), reply.len);
+        (*result)[reply.len] = '\0';
+
+        // This can print sensitive data. Uncomment if you need it.
+        // LOG("Decoded %i letters: %s\n", reply.len, *result);
+      } else {
         throwError(jenv, "PK11SDR_Decrypt");
-        goto done;
       }
-
-      *result = (char *)malloc(reply.len+1);
-      strncpy(*result, (char *)reply.data, reply.len);
-      (*result)[reply.len] = '\0';
-
-      // This can print sensitive data. Uncomment if you need it.
-      // LOG("Decoded %i letters: %s\n", reply.len, *result);
       free(request.data);
     }
 
-done:
     f_SECITEM_ZfreeItem(&reply, false);
     return rv;
 }
@@ -232,64 +235,51 @@ done:
  * Base64 encodes the data passed in. The caller must deallocate _retval using free();
  */
 SECStatus
-encode(const unsigned char *data, int32_t dataLen, char **_retval)
+encode(const uint8_t* data, uint32_t srclen, char** result)
 {
-  SECStatus rv = SECSuccess;
-  char *encoded = f_PL_Base64Encode((const char *)data, dataLen, nullptr);
-  if (!encoded)
-    rv = SECFailure;
-  if (!*encoded)
-    rv = SECFailure;
-
-  if (rv == SECSuccess) {
-    *_retval = (char *)malloc(strlen(encoded)+1);
-    strcpy(*_retval, encoded);
+  if (srclen > (PR_UINT32_MAX / 4) * 3) {
+    return SECFailure;
   }
 
-  if (encoded) {
-    f_PR_Free(encoded);
+  const uint32_t dstlen = ((srclen + 2) / 3) * 4;
+  char* const buffer = static_cast<char*>(malloc(dstlen + 1));
+
+  if (!buffer || !f_PL_Base64Encode(reinterpret_cast<const char*>(data), srclen, buffer)) {
+    free(buffer);
+    *result = nullptr;
+    return SECFailure;
   }
 
-  return rv;
+  buffer[dstlen] = '\0';
+  *result = buffer;
+  return SECSuccess;
 }
 
 /*
  * Base64 decodes the data passed in. The caller must deallocate result using free();
  */
 SECStatus
-decode(const char *data, unsigned char **result, int32_t *length)
+decode(const char* data, uint8_t** result, uint32_t* length)
 {
-  SECStatus rv = SECSuccess;
-  uint32_t len = strlen(data);
-  int adjust = 0;
-
-  /* Compute length adjustment */
-  if (len > 0 && data[len-1] == '=') {
-    adjust++;
-    if (data[len-2] == '=') adjust++;
+  uint32_t srclen = strlen(data);
+  while (srclen && data[srclen - 1] == '=') {
+    srclen--;
   }
 
-  char *decoded;
-  decoded = f_PL_Base64Decode(data, len, nullptr);
-  if (!decoded) {
+  // Avoid overflow when calculating result length.
+  const uint32_t dstlen = (srclen / 4) * 3 + ((srclen % 4) * 3) / 4;
+  // At most 2 extra bytes due to padding in input.
+  uint8_t* const buffer = static_cast<uint8_t*>(malloc(dstlen + 2));
+
+  if (!buffer || !f_PL_Base64Decode(data, srclen, reinterpret_cast<char*>(buffer))) {
+    free(buffer);
+    *result = nullptr;
+    *length = 0;
     return SECFailure;
   }
-  if (!*decoded) {
-    return SECFailure;
-  }
 
-  *length = (len*3)/4 - adjust;
-  LOG("Decoded %i chars into %i chars\n", len, *length);
-
-  *result = (unsigned char*)malloc((size_t)len);
-
-  if (!*result) {
-    rv = SECFailure;
-  } else {
-    memcpy((char*)*result, decoded, len);
-  }
-  f_PR_Free(decoded);
-  return rv;
+  buffer[dstlen] = '\0';
+  *result = buffer;
+  *length = dstlen;
+  return SECSuccess;
 }
-
-
