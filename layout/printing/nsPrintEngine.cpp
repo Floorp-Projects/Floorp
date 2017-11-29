@@ -64,6 +64,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 // FrameSet
 #include "nsIDocument.h"
+#include "nsIDocumentInlines.h"
 
 // Focus
 #include "nsISelectionController.h"
@@ -84,6 +85,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
+#include "Text.h"
 
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContextSpec.h"
@@ -150,6 +152,11 @@ static const char * gFrameTypesStr[]       = {"eDoc", "eFrame", "eIFrame", "eFra
 static const char * gPrintFrameTypeStr[]   = {"kNoFrames", "kFramesAsIs", "kSelectedFrame", "kEachFrameSep"};
 static const char * gFrameHowToEnableStr[] = {"kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
 static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection", "kRangeFocusFrame"};
+
+// This processes the selection on aOrigDoc and creates an inverted selection on
+// aDoc, which it then deletes. If the start or end of the inverted selection
+// ranges occur in text nodes then an ellipsis is added.
+static nsresult DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc);
 
 #ifdef EXTENDED_DEBUG_PRINTING
 // Forward Declarations
@@ -2274,6 +2281,14 @@ nsPrintEngine::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
     return NS_ERROR_FAILURE;
   }
 
+  // If we're printing selection then remove the unselected nodes from our
+  // cloned document.
+  int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
+  printData->mPrintSettings->GetPrintRange(&printRangeType);
+  if (printRangeType == nsIPrintSettings::kRangeSelection) {
+    DeleteUnselectedNodes(aPO->mDocument->GetOriginalDocument(), aPO->mDocument);
+  }
+
   styleSet->EndUpdate();
 
   // The pres shell now owns the style set object.
@@ -2425,78 +2440,40 @@ nsPrintEngine::PrintDocContent(const UniquePtr<nsPrintObject>& aPO,
   return false;
 }
 
-static already_AddRefed<nsIDOMNode>
-GetEqualNodeInCloneTree(nsIDOMNode* aNode, nsIDocument* aDoc)
+static nsINode*
+GetCorrespondingNodeInDocument(const nsINode* aNode, nsIDocument* aDoc)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aDoc);
+
   // Selections in anonymous subtrees aren't supported.
-  if (content && content->IsInAnonymousSubtree()) {
+  if (aNode->IsInAnonymousSubtree()) {
     return nullptr;
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, nullptr);
-
   nsTArray<int32_t> indexArray;
-  nsINode* current = node;
-  NS_ENSURE_TRUE(current, nullptr);
-  while (current) {
-    nsINode* parent = current->GetParentNode();
-    if (!parent) {
-     break;
-    }
-    int32_t index = parent->IndexOf(current);
-    NS_ENSURE_TRUE(index >= 0, nullptr);
+  const nsINode* child = aNode;
+  while (const nsINode* parent = child->GetParentNode()) {
+    int32_t index = parent->IndexOf(child);
+    MOZ_ASSERT(index >= 0);
     indexArray.AppendElement(index);
-    current = parent;
+    child = parent;
   }
-  NS_ENSURE_TRUE(current->IsNodeOfType(nsINode::eDOCUMENT), nullptr);
+  MOZ_ASSERT(child->IsNodeOfType(nsINode::eDOCUMENT));
 
-  current = aDoc;
+  nsINode* correspondingNode = aDoc;
   for (int32_t i = indexArray.Length() - 1; i >= 0; --i) {
-    current = current->GetChildAt(indexArray[i]);
-    NS_ENSURE_TRUE(current, nullptr);
+    correspondingNode = correspondingNode->GetChildAt(indexArray[i]);
+    NS_ENSURE_TRUE(correspondingNode, nullptr);
   }
-  nsCOMPtr<nsIDOMNode> result = do_QueryInterface(current);
-  return result.forget();
+
+  return correspondingNode;
 }
 
-static void
-CloneRangeToSelection(nsRange* aRange, nsIDocument* aDoc,
-                      Selection* aSelection)
-{
-  if (aRange->Collapsed()) {
-    return;
-  }
+static NS_NAMED_LITERAL_STRING(kEllipsis, u"\x2026");
 
-  nsCOMPtr<nsIDOMNode> startContainer, endContainer;
-  aRange->GetStartContainer(getter_AddRefs(startContainer));
-  int32_t startOffset = aRange->StartOffset();
-  aRange->GetEndContainer(getter_AddRefs(endContainer));
-  int32_t endOffset = aRange->EndOffset();
-  NS_ENSURE_TRUE_VOID(startContainer && endContainer);
-
-  nsCOMPtr<nsIDOMNode> newStart = GetEqualNodeInCloneTree(startContainer, aDoc);
-  nsCOMPtr<nsIDOMNode> newEnd = GetEqualNodeInCloneTree(endContainer, aDoc);
-  NS_ENSURE_TRUE_VOID(newStart && newEnd);
-
-  nsCOMPtr<nsINode> newStartNode = do_QueryInterface(newStart);
-  nsCOMPtr<nsINode> newEndNode = do_QueryInterface(newEnd);
-  if (NS_WARN_IF(!newStartNode) || NS_WARN_IF(!newEndNode)) {
-    return;
-  }
-
-  RefPtr<nsRange> range = new nsRange(newStartNode);
-  nsresult rv =
-    range->SetStartAndEnd(newStartNode, startOffset, newEndNode, endOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  aSelection->AddRange(range);
-}
-
-static nsresult CloneSelection(nsIDocument* aOrigDoc, nsIDocument* aDoc)
+static nsresult
+DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc)
 {
   nsIPresShell* origShell = aOrigDoc->GetShell();
   nsIPresShell* shell = aDoc->GetShell();
@@ -2508,10 +2485,72 @@ static nsresult CloneSelection(nsIDocument* aOrigDoc, nsIDocument* aDoc)
     shell->GetCurrentSelection(SelectionType::eNormal);
   NS_ENSURE_STATE(origSelection && selection);
 
+  nsINode* bodyNode = aDoc->GetBodyElement();
+  nsINode* startNode = bodyNode;
+  uint32_t startOffset = 0;
+  uint32_t ellipsisOffset = 0;
+
   int32_t rangeCount = origSelection->RangeCount();
   for (int32_t i = 0; i < rangeCount; ++i) {
-      CloneRangeToSelection(origSelection->GetRangeAt(i), aDoc, selection);
+    nsRange* origRange = origSelection->GetRangeAt(i);
+
+    // New end is start of original range.
+    nsINode* endNode =
+      GetCorrespondingNodeInDocument(origRange->GetStartContainer(), aDoc);
+
+    // If we're no longer in the same text node reset the ellipsis offset.
+    if (endNode != startNode) {
+      ellipsisOffset = 0;
+    }
+    uint32_t endOffset = origRange->StartOffset() + ellipsisOffset;
+
+    // Create the range that we want to remove. Note that if startNode or
+    // endNode are null CreateRange will fail and we won't remove that section.
+    RefPtr<nsRange> range;
+    nsresult rv = nsRange::CreateRange(startNode, startOffset, endNode,
+                                       endOffset, getter_AddRefs(range));
+
+    if (NS_SUCCEEDED(rv) && !range->Collapsed()) {
+      selection->AddRange(range);
+
+      // Unless we've already added an ellipsis at the start, if we ended mid
+      // text node then add ellipsis.
+      Text* text = endNode->GetAsText();
+      if (!ellipsisOffset && text && endOffset && endOffset < text->Length()) {
+        text->InsertData(endOffset, kEllipsis);
+        ellipsisOffset += kEllipsis.Length();
+      }
+    }
+
+    // Next new start is end of original range.
+    startNode =
+      GetCorrespondingNodeInDocument(origRange->GetEndContainer(), aDoc);
+
+    // If we're no longer in the same text node reset the ellipsis offset.
+    if (startNode != endNode) {
+      ellipsisOffset = 0;
+    }
+    startOffset = origRange->EndOffset() + ellipsisOffset;
+
+    // If the next node will start mid text node then add ellipsis.
+    Text* text = startNode ? startNode->GetAsText() : nullptr;
+    if (text && startOffset && startOffset < text->Length()) {
+      text->InsertData(startOffset, kEllipsis);
+      startOffset += kEllipsis.Length();
+      ellipsisOffset += kEllipsis.Length();
+    }
   }
+
+  // Add in the last range to the end of the body.
+  RefPtr<nsRange> lastRange;
+  nsresult rv = nsRange::CreateRange(startNode, startOffset, bodyNode,
+                                     bodyNode->GetChildCount(),
+                                     getter_AddRefs(lastRange));
+  if (NS_SUCCEEDED(rv) && !lastRange->Collapsed()) {
+    selection->AddRange(lastRange);
+  }
+
+  selection->DeleteFromDocument();
   return NS_OK;
 }
 
@@ -2540,12 +2579,6 @@ nsPrintEngine::DoPrint(const UniquePtr<nsPrintObject>& aPO)
   }
 
   {
-    int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
-    nsresult rv;
-    if (printData->mPrintSettings) {
-      printData->mPrintSettings->GetPrintRange(&printRangeType);
-    }
-
     // Ask the page sequence frame to print all the pages
     nsIPageSequenceFrame* pageSequence = poPresShell->GetPageSequenceFrame();
     NS_ASSERTION(nullptr != pageSequence, "no page sequence frame");
@@ -2573,77 +2606,6 @@ nsPrintEngine::DoPrint(const UniquePtr<nsPrintObject>& aPO)
     nsAutoString docTitleStr;
     nsAutoString docURLStr;
     GetDisplayTitleAndURL(aPO, docTitleStr, docURLStr, eDocTitleDefBlank);
-
-    if (nsIPrintSettings::kRangeSelection == printRangeType) {
-      CloneSelection(aPO->mDocument->GetOriginalDocument(), aPO->mDocument);
-
-      poPresContext->SetIsRenderingOnlySelection(true);
-      // temporarily creating rendering context
-      // which is needed to find the selection frames
-      // mPrintDC must have positive width and height for this call
-
-      // find the starting and ending page numbers
-      // via the selection
-      nsIFrame* startFrame;
-      nsIFrame* endFrame;
-      int32_t   startPageNum;
-      int32_t   endPageNum;
-      nsRect    startRect;
-      nsRect    endRect;
-
-      rv = GetPageRangeForSelection(pageSequence,
-                                    &startFrame, startPageNum, startRect,
-                                    &endFrame, endPageNum, endRect);
-      if (NS_SUCCEEDED(rv)) {
-        printData->mPrintSettings->SetStartPageRange(startPageNum);
-        printData->mPrintSettings->SetEndPageRange(endPageNum);
-        nsIntMargin marginTwips(0,0,0,0);
-        nsIntMargin unwrtMarginTwips(0,0,0,0);
-        printData->mPrintSettings->GetMarginInTwips(marginTwips);
-        printData->mPrintSettings->GetUnwriteableMarginInTwips(
-                                     unwrtMarginTwips);
-        nsMargin totalMargin = poPresContext->CSSTwipsToAppUnits(marginTwips +
-                                                                 unwrtMarginTwips);
-        if (startPageNum == endPageNum) {
-          startRect.y -= totalMargin.top;
-          endRect.y   -= totalMargin.top;
-
-          // Clip out selection regions above the top of the first page
-          if (startRect.y < 0) {
-            // Reduce height to be the height of the positive-territory
-            // region of original rect
-            startRect.height = std::max(0, startRect.YMost());
-            startRect.y = 0;
-          }
-          if (endRect.y < 0) {
-            // Reduce height to be the height of the positive-territory
-            // region of original rect
-            endRect.height = std::max(0, endRect.YMost());
-            endRect.y = 0;
-          }
-          NS_ASSERTION(endRect.y >= startRect.y,
-                       "Selection end point should be after start point");
-          NS_ASSERTION(startRect.height >= 0,
-                       "rect should have non-negative height.");
-          NS_ASSERTION(endRect.height >= 0,
-                       "rect should have non-negative height.");
-
-          nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
-          // XXX This is temporary fix for printing more than one page of a selection
-          pageSequence->SetSelectionHeight(startRect.y * aPO->mZoomRatio,
-                                           selectionHgt * aPO->mZoomRatio);
-
-          // calc total pages by getting calculating the selection's height
-          // and then dividing it by how page content frames will fit.
-          nscoord pageWidth, pageHeight;
-          printData->mPrintDC->GetDeviceSurfaceDimensions(pageWidth,
-                                                          pageHeight);
-          pageHeight -= totalMargin.top + totalMargin.bottom;
-          int32_t totalPages = NSToIntCeil(float(selectionHgt) * aPO->mZoomRatio / float(pageHeight));
-          pageSequence->SetTotalNumPages(totalPages);
-        }
-      }
-    }
 
     nsIFrame * seqFrame = do_QueryFrame(pageSequence);
     if (!seqFrame) {
@@ -2898,171 +2860,6 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
   return donePrinting;
 }
 
-/** ---------------------------------------------------
- *  Find by checking frames type
- */
-nsresult
-nsPrintEngine::FindSelectionBoundsWithList(nsFrameList::Enumerator& aChildFrames,
-                                           nsIFrame *      aParentFrame,
-                                           nsRect&         aRect,
-                                           nsIFrame *&     aStartFrame,
-                                           nsRect&         aStartRect,
-                                           nsIFrame *&     aEndFrame,
-                                           nsRect&         aEndRect)
-{
-  NS_ASSERTION(aParentFrame, "Pointer is null!");
-
-  aRect += aParentFrame->GetPosition();
-  for (; !aChildFrames.AtEnd(); aChildFrames.Next()) {
-    nsIFrame* child = aChildFrames.get();
-    if (child->IsSelected() && child->IsVisibleForPainting()) {
-      nsRect r = child->GetRect();
-      if (aStartFrame == nullptr) {
-        aStartFrame = child;
-        aStartRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
-      } else {
-        aEndFrame = child;
-        aEndRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
-      }
-    }
-    FindSelectionBounds(child, aRect, aStartFrame, aStartRect, aEndFrame, aEndRect);
-    child = child->GetNextSibling();
-  }
-  aRect -= aParentFrame->GetPosition();
-  return NS_OK;
-}
-
-//-------------------------------------------------------
-// Find the Frame that is XMost
-nsresult
-nsPrintEngine::FindSelectionBounds(nsIFrame *      aParentFrame,
-                                   nsRect&         aRect,
-                                   nsIFrame *&     aStartFrame,
-                                   nsRect&         aStartRect,
-                                   nsIFrame *&     aEndFrame,
-                                   nsRect&         aEndRect)
-{
-  NS_ASSERTION(aParentFrame, "Pointer is null!");
-
-  // loop through named child lists
-  nsIFrame::ChildListIterator lists(aParentFrame);
-  for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    nsresult rv = FindSelectionBoundsWithList(childFrames, aParentFrame, aRect,
-      aStartFrame, aStartRect, aEndFrame, aEndRect);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  This method finds the starting and ending page numbers
- *  of the selection and also returns rect for each where
- *  the x,y of the rect is relative to the very top of the
- *  frame tree (absolutely positioned)
- */
-nsresult
-nsPrintEngine::GetPageRangeForSelection(nsIPageSequenceFrame* aPageSeqFrame,
-                                        nsIFrame**            aStartFrame,
-                                        int32_t&              aStartPageNum,
-                                        nsRect&               aStartRect,
-                                        nsIFrame**            aEndFrame,
-                                        int32_t&              aEndPageNum,
-                                        nsRect&               aEndRect)
-{
-  NS_ASSERTION(aPageSeqFrame, "Pointer is null!");
-  NS_ASSERTION(aStartFrame, "Pointer is null!");
-  NS_ASSERTION(aEndFrame, "Pointer is null!");
-
-  nsIFrame * seqFrame = do_QueryFrame(aPageSeqFrame);
-  if (!seqFrame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFrame * startFrame = nullptr;
-  nsIFrame * endFrame   = nullptr;
-
-  // start out with the sequence frame and search the entire frame tree
-  // capturing the starting and ending child frames of the selection
-  // and their rects
-  nsRect r = seqFrame->GetRect();
-  FindSelectionBounds(seqFrame, r, startFrame, aStartRect, endFrame, aEndRect);
-
-#ifdef DEBUG_rodsX
-  printf("Start Frame: %p\n", startFrame);
-  printf("End Frame:   %p\n", endFrame);
-#endif
-
-  // initial the page numbers here
-  // in case we don't find and frames
-  aStartPageNum = -1;
-  aEndPageNum   = -1;
-
-  nsIFrame * startPageFrame;
-  nsIFrame * endPageFrame;
-
-  // check to make sure we found a starting frame
-  if (startFrame != nullptr) {
-    // Now search up the tree to find what page the
-    // start/ending selections frames are on
-    //
-    // Check to see if start should be same as end if
-    // the end frame comes back null
-    if (endFrame == nullptr) {
-      // XXX the "GetPageFrame" step could be integrated into
-      // the FindSelectionBounds step, but walking up to find
-      // the parent of a child frame isn't expensive and it makes
-      // FindSelectionBounds a little easier to understand
-      startPageFrame = nsLayoutUtils::GetPageFrame(startFrame);
-      endPageFrame   = startPageFrame;
-      aEndRect       = aStartRect;
-    } else {
-      startPageFrame = nsLayoutUtils::GetPageFrame(startFrame);
-      endPageFrame   = nsLayoutUtils::GetPageFrame(endFrame);
-    }
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-
-#ifdef DEBUG_rodsX
-  printf("Start Page: %p\n", startPageFrame);
-  printf("End Page:   %p\n", endPageFrame);
-
-  // dump all the pages and their pointers
-  {
-  int32_t pageNum = 1;
-  nsIFrame* child = seqFrame->PrincipalChildList().FirstChild();
-  while (child != nullptr) {
-    printf("Page: %d - %p\n", pageNum, child);
-    pageNum++;
-    child = child->GetNextSibling();
-  }
-  }
-#endif
-
-  // Now that we have the page frames
-  // find out what the page numbers are for each frame
-  int32_t pageNum = 1;
-  for (nsIFrame* page : seqFrame->PrincipalChildList()) {
-    if (page == startPageFrame) {
-      aStartPageNum = pageNum;
-    }
-    if (page == endPageFrame) {
-      aEndPageNum = pageNum;
-    }
-    pageNum++;
-  }
-
-#ifdef DEBUG_rodsX
-  printf("Start Page No: %d\n", aStartPageNum);
-  printf("End Page No:   %d\n", aEndPageNum);
-#endif
-
-  *aStartFrame = startPageFrame;
-  *aEndFrame   = endPageFrame;
-
-  return NS_OK;
-}
 
 //-----------------------------------------------------------------
 //-- Done: Printing Methods

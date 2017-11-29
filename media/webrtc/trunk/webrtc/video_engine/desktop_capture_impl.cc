@@ -582,7 +582,45 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
       return -1;
     }
 
-    DeliverCapturedFrame(captureFrame, captureTime);
+    int32_t req_max_width = _requestedCapability.width & 0xffff;
+    int32_t req_max_height = _requestedCapability.height & 0xffff;
+    int32_t req_ideal_width = (_requestedCapability.width >> 16) & 0xffff;
+    int32_t req_ideal_height = (_requestedCapability.height >> 16) & 0xffff;
+
+    int32_t dest_max_width = std::min(req_max_width, target_width);
+    int32_t dest_max_height = std::min(req_max_height, target_height);
+    int32_t dst_width = std::min(req_ideal_width > 0 ? req_ideal_width : target_width, dest_max_width);
+    int32_t dst_height = std::min(req_ideal_height > 0 ? req_ideal_height : target_height, dest_max_height);
+
+    // scale to average of portrait and landscape
+    float scale_width = (float)dst_width / (float)target_width;
+    float scale_height = (float)dst_height / (float)target_height;
+    float scale = (scale_width + scale_height) / 2;
+    dst_width = (int)(scale * target_width);
+    dst_height = (int)(scale * target_height);
+
+    // if scaled rectangle exceeds max rectangle, scale to minimum of portrait and landscape
+    if (dst_width > dest_max_width || dst_height > dest_max_height) {
+      scale_width = (float)dest_max_width / (float)dst_width;
+      scale_height = (float)dest_max_height / (float)dst_height;
+      scale = std::min(scale_width, scale_height);
+      dst_width = (int)(scale * dst_width);
+      dst_height = (int)(scale * dst_height);
+    }
+
+    int dst_stride_y = dst_width;
+    int dst_stride_uv = (dst_width + 1) / 2;
+    if (dst_width == target_width && dst_height == target_height) {
+      DeliverCapturedFrame(captureFrame, captureTime);
+    } else {
+      rtc::scoped_refptr<webrtc::I420Buffer> buffer;
+      buffer = I420Buffer::Create(dst_width, dst_height, dst_stride_y,
+                                  dst_stride_uv, dst_stride_uv);
+
+      buffer->ScaleFrom(*captureFrame.video_frame_buffer().get());
+      webrtc::VideoFrame scaledFrame(buffer, 0, 0, kVideoRotation_0);
+      DeliverCapturedFrame(scaledFrame, captureTime);
+    }
   } else {
     assert(false);
     return -1;

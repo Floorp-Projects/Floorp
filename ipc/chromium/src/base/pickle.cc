@@ -627,6 +627,16 @@ bool Pickle::WriteUnsignedChar(unsigned char value) {
   return WriteBytes(&value, sizeof(value));
 }
 
+bool Pickle::WriteBytesZeroCopy(void* data, uint32_t data_len, uint32_t capacity) {
+
+  BeginWrite(data_len, sizeof(memberAlignmentType));
+
+  buffers_.WriteBytesZeroCopy(reinterpret_cast<char*>(data), data_len, capacity);
+
+  EndWrite(data_len);
+  return true;
+}
+
 bool Pickle::WriteBytes(const void* data, uint32_t data_len, uint32_t alignment) {
   DCHECK(alignment == 4 || alignment == 8);
   DCHECK(intptr_t(header_) % alignment == 0);

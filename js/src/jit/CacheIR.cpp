@@ -4009,9 +4009,6 @@ GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject
 {
     MOZ_ASSERT(JSOp(*pc_) == JSOP_ITER);
 
-    if (GET_UINT8(pc_) != JSITER_ENUMERATE)
-        return false;
-
     PropertyIteratorObject* iterobj = LookupInIteratorCache(cx_, obj);
     if (!iterobj)
         return false;

@@ -92,6 +92,7 @@ public:
 
   virtual RefPtr<U2FRegisterPromise>
   Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+           const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
            const nsTArray<uint8_t>& aApplication,
            const nsTArray<uint8_t>& aChallenge,
            uint32_t aTimeoutMS) override;

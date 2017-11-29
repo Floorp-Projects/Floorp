@@ -406,10 +406,6 @@ public:
 private:
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects();
 
-  static nsresult SetValueFromDom(const char* aPrefName,
-                                  const dom::PrefValue& aValue,
-                                  PrefValueKind aKind);
-
   // Functions above that modify prefs will fail if they are not run in the
   // parent process. The "InAnyProcess" functions below will succeed outside
   // the content process, and are used when passing pref values from the parent

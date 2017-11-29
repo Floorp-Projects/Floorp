@@ -2165,6 +2165,18 @@ extern PRUint32 connectCount;
 
 #endif /* XP_BEOS */
 
+#if defined(_WIN64) && defined(WIN95)
+typedef struct _PRFileDescList {
+  PRFileDesc *fd;
+  struct _PRFileDescList *next;
+} PRFileDescList;
+
+extern PRLock *_fd_waiting_for_overlapped_done_lock;
+extern PRFileDescList *_fd_waiting_for_overlapped_done;
+extern void CheckOverlappedPendingSocketsAreDone();
+#endif
+
+
 PR_END_EXTERN_C
 
 #endif /* primpl_h___ */

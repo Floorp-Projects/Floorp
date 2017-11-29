@@ -279,7 +279,6 @@ nsresult
 MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
     const AllocationHandle* aHandle,
     const NormalizedConstraints& aNetConstraints,
-    const NormalizedConstraints& aNewConstraint, /* Ignored */
     const MediaEnginePrefs& aPrefs,
     const nsString& aDeviceId,
     const char** aOutBadConstraint)

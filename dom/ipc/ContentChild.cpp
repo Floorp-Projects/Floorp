@@ -2704,6 +2704,13 @@ ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistration
     nsHostObjectProtocolHandler::AddDataEntry(registration.url(),
                                               registration.principal(),
                                               blobImpl);
+    // If we have received an already-revoked blobURL, we have to keep it alive
+    // for a while (see nsHostObjectProtocolHandler) in order to support pending
+    // operations such as navigation, download and so on.
+    if (registration.revoked()) {
+      nsHostObjectProtocolHandler::RemoveDataEntry(registration.url(),
+                                                   false);
+    }
   }
 
   return IPC_OK();

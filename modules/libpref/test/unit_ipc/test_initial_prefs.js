@@ -13,6 +13,6 @@ function run_test() {
       pb.setIntPref("Test.IPC.int", 23);
       pb.setCharPref("Test.IPC.char", "hey");
 
-      run_test_in_child("test_existing_prefs.JS");
+      run_test_in_child("test_existing_prefs.js");
   }
 }

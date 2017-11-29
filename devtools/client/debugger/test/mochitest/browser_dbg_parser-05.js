@@ -19,7 +19,7 @@ function test() {
     "a.push('<script type=\"text/javascript\">');",
     "a.push('var b = 42;');",
     "a.push('</script>');",
-    "a.push('<script type=\"text/javascript;version=1.8\">');",
+    "a.push('<script type=\"text/javascript\">');",
     "a.push('var c = 42;');",
     "a.push('</script>');"
   ].join("\n");
@@ -34,11 +34,11 @@ function test() {
   is(parsed.scriptCount, 1,
     "There should be 1 script parsed in the parent source.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:0, length:261, index:0})",
+  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:0, length:249, index:0})",
     "The script location is correct (1).");
-  is(parsed.getScriptInfo(source.indexOf("<script>")).toSource(), "({start:0, length:261, index:0})",
+  is(parsed.getScriptInfo(source.indexOf("<script>")).toSource(), "({start:0, length:249, index:0})",
     "The script location is correct (2).");
-  is(parsed.getScriptInfo(source.indexOf("</script>")).toSource(), "({start:0, length:261, index:0})",
+  is(parsed.getScriptInfo(source.indexOf("</script>")).toSource(), "({start:0, length:249, index:0})",
     "The script location is correct (3).");
 
   finish();

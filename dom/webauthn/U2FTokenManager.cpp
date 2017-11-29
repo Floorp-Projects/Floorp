@@ -220,7 +220,7 @@ U2FTokenManager::GetTokenManagerImpl()
 void
 U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
                           const uint64_t& aTransactionId,
-                          const WebAuthnTransactionInfo& aTransactionInfo)
+                          const WebAuthnMakeCredentialInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthRegister"));
 
@@ -245,7 +245,8 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
 
   uint64_t tid = mLastTransactionId = aTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
-  mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
+  mTokenManagerImpl->Register(aTransactionInfo.ExcludeList(),
+                              aTransactionInfo.AuthenticatorSelection(),
                               aTransactionInfo.RpIdHash(),
                               aTransactionInfo.ClientDataHash(),
                               aTransactionInfo.TimeoutMS())
@@ -297,7 +298,7 @@ U2FTokenManager::MaybeAbortRegister(const uint64_t& aTransactionId,
 void
 U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
                       const uint64_t& aTransactionId,
-                      const WebAuthnTransactionInfo& aTransactionInfo)
+                      const WebAuthnGetAssertionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthSign"));
 
@@ -318,7 +319,7 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   uint64_t tid = mLastTransactionId = aTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
-  mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
+  mTokenManagerImpl->Sign(aTransactionInfo.AllowList(),
                           aTransactionInfo.RpIdHash(),
                           aTransactionInfo.ClientDataHash(),
                           aTransactionInfo.TimeoutMS())
