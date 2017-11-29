@@ -11,10 +11,8 @@
 #include "gfxConfig.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
-#include "LayersLogging.h"
 #include "ShaderDefinitionsMLGPU.h"
 #include "SharedBufferMLGPU.h"
-#include "UtilityMLGPU.h"
 
 namespace mozilla {
 namespace layers {
