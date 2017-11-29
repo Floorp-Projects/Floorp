@@ -202,7 +202,8 @@ public class WebViewDataTest {
                 continue;
             }
 
-            assertTrue("Check '" + name + "' is in whitelist", WHITELIST_DATA_DIR_CONTENTS.contains(name));
+            assertTrue("Expected file '" + name + "' to be in the app's data dir whitelist",
+                    WHITELIST_DATA_DIR_CONTENTS.contains(name));
         }
 
         assertNoTraces(dataDir);
