@@ -101,14 +101,29 @@ U2FHIDTokenManager::~U2FHIDTokenManager()
 //
 RefPtr<U2FRegisterPromise>
 U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+                             const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
                              const nsTArray<uint8_t>& aApplication,
                              const nsTArray<uint8_t>& aChallenge,
                              uint32_t aTimeoutMS)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == gPBackgroundThread);
 
+  uint64_t registerFlags = 0;
+
+  // Set flags for credential creation.
+  if (aAuthenticatorSelection.requireResidentKey()) {
+    registerFlags |= U2F_FLAG_REQUIRE_RESIDENT_KEY;
+  }
+  if (aAuthenticatorSelection.requireUserVerification()) {
+    registerFlags |= U2F_FLAG_REQUIRE_USER_VERIFICATION;
+  }
+  if (aAuthenticatorSelection.requirePlatformAttachment()) {
+    registerFlags |= U2F_FLAG_REQUIRE_PLATFORM_ATTACHMENT;
+  }
+
   ClearPromises();
   mTransactionId = rust_u2f_mgr_register(mU2FManager,
+                                         registerFlags,
                                          (uint64_t)aTimeoutMS,
                                          u2f_register_callback,
                                          aChallenge.Elements(),

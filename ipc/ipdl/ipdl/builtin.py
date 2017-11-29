@@ -39,6 +39,7 @@ Types = (
     'nsDependentSubstring',
     'nsDependentCSubstring',
     'mozilla::ipc::Shmem',
+    'mozilla::ipc::ByteBuf',
     'mozilla::ipc::FileDescriptor'
 )
 

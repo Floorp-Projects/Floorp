@@ -32,10 +32,10 @@ public:
   static U2FTokenManager* Get();
   void Register(PWebAuthnTransactionParent* aTransactionParent,
                 const uint64_t& aTransactionId,
-                const WebAuthnTransactionInfo& aTransactionInfo);
+                const WebAuthnMakeCredentialInfo& aTransactionInfo);
   void Sign(PWebAuthnTransactionParent* aTransactionParent,
             const uint64_t& aTransactionId,
-            const WebAuthnTransactionInfo& aTransactionInfo);
+            const WebAuthnGetAssertionInfo& aTransactionInfo);
   void Cancel(PWebAuthnTransactionParent* aTransactionParent,
               const uint64_t& aTransactionId);
   void MaybeClearTransaction(PWebAuthnTransactionParent* aParent);

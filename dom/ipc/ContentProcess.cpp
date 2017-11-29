@@ -156,7 +156,11 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MaybePrefValue value(PrefValue(static_cast<int32_t>(strtol(str, &str, 10))));
         MOZ_ASSERT(str[0] == '|');
         str++;
-        Pref pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        // XXX: we assume these values as default values, which may not be
+        // true. We also assume they are unlocked. Fortunately, these prefs
+        // get reset properly by the first IPC message.
+        Pref pref(nsCString(ContentPrefs::GetContentPref(index)),
+                  /* isLocked */ false, value, MaybePrefValue());
         prefsArray.AppendElement(pref);
       }
       SET_PREF_PHASE(END_INIT_PREFS);
@@ -171,7 +175,8 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MaybePrefValue value(PrefValue(!!strtol(str, &str, 10)));
         MOZ_ASSERT(str[0] == '|');
         str++;
-        Pref pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        Pref pref(nsCString(ContentPrefs::GetContentPref(index)),
+                  /* isLocked */ false, value, MaybePrefValue());
         prefsArray.AppendElement(pref);
       }
       SET_PREF_PHASE(END_INIT_PREFS);
@@ -187,7 +192,8 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MOZ_ASSERT(str[0] == ';');
         str++;
         MaybePrefValue value(PrefValue(nsCString(str, length)));
-        Pref pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        Pref pref(nsCString(ContentPrefs::GetContentPref(index)),
+                  /* isLocked */ false, value, MaybePrefValue());
         prefsArray.AppendElement(pref);
         str += length + 1;
         MOZ_ASSERT(*(str - 1) == '|');

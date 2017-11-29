@@ -28,7 +28,7 @@
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
 
-#define RELEASING_TIMER 1000
+#define RELEASING_TIMER 5000
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -48,18 +48,21 @@ struct DataInfo
     : mObjectType(eBlobImpl)
     , mBlobImpl(aBlobImpl)
     , mPrincipal(aPrincipal)
+    , mRevoked(false)
   {}
 
   DataInfo(DOMMediaStream* aMediaStream, nsIPrincipal* aPrincipal)
     : mObjectType(eMediaStream)
     , mMediaStream(aMediaStream)
     , mPrincipal(aPrincipal)
+    , mRevoked(false)
   {}
 
   DataInfo(MediaSource* aMediaSource, nsIPrincipal* aPrincipal)
     : mObjectType(eMediaSource)
     , mMediaSource(aMediaSource)
     , mPrincipal(aPrincipal)
+    , mRevoked(false)
   {}
 
   ObjectType mObjectType;
@@ -73,12 +76,17 @@ struct DataInfo
 
   // WeakReferences of nsHostObjectURI objects.
   nsTArray<nsWeakPtr> mURIs;
+
+  // When a blobURL is revoked, we keep it alive for RELEASING_TIMER
+  // milliseconds in order to support pending operations such as navigation,
+  // download and so on.
+  bool mRevoked;
 };
 
 static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
 
 static DataInfo*
-GetDataInfo(const nsACString& aUri)
+GetDataInfo(const nsACString& aUri, bool aAlsoIfRevoked = false)
 {
   if (!gDataTable) {
     return nullptr;
@@ -103,6 +111,10 @@ GetDataInfo(const nsACString& aUri)
     gDataTable->Get(aUri, &res);
   } else {
     gDataTable->Get(StringHead(aUri, pos), &res);
+  }
+
+  if (!aAlsoIfRevoked && res && res->mRevoked) {
+    return nullptr;
   }
 
   return res;
@@ -154,9 +166,8 @@ BroadcastBlobURLRegistration(const nsACString& aURI,
 }
 
 void
-BroadcastBlobURLUnregistration(const nsACString& aURI, DataInfo* aInfo)
+BroadcastBlobURLUnregistration(const nsCString& aURI)
 {
-  MOZ_ASSERT(aInfo);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (XRE_IsParentProcess()) {
@@ -165,8 +176,7 @@ BroadcastBlobURLUnregistration(const nsACString& aURI, DataInfo* aInfo)
   }
 
   dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-  Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(
-    nsCString(aURI)));
+  Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(aURI));
 }
 
 class HostObjectURLsReporter final : public nsIMemoryReporter
@@ -432,9 +442,10 @@ public:
   NS_DECL_ISUPPORTS
 
   static void
-  Create(nsTArray<nsWeakPtr>&& aArray)
+  Create(const nsACString& aURI, bool aBroadcastToOtherProcesses)
   {
-    RefPtr<ReleasingTimerHolder> holder = new ReleasingTimerHolder(Move(aArray));
+    RefPtr<ReleasingTimerHolder> holder =
+      new ReleasingTimerHolder(aURI, aBroadcastToOtherProcesses);
     nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(holder->mTimer),
                                           holder, RELEASING_TIMER,
                                           nsITimer::TYPE_ONE_SHOT,
@@ -445,11 +456,30 @@ public:
   NS_IMETHOD
   Notify(nsITimer* aTimer) override
   {
-    for (uint32_t i = 0; i < mURIs.Length(); ++i) {
-      nsCOMPtr<nsIURI> uri = do_QueryReferent(mURIs[i]);
+    // If we have to broadcast the unregistration, let's do it now.
+    if (mBroadcastToOtherProcesses) {
+      BroadcastBlobURLUnregistration(mURI);
+    }
+
+    DataInfo* info = GetDataInfo(mURI, true /* We care about revoked dataInfo */);
+    if (!info) {
+      // Already gone!
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(info->mRevoked);
+
+    for (uint32_t i = 0; i < info->mURIs.Length(); ++i) {
+      nsCOMPtr<nsIURI> uri = do_QueryReferent(info->mURIs[i]);
       if (uri) {
         static_cast<nsHostObjectURI*>(uri.get())->ForgetBlobImpl();
       }
+    }
+
+    gDataTable->Remove(mURI);
+    if (gDataTable->Count() == 0) {
+      delete gDataTable;
+      gDataTable = nullptr;
     }
 
     return NS_OK;
@@ -463,14 +493,17 @@ public:
   }
 
 private:
-  explicit ReleasingTimerHolder(nsTArray<nsWeakPtr>&& aArray)
-    : mURIs(aArray)
+  ReleasingTimerHolder(const nsACString& aURI, bool aBroadcastToOtherProcesses)
+    : mURI(aURI)
+    , mBroadcastToOtherProcesses(aBroadcastToOtherProcesses)
   {}
 
   ~ReleasingTimerHolder()
   {}
 
-  nsTArray<nsWeakPtr> mURIs;
+  nsCString mURI;
+  bool mBroadcastToOtherProcesses;
+
   nsCOMPtr<nsITimer> mTimer;
 };
 
@@ -596,7 +629,8 @@ nsHostObjectProtocolHandler::GetAllBlobURLEntries(
     }
 
     aRegistrations.AppendElement(BlobURLRegistrationData(
-      nsCString(iter.Key()), ipcBlob, IPC::Principal(info->mPrincipal)));
+      nsCString(iter.Key()), ipcBlob, IPC::Principal(info->mPrincipal),
+                info->mRevoked));
   }
 
   return true;
@@ -615,26 +649,19 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
     return;
   }
 
-  if (aBroadcastToOtherProcesses && info->mObjectType == DataInfo::eBlobImpl) {
-    BroadcastBlobURLUnregistration(aUri, info);
-  }
+  info->mRevoked = true;
 
-  if (!info->mURIs.IsEmpty()) {
-    ReleasingTimerHolder::Create(Move(info->mURIs));
-  }
-
-  gDataTable->Remove(aUri);
-  if (gDataTable->Count() == 0) {
-    delete gDataTable;
-    gDataTable = nullptr;
-  }
+  // The timer will take care of removing the entry for real after
+  // RELEASING_TIMER milliseconds. In the meantime, the DataInfo, marked as
+  // revoked, will not be exposed.
+  ReleasingTimerHolder::Create(aUri,
+                               aBroadcastToOtherProcesses &&
+                                 info->mObjectType == DataInfo::eBlobImpl);
 }
 
 /* static */ void
 nsHostObjectProtocolHandler::RemoveDataEntries()
 {
-  MOZ_ASSERT(XRE_IsContentProcess());
-
   if (!gDataTable) {
     return;
   }

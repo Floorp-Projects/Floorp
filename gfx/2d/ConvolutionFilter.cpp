@@ -113,15 +113,16 @@ ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcS
   // filter values for each one. Those values will tell us how to blend the
   // source pixels to compute the destination pixel.
 
-  // This is the pixel in the source directly under the pixel in the dest.
-  // Note that we base computations on the "center" of the pixels. To see
-  // why, observe that the destination pixel at coordinates (0, 0) in a 5.0x
-  // downscale should "cover" the pixels around the pixel with *its center*
-  // at coordinates (2.5, 2.5) in the source, not those around (0, 0).
-  // Hence we need to scale coordinates (0.5, 0.5), not (0, 0).
-  float srcPixel = 0.5f * invScale;
   mFilter->reserveAdditional(aDstSize, int32_t(ceil(aDstSize * srcSupport * 2)));
   for (int32_t destI = 0; destI < aDstSize; destI++) {
+    // This is the pixel in the source directly under the pixel in the dest.
+    // Note that we base computations on the "center" of the pixels. To see
+    // why, observe that the destination pixel at coordinates (0, 0) in a 5.0x
+    // downscale should "cover" the pixels around the pixel with *its center*
+    // at coordinates (2.5, 2.5) in the source, not those around (0, 0).
+    // Hence we need to scale coordinates (0.5, 0.5), not (0, 0).
+    float srcPixel = (static_cast<float>(destI) + 0.5f) * invScale;
+
     // Compute the (inclusive) range of source pixels the filter covers.
     float srcBegin = std::max(0.0f, floorf(srcPixel - srcSupport));
     float srcEnd = std::min(aSrcSize - 1.0f, ceilf(srcPixel + srcSupport));
@@ -165,8 +166,6 @@ ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcS
     fixedFilterValues[filterCount / 2] += leftovers;
 
     mFilter->AddFilter(int32_t(srcBegin), fixedFilterValues.begin(), filterCount);
-
-    srcPixel += invScale;
   }
 
   return mFilter->maxFilter() > 0 && mFilter->numValues() == aDstSize;

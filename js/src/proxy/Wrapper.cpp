@@ -86,7 +86,7 @@ ForwardingProxyHandler::enumerate(JSContext* cx, HandleObject proxy) const
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetIterator(cx, target, 0);
+    return GetIterator(cx, target);
 }
 
 bool

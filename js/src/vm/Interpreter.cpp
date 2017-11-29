@@ -2276,10 +2276,8 @@ END_CASE(JSOP_HASOWN)
 CASE(JSOP_ITER)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 1);
-    uint8_t flags = GET_UINT8(REGS.pc);
     HandleValue val = REGS.stackHandleAt(-1);
-    ReservedRooted<JSObject*> iter(&rootObject0);
-    iter.set(ValueToIterator(cx, flags, val));
+    JSObject* iter = ValueToIterator(cx, val);
     if (!iter)
         goto error;
     REGS.sp[-1].setObject(*iter);

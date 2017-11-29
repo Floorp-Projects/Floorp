@@ -419,11 +419,17 @@ U2F::Register(const nsAString& aAppId,
   // Always blank for U2F
   nsTArray<WebAuthnExtension> extensions;
 
-  WebAuthnTransactionInfo info(rpIdHash,
-                               clientDataHash,
-                               adjustedTimeoutMillis,
-                               excludeList,
-                               extensions);
+  // Default values for U2F.
+  WebAuthnAuthenticatorSelection authSelection(false /* requireResidentKey */,
+                                               false /* requireUserVerification */,
+                                               false /* requirePlatformAttachment */);
+
+  WebAuthnMakeCredentialInfo info(rpIdHash,
+                                  clientDataHash,
+                                  adjustedTimeoutMillis,
+                                  excludeList,
+                                  extensions,
+                                  authSelection);
 
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(clientData));
@@ -548,11 +554,11 @@ U2F::Sign(const nsAString& aAppId,
   // Always blank for U2F
   nsTArray<WebAuthnExtension> extensions;
 
-  WebAuthnTransactionInfo info(rpIdHash,
-                               clientDataHash,
-                               adjustedTimeoutMillis,
-                               permittedList,
-                               extensions);
+  WebAuthnGetAssertionInfo info(rpIdHash,
+                                clientDataHash,
+                                adjustedTimeoutMillis,
+                                permittedList,
+                                extensions);
 
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(clientData));

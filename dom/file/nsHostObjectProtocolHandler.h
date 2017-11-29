@@ -77,7 +77,6 @@ public:
   static void RemoveDataEntry(const nsACString& aUri,
                               bool aBroadcastToOTherProcesses = true);
 
-  // This is for IPC only.
   static void RemoveDataEntries();
 
   static bool HasDataEntry(const nsACString& aUri);

@@ -7434,11 +7434,9 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
     if (!emitTreeInBranch(expr))                          // EXPR
         return false;
 
-    // Convert the value to the appropriate sort of iterator object for the
-    // loop variant (for-in, for-each-in, or destructuring for-in).
-    unsigned iflags = forInLoop->pn_iflags;
-    MOZ_ASSERT(0 == (iflags & ~JSITER_ENUMERATE));
-    if (!emit2(JSOP_ITER, AssertedCast<uint8_t>(iflags))) // ITER
+    MOZ_ASSERT(forInLoop->pn_iflags == 0);
+
+    if (!emit1(JSOP_ITER))                                // ITER
         return false;
 
     // For-in loops have both the iterator and the value on the stack. Push
@@ -7491,10 +7489,8 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
 #endif
         MOZ_ASSERT(loopDepth >= 2);
 
-        if (iflags == JSITER_ENUMERATE) {
-            if (!emit1(JSOP_ITERNEXT))                    // ITER ITERVAL
-                return false;
-        }
+        if (!emit1(JSOP_ITERNEXT))                        // ITER ITERVAL
+            return false;
 
         if (!emitInitializeForInOrOfTarget(forInHead))    // ITER ITERVAL
             return false;

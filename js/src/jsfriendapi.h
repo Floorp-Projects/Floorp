@@ -1000,9 +1000,8 @@ IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
 
 /*
  * NB: keep these in sync with the copy in builtin/SelfHostingDefines.h.
- * The first two are omitted because they shouldn't be used in new code.
  */
-#define JSITER_ENUMERATE  0x1   /* for-in compatible hidden default iterator */
+/* 0x1 is no longer used */
 /* 0x2 is no longer used */
 /* 0x4 is no longer used */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */

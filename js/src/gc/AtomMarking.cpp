@@ -237,15 +237,14 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, TenuredCell* thing)
     if (!thing)
         return true;
 
-    JS::TraceKind kind = thing->getTraceKind();
-    if (kind == JS::TraceKind::String) {
-        JSString* str = static_cast<JSString*>(thing);
-        if (str->isAtom())
-            return atomIsMarked(zone, &str->asAtom());
-        return true;
+    if (thing->is<JSString>()) {
+        JSString* str = thing->as<JSString>();
+        return str->isAtom() ? atomIsMarked(zone, &str->asAtom()) : true;
     }
-    if (kind == JS::TraceKind::Symbol)
-        return atomIsMarked(zone, static_cast<JS::Symbol*>(thing));
+
+    if (thing->is<JS::Symbol>())
+        return atomIsMarked(zone, thing->as<JS::Symbol>());
+
     return true;
 }
 
