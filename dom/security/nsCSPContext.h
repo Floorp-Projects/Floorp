@@ -8,6 +8,7 @@
 #define nsCSPContext_h___
 
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "nsDataHashtable.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
@@ -58,13 +59,43 @@ class nsCSPContext : public nsIContentSecurityPolicy
                       uint32_t aColumnNumber,
                       uint32_t aSeverityFlag);
 
-    nsresult SendReports(nsISupports* aBlockedContentSource,
-                         nsIURI* aOriginalURI,
-                         nsAString& aViolatedDirective,
-                         uint32_t aViolatedPolicyIndex,
-                         nsAString& aSourceFile,
-                         nsAString& aScriptSample,
-                         uint32_t aLineNum);
+
+
+    /**
+     * Construct SecurityPolicyViolationEventInit structure.
+     *
+     * @param aBlockedContentSource
+     *        Either a CSP Source (like 'self', as string) or nsIURI: the source
+     *        of the violation.
+     * @param aOriginalUri
+     *        The original URI if the blocked content is a redirect, else null
+     * @param aViolatedDirective
+     *        the directive that was violated (string).
+     * @param aSourceFile
+     *        name of the file containing the inline script violation
+     * @param aScriptSample
+     *        a sample of the violating inline script
+     * @param aLineNum
+     *        source line number of the violation (if available)
+     * @param aViolationEventInit
+     *        The output
+     */
+    nsresult GatherSecurityPolicyViolationEventData(
+      nsISupports* aBlockedContentSource,
+      nsIURI* aOriginalURI,
+      nsAString& aViolatedDirective,
+      uint32_t aViolatedPolicyIndex,
+      nsAString& aSourceFile,
+      nsAString& aScriptSample,
+      uint32_t aLineNum,
+      mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit);
+
+    nsresult SendReports(
+      const mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit,
+      uint32_t aViolatedPolicyIndex);
+
+    nsresult FireViolationEvent(
+      const mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit);
 
     nsresult AsyncReportViolation(nsISupports* aBlockedContentSource,
                                   nsIURI* aOriginalURI,
