@@ -22,7 +22,6 @@ class nsIContentIterator;
 class nsIDOMCharacterData;
 class nsIDOMDocument;
 class nsIDOMNode;
-class nsIDOMRange;
 class nsIEditor;
 class nsISelection;
 class nsISelectionController;
@@ -77,8 +76,8 @@ public:
   /* nsITextServicesDocument method implementations. */
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor) override;
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc) override;
-  NS_IMETHOD SetExtent(nsIDOMRange* aDOMRange) override;
-  NS_IMETHOD ExpandRangeToWordBoundaries(nsIDOMRange *aRange) override;
+  NS_IMETHOD SetExtent(nsRange* aRange) override;
+  NS_IMETHOD ExpandRangeToWordBoundaries(nsRange* aRange) override;
   NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter) override;
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr) override;
   NS_IMETHOD FirstBlock() override;
