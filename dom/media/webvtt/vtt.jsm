@@ -228,7 +228,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
           settings.alt(k, v, ["start", "center", "end", "left", "right"]);
           break;
         }
-      }, /:/, /\s/);
+      }, /:/, /\t|\n|\f|\r| /); // groupDelim is ASCII whitespace
 
       // Apply default values for any missing fields.
       cue.region = settings.get("region", null);
@@ -1158,7 +1158,12 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
         }
         self.buffer = buffer.substr(pos);
         // Spec defined replacement.
-        return line.replace(/[\u0000]/g, "\uFFFD");
+        line = line.replace(/[\u0000]/g, "\uFFFD");
+
+        if (/^NOTE($|[ \t])/.test(line)) {
+          line = null;
+        }
+        return line;
       }
 
       function createCueIfNeeded() {
@@ -1170,7 +1175,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       // Parsing cue identifier and the identifier should be unique.
       // Return true if the input is a cue identifier.
       function parseCueIdentifier(input) {
-        if (maybeIsTimeStampFormat(line)) {
+        if (maybeIsTimeStampFormat(input)) {
           self.state = "CUE";
           return false;
         }
@@ -1232,7 +1237,8 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
             settings.alt(k, v, ["up"]);
             break;
           }
-        }, /=/, /\s/);
+        }, /:/, /\t|\n|\f|\r| /); // groupDelim is ASCII whitespace
+        // https://infra.spec.whatwg.org/#ascii-whitespace, U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, U+0020 SPACE
 
         // Create the region, using default values for any values that were not
         // specified.
@@ -1316,20 +1322,20 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
                 self.substate = /^REGION/.test(line) ? "REGION" : "STYLE";
                 tempStr = "";
               } else {
-                tempStr += line;;
+                tempStr = tempStr + " " + line;
               }
             }
           }
 
-          if (maybeIsTimeStampFormat(line)) {
+          if (!line || onlyContainsWhiteSpaces(line)) {
+            // empty line, whitespaces
+            continue;
+          } else if (maybeIsTimeStampFormat(line)) {
             self.state = "CUE";
             break;
           } else if (containsTimeDirectionSymbol(line)) {
             // string contains "-->"
             break;
-          } else if (!line || onlyContainsWhiteSpaces(line)) {
-            // empty line, whitespaces
-            continue;
           } else {
             //It is an ID.
             break;
@@ -1368,13 +1374,9 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
           switch (self.state) {
           case "ID":
-            // Ignore NOTE and line terminator
-            if (/^NOTE($|[ \t])/.test(line) || !line) {
-              break;
-            }
             // If there is no cue identifier, keep the line and reuse this line
             // in next iteration.
-            if (!parseCueIdentifier(line)) {
+            if (!line || !parseCueIdentifier(line)) {
               nextIteration = true;
               continue;
             }

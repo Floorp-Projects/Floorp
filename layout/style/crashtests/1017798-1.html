@@ -50,27 +50,28 @@ gaia_switch/examples/index.html from the Gaia repository.
 
 window.GaiaSwitch = (function(win) {
   // Extend from the HTMLElement prototype
-  var proto = Object.create(HTMLElement.prototype);
+  class GaiaSwitch extends HTMLElement {
+    connectedCallback() {
+      var shadow = this.createShadowRoot();
+      this._template = template.content.cloneNode(true);
+      this._input = this._template.querySelector('input[type="checkbox"]');
 
-  proto.createdCallback = function() {
-    var shadow = this.createShadowRoot();
-    this._template = template.content.cloneNode(true);
-    this._input = this._template.querySelector('input[type="checkbox"]');
+      var checked = this.getAttribute('checked');
+      if (checked !== null) {
+        this._input.checked = true;
+      }
 
-    var checked = this.getAttribute('checked');
-    if (checked !== null) {
-      this._input.checked = true;
+      shadow.appendChild(this._template);
+
+      ComponentUtils.style.call(this, '');
     }
-
-    shadow.appendChild(this._template);
-
-    ComponentUtils.style.call(this, '');
   };
+
 
   /**
    * Proxy the checked property to the input element.
    */
-  Object.defineProperty( proto, 'checked', {
+  Object.defineProperty( GaiaSwitch.prototype, 'checked', {
     get: function() {
       return this._input.checked;
     },
@@ -82,7 +83,7 @@ window.GaiaSwitch = (function(win) {
   /**
    * Proxy the name property to the input element.
    */
-  Object.defineProperty( proto, 'name', {
+  Object.defineProperty( GaiaSwitch.prototype, 'name', {
     get: function() {
       return this.getAttribute('name');
     },

@@ -18,6 +18,7 @@ const {
 const {
   MESSAGE_ADD,
   MESSAGE_OPEN,
+  MESSAGES_ADD,
   MESSAGES_CLEAR,
   REMOVED_ACTORS_CLEAR,
   NETWORK_MESSAGE_UPDATE,
@@ -132,7 +133,7 @@ function enableActorReleaser(hud) {
 
       let type = action.type;
       let proxy = hud ? hud.proxy : null;
-      if (proxy && (type == MESSAGE_ADD || type == MESSAGES_CLEAR)) {
+      if (proxy && ([MESSAGE_ADD, MESSAGES_ADD, MESSAGES_CLEAR].includes(type))) {
         releaseActors(state.messages.removedActors, proxy);
 
         // Reset `removedActors` in message reducer.

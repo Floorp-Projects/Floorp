@@ -2551,9 +2551,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                  eventState, aFrame);
       break;
 
-    case NS_THEME_SPINNER: {
+    case NS_THEME_INNER_SPIN_BUTTON: {
+    case NS_THEME_SPINNER:
+      bool isSpinner = (aWidgetType == NS_THEME_SPINNER);
       nsIContent* content = aFrame->GetContent();
-      if (content->IsHTMLElement()) {
+      if (isSpinner && content->IsHTMLElement()) {
         // In HTML the theming for the spin buttons is drawn individually into
         // their own backgrounds instead of being drawn into the background of
         // their spinner parent as it is for XUL.
@@ -3454,6 +3456,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
+    case NS_THEME_INNER_SPIN_BUTTON:
     case NS_THEME_SPINNER:
     case NS_THEME_SPINNER_UPBUTTON:
     case NS_THEME_SPINNER_DOWNBUTTON:
@@ -3838,6 +3841,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_BUTTON_ARROW_DOWN:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_TOOLBARBUTTON:
+    case NS_THEME_INNER_SPIN_BUTTON:
     case NS_THEME_SPINNER:
     case NS_THEME_SPINNER_UPBUTTON:
     case NS_THEME_SPINNER_DOWNBUTTON:
@@ -3978,6 +3982,7 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:
+    case NS_THEME_INNER_SPIN_BUTTON:
     case NS_THEME_SPINNER:
     case NS_THEME_SPINNER_UPBUTTON:
     case NS_THEME_SPINNER_DOWNBUTTON:

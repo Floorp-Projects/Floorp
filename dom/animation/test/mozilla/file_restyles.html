@@ -380,6 +380,9 @@ waitForAllPaints(() => {
 
     await waitForWheelEvent(parentElement);
 
+    // Make sure we are ready to restyle before counting restyles.
+    await waitForFrame();
+
     markers = await observeStyling(5);
     is(markers.length, 5,
        'Animations running on the main-thread which were in scrolled out ' +
@@ -423,6 +426,8 @@ waitForAllPaints(() => {
        'which are scrolled out should never cause restyles');
 
     await waitForWheelEvent(grandParent);
+
+    await waitForFrame();
 
     markers = await observeStyling(5);
     is(markers.length, 5,
@@ -476,6 +481,8 @@ waitForAllPaints(() => {
 
     await waitForWheelEvent(parentElement);
 
+    await waitForFrame();
+
     var markers = await observeStyling(5);
 
     // FIXME: We should reduce a redundant restyle here.
@@ -500,9 +507,8 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    var markers = await observeStyling(1, () => {
-      parentElement.style.height = '100px';
-    });
+    parentElement.style.height = '100px';
+    var markers = await observeStyling(1);
 
     is(markers.length, 1,
        'Animations running on the main-thread which was in scrolled out ' +
@@ -609,7 +615,7 @@ waitForAllPaints(() => {
     div.style.display = 'none';
 
     // We need to wait a frame to apply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     is(animation.playState, 'running',
        'Script animations keep running even when the target element has ' +
@@ -626,7 +632,7 @@ waitForAllPaints(() => {
     div.style.display = '';
 
     // We need to wait a frame to unapply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     var markers = await observeStyling(5);
     is(markers.length, 5,
@@ -645,7 +651,7 @@ waitForAllPaints(() => {
     div.style.display = 'none';
 
     // We need to wait a frame to apply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     is(animation.playState, 'running',
        'Opacity script animations keep running even when the target element ' +
@@ -663,7 +669,7 @@ waitForAllPaints(() => {
     div.style.display = '';
 
     // We need to wait a frame to unapply display:none style.
-    await waitForFrame();
+    await waitForNextFrame();
 
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
        'Opacity script animations restored from "display: none" should be ' +
@@ -836,7 +842,7 @@ waitForAllPaints(() => {
 
       // Need a frame to give the animation a chance to be sent to the
       // compositor.
-      await waitForFrame();
+      await waitForNextFrame();
 
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation which is no longer overridden by the ' +

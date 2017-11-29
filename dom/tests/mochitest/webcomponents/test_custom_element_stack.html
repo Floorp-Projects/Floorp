@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=783129
 -->
 <head>
-  <title>Test for document.registerElement lifecycle callback</title>
+  <title>Test for custom elements lifecycle callback</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -50,28 +50,29 @@ function testChangeAttributeInEnteredViewCallback() {
 }
 
 function testLeaveViewInEnteredViewCallback() {
-  var p = Object.create(HTMLElement.prototype);
   var connectedCallbackCalled = false;
   var disconnectedCallbackCalled = false;
   var container = document.getElementById("container");
 
-  p.connectedCallback = function() {
-    is(this.parentNode, container, "Parent node should the container in which the node was appended.");
-    is(connectedCallbackCalled, false, "Connected callback should be called only once in this test.");
-    connectedCallbackCalled = true;
-    is(disconnectedCallbackCalled, false, "Disconnected callback should not be called prior to removing element from document.");
-    container.removeChild(this);
-    is(disconnectedCallbackCalled, true, "Transition from user-agent implementation to script should run left view callback.");
-    runNextTest();
+  class Three extends HTMLElement {
+    connectedCallback() {
+      is(this.parentNode, container, "Parent node should the container in which the node was appended.");
+      is(connectedCallbackCalled, false, "Connected callback should be called only once in this test.");
+      connectedCallbackCalled = true;
+      is(disconnectedCallbackCalled, false, "Disconnected callback should not be called prior to removing element from document.");
+      container.removeChild(this);
+      is(disconnectedCallbackCalled, true, "Transition from user-agent implementation to script should run left view callback.");
+      runNextTest();
+    }
+
+    disconnectedCallback() {
+      is(disconnectedCallbackCalled, false, "The disconnected callback should only be called once in this test.");
+      is(connectedCallbackCalled, true, "The connected callback should be called prior to disconnected callback.");
+      disconnectedCallbackCalled = true;
+    }
   };
 
-  p.disconnectedCallback = function() {
-    is(disconnectedCallbackCalled, false, "The disconnected callback should only be called once in this test.");
-    is(connectedCallbackCalled, true, "The connected callback should be called prior to disconnected callback.");
-    disconnectedCallbackCalled = true;
-  };
-
-  document.registerElement("x-three", { prototype: p });
+  customElements.define("x-three", Three);
   var elem = document.createElement("x-three");
 
   container.appendChild(elem);

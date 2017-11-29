@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1111633
 <span id="del" is="x-del"></span>
 <script>
 
-// Before registerElement
+// Before define
 var foo = document.querySelector('#foo');
 is(getComputedStyle(foo).color, "rgb(0, 0, 255)", "foo - color");
 is(getComputedStyle(foo).backgroundColor, "rgb(0, 0, 255)", "foo - backgroundColor");
@@ -58,25 +58,25 @@ is(getComputedStyle(baz).backgroundColor, "rgb(0, 0, 255)", "baz - backgroundCol
 var span1 = document.querySelector('#span1');
 is(getComputedStyle(span1).color, "rgb(255, 0, 0)", "span1 - color");
 
-var Foo = document.registerElement('x-foo', { prototype: Object.create(HTMLElement.prototype) });
+customElements.define('x-foo', class extends HTMLElement {});
 
-var Bar = document.registerElement('x-bar', { extends: 'span', prototype: Object.create(HTMLSpanElement.prototype) });
+customElements.define('x-bar', class extends HTMLSpanElement {}, { extends: 'span' });
 
-var Baz = document.registerElement('x-baz', { prototype: Object.create(HTMLElement.prototype) });
+customElements.define('x-baz', class extends HTMLElement {});
 
-// After registerElement
+// After define
 is(getComputedStyle(foo).color, "rgb(255, 0, 0)",
-   "foo - color (after registerElement)");
+   "foo - color (after define)");
 
 is(getComputedStyle(bar).color,
-   "rgb(255, 0, 0)", "bar - color (after registerElement)");
+   "rgb(255, 0, 0)", "bar - color (after define)");
 
 is(getComputedStyle(baz).color,
-   "rgb(255, 0, 0)", "baz - color (after registerElement)");
+   "rgb(255, 0, 0)", "baz - color (after define)");
 is(getComputedStyle(baz).backgroundColor,
-   "rgb(255, 0, 0)", "baz - backgroundColor (after registerElement)");
+   "rgb(255, 0, 0)", "baz - backgroundColor (after define)");
 
-is(getComputedStyle(span1).color, "rgb(0, 255, 0)", "span1 - color (after registerElement)");
+is(getComputedStyle(span1).color, "rgb(0, 255, 0)", "span1 - color (after define)");
 
 // After tree removal
 var del = document.querySelector('#del');
@@ -88,9 +88,11 @@ par.removeChild(del);
 del.setAttribute("is", "foobar");
 par.appendChild(del);
 is(getComputedStyle(del).color, "rgb(0, 0, 255)", "del - color (after reappend)");
-var Del = document.registerElement('x-del', { extends: 'span', prototype: Object.create(HTMLSpanElement.prototype) });
+
+class Del extends HTMLSpanElement {};
+customElements.define('x-del', Del, { extends: 'span' });
 // [is="x-del"] will not match any longer so the rule of span will apply
-is(getComputedStyle(del).color, "rgb(0, 255, 0)", "del - color (after registerElement)");
+is(getComputedStyle(del).color, "rgb(0, 255, 0)", "del - color (after define)");
 // but the element should have been upgraded:
 ok(del instanceof Del, "element was upgraded correctly after changing |is|");
 

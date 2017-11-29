@@ -21,6 +21,7 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/DashboardTypes.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 
 class nsHostResolver;
 class nsHostRecord;
@@ -74,8 +75,8 @@ public:
      */
     Mutex        addr_info_lock;
     int          addr_info_gencnt; /* generation count of |addr_info| */
-    mozilla::net::AddrInfo *addr_info;
-    mozilla::net::NetAddr  *addr;
+    mozilla::UniquePtr<mozilla::net::AddrInfo> addr_info;
+    mozilla::UniquePtr<mozilla::net::NetAddr> addr;
     bool         negative;   /* True if this record is a cache of a failed lookup.
                                 Negative cache entries are valid just like any other
                                 (though never for more than 60 seconds), but a use
@@ -317,7 +318,8 @@ private:
       LOOKUP_RESOLVEAGAIN,
     };
 
-    LookupStatus OnLookupComplete(nsHostRecord *, nsresult, mozilla::net::AddrInfo *);
+    LookupStatus OnLookupComplete(nsHostRecord *, nsresult,
+                                  mozilla::UniquePtr<mozilla::net::AddrInfo>&&);
     void     DeQueue(PRCList &aQ, nsHostRecord **aResult);
     void     ClearPendingQueue(PRCList *aPendingQueue);
     nsresult ConditionallyCreateThread(nsHostRecord *rec);

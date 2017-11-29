@@ -290,9 +290,7 @@ function updateIndicators(aSubject, aTopic, aData) {
     showScreenSharingIndicator: ""
   };
 
-  let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageSender);
-  cpmm.sendAsyncMessage("webrtc:UpdatingIndicators");
+  Services.cpmm.sendAsyncMessage("webrtc:UpdatingIndicators");
 
   // If several iframes in the same page use media streams, it's possible to
   // have the same top level window several times. We use a Set to avoid
@@ -331,7 +329,7 @@ function updateIndicators(aSubject, aTopic, aData) {
     mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators", tabState);
   }
 
-  cpmm.sendAsyncMessage("webrtc:UpdateGlobalIndicators", state);
+  Services.cpmm.sendAsyncMessage("webrtc:UpdateGlobalIndicators", state);
 }
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
