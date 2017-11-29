@@ -15,6 +15,7 @@ EXPORTS.mozilla.ipc += [
     'BackgroundParent.h',
     'BackgroundUtils.h',
     'BrowserProcessSubThread.h',
+    'ByteBuf.h',
     'CrashReporterClient.h',
     'CrashReporterHost.h',
     'CrashReporterMetadataShmem.h',
