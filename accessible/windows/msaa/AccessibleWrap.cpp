@@ -495,8 +495,12 @@ AccessibleWrap::get_accRole(
 
   if (content->IsElement()) {
     nsAutoString roleString;
-    if (msaaRole != ROLE_SYSTEM_CLIENT &&
-        !content->GetAttr(kNameSpaceID_None, nsGkAtoms::role, roleString)) {
+    // Try the role attribute.
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::role, roleString);
+
+    if (roleString.IsEmpty()) {
+      // No role attribute (or it is an empty string).
+      // Use the tag name.
       nsIDocument * document = content->GetUncomposedDoc();
       if (!document)
         return E_FAIL;
