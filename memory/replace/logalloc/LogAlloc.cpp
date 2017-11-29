@@ -82,9 +82,7 @@ replace_malloc(size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.malloc(aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
-  }
+  FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   return ptr;
 }
 
@@ -93,10 +91,8 @@ replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   int ret = sFuncs.posix_memalign(aPtr, aAlignment, aSize);
-  if (ret == 0) {
-    FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
-             aAlignment, aSize, *aPtr);
-  }
+  FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
+           aAlignment, aSize, (ret == 0) ? *aPtr : nullptr);
   return ret;
 }
 
@@ -105,10 +101,8 @@ replace_aligned_alloc(size_t aAlignment, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.aligned_alloc(aAlignment, aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
-             aAlignment, aSize, ptr);
-  }
+  FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
+           aAlignment, aSize, ptr);
   return ptr;
 }
 
@@ -117,10 +111,8 @@ replace_calloc(size_t aNum, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.calloc(aNum, aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
-             aSize, ptr);
-  }
+  FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
+           aSize, ptr);
   return ptr;
 }
 
@@ -129,10 +121,8 @@ replace_realloc(void* aPtr, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* new_ptr = sFuncs.realloc(aPtr, aSize);
-  if (new_ptr || !aSize) {
-    FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
-             aSize, new_ptr);
-  }
+  FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
+           aSize, new_ptr);
   return new_ptr;
 }
 
@@ -140,9 +130,7 @@ static void
 replace_free(void* aPtr)
 {
   MutexAutoLock lock(sMutex);
-  if (aPtr) {
-    FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
-  }
+  FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
   sFuncs.free(aPtr);
 }
 
@@ -151,10 +139,8 @@ replace_memalign(size_t aAlignment, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.memalign(aAlignment, aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
-             aAlignment, aSize, ptr);
-  }
+  FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
+           aAlignment, aSize, ptr);
   return ptr;
 }
 
@@ -163,9 +149,7 @@ replace_valloc(size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.valloc(aSize);
-  if (ptr) {
-    FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
-  }
+  FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
   return ptr;
 }
 
