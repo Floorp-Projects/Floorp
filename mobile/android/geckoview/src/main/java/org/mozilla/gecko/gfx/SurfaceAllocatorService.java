@@ -23,6 +23,11 @@ public class SurfaceAllocatorService extends Service {
     private Binder mBinder = new ISurfaceAllocator.Stub() {
         public GeckoSurface acquireSurface(int width, int height, boolean singleBufferMode) {
             GeckoSurfaceTexture gst = GeckoSurfaceTexture.acquire(singleBufferMode);
+
+            if (gst == null) {
+                return null;
+            }
+
             if (width > 0 && height > 0) {
                 gst.setDefaultBufferSize(width, height);
             }
