@@ -1101,6 +1101,7 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
   }
   CSFLogDebug(LOGTAG, "%s received RTP packet.", description_.c_str());
   increment_rtp_packets_received(out_len);
+  OnRtpPacketReceived();
 
   RtpLogger::LogPacket(inner_data.get(), out_len, true, true, header.headerLength,
                        description_);
@@ -1896,7 +1897,8 @@ class GenericReceiveListener : public MediaStreamListener
       played_ticks_(0),
       last_log_(0),
       principal_handle_(PRINCIPAL_HANDLE_NONE),
-      listening_(false)
+      listening_(false),
+      maybe_track_needs_unmute_(true)
   {
     MOZ_ASSERT(track->GetInputStream()->AsSourceStream());
   }
@@ -1912,6 +1914,7 @@ class GenericReceiveListener : public MediaStreamListener
     if (!listening_) {
       listening_ = true;
       track_->GetInputStream()->AddListener(this);
+      maybe_track_needs_unmute_ = true;
     }
   }
 
@@ -1920,6 +1923,24 @@ class GenericReceiveListener : public MediaStreamListener
     if (listening_) {
       listening_ = false;
       track_->GetInputStream()->RemoveListener(this);
+    }
+  }
+
+  void OnRtpReceived()
+  {
+    if (maybe_track_needs_unmute_) {
+      maybe_track_needs_unmute_ = false;
+      NS_DispatchToMainThread(NewRunnableMethod(
+            "GenericReceiveListener::OnRtpReceived_m",
+            this,
+            &GenericReceiveListener::OnRtpReceived_m));
+    }
+  }
+
+  void OnRtpReceived_m()
+  {
+    if (listening_ && track_->Muted()) {
+      track_->MutedChanged(false);
     }
   }
 
@@ -1984,6 +2005,7 @@ class GenericReceiveListener : public MediaStreamListener
   TrackTicks last_log_; // played_ticks_ when we last logged
   PrincipalHandle principal_handle_;
   bool listening_;
+  Atomic<bool> maybe_track_needs_unmute_;
 };
 
 MediaPipelineReceive::MediaPipelineReceive(
@@ -2169,6 +2191,14 @@ MediaPipelineReceiveAudio::Stop()
   conduit_->StopReceiving();
 }
 
+void
+MediaPipelineReceiveAudio::OnRtpPacketReceived()
+{
+  if (listener_) {
+    listener_->OnRtpReceived();
+  }
+}
+
 class MediaPipelineReceiveVideo::PipelineListener
   : public GenericReceiveListener {
 public:
@@ -2351,6 +2381,14 @@ MediaPipelineReceiveVideo::Stop()
     listener_->RemoveSelf();
   }
   conduit_->StopReceiving();
+}
+
+void
+MediaPipelineReceiveVideo::OnRtpPacketReceived()
+{
+  if (listener_) {
+    listener_->OnRtpReceived();
+  }
 }
 
 DOMHighResTimeStamp MediaPipeline::GetNow() {
