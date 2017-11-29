@@ -677,6 +677,8 @@ ICEStats.prototype = {
     div.appendChild(this.renderIceMetric("ice_rollback_count_label",
                                          this._report.iceRollbacks));
 
+    div.appendChild(this.renderRawICECandidateSection());
+
     return div;
   },
 
@@ -725,6 +727,72 @@ ICEStats.prototype = {
     });
 
     return statsTable;
+  },
+
+  renderRawICECandidates() {
+    let div = document.createElement("div");
+
+    let tbody = [];
+    let rows = this.generateRawICECandidates();
+    for (let row of rows) {
+      tbody.push([row.local, row.remote]);
+    }
+
+    let statsTable = new SimpleTable(
+      [getString("raw_local_candidate"), getString("raw_remote_candidate")],
+      tbody).render();
+
+    // we want different formatting on the raw stats table (namely, left-align)
+    statsTable.className = "raw-candidate";
+    div.appendChild(statsTable);
+
+    return div;
+  },
+
+  renderRawICECandidateSection() {
+    let section = document.createElement("div");
+    let heading = document.createElement("h4");
+    heading.textContent = getString("raw_candidates_heading");
+    section.appendChild(heading);
+
+    let div = document.createElement("div");
+    let sectionCtrl = document.createElement("div");
+    sectionCtrl.className = "section-ctrl no-print";
+    let foldEffect = new FoldEffect(div, {
+       showMsg: getString("raw_cand_show_msg"),
+       hideMsg: getString("raw_cand_hide_msg")
+    });
+    sectionCtrl.appendChild(foldEffect.render());
+    section.appendChild(sectionCtrl);
+
+    div.appendChild(this.renderRawICECandidates());
+
+    section.appendChild(div);
+
+    return section;
+  },
+
+  generateRawICECandidates() {
+    let rows = [];
+    let row;
+
+    let rawLocals = this._report.rawLocalCandidates.sort();
+    // add to a Set (to remove duplicates) because some of these come from
+    // candidates in use and some come from the raw trickled candidates
+    // received that may have been dropped because no stream was found or
+    // they were for a component id that was too high.
+    let rawRemotes = [...new Set(this._report.rawRemoteCandidates)].sort();
+    let rowCount = Math.max(rawLocals.length, rawRemotes.length);
+    for (var i = 0; i < rowCount; i++) {
+      let rawLocal = rawLocals[i];
+      let rawRemote = rawRemotes[i];
+      row = {
+        local: rawLocal || "",
+        remote: rawRemote || ""
+      };
+      rows.push(row);
+    }
+    return rows;
   },
 
   renderIceMetric(labelName, value) {
@@ -791,11 +859,6 @@ ICEStats.prototype = {
         stats.push(stat);
       }
     }
-
-    // add the unmatched candidates to the end of the table
-    [...candidates.values()].filter(cand => !matched[cand.id]).forEach(
-      cand => stats.push({[cand.type]: this.candidateToString(cand)})
-    );
 
     return stats.sort((a, b) => (b.bytesSent ?
                                  (b.bytesSent || 0) - (a.bytesSent || 0) :
