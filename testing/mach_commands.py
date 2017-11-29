@@ -116,6 +116,7 @@ class Test(MachCommandBase):
 
         # Create shared logger
         formatter = log_formatters[self._mach_context.settings['test']['format']][0]()
+        formatter.summary_on_shutdown = True
 
         level = self._mach_context.settings['test']['level']
         log = StructuredLogger('mach-test')
