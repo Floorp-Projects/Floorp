@@ -17,9 +17,6 @@
     _(UDiv)                        \
     _(UMod)                        \
     _(SoftUDivOrMod)               \
-    _(WasmCompareExchangeCallout)  \
-    _(WasmAtomicExchangeCallout)   \
-    _(WasmAtomicBinopCallout)      \
     _(DivOrModI64)                 \
     _(UDivOrModI64)                \
     _(WasmTruncateToInt64)         \

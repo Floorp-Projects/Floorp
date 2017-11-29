@@ -38,16 +38,6 @@ MOZ_MUST_USE bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp);
 MOZ_MUST_USE bool atomics_wait(JSContext* cx, unsigned argc, Value* vp);
 MOZ_MUST_USE bool atomics_wake(JSContext* cx, unsigned argc, Value* vp);
 
-/* asm.js callouts */
-namespace wasm { class Instance; }
-int32_t atomics_add_asm_callout(wasm::Instance* i, int32_t vt, int32_t offset, int32_t value);
-int32_t atomics_sub_asm_callout(wasm::Instance* i, int32_t vt, int32_t offset, int32_t value);
-int32_t atomics_and_asm_callout(wasm::Instance* i, int32_t vt, int32_t offset, int32_t value);
-int32_t atomics_or_asm_callout(wasm::Instance* i, int32_t vt, int32_t offset, int32_t value);
-int32_t atomics_xor_asm_callout(wasm::Instance* i, int32_t vt, int32_t offset, int32_t value);
-int32_t atomics_cmpxchg_asm_callout(wasm::Instance* i, int32_t vt, int32_t offset, int32_t oldval, int32_t newval);
-int32_t atomics_xchg_asm_callout(wasm::Instance* i, int32_t vt, int32_t offset, int32_t value);
-
 class FutexThread
 {
     friend class AutoLockFutexAPI;
