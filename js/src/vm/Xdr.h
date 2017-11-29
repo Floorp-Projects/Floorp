@@ -279,13 +279,17 @@ class XDRState : public XDRCoderBase
     template <typename T>
     bool codeEnum32(T* val, typename mozilla::EnableIf<mozilla::IsEnum<T>::value, T>::Type * = NULL)
     {
+        // Mix the enumeration value with a random magic number, such that a
+        // corruption with a low-ranged value (like 0) is less likely to cause a
+        // miss-interpretation of the XDR content and instead cause a failure.
+        const uint32_t MAGIC = 0x21AB218C;
         uint32_t tmp;
         if (mode == XDR_ENCODE)
-            tmp = uint32_t(*val);
+            tmp = uint32_t(*val) ^ MAGIC;
         if (!codeUint32(&tmp))
             return false;
         if (mode == XDR_DECODE)
-            *val = T(tmp);
+            *val = T(tmp ^ MAGIC);
         return true;
     }
 
