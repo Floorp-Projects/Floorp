@@ -35,7 +35,7 @@ class NullTerminal(object):
 class MachFormatter(base.BaseFormatter):
 
     def __init__(self, start_time=None, write_interval=False, write_times=True,
-                 terminal=None, disable_colors=False, **kwargs):
+                 terminal=None, disable_colors=False, summary_on_shutdown=False, **kwargs):
         super(MachFormatter, self).__init__(**kwargs)
 
         if disable_colors:
@@ -57,6 +57,7 @@ class MachFormatter(base.BaseFormatter):
         self._known_pids = set()
 
         self.summary = SummaryHandler()
+        self.summary_on_shutdown = summary_on_shutdown
 
     def __call__(self, data):
         self.summary(data)
@@ -118,7 +119,8 @@ class MachFormatter(base.BaseFormatter):
         return "%i" % num_tests
 
     def suite_end(self, data):
-        return self._format_suite_summary(self.summary.current_suite, self.summary.current)
+        if not self.summary_on_shutdown:
+            return self._format_suite_summary(self.summary.current_suite, self.summary.current)
 
     def _format_expected(self, status, expected):
         term = self.terminal if self.terminal is not None else NullTerminal()
@@ -386,6 +388,16 @@ class MachFormatter(base.BaseFormatter):
         )
 
         return message
+
+    def shutdown(self, data):
+        if not self.summary_on_shutdown:
+            return
+
+        heading = "Overall Summary"
+        rv = ["", heading, "=" * len(heading)]
+        for suite, summary in self.summary:
+            rv.append(self._format_suite_summary(suite, summary))
+        return "\n".join(rv)
 
     def _get_subtest_data(self, data):
         test = self._get_test_id(data)
