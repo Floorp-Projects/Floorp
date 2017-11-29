@@ -1026,6 +1026,18 @@ ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 }
 
 void
+ServoStyleSet::SetStylistStyleSheetsDirty()
+{
+  mStylistState |= StylistState::StyleSheetsDirty;
+}
+
+void
+ServoStyleSet::SetStylistXBLStyleSheetsDirty()
+{
+  mStylistState |= StylistState::XBLStyleSheetsDirty;
+}
+
+void
 ServoStyleSet::RecordStyleSheetChange(
     ServoStyleSheet* aSheet,
     StyleSheet::ChangeType aChangeType)
