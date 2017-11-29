@@ -34,6 +34,9 @@ extern crate libc;
 extern crate boxfnonce;
 extern crate runloop;
 
+#[macro_use]
+extern crate bitflags;
+
 mod consts;
 mod statemachine;
 mod u2ftypes;
@@ -44,6 +47,15 @@ pub use manager::U2FManager;
 
 mod capi;
 pub use capi::*;
+
+// Keep this in sync with the constants in u2fhid-capi.h.
+bitflags! {
+    pub struct RegisterFlags: u64 {
+        const REQUIRE_RESIDENT_KEY        = 1;
+        const REQUIRE_USER_VERIFICATION   = 2;
+        const REQUIRE_PLATFORM_ATTACHMENT = 4;
+    }
+}
 
 #[cfg(fuzzing)]
 pub use u2fprotocol::*;
