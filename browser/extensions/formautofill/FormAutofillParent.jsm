@@ -27,7 +27,9 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillParent"];
+// We expose a singleton from this module. Some tests may import the
+// constructor via a backstage pass.
+this.EXPORTED_SYMBOLS = ["formAutofillParent"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -79,9 +81,29 @@ FormAutofillParent.prototype = {
   _active: null,
 
   /**
+   * The status of Form Autofill's initialization.
+   */
+  _initialized: false,
+
+  /**
+   * Exposes the status of Form Autofill's initialization. It can be used to
+   * determine whether Form Autofill is available for current users.
+   *
+   * @returns {boolean} Whether FormAutofillParent is initialized.
+   */
+  get initialized() {
+    return this._initialized;
+  },
+
+  /**
    * Initializes ProfileStorage and registers the message handler.
    */
   async init() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
     Services.obs.addObserver(this, "sync-pane-loaded");
     Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetRecords", this);
@@ -552,3 +574,5 @@ FormAutofillParent.prototype = {
     histogram.add(`${formType}-${fillingType}`, Date.now() - startedFillingMS);
   },
 };
+
+this.formAutofillParent = new FormAutofillParent();
