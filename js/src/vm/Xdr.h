@@ -307,6 +307,18 @@ class XDRState : public XDRCoderBase
         return true;
     }
 
+    bool codeMarker(uint32_t magic) {
+        uint32_t actual = magic;
+        if (!codeUint32(&actual))
+            return false;
+        if (actual != magic) {
+            // Fail in debug, but only soft-fail in release
+            MOZ_ASSERT(false, "Bad XDR marker");
+            return fail(JS::TranscodeResult_Failure_BadDecode);
+        }
+        return true;
+    }
+
     bool codeBytes(void* bytes, size_t len) {
         if (len == 0)
             return true;
