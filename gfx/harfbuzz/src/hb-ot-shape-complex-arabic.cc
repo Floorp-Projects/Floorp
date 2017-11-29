@@ -24,13 +24,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb-private.hh"
+#include "hb-debug.hh"
 #include "hb-ot-shape-complex-arabic-private.hh"
 #include "hb-ot-shape-private.hh"
-
-
-#ifndef HB_DEBUG_ARABIC
-#define HB_DEBUG_ARABIC (HB_DEBUG+0)
-#endif
 
 
 /* buffer var allocations */
@@ -563,6 +560,7 @@ apply_stch (const hb_ot_shape_plan_t *plan,
       }
       else
       {
+	buffer->unsafe_to_break (context, end);
 	hb_position_t x_offset = 0;
 	for (unsigned int k = end; k > start; k--)
 	{
@@ -689,7 +687,6 @@ reorder_marks_arabic (const hb_ot_shape_plan_t *plan,
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_arabic =
 {
-  "arabic",
   collect_features_arabic,
   nullptr, /* override_features */
   data_create_arabic,

@@ -29,6 +29,8 @@
 #ifndef HB_OT_LAYOUT_GSUBGPOS_PRIVATE_HH
 #define HB_OT_LAYOUT_GSUBGPOS_PRIVATE_HH
 
+#include "hb-private.hh"
+#include "hb-debug.hh"
 #include "hb-buffer-private.hh"
 #include "hb-ot-layout-gdef-table.hh"
 #include "hb-set-private.hh"
@@ -36,15 +38,6 @@
 
 namespace OT {
 
-
-#ifndef HB_DEBUG_CLOSURE
-#define HB_DEBUG_CLOSURE (HB_DEBUG+0)
-#endif
-
-#define TRACE_CLOSURE(this) \
-	hb_auto_trace_t<HB_DEBUG_CLOSURE, hb_void_t> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "");
 
 struct hb_closure_context_t :
        hb_dispatch_context_t<hb_closure_context_t, hb_void_t, HB_DEBUG_CLOSURE>
@@ -85,16 +78,6 @@ struct hb_closure_context_t :
 };
 
 
-
-#ifndef HB_DEBUG_WOULD_APPLY
-#define HB_DEBUG_WOULD_APPLY (HB_DEBUG+0)
-#endif
-
-#define TRACE_WOULD_APPLY(this) \
-	hb_auto_trace_t<HB_DEBUG_WOULD_APPLY, bool> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "%d glyphs", c->len);
-
 struct hb_would_apply_context_t :
        hb_dispatch_context_t<hb_would_apply_context_t, bool, HB_DEBUG_WOULD_APPLY>
 {
@@ -121,16 +104,6 @@ struct hb_would_apply_context_t :
 			      debug_depth (0) {}
 };
 
-
-
-#ifndef HB_DEBUG_COLLECT_GLYPHS
-#define HB_DEBUG_COLLECT_GLYPHS (HB_DEBUG+0)
-#endif
-
-#define TRACE_COLLECT_GLYPHS(this) \
-	hb_auto_trace_t<HB_DEBUG_COLLECT_GLYPHS, hb_void_t> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "");
 
 struct hb_collect_glyphs_context_t :
        hb_dispatch_context_t<hb_collect_glyphs_context_t, hb_void_t, HB_DEBUG_COLLECT_GLYPHS>
@@ -219,10 +192,6 @@ struct hb_collect_glyphs_context_t :
 
 
 
-#ifndef HB_DEBUG_GET_COVERAGE
-#define HB_DEBUG_GET_COVERAGE (HB_DEBUG+0)
-#endif
-
 /* XXX Can we remove this? */
 
 template <typename set_t>
@@ -248,17 +217,6 @@ struct hb_add_coverage_context_t :
   unsigned int debug_depth;
 };
 
-
-
-#ifndef HB_DEBUG_APPLY
-#define HB_DEBUG_APPLY (HB_DEBUG+0)
-#endif
-
-#define TRACE_APPLY(this) \
-	hb_auto_trace_t<HB_DEBUG_APPLY, bool> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "idx %d gid %u lookup %d", \
-	 c->buffer->idx, c->buffer->cur().codepoint, (int) c->lookup_index);
 
 struct hb_apply_context_t :
        hb_dispatch_context_t<hb_apply_context_t, bool, HB_DEBUG_APPLY>
@@ -1247,11 +1205,11 @@ struct Rule
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return inputCount.sanitize (c)
-	&& lookupCount.sanitize (c)
-	&& c->check_range (inputZ,
-			   inputZ[0].static_size * inputCount
-			   + lookupRecordX[0].static_size * lookupCount);
+    return_trace (inputCount.sanitize (c) &&
+		  lookupCount.sanitize (c) &&
+		  c->check_range (inputZ,
+				  inputZ[0].static_size * inputCount +
+				  lookupRecordX[0].static_size * lookupCount));
   }
 
   protected:

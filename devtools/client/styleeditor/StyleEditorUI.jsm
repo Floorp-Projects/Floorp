@@ -103,27 +103,6 @@ function StyleEditorUI(debuggee, target, panelDoc, cssProperties) {
 this.StyleEditorUI = StyleEditorUI;
 
 StyleEditorUI.prototype = {
-  /**
-   * Get whether any of the editors have unsaved changes.
-   *
-   * @return boolean
-   */
-  get isDirty() {
-    if (this._markedDirty === true) {
-      return true;
-    }
-    return this.editors.some((editor) => {
-      return editor.sourceEditor && !editor.sourceEditor.isClean();
-    });
-  },
-
-  /*
-   * Mark the style editor as having or not having unsaved changes.
-   */
-  set isDirty(value) {
-    this._markedDirty = value;
-  },
-
   /*
    * Index of selected stylesheet in document.styleSheets
    */

@@ -73,9 +73,9 @@ public:
         return mSurfaceOverride;
     }
 
-    virtual bool MakeCurrentImpl(bool aForce) override;
+    virtual bool MakeCurrentImpl() const override;
 
-    virtual bool IsCurrent() override;
+    virtual bool IsCurrentImpl() const override;
 
     virtual bool RenewSurface(widget::CompositorWidget* aWidget) override;
 

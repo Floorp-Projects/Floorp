@@ -15,7 +15,6 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'U2F.cpp',
-    'U2FManager.cpp',
     'U2FTransactionChild.cpp',
     'U2FTransactionParent.cpp',
 ]
@@ -34,3 +33,4 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']

@@ -84,13 +84,6 @@
 #define ITEM_KIND_VALUE 1
 #define ITEM_KIND_KEY_AND_VALUE 2
 
-// NB: keep these in sync with the copy in jsfriendapi.h.
-#define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
-#define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
-#define JSITER_SYMBOLS    0x20  /* also include symbol property keys */
-#define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
-
-
 #define REGEXP_SOURCE_SLOT 1
 #define REGEXP_FLAGS_SLOT 2
 

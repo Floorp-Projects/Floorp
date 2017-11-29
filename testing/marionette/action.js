@@ -1309,7 +1309,7 @@ function dispatchPointerMove(a, inputState, tickDuration, window) {
     const start = Date.now();
     const [startX, startY] = [inputState.x, inputState.y];
 
-    let coords = getElementCenter(a.origin);
+    let coords = getElementCenter(a.origin, window);
     let target = action.computePointerDestination(a, inputState, coords);
     const [targetX, targetY] = [target.x, target.y];
 
@@ -1419,9 +1419,9 @@ function inViewPort(x, y, win) {
   return !(x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight);
 }
 
-function getElementCenter(el) {
+function getElementCenter(el, window) {
   if (element.isDOMElement(el)) {
-    return element.coordinates(el);
+    return element.getInViewCentrePoint(el.getClientRects()[0], window);
   }
   return {};
 }

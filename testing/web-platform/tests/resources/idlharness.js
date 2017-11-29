@@ -55,6 +55,7 @@ function constValue (cnt)
     if (cnt.type === "null") return null;
     if (cnt.type === "NaN") return NaN;
     if (cnt.type === "Infinity") return cnt.negative ? -Infinity : Infinity;
+    if (cnt.type === "number") return +cnt.value;
     return cnt.value;
 }
 

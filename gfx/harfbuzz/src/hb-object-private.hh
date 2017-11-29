@@ -33,16 +33,10 @@
 #define HB_OBJECT_PRIVATE_HH
 
 #include "hb-private.hh"
+#include "hb-debug.hh"
 
 #include "hb-atomic-private.hh"
 #include "hb-mutex-private.hh"
-
-
-/* Debug */
-
-#ifndef HB_DEBUG_OBJECT
-#define HB_DEBUG_OBJECT (HB_DEBUG+0)
-#endif
 
 
 /* reference_count */

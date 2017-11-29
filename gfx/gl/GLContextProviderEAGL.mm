@@ -113,12 +113,8 @@ GLContextEAGL::RecreateRB()
 }
 
 bool
-GLContextEAGL::MakeCurrentImpl(bool aForce)
+GLContextEAGL::MakeCurrentImpl() const
 {
-    if (!aForce && [EAGLContext currentContext] == mContext) {
-        return true;
-    }
-
     if (mContext) {
         if(![EAGLContext setCurrentContext:mContext]) {
             return false;
@@ -128,7 +124,8 @@ GLContextEAGL::MakeCurrentImpl(bool aForce)
 }
 
 bool
-GLContextEAGL::IsCurrent() {
+GLContextEAGL::IsCurrentImpl() const
+{
     return [EAGLContext currentContext] == mContext;
 }
 

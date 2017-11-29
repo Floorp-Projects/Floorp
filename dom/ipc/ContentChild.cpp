@@ -2367,7 +2367,7 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvPreferenceUpdate(const PrefSetting& aPref)
+ContentChild::RecvPreferenceUpdate(const Pref& aPref)
 {
   Preferences::SetPreference(aPref);
   return IPC_OK();

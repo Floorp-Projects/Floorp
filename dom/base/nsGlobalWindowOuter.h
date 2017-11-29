@@ -1062,9 +1062,6 @@ public:
 
   virtual mozilla::AbstractThread*
   AbstractMainThreadFor(mozilla::TaskCategory aCategory) override;
-
-  typedef mozilla::LinkedList<mozilla::dom::IdleRequest> IdleRequests;
-
 protected:
   bool                          mFullScreen : 1;
   bool                          mFullscreenMode : 1;

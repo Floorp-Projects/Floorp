@@ -213,7 +213,13 @@ EGLint SwapChain11::resetOffscreenColorBuffer(const gl::Context *context,
             ID3D11Resource *tempResource11;
             HRESULT result = device->OpenSharedResource(mShareHandle, __uuidof(ID3D11Resource),
                                                         (void **)&tempResource11);
-            ASSERT(SUCCEEDED(result));
+
+            if (FAILED(result))
+            {
+                ERR() << "Could not open shared handle. " << gl::FmtHR(result);
+                release();
+                return EGL_BAD_SURFACE;
+            }
 
             mOffscreenTexture.set(d3d11::DynamicCastComObject<ID3D11Texture2D>(tempResource11),
                                   backbufferFormatInfo);
