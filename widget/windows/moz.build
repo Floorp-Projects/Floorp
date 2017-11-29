@@ -27,6 +27,7 @@ EXPORTS.mozilla.widget += [
     'PDFiumEngineShim.h',
     'PDFiumParent.h',
     'PDFiumProcessChild.h',
+    'PDFiumProcessParent.h',
     'PDFViaEMFPrintHelper.h',
     'WinCompositorWidget.h',
     'WinMessages.h',

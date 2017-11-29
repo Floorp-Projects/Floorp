@@ -6,6 +6,7 @@
 #include "PrintTargetEMF.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsIFile.h"
+#include "mozilla/widget/PDFiumProcessParent.h"
 
 using mozilla::gfx::DrawTarget;
 
@@ -16,6 +17,13 @@ PrintTargetEMF::PrintTargetEMF(HDC aDC, const IntSize& aSize)
   : PrintTarget(/* not using cairo_surface_t */ nullptr, aSize)
   , mPrinterDC(aDC)
 {
+}
+
+PrintTargetEMF::~PrintTargetEMF()
+{
+  if (mPDFiumProcess) {
+    mPDFiumProcess->Delete();
+  }
 }
 
 /* static */ already_AddRefed<PrintTargetEMF>
@@ -50,6 +58,9 @@ PrintTargetEMF::BeginPrinting(const nsAString& aTitle,
   docinfo.fwType = 0;
 
   ::StartDocW(mPrinterDC, &docinfo);
+
+  mPDFiumProcess = new PDFiumProcessParent();
+  NS_ENSURE_TRUE(mPDFiumProcess->Launch(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
