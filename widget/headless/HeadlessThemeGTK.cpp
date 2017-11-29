@@ -223,6 +223,7 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->height = 16;
       *aIsOverridable = false;
       break;
+    case NS_THEME_INNER_SPIN_BUTTON:
     case NS_THEME_SPINNER:
       aResult->width = 14;
       aResult->height = 26;
@@ -358,6 +359,7 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_TAB_SCROLL_ARROW_BACK:
     case NS_THEME_TAB_SCROLL_ARROW_FORWARD:
     case NS_THEME_TOOLTIP:
+    case NS_THEME_INNER_SPIN_BUTTON:
     case NS_THEME_SPINNER:
     case NS_THEME_SPINNER_UPBUTTON:
     case NS_THEME_SPINNER_DOWNBUTTON:
