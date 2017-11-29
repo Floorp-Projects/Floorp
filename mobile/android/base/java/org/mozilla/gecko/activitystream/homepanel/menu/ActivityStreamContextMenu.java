@@ -340,13 +340,15 @@ public abstract class ActivityStreamContextMenu
     }
 
     /**
-     * @param anchor A view to anchor the Snackbar on. Don't use items in the recyclerView because these views can be
+     * @param tabletContextMenuAnchor A view to anchor the context menu on tablet, where it doesn't fill the screen.
+     * @param snackbarAnchor A view to anchor the Snackbar on. Don't use items in the recyclerView because these views can be
      *               removed from the view hierarchy when the recyclerView scrolls.
      * @param shouldOverrideIconWithImageProvider true if the favicon should be replaced with an image provider,
      *                                            if applicable, false otherwise.
      */
     @RobocopTarget
-    public static ActivityStreamContextMenu show(View anchor, ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
+    public static ActivityStreamContextMenu show(final View tabletContextMenuAnchor, final View snackbarAnchor,
+                                                      ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                                       final MenuMode menuMode, final WebpageModel item,
                                                       final boolean shouldOverrideIconWithImageProvider,
                                                       HomePager.OnUrlOpenListener onUrlOpenListener,
@@ -355,12 +357,12 @@ public abstract class ActivityStreamContextMenu
         final ActivityStreamContextMenu menu;
 
         if (!HardwareUtils.isTablet()) {
-            menu = new BottomSheetContextMenu(anchor,
+            menu = new BottomSheetContextMenu(snackbarAnchor,
                     telemetryExtraBuilder, menuMode,
                     item, shouldOverrideIconWithImageProvider, onUrlOpenListener, onUrlOpenInBackgroundListener,
                     tilesWidth, tilesHeight);
         } else {
-            menu = new PopupContextMenu(anchor,
+            menu = new PopupContextMenu(tabletContextMenuAnchor, snackbarAnchor,
                     telemetryExtraBuilder, menuMode,
                     item, onUrlOpenListener, onUrlOpenInBackgroundListener);
         }
