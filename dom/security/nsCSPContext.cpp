@@ -273,6 +273,7 @@ NS_IMPL_ISUPPORTS_CI(nsCSPContext,
                      nsISerializable)
 
 int32_t nsCSPContext::sScriptSampleMaxLength;
+bool nsCSPContext::sViolationEventsEnabled = false;
 
 nsCSPContext::nsCSPContext()
   : mInnerWindowID(0)
@@ -285,6 +286,8 @@ nsCSPContext::nsCSPContext()
     Preferences::AddIntVarCache(&sScriptSampleMaxLength,
                                 "security.csp.reporting.script-sample.max-length",
                                 40);
+    Preferences::AddBoolVarCache(&sViolationEventsEnabled,
+                                 "security.csp.enable_violation_events");
     sInitialized = true;
   }
 
@@ -1137,6 +1140,10 @@ nsresult
 nsCSPContext::FireViolationEvent(
   const mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit)
 {
+  if (!sViolationEventsEnabled) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
   if (!doc) {
     return NS_OK;
