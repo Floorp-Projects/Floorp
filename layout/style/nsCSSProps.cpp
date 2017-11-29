@@ -786,6 +786,7 @@ const KTableEntry nsCSSProps::kAppearanceKTable[] = {
   { eCSSKeyword_tab_scroll_arrow_back,  NS_THEME_TAB_SCROLL_ARROW_BACK },
   { eCSSKeyword_tab_scroll_arrow_forward, NS_THEME_TAB_SCROLL_ARROW_FORWARD },
   { eCSSKeyword_tooltip,                NS_THEME_TOOLTIP },
+  { eCSSKeyword_inner_spin_button,      NS_THEME_INNER_SPIN_BUTTON },
   { eCSSKeyword_spinner,                NS_THEME_SPINNER },
   { eCSSKeyword_spinner_upbutton,       NS_THEME_SPINNER_UPBUTTON },
   { eCSSKeyword_spinner_downbutton,     NS_THEME_SPINNER_DOWNBUTTON },
