@@ -411,6 +411,10 @@ const kEventConstructors = {
                                                          return new WebGLContextEvent(aName, aProps);
                                                        },
                                              },
+  SecurityPolicyViolationEvent:              { create: function (aName, aProps) {
+                                                         return new SecurityPolicyViolationEvent(aName, aProps);
+                                                       },
+                                             },
 };
 
 for (var name of Object.keys(kEventConstructors)) {
