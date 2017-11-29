@@ -115,6 +115,16 @@ ExtensionPreferencesManager.addSetting("openBookmarksInNewTabs", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("openSearchResultsInNewTabs", {
+  prefNames: [
+    "browser.search.openintab",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("webNotificationsDisabled", {
   prefNames: [
     "permissions.default.desktop-notification",
@@ -190,6 +200,11 @@ this.browserSettings = class extends ExtensionAPI {
           "openBookmarksInNewTabs",
           () => {
             return Services.prefs.getBoolPref("browser.tabs.loadBookmarksInTabs");
+          }),
+        openSearchResultsInNewTabs: getSettingsAPI(extension,
+          "openSearchResultsInNewTabs",
+          () => {
+            return Services.prefs.getBoolPref("browser.search.openintab");
           }),
         webNotificationsDisabled: getSettingsAPI(extension,
           "webNotificationsDisabled",
