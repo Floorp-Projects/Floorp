@@ -531,64 +531,64 @@ public:
     mHasUserValue = false;
   }
 
-  nsresult SetValue(PrefType aType,
-                    PrefValueKind aKind,
-                    PrefValue aValue,
-                    bool aIsSticky,
-                    bool aForceSet,
-                    bool* aValueChanged,
-                    bool* aDirty)
+  nsresult SetDefaultValue(PrefType aType,
+                           PrefValue aValue,
+                           bool aIsSticky,
+                           bool* aValueChanged)
   {
-    if (aKind == PrefValueKind::Default) {
-      // Types must always match when setting the default value.
-      if (!IsType(aType)) {
-        return NS_ERROR_UNEXPECTED;
-      }
+    // Types must always match when setting the default value.
+    if (!IsType(aType)) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-      // Should we set the default value? Only if the pref is not locked, and
-      // doing so would change the default value.
-      if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
-        mDefaultValue.Replace(Type(), aType, aValue);
-        mHasDefaultValue = true;
-        if (aIsSticky) {
-          mIsSticky = true;
-        }
-        if (!mHasUserValue) {
-          *aValueChanged = true;
-        }
-        // What if we change the default to be the same as the user value?
-        // Should we clear the user value? Currently we don't.
+    // Should we set the default value? Only if the pref is not locked, and
+    // doing so would change the default value.
+    if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
+      mDefaultValue.Replace(Type(), aType, aValue);
+      mHasDefaultValue = true;
+      if (aIsSticky) {
+        mIsSticky = true;
       }
-    } else {
-      // If we have a default value, types must match when setting the user
-      // value.
-      if (mHasDefaultValue && !IsType(aType)) {
-        return NS_ERROR_UNEXPECTED;
+      if (!mHasUserValue) {
+        *aValueChanged = true;
       }
+      // What if we change the default to be the same as the user value?
+      // Should we clear the user value? Currently we don't.
+    }
+    return NS_OK;
+  }
 
-      // Should we clear the user value, if present? Only if the new user value
-      // matches the default value, and the pref isn't sticky, and we aren't
-      // force-setting it.
-      if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
-          !aForceSet) {
-        if (mHasUserValue) {
-          ClearUserValue();
-          if (!IsLocked()) {
-            *aDirty = true;
-            *aValueChanged = true;
-          }
-        }
+  nsresult SetUserValue(PrefType aType,
+                        PrefValue aValue,
+                        bool aFromFile,
+                        bool* aValueChanged)
+  {
+    // If we have a default value, types must match when setting the user
+    // value.
+    if (mHasDefaultValue && !IsType(aType)) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-        // Otherwise, should we set the user value? Only if doing so would
-        // change the user value.
-      } else if (!ValueMatches(PrefValueKind::User, aType, aValue)) {
-        mUserValue.Replace(Type(), aType, aValue);
-        SetType(aType);   // needed because we may have changed the type
-        mHasUserValue = true;
+    // Should we clear the user value, if present? Only if the new user value
+    // matches the default value, and the pref isn't sticky, and we aren't
+    // force-setting it.
+    if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
+        !aFromFile) {
+      if (mHasUserValue) {
+        ClearUserValue();
         if (!IsLocked()) {
-          *aDirty = true;
           *aValueChanged = true;
         }
+      }
+
+      // Otherwise, should we set the user value? Only if doing so would
+      // change the user value.
+    } else if (!ValueMatches(PrefValueKind::User, aType, aValue)) {
+      mUserValue.Replace(Type(), aType, aValue);
+      SetType(aType); // needed because we may have changed the type
+      mHasUserValue = true;
+      if (!IsLocked()) {
+        *aValueChanged = true;
       }
     }
     return NS_OK;
@@ -805,7 +805,7 @@ pref_SetPref(const char* aPrefName,
              PrefValueKind aKind,
              PrefValue aValue,
              bool aIsSticky,
-             bool aForceSet)
+             bool aFromFile)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -824,9 +824,13 @@ pref_SetPref(const char* aPrefName,
     pref->SetType(aType);
   }
 
-  bool valueChanged = false, handleDirty = false;
-  nsresult rv = pref->SetValue(
-    aType, aKind, aValue, aIsSticky, aForceSet, &valueChanged, &handleDirty);
+  bool valueChanged = false;
+  nsresult rv;
+  if (aKind == PrefValueKind::Default) {
+    rv = pref->SetDefaultValue(aType, aValue, aIsSticky, &valueChanged);
+  } else {
+    rv = pref->SetUserValue(aType, aValue, aFromFile, &valueChanged);
+  }
   if (NS_FAILED(rv)) {
     NS_WARNING(
       nsPrintfCString(
@@ -840,10 +844,10 @@ pref_SetPref(const char* aPrefName,
     return rv;
   }
 
-  if (handleDirty && XRE_IsParentProcess()) {
-    Preferences::HandleDirty();
-  }
   if (valueChanged) {
+    if (aKind == PrefValueKind::User && XRE_IsParentProcess()) {
+      Preferences::HandleDirty();
+    }
     NotifyCallbacks(aPrefName);
   }
 
@@ -1053,16 +1057,9 @@ Parser::HandleValue(const char* aPrefName,
                     bool aIsDefault,
                     bool aIsSticky)
 {
-  PrefValueKind kind;
-  bool forceSet;
-  if (aIsDefault) {
-    kind = PrefValueKind::Default;
-    forceSet = false;
-  } else {
-    kind = PrefValueKind::User;
-    forceSet = true;
-  }
-  pref_SetPref(aPrefName, aType, kind, aValue, aIsSticky, forceSet);
+  PrefValueKind kind =
+    aIsDefault ? PrefValueKind::Default : PrefValueKind::User;
+  pref_SetPref(aPrefName, aType, kind, aValue, aIsSticky, /* fromFile */ true);
 }
 
 // Report an error or a warning. If not specified, just dump to stderr.
@@ -4411,7 +4408,7 @@ Preferences::SetCStringInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
-                      /* forceSet */ false);
+                      /* fromFile */ false);
 }
 
 /* static */ nsresult
@@ -4437,7 +4434,7 @@ Preferences::SetBoolInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
-                      /* forceSet */ false);
+                      /* fromFile */ false);
 }
 
 /* static */ nsresult
@@ -4461,7 +4458,7 @@ Preferences::SetIntInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
-                      /* forceSet */ false);
+                      /* fromFile */ false);
 }
 
 /* static */ nsresult
