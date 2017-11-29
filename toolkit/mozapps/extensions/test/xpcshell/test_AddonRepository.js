@@ -44,33 +44,37 @@ var GET_RESULTS = [{
   id:                     "test1@tests.mozilla.org",
   type:                   "extension",
   version:                "1.1",
-  creator:                {
-                            name: "Test Creator 1",
-                            url:  BASE_URL + "/creator1.html"
-                          },
-  developers:             [{
-                            name: "Test Developer 1",
-                            url:  BASE_URL + "/developer1.html"
-                          }],
+  creator: {
+    name: "Test Creator 1",
+    url:  BASE_URL + "/creator1.html"
+  },
+  developers: [
+    {
+      name: "Test Developer 1",
+      url:  BASE_URL + "/developer1.html"
+    },
+  ],
   description:            "Test Summary 1",
   fullDescription:        "Test Description 1",
   developerComments:      "Test Developer Comments 1",
   eula:                   "Test EULA 1",
   iconURL:                BASE_URL + "/icon1.png",
   icons:                  { "32": BASE_URL + "/icon1.png" },
-  screenshots:            [{
-                            url:             BASE_URL + "/full1-1.png",
-                            width:           400,
-                            height:          300,
-                            thumbnailURL:    BASE_URL + "/thumbnail1-1.png",
-                            thumbnailWidth:  200,
-                            thumbnailHeight: 150,
-                            caption:         "Caption 1 - 1"
-                          }, {
-                            url:          BASE_URL + "/full2-1.png",
-                            thumbnailURL: BASE_URL + "/thumbnail2-1.png",
-                            caption:      "Caption 2 - 1"
-                          }],
+  screenshots: [
+    {
+      url:             BASE_URL + "/full1-1.png",
+      width:           400,
+      height:          300,
+      thumbnailURL:    BASE_URL + "/thumbnail1-1.png",
+      thumbnailWidth:  200,
+      thumbnailHeight: 150,
+      caption:         "Caption 1 - 1"
+    }, {
+      url:          BASE_URL + "/full2-1.png",
+      thumbnailURL: BASE_URL + "/thumbnail2-1.png",
+      caption:      "Caption 2 - 1"
+    },
+  ],
   homepageURL:            BASE_URL + "/learnmore1.html",
   learnmoreURL:           BASE_URL + "/learnmore1.html",
   supportURL:             BASE_URL + "/support1.html",
@@ -86,21 +90,23 @@ var GET_RESULTS = [{
   repositoryStatus:       8,
   size:                   5555,
   updateDate:             new Date(1265033045000),
-  compatibilityOverrides: [{
-                            type: "incompatible",
-                            minVersion: 0.1,
-                            maxVersion: 0.2,
-                            appID: "xpcshell@tests.mozilla.org",
-                            appMinVersion: 3.0,
-                            appMaxVersion: 4.0
-                          }, {
-                            type: "incompatible",
-                            minVersion: 0.2,
-                            maxVersion: 0.3,
-                            appID: "xpcshell@tests.mozilla.org",
-                            appMinVersion: 5.0,
-                            appMaxVersion: 6.0
-                          }]
+  compatibilityOverrides: [
+    {
+      type: "incompatible",
+      minVersion: 0.1,
+      maxVersion: 0.2,
+      appID: "xpcshell@tests.mozilla.org",
+      appMinVersion: 3.0,
+      appMaxVersion: 4.0
+    }, {
+      type: "incompatible",
+      minVersion: 0.2,
+      maxVersion: 0.3,
+      appID: "xpcshell@tests.mozilla.org",
+      appMinVersion: 5.0,
+      appMaxVersion: 6.0
+    },
+  ]
 }, {
   id:                     "test_AddonRepository_1@tests.mozilla.org",
   type:                   "theme",
@@ -114,10 +120,10 @@ var SEARCH_RESULTS = [{
   id:                     "test1@tests.mozilla.org",
   type:                   "extension",
   version:                "1.1",
-  creator:                {
-                            name: "Test Creator 1",
-                            url:  BASE_URL + "/creator1.html"
-                          },
+  creator: {
+    name: "Test Creator 1",
+    url:  BASE_URL + "/creator1.html"
+  },
   repositoryStatus:       8,
   sourceURI:              BASE_URL + "/test1.xpi",
   icons:                  {}
@@ -125,32 +131,37 @@ var SEARCH_RESULTS = [{
   id:                     "test2@tests.mozilla.org",
   type:                   "extension",
   version:                "1.2",
-  creator:                {
-                            name: "Test Creator 2",
-                            url:  BASE_URL + "/creator2.html"
-                          },
-  developers:             [{
-                            name: "Test Developer 2",
-                            url:  BASE_URL + "/developer2.html"
-                          }],
+  creator: {
+    name: "Test Creator 2",
+    url:  BASE_URL + "/creator2.html"
+  },
+  developers: [
+    {
+      name: "Test Developer 2",
+      url:  BASE_URL + "/developer2.html"
+    },
+  ],
   description:            "Test Summary 2\n\nparagraph",
   fullDescription:        "Test Description 2\nnewline",
   developerComments:      "Test Developer\nComments 2",
   eula:                   "Test EULA 2",
   iconURL:                BASE_URL + "/icon2-32.png",
-  icons:                  {
-                            "32": BASE_URL + "/icon2-32.png",
-                            "48": BASE_URL + "/icon2-48.png",
-                            "64": BASE_URL + "/icon2-64.png"
-                          },
-  screenshots:            [{
-                            url:          BASE_URL + "/full1-2.png",
-                            thumbnailURL: BASE_URL + "/thumbnail1-2.png"
-                          }, {
-                            url:          BASE_URL + "/full2-2.png",
-                            thumbnailURL: BASE_URL + "/thumbnail2-2.png",
-                            caption:      "Caption 2"
-                          }],
+  icons: {
+    "32": BASE_URL + "/icon2-32.png",
+    "48": BASE_URL + "/icon2-48.png",
+    "64": BASE_URL + "/icon2-64.png"
+  },
+  screenshots: [
+    {
+      url:          BASE_URL + "/full1-2.png",
+      thumbnailURL: BASE_URL + "/thumbnail1-2.png"
+    },
+    {
+      url:          BASE_URL + "/full2-2.png",
+      thumbnailURL: BASE_URL + "/thumbnail2-2.png",
+      caption:      "Caption 2"
+    },
+  ],
   homepageURL:            BASE_URL + "/learnmore2.html",
   supportURL:             BASE_URL + "/support2.html",
   learnmoreURL:           BASE_URL + "/learnmore2.html",
@@ -162,35 +173,42 @@ var SEARCH_RESULTS = [{
   id:                     "test3@tests.mozilla.org",
   type:                   "theme",
   version:                "1.3",
-  creator:                {
-                            name: "Test Creator 3",
-                            url:  BASE_URL + "/creator3.html"
-                          },
-  developers:             [{
-                            name: "First Test Developer 3",
-                            url:  BASE_URL + "/developer1-3.html"
-                          }, {
-                            name: "Second Test Developer 3",
-                            url:  BASE_URL + "/developer2-3.html"
-                          }],
+  creator: {
+    name: "Test Creator 3",
+    url:  BASE_URL + "/creator3.html"
+  },
+  developers: [
+    {
+      name: "First Test Developer 3",
+      url:  BASE_URL + "/developer1-3.html"
+    },
+    {
+      name: "Second Test Developer 3",
+      url:  BASE_URL + "/developer2-3.html"
+    },
+  ],
   description:            "Test Summary 3",
   fullDescription:        "Test Description 3\n\n    List item 1\n    List item 2",
   developerComments:      "Test Developer Comments 3",
   eula:                   "Test EULA 3",
   iconURL:                BASE_URL + "/icon3.png",
   icons:                  { "32": BASE_URL + "/icon3.png" },
-  screenshots:            [{
-                            url:          BASE_URL + "/full1-3.png",
-                            thumbnailURL: BASE_URL + "/thumbnail1-3.png",
-                            caption:      "Caption 1 - 3"
-                          }, {
-                            url:          BASE_URL + "/full2-3.png",
-                            caption:      "Caption 2 - 3"
-                          }, {
-                            url:          BASE_URL + "/full3-3.png",
-                            thumbnailURL: BASE_URL + "/thumbnail3-3.png",
-                            caption:      "Caption 3 - 3"
-                          }],
+  screenshots: [
+    {
+      url:          BASE_URL + "/full1-3.png",
+      thumbnailURL: BASE_URL + "/thumbnail1-3.png",
+      caption:      "Caption 1 - 3"
+    },
+    {
+      url:          BASE_URL + "/full2-3.png",
+      caption:      "Caption 2 - 3"
+    },
+    {
+      url:          BASE_URL + "/full3-3.png",
+      thumbnailURL: BASE_URL + "/thumbnail3-3.png",
+      caption:      "Caption 3 - 3"
+    },
+  ],
   homepageURL:            BASE_URL + "/homepage3.html",
   supportURL:             BASE_URL + "/support3.html",
   learnmoreURL:           BASE_URL + "/learnmore3.html",
@@ -211,10 +229,10 @@ var SEARCH_RESULTS = [{
   id:                     "purchase1@tests.mozilla.org",
   type:                   "extension",
   version:                "2.0",
-  creator:                {
-                            name: "Test Creator - Last Passing",
-                            url:  BASE_URL + "/creatorLastPassing.html"
-                          },
+  creator: {
+    name: "Test Creator - Last Passing",
+    url:  BASE_URL + "/creatorLastPassing.html"
+  },
   averageRating:          5,
   repositoryStatus:       4,
   purchaseURL:            "http://localhost:" + PORT + "/purchaseURL1",
@@ -225,10 +243,10 @@ var SEARCH_RESULTS = [{
   id:                     "purchase2@tests.mozilla.org",
   type:                   "extension",
   version:                "2.0",
-  creator:                {
-                            name: "Test Creator - Last Passing",
-                            url:  BASE_URL + "/creatorLastPassing.html"
-                          },
+  creator: {
+    name: "Test Creator - Last Passing",
+    url:  BASE_URL + "/creatorLastPassing.html"
+  },
   averageRating:          5,
   repositoryStatus:       4,
   purchaseURL:            "http://localhost:" + PORT + "/purchaseURL2",
@@ -239,10 +257,10 @@ var SEARCH_RESULTS = [{
   id:                     "test-lastPassing@tests.mozilla.org",
   type:                   "extension",
   version:                "2.0",
-  creator:                {
-                            name: "Test Creator - Last Passing",
-                            url:  BASE_URL + "/creatorLastPassing.html"
-                          },
+  creator: {
+    name: "Test Creator - Last Passing",
+    url:  BASE_URL + "/creatorLastPassing.html"
+  },
   averageRating:          5,
   repositoryStatus:       4,
   sourceURI:              BASE_URL + "/addons/test_AddonRepository_3.xpi",
@@ -264,8 +282,8 @@ var GET_TEST = {
   failedIDs:      ["test1@tests.mozilla.org"],
   failedURL:        "/XPCShell/1/1.5/1.5/test1%40tests.mozilla.org",
   successfulIDs:  ["test1@tests.mozilla.org",
-                     "{00000000-1111-2222-3333-444444444444}",
-                     "test_AddonRepository_1@tests.mozilla.org"],
+                   "{00000000-1111-2222-3333-444444444444}",
+                   "test_AddonRepository_1@tests.mozilla.org"],
   successfulURL:    "/XPCShell/1/1.5/1.5/test1%40tests.mozilla.org," +
                     "%7B00000000-1111-2222-3333-444444444444%7D," +
                     "test_AddonRepository_1%40tests.mozilla.org"
@@ -370,9 +388,9 @@ function run_test() {
 
     // Register other add-on XPI files
     gServer.registerFile(INSTALL_URL2,
-                        do_get_addon("test_AddonRepository_2"));
+                         do_get_addon("test_AddonRepository_2"));
     gServer.registerFile(INSTALL_URL3,
-                        do_get_addon("test_AddonRepository_3"));
+                         do_get_addon("test_AddonRepository_3"));
 
     // Register files used to test search failure
     mapUrlToFile(GET_TEST.failedURL,
@@ -477,10 +495,10 @@ function run_test_1() {
     preference:         PREF_GETADDONS_BROWSESEARCHRESULTS,
     urlTests:           urlTests.concat(searchURLTests),
     getURL:             function getSearchURL(aTest) {
-                          var searchTerms = aTest && aTest.searchTerms ? aTest.searchTerms
+      var searchTerms = aTest && aTest.searchTerms ? aTest.searchTerms
                                                                        : "unused terms";
-                          return AddonRepository.getSearchURL(searchTerms);
-                        }
+      return AddonRepository.getSearchURL(searchTerms);
+    }
   }];
 
   tests.forEach(function url_test(aTest) {
