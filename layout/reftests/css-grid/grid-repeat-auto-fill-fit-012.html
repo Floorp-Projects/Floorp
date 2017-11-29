@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: repeat(auto-fit) with removed tracks</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1417711">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#valdef-repeat-auto-fill">
+  <link rel="match" href="grid-repeat-auto-fill-fit-012-ref.html">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px/1 monospace; padding:0px; margin:0;
+}
+
+.container {
+  width: 200px;
+}
+
+.grid {
+  position: relative;
+  display: grid;
+  grid: 10px / repeat(auto-fit, 30px);
+  grid-auto-columns: 2px;
+  background: lightgrey;
+  margin-bottom: 4px;
+  grid-gap: 5px;
+}
+.distribute {
+  grid-gap: 0;
+  align-content: space-around;
+}
+
+span {
+  background: blue;
+  height: 10px;
+}
+
+.abs {
+  position: absolute;
+  top:0; right:0; bottom:0; left:0;
+  grid-column-end: span 1;
+  background: pink;
+}
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 4 / 5" class="abs"></span>
+<span style="grid-column: 3"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 4 / 5" class="abs"></span>
+<span style="grid-column: 1"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 1 / 5" class="abs"></span>
+<span style="grid-column: 1"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 2 / 5" class="abs"></span>
+<span style="grid-column: 2"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 2 / 5" class="abs"></span>
+<span style="grid-column: 2 / 4"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 2 / 5" class="abs"></span>
+<span style="grid-column: 4 / 5"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 2 / 5" class="abs"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid">
+<span style="grid-column: 2 / 10" class="abs"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 4 / 5" class="abs"></span>
+<span style="grid-column: 3"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 4 / 5" class="abs"></span>
+<span style="grid-column: 1"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 1 / 5" class="abs"></span>
+<span style="grid-column: 1"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 2 / 5" class="abs"></span>
+<span style="grid-column: 2"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 2 / 5" class="abs"></span>
+<span style="grid-column: 2 / 4"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 2 / 5" class="abs"></span>
+<span style="grid-column: 4 / 5"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 2 / 5" class="abs"></span>
+</div>
+</div>
+
+<div class="container">
+<div class="grid distribute">
+<span style="grid-column: 2 / 10" class="abs"></span>
+</div>
+</div>
+
+</body>
+</html>
