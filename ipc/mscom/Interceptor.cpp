@@ -28,6 +28,15 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
+#if defined(MOZ_DEV_EDITION) || defined(RELEASE_OR_BETA)
+
+#define ENSURE_HR_SUCCEEDED(hr) \
+  if (FAILED((HRESULT)hr)) { \
+    return hr; \
+  }
+
+#else
+
 #define ENSURE_HR_SUCCEEDED(hr) \
   if (FAILED((HRESULT)hr)) { \
     nsPrintfCString location("ENSURE_HR_SUCCEEDED \"%s\": %u", __FILE__, __LINE__); \
@@ -36,6 +45,8 @@
     MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED((HRESULT)hr)); \
     return hr; \
   }
+
+#endif // defined(MOZ_DEV_EDITION) || defined(RELEASE_OR_BETA)
 
 namespace mozilla {
 namespace mscom {
