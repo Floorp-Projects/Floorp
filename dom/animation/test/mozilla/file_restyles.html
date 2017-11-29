@@ -500,9 +500,8 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    var markers = await observeStyling(1, () => {
-      parentElement.style.height = '100px';
-    });
+    parentElement.style.height = '100px';
+    var markers = await observeStyling(1);
 
     is(markers.length, 1,
        'Animations running on the main-thread which was in scrolled out ' +
