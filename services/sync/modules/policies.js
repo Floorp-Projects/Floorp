@@ -25,9 +25,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 XPCOMUtils.defineLazyServiceGetter(this, "IdleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
-XPCOMUtils.defineLazyServiceGetter(this, "NetworkLinkService",
-                                   "@mozilla.org/network/network-link-service;1",
-                                   "nsINetworkLinkService");
 XPCOMUtils.defineLazyServiceGetter(this, "CaptivePortalService",
                                    "@mozilla.org/network/captive-portal-service;1",
                                    "nsICaptivePortalService");
@@ -66,10 +63,6 @@ SyncScheduler.prototype = {
 
     // A user is non-idle on startup by default.
     this.idle = false;
-
-    // That flag will be flipped if we resume from sleep and the network link
-    // is down.
-    this.shouldSyncWhenLinkComesUp = false;
 
     this.hasIncomingItems = false;
     // This is the last number of clients we saw when previously updating the
@@ -128,22 +121,13 @@ SyncScheduler.prototype = {
     // no longer attempts to track the actual network state by default, but one
     // thing stays true: if it says we're offline then we are definitely not online.
     //
-    // There is also a network link service that tracks if there is any network
-    // adaptor connected. Sadly this too is unreliable - eg, an adaptor on a
-    // local private network (eg, a VMWare local network) may be technically
-    // connected but still unable to hit the public network - but it should
-    // only be unreliable in terms of indicating we online when we aren't but
-    // not indicate we are offline when we are online.
-    //
-    // Finally, if both of these services don't tell us we're offline for sure,
-    // we'll ask the captive portal service if we are behind a locked captive
+    // We also ask the captive portal service if we are behind a locked captive
     // portal.
     //
-    // With these 3 services combined, we believe we can avoid all false positives
-    // and make a good guess on whether an user is online or not in most cases.
+    // We don't check on the NetworkLinkService however, because it gave us
+    // false positives in the past in a vm environment.
     try {
       if (Services.io.offline ||
-          !NetworkLinkService.isLinkUp ||
           CaptivePortalService.state == CaptivePortalService.LOCKED_PORTAL) {
         return true;
       }
@@ -193,11 +177,9 @@ SyncScheduler.prototype = {
         }
         break;
       case "network:link-status-changed":
-        if (this.shouldSyncWhenLinkComesUp && !this.offline) {
-          this._log.debug("Network link is up for the first time since we woke-up. Syncing.");
-          this.shouldSyncWhenLinkComesUp = false;
+        if (!this.offline) {
+          this._log.debug("Network link looks up. Syncing.");
           this.scheduleNextSync(0, {why: topic});
-          break;
         }
         // Intended fallthrough
       case "network:offline-status-changed":
@@ -378,15 +360,11 @@ SyncScheduler.prototype = {
             if (!this.offline) {
               this._log.debug("Online, will sync in 2s.");
               this.scheduleNextSync(2000, {why: topic});
-            } else {
-              this._log.debug("Offline, will sync when link comes up.");
-              this.shouldSyncWhenLinkComesUp = true;
             }
           }
         });
         break;
       case "captive-portal-login-success":
-        this.shouldSyncWhenLinkComesUp = false;
         this._log.debug("Captive portal login success. Scheduling a sync.");
         CommonUtils.nextTick(() => {
           this.scheduleNextSync(3000, {why: topic});
