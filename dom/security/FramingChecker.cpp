@@ -78,11 +78,6 @@ FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
     MOZ_CRASH();
   }
 
-  // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
-  // parent chain must be from the same origin as this document.
-  bool checkSameOrigin = aPolicy.LowerCaseEqualsLiteral("sameorigin");
-  nsCOMPtr<nsIURI> topUri;
-
   // Traverse up the parent chain and stop when we see a docshell whose
   // parent has a system principal, or a docshell corresponding to
   // <iframe mozbrowser>.
@@ -97,17 +92,6 @@ FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
     bool system = false;
     topDoc = parentDocShellItem->GetDocument();
     if (topDoc) {
-      if (checkSameOrigin) {
-        topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
-        rv = ssm->CheckSameOriginURI(uri, topUri, true);
-
-        // one of the ancestors is not same origin as this document
-        if (NS_FAILED(rv)) {
-          ReportXFOViolation(curDocShellItem, uri, eSAMEORIGIN);
-          return false;
-        }
-      }
-
       if (NS_SUCCEEDED(
             ssm->IsSystemPrincipal(topDoc->NodePrincipal(), &system)) &&
           system) {
@@ -135,7 +119,18 @@ FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   }
 
   topDoc = curDocShellItem->GetDocument();
+  nsCOMPtr<nsIURI> topUri;
   topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
+
+  // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
+  // parent chain must be from the same origin as this document.
+  if (aPolicy.LowerCaseEqualsLiteral("sameorigin")) {
+    rv = ssm->CheckSameOriginURI(uri, topUri, true);
+    if (NS_FAILED(rv)) {
+      ReportXFOViolation(curDocShellItem, uri, eSAMEORIGIN);
+      return false; /* wasn't same-origin */
+    }
+  }
 
   // If the X-Frame-Options value is "allow-from [uri]", then the top
   // frame in the parent chain must be from that origin
