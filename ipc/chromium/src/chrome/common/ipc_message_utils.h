@@ -112,6 +112,11 @@ static inline void WriteParam(Message* m, const P& p) {
 }
 
 template <class P>
+static inline void WriteParam(Message* m, P& p) {
+  ParamTraits<P>::Write(m, p);
+}
+
+template <class P>
 static inline bool WARN_UNUSED_RESULT ReadParam(const Message* m, PickleIterator* iter,
                                                 P* p) {
   return ParamTraits<P>::Read(m, iter, p);

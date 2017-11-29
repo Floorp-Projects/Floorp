@@ -125,6 +125,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/PointerEventHandler.h"
+#include "nsHostObjectProtocolHandler.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -433,4 +434,6 @@ nsLayoutStatics::Shutdown()
   CacheObserver::Shutdown();
 
   PromiseDebugging::Shutdown();
+
+  nsHostObjectProtocolHandler::RemoveDataEntries();
 }

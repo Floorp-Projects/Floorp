@@ -85,7 +85,6 @@ struct NativeIterator
     void link(NativeIterator* other) {
         /* A NativeIterator cannot appear in the enumerator list twice. */
         MOZ_ASSERT(!next_ && !prev_);
-        MOZ_ASSERT(flags & JSITER_ENUMERATE);
 
         this->next_ = other;
         this->prev_ = other->prev_;
@@ -93,8 +92,6 @@ struct NativeIterator
         other->prev_ = this;
     }
     void unlink() {
-        MOZ_ASSERT(flags & JSITER_ENUMERATE);
-
         next_->prev_ = prev_;
         prev_->next_ = next_;
         next_ = nullptr;
@@ -103,7 +100,7 @@ struct NativeIterator
 
     static NativeIterator* allocateSentinel(JSContext* maybecx);
     static NativeIterator* allocateIterator(JSContext* cx, uint32_t slength, uint32_t plength);
-    void init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t slength, uint32_t key);
+    void init(JSObject* obj, JSObject* iterObj, uint32_t slength, uint32_t key);
     bool initProperties(JSContext* cx, Handle<PropertyIteratorObject*> obj,
                         const js::AutoIdVector& props);
 
@@ -154,29 +151,19 @@ StringIteratorObject*
 NewStringIteratorObject(JSContext* cx, NewObjectKind newKind = GenericObject);
 
 JSObject*
-GetIterator(JSContext* cx, HandleObject obj, unsigned flags);
+GetIterator(JSContext* cx, HandleObject obj);
 
 PropertyIteratorObject*
 LookupInIteratorCache(JSContext* cx, HandleObject obj);
 
-/*
- * Creates either a key or value iterator, depending on flags. For a value
- * iterator, performs value-lookup to convert the given list of jsids.
- */
 JSObject*
-EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& props);
+EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, AutoIdVector& props);
 
 JSObject*
-NewEmptyPropertyIterator(JSContext* cx, unsigned flags);
+NewEmptyPropertyIterator(JSContext* cx);
 
-/*
- * Convert the value stored in *vp to its iteration object. The flags should
- * contain JSITER_ENUMERATE if js::ValueToIterator is called when enumerating
- * for-in semantics are required, and when the caller can guarantee that the
- * iterator will never be exposed to scripts.
- */
 JSObject*
-ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp);
+ValueToIterator(JSContext* cx, HandleValue vp);
 
 void
 CloseIterator(JSObject* obj);

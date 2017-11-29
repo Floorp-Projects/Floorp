@@ -467,7 +467,7 @@ Proxy::enumerate(JSContext* cx, HandleObject proxy)
         if (!GetPrototype(cx, proxy, &proto))
             return nullptr;
         if (!proto)
-            return EnumeratedIdVectorToIterator(cx, proxy, 0, props);
+            return EnumeratedIdVectorToIterator(cx, proxy, props);
         assertSameCompartment(cx, proxy, proto);
 
         AutoIdVector protoProps(cx);
@@ -475,7 +475,7 @@ Proxy::enumerate(JSContext* cx, HandleObject proxy)
             return nullptr;
         if (!AppendUnique(cx, props, protoProps))
             return nullptr;
-        return EnumeratedIdVectorToIterator(cx, proxy, 0, props);
+        return EnumeratedIdVectorToIterator(cx, proxy, props);
     }
 
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
@@ -486,7 +486,7 @@ Proxy::enumerate(JSContext* cx, HandleObject proxy)
     if (!policy.allowed()) {
         if (!policy.returnValue())
             return nullptr;
-        return NewEmptyPropertyIterator(cx, 0);
+        return NewEmptyPropertyIterator(cx);
     }
     return handler->enumerate(cx, proxy);
 }

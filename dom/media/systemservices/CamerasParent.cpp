@@ -52,7 +52,7 @@ ResolutionFeasibilityDistance(int32_t candidate, int32_t requested)
   if (candidate >= requested) {
     distance = (candidate - requested) * 1000 / std::max(candidate, requested);
   } else {
-    distance = 10000 + (requested - candidate) *
+    distance = (UINT32_MAX / 2) + (requested - candidate) *
       1000 / std::max(candidate, requested);
   }
   return distance;
@@ -862,14 +862,14 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
           capability.codecType = static_cast<webrtc::VideoCodecType>(ipcCaps.codecType());
           capability.interlaced = ipcCaps.interlaced();
 
-#ifdef DEBUG
-          auto deviceUniqueID = sDeviceUniqueIDs.find(capnum);
-          MOZ_ASSERT(deviceUniqueID == sDeviceUniqueIDs.end());
-#endif
-          sDeviceUniqueIDs.emplace(capnum, cap.VideoCapture()->CurrentDeviceName());
-          sAllRequestedCapabilities.emplace(capnum, capability);
-
           if (aCapEngine == CameraEngine) {
+#ifdef DEBUG
+            auto deviceUniqueID = sDeviceUniqueIDs.find(capnum);
+            MOZ_ASSERT(deviceUniqueID == sDeviceUniqueIDs.end());
+#endif
+            sDeviceUniqueIDs.emplace(capnum, cap.VideoCapture()->CurrentDeviceName());
+            sAllRequestedCapabilities.emplace(capnum, capability);
+
             for (const auto &it : sDeviceUniqueIDs) {
               if (strcmp(it.second, cap.VideoCapture()->CurrentDeviceName()) == 0) {
                 capability.width = std::max(
@@ -908,16 +908,6 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
             }
             MOZ_ASSERT(minIdx != -1);
             capability = candidateCapabilities->second[minIdx];
-          } else if (aCapEngine == ScreenEngine ||
-                     aCapEngine == BrowserEngine ||
-                     aCapEngine == WinEngine ||
-                     aCapEngine == AppEngine) {
-            for (const auto &it : sDeviceUniqueIDs) {
-              if (strcmp(it.second, cap.VideoCapture()->CurrentDeviceName()) == 0) {
-                capability.maxFPS = std::max(
-                  capability.maxFPS, sAllRequestedCapabilities[it.first].maxFPS);
-              }
-            }
           }
 
           error = cap.VideoCapture()->StartCapture(capability);
@@ -959,14 +949,16 @@ CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
           mCallbacks[i - 1]->mStreamId == (uint32_t)capnum) {
 
         CallbackHelper* cbh = mCallbacks[i-1];
-        engine->WithEntry(capnum,[cbh, &capnum](VideoEngine::CaptureEntry& cap){
+        engine->WithEntry(capnum,[cbh, &capnum, &aCapEngine](VideoEngine::CaptureEntry& cap){
           if (cap.VideoCapture()) {
             cap.VideoCapture()->DeRegisterCaptureDataCallback(
               static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(cbh));
             cap.VideoCapture()->StopCaptureIfAllClientsClose();
 
-            sDeviceUniqueIDs.erase(capnum);
-            sAllRequestedCapabilities.erase(capnum);
+            if (aCapEngine == CameraEngine) {
+              sDeviceUniqueIDs.erase(capnum);
+              sAllRequestedCapabilities.erase(capnum);
+            }
           }
         });
 

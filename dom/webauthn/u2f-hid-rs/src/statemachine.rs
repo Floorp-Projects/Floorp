@@ -22,6 +22,7 @@ impl StateMachine {
 
     pub fn register(
         &mut self,
+        flags: ::RegisterFlags,
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
@@ -42,6 +43,17 @@ impl StateMachine {
 
             // Try initializing it.
             if !dev.is_u2f() || !u2f_init_device(dev) {
+                return;
+            }
+
+            // We currently support none of the authenticator selection
+            // criteria because we can't ask tokens whether they do support
+            // those features. If flags are set, ignore all tokens for now.
+            //
+            // Technically, this is a ConstraintError because we shouldn't talk
+            // to this authenticator in the first place. But the result is the
+            // same anyway.
+            if !flags.is_empty() {
                 return;
             }
 

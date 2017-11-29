@@ -462,7 +462,3 @@ EXPORTS ;-
 		PR_DuplicateEnvironment;
 		PR_GetEnvSecure;
 ;+} NSPR_4.10.3;
-;+NSPR_4.17_fork {
-;+      global:
-		PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle;
-;+} NSPR_4.16;

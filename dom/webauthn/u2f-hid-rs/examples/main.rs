@@ -9,7 +9,7 @@ use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use std::io;
 use std::sync::mpsc::channel;
-use u2fhid::U2FManager;
+use u2fhid::{RegisterFlags, U2FManager};
 
 extern crate log;
 extern crate env_logger;
@@ -49,10 +49,12 @@ fn main() {
     application.result(&mut app_bytes);
 
     let manager = U2FManager::new().unwrap();
+    let flags = RegisterFlags::empty();
 
     let (tx, rx) = channel();
     manager
         .register(
+            flags,
             15_000,
             chall_bytes.clone(),
             app_bytes.clone(),

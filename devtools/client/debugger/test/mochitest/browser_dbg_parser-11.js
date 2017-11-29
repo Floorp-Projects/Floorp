@@ -12,7 +12,7 @@ function test() {
 
   let source = [
     '<script type="text/javascript" src="chrome://foo.js"/>',
-    '<script type="application/javascript;version=1.8" src="chrome://baz.js"/>',
+    '<script type="application/javascript" src="chrome://baz.js"/>',
     '<script async defer src="chrome://foobar.js"/>',
     '<script type="application/javascript"/>"hello third"',
     '<script type="application/javascript">"hello fourth"</script>',
@@ -34,7 +34,7 @@ function test() {
 
   is(parsed.getScriptInfo(source.indexOf("hello third!")).toSource(), "({start:-1, length:-1, index:-1})",
     "Inline script on self-closing tag not considered a script");
-  is(parsed.getScriptInfo(source.indexOf("hello fourth")).toSource(), "({start:267, length:14, index:4})",
+  is(parsed.getScriptInfo(source.indexOf("hello fourth")).toSource(), "({start:255, length:14, index:4})",
     "The fourth script was located correctly.");
 
   finish();

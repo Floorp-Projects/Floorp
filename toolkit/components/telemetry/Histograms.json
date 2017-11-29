@@ -13867,5 +13867,13 @@
     "n_buckets": 50,
     "description": "Amount of time in milliseconds the main thread spends waiting for the paint thread to complete, if the time was greater than 200us.",
     "bug_numbers": [1386968]
+  },
+  "SCRIPT_LOADED_WITH_VERSION": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "bug_numbers": [1418860],
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "description": "Tracking how often scripts are loaded with a 'valid' version parameter. This telemetry ID helps us to decide if and when remove the support of script versioning."
   }
 }

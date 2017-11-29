@@ -284,7 +284,7 @@ BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy) const
     if (!GetPropertyKeys(cx, proxy, 0, &props))
         return nullptr;
 
-    return EnumeratedIdVectorToIterator(cx, proxy, 0, props);
+    return EnumeratedIdVectorToIterator(cx, proxy, props);
 }
 
 bool
