@@ -37,9 +37,13 @@ function expect_console_message(/* msgId, args, ... */) {
   for (let i = 0; i < arguments.length; i += 2) {
     let msgId = arguments[i];
     let args = arguments[i + 1];
-    expectations.push({
-      errorMessage: localizer.formatStringFromName(msgId, args, args.length)
-    });
+    if (args.length === 0) {
+      expectations.push({errorMessage: localizer.GetStringFromName(msgId)});
+    } else {
+      expectations.push({
+        errorMessage: localizer.formatStringFromName(msgId, args, args.length)
+      });
+    }
   }
   return new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, expectations);
