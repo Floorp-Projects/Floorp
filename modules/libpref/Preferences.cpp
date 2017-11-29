@@ -111,7 +111,7 @@ using namespace mozilla;
 #endif // DEBUG
 
 //===========================================================================
-// The old low-level prefs API
+// Low-level types and operations
 //===========================================================================
 
 typedef nsTArray<nsCString> PrefSaveData;
@@ -699,8 +699,6 @@ static PLDHashTableOps pref_HashTableOps = {
   nullptr,
 };
 
-//---------------------------------------------------------------------------
-
 static Pref*
 pref_HashTableLookup(const char* aPrefName);
 
@@ -733,10 +731,6 @@ pref_savePrefs()
 
   return savedPrefs;
 }
-
-  //
-  // Hash table functions
-  //
 
 #ifdef DEBUG
 
@@ -2715,10 +2709,6 @@ nsPrefLocalizedString::nsPrefLocalizedString() = default;
 
 nsPrefLocalizedString::~nsPrefLocalizedString() = default;
 
-//
-// nsISupports Implementation
-//
-
 NS_IMPL_ADDREF(nsPrefLocalizedString)
 NS_IMPL_RELEASE(nsPrefLocalizedString)
 
@@ -2778,7 +2768,7 @@ nsRelativeFilePref::SetRelativeToKey(const nsACString& aRelativeToKey)
 }
 
 //===========================================================================
-// Core prefs code
+// class Preferences and related things
 //===========================================================================
 
 namespace mozilla {
@@ -3406,12 +3396,6 @@ Preferences::Shutdown()
   }
 }
 
-//-----------------------------------------------------------------------------
-
-//
-// Constructor/Destructor
-//
-
 Preferences::Preferences()
   : mRootBranch(new nsPrefBranch("", PrefValueKind::User))
   , mDefaultRootBranch(new nsPrefBranch("", PrefValueKind::Default))
@@ -3441,10 +3425,6 @@ Preferences::~Preferences()
   gPrefNameArena.Clear();
 }
 
-//
-// nsISupports Implementation
-//
-
 NS_IMPL_ADDREF(Preferences)
 NS_IMPL_RELEASE(Preferences)
 
@@ -3455,10 +3435,6 @@ NS_INTERFACE_MAP_BEGIN(Preferences)
   NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
-
-//
-// nsIPrefService Implementation
-//
 
 /* static */ void
 Preferences::SetInitPreferences(nsTArray<dom::Pref>* aDomPrefs)
@@ -3965,10 +3941,6 @@ openPrefFile(nsIFile* aFile)
   return NS_OK;
 }
 
-//
-// Some stuff that gets called from Pref_Init()
-//
-
 static int
 pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2, void* /* unused */)
 {
@@ -4334,10 +4306,6 @@ Preferences::InitInitialObjects()
 
   return Ok();
 }
-
-//----------------------------------------------------------------------------
-// Static utilities
-//----------------------------------------------------------------------------
 
 /* static */ nsresult
 Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
