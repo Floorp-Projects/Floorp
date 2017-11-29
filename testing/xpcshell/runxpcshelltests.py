@@ -653,8 +653,23 @@ class XPCShellTestThread(Thread):
             self.complete_command = cmdH + cmdT + cmdI + args
 
         if self.test_object.get('dmd') == 'true':
+            if sys.platform.startswith('linux'):
+                preloadEnvVar = 'LD_PRELOAD'
+                libdmd = os.path.join(self.xrePath, 'libdmd.so')
+            elif sys.platform == 'osx' or sys.platform == 'darwin':
+                preloadEnvVar = 'DYLD_INSERT_LIBRARIES'
+                # self.xrePath is <prefix>/Contents/Resources.
+                # We need <prefix>/Contents/MacOS/libdmd.dylib.
+                contents_dir = os.path.dirname(self.xrePath)
+                libdmd = os.path.join(contents_dir, 'MacOS', 'libdmd.dylib')
+            elif sys.platform == 'win32':
+                preloadEnvVar = 'MOZ_REPLACE_MALLOC_LIB'
+                libdmd = os.path.join(self.xrePath, 'dmd.dll')
+
             self.env['PYTHON'] = sys.executable
             self.env['BREAKPAD_SYMBOLS_PATH'] = self.symbolsPath
+            self.env['DMD_PRELOAD_VAR'] = preloadEnvVar
+            self.env['DMD_PRELOAD_VALUE'] = libdmd
 
         if self.test_object.get('subprocess') == 'true':
             self.env['PYTHON'] = sys.executable

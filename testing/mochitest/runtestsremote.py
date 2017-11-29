@@ -280,8 +280,6 @@ class MochiRemote(MochitestDesktop):
         browserEnv["MOZ_LOG_FILE"] = os.path.join(
             self.remoteMozLog,
             self.mozLogName)
-        if options.dmd:
-            browserEnv['DMD'] = '1'
         return browserEnv
 
     def runApp(self, *args, **kwargs):
@@ -356,6 +354,13 @@ def run_test_harness(parser, options):
     mozinfo.info['android_version'] = androidVersion
 
     deviceRoot = dm.deviceRoot
+    if options.dmdPath:
+        dmdLibrary = "libdmd.so"
+        dmdPathOnDevice = os.path.join(deviceRoot, dmdLibrary)
+        dm.removeFile(dmdPathOnDevice)
+        dm.pushFile(os.path.join(options.dmdPath, dmdLibrary), dmdPathOnDevice)
+        options.dmdPath = deviceRoot
+
     options.dumpOutputDirectory = deviceRoot
 
     procName = options.app.split('/')[-1]
