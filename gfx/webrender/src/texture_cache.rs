@@ -10,7 +10,7 @@ use frame::FrameId;
 use freelist::{FreeList, FreeListHandle, UpsertResult, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle};
 use internal_types::{CacheTextureId, TextureUpdateList, TextureUpdateSource};
-use internal_types::{SourceTexture, TextureUpdate, TextureUpdateOp};
+use internal_types::{RenderTargetInfo, SourceTexture, TextureUpdate, TextureUpdateOp};
 use profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
 use resource_cache::CacheItem;
 use std::cmp;
@@ -581,7 +581,14 @@ impl TextureCache {
                     height: TEXTURE_LAYER_DIMENSIONS,
                     format: descriptor.format,
                     filter: texture_array.filter,
-                    render_target: None,
+                    // TODO(gw): Creating a render target here is only used
+                    //           for the texture cache debugger display. In
+                    //           the future, we should change the debug
+                    //           display to use a shader that blits the
+                    //           texture, and then we can remove this
+                    //           memory allocation (same for the other
+                    //           standalone texture below).
+                    render_target: Some(RenderTargetInfo { has_depth: false }),
                     layer_count: texture_array.layer_count as i32,
                 },
             };
@@ -670,7 +677,7 @@ impl TextureCache {
                     height: descriptor.height,
                     format: descriptor.format,
                     filter,
-                    render_target: None,
+                    render_target: Some(RenderTargetInfo { has_depth: false }),
                     layer_count: 1,
                 },
             };

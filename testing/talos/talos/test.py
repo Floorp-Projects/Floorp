@@ -89,11 +89,6 @@ class TsBase(Test):
         'url_timestamp',
         'timeout',
         'cycles',
-        'shutdown',      # If True, collect data on shutdown (using the value
-                         # provided by __startTimestamp/__endTimestamp).
-                         # Otherwise, ignore shutdown data
-                         # (__startTimestamp/__endTimestamp is still
-                         # required but ignored).
         'profile_path',  # The path containing the template profile. This
                          # directory is copied to the temporary profile during
                          # initialization of the test. If some of the files may
@@ -142,7 +137,6 @@ class ts_paint(TsBase):
     gecko_profile_startup = True
     gecko_profile_entries = 10000000
     url = 'startup_test/tspaint_test.html'
-    shutdown = False
     xperf_counters = []
     win7_counters = []
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
@@ -182,7 +176,6 @@ class sessionrestore(TsBase):
     gecko_profile_startup = True
     gecko_profile_entries = 10000000
     profile_path = '${talos}/startup_test/sessionrestore/profile'
-    shutdown = False
     reinstall = ['sessionstore.jsonlz4', 'sessionstore.js', 'sessionCheckpoints.json']
     # Restore the session. We have to provide a URL, otherwise Talos
     # asks for a manifest URL.
@@ -251,7 +244,7 @@ class PageloaderTest(Test):
             'testeventmap', 'base_vs_ref', 'mainthread', 'resolution', 'cycles',
             'gecko_profile', 'gecko_profile_interval', 'gecko_profile_entries',
             'tptimeout', 'win_counters', 'w7_counters', 'linux_counters', 'mac_counters',
-            'tpscrolltest', 'xperf_counters', 'timeout', 'shutdown', 'responsiveness',
+            'tpscrolltest', 'xperf_counters', 'timeout', 'responsiveness',
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
             'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile']
@@ -518,7 +511,6 @@ class tp5n(PageloaderTest):
     of the site in question.
     """
     resolution = 20
-    shutdown = True
     tpmanifest = '${talos}/tests/tp5n/tp5n.manifest'
     tpcycles = 1
     tppagecycles = 1

@@ -15,6 +15,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/EventStateManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
@@ -78,6 +79,7 @@ class nsGeolocationRequest final
                        UniquePtr<PositionOptions>&& aOptions,
                        uint8_t aProtocolType,
                        bool aWatchPositionRequest = false,
+                       bool aIsHandlingUserInput = false,
                        int32_t aWatchId = 0);
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsGeolocationRequest)
@@ -126,6 +128,7 @@ class nsGeolocationRequest final
   GeoPositionCallback mCallback;
   GeoPositionErrorCallback mErrorCallback;
   UniquePtr<PositionOptions> mOptions;
+  bool mIsHandlingUserInput;
 
   RefPtr<Geolocation> mLocator;
 
@@ -305,11 +308,13 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
                                            UniquePtr<PositionOptions>&& aOptions,
                                            uint8_t aProtocolType,
                                            bool aWatchPositionRequest,
+                                           bool aIsHandlingUserInput,
                                            int32_t aWatchId)
   : mIsWatchPositionRequest(aWatchPositionRequest),
     mCallback(Move(aCallback)),
     mErrorCallback(Move(aErrorCallback)),
     mOptions(Move(aOptions)),
+    mIsHandlingUserInput(aIsHandlingUserInput),
     mLocator(aLocator),
     mWatchId(aWatchId),
     mShutdown(false),
@@ -392,6 +397,13 @@ nsGeolocationRequest::GetElement(nsIDOMElement * *aRequestingElement)
 {
   NS_ENSURE_ARG_POINTER(aRequestingElement);
   *aRequestingElement = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationRequest::GetIsHandlingUserInput(bool* aIsHandlingUserInput)
+{
+  *aIsHandlingUserInput = mIsHandlingUserInput;
   return NS_OK;
 }
 
@@ -556,13 +568,13 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     }
   }
 
-  RefPtr<Position> wrapped;
+  RefPtr<mozilla::dom::Position> wrapped;
 
   if (aPosition) {
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aPosition->GetCoords(getter_AddRefs(coords));
     if (coords) {
-      wrapped = new Position(ToSupports(mLocator), aPosition);
+      wrapped = new mozilla::dom::Position(ToSupports(mLocator), aPosition);
     }
   }
 
@@ -1254,7 +1266,7 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
   RefPtr<nsGeolocationRequest> request =
     new nsGeolocationRequest(this, Move(callback), Move(errorCallback),
                              Move(options), static_cast<uint8_t>(mProtocolType),
-                             false);
+                             false, EventStateManager::IsHandlingUserInput());
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
       nsContentUtils::ResistFingerprinting(aCallerType)) {
@@ -1341,7 +1353,8 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
   RefPtr<nsGeolocationRequest> request =
     new nsGeolocationRequest(this, Move(aCallback), Move(aErrorCallback),
                              Move(aOptions),
-                             static_cast<uint8_t>(mProtocolType), true, *aRv);
+                             static_cast<uint8_t>(mProtocolType), true,
+                             EventStateManager::IsHandlingUserInput(), *aRv);
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
       nsContentUtils::ResistFingerprinting(aCallerType)) {

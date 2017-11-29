@@ -14,6 +14,7 @@ use print_tree::{PrintTree, PrintTreePrinter};
 use render_task::ClipChain;
 use resource_cache::ResourceCache;
 use scene::SceneProperties;
+use util::MaxRect;
 
 pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
 
@@ -25,6 +26,10 @@ pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
 pub struct CoordinateSystemId(pub u32);
 
 impl CoordinateSystemId {
+    pub fn root() -> CoordinateSystemId {
+        CoordinateSystemId(0)
+    }
+
     pub fn next(&self) -> CoordinateSystemId {
         let CoordinateSystemId(id) = *self;
         CoordinateSystemId(id + 1)
@@ -66,6 +71,7 @@ pub struct TransformUpdateState {
     pub nearest_scrolling_ancestor_viewport: LayerRect,
     pub parent_clip_chain: ClipChain,
     pub combined_outer_clip_bounds: DeviceIntRect,
+    pub combined_inner_clip_bounds: DeviceIntRect,
 
     /// An id for keeping track of the axis-aligned space of this node. This is used in
     /// order to to track what kinds of clip optimizations can be done for a particular
@@ -355,6 +361,7 @@ impl ClipScrollTree {
             nearest_scrolling_ancestor_viewport: LayerRect::zero(),
             parent_clip_chain: None,
             combined_outer_clip_bounds: *screen_rect,
+            combined_inner_clip_bounds: DeviceIntRect::max_rect(),
             current_coordinate_system_id: CoordinateSystemId(0),
             next_coordinate_system_id: CoordinateSystemId(0).next(),
         };

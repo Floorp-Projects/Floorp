@@ -251,16 +251,16 @@
 }
 
 .requests-list-status-icon[data-code^="1"] {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--status-code-color-1xx);
 }
 
 .requests-list-status-icon[data-code^="2"] {
-  background-color: var(--theme-highlight-green);
+  background-color: var(--status-code-color-2xx);
 }
 
 /* 3xx are triangles */
 .requests-list-status-icon[data-code^="3"] {
-  background-color: transparent;
+  background-color: var(--status-code-color-3xx);
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
@@ -271,12 +271,12 @@
 
 /* 4xx and 5xx are squares - error codes */
 .requests-list-status-icon[data-code^="4"] {
-  background-color: var(--theme-highlight-red);
+  background-color: var(--status-code-color-4xx);
   border-radius: 0; /* squares */
 }
 
 .requests-list-status-icon[data-code^="5"] {
-  background-color: var(--theme-highlight-pink);
+  background-color: var(--status-code-color-5xx);
   border-radius: 0;
   transform: rotate(45deg);
 }

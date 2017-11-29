@@ -92,6 +92,7 @@ public:
                       const nsAString& aDescription,
                       const nsAString& aIconURL,
                       nsPIDOMWindowInner* aWindow,
+                      bool aIsHandlingUserInput,
                       nsIPrincipal* principal);
 
   virtual ~DesktopNotification();
@@ -135,6 +136,7 @@ protected:
 
   RefPtr<AlertServiceObserver> mObserver;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  bool mIsHandlingUserInput;
   bool mAllow;
   bool mShowHasBeenCalled;
 

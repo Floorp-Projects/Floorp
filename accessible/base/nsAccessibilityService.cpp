@@ -272,11 +272,13 @@ New_MaybeImageOrToolbarButtonAccessible(nsIContent* aContent,
 
   return new ImageAccessibleWrap(aContent, aContext->Document());
 }
-
 static Accessible*
 New_MenuSeparator(nsIContent* aContent, Accessible* aContext)
   { return new XULMenuSeparatorAccessible(aContent, aContext->Document()); }
 
+static Accessible*
+New_StatusBarAccessible(nsIContent* aContent, Accessible* aContext)
+  { return new XULStatusBarAccessible(aContent, aContext->Document()); }
 #endif
 
 /**
@@ -1547,9 +1549,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
   } else if (role.EqualsLiteral("xul:progressmeter")) {
     accessible = new XULProgressMeterAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:statusbar")) {
-    accessible = new XULStatusBarAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:scale")) {
     accessible = new XULSliderAccessible(aContent, aDoc);

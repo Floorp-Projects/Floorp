@@ -992,7 +992,7 @@ parent:
      *       provided.
      */
     async PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
-                                    TabId tabId);
+                                    bool aIsHandlingUserInput, TabId tabId);
 
     async ShutdownProfile(nsCString aProfile);
 

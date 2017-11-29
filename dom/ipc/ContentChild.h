@@ -553,6 +553,7 @@ public:
   virtual PContentPermissionRequestChild*
   AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
                                       const IPC::Principal& aPrincipal,
+                                      const bool& aIsHandlingUserInput,
                                       const TabId& aTabId) override;
   virtual bool
   DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor) override;

@@ -181,8 +181,6 @@ DEFAULTS = dict(
         'browser.contentHandlers.types.4.uri': 'http://127.0.0.1/rss?url=%s',
         'browser.contentHandlers.types.5.uri': 'http://127.0.0.1/rss?url=%s',
         'identity.fxaccounts.auth.uri': 'https://127.0.0.1/fxa-dummy/',
-        'datareporting.healthreport.about.reportUrl':
-            'http://127.0.0.1/abouthealthreport/',
         'datareporting.healthreport.documentServerURI':
             'http://127.0.0.1/healthreport/',
         'datareporting.policy.dataSubmissionPolicyBypassNotification': True,
@@ -216,7 +214,6 @@ GLOBAL_OVERRIDES = (
     'gecko_profile',
     'gecko_profile_interval',
     'gecko_profile_entries',
-    'shutdown',
     'tpcycles',
     'tppagecycles',
     'tpmanifest',
@@ -332,11 +329,6 @@ def get_global_overrides(config):
         if key != 'gecko_profile':
             config.pop(key)
 
-    # HACK: currently xperf tests post results to graph server and
-    # we want to ensure we don't publish shutdown numbers
-    # This is also hacked because "--noShutdown -> shutdown:True"
-    if config['xperf_path']:
-        global_overrides['shutdown'] = False
     return global_overrides
 
 

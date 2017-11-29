@@ -13,23 +13,27 @@ add_task(async function runTests() {
 
   let browser = tab.linkedBrowser;
 
-  browser.loadURI("about:healthreport");
-  let href = await BrowserTestUtils.browserLoaded(browser);
-  is(href, "about:healthreport", "Check about:healthreport loaded");
+  let loaded = BrowserTestUtils.browserLoaded(browser);
+  browser.loadURI("about:config");
+  let href = await loaded;
+  is(href, "about:config", "Check about:config loaded");
 
   // Using a dummy onunload listener to disable the bfcache as that can prevent
   // the test browser load detection mechanism from working.
+  loaded = BrowserTestUtils.browserLoaded(browser);
   browser.loadURI("data:text/html,<body%20onunload=''><iframe></iframe></body>");
-  href = await BrowserTestUtils.browserLoaded(browser);
+  href = await loaded;
   is(href, "data:text/html,<body%20onunload=''><iframe></iframe></body>",
     "Check data URL loaded");
 
+  loaded = BrowserTestUtils.browserLoaded(browser);
   browser.goBack();
-  href = await BrowserTestUtils.browserLoaded(browser);
-  is(href, "about:healthreport", "Check we've gone back to about:healthreport");
+  href = await loaded;
+  is(href, "about:config", "Check we've gone back to about:config");
 
+  loaded = BrowserTestUtils.browserLoaded(browser);
   browser.goForward();
-  href = await BrowserTestUtils.browserLoaded(browser);
+  href = await loaded;
   is(href, "data:text/html,<body%20onunload=''><iframe></iframe></body>",
      "Check we've gone forward to data URL");
 });

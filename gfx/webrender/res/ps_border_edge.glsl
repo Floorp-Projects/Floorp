@@ -217,6 +217,7 @@ void main(void) {
 
 #ifdef WR_FEATURE_TRANSFORM
     VertexInfo vi = write_transform_vertex(segment_rect,
+                                           prim.local_rect,
                                            prim.local_clip_rect,
                                            vec4(1.0),
                                            prim.z,

@@ -95,44 +95,6 @@ iframe {
   min-height: 10px;
 }
 
-/* ::::: statusbar ::::: */
-
-statusbar {
-  -moz-appearance: statusbar;
-  border-top: 1px solid ThreeDLightShadow;
-  border-left: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  background-color: -moz-Dialog;
-  min-height: 22px;
-}
-
-statusbarpanel {
-  -moz-appearance: statusbarpanel;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  border-left: 1px solid ThreeDHighlight;
-  border-top: 1px solid ThreeDHighlight;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-  padding: 0 4px;
-}
-
-statusbarpanel:not(.statusbar-resizerpanel):-moz-lwtheme {
-  -moz-appearance: none;
-  border-top-style: none;
-  border-bottom-style: none;
-  border-inline-start-style: none;
-}
-
-.statusbar-resizerpanel {
-  -moz-box-align: end;
-  -moz-box-pack: end;
-  -moz-appearance: resizerpanel;
-  padding: 0;
-  border: none;
-}
-
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {
@@ -161,12 +123,6 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 :root:-moz-lwtheme-brighttext {
   text-shadow: 1px 1px 1.5px black;
-}
-
-statusbar:-moz-lwtheme {
-  -moz-appearance: none;
-  background: none;
-  border-style: none;
 }
 
 .inset {

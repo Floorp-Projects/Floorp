@@ -533,7 +533,9 @@ impl ProfileGraph {
     ) -> Rect<f32> {
         let size = Size2D::new(600.0, 120.0);
         let line_height = debug_renderer.line_height();
-        let mut rect = Rect::new(Point2D::new(x, y), size);
+        let graph_rect = Rect::new(Point2D::new(x, y), size);
+        let mut rect = graph_rect.inflate(10.0, 10.0);
+
         let stats = self.stats();
 
         let text_color = ColorU::new(255, 255, 0, 255);
@@ -573,13 +575,11 @@ impl ProfileGraph {
             ColorU::new(51, 51, 51, 200),
         );
 
-        let bx0 = x + 10.0;
-        let by0 = y + 10.0;
-        let bx1 = bx0 + size.width - 20.0;
-        let by1 = by0 + size.height - 20.0;
+        let bx1 = graph_rect.max_x();
+        let by1 = graph_rect.max_y();
 
-        let w = (bx1 - bx0) / self.max_samples as f32;
-        let h = by1 - by0;
+        let w = graph_rect.size.width / self.max_samples as f32;
+        let h = graph_rect.size.height;
 
         let color_t0 = ColorU::new(0, 255, 0, 255);
         let color_b0 = ColorU::new(0, 180, 0, 255);
@@ -642,14 +642,11 @@ impl GpuFrameCollection {
 
 impl GpuFrameCollection {
     fn draw(&self, x: f32, y: f32, debug_renderer: &mut DebugRenderer) -> Rect<f32> {
-        let bounding_rect = Rect::new(
+        let graph_rect = Rect::new(
             Point2D::new(x, y),
-            Size2D::new(
-                GRAPH_WIDTH + 2.0 * GRAPH_PADDING,
-                GRAPH_HEIGHT + 2.0 * GRAPH_PADDING,
-            ),
+            Size2D::new(GRAPH_WIDTH, GRAPH_HEIGHT),
         );
-        let graph_rect = bounding_rect.inflate(-GRAPH_PADDING, -GRAPH_PADDING);
+        let bounding_rect = graph_rect.inflate(GRAPH_PADDING, GRAPH_PADDING);
 
         debug_renderer.add_quad(
             bounding_rect.origin.x,
@@ -840,7 +837,7 @@ impl Profiler {
     ) {
         self.x_left = 20.0;
         self.y_left = 40.0;
-        self.x_right = 400.0;
+        self.x_right = 450.0;
         self.y_right = 40.0;
 
         let mut gpu_time = 0;
@@ -956,24 +953,24 @@ impl Profiler {
 
         let rect =
             self.backend_time
-                .draw_graph(self.x_left, self.y_left, "CPU (backend)", debug_renderer);
-        self.y_left += rect.size.height + PROFILE_PADDING;
+                .draw_graph(self.x_right, self.y_right, "CPU (backend)", debug_renderer);
+        self.y_right += rect.size.height + PROFILE_PADDING;
         let rect = self.compositor_time.draw_graph(
-            self.x_left,
-            self.y_left,
+            self.x_right,
+            self.y_right,
             "CPU (compositor)",
             debug_renderer,
         );
-        self.y_left += rect.size.height + PROFILE_PADDING;
+        self.y_right += rect.size.height + PROFILE_PADDING;
         let rect =
             self.ipc_time
-                .draw_graph(self.x_left, self.y_left, "DisplayList IPC", debug_renderer);
-        self.y_left += rect.size.height + PROFILE_PADDING;
+                .draw_graph(self.x_right, self.y_right, "DisplayList IPC", debug_renderer);
+        self.y_right += rect.size.height + PROFILE_PADDING;
         let rect = self.gpu_time
-            .draw_graph(self.x_left, self.y_left, "GPU", debug_renderer);
-        self.y_left += rect.size.height + PROFILE_PADDING;
+            .draw_graph(self.x_right, self.y_right, "GPU", debug_renderer);
+        self.y_right += rect.size.height + PROFILE_PADDING;
         let rect = self.gpu_frames
-            .draw(self.x_left, self.y_left, debug_renderer);
-        self.y_left += rect.size.height + PROFILE_PADDING;
+            .draw(self.x_left, f32::max(self.y_left, self.y_right), debug_renderer);
+        self.y_right += rect.size.height + PROFILE_PADDING;
     }
 }

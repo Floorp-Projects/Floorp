@@ -17,6 +17,7 @@ void main(void) {
     vColor = rect.color;
 #ifdef WR_FEATURE_TRANSFORM
     VertexInfo vi = write_transform_vertex(prim.local_rect,
+                                           prim.local_rect,
                                            prim.local_clip_rect,
                                            rect.edge_aa_segment_mask,
                                            prim.z,

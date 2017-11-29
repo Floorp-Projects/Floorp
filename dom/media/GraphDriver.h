@@ -485,6 +485,10 @@ private:
   friend class AsyncCubebTask;
   bool Init();
   void Stop();
+  /**
+   *  Fall back to a SystemClockDriver using a normal thread. If needed,
+   *  the graph will try to re-open an audio stream later. */
+  void FallbackToSystemClockDriver();
 
   /* MediaStreamGraphs are always down/up mixed to output channels. */
   uint32_t mOutputChannels;
