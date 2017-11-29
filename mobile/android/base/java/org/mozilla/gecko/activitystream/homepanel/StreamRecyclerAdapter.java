@@ -138,7 +138,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         if (type == RowItemType.TOP_PANEL.getViewType()) {
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, new TopPanelRow.OnCardLongClickListener() {
                 @Override
-                public boolean onClick(final TopSite topSite, final int absolutePosition,
+                public boolean onLongClick(final TopSite topSite, final int absolutePosition,
                         final View tabletContextMenuAnchor, final int faviconWidth, final int faviconHeight) {
                     openContextMenuForTopSite(topSite, absolutePosition, tabletContextMenuAnchor, parent, faviconWidth, faviconHeight);
                     return true;
