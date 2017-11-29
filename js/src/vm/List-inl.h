@@ -56,11 +56,11 @@ ShiftFromList(JSContext* cx, HandleNativeObject list)
     Rooted<T*> entry(cx, &list->getDenseElement(0).toObject().as<T>());
     if (!list->tryShiftDenseElements(1)) {
         list->moveDenseElements(0, 1, length - 1);
+        list->setDenseInitializedLength(length - 1);
         list->shrinkElements(cx, length - 1);
     }
 
-    list->setDenseInitializedLength(length - 1);
-
+    MOZ_ASSERT(list->getDenseInitializedLength() == length - 1);
     return entry;
 }
 
