@@ -18,6 +18,7 @@
 #include "js/Vector.h"
 #include "threading/ProtectedData.h"
 #include "vm/ErrorReporting.h"
+#include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
 
 #ifdef _MSC_VER
