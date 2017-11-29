@@ -509,10 +509,20 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
     for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
       nsGlobalWindowOuter* window = iter.Data();
       if (!window->IsCleanedUp()) {
-        window->TraceGlobalJSObject(aTrc);
-        EventListenerManager* elm = window->GetExistingListenerManager();
-        if (elm) {
-          elm->TraceListeners(aTrc);
+        nsGlobalWindowInner* inner = nullptr;
+        for (PRCList* win = PR_LIST_HEAD(window);
+             win != window;
+             win = PR_NEXT_LINK(inner)) {
+          inner = static_cast<nsGlobalWindowInner*>(win);
+          if (inner->IsCurrentInnerWindow() ||
+              (inner->GetExtantDoc() &&
+               inner->GetExtantDoc()->GetBFCacheEntry())) {
+            inner->TraceGlobalJSObject(aTrc);
+            EventListenerManager* elm = inner->GetExistingListenerManager();
+            if (elm) {
+              elm->TraceListeners(aTrc);
+            }
+          }
         }
 
         if (window->IsRootOuterWindow()) {
