@@ -48,7 +48,8 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
                     view.onAutocomplete(prepareAutocompleteResult(
                             rawSearchText,
                             autocomplete,
-                            AutocompleteSource.CUSTOM_LIST))
+                            AutocompleteSource.CUSTOM_LIST,
+                            customDomains.size))
                     return
                 }
             }
@@ -59,7 +60,8 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
                     view.onAutocomplete(prepareAutocompleteResult(
                             rawSearchText,
                             autocomplete,
-                            AutocompleteSource.DEFAULT_LIST))
+                            AutocompleteSource.DEFAULT_LIST,
+                            preInstalledDomains.size))
                     return
                 }
             }
@@ -151,9 +153,11 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
     private fun prepareAutocompleteResult(
             rawSearchText: String,
             lowerCaseResult: String,
-            source: String
+            source: String,
+            totalCount: Int
     ) =
             AutocompleteResult(
-                rawSearchText + lowerCaseResult.substring(rawSearchText.length),
-                source)
+                    rawSearchText + lowerCaseResult.substring(rawSearchText.length),
+                    source,
+                    totalCount)
 }

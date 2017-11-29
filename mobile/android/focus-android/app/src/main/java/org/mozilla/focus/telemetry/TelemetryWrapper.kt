@@ -14,6 +14,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.search.SearchEngineManager
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.utils.AppConstants
+import org.mozilla.focus.widget.InlineAutocompleteEditText.AutocompleteResult
 import org.mozilla.telemetry.Telemetry
 import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.config.TelemetryConfiguration
@@ -127,6 +128,8 @@ object TelemetryWrapper {
         val TOTAL = "total"
         val SELECTED = "selected"
         val HIGHLIGHTED = "highlighted"
+        val AUTOCOMPLETE = "autocomplete"
+        val SOURCE = "source"
     }
 
     @JvmStatic
@@ -245,16 +248,24 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun urlBarEvent(isUrl: Boolean) {
+    fun urlBarEvent(isUrl: Boolean, autocompleteResult: AutocompleteResult) {
         if (isUrl) {
-            TelemetryWrapper.browseEvent()
+            TelemetryWrapper.browseEvent(autocompleteResult)
         } else {
             TelemetryWrapper.searchEnterEvent()
         }
     }
 
-    private fun browseEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR).queue()
+    private fun browseEvent(autocompleteResult: AutocompleteResult) {
+        val event = TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR)
+                .extra(Extra.AUTOCOMPLETE, (!autocompleteResult.isEmpty).toString())
+
+        if (!autocompleteResult.isEmpty) {
+            event.extra(Extra.TOTAL, autocompleteResult.totalItems.toString())
+            event.extra(Extra.SOURCE, autocompleteResult.source)
+        }
+
+        event.queue()
     }
 
     @JvmStatic

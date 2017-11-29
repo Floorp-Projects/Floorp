@@ -52,19 +52,21 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
     public static class AutocompleteResult {
         public static AutocompleteResult emptyResult() {
-            return new AutocompleteResult(null, null);
+            return new AutocompleteResult("", "", 0);
         }
 
-        public final String text;
-        public final String source;
+        private final String text;
+        private final String source;
+        private final int totalItems;
 
-        public AutocompleteResult(String text, String source) {
+        public AutocompleteResult(@NonNull String text, @NonNull String source, int totalItems) {
             this.text = text;
             this.source = source;
+            this.totalItems = totalItems;
         }
 
         public boolean isEmpty() {
-            return text == null;
+            return text.isEmpty();
         }
 
         public String getText() {
@@ -73,6 +75,10 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
         public String getSource() {
             return source;
+        }
+
+        public int getTotalItems() {
+            return totalItems;
         }
 
         public int getLength() {
@@ -427,6 +433,11 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
         final Editable text = getText();
 
         return text.subSequence(0, mAutoCompletePrefixLength).toString();
+    }
+
+    @NonNull
+    public AutocompleteResult getLastAutocompleteResult() {
+        return mAutoCompleteResult;
     }
 
     private static boolean hasCompositionString(Editable content) {

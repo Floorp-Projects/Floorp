@@ -429,6 +429,7 @@ class UrlInputFragment :
 
     override fun onCommit() {
         val input = urlView.text.toString()
+
         if (!input.trim { it <= ' ' }.isEmpty()) {
             ViewUtils.hideKeyboard(urlView)
 
@@ -446,7 +447,7 @@ class UrlInputFragment :
 
             openUrl(url, searchTerms)
 
-            TelemetryWrapper.urlBarEvent(isUrl)
+            TelemetryWrapper.urlBarEvent(isUrl, urlView.lastAutocompleteResult)
         }
     }
 
