@@ -13,6 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
   Components.utils.import("resource://gre/modules/Subprocess.jsm");
   Components.utils.import("resource://gre/modules/osfile.jsm");
 
+  SimpleTest.requestLongerTimeout(2);
+
   const screenshotPath = OS.Path.join(OS.Constants.Path.tmpDir, "headless_test_screenshot.png");
 
   async function runFirefox(args) {
