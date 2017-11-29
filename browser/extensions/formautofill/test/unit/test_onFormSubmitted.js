@@ -62,7 +62,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -73,7 +73,8 @@ const TESTCASES = [
             "tel": "1-650-903-0800",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -88,7 +89,8 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        creditCard: {
+        address: [],
+        creditCard: [{
           guid: null,
           record: {
             "cc-name": "John Doe",
@@ -97,7 +99,7 @@ const TESTCASES = [
             "cc-exp-year": 2000,
           },
           untouchedFields: [],
-        },
+        }],
       },
     },
   },
@@ -115,7 +117,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -126,8 +128,8 @@ const TESTCASES = [
             "tel": "1-650-903-0800",
           },
           untouchedFields: [],
-        },
-        creditCard: {
+        }],
+        creditCard: [{
           guid: null,
           record: {
             "cc-name": "John Doe",
@@ -136,7 +138,7 @@ const TESTCASES = [
             "cc-exp-year": 2000,
           },
           untouchedFields: [],
-        },
+        }],
       },
     },
   },
@@ -150,7 +152,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -161,7 +163,8 @@ const TESTCASES = [
             "tel": "1-650-903-0800",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -176,7 +179,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -187,7 +190,8 @@ const TESTCASES = [
             "tel": "1-650-903-0800",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -201,7 +205,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "address-level1": "CA",
@@ -212,7 +216,8 @@ const TESTCASES = [
             "tel": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -226,7 +231,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "address-level1": "CA",
@@ -237,7 +242,8 @@ const TESTCASES = [
             "tel": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -251,7 +257,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "address-level1": "AR",
@@ -262,7 +268,8 @@ const TESTCASES = [
             "tel": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -276,7 +283,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "address-level1": "CA",
@@ -287,7 +294,8 @@ const TESTCASES = [
             "tel": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -301,7 +309,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "address-level1": "AZ",
@@ -312,7 +320,8 @@ const TESTCASES = [
             "tel": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -326,7 +335,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "address-level1": "Arizonac",
@@ -337,7 +346,8 @@ const TESTCASES = [
             "tel": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -352,7 +362,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -363,7 +373,8 @@ const TESTCASES = [
             "email": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -378,7 +389,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -389,7 +400,8 @@ const TESTCASES = [
             "email": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -404,7 +416,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -415,7 +427,8 @@ const TESTCASES = [
             "email": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -430,7 +443,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -441,7 +454,8 @@ const TESTCASES = [
             "email": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -456,7 +470,7 @@ const TESTCASES = [
     expectedResult: {
       formSubmission: true,
       records: {
-        address: {
+        address: [{
           guid: null,
           record: {
             "street-address": "331 E. Evelyn Avenue",
@@ -467,7 +481,8 @@ const TESTCASES = [
             "email": "",
           },
           untouchedFields: [],
-        },
+        }],
+        creditCard: [],
       },
     },
   },
@@ -478,8 +493,8 @@ add_task(async function handle_earlyformsubmit_event() {
   let fakeForm = MOCK_DOC.createElement("form");
   sinon.spy(FormAutofillContent, "_onFormSubmit");
 
-  do_check_eq(FormAutofillContent.notify(fakeForm), true);
-  do_check_eq(FormAutofillContent._onFormSubmit.called, false);
+  Assert.equal(FormAutofillContent.notify(fakeForm), true);
+  Assert.equal(FormAutofillContent._onFormSubmit.called, false);
   FormAutofillContent._onFormSubmit.restore();
 });
 
@@ -508,33 +523,33 @@ add_task(async function autofill_disabled() {
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", false);
   Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
   FormAutofillContent.notify(form);
-  do_check_eq(FormAutofillContent._onFormSubmit.called, false);
+  Assert.equal(FormAutofillContent._onFormSubmit.called, false);
   FormAutofillContent._onFormSubmit.reset();
 
   // "_onFormSubmit" should be called as usual.
   Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
   Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
   FormAutofillContent.notify(form);
-  do_check_eq(FormAutofillContent._onFormSubmit.called, true);
-  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].address, undefined);
-  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].creditCard, undefined);
+  Assert.equal(FormAutofillContent._onFormSubmit.called, true);
+  Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
+  Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].creditCard, []);
   FormAutofillContent._onFormSubmit.reset();
 
   // "address" should be empty if "addresses" pref is disabled.
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", false);
   FormAutofillContent.notify(form);
-  do_check_eq(FormAutofillContent._onFormSubmit.called, true);
-  do_check_eq(FormAutofillContent._onFormSubmit.args[0][0].address, undefined);
-  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].creditCard, undefined);
+  Assert.equal(FormAutofillContent._onFormSubmit.called, true);
+  Assert.deepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
+  Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].creditCard, []);
   FormAutofillContent._onFormSubmit.reset();
   Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
 
   // "creditCard" should be empty if "creditCards" pref is disabled.
   Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
   FormAutofillContent.notify(form);
-  do_check_eq(FormAutofillContent._onFormSubmit.called, true);
-  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].address, undefined);
-  do_check_eq(FormAutofillContent._onFormSubmit.args[0][0].creditCard, undefined);
+  Assert.deepEqual(FormAutofillContent._onFormSubmit.called, true);
+  Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
+  Assert.deepEqual(FormAutofillContent._onFormSubmit.args[0][0].creditCard, []);
   FormAutofillContent._onFormSubmit.reset();
   Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
 
@@ -566,7 +581,7 @@ TESTCASES.forEach(testcase => {
     FormAutofillContent.identifyAutofillFields(element);
     FormAutofillContent.notify(form);
 
-    do_check_eq(FormAutofillContent._onFormSubmit.called,
+    Assert.equal(FormAutofillContent._onFormSubmit.called,
                 testcase.expectedResult.formSubmission);
     if (FormAutofillContent._onFormSubmit.called) {
       Assert.deepEqual(FormAutofillContent._onFormSubmit.args[0][0],
