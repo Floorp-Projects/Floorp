@@ -1,0 +1,17 @@
+﻿<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Storage inspector cookie samesite test</title>
+  </head>
+  <body>
+    <script type="application/javascript;version=1.7">
+    "use strict";
+    let expiresIn24Hours = new Date(Date.now() + 60 * 60 * 24 * 1000).toUTCString();
+
+    document.cookie = "test1=value1;expires=" + expiresIn24Hours + ";";
+    document.cookie = "test2=value2;expires=" + expiresIn24Hours + ";SameSite=lax";
+    document.cookie = "test3=value3;expires=" + expiresIn24Hours + ";SameSite=strict";
+    </script>
+  </body>
+</html>

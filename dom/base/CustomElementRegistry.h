@@ -150,9 +150,7 @@ struct CustomElementDefinition
                           nsAtom* aLocalName,
                           Function* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                          JS::Handle<JSObject*> aPrototype,
-                          mozilla::dom::LifecycleCallbacks* aCallbacks,
-                          uint32_t aDocOrder);
+                          mozilla::dom::LifecycleCallbacks* aCallbacks);
 
   // The type (name) for this custom element, for <button is="x-foo"> or <x-foo>
   // this would be x-foo.
@@ -167,17 +165,11 @@ struct CustomElementDefinition
   // The list of attributes that this custom element observes.
   nsTArray<RefPtr<nsAtom>> mObservedAttributes;
 
-  // The prototype to use for new custom elements of this type.
-  JS::Heap<JSObject *> mPrototype;
-
   // The lifecycle callbacks to call for this custom element.
   UniquePtr<mozilla::dom::LifecycleCallbacks> mCallbacks;
 
   // A construction stack. Use nullptr to represent an "already constructed marker".
   nsTArray<RefPtr<Element>> mConstructionStack;
-
-  // The document custom element order.
-  uint32_t mDocOrder;
 
   bool IsCustomBuiltIn()
   {
@@ -371,9 +363,6 @@ public:
                                        LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
                                        CustomElementDefinition* aDefinition);
 
-  void GetCustomPrototype(nsAtom* aAtom,
-                          JS::MutableHandle<JSObject*> aPrototype);
-
   /**
    * Upgrade an element.
    * https://html.spec.whatwg.org/multipage/scripting.html#upgrades
@@ -382,8 +371,7 @@ public:
 
   /**
    * Registers an unresolved custom element that is a candidate for
-   * upgrade when the definition is registered via registerElement.
-   * |aTypeName| is the name of the custom element type, if it is not
+   * upgrade. |aTypeName| is the name of the custom element type, if it is not
    * provided, then element name is used. |aTypeName| should be provided
    * when registering a custom element that extends an existing
    * element. e.g. <button is="x-button">.
@@ -420,8 +408,8 @@ private:
                         js::SystemAllocPolicy> ConstructorMap;
 
   // Hashtable for custom element definitions in web components.
-  // Custom prototypes are stored in the compartment where
-  // registerElement was called.
+  // Custom prototypes are stored in the compartment where definition was
+  // defined.
   DefinitionMap mCustomDefinitions;
 
   // Hashtable for looking up definitions by using constructor as key.

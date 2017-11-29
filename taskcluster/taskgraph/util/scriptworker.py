@@ -253,12 +253,12 @@ PUSH_APK_BREAKPOINT_WORKER_TYPE = {
     'default': 'invalid/invalid',
 }
 
-PUSH_APK_DRY_RUN_OPTION = {
-    'central': False,
-    'beta': False,
-    'maple': True,
-    'release': False,
-    'default': True,
+PUSH_APK_COMMIT_OPTION = {
+    'central': True,
+    'beta': True,
+    'maple': False,
+    'release': True,
+    'default': False,
 }
 
 PUSH_APK_ROLLOUT_PERCENTAGE = {
@@ -392,10 +392,10 @@ get_push_apk_breakpoint_worker_type = functools.partial(
     PUSH_APK_BREAKPOINT_WORKER_TYPE
 )
 
-get_push_apk_dry_run_option = functools.partial(
+get_push_apk_commit_option = functools.partial(
     get_scope_from_project,
     PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
-    PUSH_APK_DRY_RUN_OPTION
+    PUSH_APK_COMMIT_OPTION
 )
 
 get_push_apk_rollout_percentage = functools.partial(

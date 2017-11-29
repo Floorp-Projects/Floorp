@@ -100,6 +100,7 @@ public:
 
 
   static bool sBlockMixedScript;
+  static bool sBlockMixedObjectSubrequest;
   static bool sBlockMixedDisplay;
   // Do we move HSTS before mixed-content
   static bool sUseHSTS;

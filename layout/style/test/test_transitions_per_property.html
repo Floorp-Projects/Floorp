@@ -638,7 +638,7 @@ var transformTests = [
 // reference-box (i.e. border-box or content-box) if needed.
 // Bug 1313619: Add some tests for two basic shapes with an explicit
 // reference-box and a default one.
-var clipPathAndShapeOutsideTests = [
+const basicShapesTests = [
   { start: "none", end: "none",
     expected: ["none"] },
   // none to shape
@@ -780,12 +780,20 @@ var clipPathAndShapeOutsideTests = [
   { start: "circle(20px)", end: "content-box", expected: ["content-box"] },
   { start: "content-box", end: "circle(20px)", expected: ["circle", ["20px at 50% 50%"]] },
   // url to shape
+  { start: "circle(20px)", end: "url(http://localhost/a.png)", expected: ["url", ["\"http://localhost/a.png\""]] },
+  { start: "url(http://localhost/a.png)", end: "circle(20px)", expected: ["circle", ["20px at 50% 50%"]] },
+  // url to none
+  { start: "none", end: "url(http://localhost/a.png)", expected: ["url", ["\"http://localhost/a.png\""]] },
+  { start: "http://localhost/a.png", end: "none", expected: ["none"] },
+];
+
+const basicShapesWithFragmentUrlTests = [
+  // Fragment url to shape
   { start: "circle(20px)", end: "url('#a')", expected: ["url", ["\"#a\""]] },
   { start: "url('#a')", end: "circle(20px)", expected: ["circle", ["20px at 50% 50%"]] },
-  // url to none
+  // Fragment url to none
   { start: "none", end: "url('#a')", expected: ["url", ["\"#a\""]] },
   { start: "url('#a')", end: "none", expected: ["none"] },
-
 ];
 
 var filterTests = [
@@ -1575,8 +1583,13 @@ function filter_function_list_equals(computedValStr, expectedList)
 }
 
 function test_basic_shape_or_url_transition(prop) {
-  for (var i in clipPathAndShapeOutsideTests) {
-    var test = clipPathAndShapeOutsideTests[i];
+  let tests = basicShapesTests;
+  if (prop == "clip-path") {
+    // Clip-path won't resolve fragment URLs.
+    tests.concat(basicShapesWithFragmentUrlTests);
+  }
+
+  for (let test of tests) {
     div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, test.start, "");
     cs.getPropertyValue(prop);

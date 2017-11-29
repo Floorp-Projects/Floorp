@@ -1,0 +1,19 @@
+ac_add_options --enable-debug
+ac_add_options --enable-dmd
+ac_add_options --enable-verify-mar
+
+. $topsrcdir/build/mozconfig.stylo
+
+MOZ_AUTOMATION_L10N_CHECK=0
+
+. $topsrcdir/build/unix/mozconfig.linux
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+ac_add_options --enable-fuzzing
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=fuzzing
+
+. "$topsrcdir/build/mozconfig.common.override"

@@ -283,9 +283,7 @@ this.FormAutofillUtils = {
   },
 
   loadDataFromScript(url, sandbox = {}) {
-    let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                         .getService(Ci.mozIJSSubScriptLoader);
-    scriptLoader.loadSubScript(url, sandbox, "utf-8");
+    Services.scriptloader.loadSubScript(url, sandbox, "utf-8");
     return sandbox;
   },
 

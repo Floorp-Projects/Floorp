@@ -36,20 +36,14 @@ window.addEventListener("message", function(event) {
 
     if (++numFinished == 3) {
       // Clean up after ourself
-      var pm = Cc["@mozilla.org/permissionmanager;1"].
-               getService(SpecialPowers.Ci.nsIPermissionManager);
-      var ioService = Cc["@mozilla.org/network/io-service;1"]
-                        .getService(SpecialPowers.Ci.nsIIOService);
-      var uri1 = ioService.newURI(frames.testFrame.location);
-      var uri2 = ioService.newURI(frames.testFrame3.location);
+      var uri1 = SpecialPowers.Services.io.newURI(frames.testFrame.location);
+      var uri2 = SpecialPowers.Services.io.newURI(frames.testFrame3.location);
 
-      var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                  .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
-      var principal1 = ssm.createCodebasePrincipal(uri1, {});
-      var principal2 = ssm.createCodebasePrincipal(uri2, {});
+      var principal1 = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri1, {});
+      var principal2 = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri2, {});
 
-      pm.removeFromPrincipal(principal1, "offline-app");
-      pm.removeFromPrincipal(principal2, "offline-app");
+      SpecialPowers.Services.perms.removeFromPrincipal(principal1, "offline-app");
+      SpecialPowers.Services.perms.removeFromPrincipal(principal2, "offline-app");
 
       offlineByDefault.reset();
 
@@ -109,9 +103,7 @@ function loaded() {
   // Click the notification panel's "Allow" button.  This should kick
   // off updates, which will eventually lead to getting messages from
   // the children.
-  var wm = SpecialPowers.Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(SpecialPowers.Ci.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("navigator:browser");
+  var win = SpecialPowers.Services.wm.getMostRecentWindow("navigator:browser");
   var panel = win.PopupNotifications.panel;
   is(panel.childElementCount, 2, "2 notifications being displayed");
   panel.firstElementChild.button.click();

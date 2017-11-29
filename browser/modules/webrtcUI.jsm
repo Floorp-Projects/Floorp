@@ -858,9 +858,7 @@ function getGlobalIndicator() {
     _microphone: null,
     _screen: null,
 
-    _hiddenDoc: Cc["@mozilla.org/appshell/appShellService;1"]
-                  .getService(Ci.nsIAppShellService)
-                  .hiddenDOMWindow.document,
+    _hiddenDoc: Services.appShell.hiddenDOMWindow.document,
     _statusBar: Cc["@mozilla.org/widget/macsystemstatusbar;1"]
                   .getService(Ci.nsISystemStatusBar),
 

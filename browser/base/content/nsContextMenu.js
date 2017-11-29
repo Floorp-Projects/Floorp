@@ -1024,9 +1024,7 @@ nsContextMenu.prototype = {
       if (AppConstants.platform == "macosx") {
         // On Mac, the Set Desktop Background window is not modal.
         // Don't open more than one Set Desktop Background window.
-        const wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-                   getService(Ci.nsIWindowMediator);
-        let dbWin = wm.getMostRecentWindow("Shell:SetDesktopBackground");
+        let dbWin = Services.wm.getMostRecentWindow("Shell:SetDesktopBackground");
         if (dbWin) {
           dbWin.gSetBackground.init(image, imageName);
           dbWin.focus();
@@ -1079,20 +1077,14 @@ nsContextMenu.prototype = {
         // some other error occured; notify the user...
         if (!Components.isSuccessCode(aRequest.status)) {
           try {
-            const sbs = Cc["@mozilla.org/intl/stringbundle;1"].
-                        getService(Ci.nsIStringBundleService);
-            const bundle = sbs.createBundle(
+            const bundle = Services.strings.createBundle(
                     "chrome://mozapps/locale/downloads/downloads.properties");
 
             const title = bundle.GetStringFromName("downloadErrorAlertTitle");
             const msg = bundle.GetStringFromName("downloadErrorGeneric");
 
-            const promptSvc = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                              getService(Ci.nsIPromptService);
-            const wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-                       getService(Ci.nsIWindowMediator);
-            let window = wm.getOuterWindowWithId(windowID);
-            promptSvc.alert(window, title, msg);
+            let window = Services.wm.getOuterWindowWithId(windowID);
+            Services.prompt.alert(window, title, msg);
           } catch (ex) {}
           return;
         }
@@ -1397,8 +1389,7 @@ nsContextMenu.prototype = {
 
     var version = "-";
     try {
-      version = Cc["@mozilla.org/xre/app-info;1"].
-                getService(Ci.nsIXULAppInfo).version;
+      version = Services.appinfo.version;
     } catch (e) { }
 
     uri = uri.replace(/%LOCALE%/, escape(locale)).replace(/%VERSION%/, version);

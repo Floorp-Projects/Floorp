@@ -10,7 +10,7 @@ We use a version of React that has a few minor tweaks. We want to use an un-mini
 
 ## Getting the Source
 
-```
+```bash
 git clone https://github.com/facebook/react.git
 cd react
 git checkout v15.6.1 # or the version you are targetting
@@ -18,7 +18,7 @@ git checkout v15.6.1 # or the version you are targetting
 
 ## Building
 
-```
+```bash
 npm install
 grunt build
 ```
@@ -32,7 +32,7 @@ If you receive the following error:
 
 Your npm version is too recent. `"2.x || 3.x || 4.x"` is a hint that the React project only supports npm versions 2.x, 3.x and 4.x. To fix this let's start by removing all of your node versions:
 
-```
+```bash
 # If you use ubuntu
 sudo apt-get remove --purge nodejs
 # If you use homebrew
@@ -48,7 +48,7 @@ You will need to setup a node version manager. These instructions cover "n" but 
 
 Run the n-install script and it will set "n" it up for you:
 
-```
+```bash
 curl -L -o /tmp/n-install-script https://git.io/n-install
 bash /tmp/n-install-script -y
 exec $SHELL # To re-initialize the PATH variable
@@ -63,7 +63,7 @@ Running `node --version` should now show v7.10.1 and `npm --version` should show
 
 Now try again:
 
-```
+```bash
 npm install
 grunt build
 ```
@@ -78,7 +78,7 @@ grunt build
 
 - If you are editing the production version then change this:
 
-  ```
+  ```js
   if ("production" !== 'production') {
     exports.getReactPerf = function () {
       return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
@@ -92,7 +92,7 @@ grunt build
 
   To this:
 
-  ```
+  ```js
   if ("production" !== 'production') {
     exports.getReactPerf = function () {
       return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
@@ -106,7 +106,7 @@ grunt build
 
 - If you are editing the production version then change this:
 
-  ```
+  ```js
   if ("production" !== 'production') {
     // For the UMD build we get these lazily from the global since they're tied
     // to the DOM renderer and it hasn't loaded yet.
@@ -126,7 +126,7 @@ grunt build
   ```
 
   To this:
-  ```
+  ```js
   if ("production" !== 'production') {
     // For the UMD build we get these lazily from the global since they're tied
     // to the DOM renderer and it hasn't loaded yet.
@@ -156,7 +156,7 @@ grunt build
 
 - If you are editing the production version then change this:
 
-  ```
+  ```js
   if ("production" !== 'production') {
     ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
       // ReactPerf and ReactTestUtils currently only work with the DOM renderer
@@ -169,7 +169,7 @@ grunt build
 
   Into this:
 
-  ```
+  ```js
   if ("production" !== 'production') {
     ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
       // ReactPerf and ReactTestUtils currently only work with the DOM renderer
@@ -186,13 +186,13 @@ To have React's event system working correctly in certain XUL situations, ReactD
 
 e.g. Turn this:
 
-```
+```js
 module.exports = ReactDOM;
 ```
 
 Into this:
 
-```
+```js
 //--------------------------------------------------------------------------------------
 // START MONKEY PATCH
 /**
@@ -227,9 +227,16 @@ function monkeyPatchReactDOM(ReactDOM) {
   // Pass on getting and setting behaviors.
   return new Proxy({}, {
     get: (target, name) => {
-      return name === "render"
-        ? reactDomRender
-        : lazyFunctionBinding(ReactDOM, name);
+      switch (name) {
+        case "render":
+          return reactDomRender;
+        case "TestUtils":
+          // Bind ReactTestUtils and return it when a request is made for
+          // ReactDOM.TestUtils.
+          let ReactInternals = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+          return lazyFunctionBinding(ReactInternals, "ReactTestUtils");
+      }
+      return lazyFunctionBinding(ReactDOM, name);
     },
     set: (target, name, value) => {
       ReactDOM[name] = value;
@@ -368,7 +375,7 @@ module.exports = monkeyPatchReactDOM(ReactDOM);
 
 - Now we need to copy `react-with-addons.js`, `react-dom.js` and `react-dom-server.js` into our repo (note the destination filenames all have -dev added e.g. `react-dev.js`, these are part of the dev version):
 
-  ```
+  ```bash
   cp build/react-with-addons.js
      <gecko-dev>/devtools/client/shared/vendor/react-dev.js
   cp build/react-dom.js
@@ -379,7 +386,7 @@ module.exports = monkeyPatchReactDOM(ReactDOM);
 
 ### Generate a Production Build
 
-```
+```bash
 NODE_ENV=production grunt build
 
 # Or if using the fish shell:
@@ -397,7 +404,7 @@ Unfortunately, you will need to repeat the following sections **(See note below)
 
 **NOTE**: This time you need to save the files with their original filenames so the commands in the "Copy the Files Across" section become:
 
-  ```
+  ```bash
   cp build/react-with-addons.js
      <gecko-dev>/devtools/client/shared/vendor/react.js
   cp build/react-dom.js

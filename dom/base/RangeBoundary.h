@@ -15,6 +15,9 @@ class nsRange;
 
 namespace mozilla {
 
+template<typename T, typename U>
+class EditorDOMPointBase;
+
 // This class will maintain a reference to the child immediately
 // before the boundary's offset. We try to avoid computing the
 // offset as much as possible and just ensure mRef points to the
@@ -44,6 +47,8 @@ class RangeBoundaryBase
 {
   template<typename T, typename U>
   friend class RangeBoundaryBase;
+  template<typename T, typename U>
+  friend class EditorDOMPointBase;
 
   // nsRange needs to use InvalidOffset() which requires mRef initialized
   // before it's called.

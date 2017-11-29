@@ -20,6 +20,14 @@ const DEFAULT_VALUE = "value";
 loader.lazyRequireGetter(this, "naturalSortCaseInsensitive",
   "devtools/client/shared/natural-sort", true);
 
+// "Lax", "Strict" and "Unset" are special values of the sameSite property
+// that should not be translated.
+const COOKIE_SAMESITE = {
+  LAX: "Lax",
+  STRICT: "Strict",
+  UNSET: "Unset"
+};
+
 // GUID to be used as a separator in compound keys. This must match the same
 // constant in devtools/client/storage/ui.js,
 // devtools/client/storage/test/head.js and
@@ -540,8 +548,20 @@ StorageActors.createActor({
       value: new LongStringActor(this.conn, cookie.value || ""),
       isDomain: cookie.isDomain,
       isSecure: cookie.isSecure,
-      isHttpOnly: cookie.isHttpOnly
+      isHttpOnly: cookie.isHttpOnly,
+      sameSite: this.getSameSiteStringFromCookie(cookie)
     };
+  },
+
+  getSameSiteStringFromCookie(cookie) {
+    switch (cookie.sameSite) {
+      case cookie.SAMESITE_LAX:
+        return COOKIE_SAMESITE.LAX;
+      case cookie.SAMESITE_STRICT:
+        return COOKIE_SAMESITE.STRICT;
+    }
+    // cookie.SAMESITE_UNSET
+    return COOKIE_SAMESITE.UNSET;
   },
 
   populateStoresForHost(host) {
@@ -653,7 +673,8 @@ StorageActors.createActor({
       { name: "value", editable: true, hidden: false },
       { name: "isDomain", editable: false, hidden: true },
       { name: "isSecure", editable: true, hidden: true },
-      { name: "isHttpOnly", editable: true, hidden: false }
+      { name: "isHttpOnly", editable: true, hidden: false },
+      { name: "sameSite", editable: false, hidden: false }
     ];
   }),
 

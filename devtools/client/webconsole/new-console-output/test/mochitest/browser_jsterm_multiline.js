@@ -10,7 +10,7 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-console.html";
+                 "new-console-output/test/mochitest/test-console.html";
 
 let SHOULD_ENTER_MULTILINE = [
   {input: "function foo() {" },
@@ -41,30 +41,29 @@ let SHOULD_EXECUTE = [
   {input: "{2,}" },
 ];
 
-add_task(function* () {
-  let { tab, browser } = yield loadTab(TEST_URI);
-  let hud = yield openConsole();
-  let inputNode = hud.jsterm.inputNode;
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
+  let { inputNode } = hud.jsterm;
 
-  for (let test of SHOULD_ENTER_MULTILINE) {
-    hud.jsterm.setInputValue(test.input);
-    EventUtils.synthesizeKey("VK_RETURN", { shiftKey: test.shiftKey });
+  for (let {input, shiftKey} of SHOULD_ENTER_MULTILINE) {
+    hud.jsterm.setInputValue(input);
+    EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
+
     let inputValue = hud.jsterm.getInputValue();
-    is(inputNode.selectionStart, inputNode.selectionEnd,
-       "selection is collapsed");
-    is(inputNode.selectionStart, inputValue.length,
-       "caret at end of multiline input");
-    let inputWithNewline = test.input + "\n";
+    is(inputNode.selectionStart, inputNode.selectionEnd, "selection is collapsed");
+    is(inputNode.selectionStart, inputValue.length, "caret at end of multiline input");
+
+    let inputWithNewline = input + "\n";
     is(inputValue, inputWithNewline, "Input value is correct");
   }
 
-  for (let test of SHOULD_EXECUTE) {
-    hud.jsterm.setInputValue(test.input);
-    EventUtils.synthesizeKey("VK_RETURN", { shiftKey: test.shiftKey });
+  for (let {input, shiftKey} of SHOULD_EXECUTE) {
+    hud.jsterm.setInputValue(input);
+    EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
+
     let inputValue = hud.jsterm.getInputValue();
     is(inputNode.selectionStart, 0, "selection starts/ends at 0");
     is(inputNode.selectionEnd, 0, "selection starts/ends at 0");
     is(inputValue, "", "Input value is cleared");
   }
-
 });

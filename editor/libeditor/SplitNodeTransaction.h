@@ -54,7 +54,7 @@ protected:
 
   // The container is existing right node (will be split).
   // The point referring this is start of the right node after it's split.
-  RangeBoundary mStartOfRightNode;
+  EditorDOMPoint mStartOfRightNode;
 
   // The node we create when splitting mExistingRightNode.
   nsCOMPtr<nsIContent> mNewLeftNode;

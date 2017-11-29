@@ -785,7 +785,7 @@ TextEditRules::WillInsertText(EditAction aAction,
       MOZ_ASSERT(!pointAfterStringInserted.GetChildAtOffset(),
         "After inserting text into a text node, pointAfterStringInserted."
         "GetChildAtOffset() should be nullptr");
-      ErrorResult error;
+      IgnoredErrorResult error;
       aSelection->Collapse(pointAfterStringInserted, error);
       if (error.Failed()) {
         NS_WARNING("Failed to collapse selection after inserting string");

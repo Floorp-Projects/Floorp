@@ -3,8 +3,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
 
 function test() {
   var exampleUri = makeURI("http://example.com/");
-  var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
-  var principal = secman.createCodebasePrincipal(exampleUri, {});
+  var principal = Services.scriptSecurityManager.createCodebasePrincipal(exampleUri, {});
 
   function testIsFeed(aTitle, aHref, aType, aKnown) {
     var link = {

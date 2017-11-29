@@ -51,12 +51,10 @@ async function testURL(url, loadFunc, endFunc) {
 
   await ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
     async function(arg) {
-      const fm = Components.classes["@mozilla.org/focus-manager;1"].
-                            getService(Components.interfaces.nsIFocusManager);
-      Assert.equal(fm.focusedElement, null, "focusedElement not null");
+      Assert.equal(Services.focus.focusedElement, null, "focusedElement not null");
 
       if (arg.isRemote) {
-        Assert.equal(fm.activeWindow, content, "activeWindow not correct");
+        Assert.equal(Services.focus.activeWindow, content, "activeWindow not correct");
       }
   });
 

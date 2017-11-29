@@ -27,9 +27,8 @@ function* testTranslate(testActor, helper) {
     yield helper.show(shape, {mode: "cssClipPath", transformMode: true});
     let { mouse } = helper;
 
-    let { top, left, width, height } = yield getBoundingBoxInPx(testActor, helper, shape);
-    let x = left + width / 2;
-    let y = top + height / 2;
+    let { center, width, height } = yield getBoundingBoxInPx(testActor, helper, shape);
+    let [x, y] = center;
     let dx = width / 10;
     let dy = height / 10;
 
@@ -40,8 +39,8 @@ function* testTranslate(testActor, helper) {
     yield testActor.reflow();
 
     let newBB = yield getBoundingBoxInPx(testActor, helper);
-    isnot(newBB.top, top, `${shape} translated on y axis`);
-    isnot(newBB.left, left, `${shape} translated on x axis`);
+    isnot(newBB.center[0], x, `${shape} translated on y axis`);
+    isnot(newBB.center[1], y, `${shape} translated on x axis`);
 
     info(`Translating ${shape} back`);
     yield mouse.down(x + dx, y + dy, shape);
@@ -50,8 +49,8 @@ function* testTranslate(testActor, helper) {
     yield testActor.reflow();
 
     newBB = yield getBoundingBoxInPx(testActor, helper, shape);
-    is(newBB.top, top, `${shape} translated back on y axis`);
-    is(newBB.left, left, `${shape} translated back on x axis`);
+    is(newBB.center[0], x, `${shape} translated back on x axis`);
+    is(newBB.center[1], y, `${shape} translated back on y axis`);
   }
 }
 
@@ -61,92 +60,94 @@ function* testScale(testActor, helper) {
     yield helper.show(shape, {mode: "cssClipPath", transformMode: true});
     let { mouse } = helper;
 
-    let { top, left, width, height } = yield getBoundingBoxInPx(testActor, helper, shape);
+    let { nw, width,
+          height, center } = yield getBoundingBoxInPx(testActor, helper, shape);
 
     // if the top or left edges are not visible, move the shape so it is.
-    if (top < 0 || left < 0) {
-      let x = left + width / 2;
-      let y = top + height / 2;
-      let dx = Math.max(0, -left);
-      let dy = Math.max(0, -top);
+    if (nw[0] < 0 || nw[1] < 0) {
+      let [x, y] = center;
+      let dx = Math.max(0, -nw[0]);
+      let dy = Math.max(0, -nw[1]);
       yield mouse.down(x, y, shape);
       yield mouse.move(x + dx, y + dy, shape);
       yield mouse.up(x + dx, y + dy, shape);
       yield testActor.reflow();
-      left += dx;
-      top += dy;
+      nw[0] += dx;
+      nw[1] += dy;
     }
     let dx = width / 10;
     let dy = height / 10;
 
     info("Scaling from nw");
-    yield mouse.down(left, top, shape);
-    yield mouse.move(left + dx, top + dy, shape);
-    yield mouse.up(left + dx, top + dy, shape);
+    yield mouse.down(nw[0], nw[1], shape);
+    yield mouse.move(nw[0] + dx, nw[1] + dy, shape);
+    yield mouse.up(nw[0] + dx, nw[1] + dy, shape);
     yield testActor.reflow();
 
     let nwBB = yield getBoundingBoxInPx(testActor, helper, shape);
-    isnot(nwBB.top, top, `${shape} top moved down after nw scale`);
-    isnot(nwBB.left, left, `${shape} left moved right after nw scale`);
+    isnot(nwBB.nw[0], nw[0], `${shape} nw moved right after nw scale`);
+    isnot(nwBB.nw[1], nw[1], `${shape} nw moved down after nw scale`);
     isnot(nwBB.width, width, `${shape} width reduced after nw scale`);
     isnot(nwBB.height, height, `${shape} height reduced after nw scale`);
 
     info("Scaling from ne");
-    yield mouse.down(nwBB.left + nwBB.width, nwBB.top, shape);
-    yield mouse.move(nwBB.left + nwBB.width - dx, nwBB.top + dy, shape);
-    yield mouse.up(nwBB.left + nwBB.width - dx, nwBB.top + dy, shape);
+    yield mouse.down(nwBB.ne[0], nwBB.ne[1], shape);
+    yield mouse.move(nwBB.ne[0] - dx, nwBB.ne[1] + dy, shape);
+    yield mouse.up(nwBB.ne[0] - dx, nwBB.ne[1] + dy, shape);
     yield testActor.reflow();
 
     let neBB = yield getBoundingBoxInPx(testActor, helper, shape);
-    isnot(neBB.top, nwBB.top, `${shape} top moved down after ne scale`);
-    is(neBB.left, nwBB.left, `${shape} left not moved right after ne scale`);
+    isnot(neBB.ne[0], nwBB.ne[0], `${shape} ne moved right after ne scale`);
+    isnot(neBB.ne[1], nwBB.ne[1], `${shape} ne moved down after ne scale`);
     isnot(neBB.width, nwBB.width, `${shape} width reduced after ne scale`);
     isnot(neBB.height, nwBB.height, `${shape} height reduced after ne scale`);
 
     info("Scaling from sw");
-    yield mouse.down(neBB.left, neBB.top + neBB.height, shape);
-    yield mouse.move(neBB.left + dx, neBB.top + neBB.height - dy, shape);
-    yield mouse.up(neBB.left + dx, neBB.top + neBB.height - dy, shape);
+    yield mouse.down(neBB.sw[0], neBB.sw[1], shape);
+    yield mouse.move(neBB.sw[0] + dx, neBB.sw[1] - dy, shape);
+    yield mouse.up(neBB.sw[0] + dx, neBB.sw[1] - dy, shape);
     yield testActor.reflow();
 
     let swBB = yield getBoundingBoxInPx(testActor, helper, shape);
-    is(swBB.top, neBB.top, `${shape} top not moved down after sw scale`);
-    isnot(swBB.left, neBB.left, `${shape} left moved right after sw scale`);
+    isnot(swBB.sw[0], neBB.sw[0], `${shape} sw moved right after sw scale`);
+    isnot(swBB.sw[1], neBB.sw[1], `${shape} sw moved down after sw scale`);
     isnot(swBB.width, neBB.width, `${shape} width reduced after sw scale`);
     isnot(swBB.height, neBB.height, `${shape} height reduced after sw scale`);
 
     info("Scaling from se");
-    yield mouse.down(swBB.left + swBB.width, swBB.top + swBB.height, shape);
-    yield mouse.move(swBB.left + swBB.width - dx, swBB.top + swBB.height - dy, shape);
-    yield mouse.up(swBB.left + swBB.width - dx, swBB.top + swBB.height - dy, shape);
+    yield mouse.down(swBB.se[0], swBB.se[1], shape);
+    yield mouse.move(swBB.se[0] - dx, swBB.se[1] - dy, shape);
+    yield mouse.up(swBB.se[0] - dx, swBB.se[1] - dy, shape);
     yield testActor.reflow();
 
     let seBB = yield getBoundingBoxInPx(testActor, helper, shape);
-    is(seBB.top, swBB.top, `${shape} top not moved down after se scale`);
-    is(seBB.left, swBB.left, `${shape} left not moved right after se scale`);
+    isnot(seBB.se[0], swBB.se[0], `${shape} se moved right after se scale`);
+    isnot(seBB.se[1], swBB.se[1], `${shape} se moved down after se scale`);
     isnot(seBB.width, swBB.width, `${shape} width reduced after se scale`);
     isnot(seBB.height, swBB.height, `${shape} height reduced after se scale`);
   }
 }
 
 function* getBoundingBoxInPx(testActor, helper, shape = "#polygon") {
-  let bbTop = parseFloat(yield helper.getElementAttribute("shapes-bounding-box", "y"));
-  let bbLeft = parseFloat(yield helper.getElementAttribute("shapes-bounding-box", "x"));
-  let bbWidth = parseFloat(yield helper.getElementAttribute("shapes-bounding-box",
-    "width"));
-  let bbHeight = parseFloat(yield helper.getElementAttribute("shapes-bounding-box",
-    "height"));
-
   let quads = yield testActor.getAllAdjustedQuads(shape);
   let { width, height } = quads.content[0].bounds;
   let computedStyle = yield helper.highlightedNode.getComputedStyle();
   let paddingTop = parseFloat(computedStyle["padding-top"].value);
   let paddingLeft = parseFloat(computedStyle["padding-left"].value);
 
-  return {
-    top: paddingTop + height * bbTop / 100,
-    left: paddingLeft + width * bbLeft / 100,
-    width: width * bbWidth / 100,
-    height: height * bbHeight / 100
-  };
+  // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers
+  let path = yield helper.getElementAttribute("shapes-bounding-box", "d");
+  let coords = path.replace(/[MLZ]/g, "").split(" ").map((n, i) => {
+    return i % 2 === 0 ? paddingLeft + width * n / 100 : paddingTop + height * n / 100;
+  });
+
+  let nw = [coords[0], coords[1]];
+  let ne = [coords[2], coords[3]];
+  let se = [coords[4], coords[5]];
+  let sw = [coords[6], coords[7]];
+  let center = [(nw[0] + se[0]) / 2, (nw[1] + se[1]) / 2];
+  let shapeWidth = Math.sqrt((ne[0] - nw[0]) ** 2 + (ne[1] - nw[1]) ** 2);
+  let shapeHeight = Math.sqrt((sw[0] - nw[0]) ** 2 + (sw[1] - nw[1]) ** 2);
+
+  return { nw, ne, se, sw, center, width: shapeWidth, height: shapeHeight };
 }

@@ -20,9 +20,8 @@ Test focusing with the Tree component.
 window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    const React = browserRequire("devtools/client/shared/vendor/react");
-    const { Simulate } = React.addons.TestUtils;
-    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/Tree"));
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = createFactory(browserRequire("devtools/client/shared/components/Tree"));
 
     function renderTree(props) {
       const treeProps = Object.assign({},
@@ -60,7 +59,7 @@ window.onload = Task.async(function* () {
     ], "G should be focused");
 
     // Click the first tree node
-    Simulate.click(document.querySelector(".tree-node"));
+    document.querySelector(".tree-node").click();
     yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
