@@ -677,6 +677,7 @@ public:
     : mPoint(aPoint)
   {
     MOZ_ASSERT(aPoint.IsSetAndValid());
+    MOZ_ASSERT(mPoint.Container()->IsContainerNode());
     mChild = mPoint.GetChildAtOffset();
   }
 
