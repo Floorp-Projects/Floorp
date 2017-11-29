@@ -49,7 +49,4 @@ if CONFIG['MOZ_BUILD_APP'] != 'memory':
 if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
 
-if CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
-    DEFINES['MOZ_REPLACE_MALLOC_STATIC'] = True
-
 DisableStlWrapping()

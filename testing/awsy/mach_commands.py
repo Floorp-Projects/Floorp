@@ -144,10 +144,32 @@ class MachCommands(MachCommandBase):
 
         # Setup DMD env vars if necessary.
         if kwargs['dmd']:
-            bin_dir = os.path.dirname(binary)
+            dmd_params = []
 
-            if 'DMD' not in os.environ:
-                os.environ['DMD'] = '1'
+            bin_dir = os.path.dirname(binary)
+            lib_name = self.substs['DLL_PREFIX'] + 'dmd' + self.substs['DLL_SUFFIX']
+            dmd_lib = os.path.join(bin_dir, lib_name)
+            if not os.path.exists(dmd_lib):
+                print("Please build with |--enable-dmd| to use DMD.")
+                return 1
+
+            env_vars = {
+                "Darwin": {
+                    "DYLD_INSERT_LIBRARIES": dmd_lib,
+                    "LD_LIBRARY_PATH": bin_dir,
+                },
+                "Linux": {
+                    "LD_PRELOAD": dmd_lib,
+                    "LD_LIBRARY_PATH": bin_dir,
+                },
+                "WINNT": {
+                    "MOZ_REPLACE_MALLOC_LIB": dmd_lib,
+                },
+            }
+
+            arch = self.substs['OS_ARCH']
+            for k, v in env_vars[arch].iteritems():
+                os.environ[k] = v
 
             # Also add the bin dir to the python path so we can use dmd.py
             if bin_dir not in sys.path:

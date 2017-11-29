@@ -1,7 +1,7 @@
 {
  "version": 5,
  "invocation": {
-  "dmdEnvVar": "1",
+  "dmdEnvVar": null,
   "mode": "dark-matter"
  },
  "blockList": [

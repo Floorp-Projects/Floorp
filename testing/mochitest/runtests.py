@@ -1622,6 +1622,7 @@ toolbar#nav-bar {
             xrePath=options.xrePath,
             env=env,
             debugger=debugger,
+            dmdPath=options.dmdPath,
             lsanPath=lsanPath,
             ubsanPath=ubsanPath)
 
@@ -1632,9 +1633,6 @@ toolbar#nav-bar {
 
         if options.headless:
             browserEnv["MOZ_HEADLESS"] = '1'
-
-        if options.dmd:
-            browserEnv["DMD"] = os.environ.get('DMD', '1')
 
         # These variables are necessary for correct application startup; change
         # via the commandline at your own risk.
