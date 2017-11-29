@@ -38,8 +38,4 @@ NSS_WRAPPER(PK11_GetInternalKeySlot, PK11SlotInfo *, void)
 NSS_WRAPPER(PK11_NeedUserInit, PRBool, PK11SlotInfo *)
 NSS_WRAPPER(PK11_InitPin, SECStatus, PK11SlotInfo*, const char*, const char*)
 
-bool setPassword(PK11SlotInfo *slot);
-SECStatus doCrypto(JNIEnv* jenv, const char *path, const char *value, char** result, bool doEncrypt);
-SECStatus encode(const unsigned char *data, int32_t dataLen, char **_retval);
-SECStatus decode(const char *data, unsigned char **result, int32_t * _retval);
 #endif /* NSS_h */
