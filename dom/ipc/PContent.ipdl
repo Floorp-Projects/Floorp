@@ -235,9 +235,10 @@ union FileCreationResult
 
 struct BlobURLRegistrationData
 {
-    nsCString url;
-    IPCBlob blob;
-    Principal principal;
+  nsCString url;
+  IPCBlob blob;
+  Principal principal;
+  bool revoked;
 };
 
 struct GMPAPITags
