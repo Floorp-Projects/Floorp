@@ -844,7 +844,7 @@ pref_SetPref(const char* aPrefName,
     return rv;
   }
 
-  if (handleDirty) {
+  if (handleDirty && XRE_IsParentProcess()) {
     Preferences::HandleDirty();
   }
   if (valueChanged) {
@@ -2780,12 +2780,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 void
 Preferences::HandleDirty()
 {
-  if (!XRE_IsParentProcess()) {
-    // This path is hit a lot when setting up prefs for content processes. Just
-    // ignore it in that case, because content processes aren't responsible for
-    // saving prefs.
-    return;
-  }
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   if (!gHashTable || !sPreferences) {
     return;
@@ -3445,6 +3440,7 @@ Preferences::SetInitPreferences(nsTArray<dom::Pref>* aDomPrefs)
 /* static */ void
 Preferences::InitializeUserPrefs()
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!sPreferences->mCurrentFile, "Should only initialize prefs once");
 
   // Prefs which are set before we initialize the profile are silently
@@ -3878,6 +3874,8 @@ Preferences::SavePrefFileInternal(nsIFile* aFile, SaveMethod aSaveMethod)
 nsresult
 Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   if (!gHashTable) {
     return NS_ERROR_NOT_INITIALIZED;
   }
