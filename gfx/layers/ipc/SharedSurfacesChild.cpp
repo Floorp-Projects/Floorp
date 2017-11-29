@@ -20,6 +20,31 @@ using namespace mozilla::gfx;
 class SharedSurfacesChild::ImageKeyData final
 {
 public:
+  ImageKeyData(WebRenderLayerManager* aManager,
+               const wr::ImageKey& aImageKey,
+               uint32_t aGenerationId)
+    : mManager(aManager)
+    , mImageKey(aImageKey)
+    , mGenerationId(aGenerationId)
+  { }
+
+  ImageKeyData(ImageKeyData&& aOther)
+    : mManager(Move(aOther.mManager))
+    , mImageKey(aOther.mImageKey)
+    , mGenerationId(aOther.mGenerationId)
+  { }
+
+  ImageKeyData& operator=(ImageKeyData&& aOther)
+  {
+    mManager = Move(aOther.mManager);
+    mImageKey = aOther.mImageKey;
+    mGenerationId = aOther.mGenerationId;
+    return *this;
+  }
+
+  ImageKeyData(const ImageKeyData&) = delete;
+  ImageKeyData& operator=(const ImageKeyData&) = delete;
+
   RefPtr<WebRenderLayerManager> mManager;
   wr::ImageKey mImageKey;
   uint32_t mGenerationId;
@@ -47,7 +72,7 @@ public:
                           nsTArray<ImageKeyData>&& aKeys)
             : Runnable("SharedSurfacesChild::SharedUserData::DestroyRunnable")
             , mId(aId)
-            , mKeys(aKeys)
+            , mKeys(Move(aKeys))
           { }
 
           NS_IMETHOD Run() override
@@ -125,7 +150,8 @@ public:
 
     if (!found) {
       key = aManager->WrBridge()->GetNextImageKey();
-      mKeys.AppendElement(ImageKeyData { aManager, key, aGenerationId });
+      ImageKeyData data(aManager, key, aGenerationId);
+      mKeys.AppendElement(Move(data));
       aResources.AddExternalImage(mId, key);
     }
 
@@ -273,6 +299,11 @@ SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
   MOZ_ASSERT(NS_IsMainThread());
 
   for (const auto& entry : aKeys) {
+    if (entry.mManager->IsDestroyed()) {
+      continue;
+    }
+
+    entry.mManager->AddImageKeyForDiscard(entry.mImageKey);
     WebRenderBridgeChild* wrBridge = entry.mManager->WrBridge();
     if (wrBridge) {
       wrBridge->DeallocExternalImageId(aId);
