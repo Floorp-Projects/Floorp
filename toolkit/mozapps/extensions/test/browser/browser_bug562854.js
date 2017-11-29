@@ -112,10 +112,10 @@ add_test(function() {
 
       EventUtils.synthesizeMouse(target, rect.width / 2, rect.height / 2, { clickCount: 1 }, aManager);
       EventUtils.synthesizeMouse(addon,
-        rect.left - addonRect.left + rect.width / 2,
-        rect.top - addonRect.top + rect.height / 2,
-        { clickCount: 2 },
-        aManager
+                                 rect.left - addonRect.left + rect.width / 2,
+                                 rect.top - addonRect.top + rect.height / 2,
+                                 { clickCount: 2 },
+                                 aManager
       );
 
       wait_for_view_load(aManager, function(aManager) {

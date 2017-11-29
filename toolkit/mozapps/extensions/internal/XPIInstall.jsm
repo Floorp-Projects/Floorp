@@ -1,4 +1,4 @@
- /* This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -241,9 +241,11 @@ function writeStringToFile(file, string) {
                   createInstance(Ci.nsIConverterOutputStream);
 
   try {
-    stream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
-                            FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
-                           0);
+    stream.init(file,
+                FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                  FileUtils.MODE_TRUNCATE,
+                FileUtils.PERMS_FILE,
+                0);
     converter.init(stream, "UTF-8");
     converter.writeString(string);
   } finally {
@@ -1438,25 +1440,25 @@ class AddonInstall {
    */
   install() {
     switch (this.state) {
-    case AddonManager.STATE_DOWNLOADED:
-      this.checkPrompt();
-      break;
-    case AddonManager.STATE_PROMPTS_DONE:
-      this.checkForBlockers();
-      break;
-    case AddonManager.STATE_READY:
-      this.startInstall();
-      break;
-    case AddonManager.STATE_POSTPONED:
-      logger.debug(`Postponing install of ${this.addon.id}`);
-      break;
-    case AddonManager.STATE_DOWNLOADING:
-    case AddonManager.STATE_CHECKING:
-    case AddonManager.STATE_INSTALLING:
+      case AddonManager.STATE_DOWNLOADED:
+        this.checkPrompt();
+        break;
+      case AddonManager.STATE_PROMPTS_DONE:
+        this.checkForBlockers();
+        break;
+      case AddonManager.STATE_READY:
+        this.startInstall();
+        break;
+      case AddonManager.STATE_POSTPONED:
+        logger.debug(`Postponing install of ${this.addon.id}`);
+        break;
+      case AddonManager.STATE_DOWNLOADING:
+      case AddonManager.STATE_CHECKING:
+      case AddonManager.STATE_INSTALLING:
       // Installation is already running
-      return;
-    default:
-      throw new Error("Cannot start installing from this state");
+        return;
+      default:
+        throw new Error("Cannot start installing from this state");
     }
   }
 
@@ -1470,49 +1472,49 @@ class AddonInstall {
    */
   cancel() {
     switch (this.state) {
-    case AddonManager.STATE_AVAILABLE:
-    case AddonManager.STATE_DOWNLOADED:
-      logger.debug("Cancelling download of " + this.sourceURI.spec);
-      this.state = AddonManager.STATE_CANCELLED;
-      XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
-                                               this.listeners, this.wrapper);
-      this.removeTemporaryFile();
-      break;
-    case AddonManager.STATE_INSTALLED:
-      logger.debug("Cancelling install of " + this.addon.id);
-      let xpi = getFile(`${this.addon.id}.xpi`, this.installLocation.getStagingDir());
-      flushJarCache(xpi);
-      this.installLocation.cleanStagingDir([this.addon.id, this.addon.id + ".xpi",
-                                            this.addon.id + ".json"]);
-      this.state = AddonManager.STATE_CANCELLED;
-      XPIProvider.removeActiveInstall(this);
+      case AddonManager.STATE_AVAILABLE:
+      case AddonManager.STATE_DOWNLOADED:
+        logger.debug("Cancelling download of " + this.sourceURI.spec);
+        this.state = AddonManager.STATE_CANCELLED;
+        XPIProvider.removeActiveInstall(this);
+        AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
+                                                 this.listeners, this.wrapper);
+        this.removeTemporaryFile();
+        break;
+      case AddonManager.STATE_INSTALLED:
+        logger.debug("Cancelling install of " + this.addon.id);
+        let xpi = getFile(`${this.addon.id}.xpi`, this.installLocation.getStagingDir());
+        flushJarCache(xpi);
+        this.installLocation.cleanStagingDir([this.addon.id, this.addon.id + ".xpi",
+                                              this.addon.id + ".json"]);
+        this.state = AddonManager.STATE_CANCELLED;
+        XPIProvider.removeActiveInstall(this);
 
-      if (this.existingAddon) {
-        delete this.existingAddon.pendingUpgrade;
-        this.existingAddon.pendingUpgrade = null;
-      }
+        if (this.existingAddon) {
+          delete this.existingAddon.pendingUpgrade;
+          this.existingAddon.pendingUpgrade = null;
+        }
 
-      AddonManagerPrivate.callAddonListeners("onOperationCancelled", this.addon.wrapper);
+        AddonManagerPrivate.callAddonListeners("onOperationCancelled", this.addon.wrapper);
 
-      AddonManagerPrivate.callInstallListeners("onInstallCancelled",
-                                               this.listeners, this.wrapper);
-      break;
-    case AddonManager.STATE_POSTPONED:
-      logger.debug(`Cancelling postponed install of ${this.addon.id}`);
-      this.state = AddonManager.STATE_CANCELLED;
-      XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onInstallCancelled",
-                                               this.listeners, this.wrapper);
-      this.removeTemporaryFile();
+        AddonManagerPrivate.callInstallListeners("onInstallCancelled",
+                                                 this.listeners, this.wrapper);
+        break;
+      case AddonManager.STATE_POSTPONED:
+        logger.debug(`Cancelling postponed install of ${this.addon.id}`);
+        this.state = AddonManager.STATE_CANCELLED;
+        XPIProvider.removeActiveInstall(this);
+        AddonManagerPrivate.callInstallListeners("onInstallCancelled",
+                                                 this.listeners, this.wrapper);
+        this.removeTemporaryFile();
 
-      let stagingDir = this.installLocation.getStagingDir();
-      let stagedAddon = stagingDir.clone();
+        let stagingDir = this.installLocation.getStagingDir();
+        let stagedAddon = stagingDir.clone();
 
-      this.unstageInstall(stagedAddon);
-    default:
-      throw new Error("Cannot cancel install of " + this.sourceURI.spec +
-                      " from this state (" + this.state + ")");
+        this.unstageInstall(stagedAddon);
+      default:
+        throw new Error("Cannot cancel install of " + this.sourceURI.spec +
+                        " from this state (" + this.state + ")");
     }
   }
 
@@ -1552,13 +1554,13 @@ class AddonInstall {
 
     try {
       this.logger.debug("removeTemporaryFile: " + this.sourceURI.spec + " removing temp file " +
-          this.file.path);
+                        this.file.path);
       this.file.remove(true);
       this.ownsTempFile = false;
     } catch (e) {
       this.logger.warn("Failed to remove temporary file " + this.file.path + " for addon " +
-          this.sourceURI.spec,
-          e);
+                       this.sourceURI.spec,
+                       e);
     }
   }
 
@@ -1997,14 +1999,14 @@ class AddonInstall {
         version: this.version,
         install: () => {
           switch (this.state) {
-          case AddonManager.STATE_POSTPONED:
-            if (resumeFn) {
-              resumeFn();
-            }
-            break;
-          default:
-            logger.warn(`${this.addon.id} cannot resume postponed upgrade from state (${this.state})`);
-            break;
+            case AddonManager.STATE_POSTPONED:
+              if (resumeFn) {
+                resumeFn();
+              }
+              break;
+            default:
+              logger.warn(`${this.addon.id} cannot resume postponed upgrade from state (${this.state})`);
+              break;
           }
         },
       });
@@ -2167,27 +2169,27 @@ this.DownloadAddonInstall = class extends AddonInstall {
     this.restartDownload = false;
 
     AddonManagerPrivate.callInstallListeners("onNewInstall", this.listeners,
-                                            this.wrapper);
+                                             this.wrapper);
   }
 
   install() {
     switch (this.state) {
-    case AddonManager.STATE_AVAILABLE:
-      this.startDownload();
-      break;
-    case AddonManager.STATE_DOWNLOAD_FAILED:
-    case AddonManager.STATE_INSTALL_FAILED:
-    case AddonManager.STATE_CANCELLED:
-      this.removeTemporaryFile();
-      this.state = AddonManager.STATE_AVAILABLE;
-      this.error = 0;
-      this.progress = 0;
-      this.maxProgress = -1;
-      this.hash = this.originalHash;
-      this.startDownload();
-      break;
-    default:
-      super.install();
+      case AddonManager.STATE_AVAILABLE:
+        this.startDownload();
+        break;
+      case AddonManager.STATE_DOWNLOAD_FAILED:
+      case AddonManager.STATE_INSTALL_FAILED:
+      case AddonManager.STATE_CANCELLED:
+        this.removeTemporaryFile();
+        this.state = AddonManager.STATE_AVAILABLE;
+        this.error = 0;
+        this.progress = 0;
+        this.maxProgress = -1;
+        this.hash = this.originalHash;
+        this.startDownload();
+        break;
+      default:
+        super.install();
     }
   }
 
@@ -2815,11 +2817,11 @@ UpdateChecker.prototype = {
                             this.addon.compatibilityOverrides;
 
     let update = AUC.getNewestCompatibleUpdate(aUpdates,
-                                           this.appVersion,
-                                           this.platformVersion,
-                                           ignoreMaxVersion,
-                                           ignoreStrictCompat,
-                                           compatOverrides);
+                                               this.appVersion,
+                                               this.platformVersion,
+                                               ignoreMaxVersion,
+                                               ignoreStrictCompat,
+                                               compatOverrides);
 
     if (update && Services.vc.compare(this.addon.version, update.version) < 0
         && !this.addon._installLocation.locked) {

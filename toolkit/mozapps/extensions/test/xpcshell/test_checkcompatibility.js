@@ -127,11 +127,11 @@ function run_test_1() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5]) {
-    check_state(false, a1, a2, a3, a4, a5);
+                              function([a1, a2, a3, a4, a5]) {
+                                check_state(false, a1, a2, a3, a4, a5);
 
-    do_execute_soon(run_test_2);
-  });
+                                do_execute_soon(run_test_2);
+                              });
 }
 
 // Tests that with compatibility checking disabled we see the incompatible
@@ -148,11 +148,11 @@ function run_test_2() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5]) {
-    check_state(true, a1, a2, a3, a4, a5);
+                              function([a1, a2, a3, a4, a5]) {
+                                check_state(true, a1, a2, a3, a4, a5);
 
-    do_execute_soon(run_test_3);
-  });
+                                do_execute_soon(run_test_3);
+                              });
 }
 
 // Tests that with compatibility checking disabled we see the incompatible
@@ -167,11 +167,11 @@ function run_test_3() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5]) {
-    check_state(true, a1, a2, a3, a4, a5);
+                              function([a1, a2, a3, a4, a5]) {
+                                check_state(true, a1, a2, a3, a4, a5);
 
-    do_execute_soon(run_test_4);
-  });
+                                do_execute_soon(run_test_4);
+                              });
 }
 
 // Tests that with compatibility checking enabled we see the incompatible
@@ -188,9 +188,9 @@ function run_test_4() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5]) {
-    check_state(false, a1, a2, a3, a4, a5);
+                              function([a1, a2, a3, a4, a5]) {
+                                check_state(false, a1, a2, a3, a4, a5);
 
-    do_execute_soon(do_test_finished);
-  });
+                                do_execute_soon(do_test_finished);
+                              });
 }

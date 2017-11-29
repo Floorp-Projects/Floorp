@@ -56,7 +56,7 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
 
     for (let key of path) {
       if (!(key in obj))
-          obj[key] = {};
+        obj[key] = {};
       obj = obj[key];
     }
 

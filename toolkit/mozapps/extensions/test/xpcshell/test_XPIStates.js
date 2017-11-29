@@ -112,11 +112,11 @@ async function getXSJSON() {
 add_task(async function detect_touches() {
   startupManager();
   let [/* pe */, pd, /* ue */, ud] = await promiseAddonsByIDs([
-         "packed-enabled@tests.mozilla.org",
-         "packed-disabled@tests.mozilla.org",
-         "unpacked-enabled@tests.mozilla.org",
-         "unpacked-disabled@tests.mozilla.org"
-         ]);
+    "packed-enabled@tests.mozilla.org",
+    "packed-disabled@tests.mozilla.org",
+    "unpacked-enabled@tests.mozilla.org",
+    "unpacked-disabled@tests.mozilla.org"
+  ]);
 
   do_print("Disable test add-ons");
   pd.userDisabled = true;
@@ -183,11 +183,11 @@ add_task(async function detect_touches() {
  */
 add_task(async function uninstall_bootstrap() {
   let [pe, /* pd, ue, ud */] = await promiseAddonsByIDs([
-         "packed-enabled@tests.mozilla.org",
-         "packed-disabled@tests.mozilla.org",
-         "unpacked-enabled@tests.mozilla.org",
-         "unpacked-disabled@tests.mozilla.org"
-         ]);
+    "packed-enabled@tests.mozilla.org",
+    "packed-disabled@tests.mozilla.org",
+    "unpacked-enabled@tests.mozilla.org",
+    "unpacked-disabled@tests.mozilla.org"
+  ]);
   pe.uninstall();
 
   let xpiState = await getXSJSON();

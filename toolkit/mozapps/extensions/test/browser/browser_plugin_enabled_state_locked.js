@@ -53,21 +53,21 @@ function getTestPlugin(aPlugins) {
 
 function checkStateMenu(locked) {
   Assert.equal(Services.prefs.prefIsLocked(getTestPluginPref()), locked,
-    "Preference lock state should be correct.");
+               "Preference lock state should be correct.");
   let menuList = gManagerWindow.document.getAnonymousElementByAttribute(gPluginElement, "anonid", "state-menulist");
   //  State menu should always have a selected item which must be visible
   let selectedMenuItem = menuList.querySelector(".addon-control[selected=\"true\"]");
 
   is_element_visible(menuList, "State menu should be visible.");
   Assert.equal(menuList.disabled, locked,
-    "State menu should" + (locked === true ? "" : " not") + " be disabled.");
+               "State menu should" + (locked === true ? "" : " not") + " be disabled.");
 
   is_element_visible(selectedMenuItem, "State menu's selected item should be visible.");
 }
 
 function checkStateMenuDetail(locked) {
   Assert.equal(Services.prefs.prefIsLocked(getTestPluginPref()), locked,
-    "Preference should be " + (locked === true ? "" : "un") + "locked.");
+               "Preference should be " + (locked === true ? "" : "un") + "locked.");
 
   // open details menu
   let details = gManagerWindow.document.getAnonymousElementByAttribute(gPluginElement, "anonid", "details-btn");
@@ -79,7 +79,7 @@ function checkStateMenuDetail(locked) {
       let menuList = gManagerWindow.document.getElementById("detail-state-menulist");
       is_element_visible(menuList, "Details state menu should be visible.");
       Assert.equal(menuList.disabled, locked,
-        "Details state menu enabled state should be correct.");
+                   "Details state menu enabled state should be correct.");
       resolve();
     });
   });
