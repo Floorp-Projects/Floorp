@@ -330,42 +330,6 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
 };
 
 /**
- * Force updates for the given tables. This API may trigger more than one update
- * if the table lists provided belong to multiple updateurl (multiple provider).
- * Return false when any update is fail due to back-off algorithm.
- */
-PROT_ListManager.prototype.forceUpdates = function(tables) {
-  log("forceUpdates with " + tables);
-  if (!tables) {
-    return false;
-  }
-
-  let updateUrls = new Set();
-  tables.split(",").forEach((table) => {
-    if (this.tablesData[table]) {
-      updateUrls.add(this.tablesData[table].updateUrl);
-    }
-  });
-
-  let ret = true;
-
-  updateUrls.forEach((url) => {
-    // Cancel current update timer for the url because we are forcing an update.
-    if (this.updateCheckers_[url]) {
-      this.updateCheckers_[url].cancel();
-      this.updateCheckers_[url] = null;
-    }
-
-    // Trigger an update for the given url.
-    if (!this.checkForUpdates(url)) {
-      ret = false;
-    }
-  });
-
-  return ret;
-}
-
-/**
  * Updates our internal tables from the update server
  *
  * @param updateUrl: request updates for tables associated with that url, or
