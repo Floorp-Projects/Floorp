@@ -47,7 +47,7 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
  */
 @RunWith(AndroidJUnit4.class)
 public class WebViewDataTest {
-    private static final List<String> WHITELIST = Arrays.asList(
+    private static final List<String> WHITELIST_DATA_DIR_CONTENTS = Arrays.asList(
             "cache", // We assert that this folder is empty
             "code_cache",
             "shared_prefs",
@@ -202,7 +202,7 @@ public class WebViewDataTest {
                 continue;
             }
 
-            assertTrue("Check '" + name + "' is in whitelist", WHITELIST.contains(name));
+            assertTrue("Check '" + name + "' is in whitelist", WHITELIST_DATA_DIR_CONTENTS.contains(name));
         }
 
         assertNoTraces(dataDir);
