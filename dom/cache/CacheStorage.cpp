@@ -160,7 +160,7 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
   }
 
   bool testingEnabled = aForceTrustedOrigin ||
-    Preferences::GetBool("dom.caches.testing.enabled", false) ||
+    DOMPreferences::DOMCachesTestingEnabled() ||
     Preferences::GetBool("dom.serviceWorkers.testing.enabled", false);
 
   if (!IsTrusted(principalInfo, testingEnabled)) {
@@ -219,7 +219,7 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   //    origin checks.  The ServiceWorker has its own trusted origin checks
   //    that are better than ours.  In addition, we don't have information
   //    about the window any more, so we can't do our own checks.
-  bool testingEnabled = aWorkerPrivate->DOMCachesTestingEnabled() ||
+  bool testingEnabled = DOMPreferences::DOMCachesTestingEnabled() ||
                         aWorkerPrivate->ServiceWorkersTestingEnabled() ||
                         aWorkerPrivate->ServiceWorkersTestingInWindow() ||
                         aWorkerPrivate->IsServiceWorker();
