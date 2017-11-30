@@ -28,6 +28,7 @@
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 #include "gfxPlatform.h"
+#include "jsfriendapi.h"
 
 using namespace mozilla::gfx;
 
@@ -181,9 +182,35 @@ imgTools::~imgTools()
 }
 
 NS_IMETHODIMP
-imgTools::DecodeImageBuffer(const char* aBuffer, uint32_t aSize,
-                            const nsACString& aMimeType,
-                            imgIContainer** aContainer)
+imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
+                                     const nsACString& aMimeType,
+                                     JSContext* aCx,
+                                     imgIContainer** aContainer)
+{
+  if (!aArrayBuffer.isObject()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx,
+                            js::UnwrapArrayBuffer(&aArrayBuffer.toObject()));
+  if (!obj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint8_t* bufferData = nullptr;
+  uint32_t bufferLength = 0;
+  bool isSharedMemory = false;
+
+  js::GetArrayBufferLengthAndData(obj, &bufferLength, &isSharedMemory,
+                                  &bufferData);
+  return DecodeImageFromBuffer((char*)bufferData, bufferLength, aMimeType,
+                               aContainer);
+}
+
+NS_IMETHODIMP
+imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
+                                const nsACString& aMimeType,
+                                imgIContainer** aContainer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

@@ -91,6 +91,9 @@ public:
     aNotifications->AppendElements(Move(mImageCompositeNotifications));
   }
 
+  void SetWillGenerateFrame();
+  bool GetAndResetWillGenerateFrame();
+
 private:
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
@@ -168,6 +171,7 @@ private:
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
   nsClassHashtable<nsUint64HashKey, AsyncImagePipeline> mAsyncImagePipelines;
   uint32_t mAsyncImageEpoch;
+  bool mWillGenerateFrame;
   bool mDestroyed;
 
   // Render time for the current composition.
