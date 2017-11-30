@@ -12,9 +12,11 @@
 #include "gfxPrefs.h"
 #include "FrameMetrics.h"
 #include "nsDebug.h"             // for NS_WARNING
+#include "nsTArray.h"
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT
 #include "mozilla/DebugOnly.h"   // for DebugOnly
 #include "mozilla/ToString.h"    // for ToString
+#include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "ipc/IPCMessageUtils.h"
 #include "js/TypeDecls.h"
 
@@ -26,13 +28,16 @@ typedef uint32_t SequenceNumber;
 /**
  * This structure is used to store information logged by various gecko
  * components for later examination by test code.
- * It consists of a bucket for every paint (initiated on the client side),
+ * It contains a bucket for every paint (initiated on the client side),
  * and every repaint request (initiated on the compositor side by
  * AsyncPanZoomController::RequestContentRepait), which are identified by
  * sequence numbers, and within that, a set of arbitrary string key/value
  * pairs for every scrollable frame, identified by a scroll id.
  * There are two instances of this data structure for every content thread:
  * one on the client side and one of the compositor side.
+ * It also contains a list of hit-test results for MozMouseHittest events
+ * dispatched during testing. This list is only populated on the compositor
+ * instance of this class.
  */
 // TODO(botond):
 //  - Improve warnings/asserts.
@@ -66,6 +71,12 @@ public:
                                     const std::string& aValue) {
     LogTestDataImpl(mRepaintRequests, aSequenceNumber, aScrollId, aKey, aValue);
   }
+  void RecordHitResult(const ScreenPoint& aPoint,
+                       const mozilla::gfx::CompositorHitTestInfo& aResult,
+                       const ViewID& aScrollId)
+  {
+    mHitResults.AppendElement(HitResult { aPoint, aResult, aScrollId });
+  }
 
   // Convert this object to a JS representation.
   bool ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext) const;
@@ -78,9 +89,15 @@ public:
   struct Bucket : BucketBase {};
   typedef std::map<SequenceNumber, Bucket> DataStoreBase;
   struct DataStore : DataStoreBase {};
+  struct HitResult {
+    ScreenPoint point;
+    mozilla::gfx::CompositorHitTestInfo result;
+    ViewID scrollId;
+  };
 private:
   DataStore mPaints;
   DataStore mRepaintRequests;
+  nsTArray<HitResult> mHitResults;
 
   void LogTestDataImpl(DataStore& aDataStore,
                        SequenceNumber aSequenceNumber,
@@ -144,12 +161,14 @@ struct ParamTraits<mozilla::layers::APZTestData>
   {
     WriteParam(aMsg, aParam.mPaints);
     WriteParam(aMsg, aParam.mRepaintRequests);
+    WriteParam(aMsg, aParam.mHitResults);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mPaints) &&
-            ReadParam(aMsg, aIter, &aResult->mRepaintRequests));
+            ReadParam(aMsg, aIter, &aResult->mRepaintRequests) &&
+            ReadParam(aMsg, aIter, &aResult->mHitResults));
   }
 };
 
@@ -164,6 +183,26 @@ struct ParamTraits<mozilla::layers::APZTestData::Bucket>
 template <>
 struct ParamTraits<mozilla::layers::APZTestData::DataStore>
   : ParamTraits<mozilla::layers::APZTestData::DataStoreBase> {};
+
+template <>
+struct ParamTraits<mozilla::layers::APZTestData::HitResult>
+{
+  typedef mozilla::layers::APZTestData::HitResult paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.point);
+    WriteParam(aMsg, aParam.result);
+    WriteParam(aMsg, aParam.scrollId);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->point) &&
+            ReadParam(aMsg, aIter, &aResult->result) &&
+            ReadParam(aMsg, aIter, &aResult->scrollId));
+  }
+};
 
 } // namespace IPC
 

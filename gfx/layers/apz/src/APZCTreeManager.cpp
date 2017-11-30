@@ -1058,6 +1058,13 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       }
 
       if (apzc) {
+        if (gfxPrefs::APZTestLoggingEnabled() && mouseInput.mType == MouseInput::MOUSE_HITTEST) {
+          ScrollableLayerGuid guid = apzc->GetGuid();
+          if (LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(guid.mLayersId)) {
+            state->mApzTestData.RecordHitResult(mouseInput.mOrigin, hitResult, guid.mScrollId);
+          }
+        }
+
         bool targetConfirmed = (hitResult != CompositorHitTestInfo::eInvisibleToHitTest)
                             && !(hitResult & CompositorHitTestInfo::eDispatchToContent);
         bool apzDragEnabled = gfxPrefs::APZDragEnabled();

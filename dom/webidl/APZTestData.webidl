@@ -30,10 +30,33 @@ dictionary APZBucket {
   sequence<ScrollFrameData> scrollFrames;
 };
 
+[Pref="apz.test.logging_enabled"]
+callback interface APZHitResultFlags {
+  // These constants should be kept in sync with mozilla::gfx::CompositorHitTestInfo
+  const unsigned short INVISIBLE = 0;
+  const unsigned short VISIBLE = 0x0001;
+  const unsigned short DISPATCH_TO_CONTENT = 0x0002;
+  const unsigned short PAN_X_DISABLED = 0x0004;
+  const unsigned short PAN_Y_DISABLED = 0x0008;
+  const unsigned short PINCH_ZOOM_DISABLED = 0x0010;
+  const unsigned short DOUBLE_TAP_ZOOM_DISABLED = 0x0020;
+  const unsigned short SCROLLBAR = 0x0040;
+  const unsigned short SCROLLBAR_THUMB = 0x0080;
+  const unsigned short SCROLLBAR_VERTICAL = 0x0100;
+};
+
+dictionary APZHitResult {
+  float screenX;
+  float screenY;
+  unsigned short hitResult; // combination of the APZHitResultFlags.* flags
+  unsigned long long scrollId;
+};
+
 // All the paints and repaint requests. This is the top-level data structure.
 dictionary APZTestData {
   sequence<APZBucket> paints;
   sequence<APZBucket> repaintRequests;
+  sequence<APZHitResult> hitResults;
 };
 
 // A frame uniformity measurement for every scrollable layer
