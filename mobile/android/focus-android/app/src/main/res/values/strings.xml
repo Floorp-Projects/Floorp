@@ -266,7 +266,6 @@
     <string name="accessibility_announcement_search">Add search engine</string>
 
     <string name="search_add_confirmation">New search engine added.</string>
-    <string name="search_add_error">Check the search string and try again</string>
 
     <string name="search_add_error_empty_name">Enter search engine name</string>
 
