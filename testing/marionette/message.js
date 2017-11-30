@@ -27,7 +27,8 @@ class Message {
   }
 
   toString() {
-    return truncate`${this.toPacket()}`;
+    let content = JSON.stringify(this.toPacket());
+    return truncate`${content}`;
   }
 
   /**
