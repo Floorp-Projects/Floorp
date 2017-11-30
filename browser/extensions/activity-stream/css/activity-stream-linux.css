@@ -1090,7 +1090,8 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
 
 .manual-migration-actions {
   border: none;
-  display: block; }
+  display: block;
+  flex-wrap: nowrap; }
   @media (min-width: 544px) {
     .manual-migration-actions {
       display: flex;
