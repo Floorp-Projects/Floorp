@@ -64,7 +64,7 @@ def main(argv):
 
     ret = 1
     try:
-        with FileAvoidWrite(args.output_file) as output:
+        with FileAvoidWrite(args.output_file, mode='rb') as output:
             ret = module.__dict__[method](output, *args.additional_arguments, **kwargs)
             # The following values indicate a statement of success:
             #  - a set() (see below)
