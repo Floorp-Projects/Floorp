@@ -26,8 +26,6 @@
 #mainPrefPane {
   width: 100%;
   padding: 0;
-  font: message-box;
-  color: currentColor;
 }
 
 prefpane > groupbox + groupbox {
@@ -57,9 +55,13 @@ html|option {
 
 description,
 label {
-  line-height: 30px;
+  line-height: 1.8em;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+}
+
+.tip-caption {
+  font-size: .9em;
 }
 
 menulist > hbox > label,
@@ -229,12 +231,10 @@ button > hbox > label {
 }
 
 #updateApp > .groupbox-body > label {
-  margin: 0 0 4px 0;
-  line-height: 30px;
+  margin: 0 0 4px;
 }
 
 #updateApp > .groupbox-body > description {
-  line-height: 30px;
   margin: 0;
 }
 
@@ -264,7 +264,7 @@ button > hbox > label {
 }
 
 #filter {
-  margin: 4px 0 8px 0;
+  margin: 4px 0 8px;
 }
 
 #handlersView {
@@ -308,7 +308,7 @@ button > hbox > label {
 /* Search Pane */
 
 #engineList {
-  margin: 2px 0 5px 0;
+  margin: 2px 0 5px;
 }
 
 #engineList > treechildren::-moz-tree-image(engineShown, checked),
@@ -337,7 +337,7 @@ button > hbox > label {
 }
 
 #addEnginesBox {
-  margin: 4px 0 0 0;
+  margin: 4px 0 0;
 }
 
 /* Privacy Pane */
@@ -430,7 +430,6 @@ button > hbox > label {
   background-color: #fbfbfb;
   background-clip: content-box;
   color: #424e5a;
-  font-size: 14px;
   /* `transparent` will use the dialogText color in high-contrast themes and
      when page colors are disabled */
   border: 1px solid transparent;
@@ -456,7 +455,7 @@ button > hbox > label {
 }
 
 .dialogTitle {
-  font-size: unset;
+  font-size: .9em;
   text-align: center;
   -moz-user-select: none;
 }
@@ -701,7 +700,7 @@ button > hbox > label {
 
 .help-label {
   margin: 0 4px;
-  line-height: 22px;
+  font-size: .9em;
   -moz-user-select: none;
 }
 
