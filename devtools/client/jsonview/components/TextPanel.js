@@ -12,8 +12,8 @@ define(function (require, exports, module) {
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { TextToolbar } = createFactories(require("./TextToolbar"));
-  const { LiveText } = createFactories(require("./LiveText"));
-  const { div } = dom;
+
+  const { div, pre } = dom;
 
   /**
    * This template represents the 'Raw Data' panel displaying
@@ -24,7 +24,7 @@ define(function (require, exports, module) {
       return {
         isValidJson: PropTypes.bool,
         actions: PropTypes.object,
-        data: PropTypes.instanceOf(Text),
+        data: PropTypes.string
       };
     }
 
@@ -41,7 +41,9 @@ define(function (require, exports, module) {
             isValidJson: this.props.isValidJson
           }),
           div({className: "panelContent"},
-            LiveText({data: this.props.data})
+            pre({className: "data"},
+              this.props.data
+            )
           )
         )
       );

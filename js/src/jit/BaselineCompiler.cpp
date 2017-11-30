@@ -365,7 +365,7 @@ BaselineCompiler::emitPrologue()
     masm.moveStackPtrTo(BaselineFrameReg);
     masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
 
-    // Initialize BaselineFrame. For eval scripts, the scope chain
+    // Initialize BaselineFrame. For eval scripts, the env chain
     // is passed in R1, so we have to be careful not to clobber it.
 
     // Initialize BaselineFrame::flags.
@@ -653,8 +653,8 @@ BaselineCompiler::initEnvironmentChain()
 
     RootedFunction fun(cx, function());
     if (fun) {
-        // Use callee->environment as scope chain. Note that we do this also
-        // for needsSomeEnvironmentObject functions, so that the scope chain
+        // Use callee->environment as env chain. Note that we do this also
+        // for needsSomeEnvironmentObject functions, so that the env chain
         // slot is properly initialized if the call triggers GC.
         Register callee = R0.scratchReg();
         Register scope = R1.scratchReg();
@@ -2499,7 +2499,7 @@ BaselineCompiler::emit_JSOP_BINDGNAME()
             }
         }
 
-        // Otherwise we have to use the dynamic scope chain.
+        // Otherwise we have to use the environment chain.
     }
 
     return emit_JSOP_BINDNAME();
@@ -3861,7 +3861,7 @@ BaselineCompiler::emit_JSOP_ENTERWITH()
     // Pop "with" object to R0.
     frame.popRegsAndSync(1);
 
-    // Call a stub to push the object onto the scope chain.
+    // Call a stub to push the object onto the environment chain.
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
 
@@ -3879,7 +3879,7 @@ static const VMFunction LeaveWithInfo =
 bool
 BaselineCompiler::emit_JSOP_LEAVEWITH()
 {
-    // Call a stub to pop the with object from the scope chain.
+    // Call a stub to pop the with object from the environment chain.
     prepareVMCall();
 
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
