@@ -1085,18 +1085,18 @@ DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
 
-      wr::ImageDescriptor descriptor(GetSize(), GetFormat());
+      wr::ImageDescriptor descriptor(mSize, GetFormat());
       auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      MOZ_ASSERT(GetSize().width % 2 == 0);
-      MOZ_ASSERT(GetSize().height % 2 == 0);
+      MOZ_ASSERT(mSize.width % 2 == 0);
+      MOZ_ASSERT(mSize.height % 2 == 0);
 
-      wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
-      wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::R8G8);
+      wr::ImageDescriptor descriptor0(mSize, gfx::SurfaceFormat::A8);
+      wr::ImageDescriptor descriptor1(mSize / 2, gfx::SurfaceFormat::R8G8);
       auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
@@ -1145,6 +1145,7 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
   const SurfaceDescriptorDXGIYCbCr& aDescriptor)
   : TextureHost(aFlags)
   , mSize(aDescriptor.size())
+  , mSizeCbCr(aDescriptor.sizeCbCr())
   , mIsLocked(false)
   , mYUVColorSpace(aDescriptor.yUVColorSpace())
 {
@@ -1302,7 +1303,7 @@ void
 DXGIYCbCrTextureHostD3D11::CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
 {
   RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderDXGIYCbCrTextureHostOGL(mHandles, mSize);
+      new wr::RenderDXGIYCbCrTextureHostOGL(mHandles, mSize, mSizeCbCr);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId), texture.forget());
 }
@@ -1322,17 +1323,17 @@ DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResourc
 {
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
   MOZ_ASSERT(aImageKeys.length() == 3);
-  MOZ_ASSERT(GetSize().width % 2 == 0);
-  MOZ_ASSERT(GetSize().height % 2 == 0);
+  MOZ_ASSERT(mSize.width % 2 == 0);
+  MOZ_ASSERT(mSize.height % 2 == 0);
 
   auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
                                               : &wr::ResourceUpdateQueue::UpdateExternalImage;
   auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
 
   // y
-  wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
+  wr::ImageDescriptor descriptor0(mSize, gfx::SurfaceFormat::A8);
   // cb and cr
-  wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::A8);
+  wr::ImageDescriptor descriptor1(mSizeCbCr, gfx::SurfaceFormat::A8);
   (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
   (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
   (aResources.*method)(aImageKeys[2], descriptor1, aExtID, bufferType, 2);

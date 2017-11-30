@@ -60,7 +60,8 @@ class RenderDXGIYCbCrTextureHostOGL final : public RenderTextureHostOGL
 {
 public:
   explicit RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHandles)[3],
-                                         gfx::IntSize aSize);
+                                         gfx::IntSize aSize,
+                                         gfx::IntSize aSizeCbCr);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   virtual void Unlock() override;
@@ -88,6 +89,7 @@ private:
   GLuint mTextureHandles[3];
 
   gfx::IntSize mSize;
+  gfx::IntSize mSizeCbCr;
 
   bool mLocked;
 };
