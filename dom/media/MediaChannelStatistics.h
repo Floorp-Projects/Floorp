@@ -29,8 +29,8 @@ static const int64_t RELIABLE_DATA_THRESHOLD = 57 * 1460;
 class MediaChannelStatistics {
 public:
   MediaChannelStatistics() = default;
-
   MediaChannelStatistics(const MediaChannelStatistics&) = default;
+  MediaChannelStatistics& operator=(const MediaChannelStatistics&) = default;
 
   void Reset() {
     mLastStartTime = TimeStamp();

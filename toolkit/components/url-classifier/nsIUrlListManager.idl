@@ -67,6 +67,14 @@ interface nsIUrlListManager : nsISupports
     boolean checkForUpdates(in ACString updateUrl);
 
     /**
+     * Force updates for the given tables, updates are still restricted to
+     * backoff algorithm.
+     * @param tables  A string lists all the tables that we want to trigger updates.
+     *                table names are separated with ','.
+     */
+    boolean forceUpdates(in ACString tableNames);
+
+    /**
      * This is currently used by about:url-classifier to get back-off time
      * (in millisecond since epoch) for the given provider. Return 0 if we
      * are not in back-off mode.

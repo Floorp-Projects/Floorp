@@ -1,6 +1,6 @@
 == counter-style-rule-clone.html glyphs-ref.html # passes trivially
 # because "Dynamic change on @counter-style not yet supported"
-== document-rule-clone.html shouldbegreen-ref.html
+pref(layout.css.moz-document.content.enabled,true) == document-rule-clone.html shouldbegreen-ref.html
 == media-rule-clone.html shouldbegreen-ref.html
 == insert-after-clone.html shouldbegreen-ref.html
 == style-rule-clone.html shouldbegreen-ref.html

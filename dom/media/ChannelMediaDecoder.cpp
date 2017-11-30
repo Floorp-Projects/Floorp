@@ -440,7 +440,6 @@ ChannelMediaDecoder::GetStatistics()
   result.mTotalBytes = mResource->GetLength();
   result.mPlaybackRate = mPlaybackBytesPerSecond;
   result.mPlaybackRateReliable = mPlaybackRateReliable;
-  result.mDecoderPosition = mDecoderPosition;
   result.mPlaybackPosition = mPlaybackPosition;
   return result;
 }

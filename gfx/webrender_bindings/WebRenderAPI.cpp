@@ -690,6 +690,7 @@ DisplayListBuilder::~DisplayListBuilder()
 void DisplayListBuilder::Save() { wr_dp_save(mWrState); }
 void DisplayListBuilder::Restore() { wr_dp_restore(mWrState); }
 void DisplayListBuilder::ClearSave() { wr_dp_clear_save(mWrState); }
+void DisplayListBuilder::Dump() { wr_dump_display_list(mWrState); }
 
 void
 DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,

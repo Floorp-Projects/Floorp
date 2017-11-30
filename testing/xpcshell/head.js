@@ -1465,6 +1465,12 @@ function run_next_test() {
       _PromiseTestUtils.assertNoUncaughtRejections();
       let _properties;
       [_properties, _gRunningTest, ] = _gTests[_gTestIndex++];
+
+      // Must set to pending before we check for skip, so that we keep the
+      // running counts correct.
+      _testLogger.info(_TEST_NAME + " | Starting " + _gRunningTest.name);
+      do_test_pending(_gRunningTest.name);
+
       if ((typeof(_properties.skip_if) == "function" && _properties.skip_if()) ||
           (_gRunOnlyThisTest && _gRunningTest != _gRunOnlyThisTest)) {
         let _condition = _gRunOnlyThisTest ? "only one task may run." :
@@ -1482,8 +1488,6 @@ function run_next_test() {
         do_execute_soon(run_next_test);
         return;
       }
-      _testLogger.info(_TEST_NAME + " | Starting " + _gRunningTest.name);
-      do_test_pending(_gRunningTest.name);
 
       if (_properties.isTask) {
         _gTaskRunning = true;
