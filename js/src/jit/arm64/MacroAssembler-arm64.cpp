@@ -932,6 +932,33 @@ MacroAssembler::comment(const char* msg)
     Assembler::comment(msg);
 }
 
+// ========================================================================
+// wasm support
+
+void
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    MOZ_CRASH("NYI");
+}
+
 //}}} check_macroassembler_style
 
 } // namespace jit
