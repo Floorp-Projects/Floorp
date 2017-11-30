@@ -7,7 +7,6 @@
 #include "ChildIterator.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/XBLChildrenElement.h"
-#include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
@@ -18,33 +17,29 @@ namespace dom {
 
 class MatchedNodes {
 public:
-  explicit MatchedNodes(HTMLContentElement* aInsertionPoint)
-    : mIsContentElement(true), mContentElement(aInsertionPoint) {}
-
+  explicit MatchedNodes()
+    : mIsContentElement(false), mChildrenElement(nullptr) {}
   explicit MatchedNodes(XBLChildrenElement* aInsertionPoint)
     : mIsContentElement(false), mChildrenElement(aInsertionPoint) {}
 
   uint32_t Length() const
   {
-    return mIsContentElement ? mContentElement->MatchedNodes().Length()
-                             : mChildrenElement->InsertedChildrenLength();
+    return mChildrenElement ? mChildrenElement->InsertedChildrenLength() : 0;
   }
 
   nsIContent* operator[](int32_t aIndex) const
   {
-    return mIsContentElement ? mContentElement->MatchedNodes()[aIndex]
-                             : mChildrenElement->InsertedChild(aIndex);
+    return mChildrenElement ? mChildrenElement->InsertedChild(aIndex) : nullptr;
   }
 
   bool IsEmpty() const
   {
-    return mIsContentElement ? mContentElement->MatchedNodes().IsEmpty()
-                             : !mChildrenElement->HasInsertedChildren();
+    return mChildrenElement && !mChildrenElement->HasInsertedChildren();
   }
 protected:
+  // Leftover from Shadow DOM v0.
   bool mIsContentElement;
   union {
-    HTMLContentElement* mContentElement;
     XBLChildrenElement* mChildrenElement;
   };
 };
@@ -57,9 +52,9 @@ GetMatchedNodesForPoint(nsIContent* aContent)
     return MatchedNodes(static_cast<XBLChildrenElement*>(aContent));
   }
 
+  return MatchedNodes();
   // Web components case
-  MOZ_ASSERT(aContent->IsHTMLElement(nsGkAtoms::content));
-  return MatchedNodes(HTMLContentElement::FromContent(aContent));
+  // XXX handle <slot> element?
 }
 
 nsIContent*
