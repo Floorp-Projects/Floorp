@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace layers {
 
+class TiledLayerBufferComposite;
+
 class PaintedLayerMLGPU final
   : public PaintedLayer,
     public LayerMLGPU
@@ -77,7 +79,19 @@ protected:
   // We override this to support tiling.
   void AssignToView(FrameBuilder* aBuilder,
                     RenderViewMLGPU* aView,
-                    Maybe<Polygon>&& aGeometry) override;
+                    Maybe<gfx::Polygon>&& aGeometry) override;
+
+  void AssignHighResTilesToView(FrameBuilder* aBuilder,
+                                RenderViewMLGPU* aView,
+                                TiledContentHost* aTileHost,
+                                const Maybe<gfx::Polygon>& aGeometry);
+
+  // Helper for Assign*TilesToView.
+  void AssignTileBufferToView(FrameBuilder* aBuilder,
+                              RenderViewMLGPU* aView,
+                              TiledLayerBufferComposite& aTiles,
+                              const LayerIntRegion& aCompositeRegion,
+                              const Maybe<gfx::Polygon>& aGeometry);
 
   void CleanupResources();
 
@@ -88,7 +102,7 @@ private:
 #ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
   LayerIntRegion mDrawRects;
 #endif
-  IntPoint mDestOrigin;
+  gfx::IntPoint mDestOrigin;
 };
 
 } // namespace layers
