@@ -1403,13 +1403,6 @@ MediaDecoder::NotifyReaderDataArrived()
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 }
 
-void
-MediaDecoder::NotifyDataArrived()
-{
-  NotifyReaderDataArrived();
-  DownloadProgressed();
-}
-
 // Provide access to the state machine object
 MediaDecoderStateMachine*
 MediaDecoder::GetStateMachine() const
