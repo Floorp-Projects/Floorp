@@ -385,13 +385,14 @@ public:
    * NOTE: ConfigureSendMediaCodec() MUST be called before this function can be invoked
    *       This ensures the inserted video-frames can be transmitted by the conduit
    */
-  virtual MediaConduitErrorCode SendVideoFrame(unsigned char* video_frame,
+  virtual MediaConduitErrorCode SendVideoFrame(const unsigned char* video_frame,
                                                unsigned int video_frame_length,
                                                unsigned short width,
                                                unsigned short height,
                                                VideoType video_type,
                                                uint64_t capture_time) = 0;
-  virtual MediaConduitErrorCode SendVideoFrame(webrtc::VideoFrame& frame) = 0;
+  virtual MediaConduitErrorCode SendVideoFrame(
+    const webrtc::VideoFrame& frame) = 0;
 
   virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) = 0;
   /**
