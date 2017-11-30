@@ -34,10 +34,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
         'tokenserverclient.js',
     ]
 
-    TESTING_JS_MODULES.services.common += [
-        'modules-testing/storageserver.js',
-    ]
-
 TESTING_JS_MODULES.services.common += [
     'modules-testing/logging.js',
 ]
