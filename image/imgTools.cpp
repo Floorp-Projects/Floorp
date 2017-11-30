@@ -28,6 +28,7 @@
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 #include "gfxPlatform.h"
+#include "jsfriendapi.h"
 
 using namespace mozilla::gfx;
 
@@ -178,6 +179,32 @@ imgTools::imgTools()
 imgTools::~imgTools()
 {
   /* destructor code */
+}
+
+NS_IMETHODIMP
+imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
+                                     const nsACString& aMimeType,
+                                     JSContext* aCx,
+                                     imgIContainer** aContainer)
+{
+  if (!aArrayBuffer.isObject()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx,
+                            js::UnwrapArrayBuffer(&aArrayBuffer.toObject()));
+  if (!obj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint8_t* bufferData = nullptr;
+  uint32_t bufferLength = 0;
+  bool isSharedMemory = false;
+
+  js::GetArrayBufferLengthAndData(obj, &bufferLength, &isSharedMemory,
+                                  &bufferData);
+  return DecodeImageBuffer((char*)bufferData, bufferLength, aMimeType,
+                           aContainer);
 }
 
 NS_IMETHODIMP
