@@ -355,10 +355,9 @@ function rescaleIcon(aByteArray, aContentType, aSize = 32) {
   if (aContentType == "image/svg+xml")
     throw new Error("Cannot rescale SVG image");
 
-  let str = String.fromCharCode.apply(String, new Uint8Array(aByteArray));
-
   let imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
-  let container = imgTools.decodeImageBuffer(str, str.length, aContentType);
+  let arrayBuffer = (new Int8Array(aByteArray)).buffer;
+  let container = imgTools.decodeImageFromArrayBuffer(arrayBuffer, aContentType);
   let stream = imgTools.encodeScaledImage(container, "image/png", aSize, aSize);
   let size = stream.available();
   if (size > MAX_ICON_SIZE)
