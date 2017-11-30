@@ -34,6 +34,7 @@ NS_IMPL_ISUPPORTS(FallbackEncoding, nsIObserver)
 
 FallbackEncoding* FallbackEncoding::sInstance = nullptr;
 bool FallbackEncoding::sGuessFallbackFromTopLevelDomain = true;
+bool FallbackEncoding::sFallbackToUTF8ForFile = false;
 
 FallbackEncoding::FallbackEncoding()
   : mFallback(nullptr)
@@ -139,6 +140,8 @@ FallbackEncoding::Initialize()
                                 nullptr);
   Preferences::AddBoolVarCache(&sGuessFallbackFromTopLevelDomain,
                                "intl.charset.fallback.tld");
+  Preferences::AddBoolVarCache(&sFallbackToUTF8ForFile,
+                               "intl.charset.fallback.utf8_for_file");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
