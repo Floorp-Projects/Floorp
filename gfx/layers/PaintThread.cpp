@@ -94,6 +94,49 @@ CapturedBufferState::GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTexture
   }
 }
 
+bool
+CapturedTiledPaintState::Copy::CopyBuffer()
+{
+  RefPtr<gfx::SourceSurface> source = mSource->Snapshot();
+
+  // This operation requires the destination draw target to be untranslated,
+  // but the destination will have a transform from being part of a tiled draw
+  // target. However in this case, CopySurface ignores transforms so we don't
+  // need to do anything.
+  mDestination->CopySurface(source,
+                            mBounds,
+                            mBounds.TopLeft());
+  return true;
+}
+
+void
+CapturedTiledPaintState::Clear::ClearBuffer()
+{
+  // See the comment in CopyBuffer for why we need to temporarily reset
+  // the transform of the draw target.
+  Matrix oldTransform = mTarget->GetTransform();
+  mTarget->SetTransform(Matrix());
+
+  if (mTargetOnWhite) {
+    mTargetOnWhite->SetTransform(Matrix());
+    for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::Rect drawRect(iter.Get().x, iter.Get().y,
+                               iter.Get().width, iter.Get().height);
+      mTarget->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
+      mTargetOnWhite->FillRect(drawRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+    }
+    mTargetOnWhite->SetTransform(oldTransform);
+  } else {
+    for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::Rect drawRect(iter.Get().x, iter.Get().y,
+                               iter.Get().width, iter.Get().height);
+      mTarget->ClearRect(drawRect);
+    }
+  }
+
+  mTarget->SetTransform(oldTransform);
+}
+
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;
@@ -376,6 +419,14 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
   if (!mInAsyncPaintGroup) {
     mInAsyncPaintGroup = true;
     PROFILER_TRACING("Paint", "Rasterize", TRACING_INTERVAL_START);
+  }
+
+  for (auto& copy : aState->mCopies) {
+    copy.CopyBuffer();
+  }
+
+  for (auto& clear : aState->mClears) {
+    clear.ClearBuffer();
   }
 
   DrawTarget* target = aState->mTargetTiled;
