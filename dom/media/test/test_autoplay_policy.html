@@ -1,0 +1,182 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Autoplay policy test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+
+let manager = new MediaTestManager;
+
+gTestPrefs.push(["media.autoplay.enabled", false],
+                ["media.autoplay.enabled.user-gestures-needed", true]);
+
+window.info = function(msg, token) {
+  SimpleTest.info(msg + ", token=" + token);
+}
+
+window.is = function(valA, valB, msg, token) {
+  SimpleTest.is(valA, valB, msg + ", token=" + token);
+}
+
+window.ok = function(val, msg, token) {
+  SimpleTest.ok(val, msg + ", token=" + token);
+}
+
+/**
+ * test files and paremeters
+ */
+var autoplayTests = [
+  /* video */
+  { name:"gizmo.mp4", type:"video/mp4", hasAudio:true },
+  { name:"gizmo-noaudio.mp4", type:"video/mp4", hasAudio:false },
+  { name:"gizmo.webm", type:'video/webm', hasAudio:true },
+  { name:"gizmo-noaudio.webm", type:'video/webm', hasAudio:false },
+  /* audio */
+  { name:"small-shot.ogg", type:"audio/ogg", hasAudio:true },
+  { name:"small-shot.m4a", type:"audio/mp4", hasAudio:true },
+  { name:"small-shot.mp3", type:"audio/mpeg", hasAudio:true },
+  { name:"small-shot.flac", type:"audio/flac", hasAudio:true }
+];
+
+var autoplayParams = [
+  { volume: 1.0, muted: false, preload: "none" },
+  { volume: 1.0, muted: false, preload: "metadata" },
+  { volume: 0.0, muted: false, preload: "none" },
+  { volume: 0.0, muted: false, preload: "metadata" },
+  { volume: 1.0, muted: true,  preload: "none"},
+  { volume: 1.0, muted: true,  preload: "metadata" },
+  { volume: 0.0, muted: true,  preload: "none"},
+  { volume: 0.0, muted: true,  preload: "metadata" }
+];
+
+function createTestArray()
+{
+  var tests = [];
+  for (let testIdx = 0; testIdx < autoplayTests.length; testIdx++) {
+    for (let paramIdx = 0; paramIdx < autoplayParams.length; paramIdx++) {
+      let test = autoplayTests[testIdx];
+      let param = autoplayParams[paramIdx];
+      let obj = new Object;
+      obj.name = test.name;
+      obj.type = test.type;
+      obj.hasAudio = test.hasAudio;
+      obj.volume = param.volume;
+      obj.muted = param.muted;
+      obj.preload = param.preload;
+      tests.push(obj);
+    }
+  }
+  return tests;
+}
+
+/**
+ * Main test function for different autoplay cases without user interaction.
+ *
+ * When the pref "media.autoplay.enabled" is false and the pref
+ * "media.autoplay.enabled.user-gestures-needed" is true, we would only allow
+ * audible media to autoplay after the website has been activated by specific
+ * user gestures. However, non-audible media won't be restricted.
+ *
+ * Audible means the volume is not zero, or muted is not true for the video with
+ * audio track. For media without loading metadata, we can't know whether it has
+ * audio track or not, so we would also regard it as audible media.
+ *
+ * Non-audible means the volume is zero, the muted is true, or the video without
+ * audio track.
+ */
+async function runTest(test, token) {
+  manager.started(token);
+
+  await testPlay(test, token);
+  await testAutoplayKeyword(test, token);
+
+  manager.finished(token);
+}
+
+manager.runTests(createTestArray(), runTest);
+
+/**
+ * Different test scenarios
+ */
+async function testPlay(test, token) {
+  info("### start testPlay", token);
+  info(`volume=${test.volume}, muted=${test.muted}, ` +
+       `preload=${test.preload}, hasAudio=${test.hasAudio}`, token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.preload = test.preload;
+  element.volume = test.volume;
+  element.muted = test.muted;
+  element.src = test.name;
+  document.body.appendChild(element);
+
+  let preLoadNone = test.preload == "none";
+  if (!preLoadNone) {
+    info("### wait for loading metadata", token);
+    await once(element, "loadedmetadata");
+  }
+
+  let isAudible = (preLoadNone || test.hasAudio) &&
+                  test.volume != 0.0 &&
+                  !test.muted;
+  let state = isAudible? "audible" : "non-audible";
+  info(`### calling play() for ${state} media`, token);
+  let promise = element.play();
+  if (isAudible) {
+    await promise.catch(function(error) {
+      ok(element.paused, `${state} media fail to start via play()`, token);
+      is(error.name, "NotAllowedError", "rejected play promise", token);
+    });
+  } else {
+    // since we just want to check the value of 'paused', we don't need to wait
+    // resolved play promise. (it's equal to wait for 'playing' event)
+    await once(element, "play");
+    ok(!element.paused, `${state} media start via play()`, token);
+  }
+
+  removeNodeAndSource(element);
+}
+
+async function testAutoplayKeyword(test, token) {
+  info("### start testAutoplayKeyword", token);
+  info(`volume=${test.volume}, muted=${test.muted}, ` +
+       `preload=${test.preload}, hasAudio=${test.hasAudio}`, token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.autoplay = true;
+  element.preload = test.preload;
+  element.volume = test.volume;
+  element.muted = test.muted;
+  element.src = test.name;
+  document.body.appendChild(element);
+
+  let preLoadNone = test.preload == "none";
+  let isAudible = (preLoadNone || test.hasAudio) &&
+                  test.volume != 0.0 &&
+                  !test.muted;
+  let state = isAudible? "audible" : "non-audible";
+  info(`### wait to autoplay for ${state} media`, token);
+  if (isAudible) {
+    if (preLoadNone) {
+      await once(element, "suspend");
+      is(element.readyState, 0 /* HAVE_NOTHING */, "media won't start loading", token);
+    } else {
+      await once(element, "canplay");
+    }
+    ok(element.paused, `can not start with 'autoplay' keyword for ${state} media`, token);
+  } else {
+    await once(element, "play");
+    ok(!element.paused, `start with 'autoplay' keyword for ${state} media`, token);
+  }
+
+  removeNodeAndSource(element);
+}
+
+</script>

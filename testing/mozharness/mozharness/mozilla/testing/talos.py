@@ -417,6 +417,26 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             else:
                 self.info("Not downloading pageset because the no-download option was specified")
 
+        # if running speedometer locally, need to copy speedometer source into talos/tests
+        if self.config.get('run_local') and 'speedometer' in self.suite:
+            self.get_speedometer_source()
+
+    def get_speedometer_source(self):
+        # in production the build system auto copies speedometer source into place;
+        # but when run locally we need to do this manually, so that talos can find it
+        src = os.path.join(self.repo_path, 'third_party', 'webkit',
+                                 'PerformanceTests', 'Speedometer')
+        dest = os.path.join(self.talos_path, 'talos', 'tests', 'webkit',
+                                      'PerformanceTests', 'Speedometer')
+        if not os.path.exists(dest):
+            self.info("Copying speedometer source from %s to %s" % (src, dest))
+            try:
+                shutil.copytree(src, dest)
+            except:
+                self.critical("Error copying speedometer source from %s to %s" % (src, dest))
+        else:
+            self.info("Speedometer source already found at %s" % dest)
+
     def setup_mitmproxy(self):
         """Some talos tests require the use of mitmproxy to playback the pages,
         set it up here.

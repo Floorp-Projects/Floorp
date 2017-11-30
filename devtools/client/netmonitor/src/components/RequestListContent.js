@@ -13,6 +13,7 @@ const Actions = require("../actions/index");
 const { setTooltipImageContent } = require("../request-list-tooltip");
 const {
   getDisplayedRequests,
+  getSelectedRequest,
   getWaterfallScale,
 } = require("../selectors/index");
 
@@ -36,7 +37,7 @@ class RequestListContent extends Component {
     return {
       connector: PropTypes.object.isRequired,
       columns: PropTypes.object.isRequired,
-      dispatch: PropTypes.func.isRequired,
+      cloneSelectedRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMillis: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
@@ -45,8 +46,9 @@ class RequestListContent extends Component {
       onSecurityIconMouseDown: PropTypes.func.isRequired,
       onSelectDelta: PropTypes.func.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
+      openStatistics: PropTypes.func.isRequired,
       scale: PropTypes.number,
-      selectedRequestId: PropTypes.string,
+      selectedRequest: PropTypes.object,
     };
   }
 
@@ -61,13 +63,11 @@ class RequestListContent extends Component {
   }
 
   componentWillMount() {
-    const { dispatch, connector } = this.props;
+    const { connector, cloneSelectedRequest, openStatistics } = this.props;
     this.contextMenu = new RequestListContextMenu({
-      cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
-      getTabTarget: connector.getTabTarget,
-      getLongString: connector.getLongString,
-      openStatistics: (open) => dispatch(Actions.openStatistics(connector, open)),
-      requestData: connector.requestData,
+      connector,
+      cloneSelectedRequest,
+      openStatistics,
     });
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
   }
@@ -78,7 +78,6 @@ class RequestListContent extends Component {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
       interactive: true
     });
-
     // Install event handler to hide the tooltip on scroll
     this.refs.contentEl.addEventListener("scroll", this.onScroll, true);
   }
@@ -220,18 +219,18 @@ class RequestListContent extends Component {
       onSecurityIconMouseDown,
       onWaterfallMouseDown,
       scale,
-      selectedRequestId,
+      selectedRequest,
     } = this.props;
 
     return (
-      div({ className: "requests-list-wrapper"},
-        div({ className: "requests-list-table"},
+      div({ className: "requests-list-wrapper" },
+        div({ className: "requests-list-table" },
           div({
             ref: "contentEl",
             className: "requests-list-contents",
             tabIndex: 0,
             onKeyDown: this.onKeyDown,
-            style: {"--timings-scale": scale, "--timings-rev-scale": 1 / scale}
+            style: { "--timings-scale": scale, "--timings-rev-scale": 1 / scale }
           },
             RequestListHeader(),
             displayedRequests.map((item, index) => RequestListItem({
@@ -240,7 +239,7 @@ class RequestListContent extends Component {
               columns,
               item,
               index,
-              isSelected: item.id === selectedRequestId,
+              isSelected: item.id === (selectedRequest && selectedRequest.id),
               key: item.id,
               onContextMenu: this.onContextMenu,
               onFocusedNodeChange: this.onFocusedNodeChange,
@@ -261,11 +260,12 @@ module.exports = connect(
     columns: state.ui.columns,
     displayedRequests: getDisplayedRequests(state),
     firstRequestStartedMillis: state.requests.firstStartedMillis,
-    selectedRequestId: state.requests.selectedId,
+    selectedRequest: getSelectedRequest(state),
     scale: getWaterfallScale(state),
   }),
-  (dispatch) => ({
-    dispatch,
+  (dispatch, props) => ({
+    cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
+    openStatistics: (open) => dispatch(Actions.openStatistics(props.connector, open)),
     /**
      * A handler that opens the stack trace tab when a stack trace is available
      */

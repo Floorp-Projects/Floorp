@@ -134,6 +134,7 @@ function requestsReducer(state = Requests(), action) {
         urlDetails: clonedRequest.urlDetails,
         requestHeaders: clonedRequest.requestHeaders,
         requestPostData: clonedRequest.requestPostData,
+        requestPostDataAvailable: clonedRequest.requestPostDataAvailable,
         isCustom: true
       };
 

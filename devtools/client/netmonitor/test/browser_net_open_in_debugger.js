@@ -12,7 +12,7 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
-
+  let contextMenuDoc = monitor.panelWin.parent.document;
   // Avoid async processing
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
@@ -23,14 +23,15 @@ add_task(function* () {
   });
   yield wait;
 
+  wait = waitForDOM(contextMenuDoc, "#request-list-context-open-in-debugger");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[2]);
+  yield wait;
 
   let onDebuggerReady = toolbox.once("jsdebugger-ready");
-  monitor.panelWin.parent.document
-    .querySelector("#request-list-context-open-in-debugger").click();
+  contextMenuDoc.querySelector("#request-list-context-open-in-debugger").click();
   yield onDebuggerReady;
 
   ok(true, "Debugger has been open");

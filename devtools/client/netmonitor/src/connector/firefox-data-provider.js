@@ -35,6 +35,7 @@ class FirefoxDataProvider {
 
     // Fetching data from the backend
     this.getLongString = this.getLongString.bind(this);
+    this.getRequestFromQueue = this.getRequestFromQueue.bind(this);
 
     // Event handlers
     this.onNetworkEvent = this.onNetworkEvent.bind(this);
@@ -260,18 +261,15 @@ class FirefoxDataProvider {
 
     let { payload } = this.getRequestFromQueue(id);
 
-    // The payload is ready when all values in the record are true. (i.e. all data
-    // received, but the lazy one. responseContent is the only one for now).
+    // The payload is ready when all values in the record are true.
     // Note that we never fetch response header/cookies for request with security issues.
     // Bug 1404917 should simplify this heuristic by making all these field be lazily
     // fetched, only on-demand.
-    return record.requestHeaders &&
-      record.requestCookies &&
-      record.eventTimings &&
+    return record.requestHeaders && record.requestCookies && record.eventTimings &&
       (
-       (record.responseHeaders && record.responseCookies) ||
-       payload.securityState == "broken" ||
-       (payload.responseContentAvailable && !payload.status)
+        (record.responseHeaders && record.responseCookies) ||
+        payload.securityState === "broken" ||
+        (!payload.status && payload.responseContentAvailable)
       );
   }
 
@@ -384,13 +382,17 @@ class FirefoxDataProvider {
     switch (updateType) {
       case "requestHeaders":
       case "requestCookies":
-      case "requestPostData":
       case "responseHeaders":
       case "responseCookies":
         this.requestPayloadData(actor, updateType);
         break;
-      // (Be careful, securityState can be undefined, for example for WebSocket requests)
-      // Also note that service worker don't have security info set.
+      case "requestPostData":
+        this.updateRequest(actor, {
+          // This field helps knowing when/if requestPostData property is available
+          // and can be requested via `requestData`
+          requestPostDataAvailable: true
+        });
+        break;
       case "securityInfo":
         this.updateRequest(actor, { securityState: networkInfo.securityInfo });
         break;
@@ -411,7 +413,6 @@ class FirefoxDataProvider {
           contentSize: networkInfo.response.bodySize,
           transferredSize: networkInfo.response.transferredSize,
           mimeType: networkInfo.response.content.mimeType,
-
           // This field helps knowing when/if responseContent property is available
           // and can be requested via `requestData`
           responseContentAvailable: true,
@@ -471,9 +472,8 @@ class FirefoxDataProvider {
       this.cleanUpQueue(actor);
       this.rdpRequestMap.delete(actor);
 
-      let { updateRequest } = this.actions;
-      if (updateRequest) {
-        await updateRequest(actor, payloadFromQueue, true);
+      if (this.actions.updateRequest) {
+        await this.actions.updateRequest(actor, payloadFromQueue, true);
       }
 
       // This event is fired only once per request, once all the properties are fetched
@@ -498,7 +498,7 @@ class FirefoxDataProvider {
   requestData(actor, method) {
     // Key string used in `lazyRequestData`. We use this Map to prevent requesting
     // the same data twice at the same time.
-    let key = actor + "-" + method;
+    let key = `${actor}-${method}`;
     let promise = this.lazyRequestData.get(key);
     // If a request is pending, reuse it.
     if (promise) {
@@ -512,10 +512,12 @@ class FirefoxDataProvider {
       // data again.
       this.lazyRequestData.delete(key, promise);
 
-      let payloadFromQueue = this.getRequestFromQueue(actor).payload;
-      let { updateRequest } = this.actions;
-      if (updateRequest) {
-        await updateRequest(actor, payloadFromQueue, true);
+      if (this.actions.updateRequest) {
+        await this.actions.updateRequest(
+          actor,
+          this.getRequestFromQueue(actor).payload,
+          true,
+        );
       }
     });
     return promise;
@@ -548,13 +550,24 @@ class FirefoxDataProvider {
     let response = await new Promise((resolve, reject) => {
       // Do a RDP request to fetch data from the actor.
       if (typeof this.webConsoleClient[clientMethodName] === "function") {
-        this.webConsoleClient[clientMethodName](actor, (res) => {
+        // Make sure we fetch the real actor data instead of cloned actor
+        // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
+        this.webConsoleClient[clientMethodName](actor.replace("-clone", ""), (res) => {
+          if (res.error) {
+            console.error(res.error);
+          }
           resolve(res);
         });
       } else {
         reject(new Error(`Error: No such client method '${clientMethodName}'!`));
       }
     });
+
+    // Restore clone actor id
+    if (actor.includes("-clone")) {
+      // Because response's properties are read-only, we create a new response
+      response = { ...response, from: `${response.from}-clone` };
+    }
 
     // Call data processing method.
     return this[callbackMethodName](response);
@@ -591,12 +604,12 @@ class FirefoxDataProvider {
    *
    * @param {object} response the message received from the server.
    */
-  onRequestPostData(response) {
-    return this.updateRequest(response.from, {
+  async onRequestPostData(response) {
+    let payload = await this.updateRequest(response.from, {
       requestPostData: response
-    }).then(() => {
-      emit(EVENTS.RECEIVED_REQUEST_POST_DATA, response.from);
     });
+    emit(EVENTS.RECEIVED_REQUEST_POST_DATA, response.from);
+    return payload;
   }
 
   /**
