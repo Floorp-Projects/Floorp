@@ -296,52 +296,61 @@ def insertMeta(source, frontmatter):
         return "\n".join(lines) + source
 
 def exportTest262(args):
-    src = os.path.abspath(args.src[0])
+
     outDir = os.path.abspath(args.out)
+    providedSrcs = args.src
 
     # Create the output directory from scratch.
     if os.path.isdir(outDir):
         shutil.rmtree(outDir)
 
-    # Process all test directories recursively.
-    for (dirPath, _, fileNames) in os.walk(src):
-        relPath = os.path.relpath(dirPath, src)
+    # Go through each source path
+    for providedSrc in providedSrcs:
 
-        relOutDir = os.path.join(outDir, relPath)
+        src = os.path.abspath(providedSrc)
+        # the basename of the path will be used in case multiple "src" arguments
+        # are passed in to create an output directory for each "src".
+        basename = os.path.basename(src)
 
-        # This also creates the own outDir folder
-        if not os.path.exists(relOutDir):
-            os.makedirs(relOutDir)
+        # Process all test directories recursively.
+        for (dirPath, _, fileNames) in os.walk(src):
 
-        for fileName in fileNames:
-            # Skip browser.js and shell.js files
-            if fileName == "browser.js" or fileName == "shell.js":
-                continue
+            relPath = os.path.relpath(dirPath, src)
+            currentOutDir = os.path.join(outDir, basename, relPath)
 
-            filePath = os.path.join(dirPath, fileName)
-            testName = os.path.relpath(filePath, src) # captures folder/fileName
+            # This also creates the own outDir folder
+            if not os.path.exists(currentOutDir):
+                os.makedirs(currentOutDir)
 
-            # Copy non-test files as is.
-            (_, fileExt) = os.path.splitext(fileName)
-            if fileExt != ".js":
-                shutil.copyfile(filePath, os.path.join(outDir, testName))
-                print("C %s" % testName)
-                continue
+            for fileName in fileNames:
+                # Skip browser.js and shell.js files
+                if fileName == "browser.js" or fileName == "shell.js":
+                    continue
 
-            # Read the original test source and preprocess it for Test262
-            with open(filePath, "rb") as testFile:
-                testSource = testFile.read()
+                filePath = os.path.join(dirPath, fileName)
+                testName = os.path.join(fullRelPath, fileName) # captures folder(s)+filename
 
-            if not testSource:
-                print("SKIPPED %s" % testName)
-                continue
+                # Copy non-test files as is.
+                (_, fileExt) = os.path.splitext(fileName)
+                if fileExt != ".js":
+                    shutil.copyfile(filePath, os.path.join(currentOutDir, fileName))
+                    print("C %s" % testName)
+                    continue
 
-            newSource = convertTestFile(testSource)
+                # Read the original test source and preprocess it for Test262
+                with open(filePath, "rb") as testFile:
+                    testSource = testFile.read()
 
-            with open(os.path.join(outDir, testName), "wb") as output:
-                output.write(newSource)
+                if not testSource:
+                    print("SKIPPED %s" % testName)
+                    continue
 
-            print("SAVED %s" % testName)
+                newSource = convertTestFile(testSource)
+
+                with open(os.path.join(currentOutDir, fileName), "wb") as output:
+                    output.write(newSource)
+
+                print("SAVED %s" % testName)
 
 if __name__ == "__main__":
     import argparse
