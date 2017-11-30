@@ -1556,6 +1556,8 @@ nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
     mDeclaration->SetOwningRule(this);
   }
 
+  nsIDocument* doc = GetDocument();
+  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }
