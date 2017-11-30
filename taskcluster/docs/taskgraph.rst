@@ -145,9 +145,16 @@ So for instance, if you had already requested a build task in the ``try`` comman
 and you wish to add a test which depends on this build, the original build task
 is re-used.
 
-Action Tasks are currently scheduled by
-[pulse_actions](https://github.com/mozilla/pulse_actions). This feature is only
-present on ``try`` pushes for now.
+
+Runnable jobs
+-------------
+As part of the execution of the Gecko decision task we generate a
+``public/runnable-jobs.json.gz`` file. It contains a subset of all the data
+contained within the ``full-task-graph.json``.
+
+This file has the minimum ammount of data needed by Treeherder to show all
+tasks that can be scheduled on a push.
+
 
 Task Parameterization
 ---------------------
