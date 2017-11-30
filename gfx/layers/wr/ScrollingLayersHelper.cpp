@@ -35,6 +35,7 @@ ScrollingLayersHelper::BeginBuild(WebRenderLayerManager* aManager,
   MOZ_ASSERT(!mBuilder);
   mBuilder = &aBuilder;
   MOZ_ASSERT(mCache.empty());
+  MOZ_ASSERT(mScrollParents.empty());
   MOZ_ASSERT(mItemClipStack.empty());
 }
 
@@ -44,6 +45,7 @@ ScrollingLayersHelper::EndBuild()
   mBuilder = nullptr;
   mManager = nullptr;
   mCache.clear();
+  mScrollParents.clear();
   MOZ_ASSERT(mItemClipStack.empty());
 }
 
@@ -352,22 +354,27 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
       if (mBuilder->HasExtraClip()) {
         ids.second = mBuilder->GetCacheOverride(aChain);
       } else {
-        auto it = mCache.find(aChain);
-        if (it == mCache.end()) {
-          // Degenerate case, where there are two clip chain items that are
-          // fundamentally the same but are different objects and so we can't
-          // find it in the cache via hashing. Linear search for it instead.
-          // XXX This shouldn't happen very often but it might still turn out
-          // to be a performance cliff, so we should figure out a better way to
-          // deal with this.
-          for (it = mCache.begin(); it != mCache.end(); it++) {
-            if (DisplayItemClipChain::Equal(aChain, it->first)) {
-              break;
-            }
+        // Since the scroll layer was already defined, find the clip (if any)
+        // that it was previously defined as a child of. If that clip is
+        // equivalent to |aChain|, then we should use that one in the mCache
+        // lookup as it is more likely to produce a result. This happens because
+        // of how we can have two DisplayItemClipChain items that are ::Equal
+        // but not ==, and mCache only does == checking. In the hunk below,
+        // |canonicalChain| can be thought of as the clip chain instance that is
+        // equivalent to |aChain| but has the best chance of being found in
+        // mCache.
+        const DisplayItemClipChain* canonicalChain = aChain;
+        auto it = mScrollParents.find(scrollId);
+        if (it != mScrollParents.end()) {
+          const DisplayItemClipChain* scrollParent = it->second;
+          if (DisplayItemClipChain::Equal(scrollParent, aChain)) {
+            canonicalChain = scrollParent;
           }
         }
+
+        auto it2 = mCache.find(canonicalChain);
         // If |it == mCache.end()| here then we have run into a case where the
-        // scroll layer was previously defined a specific parent clip, and
+        // scroll layer was previously defined with a specific parent clip, and
         // now here it has a different parent clip. Gecko can create display
         // lists like this because it treats the ASR chain and clipping chain
         // more independently, but we can't yet represent this in WR. This is
@@ -376,8 +383,14 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
         // supports multiple ancestors on a scroll layer we can deal with this
         // better. The layout/reftests/text/wordwrap-08.html has a Text display
         // item that exercises this case.
-        if (it != mCache.end()) {
-          ids.second = Some(it->second);
+        if (it2 == mCache.end()) {
+          // leave ids.second as Nothing(). This should only happen if we didn't
+          // pick up a better canonicalChain above, either because it didn't
+          // exist, or because it was not ::Equal to aChain. Therefore
+          // canonicalChain must still be equal to aChain here.
+          MOZ_ASSERT(canonicalChain == aChain);
+        } else {
+          ids.second = Some(it2->second);
         }
       }
     }
@@ -422,6 +435,11 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   // is defined will be the parent clip for the new scrollframe that we're
   // defining.
   MOZ_ASSERT(!(ancestorIds.first && ancestorIds.second));
+
+  if (ancestorIds.second) {
+    MOZ_ASSERT(aChain);
+    mScrollParents[scrollId] = aChain;
+  }
 
   LayoutDeviceRect contentRect =
       metrics.GetExpandedScrollableRect() * metrics.GetDevPixelsPerCSSPixel();

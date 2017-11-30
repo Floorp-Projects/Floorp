@@ -13,9 +13,9 @@ const HOME_URI_2 = "http://example.com/";
 const HOME_URI_3 = "http://example.org/";
 const HOME_URI_4 = "http://example.net/";
 
-const CONTROLLABLE = "controllable_by_this_extension";
 const CONTROLLED_BY_THIS = "controlled_by_this_extension";
 const CONTROLLED_BY_OTHER = "controlled_by_other_extensions";
+const NOT_CONTROLLABLE = "not_controllable";
 
 const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 
@@ -35,11 +35,13 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
           browser.test.sendMessage("homepage", homepage);
           break;
         case "trySet":
-          await browser.browserSettings.homepageOverride.set({value: "foo"});
+          let setResult = await browser.browserSettings.homepageOverride.set({value: "foo"});
+          browser.test.assertFalse(setResult, "Calling homepageOverride.set returns false.");
           browser.test.sendMessage("homepageSet");
           break;
         case "tryClear":
-          await browser.browserSettings.homepageOverride.clear({});
+          let clearResult = await browser.browserSettings.homepageOverride.clear({});
+          browser.test.assertFalse(clearResult, "Calling homepageOverride.clear returns false.");
           browser.test.sendMessage("homepageCleared");
           break;
       }
@@ -82,7 +84,7 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
 
   is(getHomePageURL(), defaultHomePage,
      "Home url should be the default");
-  await checkHomepageOverride(ext1, getHomePageURL(), CONTROLLABLE);
+  await checkHomepageOverride(ext1, getHomePageURL(), NOT_CONTROLLABLE);
 
   // Because we are expecting the pref to change when we start or unload, we
   // need to wait on a pref change.  This is because the pref management is
@@ -156,7 +158,7 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
      "Home url should be reset to default");
 
   await ext5.startup();
-  await checkHomepageOverride(ext5, defaultHomePage, CONTROLLABLE);
+  await checkHomepageOverride(ext5, defaultHomePage, NOT_CONTROLLABLE);
   await ext5.unload();
 });
 

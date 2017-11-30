@@ -305,6 +305,9 @@ pref("devtools.webconsole.new-frontend-enabled", true);
 // Enable the webconsole sidebar toggle
 pref("devtools.webconsole.sidebarToggle", false);
 
+// Disable the new performance recording panel by default
+pref("devtools.performance.new-panel-enabled", false);
+
 // Enable client-side mapping service for source maps
 pref("devtools.source-map.client-service.enabled", true);
 

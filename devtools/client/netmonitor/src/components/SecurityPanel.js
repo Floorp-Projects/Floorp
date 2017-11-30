@@ -59,17 +59,10 @@ class SecurityPanel extends Component {
     };
   }
 
-  /**
-   * `componentDidMount` is called when opening the SecurityPanel for the first time
-   */
   componentDidMount() {
     this.maybeFetchSecurityInfo(this.props);
   }
 
-  /**
-   * `componentWillReceiveProps` is the only method called when switching between two
-   * requests while the security panel is displayed.
-   */
   componentWillReceiveProps(nextProps) {
     this.maybeFetchSecurityInfo(nextProps);
   }

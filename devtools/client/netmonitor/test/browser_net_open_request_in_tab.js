@@ -12,6 +12,7 @@ add_task(function* () {
   info("Starting test...");
 
   let { document, store, windowRequire } = monitor.panelWin;
+  let contextMenuDoc = monitor.panelWin.parent.document;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
@@ -22,10 +23,12 @@ add_task(function* () {
   });
   yield wait;
 
+  wait = waitForDOM(contextMenuDoc, "#request-list-context-newtab");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]);
+  yield wait;
 
   let onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
   monitor.panelWin.parent.document

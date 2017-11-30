@@ -46,12 +46,56 @@ class ParamsPanel extends Component {
     };
   }
 
+  constructor(props) {
+    super(props);
+  }
+
   componentDidMount() {
+    this.maybeFetchPostData(this.props);
     updateFormDataSections(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
+    this.maybeFetchPostData(nextProps);
     updateFormDataSections(nextProps);
+  }
+
+  /**
+   * When switching to another request, lazily fetch request post data
+   * from the backend. The panel will first be empty and then display the content.
+   */
+  maybeFetchPostData(props) {
+    if (props.request.requestPostDataAvailable &&
+        (!props.request.requestPostData ||
+        !props.request.requestPostData.postData.text)) {
+      // This method will set `props.request.requestPostData`
+      // asynchronously and force another render.
+      props.connector.requestData(props.request.id, "requestPostData");
+    }
+  }
+
+  /**
+   * Mapping array to dict for TreeView usage.
+   * Since TreeView only support Object(dict) format.
+   * This function also deal with duplicate key case
+   * (for multiple selection and query params with same keys)
+   *
+   * @param {Object[]} arr - key-value pair array like query or form params
+   * @returns {Object} Rep compatible object
+   */
+  getProperties(arr) {
+    return sortObjectKeys(arr.reduce((map, obj) => {
+      let value = map[obj.name];
+      if (value) {
+        if (typeof value !== "object") {
+          map[obj.name] = [value];
+        }
+        map[obj.name].push(obj.value);
+      } else {
+        map[obj.name] = obj.value;
+      }
+      return map;
+    }, {}));
   }
 
   render() {
@@ -68,7 +112,7 @@ class ParamsPanel extends Component {
     let postData = requestPostData ? requestPostData.postData.text : null;
     let query = getUrlQuery(url);
 
-    if (!formDataSections && !postData && !query) {
+    if ((!formDataSections || formDataSections.length === 0) && !postData && !query) {
       return div({ className: "empty-notice" },
         PARAMS_EMPTY_TEXT
       );
@@ -79,13 +123,13 @@ class ParamsPanel extends Component {
 
     // Query String section
     if (query) {
-      object[PARAMS_QUERY_STRING] = getProperties(parseQueryString(query));
+      object[PARAMS_QUERY_STRING] = this.getProperties(parseQueryString(query));
     }
 
     // Form Data section
     if (formDataSections && formDataSections.length > 0) {
       let sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
-      object[PARAMS_FORM_DATA] = getProperties(parseFormData(sections));
+      object[PARAMS_FORM_DATA] = this.getProperties(parseFormData(sections));
     }
 
     // Request payload section
@@ -121,30 +165,6 @@ class ParamsPanel extends Component {
       )
     );
   }
-}
-
-/**
- * Mapping array to dict for TreeView usage.
- * Since TreeView only support Object(dict) format.
- * This function also deal with duplicate key case
- * (for multiple selection and query params with same keys)
- *
- * @param {Object[]} arr - key-value pair array like query or form params
- * @returns {Object} Rep compatible object
- */
-function getProperties(arr) {
-  return sortObjectKeys(arr.reduce((map, obj) => {
-    let value = map[obj.name];
-    if (value) {
-      if (typeof value !== "object") {
-        map[obj.name] = [value];
-      }
-      map[obj.name].push(obj.value);
-    } else {
-      map[obj.name] = obj.value;
-    }
-    return map;
-  }, {}));
 }
 
 module.exports = connect(null,

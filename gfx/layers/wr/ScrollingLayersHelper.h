@@ -86,6 +86,9 @@ private:
   wr::DisplayListBuilder* mBuilder;
   ClipIdMap mCache;
 
+  typedef std::unordered_map<FrameMetrics::ViewID, const DisplayItemClipChain*> ScrollParentMap;
+  ScrollParentMap mScrollParents;
+
   struct ItemClips {
     ItemClips(const ActiveScrolledRoot* aAsr,
               const DisplayItemClipChain* aChain);

@@ -225,3 +225,27 @@ add_task(async function test_urlbar_focus() {
 
   await extension.unload();
 });
+
+add_task(async function test_create_with_popup() {
+  const extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      let normalWin = await browser.windows.create();
+      let lastFocusedNormalWin = await browser.windows.getLastFocused({});
+      browser.test.assertEq(lastFocusedNormalWin.id, normalWin.id, "The normal window is the last focused window.");
+      let popupWin = await browser.windows.create({type: "popup"});
+      let lastFocusedPopupWin = await browser.windows.getLastFocused({});
+      browser.test.assertEq(lastFocusedPopupWin.id, popupWin.id, "The popup window is the last focused window.");
+      let newtab = await browser.tabs.create({});
+      browser.test.assertEq(normalWin.id, newtab.windowId, "New tab was created in last focused normal window.");
+      await Promise.all([
+        browser.windows.remove(normalWin.id),
+        browser.windows.remove(popupWin.id),
+      ]);
+      browser.test.sendMessage("complete");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("complete");
+  await extension.unload();
+});

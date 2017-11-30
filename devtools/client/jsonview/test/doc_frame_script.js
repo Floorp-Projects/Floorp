@@ -25,19 +25,17 @@ Services.scriptloader.loadSubScript(
   "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 /**
- * When the ready state of the JSON View app changes, it triggers custom event
- * "AppReadyStateChange", then the "Test:JsonView:AppReadyStateChange" message
- * will be sent to the parent process for tests to wait for this event if needed.
+ * When the JSON View is done rendering it triggers custom event
+ * "JSONViewInitialized", then the Test:TestPageProcessingDone message
+ * will be sent to the parent process for tests to wait for this event
+ * if needed.
  */
-content.addEventListener("AppReadyStateChange", () => {
-  sendAsyncMessage("Test:JsonView:AppReadyStateChange");
+content.addEventListener("JSONViewInitialized", () => {
+  sendAsyncMessage("Test:JsonView:JSONViewInitialized");
 });
 
-/**
- * Analogous for the standard "readystatechange" event of the document.
- */
-content.document.addEventListener("readystatechange", () => {
-  sendAsyncMessage("Test:JsonView:DocReadyStateChange");
+content.addEventListener("load", () => {
+  sendAsyncMessage("Test:JsonView:load");
 });
 
 addMessageListener("Test:JsonView:GetElementCount", function (msg) {
