@@ -22,6 +22,7 @@ from taskgraph.transforms.job.common import (
 from taskgraph.util.hash import hash_paths
 from taskgraph import GECKO
 from taskgraph.util.cached_tasks import add_optimization
+import taskgraph
 
 
 CACHE_TYPE = 'toolchains.v2'
@@ -155,13 +156,14 @@ def docker_worker_toolchain(config, job, taskdesc):
     if 'toolchain-alias' in run:
         attributes['toolchain-alias'] = run['toolchain-alias']
 
-    name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
-    add_optimization(
-        config, taskdesc,
-        cache_type=CACHE_TYPE,
-        cache_name=name,
-        digest_data=get_digest_data(config, run, taskdesc),
-    )
+    if not taskgraph.fast:
+        name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
+        add_optimization(
+            config, taskdesc,
+            cache_type=CACHE_TYPE,
+            cache_name=name,
+            digest_data=get_digest_data(config, run, taskdesc),
+        )
 
 
 @run_job_using("generic-worker", "toolchain-script", schema=toolchain_run_schema)
@@ -217,10 +219,11 @@ def windows_toolchain(config, job, taskdesc):
     if 'toolchain-alias' in run:
         attributes['toolchain-alias'] = run['toolchain-alias']
 
-    name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
-    add_optimization(
-        config, taskdesc,
-        cache_type=CACHE_TYPE,
-        cache_name=name,
-        digest_data=get_digest_data(config, run, taskdesc),
-    )
+    if not taskgraph.fast:
+        name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
+        add_optimization(
+            config, taskdesc,
+            cache_type=CACHE_TYPE,
+            cache_name=name,
+            digest_data=get_digest_data(config, run, taskdesc),
+        )
