@@ -514,10 +514,6 @@ protected:
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget);
 
-  // Called to notify fetching media data is in progress.
-  // Called on the main thread only.
-  virtual void DownloadProgressed();
-
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.
   void NotifyPrincipalChanged();
