@@ -160,14 +160,6 @@ WebRenderScrollData::AddMetadata(const ScrollMetadata& aMetadata)
 }
 
 size_t
-WebRenderScrollData::AddNewLayerData()
-{
-  size_t len = mLayerScrollData.Length();
-  Unused << mLayerScrollData.AppendElement();
-  return len;
-}
-
-size_t
 WebRenderScrollData::AddLayerData(const WebRenderLayerScrollData& aData)
 {
   mLayerScrollData.AppendElement(aData);
@@ -178,15 +170,6 @@ size_t
 WebRenderScrollData::GetLayerCount() const
 {
   return mLayerScrollData.Length();
-}
-
-WebRenderLayerScrollData*
-WebRenderScrollData::GetLayerDataMutable(size_t aIndex)
-{
-  if (aIndex >= mLayerScrollData.Length()) {
-    return nullptr;
-  }
-  return &(mLayerScrollData.ElementAt(aIndex));
 }
 
 const WebRenderLayerScrollData*
