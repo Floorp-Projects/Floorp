@@ -69,7 +69,6 @@ XPCOMUtils.defineLazyGetter(this, "browserSessionID", Utils.makeGUID);
 
 function Sync11Service() {
   this._notify = Utils.notify("weave:service:");
-  this.scheduler = new SyncScheduler(this);
 }
 Sync11Service.prototype = {
 
@@ -293,6 +292,7 @@ Sync11Service.prototype = {
     this.identity = Status._authManager;
     this.collectionKeys = new CollectionKeyManager();
 
+    this.scheduler = new SyncScheduler(this);
     this.errorHandler = new ErrorHandler(this);
 
     this._log = Log.repository.getLogger("Sync.Service");
@@ -1084,6 +1084,7 @@ Sync11Service.prototype = {
   async sync({engines, why} = {}) {
     let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
+    await this.promiseInitialized;
     this._log.info(`Starting sync at ${dateStr} in browser session ${browserSessionID}`);
     return this._catch(async function() {
       // Make sure we're logged in.
