@@ -22,6 +22,10 @@
 #include "nsDisplayList.h"
 #include "WebRenderCanvasRenderer.h"
 
+// Useful for debugging, it dumps the Gecko display list *before* we try to
+// build WR commands from it, and dumps the WR display list after building it.
+#define DUMP_LISTS 0
+
 namespace mozilla {
 
 using namespace gfx;
@@ -248,10 +252,10 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
 
   AUTO_PROFILER_TRACING("Paint", "RenderLayers");
 
-#if 0
+#if DUMP_LISTS
   // Useful for debugging, it dumps the display list *before* we try to build
   // WR commands from it
-  nsFrame::PrintDisplayList(aDisplayListBuilder, *aDisplayList);
+  if (XRE_IsContentProcess()) nsFrame::PrintDisplayList(aDisplayListBuilder, *aDisplayList);
 #endif
 
   // Since we don't do repeat transactions right now, just set the time
@@ -305,6 +309,10 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
       WrBridge()->GetSyncObject()->Synchronize();
     }
   }
+
+#if DUMP_LISTS
+  if (XRE_IsContentProcess()) builder.Dump();
+#endif
 
   wr::BuiltDisplayList dl;
   builder.Finalize(contentSize, dl);

@@ -492,14 +492,15 @@ class SyncTelemetryImpl {
     }
     // We still call submit() with possibly illegal payloads so that tests can
     // know that the ping was built. We don't end up submitting them, however.
-    if (record.syncs.length) {
-      log.trace(`submitting ${record.syncs.length} sync record(s) to telemetry`);
+    let numEvents = record.events ? record.events.length : 0;
+    if (record.syncs.length || numEvents) {
+      log.trace(`submitting ${record.syncs.length} sync record(s) and ` +
+                `${numEvents} event(s) to telemetry`);
       TelemetryController.submitExternalPing("sync", record);
       return true;
     }
     return false;
   }
-
 
   onSyncStarted(data) {
     const why = data && JSON.parse(data).why;
@@ -594,9 +595,9 @@ class SyncTelemetryImpl {
         event.push(extra);
       }
     } else if (extra) {
-        event.push(null); // a null for the empty value.
-        event.push(extra);
-      }
+      event.push(null); // a null for the empty value.
+      event.push(extra);
+    }
     this.events.push(event);
   }
 

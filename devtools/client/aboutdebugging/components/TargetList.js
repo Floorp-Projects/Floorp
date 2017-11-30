@@ -23,6 +23,7 @@ class TargetList extends Component {
   static get propTypes() {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      connect: PropTypes.object,
       debugDisabled: PropTypes.bool,
       error: PropTypes.node,
       id: PropTypes.string.isRequired,
@@ -34,12 +35,21 @@ class TargetList extends Component {
   }
 
   render() {
-    let { client, debugDisabled, error, targetClass, targets, sort } = this.props;
+    let {
+      client,
+      connect,
+      debugDisabled,
+      error,
+      targetClass,
+      targets,
+      sort
+    } = this.props;
+
     if (sort) {
       targets = targets.sort(LocaleCompare);
     }
     targets = targets.map(target => {
-      return targetClass({ client, target, debugDisabled });
+      return targetClass({ client, connect, target, debugDisabled });
     });
 
     let content = "";

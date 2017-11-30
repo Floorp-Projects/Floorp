@@ -1026,6 +1026,33 @@ ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 }
 
 void
+ServoStyleSet::SetStylistStyleSheetsDirty()
+{
+  mStylistState |= StylistState::StyleSheetsDirty;
+
+  // We need to invalidate cached style in getComputedStyle for undisplayed
+  // elements, since we don't know if any of the style sheet change that we
+  // do would affect undisplayed elements.
+  if (mPresContext) {
+    // XBL sheets don't have a pres context, but invalidating the restyle generation
+    // in that case is handled by SetXBLStyleSheetsDirty in the "master" stylist.
+    mPresContext->RestyleManager()->AsServo()->IncrementUndisplayedRestyleGeneration();
+  }
+}
+
+void
+ServoStyleSet::SetStylistXBLStyleSheetsDirty()
+{
+  mStylistState |= StylistState::XBLStyleSheetsDirty;
+
+  // We need to invalidate cached style in getComputedStyle for undisplayed
+  // elements, since we don't know if any of the style sheet change that we
+  // do would affect undisplayed elements.
+  MOZ_ASSERT(mPresContext);
+  mPresContext->RestyleManager()->AsServo()->IncrementUndisplayedRestyleGeneration();
+}
+
+void
 ServoStyleSet::RecordStyleSheetChange(
     ServoStyleSheet* aSheet,
     StyleSheet::ChangeType aChangeType)

@@ -116,13 +116,13 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRTC_HW_ACCELERATION_DECODE = 15;
   /* Whether Canvas acceleration is supported, starting in 45 */
   const long FEATURE_CANVAS2D_ACCELERATION = 16;
-  /* Whether hardware VP8 decoding is supported, starting in 48. */
+  /* Whether hardware VP8 decoding is supported, starting in 48; not for downloadable blocking. */
   const long FEATURE_VP8_HW_DECODE = 17;
-  /* Whether hardware VP9 decoding is supported, starting in 48. */
+  /* Whether hardware VP9 decoding is supported, starting in 48; not for downloadable blocking. */
   const long FEATURE_VP9_HW_DECODE = 18;
-  /* Whether NV_dx_interop2 is supported, starting in 50. */
+  /* Whether NV_dx_interop2 is supported, starting in 50; downloadable blocking in 58. */
   const long FEATURE_DX_INTEROP2 = 19;
-  /* Whether the GPU process is supported, starting in 52. */
+  /* Whether the GPU process is supported, starting in 52; downloadable blocking in 58. */
   const long FEATURE_GPU_PROCESS = 20;
   /* Whether the WebGL2 is supported, starting in 54 */
   const long FEATURE_WEBGL2 = 21;

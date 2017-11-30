@@ -89,6 +89,11 @@ if CONFIG['MOZ_X11']:
         'WindowSurfaceProvider.h',
     ]
 
+if CONFIG['MOZ_WAYLAND']:
+    UNIFIED_SOURCES += [
+        'WindowSurfaceWayland.cpp',
+    ]
+
 if CONFIG['ACCESSIBILITY']:
     UNIFIED_SOURCES += [
         'maiRedundantObjectFactory.c',

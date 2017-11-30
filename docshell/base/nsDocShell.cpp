@@ -10279,7 +10279,11 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                               INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
         MOZ_ASSERT(!aPostData);
         MOZ_ASSERT(!aHeadersData);
-        MOZ_ASSERT(aLoadType == LOAD_LINK);
+        // If OnLinkClickSync was invoked inside the onload handler, the load
+        // type would be set to LOAD_NORMAL_REPLACE; otherwise it should be
+        // LOAD_LINK.
+        MOZ_ASSERT(aLoadType == LOAD_LINK ||
+                   aLoadType == LOAD_NORMAL_REPLACE);
         MOZ_ASSERT(!aSHEntry);
         MOZ_ASSERT(aFirstParty); // Windowwatcher will assume this.
 

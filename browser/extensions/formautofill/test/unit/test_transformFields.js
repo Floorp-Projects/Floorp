@@ -411,7 +411,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     description: "Has unsupported \"country\"",
     address: {
       "given-name": "John", // Make sure it won't be an empty record.
-      "country": "CA",
+      "country": "TV",
     },
     expectedResult: {
       "country": undefined,
