@@ -1277,7 +1277,7 @@ class Addresses extends AutofillRecords {
     // Compute tel
     if (!("tel-national" in address)) {
       if (address.tel) {
-        let tel = PhoneNumber.Parse(address.tel, address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE);
+        let tel = PhoneNumber.Parse(address.tel, address.country || FormAutofillUtils.DEFAULT_REGION);
         if (tel) {
           if (tel.countryCode) {
             address["tel-country-code"] = tel.countryCode;
@@ -1377,7 +1377,7 @@ class Addresses extends AutofillRecords {
     if (address.tel || TEL_COMPONENTS.some(c => !!address[c])) {
       FormAutofillUtils.compressTel(address);
 
-      let possibleRegion = address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE;
+      let possibleRegion = address.country || FormAutofillUtils.DEFAULT_REGION;
       let tel = PhoneNumber.Parse(address.tel, possibleRegion);
 
       if (tel && tel.internationalNumber) {
@@ -1659,8 +1659,13 @@ class CreditCards extends AutofillRecords {
         if (!clonedTargetCreditCard[field]) {
           return !creditCard[field];
         }
-        if (field == "cc-number") {
-          return this._getMaskedCCNumber(clonedTargetCreditCard[field]) == creditCard[field];
+        if (field == "cc-number" && creditCard[field]) {
+          if (MasterPassword.isEnabled) {
+            // Compare the masked numbers instead when the master password is
+            // enabled because we don't want to leak the credit card number.
+            return this._getMaskedCCNumber(clonedTargetCreditCard[field]) == creditCard[field];
+          }
+          return clonedTargetCreditCard[field] == MasterPassword.decryptSync(creditCard["cc-number-encrypted"]);
         }
         return clonedTargetCreditCard[field] == creditCard[field];
       });

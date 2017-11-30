@@ -22,6 +22,7 @@ struct StylePrefs
   static bool sFramesTimingFunctionEnabled;
   static bool sUnprefixedFullscreenApiEnabled;
   static bool sVisitedLinksEnabled;
+  static bool sMozDocumentEnabledInContent;
 
   static void Init();
 };

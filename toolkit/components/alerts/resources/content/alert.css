@@ -28,6 +28,9 @@
 }
 
 @keyframes alert-animation {
+  from {
+    visibility: visible;
+  }
   to {
     visibility: hidden;
   }

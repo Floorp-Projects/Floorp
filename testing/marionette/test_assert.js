@@ -9,6 +9,50 @@ const {utils: Cu} = Components;
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/error.js");
 
+add_test(function test_acyclic() {
+  assert.acyclic({});
+  assert.acyclic(new Object());
+  assert.acyclic([]);
+  assert.acyclic(new Array());
+
+  // object
+  Assert.throws(() => {
+    let obj = {};
+    obj.reference = obj;
+    assert.acyclic(obj);
+  }, JavaScriptError);
+
+  // array
+  Assert.throws(() => {
+    let arr = [];
+    arr.push(arr);
+    assert.acyclic(arr);
+  }, JavaScriptError);
+
+  // array in object
+  Assert.throws(() => {
+    let arr = [];
+    arr.push(arr);
+    assert.acyclic({arr});
+  }, JavaScriptError);
+
+  // object in array
+  Assert.throws(() => {
+    let obj = {};
+    obj.reference = obj;
+    assert.acyclic([obj]);
+  }, JavaScriptError);
+
+  // custom message
+  let cyclic = {};
+  cyclic.reference = cyclic;
+  Assert.throws(() => assert.acyclic(cyclic, "", RangeError), RangeError);
+  Assert.throws(() => assert.acyclic(cyclic, "foo"), /JavaScriptError: foo/);
+  Assert.throws(() => assert.acyclic(cyclic, "bar", RangeError), /RangeError: bar/);
+
+  run_next_test();
+});
+
 add_test(function test_session() {
   assert.session({sessionID: "foo"});
   for (let typ of [null, undefined, ""]) {

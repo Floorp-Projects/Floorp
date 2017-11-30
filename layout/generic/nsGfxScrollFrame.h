@@ -426,6 +426,7 @@ public:
   }
   void SetScrollableByAPZ(bool aScrollable);
   void SetZoomableByAPZ(bool aZoomable);
+  void SetHasOutOfFlowContentInsideFilter();
 
   bool UsesContainerScrolling() const;
 
@@ -631,6 +632,10 @@ public:
 
   // True if the APZ is allowed to zoom this scrollframe.
   bool mZoomableByAPZ:1;
+
+  // True if the scroll frame contains out-of-flow content and is inside
+  // a CSS filter.
+  bool mHasOutOfFlowContentInsideFilter:1;
 
   // True if we don't want the scrollbar to repaint itself right now.
   bool mSuppressScrollbarRepaints:1;
@@ -1061,6 +1066,9 @@ public:
   }
   void SetZoomableByAPZ(bool aZoomable) override {
     mHelper.SetZoomableByAPZ(aZoomable);
+  }
+  void SetHasOutOfFlowContentInsideFilter() override {
+    mHelper.SetHasOutOfFlowContentInsideFilter();
   }
 
   ScrollSnapInfo GetScrollSnapInfo() const override {
@@ -1496,6 +1504,9 @@ public:
   }
   void SetZoomableByAPZ(bool aZoomable) override {
     mHelper.SetZoomableByAPZ(aZoomable);
+  }
+  void SetHasOutOfFlowContentInsideFilter() override {
+    mHelper.SetHasOutOfFlowContentInsideFilter();
   }
   virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                                      nsRect* aVisibleRect,

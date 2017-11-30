@@ -228,6 +228,7 @@ public:
   void Save();
   void Restore();
   void ClearSave();
+  void Dump();
 
   void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
