@@ -3170,7 +3170,7 @@ nsXPCComponents_Utils::AllowCPOWsInAddon(const nsACString& addonIdStr,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::ReadFile(nsIFile* aFile, nsACString& aResult)
+nsXPCComponents_Utils::ReadUTF8File(nsIFile* aFile, nsACString& aResult)
 {
     NS_ENSURE_TRUE(aFile, NS_ERROR_INVALID_ARG);
 
@@ -3179,7 +3179,7 @@ nsXPCComponents_Utils::ReadFile(nsIFile* aFile, nsACString& aResult)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::ReadURI(nsIURI* aURI, nsACString& aResult)
+nsXPCComponents_Utils::ReadUTF8URI(nsIURI* aURI, nsACString& aResult)
 {
     NS_ENSURE_TRUE(aURI, NS_ERROR_INVALID_ARG);
 
