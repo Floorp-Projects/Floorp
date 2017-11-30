@@ -22,7 +22,5 @@ public interface PanZoomController {
     public boolean onTouchEvent(MotionEvent event);
     public boolean onMotionEvent(MotionEvent event);
 
-    public void setOverscrollHandler(final Overscroll controller);
-
     public void setIsLongpressEnabled(boolean isLongpressEnabled);
 }
