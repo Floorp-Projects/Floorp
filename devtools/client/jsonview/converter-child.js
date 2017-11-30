@@ -243,16 +243,16 @@ function initialHTML(doc) {
           type: "text/css",
           href: baseURI + "css/main.css",
         }),
+        element("script", {
+          src: baseURI + "lib/require.js",
+          "data-main": baseURI + "viewer-config.js",
+        })
       ]),
       element("body", {}, [
         element("div", {"id": "content"}, [
           element("div", {"id": "json"})
-        ]),
-        element("script", {
-          src: baseURI + "lib/require.js",
-          "data-main": baseURI + "viewer-config.js",
-        }),
-      ]),
+        ])
+      ])
     ]).outerHTML;
 }
 
