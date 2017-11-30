@@ -40,11 +40,11 @@ protected:
   virtual ~SharedRGBImage();
 
 public:
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
-  virtual uint8_t* GetBuffer() override;
+  uint8_t* GetBuffer() const override;
 
-  gfx::IntSize GetSize() override;
+  gfx::IntSize GetSize() const override;
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 

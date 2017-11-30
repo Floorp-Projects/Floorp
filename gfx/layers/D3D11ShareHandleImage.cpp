@@ -59,7 +59,7 @@ D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11
 }
 
 gfx::IntSize
-D3D11ShareHandleImage::GetSize()
+D3D11ShareHandleImage::GetSize() const
 {
   return mSize;
 }
