@@ -161,7 +161,8 @@ public:
                       wr::WrPipelineId pipeline_id,
                       const wr::LayoutSize& content_size,
                       wr::BuiltDisplayListDescriptor dl_descriptor,
-                      wr::Vec_u8& dl_data,
+                      uint8_t *dl_data,
+                      size_t dl_size,
                       ResourceUpdateQueue& aResources);
 
   void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id);
