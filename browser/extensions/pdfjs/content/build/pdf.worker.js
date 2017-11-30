@@ -20728,8 +20728,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '2.0.161';
-var pdfjsBuild = 'b32d659d';
+var pdfjsVersion = '2.0.173';
+var pdfjsBuild = 'fffd5cb8';
 var pdfjsCoreWorker = __w_pdfjs_require__(19);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -20924,7 +20924,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.161';
+    let workerVersion = '2.0.173';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -28407,38 +28407,59 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   constructor(params) {
     super(params);
     this.data.checkBox = !this.hasFieldFlag(_util.AnnotationFieldFlag.RADIO) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
-    if (this.data.checkBox) {
-      if (!(0, _primitives.isName)(this.data.fieldValue)) {
-        return;
-      }
-      this.data.fieldValue = this.data.fieldValue.name;
-    }
     this.data.radioButton = this.hasFieldFlag(_util.AnnotationFieldFlag.RADIO) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
-    if (this.data.radioButton) {
-      this.data.fieldValue = this.data.buttonValue = null;
-      let fieldParent = params.dict.get('Parent');
-      if ((0, _primitives.isDict)(fieldParent) && fieldParent.has('V')) {
-        let fieldParentValue = fieldParent.get('V');
-        if ((0, _primitives.isName)(fieldParentValue)) {
-          this.data.fieldValue = fieldParentValue.name;
-        }
-      }
-      let appearanceStates = params.dict.get('AP');
-      if (!(0, _primitives.isDict)(appearanceStates)) {
-        return;
-      }
-      let normalAppearanceState = appearanceStates.get('N');
-      if (!(0, _primitives.isDict)(normalAppearanceState)) {
-        return;
-      }
-      let keys = normalAppearanceState.getKeys();
-      for (let i = 0, ii = keys.length; i < ii; i++) {
-        if (keys[i] !== 'Off') {
-          this.data.buttonValue = keys[i];
-          break;
-        }
+    this.data.pushButton = this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
+    if (this.data.checkBox) {
+      this._processCheckBox();
+    } else if (this.data.radioButton) {
+      this._processRadioButton(params);
+    } else if (this.data.pushButton) {
+      this._processPushButton(params);
+    } else {
+      (0, _util.warn)('Invalid field flags for button widget annotation');
+    }
+  }
+  _processCheckBox() {
+    if (!(0, _primitives.isName)(this.data.fieldValue)) {
+      return;
+    }
+    this.data.fieldValue = this.data.fieldValue.name;
+  }
+  _processRadioButton(params) {
+    this.data.fieldValue = this.data.buttonValue = null;
+    let fieldParent = params.dict.get('Parent');
+    if ((0, _primitives.isDict)(fieldParent) && fieldParent.has('V')) {
+      let fieldParentValue = fieldParent.get('V');
+      if ((0, _primitives.isName)(fieldParentValue)) {
+        this.data.fieldValue = fieldParentValue.name;
       }
     }
+    let appearanceStates = params.dict.get('AP');
+    if (!(0, _primitives.isDict)(appearanceStates)) {
+      return;
+    }
+    let normalAppearanceState = appearanceStates.get('N');
+    if (!(0, _primitives.isDict)(normalAppearanceState)) {
+      return;
+    }
+    let keys = normalAppearanceState.getKeys();
+    for (let i = 0, ii = keys.length; i < ii; i++) {
+      if (keys[i] !== 'Off') {
+        this.data.buttonValue = keys[i];
+        break;
+      }
+    }
+  }
+  _processPushButton(params) {
+    if (!params.dict.has('A')) {
+      (0, _util.warn)('Push buttons without action dictionaries are not supported');
+      return;
+    }
+    _obj.Catalog.parseDestDictionary({
+      destDict: params.dict,
+      resultObj: this.data,
+      docBaseUrl: params.pdfManager.docBaseUrl
+    });
   }
 }
 class ChoiceWidgetAnnotation extends WidgetAnnotation {
@@ -29075,7 +29096,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var font = state.font;
       var glyphs = font.charsToGlyphs(chars);
       var isAddToPathSet = !!(state.textRenderingMode & _util.TextRenderingMode.ADD_TO_PATH_FLAG);
-      if (font.data && (isAddToPathSet || this.options.disableFontFace)) {
+      if (font.data && (isAddToPathSet || this.options.disableFontFace || state.fillColorSpace.name === 'Pattern')) {
         var buildPath = fontChar => {
           if (!font.renderer.hasBuiltPath(fontChar)) {
             var path = font.renderer.getPathJs(fontChar);
@@ -30136,86 +30157,94 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         return properties;
       });
     },
-    buildToUnicode: function PartialEvaluator_buildToUnicode(properties) {
+    _buildSimpleFontToUnicode(properties) {
+      (0, _util.assert)(!properties.composite, 'Must be a simple font.');
+      let toUnicode = [],
+          charcode,
+          glyphName;
+      let encoding = properties.defaultEncoding.slice();
+      let baseEncodingName = properties.baseEncodingName;
+      let differences = properties.differences;
+      for (charcode in differences) {
+        glyphName = differences[charcode];
+        if (glyphName === '.notdef') {
+          continue;
+        }
+        encoding[charcode] = glyphName;
+      }
+      let glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
+      for (charcode in encoding) {
+        glyphName = encoding[charcode];
+        if (glyphName === '') {
+          continue;
+        } else if (glyphsUnicodeMap[glyphName] === undefined) {
+          let code = 0;
+          switch (glyphName[0]) {
+            case 'G':
+              if (glyphName.length === 3) {
+                code = parseInt(glyphName.substr(1), 16);
+              }
+              break;
+            case 'g':
+              if (glyphName.length === 5) {
+                code = parseInt(glyphName.substr(1), 16);
+              }
+              break;
+            case 'C':
+            case 'c':
+              if (glyphName.length >= 3) {
+                code = +glyphName.substr(1);
+              }
+              break;
+            default:
+              let unicode = (0, _unicode.getUnicodeForGlyph)(glyphName, glyphsUnicodeMap);
+              if (unicode !== -1) {
+                code = unicode;
+              }
+          }
+          if (code) {
+            if (baseEncodingName && code === +charcode) {
+              let baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
+              if (baseEncoding && (glyphName = baseEncoding[charcode])) {
+                toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
+                continue;
+              }
+            }
+            toUnicode[charcode] = String.fromCharCode(code);
+          }
+          continue;
+        }
+        toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
+      }
+      return new _fonts.ToUnicodeMap(toUnicode);
+    },
+    buildToUnicode(properties) {
       properties.hasIncludedToUnicodeMap = !!properties.toUnicode && properties.toUnicode.length > 0;
       if (properties.hasIncludedToUnicodeMap) {
+        if (!properties.composite && properties.hasEncoding) {
+          properties.fallbackToUnicode = this._buildSimpleFontToUnicode(properties);
+        }
         return Promise.resolve(properties.toUnicode);
       }
-      var toUnicode, charcode, glyphName;
       if (!properties.composite) {
-        toUnicode = [];
-        var encoding = properties.defaultEncoding.slice();
-        var baseEncodingName = properties.baseEncodingName;
-        var differences = properties.differences;
-        for (charcode in differences) {
-          glyphName = differences[charcode];
-          if (glyphName === '.notdef') {
-            continue;
-          }
-          encoding[charcode] = glyphName;
-        }
-        var glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
-        for (charcode in encoding) {
-          glyphName = encoding[charcode];
-          if (glyphName === '') {
-            continue;
-          } else if (glyphsUnicodeMap[glyphName] === undefined) {
-            var code = 0;
-            switch (glyphName[0]) {
-              case 'G':
-                if (glyphName.length === 3) {
-                  code = parseInt(glyphName.substr(1), 16);
-                }
-                break;
-              case 'g':
-                if (glyphName.length === 5) {
-                  code = parseInt(glyphName.substr(1), 16);
-                }
-                break;
-              case 'C':
-              case 'c':
-                if (glyphName.length >= 3) {
-                  code = +glyphName.substr(1);
-                }
-                break;
-              default:
-                var unicode = (0, _unicode.getUnicodeForGlyph)(glyphName, glyphsUnicodeMap);
-                if (unicode !== -1) {
-                  code = unicode;
-                }
-            }
-            if (code) {
-              if (baseEncodingName && code === +charcode) {
-                var baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
-                if (baseEncoding && (glyphName = baseEncoding[charcode])) {
-                  toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
-                  continue;
-                }
-              }
-              toUnicode[charcode] = String.fromCharCode(code);
-            }
-            continue;
-          }
-          toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
-        }
-        return Promise.resolve(new _fonts.ToUnicodeMap(toUnicode));
+        return Promise.resolve(this._buildSimpleFontToUnicode(properties));
       }
       if (properties.composite && (properties.cMap.builtInCMap && !(properties.cMap instanceof _cmap.IdentityCMap) || properties.cidSystemInfo.registry === 'Adobe' && (properties.cidSystemInfo.ordering === 'GB1' || properties.cidSystemInfo.ordering === 'CNS1' || properties.cidSystemInfo.ordering === 'Japan1' || properties.cidSystemInfo.ordering === 'Korea1'))) {
-        var registry = properties.cidSystemInfo.registry;
-        var ordering = properties.cidSystemInfo.ordering;
-        var ucs2CMapName = _primitives.Name.get(registry + '-' + ordering + '-UCS2');
+        let registry = properties.cidSystemInfo.registry;
+        let ordering = properties.cidSystemInfo.ordering;
+        let ucs2CMapName = _primitives.Name.get(registry + '-' + ordering + '-UCS2');
         return _cmap.CMapFactory.create({
           encoding: ucs2CMapName,
           fetchBuiltInCMap: this.fetchBuiltInCMap,
           useCMap: null
         }).then(function (ucs2CMap) {
-          var cMap = properties.cMap;
-          toUnicode = [];
+          let cMap = properties.cMap;
+          let toUnicode = [];
           cMap.forEach(function (charcode, cid) {
             if (cid > 0xffff) {
               throw new _util.FormatError('Max size of CID is 65,535');
             }
-            var ucs2 = ucs2CMap.lookup(cid);
+            let ucs2 = ucs2CMap.lookup(cid);
             if (ucs2) {
               toUnicode[charcode] = String.fromCharCode((ucs2.charCodeAt(0) << 8) + ucs2.charCodeAt(1));
             }
@@ -32124,7 +32153,7 @@ var Glyph = function GlyphClosure() {
   return Glyph;
 }();
 var ToUnicodeMap = function ToUnicodeMapClosure() {
-  function ToUnicodeMap(cmap) {
+  function ToUnicodeMap(cmap = []) {
     this._map = cmap;
   }
   ToUnicodeMap.prototype = {
@@ -32330,6 +32359,7 @@ var Font = function FontClosure() {
     this.bbox = properties.bbox;
     this.defaultEncoding = properties.defaultEncoding;
     this.toUnicode = properties.toUnicode;
+    this.fallbackToUnicode = properties.fallbackToUnicode || new ToUnicodeMap();
     this.toFontChar = [];
     if (properties.type === 'Type3') {
       for (charCode = 0; charCode < 256; charCode++) {
@@ -33993,7 +34023,7 @@ var Font = function FontClosure() {
       width = this.widths[widthCode];
       width = (0, _util.isNum)(width) ? width : this.defaultWidth;
       var vmetric = this.vmetrics && this.vmetrics[widthCode];
-      var unicode = this.toUnicode.get(charcode) || charcode;
+      let unicode = this.toUnicode.get(charcode) || this.fallbackToUnicode.get(charcode) || charcode;
       if (typeof unicode === 'number') {
         unicode = String.fromCharCode(unicode);
       }
