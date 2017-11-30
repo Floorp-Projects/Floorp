@@ -1096,24 +1096,36 @@ IsInsideToolbar(nsIFrame* aFrame)
   return false;
 }
 
+nsNativeThemeCocoa::SearchFieldParams
+nsNativeThemeCocoa::ComputeSearchFieldParams(nsIFrame* aFrame,
+                                             EventStates aEventState)
+{
+  SearchFieldParams params;
+  params.insideToolbar = IsInsideToolbar(aFrame);
+  params.disabled = IsDisabled(aFrame, aEventState);
+  params.focused = IsFocused(aFrame);
+  params.rtl = IsFrameRTL(aFrame);
+  params.verticalAlignFactor = VerticalAlignFactor(aFrame);
+  return params;
+}
+
 void
 nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
-                                    nsIFrame* aFrame, EventStates inState)
+                                    const SearchFieldParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSSearchFieldCell* cell =
-    IsInsideToolbar(aFrame) ? mToolbarSearchFieldCell : mSearchFieldCell;
-  [cell setEnabled:!IsDisabled(aFrame, inState)];
-  [cell setShowsFirstResponder:IsFocused(aFrame)];
+    aParams.insideToolbar ? mToolbarSearchFieldCell : mSearchFieldCell;
+  [cell setEnabled:!aParams.disabled];
+  [cell setShowsFirstResponder:aParams.focused];
 
   // When using the 10.11 SDK, the default string will be shown if we don't
   // set the placeholder string.
   [cell setPlaceholderString:@""];
 
   DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings,
-                       VerticalAlignFactor(aFrame), mCellDrawView,
-                       IsFrameRTL(aFrame));
+                       aParams.verticalAlignFactor, mCellDrawView, aParams.rtl);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2987,7 +2999,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     }
 
     case NS_THEME_SEARCHFIELD:
-      DrawSearchField(cgContext, macRect, aFrame, eventState);
+      DrawSearchField(cgContext, macRect,
+                      ComputeSearchFieldParams(aFrame, eventState));
       break;
 
     case NS_THEME_PROGRESSBAR:
