@@ -130,7 +130,8 @@ android {
             java {
                 srcDir "${topsrcdir}/mobile/android/geckoview/src/thirdparty/java"
 
-                if (!mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
+                if (!mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT ||
+                    !mozconfig.substs.get('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE')) {
                     exclude 'com/google/android/exoplayer2/**'
                     exclude 'org/mozilla/gecko/media/GeckoHlsAudioRenderer.java'
                     exclude 'org/mozilla/gecko/media/GeckoHlsPlayer.java'
