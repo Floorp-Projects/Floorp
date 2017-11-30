@@ -300,6 +300,9 @@ public:
   WrapGlobalObject(JSContext* aCx,
                    JS::MutableHandle<JSObject*> aReflector) override;
 
+  static bool
+  OpenWindowEnabled(JSContext* aCx, JSObject* aObj);
+
   void
   GetScope(nsString& aScope) const
   {

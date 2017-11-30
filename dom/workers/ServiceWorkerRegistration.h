@@ -8,11 +8,11 @@
 #define mozilla_dom_ServiceWorkerRegistration_h
 
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "nsContentUtils.h" // Required for nsContentUtils::PushEnabled
 
 // Support for Notification API extension.
 #include "mozilla/dom/NotificationBinding.h"
@@ -60,6 +60,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   IMPL_EVENT_HANDLER(updatefound)
+
+  static bool
+  Visible(JSContext* aCx, JSObject* aObj);
+
+  static bool
+  NotificationAPIVisible(JSContext* aCx, JSObject* aObj);
+
 
   static already_AddRefed<ServiceWorkerRegistration>
   CreateForMainThread(nsPIDOMWindowInner* aWindow,

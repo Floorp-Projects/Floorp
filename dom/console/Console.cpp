@@ -8,7 +8,6 @@
 #include "mozilla/dom/ConsoleBinding.h"
 
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -1055,7 +1054,7 @@ Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
                                const Sequence<JS::Value>& aData)
 {
   // Make all Console API no-op if DevTools aren't enabled.
-  if (!DOMPreferences::DevToolsEnabled()) {
+  if (!nsContentUtils::DevToolsEnabled(aCx)) {
     return;
   }
 
@@ -1208,7 +1207,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
                         const Sequence<JS::Value>& aData)
 {
   // Make all Console API no-op if DevTools aren't enabled.
-  if (!DOMPreferences::DevToolsEnabled()) {
+  if (!nsContentUtils::DevToolsEnabled(aCx)) {
     return;
   }
   AssertIsOnOwningThread();

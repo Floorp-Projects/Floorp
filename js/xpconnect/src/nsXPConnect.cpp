@@ -23,7 +23,6 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Promise.h"
 
@@ -270,7 +269,7 @@ xpc::ErrorBase::AppendErrorDetailsTo(nsCString& error)
 void
 xpc::ErrorNote::LogToStderr()
 {
-    if (!DOMPreferences::DumpEnabled())
+    if (!nsContentUtils::DOMWindowDumpEnabled())
         return;
 
     nsAutoCString error;
@@ -284,7 +283,7 @@ xpc::ErrorNote::LogToStderr()
 void
 xpc::ErrorReport::LogToStderr()
 {
-    if (!DOMPreferences::DumpEnabled())
+    if (!nsContentUtils::DOMWindowDumpEnabled())
         return;
 
     nsAutoCString error;

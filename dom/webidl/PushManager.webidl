@@ -22,7 +22,7 @@ interface PushManagerImpl {
   Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options);
 };
 
-[Exposed=(Window,Worker), Func="mozilla::dom::DOMPreferences::PushEnabled",
+[Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled",
  ChromeConstructor(DOMString scope)]
 interface PushManager {
   [Throws, UseCounter]
