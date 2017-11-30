@@ -265,7 +265,8 @@ WebRenderAPI::SetDisplayList(gfx::Color aBgColor,
                              wr::WrPipelineId pipeline_id,
                              const LayoutSize& content_size,
                              wr::BuiltDisplayListDescriptor dl_descriptor,
-                             wr::Vec_u8& dl_data,
+                             uint8_t *dl_data,
+                             size_t dl_size,
                              ResourceUpdateQueue& aResources)
 {
   wr_api_set_display_list(mDocHandle,
@@ -275,7 +276,8 @@ WebRenderAPI::SetDisplayList(gfx::Color aBgColor,
                           pipeline_id,
                           content_size,
                           dl_descriptor,
-                          &dl_data.inner,
+                          dl_data,
+                          dl_size,
                           aResources.Raw());
 }
 

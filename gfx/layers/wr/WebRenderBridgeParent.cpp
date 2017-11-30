@@ -114,7 +114,6 @@ gecko_profiler_unregister_thread()
 }
 
 namespace mozilla {
-
 namespace layers {
 
 using namespace mozilla::gfx;
@@ -599,9 +598,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     return IPC_FAIL(this, "Failed to deserialize resource updates");
   }
 
-
-  wr::Vec_u8 dlData(Move(dl));
-
   // If id namespaces do not match, it means the command is obsolete, probably
   // because the tab just moved to a new window.
   // In that case do not send the commands to webrender.
@@ -613,7 +609,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
     mApi->SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
                         mPipelineId, aContentSize,
-                        dlDesc, dlData,
+                        dlDesc, dl.mData, dl.mLen,
                         resources);
 
     ScheduleGenerateFrame();
