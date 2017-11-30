@@ -589,10 +589,10 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
 
   // when called without a host record, this is a domain name check response.
   if (NS_SUCCEEDED(status)) {
-    LOG(("TRR verified %s to be fine!\n", newRRSet->mHostName));
+    LOG(("TRR verified %s to be fine!\n", newRRSet->mHostName.get()));
   } else {
-    LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->mHostName));
-    TRRBlacklist(nsCString(newRRSet->mHostName), pb, false);
+    LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->mHostName.get()));
+    TRRBlacklist(newRRSet->mHostName, pb, false);
   }
   return LOOKUP_OK;
 }
