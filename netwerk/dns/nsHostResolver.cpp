@@ -1236,7 +1236,7 @@ different_rrset(AddrInfo *rrset1, AddrInfo *rrset2)
         return true;
     }
 
-    LOG(("different_rrset %s\n", rrset1->mHostName));
+    LOG(("different_rrset %s\n", rrset1->mHostName.get()));
     nsTArray<NetAddr> orderedSet1;
     nsTArray<NetAddr> orderedSet2;
 
