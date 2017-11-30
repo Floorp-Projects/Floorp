@@ -184,7 +184,9 @@ object TelemetryWrapper {
                             resources.getString(R.string.pref_key_performance_block_webfonts),
                             resources.getString(R.string.pref_key_locale),
                             resources.getString(R.string.pref_key_secure),
-                            resources.getString(R.string.pref_key_default_browser))
+                            resources.getString(R.string.pref_key_default_browser),
+                            resources.getString(R.string.pref_key_autocomplete_preinstalled),
+                            resources.getString(R.string.pref_key_autocomplete_custom))
                     .setSettingsProvider(TelemetrySettingsProvider(context))
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled)
