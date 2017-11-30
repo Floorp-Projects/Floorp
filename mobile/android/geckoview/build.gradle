@@ -50,6 +50,8 @@ android {
         versionName "${mozconfig.substs.MOZ_APP_VERSION}-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
         consumerProguardFiles 'proguard-rules.txt'
 
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
         // TODO: ensure these fields always agree with mobile/android/geckoview/BuildConfig.java.in,
         // either by diffing the processed files or by generating the output from a single source.
         buildConfigField 'String', "GRE_MILESTONE", "\"${mozconfig.substs.GRE_MILESTONE}\""
@@ -152,6 +154,11 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.robolectric:robolectric:3.5.1'
     testImplementation 'org.mockito:mockito-core:1.10.19'
+
+    androidTestImplementation 'com.android.support.test:runner:0.5'
+    androidTestImplementation 'com.android.support.test:rules:0.5'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestImplementation "com.android.support:support-annotations:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
