@@ -54,7 +54,19 @@ public class WebViewDataTest {
             "app_dxmaker_cache",
             "telemetry",
             "databases",
-            "app_webview"
+            "app_webview",
+
+            // Android Studio will inject these files if you:
+            // - Build with Android Studio 3.0+
+            // - Have opened the "Android Profiler" tab at least once since the AS process started
+            // - Run on an API 26+ device (or maybe when explicitly enabling advanced debugging on older devices)
+            //
+            // This should only affect local builds and we don't want to risk breaking the profiler so
+            // we whitelist them. Additional details around when these files are added can be found in:
+            //   https://github.com/mozilla-mobile/focus-android/issues/1842#issuecomment-348038392
+            "libperfa_x86.so",
+            "perfa.jar",
+            "perfd"
     );
 
     // We expect those folders to exist but they should be empty.
