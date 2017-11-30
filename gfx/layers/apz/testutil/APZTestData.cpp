@@ -23,10 +23,21 @@ struct APZTestDataToJSConverter {
     }
   }
 
+  template <typename Src, typename Target>
+  static void ConvertList(const nsTArray<Src>& aFrom,
+                          dom::Sequence<Target>& aOutTo,
+                          void (*aElementConverter)(const Src&, Target&)) {
+    for (auto it = aFrom.begin(); it != aFrom.end(); ++it) {
+      aOutTo.AppendElement(fallible);
+      aElementConverter(*it, aOutTo.LastElement());
+    }
+  }
+
   static void ConvertAPZTestData(const APZTestData& aFrom,
                                  dom::APZTestData& aOutTo) {
     ConvertMap(aFrom.mPaints, aOutTo.mPaints.Construct(), ConvertBucket);
     ConvertMap(aFrom.mRepaintRequests, aOutTo.mRepaintRequests.Construct(), ConvertBucket);
+    ConvertList(aFrom.mHitResults, aOutTo.mHitResults.Construct(), ConvertHitResult);
   }
 
   static void ConvertBucket(const SequenceNumber& aKey,
@@ -52,6 +63,16 @@ struct APZTestDataToJSConverter {
 
   static void ConvertString(const std::string& aFrom, nsString& aOutTo) {
     aOutTo = NS_ConvertUTF8toUTF16(aFrom.c_str(), aFrom.size());
+  }
+
+  static void ConvertHitResult(const APZTestData::HitResult& aResult,
+                               dom::APZHitResult& aOutHitResult) {
+    aOutHitResult.mScreenX.Construct() = aResult.point.x;
+    aOutHitResult.mScreenY.Construct() = aResult.point.y;
+    static_assert(sizeof(aResult.result) == sizeof(uint16_t),
+        "Expected CompositorHitTestInfo to be 16-bit");
+    aOutHitResult.mHitResult.Construct() = static_cast<uint16_t>(aResult.result);
+    aOutHitResult.mScrollId.Construct() = aResult.scrollId;
   }
 };
 
