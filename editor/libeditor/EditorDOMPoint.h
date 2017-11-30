@@ -112,11 +112,11 @@ public:
                 aPointedNode->AsContent() : nullptr)
     , mIsChildInitialized(false)
   {
+    mIsChildInitialized = aPointedNode && mChild;
     NS_WARNING_ASSERTION(IsSet(),
       "The child is nullptr or doesn't have its parent");
     NS_WARNING_ASSERTION(mChild && mChild->GetParentNode() == mParent,
       "Initializing RangeBoundary with invalid value");
-    mIsChildInitialized = aPointedNode && mChild;
   }
 
   EditorDOMPointBase(nsINode* aContainer,
@@ -431,9 +431,15 @@ public:
       return !mOffset.value();
     }
     if (mIsChildInitialized) {
-      NS_WARNING_ASSERTION(!mOffset.isSome() || !mOffset.value(),
-        "If offset was initialized, mOffset should be 0");
-      return mParent->GetFirstChild() == mChild;
+      if (mParent->GetFirstChild() == mChild) {
+        NS_WARNING_ASSERTION(!mOffset.isSome() || !mOffset.value(),
+          "If mOffset was initialized, it should be 0");
+        return true;
+      }
+      NS_WARNING_ASSERTION(!mOffset.isSome() ||
+                           mParent->GetChildAt(mOffset.value()) == mChild,
+        "If mOffset and mChild are mismatched");
+      return false;
     }
     MOZ_ASSERT(mOffset.isSome());
     return !mOffset.value();
@@ -452,10 +458,16 @@ public:
       return false;
     }
     if (mIsChildInitialized) {
+      if (!mChild) {
+        NS_WARNING_ASSERTION(!mOffset.isSome() ||
+                             mOffset.value() == mParent->Length(),
+          "If mOffset was initialized, it should be length of the container");
+        return true;
+      }
       NS_WARNING_ASSERTION(!mOffset.isSome() ||
-                           mOffset.value() == mParent->Length(),
-        "If offset was initialized, mOffset should be length of the container");
-      return !mChild;
+                           mParent->GetChildAt(mOffset.value()) == mChild,
+        "If mOffset and mChild are mismatched");
+      return false;
     }
     MOZ_ASSERT(mOffset.isSome());
     return mOffset.value() == mParent->Length();
