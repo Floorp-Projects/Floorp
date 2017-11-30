@@ -7188,11 +7188,35 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       }
     }
 
-    nsIFrame* pointerCapturingFrame =
-      PointerEventHandler::GetPointerCapturingFrame(aEvent);
+    // Only capture mouse events and pointer events.
+    nsIContent* pointerCapturingContent =
+      PointerEventHandler::GetPointerCapturingContent(aEvent);
 
-    if (pointerCapturingFrame) {
-      frame = pointerCapturingFrame;
+    if (pointerCapturingContent) {
+      nsIFrame* pointerCapturingFrame =
+        pointerCapturingContent->GetPrimaryFrame();
+
+      if (!pointerCapturingFrame) {
+        // Dispatch events to the capturing content even it's frame is
+        // destroyed.
+        PointerEventHandler::DispatchPointerFromMouseOrTouch(
+          this, nullptr, pointerCapturingContent, aEvent, false, aEventStatus,
+          nullptr);
+
+        PresShell* shell = GetShellForEventTarget(nullptr,
+                                                  pointerCapturingContent);
+
+        if (!shell) {
+          // The capturing element could be changed when dispatch pointer
+          // events.
+          return NS_OK;
+        }
+        return shell->HandleEventWithTarget(aEvent, nullptr,
+                                            pointerCapturingContent,
+                                            aEventStatus, true);
+      } else {
+        frame = pointerCapturingFrame;
+      }
     }
 
     WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
@@ -7204,7 +7228,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     // be used instead below. Also keep using the root frame if we're dealing
     // with a window-level mouse exit event since we want to start sending
     // mouse out events at the root EventStateManager.
-    if (!captureRetarget && !isWindowLevelMouseExit && !pointerCapturingFrame) {
+    if (!captureRetarget && !isWindowLevelMouseExit &&
+        !pointerCapturingContent) {
       if (aEvent->mClass == eTouchEventClass) {
         frame = TouchManager::SetupTarget(aEvent->AsTouchEvent(), frame);
       } else {
@@ -7228,7 +7253,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     // retargeted at the capturing content instead. This will be the case when
     // capture retargeting is being used, no frame was found or the frame's
     // content is not a descendant of the capturing content.
-    if (capturingContent && !pointerCapturingFrame &&
+    if (capturingContent && !pointerCapturingContent &&
         (gCaptureInfo.mRetargetToElement || !frame->GetContent() ||
          !nsContentUtils::ContentIsCrossDocDescendantOf(frame->GetContent(),
                                                         capturingContent))) {
