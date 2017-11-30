@@ -125,6 +125,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/PointerEventHandler.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "nsHostObjectProtocolHandler.h"
 
 using namespace mozilla;
@@ -317,6 +318,9 @@ nsLayoutStatics::Initialize()
   mozilla::dom::IPCBlobInputStreamStorage::Initialize();
 
   mozilla::dom::U2FTokenManager::Initialize();
+
+  mozilla::dom::DOMPreferences::Initialize();
+
   return NS_OK;
 }
 
