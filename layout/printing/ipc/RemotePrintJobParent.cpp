@@ -27,6 +27,7 @@ namespace layout {
 
 RemotePrintJobParent::RemotePrintJobParent(nsIPrintSettings* aPrintSettings)
   : mPrintSettings(aPrintSettings)
+  , mIsDoingPrinting(false)
 {
   MOZ_COUNT_CTOR(RemotePrintJobParent);
 }
@@ -92,6 +93,8 @@ RemotePrintJobParent::InitializePrintDevice(const nsString& aDocumentTitle,
     mPrintDeviceContext->RegisterPageDoneCallback([this](nsresult aResult) { PageDone(aResult); });
   }
 
+  mIsDoingPrinting = true;
+
   return NS_OK;
 }
 
@@ -151,6 +154,8 @@ RemotePrintJobParent::PrintPage(PRFileDescStream& aRecording)
 void
 RemotePrintJobParent::PageDone(nsresult aResult)
 {
+  MOZ_ASSERT(mIsDoingPrinting);
+
   if (NS_FAILED(aResult)) {
     Unused << SendAbortPrint(aResult);
   } else {
@@ -181,6 +186,8 @@ RemotePrintJobParent::RecvFinalizePrint()
     mPrintDeviceContext->UnregisterPageDoneCallback();
   }
 
+  mIsDoingPrinting = false;
+
   Unused << Send__delete__(this);
   return IPC_OK();
 }
@@ -192,6 +199,8 @@ RemotePrintJobParent::RecvAbortPrint(const nsresult& aRv)
     Unused << mPrintDeviceContext->AbortDocument();
     mPrintDeviceContext->UnregisterPageDoneCallback();
   }
+
+  mIsDoingPrinting = false;
 
   Unused << Send__delete__(this);
   return IPC_OK();
@@ -265,6 +274,8 @@ RemotePrintJobParent::ActorDestroy(ActorDestroyReason aWhy)
   if (mPrintDeviceContext) {
     mPrintDeviceContext->UnregisterPageDoneCallback();
   }
+
+  mIsDoingPrinting = false;
 }
 
 } // namespace layout

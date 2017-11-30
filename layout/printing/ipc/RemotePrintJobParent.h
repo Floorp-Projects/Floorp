@@ -87,6 +87,7 @@ private:
   UniquePtr<PrintTranslator> mPrintTranslator;
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   PRFileDescStream mCurrentPageStream;
+  bool mIsDoingPrinting;
 };
 
 } // namespace layout
