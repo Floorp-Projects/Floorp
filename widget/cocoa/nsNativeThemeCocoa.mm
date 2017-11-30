@@ -2444,7 +2444,7 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
 }
 
 static bool
-ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* aWindow)
+ToolbarCanBeUnified(const HIRect& inBoxRect, NSWindow* aWindow)
 {
   if (![aWindow isKindOfClass:[ToolbarWindow class]])
     return false;
@@ -2488,20 +2488,18 @@ DrawNativeTitlebarToolbarWithSquareCorners(CGContextRef aContext, const CGRect& 
 
 void
 nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
-                                       NSWindow* aWindow)
+                                       const UnifiedToolbarParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   CGContextSaveGState(cgContext);
   CGContextClipToRect(cgContext, inBoxRect);
 
-  CGFloat unifiedHeight = std::max([(ToolbarWindow*)aWindow unifiedToolbarHeight],
-                                   inBoxRect.size.height);
-  BOOL isMain = [aWindow isMainWindow];
-  CGFloat titlebarHeight = unifiedHeight - inBoxRect.size.height;
+  CGFloat titlebarHeight = aParams.unifiedHeight - inBoxRect.size.height;
   CGRect drawRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y - titlebarHeight,
                                inBoxRect.size.width, inBoxRect.size.height + titlebarHeight);
-  DrawNativeTitlebarToolbarWithSquareCorners(cgContext, drawRect, unifiedHeight, isMain, YES);
+  DrawNativeTitlebarToolbarWithSquareCorners(
+    cgContext, drawRect, aParams.unifiedHeight, aParams.isMain, YES);
 
   CGContextRestoreGState(cgContext);
 
@@ -2919,11 +2917,15 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
     case NS_THEME_TOOLBAR: {
       NSWindow* win = NativeWindowForFrame(aFrame);
-      if (ToolbarCanBeUnified(cgContext, macRect, win)) {
-        DrawUnifiedToolbar(cgContext, macRect, win);
+      bool isMain = [win isMainWindow];
+      if (ToolbarCanBeUnified(macRect, win)) {
+        float unifiedHeight =
+          std::max([(ToolbarWindow*)win unifiedToolbarHeight],
+                   macRect.size.height);
+        DrawUnifiedToolbar(cgContext, macRect,
+                           UnifiedToolbarParams{unifiedHeight, isMain});
         break;
       }
-      BOOL isMain = [win isMainWindow];
       CGRect drawRect = macRect;
 
       // top border
