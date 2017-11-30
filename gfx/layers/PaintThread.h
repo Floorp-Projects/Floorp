@@ -117,6 +117,38 @@ typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintStat
 class CapturedTiledPaintState {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
 public:
+  struct Copy {
+    Copy(RefPtr<gfx::DrawTarget> aSource,
+         RefPtr<gfx::DrawTarget> aDestination,
+         gfx::IntRect aBounds)
+      : mSource(aSource)
+      , mDestination(aDestination)
+      , mBounds(aBounds)
+    {}
+
+    bool CopyBuffer();
+
+    RefPtr<gfx::DrawTarget> mSource;
+    RefPtr<gfx::DrawTarget> mDestination;
+    gfx::IntRect mBounds;
+  };
+
+  struct Clear {
+    Clear(RefPtr<gfx::DrawTarget> aTarget,
+            RefPtr<gfx::DrawTarget> aTargetOnWhite,
+            nsIntRegion aDirtyRegion)
+      : mTarget(aTarget)
+      , mTargetOnWhite(aTargetOnWhite)
+      , mDirtyRegion(aDirtyRegion)
+    {}
+
+    void ClearBuffer();
+
+    RefPtr<gfx::DrawTarget> mTarget;
+    RefPtr<gfx::DrawTarget> mTargetOnWhite;
+    nsIntRegion mDirtyRegion;
+  };
+
   CapturedTiledPaintState(gfx::DrawTarget* aTargetTiled,
                           gfx::DrawTargetCapture* aCapture)
   : mTargetTiled(aTargetTiled)
@@ -125,6 +157,9 @@ public:
 
   RefPtr<gfx::DrawTarget> mTargetTiled;
   RefPtr<gfx::DrawTargetCapture> mCapture;
+  std::vector<Copy> mCopies;
+  std::vector<Clear> mClears;
+
   std::vector<RefPtr<TextureClient>> mClients;
 
 protected:
