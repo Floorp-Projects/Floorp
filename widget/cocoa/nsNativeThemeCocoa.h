@@ -168,6 +168,14 @@ public:
     bool focused = false;
   };
 
+  struct SearchFieldParams {
+    float verticalAlignFactor = 0.5f;
+    bool insideToolbar = false;
+    bool disabled = false;
+    bool focused = false;
+    bool rtl = false;
+  };
+
   struct TreeHeaderCellParams {
     ControlParams controlParams;
     TreeSortDirection sortDirection = eTreeSortDirection_Natural;
@@ -248,6 +256,8 @@ protected:
   SegmentParams ComputeSegmentParams(nsIFrame* aFrame,
                                      mozilla::EventStates aEventState,
                                      SegmentType aSegmentType);
+  SearchFieldParams ComputeSearchFieldParams(nsIFrame* aFrame,
+                                             mozilla::EventStates aEventState);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
 
@@ -267,7 +277,7 @@ protected:
                            const HIRect& inBoxRect,
                            const CheckboxOrRadioParams& aParams);
   void DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
-                       nsIFrame* aFrame, mozilla::EventStates inState);
+                       const SearchFieldParams& aParams);
   void DrawRoundedBezelPushButton(CGContextRef cgContext,
                                   const HIRect& inBoxRect,
                                   ControlParams aControlParams);
