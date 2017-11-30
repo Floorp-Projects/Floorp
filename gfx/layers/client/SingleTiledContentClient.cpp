@@ -151,7 +151,8 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                         content, mode,
                         extraPainted,
                         TilePaintFlags::None,
-                        &backBufferOnWhite);
+                        &backBufferOnWhite,
+                        nullptr);
 
   // Mark the area we need to paint in the back buffer as invalid in the
   // front buffer as they will become out of sync.

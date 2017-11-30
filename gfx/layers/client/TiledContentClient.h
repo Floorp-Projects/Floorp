@@ -24,6 +24,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/LayersMessages.h" // for TileDescriptor
 #include "mozilla/layers/LayersTypes.h" // for TextureDumpMode
+#include "mozilla/layers/PaintThread.h" // for CapturedTiledPaintState
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureClientPool.h"
 #include "ClientLayerManager.h"
@@ -130,7 +131,8 @@ struct TileClient
                                gfxContentType aContent, SurfaceMode aMode,
                                nsIntRegion& aAddPaintedRegion,
                                TilePaintFlags aFlags,
-                               RefPtr<TextureClient>* aTextureClientOnWhite);
+                               RefPtr<TextureClient>* aTextureClientOnWhite,
+                               std::vector<CapturedTiledPaintState::Copy>* aCopies);
 
   void DiscardFrontBuffer();
 
@@ -168,7 +170,8 @@ private:
   // and records the copied region in aAddPaintedRegion.
   void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
                                    nsIntRegion& aAddPaintedRegion,
-                                   TilePaintFlags aFlags);
+                                   TilePaintFlags aFlags,
+                                   std::vector<CapturedTiledPaintState::Copy>* aCopies);
 };
 
 /**
@@ -446,6 +449,8 @@ private:
   // are either executed or replayed on the paint thread.
   std::vector<gfx::Tile> mPaintTiles;
   std::vector<RefPtr<TextureClient>> mPaintTilesTextureClients;
+  std::vector<CapturedTiledPaintState::Copy> mPaintCopies;
+  std::vector<CapturedTiledPaintState::Clear> mPaintClears;
 
   /**
    * While we're adding tiles, this is used to keep track of the position of
