@@ -7,10 +7,6 @@
 
 "use strict";
 
-// Send readyState change notification event to the window. It's useful for tests.
-JSONView.readyState = "loading";
-window.dispatchEvent(new CustomEvent("AppReadyStateChange"));
-
 /**
  * RequireJS configuration for JSON Viewer.
  *
