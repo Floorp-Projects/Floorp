@@ -29,6 +29,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Directory)
 
+  static bool
+  WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj);
+
   static already_AddRefed<Directory>
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aRealPath,

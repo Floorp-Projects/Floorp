@@ -32,7 +32,6 @@
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/DirectoryBinding.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FileBinding.h"
@@ -115,7 +114,7 @@ xpc::NewSandboxConstructor()
 static bool
 SandboxDump(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (!DOMPreferences::DumpEnabled()) {
+    if (!nsContentUtils::DOMWindowDumpEnabled()) {
         return true;
     }
 

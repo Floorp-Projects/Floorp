@@ -5013,14 +5013,9 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 
 // Since the definition of template functions is not in a header file, we
 // need to explicitly specify the instantiations that are required. Currently
-// only the order=Relaxed and SequentiallyConsistent variants are needed.
+// only the order=Relaxed variant is needed.
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*, const char*, bool);
-
-template nsresult
-Preferences::AddAtomicBoolVarCache(Atomic<bool, SequentiallyConsistent>*,
-                                   const char*,
-                                   bool);
 
 template nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,

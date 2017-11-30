@@ -106,6 +106,18 @@ Connection::Update(ConnectionType aType, bool aIsWifi, uint32_t aDHCPGateway,
   }
 }
 
+/* static */ bool
+Connection::IsEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.netinfo.enabled");
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  MOZ_ASSERT(workerPrivate);
+  return workerPrivate->NetworkInformationEnabled();
+}
+
 /* static */ Connection*
 Connection::CreateForWindow(nsPIDOMWindowInner* aWindow)
 {

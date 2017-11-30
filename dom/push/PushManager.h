@@ -32,9 +32,9 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/DOMPreferences.h"
 
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h" // Required for nsContentUtils::PushEnabled
 #include "mozilla/RefPtr.h"
 
 class nsIGlobalObject;
