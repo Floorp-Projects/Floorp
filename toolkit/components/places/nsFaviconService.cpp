@@ -820,10 +820,10 @@ nsFaviconService::OptimizeIconSizes(IconData& aIcon)
 
   // decode image
   nsCOMPtr<imgIContainer> container;
-  nsresult rv = GetImgTools()->DecodeImageBuffer(payload.data.get(),
-                                                 payload.data.Length(),
-                                                 payload.mimeType,
-                                                 getter_AddRefs(container));
+  nsresult rv = GetImgTools()->DecodeImageFromBuffer(payload.data.get(),
+                                                     payload.data.Length(),
+                                                     payload.mimeType,
+                                                     getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // For ICO files, we must evaluate each of the frames we care about.

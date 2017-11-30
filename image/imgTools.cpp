@@ -203,14 +203,14 @@ imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
 
   js::GetArrayBufferLengthAndData(obj, &bufferLength, &isSharedMemory,
                                   &bufferData);
-  return DecodeImageBuffer((char*)bufferData, bufferLength, aMimeType,
-                           aContainer);
+  return DecodeImageFromBuffer((char*)bufferData, bufferLength, aMimeType,
+                               aContainer);
 }
 
 NS_IMETHODIMP
-imgTools::DecodeImageBuffer(const char* aBuffer, uint32_t aSize,
-                            const nsACString& aMimeType,
-                            imgIContainer** aContainer)
+imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
+                                const nsACString& aMimeType,
+                                imgIContainer** aContainer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

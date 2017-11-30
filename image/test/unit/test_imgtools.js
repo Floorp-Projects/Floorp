@@ -148,7 +148,8 @@ var istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 8415);
 
 var buffer = NetUtil.readInputStreamToString(istream, istream.available());
-var container = imgTools.decodeImageBuffer(buffer, buffer.length, inMimeType);
+var container = imgTools.decodeImageFromBuffer(buffer, buffer.length,
+                                               inMimeType);
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -207,7 +208,7 @@ istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 3494);
 
 buffer = NetUtil.readInputStreamToString(istream, istream.available());
-container = imgTools.decodeImageBuffer(buffer, buffer.length, inMimeType);
+container = imgTools.decodeImageFromBuffer(buffer, buffer.length, inMimeType);
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -270,7 +271,7 @@ istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 1406);
 
 buffer = NetUtil.readInputStreamToString(istream, istream.available());
-container = imgTools.decodeImageBuffer(buffer, buffer.length, inMimeType);
+container = imgTools.decodeImageFromBuffer(buffer, buffer.length, inMimeType);
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -329,7 +330,7 @@ istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 1809);
 
 buffer = NetUtil.readInputStreamToString(istream, istream.available());
-container = imgTools.decodeImageBuffer(buffer, buffer.length, inMimeType);
+container = imgTools.decodeImageFromBuffer(buffer, buffer.length, inMimeType);
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -438,7 +439,7 @@ istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 3494);
 
 buffer = NetUtil.readInputStreamToString(istream, istream.available());
-container = imgTools.decodeImageBuffer(buffer, buffer.length, inMimeType);
+container = imgTools.decodeImageFromBuffer(buffer, buffer.length, inMimeType);
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -657,8 +658,8 @@ for(var i=0; i<testData.length; ++i) {
     istream = getFileInputStream(imgFile);
 
     var buffer = NetUtil.readInputStreamToString(istream, istream.available());
-    var container = imgTools.decodeImageBuffer(buffer, buffer.length,
-                                               dict["preImageMimeType"]);
+    var container = imgTools.decodeImageFromBuffer(buffer, buffer.length,
+                                                   dict["preImageMimeType"]);
 
     istream = imgTools.encodeImage(container, dict["refImageMimeType"]);
 
@@ -695,13 +696,13 @@ var errsrc = "none";
 
 try {
   buffer = NetUtil.readInputStreamToString(istream, istream.available());
-  container = imgTools.decodeImageBuffer(buffer, buffer.length, inMimeType);
+  container = imgTools.decodeImageFromBuffer(buffer, buffer.length, inMimeType);
 
   // We expect to hit an error during encoding because the ICO header of the
   // image is fine, but the actual resources are corrupt. Since
-  // decodeImageBuffer() only performs a metadata decode, it doesn't decode far
-  // enough to realize this, but we'll find out when we do a full decode during
-  // encodeImage().
+  // decodeImageFromBuffer() only performs a metadata decode, it doesn't decode
+  // far enough to realize this, but we'll find out when we do a full decode
+  // during encodeImage().
   try {
       istream = imgTools.encodeImage(container, "image/png");
   } catch (e) {
@@ -729,7 +730,7 @@ istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 4286);
 
 buffer = NetUtil.readInputStreamToString(istream, istream.available());
-container = imgTools.decodeImageBuffer(buffer, buffer.length, inMimeType);
+container = imgTools.decodeImageFromBuffer(buffer, buffer.length, inMimeType);
 
 var props = container.QueryInterface(Ci.nsIProperties);
 
