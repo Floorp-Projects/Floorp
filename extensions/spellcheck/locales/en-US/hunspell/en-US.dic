@@ -1,4 +1,4 @@
-52375
+52388
 0/nm
 0th/pt
 1/n1
@@ -6034,6 +6034,7 @@ JD
 JFK/M
 JP
 JPEG/SM
+JSON
 JV
 Jabez/M
 Jacinta/M
@@ -14350,6 +14351,8 @@ amiably
 amicability/M
 amicable
 amicably
+amici
+amicus
 amid
 amide/MS
 amidship/S
@@ -14444,6 +14447,7 @@ analyst/SM
 analytic
 analytical/Y
 analyticalally
+analytics
 analyzable
 analyze/ADSG
 analyzer/SM
@@ -19939,6 +19943,7 @@ collectivize/DSG
 collector/MS
 colleen/SM
 college/SM
+collegial
 collegiality/M
 collegian/MS
 collegiate
@@ -23018,7 +23023,7 @@ discotheque/SM
 discourage/LGDS
 discouragement/SM
 discouraging/Y
-discover/ASDG
+discover/ASDGB
 discovered/U
 discoverer/MS
 discovery/ASM
@@ -24517,6 +24522,7 @@ enclosed/U
 enclosure/SM
 encode/DRSZG
 encoder/M
+encodings
 encomium/MS
 encompass/GDS
 encore/DSMG
@@ -25366,6 +25372,7 @@ expiry/M
 explain/ADGS
 explainable
 explained/U
+explainer/S
 explanation/MS
 explanatory
 expletive/MS
@@ -25420,7 +25427,9 @@ expropriate/GNXDS
 expropriation/M
 expropriator/SM
 expulsion/MS
+expunction
 expunge/GDS
+expungement/S
 expurgate/DSGNX
 expurgated/U
 expurgation/M
@@ -38252,8 +38261,9 @@ parricide/MS
 parring
 parrot/GMDS
 parry/GDSM
-parse/DRSG
+parse/DSG
 parsec/MS
+parser/S
 parsimonious/Y
 parsimony/M
 parsley/M
@@ -41786,6 +41796,7 @@ recurrence/SM
 recurrent/Y
 recurring
 recurse/XNV
+recusal/S
 recuse/DSG
 recyclable/SM
 recycling/M
@@ -42646,6 +42657,7 @@ roadblock/MDSG
 roadhouse/SM
 roadie/MS
 roadkill/M
+roadmap/S
 roadrunner/SM
 roadshow/SM
 roadside/SM
@@ -46627,6 +46639,7 @@ strategic/S
 strategical/Y
 strategics/M
 strategist/SM
+strategize/GD
 strategy/SM
 strati
 stratification/M
