@@ -498,24 +498,18 @@ public:
 
   explicit AudioProxyThread(AudioSessionConduit* aConduit)
     : mConduit(aConduit)
+    , mTaskQueue(new AutoTaskQueue(
+        SharedThreadPool::Get(NS_LITERAL_CSTRING("AudioProxy"), 1)))
   {
     MOZ_ASSERT(mConduit);
     MOZ_COUNT_CTOR(AudioProxyThread);
-
-    // Use only 1 thread; also forces FIFO operation
-    // We could use multiple threads, but that may be dicier with the webrtc.org
-    // code.  If so we'd need to use TaskQueues like the videoframe converter
-    RefPtr<SharedThreadPool> pool =
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("AudioProxy"), 1);
-
-    mThread = pool.get();
   }
 
-  // called on mThread
   void InternalProcessAudioChunk(TrackRate rate,
-                                 AudioChunk& chunk,
+                                 const AudioChunk& chunk,
                                  bool enabled)
   {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
     // Convert to interleaved, 16-bits integer audio, with a maximum of two
     // channels (since the WebRTC.org code below makes the assumption that the
@@ -562,31 +556,30 @@ public:
 
     uint32_t audio_10ms = rate / 100;
 
-    if (!packetizer_ || packetizer_->PacketSize() != audio_10ms ||
-        packetizer_->Channels() != outputChannels) {
+    if (!mPacketizer || mPacketizer->PacketSize() != audio_10ms ||
+        mPacketizer->Channels() != outputChannels) {
       // It's ok to drop the audio still in the packetizer here.
-      packetizer_ =
-        new AudioPacketizer<int16_t, int16_t>(audio_10ms, outputChannels);
+      mPacketizer = MakeUnique<AudioPacketizer<int16_t, int16_t>>(
+        audio_10ms, outputChannels);
     }
 
-    packetizer_->Input(samples, chunk.mDuration);
+    mPacketizer->Input(samples, chunk.mDuration);
 
-    while (packetizer_->PacketsAvailable()) {
-      packetizer_->Output(packet_);
+    while (mPacketizer->PacketsAvailable()) {
+      mPacketizer->Output(mPacket);
       mConduit->SendAudioFrame(
-        packet_, packetizer_->PacketSize(), rate, packetizer_->Channels(), 0);
+        mPacket, mPacketizer->PacketSize(), rate, mPacketizer->Channels(), 0);
     }
   }
 
-  void QueueAudioChunk(TrackRate rate, AudioChunk& chunk, bool enabled)
+  void QueueAudioChunk(TrackRate rate, const AudioChunk& chunk, bool enabled)
   {
-    RUN_ON_THREAD(mThread,
-                  WrapRunnable(RefPtr<AudioProxyThread>(this),
-                               &AudioProxyThread::InternalProcessAudioChunk,
-                               rate,
-                               chunk,
-                               enabled),
-                  NS_DISPATCH_NORMAL);
+    RefPtr<AudioProxyThread> self = this;
+    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+      "AudioProxyThread::QueueAudioChunk", [self, rate, chunk, enabled]() {
+        self->InternalProcessAudioChunk(rate, chunk, enabled);
+      }));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   }
 
 protected:
@@ -601,11 +594,11 @@ protected:
   }
 
   RefPtr<AudioSessionConduit> mConduit;
-  nsCOMPtr<nsIEventTarget> mThread;
-  // Only accessed on mThread
-  nsAutoPtr<AudioPacketizer<int16_t, int16_t>> packetizer_;
+  RefPtr<AutoTaskQueue> mTaskQueue;
+  // Only accessed on mTaskQueue
+  UniquePtr<AudioPacketizer<int16_t, int16_t>> mPacketizer;
   // A buffer to hold a single packet of audio.
-  int16_t packet_[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
+  int16_t mPacket[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
 };
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
