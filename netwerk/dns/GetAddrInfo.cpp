@@ -282,8 +282,8 @@ _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
   }
 
   bool filterNameCollision = !(aFlags & nsHostResolver::RES_ALLOW_NAME_COLLISION);
-  nsAutoPtr<AddrInfo> ai(new AddrInfo(aCanonHost, prai, disableIPv4,
-                                      filterNameCollision, canonName));
+  nsAutoPtr<AddrInfo> ai(new AddrInfo(nsCString(aCanonHost), prai, disableIPv4,
+                                      filterNameCollision, nsCString(canonName)));
   PR_FreeAddrInfo(prai);
   if (ai->mAddresses.isEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
