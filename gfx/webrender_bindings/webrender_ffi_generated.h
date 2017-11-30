@@ -1068,8 +1068,7 @@ void wr_api_set_display_list(DocumentHandle *aDh,
                              WrPipelineId aPipelineId,
                              LayoutSize aContentSize,
                              BuiltDisplayListDescriptor aDlDescriptor,
-                             uint8_t *aDlData,
-                             size_t aDlSize,
+                             WrVecU8 *aDlData,
                              ResourceUpdates *aResources)
 WR_FUNC;
 
