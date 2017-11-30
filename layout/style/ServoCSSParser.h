@@ -32,12 +32,15 @@ public:
    * @param aCurrentColor The color value that currentcolor should compute to.
    * @param aValue The CSS <color> value.
    * @param aResultColor The resulting computed color value.
+   * @param aWasCurrentColor Whether aValue was currentcolor. Can be nullptr
+   *   if the caller doesn't care.
    * @return Whether aValue was successfully parsed and aResultColor was set.
    */
   static bool ComputeColor(ServoStyleSet* aStyleSet,
                            nscolor aCurrentColor,
                            const nsAString& aValue,
-                           nscolor* aResultColor);
+                           nscolor* aResultColor,
+                           bool* aWasCurrentColor = nullptr);
 
   /**
    * Parses a IntersectionObserver's initialization dictionary's rootMargin
