@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.h 243516 2012-11-25 14:25:08Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.h 309607 2016-12-06 10:21:25Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_PEELOFF_H_

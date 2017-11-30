@@ -25,6 +25,7 @@ import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.PageActionLayout;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapps.WebAppManifest;
 import org.mozilla.gecko.widget.SiteLogins;
@@ -480,6 +481,10 @@ public class Tab {
     }
 
     public void updatePageAction() {
+        if (!ShortcutUtils.isPinShortcutSupported()) {
+            return;
+        }
+
         if (mManifestUrl != null) {
             showPwaPageAction();
 
