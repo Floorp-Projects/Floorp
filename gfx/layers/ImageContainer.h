@@ -65,7 +65,8 @@ public:
       , mRef(aRef)
     {
     }
-    NS_IMETHOD Run() override {
+    NS_IMETHOD Run() override
+    {
       mRef->Release();
       return NS_OK;
     }
@@ -93,14 +94,16 @@ public:
 class nsOwningThreadSourceSurfaceRef;
 
 template <>
-class nsAutoRefTraits<nsOwningThreadSourceSurfaceRef> {
+class nsAutoRefTraits<nsOwningThreadSourceSurfaceRef>
+{
 public:
   typedef mozilla::gfx::SourceSurface* RawRef;
 
   /**
    * The XPCOM event that will do the actual release on the creation thread.
    */
-  class SurfaceReleaser : public mozilla::Runnable {
+  class SurfaceReleaser : public mozilla::Runnable
+  {
   public:
     explicit SurfaceReleaser(RawRef aRef)
       : mozilla::Runnable(
@@ -108,7 +111,8 @@ public:
       , mRef(aRef)
     {
     }
-    NS_IMETHOD Run() override {
+    NS_IMETHOD Run() override
+    {
       mRef->Release();
       return NS_OK;
     }
@@ -196,41 +200,49 @@ class MacIOSurfaceImage;
  * When resampling an Image, only pixels within the buffer should be
  * sampled. For example, cairo images should be sampled in EXTEND_PAD mode.
  */
-class Image {
+class Image
+{
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Image)
 
 public:
-  ImageFormat GetFormat() { return mFormat; }
-  void* GetImplData() { return mImplData; }
+  ImageFormat GetFormat() const { return mFormat; }
+  void* GetImplData() const { return mImplData; }
 
-  virtual gfx::IntSize GetSize() = 0;
-  virtual gfx::IntPoint GetOrigin()
+  virtual gfx::IntSize GetSize() const = 0;
+  virtual gfx::IntPoint GetOrigin() const
   {
     return gfx::IntPoint(0, 0);
   }
-  virtual gfx::IntRect GetPictureRect()
+  virtual gfx::IntRect GetPictureRect() const
   {
     return gfx::IntRect(GetOrigin().x, GetOrigin().y, GetSize().width, GetSize().height);
   }
 
   ImageBackendData* GetBackendData(LayersBackend aBackend)
-  { return mBackendData[aBackend]; }
+  {
+    return mBackendData[aBackend];
+  }
   void SetBackendData(LayersBackend aBackend, ImageBackendData* aData)
-  { mBackendData[aBackend] = aData; }
+  {
+    mBackendData[aBackend] = aData;
+  }
 
-  int32_t GetSerial() { return mSerial; }
+  int32_t GetSerial() const { return mSerial; }
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() = 0;
 
-  virtual bool IsValid() { return true; }
+  virtual bool IsValid() const { return true; }
 
-  virtual uint8_t* GetBuffer() { return nullptr; }
+  virtual uint8_t* GetBuffer() const { return nullptr; }
 
   /**
    * For use with the TextureForwarder only (so that the later can
    * synchronize the TextureClient with the TextureHost).
    */
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) { return nullptr; }
+  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder)
+  {
+    return nullptr;
+  }
 
   /* Access to derived classes. */
   virtual GLImage* AsGLImage() { return nullptr; }
@@ -273,7 +285,8 @@ protected:
  * and we must avoid creating a reference loop between an ImageContainer and
  * its active image.
  */
-class BufferRecycleBin final {
+class BufferRecycleBin final
+{
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BufferRecycleBin)
 
   //typedef mozilla::gl::GLContext GLContext;
@@ -335,7 +348,8 @@ protected:
 };
 
 // Used to notify ImageContainer::NotifyComposite()
-class ImageContainerListener final {
+class ImageContainerListener final
+{
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainerListener)
 
 public:
@@ -405,7 +419,8 @@ public:
   // Factory methods for shared image types.
   RefPtr<SharedRGBImage> CreateSharedRGBImage();
 
-  struct NonOwningImage {
+  struct NonOwningImage
+  {
     explicit NonOwningImage(Image* aImage = nullptr,
                             TimeStamp aTimeStamp = TimeStamp(),
                             FrameID aFrameID = 0,
@@ -540,11 +555,9 @@ public:
    * Can be called on any thread. This method takes mRecursiveMutex
    * when accessing thread-shared state.
    */
-  void SetScaleHint(const gfx::IntSize& aScaleHint)
-  { mScaleHint = aScaleHint; }
+  void SetScaleHint(const gfx::IntSize& aScaleHint) { mScaleHint = aScaleHint; }
 
-  const gfx::IntSize& GetScaleHint() const
-  { return mScaleHint; }
+  const gfx::IntSize& GetScaleHint() const { return mScaleHint; }
 
   void SetImageFactory(ImageFactory *aFactory)
   {
@@ -580,7 +593,8 @@ public:
    * Returns the number of images which have been contained in this container
    * and painted at least once.  Can be called from any thread.
    */
-  uint32_t GetPaintCount() {
+  uint32_t GetPaintCount()
+  {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mPaintCount;
   }
@@ -726,7 +740,8 @@ private:
   AutoTArray<ImageContainer::OwningImage,4> mImages;
 };
 
-struct PlanarYCbCrData {
+struct PlanarYCbCrData
+{
   // Luminance buffer
   uint8_t* mYChannel;
   int32_t mYStride;
@@ -747,7 +762,8 @@ struct PlanarYCbCrData {
   YUVColorSpace mYUVColorSpace;
   uint32_t mBitDepth;
 
-  gfx::IntRect GetPictureRect() const {
+  gfx::IntRect GetPictureRect() const
+  {
     return gfx::IntRect(mPicX, mPicY,
                      mPicSize.width,
                      mPicSize.height);
@@ -799,11 +815,13 @@ struct PlanarYCbCrData {
  * |            |<->|
  *                mYSkip
  */
-class PlanarYCbCrImage : public Image {
+class PlanarYCbCrImage : public Image
+{
 public:
   typedef PlanarYCbCrData Data;
 
-  enum {
+  enum
+  {
     MAX_DIMENSION = 16384
   };
 
@@ -825,41 +843,40 @@ public:
    * the original data available through GetData. This is optional,
    * and not all PlanarYCbCrImages will support it.
    */
-  virtual void SetDelayedConversion(bool aDelayed) { }
+  virtual void SetDelayedConversion(bool aDelayed) {}
 
   /**
    * Grab the original YUV data. This is optional.
    */
-  virtual const Data* GetData() { return &mData; }
+  virtual const Data* GetData() const { return &mData; }
 
   /**
    * Return the number of bytes of heap memory used to store this image.
    */
-  virtual uint32_t GetDataSize() { return mBufferSize; }
+  uint32_t GetDataSize() const { return mBufferSize; }
 
-  virtual bool IsValid() { return !!mBufferSize; }
+  bool IsValid() const override { return !!mBufferSize; }
 
-  virtual gfx::IntSize GetSize() { return mSize; }
+  gfx::IntSize GetSize() const override { return mSize; }
 
-  virtual gfx::IntPoint GetOrigin() { return mOrigin; }
+  gfx::IntPoint GetOrigin() const override { return mOrigin; }
 
-  explicit PlanarYCbCrImage();
+  PlanarYCbCrImage();
 
-  virtual SharedPlanarYCbCrImage *AsSharedPlanarYCbCrImage() { return nullptr; }
-
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const = 0;
 
-  PlanarYCbCrImage* AsPlanarYCbCrImage() { return this; }
+  PlanarYCbCrImage* AsPlanarYCbCrImage() override { return this; }
 
 protected:
-  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface();
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
-  gfxImageFormat GetOffscreenFormat();
+  gfxImageFormat GetOffscreenFormat() const;
 
   Data mData;
   gfx::IntPoint mOrigin;
@@ -869,12 +886,13 @@ protected:
   uint32_t mBufferSize;
 };
 
-class RecyclingPlanarYCbCrImage: public PlanarYCbCrImage {
+class RecyclingPlanarYCbCrImage: public PlanarYCbCrImage
+{
 public:
   explicit RecyclingPlanarYCbCrImage(BufferRecycleBin *aRecycleBin) : mRecycleBin(aRecycleBin) {}
-  virtual ~RecyclingPlanarYCbCrImage() override;
-  virtual bool CopyData(const Data& aData) override;
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  virtual ~RecyclingPlanarYCbCrImage();
+  bool CopyData(const Data& aData) override;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 protected:
 
   /**
@@ -895,24 +913,25 @@ protected:
  * PlanarYCbCrData is able to express all the YUV family and so we keep use it
  * in NVImage.
  */
-class NVImage: public Image {
+class NVImage final : public Image
+{
   typedef PlanarYCbCrData Data;
 
 public:
-  explicit NVImage();
-  virtual ~NVImage() override;
+  NVImage();
+  virtual ~NVImage();
 
   // Methods inherited from layers::Image.
-  virtual gfx::IntSize GetSize() override;
-  virtual gfx::IntRect GetPictureRect() override;
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
-  virtual bool IsValid() override;
-  virtual NVImage* AsNVImage() override;
+  gfx::IntSize GetSize() const override;
+  gfx::IntRect GetPictureRect() const override;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  bool IsValid() const override;
+  NVImage* AsNVImage() override;
 
   // Methods mimic layers::PlanarYCbCrImage.
-  virtual bool SetData(const Data& aData);
-  virtual const Data* GetData() const;
-  virtual uint32_t GetBufferSize() const;
+  bool SetData(const Data& aData) ;
+  const Data* GetData() const;
+  uint32_t GetBufferSize() const;
 
 protected:
 
@@ -933,22 +952,23 @@ protected:
  * device output color space. This class is very simple as all backends
  * have to know about how to deal with drawing a cairo image.
  */
-class SourceSurfaceImage final : public Image {
+class SourceSurfaceImage final : public Image
+{
 public:
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
   {
     RefPtr<gfx::SourceSurface> surface(mSourceSurface);
     return surface.forget();
   }
 
   void SetTextureFlags(TextureFlags aTextureFlags) { mTextureFlags = aTextureFlags; }
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
-  virtual gfx::IntSize GetSize() override { return mSize; }
+  gfx::IntSize GetSize() const override { return mSize; }
 
   SourceSurfaceImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface);
   explicit SourceSurfaceImage(gfx::SourceSurface* aSourceSurface);
-  ~SourceSurfaceImage();
+  virtual ~SourceSurfaceImage();
 
 private:
   gfx::IntSize mSize;

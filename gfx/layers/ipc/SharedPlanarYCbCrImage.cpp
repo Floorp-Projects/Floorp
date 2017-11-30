@@ -29,12 +29,13 @@ namespace layers {
 using namespace mozilla::ipc;
 
 SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(ImageClient* aCompositable)
-: mCompositable(aCompositable)
+  : mCompositable(aCompositable)
 {
   MOZ_COUNT_CTOR(SharedPlanarYCbCrImage);
 }
 
-SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
+SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage()
+{
   MOZ_COUNT_DTOR(SharedPlanarYCbCrImage);
 }
 
@@ -55,7 +56,7 @@ SharedPlanarYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
 }
 
 uint8_t*
-SharedPlanarYCbCrImage::GetBuffer()
+SharedPlanarYCbCrImage::GetBuffer() const
 {
   // This should never be used
   MOZ_ASSERT(false);
@@ -134,7 +135,8 @@ SharedPlanarYCbCrImage::AdoptData(const Data& aData)
 }
 
 bool
-SharedPlanarYCbCrImage::IsValid() {
+SharedPlanarYCbCrImage::IsValid() const
+{
   return mTextureClient && mTextureClient->IsValid();
 }
 

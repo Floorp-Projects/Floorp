@@ -42,7 +42,7 @@ public:
 
 class TextureClientPool final : public TextureClientAllocator
 {
-  ~TextureClientPool();
+  virtual ~TextureClientPool();
 
 public:
   TextureClientPool(LayersBackend aBackend,
@@ -95,7 +95,7 @@ public:
    * Report that a client retrieved via GetTextureClient() has become
    * unusable, so that it will no longer be tracked.
    */
-  virtual void ReportClientLost() override;
+  void ReportClientLost() override;
 
   /**
    * Calling this will cause the pool to attempt to relinquish any unused
