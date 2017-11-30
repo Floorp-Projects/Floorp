@@ -514,7 +514,7 @@ private:
   RefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
 protected:
-  void NotifyDataArrivedInternal();
+  void NotifyReaderDataArrived();
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget);
 
