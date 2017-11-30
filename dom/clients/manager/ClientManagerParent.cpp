@@ -117,6 +117,13 @@ ClientManagerParent::ClientManagerParent()
 
 ClientManagerParent::~ClientManagerParent()
 {
+  mService->RemoveManager(this);
+}
+
+void
+ClientManagerParent::Init()
+{
+  mService->AddManager(this);
 }
 
 } // namespace dom
