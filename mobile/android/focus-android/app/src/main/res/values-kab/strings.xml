@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Sefsex</string>
   <string name="action_ok">IH</string>
+  <string name="action_save">Sekles</string>
   <string name="urlbar_hint">Nadi neγ sekcem tansa</string>
   <string name="teaser">Tunigin tusligt tawurmant.\nSnirem. Kkes. Sniles.</string>
   <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ad k-d-yefk afus ad teqqime&#7693; d aqe&#7771;&#7771;u.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sew&#7717;el imesfu&#611;al (ne&#947; snifel i&#947;ewwa&#7771;en akken ad tsirge&#7693; imesfu&#947;al)</li>"\n    "<li>Sfe&#7693; inagan n tuqna akked amazray n tunigin d unadi</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s yesnulfa-t-id Mozilla. Tu&#947;da&#7789;-nne&#947; ad n&#7717;areb &#947;ef internet yeldin d tezmert-is.<br/>\n<a href="%2$s">Issin ugar</a></p>]]></string>
   <string name="preference_category_search">Nadi</string>
   <string name="preference_search_engine_default">Amezwer</string>
+  <string name="preference_state_on">Yermed</string>
+  <string name="preference_state_off">Yensa</string>
+  <string name="preference_subitem_autocomplete">Taččart tawurmant URL</string>
+  <string name="preference_switch_autocomplete">Taččart tawurmant</string>
+  <string name="preference_category_autocomplete_preinstalled">Tabdart URL tamezwart</string>
+  <string name="preference_autocomplete_preinstalled_summary">%1$s ur yizmir ara ad yesεu taččart tawurmant i ugar n 450 n URLs deg ufeggag n tansiwin.</string>
+  <string name="preference_category_autocomplete_custom">URL agan</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs iganen</string>
+  <string name="preference_autocomplete_action_add">+ Rnu URL aganan</string>
+  <string name="preference_autocomplete_title_add">Rnu URL aganan</string>
+  <string name="preference_autocomplete_title_remove">Kkes URLs iganen</string>
+  <string name="preference_autocomplete_learn_more">Issin ugar</string>
+  <string name="preference_autocomplete_custom_summary">Rnu u sefrek taččart tawurmant n URLs.</string>
+  <string name="preference_autocomplete_add_title">URL ad ternuḍ</string>
+  <string name="preference_autocomplete_add_hint">Senṭeḍ neγ sekcem URL</string>
+  <string name="preference_autocomplete_add_example">Amedya: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">URL aganan amaynut ittwarna.</string>
+  <string name="preference_autocomplete_menu_remove">Kkes</string>
+  <string name="preference_autocomplete_action_remove_content_description">Kkes</string>
+  <string name="preference_autocomplete_add_error">Senned snat γef URL i tesriḍ.</string>
   <string name="preference_language">Tutlayt</string>
   <string name="preference_language_systemdefault">Amezwer n unagraw</string>
   <string name="preference_dialog_title_search_engine">Anadi amezwer</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Amedya: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Rnu amsedday n unadi</string>
   <string name="search_add_confirmation">Amesday n unadi amaynut ittwarna.</string>
-  <string name="search_add_error">Senqed aḍris n unadi sakin εreḍ tikelt nniḍen</string>
+  <string name="search_add_error_empty_name">Sekcem isem n umsedday n unadi</string>
+  <string name="search_add_error_empty_search">Sekcem aḍris n unadi</string>
+  <string name="search_add_error_format">Senqed akken aḍris n unadi yemsaḍa akked tawsit n umedya</string>
   <string name="content_description_clear_input">Sfeḍ anekcam</string>
   <string name="content_description_dismiss_input">Kkes</string>
   <string name="content_description_erase">Kkes amazray n tunigin</string>

@@ -73,7 +73,6 @@
   <string name="search_add_manually_example">Esimerkiksi: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Lisää hakukone</string>
   <string name="search_add_confirmation">Lisättiin uusi hakukone.</string>
-  <string name="search_add_error">Tarkista hakulause ja yritä uudestaan</string>
   <string name="content_description_clear_input">Tyhjennä teksti</string>
   <string name="content_description_dismiss_input">Hylkää</string>
   <string name="content_description_erase">Tyhjennä selaushistoria</string>

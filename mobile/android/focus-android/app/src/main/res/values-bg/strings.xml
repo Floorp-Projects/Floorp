@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Пример: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Добавяне на търсачка</string>
   <string name="search_add_confirmation">Добавена е нова търсачка.</string>
-  <string name="search_add_error">Проверете низа за търсене и опитайте отново</string>
   <string name="content_description_clear_input">Изчистване на полето</string>
   <string name="content_description_dismiss_input">Затваряне</string>
   <string name="content_description_erase">Изчистване историята на разглеждането</string>

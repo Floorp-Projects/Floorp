@@ -98,7 +98,6 @@
   <string name="search_add_manually_example">Exemplu: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Adaugă motor de căutare</string>
   <string name="search_add_confirmation">Motor nou de căutare adăugat.</string>
-  <string name="search_add_error">Verifică textul de căutare şi încearcă din nou</string>
   <string name="search_add_error_empty_name">Introdu numele motorului de căutare</string>
   <string name="search_add_error_empty_search">Introdu șirul de căutare</string>
   <string name="search_add_error_format">Verifică dacă șirul de căutare se potrivește cu formatul exemplu</string>

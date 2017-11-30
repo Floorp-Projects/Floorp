@@ -98,7 +98,6 @@
   <string name="search_add_manually_example">例如：example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">添加搜索引擎</string>
   <string name="search_add_confirmation">已添加新的搜索引擎。</string>
-  <string name="search_add_error">请检查搜索字符串并重试</string>
   <string name="search_add_error_empty_name">输入搜索引擎名称</string>
   <string name="search_add_error_empty_search">输入搜索字符串</string>
   <string name="search_add_error_format">请检查搜索字符串与示例格式是否匹配</string>

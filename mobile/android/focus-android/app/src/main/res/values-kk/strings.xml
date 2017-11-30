@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Мысалы: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Іздеу жүйесін қосу</string>
   <string name="search_add_confirmation">Жаңа іздеу жүйесі қосылды.</string>
-  <string name="search_add_error">Іздеу жолына шертіп, қайталап көріңіз</string>
   <string name="content_description_clear_input">Енгізуді тазарту</string>
   <string name="content_description_dismiss_input">Тайдыру</string>
   <string name="content_description_erase">Шолу тарихын өшіру</string>

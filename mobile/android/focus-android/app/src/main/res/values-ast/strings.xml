@@ -97,7 +97,6 @@
   <string name="search_add_manually_example">Exemplu: exemplu.com/gueta/?q=%s</string>
   <string name="accessibility_announcement_search">Amestar motor de gueta</string>
   <string name="search_add_confirmation">Amestóse\'l motor de gueta nuevu.</string>
-  <string name="search_add_error">Comprueba la cadena de gueta y volvi tentalo</string>
   <string name="search_add_error_empty_name">Introduz el nome del motor de gueta</string>
   <string name="search_add_error_empty_search">Introduz la cadena de gueta</string>
   <string name="search_add_error_format">Comprueba que la cadena de gueta concase col formatu del exemplu</string>

@@ -68,7 +68,6 @@
   <string name="search_add_manually_example">مثلاٰ؛ example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">تلاش انجن اضافہ کریں</string>
   <string name="search_add_confirmation">نیا تلاش انجن شامل کر دیا گیا۔</string>
-  <string name="search_add_error">اسٹرنگ کی پڑتال کریں اور دوبارہ کوشش کریں</string>
   <string name="content_description_clear_input">ان پٹ صاف کریں</string>
   <string name="content_description_dismiss_input">برخاست کریں</string>
   <string name="content_description_erase">برائوزنگ سابقات مٹائیں</string>

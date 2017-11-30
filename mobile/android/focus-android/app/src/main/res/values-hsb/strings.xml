@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Přetorhnyć</string>
   <string name="action_ok">W porjadku</string>
+  <string name="action_save">Składować</string>
   <string name="urlbar_hint">Adresu pytać abo zapodać</string>
   <string name="teaser">Awtomatiski priwatny modus.\nPřehladować. Zhašeć. Wospjetować.</string>
   <string name="feedback_erase">Waša přehladowanska historija je so zhašała.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s da was kontrolu wobchowa&#263;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;iwaj&#263;e j&#243;n jako priwatny wobhladowak:\n  "<ul>"\n    "<li>Pytaj&#263;e a p&#345;ehladuj&#263;e direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blokuj&#263;e p&#345;es&#263;&#283;howaki (abo aktualizuj&#263;e nastajenja, zo by&#353;&#263;e p&#345;es&#263;&#283;howaki dowoli&#322;)</li>"\n    "<li>Zha&#353;ej&#263;e placki a pytansku a p&#345;ehladowansku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s so wot Mozilla wuwiwa. Na&#353;a misija je sp&#283;chowanje stroweho, wotewrjeneho interneta.<br/>\n<a href="%2$s">Dal&#353;e informacije</a></p>]]></string>
   <string name="preference_category_search">Pytać</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_state_on">Zapinjeny</string>
+  <string name="preference_state_off">Wupinjeny</string>
+  <string name="preference_subitem_autocomplete">Awtomatiske wudospołnjenje URL</string>
+  <string name="preference_switch_autocomplete">Wudospołnjenje</string>
+  <string name="preference_category_autocomplete_preinstalled">Standardna lisćina adresow</string>
+  <string name="preference_autocomplete_preinstalled_summary">Zmóžnić, zo by %1$s wjace hač 450 woblubowanych adresow w adresowym polu wudospołnił.</string>
+  <string name="preference_category_autocomplete_custom">Swójska adresa</string>
+  <string name="preference_autocomplete_subitem_customlist">Swójske adresy</string>
+  <string name="preference_autocomplete_action_add">+ Swójsku adresu přidać</string>
+  <string name="preference_autocomplete_title_add">Swójsku adresu přidać</string>
+  <string name="preference_autocomplete_title_remove">Swójske adresy wotstronić</string>
+  <string name="preference_autocomplete_learn_more">Dalše informacije</string>
+  <string name="preference_autocomplete_custom_summary">Swójske adresy za wudospołnjenje přidać a rjadowác.</string>
+  <string name="preference_autocomplete_add_title">Adresa, kotraž ma so přidać</string>
+  <string name="preference_autocomplete_add_hint">Adresu zasadźić abo zapodać</string>
+  <string name="preference_autocomplete_add_example">Přikład: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nowa swójska adresa přidata.</string>
+  <string name="preference_autocomplete_menu_remove">Wotstronić</string>
+  <string name="preference_autocomplete_action_remove_content_description">Wotstronić</string>
+  <string name="preference_autocomplete_add_error">Přepruwujće zapodatu adresu.</string>
   <string name="preference_language">Rěč</string>
   <string name="preference_language_systemdefault">Systemowy standard</string>
   <string name="preference_dialog_title_search_engine">Systemowe pytanje</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Přikład: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Pytawu přidać</string>
   <string name="search_add_confirmation">Nowa pytawa je so přidała.</string>
-  <string name="search_add_error">Přepruwujće pytanski wuraz a spytajće hišće raz</string>
+  <string name="search_add_error_empty_name">Mjeno pytawy zapodać</string>
+  <string name="search_add_error_empty_search">Pytanski wuraz zapodać</string>
+  <string name="search_add_error_format">Přepruwujće, hač pytanski wuraz přikładowemu formatej wotpowěduje</string>
   <string name="content_description_clear_input">Zapodaće wuprózdnić</string>
   <string name="content_description_dismiss_input">Zaćisnyć</string>
   <string name="content_description_erase">Přehladowansku historiju zhašeć</string>

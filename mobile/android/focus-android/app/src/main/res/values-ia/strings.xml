@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Exemplo: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Adder un motor de recerca</string>
   <string name="search_add_confirmation">Nove motor de recerca addite.</string>
-  <string name="search_add_error">Verifica le catena de recerca e retenta</string>
   <string name="content_description_clear_input">Vacuar le texto inserite</string>
   <string name="content_description_dismiss_input">Dimitter</string>
   <string name="content_description_erase">Elimina le chronologia de navigation</string>

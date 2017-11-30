@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Nuligi</string>
   <string name="action_ok">Akcepti</string>
+  <string name="action_save">Konservi</string>
   <string name="urlbar_hint">Serĉu ion aŭ tajpu adreson</string>
   <string name="teaser">Aŭtomata privata retumo.\nRetumu. Viŝu. Ripetu.</string>
   <string name="feedback_erase">Via retuma historio estis viŝita.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s igas vin reganto.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uzu &#285;in kiel privatan retumilon:\n  "<ul>"\n    "<li>Ser&#265;i kaj retumi rekte en la programo</li>"\n    "<li>Bloki spurilojn (a&#365; &#349;an&#285;i agordojn por permesi spurilojn)</li>"\n    "<li>Forigi kuketojn kaj anka&#365; retuman kaj ser&#265;an historion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s estas farita de Mozilla. Nia misio estas stimuli sanan kaj malfermitan interreton.<br/>\n<a href="%2$s">Pli da informo</a></p>]]></string>
   <string name="preference_category_search">Serĉi</string>
   <string name="preference_search_engine_default">Norma</string>
+  <string name="preference_state_on">Ŝaltita</string>
+  <string name="preference_state_off">Malŝaltita</string>
+  <string name="preference_subitem_autocomplete">Aŭtomata kompletigo de adresoj</string>
+  <string name="preference_switch_autocomplete">Aŭtomata kompletigo</string>
+  <string name="preference_category_autocomplete_preinstalled">Norma listo de adresoj</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktivigu por igi %1$s aŭtomate kompletigi pli ol 450 popularajn adresojn en la adresa strio.</string>
+  <string name="preference_category_autocomplete_custom">Personecigita adreso</string>
+  <string name="preference_autocomplete_subitem_customlist">Personecigitaj adresoj</string>
+  <string name="preference_autocomplete_action_add">+ Aldoni personecigitan adreson</string>
+  <string name="preference_autocomplete_title_add">Aldoni personecigitan adreson</string>
+  <string name="preference_autocomplete_title_remove">Forigi personecigitajn adresojn</string>
+  <string name="preference_autocomplete_learn_more">Pli da informo</string>
+  <string name="preference_autocomplete_custom_summary">Aldoni kaj administri aŭtomatan kompletigon de personecigitaj adresoj.</string>
+  <string name="preference_autocomplete_add_title">Aldonota adreso</string>
+  <string name="preference_autocomplete_add_hint">Alglui aŭ tajpi adreson</string>
+  <string name="preference_autocomplete_add_example">Ekzemplo: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nova personecigita adreso aldonita.</string>
+  <string name="preference_autocomplete_menu_remove">Forigi</string>
+  <string name="preference_autocomplete_action_remove_content_description">Forigi</string>
+  <string name="preference_autocomplete_add_error">Kontrolu denove la tajpitan adreson.</string>
   <string name="preference_language">Lingvo</string>
   <string name="preference_language_systemdefault">Sistema normo</string>
   <string name="preference_dialog_title_search_engine">Norma serĉilo</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Ekzemplo: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Aldoni serĉilon</string>
   <string name="search_add_confirmation">Nova serĉilo aldonita.</string>
-  <string name="search_add_error">Kontrolu la tekston por serĉi kaj klopodu denove</string>
+  <string name="search_add_error_empty_name">Tajpu nomon de serĉilo</string>
+  <string name="search_add_error_empty_search">Tajpu serĉan tekston</string>
+  <string name="search_add_error_format">Kontrolu ĉu la serĉa teksto kongruas kun la formo de la ekzemplo</string>
   <string name="content_description_clear_input">Viŝi kampon</string>
   <string name="content_description_dismiss_input">Ignori</string>
   <string name="content_description_erase">Viŝi retuman historion</string>

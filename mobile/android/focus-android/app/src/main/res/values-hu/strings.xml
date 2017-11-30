@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Mégse</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Mentés</string>
   <string name="urlbar_hint">Keressen, vagy adjon meg címet</string>
   <string name="teaser">Automatikus privát böngészés.\nBöngészés. Törlés. Ismétlés.</string>
   <string name="feedback_erase">A böngészési előzmények törölve.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">A %1$s az &#214;n kez&#233;be adja az ir&#225;ny&#237;t&#225;st.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Haszn&#225;lja priv&#225;t b&#246;ng&#233;sz&#337;k&#233;nt:\n  "<ul>"\n    "<li>Keressen &#233;s b&#246;ng&#233;sszen k&#246;zvetlen&#252;l az appban</li>"\n    "<li>Blokkolja a k&#246;vet&#337;ket (vagy friss&#237;tse a be&#225;ll&#237;t&#225;sokat az enged&#233;lyez&#233;shez)</li>"\n    "<li>T&#246;r&#246;lje a s&#252;tiket &#233;s a b&#246;ng&#233;sz&#233;si el&#337;zm&#233;nyeket is</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">A %1$s a Mozilla term&#233;ke. K&#252;ldet&#233;s&#252;nk az eg&#233;szs&#233;ges, ny&#237;lt Internet t&#225;mogat&#225;sa.<br/>\n<a href="%2$s">Tudjon meg t&#246;bbet</a></p>]]></string>
   <string name="preference_category_search">Keresés</string>
   <string name="preference_search_engine_default">Alapértelmezett</string>
+  <string name="preference_state_on">Be</string>
+  <string name="preference_state_off">Ki</string>
+  <string name="preference_subitem_autocomplete">Automatikus URL kiegészítés</string>
+  <string name="preference_switch_autocomplete">Automatikus kiegészítés</string>
+  <string name="preference_category_autocomplete_preinstalled">Alapértelmezett URL lista</string>
+  <string name="preference_autocomplete_preinstalled_summary">Engedélyezés, hogy a %1$s 450 népszerű URL-t automatikusan kiegészítsen a címsávban.</string>
+  <string name="preference_category_autocomplete_custom">Egyéni URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Egyéni URL-ek</string>
+  <string name="preference_autocomplete_action_add">+ Egyéni URL hozzáadása</string>
+  <string name="preference_autocomplete_title_add">Egyéni URL hozzáadása</string>
+  <string name="preference_autocomplete_title_remove">Egyéni URL-ek eltávolítása</string>
+  <string name="preference_autocomplete_learn_more">További tudnivalók</string>
+  <string name="preference_autocomplete_custom_summary">Automatikusan kiegészített URL-ek hozzáadása és kezelése.</string>
+  <string name="preference_autocomplete_add_title">Hozzáadandó URL-ek</string>
+  <string name="preference_autocomplete_add_hint">Illessze be, vagy adja meg az URL-t</string>
+  <string name="preference_autocomplete_add_example">Példa: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Új egyéni URL hozzáadva.</string>
+  <string name="preference_autocomplete_menu_remove">Eltávolítás</string>
+  <string name="preference_autocomplete_action_remove_content_description">Eltávolítás</string>
+  <string name="preference_autocomplete_add_error">Ellenőrizze a megadott URL-t.</string>
   <string name="preference_language">Nyelv</string>
   <string name="preference_language_systemdefault">Rendszer alapbeállítása</string>
   <string name="preference_dialog_title_search_engine">Alapértelmezett kereső</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Példa: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Keresőszolgáltatás hozzáadása</string>
   <string name="search_add_confirmation">Új keresőszolgáltatás hozzáadása.</string>
-  <string name="search_add_error">Ellenőrizze a keresési karakterláncot, és próbálja újra</string>
+  <string name="search_add_error_empty_name">Adja meg a keresőszolgáltatás nevét</string>
+  <string name="search_add_error_empty_search">Adja meg a keresési szöveget</string>
+  <string name="search_add_error_format">Ellenőrizze, hogy a keresési szöveg egyezik-e a példa formátumával</string>
   <string name="content_description_clear_input">Bemenet törlése</string>
   <string name="content_description_dismiss_input">Elutasítás</string>
   <string name="content_description_erase">Böngészési előzmények törlése</string>

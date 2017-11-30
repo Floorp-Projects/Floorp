@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Abbrechen</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Speichern</string>
   <string name="urlbar_hint">Suchen oder Adresse eingeben</string>
   <string name="teaser">Automatischer Privater Modus.\nSurfen. Löschen. Wiederholen.</string>
   <string name="feedback_erase">Die Surf-Chronik wurde gelöscht.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie ihn als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
   <string name="preference_category_search">Suche</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_state_on">An</string>
+  <string name="preference_state_off">Aus</string>
+  <string name="preference_subitem_autocomplete">Adressen-Autovervollständigung</string>
+  <string name="preference_switch_autocomplete">Autovervollständigung</string>
+  <string name="preference_category_autocomplete_preinstalled">Standard-Adressliste</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktivieren, damit %1$s über 450 beliebte Adressen in der Adressleiste automatisch vervollständigt.</string>
+  <string name="preference_category_autocomplete_custom">Benutzerdefinierte Adresse</string>
+  <string name="preference_autocomplete_subitem_customlist">Benutzerdefinierte Adressen</string>
+  <string name="preference_autocomplete_action_add">+ Benutzerdefinierte Adresse hinzufügen</string>
+  <string name="preference_autocomplete_title_add">Benutzerdefinierte Adresse hinzufügen</string>
+  <string name="preference_autocomplete_title_remove">Benutzerdefinierte Adressen entfernen</string>
+  <string name="preference_autocomplete_learn_more">Weitere Informationen</string>
+  <string name="preference_autocomplete_custom_summary">Benutzerdefinierte Adressen für Autovervollständigung hinzufügen und verwalten.</string>
+  <string name="preference_autocomplete_add_title">Hinzuzufügende Adresse</string>
+  <string name="preference_autocomplete_add_hint">Adresse eingeben oder einfügen</string>
+  <string name="preference_autocomplete_add_example">Beispiel: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">–</string>
+  <string name="preference_autocomplete_add_confirmation">Neue benutzerdefinierte Adresse hinzugefügt.</string>
+  <string name="preference_autocomplete_menu_remove">Entfernen</string>
+  <string name="preference_autocomplete_action_remove_content_description">Entfernen</string>
+  <string name="preference_autocomplete_add_error">Überprüfen Sie die eingegebene Adresse.</string>
   <string name="preference_language">Sprache</string>
   <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standardsuchmaschine</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Beispiel: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Suchmaschine hinzufügen</string>
   <string name="search_add_confirmation">Neue Suchmaschine hinzugefügt.</string>
-  <string name="search_add_error">Überprüfen Sie den Such-String und versuchen Sie es erneut</string>
+  <string name="search_add_error_empty_name">Name der Suchmaschine eingeben</string>
+  <string name="search_add_error_empty_search">Such-String eingeben</string>
+  <string name="search_add_error_format">Überprüfen Sie, ob der Such-String dem Beispielformat entspricht</string>
   <string name="content_description_clear_input">Eingabefeld leeren</string>
   <string name="content_description_dismiss_input">Schließen</string>
   <string name="content_description_erase">Browser-Chronik löschen</string>

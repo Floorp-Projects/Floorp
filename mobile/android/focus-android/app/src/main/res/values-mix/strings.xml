@@ -74,7 +74,6 @@
   <string name="search_add_manually_example">Sa\'an chau\'ña: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Chikaa tsi ña ndukuku</string>
   <string name="search_add_confirmation">Ntu tsa\'a tsi ña ndukuku.</string>
-  <string name="search_add_error">Revisa la cadena de búsqueda y vuelve a intentarlo</string>
   <string name="content_description_clear_input">Stoo nu nikivu</string>
   <string name="content_description_dismiss_input">Nkucha\'a su\'u</string>
   <string name="content_description_erase">Stòo ña ntukuku sata</string>

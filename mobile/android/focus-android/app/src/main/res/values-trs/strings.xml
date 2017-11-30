@@ -83,7 +83,6 @@
   <string name="search_add_manually_example">Da\' gi\'ìat: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Nutò\' sa nana\'uì\'</string>
   <string name="search_add_confirmation">Ngà nata\' a\'ngo sa nakà da\' nana\'uì\'.</string>
-  <string name="search_add_error">Ni\'ìaj si hua hue\'è sa gachrut nī garahuè ñut</string>
   <string name="search_add_error_empty_name">Si yugui sa nana\'ui\'</string>
   <string name="search_add_error_empty_search">Duguatûj sa nanikò\' dugui\'i</string>
   <string name="content_description_clear_input">Nadure\' sa duguatujt</string>

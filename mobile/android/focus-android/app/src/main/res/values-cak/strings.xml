@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Tz\'etb\'äl: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Titz\'aqatisäx kanob\'äl</string>
   <string name="search_add_confirmation">Xtz\'aqatisäx k\'ak\'a\' kanob\'äl.</string>
-  <string name="search_add_error">Tanik\'oj ri rucholajem kanoxïk, k\'a ri\' tatojtob\'ej chik</string>
   <string name="content_description_clear_input">Tajin yeyuj</string>
   <string name="content_description_dismiss_input">Tichup ruwäch</string>
   <string name="content_description_erase">Tiyuj runatab\'al okem pa k\'amaya\'l</string>

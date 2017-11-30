@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">উদাহরন: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">সার্চ ইঞ্জিন যোগ করুন</string>
   <string name="search_add_confirmation">নতুন সার্চ ইঞ্জিন যোগ করা হয়েছে।</string>
-  <string name="search_add_error">সার্চ স্ট্রিং পরীক্ষা করুন এবং পুনরায় চেষ্টা করুন</string>
   <string name="content_description_clear_input">ইনপুট করা তথ্য মুছে ফেলুন</string>
   <string name="content_description_dismiss_input">খারিজ করুন</string>
   <string name="content_description_erase">ব্রাউসারের পূর্ববর্তী তথ্য মুছে ফেলুন</string>

@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">예: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">검색 엔진 추가</string>
   <string name="search_add_confirmation">새 검색 엔진이 추가되었습니다.</string>
-  <string name="search_add_error">검색 문구를 확인하고 다시 시도해 주세요</string>
   <string name="content_description_clear_input">입력 값 초기화</string>
   <string name="content_description_dismiss_input">취소</string>
   <string name="content_description_erase">탐색 기록 지우기</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Cancelar</string>
   <string name="action_ok">Aceptar</string>
+  <string name="action_save">Guardar</string>
   <string name="urlbar_hint">Buscar o ingresar dirección</string>
   <string name="teaser">Navegación privada automática.\nNavegar. Borrar. Repetir.</string>
   <string name="feedback_erase">El historial de navegación fue borrado.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usalo como un navegador privado:\n  "<ul>"\n    "<li>Buscar y navegar en la aplicaci&#243;n</li>"\n    "<li>Bloquear rastreadores (o actualizar opciones para permitir rastreadores)</li>"\n    "<li>Borrar para eliminar cookies e historial de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producido por Mozilla. Nuestra misi&#243;n es promover una internet abierta y saludable.<br/>\n<a href="%2$s">Conocer m&#225;s</a></p>]]></string>
   <string name="preference_category_search">Buscar</string>
   <string name="preference_search_engine_default">Predeterminado</string>
+  <string name="preference_state_on">Activado</string>
+  <string name="preference_state_off">Desactivado</string>
+  <string name="preference_subitem_autocomplete">Autocompletar URL</string>
+  <string name="preference_switch_autocomplete">Autocompletar</string>
+  <string name="preference_category_autocomplete_preinstalled">Lista de URL predeterminada</string>
+  <string name="preference_autocomplete_preinstalled_summary">Activelo para que %1$s autocomplete la barra de direcciones con más de 450 URLs populares.</string>
+  <string name="preference_category_autocomplete_custom">URL personalizada</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
+  <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
+  <string name="preference_autocomplete_title_add">Agregar URL personalizada</string>
+  <string name="preference_autocomplete_title_remove">Borrar URL personalizada</string>
+  <string name="preference_autocomplete_learn_more">Conocer más</string>
+  <string name="preference_autocomplete_custom_summary">Agregar y administrar URLs personalizadas.</string>
+  <string name="preference_autocomplete_add_title">URL para agregar</string>
+  <string name="preference_autocomplete_add_hint">Pegue o escriba una URL</string>
+  <string name="preference_autocomplete_add_example">Ejemplo: ejemplo.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nueva URL personalizada agregada.</string>
+  <string name="preference_autocomplete_menu_remove">Borrar</string>
+  <string name="preference_autocomplete_action_remove_content_description">Borrar</string>
+  <string name="preference_autocomplete_add_error">Verifique la URL que escribió.</string>
   <string name="preference_language">Idioma</string>
   <string name="preference_language_systemdefault">Predeterminado del sistema</string>
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Ejemplo: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Agregar buscador</string>
   <string name="search_add_confirmation">Se agregó un buscador nuevo.</string>
-  <string name="search_add_error">Verificá la cadena de búsqueda y probá de nuevo</string>
+  <string name="search_add_error_empty_name">Escriba el nombre del motor de búsqueda</string>
+  <string name="search_add_error_empty_search">Escribir cadena de búsqueda</string>
+  <string name="search_add_error_format">Verifique que la cadena de búsqueda coincida con el formato del ejemplo</string>
   <string name="content_description_clear_input">Borrar entrada</string>
   <string name="content_description_dismiss_input">Descartar</string>
   <string name="content_description_erase">Limpiar historial de navegación</string>

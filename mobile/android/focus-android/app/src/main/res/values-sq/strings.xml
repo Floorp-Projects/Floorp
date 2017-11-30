@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Anuloje</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Ruaje</string>
   <string name="urlbar_hint">Kërkoni ose jepni adresë</string>
   <string name="teaser">Shfletim automatikisht privat.\nShfletoni. Fshini Gjurmët. Përsëriteni.</string>
   <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jua l&#235; juve kontrollin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"P&#235;rdoreni si nj&#235; shfletues privat:\n  "<ul>"\n    "<li>B&#235;ni k&#235;rkime dhe shfletoni drejt e nga aplikacioni</li>"\n    "<li>Bllokoni gjurmues (ose p&#235;rdit&#235;soni rregullimet q&#235; t&#235; lejoni gjurmime)</li>"\n    "<li>Fshini cookies, si dhe historik k&#235;rkimesh dhe shfletimesh</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s prodhohet nga Mozilla. Misioni yn&#235; &#235;sht&#235; t&#235; p&#235;rkujdesi p&#235;r nj&#235; Internet t&#235; sh&#235;ndetsh&#235;m, t&#235; hapur.<br/>\n<a href="%2$s">M&#235;soni m&#235; tep&#235;r</a></p>]]></string>
   <string name="preference_category_search">Kërkim</string>
   <string name="preference_search_engine_default">Parazgjedhje</string>
+  <string name="preference_state_on">On</string>
+  <string name="preference_state_off">Off</string>
+  <string name="preference_subitem_autocomplete">Vetëplotësim URLje</string>
+  <string name="preference_switch_autocomplete">Vetëplotësim</string>
+  <string name="preference_category_autocomplete_preinstalled">Listë Parazgjedhje URLsh</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktivizojeni që %1$s të vetëplotësojë te shtylla e adresave mbi 450 URL popullore.</string>
+  <string name="preference_category_autocomplete_custom">URL Vetjake</string>
+  <string name="preference_autocomplete_subitem_customlist">URLra Vetjake</string>
+  <string name="preference_autocomplete_action_add">+ Shtoni URL vetjake</string>
+  <string name="preference_autocomplete_title_add">Shtoni URL vetjake</string>
+  <string name="preference_autocomplete_title_remove">Hiqni URLra Vetjake</string>
+  <string name="preference_autocomplete_learn_more">Mësoni më tepër</string>
+  <string name="preference_autocomplete_custom_summary">Shtoni dhe administroni URLra vetjake vetëplotësimesh.</string>
+  <string name="preference_autocomplete_add_title">URL për shtim</string>
+  <string name="preference_autocomplete_add_hint">Ngjitni ose jepni URL</string>
+  <string name="preference_autocomplete_add_example">Shembull: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">U shtua URL vetjake e re.</string>
+  <string name="preference_autocomplete_menu_remove">Hiqe</string>
+  <string name="preference_autocomplete_action_remove_content_description">Hiqe</string>
+  <string name="preference_autocomplete_add_error">Rikontrollojeni URL-në që dhatë.</string>
   <string name="preference_language">Gjuhë</string>
   <string name="preference_language_systemdefault">Parazgjedhje sistemi</string>
   <string name="preference_dialog_title_search_engine">Kërkim parazgjedhje</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Shembull: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Shtoni motor kërkimesh</string>
   <string name="search_add_confirmation">Motori i ri i kërkimeve u shtua.</string>
-  <string name="search_add_error">Kontrolloni vargun e kërkimit dhe riprovoni</string>
+  <string name="search_add_error_empty_name">Jepni emër motori kërkimesh</string>
+  <string name="search_add_error_empty_search">Jepni varg kërkimi</string>
+  <string name="search_add_error_format">Kontrolloni që vargu i kërkimit të përputhet me formatin Shembull</string>
   <string name="content_description_clear_input">Pastro ç’është dhënë</string>
   <string name="content_description_dismiss_input">Hidhe tej</string>
   <string name="content_description_erase">Fshi historik shfletimesh</string>

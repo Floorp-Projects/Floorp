@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Отмена</string>
   <string name="action_ok">ОК</string>
+  <string name="action_save">Сохранить</string>
   <string name="urlbar_hint">Введите запрос или адрес</string>
   <string name="teaser">Автоматический режим приватного просмотра.\nПросмотреть. Стереть. Повторить.</string>
   <string name="feedback_erase">Ваша история посещения сайтов была стёрта.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1076;&#1072;&#1105;&#1090; &#1074;&#1072;&#1084; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1100;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1048;&#1089;&#1087;&#1086;&#1083;&#1100;&#1079;&#1091;&#1081;&#1090;&#1077; &#1077;&#1075;&#1086; &#1082;&#1072;&#1082; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1099;&#1081; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088;:\n  "<ul>"\n    "<li>&#1048;&#1097;&#1080;&#1090;&#1077; &#1080; &#1079;&#1072;&#1085;&#1080;&#1084;&#1072;&#1081;&#1090;&#1077;&#1089;&#1100; &#1074;&#1077;&#1073;-&#1089;&#1105;&#1088;&#1092;&#1080;&#1085;&#1075;&#1086;&#1084;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1080;&#1088;&#1091;&#1081;&#1090;&#1077; &#1090;&#1088;&#1077;&#1082;&#1077;&#1088;&#1099; (&#1080;&#1083;&#1080; &#1080;&#1079;&#1084;&#1077;&#1085;&#1080;&#1090;&#1077; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;, &#1095;&#1090;&#1086;&#1073;&#1099; &#1088;&#1072;&#1079;&#1088;&#1077;&#1096;&#1080;&#1090;&#1100; &#1080;&#1093;)</li>"\n    "<li>&#1057;&#1090;&#1080;&#1088;&#1072;&#1081;&#1090;&#1077; &#1080; &#1091;&#1076;&#1072;&#1083;&#1103;&#1081;&#1090;&#1077; &#1082;&#1091;&#1082;&#1080;, &#1072; &#1090;&#1072;&#1082;&#1078;&#1077; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1102; &#1087;&#1086;&#1080;&#1089;&#1082;&#1072; &#1080; &#1087;&#1088;&#1086;&#1089;&#1084;&#1086;&#1090;&#1088;&#1072;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1089;&#1086;&#1079;&#1076;&#1072;&#1085; Mozilla. &#1053;&#1072;&#1096;&#1072; &#1084;&#1080;&#1089;&#1089;&#1080;&#1103; &#8212; &#1089;&#1087;&#1086;&#1089;&#1086;&#1073;&#1089;&#1090;&#1074;&#1086;&#1074;&#1072;&#1090;&#1100; &#1079;&#1076;&#1086;&#1088;&#1086;&#1074;&#1086;&#1084;&#1091;, &#1086;&#1090;&#1082;&#1088;&#1099;&#1090;&#1086;&#1084;&#1091; &#1048;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1091;.<br/>\n<a href="%2$s">&#1059;&#1079;&#1085;&#1072;&#1090;&#1100; &#1073;&#1086;&#1083;&#1100;&#1096;&#1077;</a></p>]]></string>
   <string name="preference_category_search">Поиск</string>
   <string name="preference_search_engine_default">По умолчанию</string>
+  <string name="preference_state_on">Включено</string>
+  <string name="preference_state_off">Отключено</string>
+  <string name="preference_subitem_autocomplete">URL-адрес автодополнения</string>
+  <string name="preference_switch_autocomplete">Автодополнение</string>
+  <string name="preference_category_autocomplete_preinstalled">Список URL по умолчанию</string>
+  <string name="preference_autocomplete_preinstalled_summary">Включить автодополнение в %1$s для более чем 450 популярных сайтов в адресной строке.</string>
+  <string name="preference_category_autocomplete_custom">Пользовательский URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Пользовательские URL</string>
+  <string name="preference_autocomplete_action_add">+ Добавить пользовательский URL</string>
+  <string name="preference_autocomplete_title_add">Добавить пользовательский URL</string>
+  <string name="preference_autocomplete_title_remove">Удалить пользовательские URL</string>
+  <string name="preference_autocomplete_learn_more">Подробнее</string>
+  <string name="preference_autocomplete_custom_summary">Добавление и управление пользовательскими URL автодополнения.</string>
+  <string name="preference_autocomplete_add_title">URL для добавления</string>
+  <string name="preference_autocomplete_add_hint">Вставьте или введите URL-адрес</string>
+  <string name="preference_autocomplete_add_example">Пример: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Новый пользовательский URL добавлен.</string>
+  <string name="preference_autocomplete_menu_remove">Удалить</string>
+  <string name="preference_autocomplete_action_remove_content_description">Удалить</string>
+  <string name="preference_autocomplete_add_error">Внимательно проверьте введённый URL.</string>
   <string name="preference_language">Язык</string>
   <string name="preference_language_systemdefault">Язык устройства</string>
   <string name="preference_dialog_title_search_engine">Поисковая система по умолчанию</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Пример: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Добавить поисковую систему</string>
   <string name="search_add_confirmation">Добавлена новая поисковая система.</string>
-  <string name="search_add_error">Проверьте строку поискового запроса и попробуйте ещё раз</string>
+  <string name="search_add_error_empty_name">Введите имя поисковой системы</string>
+  <string name="search_add_error_empty_search">Введите поисковую строку</string>
+  <string name="search_add_error_format">Убедитесь, что поисковая строка соответствует формату примера</string>
   <string name="content_description_clear_input">Очистить ввод</string>
   <string name="content_description_dismiss_input">Пропустить</string>
   <string name="content_description_erase">Удалить историю веб-сёрфинга</string>

@@ -32,12 +32,14 @@
   <string name="preference_subitem_autocomplete">Autocompletar URL</string>
   <string name="preference_switch_autocomplete">Autocompletar</string>
   <string name="preference_category_autocomplete_preinstalled">Lista de URL padrão</string>
+  <string name="preference_autocomplete_preinstalled_summary">Habilite o %1$s para ter preenchimento automático de mais de 450 URLs populares na barra de endereços.</string>
   <string name="preference_category_autocomplete_custom">URL personalizada</string>
   <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Adicionar URL personalizada</string>
   <string name="preference_autocomplete_title_add">Adicionar URL personalizada</string>
   <string name="preference_autocomplete_title_remove">Remover URL personalizada</string>
   <string name="preference_autocomplete_learn_more">Saiba mais</string>
+  <string name="preference_autocomplete_custom_summary">Adicione e gerencie URLs de preenchimento automático personalizados.</string>
   <string name="preference_autocomplete_add_title">URL a adicionar</string>
   <string name="preference_autocomplete_add_hint">Cole ou digite a URL</string>
   <string name="preference_autocomplete_add_example">Exemplo: exemplo.com</string>
@@ -96,8 +98,9 @@
   <string name="search_add_manually_example">Exemplo: exemplo.com/search/?q= %s</string>
   <string name="accessibility_announcement_search">Adicionar mecanismo de pesquisa</string>
   <string name="search_add_confirmation">Novo mecanismo de pesquisa adicionado.</string>
-  <string name="search_add_error">Verifique o termo de pesquisa e tente novamente</string>
   <string name="search_add_error_empty_name">Digite o nome do mecanismo de pesquisa</string>
+  <string name="search_add_error_empty_search">Digite um termo de pesquisa</string>
+  <string name="search_add_error_format">Verifique se o termo da pesquisa corresponde ao formato de exemplo</string>
   <string name="content_description_clear_input">Limpar campo</string>
   <string name="content_description_dismiss_input">Dispensar</string>
   <string name="content_description_erase">Apagar o histórico de navegação</string>
@@ -174,8 +177,8 @@
   <string name="notification_browsing_session_channel_description">As notificações permitem você limpar sua sessão do %1$s com um toque. Você não precisa abrir o app ou ver o que está rodando no seu navegador.</string>
   <string name="tabs_tray_action_erase">Limpar o histórico de navegação</string>
   <string name="download_firefox">Baixar o Firefox</string>
-  <string name="your_rights_content1">%1$s é um software livre e de código aberto feita pela Mozilla e outros contribuidores.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s é disponibilizado de acordo com os termos da "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" e outras licenças de código aberto."]]></string>
+  <string name="your_rights_content1">O %1$s é um software livre e de código aberto feita pela Mozilla e outros contribuidores.</string>
+  <string name="your_rights_content2"><![CDATA["O %1$s é disponibilizado de acordo com os termos da "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" e outras licenças de código aberto."]]></string>
   <string name="your_rights_content3"><![CDATA["Não lhe são concedidos quaisquer direitos ou licenças sobre marcas registradas da Mozilla Foundation ou de terceiros, incluindo os nomes ou logos da Mozilla, Firefox ou %1$s. Informações adicionais podem ser encontradas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">here</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Código fonte adicionais para o %1$s estão disponíveis sobre várias outras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#231;as</a>" livres e de código aberto."]]></string>
   <string name="your_rights_content5"><![CDATA["O %1$s também utiliza "<em xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">listas de bloqueios</em>" disponibilizadas pela Disconnect, Inc. como um trabalho independente disponibilizado "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqui</a>", sob a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>.]]></string>

@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Eksempel: eksempel.dk/search/?q=%s</string>
   <string name="accessibility_announcement_search">Tilføj søgetjeneste</string>
   <string name="search_add_confirmation">Ny søgetjeneste tilføjet.</string>
-  <string name="search_add_error">Kontroller søgestrengen og prøv igen</string>
   <string name="content_description_clear_input">Ryd adressefeltet</string>
   <string name="content_description_dismiss_input">Afvis</string>
   <string name="content_description_erase">Slet browser-historik</string>

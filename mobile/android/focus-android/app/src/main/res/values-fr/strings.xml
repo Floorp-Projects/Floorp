@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Exemple : example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Ajouter un moteur de recherche</string>
   <string name="search_add_confirmation">Nouveau moteur de recherche ajouté.</string>
-  <string name="search_add_error">Vérifiez la chaîne de recherche puis réessayez</string>
   <string name="content_description_clear_input">Effacer le texte saisi</string>
   <string name="content_description_dismiss_input">Fermer</string>
   <string name="content_description_erase">Effacer l’historique de navigation</string>

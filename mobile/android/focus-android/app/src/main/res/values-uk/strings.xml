@@ -98,7 +98,6 @@
   <string name="search_add_manually_example">Зразок: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Додати засіб пошуку</string>
   <string name="search_add_confirmation">Новий засіб пошуку додано.</string>
-  <string name="search_add_error">Перевірте пошуковий запит і спробуйте знову</string>
   <string name="search_add_error_empty_name">Введіть назву засобу пошуку</string>
   <string name="search_add_error_empty_search">Введіть пошуковий запит</string>
   <string name="search_add_error_format">Перевірте пошуковий запит на відповідність формату зразка</string>

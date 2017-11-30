@@ -98,7 +98,6 @@
   <string name="search_add_manually_example">Voorbeeld: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Zoekmachine toevoegen</string>
   <string name="search_add_confirmation">Nieuwe zoekmachine toegevoegd.</string>
-  <string name="search_add_error">Controleer de zoekstring en probeer het opnieuw</string>
   <string name="search_add_error_empty_name">Voer naam van zoekmachine in</string>
   <string name="search_add_error_empty_search">Voer zoekstring in</string>
   <string name="search_add_error_format">Controleer of zoekstring aan voorbeeldnotatie voldoet</string>

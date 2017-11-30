@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Cancelar</string>
   <string name="action_ok">Aceptar</string>
+  <string name="action_save">Guardar</string>
   <string name="urlbar_hint">Buscar o escribir dirección</string>
   <string name="teaser">Navegación privada automática.\nNavega. Borra. Repite.</string>
   <string name="feedback_erase">Se ha eliminado tu historial de búsqueda.</string>
@@ -26,6 +27,26 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salo como navegador privado:\n  "<ul>"\n    "<li>Busca y navega en la propia aplicaci&#243;n</li>"\n    "<li>Bloquea a los rastreadores (o cambia los ajustes para permitirlos)</li>"\n    "<li>Limpia para borrar cookies y los historiales de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mozilla es la autora de %1$s. Nuestra misi&#243;n es promover un Internet saludable y abierto.<br/>\n<a href="%2$s">Descubre m&#225;s</a></p>]]></string>
   <string name="preference_category_search">Búsqueda</string>
   <string name="preference_search_engine_default">Predeterminado</string>
+  <string name="preference_state_on">Activado</string>
+  <string name="preference_state_off">Desactivado</string>
+  <string name="preference_subitem_autocomplete">Autocompletar URL</string>
+  <string name="preference_switch_autocomplete">Autocompletar</string>
+  <string name="preference_category_autocomplete_preinstalled">Lista de URLs predeterminadas</string>
+  <string name="preference_category_autocomplete_custom">URL personalizada</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
+  <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
+  <string name="preference_autocomplete_title_add">Agregar URL personalizada</string>
+  <string name="preference_autocomplete_title_remove">Eliminar URLs personalizadas</string>
+  <string name="preference_autocomplete_learn_more">Descubrir más</string>
+  <string name="preference_autocomplete_custom_summary">Agregar y gestionar autocompletado personalizado de URLs.</string>
+  <string name="preference_autocomplete_add_title">Agregar URL</string>
+  <string name="preference_autocomplete_add_hint">Pegar o escribir URL</string>
+  <string name="preference_autocomplete_add_example">Ejemplo: ejemplo.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Se agregó una nueva URL personalizada.</string>
+  <string name="preference_autocomplete_menu_remove">Eliminar</string>
+  <string name="preference_autocomplete_action_remove_content_description">Eliminar</string>
+  <string name="preference_autocomplete_add_error">Volver a comprobar la URL que has escrito.</string>
   <string name="preference_language">Idioma</string>
   <string name="preference_language_systemdefault">Predeterminado del sistema</string>
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
@@ -76,7 +97,9 @@
   <string name="search_add_manually_example">Ejemplo: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Añadir motor de búsqueda</string>
   <string name="search_add_confirmation">Nuevo motor de búsqueda añadido.</string>
-  <string name="search_add_error">Comprueba la cadena de búsqueda y vuelve a intentarlo</string>
+  <string name="search_add_error_empty_name">Introducir nombre del motor de búsqueda</string>
+  <string name="search_add_error_empty_search">Introducir cadena de búsqueda</string>
+  <string name="search_add_error_format">Comprueba que la cadena de búsqueda coincide con el formato del ejemplo</string>
   <string name="content_description_clear_input">Limpiar registro</string>
   <string name="content_description_dismiss_input">Ignorar</string>
   <string name="content_description_erase">Eliminar historial de navegación</string>

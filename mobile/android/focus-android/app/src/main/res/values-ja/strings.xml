@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">入力例: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">検索エンジンを追加</string>
   <string name="search_add_confirmation">新しい検索エンジンが追加されました。</string>
-  <string name="search_add_error">検索 URL を確認してもう一度試してください。</string>
   <string name="content_description_clear_input">入力内容を消去</string>
   <string name="content_description_dismiss_input">閉じる</string>
   <string name="content_description_erase">閲覧履歴を消去</string>

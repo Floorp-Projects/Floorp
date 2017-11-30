@@ -71,7 +71,6 @@
   <string name="search_add_manually_example">Məsələn: mozillaz.org/search/?q=%s</string>
   <string name="accessibility_announcement_search">Axtarış mühərriyini əlavə et</string>
   <string name="search_add_confirmation">Yeni axtarış mühərriyi əlavə edildi.</string>
-  <string name="search_add_error">Axtarış sətrini təkrar yoxlayın</string>
   <string name="content_description_clear_input">Girişi təmizlə</string>
   <string name="content_description_dismiss_input">Ləğv et</string>
   <string name="content_description_erase">Səyahət tarixçəsini təmizlə</string>

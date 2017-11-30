@@ -34,7 +34,7 @@
   <string name="preference_category_autocomplete_preinstalled">Standard nettadresseliste</string>
   <string name="preference_category_autocomplete_custom">Tilpassa nettadresse</string>
   <string name="preference_autocomplete_subitem_customlist">Tilpassa nettadresser</string>
-  <string name="preference_autocomplete_action_add">+ Legg til tilpassa nettadresser</string>
+  <string name="preference_autocomplete_action_add">+ Legg til tilpassa nettadresse</string>
   <string name="preference_autocomplete_title_add">Legg til tilpassa nettadresse</string>
   <string name="preference_autocomplete_title_remove">Fjern tilpassa nettadresser</string>
   <string name="preference_autocomplete_learn_more">Les meir</string>
@@ -87,7 +87,7 @@
   <string name="tutorial_search_step4_alternative">4. Om du ikkje ser %1$s, prøv å leggje til ein søkjemotor manuellt.</string>
   <string name="tutorial_search_finish">KOM I GANG</string>
   <string name="search_add_hint">Trykk på forstørringsglasikonet ovanfor tastaturet for å leggje til søkjemotoren.</string>
-  <string name="search_add_manually_name">Namn som skal visast</string>
+  <string name="search_add_manually_name">Visingsnamn</string>
   <string name="search_add_manually_name_hint">Søkjemotornamn</string>
   <string name="search_add_manually_string">Søkjestreng som skal brukast</string>
   <string name="search_add_manually_save">Lagre</string>
@@ -95,9 +95,9 @@
   <string name="search_add_manually_example">Døme: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Legg til søkjemotor</string>
   <string name="search_add_confirmation">Ny søkjemotor lagt til.</string>
-  <string name="search_add_error">Kontroller søkjestrengen og prøv på nytt</string>
   <string name="search_add_error_empty_name">Skriv inn namn på søkjemotor</string>
   <string name="search_add_error_empty_search">Skriv inn søkjestreng</string>
+  <string name="search_add_error_format">Kontroller at søkjestrengen passar med dømeformatet</string>
   <string name="content_description_clear_input">Tøm skrivefeltet</string>
   <string name="content_description_dismiss_input">Lukk</string>
   <string name="content_description_erase">Slett nettlesarhistorikk</string>

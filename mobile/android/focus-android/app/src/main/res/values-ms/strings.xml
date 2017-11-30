@@ -98,7 +98,6 @@
   <string name="search_add_manually_example">Contoh: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Tambah enjin carian</string>
   <string name="search_add_confirmation">Enjin carian baru sudah ditambah.</string>
-  <string name="search_add_error">Semak string carian dan cuba lagi</string>
   <string name="search_add_error_empty_name">Masukkan nama enjin carian</string>
   <string name="search_add_error_empty_search">Masukkan string carian</string>
   <string name="search_add_error_format">Pastikan string carian sepadan format contoh</string>

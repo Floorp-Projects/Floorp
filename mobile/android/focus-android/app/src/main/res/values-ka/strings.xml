@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">გაუქმება</string>
   <string name="action_ok">კარგი</string>
+  <string name="action_save">შენახვა</string>
   <string name="urlbar_hint">მოძებნეთ ან შეიყვანეთ მისამართი</string>
   <string name="teaser">მხოლოდ თვალიერების პირადი რეჟიმი.\nმონახულება. წაშლა. თავიდან დაწყება.</string>
   <string name="feedback_erase">მონახულებული გვერდების ისტორია წაიშალა.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4321;&#4320;&#4323;&#4314;&#4304;&#4307; &#4306;&#4312;&#4305;&#4320;&#4323;&#4316;&#4308;&#4305;&#4311; &#4315;&#4304;&#4320;&#4311;&#4309;&#4312;&#4321; &#4321;&#4304;&#4307;&#4304;&#4309;&#4308;&#4308;&#4305;&#4321;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#4306;&#4304;&#4315;&#4317;&#4312;&#4327;&#4308;&#4316;&#4308;&#4311; &#4320;&#4317;&#4306;&#4317;&#4320;&#4330; &#4318;&#4312;&#4320;&#4304;&#4307;&#4312; &#4305;&#4320;&#4304;&#4323;&#4310;&#4308;&#4320;&#4312;:\n  "<ul>"\n    "<li>&#4315;&#4317;&#4331;&#4308;&#4305;&#4316;&#4308;&#4311; &#4307;&#4304; &#4307;&#4304;&#4304;&#4311;&#4309;&#4304;&#4314;&#4312;&#4308;&#4320;&#4308;&#4311; &#4306;&#4309;&#4308;&#4320;&#4307;&#4308;&#4305;&#4312;</li>"\n    "<li>&#4328;&#4308;&#4310;&#4326;&#4323;&#4307;&#4308;&#4311; &#4315;&#4308;&#4311;&#4309;&#4304;&#4314;&#4327;&#4323;&#4320;&#4308; &#4308;&#4314;&#4308;&#4315;&#4308;&#4316;&#4322;&#4308;&#4305;&#4312; (&#4318;&#4304;&#4320;&#4304;&#4315;&#4308;&#4322;&#4320;&#4308;&#4305;&#4312;&#4307;&#4304;&#4316; &#4307;&#4304;&#4328;&#4309;&#4308;&#4305;&#4304;&#4330; &#4328;&#4308;&#4312;&#4331;&#4314;&#4308;&#4305;&#4304;)</li>"\n    "<li>&#4306;&#4304;&#4304;&#4321;&#4323;&#4324;&#4311;&#4304;&#4309;&#4308;&#4311; &#4307;&#4304; &#4332;&#4304;&#4328;&#4304;&#4314;&#4308;&#4311; &#4324;&#4323;&#4316;&#4311;&#4323;&#4328;&#4308;&#4305;&#4312;, &#4331;&#4312;&#4308;&#4305;&#4312;&#4321; &#4307;&#4304; &#4311;&#4309;&#4304;&#4314;&#4312;&#4308;&#4320;&#4308;&#4305;&#4312;&#4321; &#4312;&#4321;&#4322;&#4317;&#4320;&#4312;&#4304;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4328;&#4308;&#4325;&#4315;&#4316;&#4312;&#4314;&#4312;&#4304; Mozilla-&#4321; &#4315;&#4312;&#4308;&#4320;. &#4329;&#4309;&#4308;&#4316;&#4312; &#4315;&#4312;&#4310;&#4304;&#4316;&#4312;, &#4312;&#4316;&#4322;&#4308;&#4320;&#4316;&#4308;&#4322;&#4312;&#4321; &#4306;&#4304;&#4334;&#4321;&#4316;&#4312;&#4314;&#4317;&#4305;&#4304; &#4307;&#4304; &#4321;&#4312;&#4335;&#4304;&#4316;&#4321;&#4304;&#4326;&#4308;&#4304;.<br/>\n<a href="%2$s">&#4328;&#4308;&#4312;&#4322;&#4327;&#4309;&#4308;&#4311; &#4315;&#4308;&#4322;&#4312;</a></p>]]></string>
   <string name="preference_category_search">ძიება</string>
   <string name="preference_search_engine_default">ნაგულისხმევი</string>
+  <string name="preference_state_on">ჩართული</string>
+  <string name="preference_state_off">გამორთული</string>
+  <string name="preference_subitem_autocomplete">URL თვითშევსება</string>
+  <string name="preference_switch_autocomplete">თვითშევსება</string>
+  <string name="preference_category_autocomplete_preinstalled">ნაგულისხმევი URL ჩამონათვალი</string>
+  <string name="preference_autocomplete_preinstalled_summary">ჩართეთ და %1$s-ში გექნებათ 450-ზე მეტი სასურველი URLs ბმული მისამართების ზოლში.</string>
+  <string name="preference_category_autocomplete_custom">საკუთარი URL</string>
+  <string name="preference_autocomplete_subitem_customlist">საკუთარი URLs მისამართები</string>
+  <string name="preference_autocomplete_action_add">+ საკუთარი URL მისამართის დამატება</string>
+  <string name="preference_autocomplete_title_add">საკუთარი URL მისამართის დამატება</string>
+  <string name="preference_autocomplete_title_remove">საკუთარი URLs მისამართების წაშლა</string>
+  <string name="preference_autocomplete_learn_more">ვრცლად</string>
+  <string name="preference_autocomplete_custom_summary">დაამატეთ და მართეთ საკუთარი URLs მისამართები.</string>
+  <string name="preference_autocomplete_add_title">URL დასამატებლად</string>
+  <string name="preference_autocomplete_add_hint">ჩასვით ან შეიყვანეთ URL</string>
+  <string name="preference_autocomplete_add_example">მაგალითად: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">ახალი საკუთარი URL დაემატა.</string>
+  <string name="preference_autocomplete_menu_remove">წაშლა</string>
+  <string name="preference_autocomplete_action_remove_content_description">წაშლა</string>
+  <string name="preference_autocomplete_add_error">გადაამოწმეთ შეყვანილი URL.</string>
   <string name="preference_language">ენა</string>
   <string name="preference_language_systemdefault">სისტემის ნაგულისხმევი</string>
   <string name="preference_dialog_title_search_engine">ნაგულისხმევი საძიებო სისტემა</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">მაგალითად: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">საძიებო სისტემის დამატება</string>
   <string name="search_add_confirmation">ახალი საძიებო სისტემა დამატებულია.</string>
-  <string name="search_add_error">შეამოწმეთ საძიებო ფრაზა და სცადეთ ხელახლა</string>
+  <string name="search_add_error_empty_name">მიუთითეთ საძიებო სისტემის სახელი</string>
+  <string name="search_add_error_empty_search">შეიყვანეთ საძიებო ფრაზა</string>
+  <string name="search_add_error_format">შეამოწმეთ, შეესაბამება თუ არა საძიებო ფრაზა მოცემულ ფორმატს</string>
   <string name="content_description_clear_input">შეტანილის გასუფთავება</string>
   <string name="content_description_dismiss_input">დახურვა</string>
   <string name="content_description_erase">ისტორიის წაშლა</string>

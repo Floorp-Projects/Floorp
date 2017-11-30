@@ -65,7 +65,6 @@
   <string name="search_add_manually_example">Ví dụ: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Thêm công cụ tìm kiếm</string>
   <string name="search_add_confirmation">Đã thêm công cụ tìm kiếm mới.</string>
-  <string name="search_add_error">Kiểm tra chuỗi tìm kiếm và thử lại</string>
   <string name="content_description_clear_input">Xóa trắng</string>
   <string name="content_description_dismiss_input">Bỏ qua</string>
   <string name="content_description_erase">Xóa lịch sử duyệt web</string>

@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">مثال: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">اضافه کردن موتور جست‌وجو</string>
   <string name="search_add_confirmation">موتور جست‌وجو جدید اضافه شد.</string>
-  <string name="search_add_error">اضافه کردن رشته جست‌وجو و تلاش مجدد</string>
   <string name="content_description_clear_input">پاک کردن وروردی</string>
   <string name="content_description_dismiss_input">رد کردن</string>
   <string name="content_description_erase">حذف تاریخچه مرور</string>

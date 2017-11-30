@@ -86,7 +86,6 @@
   <string name="search_add_manually_example">Primer: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Dodaj iskalnik</string>
   <string name="search_add_confirmation">Nov iskalnik dodan.</string>
-  <string name="search_add_error">Preverite iskalni niz in poskusite znova</string>
   <string name="content_description_clear_input">Počisti vnos</string>
   <string name="content_description_dismiss_input">Opusti</string>
   <string name="content_description_erase">Počisti zgodovino brskanja</string>

@@ -68,7 +68,7 @@
   <string name="tutorial_search_step4_alternative">4 . Om du ikke ser %1$s, prøv å legge til en søkemotor manuelt.</string>
   <string name="tutorial_search_finish">KOM I GANG</string>
   <string name="search_add_hint">Trykk på forstørrelsesglassikonet overfor tastaturet for å legge til søkemotoren.</string>
-  <string name="search_add_manually_name">Navn å vise</string>
+  <string name="search_add_manually_name">Visningsnavn</string>
   <string name="search_add_manually_name_hint">Søkemotornavn</string>
   <string name="search_add_manually_string">Søkestreng å bruke</string>
   <string name="search_add_manually_save">Lagre</string>
@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Eksempel: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Legg til søkemotor</string>
   <string name="search_add_confirmation">Ny søkemotor lagt til.</string>
-  <string name="search_add_error">Kontroller søkestrengen og prøv på nytt</string>
   <string name="content_description_clear_input">Tøm skrivefeltet</string>
   <string name="content_description_dismiss_input">Lukk</string>
   <string name="content_description_erase">Slett nettleserhistorikk</string>

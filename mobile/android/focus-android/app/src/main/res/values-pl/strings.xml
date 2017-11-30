@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Anuluj</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Zapisz</string>
   <string name="urlbar_hint">Wpisz adres lub szukaj</string>
   <string name="teaser">Automatyczne przeglądanie prywatne.\nPrzeglądaj. Usuwaj. Powtórz.</string>
   <string name="feedback_erase">Usunięto historię przeglądania.</string>
@@ -26,6 +27,26 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje wi&#281;ksz&#261; kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Jako prywatna przegl&#261;darka umo&#380;liwia:\n  "<ul>"\n    "<li>wyszukiwanie i&#160;przegl&#261;danie prosto z&#160;aplikacji</li>"\n    "<li>blokowanie &#347;ledzenia (mo&#380;na to zmieni&#263; w&#160;ustawieniach)</li>"\n    "<li>usuwanie ciasteczek oraz ca&#322;ej historii wyszukiwania i&#160;przegl&#261;dania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jest tworzony przez Mozill&#281;. Naszym celem jest wspieranie zdrowego i&#160;otwartego Internetu.<br/>\n<a href="%2$s">Wi&#281;cej informacji</a></p>]]></string>
   <string name="preference_category_search">Wyszukiwanie</string>
   <string name="preference_search_engine_default">Domyślna</string>
+  <string name="preference_state_on">Włączone</string>
+  <string name="preference_state_off">Wyłączone</string>
+  <string name="preference_subitem_autocomplete">Automatyczne uzupełnianie adresów</string>
+  <string name="preference_switch_autocomplete">Automatyczne uzupełnianie</string>
+  <string name="preference_category_autocomplete_preinstalled">Domyślna lista adresów</string>
+  <string name="preference_category_autocomplete_custom">Inny adres</string>
+  <string name="preference_autocomplete_subitem_customlist">Inne adresy</string>
+  <string name="preference_autocomplete_action_add">+ Dodaj inny adres</string>
+  <string name="preference_autocomplete_title_add">Dodaj inny adres</string>
+  <string name="preference_autocomplete_title_remove">Usuń inny adres</string>
+  <string name="preference_autocomplete_learn_more">Więcej informacji</string>
+  <string name="preference_autocomplete_custom_summary">Dodawanie i zarządzenie innymi adresami automatycznego uzupełniania.</string>
+  <string name="preference_autocomplete_add_title">Adres do dodania</string>
+  <string name="preference_autocomplete_add_hint">Wklej lub wpisz adres</string>
+  <string name="preference_autocomplete_add_example">Przykład: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">—</string>
+  <string name="preference_autocomplete_add_confirmation">Dodano nowy adres.</string>
+  <string name="preference_autocomplete_menu_remove">Usuń</string>
+  <string name="preference_autocomplete_action_remove_content_description">Usuń</string>
+  <string name="preference_autocomplete_add_error">Sprawdź poprawność wpisanego adresu.</string>
   <string name="preference_language">Język</string>
   <string name="preference_language_systemdefault">Domyślny systemu</string>
   <string name="preference_dialog_title_search_engine">Domyślna wyszukiwarka</string>
@@ -76,7 +97,9 @@
   <string name="search_add_manually_example">Przykład: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Dodaj wyszukiwarkę</string>
   <string name="search_add_confirmation">Dodano nową wyszukiwarkę.</string>
-  <string name="search_add_error">Sprawdź poprawność ciągu wyszukiwania i spróbuj ponownie</string>
+  <string name="search_add_error_empty_name">Wpisz nazwę wyszukiwarki</string>
+  <string name="search_add_error_empty_search">Wpisz ciąg wyszukiwania</string>
+  <string name="search_add_error_format">Upewnij się, że ciąg wyszukiwania zgadza się z formatem przykładu</string>
   <string name="content_description_clear_input">Usuń tekst</string>
   <string name="content_description_dismiss_input">Odrzuć</string>
   <string name="content_description_erase">Usuń historię przeglądania</string>

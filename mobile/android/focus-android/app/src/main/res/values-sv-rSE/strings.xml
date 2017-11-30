@@ -98,7 +98,6 @@
   <string name="search_add_manually_example">Exempel: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Lägg till sökmotor</string>
   <string name="search_add_confirmation">Ny sökmotor tillagd.</string>
-  <string name="search_add_error">Kontrollera söksträngen och försök igen</string>
   <string name="search_add_error_empty_name">Ange sökmotorns namn</string>
   <string name="search_add_error_empty_search">Ange söksträng</string>
   <string name="search_add_error_format">Kontrollera att söksträngen matchar exempelformat</string>

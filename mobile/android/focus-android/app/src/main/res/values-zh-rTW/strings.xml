@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">取消</string>
   <string name="action_ok">確定</string>
+  <string name="action_save">儲存</string>
   <string name="urlbar_hint">進行搜尋或輸入網址</string>
   <string name="teaser">無痕瀏覽，不留足跡。</string>
   <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35731;&#24744;&#21487;&#33258;&#34892;&#25511;&#21046;&#32218;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#21487;&#30070;&#20316;&#31169;&#23494;&#28687;&#35261;&#22120;&#20351;&#29992;:\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#31243;&#24335;&#20013;&#25628;&#23563;&#12289;&#28687;&#35261;</li>"\n    "<li>&#23553;&#37782;&#36861;&#36452;&#22120;&#65288;&#20063;&#21487;&#35519;&#25972;&#35373;&#23450;&#65292;&#20801;&#35377;&#36861;&#36452;&#22120;&#65289;</li>"\n    "<li>&#28165;&#38500; Cookie&#12289;&#25628;&#23563;&#32000;&#37636;&#12289;&#19978;&#32178;&#32000;&#37636;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#26159;&#30001; Mozilla &#25152;&#25171;&#36896;&#65292;&#25105;&#20497;&#30340;&#20351;&#21629;&#26159;&#22521;&#39178;&#19968;&#20491;&#20581;&#24247;&#12289;&#38283;&#25918;&#30340;&#32178;&#38555;&#32178;&#36335;&#12290;<br/>\n<a href="%2$s">&#20102;&#35299;&#26356;&#22810;</a></p>]]></string>
   <string name="preference_category_search">搜尋</string>
   <string name="preference_search_engine_default">預設</string>
+  <string name="preference_state_on">開啟</string>
+  <string name="preference_state_off">關閉</string>
+  <string name="preference_subitem_autocomplete">網址自動完成</string>
+  <string name="preference_switch_autocomplete">自動完成</string>
+  <string name="preference_category_autocomplete_preinstalled">預設網址清單</string>
+  <string name="preference_autocomplete_preinstalled_summary">開啟後，即可在 %1$s 網址列自動完成超過 450 組熱門網址。</string>
+  <string name="preference_category_autocomplete_custom">自訂網址</string>
+  <string name="preference_autocomplete_subitem_customlist">自訂網址</string>
+  <string name="preference_autocomplete_action_add">+ 新增自訂網址</string>
+  <string name="preference_autocomplete_title_add">新增自訂網址</string>
+  <string name="preference_autocomplete_title_remove">移除自訂網址</string>
+  <string name="preference_autocomplete_learn_more">了解更多</string>
+  <string name="preference_autocomplete_custom_summary">新增與管理自訂自動完成網址。</string>
+  <string name="preference_autocomplete_add_title">要新增的網址</string>
+  <string name="preference_autocomplete_add_hint">貼上或輸入網址</string>
+  <string name="preference_autocomplete_add_example">舉例: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">已新增自訂網址。</string>
+  <string name="preference_autocomplete_menu_remove">移除</string>
+  <string name="preference_autocomplete_action_remove_content_description">移除</string>
+  <string name="preference_autocomplete_add_error">請檢查您輸入的網址。</string>
   <string name="preference_language">語言</string>
   <string name="preference_language_systemdefault">系統預設</string>
   <string name="preference_dialog_title_search_engine">預設搜尋引擎</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">例如: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">新增搜尋引擎</string>
   <string name="search_add_confirmation">已加入新搜尋引擎。</string>
-  <string name="search_add_error">請檢查搜尋字串後再試一次</string>
+  <string name="search_add_error_empty_name">輸入搜尋引擎名稱</string>
+  <string name="search_add_error_empty_search">輸入搜尋字串</string>
+  <string name="search_add_error_format">請確認搜尋字串是否符合範例格式</string>
   <string name="content_description_clear_input">清除輸入內容</string>
   <string name="content_description_dismiss_input">結束輸入</string>
   <string name="content_description_erase">清除瀏覽紀錄</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Vazgeç</string>
   <string name="action_ok">Tamam</string>
+  <string name="action_save">Kaydet</string>
   <string name="urlbar_hint">Arama yapın veya adres yazın</string>
   <string name="teaser">Otomatik gizli gezinti.\nGez ve sil. Hepsi bu kadar.</string>
   <string name="feedback_erase">Gezinti geçmişiniz silinmiştir.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kontrol&#252; size verir.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Onu gizlilik odakl&#305; bir taray&#305;c&#305; olarak kullanabilirsiniz:\n  "<ul>"\n    "<li>Do&#287;rudan uygulamada arama yapabilir ve web&#8217;de gezinebilirsiniz</li>"\n    "<li>Takip&#231;ileri engelleyebilirsiniz (veya belli takip&#231;ilere izin verebilirsiniz)</li>"\n    "<li>Tek d&#252;&#287;meyle &#231;erezleri, arama ve gezinti ge&#231;mi&#351;inizi silebilirsiniz</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla taraf&#305;ndan geli&#351;tirilmi&#351;tir. Misyonumuz daha sa&#287;l&#305;kl&#305; ve a&#231;&#305;k bir internet yaratmakt&#305;r.<br/>\n<a href="%2$s">Daha fazla bilgi al&#305;n</a></p>]]></string>
   <string name="preference_category_search">Arama</string>
   <string name="preference_search_engine_default">Varsayılan</string>
+  <string name="preference_state_on">Açık</string>
+  <string name="preference_state_off">Kapalı</string>
+  <string name="preference_subitem_autocomplete">Otomatik adres tamamlama</string>
+  <string name="preference_switch_autocomplete">Otomatik tamamla</string>
+  <string name="preference_category_autocomplete_preinstalled">Varsayılan URL listesi</string>
+  <string name="preference_autocomplete_preinstalled_summary">%1$s’un 450’den fazla popüler adresi adres çubuğunda tamamlaması için bunu etkinleştirin.</string>
+  <string name="preference_category_autocomplete_custom">Özel adres</string>
+  <string name="preference_autocomplete_subitem_customlist">Özel adresler</string>
+  <string name="preference_autocomplete_action_add">+ Özel adres ekle</string>
+  <string name="preference_autocomplete_title_add">Özel adres ekle</string>
+  <string name="preference_autocomplete_title_remove">Özel adresleri sil</string>
+  <string name="preference_autocomplete_learn_more">Daha fazla bilgi al</string>
+  <string name="preference_autocomplete_custom_summary">Otomatik tamamlanacak özel adresleri ekleyin ve yönetin.</string>
+  <string name="preference_autocomplete_add_title">Eklenecek adres</string>
+  <string name="preference_autocomplete_add_hint">Adresi yapıştırın veya yazın</string>
+  <string name="preference_autocomplete_add_example">Örnek: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Yeni özel adres eklendi.</string>
+  <string name="preference_autocomplete_menu_remove">Sil</string>
+  <string name="preference_autocomplete_action_remove_content_description">Sil</string>
+  <string name="preference_autocomplete_add_error">Yazdığınız adresi bir daha kontrol edin.</string>
   <string name="preference_language">Dil</string>
   <string name="preference_language_systemdefault">Sistem varsayılanı</string>
   <string name="preference_dialog_title_search_engine">Varsayılan arama</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Örnek: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Arama motoru ekle</string>
   <string name="search_add_confirmation">Yeni arama motoru eklendi.</string>
-  <string name="search_add_error">Arama dizgisini kontrol edip yeniden deneyin</string>
+  <string name="search_add_error_empty_name">Arama motoru adını yazın</string>
+  <string name="search_add_error_empty_search">Arama dizgisini yazın</string>
+  <string name="search_add_error_format">Arama dizgisinin örnek biçimle uyumlu olduğundan emin olun</string>
   <string name="content_description_clear_input">Girdiyi temizle</string>
   <string name="content_description_dismiss_input">Kapat</string>
   <string name="content_description_erase">Gezinti geçmişini sil</string>

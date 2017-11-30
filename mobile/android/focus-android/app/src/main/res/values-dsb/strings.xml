@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Pśetergnuś</string>
   <string name="action_ok">W pórěźe</string>
+  <string name="action_save">Składowaś</string>
   <string name="urlbar_hint">Adresu pytaś abo zapódaś</string>
   <string name="teaser">Awtomatiski priwatny modus.\nPśeglědowaś. Lašowaś. Wóspjetowaś.</string>
   <string name="feedback_erase">Waša pśeglědowańska historija jo se wulašowała.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dajo was kontrolu wobchowa&#347;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;ywaj&#347;o jen ako priwatny wobgl&#283;dowak:\n  "<ul>"\n    "<li>Pytaj&#347;o a p&#347;egl&#283;duj&#347;o direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blok&#283;ruj&#347;o p&#347;esl&#283;dowaki (abo aktualiz&#283;ruj&#347;o nastajenja, aby p&#347;esl&#283;dowaki dow&#243;li&#322;)</li>"\n    "<li>La&#353;uj&#347;o cookieje a pyta&#324;sku a p&#347;egl&#283;dowa&#324;sku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s se w&#243;t Mozilla wuwija. Na&#353;a misija jo sp&#283;chowanje strowego, w&#243;tw&#243;rjonego interneta.<br/>\n<a href="%2$s">Dal&#353;ne informacije</a></p>]]></string>
   <string name="preference_category_search">Pytaś</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_state_on">Zašaltowany</string>
+  <string name="preference_state_off">Wušaltowany</string>
+  <string name="preference_subitem_autocomplete">Awtomatiske wudopołnjenje URL</string>
+  <string name="preference_switch_autocomplete">Wudopołnjenje</string>
+  <string name="preference_category_autocomplete_preinstalled">Standardna lisćina adresow</string>
+  <string name="preference_autocomplete_preinstalled_summary">Zmóžniś, aby %1$s wěcej ako 450 woblubowanych adresow w adresowrm pólu wudopołnił.</string>
+  <string name="preference_category_autocomplete_custom">Swójska adresa</string>
+  <string name="preference_autocomplete_subitem_customlist">Swójske adrese</string>
+  <string name="preference_autocomplete_action_add">+ Swójsku adresu pśidaś</string>
+  <string name="preference_autocomplete_title_add">Swójsku adresu pśidaś</string>
+  <string name="preference_autocomplete_title_remove">Swójske adrese wótwónoźeś</string>
+  <string name="preference_autocomplete_learn_more">Dalšne informacije</string>
+  <string name="preference_autocomplete_custom_summary">Swójske adrese za wudopołnjenje pśidaś a zastojaś.</string>
+  <string name="preference_autocomplete_add_title">Adresa, kótaraž ma se pśidaś</string>
+  <string name="preference_autocomplete_add_hint">Adresu zasajźiś abo zapódaś</string>
+  <string name="preference_autocomplete_add_example">Pśikład: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nowa swójska adresa pśidana.</string>
+  <string name="preference_autocomplete_menu_remove">Wótwónoźeś</string>
+  <string name="preference_autocomplete_action_remove_content_description">Wótwónoźeś</string>
+  <string name="preference_autocomplete_add_error">Pśeglědajśo zapódanu adresu.</string>
   <string name="preference_language">Rěc</string>
   <string name="preference_language_systemdefault">Systemowy standard</string>
   <string name="preference_dialog_title_search_engine">Systemowy standard</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Pśikład: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Pytnicu pśidaś</string>
   <string name="search_add_confirmation">Nowa pytnica jo se pśidała.</string>
-  <string name="search_add_error">Pśeglědajśo pytański wuraz a wopytajśo hyšći raz</string>
+  <string name="search_add_error_empty_name">Mě pytnice zapódaś</string>
+  <string name="search_add_error_empty_search">Pytański wuraz zapódaś</string>
+  <string name="search_add_error_format">Pśeglědajśo, lěc pytański wuraz pśikładowemu formatoju wótpowědujo</string>
   <string name="content_description_clear_input">Zapódaśe wuprozniś</string>
   <string name="content_description_dismiss_input">Zachyśiś</string>
   <string name="content_description_erase">Pśeglědowańsku historiju lašowaś</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Zrušiť</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Uložiť</string>
   <string name="urlbar_hint">Zadajte hľadanie alebo adresu</string>
   <string name="teaser">Automatické súkromné prehliadanie.\nPrehliadajte. Vymažte históriu. Opakujte.</string>
   <string name="feedback_erase">Vaša história prehliadania bola vymazaná.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;va kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vajte ho ako s&#250;kromn&#253; prehliada&#269;:\n  "<ul>"\n    "<li>Vyh&#318;ad&#225;vajte a prehliadajte priamo prostredn&#237;ctvom aplik&#225;cie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach m&#244;&#382;ete sledovacie prvky povoli&#357;)</li>"\n    "<li>Vyma&#382;te cookies, hist&#243;riu vyh&#318;ad&#225;vania a prehliadania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vyv&#237;ja Mozilla. Na&#353;a misia je podporova&#357; zdrav&#253; a otvoren&#253; internet.<br/>\n<a href="%2$s">&#270;al&#353;ie inform&#225;cie</a></p>]]></string>
   <string name="preference_category_search">Vyhľadávanie</string>
   <string name="preference_search_engine_default">Predvolený</string>
+  <string name="preference_state_on">Zapnuté</string>
+  <string name="preference_state_off">Vypnuté</string>
+  <string name="preference_subitem_autocomplete">Automatické dokončovanie URL adries</string>
+  <string name="preference_switch_autocomplete">Automatické dokončovanie</string>
+  <string name="preference_category_autocomplete_preinstalled">Predvolený zoznam URL adries</string>
+  <string name="preference_autocomplete_preinstalled_summary">Povolením tejto možnosti umožníte aplikácii %1$s automaticky dokončovať viac než 450 populárnych URL adries.</string>
+  <string name="preference_category_autocomplete_custom">Vlastná URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Vlastné URL</string>
+  <string name="preference_autocomplete_action_add">+ Pridať vlastnú URL</string>
+  <string name="preference_autocomplete_title_add">Pridať vlastnú URL</string>
+  <string name="preference_autocomplete_title_remove">Odstrániť vlastné URL</string>
+  <string name="preference_autocomplete_learn_more">Ďalšie informácie</string>
+  <string name="preference_autocomplete_custom_summary">Pridanie a správa vlastných URL adries na dokončovanie.</string>
+  <string name="preference_autocomplete_add_title">Adresa na pridanie</string>
+  <string name="preference_autocomplete_add_hint">Prilepte alebo zadajte URL adresu</string>
+  <string name="preference_autocomplete_add_example">Príklad: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Bola pridaná nová vlastná URL adresa.</string>
+  <string name="preference_autocomplete_menu_remove">Odstrániť</string>
+  <string name="preference_autocomplete_action_remove_content_description">Odstrániť</string>
+  <string name="preference_autocomplete_add_error">Skontrolujte zadanú URL adresu.</string>
   <string name="preference_language">Jazyk</string>
   <string name="preference_language_systemdefault">Jazyk zariadenia</string>
   <string name="preference_dialog_title_search_engine">Predvolený vyhľadávací modul</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Príklad: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Pridať vyhľadávací modul</string>
   <string name="search_add_confirmation">Bol pridaný nový vyhľadávací modul.</string>
-  <string name="search_add_error">Skontrolujte výraz vyhľadávania a skúste to znova</string>
+  <string name="search_add_error_empty_name">Zadajte názov vyhľadávacieho modulu</string>
+  <string name="search_add_error_empty_search">Zadajte hľadaný výraz</string>
+  <string name="search_add_error_format">Skontrolujte, či sa hľadaný výraz formátovo zhoduje s príkladom</string>
   <string name="content_description_clear_input">Vymazať pole</string>
   <string name="content_description_dismiss_input">Zavrieť</string>
   <string name="content_description_erase">Vymazať históriu prehliadania</string>

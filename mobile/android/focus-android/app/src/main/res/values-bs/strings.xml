@@ -98,7 +98,6 @@
   <string name="search_add_manually_example">Primjer: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Dodajte pretraživač</string>
   <string name="search_add_confirmation">Novi pretraživač dodan.</string>
-  <string name="search_add_error">Provjerite tekst pretrage i pokušajte ponovo</string>
   <string name="search_add_error_empty_name">Unesite naziv pretraživača</string>
   <string name="search_add_error_empty_search">Unesite string za pretragu</string>
   <string name="search_add_error_format">Provjerite da traženi string odgovara formatu primjera</string>

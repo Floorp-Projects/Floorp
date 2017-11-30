@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Откажи</string>
   <string name="action_ok">У реду</string>
+  <string name="action_save">Сачувај</string>
   <string name="urlbar_hint">Претражите или унесите адресу</string>
   <string name="teaser">Аутоматско приватно сурфовање.\nСурфуј. Обриши. Понови.</string>
   <string name="feedback_erase">Ваш историјат прегледања је обрисан.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1074;&#1072;&#1084; &#1076;&#1072;&#1112;&#1077; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1091;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1050;&#1086;&#1088;&#1080;&#1089;&#1090;&#1080;&#1090;&#1077; &#1075;&#1072; &#1082;&#1072;&#1086; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1080; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1095;:\n  "<ul>"\n    "<li>&#1055;&#1088;&#1077;&#1090;&#1088;&#1072;&#1078;&#1091;&#1112;&#1090;&#1077; &#1080; &#1089;&#1091;&#1088;&#1092;&#1091;&#1112;&#1090;&#1077; &#1076;&#1080;&#1088;&#1077;&#1082;&#1090;&#1085;&#1086; &#1091; &#1072;&#1087;&#1083;&#1080;&#1082;&#1072;&#1094;&#1080;&#1112;&#1080;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1080;&#1088;&#1072;&#1112;&#1090;&#1077; &#1087;&#1088;&#1072;&#1090;&#1080;&#1086;&#1094;&#1077; (&#1080;&#1083;&#1080; &#1080;&#1093; &#1086;&#1084;&#1086;&#1075;&#1091;&#1115;&#1080;&#1090;&#1077; &#1091; &#1087;&#1086;&#1089;&#1090;&#1072;&#1074;&#1082;&#1072;&#1084;&#1072;)</li>"\n    "<li>&#1048;&#1079;&#1073;&#1088;&#1080;&#1096;&#1080;&#1090;&#1077; &#1089;&#1074;&#1077; &#1082;&#1086;&#1083;&#1072;&#1095;&#1080;&#1115;&#1077; &#1082;&#1072;&#1086; &#1080; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1112;&#1072;&#1090; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1114;&#1072; &#1080; &#1087;&#1088;&#1077;&#1090;&#1088;&#1072;&#1075;&#1077;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1112;&#1077; &#1089;&#1090;&#1074;&#1086;&#1088;&#1080;&#1083;&#1072; Mozilla. &#1053;&#1072;&#1096;&#1072; &#1084;&#1080;&#1089;&#1080;&#1112;&#1072; &#1112;&#1077; &#1085;&#1077;&#1075;&#1086;&#1074;&#1072;&#1114;&#1077; &#1079;&#1076;&#1088;&#1072;&#1074;&#1086;&#1075; &#1080; &#1086;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085;&#1086;&#1075; &#1080;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1072;.<br/>\n<a href="%2$s">&#1057;&#1072;&#1079;&#1085;&#1072;&#1112;&#1090;&#1077; &#1074;&#1080;&#1096;&#1077;</a></p>]]></string>
   <string name="preference_category_search">Претраживач</string>
   <string name="preference_search_engine_default">Подразумевано</string>
+  <string name="preference_state_on">Укључено</string>
+  <string name="preference_state_off">Искључено</string>
+  <string name="preference_subitem_autocomplete">URL ауто-завршетак</string>
+  <string name="preference_switch_autocomplete">Ауто-завршетак</string>
+  <string name="preference_category_autocomplete_preinstalled">Подразумевана URL листа</string>
+  <string name="preference_autocomplete_preinstalled_summary">Омогућите како би %1$s аутоматски завршавао преко 450 популарних URL адреса у адресној траци.</string>
+  <string name="preference_category_autocomplete_custom">Прилагођени URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Прилагођени URLs</string>
+  <string name="preference_autocomplete_action_add">+ Додај URL</string>
+  <string name="preference_autocomplete_title_add">Додај прилагођени URL</string>
+  <string name="preference_autocomplete_title_remove">Уклони прилагођени URLs</string>
+  <string name="preference_autocomplete_learn_more">Сазнајте више</string>
+  <string name="preference_autocomplete_custom_summary">Додајте и управљајте аутоматски завршеним URLs адресама.</string>
+  <string name="preference_autocomplete_add_title">URL за додавање</string>
+  <string name="preference_autocomplete_add_hint">Налепите или унесите URL</string>
+  <string name="preference_autocomplete_add_example">Пример: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Нови URL додат.</string>
+  <string name="preference_autocomplete_menu_remove">Уклони</string>
+  <string name="preference_autocomplete_action_remove_content_description">Уклони</string>
+  <string name="preference_autocomplete_add_error">Добро проверите URL који сте унели.</string>
   <string name="preference_language">Језик</string>
   <string name="preference_language_systemdefault">Системски подразумеван</string>
   <string name="preference_dialog_title_search_engine">Подразумевани претраживач</string>
@@ -76,7 +98,9 @@
   <string name="search_add_manually_example">Пример: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Додај претраживач</string>
   <string name="search_add_confirmation">Нови претраживач додат.</string>
-  <string name="search_add_error">Проверите текст претраге и покушајте поново</string>
+  <string name="search_add_error_empty_name">Унесите име претраживача</string>
+  <string name="search_add_error_empty_search">Унесите текст за претрагу</string>
+  <string name="search_add_error_format">Проверите да ли се текст за претрагу поклапа са форматом примера</string>
   <string name="content_description_clear_input">Празно поље</string>
   <string name="content_description_dismiss_input">Одбаци</string>
   <string name="content_description_erase">Избриши историјат прегледања</string>

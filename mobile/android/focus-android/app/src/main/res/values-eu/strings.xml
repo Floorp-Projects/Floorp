@@ -76,7 +76,6 @@
   <string name="search_add_manually_example">Adibidea: adibidea.eus/search/?q=%s</string>
   <string name="accessibility_announcement_search">Gehitu bilaketa-motorra</string>
   <string name="search_add_confirmation">Bilaketa-motor berria gehitu da.</string>
-  <string name="search_add_error">Egiaztatu bilaketa-katea eta saiatu berriro</string>
   <string name="content_description_clear_input">Garbitu idatzitakoa</string>
   <string name="content_description_dismiss_input">Baztertu</string>
   <string name="content_description_erase">Ezabatu nabigatze-historia</string>
