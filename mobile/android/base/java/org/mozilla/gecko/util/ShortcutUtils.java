@@ -114,6 +114,29 @@ public class ShortcutUtils {
         // mgr.requestPinShortcut(info, null);
     }
 
+    public static boolean isPinShortcutSupported() {
+        if (Versions.feature26Plus) {
+            return isPinShortcutSupported26();
+        }
+        return true;
+    }
+
+    @TargetApi(26)
+    private static boolean isPinShortcutSupported26() {
+        final Context context = GeckoAppShell.getApplicationContext();
+        try {
+            final Class<?> mgrCls = Class.forName("android.content.pm.ShortcutManager");
+            final Object mgr = context.getSystemService(mgrCls);
+
+            final boolean supported = (boolean)
+                mgrCls.getDeclaredMethod("isRequestPinShortcutSupported")
+                .invoke(mgr);
+            return supported;
+        } catch (final Exception e) {
+            return false;
+        }
+    }
+
     private static Bitmap getLauncherIcon(Bitmap aSource, int size) {
         final float[] DEFAULT_LAUNCHER_ICON_HSV = { 32.0f, 1.0f, 1.0f };
         final int kOffset = 6;

@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.h 273168 2014-10-16 15:36:04Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.h 310590 2016-12-26 11:06:41Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_INPUT_H_
@@ -48,7 +50,7 @@ sctp_common_input_processing(struct mbuf **, int, int, int,
 #endif
                              uint8_t,
 #if defined(__FreeBSD__)
-                             uint8_t, uint32_t,
+                             uint8_t, uint32_t, uint16_t,
 #endif
                              uint32_t, uint16_t);
 
