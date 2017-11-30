@@ -336,10 +336,6 @@ nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-bool nsContentUtils::sDOMWindowDumpEnabled;
-#endif
-
 bool nsContentUtils::sDoNotTrackEnabled = false;
 
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
@@ -697,11 +693,6 @@ nsContentUtils::Init()
   Preferences::AddUintVarCache(&sCookiesBehavior,
                                "network.cookie.cookieBehavior",
                                nsICookieService::BEHAVIOR_ACCEPT);
-
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  Preferences::AddBoolVarCache(&sDOMWindowDumpEnabled,
-                               "browser.dom.window.dump.enabled");
-#endif
 
   Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
                                "privacy.donottrackheader.enabled", false);
@@ -7611,19 +7602,6 @@ nsContentUtils::IsAllowedNonCorsContentType(const nsACString& aHeaderValue)
   return contentType.LowerCaseEqualsLiteral("text/plain") ||
          contentType.LowerCaseEqualsLiteral("application/x-www-form-urlencoded") ||
          contentType.LowerCaseEqualsLiteral("multipart/form-data");
-}
-
-bool
-nsContentUtils::DOMWindowDumpEnabled()
-{
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  // In optimized builds we check a pref that controls if we should
-  // enable output from dump() or not, in debug builds it's always
-  // enabled.
-  return nsContentUtils::sDOMWindowDumpEnabled;
-#else
-  return true;
-#endif
 }
 
 bool
