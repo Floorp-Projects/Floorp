@@ -287,15 +287,31 @@ this.FormAutofillUtils = {
     return sandbox;
   },
 
-  // Get country address data and fallback to US if not found.
-  // See AddressDataLoader.getData for more details of addressData structure.
-  getCountryAddressData(country, level1 = null) {
+  /**
+   * Get country address data and fallback to US if not found.
+   * See AddressDataLoader.getData for more details of addressData structure.
+   * @param {string} [country=FormAutofillUtils.DEFAULT_REGION]
+   *        The country code for requesting specific country's metadata. It'll be
+   *        default region if parameter is not set.
+   * @param {string} [level1=null]
+   *        Retrun address level 1/level 2 metadata if parameter is set.
+   * @returns {object}
+   *          Return the metadata of specific region.
+   */
+  getCountryAddressData(country = FormAutofillUtils.DEFAULT_REGION, level1 = null) {
     let metadata = AddressDataLoader.getData(country, level1);
     if (!metadata) {
-      metadata = level1 ? null : AddressDataLoader.getData("US");
+      if (level1) {
+        return null;
+      }
+      // Fallback to default region if we couldn't get data from given country.
+      if (country != FormAutofillUtils.DEFAULT_REGION) {
+        metadata = AddressDataLoader.getData(FormAutofillUtils.DEFAULT_REGION);
+      }
     }
 
-    return metadata;
+    // Fallback to US if we couldn't get data from default region.
+    return metadata || AddressDataLoader.getData("US");
   },
 
   /**
@@ -413,13 +429,13 @@ this.FormAutofillUtils = {
   },
 
   /**
-   * Try to find the abbreviation of the given state name
-   * @param   {string[]} stateValues A list of inferable state values.
-   * @param   {string} country A country name to be identified.
-   * @returns {string} The matching state abbreviation.
+   * Try to find the abbreviation of the given sub-region name
+   * @param   {string[]} subregionValues A list of inferable sub-region values.
+   * @param   {string} [country] A country name to be identified.
+   * @returns {string} The matching sub-region abbreviation.
    */
-  getAbbreviatedStateName(stateValues, country = this.DEFAULT_COUNTRY_CODE) {
-    let values = Array.isArray(stateValues) ? stateValues : [stateValues];
+  getAbbreviatedSubregionName(subregionValues, country) {
+    let values = Array.isArray(subregionValues) ? subregionValues : [subregionValues];
 
     let collators = this.getCollators(country);
     let {sub_keys: subKeys, sub_names: subNames} = this.getCountryAddressData(country);
@@ -468,9 +484,8 @@ this.FormAutofillUtils = {
       return null;
     }
 
-    let country = address.country || this.DEFAULT_COUNTRY_CODE;
-    let dataset = this.getCountryAddressData(country);
-    let collators = this.getCollators(country);
+    let dataset = this.getCountryAddressData(address.country);
+    let collators = this.getCollators(address.country);
 
     for (let option of selectEl.options) {
       if (this.strCompare(value, option.value, collators) ||
@@ -667,8 +682,8 @@ this.FormAutofillUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this.FormAutofillUtils, "DEFAULT_COUNTRY_CODE", () => {
-  return Services.prefs.getCharPref("browser.search.countryCode", "US");
+XPCOMUtils.defineLazyGetter(this.FormAutofillUtils, "DEFAULT_REGION", () => {
+  return Services.prefs.getCharPref("browser.search.region", "US");
 });
 
 this.log = null;

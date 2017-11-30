@@ -1,5 +1,6 @@
 const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const gMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
   let { require } =
@@ -36,6 +37,26 @@ function getActiveTab(window) {
   return window.gBrowser.selectedTab;
 }
 
+async function garbageCollect() {
+  dump("Garbage collect\n");
+
+  // Minimize memory usage
+  // mimic miminizeMemoryUsage, by only flushing JS objects via GC.
+  // We don't want to flush all the cache like minimizeMemoryUsage,
+  // as it slow down next executions almost like a cold start.
+
+  // See minimizeMemoryUsage code to justify the 3 iterations and the setTimeout:
+  // https://searchfox.org/mozilla-central/source/xpcom/base/nsMemoryReporterManager.cpp#2574-2585
+  for (let i = 0; i < 3; i++) {
+    // See minimizeMemoryUsage code here to justify the GC+CC+GC:
+    // https://searchfox.org/mozilla-central/rev/be78e6ea9b10b1f5b2b3b013f01d86e1062abb2b/dom/base/nsJSEnvironment.cpp#341-349
+    Cu.forceGC();
+    Cu.forceCC();
+    Cu.forceGC();
+    await new Promise(done => setTimeout(done, 0));
+  }
+}
+
 /* globals res:true */
 
 function Damp() {
@@ -49,6 +70,39 @@ function Damp() {
 }
 
 Damp.prototype = {
+
+  /**
+   * Helper to tell when a test start and when it is finished.
+   * It helps recording its duration, but also put markers for perf-html when profiling
+   * DAMP.
+   *
+   * When this method is called, the test is considered to be starting immediately
+   * When the test is over, the returned object's `done` method should be called.
+   *
+   * @param label String
+   *        Test title, displayed everywhere in PerfHerder, DevTools Perf Dashboard, ...
+   *
+   * @return object
+   *         With a `done` method, to be called whenever the test is finished running
+   *         and we should record its duration.
+   */
+  runTest(label) {
+    let startLabel = label + ".start";
+    performance.mark(startLabel);
+    let start = performance.now();
+
+    return {
+      done: () => {
+        let end = performance.now();
+        let duration = end - start;
+        performance.measure(label, startLabel);
+        this._results.push({
+          name: label,
+          value: duration
+        });
+      }
+    };
+  },
 
   addTab(url) {
     return new Promise((resolve, reject) => {
@@ -66,33 +120,20 @@ Damp.prototype = {
   },
 
   reloadPage(onReload) {
-    let startReloadTimestamp = performance.now();
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       let browser = gBrowser.selectedBrowser;
       if (typeof (onReload) == "function") {
-        onReload().then(function() {
-          let stopReloadTimestamp = performance.now();
-          resolve({
-            time: stopReloadTimestamp - startReloadTimestamp
-          });
-        });
+        onReload().then(resolve);
       } else {
-        browser.addEventListener("load", function onload() {
-          let stopReloadTimestamp = performance.now();
-          resolve({
-            time: stopReloadTimestamp - startReloadTimestamp
-          });
-        }, {capture: true, once: true});
+        browser.addEventListener("load", resolve, {capture: true, once: true});
       }
       browser.reload();
-
     });
   },
 
   async openToolbox(tool = "webconsole", onLoad) {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = TargetFactory.forTab(tab);
-    let startRecordTimestamp = performance.now();
     let onToolboxCreated = gDevTools.once("toolbox-created");
     let showPromise = gDevTools.showToolbox(target, tool);
     let toolbox = await onToolboxCreated;
@@ -103,69 +144,46 @@ Damp.prototype = {
     }
     await showPromise;
 
-    let stopRecordTimestamp = performance.now();
-    return {
-      toolbox,
-      time: stopRecordTimestamp - startRecordTimestamp
-    };
+    return toolbox;
   },
 
   async closeToolbox() {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = TargetFactory.forTab(tab);
     await target.client.waitForRequestsToSettle();
-    let startRecordTimestamp = performance.now();
     await gDevTools.closeToolbox(target);
-    let stopRecordTimestamp = performance.now();
-    return {
-      time: stopRecordTimestamp - startRecordTimestamp
-    };
   },
 
-  saveHeapSnapshot(label) {
+  async saveHeapSnapshot(label) {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let panel = toolbox.getCurrentPanel();
     let memoryFront = panel.panelWin.gFront;
 
-    let start = performance.now();
-    return memoryFront.saveHeapSnapshot().then(filePath => {
-      this._heapSnapshotFilePath = filePath;
-      let end = performance.now();
-      this._results.push({
-        name: label + ".saveHeapSnapshot",
-        value: end - start
-      });
-    });
+    let test = this.runTest(label + ".saveHeapSnapshot");
+    this._heapSnapshotFilePath = await memoryFront.saveHeapSnapshot();
+    test.done();
   },
 
   readHeapSnapshot(label) {
-    let start = performance.now();
+    let test = this.runTest(label + ".readHeapSnapshot");
     this._snapshot = ChromeUtils.readHeapSnapshot(this._heapSnapshotFilePath);
-    let end = performance.now();
-    this._results.push({
-      name: label + ".readHeapSnapshot",
-      value: end - start
-    });
+    test.done();
     return Promise.resolve();
   },
 
   async waitForNetworkRequests(label, toolbox) {
-    const start = performance.now();
+    let test = this.runTest(label + ".requestsFinished.DAMP");
     await this.waitForAllRequestsFinished();
-    const end = performance.now();
-    this._results.push({
-      name: label + ".requestsFinished.DAMP",
-      value: end - start
-    });
+    test.done();
   },
 
   async _consoleBulkLoggingTest() {
     let TOTAL_MESSAGES = 10;
     let tab = await this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    let {toolbox} = await this.openToolbox("webconsole");
+    let toolbox = await this.openToolbox("webconsole");
     let webconsole = toolbox.getPanel("webconsole");
 
     // Resolve once the last message has been received.
@@ -197,16 +215,11 @@ Damp.prototype = {
     // Kick off the logging
     messageManager.sendAsyncMessage("do-logs");
 
-    let start = performance.now();
+    let test = this.runTest("console.bulklog");
     await allMessagesReceived;
-    let end = performance.now();
+    test.done();
 
-    this._results.push({
-      name: "console.bulklog",
-      value: end - start
-    });
-
-    await this.closeToolbox(null);
+    await this.closeToolbox();
     await this.testTeardown();
   },
 
@@ -255,14 +268,14 @@ Damp.prototype = {
       value: avgTime
     });
 
-    await this.closeToolbox(null);
+    await this.closeToolbox();
     await this.testTeardown();
   },
 
   async _consoleObjectExpansionTest() {
     let tab = await this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    let {toolbox} = await this.openToolbox("webconsole");
+    let toolbox = await this.openToolbox("webconsole");
     let webconsole = toolbox.getPanel("webconsole");
 
     // Resolve once the first message is received.
@@ -291,7 +304,7 @@ Damp.prototype = {
     // Kick off the logging
     messageManager.sendAsyncMessage("do-dir");
 
-    let start = performance.now();
+    let test = this.runTest("console.objectexpand");
     await onMessageReceived;
     const tree = webconsole.hud.ui.outputNode.querySelector(".dir.message .tree");
     // The tree can be collapsed since the properties are fetched asynchronously.
@@ -308,10 +321,7 @@ Damp.prototype = {
       });
     }
 
-    this._results.push({
-      name: "console.objectexpand",
-      value: performance.now() - start,
-    });
+    test.done();
 
     await this.closeToolboxAndLog("console.objectexpanded");
     await this.testTeardown();
@@ -333,7 +343,7 @@ async _consoleOpenWithCachedMessagesTest() {
 
   await this.openToolboxAndLog("console.openwithcache", "webconsole");
 
-  await this.closeToolbox(null);
+  await this.closeToolbox();
   await this.testTeardown();
 },
 
@@ -344,7 +354,7 @@ async _consoleOpenWithCachedMessagesTest() {
   async _inspectorMutationsTest() {
     let tab = await this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    let {toolbox} = await this.openToolbox("inspector");
+    let toolbox = await this.openToolbox("inspector");
     let inspector = toolbox.getPanel("inspector");
 
     // Test with n=LIMIT mutations, with t=DELAY ms between each one.
@@ -369,7 +379,7 @@ async _consoleOpenWithCachedMessagesTest() {
       }`
     ) + ")()", false);
 
-    let start = performance.now();
+    let test = this.runTest("inspector.mutations");
 
     await new Promise(resolve => {
       let childListMutationsCounter = 0;
@@ -385,12 +395,9 @@ async _consoleOpenWithCachedMessagesTest() {
       messageManager.sendAsyncMessage("start-mutations-test");
     });
 
-    this._results.push({
-      name: "inspector.mutations",
-      value: performance.now() - start
-    });
+    test.done();
 
-    await this.closeToolbox(null);
+    await this.closeToolbox();
     await this.testTeardown();
   },
 
@@ -434,7 +441,7 @@ async _consoleOpenWithCachedMessagesTest() {
       value: performance.now() - start
     });
 
-    await this.closeToolbox(null);
+    await this.closeToolbox();
 
     // Restore sidebar tab preference.
     Services.prefs.setCharPref("devtools.inspector.activeSidebar", sidebarTab);
@@ -443,7 +450,7 @@ async _consoleOpenWithCachedMessagesTest() {
   },
 
   takeCensus(label) {
-    let start = performance.now();
+    let test = this.runTest(label + ".takeCensus");
 
     this._snapshot.takeCensus({
       breakdown: {
@@ -468,33 +475,40 @@ async _consoleOpenWithCachedMessagesTest() {
       }
     });
 
-    let end = performance.now();
-
-    this._results.push({
-      name: label + ".takeCensus",
-      value: end - start
-    });
+    test.done();
 
     return Promise.resolve();
   },
 
   async openToolboxAndLog(name, tool, onLoad) {
     dump("Open toolbox on '" + name + "'\n");
-    let {time, toolbox} = await this.openToolbox(tool, onLoad);
-    this._results.push({name: name + ".open.DAMP", value: time });
+    let test = this.runTest(name + ".open.DAMP");
+    let toolbox = await this.openToolbox(tool, onLoad);
+    test.done();
+
+    // Force freeing memory after toolbox open as it creates a lot of objects
+    // and for complex documents, it introduces a GC that runs during 'reload' test.
+    await garbageCollect();
+
     return toolbox;
   },
 
   async closeToolboxAndLog(name) {
     dump("Close toolbox on '" + name + "'\n");
-    let {time} = await this.closeToolbox();
-    this._results.push({name: name + ".close.DAMP", value: time });
+    let tab = getActiveTab(getMostRecentBrowserWindow());
+    let target = TargetFactory.forTab(tab);
+    await target.client.waitForRequestsToSettle();
+
+    let test = this.runTest(name + ".close.DAMP");
+    await gDevTools.closeToolbox(target);
+    test.done();
   },
 
   async reloadPageAndLog(name, onReload) {
     dump("Reload page on '" + name + "'\n");
-    let {time} = await this.reloadPage(onReload);
-    this._results.push({name: name + ".reload.DAMP", value: time });
+    let test = this.runTest(name + ".reload.DAMP");
+    await this.reloadPage(onReload);
+    test.done();
   },
 
   async _coldInspectorOpen() {
@@ -514,7 +528,7 @@ async _consoleOpenWithCachedMessagesTest() {
       </script>
     `);
     await this.testSetup(url);
-    let {toolbox} = await this.openToolbox("webconsole");
+    let toolbox = await this.openToolbox("webconsole");
 
     // Select the options panel to make the console be in background.
     // Options panel should not do anything on page reload.
@@ -668,6 +682,10 @@ async _consoleOpenWithCachedMessagesTest() {
 
   async testTeardown(url) {
     this.closeCurrentTab();
+
+    // Force freeing memory now so that it doesn't happen during the next test
+    await garbageCollect();
+
     this._nextCommand();
   },
 
@@ -873,6 +891,10 @@ async _consoleOpenWithCachedMessagesTest() {
       }
     }
 
-    this._doSequence(sequenceArray, this._doneInternal);
+    // Free memory before running the first test, otherwise we may have a GC
+    // related to Firefox startup or DAMP setup during the first test.
+    garbageCollect().then(() => {
+      this._doSequence(sequenceArray, this._doneInternal);
+    });
   }
 };

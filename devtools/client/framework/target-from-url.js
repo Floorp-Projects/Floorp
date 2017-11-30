@@ -7,44 +7,40 @@
 const { TargetFactory } = require("devtools/client/framework/target");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { Task } = require("devtools/shared/task");
 
 /**
  * Construct a Target for a given URL object having various query parameters:
  *
- * host:
- *    {String} The hostname or IP address to connect to.
- * port:
- *    {Number} The TCP port to connect to, to use with `host` argument.
- * ws:
- *    {Boolean} If true, connect via websocket instread of regular TCP connection.
+ * - host, port & ws: See the documentation for clientFromURL
  *
- * type: tab, process, window
- *    {String} The type of target to connect to.
+ * - type: tab, process, window
+ *      {String} The type of target to connect to.
  *
  * If type == "tab":
- * id:
- *    {Number} the tab outerWindowID
- * chrome: Optional
- *    {Boolean} Force the creation of a chrome target. Gives more privileges to
- *    the tab actor. Allows chrome execution in the webconsole and see chrome
- *    files in the debugger. (handy when contributing to firefox)
+ * - id:
+ *      {Number} the tab outerWindowID
+ * - chrome: Optional
+ *      {Boolean} Force the creation of a chrome target. Gives more privileges to
+ *      the tab actor. Allows chrome execution in the webconsole and see chrome
+ *      files in the debugger. (handy when contributing to firefox)
  *
  * If type == "process":
- * id:
- *    {Number} the process id to debug. Default to 0, which is the parent
- *    process.
+ * - id:
+ *      {Number} the process id to debug. Default to 0, which is the parent process.
  *
  * If type == "window":
- * id:
- *    {Number} the window outerWindowID
+ * - id:
+ *      {Number} the window outerWindowID
  *
  * @param {URL} url
  *        The url to fetch query params from.
  *
  * @return A target object
  */
-exports.targetFromURL = Task.async(function* (url) {
+exports.targetFromURL = async function targetFromURL(url) {
+  let client = await clientFromURL(url);
+  await client.connect();
+
   let params = url.searchParams;
   let type = params.get("type");
   if (!type) {
@@ -55,10 +51,6 @@ exports.targetFromURL = Task.async(function* (url) {
   // (handy to debug chrome stuff in a child process)
   let chrome = params.has("chrome");
 
-  let client = yield createClient(params);
-
-  yield client.connect();
-
   let form, isTabActor;
   if (type === "tab") {
     // Fetch target for a remote tab
@@ -67,7 +59,7 @@ exports.targetFromURL = Task.async(function* (url) {
       throw new Error(`targetFromURL, wrong tab id '${id}', should be a number`);
     }
     try {
-      let response = yield client.getTab({ outerWindowID: id });
+      let response = await client.getTab({ outerWindowID: id });
       form = response.tab;
     } catch (ex) {
       if (ex.error == "noTab") {
@@ -83,7 +75,7 @@ exports.targetFromURL = Task.async(function* (url) {
       if (isNaN(id)) {
         id = 0;
       }
-      let response = yield client.getProcess(id);
+      let response = await client.getProcess(id);
       form = response.form;
       chrome = true;
       if (id != 0) {
@@ -104,7 +96,7 @@ exports.targetFromURL = Task.async(function* (url) {
       if (isNaN(id)) {
         throw new Error("targetFromURL, window requires id parameter");
       }
-      let response = yield client.mainRoot.getWindow({
+      let response = await client.mainRoot.getWindow({
         outerWindowID: id,
       });
       form = response.window;
@@ -120,16 +112,31 @@ exports.targetFromURL = Task.async(function* (url) {
   }
 
   return TargetFactory.forRemoteTab({ client, form, chrome, isTabActor });
-});
+};
 
-function* createClient(params) {
+/**
+ * Create a DebuggerClient for a given URL object having various query parameters:
+ *
+ * host:
+ *    {String} The hostname or IP address to connect to.
+ * port:
+ *    {Number} The TCP port to connect to, to use with `host` argument.
+ * ws:
+ *    {Boolean} If true, connect via websocket instead of regular TCP connection.
+ *
+ * @param {URL} url
+ *        The url to fetch query params from.
+ * @return a promise that resolves a DebuggerClient object
+ */
+async function clientFromURL(url) {
+  let params = url.searchParams;
   let host = params.get("host");
   let port = params.get("port");
   let webSocket = !!params.get("ws");
 
   let transport;
   if (port) {
-    transport = yield DebuggerClient.socketConnect({ host, port, webSocket });
+    transport = await DebuggerClient.socketConnect({ host, port, webSocket });
   } else {
     // Setup a server if we don't have one already running
     DebuggerServer.init();
@@ -138,3 +145,5 @@ function* createClient(params) {
   }
   return new DebuggerClient(transport);
 }
+
+exports.clientFromURL = clientFromURL;

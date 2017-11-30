@@ -287,9 +287,19 @@ nsNavHistory::nsNavHistory()
   , mLastCachedEndOfDay(0)
   , mCanNotify(true)
   , mCacheObservers("history-observers")
+#ifdef XP_WIN
+  , mCryptoProviderInitialized(false)
+#endif
 {
   NS_ASSERTION(!gHistoryService,
                "Attempting to create two instances of the service!");
+#ifdef XP_WIN
+  BOOL cryptoAcquired = CryptAcquireContext(&mCryptoProvider, 0, 0, PROV_RSA_FULL,
+                                            CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
+  if (cryptoAcquired) {
+    mCryptoProviderInitialized = true;
+  }
+#endif
   gHistoryService = this;
 }
 
@@ -300,8 +310,15 @@ nsNavHistory::~nsNavHistory()
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this,
                "Deleting a non-singleton instance of the service");
+
   if (gHistoryService == this)
     gHistoryService = nullptr;
+
+#ifdef XP_WIN
+  if (mCryptoProviderInitialized) {
+    Unused << CryptReleaseContext(mCryptoProvider, 0);
+  }
+#endif
 }
 
 
@@ -3280,7 +3297,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
          "JOIN moz_bookmarks tags ON bms.parent = tags.id "
          "WHERE tags.parent =").
            Param(":tags_folder").
-           Str("AND tags.title IN (");
+           Str("AND lower(tags.title) IN (");
     for (uint32_t i = 0; i < tags.Length(); ++i) {
       nsPrintfCString param(":tag%d_", i);
       clause.Param(param.get());
@@ -3457,6 +3474,7 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageBaseStatement* statement,
     for (uint32_t i = 0; i < tags.Length(); ++i) {
       nsPrintfCString paramName("tag%d_", i);
       NS_ConvertUTF16toUTF8 tag(tags[i]);
+      ToLowerCase(tag);
       rv = statement->BindUTF8StringByName(paramName + qIndex, tag);
       NS_ENSURE_SUCCESS(rv, rv);
     }

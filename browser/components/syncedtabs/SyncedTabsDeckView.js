@@ -6,8 +6,6 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let { getChromeWindow } = Cu.import("resource:///modules/syncedtabs/util.js", {});
-
 let log = Cu.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
 
@@ -54,29 +52,8 @@ SyncedTabsDeckView.prototype = {
     deck.appendChild(tabListWrapper);
     this.container.appendChild(deck);
 
-    this._generateDevicePromo();
-
     this._attachListeners();
     this.update(state);
-  },
-
-  _getBrowserBundle() {
-    return getChromeWindow(this._window).document.getElementById("bundle_browser");
-  },
-
-  _generateDevicePromo() {
-    let bundle = this._getBrowserBundle();
-    let formatArgs = ["android", "ios"].map(os => {
-      let link = this._doc.createElement("a");
-      link.textContent = bundle.getString(`appMenuRemoteTabs.mobilePromo.${os}`);
-      link.className = `${os}-link text-link`;
-      link.setAttribute("href", "#");
-      return link.outerHTML;
-    });
-    // Put it all together...
-    let contents = bundle.getFormattedString("appMenuRemoteTabs.mobilePromo.text2", formatArgs);
-    // eslint-disable-next-line no-unsanitized/property
-    this.container.querySelector(".device-promo").innerHTML = contents;
   },
 
   destroy() {
@@ -106,12 +83,11 @@ SyncedTabsDeckView.prototype = {
   },
 
   _attachListeners() {
-    this.container.querySelector(".android-link").addEventListener("click", this.props.onAndroidClick);
-    this.container.querySelector(".ios-link").addEventListener("click", this.props.oniOSClick);
     let syncPrefLinks = this.container.querySelectorAll(".sync-prefs");
     for (let link of syncPrefLinks) {
       link.addEventListener("click", this.props.onSyncPrefClick);
     }
+    this.container.querySelector(".connect-device").addEventListener("click", this.props.onConnectDeviceClick);
   },
 };
 

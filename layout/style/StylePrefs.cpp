@@ -19,6 +19,7 @@ bool StylePrefs::sControlCharVisibility;
 bool StylePrefs::sFramesTimingFunctionEnabled;
 bool StylePrefs::sUnprefixedFullscreenApiEnabled;
 bool StylePrefs::sVisitedLinksEnabled;
+bool StylePrefs::sMozDocumentEnabledInContent;
 
 /* static */ void
 StylePrefs::Init()
@@ -41,6 +42,8 @@ StylePrefs::Init()
                                "full-screen-api.unprefix.enabled");
   Preferences::AddBoolVarCache(&sVisitedLinksEnabled,
                                "layout.css.visited_links_enabled");
+  Preferences::AddBoolVarCache(&sMozDocumentEnabledInContent,
+                               "layout.css.moz-document.content.enabled");
 }
 
 } // namespace mozilla

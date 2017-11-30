@@ -642,7 +642,7 @@ class FormAutofillSection {
           }
 
           let text = element.selectedOptions[0].text.trim();
-          value = FormAutofillUtils.getAbbreviatedStateName([value, text]) || text;
+          value = FormAutofillUtils.getAbbreviatedSubregionName([value, text]) || text;
         }
 
         if (!value || value.length > FormAutofillUtils.MAX_FIELD_VALUE_LENGTH) {

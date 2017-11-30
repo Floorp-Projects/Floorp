@@ -115,30 +115,26 @@ mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
 nsresult
 mozInlineSpellStatus::InitForEditorChange(
     EditAction aAction,
-    nsIDOMNode* aAnchorNode, int32_t aAnchorOffset,
-    nsIDOMNode* aPreviousNode, int32_t aPreviousOffset,
-    nsIDOMNode* aStartNode, int32_t aStartOffset,
-    nsIDOMNode* aEndNode, int32_t aEndOffset)
+    nsINode* aAnchorNode, uint32_t aAnchorOffset,
+    nsINode* aPreviousNode, uint32_t aPreviousOffset,
+    nsINode* aStartNode, uint32_t aStartOffset,
+    nsINode* aEndNode, uint32_t aEndOffset)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIDOMDocument> doc;
-  rv = GetDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(!aAnchorNode) || NS_WARN_IF(!aPreviousNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // save the anchor point as a range so we can find the current word later
-  rv = PositionToCollapsedRange(doc, aAnchorNode, aAnchorOffset,
-                                getter_AddRefs(mAnchorRange));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsINode> prevNode = do_QueryInterface(aPreviousNode);
-  NS_ENSURE_STATE(prevNode);
+  mAnchorRange = PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
+  if (NS_WARN_IF(!mAnchorRange)) {
+    return NS_ERROR_FAILURE;
+  }
 
   bool deleted = aAction == EditAction::deleteSelection;
   if (aAction == EditAction::insertIMEText) {
     // IME may remove the previous node if it cancels composition when
     // there is no text around the composition.
-    deleted = !prevNode->IsInComposedDoc();
+    deleted = !aPreviousNode->IsInComposedDoc();
   }
 
   if (deleted) {
@@ -153,27 +149,27 @@ mozInlineSpellStatus::InitForEditorChange(
   mOp = eOpChange;
 
   // range to check
-  mRange = new nsRange(prevNode);
+  mRange = new nsRange(aPreviousNode);
 
   // ...we need to put the start and end in the correct order
-  int16_t cmpResult;
-  rv = mAnchorRange->ComparePoint(aPreviousNode, aPreviousOffset, &cmpResult);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult errorResult;
+  int16_t cmpResult =
+    mAnchorRange->ComparePoint(*aPreviousNode, aPreviousOffset, errorResult);
+  if (NS_WARN_IF(errorResult.Failed())) {
+    return errorResult.StealNSResult();
+  }
+  nsresult rv;
   if (cmpResult < 0) {
     // previous anchor node is before the current anchor
-    nsCOMPtr<nsINode> previousNode = do_QueryInterface(aPreviousNode);
-    nsCOMPtr<nsINode> anchorNode = do_QueryInterface(aAnchorNode);
-    rv = mRange->SetStartAndEnd(previousNode, aPreviousOffset,
-                                anchorNode, aAnchorOffset);
+    rv = mRange->SetStartAndEnd(aPreviousNode, aPreviousOffset,
+                                aAnchorNode, aAnchorOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
     // previous anchor node is after (or the same as) the current anchor
-    nsCOMPtr<nsINode> previousNode = do_QueryInterface(aPreviousNode);
-    nsCOMPtr<nsINode> anchorNode = do_QueryInterface(aAnchorNode);
-    rv = mRange->SetStartAndEnd(anchorNode, aAnchorOffset,
-                                previousNode, aPreviousOffset);
+    rv = mRange->SetStartAndEnd(aAnchorNode, aAnchorOffset,
+                                aPreviousNode, aPreviousOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -186,15 +182,19 @@ mozInlineSpellStatus::InitForEditorChange(
 
   // if we were given a range, we need to expand our range to encompass it
   if (aStartNode && aEndNode) {
-    rv = mRange->ComparePoint(aStartNode, aStartOffset, &cmpResult);
-    NS_ENSURE_SUCCESS(rv, rv);
+    cmpResult = mRange->ComparePoint(*aStartNode, aStartOffset, errorResult);
+    if (NS_WARN_IF(errorResult.Failed())) {
+      return errorResult.StealNSResult();
+    }
     if (cmpResult < 0) { // given range starts before
       rv = mRange->SetStart(aStartNode, aStartOffset);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = mRange->ComparePoint(aEndNode, aEndOffset, &cmpResult);
-    NS_ENSURE_SUCCESS(rv, rv);
+    cmpResult = mRange->ComparePoint(*aEndNode, aEndOffset, errorResult);
+    if (NS_WARN_IF(errorResult.Failed())) {
+      return errorResult.StealNSResult();
+    }
     if (cmpResult > 0) { // given range ends after
       rv = mRange->SetEnd(aEndNode, aEndOffset);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -214,8 +214,8 @@ mozInlineSpellStatus::InitForEditorChange(
 nsresult
 mozInlineSpellStatus::InitForNavigation(
     bool aForceCheck, int32_t aNewPositionOffset,
-    nsIDOMNode* aOldAnchorNode, int32_t aOldAnchorOffset,
-    nsIDOMNode* aNewAnchorNode, int32_t aNewAnchorOffset,
+    nsINode* aOldAnchorNode, uint32_t aOldAnchorOffset,
+    nsINode* aNewAnchorNode, uint32_t aNewAnchorOffset,
     bool* aContinue)
 {
   mOp = eOpNavigation;
@@ -228,29 +228,26 @@ mozInlineSpellStatus::InitForNavigation(
   if (NS_WARN_IF(!textEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsINode> root = textEditor->GetRoot();
+  Element* root = textEditor->GetRoot();
   if (NS_WARN_IF(!root)) {
     return NS_ERROR_FAILURE;
   }
   // the anchor node might not be in the DOM anymore, check
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsINode> currentAnchor = do_QueryInterface(aOldAnchorNode, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (root && currentAnchor && ! ContentIsDescendantOf(currentAnchor, root)) {
+  if (root && aOldAnchorNode && ! ContentIsDescendantOf(aOldAnchorNode, root)) {
     *aContinue = false;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDocument> doc;
-  rv = GetDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = PositionToCollapsedRange(doc, aOldAnchorNode, aOldAnchorOffset,
-                                getter_AddRefs(mOldNavigationAnchorRange));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = PositionToCollapsedRange(doc, aNewAnchorNode, aNewAnchorOffset,
-                                getter_AddRefs(mAnchorRange));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mOldNavigationAnchorRange =
+    PositionToCollapsedRange(aOldAnchorNode, aOldAnchorOffset);
+  if (NS_WARN_IF(!mOldNavigationAnchorRange)) {
+    return NS_ERROR_FAILURE;
+  }
+  mAnchorRange =
+    PositionToCollapsedRange(aNewAnchorNode, aNewAnchorOffset);
+  if (NS_WARN_IF(!mAnchorRange)) {
+    return NS_ERROR_FAILURE;
+  }
 
   *aContinue = true;
   return NS_OK;
@@ -430,21 +427,14 @@ mozInlineSpellStatus::FillNoCheckRangeFromAnchor(
 //    Returns the nsIDOMDocument object for the document for the
 //    current spellchecker.
 
-nsresult
-mozInlineSpellStatus::GetDocument(nsIDOMDocument** aDocument)
+already_AddRefed<nsIDocument>
+mozInlineSpellStatus::GetDocument()
 {
-  *aDocument = nullptr;
   if (!mSpellChecker->mTextEditor) {
-    return NS_ERROR_UNEXPECTED;
+    return nullptr;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDoc =
-    mSpellChecker->mTextEditor->GetDOMDocument();
-  if (NS_WARN_IF(!domDoc)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  domDoc.forget(aDocument);
-  return NS_OK;
+  return mSpellChecker->mTextEditor->GetDocument();
 }
 
 // mozInlineSpellStatus::PositionToCollapsedRange
@@ -453,24 +443,23 @@ mozInlineSpellStatus::GetDocument(nsIDOMDocument** aDocument)
 //    position. We use ranges to store DOM positions becuase they stay
 //    updated as the DOM is changed.
 
-nsresult
-mozInlineSpellStatus::PositionToCollapsedRange(nsIDOMDocument* aDocument,
-                                               nsIDOMNode* aNode,
-                                               int32_t aOffset,
-                                               nsRange** aRange)
+already_AddRefed<nsRange>
+mozInlineSpellStatus::PositionToCollapsedRange(nsINode* aNode,
+                                               uint32_t aOffset)
 {
-  *aRange = nullptr;
-  nsCOMPtr<nsINode> documentNode = do_QueryInterface(aDocument);
-  RefPtr<nsRange> range = new nsRange(documentNode);
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsresult rv = range->CollapseTo(node, aOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsCOMPtr<nsIDocument> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return nullptr;
   }
 
-  range.swap(*aRange);
-  return NS_OK;
+  RefPtr<nsRange> range = new nsRange(document);
+
+  nsresult rv = range->CollapseTo(aNode, aOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return range.forget();
 }
 
 // mozInlineSpellResume
@@ -872,9 +861,9 @@ mozInlineSpellChecker::NotifyObservers(const char* aTopic,
 NS_IMETHODIMP
 mozInlineSpellChecker::SpellCheckAfterEditorChange(
     int32_t aAction, nsISelection *aSelection,
-    nsIDOMNode *aPreviousSelectedNode, int32_t aPreviousSelectedOffset,
-    nsIDOMNode *aStartNode, int32_t aStartOffset,
-    nsIDOMNode *aEndNode, int32_t aEndOffset)
+    nsINode *aPreviousSelectedNode, uint32_t aPreviousSelectedOffset,
+    nsINode *aStartNode, uint32_t aStartOffset,
+    nsINode *aEndNode, uint32_t aEndOffset)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aSelection);
@@ -885,17 +874,13 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
   // therefore, we should spellcheck for subsequent caret navigations
   mNeedsCheckAfterNavigation = true;
 
-  // the anchor node is the position of the caret
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  rv = aSelection->GetAnchorNode(getter_AddRefs(anchorNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  int32_t anchorOffset;
-  rv = aSelection->GetAnchorOffset(&anchorOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Selection> selection = aSelection->AsSelection();
 
+  // the anchor node is the position of the caret
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForEditorChange((EditAction)aAction,
-                                   anchorNode, anchorOffset,
+                                   selection->GetAnchorNode(),
+                                   selection->AnchorOffset(),
                                    aPreviousSelectedNode,
                                    aPreviousSelectedOffset,
                                    aStartNode, aStartOffset,
@@ -1840,7 +1825,7 @@ mozInlineSpellChecker::SaveCurrentSelectionPosition()
     return NS_ERROR_FAILURE;
   }
 
-  mCurrentSelectionAnchorNode = do_QueryInterface(selection->GetFocusNode());
+  mCurrentSelectionAnchorNode = selection->GetFocusNode();
   mCurrentSelectionOffset = selection->FocusOffset();
 
   return NS_OK;
@@ -1890,8 +1875,8 @@ mozInlineSpellChecker::HandleNavigationEvent(bool aForceWordSpellCheck,
   if (! mNeedsCheckAfterNavigation)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMNode> currentAnchorNode = mCurrentSelectionAnchorNode;
-  int32_t currentAnchorOffset = mCurrentSelectionOffset;
+  nsCOMPtr<nsINode> currentAnchorNode = mCurrentSelectionAnchorNode;
+  uint32_t currentAnchorOffset = mCurrentSelectionOffset;
 
   // now remember the new focus position resulting from the event
   rv = SaveCurrentSelectionPosition();

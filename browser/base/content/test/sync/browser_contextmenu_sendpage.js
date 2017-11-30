@@ -38,6 +38,7 @@ add_task(async function test_page_contextmenu_sendtab_no_remote_clients() {
   checkPopup([
     { label: "No Devices Connected", disabled: true },
     "----",
+    { label: "Connect Another Device..." },
     { label: "Learn About Sending Tabs..." }
   ]);
   await hideContentContextMenu();

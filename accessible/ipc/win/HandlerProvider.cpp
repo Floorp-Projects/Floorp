@@ -614,11 +614,15 @@ HandlerProvider::GetAllTextInfoMainThread(BSTR* aText,
   long end = 0;
   long length = ::SysStringLen(*aText);
   while (end < length) {
+    long offset = end;
     long start;
     BSTR attribs;
     // The (exclusive) end of the last run is the start of the next run.
-    hr = ht->get_attributes(end, &start, &end, &attribs);
-    if (FAILED(hr)) {
+    hr = ht->get_attributes(offset, &start, &end, &attribs);
+    // Bug 1421873: Gecko can return end <= offset in some rare cases, which
+    // isn't valid. This is perhaps because the text mutated during the loop
+    // for some reason, making this offset invalid.
+    if (FAILED(hr) || end <= offset) {
       break;
     }
     attribRuns.AppendElement(IA2TextSegment({attribs, start, end}));

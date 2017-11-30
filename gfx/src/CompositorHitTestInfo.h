@@ -45,6 +45,10 @@ enum class CompositorHitTestInfo : uint16_t {
   // If eScrollbar is set, this flag indicates if the scrollbar is a vertical
   // one (if set) or a horizontal one (if not set)
   eScrollbarVertical = 1 << 8,
+
+  // Used for IPDL serialization. This bitmask should include all the bits
+  // that are defined in the enum.
+  ALL_BITS = (1 << 9) - 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CompositorHitTestInfo)

@@ -37,13 +37,13 @@ public:
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
   nsresult InitForEditorChange(EditAction aAction,
-                               nsIDOMNode* aAnchorNode, int32_t aAnchorOffset,
-                               nsIDOMNode* aPreviousNode, int32_t aPreviousOffset,
-                               nsIDOMNode* aStartNode, int32_t aStartOffset,
-                               nsIDOMNode* aEndNode, int32_t aEndOffset);
+                               nsINode* aAnchorNode, uint32_t aAnchorOffset,
+                               nsINode* aPreviousNode, uint32_t aPreviousOffset,
+                               nsINode* aStartNode, uint32_t aStartOffset,
+                               nsINode* aEndNode, uint32_t aEndOffset);
   nsresult InitForNavigation(bool aForceCheck, int32_t aNewPositionOffset,
-                             nsIDOMNode* aOldAnchorNode, int32_t aOldAnchorOffset,
-                             nsIDOMNode* aNewAnchorNode, int32_t aNewAnchorOffset,
+                             nsINode* aOldAnchorNode, uint32_t aOldAnchorOffset,
+                             nsINode* aNewAnchorNode, uint32_t aNewAnchorOffset,
                              bool* aContinue);
   nsresult InitForSelection();
   nsresult InitForRange(nsRange* aRange);
@@ -109,10 +109,9 @@ protected:
 
   nsresult FillNoCheckRangeFromAnchor(mozInlineSpellWordUtil& aWordUtil);
 
-  nsresult GetDocument(nsIDOMDocument** aDocument);
-  nsresult PositionToCollapsedRange(nsIDOMDocument* aDocument,
-                                    nsIDOMNode* aNode, int32_t aOffset,
-                                    nsRange** aRange);
+  already_AddRefed<nsIDocument> GetDocument();
+  already_AddRefed<nsRange> PositionToCollapsedRange(nsINode* aNode,
+                                                     uint32_t aOffset);
 };
 
 class mozInlineSpellChecker final : public nsIInlineSpellChecker,
@@ -151,8 +150,8 @@ private:
 
   // we need to keep track of the current text position in the document
   // so we can spell check the old word when the user clicks around the document.
-  nsCOMPtr<nsIDOMNode> mCurrentSelectionAnchorNode;
-  int32_t              mCurrentSelectionOffset;
+  nsCOMPtr<nsINode> mCurrentSelectionAnchorNode;
+  uint32_t mCurrentSelectionOffset;
 
   // Tracks the number of pending spell checks *and* async operations that may
   // lead to spell checks, like updating the current dictionary.  This is
