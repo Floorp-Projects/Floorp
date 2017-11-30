@@ -120,7 +120,6 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecs)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
 
   // Defaults
   std::vector<VideoCodecConfig *> codecs;
@@ -178,7 +177,6 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsFEC)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
   std::vector<VideoCodecConfig *> codecs;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
@@ -211,7 +209,6 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsH264)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
 
   WebrtcGmpPCHandleSetter setter("hi there");
 
@@ -244,7 +241,6 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsKeyframeRequestType)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
   std::vector<VideoCodecConfig *> codecs;
 
   // PLI should be preferred to FIR
@@ -272,7 +268,6 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsNack)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
   std::vector<VideoCodecConfig *> codecs;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
@@ -301,7 +296,6 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsRemb)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
   std::vector<VideoCodecConfig *> codecs;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
@@ -330,7 +324,6 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsTmmbr)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
   std::vector<VideoCodecConfig *> codecs;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
