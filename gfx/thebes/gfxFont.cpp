@@ -1708,12 +1708,6 @@ private:
                     mRunParams.dt->FillGlyphs(mFontParams.scaledFont, buf,
                                               *pat, mFontParams.drawOptions);
                 }
-            } else if (state.sourceSurface) {
-                mRunParams.dt->FillGlyphs(mFontParams.scaledFont, buf,
-                                          SurfacePattern(state.sourceSurface,
-                                                         ExtendMode::CLAMP,
-                                                         state.surfTransform),
-                                          mFontParams.drawOptions);
             } else {
                 mRunParams.dt->FillGlyphs(mFontParams.scaledFont, buf,
                                           ColorPattern(state.color),

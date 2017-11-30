@@ -85,27 +85,20 @@ extern u_short ip_id;
 #if defined(__Userspace_os_Linux)
 #define IPV6_VERSION            0x60
 #endif
+#if defined(INVARIANTS)
+#define panic(args...)            \
+	do {                      \
+		SCTP_PRINTF(args);\
+		exit(1);          \
+} while (0)
+#endif
 
 #if defined(INVARIANTS)
-#include <stdlib.h>
-
-static inline void
-terminate_non_graceful(void) {
-	abort();
-}
-
-#define panic(...)                                  \
-	do {                                        \
-		SCTP_PRINTF("%s(): ", __FUNCTION__);\
-		SCTP_PRINTF(__VA_ARGS__);           \
-		SCTP_PRINTF("\n");                  \
-		terminate_non_graceful();           \
-} while (0)
-
 #define KASSERT(cond, args)          \
 	do {                         \
 		if (!(cond)) {       \
-			panic args ; \
+			printf args ;\
+			exit(1);     \
 		}                    \
 	} while (0)
 #else

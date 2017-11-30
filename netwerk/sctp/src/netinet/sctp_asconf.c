@@ -1,6 +1,4 @@
 /*-
- * SPDX-License-Identifier: BSD-3-Clause
- *
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -34,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 324056 2017-09-27 13:05:23Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 277347 2015-01-18 20:53:20Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -189,7 +187,7 @@ sctp_process_asconf_add_ip(struct sockaddr *src, struct sctp_asconf_paramhdr *ap
 		}
 		v4addr = (struct sctp_ipv4addr_param *)ph;
 		sin = &store.sin;
-		memset(sin, 0, sizeof(*sin));
+		bzero(sin, sizeof(*sin));
 		sin->sin_family = AF_INET;
 #ifdef HAVE_SIN_LEN
 		sin->sin_len = sizeof(struct sockaddr_in);
@@ -214,7 +212,7 @@ sctp_process_asconf_add_ip(struct sockaddr *src, struct sctp_asconf_paramhdr *ap
 		}
 		v6addr = (struct sctp_ipv6addr_param *)ph;
 		sin6 = &store.sin6;
-		memset(sin6, 0, sizeof(*sin6));
+		bzero(sin6, sizeof(*sin6));
 		sin6->sin6_family = AF_INET6;
 #ifdef HAVE_SIN6_LEN
 		sin6->sin6_len = sizeof(struct sockaddr_in6);
@@ -250,9 +248,8 @@ sctp_process_asconf_add_ip(struct sockaddr *src, struct sctp_asconf_paramhdr *ap
 		m_reply = sctp_asconf_error_response(aph->correlation_id,
 		    SCTP_CAUSE_INVALID_PARAM, (uint8_t *) aph,
 		    aparam_length);
-	} else if (sctp_add_remote_addr(stcb, sa, &net, stcb->asoc.port,
-	                                SCTP_DONOT_SETSCOPE,
-	                                SCTP_ADDR_DYNAMIC_ADDED) != 0) {
+	} else if (sctp_add_remote_addr(stcb, sa, &net, SCTP_DONOT_SETSCOPE,
+	                         SCTP_ADDR_DYNAMIC_ADDED) != 0) {
 		SCTPDBG(SCTP_DEBUG_ASCONF1,
 			"process_asconf_add_ip: error adding address\n");
 		m_reply = sctp_asconf_error_response(aph->correlation_id,
@@ -344,7 +341,7 @@ sctp_process_asconf_delete_ip(struct sockaddr *src,
 		}
 		v4addr = (struct sctp_ipv4addr_param *)ph;
 		sin = &store.sin;
-		memset(sin, 0, sizeof(*sin));
+		bzero(sin, sizeof(*sin));
 		sin->sin_family = AF_INET;
 #ifdef HAVE_SIN_LEN
 		sin->sin_len = sizeof(struct sockaddr_in);
@@ -366,7 +363,7 @@ sctp_process_asconf_delete_ip(struct sockaddr *src,
 		}
 		v6addr = (struct sctp_ipv6addr_param *)ph;
 		sin6 = &store.sin6;
-		memset(sin6, 0, sizeof(*sin6));
+		bzero(sin6, sizeof(*sin6));
 		sin6->sin6_family = AF_INET6;
 #ifdef HAVE_SIN6_LEN
 		sin6->sin6_len = sizeof(struct sockaddr_in6);
@@ -479,7 +476,7 @@ sctp_process_asconf_set_primary(struct sockaddr *src,
 		}
 		v4addr = (struct sctp_ipv4addr_param *)ph;
 		sin = &store.sin;
-		memset(sin, 0, sizeof(*sin));
+		bzero(sin, sizeof(*sin));
 		sin->sin_family = AF_INET;
 #ifdef HAVE_SIN_LEN
 		sin->sin_len = sizeof(struct sockaddr_in);
@@ -499,7 +496,7 @@ sctp_process_asconf_set_primary(struct sockaddr *src,
 		}
 		v6addr = (struct sctp_ipv6addr_param *)ph;
 		sin6 = &store.sin6;
-		memset(sin6, 0, sizeof(*sin6));
+		bzero(sin6, sizeof(*sin6));
 		sin6->sin6_family = AF_INET6;
 #ifdef HAVE_SIN6_LEN
 		sin6->sin6_len = sizeof(struct sockaddr_in6);
@@ -563,9 +560,7 @@ sctp_process_asconf_set_primary(struct sockaddr *src,
 		    (stcb->asoc.primary_destination->dest_state &
 		     SCTP_ADDR_UNCONFIRMED) == 0) {
 
-			sctp_timer_stop(SCTP_TIMER_TYPE_PRIM_DELETED,
-			                stcb->sctp_ep, stcb, NULL,
-			                SCTP_FROM_SCTP_ASCONF + SCTP_LOC_1);
+			sctp_timer_stop(SCTP_TIMER_TYPE_PRIM_DELETED, stcb->sctp_ep, stcb, NULL, SCTP_FROM_SCTP_TIMER+SCTP_LOC_7);
 			if (sctp_is_mobility_feature_on(stcb->sctp_ep,
 					SCTP_MOBILITY_FASTHANDOFF)) {
 				sctp_assoc_immediate_retrans(stcb,
@@ -935,7 +930,7 @@ sctp_asconf_cleanup(struct sctp_tcb *stcb, struct sctp_nets *net)
 	 * clear out any existing asconfs going out
 	 */
 	sctp_timer_stop(SCTP_TIMER_TYPE_ASCONF, stcb->sctp_ep, stcb, net,
-			SCTP_FROM_SCTP_ASCONF + SCTP_LOC_2);
+			SCTP_FROM_SCTP_ASCONF+SCTP_LOC_2);
 	stcb->asoc.asconf_seq_out_acked = stcb->asoc.asconf_seq_out;
 	/* remove the old ASCONF on our outbound queue */
 	sctp_toss_old_asconf(stcb);
@@ -1003,7 +998,7 @@ sctp_assoc_immediate_retrans(struct sctp_tcb *stcb, struct sctp_nets *dstnet)
 		SCTPDBG_ADDR(SCTP_DEBUG_ASCONF1, &stcb->asoc.primary_destination->ro._l_addr.sa);
 		sctp_timer_stop(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep, stcb,
 				stcb->asoc.deleted_primary,
-				SCTP_FROM_SCTP_ASCONF + SCTP_LOC_3);
+				SCTP_FROM_SCTP_TIMER+SCTP_LOC_8);
 		stcb->asoc.num_send_timers_up--;
 		if (stcb->asoc.num_send_timers_up < 0) {
 			stcb->asoc.num_send_timers_up = 0;
@@ -1043,7 +1038,7 @@ sctp_net_immediate_retrans(struct sctp_tcb *stcb, struct sctp_nets *net)
 
 	SCTPDBG(SCTP_DEBUG_ASCONF1, "net_immediate_retrans: RTO is %d\n", net->RTO);
 	sctp_timer_stop(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep, stcb, net,
-	                SCTP_FROM_SCTP_ASCONF + SCTP_LOC_4);
+	    SCTP_FROM_SCTP_TIMER+SCTP_LOC_5);
 	stcb->asoc.cc_functions.sctp_set_initial_cc_param(stcb, net);
 	net->error_count = 0;
 	TAILQ_FOREACH(chk, &stcb->asoc.sent_queue, sctp_next) {
@@ -1119,8 +1114,7 @@ sctp_path_check_and_react(struct sctp_tcb *stcb, struct sctp_ifa *newifa)
 		   nexthop, the path will not be changed.
 		 */
 		SCTP_RTALLOC((sctp_route_t *)&net->ro,
-			     stcb->sctp_ep->def_vrf_id,
-			     stcb->sctp_ep->fibnum);
+			     stcb->sctp_ep->def_vrf_id);
 		if (net->ro.ro_rt == NULL)
 			continue;
 
@@ -1340,7 +1334,6 @@ sctp_asconf_queue_add(struct sctp_tcb *stcb, struct sctp_ifa *ifa,
 {
 	uint32_t status;
 	int pending_delete_queued = 0;
-	int last;
 
 	/* see if peer supports ASCONF */
 	if (stcb->asoc.asconf_supported == 0) {
@@ -1351,21 +1344,15 @@ sctp_asconf_queue_add(struct sctp_tcb *stcb, struct sctp_ifa *ifa,
 	 * if this is deleting the last address from the assoc, mark it as
 	 * pending.
 	 */
-	if ((type == SCTP_DEL_IP_ADDRESS) && !stcb->asoc.asconf_del_pending) {
-		if (stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_BOUNDALL) {
-			last = (sctp_local_addr_count(stcb) == 0);
-		} else {
-			last = (sctp_local_addr_count(stcb) == 1);
-		}
-		if (last) {
-			/* set the pending delete info only */
-			stcb->asoc.asconf_del_pending = 1;
-			stcb->asoc.asconf_addr_del_pending = ifa;
-			atomic_add_int(&ifa->refcount, 1);
-			SCTPDBG(SCTP_DEBUG_ASCONF2,
-				"asconf_queue_add: mark delete last address pending\n");
-			return (-1);
-		}
+	if ((type == SCTP_DEL_IP_ADDRESS) && !stcb->asoc.asconf_del_pending &&
+	    (sctp_local_addr_count(stcb) < 2)) {
+		/* set the pending delete info only */
+		stcb->asoc.asconf_del_pending = 1;
+		stcb->asoc.asconf_addr_del_pending = ifa;
+		atomic_add_int(&ifa->refcount, 1);
+		SCTPDBG(SCTP_DEBUG_ASCONF2,
+			"asconf_queue_add: mark delete last address pending\n");
+		return (-1);
 	}
 
 	/* queue an asconf parameter */
@@ -1650,7 +1637,7 @@ sctp_asconf_ack_clear(struct sctp_tcb *stcb SCTP_UNUSED)
 {
 	/* assume peer doesn't really know how to do asconfs */
 	/* XXX we could free the pending queue here */
-
+	
 }
 
 void
@@ -1693,14 +1680,8 @@ sctp_handle_asconf_ack(struct mbuf *m, int offset,
 	 * abort the asoc, since someone probably just hijacked us...
 	 */
 	if (serial_num == (asoc->asconf_seq_out + 1)) {
-		struct mbuf *op_err;
-		char msg[SCTP_DIAG_INFO_LEN];
-
 		SCTPDBG(SCTP_DEBUG_ASCONF1, "handle_asconf_ack: got unexpected next serial number! Aborting asoc!\n");
-		snprintf(msg, sizeof(msg), "Never sent serial number %8.8x",
-			 serial_num);
-		op_err = sctp_generate_cause(SCTP_CAUSE_PROTOCOL_VIOLATION, msg);
-		sctp_abort_an_association(stcb->sctp_ep, stcb, op_err, SCTP_SO_NOT_LOCKED);
+		sctp_abort_an_association(stcb->sctp_ep, stcb, NULL, SCTP_SO_NOT_LOCKED);
 		*abort_no_unlock = 1;
 		return;
 	}
@@ -1714,7 +1695,7 @@ sctp_handle_asconf_ack(struct mbuf *m, int offset,
 	if (serial_num == asoc->asconf_seq_out - 1) {
 		/* stop our timer */
 		sctp_timer_stop(SCTP_TIMER_TYPE_ASCONF, stcb->sctp_ep, stcb, net,
-				SCTP_FROM_SCTP_ASCONF + SCTP_LOC_5);
+				SCTP_FROM_SCTP_ASCONF+SCTP_LOC_3);
 	}
 
 	/* process the ASCONF-ACK contents */
@@ -2009,8 +1990,7 @@ sctp_addr_mgmt_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 			 * sent when the state goes open.
 			 */
 			if (status == 0 &&
-			    ((SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_OPEN) ||
-			     (SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_SHUTDOWN_RECEIVED))) {
+			    SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_OPEN) {
 #ifdef SCTP_TIMER_BASED_ASCONF
 				sctp_timer_start(SCTP_TIMER_TYPE_ASCONF, inp,
 				    stcb, stcb->asoc.primary_destination);
@@ -2262,8 +2242,7 @@ sctp_asconf_iterator_stcb(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 			 * count of queued params.  If in the non-open state,
 			 * these get sent when the assoc goes open.
 			 */
-			if ((SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_OPEN) ||
-			    (SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_SHUTDOWN_RECEIVED)) {
+			if (SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_OPEN) {
 				if (status >= 0) {
 					num_queued++;
 				}
@@ -2324,8 +2303,7 @@ sctp_set_primary_ip_address_sa(struct sctp_tcb *stcb, struct sockaddr *sa)
 			"set_primary_ip_address_sa: queued on tcb=%p, ",
 			(void *)stcb);
 		SCTPDBG_ADDR(SCTP_DEBUG_ASCONF1, sa);
-		if ((SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_OPEN) ||
-		    (SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_SHUTDOWN_RECEIVED)) {
+		if (SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_OPEN) {
 #ifdef SCTP_TIMER_BASED_ASCONF
 			sctp_timer_start(SCTP_TIMER_TYPE_ASCONF,
 					 stcb->sctp_ep, stcb,
@@ -2341,6 +2319,38 @@ sctp_set_primary_ip_address_sa(struct sctp_tcb *stcb, struct sockaddr *sa)
 		return (-1);
 	}
 	return (0);
+}
+
+void
+sctp_set_primary_ip_address(struct sctp_ifa *ifa)
+{
+	struct sctp_inpcb *inp;
+
+	/* go through all our PCB's */
+	LIST_FOREACH(inp, &SCTP_BASE_INFO(listhead), sctp_list) {
+		struct sctp_tcb *stcb;
+
+		/* process for all associations for this endpoint */
+		LIST_FOREACH(stcb, &inp->sctp_asoc_list, sctp_tcblist) {
+			/* queue an ASCONF:SET_PRIM_ADDR to be sent */
+			if (!sctp_asconf_queue_add(stcb, ifa,
+						   SCTP_SET_PRIM_ADDR)) {
+				/* set primary queuing succeeded */
+				SCTPDBG(SCTP_DEBUG_ASCONF1, "set_primary_ip_address: queued on stcb=%p, ",
+					(void *)stcb);
+				SCTPDBG_ADDR(SCTP_DEBUG_ASCONF1, &ifa->address.sa);
+				if (SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_OPEN) {
+#ifdef SCTP_TIMER_BASED_ASCONF
+					sctp_timer_start(SCTP_TIMER_TYPE_ASCONF,
+							 stcb->sctp_ep, stcb,
+							 stcb->asoc.primary_destination);
+#else
+					sctp_send_asconf(stcb, NULL, SCTP_ADDR_NOT_LOCKED);
+#endif
+				}
+			}
+		} /* for each stcb */
+	} /* for each inp */
 }
 
 int
@@ -2605,7 +2615,7 @@ sctp_compose_asconf(struct sctp_tcb *stcb, int *retlen, int addr_locked)
 	SCTP_BUF_LEN(m_asconf_chk) = sizeof(struct sctp_asconf_chunk);
 	SCTP_BUF_LEN(m_asconf) = 0;
 	acp = mtod(m_asconf_chk, struct sctp_asconf_chunk *);
-	memset(acp, 0, sizeof(struct sctp_asconf_chunk));
+	bzero(acp, sizeof(struct sctp_asconf_chunk));
 	/* save pointers to lookup address and asconf params */
 	lookup_ptr = (caddr_t)(acp + 1);	/* after the header */
 	ptr = mtod(m_asconf, caddr_t);	/* beginning of cluster */
@@ -2738,7 +2748,7 @@ sctp_compose_asconf(struct sctp_tcb *stcb, int *retlen, int addr_locked)
 			/* XXX for now, we send a IPv4 address of 0.0.0.0 */
 			lookup->ph.param_type = htons(SCTP_IPV4_ADDRESS);
 			lookup->ph.param_length = htons(SCTP_SIZE32(sizeof(struct sctp_ipv4addr_param)));
-			memset(lookup->addr, 0, sizeof(struct in_addr));
+			bzero(lookup->addr, sizeof(struct in_addr));
 			SCTP_BUF_LEN(m_asconf_chk) += SCTP_SIZE32(sizeof(struct sctp_ipv4addr_param));
 		}
 	}
@@ -3240,7 +3250,6 @@ sctp_addr_mgmt_ep_sa(struct sctp_inpcb *inp, struct sockaddr *sa,
 		} else {
 			struct sctp_asconf_iterator *asc;
 			struct sctp_laddr *wi;
-			int ret;
 
 			SCTP_MALLOC(asc, struct sctp_asconf_iterator *,
 			            sizeof(struct sctp_asconf_iterator),
@@ -3262,7 +3271,7 @@ sctp_addr_mgmt_ep_sa(struct sctp_inpcb *inp, struct sockaddr *sa,
 			wi->action = type;
 			atomic_add_int(&ifa->refcount, 1);
 			LIST_INSERT_HEAD(&asc->list_of_work, wi, sctp_nxt_addr);
-			ret = sctp_initiate_iterator(sctp_asconf_iterator_ep,
+			(void)sctp_initiate_iterator(sctp_asconf_iterator_ep,
 			                             sctp_asconf_iterator_stcb,
 			                             sctp_asconf_iterator_ep_end,
 			                             SCTP_PCB_ANY_FLAGS,
@@ -3270,12 +3279,6 @@ sctp_addr_mgmt_ep_sa(struct sctp_inpcb *inp, struct sockaddr *sa,
 			                             SCTP_ASOC_ANY_STATE,
 			                             (void *)asc, 0,
 			                             sctp_asconf_iterator_end, inp, 0);
-			if (ret) {
-				SCTP_PRINTF("Failed to initiate iterator for addr_mgmt_ep_sa\n");
-				SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_ASCONF, EFAULT);
-				                    sctp_asconf_iterator_end(asc, 0);
-				return (EFAULT);
-			}
 		}
 		return (0);
 	} else {

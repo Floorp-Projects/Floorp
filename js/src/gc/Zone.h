@@ -9,20 +9,19 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/MemoryReporting.h"
 
-#include "jscntxt.h"
-
-#include "ds/SplayTree.h"
 #include "gc/FindSCCs.h"
 #include "gc/GCRuntime.h"
 #include "js/GCHashTable.h"
-#include "js/TracingAPI.h"
 #include "vm/MallocProvider.h"
 #include "vm/RegExpShared.h"
-#include "vm/TypeInference.h"
+#include "vm/Runtime.h"
+
+struct JSContext;
 
 namespace js {
+
+class Debugger;
 
 namespace jit {
 class JitZone;
@@ -987,92 +986,6 @@ ZoneAllocPolicy::pod_realloc(T* p, size_t oldSize, size_t newSize)
     return zone->pod_realloc<T>(p, oldSize, newSize);
 }
 
-/*
- * Provides a delete policy that can be used for objects which have their
- * lifetime managed by the GC so they can be safely destroyed outside of GC.
- *
- * This is necessary for example when initializing such an object may fail after
- * the initial allocation. The partially-initialized object must be destroyed,
- * but it may not be safe to do so at the current time as the store buffer may
- * contain pointers into it.
- *
- * This policy traces GC pointers in the object and clears them, making sure to
- * trigger barriers while doing so. This will remove any store buffer pointers
- * into the object and make it safe to delete.
- */
-template <typename T>
-struct GCManagedDeletePolicy
-{
-    struct ClearEdgesTracer : public JS::CallbackTracer
-    {
-        explicit ClearEdgesTracer(JSContext* cx) : CallbackTracer(cx, TraceWeakMapKeysValues) {}
-#ifdef DEBUG
-        TracerKind getTracerKind() const override { return TracerKind::ClearEdges; }
-#endif
-
-        template <typename S>
-        void clearEdge(S** thingp) {
-            InternalBarrierMethods<S*>::preBarrier(*thingp);
-            InternalBarrierMethods<S*>::postBarrier(thingp, *thingp, nullptr);
-            *thingp = nullptr;
-        }
-
-        void onObjectEdge(JSObject** objp) override { clearEdge(objp); }
-        void onStringEdge(JSString** strp) override { clearEdge(strp); }
-        void onSymbolEdge(JS::Symbol** symp) override { clearEdge(symp); }
-        void onScriptEdge(JSScript** scriptp) override { clearEdge(scriptp); }
-        void onShapeEdge(js::Shape** shapep) override { clearEdge(shapep); }
-        void onObjectGroupEdge(js::ObjectGroup** groupp) override { clearEdge(groupp); }
-        void onBaseShapeEdge(js::BaseShape** basep) override { clearEdge(basep); }
-        void onJitCodeEdge(js::jit::JitCode** codep) override { clearEdge(codep); }
-        void onLazyScriptEdge(js::LazyScript** lazyp) override { clearEdge(lazyp); }
-        void onScopeEdge(js::Scope** scopep) override { clearEdge(scopep); }
-        void onRegExpSharedEdge(js::RegExpShared** sharedp) override { clearEdge(sharedp); }
-        void onChild(const JS::GCCellPtr& thing) override { MOZ_CRASH(); }
-    };
-
-    void operator()(const T* constPtr) {
-        if (constPtr) {
-            auto ptr = const_cast<T*>(constPtr);
-            ClearEdgesTracer trc(TlsContext.get());
-            ptr->trace(&trc);
-            js_delete(ptr);
-        }
-    }
-};
-
-#ifdef DEBUG
-inline bool
-IsClearEdgesTracer(JSTracer *trc)
-{
-    return trc->isCallbackTracer() &&
-           trc->asCallbackTracer()->getTracerKind() == JS::CallbackTracer::TracerKind::ClearEdges;
-}
-#endif
-
 } // namespace js
-
-namespace JS {
-
-// Scope data that contain GCPtrs must use the correct DeletePolicy.
-//
-// This is defined here because vm/Scope.h cannot #include "vm/Runtime.h"
-
-template <>
-struct DeletePolicy<js::FunctionScope::Data>
-  : public js::GCManagedDeletePolicy<js::FunctionScope::Data>
-{ };
-
-template <>
-struct DeletePolicy<js::ModuleScope::Data>
-  : public js::GCManagedDeletePolicy<js::ModuleScope::Data>
-{ };
-
-template <>
-struct DeletePolicy<js::WasmInstanceScope::Data>
-  : public js::GCManagedDeletePolicy<js::WasmInstanceScope::Data>
-{ };
-
-} // namespace JS
 
 #endif // gc_Zone_h

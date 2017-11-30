@@ -125,10 +125,8 @@ public:
     return -1;
   }
 
-  inline static nsHtml5ElementName* elementNameByBuffer(
-    char16_t* buf,
-    int32_t length,
-    nsHtml5AtomTable* interner)
+  inline static nsHtml5ElementName*
+  elementNameByBuffer(char16_t* buf, int32_t length, nsHtml5AtomTable* interner)
   {
     uint32_t hash = nsHtml5ElementName::bufToHash(buf, length);
     jArray<int32_t, int32_t> hashes;
@@ -373,7 +371,6 @@ public:
     static nsHtml5ElementName* ELT_DT;
     static nsHtml5ElementName* ELT_APPLET;
     static nsHtml5ElementName* ELT_BASEFONT;
-    static nsHtml5ElementName* ELT_CONTENT;
     static nsHtml5ElementName* ELT_DATALIST;
     static nsHtml5ElementName* ELT_FOREIGNOBJECT;
     static nsHtml5ElementName* ELT_FIELDSET;

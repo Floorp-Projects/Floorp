@@ -631,7 +631,6 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
        GROUP_TABLE_CONTENT | GROUP_COLGROUP_CONTENT,
        GROUP_NONE),
   ELEM(colgroup, true, false, GROUP_NONE, GROUP_COLGROUP_CONTENT),
-  ELEM(content, true, false, GROUP_NONE, GROUP_INLINE_ELEMENT),
   ELEM(data, true, false, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(datalist,
        true,

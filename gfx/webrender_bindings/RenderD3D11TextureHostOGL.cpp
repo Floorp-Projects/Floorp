@@ -241,12 +241,14 @@ RenderDXGITextureHostOGL::GetSize(uint8_t aChannelIndex) const
 }
 
 RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHandles)[3],
-                                                             gfx::IntSize aSize)
+                                                             gfx::IntSize aSize,
+                                                             gfx::IntSize aSizeCbCr)
   : mHandles{ aHandles[0], aHandles[1], aHandles[2] }
   , mSurfaces{0}
   , mStreams{0}
   , mTextureHandles{0}
   , mSize(aSize)
+  , mSizeCbCr(aSizeCbCr)
   , mLocked(false)
 {
     MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
@@ -390,8 +392,7 @@ RenderDXGIYCbCrTextureHostOGL::GetSize(uint8_t aChannelIndex) const
   if (aChannelIndex == 0) {
     return mSize;
   } else {
-    // The CbCr channel size is a half of Y channel size.
-    return mSize / 2;
+    return mSizeCbCr;
   }
 }
 

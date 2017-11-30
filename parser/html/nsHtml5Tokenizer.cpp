@@ -299,8 +299,8 @@ nsHtml5Tokenizer::strBufToElementNameString()
       tagName = nsHtml5ElementName::ELT_ANNOTATION_XML;
     } else {
       nonInternedTagName->setNameForNonInterned(
-        nsHtml5Portability::newLocalNameFromBuffer(
-          strBuf, strBufLen, interner), true);
+        nsHtml5Portability::newLocalNameFromBuffer(strBuf, strBufLen, interner),
+        true);
       tagName = nonInternedTagName;
     }
   } else {
@@ -308,8 +308,8 @@ nsHtml5Tokenizer::strBufToElementNameString()
       nsHtml5ElementName::elementNameByBuffer(strBuf, strBufLen, interner);
     if (!tagName) {
       nonInternedTagName->setNameForNonInterned(
-        nsHtml5Portability::newLocalNameFromBuffer(
-          strBuf, strBufLen, interner), false);
+        nsHtml5Portability::newLocalNameFromBuffer(strBuf, strBufLen, interner),
+        false);
       tagName = nonInternedTagName;
     }
   }
