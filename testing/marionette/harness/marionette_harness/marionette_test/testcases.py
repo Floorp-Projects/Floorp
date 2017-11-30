@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import imp
+import os
 import re
 import sys
 import time
@@ -224,9 +225,13 @@ class CommonTestCase(unittest.TestCase):
 
     @property
     def test_name(self):
-        return '{0}.py {1}.{2}'.format(self.__class__.__module__,
-                                       self.__class__.__name__,
-                                       self._testMethodName)
+        rel_path = None
+        if os.path.exists(self.filepath):
+            rel_path = self._fix_test_path(os.path.relpath(self.filepath))
+
+        return '{0} {1}.{2}'.format(rel_path,
+                                    self.__class__.__name__,
+                                    self._testMethodName)
 
     def id(self):
         # TBPL starring requires that the "test name" field of a failure message
@@ -261,6 +266,18 @@ class CommonTestCase(unittest.TestCase):
                 # Gecko has crashed?
                 pass
         self.marionette = None
+
+    def _fix_test_path(self, path):
+        """Normalize a logged test path from the test package."""
+        test_path_prefixes = [
+            "tests{}".format(os.path.sep),
+        ]
+
+        for prefix in test_path_prefixes:
+            if path.startswith(prefix):
+                path = path[len(prefix):]
+                break
+        return path
 
 
 class MarionetteTestCase(CommonTestCase):
