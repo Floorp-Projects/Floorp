@@ -147,6 +147,10 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         self.test_url = c.get('test_url')
         self.test_packages_url = c.get('test_packages_url')
 
+        self.test_suite = self._get_test_suite(c.get('emulator'))
+        if self.test_suite not in self.config["suite_definitions"]:
+            self.fatal("{} is not defined in the config!".format(self.test_suite))
+
         if c.get('structured_output'):
             self.parser_class = StructuredOutputParser
         else:
@@ -157,6 +161,12 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         if not self.config.get('emulator') and not self.config.get('marionette_address'):
                 self.fatal("You need to specify a --marionette-address for non-emulator tests! "
                            "(Try --marionette-address localhost:2828 )")
+
+    def _query_tests_dir(self):
+        dirs = self.query_abs_dirs()
+        test_dir = self.config["suite_definitions"][self.test_suite]["testsdir"]
+
+        return os.path.join(dirs['abs_test_install_dir'], test_dir)
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -209,7 +219,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             self.register_virtualenv_module(
                 'marionette', os.path.join('tests', 'marionette'))
 
-    def _get_options_group(self, is_emulator):
+    def _get_test_suite(self, is_emulator):
         """
         Determine which in tree options group to use and return the
         appropriate key.
@@ -295,13 +305,8 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         if self.config.get("structured_output"):
             cmd.append("--log-raw=-")
 
-        options_group = self._get_options_group(self.config.get('emulator'))
-
-        if options_group not in self.config["suite_definitions"]:
-            self.fatal("%s is not defined in the config!" % options_group)
-
-        for s in self.config["suite_definitions"][options_group]["options"]:
-            cmd.append(s % config_fmt_args)
+        for arg in self.config["suite_definitions"][self.test_suite]["options"]:
+            cmd.append(arg % config_fmt_args)
 
         if self.mkdir_p(dirs["abs_blob_upload_dir"]) == -1:
             # Make sure that the logging directory exists
@@ -330,11 +335,18 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])
         env = self.query_env(partial_env=env)
 
+        try:
+            cwd = self._query_tests_dir()
+        except Exception as e:
+            self.fatal("Don't know how to run --test-suite '{0}': {1}!".format(
+                self.test_suite, e))
+
         marionette_parser = self.parser_class(config=self.config,
                                               log_obj=self.log_obj,
                                               error_list=BaseErrorList + HarnessErrorList,
                                               strict=False)
         return_code = self.run_command(cmd,
+                                       cwd=cwd,
                                        output_timeout=1000,
                                        output_parser=marionette_parser,
                                        env=env)
