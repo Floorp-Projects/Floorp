@@ -43,7 +43,7 @@ function runTest() {
   ok(cues[0] instanceof VTTCue, "Cue should be an instanceof VTTCue.");
 
   info("--- check the cue's position alignment ---");
-  is(cues[0].positionAlign, "center",     cues[0].text);
+  is(cues[0].positionAlign, "auto",     cues[0].text);
   is(cues[1].positionAlign, "line-left",  cues[1].text);
   is(cues[2].positionAlign, "center",     cues[2].text);
   is(cues[3].positionAlign, "line-right", cues[3].text);
