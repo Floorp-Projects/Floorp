@@ -490,7 +490,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "10e64263ca86"
+        "revision": "107ff60ff4f2"
     }, 
     "my": {
         "platforms": [
@@ -498,7 +498,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "c97f927b3192"
+        "revision": "697db1e6863d"
     }, 
     "nb-NO": {
         "platforms": [
@@ -506,7 +506,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "13900971dd15"
+        "revision": "111f1195ab7b"
     }, 
     "ne-NP": {
         "platforms": [
@@ -522,7 +522,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "3d8765a454d8"
+        "revision": "76fa86194c2c"
     }, 
     "nn-NO": {
         "platforms": [
@@ -577,7 +577,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b95690fe1425"
+        "revision": "719bf26fb3f3"
     }, 
     "rm": {
         "platforms": [
@@ -585,7 +585,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "8015d9824d14"
+        "revision": "37d27304b9df"
     }, 
     "ro": {
         "platforms": [
@@ -593,7 +593,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "c9252f4e39e1"
+        "revision": "ab5027348afa"
     }, 
     "ru": {
         "platforms": [
@@ -617,7 +617,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "06f6c7c99de2"
+        "revision": "8e64b810a6b6"
     }, 
     "son": {
         "platforms": [
@@ -641,7 +641,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "3f6fb5cdf736"
+        "revision": "b40d49b816c2"
     }, 
     "sv-SE": {
         "platforms": [
@@ -649,7 +649,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "f60630cbdfda"
+        "revision": "0d71eb0512c4"
     }, 
     "ta": {
         "platforms": [
@@ -657,7 +657,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "bd399e8a9d7b"
+        "revision": "121a1074b8af"
     }, 
     "te": {
         "platforms": [
@@ -665,7 +665,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "67db92794dc0"
+        "revision": "ebf361fbc6fa"
     }, 
     "th": {
         "platforms": [
@@ -673,7 +673,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "756bde45a1ad"
+        "revision": "33055e96745b"
     }, 
     "tr": {
         "platforms": [
@@ -681,7 +681,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "9bb2a2293fb8"
+        "revision": "1aceb0fa25df"
     }, 
     "trs": {
         "platforms": [
@@ -696,7 +696,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "8e0028246c5b"
+        "revision": "37bd7adbcecd"
     }, 
     "ur": {
         "platforms": [
@@ -704,7 +704,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "e8a6d40dff9e"
+        "revision": "ae632ad45acd"
     }, 
     "uz": {
         "platforms": [
@@ -727,7 +727,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "e0db740307e5"
+        "revision": "9cafb05397d2"
     }, 
     "xh": {
         "platforms": [
@@ -751,7 +751,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "02bf71c5d5bb"
+        "revision": "a84db836ac96"
     }, 
     "zh-TW": {
         "platforms": [
@@ -759,6 +759,6 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "fdd02ab76a70"
+        "revision": "ac796e54e218"
     }
 }
