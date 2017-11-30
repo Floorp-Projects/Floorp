@@ -21,8 +21,7 @@ this.clipboard = class extends ExtensionAPI {
           let mimeType = `image/${imageType}`;
           let container;
           try {
-            let str = String.fromCharCode.apply(String, new Uint8Array(imageData));
-            container = imgTools.decodeImageBuffer(str, str.length, mimeType);
+            container = imgTools.decodeImageFromArrayBuffer(imageData, mimeType);
           } catch (e) {
             return Promise.reject({message: `Data is not a valid ${imageType} image`});
           }
