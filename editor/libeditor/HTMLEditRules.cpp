@@ -565,12 +565,12 @@ HTMLEditRules::AfterEditInner(EditAction action,
   nsresult rv =
     mHTMLEditor->HandleInlineSpellCheck(
                    action, selection,
-                   GetAsDOMNode(mRangeItem->mStartContainer),
+                   mRangeItem->mStartContainer,
                    mRangeItem->mStartOffset,
-                   GetAsDOMNode(rangeStartContainer),
-                   static_cast<int32_t>(rangeStartOffset),
-                   GetAsDOMNode(rangeEndContainer),
-                   static_cast<int32_t>(rangeEndOffset));
+                   rangeStartContainer,
+                   rangeStartOffset,
+                   rangeEndContainer,
+                   rangeEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // detect empty doc

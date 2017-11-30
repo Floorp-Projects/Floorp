@@ -247,6 +247,7 @@ UNIFIED_SOURCES += [
     'nsTransitionManager.cpp',
     'PostTraversalTask.cpp',
     'PreloadedStyleSheet.cpp',
+    'Rule.cpp',
     'RuleNodeCacheConditions.cpp',
     'RuleProcessorCache.cpp',
     'ServoBindings.cpp',

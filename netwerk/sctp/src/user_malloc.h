@@ -195,7 +195,7 @@ Start copy: Copied code for __Userspace__ */
 #define	MALLOC(space, cast, size, type, flags)                          \
     ((space) = (cast)malloc((u_long)(size)));                           \
     do {								\
-        if (flags & M_ZERO) {                                            \
+        if(flags & M_ZERO) {                                            \
 	  memset(space,0,size);                                         \
 	}								\
     } while (0);

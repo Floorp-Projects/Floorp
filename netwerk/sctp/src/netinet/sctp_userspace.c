@@ -34,54 +34,6 @@
 #pragma comment(lib, "IPHLPAPI.lib")
 #endif
 #include <netinet/sctp_os_userspace.h>
-#if defined(__Userspace_os_FreeBSD)
-#include <pthread_np.h>
-#endif
-
-#if defined(__Userspace_os_Linux)
-#include <sys/prctl.h>
-#endif
-
-#if defined(__Userspace_os_Windows)
-/* Adapter to translate Unix thread start routines to Windows thread start
- * routines.
- */
-static DWORD WINAPI
-sctp_create_thread_adapter(void *arg) {
-	start_routine_t start_routine = (start_routine_t)arg;
-	return start_routine(NULL) == NULL;
-}
-
-int
-sctp_userspace_thread_create(userland_thread_t *thread, start_routine_t start_routine)
-{
-	*thread = CreateThread(NULL, 0, sctp_create_thread_adapter,
-			       (void *)start_routine, 0, NULL);
-	if (*thread == NULL)
-		return GetLastError();
-	return 0;
-}
-#else
-int
-sctp_userspace_thread_create(userland_thread_t *thread, start_routine_t start_routine)
-{
-	return pthread_create(thread, NULL, start_routine, NULL);
-}
-#endif
-
-void
-sctp_userspace_set_threadname(const char *name)
-{
-#if defined(__Userspace_os_Darwin)
-	pthread_setname_np(name);
-#endif
-#if defined(__Userspace_os_Linux)
-	prctl(PR_SET_NAME, name);
-#endif
-#if defined(__Userspace_os_FreeBSD)
-	pthread_set_name_np(pthread_self(), name);
-#endif
-}
 
 #if !defined(_WIN32) && !defined(__Userspace_os_NaCl)
 int
@@ -90,20 +42,16 @@ sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 	struct ifreq ifr;
 	int fd;
 
-	memset(&ifr, 0, sizeof(struct ifreq));
-	if (if_indextoname(if_index, ifr.ifr_name) != NULL) {
-		/* TODO can I use the raw socket here and not have to open a new one with each query? */
-		if ((fd = socket(af, SOCK_DGRAM, 0)) < 0)
-			return (0);
-		if (ioctl(fd, SIOCGIFMTU, &ifr) < 0) {
-			close(fd);
-			return (0);
-		}
+	if_indextoname(if_index, ifr.ifr_name);
+	/* TODO can I use the raw socket here and not have to open a new one with each query? */
+	if ((fd = socket(af, SOCK_DGRAM, 0)) < 0)
+		return (0);
+	if (ioctl(fd, SIOCGIFMTU, &ifr) < 0) {
 		close(fd);
-		return ifr.ifr_mtu;
-	} else {
 		return (0);
 	}
+	close(fd);
+	return ifr.ifr_mtu;
 }
 #endif
 
@@ -121,39 +69,27 @@ sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 {
 	PIP_ADAPTER_ADDRESSES pAdapterAddrs, pAdapt;
 	DWORD AdapterAddrsSize, Err;
-	int ret;
 
-	ret = 0;
 	AdapterAddrsSize = 0;
-	pAdapterAddrs = NULL;
 	if ((Err = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, NULL, &AdapterAddrsSize)) != 0) {
 		if ((Err != ERROR_BUFFER_OVERFLOW) && (Err != ERROR_INSUFFICIENT_BUFFER)) {
 			SCTPDBG(SCTP_DEBUG_USR, "GetAdaptersAddresses() sizing failed with error code %d, AdapterAddrsSize = %d\n", Err, AdapterAddrsSize);
-			ret = -1;
-			goto cleanup;
+			return (-1);
 		}
 	}
 	if ((pAdapterAddrs = (PIP_ADAPTER_ADDRESSES) GlobalAlloc(GPTR, AdapterAddrsSize)) == NULL) {
 		SCTPDBG(SCTP_DEBUG_USR, "Memory allocation error!\n");
-		ret = -1;
-		goto cleanup;
+		return (-1);
 	}
 	if ((Err = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, pAdapterAddrs, &AdapterAddrsSize)) != ERROR_SUCCESS) {
 		SCTPDBG(SCTP_DEBUG_USR, "GetAdaptersAddresses() failed with error code %d\n", Err);
-		ret = -1;
-		goto cleanup;
+		return (-1);
 	}
 	for (pAdapt = pAdapterAddrs; pAdapt; pAdapt = pAdapt->Next) {
-		if (pAdapt->IfIndex == if_index) {
-			ret = pAdapt->Mtu;
-			break;
-		}
+		if (pAdapt->IfIndex == if_index)
+			return (pAdapt->Mtu);
 	}
-cleanup:
-	if (pAdapterAddrs != NULL) {
-		GlobalFree(pAdapterAddrs);
-	}
-	return (ret);
+	return (0);
 }
 
 void
@@ -164,6 +100,95 @@ getwintimeofday(struct timeval *tv)
 	ftime(&tb);
 	tv->tv_sec = (long)tb.time;
 	tv->tv_usec = (long)(tb.millitm) * 1000L;
+}
+
+int
+Win_getifaddrs(struct ifaddrs** interfaces)
+{
+#if defined(INET) || defined(INET6)
+	DWORD Err, AdapterAddrsSize;
+	int count;
+	PIP_ADAPTER_ADDRESSES pAdapterAddrs, pAdapt;
+	struct ifaddrs *ifa;
+#endif
+#if defined(INET)
+	struct sockaddr_in *addr;
+#endif
+#if defined(INET6)
+	struct sockaddr_in6 *addr6;
+#endif
+#if defined(INET) || defined(INET6)
+	count = 0;
+#endif
+#if defined(INET)
+	AdapterAddrsSize = 0;
+	if ((Err = GetAdaptersAddresses(AF_INET, 0, NULL, NULL, &AdapterAddrsSize)) != 0) {
+		if ((Err != ERROR_BUFFER_OVERFLOW) && (Err != ERROR_INSUFFICIENT_BUFFER)) {
+			SCTPDBG(SCTP_DEBUG_USR, "GetAdaptersV4Addresses() sizing failed with error code %d and AdapterAddrsSize = %d\n", Err, AdapterAddrsSize);
+			return (-1);
+		}
+	}
+	/* Allocate memory from sizing information */
+	if ((pAdapterAddrs = (PIP_ADAPTER_ADDRESSES) GlobalAlloc(GPTR, AdapterAddrsSize)) == NULL) {
+		SCTPDBG(SCTP_DEBUG_USR, "Memory allocation error!\n");
+		return (-1);
+	}
+	/* Get actual adapter information */
+	if ((Err = GetAdaptersAddresses(AF_INET, 0, NULL, pAdapterAddrs, &AdapterAddrsSize)) != ERROR_SUCCESS) {
+		SCTPDBG(SCTP_DEBUG_USR, "GetAdaptersV4Addresses() failed with error code %d\n", Err);
+		return (-1);
+	}
+	/* Enumerate through each returned adapter and save its information */
+	for (pAdapt = pAdapterAddrs, count; pAdapt; pAdapt = pAdapt->Next, count++) {
+		addr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+		ifa = (struct ifaddrs *)malloc(sizeof(struct ifaddrs));
+		if ((addr == NULL) || (ifa == NULL)) {
+			SCTPDBG(SCTP_DEBUG_USR, "Can't allocate memory\n");
+			return (-1);
+		}
+		ifa->ifa_name = _strdup(pAdapt->AdapterName);
+		ifa->ifa_flags = pAdapt->Flags;
+		ifa->ifa_addr = (struct sockaddr *)addr;
+		memcpy(addr, &pAdapt->FirstUnicastAddress->Address.lpSockaddr, sizeof(struct sockaddr_in));
+		interfaces[count] = ifa;
+	}
+#endif
+#if defined(INET6)
+	if (SCTP_BASE_VAR(userspace_rawsctp6) != -1) {
+		AdapterAddrsSize = 0;
+		if ((Err = GetAdaptersAddresses(AF_INET6, 0, NULL, NULL, &AdapterAddrsSize)) != 0) {
+			if ((Err != ERROR_BUFFER_OVERFLOW) && (Err != ERROR_INSUFFICIENT_BUFFER)) {
+				SCTPDBG(SCTP_DEBUG_USR, "GetAdaptersV6Addresses() sizing failed with error code %d AdapterAddrsSize = %d\n", Err, AdapterAddrsSize);
+				return (-1);
+			}
+		}
+		/* Allocate memory from sizing information */
+		if ((pAdapterAddrs = (PIP_ADAPTER_ADDRESSES) GlobalAlloc(GPTR, AdapterAddrsSize)) == NULL) {
+			SCTPDBG(SCTP_DEBUG_USR, "Memory allocation error!\n");
+			return (-1);
+		}
+		/* Get actual adapter information */
+		if ((Err = GetAdaptersAddresses(AF_INET6, 0, NULL, pAdapterAddrs, &AdapterAddrsSize)) != ERROR_SUCCESS) {
+			SCTPDBG(SCTP_DEBUG_USR, "GetAdaptersV6Addresses() failed with error code %d\n", Err);
+			return (-1);
+		}
+		/* Enumerate through each returned adapter and save its information */
+		for (pAdapt = pAdapterAddrs, count; pAdapt; pAdapt = pAdapt->Next, count++) {
+			addr6 = (struct sockaddr_in6 *)malloc(sizeof(struct sockaddr_in6));
+			ifa = (struct ifaddrs *)malloc(sizeof(struct ifaddrs));
+			if ((addr6 == NULL) || (ifa == NULL)) {
+				SCTPDBG(SCTP_DEBUG_USR, "Can't allocate memory\n");
+				return (-1);
+			}
+			ifa->ifa_name = _strdup(pAdapt->AdapterName);
+			ifa->ifa_flags = pAdapt->Flags;
+			ifa->ifa_addr = (struct sockaddr *)addr6;
+			memcpy(addr6, &pAdapt->FirstUnicastAddress->Address.lpSockaddr, sizeof(struct sockaddr_in6));
+			interfaces[count] = ifa;
+		}
+	}
+#endif
+	return (0);
 }
 
 int

@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.import("chrome://marionette/content/assert.js");
 const {
   element,
   WebElement,
@@ -243,11 +244,37 @@ evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
 };
 
 /**
- * Convert arbitrary objects to JSON-safe primitives that can be
+ * Marshal arbitrary objects to JSON-safe primitives that can be
  * transported over the Marionette protocol.
  *
- * Any DOM elements are converted to web elements by looking them up
- * and/or adding them to the element store provided.
+ * The marshaling rules are as follows:
+ *
+ * <ul>
+ *
+ * <li>
+ * Primitives are returned as is.
+ *
+ * <li>
+ * Collections, such as <code>Array</code>, <code>NodeList</code>,
+ * <code>HTMLCollection</code> et al. are expanded to arrays and
+ * then recursed.
+ *
+ * <li>
+ * Elements that are not known web elements are added to the
+ * <var>seenEls</var> element store.  Once known, the elements'
+ * associated web element representation is returned.
+ *
+ * <li>
+ * Objects with custom JSON representations, i.e. if they have a
+ * callable <code>toJSON</code> function, are returned verbatim.
+ * This means their internal integrity <em>are not</em> checked.
+ * Be careful.
+ *
+ * <li>
+ * Other arbitrary objects are first tested for cyclic references
+ * and then recursed into.
+ *
+ * </ul>
  *
  * @param {Object} obj
  *     Object to be marshaled.
@@ -257,6 +284,9 @@ evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
  * @return {Object}
  *     Same object as provided by <var>obj</var> with the elements
  *     replaced by web elements.
+ *
+ * @throws {JavaScriptError}
+ *     If an object contains cyclic references.
  */
 evaluate.toJSON = function(obj, seenEls) {
   const t = Object.prototype.toString.call(obj);
@@ -273,13 +303,14 @@ evaluate.toJSON = function(obj, seenEls) {
 
   // Array, NodeList, HTMLCollection, et al.
   } else if (element.isCollection(obj)) {
+    assert.acyclic(obj);
     return [...obj].map(el => evaluate.toJSON(el, seenEls));
 
   // WebElement
   } else if (WebElement.isReference(obj)) {
     return obj;
 
-  // Element (HTMLElement, SVGElement, XULElement, &c.)
+  // Element (HTMLElement, SVGElement, XULElement, et al.)
   } else if (element.isElement(obj)) {
     let webEl = seenEls.add(obj);
     return webEl.toJSON();
@@ -293,6 +324,8 @@ evaluate.toJSON = function(obj, seenEls) {
   // arbitrary objects + files
   let rv = {};
   for (let prop in obj) {
+    assert.acyclic(obj[prop]);
+
     try {
       rv[prop] = evaluate.toJSON(obj[prop], seenEls);
     } catch (e) {
