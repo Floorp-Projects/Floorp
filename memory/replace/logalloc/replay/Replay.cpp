@@ -395,6 +395,9 @@ public:
 
   void free(Buffer& aArgs, Buffer& aResult)
   {
+    if (aResult) {
+      die("Malformed input");
+    }
     mOps++;
     Buffer dummy = aArgs.SplitChar('#');
     if (dummy) {
@@ -425,7 +428,7 @@ public:
 
   void jemalloc_stats(Buffer& aArgs, Buffer& aResult)
   {
-    if (aArgs) {
+    if (aArgs || aResult) {
       die("Malformed input");
     }
     mOps++;
