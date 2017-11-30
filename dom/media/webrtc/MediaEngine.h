@@ -217,6 +217,7 @@ public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AllocationHandle);
   protected:
     ~AllocationHandle() {}
+    static uint64_t sId;
   public:
     AllocationHandle(const dom::MediaTrackConstraints& aConstraints,
                      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
@@ -226,11 +227,15 @@ public:
     : mConstraints(aConstraints),
       mPrincipalInfo(aPrincipalInfo),
       mPrefs(aPrefs),
+#ifdef MOZ_WEBRTC
+      mId(sId++),
+#endif
       mDeviceId(aDeviceId) {}
   public:
     NormalizedConstraints mConstraints;
     mozilla::ipc::PrincipalInfo mPrincipalInfo;
     MediaEnginePrefs mPrefs;
+    uint64_t mId;
     nsString mDeviceId;
   };
 
@@ -366,6 +371,7 @@ protected:
   virtual nsresult
   UpdateSingleSource(const AllocationHandle* aHandle,
                      const NormalizedConstraints& aNetConstraints,
+                     const NormalizedConstraints& aNewConstraint,
                      const MediaEnginePrefs& aPrefs,
                      const nsString& aDeviceId,
                      const char** aOutBadConstraint) {
@@ -394,6 +400,7 @@ protected:
     // aHandle and/or aConstraintsUpdate may be nullptr (see below)
 
     AutoTArray<const NormalizedConstraints*, 10> allConstraints;
+    AutoTArray<const NormalizedConstraints*, 1> updatedConstraint;
     for (auto& registered : mRegisteredHandles) {
       if (aConstraintsUpdate && registered.get() == aHandle) {
         continue; // Don't count old constraints
@@ -402,9 +409,13 @@ protected:
     }
     if (aConstraintsUpdate) {
       allConstraints.AppendElement(aConstraintsUpdate);
+      updatedConstraint.AppendElement(aConstraintsUpdate);
     } else if (aHandle) {
       // In the case of AddShareOfSingleSource, the handle isn't registered yet.
       allConstraints.AppendElement(&aHandle->mConstraints);
+      updatedConstraint.AppendElement(&aHandle->mConstraints);
+    } else {
+      updatedConstraint.AppendElements(allConstraints);
     }
 
     NormalizedConstraints netConstraints(allConstraints);
@@ -413,7 +424,8 @@ protected:
       return NS_ERROR_FAILURE;
     }
 
-    nsresult rv = UpdateSingleSource(aHandle, netConstraints, aPrefs, aDeviceId,
+    NormalizedConstraints newConstraint(updatedConstraint);
+    nsresult rv = UpdateSingleSource(aHandle, netConstraints, newConstraint, aPrefs, aDeviceId,
                                      aOutBadConstraint);
     if (NS_FAILED(rv)) {
       return rv;
