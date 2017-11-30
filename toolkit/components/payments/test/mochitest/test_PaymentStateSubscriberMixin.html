@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the PaymentStateSubscriberMixin
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the PaymentStateSubscriberMixin</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="sinon-2.3.2.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="custom-elements.min.js"></script>
+  <script src="PaymentsStore.js"></script>
+  <script src="PaymentStateSubscriberMixin.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+    <test-element id="el1"></test-element>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test the PaymentStateSubscriberMixin **/
+
+/* global sinon */
+/* import-globals-from payments_common.js */
+/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
+
+class TestElement extends PaymentStateSubscriberMixin(HTMLElement) {
+  render(state) {
+    this.textContent = JSON.stringify(state);
+  }
+}
+
+// We must spy on the prototype by creating the instance in order to test Custom Element reactions.
+sinon.spy(TestElement.prototype, "disconnectedCallback");
+
+customElements.define("test-element", TestElement);
+let el1 = document.getElementById("el1");
+
+sinon.spy(el1, "render");
+sinon.spy(el1, "stateChangeCallback");
+
+add_task(async function test_initialState() {
+  let parsedState = JSON.parse(el1.textContent);
+  ok(!!parsedState.request, "Check initial state contains `request`");
+  ok(!!parsedState.savedAddresses, "Check initial state contains `savedAddresses`");
+  ok(!!parsedState.savedBasicCards, "Check initial state contains `savedBasicCards`");
+});
+
+add_task(async function test_async_batched_render() {
+  el1.requestStore.setState({a: 1});
+  el1.requestStore.setState({b: 2});
+  await asyncElementRendered();
+  ok(el1.stateChangeCallback.calledOnce, "stateChangeCallback called once");
+  ok(el1.render.calledOnce, "render called once");
+
+  let parsedState = JSON.parse(el1.textContent);
+  is(parsedState.a, 1, "Check a");
+  is(parsedState.b, 2, "Check b");
+});
+
+add_task(async function test_disconnect() {
+  el1.disconnectedCallback.reset();
+  el1.render.reset();
+  el1.stateChangeCallback.reset();
+  el1.remove();
+  ok(el1.disconnectedCallback.calledOnce, "disconnectedCallback called once");
+  await el1.requestStore.setState({a: 3});
+  await asyncElementRendered();
+  ok(el1.stateChangeCallback.notCalled, "stateChangeCallback not called");
+  ok(el1.render.notCalled, "render not called");
+});
+</script>
+
+</body>
+</html>
