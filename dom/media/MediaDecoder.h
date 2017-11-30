@@ -177,10 +177,6 @@ public:
   // Return true if the stream is infinite.
   bool IsInfinite() const;
 
-  // Called as data arrives on the stream and is read into the cache.  Called
-  // on the main thread only.
-  void NotifyDataArrived();
-
   // Return true if we are currently seeking in the media resource.
   // Call on the main thread only.
   bool IsSeeking() const;

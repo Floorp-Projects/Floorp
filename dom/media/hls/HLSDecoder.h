@@ -41,6 +41,9 @@ public:
   void Resume() override;
   void Shutdown() override;
 
+  // Called as data arrives on the underlying HLS player. Main thread only.
+  void NotifyDataArrived();
+
 private:
   friend class HLSResourceCallbacksSupport;
 
