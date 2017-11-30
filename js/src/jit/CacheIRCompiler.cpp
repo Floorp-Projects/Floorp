@@ -1954,6 +1954,30 @@ CacheIRCompiler::emitLoadDenseElementHoleResult()
 }
 
 bool
+CacheIRCompiler::emitLoadTypedElementExistsResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    TypedThingLayout layout = reader.typedThingLayout();
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    Label outOfBounds, done;
+
+    // Bound check.
+    LoadTypedThingLength(masm, layout, obj, scratch);
+    masm.branch32(Assembler::BelowOrEqual, scratch, index, &outOfBounds);
+    EmitStoreBoolean(masm, true, output);
+    masm.jump(&done);
+
+    masm.bind(&outOfBounds);
+    EmitStoreBoolean(masm, false, output);
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadDenseElementExistsResult()
 {
     AutoOutputRegister output(*this);
