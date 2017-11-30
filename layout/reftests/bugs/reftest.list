@@ -1842,6 +1842,8 @@ pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
 fuzzy-if(d2d,1,125200) fuzzy-if(skiaContent,1,126000) == 1022612-1.html 1022612-1-ref.html
 skip-if(styloVsGecko) == 1024473-1.html 1024473-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
 fuzzy-if(skiaContent,1,24000) == 1025914-1.html 1025914-1-ref.html
+pref(layout.css.moz-document.content.enabled,true) == 1035091.html 1035091-ref.html
+pref(layout.css.moz-document.content.enabled,false) == 1035091-2.html 1035091-ref.html
 == 1042104-1.html 1042104-1-ref.html
 == 1043537-1.html 1043537-1-ref.html
 == 1044198-1.html 1044198-1-ref.html
@@ -2049,3 +2051,4 @@ needs-focus != 1377447-1.html 1377447-2.html
 == 1410028.html 1410028-ref.html
 test-pref(font.size.systemFontScale,200) == 1412743.html 1412743-ref.html
 == 1419820-1.html 1419820-1-ref.html
+== 1420946-1.html 1420946-1-ref.html

@@ -2852,6 +2852,13 @@ pref("layout.css.report_errors", true);
 // Should the :visited selector ever match (otherwise :link matches instead)?
 pref("layout.css.visited_links_enabled", true);
 
+// Pref to control whether @-moz-document rules are enabled in content pages.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("layout.css.moz-document.content.enabled",  false);
+#else
+pref("layout.css.moz-document.content.enabled",  true);
+#endif
+
 // Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.
 // This sets the physical size of a device pixel and thus controls the

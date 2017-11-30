@@ -34,18 +34,6 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
 {
 }
 
-ChannelMediaResource::ChannelMediaResource(
-  MediaResourceCallback* aCallback,
-  nsIChannel* aChannel,
-  nsIURI* aURI,
-  const MediaChannelStatistics& aStatistics)
-  : BaseMediaResource(aCallback, aChannel, aURI)
-  , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
-  , mChannelStatistics(aStatistics)
-  , mSuspendAgent(mCacheStream)
-{
-}
-
 ChannelMediaResource::~ChannelMediaResource()
 {
   MOZ_ASSERT(mClosed);
@@ -297,7 +285,6 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 
   mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable, length);
   mIsTransportSeekable = seekable;
-  mChannelStatistics.Start();
 
   mSuspendAgent.Delegate(mChannel);
 
@@ -378,8 +365,6 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
                "How can OnStopRequest fire while we're suspended?");
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
-  mChannelStatistics.Stop();
-
   // Move this request back into the foreground.  This is necessary for
   // requests owned by video documents to ensure the load group fires
   // OnStopRequest when restoring from session history.
@@ -443,18 +428,6 @@ ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
                                       uint32_t aCount)
 {
   // This might happen off the main thread.
-
-  RefPtr<ChannelMediaResource> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ChannelMediaResource::OnDataAvailable", [self, aCount, aLoadID]() {
-      if (aLoadID != self->mLoadID) {
-        // Ignore data from the old channel.
-        return;
-      }
-      self->mChannelStatistics.AddBytes(aCount);
-    });
-  mCallback->AbstractMainThread()->Dispatch(r.forget());
-
   Closure closure{ aLoadID, this };
   uint32_t count = aCount;
   while (count > 0) {
@@ -590,7 +563,7 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
 
   RefPtr<ChannelMediaResource> resource =
-    new ChannelMediaResource(aCallback, nullptr, mURI, mChannelStatistics);
+    new ChannelMediaResource(aCallback, nullptr, mURI);
 
   resource->mIsTransportSeekable = mIsTransportSeekable;
 
@@ -608,7 +581,6 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   // mSuspendAgent.Suspend() accesses mCacheStream which is not ready
   // until InitAsClone() is done.
   resource->mSuspendAgent.Suspend();
-  resource->mChannelStatistics.Stop();
 
   return resource.forget();
 }
@@ -616,8 +588,6 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
 void ChannelMediaResource::CloseChannel()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  mChannelStatistics.Stop();
 
   if (mChannel) {
     mSuspendAgent.Revoke();
@@ -692,7 +662,6 @@ ChannelMediaResource::Suspend(bool aCloseImmediately)
 
   if (mSuspendAgent.Suspend()) {
     if (mChannel) {
-      mChannelStatistics.Stop();
       element->DownloadSuspended();
     }
   }
@@ -716,7 +685,6 @@ ChannelMediaResource::Resume()
   if (mSuspendAgent.Resume()) {
     if (mChannel) {
       // Just wake up our existing channel
-      mChannelStatistics.Start();
       element->DownloadResumed();
     } else {
       int64_t totalLength = GetLength();
@@ -976,8 +944,7 @@ ChannelMediaResource::Unpin()
 double
 ChannelMediaResource::GetDownloadRate(bool* aIsReliable)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  return mChannelStatistics.GetRate(aIsReliable);
+  return mCacheStream.GetDownloadRate(aIsReliable);
 }
 
 int64_t
