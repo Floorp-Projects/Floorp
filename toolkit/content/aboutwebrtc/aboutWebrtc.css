@@ -62,6 +62,10 @@ html {
   border: none;
 }
 
+.peer-connection table th {
+  font-weight: bold;
+}
+
 .peer-connection table th,
 .peer-connection table td {
   padding: 0.4em;
@@ -69,6 +73,10 @@ html {
 
 .peer-connection table tr:nth-child(even) {
   background-color: #ddd;
+}
+
+.peer-connection table caption {
+  text-align: left;
 }
 
 .info-label {
