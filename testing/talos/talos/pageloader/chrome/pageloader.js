@@ -230,69 +230,18 @@ function plInit() {
         browserWindow.resizeTo(winWidth, winHeight);
         browserWindow.moveTo(0, 0);
         browserWindow.focus();
-
         content = browserWindow.getBrowser();
+        content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/utils.js", false, true);
 
-        // Load the frame script for e10s / IPC message support
-        let contentScript = "data:,function _contentLoadHandler(e) { " +
-          "  if (e.originalTarget.defaultView == content) { " +
-          "    content.wrappedJSObject.tpRecordTime = function(t, s, n) { sendAsyncMessage('PageLoader:RecordTime', { time: t, startTime: s, testName: n }); }; ";
-        // setup idle-callback
-        contentScript += "" +
-        "var idleCallbackHandle; " +
-        "function _idleCallbackHandler() { " +
-        "  content.window.cancelIdleCallback(idleCallbackHandle); " +
-        "  sendAsyncMessage('PageLoader:IdleCallbackReceived', {}); " +
-        "}; " +
-        "function _setIdleCallback() { " +
-        "  idleCallbackHandle = content.window.requestIdleCallback(_idleCallbackHandler); " +
-        "  sendAsyncMessage('PageLoader:IdleCallbackSet', {}); " +
-        "}; ";
+        // pick the right load handler
         if (useFNBPaint) {
-          contentScript += "" +
-          "var gRetryCounter = 0; " +
-          "function _contentFNBPaintHandler() { " +
-          "  x = content.window.performance.timing.timeToNonBlankPaint; " +
-          "  if (typeof x == 'undefined') { " +
-          "    sendAsyncMessage('PageLoader:FNBPaintError', {}); " +
-          "  } " +
-          "  if (x > 0) { " +
-          "    sendAsyncMessage('PageLoader:LoadEvent', { 'fnbpaint': x }); " +
-          "  } else { " +
-          "    gRetryCounter += 1; " +
-          "    if (gRetryCounter <= 10) { " +
-          "      dump('fnbpaint is not yet available (0), retry number ' + gRetryCounter + '...\\n'); " +
-          "      content.setTimeout(_contentFNBPaintHandler, 100); " +
-          "    } else { " +
-          "      dump('unable to get a value for fnbpaint after ' + gRetryCounter + ' retries\\n'); " +
-          "      sendAsyncMessage('PageLoader:FNBPaintError', {}); " +
-          "    } " +
-          "  } " +
-          "}; " +
-          "content.setTimeout(_contentFNBPaintHandler, 0); ";
+          content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/lh_fnbpaint.js", false, true);
         } else if (useMozAfterPaint) {
-          contentScript += "" +
-          "function _contentPaintHandler() { " +
-          "  var utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils); " +
-          "  if (utils.isMozAfterPaintPending) { " +
-          "    addEventListener('MozAfterPaint', function(e) { " +
-          "      removeEventListener('MozAfterPaint', arguments.callee, true); " +
-          "      sendAsyncMessage('PageLoader:LoadEvent', {}); " +
-          "    }, true); " +
-          "  } else { " +
-          "    sendAsyncMessage('PageLoader:LoadEvent', {}); " +
-          "  } " +
-          "}; " +
-          "content.setTimeout(_contentPaintHandler, 0); ";
+          content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/lh_moz.js", false, true);
         } else {
-          contentScript += "    sendAsyncMessage('PageLoader:LoadEvent', {}); ";
+          content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/lh_dummy.js", false, true);
+
         }
-        contentScript += "" +
-          "  content.setTimeout(_setIdleCallback, 0); " +
-          "  }" +
-          "} " +
-          "addEventListener('load', _contentLoadHandler, true); ";
-        content.selectedBrowser.messageManager.loadFrameScript(contentScript, false, true);
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/talos-content.js", false);
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/tscroll.js", false, true);
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/Profiler.js", false, true);
@@ -675,7 +624,6 @@ function _loadHandler(fnbpaint = 0) {
   }
 
   var duration = (end_time - start_time);
-
   TalosParentProfiler.pause("Bubbling load handler fired.");
 
   // does this page want to do its own timing?
