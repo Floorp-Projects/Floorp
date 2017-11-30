@@ -1418,7 +1418,7 @@ different_rrset(AddrInfo *rrset1, AddrInfo *rrset2)
         return true;
     }
 
-    LOG(("different_rrset %s\n", rrset1->mHostName));
+    LOG(("different_rrset %s\n", rrset1->mHostName.get()));
     nsTArray<NetAddr> orderedSet1;
     nsTArray<NetAddr> orderedSet2;
 
@@ -1495,7 +1495,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
     if (trrResult) {
         MutexAutoLock trrlock(rec->mTrrLock);
         LOG(("TRR lookup Complete (%d) %s %s\n",
-             newRRSet->IsTRR(), newRRSet->mHostName,
+             newRRSet->IsTRR(), newRRSet->mHostName.get(),
              NS_SUCCEEDED(status) ? "OK" : "FAILED"));
         MOZ_ASSERT(TRROutstanding());
         if (newRRSet->IsTRR() == TRRTYPE_A) {
