@@ -32,7 +32,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     yield promiseBrowserEvent(browser, "load");
 
     let doc = browser.contentDocument;
-    let title = doc.getElementById("reader-title");
+    let title = doc.querySelector(".reader-title");
 
     // We need to wait for reader content to appear because AboutReader.jsm
     // asynchronously fetches the content after about:reader loads.
