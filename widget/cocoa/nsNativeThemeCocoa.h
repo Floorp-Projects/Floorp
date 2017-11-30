@@ -53,6 +53,12 @@ public:
     eMenuUpScrollArrow
   };
 
+  enum class CheckboxOrRadioState : uint8_t {
+    eOff,
+    eOn,
+    eIndeterminate
+  };
+
   enum class ButtonType : uint8_t {
     eRegularPushButton,
     eDefaultPushButton,
@@ -104,6 +110,12 @@ public:
     bool disabled = false;
     bool selected = false;
     bool rtl = false;
+  };
+
+  struct CheckboxOrRadioParams {
+    ControlParams controlParams;
+    CheckboxOrRadioState state = CheckboxOrRadioState::eOff;
+    float verticalAlignFactor = 0.5f;
   };
 
   struct ButtonParams {
@@ -208,8 +220,8 @@ protected:
                  bool inIsReverse, int32_t inCurrentValue, int32_t inMinValue,
                  int32_t inMaxValue, nsIFrame* aFrame);
   void DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
-                           const HIRect& inBoxRect, bool inSelected,
-                           mozilla::EventStates inState, nsIFrame* aFrame);
+                           const HIRect& inBoxRect,
+                           const CheckboxOrRadioParams& aParams);
   void DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
                        nsIFrame* aFrame, mozilla::EventStates inState);
   void DrawRoundedBezelPushButton(CGContextRef cgContext,
