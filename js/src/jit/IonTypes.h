@@ -540,6 +540,23 @@ MIRTypeToTag(MIRType type)
     return JSVAL_TYPE_TO_TAG(ValueTypeFromMIRType(type));
 }
 
+static inline size_t
+MIRTypeToSize(MIRType type)
+{
+    switch (type) {
+      case MIRType::Int32:
+        return 4;
+      case MIRType::Int64:
+        return 8;
+      case MIRType::Float32:
+        return 4;
+      case MIRType::Double:
+        return 8;
+      default:
+        MOZ_CRASH("MIRTypeToSize - unhandled case");
+    }
+}
+
 static inline const char*
 StringFromMIRType(MIRType type)
 {
