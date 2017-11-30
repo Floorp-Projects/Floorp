@@ -20,7 +20,7 @@ interface imgIContainerCallback;
 interface imgITools : nsISupports
 {
     /**
-     * decodeImageBuffer
+     * decodeImageFromBuffer
      * Caller provides an buffer, a buffer size and a mimetype. We read from
      * the stream and decompress it (according to the specified mime type) and
      * return the resulting imgIContainer.
@@ -32,9 +32,9 @@ interface imgITools : nsISupports
      * @param aMimeType
      *        Type of image in the stream.
      */
-    imgIContainer decodeImageBuffer(in string aBuffer,
-                                    in unsigned long aSize,
-                                    in ACString aMimeType);
+    imgIContainer decodeImageFromBuffer(in string aBuffer,
+                                        in unsigned long aSize,
+                                        in ACString aMimeType);
 
     /**
      * decodeImageFromArrayBuffer
