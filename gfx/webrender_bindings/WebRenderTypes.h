@@ -21,6 +21,11 @@
 #include "nsStyleConsts.h"
 
 namespace mozilla {
+
+namespace ipc {
+class ByteBuf;
+} // namespace ipc
+
 namespace wr {
 
 typedef wr::WrWindowId WindowId;
@@ -575,6 +580,8 @@ struct Vec_u8 {
     inner = src.inner;
     src.SetEmpty();
   }
+
+  explicit Vec_u8(mozilla::ipc::ByteBuf&& aSrc);
 
   Vec_u8&
   operator=(Vec_u8&& src) {

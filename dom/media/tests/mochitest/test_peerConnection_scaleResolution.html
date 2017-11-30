@@ -75,6 +75,8 @@
     is(v2.videoHeight, v1.videoHeight / 2, "sink is half the height of source");
     stream.getTracks().forEach(track => track.stop());
     v1.srcObject = v2.srcObject = null;
+    pc1.close()
+    pc2.close()
   }
 
   pushPrefs(['media.peerconnection.video.lock_scaling', true]).then(() => {
