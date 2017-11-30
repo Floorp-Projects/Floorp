@@ -241,12 +241,17 @@ nsToolkitProfile::RemoveInternal(bool aRemoveFiles, bool aInBackground)
         return NS_ERROR_NOT_INITIALIZED;
 
     if (aRemoveFiles) {
+        // Check if another instance is using this profile.
+        nsCOMPtr<nsIProfileLock> lock;
+        nsresult rv = Lock(nullptr, getter_AddRefs(lock));
+        NS_ENSURE_SUCCESS(rv, rv);
+
         nsCOMPtr<nsIFile> rootDir(mRootDir);
         nsCOMPtr<nsIFile> localDir(mLocalDir);
 
         nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
           "nsToolkitProfile::RemoveInternal",
-          [rootDir, localDir]() {
+          [rootDir, localDir, lock]() {
               bool equals;
               nsresult rv = rootDir->Equals(localDir, &equals);
               // The root dir might contain the temp dir, so remove
@@ -254,6 +259,10 @@ nsToolkitProfile::RemoveInternal(bool aRemoveFiles, bool aInBackground)
               if (NS_SUCCEEDED(rv) && !equals) {
                   localDir->Remove(true);
               }
+
+              // Ideally we'd unlock after deleting but since the lock is a file
+              // in the profile we must unlock before removing.
+              lock->Unlock();
 
               rootDir->Remove(true);
             }
