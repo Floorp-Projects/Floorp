@@ -32,6 +32,7 @@
   <string name="preference_subitem_autocomplete">Automatyczne uzupełnianie adresów</string>
   <string name="preference_switch_autocomplete">Automatyczne uzupełnianie</string>
   <string name="preference_category_autocomplete_preinstalled">Domyślna lista adresów</string>
+  <string name="preference_autocomplete_preinstalled_summary">Włącz, aby %1$s automatycznie uzupełniał ponad 450 popularnych adresów na pasku adresu.</string>
   <string name="preference_category_autocomplete_custom">Inny adres</string>
   <string name="preference_autocomplete_subitem_customlist">Inne adresy</string>
   <string name="preference_autocomplete_action_add">+ Dodaj inny adres</string>
