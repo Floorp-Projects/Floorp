@@ -21,7 +21,6 @@
 //   * First argument is the name of the pref.
 //   * The name of the function that updates the new value of a pref.
 
-WORKER_SIMPLE_PREF("dom.serviceWorkers.enabled", ServiceWorkersEnabled, SERVICEWORKERS_ENABLED)
 WORKER_SIMPLE_PREF("dom.serviceWorkers.testing.enabled", ServiceWorkersTestingEnabled, SERVICEWORKERS_TESTING_ENABLED)
 WORKER_SIMPLE_PREF("dom.serviceWorkers.openWindow.enabled", OpenWindowEnabled, OPEN_WINDOW_ENABLED)
 WORKER_SIMPLE_PREF("dom.storageManager.enabled", StorageManagerEnabled, STORAGEMANAGER_ENABLED)

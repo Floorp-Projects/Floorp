@@ -8,6 +8,7 @@
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 
@@ -246,7 +247,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       // It is meant as a temporary solution until service workers can
       // provide a TabChild equivalent. Don't allow this on b2g since
       // it might be used to escalate privileges.
-      if (!Preferences::GetBool("dom.serviceWorkers.enabled", false)) {
+      if (!DOMPreferences::ServiceWorkersEnabled()) {
         mInvalidReason = "ServiceWorkers should be enabled.";
         return;
       }
