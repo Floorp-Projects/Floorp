@@ -76,11 +76,11 @@
 		*addr = 0; \
 	} \
 }
-#endif
 #if defined(__Userspace_os_Windows)
 static void atomic_init() {} /* empty when we are not using atomic_mtx */
 #else
 static inline void atomic_init() {} /* empty when we are not using atomic_mtx */
+#endif
 #endif
 
 #else
@@ -188,31 +188,16 @@ static inline void atomic_unlock() {
 }
 #else
 static inline void atomic_init() {
-	pthread_mutexattr_t mutex_attr;
-
-	pthread_mutexattr_init(&mutex_attr);
-#ifdef INVARIANTS
-	pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_ERRORCHECK);
-#endif
-	pthread_mutex_init(&accept_mtx, &mutex_attr);
-	pthread_mutexattr_destroy(&mutex_attr);
+	(void)pthread_mutex_init(&atomic_mtx, NULL);
 }
 static inline void atomic_destroy() {
 	(void)pthread_mutex_destroy(&atomic_mtx);
 }
 static inline void atomic_lock() {
-#ifdef INVARIANTS
-	KASSERT(pthread_mutex_lock(&atomic_mtx) == 0, ("atomic_lock: atomic_mtx already locked"))
-#else
 	(void)pthread_mutex_lock(&atomic_mtx);
-#endif
 }
 static inline void atomic_unlock() {
-#ifdef INVARIANTS
-	KASSERT(pthread_mutex_unlock(&atomic_mtx) == 0, ("atomic_unlock: atomic_mtx not locked"))
-#else
 	(void)pthread_mutex_unlock(&atomic_mtx);
-#endif
 }
 #endif
 /*
