@@ -173,7 +173,18 @@ public:
 
   void FlushRendering(bool aIsSync);
 
-  void ScheduleComposition();
+  /**
+   * Schedule generating WebRender frame definitely at next composite timing.
+   *
+   * WebRenderBridgeParent uses composite timing to check if there is an update
+   * to AsyncImagePipelines. If there is no update, WebRenderBridgeParent skips
+   * to generate frame. If we need to generate new frame at next composite timing,
+   * call this method.
+   *
+   * Call CompositorVsyncScheduler::ScheduleComposition() directly, if we just
+   * want to trigger AsyncImagePipelines update checks.
+   */
+  void ScheduleGenerateFrame();
 
   void UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                        wr::WebRenderAPI* aApi,
