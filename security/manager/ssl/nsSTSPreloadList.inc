@@ -8,14 +8,13 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1522953969312000);
+const PRTime gPreloadListExpirationTime = INT64_C(1522954783760000);
 %%
 0-1.party, 1
 0.me.uk, 1
 00001.am, 1
 00002.am, 1
 0005pay.com, 1
-0010100.net, 1
 00220022.net, 1
 007-preisvergleich.de, 1
 00881919.com, 1
@@ -645,6 +644,7 @@ academicexperts.us, 1
 academie-de-police.ch, 1
 academy4.net, 1
 academytv.com.au, 1
+acadianapatios.com, 1
 acampar.com.br, 1
 acaonegocios.com.br, 1
 acara-yoga.de, 1
@@ -1148,6 +1148,7 @@ akr.io, 1
 akritikos.info, 1
 akropolis-ravensburg.de, 1
 akselinurmio.fi, 1
+akstudentsfirst.org, 1
 aktiv-naturheilmittel.at, 1
 aktiv-naturheilmittel.ch, 1
 aktiv-naturheilmittel.de, 1
@@ -5647,7 +5648,7 @@ cirugiasplasticas.com.mx, 1
 cirujanooral.com, 1
 cirurgicagervasio.com.br, 1
 cirurgicalucena.com.br, 1
-ciscodude.net, 0
+ciscodude.net, 1
 cisoaid.com, 1
 ciss.ltd, 1
 cisy.me, 1
@@ -7297,7 +7298,6 @@ ddel.de, 1
 dden.ca, 0
 dden.website, 1
 dden.xyz, 1
-ddepot.us, 1
 ddfreedish.site, 0
 ddhosted.com, 1
 ddmeportal.com, 1
@@ -9014,7 +9014,6 @@ elektrofinke.de, 1
 elektrokarges.de, 1
 elektrometz.de, 1
 elektropost.org, 1
-element-43.com, 0
 elemental.software, 1
 elementalict.com, 1
 elementalrobotics.com, 1
@@ -9523,7 +9522,7 @@ espanol.search.yahoo.com, 0
 espanova.com, 1
 espci.fr, 1
 especificosba.com.ar, 1
-espenandersen.no, 1
+espenandersen.no, 0
 espgg.org, 1
 esphigmenou.gr, 1
 espigol.org, 1
@@ -18533,7 +18532,6 @@ mdek.at, 1
 mdewendt.de, 1
 mdf-bis.com, 1
 mdiv.pl, 1
-mdkr.nl, 1
 mdma.net, 1
 mdmed.clinic, 1
 mdoering.de, 1
@@ -22869,7 +22867,7 @@ pokemori.jp, 1
 pokepon.center, 1
 pokl.cz, 1
 pokomichi.com, 1
-pol-expo.ru, 0
+pol-expo.ru, 1
 polaire.org, 1
 polandb2b.directory, 1
 pole-emotion.ch, 1
@@ -24550,7 +24548,6 @@ robert-flynn.de, 1
 robertabittle.com, 1
 robertattfield.com, 1
 robertg.me, 1
-roberthurlbut.com, 1
 robertkrueger.de, 1
 robertlysik.com, 1
 roberto-webhosting.nl, 1
@@ -25872,7 +25869,6 @@ setfix.de, 1
 sethcaplan.com, 1
 sethvargo.com, 1
 seti-germany.de, 1
-setkit.net, 1
 settberg.de, 1
 setterirlandes.com.br, 1
 settleapp.co, 1
@@ -27549,7 +27545,6 @@ stonewuu.com, 1
 stony.com, 1
 stonystratford.org, 1
 stopakwardhandshakes.org, 1
-stopbreakupnow.org, 1
 stopbullying.gov, 1
 stopfraud.gov, 1
 stopthethyroidmadness.com, 1
@@ -28190,7 +28185,6 @@ tavolaquadrada.com.br, 1
 tavsys.net, 1
 taxaroo.com, 1
 taxaudit.com, 1
-taxi-24std.de, 1
 taxi-chamonix.fr, 1
 taxi-collectif.ch, 1
 taxicollectif.ch, 1
@@ -32112,7 +32106,6 @@ www.theguardian.com, 1
 www.therapynotes.com, 1
 www.tinfoilsecurity.com, 0
 www.torproject.org, 0
-www.tumblr.com, 0
 www.twitter.com, 0
 www.united.com, 1
 www.usaa.com, 0
@@ -32827,7 +32820,6 @@ zaratan.fr, 1
 zargaripour.com, 1
 zarmarket.org, 1
 zarpo.com.br, 1
-zary.me, 1
 zaufanatrzeciastrona.pl, 1
 zavec.com.ec, 1
 zavetaji.lv, 1
@@ -32840,7 +32832,6 @@ zbp.at, 0
 zbrane-doplnky.cz, 1
 zby.io, 1
 zbyga.cz, 1
-zbyte.it, 0
 zcarot.com, 1
 zcarrot.com, 1
 zcgram.com, 1
