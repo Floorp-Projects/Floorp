@@ -421,6 +421,7 @@ public:
     if (aArgs) {
       die("Malformed input");
     }
+    mOps++;
     jemalloc_stats_t stats;
     ::jemalloc_stats(&stats);
     FdPrintf(mStdErr,
@@ -448,7 +449,7 @@ main()
 
   /* Read log from stdin and dispatch function calls to the Replay instance.
    * The log format is essentially:
-   *   <pid> <function>([<args>])[=<result>]
+   *   <pid> <tid> <function>([<args>])[=<result>]
    * <args> is a comma separated list of arguments.
    *
    * The logs are expected to be preprocessed so that allocations are
