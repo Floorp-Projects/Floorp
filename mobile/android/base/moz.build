@@ -406,7 +406,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/NativePanZoomController.java',
     'gfx/OverscrollEdgeEffect.java',
     'gfx/PanningPerfAPI.java',
-    'gfx/PanZoomController.java',
     'gfx/PointUtils.java',
     'gfx/RenderTask.java',
     'gfx/StackScroller.java',
