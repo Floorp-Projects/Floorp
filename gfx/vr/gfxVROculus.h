@@ -145,7 +145,7 @@ public:
                      uint32_t aHapticIndex,
                      double aIntensity,
                      double aDuration,
-                     uint32_t aPromiseID);
+                     const VRManagerPromise& aPromise);
   void StopVibrateHaptic();
 
 protected:
@@ -157,8 +157,8 @@ private:
                            double aIntensity,
                            double aDuration,
                            uint64_t aVibrateIndex,
-                           uint32_t aPromiseID);
-  void VibrateHapticComplete(ovrSession aSession, uint32_t aPromiseID, bool aStop);
+                           const VRManagerPromise& aPromise);
+  void VibrateHapticComplete(ovrSession aSession, const VRManagerPromise& aPromise, bool aStop);
 
   float mAxisMove[static_cast<uint32_t>(
                   OculusControllerAxisType::NumVRControllerAxisType)];
@@ -184,7 +184,7 @@ public:
   virtual void ScanForControllers() override;
   virtual void RemoveControllers() override;
   virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                             double aIntensity, double aDuration, uint32_t aPromiseID) override;
+                             double aIntensity, double aDuration, const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
 
 protected:
