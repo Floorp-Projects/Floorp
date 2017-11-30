@@ -6453,12 +6453,14 @@ nsTableFrame::CalcBCBorders()
         gotRowBorder = true;
       }
     }
-
-    // see if the cell to the iEnd side had a rowspan and its bEnd-iStart border
-    // needs be joined with this one's bEnd
-    // if  there is a cell to the iEnd and the cell to iEnd side was a rowspan
-    if ((info.mNumTableCols != info.GetCellEndColIndex() + 1) &&
-        (lastBEndBorders[info.GetCellEndColIndex() + 1].rowSpan > 1)) {
+    // In the function, we try to join two cells' BEnd.
+    // We normally do this work when processing the cell on the iEnd side,
+    // but when the cell on the iEnd side has a rowspan, the cell on the
+    // iStart side gets processed later (now), so we have to do this work now.
+    const auto nextColIndex = info.GetCellEndColIndex() + 1;
+    if ((info.mNumTableCols != nextColIndex) &&
+        (lastBEndBorders[nextColIndex].rowSpan > 1) &&
+        (lastBEndBorders[nextColIndex].rowIndex == info.GetCellEndRowIndex() + 1)) {
       BCCornerInfo& corner = bEndCorners[info.GetCellEndColIndex() + 1];
       if (!IsBlock(LogicalSide(corner.ownerSide))) {
         // not a block-dir owner
