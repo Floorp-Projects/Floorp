@@ -218,13 +218,15 @@ var gSync = {
     document.getElementById("sync-reauth-state").hidden = true;
     document.getElementById("sync-setup-state").hidden = true;
     document.getElementById("sync-syncnow-state").hidden = true;
+    document.getElementById("sync-unverified-state").hidden = true;
 
     if (status == UIState.STATUS_LOGIN_FAILED) {
       // unhiding this element makes the menubar show the login failure state.
       document.getElementById("sync-reauth-state").hidden = false;
-    } else if (status == UIState.STATUS_NOT_CONFIGURED ||
-               status == UIState.STATUS_NOT_VERIFIED) {
+    } else if (status == UIState.STATUS_NOT_CONFIGURED) {
       document.getElementById("sync-setup-state").hidden = false;
+    } else if (status == UIState.STATUS_NOT_VERIFIED) {
+      document.getElementById("sync-unverified-state").hidden = false;
     } else {
       document.getElementById("sync-syncnow-state").hidden = false;
     }
