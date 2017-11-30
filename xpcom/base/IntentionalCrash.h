@@ -49,8 +49,10 @@ NoteIntentionalCrash(const char* aProcessType)
   fprintf(stderr, "Writing to log: %s\n", bloatName.str().c_str());
 
   FILE* processfd = fopen(bloatName.str().c_str(), "a");
-  fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
-  fclose(processfd);
+  if (processfd) {
+    fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
+    fclose(processfd);
+  }
 }
 
 } // namespace mozilla
