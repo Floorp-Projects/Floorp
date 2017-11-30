@@ -1088,47 +1088,58 @@ this.FormHistory = {
     return defaultHandlers;
   },
 
-  search(aSelectTerms, aSearchData, aCallbacks) {
+  search(aSelectTerms, aSearchData, aRowFuncOrHandlers) {
     // if no terms selected, select everything
     if (!aSelectTerms) {
       aSelectTerms = validFields;
     }
     validateSearchData(aSearchData, "Search");
 
-    let stmt = makeSearchStatement(aSearchData, aSelectTerms);
+    let query = "SELECT " + aSelectTerms.join(", ") + " FROM moz_formhistory";
+    let queryTerms = makeQueryPredicates(aSearchData);
+    if (queryTerms) {
+      query += " WHERE " + queryTerms;
+    }
 
-    let handlers = {
-      handleResult(aResultSet) {
-        for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
-          let result = {};
-          for (let field of aSelectTerms) {
-            result[field] = row.getResultByName(field);
+    let handlers;
+
+    if (typeof aRowFuncOrHandlers == "function") {
+      handlers = this._prepareHandlers();
+      handlers.handleResult = aRowFuncOrHandlers;
+    } else if (typeof aRowFuncOrHandlers == "object") {
+      handlers = this._prepareHandlers(aRowFuncOrHandlers);
+    }
+
+    let allResults = [];
+
+    return new Promise((resolve, reject) => {
+      this.db.then(async conn => {
+        try {
+          await conn.executeCached(query, aSearchData, row => {
+            let result = {};
+            for (let field of aSelectTerms) {
+              result[field] = row.getResultByName(field);
+            }
+
+            if (handlers) {
+              handlers.handleResult(result);
+            } else {
+              allResults.push(result);
+            }
+          });
+          if (handlers) {
+            handlers.handleCompletion(0);
           }
-
-          if (aCallbacks && aCallbacks.handleResult) {
-            aCallbacks.handleResult(result);
+          resolve(allResults);
+        } catch (e) {
+          if (handlers) {
+            handlers.handleError(e);
+            handlers.handleCompletion(1);
           }
+          reject(e);
         }
-      },
-
-      handleError(aError) {
-        if (aCallbacks && aCallbacks.handleError) {
-          aCallbacks.handleError(aError);
-        }
-      },
-
-      handleCompletion(aReason) {
-        if (aCallbacks && aCallbacks.handleCompletion) {
-          aCallbacks.handleCompletion(
-            aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ?
-              0 :
-              1
-          );
-        }
-      },
-    };
-
-    stmt.executeAsync(handlers);
+      });
+    });
   },
 
   count(aSearchData, aHandlers) {
