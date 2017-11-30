@@ -492,9 +492,7 @@ var LoginManagerContent = {
     let hasInsecureLoginForms = (thisWindow) => {
       let doc = thisWindow.document;
       let hasLoginForm = this.stateForDocument(doc).loginFormRootElements.size > 0;
-      // Ignores window.opener, because it's not relevant for indicating
-      // form security. See InsecurePasswordUtils docs for details.
-      return (hasLoginForm && !thisWindow.isSecureContextIfOpenerIgnored) ||
+      return (hasLoginForm && !thisWindow.isSecureContext) ||
              Array.some(thisWindow.frames,
                         frame => hasInsecureLoginForms(frame));
     };

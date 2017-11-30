@@ -146,9 +146,7 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
 
   // Delete old key, we are generating a new key.
   // TODO(nical): noooo... we need to reuse image keys.
-  if (mKey) {
-    mWRManager->AddImageKeyForDiscard(mKey.value());
-  }
+  ClearImageKey();
 
   key = WrBridge()->GetNextImageKey();
   aResources.AddExternalImage(mExternalImageId.value(), key);
@@ -161,11 +159,10 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
 void
 WebRenderImageData::SetKey(const wr::ImageKey& aKey)
 {
-  if (mKey) {
-    MOZ_ASSERT(mKey.value() != aKey);
-    mWRManager->AddImageKeyForDiscard(mKey.value());
-  }
+  MOZ_ASSERT_IF(mKey, mKey.value() != aKey);
+  ClearImageKey();
   mKey = Some(aKey);
+  mOwnsKey = true;
 }
 
 already_AddRefed<ImageClient>
