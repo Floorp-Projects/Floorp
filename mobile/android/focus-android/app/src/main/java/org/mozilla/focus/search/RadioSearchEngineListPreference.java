@@ -12,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.RadioGroup;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Settings;
 
 public class RadioSearchEngineListPreference extends SearchEngineListPreference implements RadioGroup.OnCheckedChangeListener {
@@ -45,5 +46,6 @@ public class RadioSearchEngineListPreference extends SearchEngineListPreference 
     @Override
     public void onCheckedChanged (RadioGroup group, int checkedId) {
         Settings.getInstance(group.getContext()).setDefaultSearchEngine(searchEngines.get(checkedId));
+        TelemetryWrapper.setDefaultSearchEngineEvent();
     }
 }

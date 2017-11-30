@@ -70,6 +70,8 @@ object TelemetryWrapper {
         val SHARE_INTENT = "share_intent"
         val REMOVE = "remove"
         val REORDER = "reorder"
+        val NEW = "new"
+        val RESTORE = "restore"
     }
 
     private object Object {
@@ -96,6 +98,9 @@ object TelemetryWrapper {
         val APP_ICON = "app_icon"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
         val AUTOFILL = "autofill"
+        val SEARCH_ENGINE_SETTING = "search_engine_setting"
+        val CUSTOM_SEARCH_ENGINE = "custom_search_engine"
+        val REMOVE_SEARCH_ENGINES = "remove_search_engines"
     }
 
     private object Value {
@@ -131,6 +136,7 @@ object TelemetryWrapper {
         val HIGHLIGHTED = "highlighted"
         val AUTOCOMPLETE = "autocomplete"
         val SOURCE = "source"
+        val SUCCESS = "success"
     }
 
     @JvmStatic
@@ -601,5 +607,44 @@ object TelemetryWrapper {
     @JvmStatic
     fun autofillPerformedEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.AUTOFILL).queue()
+    }
+
+    @JvmStatic
+    fun setDefaultSearchEngineEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.SEARCH_ENGINE_SETTING).queue()
+    }
+
+    @JvmStatic
+    fun openSearchSettingsEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.SEARCH_ENGINE_SETTING).queue()
+    }
+
+    @JvmStatic
+    fun menuRemoveEnginesEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.REMOVE, Object.SEARCH_ENGINE_SETTING).queue()
+    }
+
+    @JvmStatic
+    fun menuRestoreEnginesEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.RESTORE, Object.SEARCH_ENGINE_SETTING).queue()
+    }
+
+    @JvmStatic
+    fun menuAddSearchEngineEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.NEW, Object.SEARCH_ENGINE_SETTING).queue()
+    }
+
+    @JvmStatic
+    fun saveCustomSearchEngineEvent(success: Boolean) {
+        TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.CUSTOM_SEARCH_ENGINE)
+                .extra(Extra.SUCCESS, success.toString())
+                .queue()
+    }
+
+    @JvmStatic
+    fun removeSearchEnginesEvent(selected: Int) {
+        TelemetryEvent.create(Category.ACTION, Method.REMOVE, Object.REMOVE_SEARCH_ENGINES)
+                .extra(Extra.SELECTED, selected.toString())
+                .queue()
     }
 }

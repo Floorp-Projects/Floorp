@@ -17,6 +17,7 @@ import android.widget.EditText;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.search.SearchEngineManager;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.UrlUtils;
 
 import java.util.Collections;
@@ -50,6 +51,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 final String searchQuery = ((EditText) rootView.findViewById(R.id.edit_search_string)).getText().toString();
 
                 final SharedPreferences sharedPreferences = getSearchEngineSharedPreferences();
+                boolean isSuccess = false;
                 if (TextUtils.isEmpty(engineName)) {
                     Snackbar.make(rootView, R.string.search_add_error_empty_name, Snackbar.LENGTH_SHORT).show();
                 } else if (TextUtils.isEmpty(searchQuery)) {
@@ -58,9 +60,11 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                     Snackbar.make(rootView, R.string.search_add_error_format, Snackbar.LENGTH_SHORT).show();
                 } else {
                     SearchEngineManager.addSearchEngine(sharedPreferences, getActivity(), engineName, searchQuery);
+                    isSuccess = true;
                     Snackbar.make(rootView, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show();
                     getFragmentManager().popBackStack();
                 }
+                TelemetryWrapper.saveCustomSearchEngineEvent(isSuccess);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
