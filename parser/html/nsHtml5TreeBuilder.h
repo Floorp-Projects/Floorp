@@ -410,8 +410,11 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void insertIntoStack(nsHtml5StackNode* node, int32_t position);
     void insertIntoListOfActiveFormattingElements(nsHtml5StackNode* formattingClone, int32_t bookmark);
     int32_t findInListOfActiveFormattingElements(nsHtml5StackNode* node);
-    int32_t findInListOfActiveFormattingElementsContainsBetweenEndAndLastMarker(nsAtom* name);
-    void maybeForgetEarlierDuplicateFormattingElement(nsAtom* name, nsHtml5HtmlAttributes* attributes);
+    int32_t findInListOfActiveFormattingElementsContainsBetweenEndAndLastMarker(
+      nsAtom* name);
+    void maybeForgetEarlierDuplicateFormattingElement(
+      nsAtom* name,
+      nsHtml5HtmlAttributes* attributes);
     int32_t findLastOrRoot(nsAtom* name);
     int32_t findLastOrRoot(int32_t group);
     bool addAttributesToBody(nsHtml5HtmlAttributes* attributes);
@@ -525,6 +528,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
                                  nsHtml5String systemIdentifier);
     void elementPushed(int32_t ns, nsAtom* name, nsIContentHandle* node);
     void elementPopped(int32_t ns, nsAtom* name, nsIContentHandle* node);
+
   public:
     inline bool cdataSectionAllowed()
     {
@@ -535,7 +539,11 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     bool isInForeign();
     bool isInForeignButNotHtmlOrMathTextIntegrationPoint();
   public:
-    void setFragmentContext(nsAtom* context, int32_t ns, nsIContentHandle* node, bool quirks);
+    void setFragmentContext(nsAtom* context,
+                            int32_t ns,
+                            nsIContentHandle* node,
+                            bool quirks);
+
   protected:
     nsIContentHandle* currentNode();
   public:
