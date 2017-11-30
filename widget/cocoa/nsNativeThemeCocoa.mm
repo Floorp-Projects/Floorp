@@ -2171,34 +2171,43 @@ static const CellRenderSettings meterSetting = {
   }
 };
 
-void
-nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
-                              nsIFrame* aFrame)
+nsNativeThemeCocoa::MeterParams
+nsNativeThemeCocoa::ComputeMeterParams(nsIFrame* aFrame)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK
-
-  NS_PRECONDITION(aFrame, "aFrame should not be null here!");
-
-  // When using -moz-meterbar on an non meter element, we will not be able to
-  // get all the needed information so we just draw an empty meter.
   nsIContent* content = aFrame->GetContent();
   if (!(content && content->IsHTMLElement(nsGkAtoms::meter))) {
-    DrawCellWithSnapping(mMeterBarCell, cgContext, inBoxRect,
-                         meterSetting, VerticalAlignFactor(aFrame),
-                         mCellDrawView, IsFrameRTL(aFrame));
-    return;
+    return MeterParams();
   }
 
   HTMLMeterElement* meterElement = static_cast<HTMLMeterElement*>(content);
-  double value = meterElement->Value();
-  double min = meterElement->Min();
-  double max = meterElement->Max();
+  MeterParams params;
+  params.value = meterElement->Value();
+  params.min = meterElement->Min();
+  params.max = meterElement->Max();
+  EventStates states = meterElement->State();
+  if (states.HasState(NS_EVENT_STATE_SUB_OPTIMUM)) {
+    params.optimumState = OptimumState::eSubOptimum;
+  } else if (states.HasState(NS_EVENT_STATE_SUB_SUB_OPTIMUM)) {
+    params.optimumState = OptimumState::eSubSubOptimum;
+  }
+  params.horizontal = !IsVerticalMeter(aFrame);
+  params.verticalAlignFactor = VerticalAlignFactor(aFrame);
+  params.rtl = IsFrameRTL(aFrame);
+
+  return params;
+}
+
+void
+nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
+                              const MeterParams& aParams)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK
 
   NSLevelIndicatorCell* cell = mMeterBarCell;
 
-  [cell setMinValue:min];
-  [cell setMaxValue:max];
-  [cell setDoubleValue:value];
+  [cell setMinValue:aParams.min];
+  [cell setMaxValue:aParams.max];
+  [cell setDoubleValue:aParams.value];
 
   /**
    * The way HTML and Cocoa defines the meter/indicator widget are different.
@@ -2207,20 +2216,23 @@ nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
    * value when we want to have the widget to be in the warning or critical
    * state.
    */
-  EventStates states = aFrame->GetContent()->AsElement()->State();
-
-  // Reset previously set warning and critical values.
-  [cell setWarningValue:max+1];
-  [cell setCriticalValue:max+1];
-
-  if (states.HasState(NS_EVENT_STATE_SUB_OPTIMUM)) {
-    [cell setWarningValue:value];
-  } else if (states.HasState(NS_EVENT_STATE_SUB_SUB_OPTIMUM)) {
-    [cell setCriticalValue:value];
+  switch (aParams.optimumState) {
+    case OptimumState::eOptimum:
+      [cell setWarningValue:aParams.max+1];
+      [cell setCriticalValue:aParams.max+1];
+      break;
+    case OptimumState::eSubOptimum:
+      [cell setWarningValue:aParams.value];
+      [cell setCriticalValue:aParams.max+1];
+      break;
+    case OptimumState::eSubSubOptimum:
+      [cell setWarningValue:aParams.max+1];
+      [cell setCriticalValue:aParams.value];
+      break;
   }
 
   HIRect rect = CGRectStandardize(inBoxRect);
-  BOOL vertical = IsVerticalMeter(aFrame);
+  BOOL vertical = !aParams.horizontal;
 
   CGContextSaveGState(cgContext);
 
@@ -2247,8 +2259,8 @@ nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
   }
 
   DrawCellWithSnapping(cell, cgContext, rect,
-                       meterSetting, VerticalAlignFactor(aFrame),
-                       mCellDrawView, !vertical && IsFrameRTL(aFrame));
+                       meterSetting, aParams.verticalAlignFactor,
+                       mCellDrawView, !vertical && aParams.rtl);
 
   CGContextRestoreGState(cgContext);
 
@@ -3036,7 +3048,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_METERBAR:
-      DrawMeter(cgContext, macRect, aFrame);
+      DrawMeter(cgContext, macRect, ComputeMeterParams(aFrame));
       break;
 
     case NS_THEME_PROGRESSCHUNK:
