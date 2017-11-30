@@ -24,7 +24,8 @@ WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
   return aEvent.mMessage == eMouseMove ||
          aEvent.mMessage == eMouseDown ||
          aEvent.mMessage == eMouseUp ||
-         aEvent.mMessage == eDragEnd;
+         aEvent.mMessage == eDragEnd ||
+         (gfxPrefs::TestEventsAsyncEnabled() && aEvent.mMessage == eMouseHitTest);
 }
 
 /* static */ bool
