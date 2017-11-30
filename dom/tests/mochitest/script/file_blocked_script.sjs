@@ -35,12 +35,13 @@ function handleRequest(request, response)
   switch (query[0]) {
     case "blocked":
       var alreadyUnblocked = getGlobalState(query[1]);
+
+      response.processAsync();
       if (alreadyUnblocked) {
         // the unblock request came before the blocked request, just go on and finish synchronously
         finishBlockedRequest(request, response, query);
       } else {
         setGlobalState(response, query[1]);
-        response.processAsync();
       }
       break;
 
