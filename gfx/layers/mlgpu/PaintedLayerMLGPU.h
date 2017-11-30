@@ -48,9 +48,8 @@ public:
     MOZ_ASSERT(HasComponentAlpha());
     return mTextureOnWhite;
   }
-  ContentHostTexture* GetContentHost() const {
-    return mHost;
-  }
+  gfx::Point GetDestOrigin() const;
+
   SamplerMode GetSamplerMode() {
     // Note that when resamping, we must break the texture coordinates into
     // no-repeat rects. When we have simple integer translations we can
@@ -78,12 +77,13 @@ protected:
   void CleanupResources();
 
 private:
-  RefPtr<ContentHostTexture> mHost;
+  RefPtr<ContentHost> mHost;
   RefPtr<TextureSource> mTexture;
   RefPtr<TextureSource> mTextureOnWhite;
 #ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
   LayerIntRegion mDrawRects;
 #endif
+  IntPoint mDestOrigin;
 };
 
 } // namespace layers
