@@ -92,15 +92,18 @@ nsDNSRecord::GetCanonicalName(nsACString &result)
                    NS_ERROR_NOT_AVAILABLE);
 
     MutexAutoLock lock(mHostRecord->addr_info_lock);
-    if (mHostRecord->addr_info) {
-        const char* cname = mHostRecord->addr_info->mCanonicalName ?
-            mHostRecord->addr_info->mCanonicalName :
-            mHostRecord->addr_info->mHostName;
-        result.Assign(cname);
-    } else {
-        // if the record is for an IP address literal, then the canonical
-        // host name is the IP address literal.
+
+    // if the record is for an IP address literal, then the canonical
+    // host name is the IP address literal.
+    if (!mHostRecord->addr_info) {
         result = mHostRecord->host;
+        return NS_OK;
+    }
+
+    if (mHostRecord->addr_info->mCanonicalName.IsEmpty()) {
+        result = mHostRecord->addr_info->mHostName;
+    } else {
+        result = mHostRecord->addr_info->mCanonicalName;
     }
     return NS_OK;
 }
