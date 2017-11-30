@@ -28,6 +28,7 @@ const PanelUI = {
       multiView: "appMenu-multiView",
       helpView: "PanelUI-helpView",
       libraryView: "appMenu-libraryView",
+      libraryRecentHighlights: "appMenu-library-recentHighlights",
       menuButton: "PanelUI-menu-button",
       panel: "appMenu-popup",
       notificationPanel: "appMenu-notification-popup",
@@ -305,7 +306,7 @@ const PanelUI = {
         break;
       case "ViewShowing":
         if (aEvent.target == this.libraryView) {
-          this.onLibraryViewShowing(aEvent.target);
+          this.onLibraryViewShowing(aEvent.target).catch(Cu.reportError);
         }
         break;
     }
@@ -507,32 +508,51 @@ const PanelUI = {
    * @param {panelview} viewNode The library view.
    */
   async onLibraryViewShowing(viewNode) {
-    if (this._loadingRecentHighlights) {
-      return;
-    }
-    this._loadingRecentHighlights = true;
-
     // Since the library is the first view shown, we don't want to add a blocker
-    // to the event, which would make PanelMultiView wait to show it.
-    let container = this.clearLibraryRecentHighlights();
-    if (!this.libraryRecentHighlightsEnabled) {
-      this._loadingRecentHighlights = false;
+    // to the event, which would make PanelMultiView wait to show it. Instead,
+    // we keep the space currently reserved for the items, but we hide them.
+    if (this._loadingRecentHighlights || !this.libraryRecentHighlightsEnabled) {
       return;
     }
 
+    // Make the elements invisible synchronously, before the view is shown.
+    this.makeLibraryRecentHighlightsInvisible();
+
+    // Perform the rest asynchronously while protecting from re-entrancy.
+    this._loadingRecentHighlights = true;
+    try {
+      await this.fetchAndPopulateLibraryRecentHighlights();
+    } finally {
+      this._loadingRecentHighlights = false;
+    }
+  },
+
+  /**
+   * Fetches the list of Recent Highlights and replaces the items in the Library
+   * view with the results.
+   */
+  async fetchAndPopulateLibraryRecentHighlights() {
     let highlights = await NewTabUtils.activityStreamLinks.getHighlights({
       // As per bug 1402023, hard-coded limit, until Activity Stream develops a
       // richer list.
       numItems: 6,
       withFavicons: true
+    }).catch(ex => {
+      // Just hide the section if we can't retrieve the items from the database.
+      Cu.reportError(ex);
+      return [];
     });
-    // If there's nothing to display, or the panel is already hidden, get out.
-    let multiView = viewNode.panelMultiView;
-    if (!highlights.length || (multiView && multiView.getAttribute("panelopen") != "true")) {
-      this._loadingRecentHighlights = false;
+
+    // Since the call above is asynchronous, the panel may be already hidden
+    // at this point, but we still prepare the items for the next time the
+    // panel is shown, so their space is reserved. The part of this function
+    // that adds the elements is the least expensive anyways.
+    this.clearLibraryRecentHighlights();
+    if (!highlights.length) {
       return;
     }
 
+    let container = this.libraryRecentHighlights;
     container.hidden = container.previousSibling.hidden =
       container.previousSibling.previousSibling.hidden = false;
     let fragment = document.createDocumentFragment();
@@ -551,21 +571,29 @@ const PanelUI = {
       fragment.appendChild(button);
     }
     container.appendChild(fragment);
+  },
 
-    this._loadingRecentHighlights = false;
+  /**
+   * Make all nodes from the 'Recent Highlights' section invisible while we
+   * refresh its contents. This is done while the Library view is opening to
+   * avoid showing potentially stale items, but still keep the space reserved.
+   */
+  makeLibraryRecentHighlightsInvisible() {
+    for (let button of this.libraryRecentHighlights.children) {
+      button.style.visibility = "hidden";
+    }
   },
 
   /**
    * Remove all the nodes from the 'Recent Highlights' section and hide it as well.
    */
   clearLibraryRecentHighlights() {
-    let container = document.getElementById("appMenu-library-recentHighlights");
+    let container = this.libraryRecentHighlights;
     while (container.firstChild) {
       container.firstChild.remove();
     }
     container.hidden = container.previousSibling.hidden =
       container.previousSibling.previousSibling.hidden = true;
-    return container;
   },
 
   /**
