@@ -998,25 +998,31 @@ static const CellRenderSettings checkboxSettings = {
   }
 };
 
+static NSCellStateValue
+CellStateForCheckboxOrRadioState(nsNativeThemeCocoa::CheckboxOrRadioState aState)
+{
+  switch (aState) {
+    case nsNativeThemeCocoa::CheckboxOrRadioState::eOff:
+      return NSOffState;
+    case nsNativeThemeCocoa::CheckboxOrRadioState::eOn:
+      return NSOnState;
+    case nsNativeThemeCocoa::CheckboxOrRadioState::eIndeterminate:
+      return NSMixedState;
+  }
+}
+
 void
 nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
-                                        const HIRect& inBoxRect, bool inSelected,
-                                        EventStates inState, nsIFrame* aFrame)
+                                        const HIRect& inBoxRect,
+                                        const CheckboxOrRadioParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSButtonCell *cell = inCheckbox ? mCheckboxCell : mRadioButtonCell;
-  NSCellStateValue state = inSelected ? NSOnState : NSOffState;
+  ApplyControlParamsToNSCell(aParams.controlParams, cell);
 
-  // Check if we have an indeterminate checkbox
-  if (inCheckbox && GetIndeterminate(aFrame))
-    state = NSMixedState;
-
-  [cell setEnabled:!IsDisabled(aFrame, inState)];
-  [cell setShowsFirstResponder:inState.HasState(NS_EVENT_STATE_FOCUS)];
-  [cell setState:state];
-  [cell setHighlighted:inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)];
-  [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
+  [cell setState:CellStateForCheckboxOrRadioState(aParams.state)];
+  [cell setControlTint:(aParams.controlParams.insideActiveWindow ? [NSColor currentControlTint] : NSClearControlTint)];
 
   // Ensure that the control is square.
   float length = std::min(inBoxRect.size.width, inBoxRect.size.height);
@@ -1026,7 +1032,7 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
 
   DrawCellWithSnapping(cell, cgContext, drawRect,
                        inCheckbox ? checkboxSettings : radioSettings,
-                       VerticalAlignFactor(aFrame), mCellDrawView, NO);
+                       aParams.verticalAlignFactor, mCellDrawView, NO);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2721,8 +2727,17 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO: {
       bool isCheckbox = (aWidgetType == NS_THEME_CHECKBOX);
-      DrawCheckboxOrRadio(cgContext, isCheckbox, macRect, GetCheckedOrSelected(aFrame, !isCheckbox),
-                          eventState, aFrame);
+
+      CheckboxOrRadioParams params;
+      params.state = CheckboxOrRadioState::eOff;
+      if (isCheckbox && GetIndeterminate(aFrame)) {
+        params.state = CheckboxOrRadioState::eIndeterminate;
+      } else if (GetCheckedOrSelected(aFrame, !isCheckbox)) {
+        params.state = CheckboxOrRadioState::eOn;
+      }
+      params.controlParams = ComputeControlParams(aFrame, eventState);
+      params.verticalAlignFactor = VerticalAlignFactor(aFrame);
+      DrawCheckboxOrRadio(cgContext, isCheckbox, macRect, params);
     }
       break;
 
