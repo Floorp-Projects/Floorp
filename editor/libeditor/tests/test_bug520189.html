@@ -613,8 +613,12 @@ function runTest(test) {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(doNextTest);
 
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv(
+    { "set": [["layout.css.moz-document.content.enabled", true]]},
+    doNextTest)
+});
 </script>
 </pre>
 </body>

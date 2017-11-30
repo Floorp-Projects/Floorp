@@ -67,6 +67,12 @@ pref("security.pki.cert_short_lifetime_in_days", 10);
 // 3 = only allow SHA-1 for certificates issued by an imported root.
 pref("security.pki.sha1_enforcement_level", 3);
 
+// This preference controls what signature algorithms are accepted for signed
+// apps (i.e. add-ons).
+// 0: SHA-1 and/or SHA-256 PKCS#7 allowed
+// 1: SHA-256 PKCS#7 allowed
+pref("security.signed_app_signatures.policy", 0);
+
 // security.pki.name_matching_mode controls how the platform matches hostnames
 // to name information in TLS certificates. The possible values are:
 // 0: always fall back to the subject common name if necessary (as in, if the

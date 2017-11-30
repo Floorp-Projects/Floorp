@@ -670,6 +670,14 @@ add_task(async function test_events() {
     equal(ping.events[0].length, 6);
     [timestamp, category, method, object, value, extra] = ping.events[0];
     equal(value, null);
+
+    Service.recordTelemetryEvent("object", "method", undefined, { foo: "bar" });
+    let telem = get_sync_test_telemetry();
+    // Fake a submission due to shutdown.
+    ping = await wait_for_ping(() => telem.finish("shutdown"), false, true);
+    equal(ping.syncs.length, 0);
+    equal(ping.events.length, 1);
+    equal(ping.events[0].length, 6);
   } finally {
     await cleanAndGo(engine, server);
     Service.engineManager.unregister(engine);

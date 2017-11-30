@@ -249,6 +249,8 @@ VRManagerParent::RecvCreateVRTestSystem()
   vm->CreateVRTestSystem();
   mDisplayTestID = 0;
   mControllerTestID = 0;
+  mVRDisplayTests.Clear();
+  mVRControllerTests.Clear();
   return IPC_OK();
 }
 

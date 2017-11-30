@@ -4,5 +4,6 @@
 
 DevToolsModules(
     'addon.js',
+    'connect.js',
     'worker.js',
 )

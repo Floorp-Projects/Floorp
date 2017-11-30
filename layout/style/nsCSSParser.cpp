@@ -3771,6 +3771,11 @@ CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
 bool
 CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
 {
+  if (mParsingMode == css::eAuthorSheetFeatures &&
+      !StylePrefs::sMozDocumentEnabledInContent) {
+    return false;
+  }
+
   css::DocumentRule::URL *urls = nullptr;
   css::DocumentRule::URL **next = &urls;
 

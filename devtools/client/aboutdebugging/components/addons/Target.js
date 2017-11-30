@@ -9,7 +9,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { debugAddon, isTemporaryID, parseFileUri, uninstallAddon } =
+const { debugLocalAddon, debugRemoteAddon, isTemporaryID, parseFileUri, uninstallAddon } =
   require("../../modules/addon");
 const Services = require("Services");
 
@@ -127,10 +127,12 @@ class AddonTarget extends Component {
   static get propTypes() {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      connect: PropTypes.object,
       debugDisabled: PropTypes.bool,
       target: PropTypes.shape({
         addonActor: PropTypes.string.isRequired,
         addonID: PropTypes.string.isRequired,
+        form: PropTypes.object.isRequired,
         icon: PropTypes.string,
         name: PropTypes.string.isRequired,
         temporarilyInstalled: PropTypes.bool,
@@ -148,8 +150,13 @@ class AddonTarget extends Component {
   }
 
   debug() {
-    let { target } = this.props;
-    debugAddon(target.addonID);
+    let { client, connect, target } = this.props;
+
+    if (connect.type === "REMOTE") {
+      debugRemoteAddon(target.form, client);
+    } else if (connect.type === "LOCAL") {
+      debugLocalAddon(target.addonID);
+    }
   }
 
   uninstall() {

@@ -44,12 +44,18 @@
 }
 
 @keyframes alert-clicked-animation {
+  from {
+    opacity: 1;
+  }
   to {
     opacity: 0;
   }
 }
 
 @keyframes alert-closing-animation {
+  from {
+    opacity: 1;
+  }
   to {
     opacity: 0;
   }

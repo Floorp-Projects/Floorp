@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
-/* globals DebuggerClient, DebuggerServer, Telemetry */
+/* globals Telemetry */
 
 "use strict";
 
@@ -14,10 +14,6 @@ const { BrowserLoader } = Components.utils.import(
 const { Services } = Components.utils.import(
   "resource://gre/modules/Services.jsm", {});
 
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/debugger-client", true);
-loader.lazyRequireGetter(this, "DebuggerServer",
-  "devtools/server/main", true);
 loader.lazyRequireGetter(this, "Telemetry",
   "devtools/client/shared/telemetry");
 
@@ -30,30 +26,25 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
 
 const AboutDebuggingApp = createFactory(require("./components/Aboutdebugging"));
+const { createClient } = require("./modules/connect");
 
 var AboutDebugging = {
-  init() {
+  async init() {
     if (!Services.prefs.getBoolPref("devtools.enabled", true)) {
       // If DevTools are disabled, navigate to about:devtools.
       window.location = "about:devtools?reason=AboutDebugging";
       return;
     }
 
-    DebuggerServer.init();
-    DebuggerServer.allowChromeProcess = true;
-    // We want a full featured server for about:debugging. Especially the
-    // "browser actors" like addons.
-    DebuggerServer.registerAllActors();
+    let {connect, client} = await createClient();
 
-    this.client = new DebuggerClient(DebuggerServer.connectPipe());
+    this.client = client;
+    await this.client.connect();
 
-    this.client.connect().then(() => {
-      let client = this.client;
-      let telemetry = new Telemetry();
+    let telemetry = new Telemetry();
 
-      render(AboutDebuggingApp({ client, telemetry }),
-        document.querySelector("#body"));
-    });
+    render(AboutDebuggingApp({ client, connect, telemetry }),
+      document.querySelector("#body"));
   },
 
   destroy() {

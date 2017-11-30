@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Various tests to exercise the APZ hit-testing codepaths</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+</head>
+<body>
+ <div id="scroller" style="width: 300px; height: 300px; overflow:scroll; margin-top: 100px; margin-left: 50px">
+  <div id="contents" style="width: 500px; height: 500px; background-image: linear-gradient(blue,red)">
+   <div id="apzaware" style="position: relative; width: 100px; height: 100px; top: 300px; background-color: red" onwheel="return false;"></div>
+  </div>
+ </div>
+ <div id="make_root_scrollable" style="height: 5000px"></div>
+</body>
+<script type="application/javascript">
+
+var utils = SpecialPowers.getDOMWindowUtils(window);
+var isWebRender = (utils.layerManagerType == 'WebRender');
+var isWindows = (getPlatform() == 'windows');
+
+function centerOf(element) {
+  var bounds = element.getBoundingClientRect();
+  return { x: bounds.x + (bounds.width / 2), y: bounds.y + (bounds.height / 2) };
+}
+
+function hitTest(point) {
+  dump("Hit-testing point (" + point.x + ", " + point.y + ")\n");
+  utils.sendMouseEvent("MozMouseHittest", point.x, point.y, 0, 0, 0, true, 0, 0, true, true);
+  var data = utils.getCompositorAPZTestData();
+  ok(data.hitResults.length >= 1, "Expected at least one hit result in the APZTestData");
+  var result = data.hitResults[data.hitResults.length - 1];
+  return { hitInfo: result.hitResult, scrollId: result.scrollId };
+}
+
+function* test(testDriver) {
+  var scroller = document.getElementById('scroller');
+  var apzaware = document.getElementById('apzaware');
+
+  var verticalScrollbarWidth = scroller.getBoundingClientRect().width - scroller.clientWidth;
+  var horizontalScrollbarHeight = scroller.getBoundingClientRect().height - scroller.clientHeight;
+
+  // On windows, the scrollbar tracks have buttons on the end. When computing
+  // coordinates for hit-testing we need to account for this. We assume the
+  // buttons are square, and so can use the scrollbar width/height to estimate
+  // the size of the buttons
+  var scrollbarArrowButtonHeight = isWindows ? verticalScrollbarWidth : 0;
+  var scrollbarArrowButtonWidth = isWindows ? horizontalScrollbarHeight : 0;
+
+  // WebRender will hit-test scroll thumbs even inside inactive scrollframes,
+  // because the hit-test is based on display items and we do in fact generate
+  // the display items for the scroll thumb. The user-observed behaviour is
+  // going to be unaffected because the dispatch-to-content flag will also be
+  // set on these thumbs so it's not like APZ will allow async-scrolling them
+  // before the scrollframe has been activated/layerized. In non-WebRender we
+  // do not generate the layers for thumbs on inactive scrollframes, so the
+  // hit test will be accordingly different.
+  var inactiveScrollframeThumbFlag = isWebRender ? APZHitResultFlags.SCROLLBAR_THUMB : 0;
+
+  var {hitInfo, scrollId} = hitTest(centerOf(scroller));
+  is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,
+     "inactive scrollframe hit info");
+  is(scrollId, utils.getViewId(document.scrollingElement),
+     "inactive scrollframe scrollid");
+
+  // The apz-aware div (which has a non-passive wheel listener) is not visible
+  // and so the hit-test should just return the root scrollframe area that's
+  // covering it
+  var {hitInfo, scrollId} = hitTest(centerOf(apzaware));
+  is(hitInfo, APZHitResultFlags.VISIBLE,
+     "inactive scrollframe - apzaware block hit info");
+  is(scrollId, utils.getViewId(document.scrollingElement),
+     "inactive scrollframe - apzaware block scrollid");
+
+  // Hit-test against where the scrollthumbs should be, assuming we don't have
+  // overlay scrollbars with zero dimensions. Note that the scrollframe is still
+  // inactive so the result should just be the same dispatch-to-content area
+  // as before, but because we force layerization of scrollbar tracks the hit
+  // result will have HITTEST_SCROLLBAR set. Unfortunately not forcing the
+  // layerization results in different behaviour on different platforms which
+  // makes testing harder.
+  if (verticalScrollbarWidth > 0) {
+    var verticalScrollbarPoint = {
+        x: scroller.getBoundingClientRect().right - (verticalScrollbarWidth / 2),
+        y: scroller.getBoundingClientRect().y + scrollbarArrowButtonHeight + 5,
+    };
+    var {hitInfo, scrollId} = hitTest(verticalScrollbarPoint);
+    is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT
+              | APZHitResultFlags.SCROLLBAR | APZHitResultFlags.SCROLLBAR_VERTICAL
+              | inactiveScrollframeThumbFlag,
+       "inactive scrollframe - vertical scrollbar hit info");
+    is(scrollId, utils.getViewId(document.scrollingElement),
+       "inactive scrollframe - vertical scrollbar scrollid");
+  }
+
+  if (horizontalScrollbarHeight > 0) {
+    var horizontalScrollbarPoint = {
+        x: scroller.getBoundingClientRect().x + scrollbarArrowButtonWidth + 5,
+        y: scroller.getBoundingClientRect().bottom - (horizontalScrollbarHeight / 2),
+    };
+    var {hitInfo, scrollId} = hitTest(horizontalScrollbarPoint);
+    is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT
+              | APZHitResultFlags.SCROLLBAR | inactiveScrollframeThumbFlag,
+       "inactive scrollframe - horizontal scrollbar hit info");
+    is(scrollId, utils.getViewId(document.scrollingElement),
+       "inactive scrollframe - horizontal scrollbar scrollid");
+  }
+
+
+  // activate the scrollframe but keep the main-thread scroll position at 0.
+  // also apply a async scroll offset in the y-direction such that the
+  // scrollframe scrolls to the bottom of its range.
+  utils.setDisplayPortForElement(0, 0, 500, 500, scroller, 1);
+  yield waitForAllPaints(testDriver);
+  var scrollY = scroller.scrollTopMax;
+  utils.setAsyncScrollOffset(scroller, 0, scrollY);
+  if (isWebRender) {
+    // Tick the refresh driver once to make sure the compositor has applied the
+    // async scroll offset (for APZ hit-testing this doesn't matter, but for
+    // WebRender hit-testing we need to make sure WR has the latest info).
+    utils.advanceTimeAndRefresh(16);
+    utils.restoreNormalRefresh();
+  }
+
+  // Now we again test the middle of the scrollframe, which is now active
+  var {hitInfo, scrollId} = hitTest(centerOf(scroller));
+  is(hitInfo, APZHitResultFlags.VISIBLE,
+     "active scrollframe hit info");
+  is(scrollId, utils.getViewId(scroller),
+     "active scrollframe scrollid");
+
+  // Test the apz-aware block
+  var apzawarePosition = centerOf(apzaware); // main thread position
+  apzawarePosition.y -= scrollY; // APZ position
+  var {hitInfo, scrollId} = hitTest(apzawarePosition);
+  is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,
+     "active scrollframe - apzaware block hit info");
+  is(scrollId, utils.getViewId(scroller),
+     "active scrollframe - apzaware block scrollid");
+
+  // Test the scrollbars. Note that this time the vertical scrollthumb is
+  // going to be at the bottom of the track. We'll test both the top and the
+  // bottom.
+  if (verticalScrollbarWidth > 0) {
+    // top of scrollbar track
+    var verticalScrollbarPoint = {
+        x: scroller.getBoundingClientRect().right - (verticalScrollbarWidth / 2),
+        y: scroller.getBoundingClientRect().top + scrollbarArrowButtonHeight + 5,
+    };
+    var {hitInfo, scrollId} = hitTest(verticalScrollbarPoint);
+    is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR
+              | APZHitResultFlags.SCROLLBAR_VERTICAL,
+       "active scrollframe - vertical scrollbar hit info");
+    is(scrollId, utils.getViewId(scroller),
+       "active scrollframe - vertical scrollbar scrollid");
+
+    // bottom of scrollbar track (scrollthumb)
+    verticalScrollbarPoint.y = scroller.getBoundingClientRect().bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5;
+    var {hitInfo, scrollId} = hitTest(verticalScrollbarPoint);
+    is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT
+              | APZHitResultFlags.SCROLLBAR | APZHitResultFlags.SCROLLBAR_THUMB
+              | APZHitResultFlags.SCROLLBAR_VERTICAL,
+       "active scrollframe - vertical scrollthumb hit info");
+    is(scrollId, utils.getViewId(scroller),
+       "active scrollframe - vertical scrollthumb scrollid");
+  }
+  if (horizontalScrollbarHeight > 0) {
+    // left part of scrollbar track (has scrollthumb)
+    var horizontalScrollbarPoint = {
+        x: scroller.getBoundingClientRect().x + scrollbarArrowButtonWidth + 5,
+        y: scroller.getBoundingClientRect().bottom - (horizontalScrollbarHeight / 2),
+    };
+    var {hitInfo, scrollId} = hitTest(horizontalScrollbarPoint);
+    is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT
+              | APZHitResultFlags.SCROLLBAR | APZHitResultFlags.SCROLLBAR_THUMB,
+       "active scrollframe - horizontal scrollthumb hit info");
+    is(scrollId, utils.getViewId(scroller),
+       "active scrollframe - horizontal scrollthumb scrollid");
+
+    // right part of scrollbar track
+    horizontalScrollbarPoint.x = scroller.getBoundingClientRect().right - verticalScrollbarWidth - scrollbarArrowButtonWidth - 5;
+    var {hitInfo, scrollId} = hitTest(horizontalScrollbarPoint);
+    is(hitInfo, APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR,
+       "active scrollframe - horizontal scrollbar hit info");
+    is(scrollId, utils.getViewId(scroller),
+       "active scrollframe - horizontal scrollbar scrollid");
+  }
+
+  subtestDone();
+}
+
+waitUntilApzStable().then(runContinuation(test));
+
+</script>
+</html>

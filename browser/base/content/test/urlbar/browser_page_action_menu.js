@@ -438,6 +438,11 @@ add_task(async function sendToDevice_noDevices() {
       null,
       {
         attrs: {
+          label: "Connect Another Device..."
+        }
+      },
+      {
+        attrs: {
           label: "Learn About Sending Tabs..."
         }
       }

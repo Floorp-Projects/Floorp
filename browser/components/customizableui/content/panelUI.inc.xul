@@ -438,7 +438,7 @@
                 </hbox>
                 <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.tabsnotsyncing.label;</label>
                 <hbox pack="center">
-                  <toolbarbutton class="PanelUI-remotetabs-prefs-button"
+                  <toolbarbutton class="PanelUI-remotetabs-button"
                                  label="&appMenuRemoteTabs.openprefs.label;"
                                  oncommand="gSync.openPrefs('synced-tabs');"/>
                 </hbox>
@@ -455,8 +455,10 @@
                   <image class="fxaSyncIllustrationIssue"/>
                 </hbox>
                 <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.noclients.subtitle;</label>
-                <!-- The inner HTML for PanelUI-remotetabs-mobile-promo is built at runtime -->
-                <label id="PanelUI-remotetabs-mobile-promo" fxAccountsBrand="&syncBrand.fxAccount.label;"/>
+                <toolbarbutton id="PanelUI-remotetabs-connect-device-button"
+                               class="PanelUI-remotetabs-button"
+                               label="&appMenuRemoteTabs.connectdevice.label;"
+                               oncommand="gSync.openConnectAnotherDevice('synced-tabs');"/>
               </vbox>
             </hbox>
           </deck>
@@ -471,7 +473,7 @@
                 observes="sync-setup-state">
             <image class="fxaSyncIllustration"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
-            <toolbarbutton class="PanelUI-remotetabs-prefs-button"
+            <toolbarbutton class="PanelUI-remotetabs-button"
                            label="&appMenuRemoteTabs.signin.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
@@ -485,7 +487,7 @@
                 observes="sync-reauth-state">
             <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
-            <toolbarbutton class="PanelUI-remotetabs-prefs-button"
+            <toolbarbutton class="PanelUI-remotetabs-button"
                            label="&appMenuRemoteTabs.signin.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>

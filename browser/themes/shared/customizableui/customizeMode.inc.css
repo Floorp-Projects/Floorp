@@ -665,6 +665,10 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 }
 
 @keyframes game-over {
+  0% {
+    transform: scale(1) translateY(0) rotateZ(0);
+    opacity: 1;
+  }
   15% {
     transform: scale(2) translateY(-10px) rotateZ(-90deg);
   }
