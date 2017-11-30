@@ -209,19 +209,6 @@ ReverseString(const nsString& aInput, nsString& aReversed)
   }
 }
 
-#ifdef XP_WIN
-} // namespace places
-} // namespace mozilla
-
-// Included here because windows.h conflicts with the use of mozIStorageError
-// above, but make sure that these are not included inside mozilla::places.
-#include <windows.h>
-#include <wincrypt.h>
-
-namespace mozilla {
-namespace places {
-#endif
-
 static
 nsresult
 GenerateRandomBytes(uint32_t aSize,
@@ -229,13 +216,11 @@ GenerateRandomBytes(uint32_t aSize,
 {
   // On Windows, we'll use its built-in cryptographic API.
 #if defined(XP_WIN)
+  const nsNavHistory* history = nsNavHistory::GetConstHistoryService();
   HCRYPTPROV cryptoProvider;
-  BOOL rc = CryptAcquireContext(&cryptoProvider, 0, 0, PROV_RSA_FULL,
-                                CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
-  if (rc) {
-    rc = CryptGenRandom(cryptoProvider, aSize, _buffer);
-    (void)CryptReleaseContext(cryptoProvider, 0);
-  }
+  nsresult rv = history->GetCryptoProvider(cryptoProvider);
+  NS_ENSURE_SUCCESS(rv, rv);
+  BOOL rc = CryptGenRandom(cryptoProvider, aSize, _buffer);
   return rc ? NS_OK : NS_ERROR_FAILURE;
 
   // On Unix, we'll just read in from /dev/urandom.

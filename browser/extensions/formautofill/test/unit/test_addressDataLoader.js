@@ -2,6 +2,21 @@
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
+const SUPPORT_COUNTRIES_TESTCASES = [
+  {
+    country: "US",
+    properties: ["languages", "alternative_names", "sub_keys", "sub_names"],
+  },
+  {
+    country: "CA",
+    properties: ["languages", "name", "sub_keys", "sub_names"],
+  },
+  {
+    country: "DE",
+    properties: ["name"],
+  },
+];
+
 add_task(async function test_initalState() {
   // addressData should not exist
   Assert.equal(AddressDataLoader._addressData, undefined);
@@ -46,4 +61,13 @@ add_task(async function test_loadDataState() {
   Assert.equal(undefinedMetadata, undefined, "metadata should be undefined");
   // _loadScripts should not be called
   sinon.assert.notCalled(AddressDataLoader._loadScripts);
+});
+
+SUPPORT_COUNTRIES_TESTCASES.forEach(testcase => {
+  add_task(async function test_support_country() {
+    do_print("Starting testcase: Check " + testcase.country + " metadata");
+    let metadata = FormAutofillUtils.getCountryAddressData(testcase.country);
+    Assert.ok(testcase.properties.every(key => metadata[key]),
+              "These properties should exist: " + testcase.properties);
+  });
 });

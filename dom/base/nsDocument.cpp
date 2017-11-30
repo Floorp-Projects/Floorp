@@ -4733,8 +4733,6 @@ nsDocument::SetStyleSheetApplicableState(StyleSheet* aSheet,
   NS_PRECONDITION(aSheet, "null arg");
 
   // If we're actually in the document style sheet list
-  //
-  // FIXME(emilio): Shadow DOM.
   MOZ_DIAGNOSTIC_ASSERT(aSheet->IsServo() == IsStyledByServo());
   if (mStyleSheets.IndexOf(aSheet) != mStyleSheets.NoIndex) {
     if (aApplicable) {
@@ -5757,42 +5755,45 @@ nsDocument::DocumentStatesChanged(EventStates aStateMask)
 }
 
 void
-nsDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsDocument::StyleRuleChanged(StyleSheet* aSheet,
+                             css::Rule* aStyleRule)
 {
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
+  NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleChanged, (aSheet, aStyleRule));
 
-  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
-                             "StyleRuleChanged",
-                             mRule,
-                             aStyleRule);
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
+                               "StyleRuleChanged",
+                               mRule,
+                               aStyleRule);
+  }
 }
 
 void
-nsDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsDocument::StyleRuleAdded(StyleSheet* aSheet,
+                           css::Rule* aStyleRule)
 {
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
+  NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleAdded, (aSheet, aStyleRule));
 
-  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
-                             "StyleRuleAdded",
-                             mRule,
-                             aStyleRule);
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
+                               "StyleRuleAdded",
+                               mRule,
+                               aStyleRule);
+  }
 }
 
 void
-nsDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsDocument::StyleRuleRemoved(StyleSheet* aSheet,
+                             css::Rule* aStyleRule)
 {
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
+  NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleRemoved, (aSheet, aStyleRule));
 
-  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
-                             "StyleRuleRemoved",
-                             mRule,
-                             aStyleRule);
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
+                               "StyleRuleRemoved",
+                               mRule,
+                               aStyleRule);
+  }
 }
 
 #undef DO_STYLESHEET_NOTIFICATION

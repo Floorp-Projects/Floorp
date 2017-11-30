@@ -51,6 +51,7 @@ class AboutDebuggingApp extends Component {
   static get propTypes() {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      connect: PropTypes.object.isRequired,
       telemetry: PropTypes.instanceOf(Telemetry).isRequired
     };
   }
@@ -89,14 +90,14 @@ class AboutDebuggingApp extends Component {
   }
 
   render() {
-    let { client } = this.props;
+    let { client, connect } = this.props;
     let { selectedPanelId } = this.state;
     let selectPanel = this.selectPanel;
     let selectedPanel = panels.find(p => p.id == selectedPanelId);
     let panel;
 
     if (selectedPanel) {
-      panel = selectedPanel.component({ client, id: selectedPanel.id });
+      panel = selectedPanel.component({ client, connect, id: selectedPanel.id });
     } else {
       panel = (
         dom.div({ className: "error-page" },

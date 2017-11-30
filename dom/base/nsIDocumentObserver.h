@@ -14,6 +14,12 @@
 class nsIContent;
 class nsIDocument;
 
+namespace mozilla {
+namespace css {
+class Rule;
+} // namespace css
+} // namespace mozilla
+
 #define NS_IDOCUMENT_OBSERVER_IID \
 { 0x71041fa3, 0x6dd7, 0x4cde, \
   { 0xbb, 0x76, 0xae, 0xcc, 0x69, 0xe1, 0x75, 0x78 } }
@@ -120,6 +126,45 @@ public:
    * @param aStyleSheet the StyleSheet that has changed state
    */
   virtual void StyleSheetApplicableStateChanged(mozilla::StyleSheet* aStyleSheet) = 0;
+
+  /**
+   * A StyleRule has just been modified within a style sheet.
+   * This method is called automatically when the rule gets
+   * modified. The style sheet passes this notification to
+   * the document. The notification is passed on to all of
+   * the document observers.
+   *
+   * @param aStyleSheet the StyleSheet that contians the rule
+   * @param aStyleRule the changed rule
+   */
+  virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,
+                                mozilla::css::Rule* aStyleRule) = 0;
+
+  /**
+   * A StyleRule has just been added to a style sheet.
+   * This method is called automatically when the rule gets
+   * added to the sheet. The style sheet passes this
+   * notification to the document. The notification is passed on
+   * to all of the document observers.
+   *
+   * @param aStyleSheet the StyleSheet that has been modified
+   * @param aStyleRule the added rule
+   */
+  virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,
+                              mozilla::css::Rule* aStyleRule) = 0;
+
+  /**
+   * A StyleRule has just been removed from a style sheet.
+   * This method is called automatically when the rule gets
+   * removed from the sheet. The style sheet passes this
+   * notification to the document. The notification is passed on
+   * to all of the document observers.
+   *
+   * @param aStyleSheet the StyleSheet that has been modified
+   * @param aStyleRule the removed rule
+   */
+  virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,
+                                mozilla::css::Rule* aStyleRule) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
@@ -158,6 +203,18 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     virtual void StyleSheetApplicableStateChanged(                           \
         mozilla::StyleSheet* aStyleSheet) override;
 
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                         \
+    virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,          \
+                                  mozilla::css::Rule* aStyleRule) override;
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                           \
+    virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,            \
+                                mozilla::css::Rule* aStyleRule) override;
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                         \
+    virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,          \
+                                  mozilla::css::Rule* aStyleRule) override;
+
 #define NS_DECL_NSIDOCUMENTOBSERVER                                          \
     NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                                  \
     NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                    \
@@ -168,6 +225,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                              \
     NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                            \
     NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED             \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                             \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                               \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                             \
     NS_DECL_NSIMUTATIONOBSERVER
 
 
@@ -224,5 +284,20 @@ void                                                                      \
 _class::StyleSheetApplicableStateChanged(mozilla::StyleSheet* aStyleSheet)\
 {                                                                         \
 }                                                                         \
+void                                                                      \
+_class::StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,                \
+                         mozilla::css::Rule* aStyleRule)                  \
+{                                                                         \
+}                                                                         \
+void                                                                      \
+_class::StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,                  \
+                       mozilla::css::Rule* aStyleRule)                    \
+{                                                                         \
+}                                                                         \
+void                                                                      \
+_class::StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,                \
+                         mozilla::css::Rule* aStyleRule)                  \
+{                                                                         \
+}
 
 #endif /* nsIDocumentObserver_h___ */

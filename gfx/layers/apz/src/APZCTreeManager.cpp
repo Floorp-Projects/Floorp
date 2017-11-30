@@ -977,7 +977,7 @@ APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
   // Previously, paints were throttled and therefore this method was used to
   // ensure any pending paints were flushed. Now, paints are flushed
   // immediately, so it is safe to simply send a notification now.
-  APZCTM_LOG("Flushing repaints for layers id 0x%" PRIx64, aLayersId);
+  APZCTM_LOG("Flushing repaints for layers id 0x%" PRIx64 "\n", aLayersId);
   const LayerTreeState* state =
     CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   MOZ_ASSERT(state && state->mController);
@@ -1058,6 +1058,13 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       }
 
       if (apzc) {
+        if (gfxPrefs::APZTestLoggingEnabled() && mouseInput.mType == MouseInput::MOUSE_HITTEST) {
+          ScrollableLayerGuid guid = apzc->GetGuid();
+          if (LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(guid.mLayersId)) {
+            state->mApzTestData.RecordHitResult(mouseInput.mOrigin, hitResult, guid.mScrollId);
+          }
+        }
+
         bool targetConfirmed = (hitResult != CompositorHitTestInfo::eInvisibleToHitTest)
                             && !(hitResult & CompositorHitTestInfo::eDispatchToContent);
         bool apzDragEnabled = gfxPrefs::APZDragEnabled();
@@ -2212,30 +2219,10 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
   CompositorHitTestInfo hitResult = CompositorHitTestInfo::eInvisibleToHitTest;
   HitTestingTreeNode* scrollbarNode = nullptr;
   RefPtr<AsyncPanZoomController> target;
-  target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
-
   if (gfxPrefs::WebRenderHitTest()) {
-    CompositorHitTestInfo wrHitResult = CompositorHitTestInfo::eInvisibleToHitTest;
-    HitTestingTreeNode* wrScrollbarNode = nullptr;
-    RefPtr<AsyncPanZoomController> wrTarget = GetAPZCAtPointWR(aPoint, &wrHitResult, &wrScrollbarNode);
-    // For now just compare the WR and non-WR results.
-    if (wrHitResult != hitResult) {
-      printf_stderr("WR hit result mismatch at %s: got 0x%x, expected 0x%x\n",
-          Stringify(aPoint).c_str(), (int)wrHitResult, (int)hitResult);
-      // MOZ_RELEASE_ASSERT(false);
-    }
-    if (wrTarget.get() != target.get()) {
-      printf_stderr("WR hit target mismatch at %s: got %s, expected %s\n",
-          Stringify(aPoint).c_str(),
-          wrTarget ? Stringify(wrTarget->GetGuid()).c_str() : "null",
-          target ? Stringify(target->GetGuid()).c_str() : "null");
-      // MOZ_RELEASE_ASSERT(false);
-    }
-    if (wrScrollbarNode != scrollbarNode) {
-      printf_stderr("WR scrollbar node mismatch at %s: got %p, expected %p\n",
-          Stringify(aPoint).c_str(), wrScrollbarNode, scrollbarNode);
-      // MOZ_RELEASE_ASSERT(false);
-    }
+    target = GetAPZCAtPointWR(aPoint, &hitResult, &scrollbarNode);
+  } else {
+    target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
   }
 
   if (aOutHitResult) {

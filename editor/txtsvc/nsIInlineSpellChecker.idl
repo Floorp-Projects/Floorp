@@ -10,6 +10,11 @@ interface nsISelection;
 interface nsIEditor;
 interface nsIEditorSpellCheck;
 
+%{ C++
+class nsINode;
+%}
+[ptr] native nsINodePtr(nsINode);
+
 [scriptable, uuid(b7b7a77c-40c4-4196-b0b7-b0338243b3fe)]
 interface nsIInlineSpellChecker : nsISupports
 {
@@ -20,14 +25,15 @@ interface nsIInlineSpellChecker : nsISupports
 
   attribute boolean enableRealTimeSpell;
 
-  void spellCheckAfterEditorChange(in long aAction,
-                                   in nsISelection aSelection,
-                                   in nsIDOMNode aPreviousSelectedNode,
-                                   in long aPreviousSelectedOffset,
-                                   in nsIDOMNode aStartNode,
-                                   in long aStartOffset,
-                                   in nsIDOMNode aEndNode,
-                                   in long aEndOffset);
+  [noscript] void spellCheckAfterEditorChange(
+                    in long aAction,
+                    in nsISelection aSelection,
+                    in nsINodePtr aPreviousSelectedNode,
+                    in unsigned long aPreviousSelectedOffset,
+                    in nsINodePtr aStartNode,
+                    in unsigned long aStartOffset,
+                    in nsINodePtr aEndNode,
+                    in unsigned long aEndOffset);
 
   void spellCheckRange(in nsIDOMRange aSelection);
 

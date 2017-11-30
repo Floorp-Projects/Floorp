@@ -20,9 +20,6 @@ struct MediaStatistics {
   // Current position of the download, in bytes. This is the offset of
   // the first uncached byte after the decoder position.
   int64_t mDownloadPosition;
-  // Current position of decoding, in bytes (how much of the stream
-  // has been consumed)
-  int64_t mDecoderPosition;
   // Current position of playback, in bytes
   int64_t mPlaybackPosition;
   // If false, then mDownloadRate cannot be considered a reliable

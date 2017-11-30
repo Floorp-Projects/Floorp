@@ -379,6 +379,9 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
     case eMouseExitFromWidget:
       mType = MOUSE_WIDGET_EXIT;
       break;
+    case eMouseHitTest:
+      mType = MOUSE_HITTEST;
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Mouse event type not supported");
       break;
@@ -438,6 +441,9 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
       break;
     case MOUSE_WIDGET_EXIT:
       msg = eMouseExitFromWidget;
+      break;
+    case MOUSE_HITTEST:
+      msg = eMouseHitTest;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetMouseEvent in MouseInput");

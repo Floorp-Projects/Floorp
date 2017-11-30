@@ -517,6 +517,70 @@ add_task(async function ORed_queries() {
   await task_cleanDatabase();
 });
 
+add_task(async function tag_casing_uri() {
+  do_print("Querying history on associated tags should return " +
+           "correct results irrespective of casing of tags.");
+  await task_doWithVisit(["fOo", "bAr"], function(aURI) {
+    let [query, opts] = makeQuery(["Foo"]);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    [query, opts] = makeQuery(["Foo", "Bar"]);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    [query, opts] = makeQuery(["Foo"], true);
+    executeAndCheckQueryResults(query, opts, []);
+    [query, opts] = makeQuery(["Bogus"], true);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+  });
+});
+
+add_task(async function tag_casing_bookmark() {
+  do_print("Querying bookmarks on associated tags should return " +
+           "correct results irrespective of casing of tags.");
+  await task_doWithBookmark(["fOo", "bAr"], function(aURI) {
+    let [query, opts] = makeQuery(["Foo"]);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    [query, opts] = makeQuery(["Foo", "Bar"]);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    [query, opts] = makeQuery(["Foo"], true);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    executeAndCheckQueryResults(query, opts, []);
+    [query, opts] = makeQuery(["Bogus"], true);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+  });
+});
+
+add_task(async function tag_special_char_uri() {
+  do_print("Querying history on associated tags should return " +
+           "correct results even if tags contain special characters.");
+  await task_doWithVisit(["Space ☺️ Between"], function(aURI) {
+    let [query, opts] = makeQuery(["Space ☺️ Between"]);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    [query, opts] = makeQuery(["Space ☺️ Between"], true);
+    executeAndCheckQueryResults(query, opts, []);
+    [query, opts] = makeQuery(["Bogus"], true);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+  });
+});
+
+add_task(async function tag_special_char_bookmark() {
+  do_print("Querying bookmarks on associated tags should return " +
+           "correct results even if tags contain special characters.");
+  await task_doWithBookmark(["Space ☺️ Between"], function(aURI) {
+    let [query, opts] = makeQuery(["Space ☺️ Between"]);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    [query, opts] = makeQuery(["Space ☺️ Between"], true);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    executeAndCheckQueryResults(query, opts, []);
+    [query, opts] = makeQuery(["Bogus"], true);
+    opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+  });
+});
+
 // The tag keys in query URIs, i.e., "place:tag=foo&!tags=1"
 //                                          ---     -----
 const QUERY_KEY_TAG      = "tag";
