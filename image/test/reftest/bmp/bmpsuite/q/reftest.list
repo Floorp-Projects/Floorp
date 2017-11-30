@@ -7,7 +7,7 @@
 # documentation says that 1-bpp images have a palette size of 2 (not 'up to
 # 2'), but it would be silly for a viewer not to support a size of 1."
 # [We accept it. So does Chromium.]
-== pal1p1.bmp pal1p1.png
+fuzzy(1,926) == pal1p1.bmp pal1p1.png
 
 # BMP: bihsize=40, 127 x 64, bpp=2, compression=0, colors=4
 # "A paletted image with 2 bits/pixel. Usually only 1, 4, and 8 are allowed,
@@ -32,14 +32,14 @@
 # "A file with some unused bytes between the palette and the image. This is
 # probably valid, but I’m not 100% sure."
 # [We accept it. So does Chromium.]
-fuzzy(1,899) == pal8offs.bmp pal8.png
+fuzzy(1,996) == pal8offs.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=300
 # "An 8-bit image with 300 palette colors. This may be invalid, because the
 # documentation could be interpreted to imply that 8-bit images aren’t allowed
 # to have more than 256 colors."
 # [We accept it. So does Chromium.]
-fuzzy(1,899) == pal8oversizepal.bmp pal8.png
+fuzzy(1,996) == pal8oversizepal.bmp pal8.png
 
 # BMP: bihsize=12, 127 x 64, bpp=8, compression=0, colors=0
 # "An OS/2v1 with a less-than-full-sized palette. Probably not valid, but such
@@ -52,12 +52,12 @@ fuzzy(1,899) == pal8oversizepal.bmp pal8.png
 # BMP: bihsize=64, 127 x 64, bpp=8, compression=0, colors=252
 # "My attempt to make an OS/2v2 bitmap."
 # [We accept it. So does Chromium.]
-fuzzy(1,899) == pal8os2v2.bmp pal8.png
+fuzzy(1,996) == pal8os2v2.bmp pal8.png
 
 # BMP: bihsize=16, 127 x 64, bpp=8, compression=0, colors=0
 # "An OS/2v2 bitmap whose header has only 16 bytes, instead of the full 64."
 # [We accept it. So does Chromium.]
-fuzzy(1,899) == pal8os2v2-16.bmp pal8.png
+fuzzy(1,996) == pal8os2v2-16.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "An unusual and silly 16-bit image, with 2 red bits, 3 green bits, and 1 blue
