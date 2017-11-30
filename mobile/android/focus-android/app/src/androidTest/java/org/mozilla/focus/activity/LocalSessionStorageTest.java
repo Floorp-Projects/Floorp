@@ -87,8 +87,8 @@ public class LocalSessionStorageTest {
      * Make sure that session storage values are kept and written but removed at the end of a session.
      */
     @Test
-    public void testLocaleAndSessionStorageIsWrittenAndRemoved() throws Exception {
-        // Go to first website that saves a value in the session/locale store.
+    public void testLocalAndSessionStorageIsWrittenAndRemoved() throws Exception {
+        // Go to first website that saves a value in the session/local store.
 
         goToUrlFromHomeScreen("/sessionStorage_start");
 
@@ -126,7 +126,7 @@ public class LocalSessionStorageTest {
         Assert.assertTrue(TestHelper.erasedMsg.exists());
         Assert.assertTrue(TestHelper.inlineAutocompleteEditText.exists());
 
-        // Now go to the website again and make sure that both values are not in the session/locale store
+        // Now go to the website again and make sure that both values are not in the session/local store
 
         goToUrlFromHomeScreen("/sessionStorage_check");
 
