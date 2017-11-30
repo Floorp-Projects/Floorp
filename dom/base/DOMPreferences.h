@@ -51,6 +51,10 @@ public:
 
   // Returns true if the dom.serviceWorkers.testing.enabled pref is set.
   static bool ServiceWorkersTestingEnabled();
+
+  // Returns true if the dom.serviceWorkers.openWindow.enabled pref is set.
+  static bool OpenWindowEnabled();
+  static bool OpenWindowEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace

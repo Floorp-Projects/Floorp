@@ -10,6 +10,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Fetch.h"
@@ -847,15 +848,6 @@ ServiceWorkerGlobalScope::SkipWaiting(ErrorResult& aRv)
 
   MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
   return promise.forget();
-}
-
-bool
-ServiceWorkerGlobalScope::OpenWindowEnabled(JSContext* aCx, JSObject* aObj)
-{
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
-  return worker->OpenWindowEnabled();
 }
 
 WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
