@@ -49,10 +49,6 @@ Object.defineProperty(this, "browser", {
  * same lifetime as the browser.
  */
 let gDevToolsMethods = [
-  // Used by the reload addon.
-  // Force reloading dependencies if the loader happens to have reloaded.
-  "reload",
-
   // Used by: - b2g desktop.js
   //          - nsContextMenu
   //          - /devtools code
@@ -139,7 +135,7 @@ let gDevToolsBrowserMethods = [
   // Used by browser.js
   "registerBrowserWindow",
 
-  // Used by reload addon
+  // Used by devtools-browser.js for the Toggle Toolbox status
   "hasToolboxOpened",
 
   // Used by browser.js
