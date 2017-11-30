@@ -1028,7 +1028,9 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
     color: #737373;
     font-size: 10px;
     padding-bottom: 4px;
-    text-transform: uppercase; }
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis; }
   .card-outer .card-title {
     margin: 0 0 2px;
     font-size: 14px;
