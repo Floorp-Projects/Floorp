@@ -84,6 +84,12 @@ public:
     eTab
   };
 
+  enum class OptimumState : uint8_t {
+    eOptimum,
+    eSubOptimum,
+    eSubSubOptimum
+  };
+
   struct ControlParams {
     ControlParams()
       : disabled(false)
@@ -186,6 +192,16 @@ public:
     bool rtl = false;
   };
 
+  struct MeterParams {
+    double value = 0;
+    double min = 0;
+    double max = 0;
+    OptimumState optimumState = OptimumState::eOptimum;
+    float verticalAlignFactor = 0.5f;
+    bool horizontal = true;
+    bool rtl = false;
+  };
+
   struct TreeHeaderCellParams {
     ControlParams controlParams;
     TreeSortDirection sortDirection = eTreeSortDirection_Natural;
@@ -270,6 +286,7 @@ protected:
   ProgressParams ComputeProgressParams(nsIFrame* aFrame,
                                        mozilla::EventStates aEventState,
                                        bool aIsHorizontal);
+  MeterParams ComputeMeterParams(nsIFrame* aFrame);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
 
@@ -277,7 +294,7 @@ protected:
   void DrawTextBox(CGContextRef context, const HIRect& inBoxRect,
                    TextBoxParams aParams);
   void DrawMeter(CGContextRef context, const HIRect& inBoxRect,
-                 nsIFrame* aFrame);
+                 const MeterParams& aParams);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
                    const SegmentParams& aParams);
   void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
