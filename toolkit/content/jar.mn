@@ -4,6 +4,7 @@ toolkit.jar:
    content/global/XPCNativeWrapper.js
    content/global/minimal-xul.css
 *  content/global/xul.css
+   content/global/components.css
    content/global/textbox.css
    content/global/menulist.css
    content/global/autocomplete.css

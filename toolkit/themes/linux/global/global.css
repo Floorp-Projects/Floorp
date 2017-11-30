@@ -8,7 +8,6 @@
 
 /* all localizable skin settings shall live here */
 @import url("chrome://global/locale/intl.css");
-@import url("chrome://global/skin/menu.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
