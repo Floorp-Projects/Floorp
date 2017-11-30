@@ -7,7 +7,7 @@
  * https://w3c.github.io/push-api/
  */
 
-[Func="nsContentUtils::PushEnabled",
+[Func="mozilla::dom::DOMPreferences::PushEnabled",
  Exposed=ServiceWorker]
 interface PushMessageData
 {
