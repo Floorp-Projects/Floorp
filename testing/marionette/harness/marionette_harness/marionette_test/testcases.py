@@ -18,7 +18,6 @@ from unittest.case import (
 )
 
 from marionette_driver.errors import (
-    MarionetteException,
     TimeoutException,
 )
 from mozlog import get_default_logger
@@ -311,9 +310,6 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         super(MarionetteTestCase, self).setUp()
         self.marionette.test_name = self.test_name
-        self.marionette.execute_script(r"dump('TEST-START: {0}\n')"
-                                       .format(self.test_name),
-                                       sandbox="simpletest")
 
     def tearDown(self):
         # In the case no session is active (eg. the application was quit), start
@@ -321,16 +317,7 @@ class MarionetteTestCase(CommonTestCase):
         if not self.marionette.session:
             self.marionette.start_session()
 
-        if not self.marionette.crashed:
-            try:
-                self.marionette.execute_script(r"dump('TEST-END: {0}\n')"
-                                               .format(self.test_name),
-                                               sandbox="simpletest")
-                self.marionette.test_name = None
-            except (MarionetteException, IOError):
-                # We have tried to log the test end when there is no listener
-                # object that we can access
-                pass
+        self.marionette.test_name = None
 
         super(MarionetteTestCase, self).tearDown()
 
