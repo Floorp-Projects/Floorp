@@ -706,9 +706,7 @@ fTime(0),
 fLenient(TRUE),
 fZone(NULL),
 fRepeatedWallTime(UCAL_WALLTIME_LAST),
-fSkippedWallTime(UCAL_WALLTIME_LAST),
-validLocale(""),
-actualLocale("")
+fSkippedWallTime(UCAL_WALLTIME_LAST)
 {
     clear();
     if (U_FAILURE(success)) {
@@ -734,9 +732,7 @@ fTime(0),
 fLenient(TRUE),
 fZone(NULL),
 fRepeatedWallTime(UCAL_WALLTIME_LAST),
-fSkippedWallTime(UCAL_WALLTIME_LAST),
-validLocale(""),
-actualLocale("")
+fSkippedWallTime(UCAL_WALLTIME_LAST)
 {
     if (U_FAILURE(success)) {
         return;
@@ -768,9 +764,7 @@ fTime(0),
 fLenient(TRUE),
 fZone(NULL),
 fRepeatedWallTime(UCAL_WALLTIME_LAST),
-fSkippedWallTime(UCAL_WALLTIME_LAST),
-validLocale(""),
-actualLocale("")
+fSkippedWallTime(UCAL_WALLTIME_LAST)
 {
     if (U_FAILURE(success)) {
         return;
@@ -828,8 +822,8 @@ Calendar::operator=(const Calendar &right)
         fWeekendCease            = right.fWeekendCease;
         fWeekendCeaseMillis      = right.fWeekendCeaseMillis;
         fNextStamp               = right.fNextStamp;
-        uprv_strncpy(validLocale, right.validLocale, sizeof(validLocale));
-        uprv_strncpy(actualLocale, right.actualLocale, sizeof(actualLocale));
+        uprv_strcpy(validLocale, right.validLocale);
+        uprv_strcpy(actualLocale, right.actualLocale);
     }
 
     return *this;
