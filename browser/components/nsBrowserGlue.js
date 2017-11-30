@@ -41,7 +41,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
-  LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
@@ -1167,10 +1166,6 @@ BrowserGlue.prototype = {
         JawsScreenReaderVersionCheck.onWindowsRestored();
       });
     }
-
-    Services.tm.idleDispatchToMainThread(() => {
-      LanguagePrompt.init();
-    });
   },
 
   /**

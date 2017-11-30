@@ -149,10 +149,6 @@ var gLanguagesDialog = {
       this._activeLanguages.selectedIndex = selectedIndex;
     }
 
-    // Update states of accept-language list and buttons according to
-    // privacy.resistFingerprinting and privacy.spoof_english.
-    this.readSpoofEnglish();
-
     return undefined;
   },
 
@@ -161,10 +157,8 @@ var gLanguagesDialog = {
   },
 
   onAvailableLanguageSelect() {
-    var availableLanguages = this._availableLanguages;
     var addButton = document.getElementById("addButton");
-    addButton.disabled = availableLanguages.disabled ||
-                         availableLanguages.selectedIndex < 0;
+    addButton.disabled = false;
 
     this._availableLanguages.removeAttribute("accesskey");
   },
@@ -297,40 +291,6 @@ var gLanguagesDialog = {
       downButton.disabled = true;
       removeButton.disabled = false;
     }
-  },
-
-  readSpoofEnglish() {
-    var checkbox = document.getElementById("spoofEnglish");
-    var resistFingerprinting = Services.prefs.getBoolPref("privacy.resistFingerprinting");
-    if (!resistFingerprinting) {
-      checkbox.hidden = true;
-      return false;
-    }
-
-    var spoofEnglish = document.getElementById("privacy.spoof_english").value;
-    var activeLanguages = this._activeLanguages;
-    var availableLanguages = this._availableLanguages;
-    checkbox.hidden = false;
-    switch (spoofEnglish) {
-    case 1: // don't spoof intl.accept_lanauges
-      activeLanguages.disabled = false;
-      activeLanguages.selectItem(activeLanguages.firstChild);
-      availableLanguages.disabled = false;
-      this.onAvailableLanguageSelect();
-      return false;
-    case 2: // spoof intl.accept_lanauges
-      activeLanguages.clearSelection();
-      activeLanguages.disabled = true;
-      availableLanguages.disabled = true;
-      this.onAvailableLanguageSelect();
-      return true;
-    default: // will prompt for spoofing intl.accept_lanauges if resisting fingerprinting
-      return false;
-    }
-  },
-
-  writeSpoofEnglish() {
-    return document.getElementById("spoofEnglish").checked ? 2 : 1;
   }
 };
 
