@@ -1692,7 +1692,7 @@ WebrtcVideoConduit::SelectBitrates(
 bool
 WebrtcVideoConduit::SelectSendResolution(unsigned short width,
                                          unsigned short height,
-                                         webrtc::VideoFrame* frame) // may be null
+                                         const webrtc::VideoFrame* frame) // may be null
 {
   mCodecMutex.AssertCurrentThreadOwns();
   // XXX This will do bandwidth-resolution adaptation as well - bug 877954
@@ -1794,7 +1794,7 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
 nsresult
 WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
                                          unsigned short height,
-                                         webrtc::VideoFrame* frame)
+                                         const webrtc::VideoFrame* frame)
 {
   mCodecMutex.AssertCurrentThreadOwns();
 
@@ -1839,7 +1839,7 @@ WebrtcVideoConduit::SelectSendFrameRate(const VideoCodecConfig* codecConfig,
 }
 
 MediaConduitErrorCode
-WebrtcVideoConduit::SendVideoFrame(unsigned char* video_buffer,
+WebrtcVideoConduit::SendVideoFrame(const unsigned char* video_buffer,
                                    unsigned int video_length,
                                    unsigned short width,
                                    unsigned short height,
@@ -1945,7 +1945,7 @@ WebrtcVideoConduit::OnSinkWantsChanged(
 }
 
 MediaConduitErrorCode
-WebrtcVideoConduit::SendVideoFrame(webrtc::VideoFrame& frame)
+WebrtcVideoConduit::SendVideoFrame(const webrtc::VideoFrame& frame)
 {
   // XXX Google uses a "timestamp_aligner" to translate timestamps from the
   // camera via TranslateTimestamp(); we should look at doing the same.  This

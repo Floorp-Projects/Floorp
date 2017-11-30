@@ -86,14 +86,14 @@ class VideoConverterListener
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoConverterListener)
 
-  virtual void OnVideoFrameConverted(unsigned char* aVideoFrame,
+  virtual void OnVideoFrameConverted(const unsigned char* aVideoFrame,
                                      unsigned int aVideoFrameLength,
                                      unsigned short aWidth,
                                      unsigned short aHeight,
                                      VideoType aVideoType,
                                      uint64_t aCaptureTime) = 0;
 
-  virtual void OnVideoFrameConverted(webrtc::VideoFrame& aVideoFrame) = 0;
+  virtual void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) = 0;
 
 protected:
   virtual ~VideoConverterListener() {}
@@ -132,7 +132,7 @@ public:
     MOZ_COUNT_CTOR(VideoFrameConverter);
   }
 
-  void QueueVideoChunk(VideoChunk& aChunk, bool aForceBlack)
+  void QueueVideoChunk(const VideoChunk& aChunk, bool aForceBlack)
   {
     if (aChunk.IsNull()) {
       return;
@@ -288,7 +288,7 @@ protected:
     VideoFrameConverted(video_frame);
   }
 
-  void VideoFrameConverted(webrtc::VideoFrame& aVideoFrame)
+  void VideoFrameConverted(const webrtc::VideoFrame& aVideoFrame)
   {
     MutexAutoLock lock(mMutex);
 
@@ -1379,7 +1379,7 @@ public:
     converter_ = converter;
   }
 
-  void OnVideoFrameConverted(unsigned char* aVideoFrame,
+  void OnVideoFrameConverted(const unsigned char* aVideoFrame,
                              unsigned int aVideoFrameLength,
                              unsigned short aWidth,
                              unsigned short aHeight,
@@ -1396,7 +1396,7 @@ public:
                        aCaptureTime);
   }
 
-  void OnVideoFrameConverted(webrtc::VideoFrame& aVideoFrame)
+  void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame)
   {
     MOZ_RELEASE_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
     static_cast<VideoSessionConduit*>(conduit_.get())
@@ -1472,7 +1472,7 @@ public:
     listener_ = nullptr;
   }
 
-  void OnVideoFrameConverted(unsigned char* aVideoFrame,
+  void OnVideoFrameConverted(const unsigned char* aVideoFrame,
                              unsigned int aVideoFrameLength,
                              unsigned short aWidth,
                              unsigned short aHeight,
@@ -1493,7 +1493,7 @@ public:
                                      aCaptureTime);
   }
 
-  void OnVideoFrameConverted(webrtc::VideoFrame& aVideoFrame) override
+  void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) override
   {
     MutexAutoLock lock(mutex_);
 
