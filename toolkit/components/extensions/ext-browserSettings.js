@@ -27,11 +27,16 @@ const PERM_DENY_ACTION = Services.perms.DENY_ACTION;
 const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) => {
   return {
     async get(details) {
-      return {
-        levelOfControl: details.incognito ?
+      let levelOfControl = details.incognito ?
+        "not_controllable" :
+        await ExtensionPreferencesManager.getLevelOfControl(
+          extension.id, name, storeType);
+      levelOfControl =
+        (readOnly && levelOfControl === "controllable_by_this_extension") ?
           "not_controllable" :
-          await ExtensionPreferencesManager.getLevelOfControl(
-            extension.id, name, storeType),
+          levelOfControl;
+      return {
+        levelOfControl,
         value: await callback(),
       };
     },
@@ -40,11 +45,13 @@ const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) 
         return ExtensionPreferencesManager.setSetting(
           extension.id, name, details.value);
       }
+      return false;
     },
     clear(details) {
       if (!readOnly) {
         return ExtensionPreferencesManager.removeSetting(extension.id, name);
       }
+      return false;
     },
   };
 };
@@ -78,6 +85,16 @@ ExtensionPreferencesManager.addSetting("cacheEnabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("contextMenuShowEvent", {
+  prefNames: [
+    "ui.context_menus.after_mouseup",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value === "mouseup"};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("imageAnimationBehavior", {
   prefNames: [
     "image.animation_mode",
@@ -88,13 +105,23 @@ ExtensionPreferencesManager.addSetting("imageAnimationBehavior", {
   },
 });
 
-ExtensionPreferencesManager.addSetting("contextMenuShowEvent", {
+ExtensionPreferencesManager.addSetting("openBookmarksInNewTabs", {
   prefNames: [
-    "ui.context_menus.after_mouseup",
+    "browser.tabs.loadBookmarksInTabs",
   ],
 
   setCallback(value) {
-    return {[this.prefNames[0]]: value === "mouseup"};
+    return {[this.prefNames[0]]: value};
+  },
+});
+
+ExtensionPreferencesManager.addSetting("openSearchResultsInNewTabs", {
+  prefNames: [
+    "browser.search.openintab",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
   },
 });
 
@@ -124,22 +151,6 @@ this.browserSettings = class extends ExtensionAPI {
             return Services.prefs.getBoolPref("browser.cache.disk.enable") &&
               Services.prefs.getBoolPref("browser.cache.memory.enable");
           }),
-        homepageOverride: getSettingsAPI(extension,
-          HOMEPAGE_OVERRIDE_SETTING,
-          () => {
-            return Services.prefs.getComplexValue(
-              HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
-          }, undefined, true),
-        imageAnimationBehavior: getSettingsAPI(extension,
-          "imageAnimationBehavior",
-          () => {
-            return Services.prefs.getCharPref("image.animation_mode");
-          }),
-        newTabPageOverride: getSettingsAPI(extension,
-          NEW_TAB_OVERRIDE_SETTING,
-          () => {
-            return aboutNewTabService.newTabURL;
-          }, URL_STORE_TYPE, true),
         contextMenuShowEvent: Object.assign(
           getSettingsAPI(
             extension,
@@ -169,6 +180,32 @@ this.browserSettings = class extends ExtensionAPI {
             },
           }
         ),
+        homepageOverride: getSettingsAPI(extension,
+          HOMEPAGE_OVERRIDE_SETTING,
+          () => {
+            return Services.prefs.getComplexValue(
+              HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
+          }, undefined, true),
+        imageAnimationBehavior: getSettingsAPI(extension,
+          "imageAnimationBehavior",
+          () => {
+            return Services.prefs.getCharPref("image.animation_mode");
+          }),
+        newTabPageOverride: getSettingsAPI(extension,
+          NEW_TAB_OVERRIDE_SETTING,
+          () => {
+            return aboutNewTabService.newTabURL;
+          }, URL_STORE_TYPE, true),
+        openBookmarksInNewTabs: getSettingsAPI(extension,
+          "openBookmarksInNewTabs",
+          () => {
+            return Services.prefs.getBoolPref("browser.tabs.loadBookmarksInTabs");
+          }),
+        openSearchResultsInNewTabs: getSettingsAPI(extension,
+          "openSearchResultsInNewTabs",
+          () => {
+            return Services.prefs.getBoolPref("browser.search.openintab");
+          }),
         webNotificationsDisabled: getSettingsAPI(extension,
           "webNotificationsDisabled",
           () => {

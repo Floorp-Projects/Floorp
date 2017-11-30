@@ -11,6 +11,7 @@
 #include "MediaSource.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
+#include "SourceBuffer.h"
 #include "SourceBufferList.h"
 #include "VideoUtils.h"
 #include <algorithm>

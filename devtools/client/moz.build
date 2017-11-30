@@ -20,6 +20,7 @@ DIRS += [
     'memory',
     'netmonitor',
     'performance',
+    'performance-new',
     'preferences',
     'responsive.html',
     'scratchpad',

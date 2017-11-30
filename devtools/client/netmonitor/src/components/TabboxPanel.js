@@ -6,7 +6,6 @@
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../utils/l10n");
 const { PANELS } = require("../constants");
 
@@ -58,7 +57,12 @@ function TabboxPanel({
         id: PANELS.HEADERS,
         title: HEADERS_TITLE,
       },
-        HeadersPanel({ request, cloneSelectedRequest, openLink }),
+        HeadersPanel({
+          cloneSelectedRequest,
+          connector,
+          openLink,
+          request,
+        }),
       ),
       TabPanel({
         id: PANELS.COOKIES,
@@ -118,4 +122,4 @@ TabboxPanel.propTypes = {
   sourceMapService: PropTypes.object,
 };
 
-module.exports = connect()(TabboxPanel);
+module.exports = TabboxPanel;

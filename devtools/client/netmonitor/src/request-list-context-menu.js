@@ -9,79 +9,72 @@ const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { saveAs } = require("devtools/client/shared/file-saver");
 const { copyString } = require("devtools/shared/platform/clipboard");
+const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
 const { HarExporter } = require("./har/har-exporter");
 const {
   getSelectedRequest,
   getSortedRequests,
 } = require("./selectors/index");
 const { L10N } = require("./utils/l10n");
-const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
 const {
-  getUrlQuery,
-  parseQueryString,
-  getUrlBaseName,
   formDataURI,
+  getUrlQuery,
+  getUrlBaseName,
+  parseQueryString,
 } = require("./utils/request-utils");
 
-function RequestListContextMenu({
-  cloneSelectedRequest,
-  getLongString,
-  getTabTarget,
-  openStatistics,
-  requestData,
-}) {
-  this.cloneSelectedRequest = cloneSelectedRequest;
-  this.getLongString = getLongString;
-  this.getTabTarget = getTabTarget;
-  this.openStatistics = openStatistics;
-  this.requestData = requestData;
-}
+class RequestListContextMenu {
+  constructor(props) {
+    this.props = props;
+  }
 
-RequestListContextMenu.prototype = {
-  get selectedRequest() {
+  open(event) {
     // FIXME: Bug 1336382 - Implement RequestListContextMenu React component
-    // Remove window.store
-    return getSelectedRequest(window.store.getState());
-  },
+    // Remove window.store.getState()
+    let selectedRequest = getSelectedRequest(window.store.getState());
+    let sortedRequests = getSortedRequests(window.store.getState());
 
-  get sortedRequests() {
-    // FIXME: Bug 1336382 - Implement RequestListContextMenu React component
-    // Remove window.store
-    return getSortedRequests(window.store.getState());
-  },
-
-  /**
-   * Handle the context menu opening. Hide items if no request is selected.
-   * Since visible attribute only accept boolean value but the method call may
-   * return undefined, we use !! to force convert any object to boolean
-   */
-  open(event = {}) {
-    let selectedRequest = this.selectedRequest;
     let menu = [];
     let copySubmenu = [];
+    let {
+      id,
+      isCustom,
+      method,
+      mimeType,
+      httpVersion,
+      requestHeaders,
+      requestPostDataAvailable,
+      responseHeaders,
+      responseContentAvailable,
+      url,
+    } = selectedRequest || {};
+    let {
+      cloneSelectedRequest,
+      openStatistics,
+    } = this.props;
 
     copySubmenu.push({
       id: "request-list-context-copy-url",
       label: L10N.getStr("netmonitor.context.copyUrl"),
       accesskey: L10N.getStr("netmonitor.context.copyUrl.accesskey"),
       visible: !!selectedRequest,
-      click: () => this.copyUrl(),
+      click: () => this.copyUrl(url),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-url-params",
       label: L10N.getStr("netmonitor.context.copyUrlParams"),
       accesskey: L10N.getStr("netmonitor.context.copyUrlParams.accesskey"),
-      visible: !!(selectedRequest && getUrlQuery(selectedRequest.url)),
-      click: () => this.copyUrlParams(),
+      visible: !!(selectedRequest && getUrlQuery(url)),
+      click: () => this.copyUrlParams(url),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-post-data",
       label: L10N.getStr("netmonitor.context.copyPostData"),
       accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
-      visible: !!(selectedRequest && selectedRequest.requestPostData),
-      click: () => this.copyPostData(),
+      visible: !!(selectedRequest && requestPostDataAvailable),
+      click: () => this.copyPostData(id),
     });
 
     copySubmenu.push({
@@ -89,59 +82,57 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.copyAsCurl"),
       accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
       visible: !!selectedRequest,
-      click: () => this.copyAsCurl(),
+      click: () => this.copyAsCurl(id, url, method, requestHeaders, httpVersion),
     });
 
     copySubmenu.push({
       type: "separator",
-      visible: !!selectedRequest,
+      visible: copySubmenu.slice(0, 4).some((subMenu) => subMenu.visible),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-request-headers",
       label: L10N.getStr("netmonitor.context.copyRequestHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyRequestHeaders.accesskey"),
-      visible: !!(selectedRequest && selectedRequest.requestHeaders),
-      click: () => this.copyRequestHeaders(),
+      visible: !!(selectedRequest && requestHeaders && requestHeaders.rawHeaders),
+      click: () => this.copyRequestHeaders(requestHeaders.rawHeaders.trim()),
     });
 
     copySubmenu.push({
       id: "response-list-context-copy-response-headers",
       label: L10N.getStr("netmonitor.context.copyResponseHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyResponseHeaders.accesskey"),
-      visible: !!(selectedRequest && selectedRequest.responseHeaders),
-      click: () => this.copyResponseHeaders(),
+      visible: !!(selectedRequest && responseHeaders && responseHeaders.rawHeaders),
+      click: () => this.copyResponseHeaders(responseHeaders.rawHeaders.trim()),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-response",
       label: L10N.getStr("netmonitor.context.copyResponse"),
       accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
-      visible: !!(selectedRequest && selectedRequest.responseContentAvailable),
-      click: () => this.copyResponse(),
+      visible: !!(selectedRequest && responseContentAvailable),
+      click: () => this.copyResponse(id),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-image-as-data-uri",
       label: L10N.getStr("netmonitor.context.copyImageAsDataUri"),
       accesskey: L10N.getStr("netmonitor.context.copyImageAsDataUri.accesskey"),
-      visible: !!(selectedRequest &&
-               selectedRequest.mimeType &&
-               selectedRequest.mimeType.includes("image/")),
-      click: () => this.copyImageAsDataUri(),
+      visible: !!(selectedRequest && mimeType && mimeType.includes("image/")),
+      click: () => this.copyImageAsDataUri(id, mimeType),
     });
 
     copySubmenu.push({
       type: "separator",
-      visible: !!selectedRequest,
+      visible: copySubmenu.slice(5, 9).some((subMenu) => subMenu.visible),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-all-as-har",
       label: L10N.getStr("netmonitor.context.copyAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
-      visible: this.sortedRequests.size > 0,
-      click: () => this.copyAllAsHar(),
+      visible: sortedRequests.size > 0,
+      click: () => this.copyAllAsHar(sortedRequests),
     });
 
     menu.push({
@@ -155,36 +146,34 @@ RequestListContextMenu.prototype = {
       id: "request-list-context-save-all-as-har",
       label: L10N.getStr("netmonitor.context.saveAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
-      visible: this.sortedRequests.size > 0,
-      click: () => this.saveAllAsHar(),
+      visible: sortedRequests.size > 0,
+      click: () => this.saveAllAsHar(sortedRequests),
     });
 
     menu.push({
       id: "request-list-context-save-image-as",
       label: L10N.getStr("netmonitor.context.saveImageAs"),
       accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
-      visible: !!(selectedRequest &&
-               selectedRequest.mimeType &&
-               selectedRequest.mimeType.includes("image/")),
-      click: () => this.saveImageAs(),
+      visible: !!(selectedRequest && mimeType && mimeType.includes("image/")),
+      click: () => this.saveImageAs(id, url),
     });
 
     menu.push({
       type: "separator",
-      visible: !!(selectedRequest && !selectedRequest.isCustom),
+      visible: copySubmenu.slice(10, 14).some((subMenu) => subMenu.visible),
     });
 
     menu.push({
       id: "request-list-context-resend",
       label: L10N.getStr("netmonitor.context.editAndResend"),
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
-      visible: !!(selectedRequest && !selectedRequest.isCustom),
-      click: this.cloneSelectedRequest,
+      visible: !!(selectedRequest && !isCustom),
+      click: cloneSelectedRequest,
     });
 
     menu.push({
       type: "separator",
-      visible: !!selectedRequest,
+      visible: copySubmenu.slice(15, 16).some((subMenu) => subMenu.visible),
     });
 
     menu.push({
@@ -192,17 +181,15 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.newTab"),
       accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
       visible: !!selectedRequest,
-      click: () => this.openRequestInTab()
+      click: () => this.openRequestInTab(url),
     });
 
     menu.push({
       id: "request-list-context-open-in-debugger",
       label: L10N.getStr("netmonitor.context.openInDebugger"),
       accesskey: L10N.getStr("netmonitor.context.openInDebugger.accesskey"),
-      visible: !!(selectedRequest &&
-               selectedRequest.mimeType &&
-               selectedRequest.mimeType.includes("javascript")),
-      click: () => this.openInDebugger()
+      visible: !!(selectedRequest && mimeType && mimeType.includes("javascript")),
+      click: () => this.openInDebugger(url),
     });
 
     menu.push({
@@ -210,71 +197,71 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.openInStyleEditor"),
       accesskey: L10N.getStr("netmonitor.context.openInStyleEditor.accesskey"),
       visible: !!(selectedRequest &&
-               Services.prefs.getBoolPref("devtools.styleeditor.enabled") &&
-               selectedRequest.mimeType &&
-               selectedRequest.mimeType.includes("css")),
-      click: () => this.openInStyleEditor()
+        Services.prefs.getBoolPref("devtools.styleeditor.enabled") &&
+        mimeType && mimeType.includes("css")),
+      click: () => this.openInStyleEditor(url),
     });
 
     menu.push({
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: this.sortedRequests.size > 0,
-      click: () => this.openStatistics(true)
+      visible: sortedRequests.size > 0,
+      click: () => openStatistics(true),
     });
 
-    return showMenu(event, menu);
-  },
+    showMenu(event, menu);
+  }
 
   /**
    * Opens selected item in a new tab.
    */
-  openRequestInTab() {
+  openRequestInTab(url) {
     let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-    win.openUILinkIn(this.selectedRequest.url, "tab", { relatedToCurrent: true });
-  },
+    win.openUILinkIn(url, "tab", { relatedToCurrent: true });
+  }
 
   /**
    * Opens selected item in the debugger
    */
-  openInDebugger() {
-    let toolbox = gDevTools.getToolbox(this.getTabTarget());
-    toolbox.viewSourceInDebugger(this.selectedRequest.url, 0);
-  },
+  openInDebugger(url) {
+    let toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    toolbox.viewSourceInDebugger(url, 0);
+  }
 
   /**
    * Opens selected item in the style editor
    */
-  openInStyleEditor() {
-    let toolbox = gDevTools.getToolbox(this.getTabTarget());
-    toolbox.viewSourceInStyleEditor(this.selectedRequest.url, 0);
-  },
+  openInStyleEditor(url) {
+    let toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    toolbox.viewSourceInStyleEditor(url, 0);
+  }
 
   /**
    * Copy the request url from the currently selected item.
    */
-  copyUrl() {
-    copyString(this.selectedRequest.url);
-  },
+  copyUrl(url) {
+    copyString(url);
+  }
 
   /**
    * Copy the request url query string parameters from the currently
    * selected item.
    */
-  copyUrlParams() {
-    let params = getUrlQuery(this.selectedRequest.url).split("&");
+  copyUrlParams(url) {
+    let params = getUrlQuery(url).split("&");
     copyString(params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n"));
-  },
+  }
 
   /**
    * Copy the request form data parameters (or raw payload) from
    * the currently selected item.
    */
-  copyPostData() {
-    let { formDataSections, requestPostData } = this.selectedRequest;
+  async copyPostData(id) {
+    // FIXME: Bug 1336382 - Implement RequestListContextMenu React component
+    // Remove window.store.getState()
+    let { formDataSections } = getSelectedRequest(window.store.getState());
     let params = [];
-
     // Try to extract any form data parameters.
     formDataSections.forEach(section => {
       let paramsArray = parseQueryString(section);
@@ -289,72 +276,69 @@ RequestListContextMenu.prototype = {
 
     // Fall back to raw payload.
     if (!string) {
+      let { requestPostData } = await this.props.connector
+        .requestData(id, "requestPostData");
       string = requestPostData.postData.text;
       if (Services.appinfo.OS !== "WINNT") {
         string = string.replace(/\r/g, "");
       }
     }
     copyString(string);
-  },
+  }
 
   /**
    * Copy a cURL command from the currently selected item.
    */
-  copyAsCurl() {
-    let selected = this.selectedRequest;
+  async copyAsCurl(id, url, method, requestHeaders, httpVersion) {
+    let { requestPostData } = await this.props.connector
+      .requestData(id, "requestPostData");
     // Create a sanitized object for the Curl command generator.
     let data = {
-      url: selected.url,
-      method: selected.method,
-      headers: selected.requestHeaders.headers,
-      httpVersion: selected.httpVersion,
-      postDataText: selected.requestPostData && selected.requestPostData.postData.text,
+      url,
+      method,
+      headers: requestHeaders.headers,
+      httpVersion: httpVersion,
+      postDataText: requestPostData ? requestPostData.postData.text : "",
     };
     copyString(Curl.generateCommand(data));
-  },
+  }
 
   /**
    * Copy the raw request headers from the currently selected item.
    */
-  copyRequestHeaders() {
-    let rawHeaders = this.selectedRequest.requestHeaders.rawHeaders.trim();
+  copyRequestHeaders(rawHeaders) {
     if (Services.appinfo.OS !== "WINNT") {
       rawHeaders = rawHeaders.replace(/\r/g, "");
     }
     copyString(rawHeaders);
-  },
+  }
 
   /**
    * Copy the raw response headers from the currently selected item.
    */
-  copyResponseHeaders() {
-    let rawHeaders = this.selectedRequest.responseHeaders.rawHeaders.trim();
+  copyResponseHeaders(rawHeaders) {
     if (Services.appinfo.OS !== "WINNT") {
       rawHeaders = rawHeaders.replace(/\r/g, "");
     }
     copyString(rawHeaders);
-  },
+  }
 
   /**
    * Copy image as data uri.
    */
-  async copyImageAsDataUri() {
-    let responseContent = await this.requestData(this.selectedRequest.id,
-      "responseContent");
-    let { mimeType } = this.selectedRequest;
+  async copyImageAsDataUri(id, mimeType) {
+    let responseContent = await this.props.connector.requestData(id, "responseContent");
     let { encoding, text } = responseContent.content;
-    let src = formDataURI(mimeType, encoding, text);
-    copyString(src);
-  },
+    copyString(formDataURI(mimeType, encoding, text));
+  }
 
   /**
    * Save image as.
    */
-  async saveImageAs() {
-    let responseContent = await this.requestData(this.selectedRequest.id,
-      "responseContent");
+  async saveImageAs(id, url) {
+    let responseContent = await this.props.connector.requestData(id, "responseContent");
     let { encoding, text } = responseContent.content;
-    let fileName = getUrlBaseName(this.selectedRequest.url);
+    let fileName = getUrlBaseName(url);
     let data;
     if (encoding === "base64") {
       let decoded = atob(text);
@@ -366,46 +350,45 @@ RequestListContextMenu.prototype = {
       data = text;
     }
     saveAs(new Blob([data]), fileName, document);
-  },
+  }
 
   /**
    * Copy response data as a string.
    */
-  async copyResponse() {
-    let responseContent = await this.requestData(this.selectedRequest.id,
-      "responseContent");
+  async copyResponse(id) {
+    let responseContent = await this.props.connector.requestData(id, "responseContent");
     copyString(responseContent.content.text);
-  },
+  }
 
   /**
    * Copy HAR from the network panel content to the clipboard.
    */
-  copyAllAsHar() {
-    return HarExporter.copy(this.getDefaultHarOptions());
-  },
+  copyAllAsHar(sortedRequests) {
+    return HarExporter.copy(this.getDefaultHarOptions(sortedRequests));
+  }
 
   /**
    * Save HAR from the network panel content to a file.
    */
-  saveAllAsHar() {
-    // FIXME: This will not work in launchpad
+  saveAllAsHar(sortedRequests) {
+    // This will not work in launchpad
     // document.execCommand(‘cut’/‘copy’) was denied because it was not called from
     // inside a short running user-generated event handler.
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard
-    return HarExporter.save(this.getDefaultHarOptions());
-  },
+    return HarExporter.save(this.getDefaultHarOptions(sortedRequests));
+  }
 
-  getDefaultHarOptions() {
-    let form = this.getTabTarget().form;
-    let title = form.title || form.url;
+  getDefaultHarOptions(sortedRequests) {
+    let { getLongString, getTabTarget, requestData } = this.props.connector;
+    let { form: { title, url } } = getTabTarget();
 
     return {
-      requestData: this.requestData,
-      getString: this.getLongString,
-      items: this.sortedRequests,
-      title: title
+      getString: getLongString,
+      items: sortedRequests,
+      requestData,
+      title: title || url,
     };
   }
-};
+}
 
 module.exports = RequestListContextMenu;

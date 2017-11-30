@@ -44,6 +44,10 @@
         "$ref": "types.Setting",
         "description": "Enables or disables the browser cache."
       },
+      "contextMenuShowEvent": {
+        "$ref": "types.Setting",
+        "description": "Controls after which mouse event context menus popup. This setting's value is of type ContextMenuMouseEvent, which has possible values of <code>mouseup</code> and <code>mousedown</code>."
+      },
       "homepageOverride": {
         "$ref": "types.Setting",
         "description": "Returns the value of the overridden home page. Read-only."
@@ -56,9 +60,13 @@
         "$ref": "types.Setting",
         "description": "Returns the value of the overridden new tab page. Read-only."
       },
-      "contextMenuShowEvent": {
+      "openBookmarksInNewTabs": {
         "$ref": "types.Setting",
-        "description": "Controls after which mouse event context menus popup. This setting's value is of type ContextMenuMouseEvent, which has possible values of <code>mouseup</code> and <code>mousedown</code>."
+        "description": "This boolean setting controls whether bookmarks are opened in the current tab or in a new tab."
+      },
+      "openSearchResultsInNewTabs": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether search results are opened in the current tab or in a new tab."
       },
       "webNotificationsDisabled": {
         "$ref": "types.Setting",

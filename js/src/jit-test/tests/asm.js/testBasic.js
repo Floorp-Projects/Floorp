@@ -138,6 +138,7 @@ assertTypeFailInEval('function f({global}) { "use asm"; function g() {} return g
 assertTypeFailInEval('function f(global, {imports}) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function f(g = 2) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function *f() { "use asm"; function g() {} return g }');
+assertAsmTypeFail(USE_ASM + 'function *f(){}');
 assertTypeFailInEval('f => { "use asm"; function g() {} return g }');
 assertTypeFailInEval('var f = { method() {"use asm"; return {}} }');
 assertAsmTypeFail(USE_ASM + 'return {m() {}};');

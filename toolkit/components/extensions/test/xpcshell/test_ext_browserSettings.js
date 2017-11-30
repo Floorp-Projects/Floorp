@@ -29,6 +29,8 @@ add_task(async function test_browser_settings() {
     "image.animation_mode": "none",
     "permissions.default.desktop-notification": PERM_UNKNOWN_ACTION,
     "ui.context_menus.after_mouseup": false,
+    "browser.tabs.loadBookmarksInTabs": false,
+    "browser.search.openintab": false,
   };
 
   async function background() {
@@ -144,6 +146,20 @@ add_task(async function test_browser_settings() {
       "contextMenuShowEvent", "mousedown",
       {"ui.context_menus.after_mouseup": false});
   }
+
+  await testSetting(
+    "openBookmarksInNewTabs", true,
+    {"browser.tabs.loadBookmarksInTabs": true});
+  await testSetting(
+    "openBookmarksInNewTabs", false,
+    {"browser.tabs.loadBookmarksInTabs": false});
+
+  await testSetting(
+    "openSearchResultsInNewTabs", true,
+    {"browser.search.openintab": true});
+  await testSetting(
+    "openSearchResultsInNewTabs", false,
+    {"browser.search.openintab": false});
 
   await extension.unload();
   await promiseShutdownManager();

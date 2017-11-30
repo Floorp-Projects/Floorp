@@ -56,17 +56,10 @@ class ResponsePanel extends Component {
     this.isJSON = this.isJSON.bind(this);
   }
 
-  /**
-   * `componentDidMount` is called when opening the ResponsePanel for the first time
-   */
   componentDidMount() {
     this.maybeFetchResponseContent(this.props);
   }
 
-  /**
-   * `componentWillReceiveProps` is the only method called when switching between two
-   * requests while the response panel is displayed.
-   */
   componentWillReceiveProps(nextProps) {
     this.maybeFetchResponseContent(nextProps);
   }

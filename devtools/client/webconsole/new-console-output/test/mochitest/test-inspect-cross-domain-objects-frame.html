@@ -8,9 +8,9 @@
     <script type="text/javascript"><!--
       window.onload = function testConsoleLogging()
       {
-        var o = { hello: "world!", bug: 869003 };
-        var f = Object.assign(function func(arg){}, o);
-        console.log("foobar", o, f);
+        var obj1 = { hello: "world!", bug: 869003 };
+        var obj2 = Object.assign(function func(arg){}, obj1);
+        console.log("foobar", obj1, obj2);
       };
     // --></script>
   </head>

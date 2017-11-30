@@ -120,7 +120,7 @@ HarBuilder.prototype = {
     entry.startedDateTime = dateToJSON(new Date(file.startedMillis));
     entry.time = file.endedMillis - file.startedMillis;
 
-    entry.request = this.buildRequest(file);
+    entry.request = await this.buildRequest(file);
     entry.response = await this.buildResponse(file);
     entry.cache = this.buildCache(file);
     entry.timings = file.eventTimings ? file.eventTimings.timings : {};
@@ -152,7 +152,7 @@ HarBuilder.prototype = {
     return timings;
   },
 
-  buildRequest: function (file) {
+  buildRequest: async function (file) {
     let request = {
       bodySize: 0
     };
@@ -160,25 +160,15 @@ HarBuilder.prototype = {
     request.method = file.method;
     request.url = file.url;
     request.httpVersion = file.httpVersion || "";
-
     request.headers = this.buildHeaders(file.requestHeaders);
     request.headers = this.appendHeadersPostData(request.headers, file);
     request.cookies = this.buildCookies(file.requestCookies);
-
     request.queryString = parseQueryString(getUrlQuery(file.url)) || [];
-
-    if (file.requestPostData) {
-      request.postData = this.buildPostData(file);
-    }
-
     request.headersSize = file.requestHeaders.headersSize;
+    request.postData = await this.buildPostData(file);
 
-    // Set request body size, but make sure the body is fetched
-    // from the backend.
-    if (file.requestPostData) {
-      this.fetchData(file.requestPostData.postData.text).then(value => {
-        request.bodySize = value.length;
-      });
+    if (request.postData && request.postData.text) {
+      request.bodySize = request.postData.text.length;
     }
 
     return request;
@@ -243,47 +233,57 @@ HarBuilder.prototype = {
     return result;
   },
 
-  buildPostData: function (file) {
-    let postData = {
-      mimeType: findValue(file.requestHeaders.headers, "content-type"),
-      params: [],
-      text: ""
-    };
+  buildPostData: async function (file) {
+    // When using HarAutomation, HarCollector will automatically fetch requestPostData,
+    // but when we use it from netmonitor, FirefoxDataProvider should fetch it itself
+    // lazily, via requestData.
+    let requestPostData = file.requestPostData;
+    let requestHeaders = file.requestHeaders;
+    let requestHeadersFromUploadStream;
 
-    if (!file.requestPostData) {
-      return postData;
+    if (!requestPostData && this._options.requestData) {
+      let payload = await this._options.requestData(file.id, "requestPostData");
+      requestPostData = payload.requestPostData;
+      requestHeadersFromUploadStream = payload.requestHeadersFromUploadStream;
     }
 
-    if (file.requestPostData.postDataDiscarded) {
+    if (!requestPostData.postData.text) {
+      return undefined;
+    }
+
+    let postData = {
+      mimeType: findValue(requestHeaders.headers, "content-type"),
+      params: [],
+      text: requestPostData.postData.text,
+    };
+
+    if (requestPostData.postDataDiscarded) {
       postData.comment = L10N.getStr("har.requestBodyNotIncluded");
       return postData;
     }
 
-    // Load request body from the backend.
-    this.fetchData(file.requestPostData.postData.text).then(postDataText => {
-      postData.text = postDataText;
+    // If we are dealing with URL encoded body, parse parameters.
+    if (CurlUtils.isUrlEncodedRequest({
+      headers: requestHeaders.headers,
+      postDataText: postData.text,
+    })) {
+      postData.mimeType = "application/x-www-form-urlencoded";
 
-      // If we are dealing with URL encoded body, parse parameters.
-      let { headers } = file.requestHeaders;
-      if (CurlUtils.isUrlEncodedRequest({ headers, postDataText })) {
-        postData.mimeType = "application/x-www-form-urlencoded";
+      // Extract form parameters and produce nice HAR array.
+      let formDataSections = await getFormDataSections(
+        requestHeaders,
+        requestHeadersFromUploadStream,
+        requestPostData,
+        this._options.getString,
+      );
 
-        // Extract form parameters and produce nice HAR array.
-        getFormDataSections(
-          file.requestHeaders,
-          file.requestHeadersFromUploadStream,
-          file.requestPostData,
-          this._options.getString,
-        ).then(formDataSections => {
-          formDataSections.forEach(section => {
-            let paramsArray = parseQueryString(section);
-            if (paramsArray) {
-              postData.params = [...postData.params, ...paramsArray];
-            }
-          });
-        });
-      }
-    });
+      formDataSections.forEach((section) => {
+        let paramsArray = parseQueryString(section);
+        if (paramsArray) {
+          postData.params = [...postData.params, ...paramsArray];
+        }
+      });
+    }
 
     return postData;
   },
