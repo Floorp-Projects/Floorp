@@ -48,6 +48,7 @@ PREF(OpenWindowEnabled, "dom.serviceWorkers.openWindow.enabled")
 PREF(StorageManagerEnabled, "dom.storageManager.enabled")
 PREF(PromiseRejectionEventsEnabled, "dom.promise_rejection_events.enabled")
 PREF(PushEnabled, "dom.push.enabled")
+PREF(StreamsEnabled, "dom.streams.enabled")
 
 #undef PREF
 
@@ -67,6 +68,7 @@ PREF_WEBIDL(OpenWindowEnabled)
 PREF_WEBIDL(StorageManagerEnabled)
 PREF_WEBIDL(PromiseRejectionEventsEnabled)
 PREF_WEBIDL(PushEnabled)
+PREF_WEBIDL(StreamsEnabled)
 
 #undef PREF_WEBIDL
 
