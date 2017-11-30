@@ -122,7 +122,7 @@ public:
     : mLength(0)
     , mTaskQueue(new AutoTaskQueue(
         SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoFrameConverter"))))
-    , last_img_(-1) // -1 is not a guaranteed invalid serial. See bug 1262134.
+    , mLastImage(-1) // -1 is not a guaranteed invalid serial. See bug 1262134.
 #ifdef DEBUG
     , mThrottleCount(0)
     , mThrottleRecord(0)
@@ -140,10 +140,10 @@ public:
 
     // We get passed duplicate frames every ~10ms even with no frame change.
     int32_t serial = aChunk.mFrame.GetImage()->GetSerial();
-    if (serial == last_img_) {
+    if (serial == mLastImage) {
       return;
     }
-    last_img_ = serial;
+    mLastImage = serial;
 
     // A throttling limit of 1 allows us to convert 2 frames concurrently.
     // It's short enough to not build up too significant a delay, while
@@ -188,7 +188,7 @@ public:
     if (forceBlack) {
       // Reset the last-img check.
       // -1 is not a guaranteed invalid serial. See bug 1262134.
-      last_img_ = -1;
+      mLastImage = -1;
 
       // After disabling, we still want *some* frames to flow to the other side.
       // It could happen that we drop the packet that carried the first disabled
@@ -197,15 +197,14 @@ public:
       const double disabledMinFps = 1.0;
       TimeStamp t = aChunk.mTimeStamp;
       MOZ_ASSERT(!t.IsNull());
-      if (!disabled_frame_sent_.IsNull() &&
-          (t - disabled_frame_sent_).ToSeconds() < (1.0 / disabledMinFps)) {
+      if (!mDisabledFrameSent.IsNull() &&
+          (t - mDisabledFrameSent).ToSeconds() < (1.0 / disabledMinFps)) {
         return;
       }
-
-      disabled_frame_sent_ = t;
+      mDisabledFrameSent = t;
     } else {
       // This sets it to the Null time.
-      disabled_frame_sent_ = TimeStamp();
+      mDisabledFrameSent = TimeStamp();
     }
 
     ++mLength; // Atomic
@@ -476,8 +475,8 @@ protected:
   RefPtr<AutoTaskQueue> mTaskQueue;
 
   // Written and read from the queueing thread (normally MSG).
-  int32_t last_img_;              // serial number of last Image
-  TimeStamp disabled_frame_sent_; // The time we sent the last disabled frame.
+  int32_t mLastImage;           // serial number of last Image
+  TimeStamp mDisabledFrameSent; // The time we sent the last disabled frame.
 #ifdef DEBUG
   uint32_t mThrottleCount;
   uint32_t mThrottleRecord;
