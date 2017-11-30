@@ -17,6 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
@@ -3343,7 +3344,7 @@ nsGlobalWindowInner::GetFullScreen()
 void
 nsGlobalWindowInner::Dump(const nsAString& aStr)
 {
-  if (!nsContentUtils::DOMWindowDumpEnabled()) {
+  if (!DOMPreferences::DumpEnabled()) {
     return;
   }
 
