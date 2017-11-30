@@ -13,12 +13,6 @@ from __future__ import unicode_literals
 import fluent.syntax.ast as FTL
 
 
-def LITERAL(value):
-    """Create a Pattern with a single TextElement."""
-    elements = [FTL.TextElement(value)]
-    return FTL.Pattern(elements)
-
-
 def EXTERNAL_ARGUMENT(name):
     """Create an ExternalArgument expression."""
 
