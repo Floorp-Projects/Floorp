@@ -310,7 +310,7 @@ function copyImageToClipboard(data) {
 
   let imgPtr = Cc["@mozilla.org/supports-interface-pointer;1"]
                  .createInstance(Ci.nsISupportsInterfacePointer);
-  imgPtr.data = imageTools.decodeImageBuffer(image, image.length, "image/png");
+  imgPtr.data = imageTools.decodeImageFromBuffer(image, image.length, "image/png");
 
   let xferable = Cc["@mozilla.org/widget/transferable;1"]
                    .createInstance(Ci.nsITransferable);
