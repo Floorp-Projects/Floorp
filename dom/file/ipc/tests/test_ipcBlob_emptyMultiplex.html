@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test an empty IPCBlob together with other parts</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+
+function checkContent(msg, content) {
+  return new Promise(resolve => {
+    let fr = new FileReader();
+    fr.readAsText(new Blob(content));
+    fr.onloadend = () => {
+      is(fr.result, "Hello world!", "The content matches: " + msg);
+      resolve();
+    };
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+let url = SimpleTest.getTestFileURL("script_file.js");
+
+let script = SpecialPowers.loadChromeScript(url);
+script.addMessageListener("emptyfile.opened", message => {
+  checkContent("middle", ["Hello ", message.file, "world!"]).
+  then(() => checkContent("begin", [message.file, "Hello world!"])).
+  then(() => checkContent("end", ["Hello world!", message.file])).
+  then(() => checkContent("random", [message.file, message.file, "Hello world!", message.file])).
+  then(SimpleTest.finish);
+});
+
+script.sendAsyncMessage("emptyfile.open");
+
+</script>
+</pre>
+</body>
+</html>
