@@ -85,7 +85,7 @@ public class LayerSession {
         @Override protected native void disposeNative();
 
         @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
-        public native void attachToJava(NativePanZoomController npzc);
+        public native void attachNPZC(NativePanZoomController npzc);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         public native void onBoundsChanged(int left, int top, int width, int height);
@@ -167,6 +167,7 @@ public class LayerSession {
 
     // All fields are accessed on UI thread only.
     private GeckoDisplay mDisplay;
+    private NativePanZoomController mNPZC;
     private OverscrollEdgeEffect mOverscroll;
     private DynamicToolbarAnimator mToolbar;
 
@@ -191,6 +192,23 @@ public class LayerSession {
             ThreadUtils.assertOnUiThread();
         }
         return mDisplay;
+    }
+
+    /**
+     * Get the NativePanZoomController instance for this session.
+     *
+     * @return NativePanZoomController instance.
+     */
+    public NativePanZoomController getPanZoomController() {
+        ThreadUtils.assertOnUiThread();
+
+        if (mNPZC == null) {
+            mNPZC = new NativePanZoomController(this);
+            if (mAttachedCompositor) {
+                mCompositor.attachNPZC(mNPZC);
+            }
+        }
+        return mNPZC;
     }
 
     /**
@@ -319,6 +337,10 @@ public class LayerSession {
         }
 
         mAttachedCompositor = true;
+
+        if (mNPZC != null) {
+            mCompositor.attachNPZC(mNPZC);
+        }
 
         if (mSurface != null) {
             // If we have a valid surface, create the compositor now that we're attached.

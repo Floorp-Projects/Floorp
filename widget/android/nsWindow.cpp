@@ -897,7 +897,7 @@ private:
      * Compositor methods
      */
 public:
-    void AttachToJava(jni::Object::Param aNPZC)
+    void AttachNPZC(jni::Object::Param aNPZC)
     {
         MOZ_ASSERT(NS_IsMainThread());
         if (!mWindow) {
@@ -916,21 +916,6 @@ public:
                            [npzc = NativePanZoomController::GlobalRef(npzc)] {
                                 npzc->SetAttached(true);
                            });
-
-        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
-            LayerSession::Compositor::GlobalRef compositor(mCompositor);
-            uiThread->Dispatch(NS_NewRunnableFunction(
-                    "LayerViewSupport::AttachToJava",
-                    [compositor] {
-                        compositor->OnCompositorAttached();
-                    }));
-        }
-
-        // Set the first-paint flag so that we (re-)link any new Java objects
-        // to Gecko, co-ordinate viewports, etc.
-        if (RefPtr<CompositorBridgeChild> bridge = mWindow->GetCompositorBridgeChild()) {
-            bridge->SendForceIsFirstPaint();
-        }
     }
 
     void OnBoundsChanged(int32_t aLeft, int32_t aTop,
@@ -1377,13 +1362,23 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
             inst.Env(), LayerSession::Compositor::Ref::From(aCompositor));
     window.mLayerViewSupport.Attach(compositor, &window, compositor);
 
-    if (window.mAndroidView) {
-        window.mAndroidView->mEventDispatcher->Attach(
-                java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
-        window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
-    }
+    MOZ_ASSERT(window.mAndroidView);
+    window.mAndroidView->mEventDispatcher->Attach(
+            java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
+    window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
 
     inst->OnTransfer(aDispatcher);
+
+    DispatchToUiThread(
+            "GeckoViewSupport::Transfer",
+            [compositor = LayerSession::Compositor::GlobalRef(compositor)] {
+                compositor->OnCompositorAttached();
+            });
+
+    // Set the first-paint flag so that we refresh viewports, etc.
+    if (RefPtr<CompositorBridgeChild> bridge = window.GetCompositorBridgeChild()) {
+        bridge->SendForceIsFirstPaint();
+    }
 }
 
 void
