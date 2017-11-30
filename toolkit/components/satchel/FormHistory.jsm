@@ -95,11 +95,19 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "uuidService",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
+                                  "resource://gre/modules/Sqlite.jsm");
+
 
 const DB_SCHEMA_VERSION = 4;
 const DAY_IN_MS  = 86400000; // 1 day in milliseconds
 const MAX_SEARCH_TOKENS = 10;
 const NOOP = function noop() {};
+const DB_FILENAME = "formhistory.sqlite";
 
 var supportsDeletedTable = AppConstants.platform == "android";
 
@@ -381,17 +389,17 @@ XPCOMUtils.defineLazyGetter(this, "dbConnection", function() {
 
   try {
     dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile).clone();
-    dbFile.append("formhistory.sqlite");
+    dbFile.append(DB_FILENAME);
     log("Opening database at " + dbFile.path);
 
-    _dbConnection = Services.storage.openUnsharedDatabase(dbFile);
+    _dbConnection = Services.storage.openDatabase(dbFile);
     dbInit();
   } catch (e) {
     if (e.result != Cr.NS_ERROR_FILE_CORRUPTED) {
       throw e;
     }
     dbCleanup(dbFile);
-    _dbConnection = Services.storage.openUnsharedDatabase(dbFile);
+    _dbConnection = Services.storage.openDatabase(dbFile);
     dbInit();
   }
 
@@ -477,6 +485,16 @@ var Migrators = {
       let table = dbSchema.tables.moz_deleted_formhistory;
       let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
       _dbConnection.createTable("moz_deleted_formhistory", tSQL);
+    }
+  },
+
+  async dbAsyncMigrateToVersion4(conn) {
+    const TABLE_NAME = "moz_deleted_formhistory";
+    let tableExists = await conn.tableExists(TABLE_NAME);
+    if (!tableExists) {
+      let table = dbSchema.tables[TABLE_NAME];
+      let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
+      await conn.execute(`CREATE TABLE ${TABLE_NAME} (${tSQL})`);
     }
   },
 };
@@ -806,7 +824,251 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
   });
 }
 
+
+/**
+ * Database creation and access. Used by FormHistory and some of the
+ * utility functions, but is not exposed to the outside world.
+ * @class
+ */
+this.DB = {
+  // Once we establish a database connection, we have to hold a reference
+  // to it so that it won't get GC'd.
+  _instance: null,
+  // MAX_ATTEMPTS is how many times we'll try to establish a connection
+  // or migrate a database before giving up.
+  MAX_ATTEMPTS: 2,
+
+  /** String representing where the FormHistory database is on the filesystem */
+  get path() {
+    return OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
+  },
+
+  /**
+   * Sets up and returns a connection to the FormHistory database. The
+   * connection also registers itself with AsyncShutdown so that the
+   * connection is closed on when the profile-before-change observer
+   * notification is fired.
+   *
+   * @returns {Promise}
+   * @resolves An Sqlite.jsm connection to the database.
+   * @rejects  If connecting to the database, or migrating the database
+   *           failed after MAX_ATTEMPTS attempts (where each attempt
+   *           backs up and deletes the old database), this will reject
+   *           with the Sqlite.jsm error.
+   */
+  get conn() {
+    delete this.conn;
+    let conn = new Promise(async (resolve, reject) => {
+      try {
+        this._instance = await this._establishConn();
+      } catch (e) {
+        log("Failed to establish database connection.");
+        reject(e);
+        return;
+      }
+
+      AsyncShutdown.profileBeforeChange.addBlocker(
+        "Closing FormHistory database.", () => this._instance.close());
+
+      resolve(this._instance);
+    });
+
+    return this.conn = conn;
+  },
+
+  // Private functions
+
+  /**
+   * Tries to connect to the Sqlite database at this.path, and then
+   * migrates the database as necessary. If any of the steps to do this
+   * fail, this function should re-enter itself with an incremented
+   * attemptNum so that another attempt can be made after backing up
+   * and deleting the old database.
+   *
+   * @async
+   * @param {number} attemptNum
+   *        The optional number of the attempt that is being made to connect
+   *        to the database. Defaults to 0.
+   * @returns {Promise}
+   * @resolves An Sqlite.jsm connection to the database.
+   * @rejects  After MAX_ATTEMPTS, this will reject with the Sqlite.jsm
+   *           error.
+   */
+  async _establishConn(attemptNum = 0) {
+    log(`Establishing database connection - attempt # ${attemptNum}`);
+    let conn;
+    try {
+      conn = await Sqlite.openConnection({ path: this.path });
+    } catch (e) {
+      // Bug 1423729 - We should check the reason for the connection failure,
+      // in case this is due to the disk being full or the database file being
+      // inaccessible due to third-party software (like anti-virus software).
+      // In that case, we should probably fail right away.
+      if (attemptNum < this.MAX_ATTEMPTS) {
+        log("Establishing connection failed.");
+        await this._failover(conn);
+        return this._establishConn(++attemptNum);
+      }
+
+      if (conn) {
+        await conn.close();
+      }
+      log("Establishing connection failed too many times. Giving up.");
+      throw e;
+    }
+
+    try {
+      let dbVersion = parseInt(await conn.getSchemaVersion(), 10);
+
+      // Case 1: Database is up to date and we're ready to go.
+      if (dbVersion == DB_SCHEMA_VERSION) {
+        return conn;
+      }
+
+      // Case 2: Downgrade
+      if (dbVersion > DB_SCHEMA_VERSION) {
+        log("Downgrading to version " + DB_SCHEMA_VERSION);
+        // User's DB is newer. Sanity check that our expected columns are
+        // present, and if so mark the lower version and merrily continue
+        // on. If the columns are borked, something is wrong so blow away
+        // the DB and start from scratch. [Future incompatible upgrades
+        // should switch to a different table or file.]
+        if (!(await this._expectedColumnsPresent(conn))) {
+          throw Components.Exception("DB is missing expected columns",
+                                     Cr.NS_ERROR_FILE_CORRUPTED);
+        }
+
+        // Change the stored version to the current version. If the user
+        // runs the newer code again, it will see the lower version number
+        // and re-upgrade (to fixup any entries the old code added).
+        await conn.setSchemaVersion(DB_SCHEMA_VERSION);
+        return conn;
+      }
+
+      // Case 3: Very old database that cannot be migrated.
+      //
+      // When FormHistory is released, we will no longer support the various
+      // schema versions prior to this release that nsIFormHistory2 once did.
+      // We'll throw an NS_ERROR_FILE_CORRUPTED, which should cause us to wipe
+      // out this DB and create a new one (unless this is our MAX_ATTEMPTS
+      // attempt).
+      if (dbVersion > 0 && dbVersion < 3) {
+        throw Components.Exception("DB version is unsupported.",
+                                   Cr.NS_ERROR_FILE_CORRUPTED);
+      }
+
+      if (dbVersion == 0) {
+        // Case 4: New database
+        await conn.executeTransaction(async () => {
+          log("Creating DB -- tables");
+          for (let name in dbSchema.tables) {
+            let table = dbSchema.tables[name];
+            let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
+            log("Creating table " + name + " with " + tSQL);
+            await conn.execute(`CREATE TABLE ${name} (${tSQL})`);
+          }
+
+          log("Creating DB -- indices");
+          for (let name in dbSchema.indices) {
+            let index = dbSchema.indices[name];
+            let statement = "CREATE INDEX IF NOT EXISTS " + name + " ON " + index.table +
+                            "(" + index.columns.join(", ") + ")";
+            await conn.execute(statement);
+          }
+        });
+      } else {
+        // Case 5: Old database requiring a migration
+        await conn.executeTransaction(async () => {
+          for (let v = dbVersion + 1; v <= DB_SCHEMA_VERSION; v++) {
+            log("Upgrading to version " + v + "...");
+            await Migrators["dbAsyncMigrateToVersion" + v](conn);
+          }
+        });
+      }
+
+      await conn.setSchemaVersion(DB_SCHEMA_VERSION);
+
+      return conn;
+    } catch (e) {
+      if (e.result != Cr.NS_ERROR_FILE_CORRUPTED) {
+        throw e;
+      }
+
+      if (attemptNum < this.MAX_ATTEMPTS) {
+        log("Setting up database failed.");
+        await this._failover(conn);
+        return this._establishConn(++attemptNum);
+      }
+
+      if (conn) {
+        await conn.close();
+      }
+
+      log("Setting up database failed too many times. Giving up.");
+
+      throw e;
+    }
+  },
+
+  /**
+   * Closes a connection to the database, then backs up the database before
+   * deleting it.
+   *
+   * @async
+   * @param {SqliteConnection | null} conn
+   *        The connection to the database that we failed to establish or
+   *        migrate.
+   * @throws If any file operations fail.
+   */
+  async _failover(conn) {
+    log("Cleaning up DB file - close & remove & backup.");
+    if (conn) {
+      await conn.close();
+    }
+    let backupFile = this.path + ".corrupt";
+    let { file, path: uniquePath } =
+      await OS.File.openUnique(backupFile, { humanReadable: true });
+    await file.close();
+    await OS.File.copy(this.path, uniquePath);
+    await OS.File.remove(this.path);
+    log("Completed DB cleanup.");
+  },
+
+  /**
+   * Tests that a database connection contains the tables that we expect.
+   *
+   * @async
+   * @param {SqliteConnection | null} conn
+   *        The connection to the database that we're testing.
+   * @returns {Promise}
+   * @resolves true if all expected columns are present.
+   */
+  async _expectedColumnsPresent(conn) {
+    for (let name in dbSchema.tables) {
+      let table = dbSchema.tables[name];
+      let query = "SELECT " +
+                  Object.keys(table).join(", ") +
+                  " FROM " + name;
+      try {
+        await conn.execute(query, null, (row, cancel) => {
+          // One row is enough to let us know this worked.
+          cancel();
+        });
+      } catch (e) {
+        return false;
+      }
+    }
+
+    log("Verified that expected columns are present in DB.");
+    return true;
+  },
+};
+
 this.FormHistory = {
+  get db() {
+    return DB.conn;
+  },
+
   get enabled() {
     return Prefs.enabled;
   },
