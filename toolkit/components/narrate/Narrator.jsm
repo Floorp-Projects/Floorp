@@ -89,7 +89,7 @@ Narrator.prototype = {
       // are no other strong references, and it will be GC'ed. Instead,
       // we rely on the window's lifetime and use it as a weak reference.
       this._treeWalkerRef.set(this._win,
-        this._doc.createTreeWalker(this._doc.getElementById("container"),
+        this._doc.createTreeWalker(this._doc.querySelector(".container"),
           nf.SHOW_ELEMENT, filter, false));
     }
 
