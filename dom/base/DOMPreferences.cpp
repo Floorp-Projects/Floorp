@@ -36,6 +36,7 @@ DOMPreferences::DumpEnabled()
 #endif
 
 PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
+PREF(DOMCachesEnabled, "dom.caches.enabled")
 
 #undef PREF
 
@@ -47,6 +48,7 @@ PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
   }
 
 PREF_WEBIDL(ImageBitmapExtensionsEnabled)
+PREF_WEBIDL(DOMCachesEnabled)
 
 #undef PREF_WEBIDL
 
