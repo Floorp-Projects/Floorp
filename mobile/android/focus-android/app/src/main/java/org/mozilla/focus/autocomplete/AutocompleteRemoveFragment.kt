@@ -9,7 +9,8 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
@@ -29,16 +30,18 @@ class AutocompleteRemoveFragment : AutocompleteListFragment() {
     }
 
     private fun removeSelectedDomains(context: Context) {
-        launch(CommonPool) {
-            val domains = (domainList.adapter as DomainListAdapter).selection()
-            if (!domains.isEmpty()) {
-                CustomAutocomplete.removeDomains(context, domains)
+        val domains = (domainList.adapter as DomainListAdapter).selection()
+        if (domains.isNotEmpty()) {
+            launch(UI) {
+                async {
+                    CustomAutocomplete.removeDomains(context, domains)
 
-                TelemetryWrapper.removeAutocompleteDomainsEvent(domains.size)
+                    TelemetryWrapper.removeAutocompleteDomainsEvent(domains.size)
+                }.await()
+
+                fragmentManager.popBackStack()
             }
         }
-
-        fragmentManager.popBackStack()
     }
 
     override fun isSelectionMode() = true
