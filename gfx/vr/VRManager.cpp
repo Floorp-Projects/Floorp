@@ -461,12 +461,13 @@ VRManager::NotifyGamepadChange(uint32_t aIndex, const T& aInfo)
 
 void
 VRManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                         double aIntensity, double aDuration, uint32_t aPromiseID)
+                         double aIntensity, double aDuration,
+                         const VRManagerPromise& aPromise)
 
 {
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->VibrateHaptic(aControllerIdx, aHapticIndex,
-                                aIntensity, aDuration, aPromiseID);
+                                aIntensity, aDuration, aPromise);
   }
 }
 
@@ -479,11 +480,9 @@ VRManager::StopVibrateHaptic(uint32_t aControllerIdx)
 }
 
 void
-VRManager::NotifyVibrateHapticCompleted(uint32_t aPromiseID)
+VRManager::NotifyVibrateHapticCompleted(const VRManagerPromise& aPromise)
 {
-  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    Unused << iter.Get()->GetKey()->SendReplyGamepadVibrateHaptic(aPromiseID);
-  }
+  aPromise.mParent->SendReplyGamepadVibrateHaptic(aPromise.mPromiseID);
 }
 
 void
