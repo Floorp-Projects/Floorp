@@ -82,7 +82,7 @@ public:
                                              const uint64_t& aFwdTransactionId,
                                              const uint64_t& aTransactionId,
                                              const wr::LayoutSize& aContentSize,
-                                             ipc::ByteBuf&& dl,
+                                             const wr::ByteBuffer& dl,
                                              const wr::BuiltDisplayListDescriptor& dlDesc,
                                              const WebRenderScrollData& aScrollData,
                                              nsTArray<OpUpdateResource>&& aResourceUpdates,

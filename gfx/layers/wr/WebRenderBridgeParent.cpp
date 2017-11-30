@@ -561,7 +561,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           const uint64_t& aFwdTransactionId,
                                           const uint64_t& aTransactionId,
                                           const wr::LayoutSize& aContentSize,
-                                          ipc::ByteBuf&& dl,
+                                          const wr::ByteBuffer& dl,
                                           const wr::BuiltDisplayListDescriptor& dlDesc,
                                           const WebRenderScrollData& aScrollData,
                                           nsTArray<OpUpdateResource>&& aResourceUpdates,
@@ -609,7 +609,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
     mApi->SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
                         mPipelineId, aContentSize,
-                        dlDesc, dl.mData, dl.mLen,
+                        dlDesc, dl.mData, dl.mLength,
                         resources);
 
     ScheduleComposition();
