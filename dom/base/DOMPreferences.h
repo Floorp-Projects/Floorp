@@ -91,6 +91,9 @@ public:
   // Returns true if the dom.fetchObserver.enabled pref is set.
   static bool FetchObserverEnabled();
   static bool FetchObserverEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the privacy.resistFingerprinting pref is set.
+  static bool ResistFingerprintingEnabled();
 };
 
 } // dom namespace
