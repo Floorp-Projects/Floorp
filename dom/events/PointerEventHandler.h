@@ -89,17 +89,16 @@ public:
   static void ImplicitlyReleasePointerCapture(WidgetEvent* aEvent);
 
   /**
-   * GetPointerCapturingFrame returns a target frame of aEvent. If the event is
-   * a mouse or pointer event (except mousedown and pointerdown), the pointer
-   * may be captured by a content. This method returns the capturing content's
-   * primary frame. Otherwise, nullptr.
+   * GetPointerCapturingContent returns a target content which captures the
+   * pointer. It's applied to mouse or pointer event (except mousedown and
+   * pointerdown). When capturing, return the content. Otherwise, nullptr.
    *
    * @param aEvent               A mouse event or pointer event which may be
    *                             captured.
    *
-   * @return                     Target frame for aEvent.
+   * @return                     Target content for aEvent.
    */
-  static nsIFrame* GetPointerCapturingFrame(WidgetGUIEvent* aEvent);
+  static nsIContent* GetPointerCapturingContent(WidgetGUIEvent* aEvent);
 
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
 
