@@ -20,14 +20,11 @@ interface imgIContainerCallback;
 interface imgITools : nsISupports
 {
     /**
-     * decodeImage
      * decodeImageBuffer
      * Caller provides an buffer, a buffer size and a mimetype. We read from
      * the stream and decompress it (according to the specified mime type) and
      * return the resulting imgIContainer.
      *
-     * @param aStream
-     *        An input stream for an encoded image file.
      * @param aBuffer
      *        Data in memory.
      * @param aSize
@@ -38,6 +35,21 @@ interface imgITools : nsISupports
     imgIContainer decodeImageBuffer(in string aBuffer,
                                     in unsigned long aSize,
                                     in ACString aMimeType);
+
+    /**
+     * decodeImageFromArrayBuffer
+     * Caller provides an ArrayBuffer and a mimetype. We read from
+     * the stream and decompress it (according to the specified mime type) and
+     * return the resulting imgIContainer.
+     *
+     * @param aArrayBuffer
+     *        An ArrayBuffer.
+     * @param aMimeType
+     *        Type of image in the stream.
+     */
+    [implicit_jscontext]
+    imgIContainer decodeImageFromArrayBuffer(in jsval aArrayBuffer,
+                                             in ACString aMimeType);
 
     /**
      * decodeImageAsync
