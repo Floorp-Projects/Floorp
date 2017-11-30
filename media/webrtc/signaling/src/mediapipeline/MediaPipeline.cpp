@@ -20,7 +20,6 @@
 #include "LayersLogging.h"
 #include "ImageTypes.h"
 #include "ImageContainer.h"
-#include "DOMMediaStream.h"
 #include "MediaStreamTrack.h"
 #include "MediaStreamListener.h"
 #include "MediaStreamVideoSink.h"
@@ -1892,24 +1891,27 @@ class GenericReceiveCallback : public TrackAddedCallback
 class GenericReceiveListener : public MediaStreamListener
 {
  public:
-  GenericReceiveListener(SourceMediaStream *source, TrackID track_id)
-    : source_(source),
-      track_id_(track_id),
+  explicit GenericReceiveListener(dom::MediaStreamTrack* track)
+    : track_(track),
       played_ticks_(0),
       last_log_(0),
       principal_handle_(PRINCIPAL_HANDLE_NONE),
       listening_(false)
   {
-    MOZ_ASSERT(source);
+    MOZ_ASSERT(track->GetInputStream()->AsSourceStream());
   }
 
-  virtual ~GenericReceiveListener() {}
+  virtual ~GenericReceiveListener()
+  {
+    NS_ReleaseOnMainThreadSystemGroup(
+      "GenericReceiveListener::track_", track_.forget());
+  }
 
   void AddSelf()
   {
     if (!listening_) {
       listening_ = true;
-      source_->AddListener(this);
+      track_->GetInputStream()->AddListener(this);
     }
   }
 
@@ -1917,7 +1919,7 @@ class GenericReceiveListener : public MediaStreamListener
   {
     if (listening_) {
       listening_ = false;
-      source_->RemoveListener(this);
+      track_->GetInputStream()->RemoveListener(this);
     }
   }
 
@@ -1929,24 +1931,21 @@ class GenericReceiveListener : public MediaStreamListener
     class Message : public ControlMessage
     {
     public:
-      Message(SourceMediaStream* stream,
-              TrackID track_id)
-        : ControlMessage(stream),
-          source_(stream),
-          track_id_(track_id)
+      explicit Message(dom::MediaStreamTrack* track)
+        : ControlMessage(track->GetInputStream()),
+          track_id_(track->GetInputTrackId())
       {}
 
       void Run() override {
-        source_->EndTrack(track_id_);
+        mStream->AsSourceStream()->EndTrack(track_id_);
       }
 
-      RefPtr<SourceMediaStream> source_;
       const TrackID track_id_;
     };
 
-    source_->GraphImpl()->AppendMessage(MakeUnique<Message>(source_, track_id_));
-    // This breaks the cycle with source_
-    source_->RemoveListener(this);
+    track_->GraphImpl()->AppendMessage(MakeUnique<Message>(track_));
+    // This breaks the cycle with the SourceMediaStream
+    track_->GetInputStream()->RemoveListener(this);
   }
 
   // Must be called on the main thread
@@ -1956,9 +1955,8 @@ class GenericReceiveListener : public MediaStreamListener
     {
     public:
       Message(GenericReceiveListener* listener,
-              MediaStream* stream,
               const PrincipalHandle& principal_handle)
-        : ControlMessage(stream),
+        : ControlMessage(nullptr),
           listener_(listener),
           principal_handle_(principal_handle)
       {}
@@ -1971,7 +1969,7 @@ class GenericReceiveListener : public MediaStreamListener
       PrincipalHandle principal_handle_;
     };
 
-    source_->GraphImpl()->AppendMessage(MakeUnique<Message>(this, source_, principal_handle));
+    track_->GraphImpl()->AppendMessage(MakeUnique<Message>(this, principal_handle));
   }
 
   // Must be called on the MediaStreamGraph thread
@@ -1981,8 +1979,7 @@ class GenericReceiveListener : public MediaStreamListener
   }
 
  protected:
-  RefPtr<SourceMediaStream> source_;
-  const TrackID track_id_;
+  RefPtr<dom::MediaStreamTrack> track_;
   TrackTicks played_ticks_;
   TrackTicks last_log_; // played_ticks_ when we last logged
   PrincipalHandle principal_handle_;
@@ -2007,9 +2004,9 @@ class MediaPipelineReceiveAudio::PipelineListener
   : public GenericReceiveListener
 {
 public:
-  PipelineListener(SourceMediaStream * source,
+  PipelineListener(dom::MediaStreamTrack* track,
                    const RefPtr<MediaSessionConduit>& conduit)
-    : GenericReceiveListener(source, kAudioTrack),
+    : GenericReceiveListener(track),
       conduit_(conduit)
   {
   }
@@ -2032,8 +2029,10 @@ public:
   // Implement MediaStreamListener
   void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override
   {
-    MOZ_ASSERT(source_);
-    if (!source_) {
+    RefPtr<SourceMediaStream> source =
+      track_->GetInputStream()->AsSourceStream();
+    MOZ_ASSERT(source);
+    if (!source) {
       CSFLogError(LOGTAG, "NotifyPull() called from a non-SourceMediaStream");
       return;
     }
@@ -2042,8 +2041,7 @@ public:
     uint32_t samples_per_10ms = rate/100;
 
     // This comparison is done in total time to avoid accumulated roundoff errors.
-    while (source_->TicksToTimeRoundDown(rate,
-                                         played_ticks_) < desired_time) {
+    while (source->TicksToTimeRoundDown(rate, played_ticks_) < desired_time) {
       int16_t scratch_buffer[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
 
       int samples_length;
@@ -2060,7 +2058,7 @@ public:
         // Insert silence on conduit/GIPS failure (extremely unlikely)
         CSFLogError(LOGTAG, "Audio conduit failed (%d) to return data @ %" PRId64 " (desired %" PRId64 " -> %f)",
                     err, played_ticks_, desired_time,
-                    source_->StreamTimeToSeconds(desired_time));
+                    source->StreamTimeToSeconds(desired_time));
         // if this is not enough we'll loop and provide more
         samples_length = samples_per_10ms;
         PodArrayZero(scratch_buffer);
@@ -2101,13 +2099,14 @@ public:
                            principal_handle_);
 
       // Handle track not actually added yet or removed/finished
-      if (source_->AppendToTrack(track_id_, &segment)) {
+      if (source->AppendToTrack(track_->GetInputTrackId(), &segment)) {
         played_ticks_ += frames;
         if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
           if (played_ticks_ > last_log_ + rate) { // ~ 1 second
             MOZ_LOG(AudioLogModule(), LogLevel::Debug,
                     ("%p: Inserting %zu samples into track %d, total = %" PRIu64,
-                     (void*) this, frames, track_id_, played_ticks_));
+                     (void*) this, frames, track_->GetInputTrackId(),
+                     played_ticks_));
             last_log_ = played_ticks_;
           }
         }
@@ -2129,9 +2128,9 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     nsCOMPtr<nsIEventTarget> main_thread,
     nsCOMPtr<nsIEventTarget> sts_thread,
     RefPtr<AudioSessionConduit> conduit,
-    SourceMediaStream* aStream) :
+    dom::MediaStreamTrack* aTrack) :
   MediaPipelineReceive(pc, main_thread, sts_thread, conduit),
-  listener_(aStream ? new PipelineListener(aStream, conduit_) : nullptr)
+  listener_(aTrack ? new PipelineListener(aTrack, conduit_) : nullptr)
 {
   description_ = pc_ + "| Receive audio";
 }
@@ -2173,8 +2172,8 @@ MediaPipelineReceiveAudio::Stop()
 class MediaPipelineReceiveVideo::PipelineListener
   : public GenericReceiveListener {
 public:
-  explicit PipelineListener(SourceMediaStream* source)
-    : GenericReceiveListener(source, kVideoTrack)
+  explicit PipelineListener(dom::MediaStreamTrack* track)
+    : GenericReceiveListener(track)
     , image_container_()
     , image_()
     , mutex_("Video PipelineListener")
@@ -2199,7 +2198,8 @@ public:
       IntSize size = image ? image->GetSize() : IntSize(width_, height_);
       segment.AppendFrame(image.forget(), delta, size, principal_handle_);
       // Handle track not actually added yet or removed/finished
-      if (source_->AppendToTrack(track_id_, &segment)) {
+      if (track_->GetInputStream()->AsSourceStream()->AppendToTrack(
+            track_->GetInputTrackId(), &segment)) {
         played_ticks_ = desired_time;
       } else {
         CSFLogError(LOGTAG, "AppendToTrack failed");
@@ -2304,10 +2304,10 @@ MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     nsCOMPtr<nsIEventTarget> main_thread,
     nsCOMPtr<nsIEventTarget> sts_thread,
     RefPtr<VideoSessionConduit> conduit,
-    SourceMediaStream* aStream) :
+    dom::MediaStreamTrack* aTrack) :
   MediaPipelineReceive(pc, main_thread, sts_thread, conduit),
   renderer_(new PipelineRenderer(this)),
-  listener_(aStream ? new PipelineListener(aStream) : nullptr)
+  listener_(aTrack ? new PipelineListener(aTrack) : nullptr)
 {
   description_ = pc_ + "| Receive video";
   conduit->AttachRenderer(renderer_);
