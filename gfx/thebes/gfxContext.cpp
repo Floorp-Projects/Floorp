@@ -50,24 +50,6 @@ PatternFromState::operator mozilla::gfx::Pattern&()
     return *state.pattern->GetPattern(mContext->mDT, state.patternTransformChanged ? &state.patternTransform : nullptr);
   }
 
-  if (state.sourceSurface) {
-    Matrix transform = state.surfTransform;
-
-    if (state.patternTransformChanged) {
-      Matrix mat = mContext->GetDTTransform();
-      if (!mat.Invert()) {
-        mPattern = new (mColorPattern.addr())
-        ColorPattern(Color()); // transparent black to paint nothing
-        return *mPattern;
-      }
-      transform = transform * state.patternTransform * mat;
-    }
-
-    mPattern = new (mSurfacePattern.addr())
-    SurfacePattern(state.sourceSurface, ExtendMode::CLAMP, transform);
-    return *mPattern;
-  }
-
   mPattern = new (mColorPattern.addr())
   ColorPattern(state.color);
   return *mPattern;
@@ -693,8 +675,6 @@ gfxContext::SetColor(const Color& aColor)
 {
   CURRENTSTATE_CHANGED()
   CurrentState().pattern = nullptr;
-  CurrentState().sourceSurfCairo = nullptr;
-  CurrentState().sourceSurface = nullptr;
   CurrentState().color = ToDeviceColor(aColor);
 }
 
@@ -703,17 +683,12 @@ gfxContext::SetDeviceColor(const Color& aColor)
 {
   CURRENTSTATE_CHANGED()
   CurrentState().pattern = nullptr;
-  CurrentState().sourceSurfCairo = nullptr;
-  CurrentState().sourceSurface = nullptr;
   CurrentState().color = aColor;
 }
 
 bool
 gfxContext::GetDeviceColor(Color& aColorOut)
 {
-  if (CurrentState().sourceSurface) {
-    return false;
-  }
   if (CurrentState().pattern) {
     return CurrentState().pattern->GetSolidColor(aColorOut);
   }
@@ -723,26 +698,9 @@ gfxContext::GetDeviceColor(Color& aColorOut)
 }
 
 void
-gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
-{
-  CURRENTSTATE_CHANGED()
-  CurrentState().surfTransform = Matrix(1.0f, 0, 0, 1.0f, Float(offset.x), Float(offset.y));
-  CurrentState().pattern = nullptr;
-  CurrentState().patternTransformChanged = false;
-  // Keep the underlying cairo surface around while we keep the
-  // sourceSurface.
-  CurrentState().sourceSurfCairo = surface;
-  CurrentState().sourceSurface =
-  gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
-  CurrentState().color = Color(0, 0, 0, 0);
-}
-
-void
 gfxContext::SetPattern(gfxPattern *pattern)
 {
   CURRENTSTATE_CHANGED()
-  CurrentState().sourceSurfCairo = nullptr;
-  CurrentState().sourceSurface = nullptr;
   CurrentState().patternTransformChanged = false;
   CurrentState().pattern = pattern;
 }
@@ -755,8 +713,6 @@ gfxContext::GetPattern()
   AzureState &state = CurrentState();
   if (state.pattern) {
     pat = state.pattern;
-  } else if (state.sourceSurface) {
-    NS_ASSERTION(false, "Ugh, this isn't good.");
   } else {
     pat = new gfxPattern(state.color);
   }
@@ -790,28 +746,6 @@ void
 gfxContext::Paint(gfxFloat alpha)
 {
   AUTO_PROFILER_LABEL("gfxContext::Paint", GRAPHICS);
-
-  AzureState &state = CurrentState();
-
-  if (state.sourceSurface && !state.sourceSurfCairo &&
-      !state.patternTransformChanged)
-  {
-    // This is the case where a PopGroupToSource has been done and this
-    // paint is executed without changing the transform or the source.
-    Matrix oldMat = mDT->GetTransform();
-
-    IntSize surfSize = state.sourceSurface->GetSize();
-
-    mDT->SetTransform(Matrix::Translation(-state.deviceOffset.x,
-                                          -state.deviceOffset.y));
-
-    mDT->DrawSurface(state.sourceSurface,
-                     Rect(state.sourceSurfaceDeviceOffset, Size(surfSize.width, surfSize.height)),
-                     Rect(Point(), Size(surfSize.width, surfSize.height)),
-                     DrawSurfaceOptions(), DrawOptions(alpha, GetOp()));
-    mDT->SetTransform(oldMat);
-    return;
-  }
 
   Matrix mat = mDT->GetTransform();
   mat.Invert();
@@ -992,12 +926,6 @@ gfxContext::GetOp()
     } else {
       return CompositionOp::OP_SOURCE;
     }
-  } else if (state.sourceSurface) {
-    if (state.sourceSurface->GetFormat() == SurfaceFormat::B8G8R8X8) {
-      return CompositionOp::OP_OVER;
-    } else {
-      return CompositionOp::OP_SOURCE;
-    }
   } else {
     if (state.color.a > 0.999) {
       return CompositionOp::OP_OVER;
@@ -1023,7 +951,7 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix, bool aUpdatePatternTransfo
 {
   AzureState &state = CurrentState();
 
-  if (aUpdatePatternTransform && (state.pattern || state.sourceSurface)
+  if (aUpdatePatternTransform && (state.pattern)
       && !state.patternTransformChanged) {
     state.patternTransform = GetDTTransform();
     state.patternTransformChanged = true;
