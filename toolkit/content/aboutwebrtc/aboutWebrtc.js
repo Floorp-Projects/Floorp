@@ -774,17 +774,19 @@ ICEStats.prototype = {
   }
 };
 
-function SimpleTable(heading, data) {
+function SimpleTable(heading, data, caption) {
   this._heading = heading || [];
   this._data = data;
+  this._caption = caption;
 }
 
 SimpleTable.prototype = {
-  renderRow(list) {
+  renderRow(list, header) {
     let row = document.createElement("tr");
+    let elemType = (header ? "th" : "td");
 
     for (let elem of list) {
-      let cell = document.createElement("td");
+      let cell = document.createElement(elemType);
       cell.textContent = elem;
       row.appendChild(cell);
     }
@@ -795,8 +797,12 @@ SimpleTable.prototype = {
   render() {
     let table = document.createElement("table");
 
+    if (this._caption) {
+      table.appendChild(this._caption);
+    }
+
     if (this._heading) {
-      table.appendChild(this.renderRow(this._heading));
+      table.appendChild(this.renderRow(this._heading, true));
     }
 
     for (let row of this._data) {
