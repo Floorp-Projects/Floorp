@@ -337,15 +337,17 @@ public:
     return mSlots[index];
   }
 
-  void malloc(MemSlot& aSlot, Buffer& aArgs)
+  void malloc(Buffer& aArgs, Buffer& aResult)
   {
+    MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::malloc_impl(size);
   }
 
-  void posix_memalign(MemSlot& aSlot, Buffer& aArgs)
+  void posix_memalign(Buffer& aArgs, Buffer& aResult)
   {
+    MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t alignment = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
@@ -357,24 +359,27 @@ public:
     }
   }
 
-  void aligned_alloc(MemSlot& aSlot, Buffer& aArgs)
+  void aligned_alloc(Buffer& aArgs, Buffer& aResult)
   {
+    MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t alignment = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::aligned_alloc_impl(alignment, size);
   }
 
-  void calloc(MemSlot& aSlot, Buffer& aArgs)
+  void calloc(Buffer& aArgs, Buffer& aResult)
   {
+    MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t num = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::calloc_impl(num, size);
   }
 
-  void realloc(MemSlot& aSlot, Buffer& aArgs)
+  void realloc(Buffer& aArgs, Buffer& aResult)
   {
+    MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     Buffer dummy = aArgs.SplitChar('#');
     if (dummy) {
@@ -388,7 +393,7 @@ public:
     aSlot.mPtr = ::realloc_impl(old_ptr, size);
   }
 
-  void free(Buffer& aArgs)
+  void free(Buffer& aArgs, Buffer& aResult)
   {
     mOps++;
     Buffer dummy = aArgs.SplitChar('#');
@@ -401,22 +406,24 @@ public:
     slot.mPtr = nullptr;
   }
 
-  void memalign(MemSlot& aSlot, Buffer& aArgs)
+  void memalign(Buffer& aArgs, Buffer& aResult)
   {
+    MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t alignment = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::memalign_impl(alignment, size);
   }
 
-  void valloc(MemSlot& aSlot, Buffer& aArgs)
+  void valloc(Buffer& aArgs, Buffer& aResult)
   {
+    MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::valloc_impl(size);
   }
 
-  void jemalloc_stats(Buffer& aArgs)
+  void jemalloc_stats(Buffer& aArgs, Buffer& aResult)
   {
     if (aArgs) {
       die("Malformed input");
@@ -434,6 +441,19 @@ public:
   }
 
 private:
+  MemSlot& SlotForResult(Buffer& aResult)
+  {
+    /* Parse result value and get the corresponding slot. */
+    Buffer dummy = aResult.SplitChar('=');
+    Buffer dummy2 = aResult.SplitChar('#');
+    if (dummy || dummy2) {
+      die("Malformed input");
+    }
+
+    size_t slot_id = parseNumber(aResult);
+    return mSlots[slot_id];
+  }
+
   intptr_t mStdErr;
   size_t mOps;
   MemSlotList mSlots;
@@ -484,40 +504,24 @@ main()
     Buffer func = line.SplitChar('(');
     Buffer args = line.SplitChar(')');
 
-    /* jemalloc_stats and free are functions with no result. */
     if (func == Buffer("jemalloc_stats")) {
-      replay.jemalloc_stats(args);
-      continue;
-    }
-    if (func == Buffer("free")) {
-      replay.free(args);
-      continue;
-    }
-
-    /* Parse result value and get the corresponding slot. */
-    Buffer dummy = line.SplitChar('=');
-    Buffer dummy2 = line.SplitChar('#');
-    if (dummy || dummy2) {
-      die("Malformed input");
-    }
-
-    size_t slot_id = parseNumber(line);
-    MemSlot& slot = replay[slot_id];
-
-    if (func == Buffer("malloc")) {
-      replay.malloc(slot, args);
+      replay.jemalloc_stats(args, line);
+    } else if (func == Buffer("free")) {
+      replay.free(args, line);
+    } else if (func == Buffer("malloc")) {
+      replay.malloc(args, line);
     } else if (func == Buffer("posix_memalign")) {
-      replay.posix_memalign(slot, args);
+      replay.posix_memalign(args, line);
     } else if (func == Buffer("aligned_alloc")) {
-      replay.aligned_alloc(slot, args);
+      replay.aligned_alloc(args, line);
     } else if (func == Buffer("calloc")) {
-      replay.calloc(slot, args);
+      replay.calloc(args, line);
     } else if (func == Buffer("realloc")) {
-      replay.realloc(slot, args);
+      replay.realloc(args, line);
     } else if (func == Buffer("memalign")) {
-      replay.memalign(slot, args);
+      replay.memalign(args, line);
     } else if (func == Buffer("valloc")) {
-      replay.valloc(slot, args);
+      replay.valloc(args, line);
     } else {
       die("Malformed input");
     }
