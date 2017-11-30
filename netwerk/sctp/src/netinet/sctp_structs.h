@@ -1,6 +1,4 @@
 /*-
- * SPDX-License-Identifier: BSD-3-Clause
- *
  * Copyright (c) 2001-2008, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -34,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 325370 2017-11-03 20:46:12Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 279859 2015-03-10 19:49:25Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_STRUCTS_H_
@@ -82,7 +80,6 @@ TAILQ_HEAD(sctpnetlisthead, sctp_nets);
 
 struct sctp_stream_reset_list {
 	TAILQ_ENTRY(sctp_stream_reset_list) next_resp;
-	uint32_t seq;
 	uint32_t tsn;
 	uint32_t number_entries;
 	uint16_t list_of_streams[];
@@ -230,23 +227,12 @@ struct iterator_control {
 struct sctp_net_route {
 	sctp_rtentry_t *ro_rt;
 #if defined(__FreeBSD__)
-#if __FreeBSD_version < 1100093
 #if __FreeBSD_version >= 800000
 	void *ro_lle;
 #endif
 #if __FreeBSD_version >= 900000
 	void *ro_ia;
 	int ro_flags;
-#endif
-#else
-#if __FreeBSD_version >= 1100116
-	struct llentry *ro_lle;
-#endif
-	char		*ro_prepend;
-	uint16_t	ro_plen;
-	uint16_t	ro_flags;
-	uint16_t	ro_mtu;
-	uint16_t	spare;
 #endif
 #endif
 #if defined(__APPLE__)
@@ -448,10 +434,10 @@ struct sctp_nets {
 
 
 struct sctp_data_chunkrec {
-	uint32_t tsn;		/* the TSN of this transmit */
-	uint32_t mid;		/* the message identifier of this transmit */
-	uint16_t sid;		/* the stream number of this guy */
-	uint32_t ppid;
+	uint32_t TSN_seq;	/* the TSN of this transmit */
+	uint16_t stream_seq;	/* the stream sequence number of this transmit */
+	uint16_t stream_number;	/* the stream number of this guy */
+	uint32_t payloadtype;
 	uint32_t context;	/* from send */
 	uint32_t cwnd_at_send;
 	/*
@@ -460,7 +446,6 @@ struct sctp_data_chunkrec {
 	 */
 	uint32_t fast_retran_tsn;	/* sending_seq at the time of FR */
 	struct timeval timetodrop;	/* time we drop it from queue */
-	uint32_t fsn;			/* Fragment Sequence Number */
 	uint8_t doing_fast_retransmit;
 	uint8_t rcv_flags;	/* flags pulled from data chunk on inbound for
 				 * outbound holds sending flags for PR-SCTP.
@@ -513,8 +498,14 @@ struct sctp_tmit_chunk {
 	uint8_t window_probe;
 };
 
+/*
+ * The first part of this structure MUST be the entire sinfo structure. Maybe
+ * I should have made it a sub structure... we can circle back later and do
+ * that if we want.
+ */
 struct sctp_queued_to_read {	/* sinfo structure Pluse more */
 	uint16_t sinfo_stream;	/* off the wire */
+	uint16_t sinfo_ssn;	/* off the wire */
 	uint16_t sinfo_flags;	/* SCTP_UNORDERED from wire use SCTP_EOF for
 				 * EOR */
 	uint32_t sinfo_ppid;	/* off the wire */
@@ -524,11 +515,8 @@ struct sctp_queued_to_read {	/* sinfo structure Pluse more */
 	uint32_t sinfo_cumtsn;	/* Use this in reassembly as last TSN */
 	sctp_assoc_t sinfo_assoc_id;	/* our assoc id */
 	/* Non sinfo stuff */
-	uint32_t mid;		/* Fragment Index */
 	uint32_t length;	/* length of data */
 	uint32_t held_length;	/* length held in sb */
-	uint32_t top_fsn;	/* Highest FSN in queue */
-	uint32_t fsn_included;  /* Highest FSN in *data portion */
 	struct sctp_nets *whoFrom;	/* where it came from */
 	struct mbuf *data;	/* front of the mbuf chain of data with
 				 * PKT_HDR */
@@ -536,23 +524,13 @@ struct sctp_queued_to_read {	/* sinfo structure Pluse more */
 	struct mbuf *aux_data;  /* used to hold/cache  control if o/s does not take it from us */
 	struct sctp_tcb *stcb;	/* assoc, used for window update */
 	TAILQ_ENTRY(sctp_queued_to_read) next;
-	TAILQ_ENTRY(sctp_queued_to_read) next_instrm;
-	struct sctpchunk_listhead reasm;
 	uint16_t port_from;
 	uint16_t spec_flags;	/* Flags to hold the notification field */
 	uint8_t  do_not_ref_stcb;
 	uint8_t  end_added;
 	uint8_t  pdapi_aborted;
-	uint8_t  pdapi_started;
 	uint8_t  some_taken;
-	uint8_t  last_frag_seen;
-	uint8_t  first_frag_seen;
-	uint8_t  on_read_q;
-	uint8_t  on_strm_q;
 };
-
-#define SCTP_ON_ORDERED 1
-#define SCTP_ON_UNORDERED 2
 
 /* This data structure will be on the outbound
  * stream queues. Data will be pulled off from
@@ -579,13 +557,12 @@ struct sctp_stream_queue_pending {
 	struct sctp_nets *net;
 	TAILQ_ENTRY (sctp_stream_queue_pending) next;
 	TAILQ_ENTRY (sctp_stream_queue_pending) ss_next;
-	uint32_t fsn;
 	uint32_t length;
 	uint32_t timetolive;
 	uint32_t ppid;
 	uint32_t context;
 	uint16_t sinfo_flags;
-	uint16_t sid;
+	uint16_t stream;
 	uint16_t act_flags;
 	uint16_t auth_keyid;
 	uint8_t  holds_key_ref;
@@ -603,16 +580,13 @@ struct sctp_stream_queue_pending {
 TAILQ_HEAD(sctpwheelunrel_listhead, sctp_stream_in);
 struct sctp_stream_in {
 	struct sctp_readhead inqueue;
-	struct sctp_readhead uno_inqueue;
-	uint32_t last_mid_delivered;	/* used for re-order */
-	uint16_t sid;
+	uint16_t stream_no;
+	uint16_t last_sequence_delivered;	/* used for re-order */
 	uint8_t  delivery_started;
-	uint8_t  pd_api_started;
 };
 
 TAILQ_HEAD(sctpwheel_listhead, sctp_stream_out);
 TAILQ_HEAD(sctplist_listhead, sctp_stream_queue_pending);
-
 
 /* Round-robin schedulers */
 struct ss_rr {
@@ -640,14 +614,9 @@ struct ss_fb {
  * This union holds all data necessary for
  * different stream schedulers.
  */
-struct scheduling_data {
-	struct sctp_stream_out *locked_on_sending;
-	/* circular looking for output selection */
-	struct sctp_stream_out *last_out_stream;
-	union {
-		struct sctpwheel_listhead wheel;
-		struct sctplist_listhead list;
-	} out;
+union scheduling_data {
+	struct sctpwheel_listhead out_wheel;
+	struct sctplist_listhead out_list;
 };
 
 /*
@@ -660,20 +629,11 @@ union scheduling_parameters {
 	struct ss_fb fb;
 };
 
-/* States for outgoing streams */
-#define SCTP_STREAM_CLOSED           0x00
-#define SCTP_STREAM_OPENING          0x01
-#define SCTP_STREAM_OPEN             0x02
-#define SCTP_STREAM_RESET_PENDING    0x03
-#define SCTP_STREAM_RESET_IN_FLIGHT  0x04
-
-#define SCTP_MAX_STREAMS_AT_ONCE_RESET 200
-
 /* This struct is used to track the traffic on outbound streams */
 struct sctp_stream_out {
 	struct sctp_streamhead outqueue;
 	union scheduling_parameters ss_params;
-	uint32_t chunks_on_queues;      /* send queue and sent queue */
+	uint32_t chunks_on_queues;
 #if defined(SCTP_DETAILED_STR_STATS)
 	uint32_t abandoned_unsent[SCTP_PR_SCTP_MAX + 1];
 	uint32_t abandoned_sent[SCTP_PR_SCTP_MAX + 1];
@@ -682,14 +642,9 @@ struct sctp_stream_out {
 	uint32_t abandoned_unsent[1];
 	uint32_t abandoned_sent[1];
 #endif
-	/* For associations using DATA chunks, the lower 16-bit of
-	 * next_mid_ordered are used as the next SSN.
-	 */
-	uint32_t next_mid_ordered;
-	uint32_t next_mid_unordered;
-	uint16_t sid;
+	uint16_t stream_no;
+	uint16_t next_sequence_send;	/* next one I expect to send out */
 	uint8_t last_msg_incomplete;
-	uint8_t state;
 };
 
 /* used to keep track of the addresses yet to try to add/delete */
@@ -719,13 +674,12 @@ struct sctp_scoping {
 struct sctp_tsn_log {
 	void     *stcb;
 	uint32_t tsn;
-	uint32_t seq;
 	uint16_t strm;
+	uint16_t seq;
 	uint16_t sz;
 	uint16_t flgs;
 	uint16_t in_pos;
 	uint16_t in_out;
-	uint16_t resv;
 };
 
 #define SCTP_FS_SPEC_LOG_SIZE 200
@@ -801,7 +755,7 @@ struct sctp_ss_functions {
 		int holds_lock);
 	void (*sctp_ss_clear)(struct sctp_tcb *stcb, struct sctp_association *asoc,
 		int clear_values, int holds_lock);
-	void (*sctp_ss_init_stream)(struct sctp_tcb *stcb, struct sctp_stream_out *strq, struct sctp_stream_out *with_strq);
+	void (*sctp_ss_init_stream)(struct sctp_stream_out *strq, struct sctp_stream_out *with_strq);
 	void (*sctp_ss_add_to_stream)(struct sctp_tcb *stcb, struct sctp_association *asoc,
 		struct sctp_stream_out *strq, struct sctp_stream_queue_pending *sp, int holds_lock);
 	int (*sctp_ss_is_empty)(struct sctp_tcb *stcb, struct sctp_association *asoc);
@@ -817,7 +771,6 @@ struct sctp_ss_functions {
 		struct sctp_stream_out *strq, uint16_t *value);
 	int (*sctp_ss_set_value)(struct sctp_tcb *stcb, struct sctp_association *asoc,
 		struct sctp_stream_out *strq, uint16_t value);
-	int (*sctp_ss_is_user_msgs_incomplete)(struct sctp_tcb *stcb, struct sctp_association *asoc);
 };
 
 /* used to save ASCONF chunks for retransmission */
@@ -897,8 +850,20 @@ struct sctp_association {
 	struct sctpchunk_listhead sent_queue;
 	struct sctpchunk_listhead send_queue;
 
+	/* re-assembly queue for fragmented chunks on the inbound path */
+	struct sctpchunk_listhead reasmqueue;
+
 	/* Scheduling queues */
-	struct scheduling_data ss_data;
+	union scheduling_data ss_data;
+
+	/* This pointer will be set to NULL
+	 * most of the time. But when we have
+	 * a fragmented message, where we could
+	 * not get out all of the message at
+	 * the last send then this will point
+	 * to the stream to go get data from.
+	 */
+	struct sctp_stream_out *locked_on_sending;
 
 	/* If an iterator is looking at me, this is it */
 	struct sctp_iterator *stcb_starting_point_for_iterator;
@@ -931,6 +896,8 @@ struct sctp_association {
 	/* last place I got a control from */
 	struct sctp_nets *last_control_chunk_from;
 
+	/* circular looking for output selection */
+	struct sctp_stream_out *last_out_stream;
 
 	/*
 	 * wait to the point the cum-ack passes req->send_reset_at_tsn for
@@ -951,6 +918,7 @@ struct sctp_association {
 	uint32_t stream_scheduling_module;
 
 	uint32_t vrf_id;
+
 	uint32_t cookie_preserve_req;
 	/* ASCONF next seq I am sending out, inits at init-tsn */
 	uint32_t asconf_seq_out;
@@ -1024,7 +992,7 @@ struct sctp_association {
 	uint32_t sat_t3_recovery_tsn;
 	uint32_t tsn_last_delivered;
 	/*
-	 * For the pd-api we should re-write this a bit more efficient. We
+	 * For the pd-api we should re-write this a bit more efficent. We
 	 * could have multiple sctp_queued_to_read's that we are building at
 	 * once. Now we only do this when we get ready to deliver to the
 	 * socket buffer. Note that we depend on the fact that the struct is
@@ -1157,7 +1125,6 @@ struct sctp_association {
 	uint32_t chunks_on_out_queue;	/* total chunks floating around,
 					 * locked by send socket buffer */
 	uint32_t peers_adaptation;
-	uint32_t default_mtu;
 	uint16_t peer_hmac_id;	/* peer HMAC id to send */
 
 	/*
@@ -1231,7 +1198,7 @@ struct sctp_association {
 	uint8_t hb_random_idx;
 	uint8_t default_dscp;
 	uint8_t asconf_del_pending;	/* asconf delete last addr pending */
-	uint8_t trigger_reset;
+
 	/*
 	 * This value, plus all other ack'd but above cum-ack is added
 	 * together to cross check against the bit that we have yet to
@@ -1247,16 +1214,17 @@ struct sctp_association {
 	uint8_t reconfig_supported;
 	uint8_t nrsack_supported;
 	uint8_t pktdrop_supported;
-	uint8_t idata_supported;
 
 	/* Did the peer make the stream config (add out) request */
 	uint8_t peer_req_out;
 
 	uint8_t local_strreset_support;
+
 	uint8_t peer_supports_nat;
 
 	struct sctp_scoping scope;
 	/* flags to handle send alternate net tracking */
+	uint8_t used_alt_onsack;
 	uint8_t used_alt_asconfack;
 	uint8_t fast_retran_loss_recovery;
 	uint8_t sat_t3_loss_recovery;
