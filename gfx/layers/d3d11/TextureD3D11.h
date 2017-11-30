@@ -445,6 +445,7 @@ protected:
   RefPtr<DataTextureSourceD3D11> mTextureSources[3];
 
   gfx::IntSize mSize;
+  gfx::IntSize mSizeCbCr;
   WindowsHandle mHandles[3];
   bool mIsLocked;
   YUVColorSpace mYUVColorSpace;
