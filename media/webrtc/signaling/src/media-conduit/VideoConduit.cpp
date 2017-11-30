@@ -1398,6 +1398,11 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       mRecvStreamConfig.rtp.ulpfec.ulpfec_payload_type = ulpfec_payload_type;
       mRecvStreamConfig.rtp.ulpfec.red_payload_type = red_payload_type;
       mRecvStreamConfig.rtp.ulpfec.red_rtx_payload_type = -1;
+    } else {
+      // Reset to defaults
+      mRecvStreamConfig.rtp.ulpfec.ulpfec_payload_type = -1;
+      mRecvStreamConfig.rtp.ulpfec.red_payload_type = -1;
+      mRecvStreamConfig.rtp.ulpfec.red_rtx_payload_type = -1;
     }
 
     // SetRemoteSSRC should have populated this already
