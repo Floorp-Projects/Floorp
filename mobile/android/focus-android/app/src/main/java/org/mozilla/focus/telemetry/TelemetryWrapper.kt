@@ -95,6 +95,7 @@ object TelemetryWrapper {
         val RECENT_APPS = "recent_apps"
         val APP_ICON = "app_icon"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
+        val AUTOFILL = "autofill"
     }
 
     private object Value {
@@ -591,5 +592,14 @@ object TelemetryWrapper {
                 .extra(Extra.FROM, from.toString())
                 .extra(Extra.TO, to.toString())
                 .queue()
+    }
+
+    fun autofillShownEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.AUTOFILL).queue()
+    }
+
+    @JvmStatic
+    fun autofillPerformedEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.AUTOFILL).queue()
     }
 }

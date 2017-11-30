@@ -8,6 +8,7 @@ package org.mozilla.focus.webview;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -15,7 +16,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
+import android.view.autofill.AutofillValue;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.webkit.CookieManager;
@@ -28,6 +31,7 @@ import android.webkit.WebViewDatabase;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.session.Session;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.FileUtils;
 import org.mozilla.focus.utils.ThreadUtils;
@@ -76,6 +80,10 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
         super.onAttachedToWindow();
 
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            TelemetryAutofillCallback.INSTANCE.register(getContext());
+        }
     }
 
     @Override
@@ -83,6 +91,10 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
         super.onDetachedFromWindow();
 
         PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            TelemetryAutofillCallback.INSTANCE.unregister(getContext());
+        }
     }
 
     @Override
@@ -200,6 +212,13 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
         webViewDatabase.clearHttpAuthUsernamePassword();
 
         deleteContentFromKnownLocations(getContext());
+    }
+
+    @Override
+    public void autofill(SparseArray<AutofillValue> values) {
+        super.autofill(values);
+
+        TelemetryWrapper.autofillPerformedEvent();
     }
 
     public static void deleteContentFromKnownLocations(final Context context) {
