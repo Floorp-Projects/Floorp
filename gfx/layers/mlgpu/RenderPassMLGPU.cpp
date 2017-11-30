@@ -457,7 +457,7 @@ TexturedRenderPass::TexturedRenderPass(FrameBuilder* aBuilder, const ItemInfo& a
 TexturedRenderPass::Info::Info(const ItemInfo& aItem, PaintedLayerMLGPU* aLayer)
  : item(aItem),
    textureSize(aLayer->GetTexture()->GetSize()),
-   destOrigin(aLayer->GetContentHost()->GetOriginOffset()),
+   destOrigin(aLayer->GetDestOrigin()),
    decomposeIntoNoRepeatRects(aLayer->MayResample())
 {
 }
