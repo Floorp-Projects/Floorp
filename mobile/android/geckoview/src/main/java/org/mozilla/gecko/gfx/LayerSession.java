@@ -304,9 +304,9 @@ public class LayerSession {
 
     /**
      * Get the bounds of the client area in client coordinates. The returned top-left
-     * coordinates are always (0, 0). Use the matrix from
-     * #getClientToSurfaceMatrix(Matrix) or #getClientToScreenMatrix(Matrix) to map
-     * these bounds to surface or screen coordinates, respectively.
+     * coordinates are always (0, 0). Use the matrix from {@link
+     * #getClientToSurfaceMatrix(Matrix)} or {@link #getClientToScreenMatrix(Matrix)} to
+     * map these bounds to surface or screen coordinates, respectively.
      *
      * @param rect RectF to be replaced by the client bounds in client coordinates.
      * @see getSurfaceBounds(Rect)
