@@ -126,6 +126,7 @@
 #include "nsString.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/Telemetry.h"
+#include "nsIDocShellLoadInfo.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetChild.h"
@@ -1024,7 +1025,8 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                         bool aPositionSpecified, bool aSizeSpecified,
                         nsIURI* aURI, const nsAString& aName,
                         const nsACString& aFeatures, bool aForceNoOpener,
-                        bool* aWindowIsNew, mozIDOMWindowProxy** aReturn)
+                        nsIDocShellLoadInfo* aLoadInfo, bool* aWindowIsNew,
+                        mozIDOMWindowProxy** aReturn)
 {
     *aReturn = nullptr;
 
@@ -1067,6 +1069,7 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                                    aName,
                                    aFeatures,
                                    aForceNoOpener,
+                                   aLoadInfo,
                                    aWindowIsNew,
                                    aReturn);
 }
