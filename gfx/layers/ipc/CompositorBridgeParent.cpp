@@ -904,7 +904,11 @@ CompositorBridgeParent::ScheduleComposition()
     return;
   }
 
-  mCompositorScheduler->ScheduleComposition();
+  if (mWrBridge) {
+    mWrBridge->ScheduleGenerateFrame();
+  } else {
+    mCompositorScheduler->ScheduleComposition();
+  }
 }
 
 // Go down the composite layer tree, setting properties to match their
