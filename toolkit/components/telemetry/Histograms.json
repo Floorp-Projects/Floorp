@@ -11149,14 +11149,6 @@
     "n_values": 20,
     "description": "Methods invoked under window.crypto.subtle (0=encrypt, 1=decrypt, 2=sign, 3=verify, 4=digest, 5=generateKey, 6=deriveKey, 7=deriveBits, 8=importKey, 9=exportKey, 10=wrapKey, 11=unwrapKey)"
   },
-  "WEBCRYPTO_METHOD_SECURE": {
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "60",
-    "kind": "boolean",
-    "bug_numbers": [1333140],
-    "description": "Whether a method invoked under window.crypto.subtle is in a secure context"
-  },
   "WEBCRYPTO_ALG": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
