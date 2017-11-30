@@ -5102,6 +5102,10 @@ nsHttpChannel::CloseCacheEntry(bool doomOnFailure)
     mCachedResponseHead = nullptr;
 
     mCachePump = nullptr;
+    // This releases the entry for other consumers to use.
+    // We call Dismiss() in case someone still keeps a reference
+    // to this entry handle.
+    mCacheEntry->Dismiss();
     mCacheEntry = nullptr;
     mCacheEntryIsWriteOnly = false;
     mInitedCacheEntry = false;
