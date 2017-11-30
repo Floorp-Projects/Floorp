@@ -295,7 +295,9 @@ function assertDebugLine(dbg, line) {
     const url = source.get("url");
     ok(
       false,
-      `Looks like the source ${url} is still loading. Try adding waitForLoadedSource in the test.`
+      `Looks like the source ${
+        url
+      } is still loading. Try adding waitForLoadedSource in the test.`
     );
     return;
   }
@@ -305,8 +307,9 @@ function assertDebugLine(dbg, line) {
     "Line is highlighted as paused"
   );
 
-  const debugLine = findElementWithSelector(dbg, ".new-debug-line")
-                    || findElementWithSelector(dbg, ".new-debug-line-error");
+  const debugLine =
+    findElementWithSelector(dbg, ".new-debug-line") ||
+    findElementWithSelector(dbg, ".new-debug-line-error");
 
   ok(isVisibleInEditor(dbg, debugLine), "debug line is visible");
 
@@ -553,8 +556,11 @@ function waitForLoadedSources(dbg) {
   return waitForState(
     dbg,
     state => {
-      const sources = dbg.selectors.getSources(state).valueSeq().toJS()
-      return !sources.some(source => source.loadedState == "loading")
+      const sources = dbg.selectors
+        .getSources(state)
+        .valueSeq()
+        .toJS();
+      return !sources.some(source => source.loadedState == "loading");
     },
     "loaded source"
   );
@@ -835,7 +841,6 @@ function type(dbg, string) {
   string.split("").forEach(char => EventUtils.synthesizeKey(char, {}, dbg.win));
 }
 
-
 /*
  * Checks to see if the inner element is visible inside the editor.
  *
@@ -874,12 +879,14 @@ function isVisible(outerEl, innerEl) {
   const outerRect = outerEl.getBoundingClientRect();
 
   const verticallyVisible =
-    (innerRect.top >= outerRect.top || innerRect.bottom <= outerRect.bottom)
-    || (innerRect.top < outerRect.top && innerRect.bottom > outerRect.bottom);
+    innerRect.top >= outerRect.top ||
+    innerRect.bottom <= outerRect.bottom ||
+    (innerRect.top < outerRect.top && innerRect.bottom > outerRect.bottom);
 
   const horizontallyVisible =
-    (innerRect.left >= outerRect.left || innerRect.right <= outerRect.right)
-    || (innerRect.left < outerRect.left && innerRect.right > outerRect.right);
+    innerRect.left >= outerRect.left ||
+    innerRect.right <= outerRect.right ||
+    (innerRect.left < outerRect.left && innerRect.right > outerRect.right);
 
   const visible = verticallyVisible && horizontallyVisible;
   return visible;
@@ -891,7 +898,9 @@ const selectors = {
   expressionNode: i =>
     `.expressions-list .expression-container:nth-child(${i}) .object-label`,
   expressionValue: i =>
-    `.expressions-list .expression-container:nth-child(${i}) .object-delimiter + *`,
+    `.expressions-list .expression-container:nth-child(${
+      i
+    }) .object-delimiter + *`,
   expressionClose: i =>
     `.expressions-list .expression-container:nth-child(${i}) .close`,
   expressionNodes: ".expressions-list .tree-node",
@@ -914,7 +923,8 @@ const selectors = {
   stepOut: ".stepOut.active",
   stepIn: ".stepIn.active",
   toggleBreakpoints: ".breakpoints-toggle",
-  prettyPrintButton: ".prettyPrint",
+  prettyPrintButton: ".source-footer .prettyPrint",
+  sourceMapLink: ".source-footer .mapped-source",
   sourcesFooter: ".sources-panel .source-footer",
   editorFooter: ".editor-pane .source-footer",
   sourceNode: i => `.sources-list .tree-node:nth-child(${i})`,

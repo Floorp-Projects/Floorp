@@ -27467,66 +27467,8 @@ module.exports = function(module) {
 
 /***/ }),
 /* 794 */,
-/* 795 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var createToPairs = __webpack_require__(812),
-    keys = __webpack_require__(205);
-
-/**
- * Creates an array of own enumerable string keyed-value pairs for `object`
- * which can be consumed by `_.fromPairs`. If `object` is a map or set, its
- * entries are returned.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @alias entries
- * @category Object
- * @param {Object} object The object to query.
- * @returns {Array} Returns the key-value pairs.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- *   this.b = 2;
- * }
- *
- * Foo.prototype.c = 3;
- *
- * _.toPairs(new Foo);
- * // => [['a', 1], ['b', 2]] (iteration order is not guaranteed)
- */
-var toPairs = createToPairs(keys);
-
-module.exports = toPairs;
-
-
-/***/ }),
-/* 796 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var arrayMap = __webpack_require__(110);
-
-/**
- * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
- * of key-value pairs for `object` corresponding to the property names of `props`.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {Array} props The property names to get values for.
- * @returns {Object} Returns the key-value pairs.
- */
-function baseToPairs(object, props) {
-  return arrayMap(props, function(key) {
-    return [key, object[key]];
-  });
-}
-
-module.exports = baseToPairs;
-
-
-/***/ }),
+/* 795 */,
+/* 796 */,
 /* 797 */,
 /* 798 */,
 /* 799 */
@@ -27711,7 +27653,7 @@ module.exports = matchesStrictComparable;
 /* 812 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseToPairs = __webpack_require__(796),
+var baseToPairs = __webpack_require__(1757),
     getTag = __webpack_require__(198),
     mapToArray = __webpack_require__(203),
     setToPairs = __webpack_require__(813);
@@ -36616,7 +36558,7 @@ exports.getVariablesInLocalScope = getVariablesInLocalScope;
 exports.getVariablesInScope = getVariablesInScope;
 exports.isExpressionInScope = isExpressionInScope;
 
-var _toPairs = __webpack_require__(795);
+var _toPairs = __webpack_require__(1756);
 
 var _toPairs2 = _interopRequireDefault(_toPairs);
 
@@ -41821,6 +41763,118 @@ function extendsComponent(classes) {
 
   return result;
 }
+
+/***/ }),
+/* 1704 */,
+/* 1705 */,
+/* 1706 */,
+/* 1707 */,
+/* 1708 */,
+/* 1709 */,
+/* 1710 */,
+/* 1711 */,
+/* 1712 */,
+/* 1713 */,
+/* 1714 */,
+/* 1715 */,
+/* 1716 */,
+/* 1717 */,
+/* 1718 */,
+/* 1719 */,
+/* 1720 */,
+/* 1721 */,
+/* 1722 */,
+/* 1723 */,
+/* 1724 */,
+/* 1725 */,
+/* 1726 */,
+/* 1727 */,
+/* 1728 */,
+/* 1729 */,
+/* 1730 */,
+/* 1731 */,
+/* 1732 */,
+/* 1733 */,
+/* 1734 */,
+/* 1735 */,
+/* 1736 */,
+/* 1737 */,
+/* 1738 */,
+/* 1739 */,
+/* 1740 */,
+/* 1741 */,
+/* 1742 */,
+/* 1743 */,
+/* 1744 */,
+/* 1745 */,
+/* 1746 */,
+/* 1747 */,
+/* 1748 */,
+/* 1749 */,
+/* 1750 */,
+/* 1751 */,
+/* 1752 */,
+/* 1753 */,
+/* 1754 */,
+/* 1755 */,
+/* 1756 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var createToPairs = __webpack_require__(812),
+    keys = __webpack_require__(205);
+
+/**
+ * Creates an array of own enumerable string keyed-value pairs for `object`
+ * which can be consumed by `_.fromPairs`. If `object` is a map or set, its
+ * entries are returned.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @alias entries
+ * @category Object
+ * @param {Object} object The object to query.
+ * @returns {Array} Returns the key-value pairs.
+ * @example
+ *
+ * function Foo() {
+ *   this.a = 1;
+ *   this.b = 2;
+ * }
+ *
+ * Foo.prototype.c = 3;
+ *
+ * _.toPairs(new Foo);
+ * // => [['a', 1], ['b', 2]] (iteration order is not guaranteed)
+ */
+var toPairs = createToPairs(keys);
+
+module.exports = toPairs;
+
+
+/***/ }),
+/* 1757 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var arrayMap = __webpack_require__(110);
+
+/**
+ * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
+ * of key-value pairs for `object` corresponding to the property names of `props`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array} props The property names to get values for.
+ * @returns {Object} Returns the key-value pairs.
+ */
+function baseToPairs(object, props) {
+  return arrayMap(props, function(key) {
+    return [key, object[key]];
+  });
+}
+
+module.exports = baseToPairs;
+
 
 /***/ })
 /******/ ]);
