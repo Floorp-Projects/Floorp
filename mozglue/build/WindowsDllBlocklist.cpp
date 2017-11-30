@@ -260,6 +260,9 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // Avecto Privilege Guard causes crashes, bug 1385542
   { "pghook.dll", ALL_VERSIONS },
 
+  // Old versions of G DATA BankGuard, bug 1421991
+  { "banksafe64.dll", MAKE_VERSION(1, 2, 15299, 65535) },
+
   { nullptr, 0 }
 };
 
