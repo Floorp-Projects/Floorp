@@ -158,6 +158,11 @@ public:
     bool rtl = false;
   };
 
+  struct UnifiedToolbarParams {
+    float unifiedHeight = 0.0f;
+    bool isMain = false;
+  };
+
   struct TreeHeaderCellParams {
     ControlParams controlParams;
     TreeSortDirection sortDirection = eTreeSortDirection_Natural;
@@ -298,7 +303,7 @@ protected:
                       const HIRect& inBoxRect, SpinButton aDrawnButton,
                       const SpinButtonParams& aParams);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
-                          NSWindow* aWindow);
+                          const UnifiedToolbarParams& aParams);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
                      nsIFrame *aFrame);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, nsIFrame *aFrame);
