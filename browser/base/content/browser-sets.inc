@@ -166,6 +166,7 @@
     <!-- broadcasters of the "hidden" attribute to reflect setup state for
          menus -->
     <broadcaster id="sync-setup-state"/>
+    <broadcaster id="sync-unverified-state" hidden="true"/>
     <broadcaster id="sync-syncnow-state" hidden="true"/>
     <broadcaster id="sync-reauth-state" hidden="true"/>
     <broadcaster id="viewTabsSidebar" autoCheck="false" sidebartitle="&syncedTabs.sidebar.label;"

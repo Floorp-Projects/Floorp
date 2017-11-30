@@ -36,6 +36,7 @@ function mockSyncedTabs() {
   // configure our broadcasters so we are in the right state.
   document.getElementById("sync-reauth-state").hidden = true;
   document.getElementById("sync-setup-state").hidden = true;
+  document.getElementById("sync-unverified-state").hidden = true;
   document.getElementById("sync-syncnow-state").hidden = false;
 
   registerCleanupFunction(() => {
@@ -43,6 +44,7 @@ function mockSyncedTabs() {
 
     document.getElementById("sync-reauth-state").hidden = true;
     document.getElementById("sync-setup-state").hidden = false;
+    document.getElementById("sync-unverified-state").hidden = true;
     document.getElementById("sync-syncnow-state").hidden = true;
   });
 }
