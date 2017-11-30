@@ -10,9 +10,41 @@
 namespace mozilla {
 namespace dom {
 
+
+/* DOMPreferences provides consolidated, consistent access to preferences for
+ * DOM APIs that may be invoked on Worker threads as well as the main thread.
+ * Previously this was handled through a combination of per-API boilerplate
+ * helper functions that would determine what thread they were on and defer to
+ * the WorkerPrefs mechanism if they weren't the main thread.
+ *
+ * These methods can safely be invoked on any thread.
+ *
+ * Add preferences to this file when they need to be checked from both the main
+ * thread and worker threads or when adding a new DOM API that is preference
+ * controlled.
+ *
+ * ## How to add a new preference
+ *
+ * For preferences to be checked from code:
+ * - Add a `FooEnabled();` prototype to DOMPreferences.h preceded by a comment.
+ *   The prototypes could be implemented as macro-expansions automatically, but
+ *   the macros can confuse code analysis tools (that are less clever than
+ *   searchfox).
+ * - Add a `DOM_PREF(FooEnabled, "the.pref.name")` line to
+ *   DOMPreferencesInternal.h.
+ *
+ * For preferences to also be checked from WebIDL "Func" decorator checks:
+ * - Add a `FooEnabled(JSContext* aCx, JSObject* aObj);` prototype to
+ *   DOMPreferences.h.
+ * - Add a `DOM_PREF_WEBIDL(FooEnabled)` line to DOMPreferences.cpp.
+ */
 class DOMPreferences final
 {
 public:
+  // This must be called on the main-thread in order to initialize the caching
+  // of pref values on the correct thread. You should not use this method.
+  static void Initialize();
+
   // Returns true if the browser.dom.window.dump.enabled pref is set.
   static bool DumpEnabled();
 
