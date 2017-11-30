@@ -45,6 +45,7 @@ PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
 PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
 PREF(ServiceWorkersTestingEnabled, "dom.serviceWorkers.testing.enabled")
 PREF(OpenWindowEnabled, "dom.serviceWorkers.openWindow.enabled")
+PREF(StorageManagerEnabled, "dom.storageManager.enabled")
 
 #undef PREF
 
@@ -61,6 +62,7 @@ PREF_WEBIDL(NotificationEnabledInServiceWorkers)
 PREF_WEBIDL(NotificationRIEnabled)
 PREF_WEBIDL(ServiceWorkersEnabled)
 PREF_WEBIDL(OpenWindowEnabled)
+PREF_WEBIDL(StorageManagerEnabled)
 
 #undef PREF_WEBIDL
 
