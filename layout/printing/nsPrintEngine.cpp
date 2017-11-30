@@ -2869,6 +2869,17 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
   return donePrinting;
 }
 
+void
+nsPrintEngine::PageDone(nsresult aResult)
+{
+  MOZ_ASSERT(mIsDoingPrinting);
+
+  // mPagePrintTimer might be released during RemotePrintFinished, keep a
+  // reference here to make sure it lives long enough.
+  RefPtr<nsPagePrintTimer> timer = mPagePrintTimer;
+  timer->RemotePrintFinished();
+}
+
 //-----------------------------------------------------------------
 //-- Done: Printing Methods
 //-----------------------------------------------------------------
