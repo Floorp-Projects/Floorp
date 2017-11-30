@@ -38,6 +38,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/InternalHeaders.h"
@@ -740,7 +741,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
     outerWindow->GetServiceWorkersTestingEnabled();
 
   bool authenticatedOrigin;
-  if (Preferences::GetBool("dom.serviceWorkers.testing.enabled") ||
+  if (DOMPreferences::ServiceWorkersTestingEnabled() ||
       serviceWorkersTestingEnabled) {
     authenticatedOrigin = true;
   } else {
@@ -3214,7 +3215,7 @@ ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
     // Treat http windows with devtools opened as secure if the correct devtools
     // setting is enabled.
     if (!doc->GetWindow()->GetServiceWorkersTestingEnabled() &&
-        !Preferences::GetBool("dom.serviceWorkers.testing.enabled") &&
+        !DOMPreferences::ServiceWorkersTestingEnabled() &&
         !IsFromAuthenticatedOrigin(doc)) {
       continue;
     }
