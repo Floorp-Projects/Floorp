@@ -8,27 +8,31 @@ from compare_locales import parser
 
 
 class TestParserContext(unittest.TestCase):
-    def test_lines(self):
-        "Test that Parser.Context.lines returns 1-based tuples"
+    def test_linecol(self):
+        "Should return 1-based line and column numbers."
         ctx = parser.Parser.Context('''first line
 second line
 third line
 ''')
         self.assertEqual(
-            ctx.lines(0, 1),
-            [(1, 1), (1, 2)]
+            ctx.linecol(0),
+            (1, 1)
         )
         self.assertEqual(
-            ctx.lines(len('first line')),
-            [(1, len('first line') + 1)]
+            ctx.linecol(1),
+            (1, 2)
         )
         self.assertEqual(
-            ctx.lines(len('first line') + 1),
-            [(2, 1)]
+            ctx.linecol(len('first line')),
+            (1, len('first line') + 1)
         )
         self.assertEqual(
-            ctx.lines(len(ctx.contents)),
-            [(4, 1)]
+            ctx.linecol(len('first line') + 1),
+            (2, 1)
+        )
+        self.assertEqual(
+            ctx.linecol(len(ctx.contents)),
+            (4, 1)
         )
 
     def test_empty_parser(self):
