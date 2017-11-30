@@ -405,7 +405,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> main_thread,
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             RefPtr<AudioSessionConduit> conduit,
-                            SourceMediaStream* aStream);
+                            dom::MediaStreamTrack* aTrack);
 
   void DetachMedia() override;
 
@@ -432,7 +432,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> main_thread,
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             RefPtr<VideoSessionConduit> conduit,
-                            SourceMediaStream* aStream);
+                            dom::MediaStreamTrack* aTrack);
 
   // Called on the main thread.
   void DetachMedia() override;

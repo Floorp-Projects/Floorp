@@ -509,6 +509,14 @@ public:
 
   void SetMediaStreamSizeListener(DirectMediaStreamTrackListener* aListener);
 
+  // Returns the original DOMMediaStream's underlying input stream.
+  MediaStream* GetInputStream();
+
+  TrackID GetInputTrackId() const
+  {
+    return mInputTrackID;
+  }
+
 protected:
   virtual ~MediaStreamTrack();
 
@@ -518,9 +526,6 @@ protected:
   void SetMuted(bool aMuted) { mMuted = aMuted; }
 
   void Destroy();
-
-  // Returns the original DOMMediaStream's underlying input stream.
-  MediaStream* GetInputStream();
 
   // Returns the owning DOMMediaStream's underlying owned stream.
   ProcessedMediaStream* GetOwnedStream();

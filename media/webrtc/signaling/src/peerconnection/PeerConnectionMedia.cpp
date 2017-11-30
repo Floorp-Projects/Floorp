@@ -1131,7 +1131,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
 nsresult
 PeerConnectionMedia::AddTransceiver(
     JsepTransceiver* aJsepTransceiver,
-    DOMMediaStream& aReceiveStream,
+    dom::MediaStreamTrack& aReceiveTrack,
     dom::MediaStreamTrack* aSendTrack,
     RefPtr<TransceiverImpl>* aTransceiverImpl)
 {
@@ -1144,7 +1144,7 @@ PeerConnectionMedia::AddTransceiver(
       aJsepTransceiver,
       mMainThread.get(),
       mSTSThread.get(),
-      aReceiveStream,
+      &aReceiveTrack,
       aSendTrack,
       mCall.get());
 
