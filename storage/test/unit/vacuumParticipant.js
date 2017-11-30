@@ -25,8 +25,7 @@ function new_db_file(name) {
  * @param nsIFile interface to the database file.
  */
 function getDatabase(aFile) {
-  return Cc["@mozilla.org/storage/service;1"].getService(Ci.mozIStorageService)
-                                             .openDatabase(aFile);
+  return Services.storage.openDatabase(aFile);
 }
 
 function vacuumParticipant() {
@@ -92,9 +91,7 @@ vacuumParticipant.prototype =
       } catch (e) {
         // Do nothing.
       }
-      this._dbConn = Cc["@mozilla.org/storage/service;1"].
-                     getService(Ci.mozIStorageService).
-                     openSpecialDatabase("memory");
+      this._dbConn = Services.storage.openSpecialDatabase("memory");
     } else if (aData == "dispose") {
       Services.obs.removeObserver(this, "test-options");
       try {

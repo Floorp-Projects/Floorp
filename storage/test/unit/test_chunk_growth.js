@@ -7,7 +7,7 @@ function run_sql(d, sql) {
 }
 
 function new_file(name) {
-  var file = dirSvc.get("ProfD", Ci.nsIFile);
+  var file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(name);
   return file;
 }
@@ -49,4 +49,3 @@ function run_test() {
   run_sql(d, "VACUUM");
   do_check_true(get_size(filename) >= CHUNK_SIZE);
 }
-
