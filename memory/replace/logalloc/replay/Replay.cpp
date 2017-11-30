@@ -80,14 +80,13 @@ private:
 struct MemSlot
 {
   void* mPtr;
-  size_t mSize;
 };
 
 /* An almost infinite list of slots.
  * In essence, this is a linked list of arrays of groups of slots.
- * Each group is 1MB. On 64-bits, one group allows to store 64k allocations.
+ * Each group is 1MB. On 64-bits, one group allows to store 128k allocations.
  * Each MemSlotList instance can store 1023 such groups, which means more
- * than 65M allocations. In case more would be needed, we chain to another
+ * than 130M allocations. In case more would be needed, we chain to another
  * MemSlotList, and so on.
  * Using 1023 groups makes the MemSlotList itself page sized on 32-bits
  * and 2 pages-sized on 64-bits.
@@ -343,8 +342,6 @@ public:
     mOps++;
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::malloc_impl(size);
-    aSlot.mSize = size;
-    Commit(aSlot);
   }
 
   void posix_memalign(MemSlot& aSlot, Buffer& aArgs)
@@ -355,12 +352,9 @@ public:
     void* ptr;
     if (::posix_memalign_impl(&ptr, alignment, size) == 0) {
       aSlot.mPtr = ptr;
-      aSlot.mSize = size;
     } else {
       aSlot.mPtr = nullptr;
-      aSlot.mSize = 0;
     }
-    Commit(aSlot);
   }
 
   void aligned_alloc(MemSlot& aSlot, Buffer& aArgs)
@@ -369,8 +363,6 @@ public:
     size_t alignment = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::aligned_alloc_impl(alignment, size);
-    aSlot.mSize = size;
-    Commit(aSlot);
   }
 
   void calloc(MemSlot& aSlot, Buffer& aArgs)
@@ -379,8 +371,6 @@ public:
     size_t num = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::calloc_impl(num, size);
-    aSlot.mSize = size * num;
-    Commit(aSlot);
   }
 
   void realloc(MemSlot& aSlot, Buffer& aArgs)
@@ -395,10 +385,7 @@ public:
     MemSlot& old_slot = (*this)[slot_id];
     void* old_ptr = old_slot.mPtr;
     old_slot.mPtr = nullptr;
-    old_slot.mSize = 0;
     aSlot.mPtr = ::realloc_impl(old_ptr, size);
-    aSlot.mSize = size;
-    Commit(aSlot);
   }
 
   void free(Buffer& aArgs)
@@ -412,7 +399,6 @@ public:
     MemSlot& slot = (*this)[slot_id];
     ::free_impl(slot.mPtr);
     slot.mPtr = nullptr;
-    slot.mSize = 0;
   }
 
   void memalign(MemSlot& aSlot, Buffer& aArgs)
@@ -421,8 +407,6 @@ public:
     size_t alignment = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::memalign_impl(alignment, size);
-    aSlot.mSize = size;
-    Commit(aSlot);
   }
 
   void valloc(MemSlot& aSlot, Buffer& aArgs)
@@ -430,8 +414,6 @@ public:
     mOps++;
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::valloc_impl(size);
-    aSlot.mSize = size;
-    Commit(aSlot);
   }
 
   void jemalloc_stats(Buffer& aArgs)
@@ -451,11 +433,6 @@ public:
   }
 
 private:
-  void Commit(MemSlot& aSlot)
-  {
-    memset(aSlot.mPtr, 0x5a, aSlot.mSize);
-  }
-
   intptr_t mStdErr;
   size_t mOps;
   MemSlotList mSlots;
