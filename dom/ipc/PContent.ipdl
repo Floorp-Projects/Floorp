@@ -1015,7 +1015,8 @@ parent:
                        nsCString aFeatures,
                        nsCString aBaseURI,
                        float aFullZoom,
-                       Principal aTriggeringPrincipal)
+                       Principal aTriggeringPrincipal,
+                       uint32_t aReferrerPolicy)
         returns (CreatedWindowInfo window);
 
     async CreateWindowInDifferentProcess(
@@ -1029,7 +1030,8 @@ parent:
       nsCString aBaseURI,
       float aFullZoom,
       nsString aName,
-      Principal aTriggeringPrincipal);
+      Principal aTriggeringPrincipal,
+      uint32_t aReferrerPolicy);
 
     sync GetAndroidSystemInfo()
         returns (AndroidSystemInfo info);
