@@ -55,6 +55,10 @@ public:
   // Returns true if the dom.serviceWorkers.openWindow.enabled pref is set.
   static bool OpenWindowEnabled();
   static bool OpenWindowEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.storageManager.enabled pref is set.
+  static bool StorageManagerEnabled();
+  static bool StorageManagerEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
