@@ -1208,10 +1208,15 @@ function setupEventListeners() {
     });
     $("verify-place-integrity-button").addEventListener("click", function(event) {
       PlacesDBUtils.checkAndFixDatabase().then((tasksStatusMap) => {
-        let msg = PlacesDBUtils.getLegacyLog(tasksStatusMap).join("\n");
+        let logs = [];
+        for (let [key, value] of tasksStatusMap) {
+          logs.push(`> Task: ${key}`);
+          let prefix = value.succeeded ? "+ " : "- ";
+          logs = logs.concat(value.logs.map(m => `${prefix}${m}`));
+        }
         $("verify-place-result").style.display = "block";
         $("verify-place-result").classList.remove("no-copy");
-        $("verify-place-result").textContent = msg;
+        $("verify-place-result").textContent = logs.join("\n");
       });
     });
   }
