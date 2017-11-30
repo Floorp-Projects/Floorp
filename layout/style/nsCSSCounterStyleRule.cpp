@@ -140,7 +140,12 @@ nsCSSCounterStyleRule::SetName(const nsAString& aName)
     mName = name;
 
     if (StyleSheet* sheet = GetStyleSheet()) {
-      sheet->RuleChanged(this);
+      if (sheet->IsGecko()) {
+        sheet->AsGecko()->SetModifiedByChildRule();
+      }
+      if (doc) {
+        doc->StyleRuleChanged(sheet, this);
+      }
     }
   }
   return NS_OK;
@@ -182,7 +187,12 @@ nsCSSCounterStyleRule::SetDesc(nsCSSCounterDesc aDescID, const nsCSSValue& aValu
   mGeneration++;
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->RuleChanged(this);
+    if (sheet->IsGecko()) {
+      sheet->AsGecko()->SetModifiedByChildRule();
+    }
+    if (doc) {
+      doc->StyleRuleChanged(sheet, this);
+    }
   }
 }
 
