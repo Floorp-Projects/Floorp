@@ -1510,8 +1510,6 @@ this.FormHistory = {
       },
     });
   },
-
-  shutdown() { dbClose(true); },
 };
 
 // Prevent add-ons from redefining this API
