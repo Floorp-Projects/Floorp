@@ -30,5 +30,6 @@ private:
   mozilla::OriginAttributes mOpenerOriginAttributes;
   nsCOMPtr<nsIFrameLoaderOwner> mOpenerBrowser;
   nsString mReferrer;
+  uint32_t mReferrerPolicy;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 };

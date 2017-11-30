@@ -540,6 +540,7 @@ public:
                    const nsCString& aBaseURI,
                    const float& aFullZoom,
                    const IPC::Principal& aTriggeringPrincipal,
+                   const uint32_t& aReferrerPolicy,
                    CreateWindowResolver&& aResolve) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
@@ -553,7 +554,8 @@ public:
     const nsCString& aBaseURI,
     const float& aFullZoom,
     const nsString& aName,
-    const IPC::Principal& aTriggeringPrincipal) override;
+    const IPC::Principal& aTriggeringPrincipal,
+    const uint32_t& aReferrerPolicy) override;
 
   static bool AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId);
 
@@ -717,6 +719,7 @@ private:
                      nsCOMPtr<nsITabParent>& aNewTabParent,
                      bool* aWindowIsNew,
                      nsIPrincipal* aTriggeringPrincipal,
+                     uint32_t aReferrerPolicy,
                      bool aLoadUri);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
