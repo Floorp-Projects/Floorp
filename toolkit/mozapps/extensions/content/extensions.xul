@@ -131,7 +131,7 @@
          command="cmd_focusSearch"/>
   </keyset>
   <hbox flex="1">
-    <vbox>
+    <vbox id="category-box">
       <!-- category list -->
       <richlistbox id="categories" flex="1">
         <richlistitem id="category-search" value="addons://search/"
