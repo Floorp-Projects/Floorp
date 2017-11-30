@@ -86,7 +86,9 @@ function runTest()
 }
 
 SimpleTest.waitForExplicitFinish();
-runTest();
+SpecialPowers.pushPrefEnv(
+  { "set": [["layout.css.moz-document.content.enabled", true]]},
+  runTest);
 </script>
 </pre>
 </body>

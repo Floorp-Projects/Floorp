@@ -796,10 +796,18 @@ ureldatefmt_close(URelativeDateTimeFormatter *reldatefmt)
 
 int32_t
 ureldatefmt_format(const URelativeDateTimeFormatter* reldatefmt, double offset,
-                    URelativeDateTimeUnit unit, UChar* result, int32_t resultCapacity,
-                    UErrorCode* status)
+                   URelativeDateTimeUnit unit, UChar* result, int32_t resultCapacity,
+                   UErrorCode* status)
 {
     MOZ_CRASH("ureldatefmt_format: Intl API disabled");
+}
+
+int32_t
+ureldatefmt_formatNumeric(const URelativeDateTimeFormatter* reldatefmt, double offset,
+                          URelativeDateTimeUnit unit, UChar* result, int32_t resultCapacity,
+                          UErrorCode* status)
+{
+    MOZ_CRASH("ureldatefmt_formatNumeric: Intl API disabled");
 }
 
 #endif
@@ -4015,6 +4023,19 @@ js::intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value
     return true;
 }
 
+enum class RelativeTimeType
+{
+    /**
+     * Only strings with numeric components like `1 day ago`.
+     */
+    Numeric,
+    /**
+     * Natural-language strings like `yesterday` when possible,
+     * otherwise strings with numeric components as in `7 months ago`.
+     */
+    Text,
+};
+
 bool
 js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -4053,6 +4074,23 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
         } else {
             MOZ_ASSERT(StringEqualsAscii(style, "long"));
             relDateTimeStyle = UDAT_STYLE_LONG;
+        }
+    }
+
+    if (!GetProperty(cx, internals, internals, cx->names().type, &value))
+        return false;
+
+    RelativeTimeType relDateTimeType;
+    {
+        JSLinearString* type = value.toString()->ensureLinear(cx);
+        if (!type)
+            return false;
+
+        if (StringEqualsAscii(type, "text")) {
+            relDateTimeType = RelativeTimeType::Text;
+        } else {
+            MOZ_ASSERT(StringEqualsAscii(type, "numeric"));
+            relDateTimeType = RelativeTimeType::Numeric;
         }
     }
 
@@ -4098,8 +4136,11 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
 
     ScopedICUObject<URelativeDateTimeFormatter, ureldatefmt_close> closeRelativeTimeFormat(rtf);
 
-    JSString* str = Call(cx, [rtf, t, relDateTimeUnit](UChar* chars, int32_t size, UErrorCode* status) {
-        return ureldatefmt_format(rtf, t, relDateTimeUnit, chars, size, status);
+    JSString* str = Call(cx, [rtf, t, relDateTimeUnit, relDateTimeType](UChar* chars, int32_t size, UErrorCode* status) {
+        auto fmt = relDateTimeType == RelativeTimeType::Text
+                   ? ureldatefmt_format
+                   : ureldatefmt_formatNumeric;
+        return fmt(rtf, t, relDateTimeUnit, chars, size, status);
     });
     if (!str)
         return false;

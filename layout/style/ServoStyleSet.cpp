@@ -172,13 +172,25 @@ ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManag
 }
 
 void
+ServoStyleSet::BeginShutdown()
+{
+  nsIDocument* doc = mPresContext->Document();
+
+  // Remove the style rule map from document's observer and drop it.
+  if (mStyleRuleMap) {
+    doc->RemoveObserver(mStyleRuleMap);
+    doc->CSSLoader()->RemoveObserver(mStyleRuleMap);
+    mStyleRuleMap = nullptr;
+  }
+}
+
+void
 ServoStyleSet::Shutdown()
 {
   // Make sure we drop our cached style contexts before the presshell arena
   // starts going away.
   ClearNonInheritingStyleContexts();
   mRawSet = nullptr;
-  mStyleRuleMap = nullptr;
 }
 
 void
@@ -673,10 +685,6 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
     SetStylistStyleSheetsDirty();
   }
 
-  if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(*aSheet);
-  }
-
   return NS_OK;
 }
 
@@ -701,10 +709,6 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
     SetStylistStyleSheetsDirty();
   }
 
-  if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(*aSheet);
-  }
-
   return NS_OK;
 }
 
@@ -720,10 +724,6 @@ ServoStyleSet::RemoveStyleSheet(SheetType aType,
     // Maintain a mirrored list of sheets on the servo side.
     Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet);
     SetStylistStyleSheetsDirty();
-  }
-
-  if (mStyleRuleMap) {
-    mStyleRuleMap->SheetRemoved(*aSheet);
   }
 
   return NS_OK;
@@ -758,9 +758,6 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
     }
   }
 
-  // Just don't bother calling SheetRemoved / SheetAdded, and recreate the rule
-  // map when needed.
-  mStyleRuleMap = nullptr;
   return NS_OK;
 }
 
@@ -786,10 +783,6 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
     Servo_StyleSet_InsertStyleSheetBefore(
         mRawSet.get(), aNewSheet, aReferenceSheet);
     SetStylistStyleSheetsDirty();
-  }
-
-  if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(*aNewSheet);
   }
 
   return NS_OK;
@@ -856,10 +849,6 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
       Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
       SetStylistStyleSheetsDirty();
     }
-  }
-
-  if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(*aSheet);
   }
 
   return NS_OK;
@@ -1037,32 +1026,51 @@ ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 }
 
 void
-ServoStyleSet::RuleAdded(ServoStyleSheet& aSheet, css::Rule& aRule)
+ServoStyleSet::SetStylistStyleSheetsDirty()
 {
-  if (mStyleRuleMap) {
-    mStyleRuleMap->RuleAdded(aSheet, aRule);
-  }
+  mStylistState |= StylistState::StyleSheetsDirty;
 
-  // FIXME(emilio): Could be more granular based on aRule.
-  MarkOriginsDirty(aSheet.GetOrigin());
+  // We need to invalidate cached style in getComputedStyle for undisplayed
+  // elements, since we don't know if any of the style sheet change that we
+  // do would affect undisplayed elements.
+  if (mPresContext) {
+    // XBL sheets don't have a pres context, but invalidating the restyle generation
+    // in that case is handled by SetXBLStyleSheetsDirty in the "master" stylist.
+    mPresContext->RestyleManager()->AsServo()->IncrementUndisplayedRestyleGeneration();
+  }
 }
 
 void
-ServoStyleSet::RuleRemoved(ServoStyleSheet& aSheet, css::Rule& aRule)
+ServoStyleSet::SetStylistXBLStyleSheetsDirty()
 {
-  if (mStyleRuleMap) {
-    mStyleRuleMap->RuleRemoved(aSheet, aRule);
-  }
+  mStylistState |= StylistState::XBLStyleSheetsDirty;
 
-  // FIXME(emilio): Could be more granular based on aRule.
-  MarkOriginsDirty(aSheet.GetOrigin());
+  // We need to invalidate cached style in getComputedStyle for undisplayed
+  // elements, since we don't know if any of the style sheet change that we
+  // do would affect undisplayed elements.
+  MOZ_ASSERT(mPresContext);
+  mPresContext->RestyleManager()->AsServo()->IncrementUndisplayedRestyleGeneration();
 }
 
 void
-ServoStyleSet::RuleChanged(ServoStyleSheet& aSheet, css::Rule* aRule)
+ServoStyleSet::RecordStyleSheetChange(
+    ServoStyleSheet* aSheet,
+    StyleSheet::ChangeType aChangeType)
 {
-  // FIXME(emilio): Could be more granular based on aRule.
-  MarkOriginsDirty(aSheet.GetOrigin());
+  switch (aChangeType) {
+    case StyleSheet::ChangeType::RuleAdded:
+    case StyleSheet::ChangeType::RuleRemoved:
+    case StyleSheet::ChangeType::RuleChanged:
+    case StyleSheet::ChangeType::ReparsedFromInspector:
+      // FIXME(emilio): We can presumably do better in a bunch of these.
+      return MarkOriginsDirty(aSheet->GetOrigin());
+    case StyleSheet::ChangeType::ApplicableStateChanged:
+    case StyleSheet::ChangeType::Added:
+    case StyleSheet::ChangeType::Removed:
+      // Do nothing, we've already recorded the change in the
+      // Append/Remove/Replace methods, etc, and will act consequently.
+      return;
+  }
 }
 
 #ifdef DEBUG
@@ -1450,9 +1458,14 @@ ServoStyleRuleMap*
 ServoStyleSet::StyleRuleMap()
 {
   if (!mStyleRuleMap) {
-    mStyleRuleMap = MakeUnique<ServoStyleRuleMap>(this);
+    mStyleRuleMap = new ServoStyleRuleMap(this);
+    if (mPresContext) {
+      nsIDocument* doc = mPresContext->Document();
+      doc->AddObserver(mStyleRuleMap);
+      doc->CSSLoader()->AddObserver(mStyleRuleMap);
+    }
   }
-  return mStyleRuleMap.get();
+  return mStyleRuleMap;
 }
 
 bool

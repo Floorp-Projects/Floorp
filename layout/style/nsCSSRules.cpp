@@ -40,8 +40,6 @@
 #include "StyleRule.h"
 #include "nsFont.h"
 #include "nsIURI.h"
-#include "nsCCUncollectableMarker.h"
-#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -50,118 +48,6 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 namespace css {
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Rule)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Rule)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Rule)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(Rule)
-
-bool
-Rule::IsCCLeaf() const
-{
-  return !PreservingWrapper();
-}
-
-bool
-Rule::IsKnownLive() const
-{
-  if (HasKnownLiveWrapper()) {
-    return true;
-  }
-
-  StyleSheet* sheet = GetStyleSheet();
-  if (!sheet) {
-    return false;
-  }
-
-  if (!sheet->IsOwnedByDocument()) {
-    return false;
-  }
-
-  return nsCCUncollectableMarker::InGeneration(
-    sheet->GetAssociatedDocument()->GetMarkedCCGeneration());
-}
-
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Rule)
-  return tmp->IsCCLeaf() || tmp->IsKnownLive();
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
-
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(Rule)
-  // Please see documentation for nsCycleCollectionParticipant::CanSkip* for why
-  // we need to check HasNothingToTrace here but not in the other two CanSkip
-  // methods.
-  return tmp->IsCCLeaf() ||
-    (tmp->IsKnownLive() && tmp->HasNothingToTrace(tmp));
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
-
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Rule)
-  return tmp->IsCCLeaf() || tmp->IsKnownLive();
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
-
-/* virtual */ void
-Rule::SetStyleSheet(StyleSheet* aSheet)
-{
-  // We don't reference count this up reference. The style sheet
-  // will tell us when it's going away or when we're detached from
-  // it.
-  mSheet = aSheet;
-}
-
-NS_IMETHODIMP
-Rule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  NS_IF_ADDREF(*aParentRule = mParentRule);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Rule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  NS_ENSURE_ARG_POINTER(aSheet);
-
-  NS_IF_ADDREF(*aSheet = GetStyleSheet());
-  return NS_OK;
-}
-
-/* virtual */ css::Rule*
-Rule::GetCSSRule()
-{
-  return this;
-}
-
-NS_IMETHODIMP
-Rule::GetType(uint16_t* aType)
-{
-  *aType = Type();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Rule::SetCssText(const nsAString& aCssText)
-{
-  // We used to throw for some rule types, but not all.  Specifically, we did
-  // not throw for StyleRule.  Let's just always not throw.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Rule::GetCssText(nsAString& aCssText)
-{
-  GetCssTextImpl(aCssText);
-  return NS_OK;
-}
-
-Rule*
-Rule::GetParentRule() const
-{
-  return mParentRule;
-}
 
 // -------------------------------------------
 // ImportRule
@@ -1151,7 +1037,10 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
   newSelectors.SwapElements(mKeys);
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->RuleChanged(this);
+    sheet->AsGecko()->SetModifiedByChildRule();
+    if (doc) {
+      doc->StyleRuleChanged(sheet, this);
+    }
   }
 
   return NS_OK;
@@ -1182,7 +1071,10 @@ nsCSSKeyframeRule::ChangeDeclaration(css::Declaration* aDeclaration)
   }
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->RuleChanged(this);
+    sheet->AsGecko()->SetModifiedByChildRule();
+    if (doc) {
+      doc->StyleRuleChanged(sheet, this);
+    }
   }
 }
 
@@ -1282,7 +1174,10 @@ nsCSSKeyframesRule::SetName(const nsAString& aName)
   mName = NS_Atomize(aName);
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->RuleChanged(this);
+    sheet->AsGecko()->SetModifiedByChildRule();
+    if (doc) {
+      doc->StyleRuleChanged(sheet, this);
+    }
   }
 
   return NS_OK;
@@ -1306,7 +1201,10 @@ nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
     AppendStyleRule(rule);
 
     if (StyleSheet* sheet = GetStyleSheet()) {
-      sheet->RuleChanged(this);
+      sheet->AsGecko()->SetModifiedByChildRule();
+      if (doc) {
+        doc->StyleRuleChanged(sheet, this);
+      }
     }
   }
 
@@ -1350,7 +1248,11 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
     DeleteStyleRuleAt(index);
 
     if (StyleSheet* sheet = GetStyleSheet()) {
-      sheet->RuleChanged(this);
+      sheet->AsGecko()->SetModifiedByChildRule();
+
+      if (doc) {
+        doc->StyleRuleChanged(sheet, this);
+      }
     }
   }
   return NS_OK;
@@ -1556,10 +1458,8 @@ nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
     mDeclaration->SetOwningRule(this);
   }
 
-  nsIDocument* doc = GetDocument();
-  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->RuleChanged(this);
+    sheet->AsGecko()->SetModifiedByChildRule();
   }
 }
 

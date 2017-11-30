@@ -5000,12 +5000,12 @@ EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
 nsresult
 EditorBase::HandleInlineSpellCheck(EditAction action,
                                    Selection* aSelection,
-                                   nsIDOMNode* previousSelectedNode,
-                                   int32_t previousSelectedOffset,
-                                   nsIDOMNode* aStartContainer,
-                                   int32_t aStartOffset,
-                                   nsIDOMNode* aEndContainer,
-                                   int32_t aEndOffset)
+                                   nsINode* previousSelectedNode,
+                                   uint32_t previousSelectedOffset,
+                                   nsINode* aStartContainer,
+                                   uint32_t aStartOffset,
+                                   nsINode* aEndContainer,
+                                   uint32_t aEndOffset)
 {
   // Have to cast action here because this method is from an IDL
   return mInlineSpellChecker ? mInlineSpellChecker->SpellCheckAfterEditorChange(

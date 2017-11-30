@@ -48,6 +48,7 @@ public class MmaDelegate {
     public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
     public static final String LAUNCH_BROWSER = "E_Launch_Browser";
     public static final String NEW_TAB = "E_Opened_New_Tab";
+    public static final String DISMISS_ONBOARDING = "E_Dismiss_Onboarding";
 
 
     public static final String USER_ATT_FOCUS_INSTALLED = "Focus Installed";

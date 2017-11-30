@@ -88,7 +88,7 @@ const tests = [
       prop: "background-image", pseudo: ""
   },
   {
-      name: "url-token 4",	/*Bug 751939*/
+      name: "url-token 4",  /*Bug 751939*/
       ref: "#r { background-image: url( )}",
       tst: "#t { background-image: url(" ,
       prop: "background-image", pseudo: ""
@@ -196,16 +196,16 @@ const tests = [
 ];
 
 const basestyle = ("table {\n"+
-		   "    border-collapse: collapse;\n"+
-		   "}\n"+
-		   "td {\n"+
-		   "    width: 1.5em;\n"+
-		   "    height: 1.5em;\n"+
-		   "    border: 1px solid black;\n"+
-		   "    text-align: center;\n"+
-		   "    margin: 0;\n"+
-		   "}\n"+
-		   "tr { counter-increment: tr }\n");
+       "    border-collapse: collapse;\n"+
+       "}\n"+
+       "td {\n"+
+       "    width: 1.5em;\n"+
+       "    height: 1.5em;\n"+
+       "    border: 1px solid black;\n"+
+       "    text-align: center;\n"+
+       "    margin: 0;\n"+
+       "}\n"+
+       "tr { counter-increment: tr }\n");
 
 /* This is more complicated than it might look like it needs to be,
    because for each subtest we have to splat stuff into the iframe,
@@ -213,64 +213,69 @@ const basestyle = ("table {\n"+
    styles.  */
 
 SimpleTest.waitForExplicitFinish();
- 
+
 window.onload = function() {
-    const frame = document.getElementById("display");
-    var curTest = 0;
+  SpecialPowers.pushPrefEnv(
+    { "set": [["layout.css.moz-document.content.enabled", true]]},
+    function() {
+      const frame = document.getElementById("display");
+      var curTest = 0;
 
-    const prepareTest = function() {
-	var cd = frame.contentDocument;
-	cd.open();
-	cd.write('<!DOCTYPE HTML><html><head>' +
-		 '<style>\n' + basestyle + '</style>\n' +
-		 '<style>\n' + tests[curTest].ref + '</style>\n' +
-		 '<style>\n' + tests[curTest].tst + '</style>\n' +
-		 '</head><body>\n' +
-		 '<table><tr><td id="r"><td id="t"></table>' +
-		 '</body></html>');
-	cd.close();
-    };
+      const prepareTest = function() {
+        var cd = frame.contentDocument;
+        cd.open();
+        cd.write('<!DOCTYPE HTML><html><head>' +
+          '<style>\n' + basestyle + '</style>\n' +
+          '<style>\n' + tests[curTest].ref + '</style>\n' +
+          '<style>\n' + tests[curTest].tst + '</style>\n' +
+          '</head><body>\n' +
+          '<table><tr><td id="r"><td id="t"></table>' +
+          '</body></html>');
+        cd.close();
+      };
 
-    const checkTest = function() {
-	var cd = frame.contentDocument;
-	var _is = tests[curTest].todo ? todo_is : is;
-	var _ok = tests[curTest].todo ? todo : ok;
+      const checkTest = function() {
+        var cd = frame.contentDocument;
+        var _is = tests[curTest].todo ? todo_is : is;
+        var _ok = tests[curTest].todo ? todo : ok;
 
-	if (cd.styleSheets[1].cssRules.length == 1 &&
-	    cd.styleSheets[2].cssRules.length == 1) {
-	    // If we have a .prop for this test, the .cssText of the reference
-	    // and test rules will differ in the selector.  Change #t to #r
-	    // in the test rule.
-	    var ref_canon = cd.styleSheets[1].cssRules[0].cssText;
-	    var tst_canon = cd.styleSheets[2].cssRules[0].cssText;
-	    tst_canon = tst_canon.replace(/(#|%23)t\b/, "$1r");
-	    _is(tst_canon, ref_canon,
-		tests[curTest].name + " (canonicalized rule)");
-	} else {
-	    _ok(false, tests[curTest].name + " (rule missing)");
-	}
-	if (tests[curTest].prop) {
-	    var prop = tests[curTest].prop;
-	    var pseudo = tests[curTest].pseudo;
+        if (cd.styleSheets[1].cssRules.length == 1 &&
+          cd.styleSheets[2].cssRules.length == 1) {
+          // If we have a .prop for this test, the .cssText of the reference
+          // and test rules will differ in the selector.  Change #t to #r
+          // in the test rule.
+          var ref_canon = cd.styleSheets[1].cssRules[0].cssText;
+          var tst_canon = cd.styleSheets[2].cssRules[0].cssText;
+          tst_canon = tst_canon.replace(/(#|%23)t\b/, "$1r");
+          _is(tst_canon, ref_canon,
+              tests[curTest].name + " (canonicalized rule)");
+        } else {
+          _ok(false, tests[curTest].name + " (rule missing)");
+        }
+        if (tests[curTest].prop) {
+          var prop = tests[curTest].prop;
+          var pseudo = tests[curTest].pseudo;
 
-	    var refElt = cd.getElementById("r");
-	    var tstElt = cd.getElementById("t");
-	    var refStyle = cd.defaultView.getComputedStyle(refElt, pseudo);
-	    var tstStyle = cd.defaultView.getComputedStyle(tstElt, pseudo);
-	    _is(tstStyle.getPropertyValue(prop),
-                refStyle.getPropertyValue(prop),
-                tests[curTest].name + " (computed style)");
-	}
-	curTest++;
-	if (curTest < tests.length) {
-	    prepareTest();
-	} else {
-	    SimpleTest.finish();
-	}
-    };
+          var refElt = cd.getElementById("r");
+          var tstElt = cd.getElementById("t");
+          var refStyle = cd.defaultView.getComputedStyle(refElt, pseudo);
+          var tstStyle = cd.defaultView.getComputedStyle(tstElt, pseudo);
+          _is(tstStyle.getPropertyValue(prop),
+              refStyle.getPropertyValue(prop),
+              tests[curTest].name + " (computed style)");
+        }
+        curTest++;
+        if (curTest < tests.length) {
+          prepareTest();
+        } else {
+          SimpleTest.finish();
+        }
+      };
 
-    frame.onload = function(){setTimeout(checkTest, 0);};
-    prepareTest();
+      frame.onload = function(){setTimeout(checkTest, 0);};
+      prepareTest();
+    }
+  )
 };
 </script>
 </pre>
