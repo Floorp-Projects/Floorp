@@ -10,7 +10,7 @@
 <Url type="application/x-suggestions+json" method="GET" template="https://suggest.yandex.com.tr/suggest-ff.cgi">
   <Param name="part" value="{searchTerms}"/>
 </Url>
-<Url type="text/html" method="GET" template="https://yandex.com.tr/yandsearch" resultdomain="yandex.com.tr">
+<Url type="text/html" method="GET" template="https://yandex.com.tr/search" resultdomain="yandex.com.tr">
   <MozParam name="clid" condition="purpose" purpose="searchbar"   value="2186618"/>
   <MozParam name="clid" condition="purpose" purpose="keyword"     value="2186621"/>
   <MozParam name="clid" condition="purpose" purpose="contextmenu" value="2186623"/>

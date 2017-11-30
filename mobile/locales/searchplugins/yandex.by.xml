@@ -10,11 +10,11 @@
 <Url type="application/x-suggestions+json" method="GET" template="https://suggest.yandex.by/suggest-ff.cgi">
   <Param name="part" value="{searchTerms}"/>
 </Url>
-<Url type="text/html" method="GET" template="https://yandex.by/yandsearch">
+<Url type="text/html" method="GET" template="https://yandex.by/search">
   <Param name="clid" value="2186727"/>
   <Param name="text" value="{searchTerms}"/>
 </Url>
-<Url type="application/x-moz-tabletsearch" method="GET" template="https://yandex.by/yandsearch">
+<Url type="application/x-moz-tabletsearch" method="GET" template="https://yandex.by/search">
   <Param name="clid" value="2186733"/>
   <Param name="text" value="{searchTerms}"/>
 </Url>
