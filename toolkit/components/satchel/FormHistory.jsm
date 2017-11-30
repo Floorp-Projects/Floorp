@@ -265,15 +265,6 @@ function makeQueryPredicates(aQueryData, delimiter = " AND ") {
  * Storage statement creation and parameter binding
  */
 
-function makeCountStatement(aSearchData) {
-  let query = "SELECT COUNT(*) AS numEntries FROM moz_formhistory";
-  let queryTerms = makeQueryPredicates(aSearchData);
-  if (queryTerms) {
-    query += " WHERE " + queryTerms;
-  }
-  return dbCreateAsyncStatement(query, aSearchData);
-}
-
 function makeSearchStatement(aSearchData, aSelectTerms) {
   let query = "SELECT " + aSelectTerms.join(", ") + " FROM moz_formhistory";
   let queryTerms = makeQueryPredicates(aSearchData);
@@ -1073,6 +1064,30 @@ this.FormHistory = {
     return Prefs.enabled;
   },
 
+  _prepareHandlers(handlers) {
+    let defaultHandlers = {
+      handleResult: NOOP,
+      handleError: NOOP,
+      handleCompletion: NOOP,
+    };
+
+    if (!handlers) {
+      return defaultHandlers;
+    }
+
+    if (handlers.handleResult) {
+      defaultHandlers.handleResult = handlers.handleResult;
+    }
+    if (handlers.handleError) {
+      defaultHandlers.handleError = handlers.handleError;
+    }
+    if (handlers.handleCompletion) {
+      defaultHandlers.handleCompletion = handlers.handleCompletion;
+    }
+
+    return defaultHandlers;
+  },
+
   search(aSelectTerms, aSearchData, aCallbacks) {
     // if no terms selected, select everything
     if (!aSelectTerms) {
@@ -1116,36 +1131,32 @@ this.FormHistory = {
     stmt.executeAsync(handlers);
   },
 
-  count(aSearchData, aCallbacks) {
+  count(aSearchData, aHandlers) {
     validateSearchData(aSearchData, "Count");
-    let stmt = makeCountStatement(aSearchData);
-    let handlers = {
-      handleResult(aResultSet) {
-        let row = aResultSet.getNextRow();
-        let count = row.getResultByName("numEntries");
-        if (aCallbacks && aCallbacks.handleResult) {
-          aCallbacks.handleResult(count);
-        }
-      },
 
-      handleError(aError) {
-        if (aCallbacks && aCallbacks.handleError) {
-          aCallbacks.handleError(aError);
-        }
-      },
+    let query = "SELECT COUNT(*) AS numEntries FROM moz_formhistory";
+    let queryTerms = makeQueryPredicates(aSearchData);
+    if (queryTerms) {
+      query += " WHERE " + queryTerms;
+    }
 
-      handleCompletion(aReason) {
-        if (aCallbacks && aCallbacks.handleCompletion) {
-          aCallbacks.handleCompletion(
-            aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ?
-              0 :
-              1
-          );
-        }
-      },
-    };
+    let handlers = this._prepareHandlers(aHandlers);
 
-    stmt.executeAsync(handlers);
+    return new Promise((resolve, reject) => {
+      this.db.then(async conn => {
+        try {
+          let rows = await conn.executeCached(query, aSearchData);
+          let count = rows[0].getResultByName("numEntries");
+          handlers.handleResult(count);
+          handlers.handleCompletion(0);
+          resolve(count);
+        } catch (e) {
+          handlers.handleError(e);
+          handlers.handleCompletion(1);
+          reject(e);
+        }
+      });
+    });
   },
 
   update(aChanges, aCallbacks) {
