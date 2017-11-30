@@ -601,7 +601,6 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
     .sections-list .section-empty-state .empty-state .empty-state-message {
       margin-bottom: 0;
       font-size: 13px;
-      font-weight: 300;
       color: #737373;
       text-align: center; }
 
