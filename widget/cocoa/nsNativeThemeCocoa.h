@@ -51,9 +51,14 @@ public:
     eDefaultPushButton,
     eRegularBevelButton,
     eDefaultBevelButton,
+    eRoundedBezelPushButton,
+    eSquareBezelPushButton,
     eArrowButton,
+    eHelpButton,
     eTreeTwistyPointingRight,
-    eTreeTwistyPointingDown
+    eTreeTwistyPointingDown,
+    eDisclosureButtonClosed,
+    eDisclosureButtonOpen
   };
 
   struct ControlParams {

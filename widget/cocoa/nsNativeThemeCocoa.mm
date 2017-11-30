@@ -1470,10 +1470,19 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxRect,
                         ToThemeDrawState(controlParams), adornment, controlParams);
       return;
     }
+    case ButtonType::eRoundedBezelPushButton:
+      DrawRoundedBezelPushButton(cgContext, inBoxRect, controlParams);
+      return;
+    case ButtonType::eSquareBezelPushButton:
+      DrawSquareBezelPushButton(cgContext, inBoxRect, controlParams);
+      return;
     case ButtonType::eArrowButton:
       DrawHIThemeButton(cgContext, inBoxRect, kThemeArrowButton, kThemeButtonOn,
                         kThemeStateUnavailable, kThemeAdornmentArrowDownArrow,
                         controlParams);
+      return;
+    case ButtonType::eHelpButton:
+      DrawHelpButton(cgContext, inBoxRect, controlParams);
       return;
     case ButtonType::eTreeTwistyPointingRight:
       DrawHIThemeButton(cgContext, inBoxRect, kThemeDisclosureButton, kThemeDisclosureRight,
@@ -1482,6 +1491,12 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxRect,
     case ButtonType::eTreeTwistyPointingDown:
       DrawHIThemeButton(cgContext, inBoxRect, kThemeDisclosureButton, kThemeDisclosureDown,
                         ToThemeDrawState(controlParams), kThemeAdornmentNone, controlParams);
+      return;
+    case ButtonType::eDisclosureButtonClosed:
+      DrawDisclosureButton(cgContext, inBoxRect, controlParams, NSOffState);
+      return;
+    case ButtonType::eDisclosureButtonOpen:
+      DrawDisclosureButton(cgContext, inBoxRect, controlParams, NSOnState);
       return;
   }
 }
@@ -2628,11 +2643,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
         // This comparison is done based on the height that is calculated without
         // the top, because the snapped height can be affected by the top of the
         // rect and that may result in different height depending on the top value.
-        DrawSquareBezelPushButton(cgContext, macRect,
-                                  ComputeControlParams(aFrame, eventState));
+        DrawButton(cgContext, macRect,
+                   ButtonParams{ComputeControlParams(aFrame, eventState),
+                                ButtonType::eSquareBezelPushButton});
       } else {
-        DrawRoundedBezelPushButton(cgContext, macRect,
-                                   ComputeControlParams(aFrame, eventState));
+        DrawButton(cgContext, macRect,
+                   ButtonParams{ComputeControlParams(aFrame, eventState),
+                                ButtonType::eRoundedBezelPushButton});
       }
       break;
 
@@ -2641,16 +2658,18 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_MAC_HELP_BUTTON:
-      DrawHelpButton(cgContext, macRect,
-                     ComputeControlParams(aFrame, eventState));
+      DrawButton(cgContext, macRect,
+                 ButtonParams{ComputeControlParams(aFrame, eventState),
+                              ButtonType::eHelpButton});
       break;
 
     case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED: {
-      NSCellStateValue value = (aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED)
-        ? NSOffState : NSOnState;
-      DrawDisclosureButton(cgContext, macRect,
-                           ComputeControlParams(aFrame, eventState), value);
+      ButtonType buttonType = (aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED)
+        ? ButtonType::eDisclosureButtonClosed : ButtonType::eDisclosureButtonOpen;
+      DrawButton(cgContext, macRect,
+                 ButtonParams{ComputeControlParams(aFrame, eventState),
+                              buttonType});
     }
       break;
 
