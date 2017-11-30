@@ -12,6 +12,7 @@
 
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/ErrorResult.h"
 
