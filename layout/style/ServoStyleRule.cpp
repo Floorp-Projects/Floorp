@@ -81,7 +81,9 @@ ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
       mDecls = decls.forget();
       mDecls->SetOwningRule(rule);
     }
-    sheet->RuleChanged(rule);
+    if (doc) {
+      doc->StyleRuleChanged(sheet, rule);
+    }
   }
   return NS_OK;
 }

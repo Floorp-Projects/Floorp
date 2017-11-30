@@ -304,7 +304,7 @@ GroupRule::AppendStyleRule(Rule* aRule)
   aRule->SetStyleSheet(sheet);
   aRule->SetParentRule(this);
   if (sheet) {
-    sheet->RuleChanged(this);
+    sheet->AsGecko()->SetModifiedByChildRule();
   }
 }
 
