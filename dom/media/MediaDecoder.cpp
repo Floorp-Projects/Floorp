@@ -954,15 +954,6 @@ MediaDecoder::PlaybackEnded()
 }
 
 void
-MediaDecoder::DownloadProgressed()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  GetOwner()->DownloadProgressed();
-}
-
-void
 MediaDecoder::NotifyPrincipalChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());

@@ -58,7 +58,6 @@ class ChannelMediaDecoder : public MediaDecoder
 protected:
   void OnPlaybackEvent(MediaEventType aEvent) override;
   void DurationChanged() override;
-  void DownloadProgressed() override;
   void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
                       UniquePtr<MetadataTags> aTags,
                       MediaDecoderEventVisibility aEventVisibility) override;
@@ -98,6 +97,7 @@ public:
   void Resume() override;
 
 private:
+  void DownloadProgressed();
   void PinForSeek() override;
   void UnpinForSeek() override;
 

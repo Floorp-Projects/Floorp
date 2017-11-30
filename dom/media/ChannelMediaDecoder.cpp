@@ -382,8 +382,9 @@ void
 ChannelMediaDecoder::DownloadProgressed()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  MediaDecoder::DownloadProgressed();
+  GetOwner()->DownloadProgressed();
   UpdatePlaybackRate();
   mResource->ThrottleReadahead(ShouldThrottleDownload());
 }
