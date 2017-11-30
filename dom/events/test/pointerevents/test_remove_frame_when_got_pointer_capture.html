@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for triggering popup by pointer events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="div1" style="width: 50px; height: 50px; background: green"></div>
+<div id="div2" style="width: 50px; height: 50px; background: green"></div>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function startTest() {
+  let div1 = document.getElementById("div1");
+  let divEvents = [
+    "pointerdown",
+    "gotpointercapture",
+    "pointermove",
+    "pointerup",
+    "lostpointercapture",
+    "mousedown",
+    "mousemove",
+    "mouseup",
+  ];
+
+  let documentEvents = [
+    "pointerdown",
+    "pointermove",
+    "pointerup",
+    "mousedown",
+    "mousemove",
+    "mouseup",
+  ];
+
+  divEvents.forEach((event) => {
+    div1.addEventListener(event, (e) => {
+      ok(divEvents.indexOf(e.type) >= 0, " don't expect " + e.type);
+      divEvents = divEvents.filter(item => item !== e.type);
+    }, { once: true });
+  });
+
+  documentEvents.forEach((event) => {
+    document.addEventListener(event, (e) => {
+      is(e.target, div1, e.type + " should be dispatched to div1");
+    }, { once: true });
+  });
+
+  div1.addEventListener("pointerdown", (e) => {
+    div1.setPointerCapture(e.pointerId);
+  });
+
+  div1.addEventListener("gotpointercapture", (e) => {
+    div1.style.display = "none";
+  });
+
+  synthesizeMouseAtCenter(div1, {type: "mousedown"});
+  synthesizeMouseAtCenter(div2, {type: "mousemove"});
+  synthesizeMouseAtCenter(div2, {type: "mouseup"});
+
+  ok(divEvents.length == 0, " expect " + divEvents);
+
+  divEvents = [
+    "pointerdown",
+    "gotpointercapture",
+    "pointermove",
+    "pointerup",
+    "lostpointercapture",
+    "touchstart",
+    "touchmove",
+    "touchend",
+  ];
+
+  documentEvents = [
+    "pointerdown",
+    "pointermove",
+    "pointerup",
+    "touchstart",
+    "touchmove",
+    "touchend",
+  ];
+  divEvents.forEach((event) => {
+    div1.addEventListener(event, (e) => {
+      ok(divEvents.indexOf(e.type) >= 0, " don't expect " + e.type);
+      divEvents = divEvents.filter(item => item !== e.type);
+    }, { once: true });
+  });
+
+  documentEvents.forEach((event) => {
+    document.addEventListener(event, (e) => {
+      is(e.target, div1, e.type + " should be dispatched to div1");
+    }, { once: true });
+  });
+
+  div1.style.display = "block";
+  synthesizeMouseAtCenter(div1, {type: "mousemove"});
+  synthesizeTouch(div1, 5, 5, { type: "touchstart" });
+  synthesizeTouch(div2, 5, 5, { type: "touchmove" });
+  synthesizeTouch(div2, 5, 5, { type: "touchend" });
+
+  ok(divEvents.length == 0, " expect " + divEvents);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({
+    "set": [["dom.w3c_pointer_events.enabled", true]]
+  }, startTest);
+});
+
+</script>
+</body>
+</html>
