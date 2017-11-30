@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1420589
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1420589</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1420589">Mozilla Bug 1420589</a>
+<p id="display"></p>
+<div id="div1" style="width: 50px; height: 50px; background: green"></div>
+<iframe id="iframe1" src="./bug_1420589_iframe1.html">
+</iframe>
+<script type="text/javascript">
+/*
+  Test for Bug 1420589. This test is similar to test_bug1420589_2.html but the
+  first touch point hit the div element and the second point hits the iframe.
+
+  We stop dispatching touch events to a target when we can't find any ancestor
+  document that is the same as the document of the existing target. This test
+  expects that we only dispatch touch events to the iframe document.
+
+  We dispatch pointer events to the hit targets even when there aren't in the
+  same document. This test expects that pointer events are dispatched to the div
+  element and the iframe document.
+*/
+SimpleTest.waitForExplicitFinish();
+
+var rx = 1;
+var ry = 1;
+var angle = 0;
+var force = 1;
+var modifiers = 0;
+var test1PointerId = 1;
+var test2PointerId = 2;
+
+function withoutImplicitlyPointerCaptureForTouch() {
+  let expectedEvents = [
+    // messages from the document of iframe1
+    "iframe1 pointerdown",
+    "iframe1 pointermove",
+    "iframe1 pointerup",
+    "iframe1 touchstart",
+    "iframe1 touchmove",
+    "iframe1 touchend",
+
+    // messages from the parent document
+    "div1 pointerdown",
+    "div1 pointermove",
+    "div1 pointerup",
+  ];
+
+  window.addEventListener('message',function(e) {
+    ok(expectedEvents.indexOf(e.data) >= 0, " don't expect " + e.data);
+    expectedEvents = expectedEvents.filter(item => item !== e.data);
+    if (e.data == "iframe1 touchend") {
+      ok(expectedEvents.length == 0, " expect " + expectedEvents);
+      SimpleTest.finish();
+    }
+  }, false)
+
+  let iframe1 = document.getElementById('iframe1');
+  let div1 = document.getElementById('div1');
+
+  let events = ["touchstart", "touchmove", "touchend", "pointerdown", "pointermove", "pointerup"];
+  events.forEach((event) => {
+    div1.addEventListener(event, (e) => {
+      postMessage("div1 " + e.type, "*");
+    }, { once: true });
+    iframe1.addEventListener(event, (e) => {
+      postMessage("iframe " + e.type, "*");
+    }, { once: true });
+  });
+
+  let rect1 = div1.getBoundingClientRect();
+  let rect2 = iframe1.getBoundingClientRect();
+
+  let left1 = rect1.left + 5;
+  let left2 = rect2.left + 5;
+
+  let top1 = rect1.top + 5;
+  let top2 = rect2.top + 5;
+
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
+                       [left1, left2], [top1, top2], [rx, rx], [ry, ry],
+                       [angle, angle], [force, force], 2, modifiers);
+
+  // Move the touch pointers so that we dispatch all of them to content.
+  left1++;
+  left2++;
+  utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
+                       [left1, left2], [top1, top2], [rx, rx], [ry, ry],
+                       [angle, angle], [force, force], 2, modifiers);
+  utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
+                       [left1, left2], [top1, top2], [rx, rx], [ry, ry],
+                       [angle, angle], [force, force], 2, modifiers);
+}
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
+                                     ["dom.w3c_pointer_events.implicit_capture", false]]},
+                            withoutImplicitlyPointerCaptureForTouch);
+});
+
+</script>
+</body>
+</html>
