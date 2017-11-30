@@ -6,7 +6,6 @@
 
 #include "FuzzingFunctions.h"
 
-#include "mozilla/ErrorResult.h"
 #include "nsJSEnvironment.h"
 #include "js/GCAPI.h"
 #include "nsIAccessibilityService.h"

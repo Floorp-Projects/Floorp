@@ -13,7 +13,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ClientBinding.h"
-#include "mozilla/dom/DOMPreferences.h"
 
 class nsIDocument;
 

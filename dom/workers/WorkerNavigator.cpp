@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/StorageManager.h"
@@ -82,11 +81,11 @@ WorkerNavigator::GetAppName(nsString& aAppName, CallerType aCallerType) const
   MOZ_ASSERT(workerPrivate);
 
   if ((!mProperties.mAppNameOverridden.IsEmpty() ||
-       DOMPreferences::ResistFingerprintingEnabled()) &&
+       workerPrivate->ResistFingerprintingEnabled()) &&
       !workerPrivate->UsesSystemPrincipal()) {
     // We will spoof this value when 'privacy.resistFingerprinting' is true.
     // See nsRFPService.h for spoofed value.
-    aAppName = DOMPreferences::ResistFingerprintingEnabled() ?
+    aAppName = workerPrivate->ResistFingerprintingEnabled() ?
       NS_LITERAL_STRING(SPOOFED_APPNAME) : mProperties.mAppNameOverridden;
   } else {
     aAppName = mProperties.mAppName;
@@ -101,11 +100,11 @@ WorkerNavigator::GetAppVersion(nsString& aAppVersion, CallerType aCallerType,
   MOZ_ASSERT(workerPrivate);
 
   if ((!mProperties.mAppVersionOverridden.IsEmpty() ||
-       DOMPreferences::ResistFingerprintingEnabled()) &&
+       workerPrivate->ResistFingerprintingEnabled()) &&
       !workerPrivate->UsesSystemPrincipal()) {
     // We will spoof this value when 'privacy.resistFingerprinting' is true.
     // See nsRFPService.h for spoofed value.
-    aAppVersion = DOMPreferences::ResistFingerprintingEnabled() ?
+    aAppVersion = workerPrivate->ResistFingerprintingEnabled() ?
       NS_LITERAL_STRING(SPOOFED_APPVERSION) : mProperties.mAppVersionOverridden;
   } else {
     aAppVersion = mProperties.mAppVersion;
@@ -120,11 +119,11 @@ WorkerNavigator::GetPlatform(nsString& aPlatform, CallerType aCallerType,
   MOZ_ASSERT(workerPrivate);
 
   if ((!mProperties.mPlatformOverridden.IsEmpty() ||
-       DOMPreferences::ResistFingerprintingEnabled()) &&
+       workerPrivate->ResistFingerprintingEnabled()) &&
       !workerPrivate->UsesSystemPrincipal()) {
     // We will spoof this value when 'privacy.resistFingerprinting' is true.
     // See nsRFPService.h for spoofed value.
-    aPlatform = DOMPreferences::ResistFingerprintingEnabled() ?
+    aPlatform = workerPrivate->ResistFingerprintingEnabled() ?
       NS_LITERAL_STRING(SPOOFED_PLATFORM) : mProperties.mPlatformOverridden;
   } else {
     aPlatform = mProperties.mPlatform;

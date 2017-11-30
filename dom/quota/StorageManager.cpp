@@ -6,7 +6,6 @@
 
 #include "StorageManager.h"
 
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/StorageManagerBinding.h"
@@ -864,6 +863,20 @@ StorageManager::Estimate(ErrorResult& aRv)
   return ExecuteOpOnMainOrWorkerThread(mOwner,
                                        RequestResolver::Type::Estimate,
                                        aRv);
+}
+
+// static
+bool
+StorageManager::PrefEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.storageManager.enabled");
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  MOZ_ASSERT(workerPrivate);
+
+  return workerPrivate->StorageManagerEnabled();
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner)

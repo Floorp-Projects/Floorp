@@ -19,7 +19,6 @@
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -894,22 +893,39 @@ NotificationTask::Run()
   return NS_OK;
 }
 
+bool
+Notification::RequireInteractionEnabled(JSContext* aCx, JSObject* aOjb)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.webnotifications.requireinteraction.enabled", false);
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->DOMWorkerNotificationRIEnabled();
+}
+
 // static
 bool
 Notification::PrefEnabled(JSContext* aCx, JSObject* aObj)
 {
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-    if (!workerPrivate) {
-      return false;
-    }
-
-    if (workerPrivate->IsServiceWorker()) {
-      return DOMPreferences::NotificationEnabledInServiceWorkers();
-    }
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.webnotifications.enabled", false);
   }
 
-  return DOMPreferences::NotificationEnabled();
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  if (workerPrivate->IsServiceWorker()) {
+    return workerPrivate->DOMServiceWorkerNotificationEnabled();
+  }
+
+  return workerPrivate->DOMWorkerNotificationEnabled();
 }
 
 // static
@@ -1724,7 +1740,7 @@ Notification::ShowInternal()
   bool inPrivateBrowsing = IsInPrivateBrowsing();
 
   bool requireInteraction = mRequireInteraction;
-  if (!DOMPreferences::NotificationRIEnabled()) {
+  if (!Preferences::GetBool("dom.webnotifications.requireinteraction.enabled", false)) {
     requireInteraction = false;
   }
 

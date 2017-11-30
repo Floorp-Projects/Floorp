@@ -16,7 +16,7 @@ interface Clients {
   [NewObject]
   Promise<sequence<Client>> matchAll(optional ClientQueryOptions options);
   [NewObject,
-   Func="mozilla::dom::DOMPreferences::OpenWindowEnabled"]
+   Func="mozilla::dom::ServiceWorkerGlobalScope::OpenWindowEnabled"]
   Promise<WindowClient?> openWindow(USVString url);
   [NewObject]
   Promise<void> claim();

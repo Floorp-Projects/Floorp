@@ -13,7 +13,7 @@
 #include "ServiceWorkerPrivate.h"
 #include "WorkerPrivate.h"
 
-#include "mozilla/dom/DOMPreferences.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 
@@ -32,7 +32,7 @@ bool
 ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
 {
   if (NS_IsMainThread()) {
-    return DOMPreferences::ServiceWorkersEnabled();
+    return Preferences::GetBool("dom.serviceWorkers.enabled", false);
   }
 
   return IS_INSTANCE_OF(ServiceWorkerGlobalScope, aObj);

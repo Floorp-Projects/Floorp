@@ -17,7 +17,7 @@ interface Request {
   readonly attribute USVString url;
   [SameObject] readonly attribute Headers headers;
 
-  [Func="mozilla::dom::DOMPreferences::RequestContextEnabled"]
+  [Func="mozilla::dom::Request::RequestContextEnabled"]
   readonly attribute RequestContext context;
   readonly attribute USVString referrer;
   readonly attribute ReferrerPolicy referrerPolicy;
@@ -61,7 +61,7 @@ dictionary RequestInit {
 
   AbortSignal? signal;
 
-  [Func="mozilla::dom::DOMPreferences::FetchObserverEnabled"]
+  [Func="FetchObserver::IsEnabled"]
   ObserverCallback observe;
 };
 
