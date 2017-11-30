@@ -353,6 +353,14 @@ MediaSourceDecoder::NotifyInitDataArrived()
   }
 }
 
+void
+MediaSourceDecoder::NotifyDataArrived()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NotifyReaderDataArrived();
+  DownloadProgressed();
+}
+
 already_AddRefed<nsIPrincipal>
 MediaSourceDecoder::GetCurrentPrincipal()
 {

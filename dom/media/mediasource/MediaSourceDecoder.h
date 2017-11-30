@@ -64,6 +64,10 @@ public:
 
   void NotifyInitDataArrived();
 
+  // Called as data appended to the source buffer or EOS is called on the media
+  // source. Main thread only.
+  void NotifyDataArrived();
+
 private:
   void PinForSeek() override {}
   void UnpinForSeek() override {}
