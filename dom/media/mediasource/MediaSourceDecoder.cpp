@@ -357,8 +357,10 @@ void
 MediaSourceDecoder::NotifyDataArrived()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  AbstractThread::AutoEnter context(AbstractMainThread());
   NotifyReaderDataArrived();
-  DownloadProgressed();
+  GetOwner()->DownloadProgressed();
 }
 
 already_AddRefed<nsIPrincipal>
