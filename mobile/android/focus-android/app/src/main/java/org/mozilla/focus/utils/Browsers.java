@@ -29,6 +29,7 @@ public class Browsers {
         FIREFOX_BETA("org.mozilla.firefox_beta"),
         FIREFOX_AURORA("org.mozilla.fennec_aurora"),
         FIREFOX_NIGHTLY("org.mozilla.fennec"),
+        FIREFOX_ROCKET("org.mozilla.rocket"),
 
         CHROME("com.android.chrome"),
         CHROME_BETA("com.chrome.beta"),
