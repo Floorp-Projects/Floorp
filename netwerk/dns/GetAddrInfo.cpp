@@ -282,8 +282,8 @@ _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
   }
 
   bool filterNameCollision = !(aFlags & nsHostResolver::RES_ALLOW_NAME_COLLISION);
-  nsAutoPtr<AddrInfo> ai(new AddrInfo(aCanonHost, prai, disableIPv4,
-                                      filterNameCollision, canonName));
+  nsAutoPtr<AddrInfo> ai(new AddrInfo(nsCString(aCanonHost), prai, disableIPv4,
+                                      filterNameCollision, nsCString(canonName)));
   PR_FreeAddrInfo(prai);
   if (ai->mAddresses.isEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
@@ -349,8 +349,8 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
     // Figure out the canonical name, or if that fails, just use the host name
     // we have.
     const char *name = nullptr;
-    if (*aAddrInfo != nullptr && (*aAddrInfo)->mCanonicalName) {
-      name = (*aAddrInfo)->mCanonicalName;
+    if (*aAddrInfo != nullptr && !(*aAddrInfo)->mCanonicalName.IsEmpty()) {
+      name = (*aAddrInfo)->mCanonicalName.get();
     } else {
       name = aHost;
     }
