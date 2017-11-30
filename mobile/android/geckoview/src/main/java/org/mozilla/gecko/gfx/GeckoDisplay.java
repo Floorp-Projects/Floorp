@@ -16,15 +16,15 @@ public interface GeckoDisplay {
     /**
      * Displays notify GeckoSession of changes to its Surface through this interface that
      * GeckoSession implements. To ensure drawing only happens on a valid Surface,
-     * GeckoSession will only use the provided Surface after
-     * {@link #surfaceChanged(Surface, int, int) surfaceChanged} is called and
-     * before {@link #surfaceDestroyed() surfaceDestroyed} returns.
+     * GeckoSession will only use the provided Surface after {@link
+     * #surfaceChanged(Surface, int, int)} is called and before {@link
+     * #surfaceDestroyed()} returns.
      */
     interface Listener {
         /**
-         * The display's Surface has been created or changed. Must be called on the
-         * application main thread. GeckoSession may block this call to ensure the Surface
-         * is valid while resuming drawing.
+         * Required callback. The display's Surface has been created or changed. Must be
+         * called on the application main thread. GeckoSession may block this call to
+         * ensure the Surface is valid while resuming drawing.
          *
          * @param surface The new Surface.
          * @param width New width of the Surface.
@@ -33,15 +33,15 @@ public interface GeckoDisplay {
         void surfaceChanged(Surface surface, int width, int height);
 
         /**
-         * The display's Surface has been destroyed. Must be called on the application
-         * main thread. GeckoSession may block this call to ensure the Surface is valid
-         * while pausing drawing.
+         * Required callback. The display's Surface has been destroyed. Must be called on
+         * the application main thread. GeckoSession may block this call to ensure the
+         * Surface is valid while pausing drawing.
          */
         void surfaceDestroyed();
 
         /**
-         * The display's coordinates on the screen has changed. Must be called on the
-         * application main thread.
+         * Optional callback. The display's coordinates on the screen has changed. Must be
+         * called on the application main thread.
          *
          * @param left The X coordinate of the display on the screen, in screen pixels.
          * @param top The Y coordinate of the display on the screen, in screen pixels.
@@ -58,14 +58,12 @@ public interface GeckoDisplay {
     Listener getListener();
 
     /**
-     * Set a new listener attached to this display. Must be called on the
-     * application main thread. When attaching a new listener, and there is an
-     * existing valid Surface, the display must call {@link
-     * Listener#screenOriginChanged(int, int) screenOriginChanged} and {@link
-     * Listener#surfaceChanged(Surface, int, int) surfaceChanged} on the new
-     * listener. Similarly, when detaching a previous listener, and there is an
-     * existing valid Surface, the display must call {@link
-     * Listener#surfaceDestroyed() surfaceDestroyed} on the previous listener.
+     * Set a new listener attached to this display. Must be called on the application main
+     * thread. When attaching a new listener, and there is an existing valid Surface, the
+     * display must call {@link Listener#surfaceChanged(Surface, int, int)} (and other
+     * optional callbacks, if implemented) on the new listener. Similarly, when detaching
+     * a previous listener, and there is an existing valid Surface, the display must call
+     * {@link Listener#surfaceDestroyed()} on the previous listener.
      *
      * @param listener New listener or null if detaching previous listener.
      */
