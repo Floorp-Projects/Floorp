@@ -11,7 +11,22 @@
 namespace mozilla {
 namespace dom {
 
-#define PREF(name, pref)                               \
+void
+DOMPreferences::Initialize()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Let's cache all the values on the main-thread.
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  DOMPreferences::DumpEnabled();
+#endif
+
+#define DOM_PREF(name, pref) DOMPreferences::name();
+#include "DOMPreferencesInternal.h"
+#undef DOM_PREF
+}
+
+#define DOM_PREF(name, pref)                           \
   /* static */ bool                                    \
   DOMPreferences::name()                               \
   {                                                    \
@@ -26,7 +41,7 @@ namespace dom {
   }
 
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-PREF(DumpEnabled, "browser.dom.window.dump.enabled")
+DOM_PREF(DumpEnabled, "browser.dom.window.dump.enabled")
 #else
 /* static */ bool
 DOMPreferences::DumpEnabled()
@@ -35,54 +50,33 @@ DOMPreferences::DumpEnabled()
 }
 #endif
 
-PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
-PREF(DOMCachesEnabled, "dom.caches.enabled")
-PREF(DOMCachesTestingEnabled, "dom.caches.testing.enabled")
-PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
-PREF(NotificationEnabled, "dom.webnotifications.enabled")
-PREF(NotificationEnabledInServiceWorkers, "dom.webnotifications.serviceworker.enabled")
-PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
-PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
-PREF(ServiceWorkersTestingEnabled, "dom.serviceWorkers.testing.enabled")
-PREF(OpenWindowEnabled, "dom.serviceWorkers.openWindow.enabled")
-PREF(StorageManagerEnabled, "dom.storageManager.enabled")
-PREF(PromiseRejectionEventsEnabled, "dom.promise_rejection_events.enabled")
-PREF(PushEnabled, "dom.push.enabled")
-PREF(StreamsEnabled, "dom.streams.enabled")
-PREF(RequestContextEnabled, "dom.requestcontext.enabled")
-PREF(OffscreenCanvasEnabled, "gfx.offscreencanvas.enabled")
-PREF(WebkitBlinkDirectoryPickerEnabled, "dom.webkitBlink.dirPicker.enabled")
-PREF(NetworkInformationEnabled, "dom.netinfo.enabled")
-PREF(FetchObserverEnabled, "dom.fetchObserver.enabled")
-PREF(ResistFingerprintingEnabled, "privacy.resistFingerprinting")
-PREF(DevToolsEnabled, "devtools.enabled")
+#include "DOMPreferencesInternal.h"
+#undef DOM_PREF
 
-#undef PREF
-
-#define PREF_WEBIDL(name)                              \
+#define DOM_PREF_WEBIDL(name)                          \
   /* static */ bool                                    \
   DOMPreferences::name(JSContext* aCx, JSObject* aObj) \
   {                                                    \
     return DOMPreferences::name();                     \
   }
 
-PREF_WEBIDL(ImageBitmapExtensionsEnabled)
-PREF_WEBIDL(DOMCachesEnabled)
-PREF_WEBIDL(NotificationEnabledInServiceWorkers)
-PREF_WEBIDL(NotificationRIEnabled)
-PREF_WEBIDL(ServiceWorkersEnabled)
-PREF_WEBIDL(OpenWindowEnabled)
-PREF_WEBIDL(StorageManagerEnabled)
-PREF_WEBIDL(PromiseRejectionEventsEnabled)
-PREF_WEBIDL(PushEnabled)
-PREF_WEBIDL(StreamsEnabled)
-PREF_WEBIDL(RequestContextEnabled)
-PREF_WEBIDL(OffscreenCanvasEnabled)
-PREF_WEBIDL(WebkitBlinkDirectoryPickerEnabled)
-PREF_WEBIDL(NetworkInformationEnabled)
-PREF_WEBIDL(FetchObserverEnabled)
+DOM_PREF_WEBIDL(ImageBitmapExtensionsEnabled)
+DOM_PREF_WEBIDL(DOMCachesEnabled)
+DOM_PREF_WEBIDL(NotificationEnabledInServiceWorkers)
+DOM_PREF_WEBIDL(NotificationRIEnabled)
+DOM_PREF_WEBIDL(ServiceWorkersEnabled)
+DOM_PREF_WEBIDL(OpenWindowEnabled)
+DOM_PREF_WEBIDL(StorageManagerEnabled)
+DOM_PREF_WEBIDL(PromiseRejectionEventsEnabled)
+DOM_PREF_WEBIDL(PushEnabled)
+DOM_PREF_WEBIDL(StreamsEnabled)
+DOM_PREF_WEBIDL(RequestContextEnabled)
+DOM_PREF_WEBIDL(OffscreenCanvasEnabled)
+DOM_PREF_WEBIDL(WebkitBlinkDirectoryPickerEnabled)
+DOM_PREF_WEBIDL(NetworkInformationEnabled)
+DOM_PREF_WEBIDL(FetchObserverEnabled)
 
-#undef PREF_WEBIDL
+#undef DOM_PREF_WEBIDL
 
 } // dom namespace
 } // mozilla namespace
