@@ -133,20 +133,12 @@ public:
                          const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets);
 
   void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
-  void BeginShutdown() {}
+  void BeginShutdown();
   void Shutdown();
 
-  // Called when a rules in a stylesheet in this set, or a child sheet of that,
-  // are mutated from CSSOM.
-  void RuleAdded(ServoStyleSheet&, css::Rule&);
-  void RuleRemoved(ServoStyleSheet&, css::Rule&);
-  void RuleChanged(ServoStyleSheet& aSheet, css::Rule* aRule);
+  void RecordStyleSheetChange(mozilla::ServoStyleSheet*, StyleSheet::ChangeType);
 
-  // All the relevant changes are handled in RuleAdded / RuleRemoved / etc, and
-  // the relevant AppendSheet / RemoveSheet...
-  void RecordStyleSheetChange(ServoStyleSheet*, StyleSheet::ChangeType) {}
-
-  void RecordShadowStyleChange(dom::ShadowRoot* aShadowRoot) {
+  void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) {
     // FIXME(emilio): When we properly support shadow dom we'll need to do
     // better.
     MarkOriginsDirty(OriginFlags::All);
@@ -294,7 +286,7 @@ public:
   // check whether there is ::before/::after style for an element
   already_AddRefed<ServoStyleContext>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
-                          CSSPseudoElementType aType,
+                          mozilla::CSSPseudoElementType aType,
                           ServoStyleContext* aParentContext);
 
   /**
@@ -450,6 +442,7 @@ public:
   // Called by StyleSheet::EnsureUniqueInner to let us know it cloned
   // its inner.
   void SetNeedsRestyleAfterEnsureUniqueInner() {
+    MOZ_ASSERT(!IsForXBL(), "Should not be cloning things for XBL stylesheet");
     mNeedsRestyleAfterEnsureUniqueInner = true;
   }
 
@@ -638,7 +631,7 @@ private:
 
   // Map from raw Servo style rule to Gecko's wrapper object.
   // Constructed lazily when requested by devtools.
-  UniquePtr<ServoStyleRuleMap> mStyleRuleMap;
+  RefPtr<ServoStyleRuleMap> mStyleRuleMap;
 
   // This can be null if we are used to hold XBL style sheets.
   RefPtr<nsBindingManager> mBindingManager;
