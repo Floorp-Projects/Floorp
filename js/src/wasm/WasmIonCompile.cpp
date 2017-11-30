@@ -897,6 +897,8 @@ class FunctionCompiler
             checkOffsetAndAlignmentAndBounds(access, &base);
             load = MWasmLoad::New(alloc(), memoryBase, base, *access, ToMIRType(result));
         }
+        if (!load)
+            return nullptr;
         curBlock_->add(load);
         return load;
     }
@@ -917,6 +919,8 @@ class FunctionCompiler
             checkOffsetAndAlignmentAndBounds(access, &base);
             store = MWasmStore::New(alloc(), memoryBase, base, *access, v);
         }
+        if (!store)
+            return;
         curBlock_->add(store);
     }
 
@@ -941,6 +945,8 @@ class FunctionCompiler
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* cas = MWasmCompareExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
                                                           base, *access, oldv, newv, tlsPointer_);
+        if (!cas)
+            return nullptr;
         curBlock_->add(cas);
 
         if (isSmallerAccessForI64(result, access)) {
@@ -968,6 +974,8 @@ class FunctionCompiler
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* xchg = MWasmAtomicExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
                                                           base, *access, value, tlsPointer_);
+        if (!xchg)
+            return nullptr;
         curBlock_->add(xchg);
 
         if (isSmallerAccessForI64(result, access)) {
@@ -995,6 +1003,8 @@ class FunctionCompiler
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* binop = MWasmAtomicBinopHeap::New(alloc(), bytecodeOffset(), op, memoryBase,
                                                         base, *access, value, tlsPointer_);
+        if (!binop)
+            return nullptr;
         curBlock_->add(binop);
 
         if (isSmallerAccessForI64(result, access)) {
