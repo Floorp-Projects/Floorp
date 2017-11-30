@@ -676,8 +676,8 @@ SingleTexturePass::SetupPipeline()
 }
 
 ComponentAlphaPass::ComponentAlphaPass(FrameBuilder* aBuilder, const ItemInfo& aItem)
-: TexturedRenderPass(aBuilder, aItem),
-  mAssignedLayer(nullptr)
+ : TexturedRenderPass(aBuilder, aItem),
+   mOpacity(1.0f)
 {
   SetDefaultGeometry(aItem);
 }
@@ -688,11 +688,17 @@ ComponentAlphaPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
   PaintedLayerMLGPU* layer = aLayer->AsPaintedLayerMLGPU();
   MOZ_ASSERT(layer);
 
-  if (mAssignedLayer && mAssignedLayer != layer) {
-    return false;
-  }
-  if (!mAssignedLayer) {
-    mAssignedLayer = layer;
+  if (mTextureOnBlack) {
+    if (layer->GetTexture() != mTextureOnBlack ||
+        layer->GetTextureOnWhite() != mTextureOnWhite ||
+        layer->GetOpacity() != mOpacity ||
+        layer->GetSamplerMode() != mSamplerMode)
+    {
+      return false;
+    }
+  } else {
+    mOpacity = layer->GetComputedOpacity();
+    mSamplerMode = layer->GetSamplerMode();
     mTextureOnBlack = layer->GetTexture();
     mTextureOnWhite = layer->GetTextureOnWhite();
   } 
@@ -709,7 +715,7 @@ ComponentAlphaPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
 float
 ComponentAlphaPass::GetOpacity() const
 {
-  return mAssignedLayer->GetComputedOpacity();
+  return mOpacity;
 }
 
 void
@@ -730,7 +736,7 @@ ComponentAlphaPass::SetupPipeline()
     mDevice->SetPixelShader(PixelShaderID::ComponentAlphaVertex);
   }
 
-  mDevice->SetSamplerMode(kDefaultSamplerSlot, mAssignedLayer->GetSamplerMode());
+  mDevice->SetSamplerMode(kDefaultSamplerSlot, mSamplerMode);
   mDevice->SetPSTextures(0, 2, textures);
 }
 
