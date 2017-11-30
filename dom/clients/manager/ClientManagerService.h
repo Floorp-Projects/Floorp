@@ -13,6 +13,7 @@ namespace mozilla {
 
 namespace dom {
 
+class ClientManagerParent;
 class ClientSourceParent;
 
 // Define a singleton service to manage client activity throughout the
@@ -23,6 +24,8 @@ class ClientManagerService final
   // Store the ClientSourceParent objects in a hash table.  We want to
   // optimize for insertion, removal, and lookup by UUID.
   nsDataHashtable<nsIDHashKey, ClientSourceParent*> mSourceTable;
+
+  nsTArray<ClientManagerParent*> mManagerList;
 
   ClientManagerService();
   ~ClientManagerService();
@@ -40,6 +43,12 @@ public:
   ClientSourceParent*
   FindSource(const nsID& aID,
              const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+
+  void
+  AddManager(ClientManagerParent* aManager);
+
+  void
+  RemoveManager(ClientManagerParent* aManager);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManagerService)
 };
