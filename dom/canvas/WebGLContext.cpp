@@ -5,6 +5,7 @@
 
 #include "WebGLContext.h"
 
+#include <algorithm>
 #include <queue>
 
 #include "AccessCheck.h"
@@ -1153,15 +1154,12 @@ WebGLContext::ClearBackbufferIfNeeded()
 void
 WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
 {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    // some mobile devices can't have more than 8 GL contexts overall
-    const size_t kMaxWebGLContextsPerPrincipal = 2;
-    const size_t kMaxWebGLContexts             = 4;
-#else
-    const size_t kMaxWebGLContextsPerPrincipal = 16;
-    const size_t kMaxWebGLContexts             = 32;
-#endif
-    MOZ_ASSERT(kMaxWebGLContextsPerPrincipal < kMaxWebGLContexts);
+    const size_t maxWebGLContexts = gfxPrefs::WebGLMaxContexts();
+    size_t maxWebGLContextsPerPrincipal = gfxPrefs::WebGLMaxContextsPerPrincipal();
+
+    // maxWebGLContextsPerPrincipal must be less than maxWebGLContexts
+    MOZ_ASSERT(maxWebGLContextsPerPrincipal < maxWebGLContexts);
+    maxWebGLContextsPerPrincipal = std::min(maxWebGLContextsPerPrincipal, maxWebGLContexts - 1);
 
     if (!NS_IsMainThread()) {
         // XXX mtseng: bug 709490, WebGLMemoryTracker is not thread safe.
@@ -1176,7 +1174,7 @@ WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
     WebGLMemoryTracker::ContextsArrayType& contexts = WebGLMemoryTracker::Contexts();
 
     // quick exit path, should cover a majority of cases
-    if (contexts.Length() <= kMaxWebGLContextsPerPrincipal)
+    if (contexts.Length() <= maxWebGLContextsPerPrincipal)
         return;
 
     // note that here by "context" we mean "non-lost context". See the check for
@@ -1225,14 +1223,14 @@ WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
         }
     }
 
-    if (numContextsThisPrincipal > kMaxWebGLContextsPerPrincipal) {
+    if (numContextsThisPrincipal > maxWebGLContextsPerPrincipal) {
         GenerateWarning("Exceeded %zu live WebGL contexts for this principal, losing the "
-                        "least recently used one.", kMaxWebGLContextsPerPrincipal);
+                        "least recently used one.", maxWebGLContextsPerPrincipal);
         MOZ_ASSERT(oldestContextThisPrincipal); // if we reach this point, this can't be null
         const_cast<WebGLContext*>(oldestContextThisPrincipal)->LoseContext();
-    } else if (numContexts > kMaxWebGLContexts) {
+    } else if (numContexts > maxWebGLContexts) {
         GenerateWarning("Exceeded %zu live WebGL contexts, losing the least "
-                        "recently used one.", kMaxWebGLContexts);
+                        "recently used one.", maxWebGLContexts);
         MOZ_ASSERT(oldestContext); // if we reach this point, this can't be null
         const_cast<WebGLContext*>(oldestContext)->LoseContext();
     }
