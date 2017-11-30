@@ -19,7 +19,7 @@ function check_size(db) {
 }
 
 function new_file(name) {
-  var file = dirSvc.get("ProfD", Ci.nsIFile);
+  var file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(name + ".sqlite");
   do_check_false(file.exists());
   return file;
@@ -27,6 +27,5 @@ function new_file(name) {
 
 function run_test() {
   check_size(getDatabase(new_file("shared32k")));
-  check_size(getService().openUnsharedDatabase(new_file("unshared32k")));
+  check_size(Services.storage.openUnsharedDatabase(new_file("unshared32k")));
 }
-
