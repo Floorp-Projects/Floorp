@@ -389,15 +389,10 @@ var AboutWebRTC = {
       return content;
     }
 
-    let div = document.createElement("div");
-    let sectionCtrl = document.createElement("div");
-    sectionCtrl.className = "section-ctrl no-print";
-    let foldEffect = new FoldEffect(div, {
+    let div = new FoldableSection(content, {
       showMsg: getString("log_show_msg"),
       hideMsg: getString("log_hide_msg")
-    });
-    sectionCtrl.appendChild(foldEffect.render());
-    content.appendChild(sectionCtrl);
+    }).render();
 
     for (let line of this._log) {
       elem = document.createElement("p");
@@ -420,12 +415,7 @@ PeerConnection.prototype = {
     pc.className = "peer-connection";
     pc.appendChild(this.renderHeading());
 
-    let div = document.createElement("div");
-    let sectionCtrl = document.createElement("div");
-    sectionCtrl.className = "section-ctrl no-print";
-    let foldEffect = new FoldEffect(div);
-    sectionCtrl.appendChild(foldEffect.render());
-    pc.appendChild(sectionCtrl);
+    let div = new FoldableSection(pc).render();
 
     div.appendChild(this.renderDesc());
     div.appendChild(new ICEStats(this._report).render());
@@ -755,15 +745,10 @@ ICEStats.prototype = {
     heading.textContent = getString("raw_candidates_heading");
     section.appendChild(heading);
 
-    let div = document.createElement("div");
-    let sectionCtrl = document.createElement("div");
-    sectionCtrl.className = "section-ctrl no-print";
-    let foldEffect = new FoldEffect(div, {
-       showMsg: getString("raw_cand_show_msg"),
-       hideMsg: getString("raw_cand_hide_msg")
-    });
-    sectionCtrl.appendChild(foldEffect.render());
-    section.appendChild(sectionCtrl);
+    let div = new FoldableSection(section, {
+      showMsg: getString("raw_cand_show_msg"),
+      hideMsg: getString("raw_cand_hide_msg")
+    }).render();
 
     div.appendChild(this.renderRawICECandidates());
 
@@ -878,6 +863,23 @@ ICEStats.prototype = {
     }
 
     return `${c.ipAddress}:${c.portNumber}/${c.transport}(${type})`;
+  }
+};
+
+function FoldableSection(parentElement, options = {}) {
+  this._foldableElement = document.createElement("div");
+  if (parentElement) {
+    let sectionCtrl = document.createElement("div");
+    sectionCtrl.className = "section-ctrl no-print";
+    let foldEffect = new FoldEffect(this._foldableElement, options);
+    sectionCtrl.appendChild(foldEffect.render());
+    parentElement.appendChild(sectionCtrl);
+  }
+}
+
+FoldableSection.prototype = {
+  render() {
+    return this._foldableElement;
   }
 };
 
