@@ -228,6 +228,12 @@ add_task(async function testSyncedTabsSidebarStatus() {
   Assert.ok(selectedPanel.classList.contains("notAuthedInfo"),
     "not-authed panel is selected");
 
+  account = {verified: false};
+  await syncedTabsDeckComponent.updatePanel();
+  selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
+  Assert.ok(selectedPanel.classList.contains("unverified"),
+    "unverified panel is selected");
+
   account = {verified: true};
   await syncedTabsDeckComponent.updatePanel();
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
