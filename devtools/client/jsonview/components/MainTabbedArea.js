@@ -22,7 +22,7 @@ define(function (require, exports, module) {
   class MainTabbedArea extends Component {
     static get propTypes() {
       return {
-        jsonText: PropTypes.instanceOf(Text),
+        jsonText: PropTypes.string,
         tabActive: PropTypes.number,
         actions: PropTypes.object,
         headers: PropTypes.object,
@@ -42,8 +42,8 @@ define(function (require, exports, module) {
       super(props);
 
       this.state = {
-        json: props.json,
-        expandedNodes: props.expandedNodes,
+        json: {},
+        headers: {},
         jsonText: props.jsonText,
         tabActive: props.tabActive
       };
@@ -64,7 +64,7 @@ define(function (require, exports, module) {
             className: "json",
             title: JSONView.Locale.$STR("jsonViewer.tab.JSON")},
             JsonPanel({
-              data: this.state.json,
+              data: this.props.json,
               expandedNodes: this.props.expandedNodes,
               actions: this.props.actions,
               searchFilter: this.state.searchFilter
@@ -74,8 +74,7 @@ define(function (require, exports, module) {
             className: "rawdata",
             title: JSONView.Locale.$STR("jsonViewer.tab.RawData")},
             TextPanel({
-              isValidJson: !(this.state.json instanceof Error) &&
-                           document.readyState != "loading",
+              isValidJson: !(this.props.json instanceof Error),
               data: this.state.jsonText,
               actions: this.props.actions
             })
