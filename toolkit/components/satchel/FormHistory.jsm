@@ -1415,10 +1415,6 @@ this.FormHistory = {
     return pending;
   },
 
-  get schemaVersion() {
-    return dbConnection.schemaVersion;
-  },
-
   // This is used only so that the test can verify deleted table support.
   get _supportsDeletedTable() {
     return supportsDeletedTable;
