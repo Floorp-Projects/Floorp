@@ -62,7 +62,6 @@ static const HTMLElement gHTMLElements[] = {
   ELEM(code,        ____, true)
   ELEM(col,         ____, ____)
   ELEM(colgroup,    ____, true)
-  ELEM(content,     ____, true)
   ELEM(data,        ____, true)
   ELEM(datalist,    ____, true)
   ELEM(dd,          ____, true)

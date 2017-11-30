@@ -65,6 +65,7 @@ class nsHtml5AttributeName
     static int32_t* XLINK_NS;
   public:
     static nsAtom** ALL_NO_PREFIX;
+
   private:
     static nsAtom** XMLNS_PREFIX;
     static nsAtom** XLINK_PREFIX;
@@ -72,6 +73,7 @@ class nsHtml5AttributeName
     static nsAtom** SVG_DIFFERENT(nsAtom* name, nsAtom* camel);
     static nsAtom** MATH_DIFFERENT(nsAtom* name, nsAtom* camel);
     static nsAtom** COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix);
+
   public:
     static nsAtom** SAME_LOCAL(nsAtom* name);
     inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,
@@ -159,6 +161,7 @@ class nsHtml5AttributeName
     nsAtom** prefix;
     bool custom;
     nsHtml5AttributeName(int32_t* uri, nsAtom** local, nsAtom** prefix);
+
   public:
     nsHtml5AttributeName();
     inline bool isInterned() { return !custom; }
