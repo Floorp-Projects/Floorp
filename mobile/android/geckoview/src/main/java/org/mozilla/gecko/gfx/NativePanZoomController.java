@@ -30,7 +30,6 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     private final LayerView mView;
 
     private boolean mDestroyed;
-    private Overscroll mOverscroll;
     private float mPointerScrollFactor;
     private long mLastDownTime;
 
@@ -207,11 +206,6 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko_priority") @Override // JNIObject
     protected native void disposeNative();
 
-    @Override
-    public void setOverscrollHandler(final Overscroll handler) {
-        mOverscroll = handler;
-    }
-
     @WrapForJNI(stubName = "SetIsLongpressEnabled") // Called from test thread.
     private native void nativeSetIsLongpressEnabled(boolean isLongpressEnabled);
 
@@ -222,60 +216,6 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         }
     }
 
-    @WrapForJNI
-    private void updateOverscrollVelocity(final float x, final float y) {
-        if (mOverscroll != null) {
-            if (ThreadUtils.isOnUiThread() == true) {
-                mOverscroll.setVelocity(x * 1000.0f, Overscroll.Axis.X);
-                mOverscroll.setVelocity(y * 1000.0f, Overscroll.Axis.Y);
-            } else {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Multiply the velocity by 1000 to match what was done in JPZ.
-                        mOverscroll.setVelocity(x * 1000.0f, Overscroll.Axis.X);
-                        mOverscroll.setVelocity(y * 1000.0f, Overscroll.Axis.Y);
-                    }
-                });
-            }
-        }
-    }
-
-    @WrapForJNI
-    private void updateOverscrollOffset(final float x, final float y) {
-        if (mOverscroll != null) {
-            if (ThreadUtils.isOnUiThread() == true) {
-                mOverscroll.setDistance(x, Overscroll.Axis.X);
-                mOverscroll.setDistance(y, Overscroll.Axis.Y);
-            } else {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mOverscroll.setDistance(x, Overscroll.Axis.X);
-                        mOverscroll.setDistance(y, Overscroll.Axis.Y);
-                    }
-                });
-            }
-        }
-    }
-
-    /**
-     * Active SelectionCaretDrag requires DynamicToolbarAnimator to be pinned
-     * to avoid unwanted scroll interactions.
-     */
-    @WrapForJNI(calledFrom = "gecko")
-    private void onSelectionDragState(final boolean state) {
-        final LayerView view = mView;
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (view.mSession != null) {
-                    view.mSession.getDynamicToolbarAnimator()
-                                 .setPinned(state, PinReason.CARET_DRAG);
-                }
-            }
-        });
-    }
 
     private static class PointerInfo {
         // We reserve one pointer ID for the mouse, so that tests don't have

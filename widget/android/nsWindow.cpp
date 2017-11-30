@@ -180,6 +180,15 @@ namespace {
     {
         Impl::AttachNative(aInstance, UniquePtr<Impl>(aImpl));
     }
+
+    template<class Lambda> bool
+    DispatchToUiThread(const char* aName, Lambda&& aLambda) {
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            uiThread->Dispatch(NS_NewRunnableFunction(aName, Move(aLambda)));
+            return true;
+        }
+        return false;
+    }
 } // namespace
 
 template<class Impl>
@@ -737,21 +746,6 @@ public:
             window->DispatchHitTest(touchEvent);
         });
         return true;
-    }
-
-    void UpdateOverscrollVelocity(const float x, const float y)
-    {
-        mNPZC->UpdateOverscrollVelocity(x, y);
-    }
-
-    void UpdateOverscrollOffset(const float x, const float y)
-    {
-        mNPZC->UpdateOverscrollOffset(x, y);
-    }
-
-    void SetSelectionDragState(const bool aState)
-    {
-        mNPZC->OnSelectionDragState(aState);
     }
 };
 
@@ -2002,25 +1996,57 @@ nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
 void
 nsWindow::UpdateOverscrollVelocity(const float aX, const float aY)
 {
-    if (NativePtr<NPZCSupport>::Locked npzcs{mNPZCSupport}) {
-        npzcs->UpdateOverscrollVelocity(aX, aY);
+    if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
+        const auto& compositor = lvs->GetJavaCompositor();
+        if (AndroidBridge::IsJavaUiThread()) {
+            compositor->UpdateOverscrollVelocity(aX, aY);
+            return;
+        }
+
+        DispatchToUiThread(
+                "nsWindow::UpdateOverscrollVelocity",
+                [compositor = LayerSession::Compositor::GlobalRef(compositor),
+                 aX, aY] {
+                    compositor->UpdateOverscrollVelocity(aX, aY);
+                });
     }
 }
 
 void
 nsWindow::UpdateOverscrollOffset(const float aX, const float aY)
 {
-    if (NativePtr<NPZCSupport>::Locked npzcs{mNPZCSupport}) {
-        npzcs->UpdateOverscrollOffset(aX, aY);
+    if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
+        const auto& compositor = lvs->GetJavaCompositor();
+        if (AndroidBridge::IsJavaUiThread()) {
+            compositor->UpdateOverscrollOffset(aX, aY);
+            return;
+        }
+
+        DispatchToUiThread(
+                "nsWindow::UpdateOverscrollOffset",
+                [compositor = LayerSession::Compositor::GlobalRef(compositor),
+                 aX, aY] {
+                    compositor->UpdateOverscrollOffset(aX, aY);
+                });
     }
 }
 
 void
 nsWindow::SetSelectionDragState(bool aState)
 {
-    if (NativePtr<NPZCSupport>::Locked npzcs{mNPZCSupport}) {
-        npzcs->SetSelectionDragState(aState);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mLayerViewSupport) {
+        return;
     }
+
+    const auto& compositor = mLayerViewSupport->GetJavaCompositor();
+    DispatchToUiThread(
+            "nsWindow::SetSelectionDragState",
+            [compositor = LayerSession::Compositor::GlobalRef(compositor),
+             aState] {
+                compositor->OnSelectionCaretDrag(aState);
+            });
 }
 
 void *

@@ -11,9 +11,11 @@ import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.gecko.gfx.LayerView;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Region;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -189,6 +191,19 @@ public class GeckoView extends LayerView {
         if (session != null) {
             session.addDisplay(mDisplay);
         }
+
+        final Context context = getContext();
+        session.getOverscrollEdgeEffect().setTheme(context);
+        session.getOverscrollEdgeEffect().setInvalidationCallback(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT >= 16) {
+                    GeckoView.this.postInvalidateOnAnimation();
+                } else {
+                    GeckoView.this.postInvalidateDelayed(10);
+                }
+            }
+        });
 
         mSession = session;
     }
@@ -386,5 +401,14 @@ public class GeckoView extends LayerView {
     public boolean isIMEEnabled() {
         return mInputConnectionListener != null &&
                 mInputConnectionListener.isIMEEnabled();
+    }
+
+    @Override
+    public void dispatchDraw(final Canvas canvas) {
+        super.dispatchDraw(canvas);
+
+        if (mSession != null) {
+            mSession.getOverscrollEdgeEffect().draw(canvas);
+        }
     }
 }
