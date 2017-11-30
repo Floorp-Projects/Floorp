@@ -7,13 +7,13 @@
 #include "ServiceWorkerRegistration.h"
 
 #include "ipc/ErrorIPCUtils.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
@@ -36,22 +36,6 @@ using namespace mozilla::dom::workers;
 
 namespace mozilla {
 namespace dom {
-
-/* static */ bool
-ServiceWorkerRegistration::Visible(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.serviceWorkers.enabled", false);
-  }
-
-  // Otherwise check the pref via the work private helper
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->ServiceWorkersEnabled();
-}
 
 ////////////////////////////////////////////////////
 // Main Thread implementation

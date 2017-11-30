@@ -42,6 +42,7 @@ PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
 PREF(NotificationEnabled, "dom.webnotifications.enabled")
 PREF(NotificationEnabledInServiceWorkers, "dom.webnotifications.serviceworker.enabled")
 PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
+PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
 
 #undef PREF
 
@@ -56,6 +57,7 @@ PREF_WEBIDL(ImageBitmapExtensionsEnabled)
 PREF_WEBIDL(DOMCachesEnabled)
 PREF_WEBIDL(NotificationEnabledInServiceWorkers)
 PREF_WEBIDL(NotificationRIEnabled)
+PREF_WEBIDL(ServiceWorkersEnabled)
 
 #undef PREF_WEBIDL
 
