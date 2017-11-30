@@ -732,6 +732,21 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
     // Get the new fallback stub from the recompiled baseline script.
     ICFallbackStub* fallbackStub = entry.fallbackStub();
 
+    // Some stubs are monitored, get the first stub in the monitor chain from
+    // the new fallback stub if so. We do this before checking for fallback
+    // stubs below, to ensure monitored fallback stubs have a type monitor
+    // chain.
+    ICStub* firstMonitorStub;
+    if (fallbackStub->isMonitoredFallback()) {
+        ICMonitoredFallbackStub* monitored = fallbackStub->toMonitoredFallbackStub();
+        ICTypeMonitor_Fallback* fallback = monitored->getFallbackMonitorStub(cx, entry.script);
+        if (!fallback)
+            return false;
+        firstMonitorStub = fallback->firstMonitorStub();
+    } else {
+        firstMonitorStub = nullptr;
+    }
+
     // We don't need to clone fallback stubs, as they are guaranteed to
     // exist. Furthermore, their JitCode is cached and should be the same even
     // across the recompile.
@@ -752,18 +767,6 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
         }
     }
 
-    // Some stubs are monitored, get the first stub in the monitor chain from
-    // the new fallback stub if so.
-    ICStub* firstMonitorStub;
-    if (fallbackStub->isMonitoredFallback()) {
-        ICMonitoredFallbackStub* monitored = fallbackStub->toMonitoredFallbackStub();
-        ICTypeMonitor_Fallback* fallback = monitored->getFallbackMonitorStub(cx, entry.script);
-        if (!fallback)
-            return false;
-        firstMonitorStub = fallback->firstMonitorStub();
-    } else {
-        firstMonitorStub = nullptr;
-    }
     ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(oldStub->makesGCCalls(), entry.script,
                                                               ICStubCompiler::Engine::Baseline);
 
