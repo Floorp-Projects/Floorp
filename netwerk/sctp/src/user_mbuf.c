@@ -121,7 +121,7 @@ m_get(int how, short type)
 	mbuf_mb_args.type = type;
 #endif
 	/* Mbuf master zone, zone_mbuf, has already been
-	 * created in mbuf_initialize() */
+	 * created in mbuf_init() */
 	mret = SCTP_ZONE_GET(zone_mbuf, struct mbuf);
 #if defined(SCTP_SIMPLE_ALLOCATOR)
 	mb_ctor_mbuf(mret, &mbuf_mb_args, 0);
@@ -204,39 +204,39 @@ m_free(struct mbuf *m)
 }
 
 
-static void
-clust_constructor_dup(caddr_t m_clust, struct mbuf* m)
+static int clust_constructor_dup(caddr_t m_clust, struct mbuf* m)
 {
 	u_int *refcnt;
 	int type, size;
 
-	if (m == NULL) {
-		return;
-	}
 	/* Assigning cluster of MCLBYTES. TODO: Add jumbo frame functionality */
 	type = EXT_CLUSTER;
 	size = MCLBYTES;
 
 	refcnt = SCTP_ZONE_GET(zone_ext_refcnt, u_int);
 	/*refcnt = (u_int *)umem_cache_alloc(zone_ext_refcnt, UMEM_DEFAULT);*/
-#if !defined(SCTP_SIMPLE_ALLOCATOR)
 	if (refcnt == NULL) {
+#if !defined(SCTP_SIMPLE_ALLOCATOR)
 		umem_reap();
+#endif
 		refcnt = SCTP_ZONE_GET(zone_ext_refcnt, u_int);
 		/*refcnt = (u_int *)umem_cache_alloc(zone_ext_refcnt, UMEM_DEFAULT);*/
 	}
-#endif
 	*refcnt = 1;
-	m->m_ext.ext_buf = (caddr_t)m_clust;
-	m->m_data = m->m_ext.ext_buf;
-	m->m_flags |= M_EXT;
-	m->m_ext.ext_free = NULL;
-	m->m_ext.ext_args = NULL;
-	m->m_ext.ext_size = size;
-	m->m_ext.ext_type = type;
-	m->m_ext.ref_cnt = refcnt;
-	return;
+	if (m != NULL) {
+		m->m_ext.ext_buf = (caddr_t)m_clust;
+		m->m_data = m->m_ext.ext_buf;
+		m->m_flags |= M_EXT;
+		m->m_ext.ext_free = NULL;
+		m->m_ext.ext_args = NULL;
+		m->m_ext.ext_size = size;
+		m->m_ext.ext_type = type;
+		m->m_ext.ref_cnt = refcnt;
+	}
+
+	return (0);
 }
+
 
 
 /* __Userspace__ */
@@ -245,18 +245,18 @@ m_clget(struct mbuf *m, int how)
 {
 	caddr_t mclust_ret;
 #if defined(SCTP_SIMPLE_ALLOCATOR)
-	struct clust_args clust_mb_args_l;
+	struct clust_args clust_mb_args;
 #endif
 	if (m->m_flags & M_EXT) {
 		SCTPDBG(SCTP_DEBUG_USR, "%s: %p mbuf already has cluster\n", __func__, (void *)m);
 	}
 	m->m_ext.ext_buf = (char *)NULL;
 #if defined(SCTP_SIMPLE_ALLOCATOR)
-	clust_mb_args_l.parent_mbuf = m;
+	clust_mb_args.parent_mbuf = m;
 #endif
 	mclust_ret = SCTP_ZONE_GET(zone_clust, char);
 #if defined(SCTP_SIMPLE_ALLOCATOR)
-	mb_ctor_clust(mclust_ret, &clust_mb_args_l, 0);
+	mb_ctor_clust(mclust_ret, &clust_mb_args, 0);
 #endif
 	/*mclust_ret = umem_cache_alloc(zone_clust, UMEM_DEFAULT);*/
 	/*
@@ -327,8 +327,12 @@ m_tag_setup(struct m_tag *t, u_int32_t cookie, int type, int len)
 
 /************ End functions to substitute umem_cache_alloc and umem_cache_free **************/
 
+/* __Userspace__
+ * TODO: mbuf_init must be called in the initialization routines
+ * of userspace stack.
+ */
 void
-mbuf_initialize(void *dummy)
+mbuf_init(void *dummy)
 {
 
 	/*
@@ -728,10 +732,11 @@ m_pullup(struct mbuf *n, int len)
 		if (n->m_flags & M_PKTHDR)
 			M_MOVE_PKTHDR(m, n);
 	}
-	space = (int)(&m->m_dat[MLEN] - (m->m_data + m->m_len));
+	space = &m->m_dat[MLEN] - (m->m_data + m->m_len);
 	do {
 		count = min(min(max(len, max_protohdr), space), n->m_len);
-		memcpy(mtod(m, caddr_t) + m->m_len,mtod(n, caddr_t), (u_int)count);
+		bcopy(mtod(n, caddr_t), mtod(m, caddr_t) + m->m_len,
+		  (u_int)count);
 		len -= count;
 		m->m_len += count;
 		n->m_len -= count;
@@ -897,7 +902,7 @@ m_pulldown(struct mbuf *m, int off, int len, int *offp)
 	    && writable) {
 		n->m_next->m_data -= hlen;
 		n->m_next->m_len += hlen;
-		memcpy( mtod(n->m_next, caddr_t), mtod(n, caddr_t) + off,hlen);
+		bcopy(mtod(n, caddr_t) + off, mtod(n->m_next, caddr_t), hlen);
 		n->m_len -= hlen;
 		n = n->m_next;
 		off = 0;
@@ -919,7 +924,7 @@ m_pulldown(struct mbuf *m, int off, int len, int *offp)
 	}
 	/* get hlen from <n, off> into <o, 0> */
 	o->m_len = hlen;
-	memcpy(mtod(o, caddr_t), mtod(n, caddr_t) + off, hlen);
+	bcopy(mtod(n, caddr_t) + off, mtod(o, caddr_t), hlen);
 	n->m_len -= hlen;
 	/* get tlen from <n->m_next, 0> into <o, hlen> */
 	m_copydata(n->m_next, 0, tlen, mtod(o, caddr_t) + o->m_len);
@@ -1025,7 +1030,8 @@ m_copym(struct mbuf *m, int off0, int len, int wait)
 			n->m_data = m->m_data + off;
 			mb_dupcl(n, m);
 		} else
-			memcpy(mtod(n, caddr_t), mtod(m, caddr_t) + off, (u_int)n->m_len);
+			bcopy(mtod(m, caddr_t)+off, mtod(n, caddr_t),
+			    (u_int)n->m_len);
 		if (len != M_COPYALL)
 			len -= n->m_len;
 		off = 0;
@@ -1033,7 +1039,7 @@ m_copym(struct mbuf *m, int off0, int len, int wait)
 		np = &n->m_next;
 	}
 	if (top == NULL)
-		mbstat.m_mcfail++;	/* XXX: No consistency. */
+            mbstat.m_mcfail++;	/* XXX: No consistency. */
 
 	return (top);
 nospace:
@@ -1074,8 +1080,6 @@ int
 m_dup_pkthdr(struct mbuf *to, struct mbuf *from, int how)
 {
 
-	KASSERT(to, ("m_dup_pkthdr: to is NULL"));
-	KASSERT(from, ("m_dup_pkthdr: from is NULL"));
 	to->m_flags = (from->m_flags & M_COPYFLAGS) | (to->m_flags & M_EXT);
 	if ((to->m_flags & M_EXT) == 0)
 		to->m_data = to->m_pktdat;
@@ -1094,7 +1098,7 @@ m_tag_copy(struct m_tag *t, int how)
 	p = m_tag_alloc(t->m_tag_cookie, t->m_tag_id, t->m_tag_len, how);
 	if (p == NULL)
 		return (NULL);
-	memcpy(p + 1, t + 1, t->m_tag_len); /* Copy the data */
+	bcopy(t + 1, p + 1, t->m_tag_len); /* Copy the data */
 	return p;
 }
 
@@ -1142,7 +1146,7 @@ m_copyback(struct mbuf *m0, int off, int len, caddr_t cp)
 			n = m_get(M_NOWAIT, m->m_type);
 			if (n == NULL)
 				goto out;
-			memset(mtod(n, caddr_t), 0, MLEN);
+			bzero(mtod(n, caddr_t), MLEN);
 			n->m_len = min(MLEN, len + off);
 			m->m_next = n;
 		}
@@ -1150,7 +1154,7 @@ m_copyback(struct mbuf *m0, int off, int len, caddr_t cp)
 	}
 	while (len > 0) {
 		mlen = min (m->m_len - off, len);
-		memcpy(off + mtod(m, caddr_t), cp, (u_int)mlen);
+		bcopy(cp, off + mtod(m, caddr_t), (u_int)mlen);
 		cp += mlen;
 		len -= mlen;
 		mlen += off;
@@ -1194,7 +1198,7 @@ m_prepend(struct mbuf *m, int len, int how)
 		M_MOVE_PKTHDR(mn, m);
 	mn->m_next = m;
 	m = mn;
-	if (m->m_flags & M_PKTHDR) {
+	if(m->m_flags & M_PKTHDR) {
 		if (len < MHLEN)
 			MH_ALIGN(m, len);
 	} else {
@@ -1226,7 +1230,7 @@ m_copydata(const struct mbuf *m, int off, int len, caddr_t cp)
 	while (len > 0) {
 		KASSERT(m != NULL, ("m_copydata, length > size of mbuf chain"));
 		count = min(m->m_len - off, len);
-		memcpy(cp, mtod(m, caddr_t) + off, count);
+		bcopy(mtod(m, caddr_t) + off, cp, count);
 		len -= count;
 		cp += count;
 		off = 0;
@@ -1253,7 +1257,7 @@ m_cat(struct mbuf *m, struct mbuf *n)
 			return;
 		}
 		/* splat the data from one into the other */
-		memcpy(mtod(m, caddr_t) + m->m_len, mtod(n, caddr_t), (u_int)n->m_len);
+		bcopy(mtod(n, caddr_t), mtod(m, caddr_t) + m->m_len, (u_int)n->m_len);
 		m->m_len += n->m_len;
 		n = m_free(n);
 	}
@@ -1396,7 +1400,7 @@ extpacket:
 		n->m_data = m->m_data + len;
 		mb_dupcl(n, m);
 	} else {
-		memcpy(mtod(n, caddr_t), mtod(m, caddr_t) + len, remain);
+		bcopy(mtod(m, caddr_t) + len, mtod(n, caddr_t), remain);
 	}
 	n->m_len = remain;
 	m->m_len = len;
@@ -1417,7 +1421,7 @@ pack_send_buffer(caddr_t buffer, struct mbuf* mb){
 
 	do {
 		count_to_copy = mb->m_len;
-		memcpy(buffer+offset, mtod(mb, caddr_t), count_to_copy);
+		bcopy(mtod(mb, caddr_t), buffer+offset, count_to_copy);
 		offset += count_to_copy;
 		total_count_copied += count_to_copy;
 		mb = mb->m_next;
