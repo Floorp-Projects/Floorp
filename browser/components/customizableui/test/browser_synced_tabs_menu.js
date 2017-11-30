@@ -139,6 +139,13 @@ add_task(async function() {
 });
 add_task(asyncCleanup);
 
+// When Sync is configured in an unverified state.
+add_task(async function() {
+  gSync.updateAllUI({ status: UIState.STATUS_NOT_VERIFIED, email: "foo@bar.com" });
+  await openPrefsFromMenuPanel("PanelUI-remotetabs-unverified", "synced-tabs");
+});
+add_task(asyncCleanup);
+
 // When Sync is configured in a "needs reauthentication" state.
 add_task(async function() {
   gSync.updateAllUI({ status: UIState.STATUS_LOGIN_FAILED, email: "foo@bar.com" });
