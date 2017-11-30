@@ -6,6 +6,7 @@
 package org.mozilla.focus.telemetry
 
 import android.content.Context
+import android.net.http.SslError
 import android.os.StrictMode
 import android.preference.PreferenceManager
 import android.support.annotation.CheckResult
@@ -44,6 +45,7 @@ object TelemetryWrapper {
 
     private object Category {
         val ACTION = "action"
+        val ERROR = "error"
     }
 
     private object Method {
@@ -71,6 +73,8 @@ object TelemetryWrapper {
         val REMOVE = "remove"
         val REORDER = "reorder"
         val RESTORE = "restore"
+        val PAGE = "page"
+        val RESOURCE = "resource"
     }
 
     private object Object {
@@ -137,6 +141,7 @@ object TelemetryWrapper {
         val AUTOCOMPLETE = "autocomplete"
         val SOURCE = "source"
         val SUCCESS = "success"
+        val ERROR_CODE = "error_code"
     }
 
     @JvmStatic
@@ -581,6 +586,23 @@ object TelemetryWrapper {
     @JvmStatic
     fun menuReloadEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.RELOAD).queue();
+    }
+
+    @JvmStatic
+    fun sslErrorEvent(fromPage: Boolean, error: SslError) {
+        // SSL Errors from https://developer.android.com/reference/android/net/http/SslError.html
+        val primaryErrorMessage = when (error.primaryError) {
+            SslError.SSL_DATE_INVALID -> "SSL_DATE_INVALID"
+            SslError.SSL_EXPIRED -> "SSL_EXPIRED"
+            SslError.SSL_IDMISMATCH -> "SSL_IDMISMATCH"
+            SslError.SSL_NOTYETVALID -> "SSL_NOTYETVALID"
+            SslError.SSL_UNTRUSTED -> "SSL_UNTRUSTED"
+            SslError.SSL_INVALID -> "SSL_INVALID"
+            else -> "Undefined SSL Error"
+        }
+        TelemetryEvent.create(Category.ERROR, if (fromPage) Method.PAGE else Method.RESOURCE, Object.BROWSER)
+                .extra(Extra.ERROR_CODE, primaryErrorMessage)
+                .queue()
     }
 
     fun saveAutocompleteDomainEvent() {

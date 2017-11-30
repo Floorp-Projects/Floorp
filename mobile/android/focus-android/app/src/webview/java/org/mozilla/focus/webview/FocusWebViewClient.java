@@ -18,6 +18,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.mozilla.focus.browser.LocalizedContent;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.IWebView;
@@ -259,7 +260,10 @@ import org.mozilla.focus.web.IWebView;
         // in the toolbar, but that's less noticeable). Hence we check whether this error is from
         // the desired page, or a page resource:
         if (error.getUrl().equals(currentPageURL)) {
+            TelemetryWrapper.sslErrorEvent(true, error);
             ErrorPage.loadErrorPage(view, error.getUrl(), WebViewClient.ERROR_FAILED_SSL_HANDSHAKE);
+        } else {
+            TelemetryWrapper.sslErrorEvent(false, error);
         }
     }
 
