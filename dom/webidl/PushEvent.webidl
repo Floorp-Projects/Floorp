@@ -8,7 +8,7 @@
  */
 
 [Constructor(DOMString type, optional PushEventInit eventInitDict),
- Func="nsContentUtils::PushEnabled",
+ Func="mozilla::dom::DOMPreferences::PushEnabled",
  Exposed=ServiceWorker]
 interface PushEvent : ExtendableEvent {
   readonly attribute PushMessageData? data;
