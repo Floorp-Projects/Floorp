@@ -777,7 +777,7 @@ void txMozillaXMLOutput::processHTTPEquiv(nsAtom* aHeader, const nsString& aValu
 
 nsresult
 txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
-                                         nsIDOMDocument* aSourceDocument,
+                                         nsIDocument* aSourceDocument,
                                          bool aLoadedAsData)
 {
     nsresult rv;
@@ -800,11 +800,9 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
                nsIDocument::READYSTATE_UNINITIALIZED, "Bad readyState");
     mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
     mDocument->SetMayStartLayout(false);
-    nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
-    NS_ENSURE_STATE(source);
     bool hasHadScriptObject = false;
     nsIScriptGlobalObject* sgo =
-      source->GetScriptHandlingObject(hasHadScriptObject);
+      aSourceDocument->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(sgo || !hasHadScriptObject);
 
     mCurrentNode = mDocument;

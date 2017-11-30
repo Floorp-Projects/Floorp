@@ -13,7 +13,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 
-#include "gc/DeletePolicy.h"
 #include "gc/Heap.h"
 #include "gc/Policy.h"
 #include "js/UbiNode.h"
@@ -1538,23 +1537,6 @@ DEFINE_SCOPE_DATA_GCPOLICY(js::ModuleScope::Data);
 DEFINE_SCOPE_DATA_GCPOLICY(js::WasmFunctionScope::Data);
 
 #undef DEFINE_SCOPE_DATA_GCPOLICY
-
-// Scope data that contain GCPtrs must use the correct DeletePolicy.
-
-template <>
-struct DeletePolicy<js::FunctionScope::Data>
-  : public js::GCManagedDeletePolicy<js::FunctionScope::Data>
-{};
-
-template <>
-struct DeletePolicy<js::ModuleScope::Data>
-  : public js::GCManagedDeletePolicy<js::ModuleScope::Data>
-{};
-
-template <>
-struct DeletePolicy<js::WasmInstanceScope::Data>
-  : public js::GCManagedDeletePolicy<js::WasmInstanceScope::Data>
-{ };
 
 namespace ubi {
 

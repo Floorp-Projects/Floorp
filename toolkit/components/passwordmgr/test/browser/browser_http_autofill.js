@@ -75,4 +75,3 @@ add_task(async function test_http_action_autofill() {
     gBrowser.removeTab(tab);
   }
 });
-

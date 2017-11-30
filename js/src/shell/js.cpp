@@ -1512,9 +1512,9 @@ ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "Asm.js is not supported by XDR");
         return false;
-      case JS::TranscodeResult_Failure_UnknownClassKind:
+      case JS::TranscodeResult_Failure_BadDecode:
         MOZ_ASSERT(!cx->isExceptionPending());
-        JS_ReportErrorASCII(cx, "Unknown class kind, go fix it.");
+        JS_ReportErrorASCII(cx, "XDR data corruption");
         return false;
       case JS::TranscodeResult_Failure_WrongCompileOption:
         MOZ_ASSERT(!cx->isExceptionPending());

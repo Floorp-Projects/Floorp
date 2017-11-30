@@ -14,7 +14,6 @@ DevToolsModules(
     'HeadersToolbar.js',
     'JsonPanel.js',
     'JsonToolbar.js',
-    'LiveText.js',
     'MainTabbedArea.js',
     'SearchBox.js',
     'TextPanel.js',

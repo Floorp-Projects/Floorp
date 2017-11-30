@@ -328,7 +328,7 @@ nsCocoaWindow::Create(nsIWidget* aParent,
 
   nsresult rv =
     CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds),
-                       mBorderStyle, false);
+                       mBorderStyle, false, aInitData->mIsPrivateBrowsing);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWindowType == eWindowType_popup) {
@@ -390,7 +390,8 @@ static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle)
 // content rect.
 nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
                                            nsBorderStyle aBorderStyle,
-                                           bool aRectIsFrameRect)
+                                           bool aRectIsFrameRect,
+                                           bool aIsPrivateBrowsing)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -487,6 +488,13 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   // Create the window
   mWindow = [[windowClass alloc] initWithContentRect:contentRect styleMask:features 
                                  backing:NSBackingStoreBuffered defer:YES];
+
+  // Make sure that window titles don't leak to disk in private browsing mode
+  // due to macOS' resume feature.
+  [mWindow setRestorable:!aIsPrivateBrowsing];
+  if (aIsPrivateBrowsing) {
+    [mWindow disableSnapshotRestoration];
+  }
 
   // setup our notification delegate. Note that setDelegate: does NOT retain.
   mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
@@ -1364,7 +1372,11 @@ nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   // Recreate the window with the right border style.
   NSRect frameRect = [mWindow frame];
   DestroyNativeWindow();
-  nsresult rv = CreateNativeWindow(frameRect, aShouldHide ? eBorderStyle_none : mBorderStyle, true);
+  nsresult rv = CreateNativeWindow(frameRect,
+                                   aShouldHide ? eBorderStyle_none :
+                                                 mBorderStyle,
+                                   true,
+                                   mWindow.restorable);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // Re-import state.

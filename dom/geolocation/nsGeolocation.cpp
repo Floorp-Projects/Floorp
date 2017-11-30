@@ -1207,7 +1207,7 @@ Geolocation::ShouldBlockInsecureRequests() const
     return false;
   }
 
-  if (!nsGlobalWindowInner::Cast(win)->IsSecureContextIfOpenerIgnored()) {
+  if (!nsGlobalWindowInner::Cast(win)->IsSecureContext()) {
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                     NS_LITERAL_CSTRING("DOM"), doc,
                                     nsContentUtils::eDOM_PROPERTIES,

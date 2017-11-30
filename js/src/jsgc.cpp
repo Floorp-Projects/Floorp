@@ -9047,29 +9047,3 @@ js::gc::detail::CellIsNotGray(const Cell* cell)
     return false;
 }
 #endif
-
-js::gc::ClearEdgesTracer::ClearEdgesTracer()
-  : CallbackTracer(TlsContext.get(), TraceWeakMapKeysValues)
-{}
-
-template <typename S>
-inline void
-js::gc::ClearEdgesTracer::clearEdge(S** thingp)
-{
-    InternalBarrierMethods<S*>::preBarrier(*thingp);
-    InternalBarrierMethods<S*>::postBarrier(thingp, *thingp, nullptr);
-    *thingp = nullptr;
-}
-
-void js::gc::ClearEdgesTracer::onObjectEdge(JSObject** objp) { clearEdge(objp); }
-void js::gc::ClearEdgesTracer::onStringEdge(JSString** strp) { clearEdge(strp); }
-void js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol** symp) { clearEdge(symp); }
-void js::gc::ClearEdgesTracer::onScriptEdge(JSScript** scriptp) { clearEdge(scriptp); }
-void js::gc::ClearEdgesTracer::onShapeEdge(js::Shape** shapep) { clearEdge(shapep); }
-void js::gc::ClearEdgesTracer::onObjectGroupEdge(js::ObjectGroup** groupp) { clearEdge(groupp); }
-void js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape** basep) { clearEdge(basep); }
-void js::gc::ClearEdgesTracer::onJitCodeEdge(js::jit::JitCode** codep) { clearEdge(codep); }
-void js::gc::ClearEdgesTracer::onLazyScriptEdge(js::LazyScript** lazyp) { clearEdge(lazyp); }
-void js::gc::ClearEdgesTracer::onScopeEdge(js::Scope** scopep) { clearEdge(scopep); }
-void js::gc::ClearEdgesTracer::onRegExpSharedEdge(js::RegExpShared** sharedp) { clearEdge(sharedp); }
-void js::gc::ClearEdgesTracer::onChild(const JS::GCCellPtr& thing) { MOZ_CRASH(); }

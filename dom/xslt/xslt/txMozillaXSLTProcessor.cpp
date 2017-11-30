@@ -50,7 +50,7 @@ class txToDocHandlerFactory : public txAOutputHandlerFactory
 {
 public:
     txToDocHandlerFactory(txExecutionState* aEs,
-                          nsIDOMDocument* aSourceDocument,
+                          nsIDocument* aSourceDocument,
                           nsITransformObserver* aObserver,
                           bool aDocumentIsData)
         : mEs(aEs), mSourceDocument(aSourceDocument), mObserver(aObserver),
@@ -62,7 +62,7 @@ public:
 
 private:
     txExecutionState* mEs;
-    nsCOMPtr<nsIDOMDocument> mSourceDocument;
+    nsCOMPtr<nsIDocument> mSourceDocument;
     nsCOMPtr<nsITransformObserver> mObserver;
     bool mDocumentIsData;
 };
@@ -377,13 +377,25 @@ txMozillaXSLTProcessor::SetTransformObserver(nsITransformObserver* aObserver)
 }
 
 nsresult
-txMozillaXSLTProcessor::SetSourceContentModel(nsIDOMNode* aSourceDOM)
+txMozillaXSLTProcessor::SetSourceContentModel(nsIDocument* aDocument,
+                                              const nsTArray<nsCOMPtr<nsIContent>>& aSource)
 {
-    mSource = aSourceDOM;
-
     if (NS_FAILED(mTransformResult)) {
         notifyError();
         return NS_OK;
+    }
+
+    mSource = aDocument->CreateDocumentFragment();
+
+    ErrorResult rv;
+    for (nsIContent* child : aSource) {
+        // XPath data model doesn't have DocumentType nodes.
+        if (child->NodeType() != nsIDOMNode::DOCUMENT_TYPE_NODE) {
+            mSource->AppendChild(*child, rv);
+            if (rv.Failed()) {
+                return rv.StealNSResult();
+            }
+        }
     }
 
     if (mStylesheet) {
@@ -552,8 +564,7 @@ public:
 
   ~nsTransformBlockerEvent()
   {
-    nsCOMPtr<nsIDocument> document =
-        do_QueryInterface(mProcessor->GetSourceContentModel());
+    nsCOMPtr<nsIDocument> document = mProcessor->GetSourceContentModel()->OwnerDoc();
     document->UnblockOnload(true);
   }
 
@@ -572,13 +583,9 @@ txMozillaXSLTProcessor::DoTransform()
     NS_ASSERTION(mObserver, "no observer");
     NS_ASSERTION(NS_IsMainThread(), "should only be on main thread");
 
-    nsresult rv;
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(mSource, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIRunnable> event = new nsTransformBlockerEvent(this);
-    document->BlockOnload();
-    rv = NS_DispatchToCurrentThread(event);
+    mSource->OwnerDoc()->BlockOnload();
+    nsresult rv = NS_DispatchToCurrentThread(event);
     if (NS_FAILED(rv)) {
         // XXX Maybe we should just display the source document in this case?
         //     Also, set up context information, see bug 204655.
@@ -643,7 +650,7 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     nsresult rv = ensureStylesheet();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mSource = aSource;
+    mSource = do_QueryInterface(aSource);
 
     return TransformToDoc(aResult, true);
 }
@@ -657,18 +664,12 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-    mSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
-    if (!sourceDOMDocument) {
-        sourceDOMDocument = do_QueryInterface(mSource);
-    }
-
     txExecutionState es(mStylesheet, IsLoadDisabled());
 
     // XXX Need to add error observers
 
     // If aResult is non-null, we're a data document
-    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, mObserver,
+    txToDocHandlerFactory handlerFactory(&es, mSource->OwnerDoc(), mObserver,
                                          aCreateDataDocument);
     es.mOutputHandlerFactory = &handlerFactory;
 

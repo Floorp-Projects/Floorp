@@ -491,19 +491,6 @@ dictionary IdleRequestOptions {
 
 callback IdleRequestCallback = void (IdleDeadline deadline);
 
-/**
- * Similar to |isSecureContext|, but doesn't pay attention to whether the
- * window's opener (if any) is a secure context or not.
- *
- * WARNING: Do not use this unless you are familiar with the issues that
- * taking opener state into account is designed to address (or else you may
- * introduce security issues).  If in doubt, use |isSecureContext|.  In
- * particular do not use this to gate access to JavaScript APIs.
- */
-partial interface Window {
-  [ChromeOnly] readonly attribute boolean isSecureContextIfOpenerIgnored;
-};
-
 partial interface Window {
   /**
    * Returns a list of locales that the internationalization components
