@@ -109,6 +109,8 @@ class VerifyToolsMixin(object):
         repo_tests_path = os.path.join("testing", "web-platform", "tests")
         tests_path = os.path.join("tests", "web-platform", "tests")
         for (type, path, test) in man:
+            if type not in ["testharness", "reftest", "wdspec"]:
+                continue
             repo_path = os.path.join(repo_tests_path, path)
             # manifest paths use os.sep (like backslash on Windows) but
             # automation-relevance uses posixpath.sep
