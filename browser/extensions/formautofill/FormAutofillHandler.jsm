@@ -411,7 +411,7 @@ class FormAutofillSection {
         this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
       }
       if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
-        element.addEventListener("input", this);
+        element.addEventListener("input", this, {mozSystemGroup: true});
       }
     }
   }
@@ -513,8 +513,8 @@ class FormAutofillSection {
           element instanceof Ci.nsIDOMHTMLInputElement) {
         element.setUserInput("");
       }
-      this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
+    this.resetFieldStates();
   }
 
   /**
@@ -557,7 +557,7 @@ class FormAutofillSection {
   resetFieldStates() {
     for (let fieldDetail of this._validDetails) {
       const element = fieldDetail.elementWeakRef.get();
-      element.removeEventListener("input", this);
+      element.removeEventListener("input", this, {mozSystemGroup: true});
       this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
     this.address.filledRecordGUID = null;
@@ -750,7 +750,7 @@ class FormAutofillSection {
         if (!targetSet.fieldDetails.some(detail => detail.state == FIELD_STATES.AUTO_FILLED)) {
           targetSet.filledRecordGUID = null;
         }
-        target.removeEventListener("input", this);
+        target.removeEventListener("input", this, {mozSystemGroup: true});
         break;
       }
     }
@@ -876,7 +876,7 @@ class FormAutofillHandler {
       if (!input) {
         continue;
       }
-      input.addEventListener("input", this);
+      input.addEventListener("input", this, {mozSystemGroup: true});
     }
 
     this.fieldDetails = allValidDetails;
@@ -954,16 +954,16 @@ class FormAutofillHandler {
       }
       // Unregister listeners once no field is in AUTO_FILLED state.
       if (!this.hasFilledSection()) {
-        this.form.rootElement.removeEventListener("input", onChangeHandler);
-        this.form.rootElement.removeEventListener("reset", onChangeHandler);
+        this.form.rootElement.removeEventListener("input", onChangeHandler, {mozSystemGroup: true});
+        this.form.rootElement.removeEventListener("reset", onChangeHandler, {mozSystemGroup: true});
       }
     };
 
     if (noFilledSectionsPreviously) {
       // Handle the highlight style resetting caused by user's correction afterward.
       log.debug("register change handler for filled form:", this.form);
-      this.form.rootElement.addEventListener("input", onChangeHandler);
-      this.form.rootElement.addEventListener("reset", onChangeHandler);
+      this.form.rootElement.addEventListener("input", onChangeHandler, {mozSystemGroup: true});
+      this.form.rootElement.addEventListener("reset", onChangeHandler, {mozSystemGroup: true});
     }
   }
 
@@ -979,7 +979,7 @@ class FormAutofillHandler {
           if (!input) {
             continue;
           }
-          input.removeEventListener("input", this);
+          input.removeEventListener("input", this, {mozSystemGroup: true});
         }
         this.timeStartedFillingMS = Date.now();
         break;
