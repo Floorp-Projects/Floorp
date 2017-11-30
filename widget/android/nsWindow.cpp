@@ -2146,6 +2146,10 @@ nsWindow::UserActivity()
   if (mIdleService) {
     mIdleService->ResetIdleTimeOut(0);
   }
+
+  if (FindTopLevel() != nsWindow::TopWindow()) {
+    BringToFront();
+  }
 }
 
 TextEventDispatcherListener*
