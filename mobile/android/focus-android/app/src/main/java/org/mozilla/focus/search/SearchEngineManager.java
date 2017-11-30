@@ -169,10 +169,10 @@ public class SearchEngineManager extends BroadcastReceiver {
     }
 
     public void loadSearchEngines(final Context context) {
+        invalidateSearchEngines();
         new Thread("SearchEngines-Load") {
             @Override
             public void run() {
-                invalidateSearchEngines();
                 loadFromDisk(context);
             }
         }.start();
@@ -341,7 +341,7 @@ public class SearchEngineManager extends BroadcastReceiver {
         sharedPreferences.edit().remove(PREF_KEY_HIDDEN_DEFAULT_ENGINES).commit();
     }
 
-    private void invalidateSearchEngines() {
+    private synchronized void invalidateSearchEngines() {
         searchEngines = null;
     }
 }
