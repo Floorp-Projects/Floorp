@@ -353,7 +353,7 @@ AsyncImagePipelineManager::ApplyAsyncImages()
     builder.Finalize(builderContentSize, dl);
     mApi->SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch, LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
                          pipelineId, builderContentSize,
-                         dl.dl_desc, dl.dl.inner.data, dl.dl.inner.length,
+                         dl.dl_desc, dl.dl,
                          resourceUpdates);
   }
 }
