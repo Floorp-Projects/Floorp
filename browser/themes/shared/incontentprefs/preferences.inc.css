@@ -95,6 +95,24 @@ button > hbox > label {
   margin: 4px 0;
 }
 
+.spotlight {
+  background-color: rgba(0,200,215,0.3);
+  /* Show the border to spotlight the components in high-contrast mode. */
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+[data-subcategory] {
+  margin-left: -4px;
+  margin-right: -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+[data-subcategory] > .groupbox-title {
+  padding-inline-start: 4px;
+}
+
 #searchInput {
   border-radius: 0;
 }
@@ -725,9 +743,14 @@ button > hbox > label {
 .search-container {
   position: sticky;
   background-color: var(--in-content-page-background);
-  width: 100%;
   top: 0;
   z-index: 1;
+  /* The search-container should have the capability to cover all spotlight area. */
+  width: calc(100% + 8px);
+  margin-left: -4px;
+  margin-right: -4px;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 #searchInput {

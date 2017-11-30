@@ -45,8 +45,9 @@ add_UITour_task(async function test_openPrivacyReports() {
   let tab = await promiseTabOpened;
   await BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "Initialized");
   let doc = gBrowser.selectedBrowser.contentDocument;
-  let reports = doc.querySelector("groupbox[data-subcategory='reports']");
   is(doc.location.hash, "#privacy", "Should not display the reports subcategory in the location hash.");
-  is(reports.hidden, false, "Should open to the reports subcategory in the privacy pane in the new Preferences.");
+  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
+    "Wait for the reports section is spotlighted.");
+  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
   await BrowserTestUtils.removeTab(tab);
 });
