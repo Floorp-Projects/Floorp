@@ -4,10 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+const BYTES_PER_MEBIBYTE = 1048576;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -16,28 +14,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 
 this.EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
 
-// Constants
-
-const BYTES_PER_MEBIBYTE = 1048576;
-
 this.PlacesDBUtils = {
-
-  /**
-   * Converts the `Map` returned by `runTasks` to an array of messages (legacy).
-   * @param taskStatusMap
-   *        The Map[String -> Object] returned by `runTasks`.
-   * @return an array of log messages.
-   */
-  getLegacyLog(taskStatusMap) {
-    let logs = [];
-    for (let [key, value] of taskStatusMap) {
-      logs.push(`> Task: ${key}`);
-      let prefix = value.succeeded ? "+ " : "- ";
-      logs = logs.concat(value.logs.map(m => `${prefix}${m}`));
-    }
-    return logs;
-  },
-
   _isShuttingDown: false,
   shutdown() {
     PlacesDBUtils._isShuttingDown = true;
@@ -117,80 +94,43 @@ this.PlacesDBUtils = {
   },
 
   /**
-   * Tries to execute a REINDEX on the database.
-   *
-   * @return {Promise} resolved when reindex is complete.
-   * @resolves to an array of logs for this task.
-   * @rejects if we're unable to reindex the database.
-   */
-  async reindex() {
-    try {
-      let logs = [];
-      await PlacesUtils.withConnectionWrapper(
-        "PlacesDBUtils: Reindex the database",
-        async (db) => {
-          let query = "REINDEX";
-          await db.execute(query);
-          logs.push("The database has been re indexed");
-        });
-      return logs;
-    } catch (ex) {
-      throw new Error("Unable to reindex the database.");
-    }
-  },
-
-  /**
-   * Checks integrity but does not try to fix the database through a reindex.
-   *
-   * Note: although this function isn't actually async, we keep it async to
-   * allow us to maintain a simple, consistent API for the tasks within this object.
-   *
-   * @return {Promise} resolves if database is sane.
-   * @resolves to an array of logs for this task.
-   * @rejects if we're unable to fix corruption or unable to check status.
-   */
-  async _checkIntegritySkipReindex() {
-    return this.checkIntegrity(true);
-  },
-
-  /**
    * Checks integrity and tries to fix the database through a reindex.
-   *
-   * @param [optional] skipReindex
-   *        Whether to try to reindex database or not.
    *
    * @return {Promise} resolves if database is sane or is made sane.
    * @resolves to an array of logs for this task.
    * @rejects if we're unable to fix corruption or unable to check status.
    */
-  async checkIntegrity(skipReindex) {
+  async checkIntegrity() {
     let logs = [];
 
+    async function integrity(db) {
+      let row;
+      await db.execute("PRAGMA integrity_check", null, (r, cancel) => {
+        row = r;
+        cancel();
+      });
+      return row.getResultByIndex(0) === "ok";
+    }
     try {
       // Run a integrity check, but stop at the first error.
       await PlacesUtils.withConnectionWrapper("PlacesDBUtils: check the integrity", async (db) => {
-        let row;
-        await db.execute(
-          "PRAGMA integrity_check",
-          null,
-          (r, cancel) => {
-            row = r;
-            cancel();
-          });
-        if (row.getResultByIndex(0) === "ok") {
+        let isOk = await integrity(db);
+        if (isOk) {
           logs.push("The database is sane");
         } else {
           // We stopped due to an integrity corruption, try to fix if possible.
           logs.push("The database is corrupt");
-          if (skipReindex) {
+          // Try to reindex, this often fixes simple indices corruption.
+          await db.execute("REINDEX");
+          logs.push("The database has been REINDEXed");
+          isOk = await integrity(db);
+          if (isOk) {
+            logs.push("The database is now sane");
+          } else {
+            logs.push("The database is still corrupt");
             Services.prefs.setBoolPref("places.database.replaceOnStartup", true);
             PlacesDBUtils.clearPendingTasks();
             throw new Error("Unable to fix corruption, database will be replaced on next startup");
-          } else {
-            // Try to reindex, this often fixes simple indices corruption.
-            let reindexLogs = await PlacesDBUtils.reindex();
-            let checkLogs = await PlacesDBUtils._checkIntegritySkipReindex();
-            logs = logs.concat(reindexLogs).concat(checkLogs);
           }
         }
       });
@@ -237,16 +177,14 @@ this.PlacesDBUtils = {
    */
   async checkCoherence() {
     let logs = [];
-
-    let stmts = await PlacesDBUtils._getBoundCoherenceStatements();
+    let stmts = await PlacesDBUtils._getCoherenceStatements();
     let coherenceCheck = true;
     await PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: coherence check:",
       db => db.executeTransaction(async () => {
         for (let {query, params} of stmts) {
-          params = params ? params : null;
           try {
-            await db.execute(query, params);
+            await db.execute(query, params || null);
           } catch (ex) {
             Cu.reportError(ex);
             coherenceCheck = false;
@@ -259,655 +197,575 @@ this.PlacesDBUtils = {
       logs.push("The database is coherent");
     } else {
       PlacesDBUtils.clearPendingTasks();
-      throw new Error("Unable to check database coherence");
+      throw new Error("Unable to complete the coherence check");
     }
     return logs;
   },
 
-  async _getBoundCoherenceStatements() {
-    let cleanupStatements = [];
+  async _getCoherenceStatements() {
+    let updateRootTitleSql = `UPDATE moz_bookmarks SET title = :title
+                              WHERE id = :root_id AND title <> :title`;
+    let cleanupStatements = [
+      // MOZ_ANNO_ATTRIBUTES
+      // A.1 remove obsolete annotations from moz_annos.
+      // The 'weave0' idiom exploits character ordering (0 follows /) to
+      // efficiently select all annos with a 'weave/' prefix.
+      { query:
+        `DELETE FROM moz_annos
+        WHERE type = 4 OR anno_attribute_id IN (
+          SELECT id FROM moz_anno_attributes
+          WHERE name = 'downloads/destinationFileName' OR
+                name BETWEEN 'weave/' AND 'weave0'
+        )`
+      },
+
+      // A.2 remove obsolete annotations from moz_items_annos.
+      { query:
+        `DELETE FROM moz_items_annos
+        WHERE type = 4 OR anno_attribute_id IN (
+          SELECT id FROM moz_anno_attributes
+          WHERE name = 'sync/children'
+             OR name = 'placesInternal/GUID'
+             OR name BETWEEN 'weave/' AND 'weave0'
+        )`
+      },
+
+      // A.3 remove unused attributes.
+      { query:
+        `DELETE FROM moz_anno_attributes WHERE id IN (
+          SELECT id FROM moz_anno_attributes n
+          WHERE NOT EXISTS
+              (SELECT id FROM moz_annos WHERE anno_attribute_id = n.id LIMIT 1)
+            AND NOT EXISTS
+              (SELECT id FROM moz_items_annos WHERE anno_attribute_id = n.id LIMIT 1)
+        )`
+      },
+
+      // MOZ_ANNOS
+      // B.1 remove annos with an invalid attribute
+      { query:
+        `DELETE FROM moz_annos WHERE id IN (
+          SELECT id FROM moz_annos a
+          WHERE NOT EXISTS
+            (SELECT id FROM moz_anno_attributes
+              WHERE id = a.anno_attribute_id LIMIT 1)
+        )`
+      },
+
+      // B.2 remove orphan annos
+      { query:
+        `DELETE FROM moz_annos WHERE id IN (
+          SELECT id FROM moz_annos a
+          WHERE NOT EXISTS
+            (SELECT id FROM moz_places WHERE id = a.place_id LIMIT 1)
+        )`
+      },
+
+      // MOZ_BOOKMARKS
+      // C.2 fix roots titles
+      // Some alpha version has wrong roots title, and this also fixes them if
+      // locale has changed.
+      { query: updateRootTitleSql,
+        params: {
+          root_id: PlacesUtils.placesRootId,
+          title: "",
+        }
+      },
+      { query: updateRootTitleSql,
+        params: {
+          root_id: PlacesUtils.bookmarksMenuFolderId,
+          title: PlacesUtils.getString("BookmarksMenuFolderTitle"),
+        }
+      },
+      { query: updateRootTitleSql,
+        params: {
+          root_id: PlacesUtils.bookmarksMenuFolderId,
+          title: PlacesUtils.getString("BookmarksMenuFolderTitle"),
+        }
+      },
+      { query: updateRootTitleSql,
+        params: {
+          root_id: PlacesUtils.toolbarFolderId,
+          title: PlacesUtils.getString("BookmarksToolbarFolderTitle"),
+        }
+      },
+      { query: updateRootTitleSql,
+        params: {
+          root_id: PlacesUtils.unfiledBookmarksFolderId,
+          title: PlacesUtils.getString("OtherBookmarksFolderTitle"),
+        }
+      },
+      { query: updateRootTitleSql,
+        params: {
+          root_id: PlacesUtils.tagsFolderId,
+          title: PlacesUtils.getString("TagsFolderTitle"),
+        }
+      },
+
+      // D.1 remove items without a valid place
+      // If fk IS NULL we fix them in D.7
+      { query:
+        `DELETE FROM moz_bookmarks WHERE guid NOT IN (
+          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
+        ) AND id IN (
+          SELECT b.id FROM moz_bookmarks b
+          WHERE fk NOT NULL AND b.type = :bookmark_type
+            AND NOT EXISTS (SELECT url FROM moz_places WHERE id = b.fk LIMIT 1)
+        )`,
+        params: {
+          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          rootGuid: PlacesUtils.bookmarks.rootGuid,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      },
+
+      // D.2 remove items that are not uri bookmarks from tag containers
+      { query:
+        `DELETE FROM moz_bookmarks WHERE guid NOT IN (
+          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
+        ) AND id IN (
+          SELECT b.id FROM moz_bookmarks b
+          WHERE b.parent IN
+            (SELECT id FROM moz_bookmarks WHERE parent = :tags_folder)
+            AND b.type <> :bookmark_type
+        )`,
+        params: {
+          tags_folder: PlacesUtils.tagsFolderId,
+          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          rootGuid: PlacesUtils.bookmarks.rootGuid,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      },
+
+      // D.3 remove empty tags
+      { query:
+        `DELETE FROM moz_bookmarks WHERE guid NOT IN (
+          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
+        ) AND id IN (
+          SELECT b.id FROM moz_bookmarks b
+          WHERE b.id IN
+            (SELECT id FROM moz_bookmarks WHERE parent = :tags_folder)
+            AND NOT EXISTS
+              (SELECT id from moz_bookmarks WHERE parent = b.id LIMIT 1)
+        )`,
+        params: {
+          tags_folder: PlacesUtils.tagsFolderId,
+          rootGuid: PlacesUtils.bookmarks.rootGuid,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      },
+
+      // D.4 move orphan items to unsorted folder
+      { query:
+        `UPDATE moz_bookmarks SET
+          parent = :unsorted_folder,
+          syncChangeCounter = syncChangeCounter + 1
+        WHERE guid NOT IN (
+          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
+        ) AND id IN (
+          SELECT b.id FROM moz_bookmarks b
+          WHERE NOT EXISTS
+            (SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1)
+        )`,
+        params: {
+          unsorted_folder: PlacesUtils.unfiledBookmarksFolderId,
+          rootGuid: PlacesUtils.bookmarks.rootGuid,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      },
+
+      // D.6 fix wrong item types
+      // Folders and separators should not have an fk.
+      // If they have a valid fk convert them to bookmarks. Later in D.9 we
+      // will move eventual children to unsorted bookmarks.
+      { query:
+        `UPDATE moz_bookmarks
+        SET type = :bookmark_type,
+            syncChangeCounter = syncChangeCounter + 1
+        WHERE guid NOT IN (
+          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
+        ) AND id IN (
+          SELECT id FROM moz_bookmarks b
+          WHERE type IN (:folder_type, :separator_type)
+            AND fk NOTNULL
+        )`,
+        params: {
+          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          separator_type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          rootGuid: PlacesUtils.bookmarks.rootGuid,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      },
+
+      // D.7 fix wrong item types
+      // Bookmarks should have an fk, if they don't have any, convert them to
+      // folders.
+      { query:
+        `UPDATE moz_bookmarks
+        SET type = :folder_type,
+            syncChangeCounter = syncChangeCounter + 1
+        WHERE guid NOT IN (
+          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
+        ) AND id IN (
+          SELECT id FROM moz_bookmarks b
+          WHERE type = :bookmark_type
+            AND fk IS NULL
+        )`,
+        params: {
+          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          rootGuid: PlacesUtils.bookmarks.rootGuid,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      },
+
+      // D.9 fix wrong parents
+      // Items cannot have separators or other bookmarks
+      // as parent, if they have bad parent move them to unsorted bookmarks.
+      { query:
+        `UPDATE moz_bookmarks SET
+          parent = :unsorted_folder,
+          syncChangeCounter = syncChangeCounter + 1
+        WHERE guid NOT IN (
+          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
+        ) AND id IN (
+          SELECT id FROM moz_bookmarks b
+          WHERE EXISTS
+            (SELECT id FROM moz_bookmarks WHERE id = b.parent
+              AND type IN (:bookmark_type, :separator_type)
+              LIMIT 1)
+        )`,
+        params: {
+          unsorted_folder: PlacesUtils.unfiledBookmarksFolderId,
+          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          separator_type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          rootGuid: PlacesUtils.bookmarks.rootGuid,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      },
+
+      // D.10 recalculate positions
+      // This requires multiple related statements.
+      // We can detect a folder with bad position values comparing the sum of
+      // all distinct position values (+1 since position is 0-based) with the
+      // triangular numbers obtained by the number of children (n).
+      // SUM(DISTINCT position + 1) == (n * (n + 1) / 2).
+      // id is not a PRIMARY KEY on purpose, since we need a rowid that
+      // increments monotonically.
+      { query:
+        `CREATE TEMP TABLE IF NOT EXISTS moz_bm_reindex_temp (
+          id INTEGER
+        , parent INTEGER
+        , position INTEGER
+        )`
+      },
+      { query:
+        `INSERT INTO moz_bm_reindex_temp
+        SELECT id, parent, 0
+        FROM moz_bookmarks b
+        WHERE parent IN (
+          SELECT parent
+          FROM moz_bookmarks
+          GROUP BY parent
+          HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0
+        )
+        ORDER BY parent ASC, position ASC, ROWID ASC`
+      },
+      { query:
+        `CREATE INDEX IF NOT EXISTS moz_bm_reindex_temp_index
+        ON moz_bm_reindex_temp(parent)`
+      },
+      { query:
+        `UPDATE moz_bm_reindex_temp SET position = (
+          ROWID - (SELECT MIN(t.ROWID) FROM moz_bm_reindex_temp t
+                    WHERE t.parent = moz_bm_reindex_temp.parent)
+        )`
+      },
+      { query:
+        `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_reindex_temp_trigger
+        BEFORE DELETE ON moz_bm_reindex_temp
+        FOR EACH ROW
+        BEGIN
+          UPDATE moz_bookmarks SET position = OLD.position WHERE id = OLD.id;
+        END`
+      },
+      { query: `DELETE FROM moz_bm_reindex_temp` },
+      { query: `DROP INDEX moz_bm_reindex_temp_index` },
+      { query: `DROP TRIGGER moz_bm_reindex_temp_trigger` },
+      { query: `DROP TABLE moz_bm_reindex_temp` },
+
+      // D.12 Fix empty-named tags.
+      // Tags were allowed to have empty names due to a UI bug.  Fix them
+      // replacing their title with "(notitle)".
+      { query:
+        `UPDATE moz_bookmarks SET title = :empty_title
+        WHERE length(title) = 0 AND type = :folder_type
+          AND parent = :tags_folder`,
+        params: {
+          empty_title: "(notitle)",
+          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          tags_folder: PlacesUtils.tagsFolderId,
+        }
+      },
+
+      // MOZ_ICONS
+      // E.1 remove orphan icon entries.
+      { query:
+        `DELETE FROM moz_pages_w_icons WHERE page_url_hash NOT IN (
+          SELECT url_hash FROM moz_places
+        )`
+      },
+
+      { query:
+        `DELETE FROM moz_icons WHERE id IN (
+          SELECT id FROM moz_icons WHERE root = 0
+          EXCEPT
+          SELECT icon_id FROM moz_icons_to_pages
+        )`
+      },
+
+      // MOZ_HISTORYVISITS
+      // F.1 remove orphan visits
+      { query:
+        `DELETE FROM moz_historyvisits WHERE id IN (
+          SELECT id FROM moz_historyvisits v
+          WHERE NOT EXISTS
+            (SELECT id FROM moz_places WHERE id = v.place_id LIMIT 1)
+        )`
+      },
+
+      // MOZ_INPUTHISTORY
+      // G.1 remove orphan input history
+      { query:
+        `DELETE FROM moz_inputhistory WHERE place_id IN (
+          SELECT place_id FROM moz_inputhistory i
+          WHERE NOT EXISTS
+            (SELECT id FROM moz_places WHERE id = i.place_id LIMIT 1)
+        )`
+      },
+
+      // MOZ_ITEMS_ANNOS
+      // H.1 remove item annos with an invalid attribute
+      { query:
+        `DELETE FROM moz_items_annos WHERE id IN (
+          SELECT id FROM moz_items_annos t
+          WHERE NOT EXISTS
+            (SELECT id FROM moz_anno_attributes
+              WHERE id = t.anno_attribute_id LIMIT 1)
+        )`
+      },
+
+      // H.2 remove orphan item annos
+      { query:
+        `DELETE FROM moz_items_annos WHERE id IN (
+          SELECT id FROM moz_items_annos t
+          WHERE NOT EXISTS
+            (SELECT id FROM moz_bookmarks WHERE id = t.item_id LIMIT 1)
+        )`
+      },
+
+      // MOZ_KEYWORDS
+      // I.1 remove unused keywords
+      { query:
+        `DELETE FROM moz_keywords WHERE id IN (
+          SELECT id FROM moz_keywords k
+          WHERE NOT EXISTS
+            (SELECT 1 FROM moz_places h WHERE k.place_id = h.id)
+        )`
+      },
+
+      // MOZ_PLACES
+      // L.2 recalculate visit_count and last_visit_date
+      { query:
+        `UPDATE moz_places
+        SET visit_count = (SELECT count(*) FROM moz_historyvisits
+                            WHERE place_id = moz_places.id AND visit_type NOT IN (0,4,7,8,9)),
+            last_visit_date = (SELECT MAX(visit_date) FROM moz_historyvisits
+                                WHERE place_id = moz_places.id)
+        WHERE id IN (
+          SELECT h.id FROM moz_places h
+          WHERE visit_count <> (SELECT count(*) FROM moz_historyvisits v
+                                WHERE v.place_id = h.id AND visit_type NOT IN (0,4,7,8,9))
+              OR last_visit_date <> (SELECT MAX(visit_date) FROM moz_historyvisits v
+                                    WHERE v.place_id = h.id)
+        )`
+      },
+
+      // L.3 recalculate hidden for redirects.
+      { query:
+        `UPDATE moz_places
+        SET hidden = 1
+        WHERE id IN (
+          SELECT h.id FROM moz_places h
+          JOIN moz_historyvisits src ON src.place_id = h.id
+          JOIN moz_historyvisits dst ON dst.from_visit = src.id AND dst.visit_type IN (5,6)
+          LEFT JOIN moz_bookmarks on fk = h.id AND fk ISNULL
+          GROUP BY src.place_id HAVING count(*) = visit_count
+        )`
+      },
+
+      // L.4 recalculate foreign_count.
+      { query:
+        `UPDATE moz_places SET foreign_count =
+          (SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id ) +
+          (SELECT count(*) FROM moz_keywords WHERE place_id = moz_places.id )`
+      },
+
+      // L.5 recalculate missing hashes.
+      { query: `UPDATE moz_places SET url_hash = hash(url) WHERE url_hash = 0` },
+
+      // L.6 fix invalid Place GUIDs.
+      { query:
+        `UPDATE moz_places
+        SET guid = GENERATE_GUID()
+        WHERE guid IS NULL OR
+              NOT IS_VALID_GUID(guid)`
+      },
+
+      // MOZ_BOOKMARKS
+      // S.1 fix invalid GUIDs for synced bookmarks.
+      // This requires multiple related statements.
+      // First, we insert tombstones for all synced bookmarks with invalid
+      // GUIDs, so that we can delete them on the server. Second, we add a
+      // temporary trigger to bump the change counter for the parents of any
+      // items we update, since Sync stores the list of child GUIDs on the
+      // parent. Finally, we assign new GUIDs for all items with missing and
+      // invalid GUIDs, bump their change counters, and reset their sync
+      // statuses to NEW so that they're considered for deduping.
+      { query:
+        `INSERT OR IGNORE INTO moz_bookmarks_deleted(guid, dateRemoved)
+        SELECT guid, :dateRemoved
+        FROM moz_bookmarks
+        WHERE syncStatus <> :syncStatus AND
+              guid NOT NULL AND
+              NOT IS_VALID_GUID(guid)`,
+        params: {
+          dateRemoved: PlacesUtils.toPRTime(new Date()),
+          syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+        },
+      },
+      { query:
+        `UPDATE moz_bookmarks
+        SET guid = GENERATE_GUID(),
+            syncChangeCounter = syncChangeCounter + 1,
+            syncStatus = :syncStatus
+        WHERE guid IS NULL OR
+              NOT IS_VALID_GUID(guid)`,
+        params: {
+          syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+        },
+      },
+
+      // S.2 drop tombstones for bookmarks that aren't deleted.
+      { query:
+        `DELETE FROM moz_bookmarks_deleted
+        WHERE guid IN (SELECT guid FROM moz_bookmarks)`,
+      },
+
+      // S.3 set missing added and last modified dates.
+      { query:
+        `UPDATE moz_bookmarks
+        SET dateAdded = COALESCE(dateAdded, lastModified, (
+              SELECT MIN(visit_date) FROM moz_historyvisits
+              WHERE place_id = fk
+            ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000),
+            lastModified = COALESCE(lastModified, dateAdded, (
+              SELECT MAX(visit_date) FROM moz_historyvisits
+              WHERE place_id = fk
+            ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000)
+        WHERE dateAdded IS NULL OR
+              lastModified IS NULL`,
+      },
+    ];
+
+    // Check bookmarks roots
+    // Bug 477739 shows a case where the root could be wrongly removed
+    // due to an endianness issue.  We try to fix broken roots here.
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(
+      `SELECT id FROM moz_bookmarks WHERE id = :root`,
+      { root: PlacesUtils.placesRootId });
+    if (rows.length === 0) {
+      // Note: these must be unshifted in reverse order.
+      // Reparent other roots as children of the Places root.
+      cleanupStatements.unshift({
+        query:
+        `UPDATE moz_bookmarks SET parent = :places_root WHERE guid IN
+            ( :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid )`,
+        params: {
+          places_root: PlacesUtils.placesRootId,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+        }
+      });
+      // Try to recreate the root.
+      cleanupStatements.unshift({
+        query:
+        `INSERT INTO moz_bookmarks (id, type, fk, parent, position, title, guid)
+          VALUES (:places_root, 2, NULL, 0, 0, :title, :guid)`,
+        params: {
+          places_root: PlacesUtils.placesRootId,
+          title: "",
+          guid: PlacesUtils.bookmarks.rootGuid,
+        }
+      });
+    }
 
     // Create triggers for updating Sync metadata. The "sync change" trigger
     // bumps the parent's change counter when we update a GUID or move an item
     // to a different folder, since Sync stores the list of child GUIDs on the
     // parent. The "sync tombstone" trigger inserts tombstones for deleted
     // synced bookmarks.
-    cleanupStatements.push({
+    cleanupStatements.unshift({
       query:
       `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_sync_change_temp_trigger
-       AFTER UPDATE of guid, parent, position ON moz_bookmarks
-       FOR EACH ROW
-       BEGIN
-         UPDATE moz_bookmarks
-         SET syncChangeCounter = syncChangeCounter + 1
-         WHERE id = NEW.parent OR
-               (OLD.parent <> NEW.parent AND
+      AFTER UPDATE of guid, parent, position ON moz_bookmarks
+      FOR EACH ROW
+      BEGIN
+        UPDATE moz_bookmarks
+        SET syncChangeCounter = syncChangeCounter + 1
+        WHERE id = NEW.parent OR
+              (OLD.parent <> NEW.parent AND
                 id = OLD.parent);
-      END`,
+      END`
     });
-    cleanupStatements.push({
+    cleanupStatements.unshift({
       query:
       `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_sync_tombstone_temp_trigger
-       AFTER DELETE ON moz_bookmarks
-       FOR EACH ROW WHEN OLD.guid NOT NULL AND
-                         OLD.syncStatus <> 1
-       BEGIN
-         INSERT INTO moz_bookmarks_deleted(guid, dateRemoved)
-         VALUES(OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000);
-      END`,
+      AFTER DELETE ON moz_bookmarks
+      FOR EACH ROW WHEN OLD.guid NOT NULL AND
+                        OLD.syncStatus <> 1
+      BEGIN
+        INSERT INTO moz_bookmarks_deleted(guid, dateRemoved)
+        VALUES(OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000);
+      END`
     });
-
-    // MAINTENANCE STATEMENTS SHOULD GO BELOW THIS POINT!
-
-    // MOZ_ANNO_ATTRIBUTES
-    // A.1 remove obsolete annotations from moz_annos.
-    // The 'weave0' idiom exploits character ordering (0 follows /) to
-    // efficiently select all annos with a 'weave/' prefix.
-    let deleteObsoleteAnnos = {
-      query:
-      `DELETE FROM moz_annos
-       WHERE type = 4
-          OR anno_attribute_id IN (
-         SELECT id FROM moz_anno_attributes
-         WHERE name = 'downloads/destinationFileName' OR
-               name BETWEEN 'weave/' AND 'weave0'
-       )`
-    };
-    cleanupStatements.push(deleteObsoleteAnnos);
-
-    // A.2 remove obsolete annotations from moz_items_annos.
-    let deleteObsoleteItemsAnnos = {
-      query:
-      `DELETE FROM moz_items_annos
-       WHERE type = 4
-          OR anno_attribute_id IN (
-         SELECT id FROM moz_anno_attributes
-         WHERE name = 'sync/children'
-            OR name = 'placesInternal/GUID'
-            OR name BETWEEN 'weave/' AND 'weave0'
-       )`
-    };
-    cleanupStatements.push(deleteObsoleteItemsAnnos);
-
-    // A.3 remove unused attributes.
-    let deleteUnusedAnnoAttributes = {
-      query:
-      `DELETE FROM moz_anno_attributes WHERE id IN (
-         SELECT id FROM moz_anno_attributes n
-         WHERE NOT EXISTS
-             (SELECT id FROM moz_annos WHERE anno_attribute_id = n.id LIMIT 1)
-           AND NOT EXISTS
-             (SELECT id FROM moz_items_annos WHERE anno_attribute_id = n.id LIMIT 1)
-       )`
-    };
-    cleanupStatements.push(deleteUnusedAnnoAttributes);
-
-    // MOZ_ANNOS
-    // B.1 remove annos with an invalid attribute
-    let deleteInvalidAttributeAnnos = {
-      query:
-      `DELETE FROM moz_annos WHERE id IN (
-         SELECT id FROM moz_annos a
-         WHERE NOT EXISTS
-           (SELECT id FROM moz_anno_attributes
-             WHERE id = a.anno_attribute_id LIMIT 1)
-       )`
-    };
-    cleanupStatements.push(deleteInvalidAttributeAnnos);
-
-    // B.2 remove orphan annos
-    let deleteOrphanAnnos = {
-      query:
-      `DELETE FROM moz_annos WHERE id IN (
-         SELECT id FROM moz_annos a
-         WHERE NOT EXISTS
-           (SELECT id FROM moz_places WHERE id = a.place_id LIMIT 1)
-       )`
-    };
-    cleanupStatements.push(deleteOrphanAnnos);
-
-    // Bookmarks roots
-    // C.1 fix missing Places root
-    //     Bug 477739 shows a case where the root could be wrongly removed
-    //     due to an endianness issue.  We try to fix broken roots here.
-    let selectPlacesRoot = {
-      query: "SELECT id FROM moz_bookmarks WHERE id = :places_root",
-      params: {}
-    };
-    selectPlacesRoot.params.places_root = PlacesUtils.placesRootId;
-    let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.execute(selectPlacesRoot.query, selectPlacesRoot.params);
-    if (rows.length === 0) {
-      // We are missing the root, try to recreate it.
-      let createPlacesRoot = {
-        query:
-        `INSERT INTO moz_bookmarks (id, type, fk, parent, position, title, guid)
-           VALUES (:places_root, 2, NULL, 0, 0, :title, :guid)`,
-        params: {}
-      };
-      createPlacesRoot.params.places_root = PlacesUtils.placesRootId;
-      createPlacesRoot.params.title = "";
-      createPlacesRoot.params.guid = PlacesUtils.bookmarks.rootGuid;
-      cleanupStatements.push(createPlacesRoot);
-
-      // Now ensure that other roots are children of Places root.
-      let fixPlacesRootChildren = {
-        query:
-        `UPDATE moz_bookmarks SET parent = :places_root WHERE guid IN
-             ( :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid )`,
-        params: {}
-      };
-      fixPlacesRootChildren.params.places_root = PlacesUtils.placesRootId;
-      fixPlacesRootChildren.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-      fixPlacesRootChildren.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-      fixPlacesRootChildren.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-      fixPlacesRootChildren.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-      cleanupStatements.push(fixPlacesRootChildren);
-    }
-    // C.2 fix roots titles
-    //     some alpha version has wrong roots title, and this also fixes them if
-    //     locale has changed.
-    let updateRootTitleSql = `UPDATE moz_bookmarks SET title = :title
-                              WHERE id = :root_id AND title <> :title`;
-    // root
-    let fixPlacesRootTitle = {
-      query: updateRootTitleSql,
-      params: {}
-    };
-    fixPlacesRootTitle.params.root_id = PlacesUtils.placesRootId;
-    fixPlacesRootTitle.params.title = "";
-    cleanupStatements.push(fixPlacesRootTitle);
-    // bookmarks menu
-    let fixBookmarksMenuTitle = {
-      query: updateRootTitleSql,
-      params: {}
-    };
-    fixBookmarksMenuTitle.params.root_id = PlacesUtils.bookmarksMenuFolderId;
-    fixBookmarksMenuTitle.params.title =
-      PlacesUtils.getString("BookmarksMenuFolderTitle");
-    cleanupStatements.push(fixBookmarksMenuTitle);
-    // bookmarks toolbar
-    let fixBookmarksToolbarTitle = {
-      query: updateRootTitleSql,
-      params: {}
-    };
-    fixBookmarksToolbarTitle.params.root_id = PlacesUtils.toolbarFolderId;
-    fixBookmarksToolbarTitle.params.title =
-      PlacesUtils.getString("BookmarksToolbarFolderTitle");
-    cleanupStatements.push(fixBookmarksToolbarTitle);
-    // unsorted bookmarks
-    let fixUnsortedBookmarksTitle = {
-      query: updateRootTitleSql,
-      params: {}
-    };
-    fixUnsortedBookmarksTitle.params.root_id = PlacesUtils.unfiledBookmarksFolderId;
-    fixUnsortedBookmarksTitle.params.title =
-      PlacesUtils.getString("OtherBookmarksFolderTitle");
-    cleanupStatements.push(fixUnsortedBookmarksTitle);
-    // tags
-    let fixTagsRootTitle = {
-      query: updateRootTitleSql,
-      params: {}
-    };
-    fixTagsRootTitle.params.root_id = PlacesUtils.tagsFolderId;
-    fixTagsRootTitle.params.title =
-      PlacesUtils.getString("TagsFolderTitle");
-    cleanupStatements.push(fixTagsRootTitle);
-
-    // MOZ_BOOKMARKS
-    // D.1 remove items without a valid place
-    // if fk IS NULL we fix them in D.7
-    let deleteNoPlaceItems = {
-      query:
-      `DELETE FROM moz_bookmarks WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT b.id FROM moz_bookmarks b
-         WHERE fk NOT NULL AND b.type = :bookmark_type
-           AND NOT EXISTS (SELECT url FROM moz_places WHERE id = b.fk LIMIT 1)
-       )`,
-      params: {}
-    };
-    deleteNoPlaceItems.params.bookmark_type = PlacesUtils.bookmarks.TYPE_BOOKMARK;
-    deleteNoPlaceItems.params.rootGuid = PlacesUtils.bookmarks.rootGuid;
-    deleteNoPlaceItems.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-    deleteNoPlaceItems.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-    deleteNoPlaceItems.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    deleteNoPlaceItems.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(deleteNoPlaceItems);
-
-    // D.2 remove items that are not uri bookmarks from tag containers
-    let deleteBogusTagChildren = {
-      query:
-      `DELETE FROM moz_bookmarks WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT b.id FROM moz_bookmarks b
-         WHERE b.parent IN
-           (SELECT id FROM moz_bookmarks WHERE parent = :tags_folder)
-           AND b.type <> :bookmark_type
-       )`,
-      params: {}
-    };
-    deleteBogusTagChildren.params.tags_folder = PlacesUtils.tagsFolderId;
-    deleteBogusTagChildren.params.bookmark_type = PlacesUtils.bookmarks.TYPE_BOOKMARK;
-    deleteBogusTagChildren.params.rootGuid = PlacesUtils.bookmarks.rootGuid;
-    deleteBogusTagChildren.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-    deleteBogusTagChildren.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-    deleteBogusTagChildren.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    deleteBogusTagChildren.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(deleteBogusTagChildren);
-
-    // D.3 remove empty tags
-    let deleteEmptyTags = {
-      query:
-      `DELETE FROM moz_bookmarks WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT b.id FROM moz_bookmarks b
-         WHERE b.id IN
-           (SELECT id FROM moz_bookmarks WHERE parent = :tags_folder)
-           AND NOT EXISTS
-             (SELECT id from moz_bookmarks WHERE parent = b.id LIMIT 1)
-       )`,
-      params: {}
-    };
-    deleteEmptyTags.params.tags_folder = PlacesUtils.tagsFolderId;
-    deleteEmptyTags.params.rootGuid = PlacesUtils.bookmarks.rootGuid;
-    deleteEmptyTags.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-    deleteEmptyTags.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-    deleteEmptyTags.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    deleteEmptyTags.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(deleteEmptyTags);
-
-    // D.4 move orphan items to unsorted folder
-    let fixOrphanItems = {
-      query:
-      `UPDATE moz_bookmarks SET
-         parent = :unsorted_folder,
-         syncChangeCounter = syncChangeCounter + 1
-       WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT b.id FROM moz_bookmarks b
-         WHERE NOT EXISTS
-           (SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1)
-       )`,
-      params: {}
-    };
-    fixOrphanItems.params.unsorted_folder = PlacesUtils.unfiledBookmarksFolderId;
-    fixOrphanItems.params.rootGuid = PlacesUtils.bookmarks.rootGuid;
-    fixOrphanItems.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-    fixOrphanItems.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-    fixOrphanItems.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    fixOrphanItems.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(fixOrphanItems);
-
-    // D.6 fix wrong item types
-    //     Folders and separators should not have an fk.
-    //     If they have a valid fk convert them to bookmarks. Later in D.9 we
-    //     will move eventual children to unsorted bookmarks.
-    let fixBookmarksAsFolders = {
-      query:
-      `UPDATE moz_bookmarks
-       SET type = :bookmark_type,
-           syncChangeCounter = syncChangeCounter + 1
-       WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT id FROM moz_bookmarks b
-         WHERE type IN (:folder_type, :separator_type)
-           AND fk NOTNULL
-       )`,
-      params: {}
-    };
-    fixBookmarksAsFolders.params.bookmark_type = PlacesUtils.bookmarks.TYPE_BOOKMARK;
-    fixBookmarksAsFolders.params.folder_type = PlacesUtils.bookmarks.TYPE_FOLDER;
-    fixBookmarksAsFolders.params.separator_type = PlacesUtils.bookmarks.TYPE_SEPARATOR;
-    fixBookmarksAsFolders.params.rootGuid = PlacesUtils.bookmarks.rootGuid;
-    fixBookmarksAsFolders.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-    fixBookmarksAsFolders.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-    fixBookmarksAsFolders.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    fixBookmarksAsFolders.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(fixBookmarksAsFolders);
-
-    // D.7 fix wrong item types
-    //     Bookmarks should have an fk, if they don't have any, convert them to
-    //     folders.
-    let fixFoldersAsBookmarks = {
-      query:
-      `UPDATE moz_bookmarks
-       SET type = :folder_type,
-           syncChangeCounter = syncChangeCounter + 1
-       WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT id FROM moz_bookmarks b
-         WHERE type = :bookmark_type
-           AND fk IS NULL
-       )`,
-      params: {}
-    };
-    fixFoldersAsBookmarks.params.bookmark_type = PlacesUtils.bookmarks.TYPE_BOOKMARK;
-    fixFoldersAsBookmarks.params.folder_type = PlacesUtils.bookmarks.TYPE_FOLDER;
-    fixFoldersAsBookmarks.params.rootGuid = PlacesUtils.bookmarks.rootGuid;
-    fixFoldersAsBookmarks.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-    fixFoldersAsBookmarks.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-    fixFoldersAsBookmarks.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    fixFoldersAsBookmarks.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(fixFoldersAsBookmarks);
-
-    // D.9 fix wrong parents
-    //     Items cannot have separators or other bookmarks
-    //     as parent, if they have bad parent move them to unsorted bookmarks.
-    let fixInvalidParents = {
-      query:
-      `UPDATE moz_bookmarks SET
-         parent = :unsorted_folder,
-         syncChangeCounter = syncChangeCounter + 1
-       WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT id FROM moz_bookmarks b
-         WHERE EXISTS
-           (SELECT id FROM moz_bookmarks WHERE id = b.parent
-             AND type IN (:bookmark_type, :separator_type)
-             LIMIT 1)
-       )`,
-      params: {}
-    };
-    fixInvalidParents.params.unsorted_folder = PlacesUtils.unfiledBookmarksFolderId;
-    fixInvalidParents.params.bookmark_type = PlacesUtils.bookmarks.TYPE_BOOKMARK;
-    fixInvalidParents.params.separator_type = PlacesUtils.bookmarks.TYPE_SEPARATOR;
-    fixInvalidParents.params.rootGuid = PlacesUtils.bookmarks.rootGuid;
-    fixInvalidParents.params.menuGuid = PlacesUtils.bookmarks.menuGuid;
-    fixInvalidParents.params.toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-    fixInvalidParents.params.unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    fixInvalidParents.params.tagsGuid = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(fixInvalidParents);
-
-    // D.10 recalculate positions
-    //      This requires multiple related statements.
-    //      We can detect a folder with bad position values comparing the sum of
-    //      all distinct position values (+1 since position is 0-based) with the
-    //      triangular numbers obtained by the number of children (n).
-    //      SUM(DISTINCT position + 1) == (n * (n + 1) / 2).
-    cleanupStatements.push({
-      query:
-      `CREATE TEMP TABLE IF NOT EXISTS moz_bm_reindex_temp (
-         id INTEGER PRIMARY_KEY
-       , parent INTEGER
-       , position INTEGER
-       )`
-    });
-    cleanupStatements.push({
-      query:
-      `INSERT INTO moz_bm_reindex_temp
-       SELECT id, parent, 0
-       FROM moz_bookmarks b
-       WHERE parent IN (
-         SELECT parent
-         FROM moz_bookmarks
-         GROUP BY parent
-         HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0
-       )
-       ORDER BY parent ASC, position ASC, ROWID ASC`
-    });
-    cleanupStatements.push({
-      query:
-      `CREATE INDEX IF NOT EXISTS moz_bm_reindex_temp_index
-       ON moz_bm_reindex_temp(parent)`
-    });
-    cleanupStatements.push({
-      query:
-      `UPDATE moz_bm_reindex_temp SET position = (
-         ROWID - (SELECT MIN(t.ROWID) FROM moz_bm_reindex_temp t
-                  WHERE t.parent = moz_bm_reindex_temp.parent)
-       )`
-    });
-    cleanupStatements.push({
-      query:
-      `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_reindex_temp_trigger
-       BEFORE DELETE ON moz_bm_reindex_temp
-       FOR EACH ROW
-       BEGIN
-         UPDATE moz_bookmarks SET position = OLD.position WHERE id = OLD.id;
-       END`
-    });
-    cleanupStatements.push({
-      query: "DELETE FROM moz_bm_reindex_temp "
-    });
-    cleanupStatements.push({
-      query: "DROP INDEX moz_bm_reindex_temp_index "
-    });
-    cleanupStatements.push({
-      query: "DROP TRIGGER moz_bm_reindex_temp_trigger "
-    });
-    cleanupStatements.push({
-      query: "DROP TABLE moz_bm_reindex_temp "
-    });
-
-    // D.12 Fix empty-named tags.
-    //      Tags were allowed to have empty names due to a UI bug.  Fix them
-    //      replacing their title with "(notitle)".
-    let fixEmptyNamedTags = {
-      query:
-      `UPDATE moz_bookmarks SET title = :empty_title
-       WHERE length(title) = 0 AND type = :folder_type
-         AND parent = :tags_folder`,
-      params: {}
-    };
-    fixEmptyNamedTags.params.empty_title = "(notitle)";
-    fixEmptyNamedTags.params.folder_type = PlacesUtils.bookmarks.TYPE_FOLDER;
-    fixEmptyNamedTags.params.tags_folder = PlacesUtils.tagsFolderId;
-    cleanupStatements.push(fixEmptyNamedTags);
-
-    // MOZ_ICONS
-    // E.1 remove orphan icon entries.
-    let deleteOrphanIconPages = {
-      query:
-      `DELETE FROM moz_pages_w_icons WHERE page_url_hash NOT IN (
-         SELECT url_hash FROM moz_places
-       )`
-    };
-    cleanupStatements.push(deleteOrphanIconPages);
-
-    let deleteOrphanIcons = {
-      query:
-      `DELETE FROM moz_icons WHERE id IN (
-        SELECT id FROM moz_icons WHERE root = 0
-        EXCEPT
-        SELECT icon_id FROM moz_icons_to_pages
-       )`
-    };
-    cleanupStatements.push(deleteOrphanIcons);
-
-    // MOZ_HISTORYVISITS
-    // F.1 remove orphan visits
-    let deleteOrphanVisits = {
-      query:
-      `DELETE FROM moz_historyvisits WHERE id IN (
-         SELECT id FROM moz_historyvisits v
-         WHERE NOT EXISTS
-           (SELECT id FROM moz_places WHERE id = v.place_id LIMIT 1)
-       )`
-    };
-    cleanupStatements.push(deleteOrphanVisits);
-
-    // MOZ_INPUTHISTORY
-    // G.1 remove orphan input history
-    let deleteOrphanInputHistory = {
-      query:
-      `DELETE FROM moz_inputhistory WHERE place_id IN (
-         SELECT place_id FROM moz_inputhistory i
-         WHERE NOT EXISTS
-           (SELECT id FROM moz_places WHERE id = i.place_id LIMIT 1)
-       )`
-    };
-    cleanupStatements.push(deleteOrphanInputHistory);
-
-    // MOZ_ITEMS_ANNOS
-    // H.1 remove item annos with an invalid attribute
-    let deleteInvalidAttributeItemsAnnos = {
-      query:
-      `DELETE FROM moz_items_annos WHERE id IN (
-         SELECT id FROM moz_items_annos t
-         WHERE NOT EXISTS
-           (SELECT id FROM moz_anno_attributes
-             WHERE id = t.anno_attribute_id LIMIT 1)
-       )`
-    };
-    cleanupStatements.push(deleteInvalidAttributeItemsAnnos);
-
-    // H.2 remove orphan item annos
-    let deleteOrphanItemsAnnos = {
-      query:
-      `DELETE FROM moz_items_annos WHERE id IN (
-         SELECT id FROM moz_items_annos t
-         WHERE NOT EXISTS
-           (SELECT id FROM moz_bookmarks WHERE id = t.item_id LIMIT 1)
-       )`
-    };
-    cleanupStatements.push(deleteOrphanItemsAnnos);
-
-    // MOZ_KEYWORDS
-    // I.1 remove unused keywords
-    let deleteUnusedKeywords = {
-      query:
-      `DELETE FROM moz_keywords WHERE id IN (
-         SELECT id FROM moz_keywords k
-         WHERE NOT EXISTS
-           (SELECT 1 FROM moz_places h WHERE k.place_id = h.id)
-       )`
-    };
-    cleanupStatements.push(deleteUnusedKeywords);
-
-    // MOZ_PLACES
-    // L.2 recalculate visit_count and last_visit_date
-    let fixVisitStats = {
-      query:
-      `UPDATE moz_places
-       SET visit_count = (SELECT count(*) FROM moz_historyvisits
-                          WHERE place_id = moz_places.id AND visit_type NOT IN (0,4,7,8,9)),
-           last_visit_date = (SELECT MAX(visit_date) FROM moz_historyvisits
-                              WHERE place_id = moz_places.id)
-       WHERE id IN (
-         SELECT h.id FROM moz_places h
-         WHERE visit_count <> (SELECT count(*) FROM moz_historyvisits v
-                               WHERE v.place_id = h.id AND visit_type NOT IN (0,4,7,8,9))
-            OR last_visit_date <> (SELECT MAX(visit_date) FROM moz_historyvisits v
-                                   WHERE v.place_id = h.id)
-       )`
-    };
-    cleanupStatements.push(fixVisitStats);
-
-    // L.3 recalculate hidden for redirects.
-    let fixRedirectsHidden = {
-      query:
-      `UPDATE moz_places
-       SET hidden = 1
-       WHERE id IN (
-         SELECT h.id FROM moz_places h
-         JOIN moz_historyvisits src ON src.place_id = h.id
-         JOIN moz_historyvisits dst ON dst.from_visit = src.id AND dst.visit_type IN (5,6)
-         LEFT JOIN moz_bookmarks on fk = h.id AND fk ISNULL
-         GROUP BY src.place_id HAVING count(*) = visit_count
-       )`
-    };
-    cleanupStatements.push(fixRedirectsHidden);
-
-    // L.4 recalculate foreign_count.
-    let fixForeignCount = {
-      query:
-      `UPDATE moz_places SET foreign_count =
-         (SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id ) +
-         (SELECT count(*) FROM moz_keywords WHERE place_id = moz_places.id )`
-    };
-    cleanupStatements.push(fixForeignCount);
-
-    // L.5 recalculate missing hashes.
-    let fixMissingHashes = {
-      query: `UPDATE moz_places SET url_hash = hash(url) WHERE url_hash = 0`
-    };
-    cleanupStatements.push(fixMissingHashes);
-
-    // L.6 fix invalid Place GUIDs.
-    let fixInvalidPlaceGuids = {
-      query:
-      `UPDATE moz_places
-       SET guid = GENERATE_GUID()
-       WHERE guid IS NULL OR
-             NOT IS_VALID_GUID(guid)`
-    };
-    cleanupStatements.push(fixInvalidPlaceGuids);
-
-    // MOZ_BOOKMARKS
-    // S.1 fix invalid GUIDs for synced bookmarks.
-    //     This requires multiple related statements.
-    //     First, we insert tombstones for all synced bookmarks with invalid
-    //     GUIDs, so that we can delete them on the server. Second, we add a
-    //     temporary trigger to bump the change counter for the parents of any
-    //     items we update, since Sync stores the list of child GUIDs on the
-    //     parent. Finally, we assign new GUIDs for all items with missing and
-    //     invalid GUIDs, bump their change counters, and reset their sync
-    //     statuses to NEW so that they're considered for deduping.
-    cleanupStatements.push({
-      query:
-      `INSERT OR IGNORE INTO moz_bookmarks_deleted(guid, dateRemoved)
-       SELECT guid, :dateRemoved
-       FROM moz_bookmarks
-       WHERE syncStatus <> :syncStatus AND
-             guid NOT NULL AND
-             NOT IS_VALID_GUID(guid)`,
-      params: {
-        dateRemoved: PlacesUtils.toPRTime(new Date()),
-        syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
-      },
-    });
-    cleanupStatements.push({
-      query:
-      `UPDATE moz_bookmarks
-       SET guid = GENERATE_GUID(),
-           syncChangeCounter = syncChangeCounter + 1,
-           syncStatus = :syncStatus
-       WHERE guid IS NULL OR
-             NOT IS_VALID_GUID(guid)`,
-      params: {
-        syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
-      },
-    });
-
-    // S.2 drop tombstones for bookmarks that aren't deleted.
-    cleanupStatements.push({
-      query:
-      `DELETE FROM moz_bookmarks_deleted
-       WHERE guid IN (SELECT guid FROM moz_bookmarks)`,
-    });
-
-    // S.3 set missing added and last modified dates.
-    cleanupStatements.push({
-      query:
-      `UPDATE moz_bookmarks
-       SET dateAdded = COALESCE(dateAdded, lastModified, (
-             SELECT MIN(visit_date) FROM moz_historyvisits
-             WHERE place_id = fk
-           ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000),
-           lastModified = COALESCE(lastModified, dateAdded, (
-             SELECT MAX(visit_date) FROM moz_historyvisits
-             WHERE place_id = fk
-           ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000)
-       WHERE dateAdded IS NULL OR
-             lastModified IS NULL`,
-    });
-
-    // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
-
-    cleanupStatements.push({
-      query: "DROP TRIGGER moz_bm_sync_change_temp_trigger",
-    });
-    cleanupStatements.push({
-      query: "DROP TRIGGER moz_bm_sync_tombstone_temp_trigger",
-    });
+    cleanupStatements.push({ query: `DROP TRIGGER moz_bm_sync_change_temp_trigger` });
+    cleanupStatements.push({ query: `DROP TRIGGER moz_bm_sync_tombstone_temp_trigger` });
 
     return cleanupStatements;
   },
@@ -1214,7 +1072,7 @@ this.PlacesDBUtils = {
       if (PlacesDBUtils._isShuttingDown) {
         tasksMap.set(
           task.name,
-          { succeeded: false, logs: ["Shutting down, will now schedule the task."] });
+          { succeeded: false, logs: ["Shutting down, will not schedule the task."] });
         continue;
       }
 
