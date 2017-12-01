@@ -353,10 +353,10 @@ ChannelMediaDecoder::DownloadProgressed()
   GetOwner()->DownloadProgressed();
   ComputePlaybackRate();
   UpdatePlaybackRate();
-  mResource->ThrottleReadahead(ShouldThrottleDownload());
   // Note GetStatistics() depends on the side effect of ComputePlaybackRate().
   MediaStatistics stats = GetStatistics();
   GetStateMachine()->DispatchCanPlayThrough(stats.CanPlayThrough());
+  mResource->ThrottleReadahead(ShouldThrottleDownload(stats));
 }
 
 void
@@ -415,7 +415,7 @@ ChannelMediaDecoder::GetStatistics()
 }
 
 bool
-ChannelMediaDecoder::ShouldThrottleDownload()
+ChannelMediaDecoder::ShouldThrottleDownload(const MediaStatistics& aStats)
 {
   // We throttle the download if either the throttle override pref is set
   // (so that we can always throttle in Firefox on mobile) or if the download
@@ -423,7 +423,7 @@ ChannelMediaDecoder::ShouldThrottleDownload()
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(GetStateMachine(), false);
 
-  int64_t length = mResource->GetLength();
+  int64_t length = aStats.mTotalBytes;
   if (length > 0 &&
       length <= int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
     // Don't throttle the download of small resources. This is to speed
@@ -437,13 +437,12 @@ ChannelMediaDecoder::ShouldThrottleDownload()
     return true;
   }
 
-  MediaStatistics stats = GetStatistics();
-  if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {
+  if (!aStats.mDownloadRateReliable || !aStats.mPlaybackRateReliable) {
     return false;
   }
   uint32_t factor =
     std::max(2u, Preferences::GetUint("media.throttle-factor", 2));
-  return stats.mDownloadRate > factor * stats.mPlaybackRate;
+  return aStats.mDownloadRate > factor * aStats.mPlaybackRate;
 }
 
 void
