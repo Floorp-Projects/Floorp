@@ -7,6 +7,7 @@
 #define _mozilla_dom_ClientManagerService_h
 
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/MozPromise.h"
 #include "nsDataHashtable.h"
 
 namespace mozilla {
@@ -27,12 +28,21 @@ class ClientManagerService final
 
   nsTArray<ClientManagerParent*> mManagerList;
 
+  bool mShutdown;
+
   ClientManagerService();
   ~ClientManagerService();
+
+  void
+  Shutdown();
 
 public:
   static already_AddRefed<ClientManagerService>
   GetOrCreateInstance();
+
+  // Returns nullptr if the service is not already created.
+  static already_AddRefed<ClientManagerService>
+  GetInstance();
 
   bool
   AddSource(ClientSourceParent* aSource);
