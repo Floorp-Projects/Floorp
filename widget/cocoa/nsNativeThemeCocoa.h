@@ -381,7 +381,7 @@ protected:
                           const UnifiedToolbarParams& aParams);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
                      bool aIsMain);
-  void DrawResizer(CGContextRef cgContext, const HIRect& aRect, nsIFrame *aFrame);
+  void DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL);
   void DrawScrollbarThumb(CGContextRef cgContext, const CGRect& inBoxRect,
                           ScrollbarParams aParams);
   void DrawScrollbarTrack(CGContextRef cgContext, const CGRect& inBoxRect,
