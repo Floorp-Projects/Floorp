@@ -269,3 +269,107 @@ async function addDummyHistoryEntries(searchStr = "") {
     await PlacesUtils.history.clear();
   });
 }
+
+function compareFrames(frame, previousFrame) {
+  // Accessing the Math global is expensive as the test executes in a
+  // non-syntactic scope. Accessing it as a lexical variable is enough
+  // to make the code JIT well.
+  const M = Math;
+
+  function expandRect(x, y, rect) {
+    if (rect.x2 < x)
+      rect.x2 = x;
+    else if (rect.x1 > x)
+      rect.x1 = x;
+    if (rect.y2 < y)
+      rect.y2 = y;
+  }
+
+  function isInRect(x, y, rect) {
+    return (rect.y2 == y || rect.y2 == y - 1) && rect.x1 - 1 <= x && x <= rect.x2 + 1;
+  }
+
+  if (frame.height != previousFrame.height ||
+      frame.width != previousFrame.width) {
+    // If the frames have different sizes, assume the whole window has
+    // been repainted when the window was resized.
+    return [{x1: 0, x2: frame.width, y1: 0, y2: frame.height}];
+  }
+
+  let l = frame.data.length;
+  let different = [];
+  let rects = [];
+  for (let i = 0; i < l; i += 4) {
+    let x = (i / 4) % frame.width;
+    let y = M.floor((i / 4) / frame.width);
+    for (let j = 0; j < 4; ++j) {
+      let index = i + j;
+
+      if (frame.data[index] != previousFrame.data[index]) {
+        let found = false;
+        for (let rect of rects) {
+          if (isInRect(x, y, rect)) {
+            expandRect(x, y, rect);
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+          rects.unshift({x1: x, x2: x, y1: y, y2: y});
+
+        different.push(i);
+        break;
+      }
+    }
+  }
+  rects.reverse();
+
+  // The following code block merges rects that are close to each other
+  // (less than maxEmptyPixels away).
+  // This is needed to avoid having a rect for each letter when a label moves.
+  const maxEmptyPixels = 3;
+  let areRectsContiguous = function(r1, r2) {
+    return r1.y2 >= r2.y1 - 1 - maxEmptyPixels &&
+           r2.x1 - 1 - maxEmptyPixels <= r1.x2 &&
+           r2.x2 >= r1.x1 - 1 - maxEmptyPixels;
+  };
+  let hasMergedRects;
+  do {
+    hasMergedRects = false;
+    for (let r = rects.length - 1; r > 0; --r) {
+      let rr = rects[r];
+      for (let s = r - 1; s >= 0; --s) {
+        let rs = rects[s];
+        if (areRectsContiguous(rs, rr)) {
+          rs.x1 = Math.min(rs.x1, rr.x1);
+          rs.y1 = Math.min(rs.y1, rr.y1);
+          rs.x2 = Math.max(rs.x2, rr.x2);
+          rs.y2 = Math.max(rs.y2, rr.y2);
+          rects.splice(r, 1);
+          hasMergedRects = true;
+          break;
+        }
+      }
+    }
+  } while (hasMergedRects);
+
+  // For convenience, pre-compute the width and height of each rect.
+  rects.forEach(r => {
+    r.w = r.x2 - r.x1;
+    r.h = r.y2 - r.y1;
+  });
+
+  return rects;
+}
+
+function dumpFrame({data, width, height}) {
+  let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  canvas.mozOpaque = true;
+  canvas.width = width;
+  canvas.height = height;
+
+  canvas.getContext("2d", {alpha: false, willReadFrequently: true})
+        .putImageData(new ImageData(data, width, height), 0, 0);
+
+  info(canvas.toDataURL());
+}
