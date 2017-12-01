@@ -284,12 +284,14 @@ moz:webdriverClick
 ------------------
 
 A boolean value to indicate which kind of interactability checks to run
-when performing a click on elements. For Firefoxen prior to version 58.0 some
-legacy code as imported from an older version of [FirefoxDriver] was in use.
+when performing a click or sending keys to an elements. For Firefoxen prior to
+version 58.0 some legacy code as imported from an older version of
+[FirefoxDriver] was in use.
 
 With Firefox 58 the interactability checks as required by the [WebDriver]
 specification are enabled by default. This means geckodriver will additionally
-check if an element is obscured by another when clicking.
+check if an element is obscured by another when clicking, and if an element is
+focusable for sending keys.
 
 Because of this change in behaviour, we are aware that some extra errors could
 be returned. In most cases the test in question might have to be updated
@@ -299,6 +301,8 @@ geckodriver, then please raise an issue in the [issue tracker].
 To temporarily disable the WebDriver conformant checks use `false` as value
 for this capability.
 
+Please note that this capability exists only temporarily, and that it will be
+removed once the interactability checks have been stabilized.
 
 `log` object
 ------------

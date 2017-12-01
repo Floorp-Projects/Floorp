@@ -6,6 +6,8 @@
 
 const {utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Preferences.jsm");
+
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/element.js");
@@ -328,6 +330,51 @@ interaction.flushEventLoop = async function(el) {
 };
 
 /**
+ * Focus element and, if a textual input field and no previous selection
+ * state exists, move the caret to the end of the input field.
+ *
+ * @param {Element} element
+ *     Element to focus.
+ */
+interaction.focusElement = function(el) {
+  let t = el.type;
+  if (t && (t == "text" || t == "textarea")) {
+    if (el.selectionEnd == 0) {
+      let len = el.value.length;
+      el.setSelectionRange(len, len);
+    }
+  }
+  el.focus();
+};
+
+/**
+ * Performs checks if <var>el</var> is keyboard-interactable.
+ *
+ * To decide if an element is keyboard-interactable various properties,
+ * and computed CSS styles have to be evaluated. Whereby it has to be taken
+ * into account that the element can be part of a container (eg. option),
+ * and as such the container has to be checked instead.
+ *
+ * @param {Element} el
+ *     Element to check.
+ *
+ * @return {boolean}
+ *     True if element is keyboard-interactable, false otherwise.
+ */
+interaction.isKeyboardInteractable = function(el) {
+  const win = getWindow(el);
+
+  // body and document element are always keyboard-interactable
+  if (el.localName === "body" || el === win.document.documentElement) {
+    return true;
+  }
+
+  el.focus();
+
+  return el === win.document.activeElement;
+};
+
+/**
  * Appends <var>path</var> to an <tt>&lt;input type=file&gt;</tt>'s
  * file list.
  *
@@ -398,19 +445,73 @@ interaction.setFormControlValue = function(el, value) {
  *     Element to send key events to.
  * @param {Array.<string>} value
  *     Sequence of keystrokes to send to the element.
- * @param {boolean} ignoreVisibility
- *     Flag to enable or disable element visibility tests.
  * @param {boolean=} [strict=false] strict
  *     Enforce strict accessibility tests.
+ * @param {boolean=} [specCompat=false] specCompat
+ *     Use WebDriver specification compatible interactability definition.
  */
 interaction.sendKeysToElement = async function(
-    el, value, ignoreVisibility, strict = false) {
-  let win = getWindow(el);
-  let a11y = accessibility.get(strict);
+    el, value, strict = false, specCompat = false) {
+  const a11y = accessibility.get(strict);
+
+  if (specCompat) {
+    await webdriverSendKeysToElement(el, value, a11y);
+  } else {
+    await legacySendKeysToElement(el, value, a11y);
+  }
+};
+
+async function webdriverSendKeysToElement(el, value, a11y) {
+  const win = getWindow(el);
+
+  let containerEl = element.getContainer(el);
+
+  // TODO: Wait for element to be keyboard-interactible
+  if (!interaction.isKeyboardInteractable(containerEl)) {
+    throw new ElementNotInteractableError(
+        pprint`Element ${el} is not reachable by keyboard`);
+  }
+
   let acc = await a11y.getAccessible(el, true);
   a11y.assertActionable(acc, el);
-  event.sendKeysToElement(value, el, {ignoreVisibility: false}, win);
-};
+
+  interaction.focusElement(el);
+
+  if (el.type == "file") {
+    await interaction.uploadFile(el, value);
+  } else if ((el.type == "date" || el.type == "time") &&
+      Preferences.get("dom.forms.datetime")) {
+    interaction.setFormControlValue(el, value);
+  } else {
+    event.sendKeysToElement(value, el, win);
+  }
+}
+
+async function legacySendKeysToElement(el, value, a11y) {
+  const win = getWindow(el);
+
+  if (el.type == "file") {
+    await interaction.uploadFile(el, value);
+  } else if ((el.type == "date" || el.type == "time") &&
+      Preferences.get("dom.forms.datetime")) {
+    interaction.setFormControlValue(el, value);
+  } else {
+    let visibilityCheckEl  = el;
+    if (el.localName == "option") {
+      visibilityCheckEl = element.getContainer(el);
+    }
+
+    if (!element.isVisible(visibilityCheckEl)) {
+      throw new ElementNotInteractableError("Element is not visible");
+    }
+
+    let acc = await a11y.getAccessible(el, true);
+    a11y.assertActionable(acc, el);
+
+    interaction.focusElement(el);
+    event.sendKeysToElement(value, el, win);
+  }
+}
 
 /**
  * Determine the element displayedness of an element.

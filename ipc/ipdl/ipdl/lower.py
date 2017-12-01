@@ -738,7 +738,6 @@ class StructDecl(ipdl.ast.StructDecl, HasFQName):
     def upgrade(structDecl):
         assert isinstance(structDecl, ipdl.ast.StructDecl)
         structDecl.__class__ = StructDecl
-        return structDecl
 
 class _StructField(_CompoundTypeComponent):
     def __init__(self, ipdltype, name, sd, side=None):
@@ -815,7 +814,6 @@ class UnionDecl(ipdl.ast.UnionDecl, HasFQName):
     def upgrade(unionDecl):
         assert isinstance(unionDecl, ipdl.ast.UnionDecl)
         unionDecl.__class__ = UnionDecl
-        return unionDecl
 
 
 class _UnionMember(_CompoundTypeComponent):
@@ -1110,12 +1108,9 @@ class MessageDecl(ipdl.ast.MessageDecl):
                         messageDecl.decl.type.constructedType()),
                     'actor'))
         messageDecl.__class__ = MessageDecl
-        return messageDecl
+
 
 ##--------------------------------------------------
-def _semsToChannelParts(sems):
-    return [ 'mozilla', 'ipc', 'MessageChannel' ]
-
 def _usesShmem(p):
     for md in p.messageDecls:
         for param in md.inParams:
@@ -1141,21 +1136,12 @@ class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
         return self.decl.cxxtypedefs
 
-    def sendSems(self):
-        return self.decl.type.toplevel().sendSemantics
-
-    def channelName(self):
-        return '::'.join(_semsToChannelParts(self.sendSems()))
-
     def channelSel(self):
         if self.decl.type.isToplevel():  return '.'
         return '->'
 
     def channelType(self):
-        return Type('Channel', ptr=not self.decl.type.isToplevel())
-
-    def channelHeaderFile(self):
-        return '/'.join(_semsToChannelParts(self.sendSems())) +'.h'
+        return Type('MessageChannel', ptr=not self.decl.type.isToplevel())
 
     def managerInterfaceType(self, ptr=0):
         return Type('mozilla::ipc::IProtocol', ptr=ptr)
@@ -1312,7 +1298,6 @@ class Protocol(ipdl.ast.Protocol):
     def upgrade(protocol):
         assert isinstance(protocol, ipdl.ast.Protocol)
         protocol.__class__ = Protocol
-        return protocol
 
 
 class TranslationUnit(ipdl.ast.TranslationUnit):
@@ -1320,7 +1305,7 @@ class TranslationUnit(ipdl.ast.TranslationUnit):
     def upgrade(tu):
         assert isinstance(tu, ipdl.ast.TranslationUnit)
         tu.__class__ = TranslationUnit
-        return tu
+
 
 ##-----------------------------------------------------------------------------
 
@@ -2483,10 +2468,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def standardTypedefs(self):
         return [
-            Typedef(Type('mozilla::ipc::IProtocol'), 'ProtocolBase'),
+            Typedef(Type('mozilla::ipc::IProtocol'), 'IProtocol'),
             Typedef(Type('IPC::Message'), 'Message'),
-            Typedef(Type(self.protocol.channelName()), 'Channel'),
-            Typedef(Type('mozilla::ipc::IProtocol'), 'ChannelListener'),
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
             Typedef(Type('mozilla::ipc::MessageChannel'), 'MessageChannel'),
             Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),
@@ -2661,7 +2644,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.hdrfile.addthing(CppDirective('include', '"base/id_map.h"'))
 
         self.hdrfile.addthings([
-            CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
+            CppDirective('include', '"mozilla/ipc/MessageChannel.h"'),
             Whitespace.NL ])
 
         hasAsyncReturns = False
@@ -2984,7 +2967,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprVar('MSG_ROUTING_CONTROL'), '!=', routevar))
                 routedvar = ExprVar('routed__')
                 routeif.ifb.addstmt(
-                    StmtDecl(Decl(Type('ChannelListener', ptr=1),
+                    StmtDecl(Decl(Type('IProtocol', ptr=1),
                                   routedvar.name),
                              _lookupListener(routevar)))
                 failif = StmtIf(ExprPrefixUnop(routedvar, '!'))
@@ -3247,7 +3230,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sizevar = ExprVar('aSize')
         typevar = ExprVar('aType')
         unsafevar = ExprVar('aUnsafe')
-        protocolbase = Type('ProtocolBase', ptr=1)
+        protocolbase = Type('IProtocol', ptr=1)
         sourcevar = ExprVar('aSource')
         ivar = ExprVar('i')
         kidsvar = ExprVar('kids')

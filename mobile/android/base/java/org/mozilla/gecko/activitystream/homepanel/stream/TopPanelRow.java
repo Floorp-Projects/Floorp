@@ -92,6 +92,6 @@ public class TopPanelRow extends StreamViewHolder {
     }
 
     public interface OnCardLongClickListener {
-        boolean onClick(TopSite topSite, int absolutePosition, int faviconWidth, int faviconHeight);
+        boolean onLongClick(TopSite topSite, int absolutePosition, View tabletContextMenuAnchor, int faviconWidth, int faviconHeight);
     }
 }

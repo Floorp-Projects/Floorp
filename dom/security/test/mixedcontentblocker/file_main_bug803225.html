@@ -18,7 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
      "javascript",
      "mailto",
      "resource",
-     "moz-icon",
      "wss"
 -->
 
@@ -70,18 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   testContent.appendChild(resource_script);
 
-  // Test 4: moz-icon within an img tag
-  var image=document.createElement("img");
-  image.src = "moz-icon://dummy.exe?size=16";
-  image.onload = function() {
-    parent.postMessage({"test": "mozicon", "msg": "resource with mozicon protocol loaded"}, "http://mochi.test:8888");
-  }
-  image.onerror = function() {
-    parent.postMessage({"test": "mozicon", "msg": "resource with mozicon protocol did not load"}, "http://mochi.test:8888");
-  }
-  // We don't need to append the image to the document. Doing so causes the image test to run twice.
-
-  // Test 5: about unsafe protocol within an iframe
+  // Test 4: about unsafe protocol within an iframe
   var unsafe_about_frame = document.createElement("iframe");
   unsafe_about_frame.src = "about:config";
   unsafe_about_frame.name = "unsafe_about_protocol";
@@ -93,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   }
   testContent.appendChild(unsafe_about_frame);
 
-  // Test 6: data protocol within a script tag
+  // Test 5: data protocol within a script tag
   var x = 2;
   var newscript = document.createElement("script");
   newscript.src= "data:text/javascript,var x = 4;";
@@ -105,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   }
   testContent.appendChild(newscript);
 
-  // Test 7: mailto protocol
+  // Test 6: mailto protocol
   let mm = SpecialPowers.loadChromeScript(function launchHandler() {
     var { classes: Cc, interfaces: Ci } = Components;
     var ioService = Cc["@mozilla.org/network/io-service;1"].
@@ -160,7 +148,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   mailtoProtocolStatus();
 
-  // Test 8: wss protocol
+  // Test 7: wss protocol
   var wss;
   wss = new WebSocket("wss://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225_websocket");
 

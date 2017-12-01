@@ -823,14 +823,18 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             targets_exts = ["tar.bz2", "dmg", "langpack.xpi",
                             "complete.mar", "checksums", "zip",
                             "installer.exe", "installer-stub.exe"]
-            targets = ["target.%s" % ext for ext in targets_exts]
-            targets.extend(['setup.exe', 'setup-stub.exe'])
+            targets = [(".%s" % (ext,), "target.%s" % (ext,)) for ext in targets_exts]
+            targets.extend([(f, f) for f in 'setup.exe', 'setup-stub.exe'])
             for f in matches:
-                target_file = next(target_file for target_file in targets
-                                   if f.endswith(target_file[6:]))
-                if target_file:
+                possible_targets = [
+                    (tail, target_file)
+                    for (tail, target_file) in targets
+                    if f.endswith(tail)
+                ]
+                if len(possible_targets) == 1:
+                    _, target_file = possible_targets[0]
                     # Remove from list of available options for this locale
-                    targets.remove(target_file)
+                    targets.remove(possible_targets[0])
                 else:
                     # wasn't valid (or already matched)
                     raise RuntimeError("Unexpected matching file name encountered: %s"
