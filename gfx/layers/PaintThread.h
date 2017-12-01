@@ -142,6 +142,9 @@ public:
   // and the main thread is finished recording this layer.
   void EndLayer();
 
+  // This allows external users to run code on the paint thread.
+  void Dispatch(RefPtr<Runnable>& aRunnable);
+
   // Must be called on the main thread. Signifies that the current
   // layer tree transaction has been finished and any async paints
   // for it have been queued on the paint thread. This MUST be called

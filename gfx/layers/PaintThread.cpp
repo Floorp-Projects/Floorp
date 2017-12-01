@@ -360,6 +360,16 @@ PaintThread::EndLayer()
 }
 
 void
+PaintThread::Dispatch(RefPtr<Runnable>& aRunnable)
+{
+#ifndef OMTP_FORCE_SYNC
+  sThread->Dispatch(aRunnable.forget());
+#else
+  SyncRunnable::DispatchToThread(sThread, aRunnable);
+#endif
+}
+
+void
 PaintThread::AsyncEndLayer()
 {
   MOZ_ASSERT(IsOnPaintThread());
