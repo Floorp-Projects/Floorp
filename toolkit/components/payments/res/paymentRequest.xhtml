@@ -9,20 +9,33 @@
   <title></title>
   <link rel="stylesheet" href="paymentRequest.css"/>
   <script src="vendor/custom-elements.min.js"></script>
+
+  <script src="PaymentsStore.js"></script>
+
   <script src="mixins/ObservedPropertiesMixin.js"></script>
+  <script src="mixins/PaymentStateSubscriberMixin.js"></script>
+
   <script src="components/currency-amount.js"></script>
+
+  <script src="containers/payment-dialog.js"></script>
+
   <script src="paymentRequest.js"></script>
+
+  <template id="payment-dialog-template">
+    <div id="host-name"></div>
+
+    <div id="total">
+      <h2 class="label"></h2>
+      <currency-amount></currency-amount>
+    </div>
+    <div id="controls-container">
+      <button id="cancel">Cancel payment</button>
+    </div>
+  </template>
 </head>
 <body>
   <iframe id="debugging-console" hidden="hidden" src="debugging.html"></iframe>
-  <div id="host-name"></div>
 
-  <div id="total">
-    <h2 class="label"></h2>
-    <currency-amount></currency-amount>
-  </div>
-  <div id="controls-container">
-    <button id="cancel">Cancel payment</button>
-  </div>
+  <payment-dialog></payment-dialog>
 </body>
 </html>
