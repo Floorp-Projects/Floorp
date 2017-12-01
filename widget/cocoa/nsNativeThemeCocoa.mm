@@ -1502,9 +1502,7 @@ nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRect& i
 }
 
 void
-nsNativeThemeCocoa::DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect,
-                                     EventStates inState, uint8_t aWidgetType,
-                                     nsIFrame* aFrame)
+nsNativeThemeCocoa::DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -2973,7 +2971,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_FOCUS_OUTLINE:
-      DrawFocusOutline(cgContext, macRect, eventState, aWidgetType, aFrame);
+      DrawFocusOutline(cgContext, macRect);
       break;
 
     case NS_THEME_MAC_HELP_BUTTON:
