@@ -138,8 +138,13 @@ def make_job_description(config, jobs):
         # have better beetmover support.
         dependencies.update(signing_dependencies)
 
+        attributes = copy_attributes_from_dependent_job(dep_job)
+
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'Nr')
+        if attributes.get('nightly'):
+            treeherder.setdefault('symbol', 'Nr')
+        else:
+            treeherder.setdefault('symbol', 'Rpk')
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform', "{}/opt".format(dep_th_platform))
