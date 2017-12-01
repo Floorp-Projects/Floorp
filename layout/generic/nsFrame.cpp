@@ -10439,7 +10439,19 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
   gIndent2++;
 #endif
 
-  nsBoxLayoutMetrics *metrics = BoxMetrics();
+  nsBoxLayoutMetrics* metrics = BoxMetrics();
+  if (MOZ_UNLIKELY(!metrics)) {
+    // Can't proceed without BoxMetrics. This should only happen if something
+    // is seriously broken, e.g. if we try to do XUL layout on a non-XUL frame.
+    // (If this is a content process, we'll abort even in release builds,
+    // because XUL layout mixup is extra surprising in content, and aborts are
+    // less catastrophic in content vs. in chrome.)
+    MOZ_RELEASE_ASSERT(!XRE_IsContentProcess(),
+                       "Starting XUL BoxReflow w/o BoxMetrics (in content)?");
+    MOZ_ASSERT_UNREACHABLE("Starting XUL BoxReflow w/o BoxMetrics?");
+    return;
+  }
+
   nsReflowStatus status;
   WritingMode wm = aDesiredSize.GetWritingMode();
 
