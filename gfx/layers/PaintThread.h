@@ -120,17 +120,20 @@ public:
   struct Copy {
     Copy(RefPtr<gfx::DrawTarget> aSource,
          RefPtr<gfx::DrawTarget> aDestination,
-         gfx::IntRect aBounds)
+         gfx::IntRect aSourceBounds,
+         gfx::IntPoint aDestinationPoint)
       : mSource(aSource)
       , mDestination(aDestination)
-      , mBounds(aBounds)
+      , mSourceBounds(aSourceBounds)
+      , mDestinationPoint(aDestinationPoint)
     {}
 
     bool CopyBuffer();
 
     RefPtr<gfx::DrawTarget> mSource;
     RefPtr<gfx::DrawTarget> mDestination;
-    gfx::IntRect mBounds;
+    gfx::IntRect mSourceBounds;
+    gfx::IntPoint mDestinationPoint;
   };
 
   struct Clear {

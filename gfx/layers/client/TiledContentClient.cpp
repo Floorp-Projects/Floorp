@@ -507,7 +507,7 @@ CopyFrontToBack(TextureClient* aFront,
   }
 
   auto copy = CapturedTiledPaintState::Copy{
-    frontBuffer, backBuffer, aRectToCopy
+    frontBuffer, backBuffer, aRectToCopy, aRectToCopy.TopLeft()
   };
 
   if (asyncPaint && aCopies) {
