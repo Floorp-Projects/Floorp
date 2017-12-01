@@ -63,7 +63,7 @@ function promiseLibraryClosed(organizer) {
   return new Promise(resolve => {
     // Wait for the Organizer window to actually be closed
     organizer.addEventListener("unload", function() {
-      resolve();
+      executeSoon(resolve);
     }, {once: true});
 
     // Close Library window.
@@ -413,7 +413,7 @@ var withSidebarTree = async function(type, taskFn) {
   info("withSidebarTree: waiting sidebar load");
   let sidebarLoadedPromise = new Promise(resolve => {
     sidebar.addEventListener("load", function() {
-      resolve();
+      executeSoon(resolve);
     }, {capture: true, once: true});
   });
   let sidebarId = type == "bookmarks" ? "viewBookmarksSidebar"
