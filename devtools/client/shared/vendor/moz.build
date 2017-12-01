@@ -19,7 +19,6 @@ DevToolsModules(
     'react-dom.js',
     'react-prop-types.js',
     'react-redux.js',
-    'react-virtualized.js',
     'react.js',
     'redux.js',
     'reselect.js',
