@@ -131,7 +131,7 @@ private:
   // at any time.
   MediaStatistics GetStatistics();
 
-  bool ShouldThrottleDownload();
+  bool ShouldThrottleDownload(const MediaStatistics& aStats);
 
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
