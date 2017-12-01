@@ -13,6 +13,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "nsCSSFontFaceRule.h"
@@ -522,7 +523,7 @@ FontFace::ParseDescriptor(nsCSSFontDesc aDescID,
 
   if (mFontFaceSet->Document()->IsStyledByServo()) {
     RefPtr<URLExtraData> url = new URLExtraData(base, docURI, principal);
-    return Servo_ParseFontDescriptor(aDescID, &aString, url, &aResult);
+    return ServoCSSParser::ParseFontDescriptor(aDescID, aString, url, aResult);
   }
 
   nsCSSParser parser;
