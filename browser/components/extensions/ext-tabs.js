@@ -617,6 +617,12 @@ this.tabs = class extends ExtensionAPI {
             let window = destinationWindow || nativeTab.ownerGlobal;
             let gBrowser = window.gBrowser;
 
+            // If we are not moving the tab to a different window, and the window
+            // only has one tab, do nothing.
+            if (nativeTab.ownerGlobal == window && gBrowser.tabs.length === 1) {
+              continue;
+            }
+
             let insertionPoint = indexMap.get(window) || moveProperties.index;
             // If the index is -1 it should go to the end of the tabs.
             if (insertionPoint == -1) {
