@@ -13,7 +13,6 @@ DevToolsModules(
     'jsol.js',
     'jszip.js',
     'lodash.js',
-    'react-addons-shallow-compare.js',
     'react-dom-factories.js',
     'react-dom-server.js',
     'react-dom.js',
