@@ -15,6 +15,6 @@ class Features {
          * Swipe-to-refresh: Currently disabled due to various UX issues: #1776
          */
         @JvmField
-        val SWIPE_TO_REFERSH : Boolean = BuildConfig.DEBUG
+        val SWIPE_TO_REFRESH: Boolean = BuildConfig.DEBUG
     }
 }

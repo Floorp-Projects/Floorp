@@ -12,7 +12,7 @@ import android.widget.FrameLayout
 import org.mozilla.focus.R
 import org.mozilla.focus.whatsnew.WhatsNew
 
-class IndicatorMenuButton(context: Context, attrs: AttributeSet): FrameLayout(context, attrs) {
+class IndicatorMenuButton(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
     init {
         isClickable = true
 

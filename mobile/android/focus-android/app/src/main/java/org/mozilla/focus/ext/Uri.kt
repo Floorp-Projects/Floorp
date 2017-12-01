@@ -18,7 +18,7 @@ import android.net.Uri
  *
  * Spec: https://github.com/mozilla-mobile/focus-android/issues/1231#issuecomment-326237077
  */
-fun Uri.truncatedHost() : String? {
+fun Uri.truncatedHost(): String? {
     if (host.isNullOrEmpty()) {
         return host
     }
@@ -59,7 +59,7 @@ fun Uri.truncatedHost() : String? {
 fun Uri.truncatedPath(): String {
     val segments = pathSegments
 
-    return when(segments.size) {
+    return when (segments.size) {
         0 -> ""
         1 -> "/" + segments[0]
         2 -> "/" + segments.joinToString(separator = "/" )

@@ -15,8 +15,7 @@ import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.widget.InlineAutocompleteEditText
 import org.mozilla.focus.widget.InlineAutocompleteEditText.AutocompleteResult
 import java.io.IOException
-import java.util.*
-import kotlin.collections.LinkedHashSet
+import java.util.Locale
 
 class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
     companion object {
@@ -28,10 +27,10 @@ class UrlAutoCompleteFilter : InlineAutocompleteEditText.OnFilterListener {
         const val CUSTOM_LIST = "custom"
     }
 
-    private var settings : Settings? = null
+    private var settings: Settings? = null
 
-    private var customDomains : List<String> = emptyList()
-    private var preInstalledDomains : List<String> = emptyList()
+    private var customDomains: List<String> = emptyList()
+    private var preInstalledDomains: List<String> = emptyList()
 
     override fun onFilter(rawSearchText: String, view: InlineAutocompleteEditText?) {
         if (view == null) {

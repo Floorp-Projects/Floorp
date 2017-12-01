@@ -21,7 +21,7 @@ import org.mozilla.focus.whatsnew.WhatsNew
 class HomeMenuAdapter(
         context: Context,
         private val listener: View.OnClickListener
-): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items: List<MenuItem> = listOf(
             MenuItem(R.id.whats_new, WhatsNewViewHolder.LAYOUT_ID, context.getString(R.string.menu_whats_new)),
@@ -78,7 +78,7 @@ private class MenuItemViewHolder(
 private class WhatsNewViewHolder(
         itemView: View,
         val listener: View.OnClickListener) : RecyclerView.ViewHolder(itemView) {
-    val dotView : View = itemView.findViewById(R.id.dot)
+    val dotView: View = itemView.findViewById(R.id.dot)
 
     companion object {
         val LAYOUT_ID: Int = R.layout.menu_whatsnew

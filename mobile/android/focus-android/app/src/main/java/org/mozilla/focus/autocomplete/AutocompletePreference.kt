@@ -16,7 +16,7 @@ import org.mozilla.focus.utils.Settings
  * Autocomplete preference that will show a sub screen to configure the autocomplete behavior.
  */
 class AutocompletePreference(context: Context?, attrs: AttributeSet?) : Preference(context, attrs) {
-    var summaryView : TextView? = null
+    var summaryView: TextView? = null
 
     override fun onBindView(view: View?) {
         super.onBindView(view)

@@ -7,14 +7,18 @@ package org.mozilla.focus.autocomplete
 import android.app.Fragment
 import android.content.Context
 import android.os.Bundle
-import android.view.*
-import org.mozilla.focus.R
-import org.mozilla.focus.settings.SettingsFragment
-
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_autocomplete_add_domain.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
+import org.mozilla.focus.R
 import org.mozilla.focus.ext.removePrefixesIgnoreCase
+import org.mozilla.focus.settings.SettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 
@@ -79,4 +83,3 @@ class AutocompleteAddFragment : Fragment() {
         fragmentManager.popBackStack()
     }
 }
-

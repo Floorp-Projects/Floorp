@@ -2,12 +2,10 @@ package org.mozilla.focus.settings
 
 import android.content.Context
 import android.graphics.Paint
-import android.preference.Preference.OnPreferenceClickListener
 import android.preference.SwitchPreference
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.view.View
-import android.widget.Switch
 import android.widget.TextView
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InfoActivity

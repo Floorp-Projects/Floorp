@@ -580,12 +580,12 @@ object TelemetryWrapper {
 
     @JvmStatic
     fun swipeReloadEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.SWIPE, Object.BROWSER, Value.RELOAD).queue();
+        TelemetryEvent.create(Category.ACTION, Method.SWIPE, Object.BROWSER, Value.RELOAD).queue()
     }
 
     @JvmStatic
     fun menuReloadEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.RELOAD).queue();
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.RELOAD).queue()
     }
 
     @JvmStatic
