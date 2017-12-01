@@ -195,7 +195,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         // Update title and icons when returning to fragments.
         final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
         updater.updateTitle(settingsScreen.titleResId);
-        updater.updateIcon(R.drawable.ic_back);
+        if (settingsScreen == SettingsScreen.REMOVE_ENGINES) {
+            updater.updateIcon(R.drawable.ic_close);
+        } else {
+            updater.updateIcon(R.drawable.ic_back);
+        }
         if (settingsScreen == SettingsScreen.SEARCH_ENGINES || settingsScreen == SettingsScreen.REMOVE_ENGINES) {
             refetchSearchEngines();
         }
