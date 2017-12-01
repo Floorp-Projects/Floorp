@@ -1360,11 +1360,16 @@ this.FormHistory = {
     }
   },
 
-  getAutoCompleteResults(searchString, params, aCallbacks) {
+  getAutoCompleteResults(searchString, params, aHandlers) {
     // only do substring matching when the search string contains more than one character
     let searchTokens;
     let where = "";
     let boundaryCalc = "";
+
+    if (searchString.length >= 1) {
+      params.valuePrefix = searchString + "%";
+    }
+
     if (searchString.length > 1) {
       searchTokens = searchString.split(/\s+/);
 
@@ -1375,6 +1380,11 @@ this.FormHistory = {
       let tokenCalc = [];
       let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
       for (let i = 0; i < searchTokenCount; i++) {
+        let escapedToken = searchTokens[i];
+        params["tokenBegin" + i] = escapedToken + "%";
+        params["tokenBoundary" + i] = "% " + escapedToken + "%";
+        params["tokenContains" + i] = "%" + escapedToken + "%";
+
         tokenCalc.push("(value LIKE :tokenBegin" + i + " ESCAPE '/') + " +
                             "(value LIKE :tokenBoundary" + i + " ESCAPE '/')");
         where += "AND (value LIKE :tokenContains" + i + " ESCAPE '/') ";
@@ -1395,6 +1405,8 @@ this.FormHistory = {
     }
 
     params.now = Date.now() * 1000; // convert from ms to microseconds
+
+    let handlers = this._prepareHandlers(aHandlers);
 
     /* Three factors in the frecency calculation for an entry (in order of use in calculation):
      * 1) average number of times used - items used more are ranked higher
@@ -1419,62 +1431,42 @@ this.FormHistory = {
                 "WHERE fieldname=:fieldname " + where +
                 "ORDER BY ROUND(frecency * boundaryBonuses) DESC, UPPER(value) ASC";
 
-    let stmt = dbCreateAsyncStatement(query, params);
+    let cancelled = false;
 
-    // Chicken and egg problem: Need the statement to escape the params we
-    // pass to the function that gives us the statement. So, fix it up now.
-    if (searchString.length >= 1) {
-      stmt.params.valuePrefix = stmt.escapeStringForLIKE(searchString, "/") + "%";
-    }
-    if (searchString.length > 1) {
-      let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
-      for (let i = 0; i < searchTokenCount; i++) {
-        let escapedToken = stmt.escapeStringForLIKE(searchTokens[i], "/");
-        stmt.params["tokenBegin" + i] = escapedToken + "%";
-        stmt.params["tokenBoundary" + i] =  "% " + escapedToken + "%";
-        stmt.params["tokenContains" + i] = "%" + escapedToken + "%";
-      }
-    } else {
-      // no additional params need to be substituted into the query when the
-      // length is zero or one
-    }
+    let cancellableQuery = {
+      cancel() {
+        cancelled = true;
+      },
+    };
 
-    let pending = stmt.executeAsync({
-      handleResult(aResultSet) {
-        for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
+    this.db.then(async conn => {
+      try {
+        await conn.executeCached(query, params, (row, cancel) => {
+          if (cancelled) {
+            cancel();
+            return;
+          }
+
           let value = row.getResultByName("value");
           let guid = row.getResultByName("guid");
           let frecency = row.getResultByName("frecency");
           let entry = {
-            text:          value,
+            text: value,
             guid,
             textLowerCase: value.toLowerCase(),
             frecency,
-            totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses")),
+            totalScore: Math.round(frecency * row.getResultByName("boundaryBonuses")),
           };
-          if (aCallbacks && aCallbacks.handleResult) {
-            aCallbacks.handleResult(entry);
-          }
-        }
-      },
-
-      handleError(aError) {
-        if (aCallbacks && aCallbacks.handleError) {
-          aCallbacks.handleError(aError);
-        }
-      },
-
-      handleCompletion(aReason) {
-        if (aCallbacks && aCallbacks.handleCompletion) {
-          aCallbacks.handleCompletion(
-            aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ?
-              0 :
-              1
-          );
-        }
-      },
+          handlers.handleResult(entry);
+        });
+        handlers.handleCompletion(0);
+      } catch (e) {
+        handlers.handleError(e);
+        handlers.handleCompletion(1);
+      }
     });
-    return pending;
+
+    return cancellableQuery;
   },
 
   // This is used only so that the test can verify deleted table support.
