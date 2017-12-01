@@ -1526,6 +1526,39 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
     return rv;
   }
 
+  // Copy over temporary tables, triggers, and views from the original
+  // connections. Entities in `sqlite_temp_master` are only visible to the
+  // connection that created them.
+  if (!aReadOnly) {
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = CreateStatement(NS_LITERAL_CSTRING("SELECT sql FROM sqlite_temp_master "
+                                            "WHERE type IN ('table', 'view', "
+                                                           "'index', 'trigger')"),
+                         getter_AddRefs(stmt));
+    // Propagate errors, because failing to copy triggers might cause schema
+    // coherency issues when writing to the database from the cloned connection.
+    NS_ENSURE_SUCCESS(rv, rv);
+    bool hasResult = false;
+    while (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      nsAutoCString query;
+      rv = stmt->GetUTF8String(0, query);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // The `CREATE` SQL statements in `sqlite_temp_master` omit the `TEMP`
+      // keyword. We need to add it back, or we'll recreate temporary entities
+      // as persistent ones. `sqlite_temp_master` also holds `CREATE INDEX`
+      // statements, but those don't need `TEMP` keywords.
+      if (StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TABLE ")) ||
+          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TRIGGER ")) ||
+          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE VIEW "))) {
+        query.Replace(0, 6, "CREATE TEMP");
+      }
+
+      rv = aClone->ExecuteSimpleSQL(query);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
   // Re-attach on-disk databases that were attached to the original connection.
   {
     nsCOMPtr<mozIStorageStatement> stmt;

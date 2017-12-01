@@ -82,6 +82,11 @@ interface mozIStorageConnection : mozIStorageAsyncConnection {
    *        - journal_size_limit
    *        - synchronous
    *        - wal_autocheckpoint
+   *       All SQL functions are copied over to read-only and writeable clones.
+   *       Additionally, all temporary tables, triggers, and views, as well as
+   *       any indexes on temporary tables, are copied over to writeable clones.
+   *       For temporary tables, only the schemas are copied, not their
+   *       contents.
    *
    */
   mozIStorageConnection clone([optional] in boolean aReadOnly);
