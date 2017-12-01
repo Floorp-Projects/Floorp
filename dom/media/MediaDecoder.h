@@ -652,12 +652,6 @@ protected:
   // background.
   bool mIsBackgroundVideoDecodingAllowed;
 
-  // Current decoding position in the stream. This is where the decoder
-  // is up to consuming the stream. This is not adjusted during decoder
-  // seek operations, but it's updated at the end when we start playing
-  // back again.
-  int64_t mDecoderPosition = 0;
-
 public:
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
   AbstractCanonical<bool>* CanonicalPreservesPitch()
