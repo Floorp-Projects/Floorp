@@ -64,7 +64,9 @@ StackingContextHelper::~StackingContextHelper()
 wr::LayoutRect
 StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
 {
-  return wr::ToLayoutRect(RoundedToInt(aRect - mOrigin));
+  auto rect = aRect - mOrigin;
+  rect.Round();
+  return wr::ToLayoutRect(rect);
 }
 
 } // namespace layers
