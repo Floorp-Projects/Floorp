@@ -1,0 +1,34 @@
+{
+    "en-CA": {
+        "platforms": [
+            "android", 
+            "android-api-16", 
+            "android-multilocale"
+        ], 
+        "revision": "default"
+    }, 
+    "he": {
+        "platforms": [
+            "android", 
+            "android-api-16", 
+            "android-multilocale"
+        ], 
+        "revision": "default"
+    }, 
+    "it": {
+        "platforms": [
+            "android", 
+            "android-api-16", 
+            "android-multilocale"
+        ], 
+        "revision": "default"
+    }, 
+    "ja": {
+        "platforms": [
+            "android", 
+            "android-api-16", 
+            "android-multilocale"
+        ], 
+        "revision": "default"
+    }
+}
