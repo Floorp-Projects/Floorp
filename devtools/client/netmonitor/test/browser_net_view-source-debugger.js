@@ -17,7 +17,7 @@ add_task(async function () {
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  let waitForContentRequests = waitForNetworkEvents(monitor, 2);
+  let waitForContentRequests = waitForNetworkEvents(monitor, 0, 2);
   await ContentTask.spawn(tab.linkedBrowser, {},
     () => content.wrappedJSObject.performRequests());
   await waitForContentRequests;

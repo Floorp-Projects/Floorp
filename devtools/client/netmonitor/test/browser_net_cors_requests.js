@@ -19,7 +19,7 @@ add_task(function* () {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 2);
+  let wait = waitForNetworkEvents(monitor, 1, 1);
 
   info("Performing a CORS request");
   let requestUrl = "http://test1.example.com" + CORS_SJS_PATH;

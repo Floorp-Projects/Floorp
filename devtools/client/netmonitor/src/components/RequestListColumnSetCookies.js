@@ -13,17 +13,8 @@ const { div } = dom;
 class RequestListColumnSetCookies extends Component {
   static get propTypes() {
     return {
-      connector: PropTypes.object.isRequired,
       item: PropTypes.object.isRequired,
     };
-  }
-
-  componentDidMount() {
-    this.maybeFetchResponseCookies(this.props);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.maybeFetchResponseCookies(nextProps);
   }
 
   shouldComponentUpdate(nextProps) {
@@ -32,15 +23,6 @@ class RequestListColumnSetCookies extends Component {
     currResponseCookies = currResponseCookies.cookies || currResponseCookies;
     nextResponseCookies = nextResponseCookies.cookies || nextResponseCookies;
     return currResponseCookies !== nextResponseCookies;
-  }
-
-  /**
-   * Lazily fetch response cookies from the backend.
-   */
-  maybeFetchResponseCookies(props) {
-    if (props.item.responseCookiesAvailable && !props.responseCookies) {
-      props.connector.requestData(props.item.id, "responseCookies");
-    }
   }
 
   render() {
