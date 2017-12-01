@@ -158,6 +158,12 @@ private:
   // True when our media stream has been pinned. We pin the stream
   // while seeking.
   bool mPinnedForSeek = false;
+
+  // Current playback position in the stream. This is (approximately)
+  // where we're up to playing back the stream. This is not adjusted
+  // during decoder seek operations, but it's updated at the end when we
+  // start playing back again.
+  int64_t mPlaybackPosition = 0;
 };
 
 } // namespace mozilla

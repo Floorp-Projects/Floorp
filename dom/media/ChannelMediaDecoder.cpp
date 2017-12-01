@@ -320,9 +320,6 @@ ChannelMediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
   }
 
   MOZ_ASSERT(GetStateMachine());
-  if (aOffset >= mDecoderPosition) {
-    mPlaybackStatistics.AddBytes(aBytes);
-  }
   mDecoderPosition = aOffset + aBytes;
 }
 
@@ -356,12 +353,23 @@ ChannelMediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent)
   MOZ_ASSERT(NS_IsMainThread());
   switch (aEvent.mType) {
     case MediaPlaybackEvent::PlaybackStarted:
+      mPlaybackPosition = aEvent.mData.as<int64_t>();
       mPlaybackStatistics.Start();
       break;
-    case MediaPlaybackEvent::PlaybackStopped:
+    case MediaPlaybackEvent::PlaybackProgressed: {
+      int64_t newPos = aEvent.mData.as<int64_t>();
+      mPlaybackStatistics.AddBytes(newPos - mPlaybackPosition);
+      mPlaybackPosition = newPos;
+      break;
+    }
+    case MediaPlaybackEvent::PlaybackStopped: {
+      int64_t newPos = aEvent.mData.as<int64_t>();
+      mPlaybackStatistics.AddBytes(newPos - mPlaybackPosition);
+      mPlaybackPosition = newPos;
       mPlaybackStatistics.Stop();
       ComputePlaybackRate();
       break;
+    }
     default:
       break;
   }

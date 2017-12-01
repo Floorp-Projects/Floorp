@@ -604,12 +604,6 @@ protected:
   // Duration of the media resource according to the state machine.
   Mirror<media::NullableTimeUnit> mStateMachineDuration;
 
-  // Current playback position in the stream. This is (approximately)
-  // where we're up to playing back the stream. This is not adjusted
-  // during decoder seek operations, but it's updated at the end when we
-  // start playing back again.
-  Mirror<int64_t> mPlaybackPosition;
-
   // Used to distinguish whether the audio is producing sound.
   Mirror<bool> mIsAudioDataAudible;
 
