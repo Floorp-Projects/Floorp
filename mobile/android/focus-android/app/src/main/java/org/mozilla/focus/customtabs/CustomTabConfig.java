@@ -162,7 +162,11 @@ public class CustomTabConfig {
 
         // Share is part of the default menu, so it's simplest just to toggle it off as necessary instead
         // of creating a fake menu item here, hence we keep this as  aboolean for now:
-        final boolean showShareMenuItem = intent.getBooleanExtra(CustomTabsIntent.EXTRA_DEFAULT_SHARE_MENU_ITEM, false);
+        final boolean showShareMenuItem = intent.getBooleanExtra(CustomTabsIntent.EXTRA_DEFAULT_SHARE_MENU_ITEM,
+                // Other than Chrome we will show the share menu by default. Note that currently the
+                // Custom Tabs support library has no option to explicitly hide this menu item. So
+                // setting the default to 'true' will show this menu item for all custom tabs.
+                true);
 
         final List<CustomTabMenuItem> menuItems = new LinkedList<>();
         if (intent.hasExtra(CustomTabsIntent.EXTRA_MENU_ITEMS)) {
