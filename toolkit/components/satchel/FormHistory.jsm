@@ -865,13 +865,12 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
       if (aBeginningCount - aEndingCount > 500) {
         log("expireOldEntriesVacuum");
 
-        let stmt = dbCreateAsyncStatement("VACUUM");
-        stmt.executeAsync({
-          handleResult: NOOP,
-          handleError(aError) {
+        FormHistory.db.then(async conn => {
+          try {
+            await conn.executeCached("VACUUM");
+          } catch (e) {
             log("expireVacuumError");
-          },
-          handleCompletion: NOOP,
+          }
         });
       }
 
