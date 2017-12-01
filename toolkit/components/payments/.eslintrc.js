@@ -30,7 +30,7 @@ module.exports = {
     "max-len": ["error", 100],
     "max-nested-callbacks": ["error", 4],
     "new-parens": "error",
-    "no-console": "error",
+    "no-console": ["error", { allow: ["error"] }],
     "no-fallthrough": "error",
     "no-multi-str": "error",
     "no-multiple-empty-lines": ["error", {
