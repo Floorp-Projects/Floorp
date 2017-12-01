@@ -341,9 +341,29 @@ class nsStyleSet final
   // Free all of the data associated with this style set.
   void Shutdown();
 
+  void RuleAdded(mozilla::CSSStyleSheet& aSheet, mozilla::css::Rule&)
+  {
+    SheetChanged(aSheet);
+  }
+
+  void RuleRemoved(mozilla::CSSStyleSheet& aSheet, mozilla::css::Rule&)
+  {
+    SheetChanged(aSheet);
+  }
+
+  void RuleChanged(mozilla::CSSStyleSheet& aSheet, mozilla::css::Rule*)
+  {
+    SheetChanged(aSheet);
+  }
+
   // Notes that a style sheet has changed.
-  void RecordStyleSheetChange(mozilla::CSSStyleSheet* aStyleSheet,
-                              mozilla::StyleSheet::ChangeType);
+  void RecordStyleSheetChange(mozilla::CSSStyleSheet* aSheet,
+                              mozilla::StyleSheet::ChangeType)
+  {
+    SheetChanged(*aSheet);
+  }
+
+  void SheetChanged(mozilla::CSSStyleSheet&);
 
   // Notes that style sheets have changed in a shadow root.
   void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);

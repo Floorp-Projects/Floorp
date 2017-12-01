@@ -18,14 +18,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-class CSSStyleSheet;
-class ServoStyleSet;
-namespace dom {
-class Element;
-class ShadowRoot;
-} // namespace dom
-} // namespace mozilla
 class nsBindingManager;
 class nsCSSCounterStyleRule;
 struct nsFontFaceRuleContainer;
@@ -40,6 +32,16 @@ class gfxFontFeatureValueSet;
 struct TreeMatchContext;
 
 namespace mozilla {
+
+class CSSStyleSheet;
+class ServoStyleSet;
+namespace dom {
+class Element;
+class ShadowRoot;
+} // namespace dom
+namespace css {
+class Rule;
+} // namespace css
 
 #define SERVO_BIT 0x1
 
@@ -166,6 +168,12 @@ public:
     inline void AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const;
     inline nsresult RemoveDocStyleSheet(StyleSheet* aSheet);
     inline nsresult AddDocStyleSheet(StyleSheet* aSheet, nsIDocument* aDocument);
+
+    inline void RuleRemoved(StyleSheet&, css::Rule&);
+    inline void RuleAdded(StyleSheet&, css::Rule&);
+    inline void RuleChanged(StyleSheet&, css::Rule*);
+
+    // TODO(emilio): Remove in favor of Rule* methods.
     inline void RecordStyleSheetChange(StyleSheet* aSheet, StyleSheet::ChangeType);
     inline void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
     inline bool StyleSheetsHaveChanged() const;
