@@ -101,12 +101,20 @@ private:
                                const Maybe<SVGImageContext>& aSVGContext,
                                uint32_t aFlags);
 
-  already_AddRefed<SourceSurface>
-    DrawInternal(const SVGDrawingParameters& aParams, bool aContextPaint);
+  /// Create a gfxDrawable which callbacks into the SVG document.
+  already_AddRefed<gfxDrawable>
+    CreateSVGDrawable(const SVGDrawingParameters& aParams);
 
+  /// Rasterize the SVG into a surface. aWillCache will be set to whether or
+  /// not the new surface was put into the cache.
   already_AddRefed<SourceSurface>
-    CreateSurfaceAndShow(const SVGDrawingParameters& aParams,
-                         gfx::BackendType aBackend);
+    CreateSurface(const SVGDrawingParameters& aParams,
+                  gfxDrawable* aSVGDrawable,
+                  bool& aWillCache);
+
+  /// Send a frame complete notification if appropriate. Must be called only
+  /// after all drawing has been completed.
+  void SendFrameComplete(bool aDidCache, uint32_t aFlags);
 
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
