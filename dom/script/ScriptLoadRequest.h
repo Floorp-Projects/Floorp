@@ -69,7 +69,9 @@ public:
 
   void FireScriptAvailable(nsresult aResult)
   {
-    mElement->ScriptAvailable(aResult, mElement, mIsInline, mURI, mLineNo);
+    bool isInlineClassicScript = mIsInline && !IsModuleRequest();
+    mElement->ScriptAvailable(aResult, mElement, isInlineClassicScript, mURI,
+                              mLineNo);
   }
   void FireScriptEvaluated(nsresult aResult)
   {

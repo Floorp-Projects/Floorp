@@ -10,7 +10,7 @@ interface nsIURI;
 
 [scriptable, uuid(7b787204-76fb-4764-96f1-fb7a666db4f4)]
 interface nsIScriptLoaderObserver : nsISupports {
-  
+
   /**
    * The script is available for evaluation. For inline scripts, this
    * method will be called synchronously. For externally loaded scripts,
@@ -20,15 +20,16 @@ interface nsIScriptLoaderObserver : nsISupports {
    *        a script. If this is a failure code, script evaluation
    *        will not occur.
    * @param aElement The element being processed.
-   * @param aIsInline Is this an inline script or externally loaded?
+   * @param aIsInline Is this an inline classic script (as opposed to an
+   *        externally loaded classic script or module script)?
    * @param aURI What is the URI of the script (the document URI if
    *        it is inline).
    * @param aLineNo At what line does the script appear (generally 1
    *        if it is a loaded script).
    */
-  void scriptAvailable(in nsresult aResult, 
+  void scriptAvailable(in nsresult aResult,
                        in nsIScriptElement aElement,
-                       in boolean aIsInline,
+                       in boolean aIsInlineClassicScript,
                        in nsIURI aURI,
                        in int32_t aLineNo);
 
@@ -40,8 +41,7 @@ interface nsIScriptLoaderObserver : nsISupports {
    * @param aElement The element being processed.
    * @param aIsInline Is this an inline script or externally loaded?
    */
-  void scriptEvaluated(in nsresult aResult, 
+  void scriptEvaluated(in nsresult aResult,
                        in nsIScriptElement aElement,
                        in boolean aIsInline);
-		       
 };
