@@ -31,6 +31,7 @@ except Exception:
 
 from mach.mixin.logging import LoggingMixin
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
+from mozterm.widgets import Footer
 
 import mozpack.path as mozpath
 
@@ -563,60 +564,6 @@ class TerminalLoggingHandler(logging.Handler):
             self.release()
 
 
-class Footer(object):
-    """Handles display of a footer in a terminal.
-
-    This class implements the functionality common to all mach commands
-    that render a footer.
-    """
-
-    def __init__(self, terminal):
-        # terminal is a blessings.Terminal.
-        self._t = terminal
-        self._fh = sys.stdout
-
-    def clear(self):
-        """Removes the footer from the current terminal."""
-        self._fh.write(self._t.move_x(0))
-        self._fh.write(self._t.clear_eol())
-
-    def write(self, parts):
-        """Write some output in the footer, accounting for terminal width.
-
-        parts is a list of 2-tuples of (encoding_function, input).
-        None means no encoding."""
-
-        # We don't want to write more characters than the current width of the
-        # terminal otherwise wrapping may result in weird behavior. We can't
-        # simply truncate the line at terminal width characters because a)
-        # non-viewable escape characters count towards the limit and b) we
-        # don't want to truncate in the middle of an escape sequence because
-        # subsequent output would inherit the escape sequence.
-        max_width = self._t.width
-        written = 0
-        write_pieces = []
-        for part in parts:
-            try:
-                func, part = part
-                encoded = getattr(self._t, func)(part)
-            except ValueError:
-                encoded = part
-
-            len_part = len(part)
-            len_spaces = len(write_pieces)
-            if written + len_part + len_spaces > max_width:
-                write_pieces.append(part[0:max_width - written - len_spaces])
-                written += len_part
-                break
-
-            write_pieces.append(encoded)
-            written += len_part
-
-        with self._t.location():
-            self._t.move(self._t.height-1,0)
-            self._fh.write(' '.join(write_pieces))
-
-
 class BuildProgressFooter(Footer):
     """Handles display of a build progress indicator in a terminal.
 
@@ -649,7 +596,6 @@ class BuildProgressFooter(Footer):
                 append(('underline_yellow', tier))
 
         self.write(parts)
-
 
 
 class OutputManager(LoggingMixin):
