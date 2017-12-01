@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Annuller</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Gem</string>
   <string name="urlbar_hint">Søg eller indtast adresse</string>
   <string name="teaser">Automatisk privat browsing.\nSurf. Slet. Start forfra.</string>
   <string name="feedback_erase">Din browser-historik er blevet slettet.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s giver dig fuld kontrol.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anvend den som privat browser:\n  "<ul>"\n    "<li>S&#248;g og surf direkte i appen</li>"\n    "<li>Bloker sporing (eller opdater indstillingerne og tillad sporing)</li>"\n    "<li>Slet fjerner cookies samt s&#248;ge- og browser-historik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er udviklet af Mozilla. Vores form&#229;l er at fremme et sundt, &#229;bent internet.<br/>\n<a href="%2$s">L&#230;s mere</a></p>]]></string>
   <string name="preference_category_search">Søgning</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_state_on">Aktiveret</string>
+  <string name="preference_state_off">Deaktiveret</string>
+  <string name="preference_subitem_autocomplete">Autofuldfør URL</string>
+  <string name="preference_switch_autocomplete">Autofuldførelse</string>
+  <string name="preference_category_autocomplete_preinstalled">Standard URL-liste</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktiver at %1$s autofuldfører over 450 populære URL\'er i addressefeltet.</string>
+  <string name="preference_category_autocomplete_custom">Brugerdefineret URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Brugerdefinerede URL\'er</string>
+  <string name="preference_autocomplete_action_add">+ Tilføj brugerdefineret URL</string>
+  <string name="preference_autocomplete_title_add">Tilføj brugerdefineret URL</string>
+  <string name="preference_autocomplete_title_remove">Fjern brugerdefinerede URL\'er</string>
+  <string name="preference_autocomplete_learn_more">Læs mere</string>
+  <string name="preference_autocomplete_custom_summary">Tilføj og håndter brugerdefineret autofuldførelse af URL\'er.</string>
+  <string name="preference_autocomplete_add_title">URL der skal tilføjes</string>
+  <string name="preference_autocomplete_add_hint">Indsæt eller skriv URL</string>
+  <string name="preference_autocomplete_add_example">Eksempel: eksempel.dk</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Ny brugerdefineret URL tilføjet.</string>
+  <string name="preference_autocomplete_menu_remove">Fjern</string>
+  <string name="preference_autocomplete_action_remove_content_description">Fjern</string>
+  <string name="preference_autocomplete_add_error">Kontroller den indtastede URL.</string>
   <string name="preference_language">Sprog</string>
   <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standard-søgetjeneste</string>
@@ -76,6 +98,9 @@
   <string name="search_add_manually_example">Eksempel: eksempel.dk/search/?q=%s</string>
   <string name="accessibility_announcement_search">Tilføj søgetjeneste</string>
   <string name="search_add_confirmation">Ny søgetjeneste tilføjet.</string>
+  <string name="search_add_error_empty_name">Indtast søgetjenestens navn</string>
+  <string name="search_add_error_empty_search">Indtast søgestreng</string>
+  <string name="search_add_error_format">Kontroller at søgestrengens format svarer til eksemplets</string>
   <string name="content_description_clear_input">Ryd adressefeltet</string>
   <string name="content_description_dismiss_input">Afvis</string>
   <string name="content_description_erase">Slet browser-historik</string>

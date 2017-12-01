@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">ألغِ</string>
   <string name="action_ok">حسنا</string>
+  <string name="action_save">احفظ</string>
   <string name="urlbar_hint">ابحث أو أدخل عنوانا</string>
   <string name="teaser">تصفح خاص تلقائي.\nتصفح. امسح. كرر.</string>
   <string name="feedback_erase">لقد مسح تأريخ تصفحك.</string>
@@ -26,6 +27,26 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1610;&#1593;&#1591;&#1610;&#1603; %1$s &#1575;&#1604;&#1583;&#1601;&#1577;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1587;&#1578;&#1582;&#1583;&#1605;&#1607; &#1603;&#1605;&#1578;&#1589;&#1601;&#1581; &#1582;&#1575;&#1589;:\n  "<ul>"\n    "<li>&#1575;&#1576;&#1581;&#1579; &#1608;&#160;&#1578;&#1589;&#1601;&#1581; &#1605;&#1576;&#1575;&#1588;&#1585;&#1577; &#1601;&#1610; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;</li>"\n    "<li>&#1575;&#1581;&#1580;&#1576; &#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578; (&#1571;&#1608; &#1581;&#1583;&#1617;&#1579; &#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1604;&#1604;&#1587;&#1605;&#1575;&#1581; &#1576;&#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578;)</li>"\n    "<li>&#1575;&#1605;&#1587;&#1581; &#1575;&#1604;&#1603;&#1593;&#1603;&#1575;&#1578; &#1576;&#1575;&#1604;&#1573;&#1590;&#1575;&#1601;&#1577; &#1573;&#1604;&#1609; &#1581;&#1584;&#1601; &#1578;&#1571;&#1585;&#1610;&#1582; &#1575;&#1604;&#1576;&#1581;&#1579; &#1608;&#160;&#1575;&#1604;&#1578;&#1589;&#1601;&#1581;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8207;%1$s &#1605;&#1606;&#1578;&#1580; &#1605;&#1606; &#1605;&#1608;&#1586;&#1610;&#1604;&#1575;. &#1605;&#1607;&#1605;&#1578;&#1606;&#1575; &#1578;&#1588;&#1580;&#1610;&#1593; &#1573;&#1606;&#1578;&#1585;&#1606;&#1578; &#1605;&#1601;&#1578;&#1608;&#1581; &#1608;&#160;&#1589;&#1581;&#1610;.<br/>\n<a href="%2$s">&#1575;&#1591;&#1617;&#1604;&#1593; &#1593;&#1604;&#1609; &#1575;&#1604;&#1605;&#1586;&#1610;&#1583;</a></p>]]></string>
   <string name="preference_category_search">البحث</string>
   <string name="preference_search_engine_default">المبدئي</string>
+  <string name="preference_state_on">مفعّل</string>
+  <string name="preference_state_off">معطّل</string>
+  <string name="preference_subitem_autocomplete">إكمال المسارات تلقائيا</string>
+  <string name="preference_switch_autocomplete">الإكمال التلقائي</string>
+  <string name="preference_category_autocomplete_preinstalled">قائمة المسارات المبدئية</string>
+  <string name="preference_autocomplete_preinstalled_summary">فعّله ليُكمل %1$s تلقائيا أكثر من ٤٥٠ عنوان وب في شريط العناوين.</string>
+  <string name="preference_category_autocomplete_custom">مسار مخصص</string>
+  <string name="preference_autocomplete_action_add">+ أضِف مسارا مخصصا</string>
+  <string name="preference_autocomplete_title_add">أضِف مسارا مخصصا</string>
+  <string name="preference_autocomplete_title_remove">أزِل المسارات المخصصة</string>
+  <string name="preference_autocomplete_learn_more">اطّلع على المزيد</string>
+  <string name="preference_autocomplete_custom_summary">أضِف وأدِر إكمال المسارات المخصصة تلقائيا.</string>
+  <string name="preference_autocomplete_add_title">المسار لإضافته</string>
+  <string name="preference_autocomplete_add_hint">ألصِق مسارا أو أدخِله</string>
+  <string name="preference_autocomplete_add_example">مثال: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">أُضيف مسار مخصص جديد.</string>
+  <string name="preference_autocomplete_menu_remove">أزِل</string>
+  <string name="preference_autocomplete_action_remove_content_description">أزِل</string>
+  <string name="preference_autocomplete_add_error">تحقق من المسار الذي أدخلته.</string>
   <string name="preference_language">اللغة</string>
   <string name="preference_language_systemdefault">المبدئية للنظام</string>
   <string name="preference_dialog_title_search_engine">محرك البحث المبدئي</string>
@@ -76,6 +97,9 @@
   <string name="search_add_manually_example">مثال: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">أضف محرك بحث</string>
   <string name="search_add_confirmation">أُضيف محرك البحث الجديد.</string>
+  <string name="search_add_error_empty_name">أدخِل اسم محرك البحث</string>
+  <string name="search_add_error_empty_search">أدخِل نص البحث</string>
+  <string name="search_add_error_format">تحقق من أن نص البحث يطابق تنسيق المثال</string>
   <string name="content_description_clear_input">امسح الإدخال</string>
   <string name="content_description_dismiss_input">غادِر</string>
   <string name="content_description_erase">امسح تأريخ التصفح</string>

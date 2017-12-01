@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">ரத்து</string>
   <string name="action_ok">சரி</string>
+  <string name="action_save">சேமி</string>
   <string name="urlbar_hint">தேட (அ) உலாவ முகவரியை உள்ளிடுக</string>
   <string name="teaser">தானியக்க அந்தரங்க உலாவல்.\nஉலாவு. அழி. திரும்பச்செய்.</string>
   <string name="feedback_erase">உங்கள் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
@@ -10,6 +11,7 @@
   <string name="menu_open_with_default_browser">%1$s மூலம் திற</string>
   <string name="menu_open_with_a_browser">செயலிகள் மூலம் திற…</string>
   <string name="menu_add_to_home_screen">முகப்பு திரைக்கு சேர்</string>
+  <string name="menu_whats_new">புதிதாய் என்ன</string>
   <string name="menu_settings">அமைவுகள்</string>
   <string name="menu_about">போக்கசு பற்றி</string>
   <string name="menu_help">உதவி</string>
@@ -25,25 +27,80 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2953;&#2994;&#3006;&#2997;&#3007; &#2953;&#2969;&#3021;&#2965;&#2995;&#3016;&#2965;&#3021; &#2965;&#2975;&#3021;&#2975;&#3009;&#2986;&#3021;&#2986;&#2975;&#3009;&#2980;&#3021;&#2980;&#3009;&#2965;&#3007;&#2993;&#2980;&#3009;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2949;&#2984;&#3021;&#2980;&#2992;&#2969;&#3021;&#2965; &#2953;&#2994;&#3006;&#2997;&#3007;&#2991;&#3006;&#2965;&#2986;&#3021; &#2986;&#2991;&#2985;&#3021;&#2986;&#2975;&#3009;&#2980;&#3021;&#2980;&#3009;&#2965;:\n  "<ul>"\n    "<li>&#2980;&#3015;&#2975;&#2994;&#3009;&#2965;&#3021;&#2965;&#3009;&#2990;&#3021; &#2953;&#2994;&#3006;&#2997;&#2994;&#3009;&#2965;&#3021;&#2965;&#3009;&#2990;&#3021; &#2951;&#2984;&#3021;&#2980; &#2953;&#2994;&#3006;&#2997;&#3007;&#2991;&#3016;&#2986;&#3021; &#2986;&#3006;&#2997;&#3007;&#2991;&#3009;&#2969;&#3021;&#2965;&#2995;&#3021;</li>"\n    "<li>&#2986;&#3007;&#2985;&#3021;&#2980;&#3018;&#2975;&#2992;&#3007;&#2965;&#2995;&#3016;&#2980;&#3021; &#2980;&#2975;&#3009; (&#2949;&#2994;&#3021;&#2994;&#2980;&#3009; &#2949;&#2990;&#3016;&#2997;&#3009;&#2965;&#2995;&#3016; &#2990;&#3006;&#2993;&#3021;&#2993;&#3007; &#2986;&#3007;&#2985;&#3021;&#2980;&#3018;&#2975;&#2992;&#3007;&#2991;&#3016; &#2949;&#2985;&#3009;&#2990;&#2980;&#3007;)</li>"\n    "<li>&#2984;&#3007;&#2985;&#3016;&#2997;&#3007;&#2965;&#2995;&#3016; &#2949;&#2965;&#2993;&#3021;&#2993;&#3009;&#2997;&#2980;&#2985;&#3021; &#2990;&#3010;&#2994;&#2990;&#3021; &#2980;&#3015;&#2975;&#2994;&#3021; &#2990;&#2993;&#3021;&#2993;&#3009;&#2990;&#3021; &#2953;&#2994;&#3006;&#2997;&#2994;&#3021; &#2997;&#2992;&#2994;&#3006;&#2993;&#3021;&#2993;&#3016;&#2991;&#3009;&#2990;&#3021; &#2970;&#3015;&#2992;&#3021;&#2980;&#3021;&#2980;&#3009; &#2949;&#2965;&#2993;&#3021;&#2993;&#3009;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2962;&#2992;&#3009; &#2990;&#3018;&#2970;&#3007;&#2994;&#3021;&#2994;&#3006; &#2980;&#2991;&#3006;&#2992;&#3007;&#2986;&#3021;&#2986;&#3006;&#2965;&#3009;&#2990;&#3021;. &#2958;&#2969;&#3021;&#2965;&#2995;&#3007;&#2985;&#3021; &#2984;&#3019;&#2965;&#3021;&#2965;&#2990;&#3021; &#2997;&#3015;&#2965;&#2990;&#3006;&#2985; &#2950;&#2992;&#3019;&#2965;&#3021;&#2965;&#3007;&#2991;&#2990;&#3006;&#2985; &#2980;&#3007;&#2993;&#2984;&#3021;&#2980; &#2951;&#2979;&#3016;&#2991;&#2980;&#3021;&#2980;&#3016;&#2965;&#3021; &#2965;&#3007;&#2975;&#3016;&#2965;&#3021;&#2965;&#2970;&#3021; &#2970;&#3014;&#2991;&#3021;&#2997;&#2980;&#3006;&#2965;&#3009;&#2990;&#3021;.<br/>\n<a href="%2$s">&#2990;&#3015;&#2994;&#3009;&#2990;&#3021; &#2949;&#2993;&#3007;&#2991;</a></p>]]></string>
   <string name="preference_category_search">தேடு</string>
   <string name="preference_search_engine_default">முன்னிருப்பு</string>
+  <string name="preference_state_on">இயக்கு</string>
+  <string name="preference_state_off">அணை</string>
+  <string name="preference_subitem_autocomplete">URL தானியங்கு நிரப்பு</string>
+  <string name="preference_switch_autocomplete">தானியங்கு நிரப்பி</string>
+  <string name="preference_category_autocomplete_preinstalled">இயல்பு URL பட்டியல்</string>
+  <string name="preference_autocomplete_preinstalled_summary">முகவரிப்பட்டையில் 450 பிரபல URLs உடைய %1$s தானியங்குநிரப்பலைக் கொண்டிருக்க செயற்படுத்தவும்.</string>
+  <string name="preference_category_autocomplete_custom">தனிப்பயன் URL</string>
+  <string name="preference_autocomplete_subitem_customlist">தனிபயன் URLs</string>
+  <string name="preference_autocomplete_action_add">+ தனிபயன் URL சேர்</string>
+  <string name="preference_autocomplete_title_add">தனிபயன் URL சேர்</string>
+  <string name="preference_autocomplete_title_remove">தனிபயன் URLs நீக்கு</string>
+  <string name="preference_autocomplete_learn_more">மேலும் அறிய</string>
+  <string name="preference_autocomplete_custom_summary">தனிபயன் தானியங்குநிரப்பு URLs சேர்த்து நிர்வகி.</string>
+  <string name="preference_autocomplete_add_title">சேர்க்க வேண்டிய URL</string>
+  <string name="preference_autocomplete_add_hint">URL ஒட்டு அல்லது உள்ளிடு</string>
+  <string name="preference_autocomplete_add_example">எகா: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">புது தனிபயன் URL சேர்க்கப்பட்டது.</string>
+  <string name="preference_autocomplete_menu_remove">நீக்கு</string>
+  <string name="preference_autocomplete_action_remove_content_description">நீக்கு</string>
+  <string name="preference_autocomplete_add_error">நீங்கள் உள்ளிட்ட URL இருமுறை சரிபார்க்கவும்.</string>
   <string name="preference_language">மொழி</string>
   <string name="preference_language_systemdefault">கைப்பேசி முன்னிருப்பு</string>
   <string name="preference_dialog_title_search_engine">முன்னிருப்பு தேடுபொறி</string>
   <string name="preference_category_privacy">தனியுரிமை</string>
   <string name="preference_privacy_block_ads">விளம்பர பின்தொடரிகளைத் தடு</string>
+  <string name="preference_privacy_block_ads_summary">சில விளம்பரங்கள், நீங்கள் அதனை சொடுக்காவிட்டாலும் தள பார்வைகளைப் பின்தொடரும்</string>
   <string name="preference_privacy_block_analytics">பகுப்பாய்வு பின்தொடரிகளைத் தடு</string>
+  <string name="preference_privacy_block_analytics_summary">தட்டல், உருட்டுதல் போன்ற செயல்களைச் சேகரிக்கும், ஆய்வுசெய்யும் அளவிடும்</string>
   <string name="preference_privacy_block_social">சமூக பின்தொடரிகளைத் தடு</string>
+  <string name="preference_privacy_block_social_summary">உங்கள் பார்வைகளைப் பின்தொடரவும் பகிர்தல் பொத்தான் போன்றவற்றைக் காட்டவும் தளத்தில் உட்பொதியப்பட்டிருக்கும்</string>
   <string name="preference_privacy_block_content">உள்ளடக்க பின்தொடரிகளைத் தடு</string>
+  <string name="preference_privacy_block_content_summary2">செயற்படுத்துவது சில பக்கங்கள் எதிர்பாராமல் தவறாகச் செயல்பட காரணமாகலாம்</string>
   <string name="preference_privacy_secure_mode">போரியல்</string>
   <string name="preference_privacy_stealth_summary">செயலிகளில் மாறும்பொழுது வலைப்பக்கங்களை மறை</string>
   <string name="preference_category_performance">செயல்திறன்</string>
   <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
   <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>
   <string name="preference_performance_block_images">படங்களைத் தடு</string>
+  <string name="preference_default_browser2">%1$s உங்கள் முன்னிருப்பு உலாவியாக மாற்றவும்</string>
   <string name="preference_category_mozilla">மொசில்லா</string>
+  <string name="preference_mozilla_telemetry2">பயனளவு தரவை அனுப்பு</string>
   <string name="preference_mozilla_telemetry_summary">மேலும் அறிய</string>
   <string name="preference_mozilla_telemetry_summary2">அனைவருக்கும் %1$s வழங்க மற்றும் மேம்படுத்த தேவையானதை மட்டும் சேகரிக்க மொசில்லா உறுதிபூண்டுள்ளது.</string>
   <string name="preference_privacy_notice">தனியுரிமை கொள்கை</string>
   <string name="preference_about">%1$s பற்றி</string>
+  <string name="preference_search_installed_search_engines">நிறுவப்பட்ட தேடு பொறிகள்</string>
+  <string name="preference_search_restore">முன்னிருப்பு தேடுபொறிகளை மீட்டமை</string>
+  <string name="preference_search_add2">+ மற்றொரு தேடு பொறியைச் சேர்</string>
+  <string name="preference_search_remove_title">தேடு பொறிகளை நீக்கு</string>
+  <string name="preference_search_remove">நீக்கு</string>
+  <string name="tutorial_search_manually_add">கைமுறையாகச் சேர்</string>
+  <string name="tutorial_search_title">தேடுபொறியைச் சேர்</string>
+  <string name="tutorial_search_step1">1. தேடு பொறி முகப்புப்பக்கத்திற்குச் செல்.</string>
+  <string name="tutorial_search_step2">2. தேடுபொறியின் தேடல் களத்தைத் தட்டு.</string>
+  <string name="tutorial_search_step2_alternative">2. தேடுபொறியின் தேடல் களத்தை நெடுநேரம் அழுத்து.</string>
+  <string name="tutorial_search_step3">3. தேடுபொறியைச் சேர்க்க விசைப்பலகை மேலுள்ள உருப்பெருக்கு கண்ணாடியைத் தட்டு.</string>
+  <string name="action_option_add_search_engine">தேடுபொறியைச் சேர்</string>
+  <string name="tutorial_search_step3_alternative">3. %1$s தட்டு</string>
+  <string name="tutorial_search_step4">4. உருப்பெருக்கும் கண்ணாடி இல்லாவிட்டால், கைமுறையாகத் தேடுபொறியைச் சேர்க்க முயற்சிக்கவும்.</string>
+  <string name="tutorial_search_step4_alternative">4. %1$s இல்லாவிட்டால், கைமுறையாகத் தேடுபொறியைச் சேர்க்க முயற்சிக்கவும்.</string>
+  <string name="tutorial_search_finish">தொடங்கவும்</string>
+  <string name="search_add_hint">இந்தத் தேடுபொறியைச் சேர்க்க விசைப்பலகை மேலுள்ள உருப்பெருக்கு கண்ணாடியைத் தட்டு.</string>
+  <string name="search_add_manually_name">காட்ட வேண்டிய பெயர்</string>
+  <string name="search_add_manually_name_hint">தேடுபொறி பெயர்</string>
+  <string name="search_add_manually_string">பயன்படுத்த வேண்டிய தேடல் தொடர்</string>
+  <string name="search_add_manually_save">சேமி</string>
+  <string name="search_add_manually_string_hint">தேடல் தொடரை ஒட்டு அல்லது உள்ளிடு. தேவைப்படின், தேடல் தொடரை பதிலிடு: %s.</string>
+  <string name="search_add_manually_example">எகா: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">தேடுபொறியைச் சேர்</string>
+  <string name="search_add_confirmation">புது தேடுபொறி சேர்க்கப்பட்டது.</string>
+  <string name="search_add_error_empty_name">தேடுபொறி பெயரை உள்ளிடு</string>
+  <string name="search_add_error_empty_search">தேடல் தொடரை உள்ளிடு</string>
+  <string name="search_add_error_format">தேடல் தொடர் எகா வடிவத்தை ஒத்திருக்கிறதா என்று பார்</string>
   <string name="content_description_clear_input">துள்ளிய உள்ளீடு</string>
   <string name="content_description_dismiss_input">நிராகரி</string>
   <string name="content_description_erase">உலாவல் வரலாற்றை அகற்று</string>
@@ -99,6 +156,13 @@
   <string name="contextmenu_open_in_new_tab">இணைப்பைப் புதிய கீற்றில் திற</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s வரலாற்றை அகற்றும் போது சேமித்த பகிர்ந்த படங்கள் "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2949;&#2996;&#3007;&#2965;&#3021;&#2965;&#2986;&#3021;&#2986;&#2975;&#3006;&#2980;&#3009;</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">தனியுரிமையைத் துரிதப்படுத்துங்கள்</string>
+  <string name="firstrun_defaultbrowser_text2">தனிப்பட்ட உலாவலை அடுத்த நிலைக்கு எடுத்துச் செல்லவும். தளங்கள் எங்கும் உங்களைப் பின்தொடரக்கூடிய மற்றும் பக்க ஏற்று நேரத்தைக் கூட்டும் விளம்பரம் மற்றும் மற்ற உள்ளடக்கங்களை முடக்கு.</string>
+  <string name="firstrun_search_title">உங்களின் தேடல் உங்கள் வழி</string>
+  <string name="firstrun_search_text">வித்தியாசமானதைத் தேடுகிறீர்களா? அமைப்புகளில் வேறொரு இயல்புநிலை தேடியியந்திரத்தைத் தேர்ந்தெடுக்கவும்.</string>
+  <string name="firstrun_shortcut_title">உங்கள் முகப்பு திரையில் சுருக்கு வழிகளைச் சேர்க்கவும்</string>
+  <string name="firstrun_shortcut_text">%1$s உலாவியல் உங்கள் விருப்ப தங்களுக்கு விரைவாகத் திரும்பவும். %1$s மெனுவிலிருந்து \"முகப்பு திரையில் சேர்க்கவும்\" என்பதைத் தேர்ந்தெடுக்கவும்.</string>
+  <string name="firstrun_privacy_title">தனியுரிமையை ஒரு பழக்கமாக்கவும்</string>
+  <string name="firstrun_privacy_text">%1$s உலாவியை முன்னிருப்பாக அமைப்பதன் மூலம் பிற செயலிகளிலிருந்து வலைத்தளங்களைத் திறக்கும்போது அந்தரங்க உலாவலின் நன்மையைப் பெறலாம்.</string>
   <string name="firstrun_close_button">சரி, புரிந்தது!</string>
   <string name="firstrun_skip_button">தாவு</string>
   <string name="firstrun_next_button">அடுத்தது</string>
@@ -106,4 +170,16 @@
   <string name="dialog_addtohomescreen_title">முகப்பு திரைக்கு சேர்</string>
   <string name="dialog_addtohomescreen_action_add">சேர்</string>
   <string name="dialog_addtohomescreen_action_cancel">ரத்து</string>
+  <string name="dialog_addtohomescreen_tracking_protection">சுருக்குவழி பின்தொடரல் பாதுகாப்பு முடக்கப்பட்டு திறக்கும்</string>
+  <string name="dialog_opentab_title">இணைப்பைத் தேர்ந்தெடுத்த கீற்றில் திற</string>
+  <string name="dialog_opentab_action_open">திற</string>
+  <string name="notification_browsing_session_channel_name">அந்தரங்க உலாவல் அமர்வு</string>
+  <string name="notification_browsing_session_channel_description">அறிவிப்புகள் உங்கள் %1$s அமர்வை ஒரு தட்டில் அழிக்க அனுமதிக்கிறது. நீங்கள் செயலியைத் திறக்கவோ உலாவியில் என்ன இருக்கிறது என்று பார்க்கவோ தேவையில்லை.</string>
+  <string name="tabs_tray_action_erase">உலாவல் வரலாற்றை அழி</string>
+  <string name="download_firefox">பயர்பாக்சைப் பதிவிறக்கு</string>
+  <string name="your_rights_content1">%1$s மொசில்லா மற்றும் பிற பங்களிப்பாளர்களால் உருவாக்கப்பட்ட கட்டற்ற திறந்தமூல மென்பொருள் ஆகும்.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s உங்களுக்கு "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2990;&#3018;&#2970;&#3007;&#2994;&#3021;&#2994;&#3006; &#2986;&#3018;&#2980;&#3009; &#2953;&#2992;&#3007;&#2990;&#2990;&#3021;</a>" மற்றும் பிற திறந்த மூல உரிமங்களின் கீழ் கிடைக்கிறது."]]></string>
+  <string name="your_rights_content3"><![CDATA["உங்களுக்கு மொசில்லா அறக்கட்டளையின் அல்லது பிற தரப்பின் வணிகச்சின்னங்கள் மீது எந்த உரிமைகளும் உரிமங்களும் வழப்படவில்லை. இதில் மொசில்லா, பயர்பாக்ஸ் அல்லது %1$s பெயர்கள் அல்லது லாகோக்கள் அடங்கும். கூடுதல் விவரவங்களை "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2951;&#2969;&#3021;&#2965;&#3015;</a>" காணலாம்."]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s உடைய கூடுதல் மூல நிரல் மற்ற கட்டற்ற திறந்த மூல "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2953;&#2992;&#3007;&#2990;&#2969;&#3021;&#2965;&#2995;&#3021;</a>" கீழ் கிடைக்கிறது."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s டிஸ்கணக்ட் இன்க். நிறுவனத்தின் தடைப்பட்டியல்களையும் பயன்படுத்துகிறது. இது தனித்த சுதந்தரிப் பணியாக "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU&#2986;&#3018;&#2980;&#3009; &#2953;&#2992;&#3007;&#2990;&#2990;&#3021; v3</a>" கீழ், "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#2951;&#2969;&#3021;&#2965;&#3015;</a>" கிடைக்கிறது."]]></string>
 </resources>

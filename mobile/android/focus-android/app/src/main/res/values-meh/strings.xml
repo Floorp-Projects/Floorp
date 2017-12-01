@@ -1,7 +1,32 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Ntuvi</string>
+  <string name="action_ok">OK</string>
   <string name="action_save">Chuva´a</string>
-  <string name="menu_whats_new">Nakuvi a jíia íyo</string>
+  <string name="urlbar_hint">Nánuku a xiin chu´un iin nuu</string>
+  <string name="teaser">Nánuku yɨɨ yu´u.</string>
+  <string name="feedback_erase">Daa nnánukunu nnaá.</string>
+  <string name="search_hint">Nuku jii %1$s</string>
+  <string name="menu_share">Kua´a...</string>
+  <string name="menu_open_with_default_browser">Sine jii %1$s</string>
+  <string name="menu_open_with_a_browser">Sine jii…</string>
+  <string name="menu_add_to_home_screen">Tee-ma nuu kajie´e</string>
+  <string name="menu_whats_new">Nakuvi a jíía íyo</string>
+  <string name="menu_settings">Ke´i</string>
+  <string name="menu_about">Jiee ya´a</string>
+  <string name="menu_help">Chinei</string>
+  <string name="menu_rights">Daa tutu nichi no´o</string>
+  <string name="menu_trackers_blocked_title">Daa a nita noo´o nxita</string>
+  <string name="share_dialog_title">Kua´a jii</string>
+  <string name="notification_erase_text">Xiná daa nnánukunu</string>
+  <string name="notification_action_open">Síne</string>
+  <string name="notification_action_erase_and_open">Xiná jee síne</string>
+  <string name="shortcut_erase_short_label">Xiná</string>
+  <string name="shortcut_erase_long_label">Xiná daa nnánukunu</string>
+  <string name="text_selection_search_action">Nánuku yɨ´ɨ yu´u</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s taji kajinu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ni&#180;ima kua iin nuu n&#225;nuku privado:\n  "<ul>"\n    "<li>N&#225;nuku jee kaka nuu ka&#225; ya&#180;a</li>"\n    "<li>Chiyu&#180;u daa a nita no&#180;o (a xiin kaji kuvi kuntadaja no&#180;o)</li>"\n    "<li>Xina saa kuvi na&#225; cokies jii daa tu&#180;un nn&#225;nukunu</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kuviji iin nsa&#180;a Mozilla. Nuku-ani iin internet vii jee va&#180;a<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
+  <string name="preference_category_search">Nánuku</string>
+  <string name="preference_search_engine_default">Kua vaji</string>
   <string name="preference_state_on">Tɨɨn</string>
   <string name="preference_state_off">Xina´va</string>
   <string name="preference_subitem_autocomplete">URL Tee ntu´u</string>
@@ -42,12 +67,34 @@
   <string name="preference_performance_block_webfonts_summary">Kuvi tuvi íconos a xiin nkutuvi tutu natava</string>
   <string name="preference_performance_block_images">Chiyu´u tutu natava</string>
   <string name="preference_default_browser2">Sa´a %1$s navegador xinañu´u ya´a</string>
-  <string name="preference_category_mozilla">Mozila</string>
+  <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Chu´uichí datos a ni´í</string>
   <string name="preference_mozilla_telemetry_summary">Ka´vi kue´eka</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla nake´e sani daa a íyo tiñu jee jia´a va´a %1$s nuu kuaiyo daa yo.</string>
   <string name="preference_privacy_notice">Tutu xítu</string>
   <string name="preference_about">Jiee ya´a %1$s</string>
+  <string name="preference_search_installed_search_engines">Ka̱a̱ nánuku yɨ´ɨ</string>
+  <string name="preference_search_restore">Na tee tuku ka̱a̱ nánuku kua vaji</string>
+  <string name="preference_search_add2">+ Tee inka ka̱a̱ nánuku</string>
+  <string name="preference_search_remove_title">Xita ka̱a̱ nánuku</string>
+  <string name="preference_search_remove">Xita</string>
+  <string name="tutorial_search_manually_add">Tee na´ama</string>
+  <string name="tutorial_search_title">Chisó iin ka̱a̱ nánuku</string>
+  <string name="tutorial_search_step1">1. Kɨ´ɨn-on nuu ka̱a̱ kajie´e nánuku.</string>
+  <string name="tutorial_search_step2">2. Kuaxin nuu nánuku ka̱a̱ nánuku.</string>
+  <string name="tutorial_search_step2_alternative">2. Nsianu a kuaxin nuu nánuku ka̱a̱ nánuku.</string>
+  <string name="tutorial_search_step3">3. Kuaxin ícono lupa, nuu teclado, saa kuvi tee ka̱a̱ nánuku.</string>
+  <string name="action_option_add_search_engine">Chisó ka̱a̱ nánuku</string>
+  <string name="tutorial_search_step3_alternative">3. Kuaxin %1$s</string>
+  <string name="tutorial_search_finish">KAJIE´E STARTED</string>
+  <string name="search_add_manually_name">Sivɨ a kutúvi</string>
+  <string name="search_add_manually_name_hint">Sivɨ ka̱a̱ nánuku</string>
+  <string name="search_add_manually_save">Chuva´a</string>
+  <string name="search_add_manually_example">Kua: nakuvi.com/search/?q=</string>
+  <string name="accessibility_announcement_search">Chisó ka̱a̱ nánuku</string>
+  <string name="search_add_confirmation">A jíía ka̱a̱ nánuku ntee.</string>
+  <string name="search_add_error_empty_name">Tee sivɨ ka̱a̱ nánuku</string>
+  <string name="search_add_error_empty_search">Tee a nánukunu</string>
   <string name="content_description_clear_input">Xinó tu´u nchu´u</string>
   <string name="content_description_dismiss_input">Chiyu´u</string>
   <string name="content_description_erase">Xinó daa nnánuku noo´o</string>
@@ -82,10 +129,12 @@
   <string name="errorpage_refresh">Nakajie´e tuku</string>
   <string name="error_connectionfailure_title">Ntu nkuvi kivɨ</string>
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sitio ya&#180;a ntu kuvi s&#237;ne a xiin kue&#180;e &#241;&#616;v&#616; ni&#180;i ya&#180;a.</li>"\n        "<li>Dee ntu kuvi s&#237;ne iin p&#225;gina, kune&#180;y&#225; datos ka&#817;a&#817; noo&#180;o a xiin Wi-Fi.</li></ul>]]></string>
+  <string name="error_timeout_title">A netu nnɨ´ɨ nuu conexión</string>
   <string name="error_hostLookup_title">Ntu nani´í kaa servidor</string>
   <string name="error_generic_title">Uta</string>
   <string name="contextmenu_link_share">Kua´a link</string>
   <string name="contextmenu_image_share">Kua´a tutu nátava</string>
+  <string name="contextmenu_image_copy">Tɨɨ dirección tutu natava</string>
   <string name="contextmenu_image_save">Chuva´a tutu nátava</string>
   <string name="contextmenu_open_in_new_tab">Síne link nuu iin pestaña jíía</string>
   <string name="firstrun_close_button">OK, vatu!</string>
@@ -94,6 +143,7 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Tee</string>
   <string name="dialog_addtohomescreen_action_cancel">Nkuvi</string>
+  <string name="dialog_opentab_title">Síne enlace nuu su̱ku̱a nkají</string>
   <string name="dialog_opentab_action_open">Síne</string>
   <string name="download_firefox">Xinuun Firefox</string>
 </resources>

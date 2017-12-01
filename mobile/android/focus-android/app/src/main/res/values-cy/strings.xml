@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Diddymu</string>
   <string name="action_ok">Iawn</string>
+  <string name="action_save">Cadw</string>
   <string name="urlbar_hint">Chwilio neu gyfeiriad</string>
   <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Eto.</string>
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gyda %1$s chi sy\'n rheoli.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ei ddefnyddio fel porwr preifat:\n  "<ul>"\n    "<li>Chwilio a phori o fewn yr ap</li>"\n    "<li>Rhwystro tracwyr (neu ddiweddaru\'r gosodiadau i ganiat&#225;u tracwyr)</li>"\n    "<li>Dileu cwcis, yn ogystal &#226; hanes chwilio a phori</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mae %1$s wedi ei gynhyrchu gan Mozilla. Ein amcan yw i hybu Rhyngrwyd iach ac agored.<br/>\n<a href="%2$s">Dysgu rhagor</a></p>]]></string>
   <string name="preference_category_search">Chwilio</string>
   <string name="preference_search_engine_default">Rhagosodiad</string>
+  <string name="preference_state_on">Ymlaen</string>
+  <string name="preference_state_off">Diffodd</string>
+  <string name="preference_subitem_autocomplete">AwtoGwblhau URL</string>
+  <string name="preference_switch_autocomplete">Awtogwblhau</string>
+  <string name="preference_category_autocomplete_preinstalled">Rhestr URL rhagosodedig</string>
+  <string name="preference_autocomplete_preinstalled_summary">Galluogi i %1$s awtogwblhau dros 450 URLs poblogaidd yn y bar cyfeiriad.</string>
+  <string name="preference_category_autocomplete_custom">URL cyfaddas</string>
+  <string name="preference_autocomplete_subitem_customlist">URLau cyfaddas</string>
+  <string name="preference_autocomplete_action_add">+ Ychwanegu URL cyfaddas</string>
+  <string name="preference_autocomplete_title_add">Ychwanegu URL cyfaddas</string>
+  <string name="preference_autocomplete_title_remove">Tynnu URLau cyfaddas</string>
+  <string name="preference_autocomplete_learn_more">Dysgu rhagor</string>
+  <string name="preference_autocomplete_custom_summary">Ychwanegu a rheoli URLs awtogwblhau cyfaddas.</string>
+  <string name="preference_autocomplete_add_title">URLau i\'w hychwanegu</string>
+  <string name="preference_autocomplete_add_hint">Gludo neu rhoi URL</string>
+  <string name="preference_autocomplete_add_example">Esiampl: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">URL cyfaddas newydd wedi ei ychwanegu.</string>
+  <string name="preference_autocomplete_menu_remove">Tynnu</string>
+  <string name="preference_autocomplete_action_remove_content_description">Tynnu</string>
+  <string name="preference_autocomplete_add_error">Gwiriwch yr URL rydych wedi ei roi.</string>
   <string name="preference_language">Iaith</string>
   <string name="preference_language_systemdefault">Rhagosodiad y system</string>
   <string name="preference_dialog_title_search_engine">Chwilio rhagosodedig</string>
@@ -76,6 +98,9 @@
   <string name="search_add_manually_example">Esampl: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Ychwanegu peiriant chwilio</string>
   <string name="search_add_confirmation">Wedi ychwanegu peiriant chwilio.</string>
+  <string name="search_add_error_empty_name">Rhowch enw peiriant chwilio</string>
+  <string name="search_add_error_empty_search">Rhowch linyn chwilio</string>
+  <string name="search_add_error_format">Gwiriwch fod y llinyn chwilio yn cyfateb i fformat Enghraifft</string>
   <string name="content_description_clear_input">Clirio\'r mewnbwn</string>
   <string name="content_description_dismiss_input">Cau</string>
   <string name="content_description_erase">Dileu\'r hanes pori</string>

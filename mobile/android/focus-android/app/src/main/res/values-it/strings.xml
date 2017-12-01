@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Annulla</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Salva</string>
   <string name="urlbar_hint">Cerca o inserisci un indirizzo</string>
   <string name="teaser">Navigazione anonima in automatico.\nNaviga. Elimina. Ripeti.</string>
   <string name="feedback_erase">La cronologia di navigazione è stata eliminata.</string>
@@ -26,6 +27,16 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Prendi il controllo con %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utilizzalo per la navigazione anonima:\n  "<ul>"\n    "<li>Cerca e naviga direttamente nell&#8217;app.</li>"\n    "<li>Blocca il tracciamento (o aggiorna le impostazioni per consentirlo).</li>"\n    "<li>Utilizza &#8220;Elimina&#8221; per rimuovere i cookie cos&#236; come la cronologia di ricerca e navigazione.</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#232; realizzato da Mozilla. La nostra missione &#232; promuovere un Internet integro e aperto.<br/>\n<a href="%2$s">Ulteriori informazioni</a></p>]]></string>
   <string name="preference_category_search">Ricerca</string>
   <string name="preference_search_engine_default">Predefinito</string>
+  <string name="preference_category_autocomplete_preinstalled">Elenco indirizzi predefinito</string>
+  <string name="preference_category_autocomplete_custom">Indirizzo personalizzato</string>
+  <string name="preference_autocomplete_subitem_customlist">Indirizzi personalizzati</string>
+  <string name="preference_autocomplete_learn_more">Ulteriori informazioni</string>
+  <string name="preference_autocomplete_add_title">Indirizzo da aggiungere</string>
+  <string name="preference_autocomplete_add_example">Esempio: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Aggiunto nuovo indirizzo personalizzato.</string>
+  <string name="preference_autocomplete_menu_remove">Elimina</string>
+  <string name="preference_autocomplete_action_remove_content_description">Elimina</string>
   <string name="preference_language">Lingua</string>
   <string name="preference_language_systemdefault">Predefinita del sistema</string>
   <string name="preference_dialog_title_search_engine">Motore di ricerca predefinito</string>
@@ -76,6 +87,8 @@
   <string name="search_add_manually_example">Esempio: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Aggiungi motore di ricerca</string>
   <string name="search_add_confirmation">Aggiunto nuovo motore di ricerca.</string>
+  <string name="search_add_error_empty_name">Inserire il nome del motore di ricerca</string>
+  <string name="search_add_error_format">Verifica che la stringa di ricerca corrisponda al formato di esempio</string>
   <string name="content_description_clear_input">Cancella testo</string>
   <string name="content_description_dismiss_input">Chiudi</string>
   <string name="content_description_erase">Elimina cronologia di navigazione</string>
