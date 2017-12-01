@@ -1395,6 +1395,23 @@ nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext,
   }
 }
 
+void
+nsNativeThemeCocoa::DrawMenuSeparator(CGContextRef cgContext,
+                                      const CGRect& inBoxRect,
+                                      const MenuItemParams& aParams)
+{
+  ThemeMenuState menuState;
+  if (aParams.disabled) {
+    menuState = kThemeMenuDisabled;
+  } else {
+    menuState = aParams.selected ? kThemeMenuSelected : kThemeMenuActive;
+  }
+
+  HIThemeMenuItemDrawInfo midi = { 0, kThemeMenuItemPlain, menuState };
+  HIThemeDrawMenuSeparator(&inBoxRect, &inBoxRect, &midi, cgContext,
+                           HITHEME_ORIENTATION);
+}
+
 nsNativeThemeCocoa::ControlParams
 nsNativeThemeCocoa::ComputeControlParams(nsIFrame* aFrame, EventStates aEventState)
 {
@@ -2918,19 +2935,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                                          aWidgetType == NS_THEME_CHECKMENUITEM));
       break;
 
-    case NS_THEME_MENUSEPARATOR: {
-      ThemeMenuState menuState;
-      if (IsDisabled(aFrame, eventState)) {
-        menuState = kThemeMenuDisabled;
-      }
-      else {
-        menuState = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive) ?
-                    kThemeMenuSelected : kThemeMenuActive;
-      }
-
-      HIThemeMenuItemDrawInfo midi = { 0, kThemeMenuItemPlain, menuState };
-      HIThemeDrawMenuSeparator(&macRect, &macRect, &midi, cgContext, HITHEME_ORIENTATION);
-    }
+    case NS_THEME_MENUSEPARATOR:
+      DrawMenuSeparator(cgContext, macRect,
+                        ComputeMenuItemParams(aFrame, eventState, false));
       break;
 
     case NS_THEME_BUTTON_ARROW_UP:
