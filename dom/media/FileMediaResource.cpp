@@ -171,9 +171,6 @@ FileMediaResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
     if (NS_FAILED(rv)) return rv;
     rv = UnsafeRead(aBuffer, aCount, aBytes);
   }
-  if (NS_SUCCEEDED(rv)) {
-    DispatchBytesConsumed(*aBytes, aOffset);
-  }
   return rv;
 }
 
