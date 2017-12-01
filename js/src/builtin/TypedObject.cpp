@@ -2688,7 +2688,7 @@ js::LoadScalar##T::Func(JSContext* cx, unsigned argc, Value* vp)                
                                                                                         \
     JS::AutoCheckCannotGC nogc(cx);                                                     \
     T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));                  \
-    args.rval().setNumber((double) *target);                                            \
+    args.rval().setNumber(JS::CanonicalizeNaN((double) *target));                       \
     return true;                                                                        \
 }
 
