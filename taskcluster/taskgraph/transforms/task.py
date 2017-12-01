@@ -591,6 +591,7 @@ V2_NIGHTLY_L10N_TEMPLATES = [
 V2_L10N_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.revision.{branch_rev}.{product}-l10n.{job-name}.{locale}",
     "index.{trust-domain}.v2.{project}.pushdate.{build_date_long}.{product}-l10n.{job-name}.{locale}",  # noqa - too long
+    "index.{trust-domain}.v2.{project}.pushlog-id.{pushlog_id}.{product}-l10n.{job-name}.{locale}",
     "index.{trust-domain}.v2.{project}.latest.{product}-l10n.{job-name}.{locale}",
 ]
 
