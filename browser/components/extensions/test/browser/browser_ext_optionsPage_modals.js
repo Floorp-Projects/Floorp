@@ -55,7 +55,9 @@ add_task(async function test_tab_options_modals() {
       }
 
       aboutAddonsBrowser.removeEventListener("DOMWillOpenModalDialog", onModalDialog, true);
-      resolve();
+      // Wait for the next event tick to make sure the remaining part of the
+      // testcase runs after the dialog gets opened.
+      SimpleTest.executeSoon(resolve);
     }, true);
   });
 
