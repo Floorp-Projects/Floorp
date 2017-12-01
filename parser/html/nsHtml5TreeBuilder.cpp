@@ -325,6 +325,7 @@ nsHtml5TreeBuilder::characters(const char16_t* buf,
       if (!isInForeignButNotHtmlOrMathTextIntegrationPoint()) {
         reconstructTheActiveFormattingElements();
       }
+      MOZ_FALLTHROUGH;
     }
     case TEXT: {
       accumulateCharacters(buf, start, length);
@@ -625,6 +626,7 @@ nsHtml5TreeBuilder::eof()
         if (isTemplateModeStackEmpty()) {
           NS_HTML5_BREAK(eofloop);
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_TEMPLATE: {
         int32_t eltPos = findLast(nsGkAtoms::_template);
@@ -760,6 +762,7 @@ starttagloop:
                 NS_HTML5_CONTINUE(starttagloop);
               }
             }
+            MOZ_FALLTHROUGH;
           }
           default: {
             if (kNameSpaceID_SVG == currNs) {
@@ -890,6 +893,7 @@ starttagloop:
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_TABLE_BODY: {
         switch (group) {
@@ -929,6 +933,7 @@ starttagloop:
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_TABLE: {
         for (;;) {
@@ -1041,6 +1046,7 @@ starttagloop:
           }
         }
       intableloop_end:;
+        MOZ_FALLTHROUGH;
       }
       case IN_CAPTION: {
         switch (group) {
@@ -1068,6 +1074,7 @@ starttagloop:
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_CELL: {
         switch (group) {
@@ -1088,6 +1095,7 @@ starttagloop:
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case FRAMESET_OK: {
         switch (group) {
@@ -1140,9 +1148,11 @@ starttagloop:
               framesetOk = false;
               mode = IN_BODY;
             }
+            MOZ_FALLTHROUGH;
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_BODY: {
         for (;;) {
@@ -1363,6 +1373,7 @@ starttagloop:
             case EMBED:
             case AREA_OR_WBR: {
               reconstructTheActiveFormattingElements();
+              MOZ_FALLTHROUGH;
             }
 #ifdef ENABLE_VOID_MENUITEM
             case MENUITEM:
@@ -1425,8 +1436,8 @@ starttagloop:
                                                            attributes);
                 attributes = nullptr;
                 NS_HTML5_BREAK(starttagloop);
-              } else {
               }
+              MOZ_FALLTHROUGH;
             }
             case NOFRAMES:
             case IFRAME:
@@ -1560,6 +1571,7 @@ starttagloop:
           }
         }
       inbodyloop_end:;
+        MOZ_FALLTHROUGH;
       }
       case IN_HEAD: {
         for (;;) {
@@ -1630,6 +1642,7 @@ starttagloop:
           }
         }
       inheadloop_end:;
+        MOZ_FALLTHROUGH;
       }
       case IN_HEAD_NOSCRIPT: {
         switch (group) {
@@ -1734,6 +1747,7 @@ starttagloop:
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_SELECT: {
         switch (group) {
@@ -1842,6 +1856,7 @@ starttagloop:
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case AFTER_FRAMESET: {
         switch (group) {
@@ -2416,6 +2431,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             NS_HTML5_BREAK(endtagloop);
           }
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_ROW: {
         switch (group) {
@@ -2471,6 +2487,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_TABLE_BODY: {
         switch (group) {
@@ -2509,6 +2526,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_TABLE: {
         switch (group) {
@@ -2543,6 +2561,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             errStrayEndTag(name);
           }
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_CAPTION: {
         switch (group) {
@@ -2591,6 +2610,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_CELL: {
         switch (group) {
@@ -2635,6 +2655,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case FRAMESET_OK:
       case IN_BODY: {
@@ -2884,8 +2905,8 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             if (scriptingEnabled) {
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
-            } else {
             }
+            MOZ_FALLTHROUGH;
           }
           case A:
           case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
@@ -2894,6 +2915,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             if (adoptionAgencyEndTag(name)) {
               NS_HTML5_BREAK(endtagloop);
             }
+            MOZ_FALLTHROUGH;
           }
           default: {
             if (isCurrent(name)) {
@@ -2920,6 +2942,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
           }
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_HEAD: {
         switch (group) {
@@ -3024,6 +3047,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
           default:; // fall through
         }
+        MOZ_FALLTHROUGH;
       }
       case IN_SELECT: {
         switch (group) {
