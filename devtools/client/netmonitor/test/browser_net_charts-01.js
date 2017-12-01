@@ -8,16 +8,11 @@
  */
 
 add_task(function* () {
-  let { monitor, tab } = yield initNetMonitor(SIMPLE_URL);
-
+  let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, windowRequire } = monitor.panelWin;
   let { Chart } = windowRequire("devtools/client/shared/widgets/Chart");
-
-  let wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.loadURI(SIMPLE_URL);
-  yield wait;
 
   let pie = Chart.Pie(document, {
     width: 100,

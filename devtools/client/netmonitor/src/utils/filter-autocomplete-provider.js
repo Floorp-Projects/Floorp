@@ -6,7 +6,7 @@
 
 const { FILTER_FLAGS } = require("../constants");
 
-/**
+/*
  * Generates a value for the given filter
  * ie. if flag = status-code, will generate "200" from the given request item.
  * For flags related to cookies, it might generate an array based on the request
@@ -70,7 +70,7 @@ function getAutocompleteValuesForFlag(flag, request) {
   return values;
 }
 
-/**
+/*
  * For a given lastToken passed ie. "is:", returns an array of populated flag
  * values for consumption in autocompleteProvider
  * ie. ["is:cached", "is:running", "is:from-cache"]

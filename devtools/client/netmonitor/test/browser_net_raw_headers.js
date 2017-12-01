@@ -19,7 +19,7 @@ add_task(function* () {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 2);
+  let wait = waitForNetworkEvents(monitor, 0, 2);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
     content.wrappedJSObject.performRequests();
   });
@@ -30,9 +30,11 @@ add_task(function* () {
     document.querySelectorAll(".request-list-item")[0]);
   yield wait;
 
+  let onRequestPostData = monitor.panelWin.once(EVENTS.RECEIVED_REQUEST_POST_DATA);
   wait = waitForDOM(document, ".raw-headers-container textarea", 2);
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersButton());
   yield wait;
+  yield onRequestPostData;
 
   testRawHeaderButtonStyle(true);
 

@@ -8,6 +8,12 @@
  */
 
 add_task(function* () {
+  // Make sure timing division can render properly
+  Services.prefs.setCharPref(
+    "devtools.netmonitor.visibleColumns",
+    "[\"waterfall\"]"
+  );
+
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
