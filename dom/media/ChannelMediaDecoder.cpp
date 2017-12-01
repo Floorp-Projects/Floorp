@@ -351,21 +351,21 @@ ChannelMediaDecoder::IsLiveStream()
 }
 
 void
-ChannelMediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
+ChannelMediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MediaDecoder::OnPlaybackEvent(aEvent);
-  switch (aEvent) {
-    case MediaEventType::PlaybackStarted:
+  switch (aEvent.mType) {
+    case MediaPlaybackEvent::PlaybackStarted:
       mPlaybackStatistics.Start();
       break;
-    case MediaEventType::PlaybackStopped:
+    case MediaPlaybackEvent::PlaybackStopped:
       mPlaybackStatistics.Stop();
       ComputePlaybackRate();
       break;
     default:
       break;
   }
+  MediaDecoder::OnPlaybackEvent(Move(aEvent));
 }
 
 void
