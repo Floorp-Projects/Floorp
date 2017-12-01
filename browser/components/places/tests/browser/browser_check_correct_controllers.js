@@ -67,7 +67,7 @@ function promiseLoadedSidebar(cmd) {
   return new Promise(resolve => {
     let sidebar = document.getElementById("sidebar");
     sidebar.addEventListener("load", function() {
-      resolve(sidebar);
+      executeSoon(() => resolve(sidebar));
     }, {capture: true, once: true});
 
     SidebarUI.show(cmd);
