@@ -2582,7 +2582,7 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
 
 void
 nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
-                                  nsIFrame *aFrame)
+                                  bool aIsMain)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -2603,7 +2603,7 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
           [NSDictionary dictionaryWithObjectsAndKeys:
             @"kCUIWidgetWindowFrame", @"widget",
             @"regularwin", @"windowtype",
-            (IsActive(aFrame, YES) ? @"normal" : @"inactive"), @"state",
+            (aIsMain ? @"normal" : @"inactive"), @"state",
             [NSNumber numberWithInt:inBoxRect.size.height], @"kCUIWindowFrameBottomBarHeightKey",
             [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawBottomBarSeparatorKey",
             [NSNumber numberWithBool:YES], @"is.flipped",
@@ -3103,7 +3103,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_STATUSBAR:
-      DrawStatusBar(cgContext, macRect, aFrame);
+      DrawStatusBar(cgContext, macRect, IsActive(aFrame, YES));
       break;
 
     case NS_THEME_MENULIST:

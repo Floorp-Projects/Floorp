@@ -380,7 +380,7 @@ protected:
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           const UnifiedToolbarParams& aParams);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
-                     nsIFrame *aFrame);
+                     bool aIsMain);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, nsIFrame *aFrame);
   void DrawScrollbarThumb(CGContextRef cgContext, const CGRect& inBoxRect,
                           ScrollbarParams aParams);
