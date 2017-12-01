@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/webcrypto/Overview.html
+ * http://www.w3.org/TR/WebCryptoAPI/
  */
 
 dictionary KeyAlgorithm {
