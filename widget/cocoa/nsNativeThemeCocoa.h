@@ -359,6 +359,8 @@ protected:
                     const MenuIconParams& aParams);
   void DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
                     const MenuItemParams& aParams);
+  void DrawMenuSeparator(CGContextRef cgContext, const CGRect& inBoxRect,
+                         const MenuItemParams& aParams);
   void DrawHIThemeButton(CGContextRef cgContext, const HIRect& aRect,
                          ThemeButtonKind aKind, ThemeButtonValue aValue,
                          ThemeDrawState aState, ThemeButtonAdornment aAdornment,
