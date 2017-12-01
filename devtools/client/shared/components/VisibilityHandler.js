@@ -13,35 +13,43 @@
  * See devtools/client/framework/toolbox.js:setIframeVisible().
  */
 
-const {
-  createClass,
-} = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const VisibilityHandler = createClass({
+class VisibilityHandler extends Component {
+  static get propTypes() {
+    return {
+      children: PropTypes.element.isRequired
+    };
+  }
 
-  displayName: "VisiblityHandler",
+  constructor(props) {
+    super(props);
+
+    this.onVisibilityChange = this.onVisibilityChange.bind(this);
+  }
+
+  componentDidMount() {
+    window.addEventListener("visibilitychange", this.onVisibilityChange);
+  }
 
   shouldComponentUpdate() {
     return document.visibilityState == "visible";
-  },
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("visibilitychange", this.onVisibilityChange);
+  }
 
   onVisibilityChange() {
     if (document.visibilityState == "visible") {
       this.forceUpdate();
     }
-  },
-
-  componentDidMount() {
-    window.addEventListener("visibilitychange", this.onVisibilityChange);
-  },
-
-  componentWillUnmount() {
-    window.removeEventListener("visibilitychange", this.onVisibilityChange);
-  },
+  }
 
   render() {
     return this.props.children;
   }
-});
+}
 
 module.exports = VisibilityHandler;
