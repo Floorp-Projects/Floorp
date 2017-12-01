@@ -377,6 +377,8 @@ protected:
   void DrawSpinButton(CGContextRef context,
                       const HIRect& inBoxRect, SpinButton aDrawnButton,
                       const SpinButtonParams& aParams);
+  void DrawToolbar(CGContextRef cgContext, const CGRect& inBoxRect,
+                   bool aIsMain);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           const UnifiedToolbarParams& aParams);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,

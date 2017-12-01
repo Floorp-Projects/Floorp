@@ -2517,6 +2517,27 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   return scrollbarFrame;
 }
 
+void
+nsNativeThemeCocoa::DrawToolbar(CGContextRef cgContext, const CGRect& inBoxRect,
+                                bool aIsMain)
+{
+  CGRect drawRect = inBoxRect;
+
+  // top border
+  drawRect.size.height = 1.0f;
+  DrawNativeGreyColorInRect(cgContext, toolbarTopBorderGrey, drawRect, aIsMain);
+
+  // background
+  drawRect.origin.y += drawRect.size.height;
+  drawRect.size.height = inBoxRect.size.height - 2.0f;
+  DrawNativeGreyColorInRect(cgContext, toolbarFillGrey, drawRect, aIsMain);
+
+  // bottom border
+  drawRect.origin.y += drawRect.size.height;
+  drawRect.size.height = 1.0f;
+  DrawNativeGreyColorInRect(cgContext, toolbarBottomBorderGrey, drawRect, aIsMain);
+}
+
 static bool
 ToolbarCanBeUnified(const HIRect& inBoxRect, NSWindow* aWindow)
 {
@@ -3104,21 +3125,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                            UnifiedToolbarParams{unifiedHeight, isMain});
         break;
       }
-      CGRect drawRect = macRect;
-
-      // top border
-      drawRect.size.height = 1.0f;
-      DrawNativeGreyColorInRect(cgContext, toolbarTopBorderGrey, drawRect, isMain);
-
-      // background
-      drawRect.origin.y += drawRect.size.height;
-      drawRect.size.height = macRect.size.height - 2.0f;
-      DrawNativeGreyColorInRect(cgContext, toolbarFillGrey, drawRect, isMain);
-
-      // bottom border
-      drawRect.origin.y += drawRect.size.height;
-      drawRect.size.height = 1.0f;
-      DrawNativeGreyColorInRect(cgContext, toolbarBottomBorderGrey, drawRect, isMain);
+      DrawToolbar(cgContext, macRect, isMain);
     }
       break;
 
