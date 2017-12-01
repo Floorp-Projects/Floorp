@@ -56,7 +56,7 @@ class ChannelMediaDecoder : public MediaDecoder
   };
 
 protected:
-  void OnPlaybackEvent(MediaEventType aEvent) override;
+  void OnPlaybackEvent(MediaPlaybackEvent&& aEvent) override;
   void DurationChanged() override;
   void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
                       UniquePtr<MetadataTags> aTags,
