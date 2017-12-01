@@ -259,6 +259,84 @@ this.FormAutofillUtils = {
     return " ";
   },
 
+  /**
+   * Get credit card display label. It should display masked numbers and the
+   * cardholder's name, separated by a comma. If `showCreditCards` is set to
+   * true, decrypted credit card numbers are shown instead.
+   *
+   * @param  {object} creditCard
+   * @param  {boolean} showCreditCards [optional]
+   * @returns {string}
+   */
+  getCreditCardLabel(creditCard, showCreditCards = false) {
+    let parts = [];
+    let ccLabel;
+    let ccNumber = creditCard["cc-number"];
+    let decryptedCCNumber = creditCard["cc-number-decrypted"];
+
+    if (showCreditCards && decryptedCCNumber) {
+      ccLabel = decryptedCCNumber;
+    }
+    if (ccNumber && !ccLabel) {
+      if (this.isCCNumber(ccNumber)) {
+        ccLabel = "*".repeat(4) + " " + ccNumber.substr(-4);
+      } else {
+        let {affix, label} = this.fmtMaskedCreditCardLabel(ccNumber);
+        ccLabel = `${affix} ${label}`;
+      }
+    }
+
+    if (ccLabel) {
+      parts.push(ccLabel);
+    }
+    if (creditCard["cc-name"]) {
+      parts.push(creditCard["cc-name"]);
+    }
+    return parts.join(", ");
+  },
+
+  /**
+   * Get address display label. It should display up to two pieces of
+   * information, separated by a comma.
+   *
+   * @param  {object} address
+   * @returns {string}
+   */
+  getAddressLabel(address) {
+    // TODO: Implement a smarter way for deciding what to display
+    //       as option text. Possibly improve the algorithm in
+    //       ProfileAutoCompleteResult.jsm and reuse it here.
+    const fieldOrder = [
+      "name",
+      "-moz-street-address-one-line",  // Street address
+      "address-level2",  // City/Town
+      "organization",    // Company or organization name
+      "address-level1",  // Province/State (Standardized code if possible)
+      "country-name",    // Country name
+      "postal-code",     // Postal code
+      "tel",             // Phone number
+      "email",           // Email address
+    ];
+
+    address = {...address};
+    let parts = [];
+    if (address["street-address"]) {
+      address["-moz-street-address-one-line"] = this.toOneLineAddress(
+        address["street-address"]
+      );
+    }
+    for (const fieldName of fieldOrder) {
+      let string = address[fieldName];
+      if (string) {
+        parts.push(string);
+      }
+      if (parts.length == 2) {
+        break;
+      }
+    }
+    return parts.join(", ");
+  },
+
   toOneLineAddress(address, delimiter = "\n") {
     let array = typeof address == "string" ? address.split(delimiter) : address;
 
