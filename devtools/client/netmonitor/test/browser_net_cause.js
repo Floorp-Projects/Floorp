@@ -102,6 +102,8 @@ add_task(function* () {
   tab.linkedBrowser.loadURI(CAUSE_URL);
   yield wait;
 
+  // Fetch stack-trace data from the backend and wait till
+  // all packets are received.
   let requests = getSortedRequests(store.getState());
   yield Promise.all(requests.map(requestItem =>
     connector.requestData(requestItem.id, "stackTrace")));
@@ -109,7 +111,7 @@ add_task(function* () {
   is(store.getState().requests.requests.size, EXPECTED_REQUESTS.length,
     "All the page events should be recorded.");
 
-  EXPECTED_REQUESTS.forEach(async (spec, i) => {
+  EXPECTED_REQUESTS.forEach((spec, i) => {
     let { method, url, causeType, causeUri, stack } = spec;
 
     let requestItem = getSortedRequests(store.getState()).get(i);
@@ -124,8 +126,6 @@ add_task(function* () {
 
     let stacktrace = requestItem.stacktrace;
     let stackLen = stacktrace ? stacktrace.length : 0;
-
-    await waitUntil(() => !!requestItem.stacktrace);
 
     if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);

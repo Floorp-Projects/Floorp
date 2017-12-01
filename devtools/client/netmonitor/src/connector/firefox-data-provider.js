@@ -180,10 +180,6 @@ class FirefoxDataProvider {
       requestPostData.postData.text = postData;
       payload.requestPostData = Object.assign({}, requestPostData);
       payload.requestHeadersFromUploadStream = { headers, headersSize };
-
-      // Lock down requestPostDataAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.requestPostDataAvailable = false;
     }
     return payload;
   }
@@ -206,10 +202,6 @@ class FirefoxDataProvider {
           payload.responseCookies = resCookies;
         }
       }
-
-      // Lock down responseCookiesAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.responseCookiesAvailable = false;
     }
     return payload;
   }
@@ -232,10 +224,6 @@ class FirefoxDataProvider {
           payload.requestCookies = reqCookies;
         }
       }
-
-      // Lock down requestCookiesAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.requestCookiesAvailable = false;
     }
     return payload;
   }
@@ -277,9 +265,12 @@ class FirefoxDataProvider {
     // Note that we never fetch response header/cookies for request with security issues.
     // Bug 1404917 should simplify this heuristic by making all these field be lazily
     // fetched, only on-demand.
-    return record.requestHeaders && record.eventTimings &&
-      (record.responseHeaders || payload.securityState === "broken" ||
-        (!payload.status && payload.responseContentAvailable));
+    return record.requestHeaders && record.requestCookies && record.eventTimings &&
+      (
+        (record.responseHeaders && record.responseCookies) ||
+        payload.securityState === "broken" ||
+        (!payload.status && payload.responseContentAvailable)
+      );
   }
 
   /**
@@ -351,7 +342,9 @@ class FirefoxDataProvider {
     // Create tracking record for this request.
     this.rdpRequestMap.set(actor, {
       requestHeaders: false,
+      requestCookies: false,
       responseHeaders: false,
+      responseCookies: false,
       eventTimings: false,
     });
 
@@ -388,15 +381,17 @@ class FirefoxDataProvider {
 
     switch (updateType) {
       case "requestHeaders":
+      case "requestCookies":
       case "responseHeaders":
+      case "responseCookies":
         this.requestPayloadData(actor, updateType);
         break;
-      case "requestCookies":
-      case "responseCookies":
       case "requestPostData":
-        // This field helps knowing when/if updateType property is available
-        // and can be requested via `requestData`
-        this.updateRequest(actor, { [`${updateType}Available`]: true });
+        this.updateRequest(actor, {
+          // This field helps knowing when/if requestPostData property is available
+          // and can be requested via `requestData`
+          requestPostDataAvailable: true
+        });
         break;
       case "securityInfo":
         this.updateRequest(actor, { securityState: networkInfo.securityInfo });
@@ -596,12 +591,12 @@ class FirefoxDataProvider {
    *
    * @param {object} response the message received from the server.
    */
-  async onRequestCookies(response) {
-    let payload = await this.updateRequest(response.from, {
+  onRequestCookies(response) {
+    return this.updateRequest(response.from, {
       requestCookies: response
+    }).then(() => {
+      emit(EVENTS.RECEIVED_REQUEST_COOKIES, response.from);
     });
-    emit(EVENTS.RECEIVED_REQUEST_COOKIES, response.from);
-    return payload.requestCookies;
   }
 
   /**
@@ -648,12 +643,12 @@ class FirefoxDataProvider {
    *
    * @param {object} response the message received from the server.
    */
-  async onResponseCookies(response) {
-    let payload = await this.updateRequest(response.from, {
+  onResponseCookies(response) {
+    return this.updateRequest(response.from, {
       responseCookies: response
+    }).then(() => {
+      emit(EVENTS.RECEIVED_RESPONSE_COOKIES, response.from);
     });
-    emit(EVENTS.RECEIVED_RESPONSE_COOKIES, response.from);
-    return payload.responseCookies;
   }
 
   /**

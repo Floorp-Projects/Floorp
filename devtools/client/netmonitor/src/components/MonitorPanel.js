@@ -95,7 +95,7 @@ class MonitorPanel extends Component {
 
     return (
       div({ className: "monitor-panel" },
-        Toolbar({ connector }),
+        Toolbar(),
         SplitBox({
           className: "devtools-responsive-container",
           initialWidth: `${initialWidth}px`,

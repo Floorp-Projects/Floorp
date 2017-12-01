@@ -56,7 +56,6 @@ const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label")
 class Toolbar extends Component {
   static get propTypes() {
     return {
-      connector: PropTypes.object.isRequired,
       toggleRecording: PropTypes.func.isRequired,
       recording: PropTypes.bool.isRequired,
       clearRequests: PropTypes.func.isRequired,
@@ -79,7 +78,6 @@ class Toolbar extends Component {
   constructor(props) {
     super(props);
     this.autocompleteProvider = this.autocompleteProvider.bind(this);
-    this.onSearchBoxFocus = this.onSearchBoxFocus.bind(this);
     this.toggleRequestFilterType = this.toggleRequestFilterType.bind(this);
     this.updatePersistentLogsEnabled = this.updatePersistentLogsEnabled.bind(this);
     this.updateBrowserCacheDisabled = this.updateBrowserCacheDisabled.bind(this);
@@ -130,15 +128,6 @@ class Toolbar extends Component {
 
   autocompleteProvider(filter) {
     return autocompleteProvider(filter, this.props.filteredRequests);
-  }
-
-  onSearchBoxFocus() {
-    let { connector, filteredRequests } = this.props;
-
-    // Fetch responseCookies for building autocomplete list
-    filteredRequests.forEach((request) => {
-      connector.requestData(request.id, "responseCookies");
-    });
   }
 
   render() {
@@ -249,7 +238,6 @@ class Toolbar extends Component {
             type: "filter",
             ref: "searchbox",
             onChange: setRequestFilterText,
-            onFocus: this.onSearchBoxFocus,
             autocompleteProvider: this.autocompleteProvider,
           }),
           button({

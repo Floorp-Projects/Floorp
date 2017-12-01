@@ -57,8 +57,6 @@ const UPDATED_REQ_ITEM_PROPS = [
   "transferredSize",
   "startedMillis",
   "totalTime",
-  "requestCookies",
-  "responseCookies",
 ];
 
 const UPDATED_REQ_PROPS = [
@@ -74,7 +72,6 @@ const UPDATED_REQ_PROPS = [
 class RequestListItem extends Component {
   static get propTypes() {
     return {
-      connector: PropTypes.object.isRequired,
       columns: PropTypes.object.isRequired,
       item: PropTypes.object.isRequired,
       index: PropTypes.number.isRequired,
@@ -114,7 +111,6 @@ class RequestListItem extends Component {
 
   render() {
     let {
-      connector,
       columns,
       item,
       index,
@@ -151,8 +147,8 @@ class RequestListItem extends Component {
         columns.get("remoteip") && RequestListColumnRemoteIP({ item }),
         columns.get("cause") && RequestListColumnCause({ item, onCauseBadgeMouseDown }),
         columns.get("type") && RequestListColumnType({ item }),
-        columns.get("cookies") && RequestListColumnCookies({ connector, item }),
-        columns.get("setCookies") && RequestListColumnSetCookies({ connector, item }),
+        columns.get("cookies") && RequestListColumnCookies({ item }),
+        columns.get("setCookies") && RequestListColumnSetCookies({ item }),
         columns.get("transferred") && RequestListColumnTransferredSize({ item }),
         columns.get("contentSize") && RequestListColumnContentSize({ item }),
         columns.get("startTime") &&
