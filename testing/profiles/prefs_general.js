@@ -307,6 +307,7 @@ user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 // Use an empty list of sites to avoid fetching
 user_pref("browser.newtabpage.activity-stream.default.sites", "");
 user_pref("browser.newtabpage.activity-stream.telemetry", false);
+user_pref("browser.newtabpage.activity-stream.tippyTop.service.endpoint", "");
 user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
 
