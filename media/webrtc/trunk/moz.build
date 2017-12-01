@@ -1,0 +1,153 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+DIRS += [
+    "/media/webrtc/trunk/webrtc/modules/audio_mixer/audio_mixer_impl_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_coding/video_coding_utility_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_conference_mixer/audio_conference_mixer_gn",
+    "/media/webrtc/trunk/webrtc/modules/bitrate_controller/bitrate_controller_gn",
+    "/media/webrtc/trunk/webrtc/common_audio/common_audio_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/pcm16b_c_gn",
+    "/media/webrtc/trunk/webrtc/voice_engine/voice_engine_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/webrtc_opus_gn",
+    "/media/webrtc/trunk/webrtc/voice_engine/file_recorder_gn",
+    "/media/webrtc/trunk/webrtc/call/call_gn",
+    "/media/webrtc/trunk/webrtc/modules/media_file/media_file_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_device/audio_device_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_module_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/g722_c_gn",
+    "/media/webrtc/trunk/webrtc/system_wrappers/system_wrappers_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_decoder_interface_gn",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log_impl_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/g711_c_gn",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/rtp_rtcp_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/webrtc_opus_c_gn",
+    "/media/webrtc/trunk/webrtc/common_video/common_video_gn",
+    "/media/webrtc/trunk/webrtc/system_wrappers/metrics_default_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_format_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/cng_gn",
+    "/media/webrtc/trunk/webrtc/modules/congestion_controller/congestion_controller_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/builtin_audio_decoder_factory_gn",
+    "/media/webrtc/trunk/webrtc/webrtc_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_coding/webrtc_vp9_gn",
+    "/media/webrtc/trunk/webrtc/common_audio/common_audio_c_gn",
+    "/media/webrtc/trunk/webrtc/modules/utility/utility_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_format_conversion_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/neteq_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_coding/video_coding_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_fix_c_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_coding/webrtc_h264_gn",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log_api_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_coding/webrtc_vp8_gn",
+    "/media/webrtc/trunk/webrtc/api/transport_api_gn",
+    "/media/webrtc/trunk/webrtc/api/audio_mixer_api_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/g711_gn",
+    "/media/webrtc/trunk/webrtc/audio/audio_gn",
+    "/media/webrtc/trunk/webrtc/api/call_api_gn",
+    "/media/webrtc/trunk/webrtc/api/video_frame_api_gn",
+    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_gn",
+    "/media/webrtc/trunk/webrtc/audio/utility/audio_frame_operations_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_c_gn",
+    "/media/webrtc/trunk/webrtc/base/rtc_numerics_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_encoder_interface_gn",
+    "/media/webrtc/trunk/webrtc/voice_engine/audio_coder_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/g722_gn",
+    "/media/webrtc/trunk/webrtc/voice_engine/file_player_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_coding/webrtc_i420_gn",
+    "/media/webrtc/trunk/webrtc/base/rtc_task_queue_gn",
+    "/media/webrtc/trunk/webrtc/media/mozilla_rtc_media_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_common_gn",
+    "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn",
+    "/media/webrtc/trunk/webrtc/modules/pacing/pacing_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_c_gn",
+    "/media/webrtc/trunk/webrtc/call/call_interfaces_gn",
+    "/media/webrtc/trunk/webrtc/voice_engine/level_indicator_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/rent_a_codec_gn",
+    "/media/webrtc/trunk/webrtc/base/rtc_base_approved_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_mixer/audio_frame_manipulator_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/pcm16b_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_fix_gn",
+    "/media/webrtc/trunk/webrtc/base/gtest_prod_gn",
+    "/media/webrtc/trunk/webrtc/video/video_gn",
+    "/media/webrtc/trunk/webrtc/system_wrappers/field_trial_default_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_decoder_factory_interface_gn",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_coding_gn",
+    "/media/webrtc/trunk/webrtc/webrtc_common_gn"
+]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/video_engine/video_engine_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn"
+    ]
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/video_engine/video_engine_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/system_wrappers/cpu_features_linux_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn"
+    ]
+
+if CONFIG["OS_TARGET"] == "Darwin":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/video_engine/video_engine_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_device/mac_portaudio_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_neon_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_c_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_neon_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_neon_c_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_neon_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_neon_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_c_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_neon_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_neon_c_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_neon_gn"
+    ]

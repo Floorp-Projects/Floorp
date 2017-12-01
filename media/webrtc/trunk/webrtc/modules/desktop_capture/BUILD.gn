@@ -181,7 +181,7 @@ rtc_static_library("desktop_capture") {
   ]
 
   if (build_with_mozilla) {
-    defines += [ "MULTI_MONITOR_SCREENSHARE" ]
+    defines = [ "MULTI_MONITOR_SCREENSHARE" ]
     sources += [
       "desktop_device_info.cc",
       "desktop_device_info.h",
