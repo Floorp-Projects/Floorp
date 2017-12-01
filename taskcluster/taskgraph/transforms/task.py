@@ -1412,6 +1412,8 @@ def add_nightly_l10n_index_routes(config, task, force_locale=None):
     subs['job-name'] = index['job-name']
     subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
                                             time.gmtime(config.params['build_date']))
+    subs['build_date'] = time.strftime("%Y.%m.%d",
+                                       time.gmtime(config.params['build_date']))
     subs['product'] = index['product']
     subs['trust-domain'] = config.graph_config['trust-domain']
     subs['branch_rev'] = get_branch_rev(config)
