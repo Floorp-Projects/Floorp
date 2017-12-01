@@ -45,6 +45,7 @@ private:
   virtual ~CaptivePortalService();
   nsresult PerformCheck();
   nsresult RearmTimer();
+  void NotifyConnectivityAvailable(bool aCaptive);
 
   nsCOMPtr<nsICaptivePortalDetector>    mCaptivePortalDetector;
   int32_t                               mState;
