@@ -20,6 +20,10 @@ fuzzy(1,926) == pal1wb.bmp pal1.png
 # "Paletted image with 12 palette colors, and 4 bits/pixel."
 == pal4.bmp pal4.png
 
+# BMP: bihsize=40, 127 x 64, bpp=4, compression=0, colors=12
+# "Paletted image with 12 grayscale palette colors, and 4 bits/pixel."
+== pal4gs.bmp pal4gs.png
+
 # BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=12
 # "4-bit image that uses RLE compression."
 == pal4rle.bmp pal4.png
@@ -32,6 +36,10 @@ fuzzy(1,996) == pal8.bmp pal8.png
 # "Every field that can be set to 0 is set to 0: pixels/meter=0; colors used=0
 # (meaning the default 256); size-of-image=0."
 fuzzy(1,996) == pal8-0.bmp pal8.png
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=252
+# "An 8-bit image with a palette of 252 grayscale colors."
+== pal8gs.bmp pal8gs.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=252
 # "8-bit image that uses RLE compression."
@@ -79,6 +87,10 @@ fuzzy(1,996) == pal8v5.bmp pal8.png
 fuzzy(1,1296) == rgb16.bmp rgb16.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
+# "Same format as rgb16.bmp, but with a BITFIELDS segment."
+fuzzy(1,1296) == rgb16bfdef.bmp rgb16.png
+
+# BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "A 16-bit image with a BITFIELDS segment indicating 5 red, 6 green, and 5 blue
 # bits. This is a standard 16-bit format, even supported by old versions of
 # Windows that don’t support any other non-default 16-bit formats. The whitest
@@ -103,6 +115,10 @@ fuzzy(1,1516) == rgb16.bmp rgb16.png
 # BITFIELDS segment). There are 8 bits per color channel, and 8 unused bits.
 # The unused bits are set to 0."
 == rgb32.bmp rgb24.png
+
+# BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
+# "Same format as rgb32.bmp, but with a BITFIELDS segment."
+== rgb32bfdef.bmp rgb24.png
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32-bit image with a BITFIELDS segment. As usual, there are 8 bits per color

@@ -20,6 +20,7 @@ There are three sub-directories.
 - g/: for "good" images.
 - q/: for "questionable" images.
 - b/: for "bad" images.
+- x/: for images that arguably may not truly be in "BMP format".
 
 Each file listed in a reftest.list file is annotated with the following lines.
 
