@@ -5,6 +5,21 @@ add_task(async function() {
   BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.addTab(gBrowser);
 
+  // While doing this test, we should make sure the selected tab in the tab
+  // preview is not changed by mouse events.  That may happen after closing
+  // the selected tab with ctrl+W.  Disable all mouse events to prevent it.
+  for (let node of ctrlTab.previews) {
+    node.style.pointerEvents = "none";
+  }
+  registerCleanupFunction(function() {
+    for (let node of ctrlTab.previews) {
+      try {
+        node.style.removeProperty("pointer-events");
+      } catch (e) {
+      }
+    }
+  });
+
   checkTabs(4);
 
   await ctrlTabTest([2], 1, 0);
