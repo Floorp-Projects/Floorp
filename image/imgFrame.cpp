@@ -610,6 +610,14 @@ imgFrame::ImageUpdatedInternal(const nsIntRect& aUpdateRect)
   // decoded rect that extends outside the bounds of the frame rect.
   mDecoded.IntersectRect(mDecoded, mFrameRect);
 
+  // Update our invalidation counters for any consumers watching for changes
+  // in the surface.
+  if (mRawSurface) {
+    mRawSurface->Invalidate();
+  }
+  if (mLockedSurface && mRawSurface != mLockedSurface) {
+    mLockedSurface->Invalidate();
+  }
   return NS_OK;
 }
 
