@@ -5077,7 +5077,7 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
 }
 
 void
-nsWindow::HideWindowChrome(bool aShouldHide)
+nsWindow::SetWindowDecoration(nsBorderStyle aStyle)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
@@ -5089,7 +5089,7 @@ nsWindow::HideWindowChrome(bool aShouldHide)
         if (!topWindow)
             return;
 
-        topWindow->HideWindowChrome(aShouldHide);
+        topWindow->SetWindowDecoration(aStyle);
         return;
     }
 
@@ -5102,12 +5102,7 @@ nsWindow::HideWindowChrome(bool aShouldHide)
         wasVisible = true;
     }
 
-    gint wmd;
-    if (aShouldHide)
-        wmd = 0;
-    else
-        wmd = ConvertBorderStyles(mBorderStyle);
-
+    gint wmd = ConvertBorderStyles(aStyle);
     if (wmd != -1)
       gdk_window_set_decorations(mGdkWindow, (GdkWMDecoration) wmd);
 
@@ -5124,6 +5119,12 @@ nsWindow::HideWindowChrome(bool aShouldHide)
 #else
     gdk_flush ();
 #endif /* MOZ_X11 */
+}
+
+void
+nsWindow::HideWindowChrome(bool aShouldHide)
+{
+    SetWindowDecoration(aShouldHide ? eBorderStyle_none : mBorderStyle);
 }
 
 bool
@@ -6646,14 +6647,9 @@ nsWindow::SetDrawsInTitlebar(bool aState)
       return;
 
   if (mShell) {
-      gint wmd;
-      if (aState) {
-          wmd = GetCSDSupportLevel() == CSD_SUPPORT_FULL ? GDK_DECOR_BORDER : 0;
-      } else {
-          wmd = ConvertBorderStyles(mBorderStyle);
+      if (GetCSDSupportLevel() == CSD_SUPPORT_FULL) {
+          SetWindowDecoration(aState ? eBorderStyle_border : mBorderStyle);
       }
-      gdk_window_set_decorations(gtk_widget_get_window(mShell),
-                                 (GdkWMDecoration) wmd);
   }
 
   mIsCSDEnabled = aState;
