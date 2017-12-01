@@ -2723,6 +2723,41 @@ nsNativeThemeCocoa::DrawScrollbarTrack(CGContextRef cgContext,
           true);
 }
 
+static const Color kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
+static const Color kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
+static const Color kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
+static const Color kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
+static const Color kListBoxSidesAndBottomBorderColor(0.745, 0.745, 0.745, 1.0);
+
+void
+nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext,
+                                           const CGRect& inBoxRect,
+                                           bool aIsFocused)
+{
+  CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
+
+  CGContextFillRect(cgContext, inBoxRect);
+
+  float x = inBoxRect.origin.x, y = inBoxRect.origin.y;
+  float w = inBoxRect.size.width, h = inBoxRect.size.height;
+  SetCGContextFillColor(cgContext, kMultilineTextFieldTopBorderColor);
+  CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
+  SetCGContextFillColor(cgContext, kMultilineTextFieldSidesAndBottomBorderColor);
+  CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
+  CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
+  CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
+
+  if (aIsFocused) {
+    NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+    CGContextSaveGState(cgContext);
+    NSSetFocusRingStyle(NSFocusRingOnly);
+    NSRectFill(NSRectFromCGRect(inBoxRect));
+    CGContextRestoreGState(cgContext);
+    [NSGraphicsContext setCurrentContext:savedContext];
+  }
+}
+
 static void
 DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
                        nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType)
@@ -2746,12 +2781,6 @@ IsHiDPIContext(nsDeviceContext* aContext)
   return nsPresContext::AppUnitsPerCSSPixel() >=
     2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
 }
-
-static const Color kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
-static const Color kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
-static const Color kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
-static const Color kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
-static const Color kListBoxSidesAndBottomBorderColor(0.745, 0.745, 0.745, 1.0);
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
@@ -3266,32 +3295,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
           aFrame, aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL));
       break;
 
-    case NS_THEME_TEXTFIELD_MULTILINE: {
-      // we have to draw this by hand because there is no HITheme value for it
-      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
-
-      CGContextFillRect(cgContext, macRect);
-
-      float x = macRect.origin.x, y = macRect.origin.y;
-      float w = macRect.size.width, h = macRect.size.height;
-      SetCGContextFillColor(cgContext, kMultilineTextFieldTopBorderColor);
-      CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
-      SetCGContextFillColor(cgContext, kMultilineTextFieldSidesAndBottomBorderColor);
-      CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
-      CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
-      CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
-
-      // draw a focus ring
-      if (eventState.HasState(NS_EVENT_STATE_FOCUS)) {
-        NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-        [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
-        CGContextSaveGState(cgContext);
-        NSSetFocusRingStyle(NSFocusRingOnly);
-        NSRectFill(NSRectFromCGRect(macRect));
-        CGContextRestoreGState(cgContext);
-        [NSGraphicsContext setCurrentContext:savedContext];
-      }
-    }
+    case NS_THEME_TEXTFIELD_MULTILINE:
+      DrawMultilineTextField(cgContext, macRect,
+                             eventState.HasState(NS_EVENT_STATE_FOCUS));
       break;
 
     case NS_THEME_LISTBOX: {
