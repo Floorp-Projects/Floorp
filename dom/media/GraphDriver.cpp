@@ -960,7 +960,8 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   mCurrentTimeStamp = TimeStamp::Now();
 
   if (stateComputedTime < mIterationEnd) {
-    LOG(LogLevel::Warning, ("Media graph global underrun detected"));
+    LOG(LogLevel::Error, ("Media graph global underrun detected"));
+    MOZ_ASSERT_UNREACHABLE("We should not underrun in full duplex");
     mIterationEnd = stateComputedTime;
   }
 
