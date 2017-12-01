@@ -27,17 +27,19 @@ const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
+const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot"];
+const PINNED_FAVICON_PROPS_TO_MIGRATE = ["favicon", "faviconRef", "faviconSize"];
 
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
     this.dedupe = new Dedupe(this._dedupeKey);
     this.frecentCache = new LinksCache(NewTabUtils.activityStreamLinks,
-      "getTopSites", ["screenshot"], (oldOptions, newOptions) =>
+      "getTopSites", CACHED_LINK_PROPS_TO_MIGRATE, (oldOptions, newOptions) =>
         // Refresh if no old options or requesting more items
         !(oldOptions.numItems >= newOptions.numItems));
     this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks, "links",
-      ["favicon", "faviconSize", "screenshot"]);
+      [...CACHED_LINK_PROPS_TO_MIGRATE, ...PINNED_FAVICON_PROPS_TO_MIGRATE]);
     PageThumbs.addExpirationFilter(this);
   }
 
@@ -102,8 +104,10 @@ this.TopSitesFeed = class TopSitesFeed {
         try {
           NewTabUtils.activityStreamProvider._faviconBytesToDataURI(await
             NewTabUtils.activityStreamProvider._addFavicons([copy]));
-          copy.__sharedCache.updateLink("favicon", copy.favicon);
-          copy.__sharedCache.updateLink("faviconSize", copy.faviconSize);
+
+          for (const prop of PINNED_FAVICON_PROPS_TO_MIGRATE) {
+            copy.__sharedCache.updateLink(prop, copy[prop]);
+          }
         } catch (e) {
           // Some issue with favicon, so just continue without one
         }
@@ -161,11 +165,17 @@ this.TopSitesFeed = class TopSitesFeed {
    * Get an image for the link preferring tippy top, rich favicon, screenshots.
    */
   async _fetchIcon(link) {
-    // Check for tippy top icon or a rich icon.
+    // Check for tippy top icon and rich icon.
     this._tippyTopProvider.processSite(link);
-    if (!link.tippyTopIcon &&
-        (!link.favicon || link.faviconSize < MIN_FAVICON_SIZE) &&
-        !link.screenshot) {
+    let hasTippyTop = !!link.tippyTopIcon;
+    let hasRichIcon = link.favicon && link.faviconSize >= MIN_FAVICON_SIZE;
+
+    if (!hasTippyTop && !hasRichIcon) {
+      this._requestRichIcon(link.url);
+    }
+
+    // Request a screenshot if needed.
+    if (!hasTippyTop && !hasRichIcon && !link.screenshot) {
       const {url} = link;
       await Screenshots.maybeCacheScreenshot(link, url, "screenshot",
         screenshot => this.store.dispatch(ac.BroadcastToContent({
@@ -173,6 +183,13 @@ this.TopSitesFeed = class TopSitesFeed {
           type: at.SCREENSHOT_UPDATED
         })));
     }
+  }
+
+  _requestRichIcon(url) {
+    this.store.dispatch({
+      type: at.RICH_ICON_MISSING,
+      data: {url}
+    });
   }
 
   /**

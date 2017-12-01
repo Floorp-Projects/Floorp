@@ -310,6 +310,7 @@ describe("Top Sites Feed", () => {
           assert.callCount(fakeScreenshot.getScreenshotForURL, FAKE_LINKS.length);
         });
         it("should dispatch once per link screenshot fetched", async () => {
+          feed._requestRichIcon = sinon.stub();
           await getTwice();
 
           await resolveAll();
@@ -657,6 +658,7 @@ describe("Top Sites Feed", () => {
     });
 
     it("should add a pinned site and remove it", async () => {
+      feed._requestRichIcon = sinon.stub();
       const url = "pin.me";
       fakeNewTabUtils.pinnedLinks.pin = sandbox.stub().callsFake(link => {
         fakeNewTabUtils.pinnedLinks.links.push(link);

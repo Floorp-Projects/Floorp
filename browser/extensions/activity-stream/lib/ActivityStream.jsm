@@ -19,6 +19,7 @@ const {Store} = Cu.import("resource://activity-stream/lib/Store.jsm", {});
 const {SnippetsFeed} = Cu.import("resource://activity-stream/lib/SnippetsFeed.jsm", {});
 const {SystemTickFeed} = Cu.import("resource://activity-stream/lib/SystemTickFeed.jsm", {});
 const {TelemetryFeed} = Cu.import("resource://activity-stream/lib/TelemetryFeed.jsm", {});
+const {FaviconFeed} = Cu.import("resource://activity-stream/lib/FaviconFeed.jsm", {});
 const {TopSitesFeed} = Cu.import("resource://activity-stream/lib/TopSitesFeed.jsm", {});
 const {TopStoriesFeed} = Cu.import("resource://activity-stream/lib/TopStoriesFeed.jsm", {});
 const {HighlightsFeed} = Cu.import("resource://activity-stream/lib/HighlightsFeed.jsm", {});
@@ -133,6 +134,10 @@ const PREFS_CONFIG = new Map([
   ["section.topstories.showDisclaimer", {
     title: "Boolean flag that decides whether or not to show the topstories disclaimer.",
     value: true
+  }],
+  ["tippyTop.service.endpoint", {
+    title: "Tippy Top service manifest url",
+    value: "https://activity-stream-icons.services.mozilla.com/v1/icons.json.br"
   }]
 ]);
 
@@ -204,6 +209,12 @@ const FEEDS_DATA = [
     name: "telemetry",
     factory: () => new TelemetryFeed(),
     title: "Relays telemetry-related actions to PingCentre",
+    value: true
+  },
+  {
+    name: "favicon",
+    factory: () => new FaviconFeed(),
+    title: "Fetches tippy top manifests from remote service",
     value: true
   },
   {

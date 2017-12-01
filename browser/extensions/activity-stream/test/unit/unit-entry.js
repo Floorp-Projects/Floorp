@@ -76,7 +76,8 @@ overrider.set({
       init(cb) { cb(); },
       getVisibleEngines: () => [{identifier: "google"}, {identifier: "bing"}],
       defaultEngine: {identifier: "google"}
-    }
+    },
+    scriptSecurityManager: {getSystemPrincipal() {}}
   },
   XPCOMUtils: {
     defineLazyGetter(_1, _2, f) { f(); },

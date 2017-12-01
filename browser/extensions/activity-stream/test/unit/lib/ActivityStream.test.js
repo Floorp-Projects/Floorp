@@ -21,6 +21,7 @@ describe("ActivityStream", () => {
       "lib/SnippetsFeed.jsm": {SnippetsFeed: Fake},
       "lib/SystemTickFeed.jsm": {SystemTickFeed: Fake},
       "lib/TelemetryFeed.jsm": {TelemetryFeed: Fake},
+      "lib/FaviconFeed.jsm": {FaviconFeed: Fake},
       "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake},
       "lib/TopStoriesFeed.jsm": {TopStoriesFeed: Fake},
       "lib/HighlightsFeed.jsm": {HighlightsFeed: Fake}
@@ -146,6 +147,10 @@ describe("ActivityStream", () => {
     });
     it("should create a SystemTick feed", () => {
       const feed = as.feeds.get("feeds.systemtick")();
+      assert.instanceOf(feed, Fake);
+    });
+    it("should create a Favicon feed", () => {
+      const feed = as.feeds.get("feeds.favicon")();
       assert.instanceOf(feed, Fake);
     });
   });
