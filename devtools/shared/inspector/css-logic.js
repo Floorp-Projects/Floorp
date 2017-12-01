@@ -158,8 +158,13 @@ function prettifyCSS(text, ruleCount) {
     prettifyCSS.LINE_SEPARATOR = (os === "WINNT" ? "\r\n" : "\n");
   }
 
-  // remove initial and terminating HTML comments and surrounding whitespace
-  text = text.replace(/(?:^\s*<!--[\r\n]*)|(?:\s*-->\s*$)/g, "");
+  // Stylesheets may start and end with HTML comment tags (possibly with whitespaces
+  // before and after). Remove those first. Don't do anything there aren't any.
+  let trimmed = text.trim();
+  if (trimmed.startsWith("<!--")) {
+    text = trimmed.replace(/^<!--/, "").replace(/-->$/, "").trim();
+  }
+
   let originalText = text;
   text = text.trim();
 
