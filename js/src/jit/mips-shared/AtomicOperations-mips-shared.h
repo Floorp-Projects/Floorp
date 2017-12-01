@@ -222,26 +222,4 @@ js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val)
     return v;
 }
 
-template<size_t nbytes>
-inline void
-js::jit::RegionLock::acquire(void* addr)
-{
-    uint32_t zero = 0;
-    uint32_t one = 1;
-    while (!__atomic_compare_exchange(&spinlock, &zero, &one, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)) {
-        zero = 0;
-        continue;
-    }
-}
-
-template<size_t nbytes>
-inline void
-js::jit::RegionLock::release(void* addr)
-{
-    MOZ_ASSERT(AtomicOperations::loadSeqCst(&spinlock) == 1, "releasing unlocked region lock");
-    uint32_t zero = 0;
-    __atomic_store(&spinlock, &zero, __ATOMIC_SEQ_CST);
-}
-
-
 #endif // jit_mips_shared_AtomicOperations_mips_shared_h
