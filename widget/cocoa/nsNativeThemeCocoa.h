@@ -392,6 +392,8 @@ protected:
                           ScrollbarParams aParams);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
                               bool aIsFocused);
+  void DrawSourceList(CGContextRef cgContext, const CGRect& inBoxRect,
+                      bool aIsActive);
 
   // Scrollbars
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
