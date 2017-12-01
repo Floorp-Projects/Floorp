@@ -265,7 +265,7 @@ style:
     ignoreNamedArgument: true
     ignoreEnums: false
   WildcardImport:
-    active: false
+    active: true
     excludeImports: 'java.util.*,kotlinx.android.synthetic.*'
   SafeCast:
     active: true
