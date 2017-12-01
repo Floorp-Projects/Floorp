@@ -130,7 +130,11 @@ open class AutocompleteListFragment : Fragment() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?) {
-        menu?.findItem(R.id.remove)?.isVisible = isSelectionMode() || domainList.adapter.itemCount > 1
+        val removeItem = menu?.findItem(R.id.remove)
+
+        removeItem?.isVisible = isSelectionMode() || domainList.adapter.itemCount > 1
+        removeItem?.isEnabled = !isSelectionMode()
+                || (domainList.adapter as DomainListAdapter).selection().isNotEmpty()
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean = when (item?.itemId) {
@@ -187,7 +191,12 @@ open class AutocompleteListFragment : Fragment() {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
             if (holder is DomainViewHolder) {
-                holder.bind(domains[position], isSelectionMode(), selectedDomains, itemTouchHelper)
+                holder.bind(
+                        domains[position],
+                        isSelectionMode(),
+                        selectedDomains,
+                        itemTouchHelper,
+                        this@AutocompleteListFragment)
             }
         }
 
@@ -227,7 +236,8 @@ open class AutocompleteListFragment : Fragment() {
                 domain: String,
                 isSelectionMode: Boolean,
                 selectedDomains: MutableList<String>,
-                itemTouchHelper: ItemTouchHelper) {
+                itemTouchHelper: ItemTouchHelper,
+                fragment: AutocompleteListFragment) {
             domainView.text  = domain
 
             checkBoxView.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
@@ -238,6 +248,8 @@ open class AutocompleteListFragment : Fragment() {
                 } else {
                     selectedDomains.remove(domain)
                 }
+
+                fragment.activity?.let { it.invalidateOptionsMenu() }
             })
 
             handleView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
