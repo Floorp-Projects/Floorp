@@ -77,8 +77,6 @@ function* testUseKeyWithSplitConsoleWrongTool() {
 }
 
 function* cleanup() {
-  // We don't want the open split console to confuse other tests..
-  Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
   yield gToolbox.destroy();
   gBrowser.removeCurrentTab();
   gToolbox = panelWin = null;
