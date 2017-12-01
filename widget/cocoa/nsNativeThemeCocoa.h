@@ -332,7 +332,8 @@ protected:
                  const MeterParams& aParams);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
                    const SegmentParams& aParams);
-  void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
+  void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect,
+                    bool aIsInsideActiveWindow);
   void DrawScale(CGContextRef context, const HIRect& inBoxRect,
                  const ScaleParams& aParams);
   void DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,

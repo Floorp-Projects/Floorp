@@ -2269,14 +2269,14 @@ nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
 
 void
 nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 nsIFrame* aFrame)
+                                 bool aIsInsideActiveWindow)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   HIThemeTabPaneDrawInfo tpdi;
 
   tpdi.version = 1;
-  tpdi.state = FrameIsInActiveWindow(aFrame) ? kThemeStateActive : kThemeStateInactive;
+  tpdi.state = aIsInsideActiveWindow ? kThemeStateActive : kThemeStateInactive;
   tpdi.direction = kThemeTabNorth;
   tpdi.size = kHIThemeTabSizeNormal;
   tpdi.kind = kHIThemeTabKindNormal;
@@ -3372,7 +3372,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_TABPANELS:
-      DrawTabPanel(cgContext, macRect, aFrame);
+      DrawTabPanel(cgContext, macRect, FrameIsInActiveWindow(aFrame));
       break;
 
     case NS_THEME_RESIZER:
