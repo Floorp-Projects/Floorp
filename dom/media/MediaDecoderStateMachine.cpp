@@ -2634,7 +2634,6 @@ ShutdownState::Enter()
 
   master->mDuration.DisconnectAll();
   master->mCurrentPosition.DisconnectAll();
-  master->mPlaybackOffset.DisconnectAll();
   master->mIsAudioDataAudible.DisconnectAll();
 
   // Shut down the watch manager to stop further notifications.
@@ -2687,7 +2686,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
-  INIT_CANONICAL(mPlaybackOffset, 0),
   INIT_CANONICAL(mIsAudioDataAudible, false)
 #ifdef XP_WIN
   , mShouldUseHiResTimers(Preferences::GetBool("media.hi-res-timers.enabled", true))
@@ -2833,14 +2831,14 @@ void
 MediaDecoderStateMachine::OnAudioPopped(const RefPtr<AudioData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
-  mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
+  mPlaybackOffset = std::max(mPlaybackOffset, aSample->mOffset);
 }
 
 void
 MediaDecoderStateMachine::OnVideoPopped(const RefPtr<VideoData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
-  mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
+  mPlaybackOffset = std::max(mPlaybackOffset, aSample->mOffset);
 }
 
 bool
@@ -2906,9 +2904,9 @@ MediaDecoderStateMachine::StopPlayback()
   MOZ_ASSERT(OnTaskQueue());
   LOG("StopPlayback()");
 
-  mOnPlaybackEvent.Notify(MediaPlaybackEvent::PlaybackStopped);
-
   if (IsPlaying()) {
+    mOnPlaybackEvent.Notify(MediaPlaybackEvent{
+      MediaPlaybackEvent::PlaybackStopped, mPlaybackOffset });
     mMediaSink->SetPlaying(false);
     MOZ_ASSERT(!IsPlaying());
 #ifdef XP_WIN
@@ -2937,7 +2935,6 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   LOG("MaybeStartPlayback() starting playback");
-  mOnPlaybackEvent.Notify(MediaPlaybackEvent::PlaybackStarted);
   StartMediaSink();
 
 #ifdef XP_WIN
@@ -2958,6 +2955,9 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
     mMediaSink->SetPlaying(true);
     MOZ_ASSERT(IsPlaying());
   }
+
+  mOnPlaybackEvent.Notify(
+    MediaPlaybackEvent{ MediaPlaybackEvent::PlaybackStarted, mPlaybackOffset });
 }
 
 void
@@ -3316,6 +3316,14 @@ MediaDecoderStateMachine::StartMediaSink()
         &MediaDecoderStateMachine::OnMediaSinkVideoError)
       ->Track(mMediaSinkVideoPromise);
     }
+    // Remember the initial offset when playback starts. This will be used
+    // to calculate the rate at which bytes are consumed as playback moves on.
+    RefPtr<MediaData> sample = mAudioQueue.PeekFront();
+    mPlaybackOffset = sample ? sample->mOffset : 0;
+    sample = mVideoQueue.PeekFront();
+    if (sample && sample->mOffset > mPlaybackOffset) {
+      mPlaybackOffset = sample->mOffset;
+    }
   }
 }
 
@@ -3494,8 +3502,6 @@ MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
     mAudioWaitRequest.DisconnectIfExists();
   }
 
-  mPlaybackOffset = 0;
-
   mReader->ResetDecode(aTracks);
 }
 
@@ -3551,6 +3557,14 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
 
   int64_t delay = std::max<int64_t>(1, AUDIO_DURATION_USECS / mPlaybackRate);
   ScheduleStateMachineIn(TimeUnit::FromMicroseconds(delay));
+
+  // Notify the listener as we progress in the playback offset. Note it would
+  // be too intensive to send notifications for each popped audio/video sample.
+  // It is good enough to send 'PlaybackProgressed' events every 40us (defined
+  // by AUDIO_DURATION_USECS), and we ensure 'PlaybackProgressed' events are
+  // always sent after 'PlaybackStarted' and before 'PlaybackStopped'.
+  mOnPlaybackEvent.Notify(MediaPlaybackEvent{
+    MediaPlaybackEvent::PlaybackProgressed, mPlaybackOffset });
 }
 
 void
