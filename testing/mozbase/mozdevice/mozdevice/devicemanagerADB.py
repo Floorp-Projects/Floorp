@@ -538,10 +538,16 @@ class DeviceManagerADB(DeviceManager):
                 localDir = os.path.join(tempParent, remoteName)
             else:
                 localDir = '/'.join(localDir.rstrip('/').split('/')[:-1])
-        self._runCmd(["pull", remoteDir, localDir]).wait()
+        cmd = ["pull", remoteDir, localDir]
+        proc = self._runCmd(cmd)
         if copyRequired:
-            dir_util.copy_tree(localDir, originalLocal)
-            mozfile.remove(tempParent)
+            try:
+                dir_util.copy_tree(localDir, originalLocal)
+                mozfile.remove(tempParent)
+            except:
+                self._logger.error("getDirectory() failed after %s" % str(cmd))
+                self._logger.error("rc=%d out=%s" % (proc.returncode, str(proc.output)))
+                raise
 
     def validateFile(self, remoteFile, localFile):
         md5Remote = self._getRemoteHash(remoteFile)
@@ -678,16 +684,20 @@ class DeviceManagerADB(DeviceManager):
             self._logger.error("Timeout exceeded for _runCmd call '%s'" % ' '.join(finalArgs))
 
         retries = 0
+        proc = None
         while retries < retryLimit:
             proc = ProcessHandler(finalArgs, storeOutput=True,
                                   processOutputLine=self._log, onTimeout=_timeout)
             proc.run(timeout=timeout)
             proc.returncode = proc.wait()
-            if proc.returncode is None:
-                proc.kill()
-                retries += 1
-            else:
-                return proc
+            if proc.returncode is not None:
+                break
+            proc.kill()
+            self._logger.warning("_runCmd failed for '%s'" % ' '.join(finalArgs))
+            retries += 1
+        if retries >= retryLimit:
+            self._logger.warning("_runCmd exceeded all retries")
+        return proc
 
     # timeout is specified in seconds, and if no timeout is given,
     # we will run until we hit the default_timeout specified in the __init__

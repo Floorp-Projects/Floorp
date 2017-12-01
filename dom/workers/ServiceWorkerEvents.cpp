@@ -342,8 +342,8 @@ public:
     RefPtr<BodyCopyHandle> copyHandle;
     copyHandle = new BodyCopyHandle(Move(mClosure));
 
-    rv = mChannel->StartSynthesizedResponse(body, copyHandle,
-                                            mResponseURLSpec);
+    rv = mChannel->StartSynthesizedResponse(body, copyHandle, mResponseURLSpec,
+                                            mInternalResponse->IsRedirected());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
@@ -658,15 +658,14 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   if (NS_WARN_IF(!ir)) {
     return;
   }
-  // When an opaque response is encountered, we need the original channel's principal
-  // to reflect the final URL. Non-opaque responses are either same-origin or CORS-enabled
-  // cross-origin responses, which are treated as same-origin by consumers.
-  nsCString responseURL;
-  if (response->Type() == ResponseType::Opaque) {
-    responseURL = ir->GetUnfilteredURL();
-    if (NS_WARN_IF(responseURL.IsEmpty())) {
-      return;
-    }
+
+  // An extra safety check to make sure our invariant that opaque and cors
+  // responses always have a URL does not break.
+  if (NS_WARN_IF((response->Type() == ResponseType::Opaque ||
+                  response->Type() == ResponseType::Cors) &&
+                 ir->GetUnfilteredURL().IsEmpty())) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Cors or opaque Response without a URL");
+    return;
   }
 
   Telemetry::ScalarAdd(Telemetry::ScalarID::SW_SYNTHESIZED_RES_COUNT, 1);
@@ -674,6 +673,23 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   if (mRequestMode == RequestMode::Same_origin &&
       response->Type() == ResponseType::Cors) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::SW_CORS_RES_FOR_SO_REQ_COUNT, 1);
+
+    // XXXtt: Will have a pref to enable the quirk response in bug 1419684.
+    // The variadic template provided by StringArrayAppender requires exactly
+    // an nsString.
+    NS_ConvertUTF8toUTF16 responseURL(ir->GetUnfilteredURL());
+    autoCancel.SetCancelMessage(
+      NS_LITERAL_CSTRING("CorsResponseForSameOriginRequest"), mRequestURL,
+      responseURL);
+    return;
+  }
+
+  // Propagate the URL to the content if the request mode is not "navigate".
+  // Note that, we only reflect the final URL if the response.redirected is
+  // false. We propagate all the URLs if the response.redirected is true.
+  nsCString responseURL;
+  if (mRequestMode != RequestMode::Navigate) {
+    responseURL = ir->GetUnfilteredURL();
   }
 
   UniquePtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel,

@@ -500,7 +500,7 @@ public:
     AutoSetContext Asc(this, D);
     return Super::TraverseRecordDecl(D);
   }
-  bool TraverseCxxRecordDecl(CXXRecordDecl *D) {
+  bool TraverseCXXRecordDecl(CXXRecordDecl *D) {
     AutoSetContext Asc(this, D);
     return Super::TraverseCXXRecordDecl(D);
   }
@@ -516,7 +516,7 @@ public:
     }
     return Super::TraverseFunctionDecl(D);
   }
-  bool TraverseCxxMethodDecl(CXXMethodDecl *D) {
+  bool TraverseCXXMethodDecl(CXXMethodDecl *D) {
     AutoSetContext Asc(this, D);
     const FunctionDecl *Def;
     // See TraverseFunctionDecl.
@@ -525,7 +525,7 @@ public:
     }
     return Super::TraverseCXXMethodDecl(D);
   }
-  bool TraverseCxxConstructorDecl(CXXConstructorDecl *D) {
+  bool TraverseCXXConstructorDecl(CXXConstructorDecl *D) {
     AutoSetContext Asc(this, D);
     const FunctionDecl *Def;
     // See TraverseFunctionDecl.
@@ -534,7 +534,7 @@ public:
     }
     return Super::TraverseCXXConstructorDecl(D);
   }
-  bool TraverseCxxConversionDecl(CXXConversionDecl *D) {
+  bool TraverseCXXConversionDecl(CXXConversionDecl *D) {
     AutoSetContext Asc(this, D);
     const FunctionDecl *Def;
     // See TraverseFunctionDecl.
@@ -543,7 +543,7 @@ public:
     }
     return Super::TraverseCXXConversionDecl(D);
   }
-  bool TraverseCxxDestructorDecl(CXXDestructorDecl *D) {
+  bool TraverseCXXDestructorDecl(CXXDestructorDecl *D) {
     AutoSetContext Asc(this, D);
     const FunctionDecl *Def;
     // See TraverseFunctionDecl.
@@ -1143,7 +1143,7 @@ public:
     return true;
   }
 
-  bool VisitCxxConstructExpr(CXXConstructExpr *E) {
+  bool VisitCXXConstructExpr(CXXConstructExpr *E) {
     SourceLocation Loc = E->getLocStart();
     normalizeLocation(&Loc);
     if (!isInterestingLocation(Loc)) {
@@ -1313,7 +1313,7 @@ public:
     return true;
   }
 
-  bool VisitCxxConstructorDecl(CXXConstructorDecl *D) {
+  bool VisitCXXConstructorDecl(CXXConstructorDecl *D) {
     if (!isInterestingLocation(D->getLocation())) {
       return true;
     }
@@ -1356,7 +1356,7 @@ public:
     return true;
   }
 
-  bool VisitCxxDependentScopeMemberExpr(CXXDependentScopeMemberExpr *E) {
+  bool VisitCXXDependentScopeMemberExpr(CXXDependentScopeMemberExpr *E) {
     SourceLocation Loc = E->getMemberLoc();
     normalizeLocation(&Loc);
     if (!isInterestingLocation(Loc)) {
