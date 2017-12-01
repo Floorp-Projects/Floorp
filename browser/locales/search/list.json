@@ -6,10 +6,9 @@
   },
   "regionOverrides": {
     "US": {
-      "google": "google-nocodes"
+      "google": "google-2018"
     },
     "CA": {
-      "google": "google-nocodes",
       "ebay": "ebay-ca",
       "ebay-fr": "ebay-ca"
     },
@@ -26,12 +25,6 @@
       "google": "google-nocodes"
     },
     "CN": {
-      "google": "google-nocodes"
-    },
-    "TW": {
-      "google": "google-nocodes"
-    },
-    "HK": {
       "google": "google-nocodes"
     },
     "AT": {
