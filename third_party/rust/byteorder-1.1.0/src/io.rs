@@ -1,5 +1,6 @@
 use std::io::{self, Result};
 use std::slice;
+// use std::mem::transmute;
 
 use ByteOrder;
 
@@ -508,7 +509,7 @@ pub trait ReadBytesExt: io::Read {
     #[inline]
     fn read_u16_into<T: ByteOrder>(&mut self, dst: &mut [u16]) -> Result<()> {
         {
-            let buf = unsafe { slice_to_u8_mut(dst) };
+            let mut buf = unsafe { slice_to_u8_mut(dst) };
             try!(self.read_exact(buf));
         }
         T::from_slice_u16(dst);
@@ -543,7 +544,7 @@ pub trait ReadBytesExt: io::Read {
     #[inline]
     fn read_u32_into<T: ByteOrder>(&mut self, dst: &mut [u32]) -> Result<()> {
         {
-            let buf = unsafe { slice_to_u8_mut(dst) };
+            let mut buf = unsafe { slice_to_u8_mut(dst) };
             try!(self.read_exact(buf));
         }
         T::from_slice_u32(dst);
@@ -581,7 +582,7 @@ pub trait ReadBytesExt: io::Read {
     #[inline]
     fn read_u64_into<T: ByteOrder>(&mut self, dst: &mut [u64]) -> Result<()> {
         {
-            let buf = unsafe { slice_to_u8_mut(dst) };
+            let mut buf = unsafe { slice_to_u8_mut(dst) };
             try!(self.read_exact(buf));
         }
         T::from_slice_u64(dst);
@@ -658,7 +659,7 @@ pub trait ReadBytesExt: io::Read {
     #[inline]
     fn read_i16_into<T: ByteOrder>(&mut self, dst: &mut [i16]) -> Result<()> {
         {
-            let buf = unsafe { slice_to_u8_mut(dst) };
+            let mut buf = unsafe { slice_to_u8_mut(dst) };
             try!(self.read_exact(buf));
         }
         T::from_slice_i16(dst);
@@ -693,7 +694,7 @@ pub trait ReadBytesExt: io::Read {
     #[inline]
     fn read_i32_into<T: ByteOrder>(&mut self, dst: &mut [i32]) -> Result<()> {
         {
-            let buf = unsafe { slice_to_u8_mut(dst) };
+            let mut buf = unsafe { slice_to_u8_mut(dst) };
             try!(self.read_exact(buf));
         }
         T::from_slice_i32(dst);
@@ -731,7 +732,7 @@ pub trait ReadBytesExt: io::Read {
     #[inline]
     fn read_i64_into<T: ByteOrder>(&mut self, dst: &mut [i64]) -> Result<()> {
         {
-            let buf = unsafe { slice_to_u8_mut(dst) };
+            let mut buf = unsafe { slice_to_u8_mut(dst) };
             try!(self.read_exact(buf));
         }
         T::from_slice_i64(dst);
@@ -786,6 +787,12 @@ pub trait ReadBytesExt: io::Read {
     /// The given buffer is either filled completely or an error is returned.
     /// If an error is returned, the contents of `dst` are unspecified.
     ///
+    /// # Safety
+    ///
+    /// This method is unsafe because there are no guarantees made about the
+    /// floating point values. In particular, this method does not check for
+    /// signaling NaNs, which may result in undefined behavior.
+    ///
     /// # Errors
     ///
     /// This method returns the same errors as [`Read::read_exact`].
@@ -808,113 +815,24 @@ pub trait ReadBytesExt: io::Read {
     ///     0x3f, 0x80, 0x00, 0x00,
     /// ]);
     /// let mut dst = [0.0; 2];
-    /// rdr.read_f32_into::<BigEndian>(&mut dst).unwrap();
+    /// unsafe {
+    ///     rdr.read_f32_into_unchecked::<BigEndian>(&mut dst).unwrap();
+    /// }
     /// assert_eq!([f32::consts::PI, 1.0], dst);
     /// ```
     #[inline]
-    fn read_f32_into<T: ByteOrder>(
+    unsafe fn read_f32_into_unchecked<T: ByteOrder>(
         &mut self,
         dst: &mut [f32],
     ) -> Result<()> {
         {
-            let buf = unsafe { slice_to_u8_mut(dst) };
+            let mut buf = slice_to_u8_mut(dst);
             try!(self.read_exact(buf));
         }
         T::from_slice_f32(dst);
         Ok(())
     }
 
-    /// **DEPRECATED**.
-    ///
-    /// This method is deprecated. Use `read_f32_into` instead.
-    ///
-    /// Reads a sequence of IEEE754 single-precision (4 bytes) floating
-    /// point numbers from the underlying reader.
-    ///
-    /// The given buffer is either filled completely or an error is returned.
-    /// If an error is returned, the contents of `dst` are unspecified.
-    ///
-    /// # Errors
-    ///
-    /// This method returns the same errors as [`Read::read_exact`].
-    ///
-    /// [`Read::read_exact`]: https://doc.rust-lang.org/std/io/trait.Read.html#method.read_exact
-    ///
-    /// # Examples
-    ///
-    /// Read a sequence of big-endian single-precision floating point number
-    /// from a `Read`:
-    ///
-    /// ```rust
-    /// use std::f32;
-    /// use std::io::Cursor;
-    ///
-    /// use byteorder::{BigEndian, ReadBytesExt};
-    ///
-    /// let mut rdr = Cursor::new(vec![
-    ///     0x40, 0x49, 0x0f, 0xdb,
-    ///     0x3f, 0x80, 0x00, 0x00,
-    /// ]);
-    /// let mut dst = [0.0; 2];
-    /// rdr.read_f32_into_unchecked::<BigEndian>(&mut dst).unwrap();
-    /// assert_eq!([f32::consts::PI, 1.0], dst);
-    /// ```
-    #[inline]
-    fn read_f32_into_unchecked<T: ByteOrder>(
-        &mut self,
-        dst: &mut [f32],
-    ) -> Result<()> {
-        self.read_f32_into::<T>(dst)
-    }
-
-    /// Reads a sequence of IEEE754 double-precision (8 bytes) floating
-    /// point numbers from the underlying reader.
-    ///
-    /// The given buffer is either filled completely or an error is returned.
-    /// If an error is returned, the contents of `dst` are unspecified.
-    ///
-    /// # Errors
-    ///
-    /// This method returns the same errors as [`Read::read_exact`].
-    ///
-    /// [`Read::read_exact`]: https://doc.rust-lang.org/std/io/trait.Read.html#method.read_exact
-    ///
-    /// # Examples
-    ///
-    /// Read a sequence of big-endian single-precision floating point number
-    /// from a `Read`:
-    ///
-    /// ```rust
-    /// use std::f64;
-    /// use std::io::Cursor;
-    ///
-    /// use byteorder::{BigEndian, ReadBytesExt};
-    ///
-    /// let mut rdr = Cursor::new(vec![
-    ///     0x40, 0x09, 0x21, 0xfb, 0x54, 0x44, 0x2d, 0x18,
-    ///     0x3f, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    /// ]);
-    /// let mut dst = [0.0; 2];
-    /// rdr.read_f64_into::<BigEndian>(&mut dst).unwrap();
-    /// assert_eq!([f64::consts::PI, 1.0], dst);
-    /// ```
-    #[inline]
-    fn read_f64_into<T: ByteOrder>(
-        &mut self,
-        dst: &mut [f64],
-    ) -> Result<()> {
-        {
-            let buf = unsafe { slice_to_u8_mut(dst) };
-            try!(self.read_exact(buf));
-        }
-        T::from_slice_f64(dst);
-        Ok(())
-    }
-
-    /// **DEPRECATED**.
-    ///
-    /// This method is deprecated. Use `read_f64_into` instead.
-    ///
     /// Reads a sequence of IEEE754 double-precision (8 bytes) floating
     /// point numbers from the underlying reader.
     ///
@@ -949,15 +867,22 @@ pub trait ReadBytesExt: io::Read {
     ///     0x3f, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     /// ]);
     /// let mut dst = [0.0; 2];
-    /// rdr.read_f64_into_unchecked::<BigEndian>(&mut dst).unwrap();
+    /// unsafe {
+    ///     rdr.read_f64_into_unchecked::<BigEndian>(&mut dst).unwrap();
+    /// }
     /// assert_eq!([f64::consts::PI, 1.0], dst);
     /// ```
     #[inline]
-    fn read_f64_into_unchecked<T: ByteOrder>(
+    unsafe fn read_f64_into_unchecked<T: ByteOrder>(
         &mut self,
         dst: &mut [f64],
     ) -> Result<()> {
-        self.read_f64_into::<T>(dst)
+        {
+            let mut buf = slice_to_u8_mut(dst);
+            try!(self.read_exact(buf));
+        }
+        T::from_slice_f64(dst);
+        Ok(())
     }
 }
 
