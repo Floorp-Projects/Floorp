@@ -229,13 +229,15 @@ InterceptedHttpChannel::FollowSyntheticRedirect()
 }
 
 nsresult
-InterceptedHttpChannel::RedirectForOpaqueResponse(nsIURI* aResponseURI)
+InterceptedHttpChannel::RedirectForResponseURL(nsIURI* aResponseURI,
+                                               bool aResponseRedirected)
 {
-  // Perform an internal redirect to another InterceptedHttpChannel using
-  // the given cross-origin response URL.  The resulting channel will then
-  // process the synthetic response as normal.  This extra redirect is
-  // performed so that listeners treat the result as unsafe cross-origin
-  // data.
+  // Perform a service worker redirect to another InterceptedHttpChannel using
+  // the given response URL. It allows content to see the final URL where
+  // appropriate and also helps us enforce cross-origin restrictions. The
+  // resulting channel will then process the synthetic response as normal. This
+  // extra redirect is performed so that listeners treat the result as unsafe
+  // cross-origin data.
 
   nsresult rv = NS_OK;
 
@@ -253,7 +255,11 @@ InterceptedHttpChannel::RedirectForOpaqueResponse(nsIURI* aResponseURI)
                         static_cast<nsProxyInfo*>(mProxyInfo.get()),
                         mProxyResolveFlags, mProxyURI, mChannelId);
 
-  uint32_t flags = nsIChannelEventSink::REDIRECT_INTERNAL;
+  // If the response has been redirected, propagate all the URLs to content.
+  // Thus, the exact value of the redirect flag does not matter as long as it's
+  // not REDIRECT_INTERNAL.
+  uint32_t flags = aResponseRedirected ? nsIChannelEventSink::REDIRECT_TEMPORARY
+                                       : nsIChannelEventSink::REDIRECT_INTERNAL;
 
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
     CloneLoadInfoForRedirect(aResponseURI, flags);
@@ -717,7 +723,8 @@ InterceptedHttpChannel::SynthesizeHeader(const nsACString& aName,
 NS_IMETHODIMP
 InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
                                                  nsIInterceptedBodyCallback* aBodyCallback,
-                                                 const nsACString& aFinalURLSpec)
+                                                 const nsACString& aFinalURLSpec,
+                                                 bool aResponseRedirected)
 {
   nsresult rv = NS_OK;
 
@@ -783,7 +790,7 @@ InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
   bool equal = false;
   Unused << mURI->Equals(responseURI, &equal);
   if (!equal) {
-    rv = RedirectForOpaqueResponse(responseURI);
+    rv = RedirectForResponseURL(responseURI, aResponseRedirected);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

@@ -432,7 +432,8 @@ private:
 
   // Perform a redirection without communicating with the parent process at all.
   void BeginNonIPCRedirect(nsIURI* responseURI,
-                           const nsHttpResponseHead* responseHead);
+                           const nsHttpResponseHead* responseHead,
+                           bool responseRedirected);
 
   // Override the default security info pointer during a non-IPC redirection.
   void OverrideSecurityInfoForNonIPCRedirect(nsISupports* securityInfo);

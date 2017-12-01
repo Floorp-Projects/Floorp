@@ -40,6 +40,9 @@ config = {
 
     "download_tooltool": True,
 
+    # this would normally be in "exes", but "exes" is clobbered by remove_executables
+    "geckodriver": "%(abs_test_bin_dir)s/geckodriver",
+
     "verify_category": "web-platform",
 }
 
