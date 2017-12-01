@@ -532,7 +532,11 @@ WMFVideoMFTManager::InitializeDXVA()
     return false;
   }
   MOZ_ASSERT(!mDXVA2Manager);
-  if (!mKnowsCompositor || !mKnowsCompositor->SupportsD3D11()) {
+  LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
+  bool useANGLE =
+      mKnowsCompositor ? mKnowsCompositor->GetCompositorUseANGLE() : false;
+  bool wrWithANGLE = (backend == LayersBackend::LAYERS_WR) && useANGLE;
+  if (backend != LayersBackend::LAYERS_D3D11 && !wrWithANGLE) {
     mDXVAFailureReason.AssignLiteral("Unsupported layers backend");
     return false;
   }
