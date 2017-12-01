@@ -167,6 +167,17 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
         self.register_virtualenv_module(requirements=[requirements],
                                         two_pass=True)
 
+    def _query_geckodriver(self):
+        path = None
+        c = self.config
+        dirs = self.query_abs_dirs()
+        repl_dict = {}
+        repl_dict.update(dirs)
+        path = c.get("geckodriver", "geckodriver")
+        if path:
+            path = path % repl_dict
+        return path
+
     def _query_cmd(self, test_types):
         if not self.binary_path:
             self.fatal("Binary path could not be determined")
@@ -218,10 +229,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
                 cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
 
         if "wdspec" in test_types:
-            geckodriver_path = os.path.join(dirs["abs_test_bin_dir"], "geckodriver")
-            if not os.path.isfile(geckodriver_path):
+            geckodriver_path = self._query_geckodriver()
+            if not geckodriver_path or not os.path.isfile(geckodriver_path):
                 self.fatal("Unable to find geckodriver binary "
-                           "in common test package: %s" % geckodriver_path)
+                           "in common test package: %s" % str(geckodriver_path))
             cmd.append("--webdriver-binary=%s" % geckodriver_path)
 
         options = list(c.get("options", []))
@@ -325,6 +336,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
 
         if self.config.get("verify") is True:
             verify_suites = self.query_verify_category_suites(None, None)
+            if "wdspec" in verify_suites:
+                # geckodriver is required for wdspec, but not always available
+                geckodriver_path = self._query_geckodriver()
+                if not geckodriver_path or not os.path.isfile(geckodriver_path):
+                    verify_suites.remove("wdspec")
+                    self.info("Test verification skipping 'wdspec' tests - no geckodriver")
         else:
             test_types = self.config.get("test_type", [])
             verify_suites = [None]
