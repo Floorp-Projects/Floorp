@@ -388,6 +388,7 @@ nsPlainTextSerializer::ScanElementForPreformat(Element* aElement)
 NS_IMETHODIMP
 nsPlainTextSerializer::ForgetElementForPreformat(Element* aElement)
 {
+  MOZ_RELEASE_ASSERT(!mPreformatStack.empty(), "Tried to pop without previous push.");
   mPreformatStack.pop();
   return NS_OK;
 }
