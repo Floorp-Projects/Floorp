@@ -155,7 +155,9 @@ HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& 
 {
   mDefaultValue = aDefaultValue;
   if (mValueModeFlag == eModeDefault) {
-    aRv = nsContentUtils::SetNodeTextContent(this, mDefaultValue, true);
+    // We can't pass mDefaultValue, because it'll be truncated when
+    // the element's descendants are changed.
+    aRv = nsContentUtils::SetNodeTextContent(this, aDefaultValue, true);
   }
 }
 
