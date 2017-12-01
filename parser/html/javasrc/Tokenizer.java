@@ -1189,7 +1189,7 @@ public class Tokenizer implements Locator {
                             interner),
                     namePolicy != XmlViolationPolicy.ALLOW);
             // ]NOCPP]
-            // CPPONLY:     nonInternedAttributeName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen, interner));
+            // CPPONLY:     nonInternedAttributeName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, strBufLen, interner));
             // CPPONLY:     attributeName = nonInternedAttributeName;
         }
         clearStrBufAfterUse();
