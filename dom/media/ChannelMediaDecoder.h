@@ -118,18 +118,23 @@ private:
 
   bool IsLiveStream() override final;
 
+  struct PlaybackRateInfo
+  {
+    uint32_t mRate; // Estimate of the current playback rate (bytes/second).
+    bool mReliable; // True if mRate is a reliable estimate.
+  };
   // The actual playback rate computation.
-  void ComputePlaybackRate();
+  PlaybackRateInfo ComputePlaybackRate();
 
   // Something has changed that could affect the computed playback rate,
   // so recompute it.
-  void UpdatePlaybackRate();
+  void UpdatePlaybackRate(const PlaybackRateInfo& aInfo);
 
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
   // at any time.
-  MediaStatistics GetStatistics();
+  MediaStatistics GetStatistics(const PlaybackRateInfo& aInfo);
 
   bool ShouldThrottleDownload(const MediaStatistics& aStats);
 
@@ -137,12 +142,6 @@ private:
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
   MediaChannelStatistics mPlaybackStatistics;
-
-  // Estimate of the current playback rate (bytes/second).
-  double mPlaybackBytesPerSecond = 0;
-
-  // True if mPlaybackBytesPerSecond is a reliable estimate.
-  bool mPlaybackRateReliable = true;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.
