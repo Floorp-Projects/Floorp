@@ -122,6 +122,24 @@ const TESTS_SPACE_INDENT = [
       "}",
     ]
   },
+
+  { name: "HTML comments with some whitespace padding",
+    input: "  \n\n\t  <!--\n\n\t body {color:red}  \n\n-->   \t\n",
+    expected: [
+      "body {",
+      " color:red",
+      "}"
+    ]
+  },
+
+  { name: "HTML comments without whitespace padding",
+    input: "<!--body {color:red}-->",
+    expected: [
+      "body {",
+      " color:red",
+      "}"
+    ]
+  },
 ];
 
 function run_test() {
