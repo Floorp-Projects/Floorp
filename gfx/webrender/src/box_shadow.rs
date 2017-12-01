@@ -4,10 +4,12 @@
 
 use api::{BorderRadiusKind, ColorF, LayerPoint, LayerRect, LayerSize, LayerVector2D};
 use api::{BorderRadius, BoxShadowClipMode, LayoutSize, LayerPrimitiveInfo};
-use api::{ClipMode, ClipAndScrollInfo, ComplexClipRegion, EdgeAaSegmentMask, LocalClip};
+use api::{ClipMode, ClipAndScrollInfo, ComplexClipRegion, LocalClip};
 use api::{PipelineId};
+use app_units::Au;
 use clip::ClipSource;
 use frame_builder::FrameBuilder;
+use internal_types::EdgeAaSegmentMask;
 use prim_store::{PrimitiveContainer, RectangleContent, RectanglePrimitive};
 use prim_store::{BrushMaskKind, BrushKind, BrushPrimitive};
 use picture::PicturePrimitive;
@@ -25,6 +27,25 @@ pub const MAX_BLUR_RADIUS : f32 = 300.;
 // mask. This ensures that we get a few pixels past the corner that can be
 // blurred without being affected by the border radius.
 pub const MASK_CORNER_PADDING: f32 = 4.0;
+
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
+pub struct BoxShadowCacheKey {
+    pub width: Au,
+    pub height: Au,
+    pub blur_radius: Au,
+    pub spread_radius: Au,
+    pub offset_x: Au,
+    pub offset_y: Au,
+    pub br_top_left_w: Au,
+    pub br_top_left_h: Au,
+    pub br_top_right_w: Au,
+    pub br_top_right_h: Au,
+    pub br_bottom_left_w: Au,
+    pub br_bottom_left_h: Au,
+    pub br_bottom_right_w: Au,
+    pub br_bottom_right_h: Au,
+    pub clip_mode: BoxShadowClipMode,
+}
 
 impl FrameBuilder {
     pub fn add_box_shadow(
@@ -119,6 +140,24 @@ impl FrameBuilder {
             let blur_offset = BLUR_SAMPLE_SCALE * blur_radius;
             let mut extra_clips = vec![];
 
+            let cache_key = BoxShadowCacheKey {
+                width: Au::from_f32_px(shadow_rect.size.width),
+                height: Au::from_f32_px(shadow_rect.size.height),
+                blur_radius: Au::from_f32_px(blur_radius),
+                spread_radius: Au::from_f32_px(spread_radius),
+                offset_x: Au::from_f32_px(box_offset.x),
+                offset_y: Au::from_f32_px(box_offset.y),
+                br_top_left_w: Au::from_f32_px(border_radius.top_left.width),
+                br_top_left_h: Au::from_f32_px(border_radius.top_left.height),
+                br_top_right_w: Au::from_f32_px(border_radius.top_right.width),
+                br_top_right_h: Au::from_f32_px(border_radius.top_right.height),
+                br_bottom_left_w: Au::from_f32_px(border_radius.bottom_left.width),
+                br_bottom_left_h: Au::from_f32_px(border_radius.bottom_left.height),
+                br_bottom_right_w: Au::from_f32_px(border_radius.bottom_right.width),
+                br_bottom_right_h: Au::from_f32_px(border_radius.bottom_right.height),
+                clip_mode,
+            };
+
             match clip_mode {
                 BoxShadowClipMode::Outset => {
                     let width;
@@ -192,6 +231,7 @@ impl FrameBuilder {
                         Vec::new(),
                         clip_mode,
                         radii_kind,
+                        cache_key,
                         pipeline_id,
                     );
                     pic_prim.add_primitive(
@@ -270,6 +310,7 @@ impl FrameBuilder {
                         BoxShadowClipMode::Inset,
                         // TODO(gw): Make use of optimization for inset.
                         BorderRadiusKind::NonUniform,
+                        cache_key,
                         pipeline_id,
                     );
                     pic_prim.add_primitive(
