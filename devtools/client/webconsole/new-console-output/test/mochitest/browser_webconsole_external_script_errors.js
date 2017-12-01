@@ -7,29 +7,21 @@
 
 // See Bug 597136.
 
-const TEST_URI = "http://example.com/browser/devtools/client/" +
-                 "webconsole/test/test-bug-597136-external-script-" +
-                 "errors.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-external-script-errors.html";
 
-function test() {
-  Task.spawn(function* () {
-    const {tab} = yield loadTab(TEST_URI);
-    const hud = yield openConsole(tab);
+add_task(async function () {
+  // On e10s, the exception is triggered in child process
+  // and is ignored by test harness
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
-    // On e10s, the exception is triggered in child process
-    // and is ignored by test harness
-    if (!Services.appinfo.browserTabsRemoteAutostart) {
-      expectUncaughtException();
-    }
-    BrowserTestUtils.synthesizeMouseAtCenter("button", {}, gBrowser.selectedBrowser);
+  let hud = await openNewTabAndConsole(TEST_URI);
 
-    yield waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "bogus is not defined",
-        category: CATEGORY_JS,
-        severity: SEVERITY_ERROR,
-      }],
-    });
-  }).then(finishTest);
-}
+  let onMessage = waitForMessage(hud, "bogus is not defined");
+  BrowserTestUtils.synthesizeMouseAtCenter("button", {}, gBrowser.selectedBrowser);
+  await onMessage;
+
+  ok(true, "Received the expected message");
+});
