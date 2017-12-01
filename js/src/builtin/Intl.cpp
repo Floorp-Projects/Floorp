@@ -4408,9 +4408,7 @@ enum class DisplayNameStyle
 template<typename ConstChar>
 static JSString*
 ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenerator* dtpg,
-                         DisplayNameStyle style,
-                         Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE>& chars,
-                         const Range<ConstChar>& pattern)
+                         DisplayNameStyle style, const Range<ConstChar>& pattern)
 {
     RangedPtr<ConstChar> iter = pattern.begin();
     const RangedPtr<ConstChar> end = pattern.end();
@@ -4647,10 +4645,6 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     }
     ScopedICUObject<UDateTimePatternGenerator, udatpg_close> datPgToClose(dtpg);
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
     // 5. For each element of keys,
     RootedString keyValStr(cx);
     RootedValue v(cx);
@@ -4668,10 +4662,8 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
         //      corresponding display name.
         JSString* displayName =
             stablePatternChars.isLatin1()
-            ? ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, chars,
-                                       stablePatternChars.latin1Range())
-            : ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, chars,
-                                       stablePatternChars.twoByteRange());
+            ? ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, stablePatternChars.latin1Range())
+            : ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, stablePatternChars.twoByteRange());
         if (!displayName)
             return false;
 

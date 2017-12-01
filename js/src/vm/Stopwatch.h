@@ -71,7 +71,7 @@ struct PerformanceMonitoring {
         return iteration_;
     }
 
-    explicit PerformanceMonitoring(JSRuntime* runtime)
+    explicit PerformanceMonitoring()
       : totalCPOWTime(0)
       , stopwatchStartCallback(nullptr)
       , stopwatchStartClosure(nullptr)

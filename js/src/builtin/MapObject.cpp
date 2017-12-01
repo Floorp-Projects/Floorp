@@ -591,7 +591,7 @@ WriteBarrierPost(JSRuntime* rt, SetObject* set, const Value& key)
 }
 
 bool
-MapObject::getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
+MapObject::getKeysAndValuesInterleaved(HandleObject obj,
                                        JS::MutableHandle<GCVector<JS::Value>> entries)
 {
     ValueMap* map = obj->as<MapObject>().getData();
@@ -1372,7 +1372,7 @@ SetObject::sweepAfterMinorGC(FreeOp* fop, SetObject* setobj)
 }
 
 bool
-SetObject::isBuiltinAdd(HandleValue add, JSContext* cx)
+SetObject::isBuiltinAdd(HandleValue add)
 {
     return IsNativeFunction(add, SetObject::add);
 }
