@@ -2,11 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import urllib
+
 from marionette_driver.by import By
 from marionette_driver.keys import Keys
 from marionette_driver.marionette import Actions
 
 from marionette_harness import MarionetteTestCase
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
 class TestMouseAction(MarionetteTestCase):
@@ -34,19 +40,21 @@ class TestMouseAction(MarionetteTestCase):
         self.action.click(el).perform()
 
     def test_double_click_action(self):
-        test_html = self.marionette.absolute_url("double_click.html")
-        self.marionette.navigate(test_html)
-        el = self.marionette.find_element(By.ID, "one-word-div")
+        self.marionette.navigate(inline("""
+          <div contenteditable>zyxw</div><input type="text"/>
+        """))
+
+        el = self.marionette.find_element(By.CSS_SELECTOR, "div")
         self.action.double_click(el).perform()
         el.send_keys(self.mod_key + "c")
-        rel = self.marionette.find_element(By.ID, "input-field")
+        rel = self.marionette.find_element(By.CSS_SELECTOR, "input")
         rel.send_keys(self.mod_key + "v")
         self.assertEqual("zyxw", rel.get_property("value"))
 
     def test_context_click_action(self):
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
-        click_el = self.marionette.find_element(By.ID, "resultContainer")
+        click_el = self.marionette.find_element(By.ID, "normal")
 
         def context_menu_state():
             with self.marionette.using_context("chrome"):

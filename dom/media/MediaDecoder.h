@@ -177,10 +177,6 @@ public:
   // Return true if the stream is infinite.
   bool IsInfinite() const;
 
-  // Called as data arrives on the stream and is read into the cache.  Called
-  // on the main thread only.
-  void NotifyDataArrived();
-
   // Return true if we are currently seeking in the media resource.
   // Call on the main thread only.
   bool IsSeeking() const;
@@ -514,13 +510,9 @@ private:
   RefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
 protected:
-  void NotifyDataArrivedInternal();
+  void NotifyReaderDataArrived();
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget);
-
-  // Called to notify fetching media data is in progress.
-  // Called on the main thread only.
-  virtual void DownloadProgressed();
 
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.

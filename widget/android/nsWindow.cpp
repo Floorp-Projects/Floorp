@@ -180,6 +180,15 @@ namespace {
     {
         Impl::AttachNative(aInstance, UniquePtr<Impl>(aImpl));
     }
+
+    template<class Lambda> bool
+    DispatchToUiThread(const char* aName, Lambda&& aLambda) {
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            uiThread->Dispatch(NS_NewRunnableFunction(aName, Move(aLambda)));
+            return true;
+        }
+        return false;
+    }
 } // namespace
 
 template<class Impl>
@@ -423,7 +432,7 @@ public:
 
         typedef NativePanZoomController::GlobalRef NPZCRef;
         auto callDestroy = [] (const NPZCRef& npzc) {
-            npzc->Destroy();
+            npzc->SetAttached(false);
         };
 
         NativePanZoomController::GlobalRef npzc = mNPZC;
@@ -738,21 +747,6 @@ public:
         });
         return true;
     }
-
-    void UpdateOverscrollVelocity(const float x, const float y)
-    {
-        mNPZC->UpdateOverscrollVelocity(x, y);
-    }
-
-    void UpdateOverscrollOffset(const float x, const float y)
-    {
-        mNPZC->UpdateOverscrollOffset(x, y);
-    }
-
-    void SetSelectionDragState(const bool aState)
-    {
-        mNPZC->OnSelectionDragState(aState);
-    }
 };
 
 template<> const char
@@ -903,7 +897,7 @@ private:
      * Compositor methods
      */
 public:
-    void AttachToJava(jni::Object::Param aNPZC)
+    void AttachNPZC(jni::Object::Param aNPZC)
     {
         MOZ_ASSERT(NS_IsMainThread());
         if (!mWindow) {
@@ -911,25 +905,17 @@ public:
         }
 
         MOZ_ASSERT(aNPZC);
+        MOZ_ASSERT(!mWindow->mNPZCSupport);
+
         auto npzc = NativePanZoomController::LocalRef(
                 jni::GetGeckoThreadEnv(),
                 NativePanZoomController::Ref::From(aNPZC));
         mWindow->mNPZCSupport.Attach(npzc, mWindow, npzc);
 
-        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
-            LayerSession::Compositor::GlobalRef compositor(mCompositor);
-            uiThread->Dispatch(NS_NewRunnableFunction(
-                    "LayerViewSupport::AttachToJava",
-                    [compositor] {
-                        compositor->OnCompositorAttached();
-                    }));
-        }
-
-        // Set the first-paint flag so that we (re-)link any new Java objects
-        // to Gecko, co-ordinate viewports, etc.
-        if (RefPtr<CompositorBridgeChild> bridge = mWindow->GetCompositorBridgeChild()) {
-            bridge->SendForceIsFirstPaint();
-        }
+        DispatchToUiThread("LayerViewSupport::AttachNPZC",
+                           [npzc = NativePanZoomController::GlobalRef(npzc)] {
+                                npzc->SetAttached(true);
+                           });
     }
 
     void OnBoundsChanged(int32_t aLeft, int32_t aTop,
@@ -1364,6 +1350,7 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
                                      jni::Object::Param aSettings)
 {
     if (window.mNPZCSupport) {
+        MOZ_ASSERT(window.mLayerViewSupport);
         window.mNPZCSupport.Detach();
     }
 
@@ -1375,13 +1362,23 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
             inst.Env(), LayerSession::Compositor::Ref::From(aCompositor));
     window.mLayerViewSupport.Attach(compositor, &window, compositor);
 
-    if (window.mAndroidView) {
-        window.mAndroidView->mEventDispatcher->Attach(
-                java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
-        window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
-    }
+    MOZ_ASSERT(window.mAndroidView);
+    window.mAndroidView->mEventDispatcher->Attach(
+            java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
+    window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
 
     inst->OnTransfer(aDispatcher);
+
+    DispatchToUiThread(
+            "GeckoViewSupport::Transfer",
+            [compositor = LayerSession::Compositor::GlobalRef(compositor)] {
+                compositor->OnCompositorAttached();
+            });
+
+    // Set the first-paint flag so that we refresh viewports, etc.
+    if (RefPtr<CompositorBridgeChild> bridge = window.GetCompositorBridgeChild()) {
+        bridge->SendForceIsFirstPaint();
+    }
 }
 
 void
@@ -2002,25 +1999,57 @@ nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
 void
 nsWindow::UpdateOverscrollVelocity(const float aX, const float aY)
 {
-    if (NativePtr<NPZCSupport>::Locked npzcs{mNPZCSupport}) {
-        npzcs->UpdateOverscrollVelocity(aX, aY);
+    if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
+        const auto& compositor = lvs->GetJavaCompositor();
+        if (AndroidBridge::IsJavaUiThread()) {
+            compositor->UpdateOverscrollVelocity(aX, aY);
+            return;
+        }
+
+        DispatchToUiThread(
+                "nsWindow::UpdateOverscrollVelocity",
+                [compositor = LayerSession::Compositor::GlobalRef(compositor),
+                 aX, aY] {
+                    compositor->UpdateOverscrollVelocity(aX, aY);
+                });
     }
 }
 
 void
 nsWindow::UpdateOverscrollOffset(const float aX, const float aY)
 {
-    if (NativePtr<NPZCSupport>::Locked npzcs{mNPZCSupport}) {
-        npzcs->UpdateOverscrollOffset(aX, aY);
+    if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
+        const auto& compositor = lvs->GetJavaCompositor();
+        if (AndroidBridge::IsJavaUiThread()) {
+            compositor->UpdateOverscrollOffset(aX, aY);
+            return;
+        }
+
+        DispatchToUiThread(
+                "nsWindow::UpdateOverscrollOffset",
+                [compositor = LayerSession::Compositor::GlobalRef(compositor),
+                 aX, aY] {
+                    compositor->UpdateOverscrollOffset(aX, aY);
+                });
     }
 }
 
 void
 nsWindow::SetSelectionDragState(bool aState)
 {
-    if (NativePtr<NPZCSupport>::Locked npzcs{mNPZCSupport}) {
-        npzcs->SetSelectionDragState(aState);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mLayerViewSupport) {
+        return;
     }
+
+    const auto& compositor = mLayerViewSupport->GetJavaCompositor();
+    DispatchToUiThread(
+            "nsWindow::SetSelectionDragState",
+            [compositor = LayerSession::Compositor::GlobalRef(compositor),
+             aState] {
+                compositor->OnSelectionCaretDrag(aState);
+            });
 }
 
 void *
@@ -2223,8 +2252,20 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
 
     MOZ_ASSERT(mNPZCSupport);
     const auto& npzc = mNPZCSupport->GetJavaNPZC();
-    npzc->SynthesizeNativeTouchPoint(aPointerId, eventType, aPoint.x, aPoint.y,
-                                     aPointerPressure, aPointerOrientation);
+    const auto& bounds = FindTopLevel()->mBounds;
+    aPoint.x -= bounds.x;
+    aPoint.y -= bounds.y;
+
+    DispatchToUiThread(
+            "nsWindow::SynthesizeNativeTouchPoint",
+            [npzc = NativePanZoomController::GlobalRef(npzc),
+             aPointerId, eventType, aPoint,
+             aPointerPressure, aPointerOrientation] {
+                npzc->SynthesizeNativeTouchPoint(aPointerId, eventType,
+                                                 aPoint.x, aPoint.y,
+                                                 aPointerPressure,
+                                                 aPointerOrientation);
+            });
     return NS_OK;
 }
 
@@ -2238,7 +2279,17 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
 
     MOZ_ASSERT(mNPZCSupport);
     const auto& npzc = mNPZCSupport->GetJavaNPZC();
-    npzc->SynthesizeNativeMouseEvent(aNativeMessage, aPoint.x, aPoint.y);
+    const auto& bounds = FindTopLevel()->mBounds;
+    aPoint.x -= bounds.x;
+    aPoint.y -= bounds.y;
+
+    DispatchToUiThread(
+            "nsWindow::SynthesizeNativeMouseEvent",
+            [npzc = NativePanZoomController::GlobalRef(npzc),
+             aNativeMessage, aPoint] {
+                npzc->SynthesizeNativeMouseEvent(aNativeMessage,
+                                                 aPoint.x, aPoint.y);
+            });
     return NS_OK;
 }
 
@@ -2250,8 +2301,16 @@ nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
 
     MOZ_ASSERT(mNPZCSupport);
     const auto& npzc = mNPZCSupport->GetJavaNPZC();
-    npzc->SynthesizeNativeMouseEvent(sdk::MotionEvent::ACTION_HOVER_MOVE,
-                                     aPoint.x, aPoint.y);
+    const auto& bounds = FindTopLevel()->mBounds;
+    aPoint.x -= bounds.x;
+    aPoint.y -= bounds.y;
+
+    DispatchToUiThread(
+            "nsWindow::SynthesizeNativeMouseMove",
+            [npzc = NativePanZoomController::GlobalRef(npzc), aPoint] {
+                npzc->SynthesizeNativeMouseEvent(sdk::MotionEvent::ACTION_HOVER_MOVE,
+                                                 aPoint.x, aPoint.y);
+            });
     return NS_OK;
 }
 

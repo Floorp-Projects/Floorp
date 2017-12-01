@@ -11,10 +11,13 @@ function handleRequest(request, response)
   let scheme = query.get("scheme");
   let policy = query.get("policy");
   let rel = query.get("rel");
+  let cross = query.get("cross");
 
-  let linkUrl = scheme +
-                "test1.example.com/browser/browser/base/content/test/referrer/" +
+  let host = cross ? "example.com" : "test1.example.com";
+  let linkUrl = scheme + host +
+                "/browser/browser/base/content/test/referrer/" +
                 "file_referrer_testserver.sjs";
+
   let referrerPolicy =
       policy ? `referrerpolicy="${policy}"` : "";
 

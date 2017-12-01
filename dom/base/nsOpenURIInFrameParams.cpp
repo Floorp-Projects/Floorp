@@ -7,6 +7,7 @@
 #include "nsOpenURIInFrameParams.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsOpenURIInFrameParams)
   NS_INTERFACE_MAP_ENTRY(nsIOpenURIInFrameParams)
@@ -22,6 +23,7 @@ nsOpenURIInFrameParams::nsOpenURIInFrameParams(const mozilla::OriginAttributes& 
                                                nsIFrameLoaderOwner* aOpener)
   : mOpenerOriginAttributes(aOriginAttributes)
   , mOpenerBrowser(aOpener)
+  , mReferrerPolicy(mozilla::net::RP_Unset)
 {
 }
 
@@ -39,6 +41,21 @@ NS_IMETHODIMP
 nsOpenURIInFrameParams::SetReferrer(const nsAString& aReferrer)
 {
   mReferrer = aReferrer;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsOpenURIInFrameParams::GetReferrerPolicy(uint32_t* aReferrerPolicy)
+{
+  *aReferrerPolicy = mReferrerPolicy;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOpenURIInFrameParams::SetReferrerPolicy(uint32_t aReferrerPolicy)
+{
+  mReferrerPolicy = aReferrerPolicy;
   return NS_OK;
 }
 

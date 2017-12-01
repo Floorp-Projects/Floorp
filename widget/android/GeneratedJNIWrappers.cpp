@@ -1259,8 +1259,8 @@ const char LayerSession::name[] =
 const char LayerSession::Compositor::name[] =
         "org/mozilla/gecko/gfx/LayerSession$Compositor";
 
-constexpr char LayerSession::Compositor::AttachToJava_t::name[];
-constexpr char LayerSession::Compositor::AttachToJava_t::signature[];
+constexpr char LayerSession::Compositor::AttachNPZC_t::name[];
+constexpr char LayerSession::Compositor::AttachNPZC_t::signature[];
 
 constexpr char LayerSession::Compositor::CreateCompositor_t::name[];
 constexpr char LayerSession::Compositor::CreateCompositor_t::signature[];
@@ -1288,6 +1288,14 @@ constexpr char LayerSession::Compositor::OnCompositorDetached_t::signature[];
 auto LayerSession::Compositor::OnCompositorDetached() const -> void
 {
     return mozilla::jni::Method<OnCompositorDetached_t>::Call(Compositor::mCtx, nullptr);
+}
+
+constexpr char LayerSession::Compositor::OnSelectionCaretDrag_t::name[];
+constexpr char LayerSession::Compositor::OnSelectionCaretDrag_t::signature[];
+
+auto LayerSession::Compositor::OnSelectionCaretDrag(bool a0) const -> void
+{
+    return mozilla::jni::Method<OnSelectionCaretDrag_t>::Call(Compositor::mCtx, nullptr, a0);
 }
 
 constexpr char LayerSession::Compositor::RecvScreenPixels_t::name[];
@@ -1330,6 +1338,22 @@ constexpr char LayerSession::Compositor::SyncPauseCompositor_t::signature[];
 constexpr char LayerSession::Compositor::SyncResumeResizeCompositor_t::name[];
 constexpr char LayerSession::Compositor::SyncResumeResizeCompositor_t::signature[];
 
+constexpr char LayerSession::Compositor::UpdateOverscrollOffset_t::name[];
+constexpr char LayerSession::Compositor::UpdateOverscrollOffset_t::signature[];
+
+auto LayerSession::Compositor::UpdateOverscrollOffset(float a0, float a1) const -> void
+{
+    return mozilla::jni::Method<UpdateOverscrollOffset_t>::Call(Compositor::mCtx, nullptr, a0, a1);
+}
+
+constexpr char LayerSession::Compositor::UpdateOverscrollVelocity_t::name[];
+constexpr char LayerSession::Compositor::UpdateOverscrollVelocity_t::signature[];
+
+auto LayerSession::Compositor::UpdateOverscrollVelocity(float a0, float a1) const -> void
+{
+    return mozilla::jni::Method<UpdateOverscrollVelocity_t>::Call(Compositor::mCtx, nullptr, a0, a1);
+}
+
 constexpr char LayerSession::Compositor::UpdateRootFrameMetrics_t::name[];
 constexpr char LayerSession::Compositor::UpdateRootFrameMetrics_t::signature[];
 
@@ -1352,14 +1376,6 @@ auto LayerView::GetCompositor() const -> mozilla::jni::Object::LocalRef
 const char NativePanZoomController::name[] =
         "org/mozilla/gecko/gfx/NativePanZoomController";
 
-constexpr char NativePanZoomController::Destroy_t::name[];
-constexpr char NativePanZoomController::Destroy_t::signature[];
-
-auto NativePanZoomController::Destroy() const -> void
-{
-    return mozilla::jni::Method<Destroy_t>::Call(NativePanZoomController::mCtx, nullptr);
-}
-
 constexpr char NativePanZoomController::DisposeNative_t::name[];
 constexpr char NativePanZoomController::DisposeNative_t::signature[];
 
@@ -1375,12 +1391,12 @@ constexpr char NativePanZoomController::HandleScrollEvent_t::signature[];
 constexpr char NativePanZoomController::SetIsLongpressEnabled_t::name[];
 constexpr char NativePanZoomController::SetIsLongpressEnabled_t::signature[];
 
-constexpr char NativePanZoomController::OnSelectionDragState_t::name[];
-constexpr char NativePanZoomController::OnSelectionDragState_t::signature[];
+constexpr char NativePanZoomController::SetAttached_t::name[];
+constexpr char NativePanZoomController::SetAttached_t::signature[];
 
-auto NativePanZoomController::OnSelectionDragState(bool a0) const -> void
+auto NativePanZoomController::SetAttached(bool a0) const -> void
 {
-    return mozilla::jni::Method<OnSelectionDragState_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
+    return mozilla::jni::Method<SetAttached_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
 }
 
 constexpr char NativePanZoomController::SynthesizeNativeMouseEvent_t::name[];
@@ -1397,22 +1413,6 @@ constexpr char NativePanZoomController::SynthesizeNativeTouchPoint_t::signature[
 auto NativePanZoomController::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_t a2, int32_t a3, double a4, int32_t a5) const -> void
 {
     return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
-}
-
-constexpr char NativePanZoomController::UpdateOverscrollOffset_t::name[];
-constexpr char NativePanZoomController::UpdateOverscrollOffset_t::signature[];
-
-auto NativePanZoomController::UpdateOverscrollOffset(float a0, float a1) const -> void
-{
-    return mozilla::jni::Method<UpdateOverscrollOffset_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1);
-}
-
-constexpr char NativePanZoomController::UpdateOverscrollVelocity_t::name[];
-constexpr char NativePanZoomController::UpdateOverscrollVelocity_t::signature[];
-
-auto NativePanZoomController::UpdateOverscrollVelocity(float a0, float a1) const -> void
-{
-    return mozilla::jni::Method<UpdateOverscrollVelocity_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1);
 }
 
 const char StackScroller::name[] =

@@ -944,20 +944,6 @@ nsXPConnect::DebugDumpJSStack(bool showArgs,
     return NS_OK;
 }
 
-char*
-nsXPConnect::DebugPrintJSStack(bool showArgs,
-                               bool showLocals,
-                               bool showThisProps)
-{
-    JSContext* cx = nsContentUtils::GetCurrentJSContext();
-    if (!cx)
-        printf("there is no JSContext on the nsIThreadJSContextStack!\n");
-    else
-        return xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps).release();
-
-    return nullptr;
-}
-
 NS_IMETHODIMP
 nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
                          MutableHandleValue _retval)
@@ -1229,13 +1215,11 @@ JS_EXPORT_API(void) DumpJSStack()
     xpc_DumpJSStack(true, true, false);
 }
 
-JS_EXPORT_API(char*) PrintJSStack()
+JS_EXPORT_API(const char*) PrintJSStack()
 {
-    nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    return (NS_SUCCEEDED(rv) && xpc) ?
-        xpc->DebugPrintJSStack(true, true, false) :
-        nullptr;
+    if (JSContext* cx = nsContentUtils::GetCurrentJSContext())
+        return xpc_PrintJSStack(cx, true, true, false).release();
+    return "There is no JSContext on the stack.\n";
 }
 
 JS_EXPORT_API(void) DumpCompleteHeap()

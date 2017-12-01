@@ -442,7 +442,7 @@ VROculusSession::StartRendering()
     return true;
   }
   if (!mDevice) {
-    mDevice = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+    mDevice = gfx::DeviceManagerDx::Get()->GetVRDevice();
     if (!mDevice) {
       NS_WARNING("Failed to get a D3D11Device for Oculus");
       return false;
