@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{ClipId, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixel};
 use api::{LayerPoint, LayerRect, PremultipliedColorF};
+use box_shadow::BoxShadowCacheKey;
 use clip::{ClipSource, ClipSourcesWeakHandle, ClipStore};
 use clip_scroll_tree::CoordinateSystemId;
+use euclid::TypedSize2D;
 use gpu_types::{ClipScrollNodeIndex};
 use picture::RasterizationSpace;
 use prim_store::{PrimitiveIndex};
+#[cfg(feature = "debugger")]
+use print_tree::{PrintTreePrinter};
 use std::{cmp, ops, usize, f32, i32};
 use std::rc::Rc;
 use tiling::{RenderPass, RenderTargetIndex};
@@ -149,6 +153,9 @@ impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
 pub enum RenderTaskKey {
     /// Draw the alpha mask for a shared clip.
     CacheMask(ClipId),
+    CacheScaling(BoxShadowCacheKey, TypedSize2D<i32, DevicePixel>),
+    CacheBlur(BoxShadowCacheKey, i32),
+    CachePicture(BoxShadowCacheKey),
 }
 
 #[derive(Debug)]
@@ -250,6 +257,18 @@ pub struct BlurTask {
     pub scale_factor: f32,
 }
 
+impl BlurTask {
+    #[cfg(feature = "debugger")]
+    fn print_with<T: PrintTreePrinter>(&self, pt: &mut T) {
+        pt.add_item(format!("std deviation: {}", self.blur_std_deviation));
+        pt.add_item(format!("target: {:?}", self.target_kind));
+        pt.add_item(format!("scale: {}", self.scale_factor));
+        for region in &self.regions {
+            pt.add_item(format!("region {:?}", region));
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct RenderTaskData {
     pub data: [f32; FLOATS_PER_RENDER_TASK_INFO],
@@ -266,7 +285,7 @@ pub enum RenderTaskKind {
     Scaling(RenderTargetKind),
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum ClearMode {
     // Applicable to color and alpha targets.
     Zero,
@@ -296,6 +315,7 @@ impl RenderTask {
         clear_mode: ClearMode,
         rasterization_kind: RasterizationSpace,
         children: Vec<RenderTaskId>,
+        box_shadow_cache_key: Option<BoxShadowCacheKey>,
     ) -> Self {
         let location = match size {
             Some(size) => RenderTaskLocation::Dynamic(None, size),
@@ -303,7 +323,10 @@ impl RenderTask {
         };
 
         RenderTask {
-            cache_key: None,
+            cache_key: match box_shadow_cache_key {
+                Some(key) => Some(RenderTaskKey::CachePicture(key)),
+                None => None,
+            },
             children,
             location,
             kind: RenderTaskKind::Picture(PictureTask {
@@ -390,6 +413,7 @@ impl RenderTask {
         regions: &[LayerRect],
         clear_mode: ClearMode,
         color: PremultipliedColorF,
+        box_shadow_cache_key: Option<BoxShadowCacheKey>,
     ) -> Self {
         // Adjust large std deviation value.
         let mut adjusted_blur_std_deviation = blur_std_deviation;
@@ -408,14 +432,18 @@ impl RenderTask {
             let downscaling_task = RenderTask::new_scaling(
                 target_kind,
                 downscaling_src_task_id,
-                adjusted_blur_target_size
+                adjusted_blur_target_size,
+                box_shadow_cache_key,
             );
             downscaling_src_task_id = render_tasks.add(downscaling_task);
         }
         scale_factor = blur_target_size.width as f32 / adjusted_blur_target_size.width as f32;
 
         let blur_task_v = RenderTask {
-            cache_key: None,
+            cache_key: match box_shadow_cache_key {
+                Some(key) => Some(RenderTaskKey::CacheBlur(key, 0)),
+                None => None,
+            },
             children: vec![downscaling_src_task_id],
             location: RenderTaskLocation::Dynamic(None, adjusted_blur_target_size),
             kind: RenderTaskKind::VerticalBlur(BlurTask {
@@ -431,7 +459,10 @@ impl RenderTask {
         let blur_task_v_id = render_tasks.add(blur_task_v);
 
         let blur_task_h = RenderTask {
-            cache_key: None,
+            cache_key: match box_shadow_cache_key {
+                Some(key) => Some(RenderTaskKey::CacheBlur(key, 1)),
+                None => None,
+            },
             children: vec![blur_task_v_id],
             location: RenderTaskLocation::Dynamic(None, adjusted_blur_target_size),
             kind: RenderTaskKind::HorizontalBlur(BlurTask {
@@ -451,9 +482,13 @@ impl RenderTask {
         target_kind: RenderTargetKind,
         src_task_id: RenderTaskId,
         target_size: DeviceIntSize,
+        box_shadow_cache_key: Option<BoxShadowCacheKey>,
     ) -> Self {
         RenderTask {
-            cache_key: None,
+            cache_key: match box_shadow_cache_key {
+                Some(key) => Some(RenderTaskKey::CacheScaling(key, target_size)),
+                None => None,
+            },
             children: vec![src_task_id],
             location: RenderTaskLocation::Dynamic(None, target_size),
             kind: RenderTaskKind::Scaling(target_kind),
@@ -625,5 +660,52 @@ impl RenderTask {
                 panic!("BUG: is_shared() called on aliased task");
             }
         }
+    }
+
+    #[cfg(feature = "debugger")]
+    pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T, tree: &RenderTaskTree) -> bool {
+        match self.kind {
+            RenderTaskKind::Picture(ref task) => {
+                pt.new_level(format!("Picture of {:?}", task.prim_index));
+                pt.add_item(format!("kind: {:?}", task.target_kind));
+                pt.add_item(format!("space: {:?}", task.rasterization_kind));
+            }
+            RenderTaskKind::CacheMask(ref task) => {
+                pt.new_level(format!("CacheMask with {} clips", task.clips.len()));
+                pt.add_item(format!("rect: {:?}", task.actual_rect));
+                pt.add_item(format!("geometry: {:?}", task.geometry_kind));
+            }
+            RenderTaskKind::VerticalBlur(ref task) => {
+                pt.new_level("VerticalBlur".to_owned());
+                task.print_with(pt);
+            }
+            RenderTaskKind::HorizontalBlur(ref task) => {
+                pt.new_level("HorizontalBlur".to_owned());
+                task.print_with(pt);
+            }
+            RenderTaskKind::Readback(ref rect) => {
+                pt.new_level("Readback".to_owned());
+                pt.add_item(format!("rect: {:?}", rect));
+            }
+            RenderTaskKind::Scaling(ref kind) => {
+                pt.new_level("Scaling".to_owned());
+                pt.add_item(format!("kind: {:?}", kind));
+            }
+            RenderTaskKind::Alias(ref alias_id) => {
+                pt.add_item(format!("Alias of {:?}", alias_id));
+                return false
+            }
+        }
+
+        pt.add_item(format!("clear to: {:?}", self.clear_mode));
+
+        for &child_id in &self.children {
+            if tree[child_id].print_with(pt, tree) {
+                pt.add_item(format!("self: {:?}", child_id))
+            }
+        }
+
+        pt.end_level();
+        true
     }
 }

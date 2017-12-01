@@ -6,14 +6,14 @@ use api::{BorderRadius, BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRe
 use api::{DevicePoint, ExtendMode, FontRenderMode, GlyphInstance, GlyphKey};
 use api::{GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerRect};
 use api::{ClipMode, LayerSize, LayerVector2D, LayerToWorldTransform, LineOrientation, LineStyle};
-use api::{ClipAndScrollInfo, EdgeAaSegmentMask, PremultipliedColorF, TileOffset};
+use api::{ClipAndScrollInfo, PremultipliedColorF, TileOffset};
 use api::{ClipId, LayerTransform, PipelineId, YuvColorSpace, YuvFormat};
 use border::BorderCornerInstance;
 use clip_scroll_tree::{CoordinateSystemId, ClipScrollTree};
 use clip::{ClipSourcesHandle, ClipStore};
 use frame_builder::PrimitiveContext;
 use glyph_rasterizer::{FontInstance, FontTransform};
-use internal_types::FastHashMap;
+use internal_types::{EdgeAaSegmentMask, FastHashMap};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use picture::{PictureKind, PicturePrimitive, RasterizationSpace};
