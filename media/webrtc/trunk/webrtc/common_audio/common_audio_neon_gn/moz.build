@@ -1,0 +1,86 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+FINAL_LIBRARY = "webrtc"
+
+
+UNIFIED_SOURCES += [
+    "/media/webrtc/trunk/webrtc/common_audio/fir_filter_neon.cc",
+    "/media/webrtc/trunk/webrtc/common_audio/resampler/sinc_resampler_neon.cc"
+]
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/ipc/glue",
+    "/media/webrtc/trunk/"
+]
+
+COMPILE_FLAGS["STL"] = []
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["WEBRTC_ANDROID"] = True
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+DEFINES["__GNU_SOURCE"] = "1"
+DEFINES["V8_DEPRECATION_WARNINGS"] = True
+DEFINES["WEBRTC_LINUX"] = True
+DEFINES["HAVE_SYS_UIO_H"] = True
+DEFINES["NO_TCMALLOC"] = True
+DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
+DEFINES["_FILE_OFFSET_BITS"] = "64"
+DEFINES["WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE"] = True
+DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["WEBRTC_HAS_NEON"] = True
+DEFINES["USE_OPENSSL_CERTS"] = "1"
+DEFINES["ANDROID"] = True
+DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+DEFINES["DISABLE_NACL"] = True
+DEFINES["EXPAT_RELATIVE_PATH"] = True
+DEFINES["WEBRTC_POSIX"] = True
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NVALGRIND"] = True
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+    DEFINES["NDEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"]:
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+
+Library("common_audio_neon_gn")
