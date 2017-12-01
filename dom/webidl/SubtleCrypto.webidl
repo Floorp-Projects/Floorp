@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/webcrypto/Overview.html
+ * http://www.w3.org/TR/WebCryptoAPI/
  */
 
 typedef DOMString KeyType;
@@ -152,7 +152,6 @@ dictionary JsonWebKey {
 
 /***** The Main API *****/
 
-[SecureContext,Exposed=(Window,Worker)]
 interface CryptoKey {
   readonly attribute KeyType type;
   readonly attribute boolean extractable;
@@ -168,7 +167,7 @@ dictionary CryptoKeyPair {
 typedef DOMString KeyFormat;
 typedef (object or DOMString) AlgorithmIdentifier;
 
-[SecureContext,Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface SubtleCrypto {
   [Throws]
   Promise<any> encrypt(AlgorithmIdentifier algorithm,
