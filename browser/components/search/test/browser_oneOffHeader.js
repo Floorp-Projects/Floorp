@@ -42,7 +42,7 @@ function synthesizeNativeMouseMove(aElement) {
   return new Promise((resolve, reject) => {
     function eventOccurred(e) {
       aElement.removeEventListener("mousemove", eventOccurred, true);
-      resolve();
+      SimpleTest.executeSoon(resolve);
     }
 
     aElement.addEventListener("mousemove", eventOccurred, true);
