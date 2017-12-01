@@ -104,8 +104,8 @@ CapturedTiledPaintState::Copy::CopyBuffer()
   // target. However in this case, CopySurface ignores transforms so we don't
   // need to do anything.
   mDestination->CopySurface(source,
-                            mBounds,
-                            mBounds.TopLeft());
+                            mSourceBounds,
+                            mDestinationPoint);
   return true;
 }
 
