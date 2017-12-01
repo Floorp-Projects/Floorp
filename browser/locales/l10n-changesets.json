@@ -337,7 +337,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "557890da9773"
+        "revision": "baab0914d6f9"
     }, 
     "fy-NL": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "4664e76c0d2e"
+        "revision": "09e9ae74e590"
     }, 
     "kab": {
         "platforms": [
