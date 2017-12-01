@@ -367,9 +367,7 @@ protected:
                   const ButtonParams& aParams);
   void DrawTreeHeaderCell(CGContextRef context, const HIRect& inBoxRect,
                           const TreeHeaderCellParams& aParams);
-  void DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect,
-                        mozilla::EventStates inState, uint8_t aWidgetType,
-                        nsIFrame* aFrame);
+  void DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect);
   void DrawDropdown(CGContextRef context, const HIRect& inBoxRect,
                     const DropdownParams& aParams);
   HIThemeButtonDrawInfo SpinButtonDrawInfo(ThemeButtonKind aKind,
