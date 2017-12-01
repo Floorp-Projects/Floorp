@@ -403,7 +403,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mCurrentPosition, TimeUnit::Zero())
   , INIT_MIRROR(mStateMachineDuration, NullableTimeUnit())
-  , INIT_MIRROR(mPlaybackPosition, 0)
   , INIT_MIRROR(mIsAudioDataAudible, false)
   , INIT_CANONICAL(mVolume, aInit.mVolume)
   , INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch)
@@ -1300,7 +1299,6 @@ MediaDecoder::ConnectMirrors(MediaDecoderStateMachine* aObject)
   mStateMachineDuration.Connect(aObject->CanonicalDuration());
   mBuffered.Connect(aObject->CanonicalBuffered());
   mCurrentPosition.Connect(aObject->CanonicalCurrentPosition());
-  mPlaybackPosition.Connect(aObject->CanonicalPlaybackOffset());
   mIsAudioDataAudible.Connect(aObject->CanonicalIsAudioDataAudible());
 }
 
@@ -1311,7 +1309,6 @@ MediaDecoder::DisconnectMirrors()
   mStateMachineDuration.DisconnectIfConnected();
   mBuffered.DisconnectIfConnected();
   mCurrentPosition.DisconnectIfConnected();
-  mPlaybackPosition.DisconnectIfConnected();
   mIsAudioDataAudible.DisconnectIfConnected();
 }
 

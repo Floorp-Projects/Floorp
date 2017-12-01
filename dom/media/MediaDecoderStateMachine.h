@@ -120,6 +120,7 @@ struct MediaPlaybackEvent
   {
     PlaybackStarted,
     PlaybackStopped,
+    PlaybackProgressed,
     PlaybackEnded,
     SeekStarted,
     Loop,
@@ -138,6 +139,13 @@ struct MediaPlaybackEvent
   MOZ_IMPLICIT MediaPlaybackEvent(EventType aType)
     : mType(aType)
     , mData(Nothing{})
+  {
+  }
+
+  template<typename T>
+  MediaPlaybackEvent(EventType aType, T&& aArg)
+    : mType(aType)
+    , mData(Forward<T>(aArg))
   {
   }
 };
@@ -684,6 +692,9 @@ private:
 
   bool mSeamlessLoopingAllowed;
 
+  // Current playback position in the stream in bytes.
+  int64_t mPlaybackOffset = 0;
+
 private:
   // The buffered range. Mirrored from the decoder thread.
   Mirror<media::TimeIntervals> mBuffered;
@@ -718,9 +729,6 @@ private:
   // playback position.
   Canonical<media::TimeUnit> mCurrentPosition;
 
-  // Current playback position in the stream in bytes.
-  Canonical<int64_t> mPlaybackOffset;
-
   // Used to distinguish whether the audio is producing sound.
   Canonical<bool> mIsAudioDataAudible;
 
@@ -734,10 +742,6 @@ public:
   AbstractCanonical<media::TimeUnit>* CanonicalCurrentPosition()
   {
     return &mCurrentPosition;
-  }
-  AbstractCanonical<int64_t>* CanonicalPlaybackOffset()
-  {
-    return &mPlaybackOffset;
   }
   AbstractCanonical<bool>* CanonicalIsAudioDataAudible()
   {
