@@ -791,6 +791,11 @@ pref("gfx.downloadable_fonts.otl_validation", false);
 pref("gfx.downloadable_fonts.otl_validation", true);
 #endif
 
+// Whether to preserve color bitmap tables in fonts (bypassing OTS).
+// Currently these are supported only on platforms where we use Freetype
+// to render fonts (Linux/Gtk and Android).
+pref("gfx.downloadable_fonts.keep_color_bitmaps", false);
+
 // Whether to preserve OpenType variation tables in fonts (bypassing OTS)
 pref("gfx.downloadable_fonts.keep_variation_tables", false);
 
