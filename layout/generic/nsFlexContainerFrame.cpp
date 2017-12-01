@@ -4498,12 +4498,20 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     ConvertLegacyStyleToJustifyContent(StyleXUL()) :
     aReflowInput.mStylePosition->mJustifyContent;
 
-  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
+  lineIndex = 0;
+  for (FlexLine* line = lines.getFirst(); line; line = line->getNext(),
+                                                ++lineIndex) {
     // Main-Axis Alignment - Flexbox spec section 9.5
     // ==============================================
     line->PositionItemsInMainAxis(justifyContent,
                                   aContentBoxMainSize,
                                   aAxisTracker);
+
+    // See if we need to extract some computed info for this line.
+    if (MOZ_UNLIKELY(containerInfo)) {
+      ComputedFlexLineInfo& lineInfo = containerInfo->mLines[lineIndex];
+      lineInfo.mCrossStart = crossAxisPosnTracker.GetPosition();
+    }
 
     // Cross-Axis Alignment - Flexbox spec section 9.6
     // ===============================================
@@ -4716,15 +4724,15 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize)
 
   // Finally update our line sizing values in our containerInfo.
-  if (containerInfo) {
-    uint32_t lineIndex = 0;
+  if (MOZ_UNLIKELY(containerInfo)) {
+    lineIndex = 0;
     for (const FlexLine* line = lines.getFirst(); line;
          line = line->getNext(), ++lineIndex) {
-      ComputedFlexLineInfo* lineInfo = &containerInfo->mLines[lineIndex];
+      ComputedFlexLineInfo& lineInfo = containerInfo->mLines[lineIndex];
 
-      lineInfo->mCrossSize = line->GetLineCrossSize();
-      lineInfo->mFirstBaselineOffset = line->GetFirstBaselineOffset();
-      lineInfo->mLastBaselineOffset = line->GetLastBaselineOffset();
+      lineInfo.mCrossSize = line->GetLineCrossSize();
+      lineInfo.mFirstBaselineOffset = line->GetFirstBaselineOffset();
+      lineInfo.mLastBaselineOffset = line->GetLastBaselineOffset();
     }
   }
 }
