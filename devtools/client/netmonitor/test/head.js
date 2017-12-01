@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* import-globals-from ../../framework/test/shared-head.js */
-/* import-globals-from shared-head.js */
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
    verifyRequestItemTarget, waitFor, testFilterButtons, loadCommonFrameScript,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor */
@@ -12,10 +11,6 @@
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
-  this);
-
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/shared-head.js",
   this);
 
 const {
@@ -30,6 +25,7 @@ const {
   getUrlQuery,
   getUrlScheme,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
+const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 
 /* eslint-disable no-unused-vars, max-len */
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/netmonitor/test/";
@@ -225,23 +221,35 @@ let finishedQueue = {};
 let updatingTypes = [
   "NetMonitor:NetworkEventUpdating:RequestCookies",
   "NetMonitor:NetworkEventUpdating:ResponseCookies",
+  "NetMonitor:NetworkEventUpdating:RequestHeaders",
+  "NetMonitor:NetworkEventUpdating:ResponseHeaders",
+  "NetMonitor:NetworkEventUpdating:RequestPostData",
+  "NetMonitor:NetworkEventUpdating:ResponseContent",
+  "NetMonitor:NetworkEventUpdating:SecurityInfo",
+  "NetMonitor:NetworkEventUpdating:EventTimings",
 ];
 let updatedTypes = [
   "NetMonitor:NetworkEventUpdated:RequestCookies",
   "NetMonitor:NetworkEventUpdated:ResponseCookies",
+  "NetMonitor:NetworkEventUpdated:RequestHeaders",
+  "NetMonitor:NetworkEventUpdated:ResponseHeaders",
+  "NetMonitor:NetworkEventUpdated:RequestPostData",
+  "NetMonitor:NetworkEventUpdated:ResponseContent",
+  "NetMonitor:NetworkEventUpdated:SecurityInfo",
+  "NetMonitor:NetworkEventUpdated:EventTimings",
 ];
 
 // Start collecting all networkEventUpdate event when panel is opened.
 // removeTab() should be called once all corresponded RECEIVED_* events finished.
 function startNetworkEventUpdateObserver(panelWin) {
   updatingTypes.forEach((type) => panelWin.on(type, (event, actor) => {
-    let key = actor + "-" + event.replace("NetMonitor:NetworkEventUpdating:", "");
+    let key = actor + "-" + updatedTypes[updatingTypes.indexOf(event)];
     finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] + 1 : 1;
   }));
 
   updatedTypes.forEach((type) => panelWin.on(type, (event, actor) => {
-    let key = actor + "-" + event.replace("NetMonitor:NetworkEventUpdated:", "");
-    finishedQueue[key]--;
+    let key = actor + "-" + event;
+    finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] - 1 : -1;
   }));
 }
 
@@ -329,10 +337,6 @@ function teardown(monitor) {
   return Task.spawn(function* () {
     let tab = monitor.toolbox.target.tab;
 
-    // Ensure that there is no pending RDP requests related to payload request
-    // done from FirefoxDataProvider.
-    info("Wait for completion of all pending RDP requests...");
-    yield waitForExistingRequests(monitor);
     yield waitForAllNetworkUpdateEvents();
     info("All pending requests finished.");
 
@@ -346,44 +350,17 @@ function waitForNetworkEvents(monitor, getRequests) {
   return new Promise((resolve) => {
     let panel = monitor.panelWin;
     let { getNetworkRequest } = panel.connector;
-    let progress = {};
-    let genericEvents = 0;
+    let networkEvent = 0;
     let payloadReady = 0;
-    let awaitedEventsToListeners = [
-      ["UPDATING_REQUEST_HEADERS", onGenericEvent],
-      ["RECEIVED_REQUEST_HEADERS", onGenericEvent],
-      ["UPDATING_RESPONSE_HEADERS", onGenericEvent],
-      ["RECEIVED_RESPONSE_HEADERS", onGenericEvent],
-      ["UPDATING_EVENT_TIMINGS", onGenericEvent],
-      ["RECEIVED_EVENT_TIMINGS", onGenericEvent],
-      ["PAYLOAD_READY", onPayloadReady]
-    ];
-    let expectedGenericEvents = awaitedEventsToListeners
-      .filter(([, listener]) => listener == onGenericEvent).length;
 
-    function initProgressForURL(url) {
-      if (progress[url]) {
-        return;
-      }
-      progress[url] = {};
-      awaitedEventsToListeners.forEach(function ([e]) {
-        progress[url][e] = 0;
-      });
-    }
-
-    function updateProgressForURL(url, event) {
-      initProgressForURL(url);
-      progress[url][Object.keys(EVENTS).find(e => EVENTS[e] == event)] = 1;
-    }
-
-    function onGenericEvent(event, actor) {
+    function onNetworkEvent(event, actor) {
       let networkInfo = getNetworkRequest(actor);
       if (!networkInfo) {
         // Must have been related to reloading document to disable cache.
         // Ignore the event.
         return;
       }
-      genericEvents++;
+      networkEvent++;
       maybeResolve(event, actor, networkInfo);
     }
 
@@ -394,38 +371,30 @@ function waitForNetworkEvents(monitor, getRequests) {
         // Ignore the event.
         return;
       }
-
       payloadReady++;
       maybeResolve(event, actor, networkInfo);
     }
 
     function maybeResolve(event, actor, networkInfo) {
       info("> Network event progress: " +
-        "Payload: " + payloadReady + "/" + getRequests + ", " +
-        "Generic: " + genericEvents + "/" + (getRequests * expectedGenericEvents) + ", " +
+        "NetworkEvent: " + networkEvent + "/" + getRequests + ", " +
+        "PayloadReady: " + payloadReady + "/" + getRequests + ", " +
         "got " + event + " for " + actor);
 
-      let url = networkInfo.request.url;
-      updateProgressForURL(url, event);
-
-      // Uncomment this to get a detailed progress logging (when debugging a test)
-      // info("> Current state: " + JSON.stringify(progress, null, 2));
-
-      // There are `expectedGenericEvents` updates which need to be fired for a request
-      // to be considered finished. The "requestPostData" packet isn't fired for non-POST
-      // requests.
-      if (payloadReady >= getRequests &&
-        genericEvents >= getRequests * expectedGenericEvents) {
-        awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
+      // Wait until networkEvent & payloadReady finish for each request.
+      if (networkEvent >= getRequests && payloadReady >= getRequests) {
+        panel.off(EVENTS.NETWORK_EVENT, onNetworkEvent);
+        panel.off(EVENTS.PAYLOAD_READY, onPayloadReady);
         executeSoon(resolve);
       }
     }
 
-    awaitedEventsToListeners.forEach(([e, l]) => panel.on(EVENTS[e], l));
+    panel.on(EVENTS.NETWORK_EVENT, onNetworkEvent);
+    panel.on(EVENTS.PAYLOAD_READY, onPayloadReady);
   });
 }
 
-function verifyRequestItemTarget(document, requestList, requestItem, method,
+function* verifyRequestItemTarget(document, requestList, requestItem, method,
                                  url, data = {}) {
   info("> Verifying: " + method + " " + url + " " + data.toSource());
 

@@ -33,9 +33,11 @@ add_task(function* () {
 
   // Fetch stack-trace data from the backend and wait till
   // all packets are received.
-  let requests = getSortedRequests(store.getState());
-  yield Promise.all(requests.map(requestItem =>
-    connector.requestData(requestItem.id, "stackTrace")));
+  let requests = getSortedRequests(store.getState())
+    .filter((req) => !req.stacktrace)
+    .map((req) => connector.requestData(req.id, "stackTrace"));
+
+  yield Promise.all(requests);
 
   EXPECTED_REQUESTS.forEach(({status, hasStack}, i) => {
     let item = getSortedRequests(store.getState()).get(i);

@@ -17,7 +17,6 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, store, windowRequire, connector } = monitor.panelWin;
-  let { requestData } = connector;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getSelectedRequest,
@@ -56,7 +55,15 @@ add_task(function* () {
   store.dispatch(Actions.sendCustomRequest(connector));
   yield wait;
 
-  let sentItem = getSelectedRequest(store.getState());
+  let sentItem;
+  // Testing sent request will require updated requestHeaders and requestPostData,
+  // we must wait for both properties get updated before starting test.
+  yield waitUntil(() => {
+    sentItem = getSelectedRequest(store.getState());
+    origItem = getSortedRequests(store.getState()).get(0);
+    return sentItem.requestHeaders && sentItem.requestPostData &&
+      origItem.requestHeaders && origItem.requestPostData;
+  });
 
   yield testSentRequest(sentItem, origItem);
 
@@ -164,13 +171,8 @@ add_task(function* () {
     let hasUAHeader = headers.some(h => `${h.name}: ${h.value}` == ADD_UA_HEADER);
     ok(hasUAHeader, "User-Agent header added to sent request");
 
-    let { requestPostData: clonedRequestPostData } = yield requestData(data.id,
-      "requestPostData");
-    let { requestPostData: origRequestPostData } = yield requestData(origData.id,
-      "requestPostData");
-
-    is(clonedRequestPostData.postData.text,
-      origRequestPostData.postData.text + ADD_POSTDATA,
+    is(data.requestPostData.postData.text,
+      origData.requestPostData.postData.text + ADD_POSTDATA,
       "post data added to sent request");
   }
 
