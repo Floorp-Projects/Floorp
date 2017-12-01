@@ -11,6 +11,7 @@
 #include "mozilla/RangedArray.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h" // For FastBaseKeyframe etc.
@@ -560,26 +561,6 @@ KeyframeUtils::IsAnimatableProperty(nsCSSPropertyID aProperty,
   return false;
 }
 
-/* static */ already_AddRefed<RawServoDeclarationBlock>
-KeyframeUtils::ParseProperty(nsCSSPropertyID aProperty,
-                             const nsAString& aValue,
-                             nsIDocument* aDocument)
-{
-  MOZ_ASSERT(aDocument);
-
-  NS_ConvertUTF16toUTF8 value(aValue);
-  // FIXME this is using the wrong base uri (bug 1343919)
-  RefPtr<URLExtraData> data = new URLExtraData(aDocument->GetDocumentURI(),
-                                               aDocument->GetDocumentURI(),
-                                               aDocument->NodePrincipal());
-  return Servo_ParseProperty(aProperty,
-                             &value,
-                             data,
-                             ParsingMode::Default,
-                             aDocument->GetCompatibilityMode(),
-                             aDocument->CSSLoader()).Consume();
-}
-
 // ------------------------------------------------------------------
 //
 // Internal helpers
@@ -903,8 +884,10 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
   Maybe<PropertyValuePair> result;
 
   if (aDocument->GetStyleBackendType() == StyleBackendType::Servo) {
+    ServoCSSParser::ParsingEnvironment env =
+      ServoCSSParser::GetParsingEnvironment(aDocument);
     RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-      KeyframeUtils::ParseProperty(aProperty, aStringValue, aDocument);
+      ServoCSSParser::ParseProperty(aProperty, aStringValue, env);
 
     if (servoDeclarationBlock) {
       result.emplace(aProperty, Move(servoDeclarationBlock));
