@@ -12,8 +12,7 @@ function testURL() {
       ok(res.type !== "error", "Response should not be an error for " + entry[0]);
       is(res.status, entry[2], "Status should match expected for " + entry[0]);
       is(res.statusText, entry[3], "Status text should match expected for " + entry[0]);
-      // This file redirects to pass2, but that is invisible if a SW is present.
-      if (entry[0] != "file_XHR_pass3.txt" || isSWPresent)
+      if (entry[0] != "file_XHR_pass3.txt")
         ok(res.url.endsWith(path + entry[0]), "Response url should match request for simple fetch for " + entry[0]);
       else
         ok(res.url.endsWith(path + "file_XHR_pass2.txt"), "Response url should match request for simple fetch for " + entry[0]);
@@ -49,8 +48,7 @@ function testRequestGET() {
       ok(res.type !== "error", "Response should not be an error for " + entry[0]);
       is(res.status, entry[2], "Status should match expected for " + entry[0]);
       is(res.statusText, entry[3], "Status text should match expected for " + entry[0]);
-      // This file redirects to pass2, but that is invisible if a SW is present.
-      if (entry[0] != "file_XHR_pass3.txt" || isSWPresent)
+      if (entry[0] != "file_XHR_pass3.txt")
         ok(res.url.endsWith(path + entry[0]), "Response url should match request for simple fetch for " + entry[0]);
       else
         ok(res.url.endsWith(path + "file_XHR_pass2.txt"), "Response url should match request for simple fetch for " + entry[0]);

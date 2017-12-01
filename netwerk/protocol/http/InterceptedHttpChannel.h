@@ -113,8 +113,12 @@ private:
   nsresult
   FollowSyntheticRedirect();
 
+  // If the response's URL is different from the request's then do a service
+  // worker redirect. If Response.redirected is false we do an internal
+  // redirect. Otherwise, if Response.redirect is true do a non-internal
+  // redirect so end consumers detect the redirected state.
   nsresult
-  RedirectForOpaqueResponse(nsIURI* aResponseURI);
+  RedirectForResponseURL(nsIURI* aResponseURI, bool aResponseRedirected);
 
   nsresult
   StartPump();
