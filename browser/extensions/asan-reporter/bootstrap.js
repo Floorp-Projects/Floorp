@@ -31,12 +31,37 @@ logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 logger.addAppender(new Log.DumpAppender(new Log.BasicFormatter()));
 logger.level = Preferences.get(PREF_LOG_LEVEL, Log.Level.Info);
 
+this.TabCrashObserver = {
+  init() {
+    if (this.initialized)
+      return;
+    this.initialized = true;
+
+    Services.obs.addObserver(this, "ipc:content-shutdown");
+  },
+
+  observe(aSubject, aTopic, aData) {
+    if (aTopic == "ipc:content-shutdown") {
+        aSubject.QueryInterface(Ci.nsIPropertyBag2);
+        if (!aSubject.get("abnormal")) {
+          return;
+        }
+        processDirectory("/tmp");
+    }
+  },
+};
+
 function install(aData, aReason) {}
 
 function uninstall(aData, aReason) {}
 
 function startup(aData, aReason) {
   logger.info("Starting up...");
+
+  // Install a handler to observe tab crashes, so we can report those right
+  // after they happen instead of relying on the user to restart the browser.
+  TabCrashObserver.init();
+
   // We could use OS.Constants.Path.tmpDir here, but unfortunately there is
   // no way in C++ to get the same value *prior* to xpcom initialization.
   // Since ASan needs its options, including the "log_path" option already
