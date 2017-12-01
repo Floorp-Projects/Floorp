@@ -274,6 +274,7 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
 
   MediaDecoderOwner* owner = GetOwner();
   if (NS_SUCCEEDED(aStatus) || aStatus == NS_BASE_STREAM_CLOSED) {
+    ComputePlaybackRate();
     UpdatePlaybackRate();
     owner->DownloadSuspended();
     // NotifySuspendedStatusChanged will tell the element that download
@@ -339,6 +340,7 @@ ChannelMediaDecoder::DurationChanged()
   AbstractThread::AutoEnter context(AbstractMainThread());
   MediaDecoder::DurationChanged();
   // Duration has changed so we should recompute playback rate
+  ComputePlaybackRate();
   UpdatePlaybackRate();
 }
 
@@ -349,6 +351,7 @@ ChannelMediaDecoder::DownloadProgressed()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
   GetOwner()->DownloadProgressed();
+  ComputePlaybackRate();
   UpdatePlaybackRate();
   mResource->ThrottleReadahead(ShouldThrottleDownload());
 }
@@ -377,7 +380,6 @@ ChannelMediaDecoder::UpdatePlaybackRate()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mResource);
 
-  ComputePlaybackRate();
   uint32_t rate = mPlaybackBytesPerSecond;
 
   if (mPlaybackRateReliable) {
