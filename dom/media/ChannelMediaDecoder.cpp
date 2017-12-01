@@ -411,7 +411,7 @@ ChannelMediaDecoder::ComputePlaybackRate()
   }
 
   bool reliable = false;
-  mPlaybackBytesPerSecond = mPlaybackStatistics.GetRateAtLastStop(&reliable);
+  mPlaybackBytesPerSecond = mPlaybackStatistics.GetRate(&reliable);
   mPlaybackRateReliable = reliable;
 }
 
