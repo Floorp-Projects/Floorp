@@ -11,6 +11,12 @@
 extern "C" {
 
 #if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)
+#if defined(__clang__)
+// clang-cl may erroneously discard the symbol `kCoefficientsRgbY`
+// https://bugs.llvm.org/show_bug.cgi?id=35290
+volatile auto keep_kCoefficientsRgbY_alive = &kCoefficientsRgbY;
+#endif
+
 __declspec(naked)
 void FastConvertYUVToRGB32Row_SSE(const uint8* y_buf,
                                   const uint8* u_buf,
