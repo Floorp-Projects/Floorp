@@ -445,7 +445,7 @@ ChannelMediaDecoder::GetStatistics()
   MediaStatistics result;
   result.mDownloadRate =
     mResource->GetDownloadRate(&result.mDownloadRateReliable);
-  result.mDownloadPosition = mResource->GetCachedDataEnd(mDecoderPosition);
+  result.mDownloadPosition = mResource->GetCachedDataEnd(mPlaybackPosition);
   result.mTotalBytes = mResource->GetLength();
   result.mPlaybackRate = mPlaybackBytesPerSecond;
   result.mPlaybackRateReliable = mPlaybackRateReliable;
