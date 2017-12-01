@@ -7,39 +7,32 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/preference_root_layout_padding">
+    android:paddingLeft="@dimen/preference_root_layout_vertical_padding"
+    android:paddingRight="@dimen/preference_root_layout_vertical_padding"
+    android:paddingTop="@dimen/preference_root_layout_vertical_padding"
+    android:paddingBottom="@dimen/preference_root_layout_vertical_padding">
 
-    <TextView
-        android:defaultFocusHighlightEnabled="true"
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/search_add_manually_name"
-        android:paddingStart="5dp"
-        android:paddingLeft="5dp"
-        android:paddingTop="@dimen/preference_padding_vertical"/>
+        android:layout_height="wrap_content">
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/edit_engine_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/search_add_manually_name_hint"
+            android:inputType="text" />
+    </android.support.design.widget.TextInputLayout>
 
-    <EditText
-        android:id="@+id/edit_engine_name"
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/search_add_manually_name_hint"
-        android:inputType="text"
-        android:nextFocusDown="@+id/edit_search_string"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/search_add_manually_string"
-        android:paddingStart="5dp"
-        android:paddingLeft="5dp"
-        android:paddingTop="@dimen/preference_padding_vertical"/>
-
-    <EditText
-        android:id="@id/edit_search_string"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/search_add_manually_string_hint"
-        android:nextFocusUp="@id/edit_engine_name"/>
+        android:layout_height="wrap_content">
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/edit_search_string"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/search_add_manually_string"
+            android:inputType="text" />
+    </android.support.design.widget.TextInputLayout>
 
     <TextView
         android:layout_width="match_parent"
