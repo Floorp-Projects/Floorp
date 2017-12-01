@@ -386,6 +386,8 @@ protected:
                           ScrollbarParams aParams);
   void DrawScrollbarTrack(CGContextRef cgContext, const CGRect& inBoxRect,
                           ScrollbarParams aParams);
+  void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
+                              bool aIsFocused);
 
   // Scrollbars
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
