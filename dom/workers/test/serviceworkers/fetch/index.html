@@ -140,7 +140,8 @@
   xmlDoc.load('load_cross_origin_xml_document_cors.xml');
   xmlDoc.onload = function(evt) {
     var content = new XMLSerializer().serializeToString(evt.target);
-    my_ok(!content.includes('parsererror'), "Load CORS cross origin XML Document should be allowed");
+    // issue: https://github.com/whatwg/fetch/issues/629
+    my_ok(content.includes('parsererror'), "Load CORS cross origin XML Document should not be allowed");
     finish();
   };
 

@@ -2354,8 +2354,7 @@ nsStyleSet::Shutdown()
 }
 
 void
-nsStyleSet::RecordStyleSheetChange(CSSStyleSheet* aStyleSheet,
-                                   StyleSheet::ChangeType)
+nsStyleSet::SheetChanged(CSSStyleSheet& aStyleSheet)
 {
   MOZ_ASSERT(mBatching != 0, "Should be in an update");
 
@@ -2363,7 +2362,7 @@ nsStyleSet::RecordStyleSheetChange(CSSStyleSheet* aStyleSheet,
     return;
   }
 
-  if (Element* scopeElement = aStyleSheet->GetScopeElement()) {
+  if (Element* scopeElement = aStyleSheet.GetScopeElement()) {
     mChangedScopeStyleRoots.AppendElement(scopeElement);
     return;
   }

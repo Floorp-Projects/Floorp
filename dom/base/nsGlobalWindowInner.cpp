@@ -794,6 +794,10 @@ nsGlobalWindowInner::RequestIdleCallback(JSContext* aCx,
 {
   AssertIsOnMainThread();
 
+  if (mInnerObjectsFreed) {
+   return 0;
+  }
+
   uint32_t handle = mIdleRequestCallbackCounter++;
 
   RefPtr<IdleRequest> request =
