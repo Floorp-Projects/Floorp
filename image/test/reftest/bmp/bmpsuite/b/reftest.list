@@ -43,6 +43,18 @@ fuzzy(1,926) == badbitssize.bmp pal1.png
 # [We accept it. So does Chromium.]
 == badplanes.bmp pal1.png
 
+# BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=13
+# "An invalid RLE4-compressed image that tries to cause buffer overruns."
+== badrle4.bmp badrle4.png
+
+# BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=13
+# "Another invalid RLE4-compressed image that tries to cause buffer overruns."
+== badrle4bis.bmp badrle4bis.png
+
+# BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=13
+# "Another invalid RLE4-compressed image that tries to cause buffer overruns."
+== badrle4ter.bmp badrle4ter.png
+
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
 # "An invalid RLE-compressed image that tries to cause buffer overruns."
 # [We accept it, drawing the valid first part and leaving the rest black.
@@ -50,6 +62,14 @@ fuzzy(1,926) == badbitssize.bmp pal1.png
 # transparent. Using black for the invalid part is arguably better because it
 # makes the image edges more obvious.]
 == badrle.bmp badrle.png
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
+# "8-bit version of b/badrle4bis.bmp."
+== badrlebis.bmp badrlebis.png
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
+# "8-bit version of b/badrle4ter.bmp."
+== badrleter.bmp badrleter.png
 
 # BMP: bihsize=40, -127 x 64, bpp=1, compression=0, colors=2
 # "The image claims to be a negative number of pixels in width."
@@ -66,6 +86,12 @@ fuzzy(1,926) == badbitssize.bmp pal1.png
 # "An image with a very large reported width and height."
 # [We reject it. So does Chromium.]
 == wrapper.html?reallybig.bmp about:blank
+
+# BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
+# "A 16-bit image with a BITFIELDS segment indicating 8 red, 8 green, and 0
+# blue bits. The documentation doesn’t say whether undefined channels are
+# legal, or how they should be handled."
+== rgb16-880.bmp rgb16-880.png
 
 # BMP: bihsize=40, 127 x -64, bpp=8, compression=1, colors=252
 # "An RLE-compressed image that tries to use top-down orientation, which isn’t
