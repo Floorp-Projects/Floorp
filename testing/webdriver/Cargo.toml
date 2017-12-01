@@ -1,6 +1,6 @@
 [package]
 name = "webdriver"
-version = "0.32.0"
+version = "0.33.0"
 authors = ["Mozilla <tools-marionette@lists.mozilla.org>"]
 description = "Library implementing the wire protocol for the W3C WebDriver specification."
 keywords = ["webdriver", "browser", "automation", "protocol", "w3c"]
@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MPL-2.0"
 
 [dependencies]
-cookie = { version = "0.9", default-features = false }
+cookie = { version = "0.10", default-features = false }
 hyper = "0.10"
 log = "0.3"
 regex = "0.2"
