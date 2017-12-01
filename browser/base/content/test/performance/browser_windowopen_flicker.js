@@ -112,11 +112,11 @@ add_task(async function() {
         },
 
         {name: "bug 1401955 - about:home favicon should be visible at first paint",
-         condition: r => inFirstTab(r) && r.h == 14 && r.w == 14
+         condition: r => inFirstTab(r) && inRange(r.h, 14, 15) && inRange(r.w, 14, 15)
         },
 
         {name: "bug 1401955 - space for about:home favicon should be there at first paint",
-         condition: r => inFirstTab(r) && inRange(r.w, 60, 80) && inRange(r.h, 8, 14)
+         condition: r => inFirstTab(r) && inRange(r.w, 60, 80) && inRange(r.h, 8, 15)
         },
       ];
 
