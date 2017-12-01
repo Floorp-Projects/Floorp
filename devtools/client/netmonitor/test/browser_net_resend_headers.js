@@ -13,7 +13,7 @@ add_task(function* () {
 
   let { store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { sendHTTPRequest } = connector;
+  let { requestData, sendHTTPRequest } = connector;
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
@@ -40,6 +40,19 @@ add_task(function* () {
   yield wait;
 
   let item = getSortedRequests(store.getState()).get(0);
+
+  ok(item.requestHeadersAvailable, "headers are available for lazily fetching");
+
+  if (item.requestHeadersAvailable && !item.requestHeaders) {
+    requestData(item.id, "requestHeaders");
+  }
+
+  // Wait until requestHeaders packet gets updated.
+  yield waitUntil(() => {
+    item = getSortedRequests(store.getState()).get(0);
+    return item.requestHeaders;
+  });
+
   is(item.method, "POST", "The request has the right method");
   is(item.url, requestUrl, "The request has the right URL");
 

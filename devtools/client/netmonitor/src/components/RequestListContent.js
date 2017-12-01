@@ -242,6 +242,7 @@ class RequestListContent extends Component {
       onItemMouseDown,
       onSecurityIconMouseDown,
       onWaterfallMouseDown,
+      requestFilterTypes,
       scale,
       selectedRequest,
     } = this.props;
@@ -272,6 +273,7 @@ class RequestListContent extends Component {
               onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
               onSecurityIconMouseDown: () => onSecurityIconMouseDown(item.securityState),
               onWaterfallMouseDown: () => onWaterfallMouseDown(),
+              requestFilterTypes,
             }))
           )
         )
