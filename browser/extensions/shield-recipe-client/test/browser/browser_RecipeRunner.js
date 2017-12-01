@@ -324,6 +324,7 @@ add_task(withMockNormandyApi(async function testLoadActionSandboxManagers(mockAp
   );
 }));
 
+// test init() in dev mode
 decorate_task(
   withPrefEnv({
     set: [
@@ -340,6 +341,7 @@ decorate_task(
   }
 );
 
+// Test init() during normal operation
 decorate_task(
   withPrefEnv({
     set: [
@@ -356,16 +358,19 @@ decorate_task(
   }
 );
 
+// Test init() first run
 decorate_task(
   withPrefEnv({
     set: [
       ["extensions.shield-recipe-client.dev_mode", false],
       ["extensions.shield-recipe-client.first_run", true],
+      ["extensions.shield-recipe-client.api_url", "https://example.com"],
     ],
   }),
   withStub(RecipeRunner, "run"),
   withStub(RecipeRunner, "registerTimer"),
-  async function testInitFirstRun(runStub, registerTimerStub) {
+  withStub(RecipeRunner, "watchPrefs"),
+  async function testInitFirstRun(runStub, registerTimerStub, watchPrefsStub) {
     await RecipeRunner.init();
     ok(runStub.called, "RecipeRunner.run is called immediately on first run");
     ok(
@@ -373,5 +378,87 @@ decorate_task(
       "On first run, the first run pref is set to false"
     );
     ok(registerTimerStub.called, "RecipeRunner.registerTimer registers a timer");
+
+    // RecipeRunner.init() sets this to false, but SpecialPowers
+    // relies on the preferences it manages to actually change when it
+    // tries to change them. Settings this back to true here allows
+    // that to happen. Not doing this causes popPrefEnv to hang forever.
+    Services.prefs.setBoolPref("extensions.shield-recipe-client.first_run", true);
+  }
+);
+
+// Test that prefs are watched correctly
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
+      ["extensions.shield-recipe-client.dev_mode", false],
+      ["extensions.shield-recipe-client.first_run", false],
+      ["extensions.shield-recipe-client.enabled", true],
+      ["extensions.shield-recipe-client.api_url", "https://example.com"], // starts with "https://"
+    ],
+  }),
+  withStub(RecipeRunner, "run"),
+  withStub(RecipeRunner, "enable"),
+  withStub(RecipeRunner, "disable"),
+  withStub(CleanupManager, "addCleanupHandler"),
+
+  async function testPrefWatching(runStub, enableStub, disableStub, addCleanupHandlerStub) {
+    await RecipeRunner.init();
+    is(enableStub.callCount, 1, "Enable should be called initially");
+    is(disableStub.callCount, 0, "Disable should not be called initially");
+
+    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.enabled", false]] });
+    is(enableStub.callCount, 1, "Enable should not be called again");
+    is(disableStub.callCount, 1, "RecipeRunner should disable when Shield is disabled");
+
+    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.enabled", true]] });
+    is(enableStub.callCount, 2, "RecipeRunner should re-enable when Shield is enabled");
+    is(disableStub.callCount, 1, "Disable should not be called again");
+
+    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.api_url", "http://example.com"]] }); // does not start with https://
+    is(enableStub.callCount, 2, "Enable should not be called again");
+    is(disableStub.callCount, 2, "RecipeRunner should disable when an invalid api url is given");
+
+    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.api_url", "https://example.com"]] }); // ends with https://
+    is(enableStub.callCount, 3, "RecipeRunner should re-enable when a valid api url is given");
+    is(disableStub.callCount, 2, "Disable should not be called again");
+
+    await SpecialPowers.pushPrefEnv({ set: [["datareporting.healthreport.uploadEnabled", false]] });
+    is(enableStub.callCount, 3, "Enable should not be called again");
+    is(disableStub.callCount, 3, "RecipeRunner should disable when telemetry is disabled");
+
+    await SpecialPowers.pushPrefEnv({ set: [["datareporting.healthreport.uploadEnabled", true]] });
+    is(enableStub.callCount, 4, "RecipeRunner should re-enable when telemetry is enabled");
+    is(disableStub.callCount, 3, "Disable should not be called again");
+
+    is(runStub.callCount, 0, "RecipeRunner.run should not be called during this test");
+  }
+);
+
+// Test that enable and disable are idempotent
+decorate_task(
+  withStub(RecipeRunner, "registerTimer"),
+  withStub(RecipeRunner, "unregisterTimer"),
+
+  async function testPrefWatching(registerTimerStub, unregisterTimerStub) {
+    const originalEnabled = RecipeRunner.enabled;
+
+    try {
+      RecipeRunner.enabled = false;
+      RecipeRunner.enable();
+      RecipeRunner.enable();
+      RecipeRunner.enable();
+      is(registerTimerStub.callCount, 1, "Enable should be idempotent");
+
+      RecipeRunner.enabled = true;
+      RecipeRunner.disable();
+      RecipeRunner.disable();
+      RecipeRunner.disable();
+      is(registerTimerStub.callCount, 1, "Disable should be idempotent");
+
+    } finally {
+      RecipeRunner.enabled = originalEnabled;
+    }
   }
 );

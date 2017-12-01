@@ -102,18 +102,11 @@ add_task(async function() {
   Assert.equal(messageEl.textContent, "test", "Message is correct");
 
   // Check that when clicking the learn more link, a tab opens with the right URL
-  let loadedPromise;
-  const tabOpenPromise = new Promise(resolve => {
-    gBrowser.tabContainer.addEventListener("TabOpen", event => {
-      let tab = event.target;
-      loadedPromise = BrowserTestUtils.browserLoaded(
-        tab.linkedBrowser, true, url => url && url !== "about:blank");
-      resolve(tab);
-    }, { once: true });
-  });
+  const tabOpenPromise = BrowserTestUtils.waitForNewTab(targetWindow.gBrowser);
   learnMoreEl.click();
   const tab = await tabOpenPromise;
-  const tabUrl = await loadedPromise;
+  const tabUrl = await BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser, true, url => url && url !== "about:blank");
 
   Assert.equal(tabUrl, "https://example.org/learnmore", "Learn more link opened the right url");
 
@@ -145,18 +138,11 @@ add_task(async function() {
   Assert.equal(engagementButton.label, "Click me!", "Engagement button has correct label");
 
   const engagementEl = hb.notice.querySelector(".notification-button");
-  let loadedPromise;
-  const tabOpenPromise = new Promise(resolve => {
-    gBrowser.tabContainer.addEventListener("TabOpen", event => {
-      let tab = event.target;
-      loadedPromise = BrowserTestUtils.browserLoaded(
-        tab.linkedBrowser, true, url => url && url !== "about:blank");
-      resolve(tab);
-    }, { once: true });
-  });
+  const tabOpenPromise = BrowserTestUtils.waitForNewTab(targetWindow.gBrowser);
   engagementEl.click();
   const tab = await tabOpenPromise;
-  const tabUrl = await loadedPromise;
+  const tabUrl = await BrowserTestUtils.browserLoaded(
+        tab.linkedBrowser, true, url => url && url !== "about:blank");
   // the postAnswer url gets query parameters appended onto the end, so use Assert.startsWith instead of Assert.equal
   Assert.ok(tabUrl.startsWith("https://example.org/postAnswer"), "Engagement button opened the right url");
 
