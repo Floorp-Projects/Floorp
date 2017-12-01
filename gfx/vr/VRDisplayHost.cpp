@@ -85,7 +85,7 @@ bool
 VRDisplayHost::CreateD3DObjects()
 {
   if (!mDevice) {
-    RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+    RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetVRDevice();
     if (!device) {
       NS_WARNING("VRDisplayHost::CreateD3DObjects failed to get a D3D11Device");
       return false;

@@ -87,7 +87,9 @@ fuzzy(20,999) != downscale-2c.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2d.html?205,53,bottom about:blank
 fuzzy(20,999) fails-if(OSX>=1008&&!skiaContent) != downscale-2e.html?205,53,bottom about:blank
 
-fuzzy(71,3391) skip-if(/^Linux\x20i686/.test(http.oscpu)) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # linux32 timeout, bug 1328771
+# Skip on Android because it runs reftests via http, and moz-icon isn't
+# accessible from http/https origins anymore.
+fuzzy(71,3391) skip-if(Android||/^Linux\x20i686/.test(http.oscpu)) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # linux32 timeout, bug 1328771
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
@@ -171,7 +173,9 @@ fuzzy(20,999) != downscale-2e.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2f.html?205,53,bottom about:blank
 
 # Skip on WinXP with skia content
-fuzzy(77,4439) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) skip-if(/^Linux\x20i686/.test(http.oscpu)) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # linux32 timeout, bug 1328771
+# Skip on Android because it runs reftests via http, and moz-icon isn't
+# accessible from http/https origins anymore.
+fuzzy(77,4439) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) skip-if(Android||/^Linux\x20i686/.test(http.oscpu)) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # linux32 timeout, bug 1328771
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal

@@ -74,7 +74,7 @@ ChannelMediaDecoder::ResourceCallback::TimerCallback(nsITimer* aTimer,
   MOZ_ASSERT(NS_IsMainThread());
   ResourceCallback* thiz = static_cast<ResourceCallback*>(aClosure);
   MOZ_ASSERT(thiz->mDecoder);
-  thiz->mDecoder->NotifyDataArrivedInternal();
+  thiz->mDecoder->NotifyReaderDataArrived();
   thiz->mTimerArmed = false;
 }
 
@@ -382,8 +382,9 @@ void
 ChannelMediaDecoder::DownloadProgressed()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  MediaDecoder::DownloadProgressed();
+  GetOwner()->DownloadProgressed();
   UpdatePlaybackRate();
   mResource->ThrottleReadahead(ShouldThrottleDownload());
 }

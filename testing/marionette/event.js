@@ -11,8 +11,6 @@ this.event = {};
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
-const {ElementNotInteractableError} =
-    Cu.import("chrome://marionette/content/error.js", {});
 
 const dblclickTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
@@ -1349,48 +1347,20 @@ event.sendSingleKey = function(keyToSend, modifiers, window = undefined) {
 };
 
 /**
- * Focus element and, if a textual input field and no previous selection
- * state exists, move the caret to the end of the input field.
- *
- * @param {Element} element
- *     Element to focus.
- */
-function focusElement(element) {
-  let t = element.type;
-  if (t && (t == "text" || t == "textarea")) {
-    if (element.selectionEnd == 0) {
-      let len = element.value.length;
-      element.setSelectionRange(len, len);
-    }
-  }
-  element.focus();
-}
-
-/**
  * @param {string} keyString
  * @param {Element} element
- * @param {Object.<string, boolean>=} opts
  * @param {Window=} window
  */
-event.sendKeysToElement = function(
-    keyString, el, opts = {}, window = undefined) {
+event.sendKeysToElement = function(keyString, el, window = undefined) {
+  // make Object.<modifier, false> map
+  let modifiers = Object.create(event.Modifiers);
+  for (let modifier in event.Modifiers) {
+    modifiers[modifier] = false;
+  }
 
-  if (opts.ignoreVisibility || element.isVisible(el)) {
-    focusElement(el);
-
-    // make Object.<modifier, false> map
-    let modifiers = Object.create(event.Modifiers);
-    for (let modifier in event.Modifiers) {
-      modifiers[modifier] = false;
-    }
-
-    for (let i = 0; i < keyString.length; i++) {
-      let c = keyString.charAt(i);
-      event.sendSingleKey(c, modifiers, window);
-    }
-
-  } else {
-    throw new ElementNotInteractableError("Element is not visible");
+  for (let i = 0; i < keyString.length; i++) {
+    let c = keyString.charAt(i);
+    event.sendSingleKey(c, modifiers, window);
   }
 };
 

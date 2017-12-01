@@ -79,22 +79,19 @@ class TestSwitchFrame(MarionetteTestCase):
         test_html = self.marionette.absolute_url("deletingFrame.html")
         self.marionette.navigate(test_html)
 
-        self.marionette.switch_to_frame(self.marionette.find_element(By.ID,
-                                                                     'iframe1'))
-        killIframe = self.marionette.find_element(By.ID, "killIframe")
-        killIframe.click()
+        self.marionette.switch_to_frame(self.marionette.find_element(By.ID, 'iframe1'))
+        kill_iframe = self.marionette.find_element(By.ID, "killIframe")
+        kill_iframe.click()
         self.marionette.switch_to_frame()
-
         self.assertEqual(0, len(self.marionette.find_elements(By.ID, "iframe1")))
 
-        addIFrame = self.marionette.find_element(By.ID, "addBackFrame")
-        addIFrame.click()
-        self.marionette.find_element(By.ID, "iframe1")
+        add_iframe = self.marionette.find_element(By.ID, "addBackFrame")
+        add_iframe.click()
 
+        self.marionette.find_element(By.ID, "iframe1")
         self.marionette.switch_to_frame(self.marionette.find_element(By.ID,
                                                                      "iframe1"))
-
-        self.marionette.find_element(By.ID, "checkbox")
+        self.marionette.find_element(By.ID, "killIframe")
 
     def test_should_allow_a_user_to_switch_from_an_iframe_back_to_the_main_content_of_the_page(self):
         test_iframe = self.marionette.absolute_url("test_iframe.html")

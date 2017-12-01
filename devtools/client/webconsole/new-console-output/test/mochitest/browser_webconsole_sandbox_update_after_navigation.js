@@ -9,68 +9,50 @@
 
 "use strict";
 
-add_task(function* () {
-  const TEST_URI1 = "http://example.com/browser/devtools/client/webconsole/" +
-                    "test/test-console.html";
-  const TEST_URI2 = "http://example.org/browser/devtools/client/webconsole/" +
-                    "test/test-console.html";
+const BASE_URI = "browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-console.html";
+const TEST_URI1 = "http://example.com/" + BASE_URI;
+const TEST_URI2 = "http://example.org/" + BASE_URI;
 
-  yield loadTab(TEST_URI1);
-  let hud = yield openConsole();
+add_task(async function () {
+  pushPref("devtools.webconsole.persistlog", false);
 
-  hud.jsterm.clearOutput();
+  let hud = await openNewTabAndConsole(TEST_URI1);
+
+  let onMessages = waitForMessages({
+    hud,
+    messages: [
+      { text: "window.location.href" },
+      { text: TEST_URI1 },
+    ],
+  });
+
   hud.jsterm.execute("window.location.href");
 
   info("wait for window.location.href");
-
-  let msgForLocation1 = {
-    webconsole: hud,
-    messages: [
-      {
-        name: "window.location.href jsterm input",
-        text: "window.location.href",
-        category: CATEGORY_INPUT,
-      },
-      {
-        name: "window.location.href result is displayed",
-        text: TEST_URI1,
-        category: CATEGORY_OUTPUT,
-      },
-    ],
-  };
-
-  yield waitForMessages(msgForLocation1);
+  await onMessages;
 
   // load second url
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI2);
-  yield loadBrowser(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  is(hud.outputNode.textContent.indexOf("Permission denied"), -1,
-     "no permission denied errors");
+  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
+
+  onMessages = waitForMessages({
+    hud,
+    messages: [
+      { text: "window.location.href" },
+      { text: TEST_URI2 },
+    ],
+  });
 
   hud.jsterm.clearOutput();
   hud.jsterm.execute("window.location.href");
 
   info("wait for window.location.href after page navigation");
+  await onMessages;
 
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [
-      {
-        name: "window.location.href jsterm input",
-        text: "window.location.href",
-        category: CATEGORY_INPUT,
-      },
-      {
-        name: "window.location.href result is displayed",
-        text: TEST_URI2,
-        category: CATEGORY_OUTPUT,
-      },
-    ],
-  });
-
-  is(hud.outputNode.textContent.indexOf("Permission denied"), -1,
-     "no permission denied errors");
+  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 
   // Navigation clears messages. Wait for that clear to happen before
   // continuing the test or it might destroy messages we wait later on (Bug
@@ -79,14 +61,23 @@ add_task(function* () {
 
   gBrowser.goBack();
 
-  info("Waiting for messages to be cleared due to navigation");
-  yield cleared;
+  info("Waiting for messages-cleared event due to navigation");
+  await cleared;
 
   info("Messages cleared after navigation; checking location");
+
+  onMessages = waitForMessages({
+    hud,
+    messages: [
+      { text: "window.location.href" },
+      { text: TEST_URI1 },
+    ],
+  });
+
   hud.jsterm.execute("window.location.href");
 
   info("wait for window.location.href after goBack()");
-  yield waitForMessages(msgForLocation1);
-  is(hud.outputNode.textContent.indexOf("Permission denied"), -1,
-     "no permission denied errors");
+  await onMessages;
+
+  ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 });

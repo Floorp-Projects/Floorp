@@ -954,15 +954,6 @@ MediaDecoder::PlaybackEnded()
 }
 
 void
-MediaDecoder::DownloadProgressed()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  GetOwner()->DownloadProgressed();
-}
-
-void
 MediaDecoder::NotifyPrincipalChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1391,24 +1382,16 @@ MediaDecoder::SizeOfAudioQueue()
 }
 
 void
-MediaDecoder::NotifyDataArrivedInternal()
+MediaDecoder::NotifyReaderDataArrived()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  nsresult rv =
-    mReader->OwnerThread()->Dispatch(
-      NewRunnableMethod("MediaFormatReader::NotifyDataArrived",
-                        mReader.get(),
-                        &MediaFormatReader::NotifyDataArrived));
+  nsresult rv = mReader->OwnerThread()->Dispatch(
+    NewRunnableMethod("MediaFormatReader::NotifyDataArrived",
+                      mReader.get(),
+                      &MediaFormatReader::NotifyDataArrived));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-}
-
-void
-MediaDecoder::NotifyDataArrived()
-{
-  NotifyDataArrivedInternal();
-  DownloadProgressed();
 }
 
 // Provide access to the state machine object

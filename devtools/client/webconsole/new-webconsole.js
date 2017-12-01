@@ -305,7 +305,7 @@ NewWebConsoleFrame.prototype = {
         packet._type = true;
         this.newConsoleOutput.dispatchMessageAdd(packet);
       } else {
-        this.clearOutput(false);
+        this.jsterm.clearOutput(false);
       }
     }
 
@@ -322,14 +322,6 @@ NewWebConsoleFrame.prototype = {
       // is fully updated after a page reload
       await this.newConsoleOutput.waitAsyncDispatches();
       this.emit("reloaded");
-    }
-  },
-
-  clearOutput(clearStorage) {
-    this.newConsoleOutput.dispatchMessagesClear();
-    this.webConsoleClient.clearNetworkRequests();
-    if (clearStorage) {
-      this.webConsoleClient.clearMessagesCache();
     }
   },
 };

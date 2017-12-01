@@ -231,7 +231,7 @@ public class testActivityStreamContextMenu extends OldBaseTest {
     private void testMenuForItem(WebpageModel item, boolean bookmarked, boolean pinned, boolean visited) {
         final View anchor = new View(getActivity());
         final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(
-                anchor, ActivityStreamTelemetry.Extras.builder(),
+                anchor, anchor, ActivityStreamTelemetry.Extras.builder(),
                 ActivityStreamContextMenu.MenuMode.HIGHLIGHT, item,
                 false, null, null, 100, 100);
 

@@ -688,6 +688,15 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         // exception for foo: linking to view-source:foo for reftests...
         return NS_OK;
     }
+    else if (sourceScheme.EqualsIgnoreCase("file") &&
+             targetScheme.EqualsIgnoreCase("moz-icon"))
+    {
+        // exception for file: linking to moz-icon://.ext?size=...
+        // Note that because targetScheme is the base (innermost) URI scheme,
+        // this does NOT allow file -> moz-icon:file:///... links.
+        // This is intentional.
+        return NS_OK;
+    }
 
     // Check for webextension
     rv = NS_URIChainHasFlags(aTargetURI,
@@ -837,12 +846,6 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
     NS_ENSURE_SUCCESS(rv, rv);
     if (hasFlags) {
         if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) {
-            // For now, don't change behavior for moz-icon:// and just allow it.
-            if (!targetScheme.EqualsLiteral("chrome")
-                    && !targetScheme.EqualsLiteral("resource")) {
-                return NS_OK;
-            }
-
             // Allow a URI_IS_UI_RESOURCE source to link to a URI_IS_UI_RESOURCE
             // target if ALLOW_CHROME is set.
             //

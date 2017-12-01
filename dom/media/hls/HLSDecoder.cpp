@@ -241,4 +241,14 @@ HLSDecoder::Shutdown()
   MediaDecoder::Shutdown();
 }
 
+void
+HLSDecoder::NotifyDataArrived()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  NotifyReaderDataArrived();
+  GetOwner()->DownloadProgressed();
+}
+
 } // namespace mozilla

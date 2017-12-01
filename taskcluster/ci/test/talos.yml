@@ -381,7 +381,7 @@ talos-tp6:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-            macosx.*: ['mozilla-beta', 'autoland', 'try']
+            macosx.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:

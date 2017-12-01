@@ -136,9 +136,6 @@ public:
   // Add the given ScrollMetadata if it doesn't already exist. Return an index
   // that can be used to look up the metadata later.
   size_t AddMetadata(const ScrollMetadata& aMetadata);
-  // Add a new empty WebRenderLayerScrollData and return the index that can be
-  // used to look it up via GetLayerData.
-  size_t AddNewLayerData();
   // Add the provided WebRenderLayerScrollData and return the index that can
   // be used to look it up via GetLayerData.
   size_t AddLayerData(const WebRenderLayerScrollData& aData);
@@ -147,7 +144,6 @@ public:
 
   // Return a pointer to the scroll data at the given index. Use with caution,
   // as the pointer may be invalidated if this WebRenderScrollData is mutated.
-  WebRenderLayerScrollData* GetLayerDataMutable(size_t aIndex);
   const WebRenderLayerScrollData* GetLayerData(size_t aIndex) const;
 
   const ScrollMetadata& GetScrollMetadata(size_t aIndex) const;

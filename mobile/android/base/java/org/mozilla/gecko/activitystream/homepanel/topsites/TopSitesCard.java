@@ -52,7 +52,7 @@ import java.util.concurrent.Future;
             @Override
             public boolean onLongClick(View v) {
                 if (onCardLongClickListener != null) {
-                    return onCardLongClickListener.onClick(topSite, absolutePosition, faviconView.getWidth(), faviconView.getHeight());
+                    return onCardLongClickListener.onLongClick(topSite, absolutePosition, card, faviconView.getWidth(), faviconView.getHeight());
                 }
                 return false;
             }

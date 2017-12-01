@@ -386,9 +386,9 @@ public:
 template<class Impl>
 const JNINativeMethod LayerSession::Compositor::Natives<Impl>::methods[] = {
 
-    mozilla::jni::MakeNativeMethod<LayerSession::Compositor::AttachToJava_t>(
-            mozilla::jni::NativeStub<LayerSession::Compositor::AttachToJava_t, Impl>
-            ::template Wrap<&Impl::AttachToJava>),
+    mozilla::jni::MakeNativeMethod<LayerSession::Compositor::AttachNPZC_t>(
+            mozilla::jni::NativeStub<LayerSession::Compositor::AttachNPZC_t, Impl>
+            ::template Wrap<&Impl::AttachNPZC>),
 
     mozilla::jni::MakeNativeMethod<LayerSession::Compositor::CreateCompositor_t>(
             mozilla::jni::NativeStub<LayerSession::Compositor::CreateCompositor_t, Impl>

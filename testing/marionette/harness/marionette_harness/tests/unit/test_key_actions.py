@@ -2,11 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import urllib
+
 from marionette_driver.by import By
 from marionette_driver.keys import Keys
 from marionette_driver.marionette import Actions
 
 from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
 class TestKeyActions(WindowManagerMixin, MarionetteTestCase):
@@ -17,7 +23,7 @@ class TestKeyActions(WindowManagerMixin, MarionetteTestCase):
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
-        test_html = self.marionette.absolute_url("javascriptPage.html")
+        test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
         self.reporter_element = self.marionette.find_element(By.ID, "keyReporter")
         self.reporter_element.click()
@@ -74,18 +80,17 @@ class TestKeyActions(WindowManagerMixin, MarionetteTestCase):
     def test_open_in_new_window_shortcut(self):
 
         def open_window_with_action():
-            el = self.marionette.find_element(By.ID, "updatediv")
-            # Ensure that the element is in the current view port because press() doesn't
-            # handle that inside the action chain (bug 1295538).
-            self.marionette.execute_script('arguments[0].scrollIntoView()', script_args=[el])
+            el = self.marionette.find_element(By.TAG_NAME, "a")
             (self.key_action.key_down(Keys.SHIFT)
                             .press(el)
                             .release()
                             .key_up(Keys.SHIFT)
                             .perform())
 
+        self.marionette.navigate(inline("<a href='#'>Click</a>"))
         new_window = self.open_window(trigger=open_window_with_action)
+
         self.marionette.switch_to_window(new_window)
         self.marionette.close_chrome_window()
+
         self.marionette.switch_to_window(self.start_window)
-        self.assertEqual(self.key_reporter_value, "")
