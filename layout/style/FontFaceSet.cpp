@@ -20,6 +20,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/Sprintf.h"
@@ -210,12 +211,9 @@ FontFaceSet::ParseFontShorthandForMatching(
     nsCSSValue style;
     nsCSSValue stretch;
     nsCSSValue weight;
-    // Bug 1343919: The Base URI is not correct.
-    RefPtr<URLExtraData> url = new URLExtraData(mDocument->GetDocumentURI(),
-                                                mDocument->GetDocumentURI(),
-                                                mDocument->NodePrincipal());
-    if (!Servo_ParseFontShorthandForMatching(
-          &aFont, url, &aFamilyList, &style, &stretch, &weight)) {
+    RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(mDocument);
+    if (!ServoCSSParser::ParseFontShorthandForMatching(
+          aFont, url, aFamilyList, style, stretch, weight)) {
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return;
     }

@@ -9,7 +9,19 @@
 #ifndef mozilla_ServoCSSParser_h
 #define mozilla_ServoCSSParser_h
 
-#include "mozilla/ServoBindings.h"
+#include "mozilla/gfx/Types.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/ServoTypes.h"
+#include "nsColor.h"
+#include "nsCSSPropertyID.h"
+#include "nsDOMCSSDeclaration.h"
+#include "nsString.h"
+
+class nsCSSValue;
+class nsIDocument;
+struct nsCSSRect;
+
+using RawGeckoGfxMatrix4x4 = mozilla::gfx::Float[16];
 
 namespace mozilla {
 namespace css {
@@ -19,9 +31,15 @@ class Loader;
 
 namespace mozilla {
 
+class ServoStyleSet;
+class SharedFontList;
+struct URLExtraData;
+
 class ServoCSSParser
 {
 public:
+  using ParsingEnvironment = nsDOMCSSDeclaration::ServoCSSParsingEnvironment;
+
   /**
    * Returns whether the specified string can be parsed as a valid CSS
    * <color> value.
@@ -87,6 +105,98 @@ public:
                               const nsAString& aValue,
                               URLExtraData* aURLExtraData,
                               nsCSSValue& aResult);
+
+  /**
+   * Parse a string representing a CSS property value into a
+   * RawServoDeclarationBlock.
+   *
+   * @param aProperty The property to be parsed.
+   * @param aValue The specified value.
+   * @param aParsingEnvironment All the parsing environment data we need.
+   * @param aParsingMode The paring mode we apply.
+   * @return The parsed value as a RawServoDeclarationBlock. We put the value
+   *   in a declaration block since that is how we represent specified values
+   *   in Servo.
+   */
+  static already_AddRefed<RawServoDeclarationBlock> ParseProperty(
+    nsCSSPropertyID aProperty,
+    const nsAString& aValue,
+    const ParsingEnvironment& aParsingEnvironment,
+    ParsingMode aParsingMode = ParsingMode::Default);
+
+  /**
+   * Parse a animation timing function.
+   *
+   * @param aValue The specified value.
+   * @param aUrl The parser url extra data.
+   * @param aResult The output timing function. (output)
+   * @return Whether the value was successfully parsed.
+   */
+  static bool ParseEasing(const nsAString& aValue,
+                          URLExtraData* aUrl,
+                          nsTimingFunction& aResult);
+
+  /**
+   * Parse a specified transform list into a gfx matrix.
+   *
+   * @param aValue The specified value.
+   * @param aContains3DTransform The output flag indicates whether this is any
+   *   3d transform function. (output)
+   * @param aResult The output matrix. (output)
+   * @return Whether the value was successfully parsed.
+   */
+  static bool ParseTransformIntoMatrix(const nsAString& aValue,
+                                       bool& aContains3DTransform,
+                                       RawGeckoGfxMatrix4x4& aResult);
+
+  /**
+   * Parse a font descriptor.
+   *
+   * @param aDescID The font descriptor id.
+   * @param aValue The specified value.
+   * @param aUrl The parser url extra data.
+   * @param aResult The parsed result. (output)
+   * @return Whether the value was successfully parsed.
+   */
+  static bool ParseFontDescriptor(nsCSSFontDesc aDescID,
+                                  const nsAString& aValue,
+                                  URLExtraData* aUrl,
+                                  nsCSSValue& aResult);
+
+  /**
+   * Parse a font shorthand for FontFaceSet matching, so we only care about
+   * FontFamily, FontStyle, FontStretch, and FontWeight.
+   *
+   * @param aValue The specified value.
+   * @param aUrl The parser url extra data.
+   * @param aList The parsed FontFamily list. (output)
+   * @param aStyle The parsed FontStyle. (output)
+   * @param aStretch The parsed FontStretch. (output)
+   * @param aWeight The parsed FontWeight. (output)
+   * @return Whether the value was successfully parsed.
+   */
+  static bool ParseFontShorthandForMatching(const nsAString& aValue,
+                                            URLExtraData* aUrl,
+                                            RefPtr<SharedFontList>& aList,
+                                            nsCSSValue& aStyle,
+                                            nsCSSValue& aStretch,
+                                            nsCSSValue& aWeight);
+
+  /**
+   * Get a URLExtraData from |nsIDocument|.
+   *
+   * @param aDocument The current document.
+   * @return The URLExtraData object.
+   */
+  static already_AddRefed<URLExtraData> GetURLExtraData(nsIDocument* aDocument);
+
+  /**
+   * Get a ParsingEnvironment from |nsIDocument|.
+   *
+   * @param aDocument The current document.
+   * @return The ParsingEnvironment object.
+   */
+  static ParsingEnvironment GetParsingEnvironment(nsIDocument* aDocument);
 };
 
 } // namespace mozilla

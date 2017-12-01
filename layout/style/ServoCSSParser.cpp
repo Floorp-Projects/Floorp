@@ -8,6 +8,9 @@
 
 #include "ServoCSSParser.h"
 
+#include "mozilla/ServoBindings.h"
+#include "nsIDocument.h"
+
 using namespace mozilla;
 
 /* static */ bool
@@ -53,4 +56,78 @@ ServoCSSParser::ParseCounterStyleDescriptor(nsCSSCounterDesc aDescriptor,
   NS_ConvertUTF16toUTF8 value(aValue);
   return Servo_ParseCounterStyleDescriptor(aDescriptor, &value, aURLExtraData,
                                            &aResult);
+}
+
+/* static */ already_AddRefed<RawServoDeclarationBlock>
+ServoCSSParser::ParseProperty(nsCSSPropertyID aProperty,
+                              const nsAString& aValue,
+                              const ParsingEnvironment& aParsingEnvironment,
+                              ParsingMode aParsingMode)
+{
+  NS_ConvertUTF16toUTF8 value(aValue);
+  return Servo_ParseProperty(aProperty,
+                             &value,
+                             aParsingEnvironment.mUrlExtraData,
+                             aParsingMode,
+                             aParsingEnvironment.mCompatMode,
+                             aParsingEnvironment.mLoader).Consume();
+}
+
+/* static */ bool
+ServoCSSParser::ParseEasing(const nsAString& aValue,
+                            URLExtraData* aUrl,
+                            nsTimingFunction& aResult)
+{
+  return Servo_ParseEasing(&aValue, aUrl, &aResult);
+}
+
+/* static */ bool
+ServoCSSParser::ParseTransformIntoMatrix(const nsAString& aValue,
+                                         bool& aContains3DTransform,
+                                         RawGeckoGfxMatrix4x4& aResult)
+{
+  return Servo_ParseTransformIntoMatrix(&aValue,
+                                        &aContains3DTransform,
+                                        &aResult);
+}
+
+/* static */ bool
+ServoCSSParser::ParseFontDescriptor(nsCSSFontDesc aDescID,
+                                    const nsAString& aValue,
+                                    URLExtraData* aUrl,
+                                    nsCSSValue& aResult)
+{
+  return Servo_ParseFontDescriptor(aDescID, &aValue, aUrl, &aResult);
+}
+
+/* static */ bool
+ServoCSSParser::ParseFontShorthandForMatching(const nsAString& aValue,
+                                              URLExtraData* aUrl,
+                                              RefPtr<SharedFontList>& aList,
+                                              nsCSSValue& aStyle,
+                                              nsCSSValue& aStretch,
+                                              nsCSSValue& aWeight)
+{
+  return Servo_ParseFontShorthandForMatching(&aValue, aUrl, &aList,
+                                             &aStyle, &aStretch, &aWeight);
+}
+
+/* static */ already_AddRefed<URLExtraData>
+ServoCSSParser::GetURLExtraData(nsIDocument* aDocument)
+{
+  MOZ_ASSERT(aDocument);
+
+  // FIXME this is using the wrong base uri (bug 1343919)
+  RefPtr<URLExtraData> url = new URLExtraData(aDocument->GetDocumentURI(),
+                                              aDocument->GetDocumentURI(),
+                                              aDocument->NodePrincipal());
+  return url.forget();
+}
+
+/* static */ ServoCSSParser::ParsingEnvironment
+ServoCSSParser::GetParsingEnvironment(nsIDocument* aDocument)
+{
+  return ParsingEnvironment(GetURLExtraData(aDocument),
+                            aDocument->GetCompatibilityMode(),
+                            aDocument->CSSLoader());
 }

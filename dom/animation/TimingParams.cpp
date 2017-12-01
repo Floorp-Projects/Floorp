@@ -10,7 +10,7 @@
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
-#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h" // For nsCSSParser
 #include "nsIDocument.h"
 #include "nsRuleNode.h"
@@ -119,11 +119,8 @@ TimingParams::ParseEasing(const nsAString& aEasing,
 
   if (aDocument->IsStyledByServo()) {
     nsTimingFunction timingFunction;
-    // FIXME this is using the wrong base uri (bug 1343919)
-    RefPtr<URLExtraData> data = new URLExtraData(aDocument->GetDocumentURI(),
-                                                 aDocument->GetDocumentURI(),
-                                                 aDocument->NodePrincipal());
-    if (!Servo_ParseEasing(&aEasing, data, &timingFunction)) {
+    RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(aDocument);
+    if (!ServoCSSParser::ParseEasing(aEasing, url, timingFunction)) {
       aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
       return Nothing();
     }

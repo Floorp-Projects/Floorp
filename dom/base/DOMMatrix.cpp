@@ -12,7 +12,7 @@
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h"
 #include "nsStyleTransformMatrix.h"
 
@@ -676,10 +676,9 @@ DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
   gfx::Matrix4x4 transform;
   bool contains3dTransform = false;
   if (mIsServo) {
-    bool status = Servo_ParseTransformIntoMatrix(&aTransformList,
-                                                 &contains3dTransform,
-                                                 &transform.components);
-    if (!status) {
+    if (!ServoCSSParser::ParseTransformIntoMatrix(aTransformList,
+                                                  contains3dTransform,
+                                                  transform.components)) {
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return nullptr;
     }
