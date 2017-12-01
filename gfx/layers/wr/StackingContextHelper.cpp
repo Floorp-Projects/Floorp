@@ -40,7 +40,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   // Compute scale for fallback rendering.
   gfx::Matrix transform2d;
   if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d)) {
-    mScale = transform2d.ScaleFactors(true) * aParentSC.mScale;
+    mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
+    mScale = mInheritedTransform.ScaleFactors(true);
   }
 
   mBuilder->PushStackingContext(wr::LayoutRect(),
