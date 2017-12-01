@@ -18,6 +18,16 @@
 
 /* WebAssembly baseline compiler ("RabaldrMonkey")
  *
+ * General assumptions for 32-bit vs 64-bit code:
+ *
+ * - A 32-bit register can be extended in-place to a 64-bit register on 64-bit
+ *   systems.
+ *
+ * - Code that knows that Register64 has a '.reg' member on 64-bit systems and
+ *   '.high' and '.low' members on 32-bit systems, or knows the implications
+ *   thereof, is #ifdef JS_PUNBOX64.  All other code is #if(n)?def JS_64BIT.
+ *
+ *
  * General status notes:
  *
  * "FIXME" indicates a known or suspected bug.  Always has a bug#.
@@ -297,6 +307,67 @@ struct AnyReg
     };
     enum { I32, I64, F32, F64 } tag;
 };
+
+// Platform-specific registers.
+//
+// All platforms must define struct SpecificRegs.  All 32-bit platforms must
+// have an abiReturnRegI64 member in that struct.
+
+#if defined(JS_CODEGEN_X64)
+struct SpecificRegs
+{
+    RegI32 eax, ecx, edx, edi, esi;
+    RegI64 rax, rcx, rdx;
+
+    SpecificRegs()
+      : eax(RegI32(js::jit::eax)),
+        ecx(RegI32(js::jit::ecx)),
+        edx(RegI32(js::jit::edx)),
+        edi(RegI32(js::jit::edi)),
+        esi(RegI32(js::jit::esi)),
+        rax(RegI64(Register64(js::jit::rax))),
+        rcx(RegI64(Register64(js::jit::rcx))),
+        rdx(RegI64(Register64(js::jit::rdx)))
+    {}
+};
+#elif defined(JS_CODEGEN_X86)
+struct SpecificRegs
+{
+    RegI32 eax, ecx, edx, edi, esi;
+    RegI64 ecx_ebx, edx_eax, abiReturnRegI64;
+
+    SpecificRegs()
+      : eax(RegI32(js::jit::eax)),
+        ecx(RegI32(js::jit::ecx)),
+        edx(RegI32(js::jit::edx)),
+        edi(RegI32(js::jit::edi)),
+        esi(RegI32(js::jit::esi)),
+        ecx_ebx(RegI64(Register64(js::jit::ecx, js::jit::ebx))),
+        edx_eax(RegI64(Register64(js::jit::edx, js::jit::eax))),
+        abiReturnRegI64(edx_eax)
+    {}
+};
+#elif defined(JS_CODEGEN_ARM)
+struct SpecificRegs
+{
+    RegI64 abiReturnRegI64;
+
+    SpecificRegs()
+      : abiReturnRegI64(ReturnReg64)
+    {}
+};
+#else
+struct SpecificRegs
+{
+# ifndef JS_64BIT
+    RegI64 abiReturnRegI64;
+# endif
+
+    SpecificRegs() {
+        MOZ_CRASH("BaseCompiler porting interface: SpecificRegs");
+    }
+};
+#endif
 
 class BaseCompilerInterface
 {
@@ -1004,7 +1075,7 @@ class BaseStackFrame
         masm.load32(Address(sp_, localOffset(src)), dest);
     }
 
-#ifndef JS_64BIT
+#ifndef JS_PUNBOX64
     void loadLocalI64Low(const Local& src, RegI32 dest) {
         masm.load32(Address(sp_, localOffset(src) + INT64LOW_OFFSET), dest);
     }
@@ -1198,7 +1269,7 @@ class BaseStackFrame
         masm.load64(Address(sp_, stackOffset(offset)), dest);
     }
 
-#ifndef JS_64BIT
+#ifndef JS_PUNBOX64
     void loadStackI64Low(int32_t offset, RegI32 dest) {
         masm.load32(Address(sp_, stackOffset(offset - INT64LOW_OFFSET)), dest);
     }
@@ -1503,28 +1574,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
     // On specific platforms we sometimes need to use specific registers.
 
-#ifdef JS_CODEGEN_X64
-    RegI64 specific_rax;
-    RegI64 specific_rcx;
-    RegI64 specific_rdx;
-#endif
-
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-    RegI32 specific_eax;
-    RegI32 specific_ecx;
-    RegI32 specific_edx;
-    RegI32 specific_edi;
-    RegI32 specific_esi;
-#endif
-
-#if defined(JS_CODEGEN_X86)
-    RegI64 specific_ecx_ebx;
-    RegI64 specific_edx_eax;
-#endif
-
-#if !defined(JS_PUNBOX64)
-    RegI64 abiReturnRegI64;
-#endif
+    SpecificRegs                specific;
 
     // The join registers are used to carry values out of blocks.
     // JoinRegI32 and joinRegI64 must overlap: emitBrIf and
@@ -1665,7 +1715,7 @@ class BaseCompiler final : public BaseCompilerInterface
         return RegI32(lowPart(r));
     }
 
-#ifdef JS_64BIT
+#ifdef JS_PUNBOX64
     RegI64 fromI32(RegI32 r) {
         return RegI64(Register64(r));
     }
@@ -1682,7 +1732,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     RegI32 narrowI64(RegI64 r) {
-#if defined(JS_PUNBOX64)
+#ifdef JS_PUNBOX64
         return RegI32(r.reg);
 #else
         freeI32(RegI32(r.high));
@@ -3375,10 +3425,10 @@ class BaseCompiler final : public BaseCompilerInterface
     void pop2xI32ForIntMulDiv(RegI32* r0, RegI32* r1) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         // srcDest must be eax, and edx will be clobbered.
-        need2xI32(specific_eax, specific_edx);
+        need2xI32(specific.eax, specific.edx);
         *r1 = popI32();
-        *r0 = popI32ToSpecific(specific_eax);
-        freeI32(specific_edx);
+        *r0 = popI32ToSpecific(specific.eax);
+        freeI32(specific.edx);
 #else
         pop2xI32(r0, r1);
 #endif
@@ -3387,10 +3437,10 @@ class BaseCompiler final : public BaseCompilerInterface
     void pop2xI64ForIntDiv(RegI64* r0, RegI64* r1) {
 #ifdef JS_CODEGEN_X64
         // srcDest must be rax, and rdx will be clobbered.
-        need2xI64(specific_rax, specific_rdx);
+        need2xI64(specific.rax, specific.rdx);
         *r1 = popI64();
-        *r0 = popI64ToSpecific(specific_rax);
-        freeI64(specific_rdx);
+        *r0 = popI64ToSpecific(specific.rax);
+        freeI64(specific.rdx);
 #else
         pop2xI64(r0, r1);
 #endif
@@ -3446,7 +3496,7 @@ class BaseCompiler final : public BaseCompilerInterface
 # if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg == rax);
-        MOZ_ASSERT(isAvailableI64(specific_rdx));
+        MOZ_ASSERT(isAvailableI64(specific.rdx));
         if (isUnsigned) {
             masm.xorq(rdx, rdx);
             masm.udivq(rhs.reg);
@@ -3474,7 +3524,7 @@ class BaseCompiler final : public BaseCompilerInterface
 # if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg == rax);
-        MOZ_ASSERT(isAvailableI64(specific_rdx));
+        MOZ_ASSERT(isAvailableI64(specific.rdx));
 
         if (isUnsigned) {
             masm.xorq(rdx, rdx);
@@ -3493,7 +3543,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
     void pop2xI32ForShiftOrRotate(RegI32* r0, RegI32* r1) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        *r1 = popI32(specific_ecx);
+        *r1 = popI32(specific.ecx);
         *r0 = popI32();
 #else
         pop2xI32(r0, r1);
@@ -3502,8 +3552,8 @@ class BaseCompiler final : public BaseCompilerInterface
 
     void pop2xI64ForShiftOrRotate(RegI64* r0, RegI64* r1) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        needI32(specific_ecx);
-        *r1 = widenI32(specific_ecx);
+        needI32(specific.ecx);
+        *r1 = widenI32(specific.ecx);
         *r1 = popI64ToSpecific(*r1);
         *r0 = popI64();
 #else
@@ -3549,9 +3599,9 @@ class BaseCompiler final : public BaseCompilerInterface
 
     RegI64 popI32ForSignExtendI64() {
 #if defined(JS_CODEGEN_X86)
-        need2xI32(specific_edx, specific_eax);
-        RegI32 r0 = popI32ToSpecific(specific_eax);
-        RegI64 x0 = specific_edx_eax;
+        need2xI32(specific.edx, specific.eax);
+        RegI32 r0 = popI32ToSpecific(specific.eax);
+        RegI64 x0 = specific.edx_eax;
         (void)r0;               // x0 is the widening of r0
 #else
         RegI32 r0 = popI32();
@@ -3562,9 +3612,9 @@ class BaseCompiler final : public BaseCompilerInterface
 
     RegI64 popI64ForSignExtendI64() {
 #if defined(JS_CODEGEN_X86)
-        need2xI32(specific_edx, specific_eax);
+        need2xI32(specific.edx, specific.eax);
         // Low on top, high underneath
-        return popI64ToSpecific(specific_edx_eax);
+        return popI64ToSpecific(specific.edx_eax);
 #else
         return popI64();
 #endif
@@ -4011,7 +4061,7 @@ class BaseCompiler final : public BaseCompilerInterface
         Operand srcAddr(ptr, access->offset());
 
         if (dest.tag == AnyReg::I64) {
-            MOZ_ASSERT(dest.i64() == abiReturnRegI64);
+            MOZ_ASSERT(dest.i64() == specific.abiReturnRegI64);
             masm.wasmLoadI64(*access, srcAddr, dest.i64());
         } else {
             ScratchI8 scratch(*this);
@@ -4156,13 +4206,13 @@ class BaseCompiler final : public BaseCompilerInterface
     void xchg64(MemoryAccessDesc* access, ValType type, WantResult wantResult)
     {
 #if defined(JS_CODEGEN_X86)
-        RegI64 rd = specific_edx_eax;
+        RegI64 rd = specific.edx_eax;
         needI64(rd);
-        needI32(specific_ecx);
+        needI32(specific.ecx);
         // Claim scratch after the need() calls because they may need it to
         // sync.
         ScratchEBX scratch(*this);
-        RegI64 rv = specific_ecx_ebx;
+        RegI64 rv = specific.ecx_ebx;
 #elif defined(JS_CODEGEN_ARM)
         RegI64 rv = needI64Pair();
         RegI64 rd = needI64Pair();
@@ -4190,7 +4240,7 @@ class BaseCompiler final : public BaseCompilerInterface
         freeI32(rp);
 
 #if defined(JS_CODEGEN_X86)
-        freeI32(specific_ecx);
+        freeI32(specific.ecx);
 #elif defined(JS_CODEGEN_ARM)
         freeI64(rv);
 #else
@@ -4312,7 +4362,7 @@ class BaseCompiler final : public BaseCompilerInterface
           case Scalar::Uint8: {
 #if defined(JS_CODEGEN_X86)
             ScratchI8 scratch(*this);
-            MOZ_ASSERT(rd == specific_eax);
+            MOZ_ASSERT(rd == specific.eax);
             if (!ra.isSingleByteI32(rnew)) {
                 // The replacement value must have a byte persona.
                 masm.movl(rnew, scratch);
@@ -4880,14 +4930,14 @@ BaseCompiler::emitMultiplyI64()
     RegI32 temp;
 #if defined(JS_CODEGEN_X64)
     // srcDest must be rax, and rdx will be clobbered.
-    need2xI64(specific_rax, specific_rdx);
+    need2xI64(specific.rax, specific.rdx);
     r1 = popI64();
-    r0 = popI64ToSpecific(specific_rax);
-    freeI64(specific_rdx);
+    r0 = popI64ToSpecific(specific.rax);
+    freeI64(specific.rdx);
 #elif defined(JS_CODEGEN_X86)
-    need2xI32(specific_eax, specific_edx);
+    need2xI32(specific.eax, specific.edx);
     r1 = popI64();
-    r0 = popI64ToSpecific(specific_edx_eax);
+    r0 = popI64ToSpecific(specific.edx_eax);
     temp = needI32();
 #else
     pop2xI64(&r0, &r1);
@@ -5048,7 +5098,7 @@ BaseCompiler::emitRemainderU32()
 void
 BaseCompiler::emitQuotientI64()
 {
-# ifdef JS_PUNBOX64
+# ifdef JS_64BIT
     int64_t c;
     uint_fast8_t power;
     if (popConstPositivePowerOfTwoI64(&c, &power, 0)) {
@@ -5079,7 +5129,7 @@ BaseCompiler::emitQuotientI64()
 void
 BaseCompiler::emitQuotientU64()
 {
-# ifdef JS_PUNBOX64
+# ifdef JS_64BIT
     int64_t c;
     uint_fast8_t power;
     if (popConstPositivePowerOfTwoI64(&c, &power, 0)) {
@@ -5104,7 +5154,7 @@ BaseCompiler::emitQuotientU64()
 void
 BaseCompiler::emitRemainderI64()
 {
-# ifdef JS_PUNBOX64
+# ifdef JS_64BIT
     int64_t c;
     uint_fast8_t power;
     if (popConstPositivePowerOfTwoI64(&c, &power, 1)) {
@@ -5139,7 +5189,7 @@ BaseCompiler::emitRemainderI64()
 void
 BaseCompiler::emitRemainderU64()
 {
-# ifdef JS_PUNBOX64
+# ifdef JS_64BIT
     int64_t c;
     uint_fast8_t power;
     if (popConstPositivePowerOfTwoI64(&c, &power, 1)) {
@@ -6805,10 +6855,10 @@ BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operand
 
     sync();
 
-    needI64(abiReturnRegI64);
+    needI64(specific.abiReturnRegI64);
 
     RegI64 rhs = popI64();
-    RegI64 srcDest = popI64ToSpecific(abiReturnRegI64);
+    RegI64 srcDest = popI64ToSpecific(specific.abiReturnRegI64);
 
     Label done;
 
@@ -6845,7 +6895,7 @@ BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType 
     FunctionCall call(0);
 
     masm.setupWasmABICall();
-# if defined(JS_PUNBOX64)
+# ifdef JS_PUNBOX64
     MOZ_CRASH("BaseCompiler platform hook: emitConvertInt64ToFloatingCallout");
 # else
     masm.passABIArg(input.high);
@@ -7280,7 +7330,7 @@ BaseCompiler::loadCommon(MemoryAccessDesc* access, ValType type)
         RegI64 rv;
         RegI32 rp;
 #ifdef JS_CODEGEN_X86
-        rv = abiReturnRegI64;
+        rv = specific.abiReturnRegI64;
         needI64(rv);
         rp = popMemoryAccess(access, &check);
 #else
@@ -7677,10 +7727,10 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
     if (Scalar::byteSize(viewType) <= 4) {
         bool narrowing = type == ValType::I64;
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-        needI32(specific_eax);
+        needI32(specific.eax);
         RegI32 rnew = narrowing ? popI64ToI32() : popI32();
-        RegI32 rexpect = narrowing ? popI64ToSpecificI32(specific_eax)
-                                   : popI32ToSpecific(specific_eax);
+        RegI32 rexpect = narrowing ? popI64ToSpecificI32(specific.eax)
+                                   : popI32ToSpecific(specific.eax);
         RegI32 rd = rexpect;
 #elif defined(JS_CODEGEN_ARM)
         RegI32 rnew = narrowing ? popI64ToI32() : popI32();
@@ -7713,17 +7763,17 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
     MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
 
 #ifdef JS_CODEGEN_X64
-    needI64(specific_rax);
+    needI64(specific.rax);
     RegI64 rreplace = popI64();
-    RegI64 rexpect = popI64ToSpecific(specific_rax);
+    RegI64 rexpect = popI64ToSpecific(specific.rax);
     RegI64 rd = rexpect;
 #elif defined(JS_CODEGEN_X86)
-    needI32(specific_ecx);
-    needI64(specific_edx_eax);
+    needI32(specific.ecx);
+    needI64(specific.edx_eax);
     // Claim scratch after the need() calls because they may need it to sync.
     ScratchEBX scratch(*this);
-    RegI64 rreplace = popI64ToSpecific(specific_ecx_ebx);
-    RegI64 rexpect = popI64ToSpecific(specific_edx_eax);
+    RegI64 rreplace = popI64ToSpecific(specific.ecx_ebx);
+    RegI64 rexpect = popI64ToSpecific(specific.edx_eax);
     RegI64 rd = rexpect;
 #elif defined(JS_CODEGEN_ARM)
     RegI64 rreplace = popI64Pair();
@@ -7748,7 +7798,7 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
 #if defined(JS_CODEGEN_X64)
     freeI64(rreplace);
 #elif defined(JS_CODEGEN_X86)
-    freeI32(specific_ecx);
+    freeI32(specific.ecx);
 #elif defined(JS_CODEGEN_ARM)
     freeI64(rexpect);
     freeI64(rreplace);
@@ -7782,12 +7832,12 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
 #else
 
 # if defined(JS_CODEGEN_X86)
-    needI32(specific_ecx);
-    needI64(specific_edx_eax);
+    needI32(specific.ecx);
+    needI64(specific.edx_eax);
     // Claim scratch after the need() calls because they may need it to sync.
     ScratchEBX scratch(*this);
-    RegI64 tmp = specific_ecx_ebx;
-    RegI64 output = specific_edx_eax;
+    RegI64 tmp = specific.ecx_ebx;
+    RegI64 output = specific.edx_eax;
 # elif defined(JS_CODEGEN_ARM)
     RegI64 tmp;
     RegI64 output = needI64Pair();
@@ -7808,7 +7858,7 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
     freeI32(rp);
     maybeFreeI32(tls);
 # if defined(JS_CODEGEN_X86)
-    freeI32(specific_ecx);
+    freeI32(specific.ecx);
 # elif defined(JS_CODEGEN_ARM)
     // Nothing
 # else
@@ -7839,12 +7889,12 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
         bool narrowing = type == ValType::I64;
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         bool isAddSub = op == AtomicFetchAddOp || op == AtomicFetchSubOp;
-        needI32(specific_eax);
+        needI32(specific.eax);
         RegI32 rv = narrowing
-                  ? (isAddSub ? popI64ToSpecificI32(specific_eax) : popI64ToI32())
-                  : (isAddSub ? popI32ToSpecific(specific_eax) : popI32());
+                  ? (isAddSub ? popI64ToSpecificI32(specific.eax) : popI64ToI32())
+                  : (isAddSub ? popI32ToSpecific(specific.eax) : popI32());
         RegI32 rp = popMemoryAccess(&access, &check);
-        RegI32 output = isAddSub ? rv : specific_eax;
+        RegI32 output = isAddSub ? rv : specific.eax;
 #elif defined(JS_CODEGEN_ARM)
         RegI32 rv = narrowing ? popI64ToI32() : popI32();
         RegI32 rp = popMemoryAccess(&access, &check);
@@ -7877,24 +7927,24 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
 
     sync();
 
-    needI32NoSync(specific_eax);
+    needI32NoSync(specific.eax);
     ScratchEBX scratch(*this);           // Already allocated
-    needI32NoSync(specific_ecx);
-    needI32NoSync(specific_edx);
-    needI32NoSync(specific_edi);
-    needI32NoSync(specific_esi);
+    needI32NoSync(specific.ecx);
+    needI32NoSync(specific.edx);
+    needI32NoSync(specific.edi);
+    needI32NoSync(specific.esi);
 
     AccessCheck check;
     MOZ_ASSERT(needTlsForAccess(check));
 
-    RegI64 tmp = specific_ecx_ebx;
+    RegI64 tmp = specific.ecx_ebx;
     popI64ToSpecific(tmp);
 
-    RegI32 ptr = specific_esi;
+    RegI32 ptr = specific.esi;
     popI32ToSpecific(ptr);
 
-    RegI32 tls = specific_edi;
-    RegI32 memoryBase = specific_edi;     // Yes, same
+    RegI32 tls = specific.edi;
+    RegI32 memoryBase = specific.edi;     // Yes, same
     masm.loadWasmTlsRegFromFrame(tls);
 
     prepareMemoryAccess(&access, &check, tls, ptr);
@@ -7903,7 +7953,7 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
     fr.pushPtr(ecx);
     fr.pushPtr(ebx);
 
-    RegI64 rd = specific_edx_eax;
+    RegI64 rd = specific.edx_eax;
 
     BaseIndex srcAddr(memoryBase, ptr, TimesOne, access.offset());
     Address value(esp, 0);
@@ -7912,19 +7962,19 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
     fr.popBytes(8);
 
     pushI64(rd);
-    freeI32(specific_ecx);
-    freeI32(specific_edi);
-    freeI32(specific_esi);
+    freeI32(specific.ecx);
+    freeI32(specific.edi);
+    freeI32(specific.esi);
 
 #else // !JS_CODEGEN_X86
 
     AccessCheck check;
 # if defined(JS_CODEGEN_X64)
     bool isAddSub = op == AtomicFetchAddOp || op == AtomicFetchSubOp;
-    needI64(specific_rax);
-    RegI64 rv = isAddSub ? popI64ToSpecific(specific_rax) : popI64();
+    needI64(specific.rax);
+    RegI64 rv = isAddSub ? popI64ToSpecific(specific.rax) : popI64();
     RegI32 rp = popMemoryAccess(&access, &check);
-    RegI64 rd = isAddSub ? rv : specific_rax;
+    RegI64 rd = isAddSub ? rv : specific.rax;
 # elif defined(JS_CODEGEN_ARM)
     RegI64 rv = popI64();
     RegI32 rp = popMemoryAccess(&access, &check);
@@ -8029,11 +8079,11 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
 #ifdef JS_64BIT
     RegI64 rv = popI64();
     RegI32 rp = popMemoryAccess(&access, &check);
-#ifdef JS_CODEGEN_X64
+# ifdef JS_CODEGEN_X64
     RegI64 rd = rv;
-#else
+# else
     RegI64 rd = needI64();
-#endif
+# endif
     RegI32 tls = maybeLoadTlsForAccess(check);
 
     prepareMemoryAccess(&access, &check, tls, rp);
@@ -8878,26 +8928,6 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       masm(*masm),
       ra(*this),
       fr(*masm),
-#ifdef JS_CODEGEN_X64
-      specific_rax(RegI64(Register64(rax))),
-      specific_rcx(RegI64(Register64(rcx))),
-      specific_rdx(RegI64(Register64(rdx))),
-#endif
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-      specific_eax(RegI32(eax)),
-      specific_ecx(RegI32(ecx)),
-      specific_edx(RegI32(edx)),
-      specific_edi(RegI32(edi)),
-      specific_esi(RegI32(esi)),
-#endif
-#ifdef JS_CODEGEN_X86
-      specific_ecx_ebx(RegI64(Register64(ecx, ebx))),
-      specific_edx_eax(RegI64(Register64(edx, eax))),
-      abiReturnRegI64(RegI64(Register64(edx, eax))),
-#endif
-#ifdef JS_CODEGEN_ARM
-      abiReturnRegI64(ReturnReg64),
-#endif
       joinRegI32(RegI32(ReturnReg)),
       joinRegI64(RegI64(ReturnReg64)),
       joinRegF32(RegF32(ReturnFloat32Reg)),
