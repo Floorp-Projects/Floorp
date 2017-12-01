@@ -433,3 +433,22 @@ function simulateLinkClick(element) {
     element.click();
   });
 }
+
+/**
+ * Open a new browser window and return a promise that resolves when the new window has
+ * fired the "browser-delayed-startup-finished" event.
+ *
+ * @returns Promise
+ *          A Promise that resolves when the window is ready.
+ */
+function openNewBrowserWindow() {
+  let win = OpenBrowserWindow();
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observer(subject, topic) {
+      if (win == subject) {
+        Services.obs.removeObserver(observer, topic);
+        resolve(win);
+      }
+    }, "browser-delayed-startup-finished");
+  });
+}
