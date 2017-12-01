@@ -70,7 +70,6 @@ object TelemetryWrapper {
         val SHARE_INTENT = "share_intent"
         val REMOVE = "remove"
         val REORDER = "reorder"
-        val NEW = "new"
         val RESTORE = "restore"
     }
 
@@ -610,8 +609,10 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun setDefaultSearchEngineEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.SEARCH_ENGINE_SETTING).queue()
+    fun setDefaultSearchEngineEvent(source: String) {
+        TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.SEARCH_ENGINE_SETTING)
+                .extra(Extra.SOURCE, source)
+                .queue()
     }
 
     @JvmStatic
@@ -631,7 +632,7 @@ object TelemetryWrapper {
 
     @JvmStatic
     fun menuAddSearchEngineEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.NEW, Object.SEARCH_ENGINE_SETTING).queue()
+        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.CUSTOM_SEARCH_ENGINE).queue()
     }
 
     @JvmStatic

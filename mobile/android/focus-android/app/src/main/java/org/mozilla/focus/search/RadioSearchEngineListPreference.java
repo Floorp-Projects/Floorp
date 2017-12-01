@@ -45,7 +45,10 @@ public class RadioSearchEngineListPreference extends SearchEngineListPreference 
 
     @Override
     public void onCheckedChanged (RadioGroup group, int checkedId) {
-        Settings.getInstance(group.getContext()).setDefaultSearchEngine(searchEngines.get(checkedId));
-        TelemetryWrapper.setDefaultSearchEngineEvent();
+        final SearchEngine newDefaultEngine = searchEngines.get(checkedId);
+        Settings.getInstance(group.getContext()).setDefaultSearchEngine(newDefaultEngine);
+        final String source = SearchEngineManager.getInstance().isCustomSearchEngine(newDefaultEngine.getIdentifier(), getContext()) ?
+                SearchEngineManager.ENGINE_TYPE_CUSTOM : SearchEngineManager.ENGINE_TYPE_BUNDLED;
+        TelemetryWrapper.setDefaultSearchEngineEvent(source);
     }
 }
