@@ -3,13 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-/* import-globals-from ../../netmonitor/test/shared-head.js */
-
 // A test to ensure Style Editor doesn't bybass cache when loading style sheet
 // contents (bug 978688).
-
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/shared-head.js", this);
 
 const TEST_URL = TEST_BASE_HTTP + "doc_uncached.html";
 
@@ -38,8 +33,6 @@ add_task(function* () {
 
   info("Waiting for the source to be loaded.");
   yield styleeditor.UI.editors[0].getSourceEditor();
-
-  yield waitForExistingRequests(monitor);
 
   info("Checking Netmonitor contents.");
   let items = [];

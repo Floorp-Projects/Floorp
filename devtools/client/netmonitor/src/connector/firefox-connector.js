@@ -71,16 +71,18 @@ class FirefoxConnector {
     this.removeListeners();
 
     if (this.tabTarget) {
+      // Unregister `will-navigate` needs to be done before `this.timelineFront.destroy()`
+      // since this.tabTarget might be nullified after timelineFront.destroy().
+      this.tabTarget.off("will-navigate");
       // The timeline front wasn't initialized and started if the server wasn't
       // recent enough to emit the markers we were interested in.
       if (this.tabTarget.getTrait("documentLoadingMarkers") && this.timelineFront) {
         this.timelineFront.off("doc-loading", this.onDocLoadingMarker);
         await this.timelineFront.destroy();
       }
-
-      this.tabTarget.off("will-navigate");
       this.tabTarget = null;
     }
+
     this.webConsoleClient = null;
     this.timelineFront = null;
     this.dataProvider = null;

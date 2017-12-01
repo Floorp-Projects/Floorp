@@ -46,8 +46,6 @@ class StackTracePanel extends Component {
     fetchNetworkUpdatePacket(connector.requestData, request, ["stackTrace"]);
   }
 
-  // Rendering
-
   render() {
     let {
       connector,

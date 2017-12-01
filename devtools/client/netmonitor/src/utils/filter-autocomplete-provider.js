@@ -56,8 +56,8 @@ function getAutocompleteValuesForFlag(flag, request) {
       break;
     case "has-response-header":
       // Some requests not having responseHeaders..?
-      values = request.responseHeaders &&
-        request.responseHeaders.headers.map(h => h.name);
+      values = request.responseHeaders ?
+        request.responseHeaders.headers.map(h => h.name) : [];
       break;
     case "protocol":
       values.push(request.httpVersion);
@@ -108,10 +108,11 @@ function getLastTokenFlagValues(lastToken, requests) {
   values = [...new Set(values)];
 
   return values
+    .filter(value => value)
     .filter(value => {
-      if (typedFlagValue) {
-        let lowerTyped = typedFlagValue.toLowerCase(),
-          lowerValue = value.toLowerCase();
+      if (typedFlagValue && value) {
+        let lowerTyped = typedFlagValue.toLowerCase();
+        let lowerValue = value.toLowerCase();
         return lowerValue.includes(lowerTyped) && lowerValue !== lowerTyped;
       }
       return typeof value !== "undefined" && value !== "" && value !== "undefined";
