@@ -6646,7 +6646,7 @@ JS_SetRegExpInput(JSContext* cx, HandleObject obj, HandleString input)
     if (!res)
         return false;
 
-    res->reset(cx, input);
+    res->reset(input);
     return true;
 }
 

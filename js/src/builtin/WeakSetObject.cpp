@@ -178,7 +178,7 @@ WeakSetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 }
 
 bool
-WeakSetObject::isBuiltinAdd(HandleValue add, JSContext* cx)
+WeakSetObject::isBuiltinAdd(HandleValue add)
 {
     return IsNativeFunction(add, WeakSet_add);
 }
