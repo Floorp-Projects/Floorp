@@ -2650,7 +2650,7 @@ CASE(JSOP_NEG)
 {
     ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
     MutableHandleValue res = REGS.stackHandleAt(-1);
-    if (!NegOperation(cx, script, REGS.pc, val, res))
+    if (!NegOperation(cx, val, res))
         goto error;
 }
 END_CASE(JSOP_NEG)
@@ -2730,7 +2730,7 @@ CASE(JSOP_TOID)
      */
     ReservedRooted<Value> idval(&rootValue1, REGS.sp[-1]);
     MutableHandleValue res = REGS.stackHandleAt(-1);
-    if (!ToIdOperation(cx, script, REGS.pc, idval, res))
+    if (!ToIdOperation(cx, idval, res))
         goto error;
 }
 END_CASE(JSOP_TOID)
@@ -2793,7 +2793,7 @@ END_CASE(JSOP_CHECKTHIS)
 CASE(JSOP_CHECKTHISREINIT)
 {
     if (!REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
-        MOZ_ALWAYS_FALSE(ThrowInitializedThis(cx, REGS.fp()));
+        MOZ_ALWAYS_FALSE(ThrowInitializedThis(cx));
         goto error;
     }
 }
@@ -5256,7 +5256,7 @@ js::SuperFunOperation(JSContext* cx, HandleObject callee)
 }
 
 bool
-js::ThrowInitializedThis(JSContext* cx, AbstractFramePtr frame)
+js::ThrowInitializedThis(JSContext* cx)
 {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REINIT_THIS);
     return false;

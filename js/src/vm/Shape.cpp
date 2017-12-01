@@ -2115,7 +2115,7 @@ EmptyShape::getInitialShape(JSContext* cx, const Class* clasp, TaggedProto proto
     }
 
     if (!shape) {
-        StackBaseShape base(cx, clasp, objectFlags);
+        StackBaseShape base(clasp, objectFlags);
         Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
         if (!nbase)
             return nullptr;

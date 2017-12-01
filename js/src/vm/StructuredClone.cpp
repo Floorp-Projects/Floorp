@@ -1352,7 +1352,7 @@ JSStructuredCloneWriter::traverseMap(HandleObject obj)
         RootedObject unwrapped(context(), CheckedUnwrap(obj));
         MOZ_ASSERT(unwrapped);
         JSAutoCompartment ac(context(), unwrapped);
-        if (!MapObject::getKeysAndValuesInterleaved(context(), unwrapped, &newEntries))
+        if (!MapObject::getKeysAndValuesInterleaved(unwrapped, &newEntries))
             return false;
     }
     if (!context()->compartment()->wrap(context(), &newEntries))

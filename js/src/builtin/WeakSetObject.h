@@ -24,7 +24,7 @@ class WeakSetObject : public WeakCollectionObject
     static WeakSetObject* create(JSContext* cx, HandleObject proto = nullptr);
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool isBuiltinAdd(HandleValue add, JSContext* cx);
+    static bool isBuiltinAdd(HandleValue add);
 };
 
 extern JSObject*

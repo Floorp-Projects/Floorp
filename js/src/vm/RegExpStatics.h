@@ -68,7 +68,7 @@ class RegExpStatics
     inline void clear();
 
     /* Corresponds to JSAPI functionality to set the pending RegExp input. */
-    void reset(JSContext* cx, JSString* newInput) {
+    void reset(JSString* newInput) {
         clear();
         pendingInput = newInput;
         checkInvariants();
