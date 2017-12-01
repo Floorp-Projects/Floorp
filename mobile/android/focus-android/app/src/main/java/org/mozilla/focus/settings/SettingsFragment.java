@@ -118,6 +118,19 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        switch (settingsScreen) {
+            case SEARCH_ENGINES:
+                if (SearchEngineManager.hasAllDefaultSearchEngines(getSearchEngineSharedPreferences())) {
+                    menu.findItem(R.id.menu_restore_default_engines).setEnabled(false);
+                }
+                break;
+            default:
+                return;
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_remove_search_engines:
