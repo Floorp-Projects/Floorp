@@ -2155,9 +2155,8 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token)
             buffer[i] = char(cur[i]);
         buffer[end - cur] = '\0';
         char* strtod_end;
-        int err;
-        result = (Float)js_strtod_harder(c.dtoaState, buffer, &strtod_end, &err);
-        if (err != 0 || strtod_end == buffer) {
+        result = (Float)js_strtod_harder(c.dtoaState, buffer, &strtod_end);
+        if (strtod_end == buffer) {
             c.lifo.release(mark);
             c.ts.generateError(token, c.error);
             return nullptr;

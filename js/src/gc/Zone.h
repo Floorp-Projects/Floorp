@@ -822,10 +822,6 @@ class ZonesIter
             next();
     }
 
-    bool atAtomsZone(JSRuntime* rt) const {
-        return !!atomsZone;
-    }
-
     bool done() const { return !atomsZone && group.done(); }
 
     void next() {
