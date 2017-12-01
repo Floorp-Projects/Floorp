@@ -1424,6 +1424,15 @@ impl Device {
         }
     }
 
+    pub fn read_pixels(&mut self, width: i32, height: i32) -> Vec<u8> {
+        self.gl.read_pixels(
+            0, 0, 
+            width as i32, height as i32,
+            gl::RGBA,
+            gl::UNSIGNED_BYTE
+        )
+    }
+
     pub fn bind_vao(&mut self, vao: &VAO) {
         debug_assert!(self.inside_frame);
 
@@ -1603,29 +1612,11 @@ impl Device {
         self.frame_id.0 += 1;
     }
 
-    pub fn clear_target(&self, color: Option<[f32; 4]>, depth: Option<f32>) {
-        let mut clear_bits = 0;
-
-        if let Some(color) = color {
-            self.gl.clear_color(color[0], color[1], color[2], color[3]);
-            clear_bits |= gl::COLOR_BUFFER_BIT;
-        }
-
-        if let Some(depth) = depth {
-            self.gl.clear_depth(depth as f64);
-            clear_bits |= gl::DEPTH_BUFFER_BIT;
-        }
-
-        if clear_bits != 0 {
-            self.gl.clear(clear_bits);
-        }
-    }
-
-    pub fn clear_target_rect(
+    pub fn clear_target(
         &self,
         color: Option<[f32; 4]>,
         depth: Option<f32>,
-        rect: DeviceIntRect,
+        rect: Option<DeviceIntRect>,
     ) {
         let mut clear_bits = 0;
 
@@ -1635,20 +1626,28 @@ impl Device {
         }
 
         if let Some(depth) = depth {
+            debug_assert_ne!(self.gl.get_boolean_v(gl::DEPTH_WRITEMASK), 0);
             self.gl.clear_depth(depth as f64);
             clear_bits |= gl::DEPTH_BUFFER_BIT;
         }
 
         if clear_bits != 0 {
-            self.gl.enable(gl::SCISSOR_TEST);
-            self.gl.scissor(
-                rect.origin.x,
-                rect.origin.y,
-                rect.size.width,
-                rect.size.height,
-            );
-            self.gl.clear(clear_bits);
-            self.gl.disable(gl::SCISSOR_TEST);
+            match rect {
+                Some(rect) => {
+                    self.gl.enable(gl::SCISSOR_TEST);
+                    self.gl.scissor(
+                        rect.origin.x,
+                        rect.origin.y,
+                        rect.size.width,
+                        rect.size.height,
+                    );
+                    self.gl.clear(clear_bits);
+                    self.gl.disable(gl::SCISSOR_TEST);
+                }
+                None => {
+                    self.gl.clear(clear_bits);
+                }
+            }
         }
     }
 

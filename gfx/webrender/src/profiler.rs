@@ -8,6 +8,7 @@ use euclid::{Point2D, Rect, Size2D, vec2};
 use query::{GpuSampler, GpuTimer, NamedTag};
 use std::collections::vec_deque::VecDeque;
 use internal_types::FastHashMap;
+use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{f32, mem};
 use time::precise_time_ns;
 
@@ -350,13 +351,19 @@ impl TextureCacheProfileCounters {
 pub struct GpuCacheProfileCounters {
     pub allocated_rows: IntProfileCounter,
     pub allocated_blocks: IntProfileCounter,
+    pub updated_rows: IntProfileCounter,
+    pub updated_blocks: IntProfileCounter,
+    pub saved_blocks: IntProfileCounter,
 }
 
 impl GpuCacheProfileCounters {
     pub fn new() -> Self {
         GpuCacheProfileCounters {
-            allocated_rows: IntProfileCounter::new("GPU cache rows"),
-            allocated_blocks: IntProfileCounter::new("GPU cache blocks"),
+            allocated_rows: IntProfileCounter::new("GPU cache rows: total"),
+            updated_rows: IntProfileCounter::new("GPU cache rows: updated"),
+            allocated_blocks: IntProfileCounter::new("GPU cache blocks: total"),
+            updated_blocks: IntProfileCounter::new("GPU cache blocks: updated"),
+            saved_blocks: IntProfileCounter::new("GPU cache blocks: saved"),
         }
     }
 }
@@ -825,6 +832,99 @@ impl Profiler {
         }
     }
 
+    fn draw_gpu_cache_bar(
+        &mut self,
+        label: &str,
+        label_color: ColorU,
+        counters: &[(ColorU, &IntProfileCounter)],
+        debug_renderer: &mut DebugRenderer,
+    ) -> Rect<f32> {
+        let mut rect = debug_renderer.add_text(
+            self.x_left,
+            self.y_left,
+            label,
+            label_color,
+        );
+
+        let x_base = rect.origin.x + rect.size.width + 10.0;
+        let height = debug_renderer.line_height();
+        let width = (self.x_right - 30.0 - x_base).max(0.0);
+        let total_value = counters.last().unwrap().1.value;
+        let scale = width / total_value as f32;
+        let mut x_current = x_base;
+
+        for &(color, counter) in counters {
+            let x_stop = x_base + counter.value as f32 * scale;
+            debug_renderer.add_quad(
+                x_current,
+                rect.origin.y,
+                x_stop,
+                rect.origin.y + height,
+                color,
+                color,
+            );
+            x_current = x_stop;
+        }
+
+        self.y_left += height;
+
+        rect.size.width += width + 10.0;
+        rect
+    }
+
+    fn draw_gpu_cache_bars(
+        &mut self,
+        counters: &GpuCacheProfileCounters,
+        debug_renderer: &mut DebugRenderer,
+    ) {
+        let color_updated = ColorU::new(0xFF, 0, 0, 0xFF);
+        let color_free = ColorU::new(0, 0, 0xFF, 0xFF);
+        let color_saved = ColorU::new(0, 0xFF, 0, 0xFF);
+
+        let requested_blocks = IntProfileCounter {
+            description: "",
+            value: counters.updated_blocks.value + counters.saved_blocks.value,
+        };
+        let total_blocks = IntProfileCounter {
+            description: "",
+            value: counters.allocated_rows.value * MAX_VERTEX_TEXTURE_WIDTH,
+        };
+
+        let rect0 = self.draw_gpu_cache_bar(
+            &format!("GPU cache rows ({}):", counters.allocated_rows.value),
+            ColorU::new(255, 255, 255, 255),
+            &[
+                (color_updated, &counters.updated_rows),
+                (color_free, &counters.allocated_rows),
+            ],
+            debug_renderer,
+        );
+
+        let rect1 = self.draw_gpu_cache_bar(
+            "GPU cache blocks",
+            ColorU::new(255, 255, 0, 255),
+            &[
+                (color_updated, &counters.updated_blocks),
+                (color_saved, &requested_blocks),
+                (color_free, &counters.allocated_blocks),
+                (ColorU::new(0, 0, 0, 255), &total_blocks),
+            ],
+            debug_renderer,
+        );
+
+        let total_rect = rect0.union(&rect1).inflate(10.0, 10.0);
+        debug_renderer.add_quad(
+            total_rect.origin.x,
+            total_rect.origin.y,
+            total_rect.origin.x + total_rect.size.width,
+            total_rect.origin.y + total_rect.size.height,
+            ColorF::new(0.1, 0.1, 0.1, 0.8).into(),
+            ColorF::new(0.2, 0.2, 0.2, 0.8).into(),
+        );
+
+        self.y_left = total_rect.origin.y + total_rect.size.height + 30.0;
+    }
+
     pub fn draw_profile(
         &mut self,
         frame_profiles: &[FrameProfileCounters],
@@ -848,15 +948,11 @@ impl Profiler {
         renderer_timers.gpu_time.set(gpu_time);
 
         self.draw_counters(&[&renderer_profile.frame_time], debug_renderer, true);
+        self.draw_counters(&[&renderer_profile.frame_counter], debug_renderer, true);
 
-        self.draw_counters(
-            &[
-                &renderer_profile.frame_counter,
-                &backend_profile.resources.gpu_cache.allocated_rows,
-                &backend_profile.resources.gpu_cache.allocated_blocks,
-            ],
+        self.draw_gpu_cache_bars(
+            &backend_profile.resources.gpu_cache,
             debug_renderer,
-            true,
         );
 
         self.draw_counters(

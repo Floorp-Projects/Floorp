@@ -5,8 +5,9 @@
 #[cfg(test)]
 use api::{IdNamespace, LayoutPoint};
 use api::{ColorF, ColorU, DevicePoint, DeviceUintSize};
-use api::{FontInstancePlatformOptions, FontRenderMode, FontVariation};
-use api::{FontKey, FontTemplate, GlyphDimensions, GlyphKey, SubpixelDirection};
+use api::{FontInstanceFlags, FontInstancePlatformOptions};
+use api::{FontKey, FontRenderMode, FontTemplate, FontVariation};
+use api::{GlyphDimensions, GlyphKey, SubpixelDirection};
 use api::{ImageData, ImageDescriptor, ImageFormat, LayerToWorldTransform};
 use app_units::Au;
 use device::TextureFilter;
@@ -139,9 +140,9 @@ pub struct FontInstance {
     pub bg_color: ColorU,
     pub render_mode: FontRenderMode,
     pub subpx_dir: SubpixelDirection,
+    pub flags: FontInstanceFlags,
     pub platform_options: Option<FontInstancePlatformOptions>,
     pub variations: Vec<FontVariation>,
-    pub synthetic_italics: bool,
     pub transform: FontTransform,
 }
 
@@ -153,9 +154,9 @@ impl FontInstance {
         bg_color: ColorU,
         render_mode: FontRenderMode,
         subpx_dir: SubpixelDirection,
+        flags: FontInstanceFlags,
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
-        synthetic_italics: bool,
     ) -> Self {
         FontInstance {
             font_key,
@@ -164,9 +165,9 @@ impl FontInstance {
             bg_color,
             render_mode,
             subpx_dir,
+            flags,
             platform_options,
             variations,
-            synthetic_italics,
             transform: FontTransform::identity(),
         }
     }
@@ -611,9 +612,9 @@ fn raterize_200_glyphs() {
         ColorU::new(0, 0, 0, 0),
         FontRenderMode::Subpixel,
         SubpixelDirection::Horizontal,
+        Default::default(),
         None,
         Vec::new(),
-        false,
     );
 
     let mut glyph_keys = Vec::with_capacity(200);
