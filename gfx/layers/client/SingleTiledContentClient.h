@@ -85,6 +85,8 @@ public:
 private:
   TileClient mTile;
 
+  RefPtr<ClientLayerManager> mManager;
+
   nsIntRegion mPaintedRegion;
   nsIntRegion mValidRegion;
   bool mWasLastPaintProgressive;

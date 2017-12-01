@@ -47,6 +47,7 @@ ClientSingleTiledLayerBuffer::ClientSingleTiledLayerBuffer(ClientTiledPaintedLay
                                                            CompositableClient& aCompositableClient,
                                                            ClientLayerManager* aManager)
   : ClientTiledLayerBuffer(aPaintedLayer, aCompositableClient)
+  , mManager(aManager)
   , mWasLastPaintProgressive(false)
   , mFormat(gfx::SurfaceFormat::UNKNOWN)
 {
@@ -108,6 +109,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                           TilePaintFlags aFlags)
 {
   mWasLastPaintProgressive = !!(aFlags & TilePaintFlags::Progressive);
+  bool asyncPaint = !!(aFlags & TilePaintFlags::Async);
 
   // Compare layer valid region size to current backbuffer size, discard if not matching.
   gfx::IntSize size = aNewValidRegion.GetBounds().Size();
@@ -124,8 +126,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     discardedFrontBufferOnWhite = mTile.mFrontBufferOnWhite;
     discardedValidRegion = mValidRegion;
 
-    TILING_LOG("TILING %p: Single-tile valid region changed. Discarding buffers.\n", &mPaintedLayer)
-;
+    TILING_LOG("TILING %p: Single-tile valid region changed. Discarding buffers.\n", &mPaintedLayer);
     ResetPaintedAndValidState();
     mSize = size;
     mTilingOrigin = origin;
@@ -239,7 +240,34 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     dtOnWhite = nullptr;
   }
 
-  {
+  if (asyncPaint) {
+    // Create a capture draw target
+    RefPtr<DrawTargetCapture> captureDT =
+      Factory::CreateCaptureDrawTarget(dt->GetBackendType(),
+                                       dt->GetSize(),
+                                       dt->GetFormat());
+
+    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(captureDT);
+    if (!ctx) {
+      gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
+      return;
+    }
+    ctx->SetMatrix(ctx->CurrentMatrix().PreTranslate(-mTilingOrigin.x, -mTilingOrigin.y));
+    aCallback(&mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
+    ctx = nullptr;
+
+    // Replay on the paint thread
+    RefPtr<CapturedTiledPaintState> capturedState =
+      new CapturedTiledPaintState(dt,
+                                  captureDT);
+    capturedState->mClients.push_back(backBuffer);
+    if (backBufferOnWhite) {
+      capturedState->mClients.push_back(backBufferOnWhite);
+    }
+
+    PaintThread::Get()->PaintTiledContents(capturedState);
+    mManager->SetQueuedAsyncPaints();
+  } else {
     RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
     if (!ctx) {
       gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
