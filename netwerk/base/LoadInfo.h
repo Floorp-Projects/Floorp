@@ -124,6 +124,7 @@ private:
            bool aForcePreflight,
            bool aIsPreflight,
            bool aLoadTriggeredFromExternal,
+           bool aServiceWorkerTaintingSynthesized,
            bool aForceHSTSPriming,
            bool aMixedContentWouldBlock,
            bool aIsHSTSPriming,
@@ -188,6 +189,7 @@ private:
   bool                             mForcePreflight;
   bool                             mIsPreflight;
   bool                             mLoadTriggeredFromExternal;
+  bool                             mServiceWorkerTaintingSynthesized;
 
   bool                             mForceHSTSPriming : 1;
   bool                             mMixedContentWouldBlock : 1;

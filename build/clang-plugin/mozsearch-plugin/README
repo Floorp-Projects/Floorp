@@ -1,7 +1,7 @@
 This clang plugin code generates a JSON file for each compiler input
 file. The JSON file contains information about the C++ symbols that
 are referenced by the input file. The data is eventually consumed by
-Searchfox. See https://github.com/bill-mccloskey/mozsearch for more
+Searchfox. See https://github.com/mozsearch/mozsearch for more
 information.
 
 This plugin is enabled with the --enable-clang-plugin and

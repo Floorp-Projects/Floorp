@@ -505,6 +505,7 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
       canReuseBuffer = false;
       canKeepBufferContents = false;
       validRegion.SetEmpty();
+      continue;
     }
     break;
   }

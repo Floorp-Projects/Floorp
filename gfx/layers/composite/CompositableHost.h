@@ -46,6 +46,7 @@ class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
 class WebRenderImageHost;
+class ContentHost;
 class ContentHostTexture;
 struct EffectChain;
 
@@ -149,6 +150,7 @@ public:
   Layer* GetLayer() const { return mLayer; }
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
 
+  virtual ContentHost* AsContentHost() { return nullptr; }
   virtual ContentHostTexture* AsContentHostTexture() { return nullptr; }
   virtual ImageHost* AsImageHost() { return nullptr; }
   virtual TiledContentHost* AsTiledContentHost() { return nullptr; }

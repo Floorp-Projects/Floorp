@@ -1162,11 +1162,7 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(DeclarationBlock* aDecl)
   mRule->SetDeclaration(aDecl->AsGecko());
 
   if (sheet) {
-    sheet->DidDirty();
-  }
-
-  if (doc) {
-    doc->StyleRuleChanged(sheet, mRule);
+    sheet->RuleChanged(mRule);
   }
   return NS_OK;
 }
