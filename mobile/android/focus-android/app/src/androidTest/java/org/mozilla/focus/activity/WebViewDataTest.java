@@ -14,6 +14,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
+import android.util.Log;
 import junit.framework.Assert;
 
 import org.junit.After;
@@ -26,7 +27,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.mockwebserver.MockResponse;
@@ -47,32 +50,49 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
  */
 @RunWith(AndroidJUnit4.class)
 public class WebViewDataTest {
-    private static final List<String> WHITELIST_DATA_DIR_CONTENTS = Arrays.asList(
-            "cache", // We assert that this folder is empty
-            "code_cache",
-            "shared_prefs",
-            "app_dxmaker_cache",
-            "telemetry",
-            "databases",
-            "app_webview",
+    private static final String LOGTAG = "WebViewDataTest";
 
-            // Android Studio will inject these files if you:
-            // - Build with Android Studio 3.0+
-            // - Have opened the "Android Profiler" tab at least once since the AS process started
-            // - Run on an API 26+ device (or maybe when explicitly enabling advanced debugging on older devices)
-            //
-            // This should only affect local builds and we don't want to risk breaking the profiler so
-            // we whitelist them. Additional details around when these files are added can be found in:
-            //   https://github.com/mozilla-mobile/focus-android/issues/1842#issuecomment-348038392
+    /**
+     * A list of files Android Studio will inject into the data dir if you:
+     * - Build with Android Studio 3.0+
+     * - Have opened the "Android Profiler" tab at least once since the AS process started
+     * - Run on an API 26+ device (or maybe when explicitly enabling advanced debugging on older devices)
+     */
+    private static final Set<String> ANDROID_PROFILER_FILES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             "libperfa_x86.so",
             "perfa.jar",
             "perfd"
-    );
+    )));
+
+    private static final Set<String> WHITELIST_DATA_DIR_CONTENTS;
+    static {
+        final Set<String> whitelistDataDirContents = new HashSet<>(Arrays.asList(
+                "cache", // We assert that this folder is empty
+                "code_cache",
+                "shared_prefs",
+                "app_dxmaker_cache",
+                "telemetry",
+                "databases",
+                "app_webview"
+        ));
+
+        // These profiler files should only be present local builds and we don't want to risk breaking the profiler
+        // by removing them so we whitelist them. Additional details around when these files are added can be found in:
+        //   https://github.com/mozilla-mobile/focus-android/issues/1842#issuecomment-348038392
+        whitelistDataDirContents.addAll(ANDROID_PROFILER_FILES);
+        WHITELIST_DATA_DIR_CONTENTS = Collections.unmodifiableSet(whitelistDataDirContents);
+    }
 
     // We expect those folders to exist but they should be empty.
     private static final List<String> WHITELIST_EMPTY_FOLDERS = Collections.singletonList(
             "app_textures"
     );
+
+    // These profiler files should only be present local builds and we don't want to risk breaking the profiler
+    // by removing them so we ignore them. Additional details around when these files are added can be found in:
+    //   https://github.com/mozilla-mobile/focus-android/issues/1842#issuecomment-348038392
+    private static final Set<String> NO_TRACES_IGNORE_LIST =
+            Collections.unmodifiableSet(new HashSet<>(ANDROID_PROFILER_FILES));
 
     private static final String TEST_PATH = "/copper/truck/destroy?smoke=violet#bizarre";
 
@@ -244,6 +264,11 @@ public class WebViewDataTest {
 
             if (file.isDirectory()) {
                 assertNoTraces(file);
+                continue;
+            }
+
+            if (NO_TRACES_IGNORE_LIST.contains(name)) {
+                Log.d(LOGTAG, "assertNoTraces: Ignoring file '" + name + "'...");
                 continue;
             }
 
