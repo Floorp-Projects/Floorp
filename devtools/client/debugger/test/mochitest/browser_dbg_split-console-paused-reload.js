@@ -62,6 +62,5 @@ function* runTests() {
     "Got the expected split console log on $_ executed on resumed debugger"
   );
 
-  Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
   yield closeDebuggerAndFinish(panel);
 }
