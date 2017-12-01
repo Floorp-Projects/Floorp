@@ -32,6 +32,8 @@ build-clang.py accepts a JSON config format with the following fields:
 * stages: Use 1, 2, or 3 to select different compiler stages.  The default is 3.
 * llvm_repo: SVN path to the LLVM repo.
 * clang_repo: SVN path to the Clang repo.
+* extra_repo: SVN path to the clang-tools-extra repo.
+* lld_repo: SVN path to the lld repo.
 * compiler_repo: SVN path to the compiler-rt repo.
 * libcxx_repo: SVN path to the libcxx repo.
 * libcxxabi_repo: SVN path to the libcxxabi repo.
