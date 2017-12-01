@@ -74,6 +74,8 @@ const CONTENT = {
   updateAddress: {
     notificationId: "autofill-address",
     message: GetStringFromName("updateAddressMessage"),
+    descriptionLabel: GetStringFromName("updateAddressDescriptionLabel"),
+    descriptionIcon: false,
     linkMessage: GetStringFromName(autofillOptsKey),
     anchor: {
       id: "autofill-address-notification-icon",
@@ -99,6 +101,8 @@ const CONTENT = {
   addCreditCard: {
     notificationId: "autofill-credit-card",
     message: formatStringFromName("saveCreditCardMessage", [brandShortName], 1),
+    descriptionLabel: GetStringFromName("saveCreditCardDescriptionLabel"),
+    descriptionIcon: true,
     linkMessage: GetStringFromName(autofillSecurityOptionsKey),
     anchor: {
       id: "autofill-credit-card-notification-icon",
@@ -152,6 +156,8 @@ const CONTENT = {
   updateCreditCard: {
     notificationId: "autofill-credit-card",
     message: GetStringFromName("updateCreditCardMessage"),
+    descriptionLabel: GetStringFromName("updateCreditCardDescriptionLabel"),
+    descriptionIcon: true,
     linkMessage: GetStringFromName(autofillOptsKey),
     anchor: {
       id: "autofill-credit-card-notification-icon",
@@ -222,29 +228,57 @@ let FormAutofillDoorhanger = {
   },
   /**
    * Append the link label element to the popupnotificationcontent.
-   * @param  {XULElement} browser
-   *         Target browser element for showing doorhanger.
-   * @param  {string} id
-   *         The ID of the doorhanger.
+   * @param  {XULElement} content
+   *         popupnotificationcontent
    * @param  {string} message
    *         The localized string for link title.
    */
-  _appendPrivacyPanelLink(browser, id, message) {
-    let notificationId = id + "-notification";
-    let chromeDoc = browser.ownerDocument;
-    let notification = chromeDoc.getElementById(notificationId);
-
-    if (!notification.querySelector("popupnotificationcontent")) {
-      let notificationcontent = chromeDoc.createElement("popupnotificationcontent");
-      let privacyLinkElement = chromeDoc.createElement("label");
-      privacyLinkElement.className = "text-link";
-      privacyLinkElement.setAttribute("useoriginprincipal", true);
-      privacyLinkElement.setAttribute("href", "about:preferences#privacy");
-      privacyLinkElement.setAttribute("value", message);
-      notificationcontent.appendChild(privacyLinkElement);
-      notification.append(notificationcontent);
-    }
+  _appendPrivacyPanelLink(content, message) {
+    let chromeDoc = content.ownerDocument;
+    let privacyLinkElement = chromeDoc.createElement("label");
+    privacyLinkElement.className = "text-link";
+    privacyLinkElement.setAttribute("useoriginprincipal", true);
+    privacyLinkElement.setAttribute("href", "about:preferences#privacy");
+    privacyLinkElement.setAttribute("value", message);
+    content.appendChild(privacyLinkElement);
   },
+
+  /**
+   * Append the description section to the popupnotificationcontent.
+   * @param  {XULElement} content
+   *         popupnotificationcontent
+   * @param  {string} descriptionLabel
+   *         The label showing above description.
+   * @param  {string} descriptionIcon
+   *         The src of description icon.
+   */
+  _appendDescription(content, descriptionLabel, descriptionIcon) {
+    let chromeDoc = content.ownerDocument;
+    let docFragment = chromeDoc.createDocumentFragment();
+
+    let descriptionLabelElement = chromeDoc.createElement("label");
+    descriptionLabelElement.setAttribute("value", descriptionLabel);
+    docFragment.appendChild(descriptionLabelElement);
+
+    let descriptionWrapper = chromeDoc.createElement("hbox");
+    descriptionWrapper.className = "desc-message-box";
+
+    if (descriptionIcon) {
+      let descriptionIconElement = chromeDoc.createElement("image");
+      descriptionWrapper.appendChild(descriptionIconElement);
+    }
+
+    let descriptionElement = chromeDoc.createElement("description");
+    descriptionWrapper.appendChild(descriptionElement);
+    docFragment.appendChild(descriptionWrapper);
+
+    content.appendChild(docFragment);
+  },
+
+  _updateDescription(content, description) {
+    content.querySelector("description").textContent = description;
+  },
+
   /**
    * Create an image element for notification anchor if it doesn't already exist.
    * @param  {XULElement} browser
@@ -301,15 +335,19 @@ let FormAutofillDoorhanger = {
    *         Target browser element for showing doorhanger.
    * @param  {string} type
    *         The type of the doorhanger. There will have first time use/update/credit card.
+   * @param  {string} description
+   *         The message that provides more information on doorhanger.
    * @returns {Promise}
               Resolved with action type when action callback is triggered.
    */
-  async show(browser, type) {
+  async show(browser, type, description) {
     log.debug("show doorhanger with type:", type);
     return new Promise((resolve) => {
       let {
         notificationId,
         message,
+        descriptionLabel,
+        descriptionIcon,
         linkMessage,
         anchor,
         mainAction,
@@ -317,7 +355,10 @@ let FormAutofillDoorhanger = {
         options,
       } = CONTENT[type];
 
-      let chromeWin = browser.ownerGlobal;
+      const {
+        ownerGlobal: chromeWin,
+        ownerDocument: chromeDoc,
+      } = browser;
       options.eventCallback = (topic) => {
         log.debug("eventCallback:", topic);
 
@@ -337,7 +378,17 @@ let FormAutofillDoorhanger = {
           return;
         }
 
-        this._appendPrivacyPanelLink(browser, notificationId, linkMessage);
+        const notificationElementId = notificationId + "-notification";
+        const notification = chromeDoc.getElementById(notificationElementId);
+        const notificationContent = notification.querySelector("popupnotificationcontent") ||
+                                    chromeDoc.createElement("popupnotificationcontent");
+        if (!notification.contains(notificationContent)) {
+          notificationContent.setAttribute("orient", "vertical");
+          this._appendDescription(notificationContent, descriptionLabel, descriptionIcon);
+          this._appendPrivacyPanelLink(notificationContent, linkMessage);
+          notification.append(notificationContent);
+        }
+        this._updateDescription(notificationContent, description);
       };
       this._setAnchor(browser, anchor);
       chromeWin.PopupNotifications.show(

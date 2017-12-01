@@ -397,7 +397,8 @@ FormAutofillParent.prototype = {
         this._recordFormFillingTime("address", "autofill-update", timeStartedFillingMS);
 
         showDoorhanger = async () => {
-          const state = await FormAutofillDoorhanger.show(target, "updateAddress");
+          const description = FormAutofillUtils.getAddressLabel(address.record);
+          const state = await FormAutofillDoorhanger.show(target, "updateAddress", description);
           let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record, true);
           switch (state) {
             case "create":
@@ -436,7 +437,8 @@ FormAutofillParent.prototype = {
       if (FormAutofillUtils.isAutofillAddressesFirstTimeUse) {
         Services.prefs.setBoolPref(FormAutofillUtils.ADDRESSES_FIRST_TIME_USE_PREF, false);
         showDoorhanger = async () => {
-          const state = await FormAutofillDoorhanger.show(target, "firstTimeUse");
+          const description = FormAutofillUtils.getAddressLabel(address.record);
+          const state = await FormAutofillDoorhanger.show(target, "firstTimeUse", description);
           if (state !== "open-pref") {
             return;
           }
@@ -521,7 +523,10 @@ FormAutofillParent.prototype = {
         return;
       }
 
-      const state = await FormAutofillDoorhanger.show(target, creditCard.guid ? "updateCreditCard" : "addCreditCard");
+      const description = FormAutofillUtils.getCreditCardLabel(creditCard.record, false);
+      const state = await FormAutofillDoorhanger.show(target,
+                                                      creditCard.guid ? "updateCreditCard" : "addCreditCard",
+                                                      description);
       if (state == "cancel") {
         return;
       }
