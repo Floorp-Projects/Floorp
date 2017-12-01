@@ -6010,13 +6010,6 @@ HTMLMediaElement::UpdateReadyStateInternal()
   if (nextFrameStatus == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
     // Force HAVE_CURRENT_DATA when buffering.
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
-    if (mDecoder) {
-      // The side effect of CanPlayThrough() will update mCanPlayThrough of
-      // MDSM so it has a chance to exit buffering quickly.
-      // TODO: This implicit coupling is bad. Refactoring should be done
-      // to remove the side effect of CanPlayThrough().
-      mDecoder->CanPlayThrough();
-    }
     return;
   }
 

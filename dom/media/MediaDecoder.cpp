@@ -1416,12 +1416,7 @@ MediaDecoder::CanPlayThrough()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  bool val = CanPlayThroughImpl();
-  if (val != mCanPlayThrough) {
-    mCanPlayThrough = val;
-    mDecoderStateMachine->DispatchCanPlayThrough(val);
-  }
-  return val;
+  return CanPlayThroughImpl();
 }
 
 RefPtr<SetCDMPromise>
