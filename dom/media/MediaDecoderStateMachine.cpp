@@ -679,7 +679,7 @@ public:
     }
 
     mMaster->mVideoDecodeSuspended = true;
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+    mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::EnterVideoSuspend);
     Reader()->SetVideoBlankDecode(true);
   }
 
@@ -832,7 +832,7 @@ public:
     // when seek is done.
     if (mMaster->mVideoDecodeSuspended) {
       mMaster->mVideoDecodeSuspended = false;
-      mMaster->mOnPlaybackEvent.Notify(MediaEventType::ExitVideoSuspend);
+      mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::ExitVideoSuspend);
       Reader()->SetVideoBlankDecode(false);
     }
 
@@ -846,7 +846,7 @@ public:
       // playback should has been stopped.
       mMaster->StopPlayback();
       mMaster->UpdatePlaybackPositionInternal(mSeekJob.mTarget->GetTime());
-      mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
+      mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::SeekStarted);
       mMaster->mOnNextFrameStatus.Notify(
         MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
     }
@@ -1642,7 +1642,7 @@ public:
 
     // Dispatch a mozvideoonlyseekbegin event to indicate UI for corresponding
     // changes.
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekBegin);
+    mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::VideoOnlySeekBegin);
 
     return p.forget();
   }
@@ -1652,7 +1652,8 @@ public:
     // We are completing or discarding this video-only seek operation now,
     // dispatch an event so that the UI can change in response to the end
     // of video-only seek.
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekCompleted);
+    mMaster->mOnPlaybackEvent.Notify(
+      MediaPlaybackEvent::VideoOnlySeekCompleted);
 
     AccurateSeekingState::Exit();
   }
@@ -1858,7 +1859,7 @@ public:
     }
 
     mMaster->mVideoDecodeSuspended = true;
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+    mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::EnterVideoSuspend);
     Reader()->SetVideoBlankDecode(true);
   }
 
@@ -1947,7 +1948,7 @@ public:
       mMaster->mOnNextFrameStatus.Notify(
         MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 
-      mMaster->mOnPlaybackEvent.Notify(MediaEventType::PlaybackEnded);
+      mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::PlaybackEnded);
 
       mSentPlaybackEndedEvent = true;
 
@@ -2329,7 +2330,7 @@ DecodingState::Step()
   // when the media is looped back from the end to the beginning.
   if (before > mMaster->GetMediaTime()) {
     MOZ_ASSERT(mMaster->mLooping);
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::Loop);
+    mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::Loop);
   // After looping is cancelled, the time won't be corrected, and therefore we
   // can check it to see if the end of the media track is reached. Make sure
   // the media is started before comparing the time, or it's meaningless.
@@ -2509,7 +2510,7 @@ SeekingState::SeekCompleted()
 
   if (mMaster->VideoQueue().PeekFront()) {
     mMaster->mMediaSink->Redraw(Info().mVideo);
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
+    mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::Invalidate);
   }
 
   GoToNextState();
@@ -2905,7 +2906,7 @@ MediaDecoderStateMachine::StopPlayback()
   MOZ_ASSERT(OnTaskQueue());
   LOG("StopPlayback()");
 
-  mOnPlaybackEvent.Notify(MediaEventType::PlaybackStopped);
+  mOnPlaybackEvent.Notify(MediaPlaybackEvent::PlaybackStopped);
 
   if (IsPlaying()) {
     mMediaSink->SetPlaying(false);
@@ -2936,7 +2937,7 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   LOG("MaybeStartPlayback() starting playback");
-  mOnPlaybackEvent.Notify(MediaEventType::PlaybackStarted);
+  mOnPlaybackEvent.Notify(MediaPlaybackEvent::PlaybackStarted);
   StartMediaSink();
 
 #ifdef XP_WIN
@@ -3082,7 +3083,7 @@ void MediaDecoderStateMachine::SetVideoDecodeModeInternal(VideoDecodeMode aMode)
     mVideoDecodeSuspendTimer.Ensure(target,
                                     [=]() { self->OnSuspendTimerResolved(); },
                                     [] () { MOZ_DIAGNOSTIC_ASSERT(false); });
-    mOnPlaybackEvent.Notify(MediaEventType::StartVideoSuspendTimer);
+    mOnPlaybackEvent.Notify(MediaPlaybackEvent::StartVideoSuspendTimer);
     return;
   }
 
@@ -3953,7 +3954,7 @@ MediaDecoderStateMachine::CancelSuspendTimer()
       mVideoDecodeSuspendTimer.IsScheduled() ? 'T' : 'F');
   MOZ_ASSERT(OnTaskQueue());
   if (mVideoDecodeSuspendTimer.IsScheduled()) {
-    mOnPlaybackEvent.Notify(MediaEventType::CancelVideoSuspendTimer);
+    mOnPlaybackEvent.Notify(MediaPlaybackEvent::CancelVideoSuspendTimer);
   }
   mVideoDecodeSuspendTimer.Reset();
 }

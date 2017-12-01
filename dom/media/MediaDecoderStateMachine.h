@@ -114,20 +114,32 @@ class TaskQueue;
 
 extern LazyLogModule gMediaDecoderLog;
 
-enum class MediaEventType : int8_t
+struct MediaPlaybackEvent
 {
-  PlaybackStarted,
-  PlaybackStopped,
-  PlaybackEnded,
-  SeekStarted,
-  Loop,
-  Invalidate,
-  EnterVideoSuspend,
-  ExitVideoSuspend,
-  StartVideoSuspendTimer,
-  CancelVideoSuspendTimer,
-  VideoOnlySeekBegin,
-  VideoOnlySeekCompleted,
+  enum EventType
+  {
+    PlaybackStarted,
+    PlaybackStopped,
+    PlaybackEnded,
+    SeekStarted,
+    Loop,
+    Invalidate,
+    EnterVideoSuspend,
+    ExitVideoSuspend,
+    StartVideoSuspendTimer,
+    CancelVideoSuspendTimer,
+    VideoOnlySeekBegin,
+    VideoOnlySeekCompleted,
+  } mType;
+
+  using DataType = Variant<Nothing, int64_t>;
+  DataType mData;
+
+  MOZ_IMPLICIT MediaPlaybackEvent(EventType aType)
+    : mType(aType)
+    , mData(Nothing{})
+  {
+  }
 };
 
 enum class VideoDecodeMode : uint8_t
@@ -246,8 +258,10 @@ public:
                       MediaDecoderEventVisibility>&
   FirstFrameLoadedEvent() { return mFirstFrameLoadedEvent; }
 
-  MediaEventSource<MediaEventType>&
-  OnPlaybackEvent() { return mOnPlaybackEvent; }
+  MediaEventSource<MediaPlaybackEvent>& OnPlaybackEvent()
+  {
+    return mOnPlaybackEvent;
+  }
   MediaEventSource<MediaResult>&
   OnPlaybackErrorEvent() { return mOnPlaybackErrorEvent; }
 
@@ -659,7 +673,7 @@ private:
   MediaEventProducerExc<nsAutoPtr<MediaInfo>,
                         MediaDecoderEventVisibility> mFirstFrameLoadedEvent;
 
-  MediaEventProducer<MediaEventType> mOnPlaybackEvent;
+  MediaEventProducer<MediaPlaybackEvent> mOnPlaybackEvent;
   MediaEventProducer<MediaResult> mOnPlaybackErrorEvent;
 
   MediaEventProducer<DecoderDoctorEvent> mOnDecoderDoctorEvent;

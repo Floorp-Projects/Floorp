@@ -528,38 +528,38 @@ MediaDecoder::~MediaDecoder()
 }
 
 void
-MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
+MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent)
 {
-  switch (aEvent) {
-    case MediaEventType::PlaybackEnded:
+  switch (aEvent.mType) {
+    case MediaPlaybackEvent::PlaybackEnded:
       PlaybackEnded();
       break;
-    case MediaEventType::SeekStarted:
+    case MediaPlaybackEvent::SeekStarted:
       SeekingStarted();
       break;
-    case MediaEventType::Loop:
+    case MediaPlaybackEvent::Loop:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeking"));
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
       break;
-    case MediaEventType::Invalidate:
+    case MediaPlaybackEvent::Invalidate:
       Invalidate();
       break;
-    case MediaEventType::EnterVideoSuspend:
+    case MediaPlaybackEvent::EnterVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozentervideosuspend"));
       break;
-    case MediaEventType::ExitVideoSuspend:
+    case MediaPlaybackEvent::ExitVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
       break;
-    case MediaEventType::StartVideoSuspendTimer:
+    case MediaPlaybackEvent::StartVideoSuspendTimer:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozstartvideosuspendtimer"));
       break;
-    case MediaEventType::CancelVideoSuspendTimer:
+    case MediaPlaybackEvent::CancelVideoSuspendTimer:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozcancelvideosuspendtimer"));
       break;
-    case MediaEventType::VideoOnlySeekBegin:
+    case MediaPlaybackEvent::VideoOnlySeekBegin:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozvideoonlyseekbegin"));
       break;
-    case MediaEventType::VideoOnlySeekCompleted:
+    case MediaPlaybackEvent::VideoOnlySeekCompleted:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozvideoonlyseekcompleted"));
       break;
     default:
