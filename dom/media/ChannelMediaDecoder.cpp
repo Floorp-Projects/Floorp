@@ -294,6 +294,7 @@ ChannelMediaDecoder::CanPlayThroughImpl()
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(GetStateMachine(), false);
+  ComputePlaybackRate();
   return GetStatistics().CanPlayThrough();
 }
 
@@ -324,7 +325,6 @@ ChannelMediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent)
       mPlaybackStatistics.AddBytes(newPos - mPlaybackPosition);
       mPlaybackPosition = newPos;
       mPlaybackStatistics.Stop();
-      ComputePlaybackRate();
       break;
     }
     default:
