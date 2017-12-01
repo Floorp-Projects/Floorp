@@ -2631,7 +2631,7 @@ RenderResizer(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
 
 void
 nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
-                                nsIFrame *aFrame)
+                                bool aIsRTL)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -2643,7 +2643,7 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
   drawInfo.size = kHIThemeGrowBoxSizeNormal;
 
   RenderTransformedHIThemeControl(cgContext, aRect, RenderResizer, &drawInfo,
-                                  IsFrameRTL(aFrame));
+                                  aIsRTL);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3374,7 +3374,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_RESIZER:
-      DrawResizer(cgContext, macRect, aFrame);
+      DrawResizer(cgContext, macRect, IsFrameRTL(aFrame));
       break;
 
     case NS_THEME_MAC_VIBRANCY_LIGHT:
