@@ -31,16 +31,16 @@ public class TimezoneOffsetMeasurementTest {
     public void testDifferentTimezones() {
         final TimezoneOffsetMeasurement measurement = spy(new TimezoneOffsetMeasurement());
         doReturn(createCalendarInTimeZone("GMT-8:00"))
-                .doReturn(createCalendarInTimeZone("PST"))
+                .doReturn(createCalendarInTimeZone("MST"))
+                .doReturn(createCalendarInTimeZone("Australia/Darwin"))
                 .doReturn(createCalendarInTimeZone("CEST"))
-                .doReturn(createCalendarInTimeZone("CET"))
                 .doReturn(createCalendarInTimeZone("GMT+2:00"))
                 .when(measurement).now();
 
         assertEquals(-480, (int) measurement.flush());
         assertEquals(-420, (int) measurement.flush());
+        assertEquals(570, (int) measurement.flush());
         assertEquals(0, (int) measurement.flush());
-        assertEquals(120, (int) measurement.flush());
         assertEquals(120, (int) measurement.flush());
     }
 
