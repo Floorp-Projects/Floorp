@@ -68,8 +68,8 @@ dictionary RTCAnswerOptions : RTCOfferAnswerOptions {
 };
 
 dictionary RTCOfferOptions : RTCOfferAnswerOptions {
-  long    offerToReceiveVideo;
-  long    offerToReceiveAudio;
+  boolean offerToReceiveVideo;
+  boolean offerToReceiveAudio;
   boolean iceRestart = false;
 };
 
