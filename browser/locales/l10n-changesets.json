@@ -37,7 +37,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "c3397c7c41be"
+        "revision": "9134e2712846"
     }, 
     "as": {
         "platforms": [
@@ -167,7 +167,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "1cef80e3bf70"
+        "revision": "c4225bc5c305"
     }, 
     "da": {
         "platforms": [
@@ -217,7 +217,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e6c4ba8362a7"
+        "revision": "a5e249d8dba9"
     }, 
     "en-ZA": {
         "platforms": [
@@ -237,7 +237,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "bb578f7639dc"
+        "revision": "20e756560099"
     }, 
     "es-AR": {
         "platforms": [
@@ -397,7 +397,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "7425c267ba8c"
+        "revision": "fab936c2ca90"
     }, 
     "he": {
         "platforms": [
@@ -477,7 +477,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "1da366d1e8ff"
+        "revision": "f9cce0d10699"
     }, 
     "it": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "7327d5d9ad5e"
+        "revision": "87d4bdda1ef8"
     }, 
     "ja": {
         "platforms": [
@@ -732,7 +732,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "5137477e4877"
+        "revision": "7a0afbbc85df"
     }, 
     "pt-PT": {
         "platforms": [
@@ -742,7 +742,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "719bf26fb3f3"
+        "revision": "aac862a25b85"
     }, 
     "rm": {
         "platforms": [
@@ -922,7 +922,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e886b92bbd9f"
+        "revision": "1cacdd6d07bc"
     }, 
     "xh": {
         "platforms": [
@@ -942,7 +942,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a84db836ac96"
+        "revision": "9941778aa12b"
     }, 
     "zh-TW": {
         "platforms": [
