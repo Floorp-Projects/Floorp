@@ -510,7 +510,7 @@ CopyFrontToBack(TextureClient* aFront,
     frontBuffer, backBuffer, aRectToCopy
   };
 
-  if (asyncPaint) {
+  if (asyncPaint && aCopies) {
     aCopies->push_back(copy);
   } else {
     copy.CopyBuffer();
