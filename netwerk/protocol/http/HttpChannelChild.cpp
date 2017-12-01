@@ -1105,7 +1105,9 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   // If there is a possibility we might want to write alt data to the cache
   // entry, we keep the channel alive. We still send the DocumentChannelCleanup
   // message but request the cache entry to be kept by the parent.
-  if (!mPreferredCachedAltDataType.IsEmpty()) {
+  // If the channel has failed, the cache entry is in a non-writtable state and
+  // we want to release it to not block following consumers.
+  if (NS_SUCCEEDED(channelStatus) && !mPreferredCachedAltDataType.IsEmpty()) {
     mKeptAlive = true;
     SendDocumentChannelCleanup(false); // don't clear cache entry
     return;
