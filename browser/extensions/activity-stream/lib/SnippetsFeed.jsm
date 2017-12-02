@@ -143,6 +143,9 @@ this.SnippetsFeed = class SnippetsFeed {
       case at.SHOW_FIREFOX_ACCOUNTS:
         this.showFirefoxAccounts(action._target.browser);
         break;
+      case at.SNIPPETS_BLOCKLIST_UPDATED:
+        this.store.dispatch(ac.BroadcastToContent({type: at.SNIPPET_BLOCKED, data: action.data}));
+        break;
     }
   }
 };
