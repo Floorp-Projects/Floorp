@@ -4924,7 +4924,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
       // Click events apply to *elements* not nodes. At this point the target
       // content may have been reset to some non-element content, and so we need
       // to walk up the closest ancestor element, just like we do in
-      // nsPresShell::HandlePositionedEvent.
+      // nsPresShell::HandleEvent.
       while (mouseContent && !mouseContent->IsElement()) {
         mouseContent = mouseContent->GetParent();
       }
