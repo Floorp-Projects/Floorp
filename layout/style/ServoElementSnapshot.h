@@ -151,7 +151,7 @@ public:
     return nullptr;
   }
 
-  const nsAttrValue* GetClasses() const
+  const nsAttrValue* DoGetClasses() const
   {
     MOZ_ASSERT(HasAttrs());
     return &mClass;

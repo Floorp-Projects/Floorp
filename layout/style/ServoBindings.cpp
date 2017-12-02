@@ -1059,7 +1059,7 @@ template <typename Implementor>
 static uint32_t
 ClassOrClassList(Implementor* aElement, nsAtom** aClass, nsAtom*** aClassList)
 {
-  const nsAttrValue* attr = aElement->GetClasses();
+  const nsAttrValue* attr = aElement->DoGetClasses();
   if (!attr) {
     return 0;
   }
