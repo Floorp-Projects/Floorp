@@ -192,7 +192,6 @@ def old_configure_options(*options):
     '--enable-icf',
     '--enable-install-strip',
     '--enable-ios-target',
-    '--enable-jitspew',
     '--enable-libjpeg-turbo',
     '--enable-libproxy',
     '--enable-llvm-hacks',
