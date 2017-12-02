@@ -80,7 +80,8 @@ public class SearchEngineManager extends BroadcastReceiver {
     private SearchEngineManager() {}
 
     public static boolean addSearchEngine(SharedPreferences sharedPreferences, Context context, String engineName, String searchQuery) {
-        final Bitmap iconBitmap = IconGenerator.generateCharacterIcon(context, engineName.charAt(0));
+        // This is not for a homescreen shortcut so we don't want an adaptive launcher icon.
+        final Bitmap iconBitmap = IconGenerator.generateLauncherIconPreOreo(context, engineName.charAt(0));
         final String searchEngineXml = buildSearchEngineXML(engineName, searchQuery, iconBitmap);
         if (searchEngineXml == null) {
             return false;
