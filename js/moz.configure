@@ -36,6 +36,10 @@ def js_disable_shell(value):
 set_config('JS_DISABLE_SHELL', js_disable_shell)
 
 
+set_define('JS_PUNBOX64', depends(target)(lambda t: t.bitness == 64 or None))
+set_define('JS_NUNBOX32', depends(target)(lambda t: t.bitness == 32 or None))
+
+
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
 js_option('--disable-shared-js', default=building_js,
