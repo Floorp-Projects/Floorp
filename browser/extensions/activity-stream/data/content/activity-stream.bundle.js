@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -2473,11 +2473,6 @@ class Search extends React.PureComponent {
       // In the future, when activity stream is default about:home, this can be renamed
       window.gContentSearchController = new ContentSearchUIController(input, input.parentNode, healthReportKey, searchSource);
       addEventListener("ContentSearchClient", this);
-
-      // Focus the search box if we are on about:home
-      if (!IS_NEWTAB) {
-        input.focus();
-      }
     } else {
       window.gContentSearchController = null;
       removeEventListener("ContentSearchClient", this);
@@ -3769,8 +3764,9 @@ class SnippetsMap extends Map {
     let blockList = this.blockList;
     if (!blockList.includes(id)) {
       blockList.push(id);
+      this._dispatch(ac.SendToMain({ type: at.SNIPPETS_BLOCKLIST_UPDATED, data: blockList }));
+      await this.set("blockList", blockList);
     }
-    await this.set("blockList", blockList);
   }
 
   disableOnboarding() {
@@ -3893,6 +3889,7 @@ class SnippetsProvider {
     // Initialize the Snippets Map and attaches it to a global so that
     // the snippet payload can interact with it.
     global.gSnippetsMap = new SnippetsMap(dispatch);
+    this._onAction = this._onAction.bind(this);
   }
 
   get snippetsMap() {
@@ -3958,6 +3955,7 @@ class SnippetsProvider {
     }
 
     // Note that injecting snippets can throw if they're invalid XML.
+    // eslint-disable-next-line no-unsanitized/property
     snippetsEl.innerHTML = payload;
 
     // Scripts injected by innerHTML are inactive, so we have to relocate them
@@ -3966,6 +3964,13 @@ class SnippetsProvider {
       const relocatedScript = document.createElement("script");
       relocatedScript.text = scriptEl.text;
       scriptEl.parentNode.replaceChild(relocatedScript, scriptEl);
+    }
+  }
+
+  _onAction(msg) {
+    if (msg.data.type === at.SNIPPET_BLOCKED) {
+      this.snippetsMap.set("blockList", msg.data.data);
+      document.getElementById("snippets-container").style.display = "none";
     }
   }
 
@@ -3984,6 +3989,11 @@ class SnippetsProvider {
       elementId: "snippets",
       connect: true
     }, options);
+
+    // Add listener so we know when snippets are blocked on other pages
+    if (global.addMessageListener) {
+      global.addMessageListener("ActivityStream:MainToContent", this._onAction);
+    }
 
     // TODO: Requires enabling indexedDB on newtab
     // Restore the snippets map from indexedDB
@@ -4019,6 +4029,9 @@ class SnippetsProvider {
   uninit() {
     window.dispatchEvent(new Event(SNIPPETS_DISABLED_EVENT));
     this._forceOnboardingVisibility(false);
+    if (global.removeMessageListener) {
+      global.removeMessageListener("ActivityStream:MainToContent", this._onAction);
+    }
     this.initialized = false;
   }
 }

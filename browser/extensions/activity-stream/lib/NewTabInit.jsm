@@ -40,13 +40,6 @@ this.NewTabInit = class NewTabInit {
         if (action.data.simulated) {
           this._repliedEarlyTabs.set(action.data.portID, false);
         }
-
-        if (action.data.url === "about:home") {
-          const prefs = this.store.getState().Prefs.values;
-          if (prefs["aboutHome.autoFocus"] && prefs.showSearch) {
-            action.data.browser.focus();
-          }
-        }
         break;
       case at.NEW_TAB_UNLOAD:
         // Clean up for any tab (no-op if not an early tab)
