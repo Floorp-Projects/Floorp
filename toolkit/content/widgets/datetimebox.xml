@@ -30,6 +30,10 @@
         this.mYearPlaceHolder = ]]>"&date.year.placeholder;"<![CDATA[;
         this.mMonthPlaceHolder = ]]>"&date.month.placeholder;"<![CDATA[;
         this.mDayPlaceHolder = ]]>"&date.day.placeholder;"<![CDATA[;
+
+        this.mYearLabel = ]]>"&date.year.label;"<![CDATA[;
+        this.mMonthLabel = ]]>"&date.month.label;"<![CDATA[;
+        this.mDayLabel = ]]>"&date.day.label;"<![CDATA[;
         /* eslint-enable no-multi-spaces */
 
         this.mMinMonth = 1;
@@ -62,14 +66,14 @@
 
           let yearMaxLength = this.mMaxYear.toString().length;
           this.mYearField = this.createEditField(this.mYearPlaceHolder,
-            true, this.mYearLength, yearMaxLength, this.mMinYear, this.mMaxYear,
-            this.mYearPageUpDownInterval);
+            this.mYearLabel, true, this.mYearLength, yearMaxLength,
+            this.mMinYear, this.mMaxYear, this.mYearPageUpDownInterval);
           this.mMonthField = this.createEditField(this.mMonthPlaceHolder,
-            true, this.mMonthDayLength, this.mMonthDayLength, this.mMinMonth,
-            this.mMaxMonth, this.mMonthPageUpDownInterval);
+            this.mMonthLabel, true, this.mMonthDayLength, this.mMonthDayLength,
+            this.mMinMonth, this.mMaxMonth, this.mMonthPageUpDownInterval);
           this.mDayField = this.createEditField(this.mDayPlaceHolder,
-            true, this.mMonthDayLength, this.mMonthDayLength, this.mMinDay,
-            this.mMaxDay, this.mDayPageUpDownInterval);
+            this.mDayLabel, true, this.mMonthDayLength, this.mMonthDayLength,
+            this.mMinDay, this.mMaxDay, this.mDayPageUpDownInterval);
 
           let fragment = document.createDocumentFragment();
           let formatter = Intl.DateTimeFormat(this.mLocales, {
@@ -391,6 +395,7 @@
           });
 
           aField.textContent = formatted;
+          aField.setAttribute("aria-valuetext", formatted);
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -451,6 +456,12 @@
         this.mSecondPlaceHolder = ]]>"&time.second.placeholder;"<![CDATA[;
         this.mMillisecPlaceHolder = ]]>"&time.millisecond.placeholder;"<![CDATA[;
         this.mDayPeriodPlaceHolder = ]]>"&time.dayperiod.placeholder;"<![CDATA[;
+
+        this.mHourLabel = ]]>"&time.hour.label;"<![CDATA[;
+        this.mMinuteLabel = ]]>"&time.minute.label;"<![CDATA[;
+        this.mSecondLabel = ]]>"&time.second.label;"<![CDATA[;
+        this.mMillisecLabel = ]]>"&time.millisecond.label;"<![CDATA[;
+        this.mDayPeriodLabel = ]]>"&time.dayperiod.label;"<![CDATA[;
         /* eslint-enable no-multi-spaces */
 
         this.mHour12 = this.is12HourTime(this.mLocales);
@@ -613,28 +624,32 @@
           };
 
           this.mHourField = this.createEditField(this.mHourPlaceHolder,
-            true, this.mMaxLength, this.mMaxLength, this.mMinHour,
-            this.mMaxHour, this.mHourPageUpDownInterval);
+            this.mHourLabel, true, this.mMaxLength, this.mMaxLength,
+            this.mMinHour, this.mMaxHour, this.mHourPageUpDownInterval);
           this.mMinuteField = this.createEditField(this.mMinutePlaceHolder,
-            true, this.mMaxLength, this.mMaxLength, this.mMinMinute,
-            this.mMaxMinute, this.mMinSecPageUpDownInterval);
+            this.mMinuteLabel, true, this.mMaxLength, this.mMaxLength,
+            this.mMinMinute, this.mMaxMinute, this.mMinSecPageUpDownInterval);
 
           if (this.mHour12) {
             this.mDayPeriodField = this.createEditField(
-              this.mDayPeriodPlaceHolder, false);
+              this.mDayPeriodPlaceHolder, this.mDayPeriodLabel, false);
+
+            // Give aria autocomplete hint for am/pm
+            this.mDayPeriodField.setAttribute("aria-autocomplete", "inline");
           }
 
           if (this.shouldShowSecondField()) {
             options.second = "numeric";
             this.mSecondField = this.createEditField(this.mSecondPlaceHolder,
-              true, this.mMaxLength, this.mMaxLength, this.mMinSecond,
-              this.mMaxSecond, this.mMinSecPageUpDownInterval);
+              this.mSecondLabel, true, this.mMaxLength, this.mMaxLength,
+              this.mMinSecond, this.mMaxSecond, this.mMinSecPageUpDownInterval);
 
             if (this.shouldShowMillisecField()) {
               this.mMillisecField = this.createEditField(
-                this.mMillisecPlaceHolder, true, this.mMillisecMaxLength,
-                this.mMillisecMaxLength, this.mMinMillisecond,
-                this.mMaxMillisecond, this.mMinSecPageUpDownInterval);
+                this.mMillisecPlaceHolder, this.mMillisecLabel, true,
+                this.mMillisecMaxLength, this.mMillisecMaxLength,
+                this.mMinMillisecond, this.mMaxMillisecond,
+                this.mMinSecPageUpDownInterval);
             }
           }
 
@@ -1073,6 +1088,7 @@
           });
 
           aField.textContent = formatted;
+          aField.setAttribute("aria-valuetext", formatted);
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -1185,7 +1201,7 @@
 
     <content>
       <html:div class="datetime-input-box-wrapper" anonid="input-box-wrapper"
-                xbl:inherits="context,disabled,readonly">
+                xbl:inherits="context,disabled,readonly" role="presentation">
         <html:span class="datetime-input-edit-wrapper"
                    anonid="edit-wrapper">
           <!-- Each of the date/time input types will append their input child
@@ -1193,7 +1209,7 @@
         </html:span>
 
         <html:button class="datetime-reset-button" anonid="reset-button"
-                     tabindex="-1" xbl:inherits="disabled"/>
+                     tabindex="-1" xbl:inherits="disabled" aria-label="&datetime.reset.label;"/>
       </html:div>
     </content>
 
@@ -1279,6 +1295,7 @@
 
       <method name="createEditField">
         <parameter name="aPlaceHolder"/>
+        <parameter name="aLabel"/>
         <parameter name="aIsNumeric"/>
         <parameter name="aMinDigits"/>
         <parameter name="aMaxLength"/>
@@ -1300,6 +1317,7 @@
           // Set property as well for convenience.
           field.disabled = this.mInputElement.disabled;
           field.readOnly = this.mInputElement.readOnly;
+          field.setAttribute("aria-label", aLabel);
 
           if (aIsNumeric) {
             field.classList.add("numeric");
@@ -1320,6 +1338,8 @@
             // Maximum length for the field, will be advance to the next field
             // automatically if exceeded.
             field.setAttribute("maxlength", aMaxLength);
+            // Set spinbutton ARIA role
+            field.setAttribute("role", "spinbutton");
 
             if (this.mIsRTL) {
               // Force the direction to be "ltr", so that the field stays in the
@@ -1329,6 +1349,9 @@
               field.style.unicodeBidi = "embed";
               field.style.direction = "ltr";
             }
+          } else {
+            // Set generic textbox ARIA role
+            field.setAttribute("role", "textbox");
           }
 
           return field;
