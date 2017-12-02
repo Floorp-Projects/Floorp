@@ -13160,6 +13160,26 @@
     "bug_numbers": [1307242],
     "description": "The time between navigation start and the first non-blank paint of a foreground root content document, in milliseconds. This only records documents that were in an active docshell throughout the whole time between navigation start and non-blank paint. The non-blank paint timestamp is taken during display list building and does not include rasterization or compositing of that paint."
   },
+  "TIME_TO_NON_BLANK_PAINT_NETOPT_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["necko@mozilla.com", "hbambas@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1411632],
+    "description": "The time between navigation start and the first non-blank paint of a foreground root content document, in milliseconds. This only records documents that were in an active docshell throughout the whole time between navigation start and non-blank paint. The non-blank paint timestamp is taken during display list building and does not include rasterization or compositing of that paint.  This probe only accumulates when there were active-tab network load optimizations happening during the interval."
+  },
+  "TIME_TO_NON_BLANK_PAINT_NO_NETOPT_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["necko@mozilla.com", "hbambas@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1411632],
+    "description": "The time between navigation start and the first non-blank paint of a foreground root content document, in milliseconds. This only records documents that were in an active docshell throughout the whole time between navigation start and non-blank paint. The non-blank paint timestamp is taken during display list building and does not include rasterization or compositing of that paint.  This probe only accumulates when there were no active-tab network load optimizations happening during the interval."
+  },
   "TAB_AUDIO_INDICATOR_USED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["alwu@mozilla.com"],
@@ -13380,6 +13400,26 @@
     "bug_numbers": [1344893],
     "description": "Time in milliseconds from navigationStart to domContentLoadedEventStart."
   },
+  "TIME_TO_DOM_CONTENT_LOADED_START_ACTIVE_NETOPT_MS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["necko@mozilla.com", "hbambas@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1411632],
+    "description": "Time in milliseconds from navigationStart to domContentLoadedEventStart for all-the-time active page for which some of the network loading optimization happened."
+  },
+  "TIME_TO_DOM_CONTENT_LOADED_START_ACTIVE_MS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["necko@mozilla.com", "hbambas@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1411632],
+    "description": "Time in milliseconds from navigationStart to domContentLoadedEventStart for all-the-time active page for which none of the network loading optimization happened."
+  },
   "TIME_TO_DOM_CONTENT_LOADED_END_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["wpan@mozilla.com"],
@@ -13409,6 +13449,26 @@
     "n_buckets": 100,
     "bug_numbers": [1344893],
     "description": "Time in milliseconds from navigationStart to loadEventStart."
+  },
+  "TIME_TO_LOAD_EVENT_START_ACTIVE_NETOPT_MS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["necko@mozilla.com", "hbambas@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1411632],
+    "description": "Time in milliseconds from navigationStart to loadEventStart for all-the-time active page for which some of the network loading optimization happened."
+  },
+  "TIME_TO_LOAD_EVENT_START_ACTIVE_MS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["necko@mozilla.com", "hbambas@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1411632],
+    "description": "Time in milliseconds from navigationStart to loadEventStart for all-the-time active page for which none of the network loading optimization happened."
   },
   "TIME_TO_LOAD_EVENT_END_MS": {
     "record_in_processes": ["content"],

@@ -36,7 +36,8 @@ child:
                            uint32_t  count,
                            nsCString data);
 
-  async OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing);
+  async OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing,
+                      TimeStamp lastActiveTabOptimization);
 
   async OnProgress(int64_t progress, int64_t progressMax);
 
