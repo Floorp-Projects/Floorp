@@ -282,6 +282,7 @@ nsHttpHandler::nsHttpHandler()
     , mActiveTabPriority(true)
     , mProcessId(0)
     , mNextChannelId(1)
+    , mLastActiveTabLoadOptimizationLock("nsHttpConnectionMgr::LastActiveTabLoadOptimization")
 {
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -2668,6 +2669,39 @@ nsHttpHandler::NewChannelId(uint64_t& channelId)
   MOZ_ASSERT(NS_IsMainThread());
   channelId = ((static_cast<uint64_t>(mProcessId) << 32) & 0xFFFFFFFF00000000LL) | mNextChannelId++;
   return NS_OK;
+}
+
+void
+nsHttpHandler::NotifyActiveTabLoadOptimization()
+{
+  SetLastActiveTabLoadOptimizationHit(TimeStamp::Now());
+}
+
+TimeStamp const nsHttpHandler::GetLastActiveTabLoadOptimizationHit()
+{
+  MutexAutoLock lock(mLastActiveTabLoadOptimizationLock);
+
+  return mLastActiveTabLoadOptimizationHit;
+}
+
+void
+nsHttpHandler::SetLastActiveTabLoadOptimizationHit(TimeStamp const &when)
+{
+  MutexAutoLock lock(mLastActiveTabLoadOptimizationLock);
+
+  if (mLastActiveTabLoadOptimizationHit.IsNull() ||
+      (!when.IsNull() && mLastActiveTabLoadOptimizationHit < when)) {
+    mLastActiveTabLoadOptimizationHit = when;
+  }
+}
+
+bool
+nsHttpHandler::IsBeforeLastActiveTabLoadOptimization(TimeStamp const &when)
+{
+  MutexAutoLock lock(mLastActiveTabLoadOptimizationLock);
+
+  return !mLastActiveTabLoadOptimizationHit.IsNull() &&
+         when <= mLastActiveTabLoadOptimizationHit;
 }
 
 } // namespace net

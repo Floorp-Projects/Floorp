@@ -11,7 +11,9 @@
 #include "nsHttpConnectionMgr.h"
 #include "ASpdySession.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
@@ -403,6 +405,14 @@ public:
         return mActiveTabPriority;
     }
 
+    // Called when an optimization feature affecting active vs background tab load
+    // took place.  Called only on the parent process and only updates
+    // mLastActiveTabLoadOptimizationHit timestamp to now.
+    void NotifyActiveTabLoadOptimization();
+    TimeStamp const GetLastActiveTabLoadOptimizationHit();
+    void SetLastActiveTabLoadOptimizationHit(TimeStamp const &when);
+    bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const &when);
+
 private:
     nsHttpHandler();
 
@@ -688,6 +698,18 @@ private:
     // State for generating channelIds
     uint32_t mProcessId;
     uint32_t mNextChannelId;
+
+    // The last time any of the active tab page load optimization took place.
+    // This is accessed on multiple threads, hence a lock is needed.
+    // On the parent process this is updated to now every time a scheduling
+    // or rate optimization related to the active/background tab is hit.
+    // We carry this value through each http channel's onstoprequest notification
+    // to the parent process.  On the content process then we just update this
+    // value from ipc onstoprequest arguments.  This is a sufficent way of passing
+    // it down to the content process, since the value will be used only after
+    // onstoprequest notification coming from an http channel.
+    Mutex mLastActiveTabLoadOptimizationLock;
+    TimeStamp mLastActiveTabLoadOptimizationHit;
 
 public:
     MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);

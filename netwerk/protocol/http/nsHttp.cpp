@@ -15,6 +15,7 @@
 #include "nsCRT.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
+#include "nsHttpHandler.h"
 #include "nsICacheEntry.h"
 #include "nsIRequest.h"
 #include <errno.h>
@@ -538,6 +539,33 @@ DetermineFramingAndImmutability(nsICacheEntry *entry,
     // compatible with old cache contents which dont have strongly-framed makers
     *weaklyFramed = NS_SUCCEEDED(rv) && framedBuf.EqualsLiteral("0");
     *isImmutable = !*weaklyFramed && isHttps && responseHead->Immutable();
+}
+
+bool
+IsBeforeLastActiveTabLoadOptimization(TimeStamp const & when)
+{
+  return gHttpHandler && gHttpHandler->IsBeforeLastActiveTabLoadOptimization(when);
+}
+
+void
+NotifyActiveTabLoadOptimization()
+{
+  if (gHttpHandler) {
+    gHttpHandler->NotifyActiveTabLoadOptimization();
+  }
+}
+
+TimeStamp const GetLastActiveTabLoadOptimizationHit()
+{
+  return gHttpHandler ? gHttpHandler->GetLastActiveTabLoadOptimizationHit() : TimeStamp();
+}
+
+void
+SetLastActiveTabLoadOptimizationHit(TimeStamp const &when)
+{
+  if (gHttpHandler) {
+    gHttpHandler->SetLastActiveTabLoadOptimizationHit(when);
+  }
 }
 
 } // namespace nsHttp
