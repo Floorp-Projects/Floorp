@@ -71,7 +71,11 @@ public:
   typedef ServoElementSnapshotFlags Flags;
 
   explicit ServoElementSnapshot(const Element* aElement);
-  ~ServoElementSnapshot();
+
+  ~ServoElementSnapshot()
+  {
+    MOZ_COUNT_DTOR(ServoElementSnapshot);
+  }
 
   bool HasAttrs() const { return HasAny(Flags::Attributes); }
 
