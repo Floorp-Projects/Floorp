@@ -288,7 +288,7 @@ WriteFontDescriptor(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
 }
 
 void
-WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<wr::GlyphInstance>& aGlyphs,
+WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, Range<const wr::GlyphInstance> aGlyphs,
                                  gfx::ScaledFont* aFont, const wr::ColorF& aColor, const StackingContextHelper& aSc,
                                  const wr::LayerRect& aBounds, const wr::LayerRect& aClip, bool aBackfaceVisible,
                                  const wr::GlyphOptions* aGlyphOptions)
@@ -304,7 +304,7 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
                     aBackfaceVisible,
                     aColor,
                     key,
-                    Range<const wr::GlyphInstance>(aGlyphs.Elements(), aGlyphs.Length()),
+                    aGlyphs,
                     aGlyphOptions);
 }
 
