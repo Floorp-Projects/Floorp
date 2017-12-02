@@ -382,8 +382,7 @@ nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
   nsNSSCertTrust trust;
   trust.SetValidCA();
   trust.AddCATrust(!!(trustBits & nsIX509CertDB::TRUSTED_SSL),
-                   !!(trustBits & nsIX509CertDB::TRUSTED_EMAIL),
-                   !!(trustBits & nsIX509CertDB::TRUSTED_OBJSIGN));
+                   !!(trustBits & nsIX509CertDB::TRUSTED_EMAIL));
 
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   SECStatus srv = PK11_ImportCert(slot.get(), tmpCert.get(), CK_INVALID_HANDLE,
@@ -737,7 +736,7 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
     // want to do that with user certs, because a user may  re-store
     // the cert onto the card again at which point we *will* want to
     // trust that cert if it chains up properly.
-    nsNSSCertTrust trust(0, 0, 0);
+    nsNSSCertTrust trust(0, 0);
     srv = ChangeCertTrustWithPossibleAuthentication(cert, trust.GetTrust(),
                                                     nullptr);
   }
@@ -768,17 +767,15 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
     case nsIX509Cert::CA_CERT:
       trust.SetValidCA();
       trust.AddCATrust(!!(trusted & nsIX509CertDB::TRUSTED_SSL),
-                       !!(trusted & nsIX509CertDB::TRUSTED_EMAIL),
-                       !!(trusted & nsIX509CertDB::TRUSTED_OBJSIGN));
+                       !!(trusted & nsIX509CertDB::TRUSTED_EMAIL));
       break;
     case nsIX509Cert::SERVER_CERT:
       trust.SetValidPeer();
-      trust.AddPeerTrust(trusted & nsIX509CertDB::TRUSTED_SSL, false, false);
+      trust.AddPeerTrust(trusted & nsIX509CertDB::TRUSTED_SSL, false);
       break;
     case nsIX509Cert::EMAIL_CERT:
       trust.SetValidPeer();
-      trust.AddPeerTrust(false, !!(trusted & nsIX509CertDB::TRUSTED_EMAIL),
-                         false);
+      trust.AddPeerTrust(false, !!(trusted & nsIX509CertDB::TRUSTED_EMAIL));
       break;
     default:
       // Ignore any other type of certificate (including invalid types).
@@ -821,31 +818,25 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
   nsNSSCertTrust trust(&nsstrust);
   if (certType == nsIX509Cert::CA_CERT) {
     if (trustType & nsIX509CertDB::TRUSTED_SSL) {
-      *_isTrusted = trust.HasTrustedCA(true, false, false);
+      *_isTrusted = trust.HasTrustedCA(true, false);
     } else if (trustType & nsIX509CertDB::TRUSTED_EMAIL) {
-      *_isTrusted = trust.HasTrustedCA(false, true, false);
-    } else if (trustType & nsIX509CertDB::TRUSTED_OBJSIGN) {
-      *_isTrusted = trust.HasTrustedCA(false, false, true);
+      *_isTrusted = trust.HasTrustedCA(false, true);
     } else {
       return NS_ERROR_FAILURE;
     }
   } else if (certType == nsIX509Cert::SERVER_CERT) {
     if (trustType & nsIX509CertDB::TRUSTED_SSL) {
-      *_isTrusted = trust.HasTrustedPeer(true, false, false);
+      *_isTrusted = trust.HasTrustedPeer(true, false);
     } else if (trustType & nsIX509CertDB::TRUSTED_EMAIL) {
-      *_isTrusted = trust.HasTrustedPeer(false, true, false);
-    } else if (trustType & nsIX509CertDB::TRUSTED_OBJSIGN) {
-      *_isTrusted = trust.HasTrustedPeer(false, false, true);
+      *_isTrusted = trust.HasTrustedPeer(false, true);
     } else {
       return NS_ERROR_FAILURE;
     }
   } else if (certType == nsIX509Cert::EMAIL_CERT) {
     if (trustType & nsIX509CertDB::TRUSTED_SSL) {
-      *_isTrusted = trust.HasTrustedPeer(true, false, false);
+      *_isTrusted = trust.HasTrustedPeer(true, false);
     } else if (trustType & nsIX509CertDB::TRUSTED_EMAIL) {
-      *_isTrusted = trust.HasTrustedPeer(false, true, false);
-    } else if (trustType & nsIX509CertDB::TRUSTED_OBJSIGN) {
-      *_isTrusted = trust.HasTrustedPeer(false, false, true);
+      *_isTrusted = trust.HasTrustedPeer(false, true);
     } else {
       return NS_ERROR_FAILURE;
     }

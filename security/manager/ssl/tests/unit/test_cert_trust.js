@@ -18,8 +18,7 @@ function load_cert(cert_name, trust_string) {
 function setup_basic_trusts(ca_cert, int_cert) {
   certdb.setCertTrust(ca_cert, Ci.nsIX509Cert.CA_CERT,
                       Ci.nsIX509CertDB.TRUSTED_SSL |
-                      Ci.nsIX509CertDB.TRUSTED_EMAIL |
-                      Ci.nsIX509CertDB.TRUSTED_OBJSIGN);
+                      Ci.nsIX509CertDB.TRUSTED_EMAIL);
 
   certdb.setCertTrust(int_cert, Ci.nsIX509Cert.CA_CERT, 0);
 }
