@@ -21,7 +21,13 @@ function open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn
     let subdialog = content.gSubDialog._topDialog;
 
     info("waiting for subdialog DOMFrameContentLoaded");
-    await ContentTaskUtils.waitForEvent(win, "DOMFrameContentLoaded", true);
+    let dialogOpenPromise;
+    await new Promise(resolve => {
+      win.addEventListener("DOMFrameContentLoaded", () => {
+        dialogOpenPromise = ContentTaskUtils.waitForEvent(subdialog._overlay, "dialogopen");
+        resolve();
+      }, { once: true, capture: true });
+    });
     let result;
     if (args.domcontentloadedFnStr) {
       // eslint-disable-next-line no-eval
@@ -29,7 +35,7 @@ function open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn
     }
 
     info("waiting for subdialog load");
-    await ContentTaskUtils.waitForEvent(subdialog._overlay, "dialogopen");
+    await dialogOpenPromise;
     info("subdialog window is loaded");
 
     let expectedStyleSheetURLs = subdialog._injectedStyleSheets.slice(0);

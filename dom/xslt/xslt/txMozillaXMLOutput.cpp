@@ -954,7 +954,7 @@ NS_IMPL_ISUPPORTS(txTransformNotifier,
 NS_IMETHODIMP
 txTransformNotifier::ScriptAvailable(nsresult aResult,
                                      nsIScriptElement *aElement,
-                                     bool aIsInline,
+                                     bool aIsInlineClassicScript,
                                      nsIURI *aURI,
                                      int32_t aLineNo)
 {

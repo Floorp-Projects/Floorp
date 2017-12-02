@@ -26,13 +26,13 @@ SUPPORT_FILES = set(["browser.js", "shell.js", "template.js", "user.js",
 FRONTMATTER_WRAPPER_PATTERN = re.compile(
     r'/\*\---\n([\s]*)((?:\s|\S)*)[\n\s*]---\*/', flags=re.DOTALL)
 
-def convertTestFile(source):
+def convertTestFile(source, includes):
     """
     Convert a jstest test to a compatible Test262 test file.
     """
 
     source = convertReportCompare(source)
-    source = updateMeta(source)
+    source = updateMeta(source, includes)
     source = insertCopyrightLines(source)
 
     return source
@@ -153,7 +153,7 @@ def extractMeta(source):
 
     return yaml.safe_load(unindented)
 
-def updateMeta(source):
+def updateMeta(source, includes):
     """
     Captures the reftest meta and a pre-existing meta if any and merge them
     into a single dict.
@@ -166,12 +166,13 @@ def updateMeta(source):
     frontmatter = extractMeta(source)
 
     # Merge the reftest and frontmatter
-    merged = mergeMeta(reftest, frontmatter)
+    merged = mergeMeta(reftest, frontmatter, includes)
 
     # Cleanup the metadata
     properData = cleanupMeta(merged)
 
     return insertMeta(source, properData)
+
 
 def cleanupMeta(meta):
     """
@@ -206,7 +207,7 @@ def cleanupMeta(meta):
 
     return meta
 
-def mergeMeta(reftest, frontmatter):
+def mergeMeta(reftest, frontmatter, includes):
     """
     Merge the metadata from reftest and an existing frontmatter and populate
     required frontmatter fields properly.
@@ -249,6 +250,10 @@ def mergeMeta(reftest, frontmatter):
             print("Warning: The reftest error doesn't match the existing " + \
                 "frontmatter error. %s != %s" % (error,
                 frontmatter["negative"]["type"]))
+
+    # Add the shell specific includes
+    if includes:
+        frontmatter["includes"] = list(includes)
 
     return frontmatter
 
@@ -295,53 +300,117 @@ def insertMeta(source, frontmatter):
     else:
         return "\n".join(lines) + source
 
+
+
+def findAndCopyIncludes(dirPath, baseDir, includeDir):
+    relPath = os.path.relpath(dirPath, baseDir)
+    includes = []
+
+    # Recurse down all folders in the relative path until
+    # we reach the base directory of shell.js include files.
+    # Each directory will have a shell.js file to copy.
+    while (relPath):
+
+        # find the shell.js
+        shellFile = os.path.join(baseDir, relPath, "shell.js")
+
+        # create new shell.js file name
+        includeFileName = relPath.replace("/", "-") + "-shell.js"
+        includesPath = os.path.join(includeDir, includeFileName)
+
+        if os.path.exists(shellFile):
+            # if the file exists, include in includes
+            includes.append(includeFileName)
+
+            if not os.path.exists(includesPath):
+                shutil.copyfile(shellFile, includesPath)
+
+        relPath = os.path.split(relPath)[0]
+
+
+    shellFile = os.path.join(baseDir, "shell.js")
+    includesPath = os.path.join(includeDir, "shell.js")
+    if not os.path.exists(includesPath):
+        shutil.copyfile(shellFile, includesPath)
+
+    includes.append("shell.js")
+
+    if not os.path.exists(includesPath):
+        shutil.copyfile(shellFile, includesPath)
+
+    return includes
+
 def exportTest262(args):
-    src = os.path.abspath(args.src[0])
+
     outDir = os.path.abspath(args.out)
+    providedSrcs = args.src
+    includeShell = args.exportshellincludes
+    baseDir = os.getcwd()
 
     # Create the output directory from scratch.
     if os.path.isdir(outDir):
         shutil.rmtree(outDir)
 
-    # Process all test directories recursively.
-    for (dirPath, _, fileNames) in os.walk(src):
-        relPath = os.path.relpath(dirPath, src)
+    # only make the includes directory if requested
+    includeDir = os.path.join(outDir, "harness-includes")
+    if includeShell:
+        os.makedirs(includeDir)
 
-        relOutDir = os.path.join(outDir, relPath)
+    # Go through each source path
+    for providedSrc in providedSrcs:
 
-        # This also creates the own outDir folder
-        if not os.path.exists(relOutDir):
-            os.makedirs(relOutDir)
+        src = os.path.abspath(providedSrc)
+        # the basename of the path will be used in case multiple "src" arguments
+        # are passed in to create an output directory for each "src".
+        basename = os.path.basename(src)
 
-        for fileName in fileNames:
-            # Skip browser.js and shell.js files
-            if fileName == "browser.js" or fileName == "shell.js":
-                continue
+        # Process all test directories recursively.
+        for (dirPath, _, fileNames) in os.walk(src):
 
-            filePath = os.path.join(dirPath, fileName)
-            testName = os.path.relpath(filePath, src) # captures folder/fileName
+            # we need to make and get the unique set of includes for this filepath
+            includes = []
+            if includeShell:
+                includes = findAndCopyIncludes(dirPath, baseDir, includeDir)
 
-            # Copy non-test files as is.
-            (_, fileExt) = os.path.splitext(fileName)
-            if fileExt != ".js":
-                shutil.copyfile(filePath, os.path.join(outDir, testName))
-                print("C %s" % testName)
-                continue
+            relPath = os.path.relpath(dirPath, src)
+            fullRelPath = os.path.join(basename, relPath)
 
-            # Read the original test source and preprocess it for Test262
-            with open(filePath, "rb") as testFile:
-                testSource = testFile.read()
+            # Make new test subdirectory to seperate from includes
+            currentOutDir = os.path.join(outDir, "tests", fullRelPath)
 
-            if not testSource:
-                print("SKIPPED %s" % testName)
-                continue
+            # This also creates the own outDir folder
+            if not os.path.exists(currentOutDir):
+                os.makedirs(currentOutDir)
 
-            newSource = convertTestFile(testSource)
+            for fileName in fileNames:
+                # Skip browser.js files
+                if fileName == "browser.js" or fileName == "shell.js" :
+                    continue
 
-            with open(os.path.join(outDir, testName), "wb") as output:
-                output.write(newSource)
+                filePath = os.path.join(dirPath, fileName)
+                testName = os.path.join(fullRelPath, fileName) # captures folder(s)+filename
 
-            print("SAVED %s" % testName)
+                # Copy non-test files as is.
+                (_, fileExt) = os.path.splitext(fileName)
+                if fileExt != ".js":
+                    shutil.copyfile(filePath, os.path.join(currentOutDir, fileName))
+                    print("C %s" % testName)
+                    continue
+
+                # Read the original test source and preprocess it for Test262
+                with open(filePath, "rb") as testFile:
+                    testSource = testFile.read()
+
+                if not testSource:
+                    print("SKIPPED %s" % testName)
+                    continue
+
+                newSource = convertTestFile(testSource, includes)
+
+                with open(os.path.join(currentOutDir, fileName), "wb") as output:
+                    output.write(newSource)
+
+                print("SAVED %s" % testName)
 
 if __name__ == "__main__":
     import argparse
@@ -353,6 +422,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export tests to match Test262 file compliance.")
     parser.add_argument("--out", default="test262/export",
                         help="Output directory. Any existing directory will be removed! (default: %(default)s)")
+    parser.add_argument("--exportshellincludes", action="store_true",
+                         help="Optionally export shell.js files as includes in exported tests. Only use for testing, do not use for exporting to test262 (test262 tests should have as few dependencies as possible).")
     parser.add_argument("src", nargs="+", help="Source folder with test files to export")
     parser.set_defaults(func=exportTest262)
     args = parser.parse_args()
