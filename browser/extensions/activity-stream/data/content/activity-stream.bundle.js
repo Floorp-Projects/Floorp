@@ -986,6 +986,9 @@ function getFormattedMessage(message) {
     message
   ) : React.createElement(FormattedMessage, message);
 }
+function getCollapsed(props) {
+  return props.Prefs.values[props.prefName];
+}
 
 class Info extends React.PureComponent {
   constructor(props) {
@@ -1113,6 +1116,7 @@ const DisclaimerIntl = injectIntl(Disclaimer);
 class CollapsibleSection extends React.PureComponent {
   constructor(props) {
     super(props);
+    this.onBodyMount = this.onBodyMount.bind(this);
     this.onInfoEnter = this.onInfoEnter.bind(this);
     this.onInfoLeave = this.onInfoLeave.bind(this);
     this.onHeaderClick = this.onHeaderClick.bind(this);
@@ -1123,6 +1127,16 @@ class CollapsibleSection extends React.PureComponent {
 
   componentWillMount() {
     this.props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
+  }
+  componentWillUpdate(nextProps) {
+    // Check if we're about to go from expanded to collapsed
+    if (!getCollapsed(this.props) && getCollapsed(nextProps)) {
+      // This next line forces a layout flush of the section body, which has a
+      // max-height style set, so that the upcoming collapse animation can
+      // animate from that height to the collapsed height. Without this, the
+      // update is coalesced and there's no animation from no-max-height to 0.
+      this.sectionBody.scrollHeight; // eslint-disable-line no-unused-expressions
+    }
   }
   componentWillUnmount() {
     this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
@@ -1141,6 +1155,9 @@ class CollapsibleSection extends React.PureComponent {
       this.setState({ infoActive });
     }
   }
+  onBodyMount(node) {
+    this.sectionBody = node;
+  }
   onInfoEnter() {
     // We're getting focus or hover, so info state should be true if not yet.
     this._setInfoState(true);
@@ -1152,11 +1169,18 @@ class CollapsibleSection extends React.PureComponent {
     this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
   }
   onHeaderClick() {
-    this.setState({ isAnimating: true });
-    this.props.dispatch(ac.SetPref(this.props.prefName, !this.props.Prefs.values[this.props.prefName]));
+    // Get the current height of the body so max-height transitions can work
+    this.setState({
+      isAnimating: true,
+      maxHeight: `${this.sectionBody.scrollHeight}px`
+    });
+    this.props.dispatch(ac.SetPref(this.props.prefName, !getCollapsed(this.props)));
   }
-  onTransitionEnd() {
-    this.setState({ isAnimating: false });
+  onTransitionEnd(event) {
+    // Only update the animating state for our own transition (not a child's)
+    if (event.target === event.currentTarget) {
+      this.setState({ isAnimating: false });
+    }
   }
   renderIcon() {
     const icon = this.props.icon;
@@ -1166,8 +1190,8 @@ class CollapsibleSection extends React.PureComponent {
     return React.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` });
   }
   render() {
-    const isCollapsed = this.props.Prefs.values[this.props.prefName];
-    const { enableAnimation, isAnimating } = this.state;
+    const isCollapsed = getCollapsed(this.props);
+    const { enableAnimation, isAnimating, maxHeight } = this.state;
     const { id, infoOption, eventSource, disclaimer } = this.props;
     const disclaimerPref = `section.${id}.showDisclaimer`;
     const needsDisclaimer = disclaimer && this.props.Prefs.values[disclaimerPref];
@@ -1193,7 +1217,11 @@ class CollapsibleSection extends React.PureComponent {
       ),
       React.createElement(
         "div",
-        { className: `section-body${isAnimating ? " animating" : ""}`, onTransitionEnd: this.onTransitionEnd },
+        {
+          className: `section-body${isAnimating ? " animating" : ""}`,
+          onTransitionEnd: this.onTransitionEnd,
+          ref: this.onBodyMount,
+          style: isAnimating && !isCollapsed ? { maxHeight } : null },
         needsDisclaimer && React.createElement(DisclaimerIntl, { disclaimerPref: disclaimerPref, disclaimer: disclaimer, eventSource: eventSource, dispatch: this.props.dispatch }),
         this.props.children
       )
