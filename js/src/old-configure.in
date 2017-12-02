@@ -892,26 +892,6 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
-dnl Configure JIT support
-
-case "$CPU_ARCH" in
-x86|x86_64|arm|aarch64|mips*)
-    ENABLE_ION=1
-    ;;
-esac
-
-if test "$HAVE_64BIT_BUILD" ; then
-    AC_DEFINE(JS_PUNBOX64)
-else
-    AC_DEFINE(JS_NUNBOX32)
-fi
-
-MOZ_ARG_DISABLE_BOOL(ion,
-[  --disable-ion      Disable use of the IonMonkey JIT],
-  ENABLE_ION= )
-
-AC_SUBST(ENABLE_ION)
-
 if test -n "$COMPILE_ENVIRONMENT"; then
     MOZ_COMPILER_OPTS
 fi
@@ -1492,24 +1472,6 @@ AC_SUBST_LIST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST_LIST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
-dnl = Trace logging. Enabled by default in DEBUG builds.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(trace-logging,
-[  --enable-trace-logging   Enable trace logging],
-    ENABLE_TRACE_LOGGING=1,
-    ENABLE_TRACE_LOGGING= )
-
-if test -n "$MOZ_DEBUG"; then
-    ENABLE_TRACE_LOGGING=1
-fi
-
-AC_SUBST(ENABLE_TRACE_LOGGING)
-
-if test -n "$ENABLE_TRACE_LOGGING"; then
-    AC_DEFINE(JS_TRACE_LOGGING)
-fi
-
-dnl ========================================================
 dnl = Disable treating compiler warnings as errors
 dnl ========================================================
 if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
@@ -1578,126 +1540,11 @@ fi
 AC_SUBST(MOZ_VALGRIND)
 
 dnl ========================================================
-dnl = Use a JIT code simulator for a foreign architecture.
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(simulator,
-[  --enable-simulator=ARCH
-                          Enable a JIT code simulator for the specified arch.
-                          (arm, arm64, mips32, mips64).],
-    JS_SIMULATOR="$enableval")
-
-if test -n "$JS_SIMULATOR"; then
-    case "$JS_SIMULATOR" in
-        arm|arm64|mips32|mips64) ;;
-        no)
-            JS_SIMULATOR=
-            ;;
-        *) AC_MSG_ERROR([Invalid simulator. Valid simulators are: arm, arm64, mips32, mips64.]) ;;
-    esac
-fi
-
-if test -z "$ENABLE_ION"; then
-    AC_DEFINE(JS_CODEGEN_NONE)
-    JS_CODEGEN_NONE=1
-elif test "$JS_SIMULATOR" = arm; then
-    if test "$CPU_ARCH" != "x86"; then
-        AC_MSG_ERROR([The ARM simulator only works on x86.])
-    fi
-    AC_DEFINE(JS_SIMULATOR)
-    AC_DEFINE(JS_SIMULATOR_ARM)
-    AC_DEFINE(JS_DISASM_ARM)
-    AC_DEFINE(JS_CODEGEN_ARM)
-    JS_SIMULATOR_ARM=1
-    JS_DISASM_ARM=1
-    JS_CODEGEN_ARM=1
-elif test "$JS_SIMULATOR" = arm64; then
-    if test "$CPU_ARCH" != "x86_64"; then
-        AC_MSG_ERROR([The ARM64 simulator only works on x86_64.])
-    fi
-    AC_DEFINE(JS_SIMULATOR)
-    AC_DEFINE(JS_SIMULATOR_ARM64)
-    AC_DEFINE(JS_CODEGEN_ARM64)
-    JS_SIMULATOR_ARM64=1
-    JS_CODEGEN_ARM64=1
-elif test "$JS_SIMULATOR" = mips32; then
-    if test "$CPU_ARCH" != "x86"; then
-        AC_MSG_ERROR([The MIPS32 simulator only works on x86.])
-    fi
-    AC_DEFINE(JS_SIMULATOR)
-    AC_DEFINE(JS_SIMULATOR_MIPS32)
-    AC_DEFINE(JS_CODEGEN_MIPS32)
-    JS_SIMULATOR_MIPS32=1
-    JS_CODEGEN_MIPS32=1
-elif test "$JS_SIMULATOR" = mips64; then
-    if test "$CPU_ARCH" != "x86_64"; then
-        AC_MSG_ERROR([The MIPS64 simulator only works on x86_64.])
-    fi
-    AC_DEFINE(JS_SIMULATOR)
-    AC_DEFINE(JS_SIMULATOR_MIPS64)
-    AC_DEFINE(JS_CODEGEN_MIPS64)
-    JS_SIMULATOR_MIPS64=1
-    JS_CODEGEN_MIPS64=1
-elif test "$CPU_ARCH" = "x86"; then
-    AC_DEFINE(JS_CODEGEN_X86)
-    JS_CODEGEN_X86=1
-elif test "$CPU_ARCH" = "x86_64"; then
-    AC_DEFINE(JS_CODEGEN_X64)
-    JS_CODEGEN_X64=1
-elif test "$CPU_ARCH" = "arm"; then
-    AC_DEFINE(JS_CODEGEN_ARM)
-    JS_CODEGEN_ARM=1
-    if test -n "$MOZ_DEBUG"; then
-        AC_DEFINE(JS_DISASM_ARM)
-        JS_DISASM_ARM=1
-    fi
-
-    dnl ARM platforms may trap on unaligned accesses; catch the signal and
-    dnl recover.
-elif test "$CPU_ARCH" = "aarch64"; then
-    AC_DEFINE(JS_CODEGEN_ARM64)
-    JS_CODEGEN_ARM64=1
-elif test "$CPU_ARCH" = "mips32"; then
-    AC_DEFINE(JS_CODEGEN_MIPS32)
-    JS_CODEGEN_MIPS32=1
-elif test "$CPU_ARCH" = "mips64"; then
-    AC_DEFINE(JS_CODEGEN_MIPS64)
-    JS_CODEGEN_MIPS64=1
-fi
-
-AC_SUBST(JS_SIMULATOR)
-AC_SUBST(JS_SIMULATOR_ARM)
-AC_SUBST(JS_SIMULATOR_ARM64)
-AC_SUBST(JS_SIMULATOR_MIPS32)
-AC_SUBST(JS_SIMULATOR_MIPS64)
-AC_SUBST(JS_CODEGEN_ARM)
-AC_SUBST(JS_CODEGEN_ARM64)
-AC_SUBST(JS_CODEGEN_MIPS32)
-AC_SUBST(JS_CODEGEN_MIPS64)
-AC_SUBST(JS_CODEGEN_X86)
-AC_SUBST(JS_CODEGEN_X64)
-AC_SUBST(JS_CODEGEN_NONE)
-AC_SUBST(JS_DISASM_ARM)
-
-dnl ========================================================
 dnl instruments
 dnl ========================================================
 if test -n "$MOZ_INSTRUMENTS"; then
     LIBS="$LIBS -framework CoreFoundation"
 fi
-
-dnl ========================================================
-dnl JitSpew.  Enabled by default in debug builds.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jitspew,
-[  --enable-jitspew        Enable the Jit spew and IONFLAGS.],
-    JS_JITSPEW=1,
-    JS_JITSPEW= )
-
-if test -n "$JS_JITSPEW" -o -n "$MOZ_DEBUG"; then
-    AC_DEFINE(JS_JITSPEW)
-fi
-
-AC_SUBST(JS_JITSPEW)
 
 dnl ========================================================
 dnl Debug (see Bug 939505)

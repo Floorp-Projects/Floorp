@@ -932,19 +932,7 @@ LIRGeneratorARM::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
     }
 
     MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-
-    if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
-        MOZ_ASSERT(ins->access().offset() == 0);
-        LWasmCompareExchangeCallout* lir =
-            new(alloc()) LWasmCompareExchangeCallout(useFixedAtStart(base, IntArgReg2),
-                                                     useFixedAtStart(ins->oldValue(), IntArgReg3),
-                                                     useFixedAtStart(ins->newValue(), CallTempReg0),
-                                                     useFixedAtStart(ins->tls(), WasmTlsReg),
-                                                     tempFixed(IntArgReg0),
-                                                     tempFixed(IntArgReg1));
-        defineReturn(lir, ins);
-        return;
-    }
+    MOZ_ASSERT(HasLDSTREXBHD(), "by HasCompilerSupport() constraints");
 
     LWasmCompareExchangeHeap* lir =
         new(alloc()) LWasmCompareExchangeHeap(useRegister(base),
@@ -971,17 +959,7 @@ LIRGeneratorARM::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
     }
 
     MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-
-    if (byteSize(ins->access().type()) < 4 && !HasLDSTREXBHD()) {
-        MOZ_ASSERT(ins->access().offset() == 0);
-        // Call out on ARMv6.
-        defineReturn(new(alloc()) LWasmAtomicExchangeCallout(useFixedAtStart(ins->base(), IntArgReg2),
-                                                             useFixedAtStart(ins->value(), IntArgReg3),
-                                                             useFixedAtStart(ins->tls(), WasmTlsReg),
-                                                             tempFixed(IntArgReg0),
-                                                             tempFixed(IntArgReg1)), ins);
-        return;
-    }
+    MOZ_ASSERT(HasLDSTREXBHD(), "by HasCompilerSupport() constraints");
 
     const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
@@ -1004,21 +982,10 @@ LIRGeneratorARM::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
     }
 
     MOZ_ASSERT(ins->access().type() < Scalar::Float32);
+    MOZ_ASSERT(HasLDSTREXBHD(), "by HasCompilerSupport() constraints");
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
-
-    if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
-        MOZ_ASSERT(ins->access().offset() == 0);
-        LWasmAtomicBinopCallout* lir =
-            new(alloc()) LWasmAtomicBinopCallout(useFixedAtStart(base, IntArgReg2),
-                                                 useFixedAtStart(ins->value(), IntArgReg3),
-                                                 useFixedAtStart(ins->tls(), WasmTlsReg),
-                                                 tempFixed(IntArgReg0),
-                                                 tempFixed(IntArgReg1));
-        defineReturn(lir, ins);
-        return;
-    }
 
     if (!ins->hasUses()) {
         LWasmAtomicBinopHeapForEffect* lir =
