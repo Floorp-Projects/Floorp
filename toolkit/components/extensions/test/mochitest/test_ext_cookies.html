@@ -58,6 +58,12 @@ add_task(async function test_cookies() {
       return {windowId, tabId};
     }
 
+    function changePort(href, port) {
+      let url = new URL(href);
+      url.port = port;
+      return url.href;
+    }
+
     const TEST_URL = "http://example.org/";
     const TEST_SECURE_URL = "https://example.org/";
     const THE_FUTURE = Date.now() + 5 * 60;
@@ -116,6 +122,29 @@ add_task(async function test_cookies() {
 
     let details = await browser.cookies.remove({url: TEST_URL, name: "name1"});
     assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
+    browser.test.assertEq(null, cookie, "removed cookie not found");
+
+    // Ports in cookie URLs should be ignored. Every API call uses a different port number for better coverage.
+    cookie = await browser.cookies.set({url: changePort(TEST_URL, 1234), name: "name1", value: "value1", expirationDate: THE_FUTURE});
+    assertExpected(expected, cookie);
+
+    cookie = await browser.cookies.get({url: changePort(TEST_URL, 65535), name: "name1"});
+    assertExpected(expected, cookie);
+
+    cookies = await browser.cookies.getAll({url: TEST_URL});
+    browser.test.assertEq(cookies.length, 1, "Found cookie using getAll without port");
+    assertExpected(expected, cookies[0]);
+
+    cookies = await browser.cookies.getAll({url: changePort(TEST_URL, 1)});
+    browser.test.assertEq(cookies.length, 1, "Found cookie using getAll with port");
+    assertExpected(expected, cookies[0]);
+
+    // .remove should return the URL of the API call, so the port is included in the return value.
+    const TEST_URL_TO_REMOVE = changePort(TEST_URL, 1023);
+    details = await browser.cookies.remove({url: TEST_URL_TO_REMOVE, name: "name1"});
+    assertExpected({url: TEST_URL_TO_REMOVE, name: "name1", storeId: STORE_ID}, details);
 
     cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
     browser.test.assertEq(null, cookie, "removed cookie not found");
