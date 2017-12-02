@@ -124,6 +124,8 @@ enum Command : CommandInt
 };
 #undef NS_DEFINE_COMMAND
 
+const char* ToChar(Command aCommand);
+
 } // namespace mozilla
 
 /**

@@ -85,6 +85,28 @@ ToString(CodeNameIndex aCodeNameIndex)
   return NS_ConvertUTF16toUTF8(codeName);
 }
 
+const char*
+ToChar(Command aCommand)
+{
+  if (aCommand == CommandDoNothing) {
+    return "CommandDoNothing";
+  }
+
+  switch (aCommand) {
+
+#define NS_DEFINE_COMMAND(aName, aCommandStr) \
+    case Command##aName: \
+      return "Command" #aName;
+
+#include "mozilla/CommandList.h"
+
+#undef NS_DEFINE_COMMAND
+
+    default:
+      return "illegal command value";
+  }
+}
+
 const nsCString
 GetDOMKeyCodeName(uint32_t aKeyCode)
 {
