@@ -274,6 +274,18 @@ def gc_trace(value):
 set_define('JS_GC_TRACE', gc_trace)
 
 
+# Trace logging.
+# =======================================================
+js_option('--enable-trace-logging',
+          default=depends_if(moz_debug)(lambda x: True),
+          help='Enable trace logging')
+
+set_config('ENABLE_TRACE_LOGGING',
+           depends_if('--enable-trace-logging')(lambda x: True))
+set_define('JS_TRACE_LOGGING',
+           depends_if('--enable-trace-logging')(lambda x: True))
+
+
 js_option('--enable-perf', env='JS_ION_PERF',
           help='Enable Linux perf integration')
 
