@@ -439,7 +439,7 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText,
   }
 
   RefPtr<SpeechTaskCallback> callback = new SpeechTaskCallback(aTask, synth, offsets);
-  nsresult rv = aTask->Setup(callback, 0, 0, 0);
+  nsresult rv = aTask->Setup(callback);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NSString* text = nsCocoaUtils::ToNSString(escapedText);
@@ -450,13 +450,6 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
-OSXSpeechSynthesizerService::GetServiceType(SpeechServiceType* aServiceType)
-{
-  *aServiceType = nsISpeechService::SERVICETYPE_INDIRECT_AUDIO;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
