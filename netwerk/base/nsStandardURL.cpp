@@ -3768,9 +3768,3 @@ Test_NormalizeIPv4(const nsACString& host, nsCString& result)
 {
     return nsStandardURL::NormalizeIPv4(host, result);
 }
-
-nsresult
-NS_GetURIMutator(nsIURI* aURI, nsIURIMutator** aMutator)
-{
-    return aURI->Mutate(aMutator);
-}
