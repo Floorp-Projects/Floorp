@@ -181,7 +181,7 @@ this.startup = function startup(data, reason) {
   startupReason = reason;
 
   // Only start Activity Stream up when the browser UI is ready
-  if (Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).startingUp) {
+  if (Services.startup.startingUp) {
     Services.obs.addObserver(observe, BROWSER_READY_NOTIFICATION);
   } else {
     // Handle manual install or automatic install after manual uninstall

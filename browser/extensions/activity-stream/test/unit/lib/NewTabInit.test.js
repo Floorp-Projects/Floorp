@@ -19,50 +19,6 @@ describe("NewTabInit", () => {
     const resp = ac.SendToContent({type: at.NEW_TAB_INITIAL_STATE, data: STATE}, 123);
     assert.calledWith(store.dispatch, resp);
   });
-  describe("about:home search auto focus", () => {
-    let action;
-    beforeEach(() => {
-      STATE.Prefs = {
-        values: {
-          "aboutHome.autoFocus": true,
-          "showSearch": true
-        }
-      };
-      action = {
-        type: at.NEW_TAB_INIT,
-        data: {
-          url: "about:home",
-          browser: {focus: sinon.spy()}
-        }
-      };
-    });
-    it("should focus the content browser when NEW_TAB_INIT", () => {
-      instance.onAction(action);
-
-      assert.calledOnce(action.data.browser.focus);
-    });
-    it("should NOT focus the content browser when NEW_TAB_INIT for about:newtab", () => {
-      action.data.url = "about:newtab";
-
-      instance.onAction(action);
-
-      assert.notCalled(action.data.browser.focus);
-    });
-    it("should NOT focus the content browser when NEW_TAB_INIT when autoFocus pref is off", () => {
-      STATE.Prefs.values["aboutHome.autoFocus"] = false;
-
-      instance.onAction(action);
-
-      assert.notCalled(action.data.browser.focus);
-    });
-    it("should NOT focus the content browser when NEW_TAB_INIT when there's no search", () => {
-      STATE.Prefs.values.showSearch = false;
-
-      instance.onAction(action);
-
-      assert.notCalled(action.data.browser.focus);
-    });
-  });
   describe("early / simulated new tabs", () => {
     const simulateTabInit = portID => instance.onAction({
       type: at.NEW_TAB_INIT,
