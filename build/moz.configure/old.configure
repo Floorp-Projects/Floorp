@@ -228,7 +228,6 @@ def old_configure_options(*options):
     '--enable-system-sqlite',
     '--enable-tasktracer',
     '--enable-thread-sanitizer',
-    '--enable-trace-logging',
     '--enable-ubsan-int-overflow',
     '--enable-ui-locale',
     '--enable-universalchardet',
