@@ -156,14 +156,14 @@
   <string name="contextmenu_open_in_new_tab">Отвори везу у новом језичку</string>
   <string name="contextmenu_image_warning"><![CDATA["Сачуване и дељене слике "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077;&#1115;&#1077; &#1073;&#1080;&#1090;&#1080; &#1086;&#1073;&#1088;&#1080;&#1089;&#1072;&#1085;&#1077;</b>" када обришете %1$s историјат."]]></string>
   <string name="firstrun_defaultbrowser_title">Ојачајте вашу приватност</string>
-  <string name="firstrun_defaultbrowser_text2">Унапредите приватно прегледање. Блокирајте рекламе и други саржај који вас прати путем сајтова и убрзајте учитавање страница.</string>
+  <string name="firstrun_defaultbrowser_text2">Побољшајте приватност током сурфовања. Блокирајте рекламе и друге саржаје који вас прати путем сајтова и убрзајте учитавање страница.</string>
   <string name="firstrun_search_title">Ваше претраге, ваш начин</string>
   <string name="firstrun_search_text">Тражите нешто другачије? Изаберите други подразумевани претраживач у поставкама.</string>
   <string name="firstrun_shortcut_title">Додајте пречице на вашем почетном екрану</string>
   <string name="firstrun_shortcut_text">Вратите се на ваше омиљене сајтове у %1$s-у лако. Само изаберите \"Додај на екран телефона\" из %1$s менија.</string>
   <string name="firstrun_privacy_title">Учините приватност навиком</string>
-  <string name="firstrun_privacy_text">Поставите %1$s као ваш подразумевани прегледач и искусите приватно прегледање када отворите веб странице из других апликација.</string>
-  <string name="firstrun_close_button">У реду, разумем!</string>
+  <string name="firstrun_privacy_text">Поставите %1$s као ваш подразумевани прегледач и побољшајте приватност током сурфовања када отворите веб странице из других апликација.</string>
+  <string name="firstrun_close_button">Разумем!</string>
   <string name="firstrun_skip_button">Прескочи</string>
   <string name="firstrun_next_button">Следеће</string>
   <string name="content_blocking_disabled">-</string>

@@ -29,7 +29,6 @@
   <string name="preference_search_engine_default">Privzet</string>
   <string name="preference_state_on">Vključeno</string>
   <string name="preference_state_off">Izklopljeno</string>
-  <string name="preference_switch_autocomplete">Samodejno dopolni</string>
   <string name="preference_autocomplete_learn_more">Več o tem</string>
   <string name="preference_autocomplete_add_hint">Prilepite ali vpišite URL</string>
   <string name="preference_autocomplete_add_example">Primer: example.com</string>
@@ -86,6 +85,9 @@
   <string name="search_add_manually_example">Primer: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Dodaj iskalnik</string>
   <string name="search_add_confirmation">Nov iskalnik dodan.</string>
+  <string name="search_add_error_empty_name">Vnesite ime iskalnika</string>
+  <string name="search_add_error_empty_search">Vnesite iskalni niz</string>
+  <string name="search_add_error_format">Prepričajte se, da se iskalni niz ujema z obliko primera</string>
   <string name="content_description_clear_input">Počisti vnos</string>
   <string name="content_description_dismiss_input">Opusti</string>
   <string name="content_description_erase">Počisti zgodovino brskanja</string>

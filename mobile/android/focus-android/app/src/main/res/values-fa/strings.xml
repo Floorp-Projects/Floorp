@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">لغو</string>
   <string name="action_ok">تایید</string>
+  <string name="action_save">ذخیره</string>
   <string name="urlbar_hint">جست‌وجو کنید یا آدرسی را وارد کنید</string>
   <string name="teaser">مرور ناشناس خودکار.\nمرور کنید. پاک کنید. تکرار کنید.</string>
   <string name="feedback_erase">تاریخچه مرور شما حذف شد.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1588;&#1605;&#1575; &#1585;&#1575; &#1583;&#1585; &#1705;&#1606;&#1578;&#1585;&#1604; &#1602;&#1585;&#1575;&#1585; &#1605;&#1740;&#1583;&#1607;&#1583;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1586; &#1575;&#1740;&#1606; &#1576;&#1585;&#1606;&#1575;&#1605;&#1607; &#1576;&#1607; &#1593;&#1606;&#1608;&#1575;&#1606; &#1740;&#1705; &#1605;&#1585;&#1608;&#1585;&#1711;&#1585; &#1606;&#1575;&#1588;&#1606;&#1575;&#1587; &#1575;&#1587;&#1578;&#1601;&#1575;&#1583;&#1607; &#1705;&#1606;&#1740;&#1583;:\n  "<ul>"\n    "<li>&#1576;&#1583;&#1608;&#1606; &#1582;&#1585;&#1608;&#1580; &#1575;&#1586; &#1576;&#1585;&#1606;&#1575;&#1605;&#1607;&#1548; &#1575;&#1740;&#1606;&#1578;&#1585;&#1606;&#1578; &#1585;&#1575; &#1580;&#1587;&#1578;&#8204;&#1608;&#1580;&#1608; &#1608; &#1605;&#1585;&#1608;&#1585; &#1705;&#1606;&#1740;&#1583;</li>"\n    "<li>&#1585;&#1583;&#1740;&#1575;&#1576;&#8204;&#1607;&#1575; &#1585;&#1575; &#1605;&#1587;&#1583;&#1608;&#1583; &#1705;&#1606;&#1740;&#1583; (&#1740;&#1575; &#1575;&#1740;&#1606;&#1705;&#1607; &#1578;&#1606;&#1592;&#1740;&#1605;&#1575;&#1578; &#1582;&#1608;&#1583; &#1585;&#1575; &#1576;&#1585;&#1575;&#1740; &#1575;&#1580;&#1575;&#1586;&#1607; &#1583;&#1575;&#1583;&#1606; &#1576;&#1607; &#1585;&#1583;&#1740;&#1575;&#1576;&#8204;&#1607;&#1575; &#1578;&#1594;&#1740;&#1740;&#1585; &#1583;&#1607;&#1740;&#1583;)</li>"\n    "<li>&#1662;&#1575;&#1705; &#1705;&#1606;&#1740;&#1583; &#1578;&#1575; &#1575;&#1591;&#1604;&#1575;&#1593;&#1575;&#1578;&#1740; &#1605;&#1575;&#1606;&#1606;&#1583; &#1705;&#1608;&#1705;&#1740;&#8204;&#1607;&#1575; &#1608; &#1607;&#1605;&#1670;&#1606;&#1740;&#1606; &#1580;&#1587;&#1578;&#8204;&#1608;&#1580;&#1608;&#1607;&#1575; &#1608; &#1578;&#1575;&#1585;&#1740;&#1582;&#1670;&#1607; &#1605;&#1585;&#1608;&#1585; &#1581;&#1584;&#1601; &#1588;&#1608;&#1606;&#1583;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1578;&#1608;&#1587;&#1617;&#1591; &#1605;&#1608;&#1586;&#1740;&#1604;&#1575; &#1605;&#1606;&#1578;&#1588;&#1585; &#1588;&#1583;&#1607; &#1575;&#1587;&#1578;. &#1605;&#1571;&#1605;&#1608;&#1585;&#1740;&#1578; &#1605;&#1575; &#1578;&#1575; &#1585;&#1608;&#1575;&#1580; &#1740;&#1705; &#1575;&#1740;&#1606;&#1578;&#1585;&#1606;&#1578; &#1587;&#1575;&#1604;&#1605; &#1608; &#1576;&#1575;&#1586; &#1575;&#1587;&#1578;.<br/>\n<a href="%2$s">&#1576;&#1740;&#1588;&#1578;&#1585; &#1576;&#1583;&#1575;&#1606;&#1740;&#1583;</a></p>]]></string>
   <string name="preference_category_search">جست‌وجو</string>
   <string name="preference_search_engine_default">پیش‌فرض</string>
+  <string name="preference_state_on">روشن</string>
+  <string name="preference_state_off">خاموش</string>
+  <string name="preference_subitem_autocomplete">تکمیل خودکار URL</string>
+  <string name="preference_switch_autocomplete">تکمیل خودکار</string>
+  <string name="preference_category_autocomplete_preinstalled">فهرستِ پیش‌فرض URL</string>
+  <string name="preference_autocomplete_preinstalled_summary">برای داشتن تکمیل خودکار %1$s برای بیش از ۴۵۰ نشانی محبوب در نوار آدرس، فعال کنید.</string>
+  <string name="preference_category_autocomplete_custom">نشانیِ سفارشی</string>
+  <string name="preference_autocomplete_subitem_customlist">نشانی‌های سفارشی</string>
+  <string name="preference_autocomplete_action_add">+ اضافه کردن نشانی سفارشی</string>
+  <string name="preference_autocomplete_title_add">اضافه کردن نشانی سفارشی</string>
+  <string name="preference_autocomplete_title_remove">حذف نشانی سفارشی</string>
+  <string name="preference_autocomplete_learn_more">اطلاعات بیشتر</string>
+  <string name="preference_autocomplete_custom_summary">اضافه و مدیریت کردنِ تکمیل خودکار نشانی‌های سفارشی.</string>
+  <string name="preference_autocomplete_add_title">نشانی برای اضافه کردن</string>
+  <string name="preference_autocomplete_add_hint">جای‌گذاری یا ورود نشانی</string>
+  <string name="preference_autocomplete_add_example">مثال: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">نشانی سفارشی جدید اضافه شد</string>
+  <string name="preference_autocomplete_menu_remove">حذف</string>
+  <string name="preference_autocomplete_action_remove_content_description">حذف</string>
+  <string name="preference_autocomplete_add_error">نشانی که وارد کردید را دوباره بررسی کنید.</string>
   <string name="preference_language">زبان</string>
   <string name="preference_language_systemdefault">پیش‌فرض سیستم</string>
   <string name="preference_dialog_title_search_engine">جست‌وجوی پیش‌فرض</string>
@@ -76,6 +98,9 @@
   <string name="search_add_manually_example">مثال: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">اضافه کردن موتور جست‌وجو</string>
   <string name="search_add_confirmation">موتور جست‌وجو جدید اضافه شد.</string>
+  <string name="search_add_error_empty_name">نام موتور جست‌وجو را وارد کنید</string>
+  <string name="search_add_error_empty_search">رشتهٔ جست‌وجو را وارد کنید</string>
+  <string name="search_add_error_format">بررسی کنید که رشته جست‌وجو با شکل و قالب نمونهٔ ارائه شده مطابقت دارد</string>
   <string name="content_description_clear_input">پاک کردن وروردی</string>
   <string name="content_description_dismiss_input">رد کردن</string>
   <string name="content_description_erase">حذف تاریخچه مرور</string>

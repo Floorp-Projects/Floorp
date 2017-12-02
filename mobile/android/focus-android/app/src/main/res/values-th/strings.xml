@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_add_title">URL ที่จะเพิ่ม</string>
   <string name="preference_autocomplete_add_hint">วางหรือป้อน URL</string>
   <string name="preference_autocomplete_add_example">ตัวอย่าง: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
   <string name="preference_autocomplete_add_confirmation">เพิ่ม URL ที่กำหนดเองใหม่แล้ว</string>
   <string name="preference_autocomplete_menu_remove">เอาออก</string>
   <string name="preference_autocomplete_action_remove_content_description">เอาออก</string>

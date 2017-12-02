@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">취소</string>
   <string name="action_ok">확인</string>
+  <string name="action_save">저장</string>
   <string name="urlbar_hint">검색어 또는 주소 입력</string>
   <string name="teaser">자동화된 개인 정보 보호 브라우저.\n쓰고, 지우고. 쓰고, 지우고.</string>
   <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#47484; &#50668;&#47084; &#44592;&#45733;&#51004;&#47196; &#49324;&#50857;&#54624; &#49688; &#51080;&#49845;&#45768;&#45796;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#44060;&#51064; &#51221;&#48372; &#48372;&#54840; &#48652;&#46972;&#50864;&#51200;&#47196; &#49324;&#50857;:\n  "<ul>"\n    "<li>&#50545;&#50640;&#49436; &#44160;&#49353; &#48143; &#48652;&#46972;&#50864;&#51669;&#54616;&#44592;</li>"\n    "<li>&#52628;&#51201;&#44592; &#52264;&#45800;(&#49444;&#51221;&#51012; &#48320;&#44221;&#54644; &#54728;&#50857;&#54624; &#49688; &#51080;&#51020;)</li>"\n    "<li>&#51064;&#53552;&#45367; &#44592;&#47197;&#51060;&#45208; &#44160;&#49353; &#44592;&#47197;, &#53216;&#53412; &#49325;&#51228;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#45716; Mozilla&#51032; &#51228;&#54408;&#51077;&#45768;&#45796;. Mozilla&#51032; &#49324;&#47749;&#51008; &#44148;&#44053;&#54616;&#44256; &#44060;&#48169;&#51201;&#51064; &#51064;&#53552;&#45367;&#51012; &#51312;&#49457;&#54616;&#45716; &#44163;&#51077;&#45768;&#45796;.<br/><a href="%2$s">&#45908; &#50508;&#50500;&#48372;&#44592;</a></p>]]></string>
   <string name="preference_category_search">검색</string>
   <string name="preference_search_engine_default">기본</string>
+  <string name="preference_state_on">사용 중</string>
+  <string name="preference_state_off">사용 안 함</string>
+  <string name="preference_subitem_autocomplete">URL 자동 완성</string>
+  <string name="preference_switch_autocomplete">자동 완성</string>
+  <string name="preference_category_autocomplete_preinstalled">기본 URL 목록</string>
+  <string name="preference_autocomplete_preinstalled_summary">주소창에서 450개가 넘는 URL의 %1$s 자동 완성 기능을 사용하세요.</string>
+  <string name="preference_category_autocomplete_custom">사용자 정의 URL</string>
+  <string name="preference_autocomplete_subitem_customlist">사용자 정의 URL</string>
+  <string name="preference_autocomplete_action_add">+ 사용자 정의 URL 추가</string>
+  <string name="preference_autocomplete_title_add">사용자 정의 URL 추가</string>
+  <string name="preference_autocomplete_title_remove">사용자 정의 URL 삭제</string>
+  <string name="preference_autocomplete_learn_more">더 알아보기</string>
+  <string name="preference_autocomplete_custom_summary">사용자 정의 자동 완성 URL 추가하고 관리합니다.</string>
+  <string name="preference_autocomplete_add_title">추가할 URL</string>
+  <string name="preference_autocomplete_add_hint">URL 입력 또는 붙여넣기</string>
+  <string name="preference_autocomplete_add_example">예: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">새 사용자 정의 URL이 추가되었습니다.</string>
+  <string name="preference_autocomplete_menu_remove">삭제</string>
+  <string name="preference_autocomplete_action_remove_content_description">삭제</string>
+  <string name="preference_autocomplete_add_error">입력한 URL을 다시 확인하세요.</string>
   <string name="preference_language">언어</string>
   <string name="preference_language_systemdefault">시스템 기본값</string>
   <string name="preference_dialog_title_search_engine">기본 검색</string>
@@ -76,6 +98,9 @@
   <string name="search_add_manually_example">예: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">검색 엔진 추가</string>
   <string name="search_add_confirmation">새 검색 엔진이 추가되었습니다.</string>
+  <string name="search_add_error_empty_name">검색 엔진 이름을 입력하세요</string>
+  <string name="search_add_error_empty_search">검색어를 입력하세요</string>
+  <string name="search_add_error_format">검색어가 예시 형식과 일치하는 지 확인하세요</string>
   <string name="content_description_clear_input">입력 값 초기화</string>
   <string name="content_description_dismiss_input">취소</string>
   <string name="content_description_erase">탐색 기록 지우기</string>
