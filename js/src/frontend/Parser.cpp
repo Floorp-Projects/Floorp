@@ -685,7 +685,7 @@ ParserBase::extraWarning(unsigned errorNumber, ...)
     va_start(args, errorNumber);
 
     bool result =
-        tokenStream.reportExtraWarningErrorNumberVA(nullptr, pos().begin, errorNumber, args);
+        tokenStream.reportExtraWarningErrorNumberVA(nullptr, pos().begin, errorNumber, &args);
 
     va_end(args);
     return result;
@@ -698,7 +698,7 @@ ParserBase::extraWarningAt(uint32_t offset, unsigned errorNumber, ...)
     va_start(args, errorNumber);
 
     bool result =
-        tokenStream.reportExtraWarningErrorNumberVA(nullptr, offset, errorNumber, args);
+        tokenStream.reportExtraWarningErrorNumberVA(nullptr, offset, errorNumber, &args);
 
     va_end(args);
     return result;
@@ -712,7 +712,7 @@ ParserBase::strictModeError(unsigned errorNumber, ...)
 
     bool res =
         tokenStream.reportStrictModeErrorNumberVA(nullptr, pos().begin, pc->sc()->strict(),
-                                                  errorNumber, args);
+                                                  errorNumber, &args);
 
     va_end(args);
     return res;
@@ -726,7 +726,7 @@ ParserBase::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
 
     bool res =
         tokenStream.reportStrictModeErrorNumberVA(nullptr, offset, pc->sc()->strict(),
-                                                  errorNumber, args);
+                                                  errorNumber, &args);
 
     va_end(args);
     return res;
@@ -759,11 +759,11 @@ ParserBase::reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumb
       }
       case ParseExtraWarning:
         result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, TokenStream::NoOffset,
-                                                             errorNumber, args);
+                                                             errorNumber, &args);
         break;
       case ParseStrictError:
         result = tokenStream.reportStrictModeErrorNumberVA(nullptr, TokenStream::NoOffset, strict,
-                                                           errorNumber, args);
+                                                           errorNumber, &args);
         break;
     }
 

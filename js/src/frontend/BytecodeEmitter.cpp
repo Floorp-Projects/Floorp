@@ -3584,7 +3584,7 @@ BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
     // FIXME: parser.tokenStream() should be a TokenStreamAnyChars for bug 1351107,
     // but caused problems, cf. bug 1363116.
     bool result = parser.tokenStream()
-                        .reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, args);
+                        .reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, &args);
 
     va_end(args);
     return result;
