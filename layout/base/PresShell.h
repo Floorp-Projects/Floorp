@@ -685,9 +685,6 @@ protected:
   nsresult HandleEventInternal(mozilla::WidgetEvent* aEvent,
                                nsEventStatus* aStatus,
                                bool aIsHandlingNativeEvent);
-  nsresult HandlePositionedEvent(nsIFrame* aTargetFrame,
-                                 mozilla::WidgetGUIEvent* aEvent,
-                                 nsEventStatus* aEventStatus);
 
   /*
    * This and the next two helper methods are used to target and position the
