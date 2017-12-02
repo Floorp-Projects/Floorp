@@ -8,8 +8,10 @@ const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CANVAS_SIZE,
   DEFAULT_COLOR,
+  clearRect,
   drawRect,
   getCurrentMatrix,
+  getPointsFromDiagonal,
   updateCanvasElement,
   updateCanvasPosition,
 } = require("./utils/canvas");
@@ -33,6 +35,17 @@ const FLEXBOX_LINES_PROPERTIES = {
     alpha: 1,
   },
 };
+
+const FLEXBOX_CONTAINER_PATTERN_WIDTH = 14; // px
+const FLEXBOX_CONTAINER_PATTERN_HEIGHT = 14; // px
+const FLEXBOX_CONTAINER_PATTERN_LINE_DISH = [5, 3]; // px
+
+/**
+ * Cached used by `FlexboxHighlighter.getFlexContainerPattern`.
+ */
+const gCachedFlexboxPattern = new Map();
+
+const FLEXBOX = "flexbox";
 
 class FlexboxHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
@@ -98,6 +111,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     return container;
   }
 
+  clearCache() {
+    gCachedFlexboxPattern.clear();
+  }
+
   destroy() {
     let { highlighterEnv } = this;
     highlighterEnv.off("will-navigate", this.onWillNavigate);
@@ -109,6 +126,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     this.markup.destroy();
 
+    // Clear the pattern cache to avoid dead object exceptions (Bug 1342051).
+    this.clearCache();
     AutoRefreshHighlighter.prototype.destroy.call(this);
   }
 
@@ -122,6 +141,51 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
   getElement(id) {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+  }
+
+  /**
+  * Gets the flexbox container pattern used to render the container regions.
+  *
+  * @param  {Number} devicePixelRatio
+  *         The device pixel ratio we want the pattern for.
+  * @return {CanvasPattern} flex container pattern.
+  */
+  getFlexContainerPattern(devicePixelRatio) {
+    let flexboxPatternMap = null;
+
+    if (gCachedFlexboxPattern.has(devicePixelRatio)) {
+      flexboxPatternMap = gCachedFlexboxPattern.get(devicePixelRatio);
+    } else {
+      flexboxPatternMap = new Map();
+    }
+
+    if (gCachedFlexboxPattern.has(FLEXBOX)) {
+      return gCachedFlexboxPattern.get(FLEXBOX);
+    }
+
+    // Create the diagonal lines pattern for the rendering the flexbox gaps.
+    let canvas = createNode(this.win, { nodeType: "canvas" });
+    let width = canvas.width = FLEXBOX_CONTAINER_PATTERN_WIDTH * devicePixelRatio;
+    let height = canvas.height = FLEXBOX_CONTAINER_PATTERN_HEIGHT * devicePixelRatio;
+
+    let ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.setLineDash(FLEXBOX_CONTAINER_PATTERN_LINE_DISH);
+    ctx.beginPath();
+    ctx.translate(.5, .5);
+
+    ctx.moveTo(0, 0);
+    ctx.lineTo(width, height);
+
+    ctx.strokeStyle = DEFAULT_COLOR;
+    ctx.stroke();
+    ctx.restore();
+
+    let pattern = ctx.createPattern(canvas, "repeat");
+    flexboxPatternMap.set(FLEXBOX, pattern);
+    gCachedFlexboxPattern.set(devicePixelRatio, flexboxPatternMap);
+
+    return pattern;
   }
 
   /**
@@ -187,6 +251,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
    * next time.
    */
   onWillNavigate({ isTopLevel }) {
+    this.clearCache();
+
     if (isTopLevel) {
       this.hide();
     }
@@ -210,11 +276,12 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.globalAlpha = FLEXBOX_LINES_PROPERTIES.edge.alpha;
     this.ctx.lineWidth = lineWidth;
     this.ctx.strokeStyle = DEFAULT_COLOR;
+    this.ctx.fillStyle = this.getFlexContainerPattern(devicePixelRatio);
 
     let { bounds } = this.currentQuads.content[0];
-
     drawRect(this.ctx, 0, 0, bounds.width, bounds.height, this.currentMatrix);
 
+    this.ctx.fill();
     this.ctx.stroke();
     this.ctx.restore();
   }
@@ -244,7 +311,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     // TODO: Utilize the platform API that will be implemented in Bug 1414290 to
     // retrieve the flex item properties.
     for (let flexItem of flexItems) {
-      let quads = getAdjustedQuads(this.win, flexItem, "content");
+      let quads = getAdjustedQuads(this.win, flexItem, "border");
       if (!quads.length) {
         continue;
       }
@@ -256,6 +323,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       let right = flexItemBounds.right - bounds.left;
       let bottom = flexItemBounds.bottom - bounds.top;
 
+      clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
       drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
       this.ctx.stroke();
     }
