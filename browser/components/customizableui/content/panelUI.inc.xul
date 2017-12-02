@@ -630,10 +630,12 @@
                        label="&appMenuRemoteTabs.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
-        <toolbarseparator/>
+        <toolbarseparator hidden="true"/>
         <label value="&appMenuRecentHighlights.label;"
+               hidden="true"
                class="subview-subheader"/>
         <toolbaritem id="appMenu-library-recentHighlights"
+                     hidden="true"
                      orient="vertical"
                      smoothscroll="false"
                      flatList="true"

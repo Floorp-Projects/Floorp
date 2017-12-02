@@ -2,67 +2,43 @@
  * Mixed Content Block frame navigates for target="_top" - Test for Bug 902350
  */
 
+add_task(async function mixed_content_block_for_target_top_test() {
+  const PREF_ACTIVE = "security.mixed_content.block_active_content";
+  const httpsTestRoot = getRootDirectory(gTestPath)
+    .replace("chrome://mochitests/content", "https://example.com");
 
-const PREF_ACTIVE = "security.mixed_content.block_active_content";
-const gHttpTestRoot = "https://example.com/browser/dom/base/test/";
-var origBlockActive;
-var gTestBrowser = null;
+  await SpecialPowers.pushPrefEnv({ set: [[ PREF_ACTIVE, true ]] });
 
-registerCleanupFunction(function() {
-  // Set preferences back to their original values
-  Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
-});
+  let newTab = await BrowserTestUtils.openNewForegroundTab({ gBrowser,
+                                                             waitForLoad: true });
+  let testBrowser = newTab.linkedBrowser;
 
-function MixedTestsCompleted() {
-  gBrowser.removeCurrentTab();
-  window.focus();
-  finish();
-}
+  var url = httpsTestRoot + "file_bug902350.html";
+  var frameUrl = httpsTestRoot + "file_bug902350_frame.html";
+  let loadPromise = BrowserTestUtils.browserLoaded(testBrowser, false, url);
+  let frameLoadPromise = BrowserTestUtils.browserLoaded(testBrowser, true,
+                                                        frameUrl);
+  testBrowser.loadURI(url);
+  await loadPromise;
+  await frameLoadPromise;
 
-function test() {
-  waitForExplicitFinish();
-
-  origBlockActive = Services.prefs.getBoolPref(PREF_ACTIVE);
-
-  Services.prefs.setBoolPref(PREF_ACTIVE, true);
-
-  var newTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedTab = newTab;
-  gTestBrowser = gBrowser.selectedBrowser;
-
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(() => {
-    // about:blank is expected to be loaded here.
-    var url = gHttpTestRoot + "file_bug902350.html";
-    BrowserTestUtils.browserLoaded(gTestBrowser, true /*includeSubFrames*/).then(MixedTest1A);
-    gTestBrowser.loadURI(url);
-  });
-}
-
-// Need to capture 2 loads, one for the main page and one for the iframe
-function MixedTest1A() {
-  BrowserTestUtils.browserLoaded(gTestBrowser, true /*includeSubFrames*/).then(MixedTest1B);
-}
-
-// Find the iframe and click the link in it
-function MixedTest1B() {
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(MixedTest1C);
-
-  ContentTask.spawn(gTestBrowser, null, function() {
+  // Find the iframe and click the link in it.
+  let insecureUrl = "http://example.com/";
+  let insecureLoadPromise = BrowserTestUtils.browserLoaded(testBrowser, false,
+                                                           insecureUrl);
+  ContentTask.spawn(testBrowser, null, function() {
     var frame = content.document.getElementById("testing_frame");
     var topTarget = frame.contentWindow.document.getElementById("topTarget");
     topTarget.click();
   });
 
-  // The link click should have caused a load and should not invoke the Mixed Content Blocker
-  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
+  // Navigating to insecure domain through target='_top' should succeed.
+  await insecureLoadPromise;
+
+  // The link click should not invoke the Mixed Content Blocker.
+  let {gIdentityHandler} = testBrowser.ownerGlobal;
   ok (!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
       "Mixed Content Doorhanger did not appear when trying to navigate top");
-}
 
-function MixedTest1C() {
-  ContentTask.spawn(gTestBrowser, null, function() {
-    Assert.equal(content.location.href, "http://example.com/",
-      "Navigating to insecure domain through target='_top' failed.")
-  }).then(MixedTestsCompleted);
-}
-
+  await BrowserTestUtils.removeTab(newTab);
+});

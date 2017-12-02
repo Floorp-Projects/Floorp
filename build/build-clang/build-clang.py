@@ -343,6 +343,7 @@ if __name__ == "__main__":
     llvm_source_dir = source_dir + "/llvm"
     clang_source_dir = source_dir + "/clang"
     extra_source_dir = source_dir + "/extra"
+    lld_source_dir = source_dir + "/lld"
     compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
     libcxxabi_source_dir = source_dir + "/libcxxabi"
@@ -379,6 +380,7 @@ if __name__ == "__main__":
     llvm_repo = config["llvm_repo"]
     clang_repo = config["clang_repo"]
     extra_repo = config.get("extra_repo")
+    lld_repo = config.get("lld_repo")
     compiler_repo = config["compiler_repo"]
     libcxx_repo = config["libcxx_repo"]
     libcxxabi_repo = config.get("libcxxabi_repo")
@@ -449,6 +451,8 @@ if __name__ == "__main__":
     checkout_or_update(clang_repo, clang_source_dir)
     checkout_or_update(compiler_repo, compiler_rt_source_dir)
     checkout_or_update(libcxx_repo, libcxx_source_dir)
+    if lld_repo:
+        checkout_or_update(lld_repo, lld_source_dir)
     if libcxxabi_repo:
         checkout_or_update(libcxxabi_repo, libcxxabi_source_dir)
     if extra_repo:
@@ -460,6 +464,8 @@ if __name__ == "__main__":
                  llvm_source_dir + "/tools/clang"),
                 (extra_source_dir,
                  llvm_source_dir + "/tools/clang/tools/extra"),
+                (lld_source_dir,
+                 llvm_source_dir + "/tools/lld"),
                 (compiler_rt_source_dir,
                  llvm_source_dir + "/projects/compiler-rt"),
                 (libcxx_source_dir,

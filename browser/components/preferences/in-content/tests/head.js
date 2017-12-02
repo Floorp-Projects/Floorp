@@ -67,7 +67,9 @@ function promiseLoadSubDialog(aURL) {
       }
       is(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
 
-      resolve(aEvent.detail.dialog._frame.contentWindow);
+      // Wait for the next event tick to make sure the remaining part of the
+      // testcase runs after the dialog gets ready for input.
+      executeSoon(() => resolve(aEvent.detail.dialog._frame.contentWindow));
     });
   });
 }

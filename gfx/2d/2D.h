@@ -558,6 +558,18 @@ public:
     return true;
   }
 
+  /**
+   * Indicates how many times the surface has been invalidated.
+   */
+  virtual int32_t Invalidations() const {
+    return -1;
+  }
+
+  /**
+   * Increment the invalidation counter.
+   */
+  virtual void Invalidate() { }
+
 protected:
   bool mIsMapped;
 };

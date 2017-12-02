@@ -68,12 +68,18 @@ public:
   // Export the inherited scale
   gfx::Size GetInheritedScale() const { return mScale; }
 
+  const gfx::Matrix& GetInheritedTransform() const
+  {
+    return mInheritedTransform;
+  }
+
   bool IsBackfaceVisible() const { return mTransform.IsBackfaceVisible(); }
 
 private:
   wr::DisplayListBuilder* mBuilder;
   gfx::Matrix4x4 mTransform;
   gfx::Size mScale;
+  gfx::Matrix mInheritedTransform;
 };
 
 } // namespace layers
