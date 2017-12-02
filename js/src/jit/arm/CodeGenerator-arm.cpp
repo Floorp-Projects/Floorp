@@ -2549,33 +2549,6 @@ CodeGeneratorARM::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
 }
 
 void
-CodeGeneratorARM::visitWasmCompareExchangeCallout(LWasmCompareExchangeCallout* ins)
-{
-    const MWasmCompareExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
-
-    Register ptr = ToRegister(ins->ptr());
-    Register oldval = ToRegister(ins->oldval());
-    Register newval = ToRegister(ins->newval());
-    Register tls = ToRegister(ins->tls());
-    Register instance = ToRegister(ins->getTemp(0));
-    Register viewType = ToRegister(ins->getTemp(1));
-
-    MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
-
-    masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
-    masm.ma_mov(Imm32(mir->access().type()), viewType);
-
-    masm.setupWasmABICall();
-    masm.passABIArg(instance);
-    masm.passABIArg(viewType);
-    masm.passABIArg(ptr);
-    masm.passABIArg(oldval);
-    masm.passABIArg(newval);
-    masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::AtomicCmpXchg);
-}
-
-void
 CodeGeneratorARM::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
 {
     MWasmAtomicExchangeHeap* mir = ins->mir();
@@ -2588,31 +2561,6 @@ CodeGeneratorARM::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
 
     masm.atomicExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                        srcAddr, value, InvalidReg, ToAnyRegister(ins->output()));
-}
-
-void
-CodeGeneratorARM::visitWasmAtomicExchangeCallout(LWasmAtomicExchangeCallout* ins)
-{
-    const MWasmAtomicExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
-
-    Register ptr = ToRegister(ins->ptr());
-    Register value = ToRegister(ins->value());
-    Register tls = ToRegister(ins->tls());
-    Register instance = ToRegister(ins->getTemp(0));
-    Register viewType = ToRegister(ins->getTemp(1));
-
-    MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
-
-    masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
-    masm.ma_mov(Imm32(mir->access().type()), viewType);
-
-    masm.setupWasmABICall();
-    masm.passABIArg(instance);
-    masm.passABIArg(viewType);
-    masm.passABIArg(ptr);
-    masm.passABIArg(value);
-    masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::AtomicXchg);
 }
 
 void
@@ -2660,49 +2608,6 @@ CodeGeneratorARM::visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffec
         atomicBinopToTypedIntArray(op, vt, Imm32(ToInt32(value)), srcAddr, flagTemp);
     else
         atomicBinopToTypedIntArray(op, vt, ToRegister(value), srcAddr, flagTemp);
-}
-
-void
-CodeGeneratorARM::visitWasmAtomicBinopCallout(LWasmAtomicBinopCallout* ins)
-{
-    const MWasmAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
-
-    Register ptr = ToRegister(ins->ptr());
-    Register value = ToRegister(ins->value());
-    Register tls = ToRegister(ins->tls());
-    Register instance = ToRegister(ins->getTemp(0));
-    Register viewType = ToRegister(ins->getTemp(1));
-
-    masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
-    masm.move32(Imm32(mir->access().type()), viewType);
-
-    masm.setupWasmABICall();
-    masm.passABIArg(instance);
-    masm.passABIArg(viewType);
-    masm.passABIArg(ptr);
-    masm.passABIArg(value);
-
-    wasm::BytecodeOffset bytecodeOffset = mir->bytecodeOffset();
-    switch (mir->operation()) {
-      case AtomicFetchAddOp:
-        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchAdd);
-        break;
-      case AtomicFetchSubOp:
-        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchSub);
-        break;
-      case AtomicFetchAndOp:
-        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchAnd);
-        break;
-      case AtomicFetchOrOp:
-        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchOr);
-        break;
-      case AtomicFetchXorOp:
-        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchXor);
-        break;
-      default:
-        MOZ_CRASH("Unknown op");
-    }
 }
 
 void

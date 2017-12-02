@@ -94,7 +94,7 @@ audioElement.onplaying = function() {
     var rv = checkFrequency(an);
     info("currentTime: " + audioElement.currentTime);
     if (audioElement.currentTime < 4 ||
-        audioElement.currentTIme > 8){
+        audioElement.currentTime > 8){
       return;
     }
     if (!rv) {
