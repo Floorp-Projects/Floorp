@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_nsSpeechTask_h
 #define mozilla_dom_nsSpeechTask_h
 
-#include "MediaStreamGraph.h"
 #include "SpeechSynthesisUtterance.h"
 #include "nsIAudioChannelAgent.h"
 #include "nsISpeechService.h"
@@ -46,14 +45,9 @@ public:
 
   virtual void ForceEnd();
 
-  float GetCurrentTime();
-
-  uint32_t GetCurrentCharOffset();
-
   void SetSpeechSynthesis(SpeechSynthesis* aSpeechSynthesis);
 
-  void InitDirectAudio();
-  void InitIndirectAudio();
+  void Init();
 
   void SetChosenVoiceURI(const nsAString& aUri);
 
@@ -61,20 +55,11 @@ public:
 
   void ForceError(float aElapsedTime, uint32_t aCharIndex);
 
-  bool IsPreCanceled()
-  {
-    return mPreCanceled;
-  };
+  bool IsPreCanceled() { return mPreCanceled; };
 
-  bool IsPrePaused()
-  {
-    return mPrePaused;
-  }
+  bool IsPrePaused() { return mPrePaused; }
 
-  bool IsChrome()
-  {
-    return mIsChrome;
-  }
+  bool IsChrome() { return mIsChrome; }
 
 protected:
   virtual ~nsSpeechTask();
@@ -115,30 +100,15 @@ protected:
 private:
   void End();
 
-  void SendAudioImpl(RefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen);
-
-  nsresult DispatchStartInner();
-
-  nsresult DispatchErrorInner(float aElapsedTime, uint32_t aCharIndex);
-  nsresult DispatchEndInner(float aElapsedTime, uint32_t aCharIndex);
-
   void CreateAudioChannelAgent();
 
   void DestroyAudioChannelAgent();
-
-  RefPtr<SourceMediaStream> mStream;
-
-  RefPtr<MediaInputPort> mPort;
 
   nsCOMPtr<nsISpeechTaskCallback> mCallback;
 
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 
-  uint32_t mChannels;
-
   RefPtr<SpeechSynthesis> mSpeechSynthesis;
-
-  bool mIndirectAudio;
 
   nsString mChosenVoiceURI;
 

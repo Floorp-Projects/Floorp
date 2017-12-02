@@ -5,12 +5,8 @@
 
 #include "nsISupports.idl"
 
-typedef unsigned short SpeechServiceType;
-
 /**
- * A callback is implemented by the service. For direct audio services, it is
- * required to implement these, although it could be helpful to use the
- * cancel method for shutting down the speech resources.
+ * A callback is implemented by the service.
  */
 [scriptable, uuid(c576de0c-8a3d-4570-be7e-9876d3e5bed2)]
 interface nsISpeechTaskCallback : nsISupports
@@ -32,7 +28,6 @@ interface nsISpeechTaskCallback : nsISupports
 
   /**
    * The user or application has changed the volume of this speech.
-   * This is only used on indirect audio service type.
    */
   void onVolumeChanged(in float aVolume);
 };
@@ -49,26 +44,8 @@ interface nsISpeechTask : nsISupports
    * Prepare browser for speech.
    *
    * @param aCallback callback object for mid-speech operations.
-   * @param aChannels number of audio channels. Only required
-   *                    in direct audio services
-   * @param aRate     audio rate. Only required in direct audio services
    */
-  [optional_argc] void setup(in nsISpeechTaskCallback aCallback,
-                               [optional] in uint32_t aChannels,
-                               [optional] in uint32_t aRate);
-
-  /**
-   * Send audio data to browser.
-   *
-   * @param aData     an Int16Array with PCM-16 audio data.
-   * @param aLandmarks an array of sample offset and landmark pairs.
-   *                     Used for emiting boundary and mark events.
-   */
-  [implicit_jscontext]
-  void sendAudio(in jsval aData, in jsval aLandmarks);
-
-  [noscript]
-  void sendAudioNative([array, size_is(aDataLen)] in short aData, in unsigned long aDataLen);
+  void setup(in nsISpeechTaskCallback aCallback);
 
   /**
    * Dispatch start event.
@@ -132,15 +109,11 @@ interface nsISpeechTask : nsISupports
 /**
  * The main interface of a speech synthesis service.
  *
- * A service's speak method could be implemented in two ways:
- *  1. Indirect audio - the service is responsible for outputting audio.
- *    The service calls the nsISpeechTask.dispatch* methods directly. Starting
- *    with dispatchStart() and ending with dispatchEnd or dispatchError().
- *
- *  2. Direct audio - the service provides us with PCM-16 data, and we output it.
- *    The service does not call the dispatch task methods directly. Instead,
- *    audio information is provided at setup(), and audio data is sent with
- *    sendAudio(). The utterance is terminated with an empty sendAudio().
+ * A service is responsible for outputting audio.
+ * The service dispatches events, starting with dispatchStart() and ending with
+ * dispatchEnd or dispatchError().
+ * A service must also respond with the currect actions and events in response
+ * to implemented callback methods.
  */
 [scriptable, uuid(9b7d59db-88ff-43d0-b6ee-9f63d042d08f)]
 interface nsISpeechService : nsISupports
@@ -161,11 +134,6 @@ interface nsISpeechService : nsISupports
   void speak(in DOMString aText, in DOMString aUri,
              in float aVolume, in float aRate, in float aPitch,
              in nsISpeechTask aTask);
-
-  const SpeechServiceType SERVICETYPE_DIRECT_AUDIO = 1;
-  const SpeechServiceType SERVICETYPE_INDIRECT_AUDIO = 2;
-
-  readonly attribute SpeechServiceType serviceType;
 };
 
 %{C++

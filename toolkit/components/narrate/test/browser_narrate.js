@@ -12,7 +12,7 @@ add_task(async function testNarrate() {
   setup();
 
   await spawnInNewReaderTab(TEST_ARTICLE, async function() {
-    let TEST_VOICE = "urn:moz-tts:fake-indirect:teresa";
+    let TEST_VOICE = "urn:moz-tts:fake:teresa";
     let $ = content.document.querySelector.bind(content.document);
 
     await NarrateTestUtils.waitForNarrateToggle(content);

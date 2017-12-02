@@ -166,21 +166,7 @@ SpeechTaskChild::SpeechTaskChild(SpeechSynthesisUtterance* aUtterance, bool aIsC
 }
 
 NS_IMETHODIMP
-SpeechTaskChild::Setup(nsISpeechTaskCallback* aCallback,
-                       uint32_t aChannels, uint32_t aRate, uint8_t argc)
-{
-  MOZ_CRASH("Should never be called from child");
-}
-
-NS_IMETHODIMP
-SpeechTaskChild::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLandmarks,
-                           JSContext* aCx)
-{
-  MOZ_CRASH("Should never be called from child");
-}
-
-NS_IMETHODIMP
-SpeechTaskChild::SendAudioNative(int16_t* aData, uint32_t aDataLen)
+SpeechTaskChild::Setup(nsISpeechTaskCallback* aCallback)
 {
   MOZ_CRASH("Should never be called from child");
 }

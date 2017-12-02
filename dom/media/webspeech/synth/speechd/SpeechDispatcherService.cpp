@@ -513,8 +513,7 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
   // speech-dispatcher expects -100 to 100 with 0 being default.
   spd_set_voice_pitch(mSpeechdClient, static_cast<int>((aPitch - 1) * 100));
 
-  // The last three parameters don't matter for an indirect service
-  nsresult rv = aTask->Setup(callback, 0, 0, 0);
+  nsresult rv = aTask->Setup(callback);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -546,13 +545,6 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
       SPD_EVENT_END));
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SpeechDispatcherService::GetServiceType(SpeechServiceType* aServiceType)
-{
-  *aServiceType = nsISpeechService::SERVICETYPE_INDIRECT_AUDIO;
   return NS_OK;
 }
 
