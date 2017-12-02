@@ -78,6 +78,10 @@ audioElement.loop = true;
 var ac = new AudioContext();
 var mediaElementSource = ac.createMediaElementSource(audioElement);
 var an = ac.createAnalyser();
+// Use no smoothing as this would just average with previous
+// getFloatFrequencyData() calls.  Non-seamless looping would introduce noise,
+// and smoothing would spread this into calls after the loop point.
+an.smoothingTimeConstant = 0;
 frequencyArray = new Float32Array(an.frequencyBinCount);
 
 // Uncomment this to check what the analyser is doing.
