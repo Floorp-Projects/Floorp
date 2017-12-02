@@ -383,6 +383,8 @@ protected:
                    bool aIsMain);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           const UnifiedToolbarParams& aParams);
+  void DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
+                          const UnifiedToolbarParams& aParams);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
                      bool aIsMain);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL);
