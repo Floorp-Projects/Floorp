@@ -108,8 +108,8 @@ add_task(async function test_ui_state_unverified() {
     syncing: false,
     syncNowTooltip: tooltipText
   });
-  checkRemoteTabsPanel("PanelUI-remotetabs-unverified", false);
-  checkMenuBarItem("sync-unverifieditem");
+  checkRemoteTabsPanel("PanelUI-remotetabs-setupsync", false);
+  checkMenuBarItem("sync-setup");
 });
 
 add_task(async function test_ui_state_loginFailed() {
@@ -176,8 +176,7 @@ function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, s
 function checkRemoteTabsPanel(expectedShownItemId, syncing, syncNowTooltip) {
   checkItemsVisiblities(["PanelUI-remotetabs-main",
                          "PanelUI-remotetabs-setupsync",
-                         "PanelUI-remotetabs-reauthsync",
-                         "PanelUI-remotetabs-unverified"],
+                         "PanelUI-remotetabs-reauthsync"],
                         expectedShownItemId);
 
   if (syncing != undefined && syncNowTooltip != undefined) {
@@ -186,7 +185,7 @@ function checkRemoteTabsPanel(expectedShownItemId, syncing, syncNowTooltip) {
 }
 
 function checkMenuBarItem(expectedShownItemId) {
-  checkItemsVisiblities(["sync-setup", "sync-syncnowitem", "sync-reauthitem", "sync-unverifieditem"],
+  checkItemsVisiblities(["sync-setup", "sync-syncnowitem", "sync-reauthitem"],
                         expectedShownItemId);
 }
 
