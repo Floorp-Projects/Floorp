@@ -1547,20 +1547,6 @@ if test -n "$MOZ_INSTRUMENTS"; then
 fi
 
 dnl ========================================================
-dnl JitSpew.  Enabled by default in debug builds.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jitspew,
-[  --enable-jitspew        Enable the Jit spew and IONFLAGS.],
-    JS_JITSPEW=1,
-    JS_JITSPEW= )
-
-if test -n "$JS_JITSPEW" -o -n "$MOZ_DEBUG"; then
-    AC_DEFINE(JS_JITSPEW)
-fi
-
-AC_SUBST(JS_JITSPEW)
-
-dnl ========================================================
 dnl Debug (see Bug 939505)
 dnl ========================================================
 if test -n "$MOZ_DEBUG"; then

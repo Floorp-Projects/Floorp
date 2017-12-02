@@ -297,6 +297,16 @@ def ion_perf(value):
 set_define('JS_ION_PERF', ion_perf)
 
 
+js_option('--enable-jitspew',
+          default=depends(when=moz_debug)(lambda: True),
+          help='Enable the Jit spew and IONFLAGS environment variable.')
+
+set_define('JS_JITSPEW',
+           depends_if('--enable-jitspew')(lambda _: True))
+set_config('JS_JITSPEW',
+           depends_if('--enable-jitspew')(lambda _: True))
+
+
 js_option('--enable-more-deterministic', env='JS_MORE_DETERMINISTIC',
           help='Enable changes that make the shell more deterministic')
 
