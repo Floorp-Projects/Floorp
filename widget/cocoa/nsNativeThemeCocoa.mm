@@ -2660,6 +2660,14 @@ nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRe
   DrawNativeTitlebarToolbarWithSquareCorners(aContext, aTitlebarRect, unifiedHeight, aIsMain, aIsFlipped);
 }
 
+void
+nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
+                                       const UnifiedToolbarParams& aParams)
+{
+  DrawNativeTitlebar(aContext, aTitlebarRect, aParams.unifiedHeight,
+                     aParams.isMain, YES);
+}
+
 static void
 RenderResizer(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
 {
@@ -3160,10 +3168,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
     case NS_THEME_WINDOW_TITLEBAR: {
       NSWindow* win = NativeWindowForFrame(aFrame);
-      BOOL isMain = [win isMainWindow];
+      bool isMain = [win isMainWindow];
       float unifiedToolbarHeight = [win isKindOfClass:[ToolbarWindow class]] ?
         [(ToolbarWindow*)win unifiedToolbarHeight] : macRect.size.height;
-      DrawNativeTitlebar(cgContext, macRect, unifiedToolbarHeight, isMain, YES);
+      DrawNativeTitlebar(cgContext, macRect,
+                         UnifiedToolbarParams{unifiedToolbarHeight, isMain});
     }
       break;
 
