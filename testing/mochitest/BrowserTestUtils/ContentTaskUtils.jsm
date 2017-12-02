@@ -105,14 +105,14 @@ this.ContentTaskUtils = {
             return;
           }
           subject.removeEventListener(eventName, listener, capture);
-          resolve(event);
+          setTimeout(() => resolve(event), 0);
         } catch (ex) {
           try {
             subject.removeEventListener(eventName, listener, capture);
           } catch (ex2) {
             // Maybe the provided object does not support removeEventListener.
           }
-          reject(ex);
+          setTimeout(() => reject(ex), 0);
         }
       }, capture, wantsUntrusted);
     });

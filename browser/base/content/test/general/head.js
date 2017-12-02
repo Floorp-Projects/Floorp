@@ -223,7 +223,7 @@ function promiseWindowWillBeClosed(win) {
     Services.obs.addObserver(function observe(subject, topic) {
       if (subject == win) {
         Services.obs.removeObserver(observe, topic);
-        resolve();
+        executeSoon(resolve);
       }
     }, "domwindowclosed");
   });

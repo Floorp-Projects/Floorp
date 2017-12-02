@@ -684,7 +684,10 @@ RasterImage::GetImageContainerAtSize(LayerManager* aManager,
                                      const Maybe<SVGImageContext>& aSVGContext,
                                      uint32_t aFlags)
 {
-  return GetImageContainerImpl(aManager, aSize, aSVGContext, aFlags);
+  // We do not pass in the given SVG context because in theory it could differ
+  // between calls, but actually have no impact on the actual contents of the
+  // image container.
+  return GetImageContainerImpl(aManager, aSize, Nothing(), aFlags);
 }
 
 size_t

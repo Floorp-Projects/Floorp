@@ -24,6 +24,9 @@ AllocClientManagerParent();
 bool
 DeallocClientManagerParent(PClientManagerParent* aActor);
 
+void
+InitClientManagerParent(PClientManagerParent* aActor);
+
 
 } // namespace dom
 } // namespace mozilla
