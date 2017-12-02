@@ -15,22 +15,16 @@ class nsNSSCertTrust
 {
 public:
   nsNSSCertTrust();
-  nsNSSCertTrust(unsigned int ssl, unsigned int email, unsigned int objsign);
+  nsNSSCertTrust(unsigned int ssl, unsigned int email);
   explicit nsNSSCertTrust(CERTCertTrust *t);
   virtual ~nsNSSCertTrust();
 
   /* query */
   bool HasAnyCA();
   bool HasAnyUser();
-  bool HasPeer(bool checkSSL = true,
-                 bool checkEmail = true,
-                 bool checkObjSign = true);
-  bool HasTrustedCA(bool checkSSL = true,
-                      bool checkEmail = true,
-                      bool checkObjSign = true);
-  bool HasTrustedPeer(bool checkSSL = true,
-                        bool checkEmail = true,
-                        bool checkObjSign = true);
+  bool HasPeer(bool checkSSL = true, bool checkEmail = true);
+  bool HasTrustedCA(bool checkSSL = true, bool checkEmail = true);
+  bool HasTrustedPeer(bool checkSSL = true, bool checkEmail = true);
 
   /* common defaults */
   /* equivalent to "c,c,c" */
@@ -48,14 +42,10 @@ public:
                      bool ca,   bool tCA, bool tClientCA,
                      bool user, bool warn);
 
-  void SetObjSignTrust(bool peer, bool tPeer,
-                       bool ca,   bool tCA, bool tClientCA,
-                       bool user, bool warn);
-
   /* set c <--> CT */
-  void AddCATrust(bool ssl, bool email, bool objSign);
+  void AddCATrust(bool ssl, bool email);
   /* set p <--> P */
-  void AddPeerTrust(bool ssl, bool email, bool objSign);
+  void AddPeerTrust(bool ssl, bool email);
 
   CERTCertTrust& GetTrust() { return mTrust; }
 
