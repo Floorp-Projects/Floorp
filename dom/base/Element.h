@@ -900,6 +900,25 @@ public:
     return nullptr;
   }
 
+  /**
+   * Hook for implementing GetClasses. This should only be called if the
+   * ElementMayHaveClass flag is set.
+   *
+   * Public only because Servo needs to call it too, and it ensures the
+   * precondition before calling this.
+   */
+  const nsAttrValue* DoGetClasses() const
+  {
+    MOZ_ASSERT(MayHaveClass(), "Unexpected call");
+    if (IsSVGElement()) {
+      if (const nsAttrValue* value = GetSVGAnimatedClass()) {
+        return value;
+      }
+    }
+
+    return GetParsedAttr(nsGkAtoms::_class);
+  }
+
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override
   {
@@ -1900,10 +1919,9 @@ protected:
 
 private:
   /**
-   * Hook for implementing GetClasses.  This is guaranteed to only be
-   * called if the NODE_MAY_HAVE_CLASS flag is set.
+   * Slow path for DoGetClasses, this should only be called for SVG elements.
    */
-  const nsAttrValue* DoGetClasses() const;
+  const nsAttrValue* GetSVGAnimatedClass() const;
 
   /**
    * Get this element's client area rect in app units.

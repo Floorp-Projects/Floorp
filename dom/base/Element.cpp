@@ -205,18 +205,10 @@ nsIContent::DoGetID() const
 }
 
 const nsAttrValue*
-Element::DoGetClasses() const
+Element::GetSVGAnimatedClass() const
 {
-  MOZ_ASSERT(MayHaveClass(), "Unexpected call");
-  if (IsSVGElement()) {
-    const nsAttrValue* animClass =
-      static_cast<const nsSVGElement*>(this)->GetAnimatedClassName();
-    if (animClass) {
-      return animClass;
-    }
-  }
-
-  return GetParsedAttr(nsGkAtoms::_class);
+  MOZ_ASSERT(MayHaveClass() && IsSVGElement(), "Unexpected call");
+  return static_cast<const nsSVGElement*>(this)->GetAnimatedClassName();
 }
 
 NS_IMETHODIMP
