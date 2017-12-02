@@ -910,6 +910,11 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
     }
 
     if (ShouldStopReading()) {
+        if (gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId() !=
+            mTopLevelOuterContentWindowId) {
+            nsHttp::NotifyActiveTabLoadOptimization();
+        }
+
         // Must remember that we have to call ResumeRecv() on our connection when
         // called back by the conn manager to resume reading.
         LOG(("nsHttpTransaction::WriteSegments %p response throttled", this));
