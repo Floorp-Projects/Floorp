@@ -10,7 +10,6 @@
 #include "nsISynthVoiceRegistry.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
-#include "MediaStreamGraph.h"
 
 class nsISpeechService;
 
