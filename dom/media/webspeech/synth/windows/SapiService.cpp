@@ -402,14 +402,14 @@ SapiService::Speak(const nsAString& aText, const nsAString& aUri,
     new SapiCallback(aTask, spVoice, textOffset, aText.Length());
 
   // The last three parameters doesn't matter for an indirect service
-  nsresult rv = aTask->Setup(callback, 0, 0, 0);
+  nsresult rv = aTask->Setup(callback);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   ULONG streamNum;
   if (FAILED(spVoice->Speak(xml.get(), SPF_ASYNC, &streamNum))) {
-    aTask->Setup(nullptr, 0, 0, 0);
+    aTask->Setup(nullptr);
     return NS_ERROR_FAILURE;
   }
 
@@ -419,13 +419,6 @@ SapiService::Speak(const nsAString& aText, const nsAString& aUri,
   // So we cannot use data hashtable and has to add it to vector at last.
   mCallbacks.AppendElement(callback);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SapiService::GetServiceType(SpeechServiceType* aServiceType)
-{
-  *aServiceType = nsISpeechService::SERVICETYPE_INDIRECT_AUDIO;
   return NS_OK;
 }
 
