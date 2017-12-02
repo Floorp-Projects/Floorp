@@ -27,11 +27,6 @@ ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
   mSupportsLangAttr = aElement->SupportsLangAttr();
 }
 
-ServoElementSnapshot::~ServoElementSnapshot()
-{
-  MOZ_COUNT_DTOR(ServoElementSnapshot);
-}
-
 void
 ServoElementSnapshot::AddAttrs(Element* aElement,
                                int32_t aNameSpaceID,
