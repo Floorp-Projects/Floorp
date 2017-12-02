@@ -506,27 +506,6 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::aeabi_uidivmod:
         *abiType = Args_General2;
         return FuncCast(__aeabi_uidivmod, *abiType);
-      case SymbolicAddress::AtomicCmpXchg:
-        *abiType = Args_General5;
-        return FuncCast(atomics_cmpxchg_asm_callout, *abiType);
-      case SymbolicAddress::AtomicXchg:
-        *abiType = Args_General4;
-        return FuncCast(atomics_xchg_asm_callout, *abiType);
-      case SymbolicAddress::AtomicFetchAdd:
-        *abiType = Args_General4;
-        return FuncCast(atomics_add_asm_callout, *abiType);
-      case SymbolicAddress::AtomicFetchSub:
-        *abiType = Args_General4;
-        return FuncCast(atomics_sub_asm_callout, *abiType);
-      case SymbolicAddress::AtomicFetchAnd:
-        *abiType = Args_General4;
-        return FuncCast(atomics_and_asm_callout, *abiType);
-      case SymbolicAddress::AtomicFetchOr:
-        *abiType = Args_General4;
-        return FuncCast(atomics_or_asm_callout, *abiType);
-      case SymbolicAddress::AtomicFetchXor:
-        *abiType = Args_General4;
-        return FuncCast(atomics_xor_asm_callout, *abiType);
 #endif
       case SymbolicAddress::ModD:
         *abiType = Args_Double_DoubleDouble;
@@ -640,13 +619,6 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
 #if defined(JS_CODEGEN_ARM)
       case SymbolicAddress::aeabi_idivmod:
       case SymbolicAddress::aeabi_uidivmod:
-      case SymbolicAddress::AtomicCmpXchg:
-      case SymbolicAddress::AtomicXchg:
-      case SymbolicAddress::AtomicFetchAdd:
-      case SymbolicAddress::AtomicFetchSub:
-      case SymbolicAddress::AtomicFetchAnd:
-      case SymbolicAddress::AtomicFetchOr:
-      case SymbolicAddress::AtomicFetchXor:
 #endif
       case SymbolicAddress::ModD:
       case SymbolicAddress::SinD:

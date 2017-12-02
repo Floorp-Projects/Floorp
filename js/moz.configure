@@ -36,6 +36,10 @@ def js_disable_shell(value):
 set_config('JS_DISABLE_SHELL', js_disable_shell)
 
 
+set_define('JS_PUNBOX64', depends(target)(lambda t: t.bitness == 64 or None))
+set_define('JS_NUNBOX32', depends(target)(lambda t: t.bitness == 32 or None))
+
+
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
 js_option('--disable-shared-js', default=building_js,
@@ -97,6 +101,98 @@ def disable_export_js(value):
     die('Setting %s is deprecated, use %s instead.',
         value.format('DISABLE_EXPORT_JS'), suggestion)
 
+
+# JIT support
+# =======================================================
+@depends(target)
+def ion_default(target):
+    if target.cpu in ('x86', 'x86_64', 'arm', 'aarch64', 'mips32', 'mips64'):
+        return True
+
+js_option('--enable-ion',
+          default=ion_default,
+          help='Enable use of the IonMonkey JIT')
+
+set_config('ENABLE_ION', depends_if('--enable-ion')(lambda x: True))
+
+# JIT code simulator for cross compiles
+# =======================================================
+js_option('--enable-simulator', choices=('arm', 'arm64', 'mips32', 'mips64'),
+          nargs=1,
+          help='Enable a JIT code simulator for the specified architecture')
+
+@depends('--enable-ion', '--enable-simulator', target)
+def simulator(ion_enabled, simulator_enabled, target):
+    if not ion_enabled or not simulator_enabled:
+        return
+
+    sim_cpu = simulator_enabled[0]
+
+    if sim_cpu in ('arm', 'mips32'):
+        if target.cpu != 'x86':
+            die('The %s simulator only works on x86.' % sim_cpu)
+
+    if sim_cpu in ('arm64', 'mips64'):
+        if target.cpu != 'x86_64':
+            die('The %s simulator only works on x86-64.' % sim_cpu)
+
+    return namespace(**{sim_cpu: True})
+
+set_config('JS_SIMULATOR', depends_if(simulator)(lambda x: True))
+set_config('JS_SIMULATOR_ARM', simulator.arm)
+set_config('JS_SIMULATOR_ARM64', simulator.arm64)
+set_config('JS_SIMULATOR_MIPS32', simulator.mips32)
+set_config('JS_SIMULATOR_MIPS64', simulator.mips64)
+set_define('JS_SIMULATOR', depends_if(simulator)(lambda x: True))
+set_define('JS_SIMULATOR_ARM', simulator.arm)
+set_define('JS_SIMULATOR_ARM64', simulator.arm64)
+set_define('JS_SIMULATOR_MIPS32', simulator.mips32)
+set_define('JS_SIMULATOR_MIPS64', simulator.mips64)
+
+@depends('--enable-ion', simulator, target)
+def jit_codegen(ion_enabled, simulator, target):
+    if not ion_enabled:
+        return namespace(none=True)
+
+    if simulator:
+        return simulator
+
+    if target.cpu == 'aarch64':
+        return namespace(arm64=True)
+    elif target.cpu == 'x86_64':
+        return namespace(x64=True)
+
+    return namespace(**{str(target.cpu): True})
+
+set_config('JS_CODEGEN_NONE', jit_codegen.none)
+set_config('JS_CODEGEN_ARM', jit_codegen.arm)
+set_config('JS_CODEGEN_ARM64', jit_codegen.arm64)
+set_config('JS_CODEGEN_MIPS32', jit_codegen.mips32)
+set_config('JS_CODEGEN_MIPS64', jit_codegen.mips64)
+set_config('JS_CODEGEN_X86', jit_codegen.x86)
+set_config('JS_CODEGEN_X64', jit_codegen.x64)
+set_define('JS_CODEGEN_NONE', jit_codegen.none)
+set_define('JS_CODEGEN_ARM', jit_codegen.arm)
+set_define('JS_CODEGEN_ARM64', jit_codegen.arm64)
+set_define('JS_CODEGEN_MIPS32', jit_codegen.mips32)
+set_define('JS_CODEGEN_MIPS64', jit_codegen.mips64)
+set_define('JS_CODEGEN_X86', jit_codegen.x86)
+set_define('JS_CODEGEN_X64', jit_codegen.x64)
+
+@depends('--enable-ion', simulator, target, moz_debug)
+def jit_disasm_arm(ion_enabled, simulator, target, debug):
+    if not ion_enabled:
+        return
+
+    if simulator:
+        if getattr(simulator, 'arm', None):
+            return True
+
+    if target.cpu == 'arm' and debug:
+        return True
+
+set_config('JS_DISASM_ARM', jit_disasm_arm)
+set_define('JS_DISASM_ARM', jit_disasm_arm)
 
 # Profiling
 # =======================================================
@@ -178,6 +274,18 @@ def gc_trace(value):
 set_define('JS_GC_TRACE', gc_trace)
 
 
+# Trace logging.
+# =======================================================
+js_option('--enable-trace-logging',
+          default=depends(when=moz_debug)(lambda: True),
+          help='Enable trace logging')
+
+set_config('ENABLE_TRACE_LOGGING',
+           depends_if('--enable-trace-logging')(lambda x: True))
+set_define('JS_TRACE_LOGGING',
+           depends_if('--enable-trace-logging')(lambda x: True))
+
+
 js_option('--enable-perf', env='JS_ION_PERF',
           help='Enable Linux perf integration')
 
@@ -187,6 +295,16 @@ def ion_perf(value):
         return True
 
 set_define('JS_ION_PERF', ion_perf)
+
+
+js_option('--enable-jitspew',
+          default=depends(when=moz_debug)(lambda: True),
+          help='Enable the Jit spew and IONFLAGS environment variable.')
+
+set_define('JS_JITSPEW',
+           depends_if('--enable-jitspew')(lambda _: True))
+set_config('JS_JITSPEW',
+           depends_if('--enable-jitspew')(lambda _: True))
 
 
 js_option('--enable-more-deterministic', env='JS_MORE_DETERMINISTIC',

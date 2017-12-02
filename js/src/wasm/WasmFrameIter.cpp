@@ -983,20 +983,6 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "call to native i32.div_s (in wasm)";
       case SymbolicAddress::aeabi_uidivmod:
         return "call to native i32.div_u (in wasm)";
-      case SymbolicAddress::AtomicCmpXchg:
-        return "call to native atomic compare exchange (in wasm)";
-      case SymbolicAddress::AtomicXchg:
-        return "call to native atomic exchange (in wasm)";
-      case SymbolicAddress::AtomicFetchAdd:
-        return "call to native atomic fetch add (in wasm)";
-      case SymbolicAddress::AtomicFetchSub:
-        return "call to native atomic fetch sub (in wasm)";
-      case SymbolicAddress::AtomicFetchAnd:
-        return "call to native atomic fetch and (in wasm)";
-      case SymbolicAddress::AtomicFetchOr:
-        return "call to native atomic fetch or (in wasm)";
-      case SymbolicAddress::AtomicFetchXor:
-        return "call to native atomic fetch xor (in wasm)";
 #endif
       case SymbolicAddress::ModD:
         return "call to asm.js native f64 % (mod)";
