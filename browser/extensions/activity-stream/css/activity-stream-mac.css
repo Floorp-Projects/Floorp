@@ -583,8 +583,7 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
   height: 266px;
   display: flex;
   border: 1px solid #D7D7DB;
-  border-radius: 3px;
-  margin-bottom: 16px; }
+  border-radius: 3px; }
   .sections-list .section-empty-state .empty-state {
     margin: auto;
     max-width: 350px; }
@@ -1252,11 +1251,11 @@ section.top-sites:not(.collapsed):hover .edit-topsites-button {
         position: absolute; } }
 
 .collapsible-section .section-body {
-  max-height: 1100px;
   margin: 0 -7px;
   padding: 0 7px; }
   .collapsible-section .section-body.animating {
-    overflow: hidden; }
+    overflow: hidden;
+    pointer-events: none; }
 
 .collapsible-section.animation-enabled .section-title .icon-arrowhead-down,
 .collapsible-section.animation-enabled .section-title .icon-arrowhead-forward {
