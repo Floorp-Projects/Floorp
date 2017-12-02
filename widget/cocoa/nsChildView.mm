@@ -5587,7 +5587,15 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 - (void)insertNewline:(id)sender
 {
   if (mTextInputHandler) {
-    mTextInputHandler->InsertNewline();
+    mTextInputHandler->HandleCommand(CommandInsertParagraph);
+  }
+}
+
+- (void)insertLineBreak:(id)sender
+{
+  // Ctrl + Enter in the default settings.
+  if (mTextInputHandler) {
+    mTextInputHandler->HandleCommand(CommandInsertLineBreak);
   }
 }
 

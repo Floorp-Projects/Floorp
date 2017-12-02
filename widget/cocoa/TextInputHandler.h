@@ -1160,13 +1160,9 @@ public:
                   NSRange* aReplacementRange = nullptr);
 
   /**
-   * Handles "insertNewline:" command.  Due to bug 1350541, this always
-   * dispatches a keypress event of Enter key unless there is composition.
-   * If it's handling Enter key event, this dispatches "actual" Enter
-   * keypress event.  Otherwise, dispatches "fake" Enter keypress event
-   * whose code value is unidentified.
+   * Handles aCommand.  This may cause dispatching an eKeyPress event.
    */
-  void InsertNewline();
+  void HandleCommand(Command aCommand);
 
   /**
    * doCommandBySelector event handler.
