@@ -36,7 +36,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "98203046670d"
+        "revision": "f032cba8ac62"
     }, 
     "az": {
         "platforms": [
@@ -403,7 +403,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "12c14c85d112"
+        "revision": "0e63c4be8257"
     }, 
     "kk": {
         "platforms": [
@@ -545,7 +545,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "cf0ddf23abe5"
+        "revision": "612c0849cf8e"
     }, 
     "pa-IN": {
         "platforms": [
@@ -577,7 +577,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "aac862a25b85"
+        "revision": "0ce727a47596"
     }, 
     "rm": {
         "platforms": [
@@ -704,7 +704,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "ae632ad45acd"
+        "revision": "216b0658024e"
     }, 
     "uz": {
         "platforms": [
