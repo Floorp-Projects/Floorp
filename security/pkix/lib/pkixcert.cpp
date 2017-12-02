@@ -157,7 +157,7 @@ BackCert::Init()
   // SSL Client          |  false                |  id_kp_clientAuth
   // S/MIME Client       |  false                |  id_kp_emailProtection
   // Object Signing      |  false                |  id_kp_codeSigning
-  // SSL Server CA       |  true                 |  id_pk_serverAuth
+  // SSL Server CA       |  true                 |  id_kp_serverAuth
   // SSL Client CA       |  true                 |  id_kp_clientAuth
   // S/MIME CA           |  true                 |  id_kp_emailProtection
   // Object Signing CA   |  true                 |  id_kp_codeSigning
