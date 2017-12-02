@@ -449,36 +449,6 @@ AtomicOperations::exchangeSeqCst(uint64_t* addr, uint64_t val) {
 } }
 #endif
 
-template<size_t nbytes>
-inline void
-js::jit::RegionLock::acquire(void* addr)
-{
-# ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
-    while (!__sync_bool_compare_and_swap(&spinlock, 0, 1))
-        ;
-# else
-    uint32_t zero = 0;
-    uint32_t one = 1;
-    while (!__atomic_compare_exchange(&spinlock, &zero, &one, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)) {
-        zero = 0;
-        continue;
-    }
-# endif
-}
-
-template<size_t nbytes>
-inline void
-js::jit::RegionLock::release(void* addr)
-{
-    MOZ_ASSERT(AtomicOperations::loadSeqCst(&spinlock) == 1, "releasing unlocked region lock");
-# ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
-    __sync_sub_and_fetch(&spinlock, 1);
-# else
-    uint32_t zero = 0;
-    __atomic_store(&spinlock, &zero, __ATOMIC_SEQ_CST);
-# endif
-}
-
 #elif defined(ENABLE_SHARED_ARRAY_BUFFER)
 
 # error "Either disable JS shared memory, use GCC or Clang, or add code here"

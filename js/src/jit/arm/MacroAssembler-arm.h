@@ -1112,36 +1112,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Register computePointer(const T& src, Register r);
 
     template<typename T>
-    void compareExchangeARMv6(int nbytes, bool signExtend, const T& mem, Register oldval,
-                              Register newval, Register output);
-
-    template<typename T>
-    void compareExchangeARMv7(int nbytes, bool signExtend, const T& mem, Register oldval,
-                              Register newval, Register output);
-
-    template<typename T>
     void compareExchange(int nbytes, bool signExtend, const T& address, Register oldval,
                          Register newval, Register output);
 
     template<typename T>
-    void atomicExchangeARMv6(int nbytes, bool signExtend, const T& mem, Register value,
-                             Register output);
-
-    template<typename T>
-    void atomicExchangeARMv7(int nbytes, bool signExtend, const T& mem, Register value,
-                             Register output);
-
-    template<typename T>
     void atomicExchange(int nbytes, bool signExtend, const T& address, Register value,
                         Register output);
-
-    template<typename T>
-    void atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicOp op, const Register& value,
-                            const T& mem, Register flagTemp, Register output);
-
-    template<typename T>
-    void atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicOp op, const Register& value,
-                            const T& mem, Register flagTemp, Register output);
 
     template<typename T>
     void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32& value,
@@ -1150,14 +1126,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     template<typename T>
     void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Register& value,
                        const T& address, Register flagTemp, Register output);
-
-    template<typename T>
-    void atomicEffectOpARMv6(int nbytes, AtomicOp op, const Register& value, const T& address,
-                             Register flagTemp);
-
-    template<typename T>
-    void atomicEffectOpARMv7(int nbytes, AtomicOp op, const Register& value, const T& address,
-                             Register flagTemp);
 
     template<typename T>
     void atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value, const T& address,

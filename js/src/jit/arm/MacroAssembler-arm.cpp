@@ -4193,22 +4193,6 @@ MacroAssemblerARMCompat::computePointer<Address>(const Address& src, Register r)
 } // namespace jit
 } // namespace js
 
-template<typename T>
-void
-MacroAssemblerARMCompat::compareExchange(int nbytes, bool signExtend, const T& mem,
-                                         Register oldval, Register newval, Register output)
-{
-    // If LDREXB/H and STREXB/H are not available we use the
-    // word-width operations with read-modify-add.  That does not
-    // abstract well, so fork.
-    //
-    // Bug 1077321: We may further optimize for ARMv8 (AArch32) here.
-    if (nbytes < 4 && !HasLDSTREXBHD())
-        compareExchangeARMv6(nbytes, signExtend, mem, oldval, newval, output);
-    else
-        compareExchangeARMv7(nbytes, signExtend, mem, oldval, newval, output);
-}
-
 // General algorithm:
 //
 //     ...    ptr, <addr>         ; compute address of item
@@ -4232,8 +4216,8 @@ MacroAssemblerARMCompat::compareExchange(int nbytes, bool signExtend, const T& m
 
 template<typename T>
 void
-MacroAssemblerARMCompat::compareExchangeARMv7(int nbytes, bool signExtend, const T& mem,
-                                              Register oldval, Register newval, Register output)
+MacroAssemblerARMCompat::compareExchange(int nbytes, bool signExtend, const T& mem,
+                                         Register oldval, Register newval, Register output)
 {
     Label again;
     Label done;
@@ -4293,16 +4277,6 @@ MacroAssemblerARMCompat::compareExchangeARMv7(int nbytes, bool signExtend, const
     asMasm().memoryBarrier(MembarFull);
 }
 
-template<typename T>
-void
-MacroAssemblerARMCompat::compareExchangeARMv6(int nbytes, bool signExtend, const T& mem,
-                                              Register oldval, Register newval, Register output)
-{
-    // Bug 1077318: Must use read-modify-write with LDREX / STREX.
-    MOZ_ASSERT(nbytes == 1 || nbytes == 2);
-    MOZ_CRASH("NYI");
-}
-
 template void
 js::jit::MacroAssemblerARMCompat::compareExchange(int nbytes, bool signExtend,
                                                   const Address& address, Register oldval,
@@ -4317,22 +4291,7 @@ void
 MacroAssemblerARMCompat::atomicExchange(int nbytes, bool signExtend, const T& mem,
                                         Register value, Register output)
 {
-    // If LDREXB/H and STREXB/H are not available we use the
-    // word-width operations with read-modify-add.  That does not
-    // abstract well, so fork.
-    //
     // Bug 1077321: We may further optimize for ARMv8 (AArch32) here.
-    if (nbytes < 4 && !HasLDSTREXBHD())
-        atomicExchangeARMv6(nbytes, signExtend, mem, value, output);
-    else
-        atomicExchangeARMv7(nbytes, signExtend, mem, value, output);
-}
-
-template<typename T>
-void
-MacroAssemblerARMCompat::atomicExchangeARMv7(int nbytes, bool signExtend, const T& mem,
-                                             Register value, Register output)
-{
     Label again;
     Label done;
 
@@ -4370,16 +4329,6 @@ MacroAssemblerARMCompat::atomicExchangeARMv7(int nbytes, bool signExtend, const 
     bind(&done);
 
     asMasm().memoryBarrier(MembarFull);
-}
-
-template<typename T>
-void
-MacroAssemblerARMCompat::atomicExchangeARMv6(int nbytes, bool signExtend, const T& mem,
-                                             Register value, Register output)
-{
-    // Bug 1077318: Must use read-modify-write with LDREX / STREX.
-    MOZ_ASSERT(nbytes == 1 || nbytes == 2);
-    MOZ_CRASH("NYI");
 }
 
 template void
@@ -4428,21 +4377,6 @@ void
 MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
                                        const Register& value, const T& mem, Register flagTemp,
                                        Register output)
-{
-    // Fork for non-word operations on ARMv6.
-    //
-    // Bug 1077321: We may further optimize for ARMv8 (AArch32) here.
-    if (nbytes < 4 && !HasLDSTREXBHD())
-        atomicFetchOpARMv6(nbytes, signExtend, op, value, mem, flagTemp, output);
-    else
-        atomicFetchOpARMv7(nbytes, signExtend, op, value, mem, flagTemp, output);
-}
-
-template<typename T>
-void
-MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicOp op,
-                                            const Register& value, const T& mem, Register flagTemp,
-                                            Register output)
 {
     MOZ_ASSERT(flagTemp != InvalidReg);
     MOZ_ASSERT(output != value);
@@ -4508,43 +4442,6 @@ MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicO
     asMasm().memoryBarrier(MembarFull);
 }
 
-template<typename T>
-void
-MacroAssemblerARMCompat::atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicOp op,
-                                            const Register& value, const T& mem, Register flagTemp,
-                                            Register output)
-{
-    // Bug 1077318: Must use read-modify-write with LDREX / STREX.
-    MOZ_ASSERT(nbytes == 1 || nbytes == 2);
-    MOZ_CRASH("NYI");
-}
-template<typename T>
-void
-MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
-                                        const T& mem, Register flagTemp)
-{
-    // Fork for non-word operations on ARMv6.
-    //
-    // Bug 1077321: We may further optimize for ARMv8 (AArch32) here.
-    if (nbytes < 4 && !HasLDSTREXBHD())
-        atomicEffectOpARMv6(nbytes, op, value, mem, flagTemp);
-    else
-        atomicEffectOpARMv7(nbytes, op, value, mem, flagTemp);
-}
-
-template<typename T>
-void
-MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value,
-                                        const T& mem, Register flagTemp)
-{
-    // The Imm32 case is not needed yet because lowering always forces
-    // the value into a register at present (bug 1077317).
-    //
-    // This would be useful for immediates small enough to fit into
-    // add/sub/and/or/xor.
-    MOZ_CRASH("NYI");
-}
-
 // Uses both scratch registers, one for the address and one for a temp,
 // but needs two temps for strex:
 //
@@ -4559,8 +4456,8 @@ MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& va
 
 template<typename T>
 void
-MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Register& value,
-                                             const T& mem, Register flagTemp)
+MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
+                                        const T& mem, Register flagTemp)
 {
     MOZ_ASSERT(flagTemp != InvalidReg);
 
@@ -4622,11 +4519,14 @@ MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Regi
 
 template<typename T>
 void
-MacroAssemblerARMCompat::atomicEffectOpARMv6(int nbytes, AtomicOp op, const Register& value,
-                                             const T& mem, Register flagTemp)
+MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value,
+                                        const T& mem, Register flagTemp)
 {
-    // Bug 1077318: Must use read-modify-write with LDREX / STREX.
-    MOZ_ASSERT(nbytes == 1 || nbytes == 2);
+    // The Imm32 case is not needed yet because lowering always forces
+    // the value into a register at present (bug 1077317).
+    //
+    // This would be useful for immediates small enough to fit into
+    // add/sub/and/or/xor.
     MOZ_CRASH("NYI");
 }
 

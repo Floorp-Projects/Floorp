@@ -74,6 +74,11 @@ wasm::HasCompilerSupport(JSContext* cx)
         return false;
 #endif
 
+#ifdef JS_SIMULATOR
+    if (!Simulator::supportsAtomics())
+        return false;
+#endif
+
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
 #else
