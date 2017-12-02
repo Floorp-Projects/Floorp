@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0e63c4be8257"
+        "revision": "0d61939d0897"
     }, 
     "kk": {
         "platforms": [
@@ -902,7 +902,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "216b0658024e"
+        "revision": "caeaf72a9536"
     }, 
     "uz": {
         "platforms": [
