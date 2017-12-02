@@ -900,12 +900,6 @@ x86|x86_64|arm|aarch64|mips*)
     ;;
 esac
 
-if test "$HAVE_64BIT_BUILD" ; then
-    AC_DEFINE(JS_PUNBOX64)
-else
-    AC_DEFINE(JS_NUNBOX32)
-fi
-
 MOZ_ARG_DISABLE_BOOL(ion,
 [  --disable-ion      Disable use of the IonMonkey JIT],
   ENABLE_ION= )
