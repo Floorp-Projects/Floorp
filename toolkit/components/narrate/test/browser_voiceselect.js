@@ -55,7 +55,7 @@ add_task(async function testVoiceselectLabelChange() {
     ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
       "popup is toggled");
 
-    ok(NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake-direct:lenny"),
+    ok(NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake:lenny"),
       "voice selected");
 
     let selectedOption = $(NarrateTestUtils.VOICE_SELECTED);
