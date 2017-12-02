@@ -627,14 +627,141 @@ protected:
       return !mKeyDownHandled && !mKeyPressHandled;
     }
 
-    bool IsEnterKeyEvent() const
+    bool IsProperKeyEvent(Command aCommand) const
     {
       if (NS_WARN_IF(!mKeyEvent)) {
         return false;
       }
       KeyNameIndex keyNameIndex =
         TISInputSourceWrapper::ComputeGeckoKeyNameIndex([mKeyEvent keyCode]);
-      return keyNameIndex == KEY_NAME_INDEX_Enter;
+      Modifiers modifiers =
+        nsCocoaUtils::ModifiersForEvent(mKeyEvent) & (MODIFIER_SHIFT |
+                                                      MODIFIER_CONTROL |
+                                                      MODIFIER_ALT |
+                                                      MODIFIER_META);
+      switch (aCommand) {
+        case CommandInsertLineBreak:
+          return keyNameIndex == KEY_NAME_INDEX_Enter &&
+                 modifiers == MODIFIER_CONTROL;
+        case CommandInsertParagraph:
+          return keyNameIndex == KEY_NAME_INDEX_Enter &&
+                 modifiers == MODIFIER_NONE;
+        case CommandDeleteCharBackward:
+          return keyNameIndex == KEY_NAME_INDEX_Backspace &&
+                 modifiers == MODIFIER_NONE;
+        case CommandDeleteToBeginningOfLine:
+          return keyNameIndex == KEY_NAME_INDEX_Backspace &&
+                 modifiers == MODIFIER_META;
+        case CommandDeleteWordBackward:
+          return keyNameIndex == KEY_NAME_INDEX_Backspace &&
+                 modifiers == MODIFIER_ALT;
+        case CommandDeleteCharForward:
+          return keyNameIndex == KEY_NAME_INDEX_Delete &&
+                 modifiers == MODIFIER_NONE;
+        case CommandDeleteWordForward:
+          return keyNameIndex == KEY_NAME_INDEX_Delete &&
+                 modifiers == MODIFIER_ALT;
+        case CommandInsertTab:
+          return keyNameIndex == KEY_NAME_INDEX_Tab &&
+                 modifiers == MODIFIER_NONE;
+        case CommandInsertBacktab:
+          return keyNameIndex == KEY_NAME_INDEX_Tab &&
+                 modifiers == MODIFIER_SHIFT;
+        case CommandCharNext:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_NONE;
+        case CommandSelectCharNext:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_SHIFT;
+        case CommandWordNext:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_ALT;
+        case CommandSelectWordNext:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
+        case CommandEndLine:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_META;
+        case CommandSelectEndLine:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == (MODIFIER_META | MODIFIER_SHIFT);
+        case CommandCharPrevious:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_NONE;
+        case CommandSelectCharPrevious:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_SHIFT;
+        case CommandWordPrevious:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_ALT;
+        case CommandSelectWordPrevious:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
+        case CommandBeginLine:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_META;
+        case CommandSelectBeginLine:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == (MODIFIER_META | MODIFIER_SHIFT);
+        case CommandLinePrevious:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
+                 modifiers == MODIFIER_NONE;
+        case CommandSelectLinePrevious:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
+                 modifiers == MODIFIER_SHIFT;
+        case CommandMoveTop:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
+                 modifiers == MODIFIER_META;
+        case CommandSelectTop:
+          return (keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
+                  modifiers == (MODIFIER_META | MODIFIER_SHIFT)) ||
+                 (keyNameIndex == KEY_NAME_INDEX_Home &&
+                  modifiers == MODIFIER_SHIFT);
+        case CommandLineNext:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
+                 modifiers == MODIFIER_NONE;
+        case CommandSelectLineNext:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
+                 modifiers == MODIFIER_SHIFT;
+        case CommandMoveBottom:
+          return keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
+                 modifiers == MODIFIER_META;
+        case CommandSelectBottom:
+          return (keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
+                  modifiers == (MODIFIER_META | MODIFIER_SHIFT)) ||
+                 (keyNameIndex == KEY_NAME_INDEX_End &&
+                  modifiers == MODIFIER_SHIFT);
+        case CommandScrollPageUp:
+          return keyNameIndex == KEY_NAME_INDEX_PageUp &&
+                 modifiers == MODIFIER_NONE;
+        case CommandSelectPageUp:
+          return keyNameIndex == KEY_NAME_INDEX_PageUp &&
+                 modifiers == MODIFIER_SHIFT;
+        case CommandScrollPageDown:
+          return keyNameIndex == KEY_NAME_INDEX_PageDown &&
+                 modifiers == MODIFIER_NONE;
+        case CommandSelectPageDown:
+          return keyNameIndex == KEY_NAME_INDEX_PageDown &&
+                 modifiers == MODIFIER_SHIFT;
+        case CommandScrollBottom:
+          return keyNameIndex == KEY_NAME_INDEX_End &&
+                 modifiers == MODIFIER_NONE;
+        case CommandScrollTop:
+          return keyNameIndex == KEY_NAME_INDEX_Home &&
+                 modifiers == MODIFIER_NONE;
+        case CommandCancelOperation:
+          return (keyNameIndex == KEY_NAME_INDEX_Escape &&
+                  (modifiers == MODIFIER_NONE ||
+                   modifiers == MODIFIER_SHIFT)) ||
+                 ([mKeyEvent keyCode] == kVK_ANSI_Period &&
+                  modifiers == MODIFIER_META);
+        case CommandComplete:
+          return keyNameIndex == KEY_NAME_INDEX_Escape &&
+                 (modifiers == MODIFIER_ALT ||
+                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT));
+        default:
+          return false;
+      }
     }
 
     void InitKeyEvent(TextInputHandlerBase* aHandler,
@@ -1161,8 +1288,12 @@ public:
 
   /**
    * Handles aCommand.  This may cause dispatching an eKeyPress event.
+   *
+   * @param aCommand    The command which receives from Cocoa.
+   * @return            true if this handles the command even if it does
+   *                    nothing actually.  Otherwise, false.
    */
-  void HandleCommand(Command aCommand);
+  bool HandleCommand(Command aCommand);
 
   /**
    * doCommandBySelector event handler.

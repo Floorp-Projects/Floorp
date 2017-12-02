@@ -114,6 +114,7 @@ enum CodeNameIndex : CodeNameIndexType
 const nsCString ToString(CodeNameIndex aCodeNameIndex);
 
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
+#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , Command##aName
 
 typedef int8_t CommandInt;
 enum Command : CommandInt
@@ -123,6 +124,7 @@ enum Command : CommandInt
 #include "mozilla/CommandList.h"
 };
 #undef NS_DEFINE_COMMAND
+#undef NS_DEFINE_COMMAND_NO_EXEC_COMMAND
 
 const char* ToChar(Command aCommand);
 

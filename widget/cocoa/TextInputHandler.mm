@@ -2350,13 +2350,13 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void
+bool
 TextInputHandler::HandleCommand(Command aCommand)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (Destroyed()) {
-    return;
+    return false;
   }
 
   KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
@@ -2377,9 +2377,9 @@ TextInputHandler::HandleCommand(Command aCommand)
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mCompositionDispatched) : "N/A"));
 
-  // If "insertNewline:" command shouldn't be handled, let's ignore it.
+  // The command shouldn't be handled, let's ignore it.
   if (currentKeyEvent && !currentKeyEvent->CanHandleCommand()) {
-    return;
+    return false;
   }
 
   // If it's in composition, we cannot dispatch keypress event.
@@ -2402,8 +2402,52 @@ TextInputHandler::HandleCommand(Command aCommand)
           currentKeyEvent->mCompositionDispatched = true;
         }
         [lineBreaker release];
-        return;
+        return true;
       }
+      case CommandDeleteCharBackward:
+      case CommandDeleteCharForward:
+      case CommandDeleteToBeginningOfLine:
+      case CommandDeleteWordBackward:
+      case CommandDeleteWordForward:
+        // Don't remove any contents during composition.
+        return false;
+      case CommandInsertTab:
+      case CommandInsertBacktab:
+        // Don't move focus during composition.
+        return false;
+      case CommandCharNext:
+      case CommandSelectCharNext:
+      case CommandWordNext:
+      case CommandSelectWordNext:
+      case CommandEndLine:
+      case CommandSelectEndLine:
+      case CommandCharPrevious:
+      case CommandSelectCharPrevious:
+      case CommandWordPrevious:
+      case CommandSelectWordPrevious:
+      case CommandBeginLine:
+      case CommandSelectBeginLine:
+      case CommandLinePrevious:
+      case CommandSelectLinePrevious:
+      case CommandMoveTop:
+      case CommandLineNext:
+      case CommandSelectLineNext:
+      case CommandMoveBottom:
+      case CommandSelectBottom:
+      case CommandSelectPageUp:
+      case CommandSelectPageDown:
+      case CommandScrollBottom:
+      case CommandScrollTop:
+        // Don't move selection during composition.
+        return false;
+      case CommandCancelOperation:
+      case CommandComplete:
+        // Don't handle Escape key by ourselves during composition.
+        return false;
+      case CommandScrollPageUp:
+      case CommandScrollPageDown:
+        // Allow to scroll.
+        break;
       default:
         break;
     }
@@ -2415,7 +2459,7 @@ TextInputHandler::HandleCommand(Command aCommand)
     MOZ_LOG(gLog, LogLevel::Error,
       ("%p, IMEInputHandler::HandleCommand, "
        "FAILED, due to BeginNativeInputTransaction() failure", this));
-    return;
+    return false;
   }
 
   // TODO: If it's not appropriate keypress but user customized the OS
@@ -2428,7 +2472,7 @@ TextInputHandler::HandleCommand(Command aCommand)
   // Otherwise, we should adjust Control, Option and Command state since
   // editor may behave differently if some of them are active.
   bool dispatchFakeKeyPress =
-    !(currentKeyEvent && currentKeyEvent->IsEnterKeyEvent() &&
+    !(currentKeyEvent && currentKeyEvent->IsProperKeyEvent(aCommand) &&
       currentKeyEvent->CanDispatchKeyPressEvent());
 
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
@@ -2464,8 +2508,205 @@ TextInputHandler::HandleCommand(Command aCommand)
         }
         break;
       }
+      case CommandDeleteCharBackward:
+      case CommandDeleteToBeginningOfLine:
+      case CommandDeleteWordBackward: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_BACK;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Backspace;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandDeleteToBeginningOfLine) {
+          keypressEvent.mModifiers |= MODIFIER_META;
+        } else if (aCommand == CommandDeleteWordBackward) {
+          keypressEvent.mModifiers |= MODIFIER_ALT;
+        }
+        break;
+      }
+      case CommandDeleteCharForward:
+      case CommandDeleteWordForward: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_DELETE;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Delete;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandDeleteWordForward) {
+          keypressEvent.mModifiers |= MODIFIER_ALT;
+        }
+        break;
+      }
+      case CommandCharNext:
+      case CommandSelectCharNext:
+      case CommandWordNext:
+      case CommandSelectWordNext:
+      case CommandEndLine:
+      case CommandSelectEndLine: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_RIGHT;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowRight;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandSelectCharNext ||
+            aCommand == CommandSelectWordNext ||
+            aCommand == CommandSelectEndLine) {
+          keypressEvent.mModifiers |= MODIFIER_SHIFT;
+        }
+        if (aCommand == CommandWordNext ||
+            aCommand == CommandSelectWordNext) {
+          keypressEvent.mModifiers |= MODIFIER_ALT;
+        }
+        if (aCommand == CommandEndLine ||
+            aCommand == CommandSelectEndLine) {
+          keypressEvent.mModifiers |= MODIFIER_META;
+        }
+        break;
+      }
+      case CommandCharPrevious:
+      case CommandSelectCharPrevious:
+      case CommandWordPrevious:
+      case CommandSelectWordPrevious:
+      case CommandBeginLine:
+      case CommandSelectBeginLine: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_LEFT;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowLeft;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandSelectCharPrevious ||
+            aCommand == CommandSelectWordPrevious ||
+            aCommand == CommandSelectBeginLine) {
+          keypressEvent.mModifiers |= MODIFIER_SHIFT;
+        }
+        if (aCommand == CommandWordPrevious ||
+            aCommand == CommandSelectWordPrevious) {
+          keypressEvent.mModifiers |= MODIFIER_ALT;
+        }
+        if (aCommand == CommandBeginLine ||
+            aCommand == CommandSelectBeginLine) {
+          keypressEvent.mModifiers |= MODIFIER_META;
+        }
+        break;
+      }
+      case CommandLinePrevious:
+      case CommandSelectLinePrevious:
+      case CommandMoveTop:
+      case CommandSelectTop: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_UP;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowUp;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandSelectLinePrevious ||
+            aCommand == CommandSelectTop) {
+          keypressEvent.mModifiers |= MODIFIER_SHIFT;
+        }
+        if (aCommand == CommandMoveTop ||
+            aCommand == CommandSelectTop) {
+          keypressEvent.mModifiers |= MODIFIER_META;
+        }
+        break;
+      }
+      case CommandLineNext:
+      case CommandSelectLineNext:
+      case CommandMoveBottom:
+      case CommandSelectBottom: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_DOWN;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowDown;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandSelectLineNext ||
+            aCommand == CommandSelectBottom) {
+          keypressEvent.mModifiers |= MODIFIER_SHIFT;
+        }
+        if (aCommand == CommandMoveBottom ||
+            aCommand == CommandSelectBottom) {
+          keypressEvent.mModifiers |= MODIFIER_META;
+        }
+        break;
+      }
+      case CommandScrollPageUp:
+      case CommandSelectPageUp: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_PAGE_UP;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_PageUp;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandSelectPageUp) {
+          keypressEvent.mModifiers |= MODIFIER_SHIFT;
+        }
+        break;
+      }
+      case CommandScrollPageDown:
+      case CommandSelectPageDown: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_PAGE_DOWN;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_PageDown;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandSelectPageDown) {
+          keypressEvent.mModifiers |= MODIFIER_SHIFT;
+        }
+        break;
+      }
+      case CommandScrollBottom:
+      case CommandScrollTop: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        if (aCommand == CommandScrollBottom) {
+          keypressEvent.mKeyCode = NS_VK_END;
+          keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_End;
+        } else {
+          keypressEvent.mKeyCode = NS_VK_HOME;
+          keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Home;
+        }
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        break;
+      }
+      case CommandCancelOperation:
+      case CommandComplete: {
+        NSEvent* keyEvent =
+          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_ESCAPE;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Escape;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                      MODIFIER_ALT |
+                                      MODIFIER_META);
+        if (aCommand == CommandComplete) {
+          keypressEvent.mModifiers |= MODIFIER_ALT;
+        }
+        break;
+      }
       default:
-        return;
+        return false;
     }
   }
 
@@ -2486,20 +2727,26 @@ TextInputHandler::HandleCommand(Command aCommand)
       currentKeyEvent->mKeyPressHandled = keyPressHandled;
       currentKeyEvent->mKeyPressDispatched = keyPressDispatched;
     }
-    return;
+    return true;
   }
 
   // If keypress event isn't dispatched as expected, we should fallback to
   // using composition events.
-  NSAttributedString* lineBreaker =
-    [[NSAttributedString alloc] initWithString:@"\n"];
-  InsertTextAsCommittingComposition(lineBreaker, nullptr);
-  if (currentKeyEvent) {
-    currentKeyEvent->mCompositionDispatched = true;
+  if (aCommand == CommandInsertLineBreak ||
+      aCommand == CommandInsertParagraph) {
+    NSAttributedString* lineBreaker =
+      [[NSAttributedString alloc] initWithString:@"\n"];
+    InsertTextAsCommittingComposition(lineBreaker, nullptr);
+    if (currentKeyEvent) {
+      currentKeyEvent->mCompositionDispatched = true;
+    }
+    [lineBreaker release];
+    return true;
   }
-  [lineBreaker release];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  return false;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 bool
@@ -2567,7 +2814,26 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
   // Korean IME sends "insertNewline:" when committing existing composition
   // with Enter key press.  In such case, the key operation has been consumed
   // by the committing composition but we still need to handle the command.
-  return Destroyed() || !currentKeyEvent->CanHandleCommand();
+  if (Destroyed() || !currentKeyEvent->CanHandleCommand()) {
+    return true;
+  }
+
+  // cancelOperation: command is fired after Escape or Command + Period.
+  // However, if ChildView implements cancelOperation:, calling
+  // [[ChildView super] doCommandBySelector:aSelector] when Command + Period
+  // causes only a call of [ChildView cancelOperation:sender].  I.e.,
+  // [ChildView keyDown:theEvent] becomes to be never called.  For avoiding
+  // this odd behavior, we need to handle the command before super class of
+  // ChildView only when current key event is proper event to fire Escape
+  // keypress event.
+  if (!strcmp(aSelector, "cancelOperatiorn:") && currentKeyEvent &&
+      currentKeyEvent->IsProperKeyEvent(CommandCancelOperation)) {
+    return HandleCommand(CommandCancelOperation);
+  }
+
+  // Otherwise, we've not handled the command yet.  Propagate the command
+  // to the super class of ChildView.
+  return false;
 }
 
 
