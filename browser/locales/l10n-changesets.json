@@ -417,7 +417,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f7e78cf04971"
+        "revision": "200795f4715f"
     }, 
     "hr": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "7027cc69369a"
+        "revision": "12c14c85d112"
     }, 
     "kk": {
         "platforms": [
@@ -842,7 +842,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0d71eb0512c4"
+        "revision": "b9638fe2be35"
     }, 
     "ta": {
         "platforms": [
