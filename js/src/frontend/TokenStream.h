@@ -694,10 +694,14 @@ class MOZ_STACK_CLASS TokenStream final : public TokenStreamAnyChars
     // General-purpose error reporters.  You should avoid calling these
     // directly, and instead use the more succinct alternatives (error(),
     // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
+    //
+    // These functions take a |va_list*| parameter, not a |va_list| parameter,
+    // to hack around bug 1363116.  (Longer-term, the right fix is of course to
+    // not use ellipsis functions or |va_list| at all in error reporting.)
     bool reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
-                                       bool strictMode, unsigned errorNumber, va_list args);
+                                       bool strictMode, unsigned errorNumber, va_list* args);
     bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
-                                         unsigned errorNumber, va_list args);
+                                         unsigned errorNumber, va_list* args);
 
     JSAtom* getRawTemplateStringAtom() {
         MOZ_ASSERT(currentToken().type == TOK_TEMPLATE_HEAD ||

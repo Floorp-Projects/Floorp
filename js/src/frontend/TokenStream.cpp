@@ -670,7 +670,7 @@ TokenStream::seek(const Position& pos, const TokenStream& other)
 
 bool
 TokenStream::reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
-                                           bool strictMode, unsigned errorNumber, va_list args)
+                                           bool strictMode, unsigned errorNumber, va_list* args)
 {
     if (!strictMode && !options().extraWarningsOption)
         return true;
@@ -680,12 +680,12 @@ TokenStream::reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32
         return false;
 
     if (strictMode) {
-        ReportCompileError(cx, Move(metadata), Move(notes), JSREPORT_ERROR, errorNumber, args);
+        ReportCompileError(cx, Move(metadata), Move(notes), JSREPORT_ERROR, errorNumber, *args);
         return false;
     }
 
     return compileWarning(Move(metadata), Move(notes), JSREPORT_WARNING | JSREPORT_STRICT,
-                          errorNumber, args);
+                          errorNumber, *args);
 }
 
 bool
@@ -839,7 +839,7 @@ TokenStream::reportStrictModeError(unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
     bool result = reportStrictModeErrorNumberVA(nullptr, currentToken().pos.begin, strictMode(),
-                                                errorNumber, args);
+                                                errorNumber, &args);
     va_end(args);
     return result;
 }
@@ -888,7 +888,7 @@ TokenStream::warning(unsigned errorNumber, ...)
 
 bool
 TokenStream::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
-                                             unsigned errorNumber, va_list args)
+                                             unsigned errorNumber, va_list* args)
 {
     if (!options().extraWarningsOption)
         return true;
@@ -898,7 +898,7 @@ TokenStream::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint
         return false;
 
     return compileWarning(Move(metadata), Move(notes), JSREPORT_STRICT | JSREPORT_WARNING,
-                          errorNumber, args);
+                          errorNumber, *args);
 }
 
 void
