@@ -92,8 +92,7 @@ NSSDialogs.prototype = {
                                   ], aCtx);
 
       prompt.addCheckbox({ id: "trustSSL", label: this.getString("downloadCert.trustSSL"), checked: false })
-            .addCheckbox({ id: "trustEmail", label: this.getString("downloadCert.trustEmail"), checked: false })
-            .addCheckbox({ id: "trustSign", label: this.getString("downloadCert.trustObjSign"), checked: false });
+            .addCheckbox({ id: "trustEmail", label: this.getString("downloadCert.trustEmail"), checked: false });
       let response = this.showPrompt(prompt);
 
       // they hit the "view cert" button, so show the cert and try again
@@ -107,7 +106,6 @@ NSSDialogs.prototype = {
       aTrust.value = Ci.nsIX509CertDB.UNTRUSTED;
       if (response.trustSSL) aTrust.value |= Ci.nsIX509CertDB.TRUSTED_SSL;
       if (response.trustEmail) aTrust.value |= Ci.nsIX509CertDB.TRUSTED_EMAIL;
-      if (response.trustSign) aTrust.value |= Ci.nsIX509CertDB.TRUSTED_OBJSIGN;
       return true;
     }
   },

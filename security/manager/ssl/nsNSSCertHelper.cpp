@@ -2039,9 +2039,9 @@ getCertType(CERTCertificate* cert)
     return nsIX509Cert::USER_CERT;
   if (trust.HasAnyCA())
     return nsIX509Cert::CA_CERT;
-  if (trust.HasPeer(true, false, false))
+  if (trust.HasPeer(true, false))
     return nsIX509Cert::SERVER_CERT;
-  if (trust.HasPeer(false, true, false) && cert->emailAddr)
+  if (trust.HasPeer(false, true) && cert->emailAddr)
     return nsIX509Cert::EMAIL_CERT;
   if (CERT_IsCACert(cert, nullptr))
     return nsIX509Cert::CA_CERT;

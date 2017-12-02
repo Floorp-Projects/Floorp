@@ -153,16 +153,9 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor* ctx,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  bool trustForObjSign = false;
-  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("trustForObjSign"),
-                                  &trustForObjSign);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   *trust |= trustForSSL ? nsIX509CertDB::TRUSTED_SSL : 0;
   *trust |= trustForEmail ? nsIX509CertDB::TRUSTED_EMAIL : 0;
-  *trust |= trustForObjSign ? nsIX509CertDB::TRUSTED_OBJSIGN : 0;
 
   return NS_OK;
 }
