@@ -16,16 +16,16 @@ add_task(async function testVoiceselectDropdownAutoclose() {
 
     await NarrateTestUtils.waitForNarrateToggle(content);
 
-    ok(!!$(".option[data-value='urn:moz-tts:fake-direct:bob']"),
+    ok(!!$(".option[data-value='urn:moz-tts:fake:bob']"),
       "Jamaican English voice available");
-    ok(!!$(".option[data-value='urn:moz-tts:fake-direct:lenny']"),
+    ok(!!$(".option[data-value='urn:moz-tts:fake:lenny']"),
       "Canadian English voice available");
-    ok(!!$(".option[data-value='urn:moz-tts:fake-direct:amy']"),
+    ok(!!$(".option[data-value='urn:moz-tts:fake:amy']"),
       "British English voice available");
 
-    ok(!$(".option[data-value='urn:moz-tts:fake-direct:celine']"),
+    ok(!$(".option[data-value='urn:moz-tts:fake:celine']"),
       "Canadian French voice unavailable");
-    ok(!$(".option[data-value='urn:moz-tts:fake-direct:julie']"),
+    ok(!$(".option[data-value='urn:moz-tts:fake:julie']"),
       "Mexican Spanish voice unavailable");
 
     $(NarrateTestUtils.TOGGLE).click();
@@ -34,9 +34,9 @@ add_task(async function testVoiceselectDropdownAutoclose() {
 
     let prefChanged = NarrateTestUtils.waitForPrefChange(
       "narrate.voice", "getCharPref");
-    NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake-direct:lenny");
+    NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake:lenny");
     let voicePref = JSON.parse(await prefChanged);
-    is(voicePref.en, "urn:moz-tts:fake-direct:lenny", "pref set correctly");
+    is(voicePref.en, "urn:moz-tts:fake:lenny", "pref set correctly");
   });
 });
 
@@ -48,16 +48,16 @@ add_task(async function testVoiceselectDropdownAutoclose() {
 
     await NarrateTestUtils.waitForNarrateToggle(content);
 
-    ok(!!$(".option[data-value='urn:moz-tts:fake-indirect:zanetta']"),
+    ok(!!$(".option[data-value='urn:moz-tts:fake:zanetta']"),
       "Italian voice available");
-    ok(!!$(".option[data-value='urn:moz-tts:fake-indirect:margherita']"),
+    ok(!!$(".option[data-value='urn:moz-tts:fake:margherita']"),
       "Italian voice available");
 
-    ok(!$(".option[data-value='urn:moz-tts:fake-direct:bob']"),
+    ok(!$(".option[data-value='urn:moz-tts:fake:bob']"),
       "Jamaican English voice available");
-    ok(!$(".option[data-value='urn:moz-tts:fake-direct:celine']"),
+    ok(!$(".option[data-value='urn:moz-tts:fake:celine']"),
       "Canadian French voice unavailable");
-    ok(!$(".option[data-value='urn:moz-tts:fake-direct:julie']"),
+    ok(!$(".option[data-value='urn:moz-tts:fake:julie']"),
       "Mexican Spanish voice unavailable");
 
     $(NarrateTestUtils.TOGGLE).click();
@@ -66,8 +66,8 @@ add_task(async function testVoiceselectDropdownAutoclose() {
 
     let prefChanged = NarrateTestUtils.waitForPrefChange(
       "narrate.voice", "getCharPref");
-    NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake-indirect:zanetta");
+    NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake:zanetta");
     let voicePref = JSON.parse(await prefChanged);
-    is(voicePref.it, "urn:moz-tts:fake-indirect:zanetta", "pref set correctly");
+    is(voicePref.it, "urn:moz-tts:fake:zanetta", "pref set correctly");
   });
 });

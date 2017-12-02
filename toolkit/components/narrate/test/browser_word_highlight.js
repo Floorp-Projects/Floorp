@@ -9,7 +9,7 @@
 registerCleanupFunction(teardown);
 
 add_task(async function testNarrate() {
-  setup("urn:moz-tts:fake-indirect:teresa");
+  setup("urn:moz-tts:fake:teresa");
 
   await spawnInNewReaderTab(TEST_ARTICLE, async function() {
     let $ = content.document.querySelector.bind(content.document);
@@ -29,7 +29,7 @@ add_task(async function testNarrate() {
     let promiseEvent = ContentTaskUtils.waitForEvent(content, "paragraphstart");
     $(NarrateTestUtils.START).click();
     let voice = (await promiseEvent).detail.voice;
-    is(voice, "urn:moz-tts:fake-indirect:teresa", "double-check voice");
+    is(voice, "urn:moz-tts:fake:teresa", "double-check voice");
 
     // Skip forward to first paragraph.
     let details;

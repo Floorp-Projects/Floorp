@@ -824,23 +824,11 @@ nsSynthVoiceRegistry::SpeakImpl(VoiceData* aVoice,
        NS_ConvertUTF16toUTF8(aText).get(), NS_ConvertUTF16toUTF8(aVoice->mUri).get(),
        aRate, aPitch));
 
-  SpeechServiceType serviceType;
-
-  DebugOnly<nsresult> rv = aVoice->mService->GetServiceType(&serviceType);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get speech service type");
-
-  if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
-    aTask->InitIndirectAudio();
-  } else {
-    aTask->InitDirectAudio();
-  }
+  aTask->Init();
 
   if (NS_FAILED(aVoice->mService->Speak(aText, aVoice->mUri, aVolume, aRate,
                                         aPitch, aTask))) {
-    if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
-      aTask->DispatchError(0, 0);
-    }
-    // XXX When using direct audio, no way to dispatch error
+    aTask->DispatchError(0, 0);
   }
 }
 
