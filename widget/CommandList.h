@@ -4,9 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Define NS_DEFIVE_COMMAND(aName, aCommandStr) before including this.
+ * Define NS_DEFINE_COMMAND(aName, aCommandStr) before including this.
  * @param aName          The name useful in C++ of the command.
  * @param aCommandStr    The command string in JS.
+ *
+ * Define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) before including this.
+ * @param aName          The name useful in C++ of the command.
  */
 
 NS_DEFINE_COMMAND(BeginLine,                   cmd_beginLine)
@@ -52,3 +55,8 @@ NS_DEFINE_COMMAND(SelectWordNext,              cmd_selectWordNext)
 NS_DEFINE_COMMAND(SelectWordPrevious,          cmd_selectWordPrevious)
 NS_DEFINE_COMMAND(WordNext,                    cmd_wordNext)
 NS_DEFINE_COMMAND(WordPrevious,                cmd_wordPrevious)
+
+NS_DEFINE_COMMAND_NO_EXEC_COMMAND(CancelOperation)
+NS_DEFINE_COMMAND_NO_EXEC_COMMAND(Complete)
+NS_DEFINE_COMMAND_NO_EXEC_COMMAND(InsertBacktab)
+NS_DEFINE_COMMAND_NO_EXEC_COMMAND(InsertTab)
