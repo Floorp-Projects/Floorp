@@ -88,7 +88,6 @@ replace_malloc(size_t aSize)
   return ptr;
 }
 
-#ifndef LOGALLOC_MINIMAL
 static int
 replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
 {
@@ -112,7 +111,6 @@ replace_aligned_alloc(size_t aAlignment, size_t aSize)
   }
   return ptr;
 }
-#endif
 
 static void*
 replace_calloc(size_t aNum, size_t aSize)
@@ -160,7 +158,6 @@ replace_memalign(size_t aAlignment, size_t aSize)
   return ptr;
 }
 
-#ifndef LOGALLOC_MINIMAL
 static void*
 replace_valloc(size_t aSize)
 {
@@ -171,7 +168,6 @@ replace_valloc(size_t aSize)
   }
   return ptr;
 }
-#endif
 
 static void
 replace_jemalloc_stats(jemalloc_stats_t* aStats)
@@ -243,11 +239,11 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
 #define MALLOC_DECL(name, ...) aTable->name = replace_ ## name;
 #include "malloc_decls.h"
   aTable->jemalloc_stats = replace_jemalloc_stats;
-#ifndef LOGALLOC_MINIMAL
-  aTable->posix_memalign = replace_posix_memalign;
-  aTable->aligned_alloc = replace_aligned_alloc;
-  aTable->valloc = replace_valloc;
-#endif
+  if (!getenv("MALLOC_LOG_MINIMAL")) {
+    aTable->posix_memalign = replace_posix_memalign;
+    aTable->aligned_alloc = replace_aligned_alloc;
+    aTable->valloc = replace_valloc;
+  }
   *aBridge = &bridge;
 
 #ifndef _WIN32
