@@ -9365,9 +9365,6 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
   // OnLoadingSite(), but don't fire OnLocationChange()
   // notifications before we've called Embed(). See bug 284993.
   mURIResultedInDocument = true;
-  bool errorOnLocationChangeNeeded = false;
-  nsCOMPtr<nsIChannel> failedChannel = mFailedChannel;
-  nsCOMPtr<nsIURI> failedURI;
 
   if (mLoadType == LOAD_ERROR_PAGE) {
     // We need to set the SH entry and our current URI here and not
@@ -9378,15 +9375,17 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
     // following function calls need it.
     mLoadType = mFailedLoadType;
 
+    nsCOMPtr<nsIChannel> failedChannel = mFailedChannel;
 
     nsIDocument* doc = viewer->GetDocument();
     if (doc) {
       doc->SetFailedChannel(failedChannel);
     }
 
+    // Make sure we have a URI to set currentURI.
+    nsCOMPtr<nsIURI> failedURI;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     if (failedChannel) {
-      // Make sure we have a URI to set currentURI.
       NS_GetFinalChannelURI(failedChannel, getter_AddRefs(failedURI));
     }
      else {
@@ -9412,9 +9411,14 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
 
     // Create an shistory entry for the old load.
     if (failedURI) {
-      errorOnLocationChangeNeeded = OnNewURI(
+      bool errorOnLocationChangeNeeded = OnNewURI(
         failedURI, failedChannel, triggeringPrincipal,
         nullptr, mLoadType, false, false, false);
+
+      if (errorOnLocationChangeNeeded) {
+        FireOnLocationChange(this, failedChannel, failedURI,
+                             LOCATION_CHANGE_ERROR_PAGE);
+      }
     }
 
     // Be sure to have a correct mLSHE, it may have been cleared by
@@ -9505,10 +9509,7 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
     FavorPerformanceHint(true);
   }
 
-  if (errorOnLocationChangeNeeded) {
-    FireOnLocationChange(this, failedChannel, failedURI,
-                         LOCATION_CHANGE_ERROR_PAGE);
-  } else if (onLocationChangeNeeded) {
+  if (onLocationChangeNeeded) {
     FireOnLocationChange(this, aRequest, mCurrentURI, 0);
   }
 
