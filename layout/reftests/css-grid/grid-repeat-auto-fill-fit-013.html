@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+<meta charset="utf-8">
+<title>CSS Grid Test: test placement in repeat auto-fit grids with leading implicit tracks</title>
+<link rel="author" title="Brad Werth" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1416350">
+<link rel="help" href="https://drafts.csswg.org/css-grid/#valdef-repeat-auto-fill">
+<link rel="match" href="grid-repeat-auto-fill-fit-013-ref.html">
+<style type="text/css">
+body {
+  margin: 10px;
+  font-size: 10px;
+}
+.wrapper {
+  display: grid;
+  width: 600px;
+  background-color: #f00;
+  grid-auto-columns: 10px;
+  grid-auto-flow: row;
+}
+.wrapper > * {
+  background-color: #444;
+  color: #fff;
+}
+
+.relative {
+  position: relative;
+}
+
+.absposchild {
+  z-index: -1;
+  position: absolute;
+  grid-column-end: span 1;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
+.templateFit {
+  grid-template-columns: repeat(auto-fit, 40px);
+}
+.templateFixedFit {
+  grid-template-columns: 20px repeat(auto-fit, 40px);
+}
+.templateFitFixed {
+  grid-template-columns: repeat(auto-fit, 40px) 40px;
+}
+.templateFixedFitFixed {
+  grid-template-columns: 20px repeat(auto-fit, 40px) 40px;
+}
+
+z {
+  grid-column: -18;
+}
+z::after {
+  content: "Z";
+}
+
+y {
+  grid-column: auto;
+}
+y::after {
+  content: "Y";
+}
+
+
+b {
+  grid-column: 3;
+}
+b::after {
+  content: "B";
+}
+
+c {
+  grid-column: 5;
+}
+c::after {
+  content: "C";
+}
+
+d {
+  grid-column: 7;
+}
+d::after {
+  content: "D";
+}
+
+e {
+  grid-column: 9;
+}
+e::after {
+  content: "E";
+}
+
+f {
+  grid-column: 11;
+}
+f::after {
+  content: "F";
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrapper templateFit"><z></z><b></b><y></y></div>
+<div class="wrapper templateFit"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFit"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFit relative"><z></z><b></b><c class="absposchild"></c><d></d></div>
+<div class="wrapper templateFit relative"><z></z><b></b><c class="absposchild"></c><d></d><e class="absposchild"></e><f></f></div>
+
+<div class="wrapper templateFixedFit"><z></z><b></b><y></y></div>
+<div class="wrapper templateFixedFit"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFixedFit"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFixedFit relative"><z></z><b></b><c class="absposchild"></c><d></d></div>
+<div class="wrapper templateFixedFit relative"><z></z><b></b><c class="absposchild"></c><d></d><e class="absposchild"></e><f></f></div>
+
+<div class="wrapper templateFitFixed"><z></z><b></b><y></y></div>
+<div class="wrapper templateFitFixed"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFitFixed"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFitFixed relative"><z></z><b></b><c class="absposchild"></c><d></d></div>
+<div class="wrapper templateFitFixed relative"><z></z><b></b><c class="absposchild"></c><d></d><e class="absposchild"></e><f></f></div>
+
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><y></y></div>
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFixedFitFixed relative"><z></z><b></b><c class="absposchild"></c><d></d></div>
+<div class="wrapper templateFixedFitFixed relative"><z></z><b></b><c class="absposchild"></c><d></d><e class="absposchild"></e><f></f></div>
+
+</body>
+</html>
