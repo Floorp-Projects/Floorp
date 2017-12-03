@@ -75,6 +75,8 @@ headers = [
     "mozilla/SizeOfState.h",
     "nsCSSCounterStyleRule.h",
     "nsCSSFontFaceRule.h",
+    "nsContentUtils.h",
+    "nsNameSpaceManager.h",
     "nsMediaFeatures.h",
     "nsXBLBinding.h",
 ]
@@ -206,6 +208,7 @@ whitelist-vars = [
     "kNameSpaceID_.*",
     "kGenericFont_.*",
     "kPresContext_.*",
+    "nsContentUtils_.*",
 ]
 whitelist-types = [
     "RawGecko.*",
