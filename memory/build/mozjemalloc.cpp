@@ -1015,8 +1015,8 @@ private:
   void* RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize);
 
   void* RallocHuge(void* aPtr, size_t aSize, size_t aOldSize);
-public:
 
+public:
   inline void* Malloc(size_t aSize, bool aZero);
 
   void* Palloc(size_t aAlignment, size_t aSize);
@@ -1187,10 +1187,11 @@ static size_t base_committed;
 // ******
 // Arenas.
 
-// The arena associated with the current thread (per jemalloc_thread_local_arena)
-// On OSX, __thread/thread_local circles back calling malloc to allocate storage
-// on first access on each thread, which leads to an infinite loop, but
-// pthread-based TLS somehow doesn't have this problem.
+// The arena associated with the current thread (per
+// jemalloc_thread_local_arena) On OSX, __thread/thread_local circles back
+// calling malloc to allocate storage on first access on each thread, which
+// leads to an infinite loop, but pthread-based TLS somehow doesn't have this
+// problem.
 #if !defined(XP_DARWIN)
 static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
 #else
@@ -1311,7 +1312,8 @@ _getprogname(void)
 }
 
 // Fill the given range of memory with zeroes or junk depending on opt_junk and
-// opt_zero. Callers can force filling with zeroes through the aForceZero argument.
+// opt_zero. Callers can force filling with zeroes through the aForceZero
+// argument.
 static inline void
 ApplyZeroOrJunk(void* aPtr, size_t aSize)
 {
@@ -1535,15 +1537,15 @@ pages_map(void* aAddr, size_t aSize)
   void* ret;
 #if defined(__ia64__) ||                                                       \
   (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
-  // The JS engine assumes that all allocated pointers have their high 17 bits clear,
-  // which ia64's mmap doesn't support directly. However, we can emulate it by passing
-  // mmap an "addr" parameter with those bits clear. The mmap will return that address,
-  // or the nearest available memory above that address, providing a near-guarantee
-  // that those bits are clear. If they are not, we return nullptr below to indicate
-  // out-of-memory.
+  // The JS engine assumes that all allocated pointers have their high 17 bits
+  // clear, which ia64's mmap doesn't support directly. However, we can emulate
+  // it by passing mmap an "addr" parameter with those bits clear. The mmap will
+  // return that address, or the nearest available memory above that address,
+  // providing a near-guarantee that those bits are clear. If they are not, we
+  // return nullptr below to indicate out-of-memory.
   //
-  // The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual
-  // address space.
+  // The addr is chosen as 0x0000070000000000, which still allows about 120TB of
+  // virtual address space.
   //
   // See Bug 589735 for more information.
   bool check_placement = true;
@@ -1596,7 +1598,8 @@ pages_map(void* aAddr, size_t aSize)
     munmap(ret, aSize);
     ret = nullptr;
   }
-  // If the caller requested a specific memory location, verify that's what mmap returned.
+  // If the caller requested a specific memory location, verify that's what mmap
+  // returned.
   else if (check_placement && ret != aAddr) {
 #else
   else if (aAddr && ret != aAddr) {
@@ -2485,8 +2488,8 @@ arena_t::DeallocChunk(arena_chunk_t* aChunk)
     mStats.committed -= gChunkHeaderNumPages;
   }
 
-  // Remove run from the tree of available runs, so that the arena does not use it.
-  // Dirty page flushing only uses the tree of dirty chunks, so leaving this
+  // Remove run from the tree of available runs, so that the arena does not use
+  // it. Dirty page flushing only uses the tree of dirty chunks, so leaving this
   // chunk in the chunks_* trees is sufficient for that purpose.
   mRunsAvail.Remove(&aChunk->map[gChunkHeaderNumPages]);
 
@@ -3581,8 +3584,7 @@ arena_t::RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize)
   // Try to avoid moving the allocation.
   if (aOldSize <= gMaxLargeClass && sizeClass.Size() == aOldSize) {
     if (aSize < aOldSize) {
-      memset(
-        (void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
+      memset((void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
     }
     return aPtr;
   }
