@@ -246,7 +246,10 @@ HttpBackgroundChannelParent::OnStopRequest(const nsresult& aChannelStatus,
     return NS_SUCCEEDED(rv);
   }
 
-  return SendOnStopRequest(aChannelStatus, aTiming);
+  // See the child code for why we do this.
+  TimeStamp lastActTabOpt = nsHttp::GetLastActiveTabLoadOptimizationHit();
+
+  return SendOnStopRequest(aChannelStatus, aTiming, lastActTabOpt);
 }
 
 bool

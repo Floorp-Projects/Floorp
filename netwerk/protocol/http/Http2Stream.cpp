@@ -1279,6 +1279,8 @@ Http2Stream::UpdatePriorityDependency()
           " depends on background group for trans %p\n",
           this, trans));
     mPriorityDependency = Http2Session::kBackgroundGroupID;
+
+    nsHttp::NotifyActiveTabLoadOptimization();
   }
 
   LOG3(("Http2Stream::UpdatePriorityDependency %p "
@@ -1311,6 +1313,8 @@ Http2Stream::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
     mPriorityDependency = Http2Session::kBackgroundGroupID;
     LOG3(("Http2Stream::TopLevelOuterContentWindowIdChanged %p "
           "move into background group.\n", this));
+
+    nsHttp::NotifyActiveTabLoadOptimization();
   } else {
     nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
     if (!trans) {

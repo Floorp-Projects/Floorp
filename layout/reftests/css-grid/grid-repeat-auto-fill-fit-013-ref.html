@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+<meta charset="utf-8">
+<title>CSS Grid Test Reference: test auto placement in repeat auto-fit grids with leading implicit tracks</title>
+<style type="text/css">
+body {
+  margin: 10px;
+  font-size: 10px;
+}
+.wrapper {
+  display: grid;
+  width: 600px;
+  background-color: #f00;
+}
+.wrapper > * {
+  background-color: #444;
+  color: #fff;
+}
+
+.templateFit {
+  grid-template-columns: 10px 10px repeat(auto-fill, 40px);
+}
+.templateFixedFit {
+  grid-template-columns: 10px calc(10px + 20px) repeat(auto-fill, 40px);
+}
+.templateFitFixed {
+  grid-template-columns: 10px 10px repeat(auto-fill, 40px) 40px;
+}
+.templateFixedFitFixed {
+  grid-template-columns: 10px calc(10px + 20px) repeat(auto-fill, 40px) 40px;
+}
+
+z {
+  grid-column: 1;
+}
+z::after {
+  content: "Z";
+}
+
+y {
+  grid-column: auto;
+}
+y::after {
+  content: "Y";
+}
+
+
+b {
+  grid-column: 3;
+}
+b::after {
+  content: "B";
+}
+
+c {
+  grid-column: 4;
+}
+c::after {
+  content: "C";
+}
+
+d {
+  grid-column: 5;
+}
+d::after {
+  content: "D";
+}
+
+e {
+  grid-column: 6;
+}
+e::after {
+  content: "E";
+}
+
+f {
+  grid-column: 7;
+}
+f::after {
+  content: "F";
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrapper templateFit"><z></z><b></b><y></y></div>
+<div class="wrapper templateFit"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFit"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFit"><z></z><b></b><d style="grid-column: 4"></d></div>
+<div class="wrapper templateFit"><z></z><b></b><d style="grid-column: 4"></d><f style="grid-column: 5"></f></div>
+
+<div class="wrapper templateFixedFit"><z></z><b></b><y></y></div>
+<div class="wrapper templateFixedFit"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFixedFit"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFixedFit"><z></z><b></b><d style="grid-column: 4"></d></div>
+<div class="wrapper templateFixedFit"><z></z><b></b><d style="grid-column: 4"></d><f style="grid-column: 5"></f></div>
+
+<div class="wrapper templateFitFixed"><z></z><b></b><y></y></div>
+<div class="wrapper templateFitFixed"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFitFixed"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFitFixed"><z></z><b></b><d style="grid-column: 4"></d></div>
+<div class="wrapper templateFitFixed"><z></z><b></b><d style="grid-column: 4"></d><f style="grid-column: 5"></f></div>
+
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><y></y></div>
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><c></c><d></d></div>
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><c></c><d></d><e></e><f></f></div>
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><d style="grid-column: 4"></d></div>
+<div class="wrapper templateFixedFitFixed"><z></z><b></b><d style="grid-column: 4"></d><f style="grid-column: 5"></f></div>
+
+</body>
+</html>

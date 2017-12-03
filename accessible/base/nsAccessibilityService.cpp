@@ -215,6 +215,14 @@ static Accessible* New_HTMLInput(nsIContent* aContent, Accessible* aContext)
                             nsGkAtoms::radio, eIgnoreCase)) {
     return new HTMLRadioButtonAccessible(aContent, aContext->Document());
   }
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::time, eIgnoreCase)) {
+    return new EnumRoleAccessible<roles::GROUPING>(aContent, aContext->Document());
+  }
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::date, eIgnoreCase)) {
+    return new EnumRoleAccessible<roles::DATE_EDITOR>(aContent, aContext->Document());
+  }
   return nullptr;
 }
 
