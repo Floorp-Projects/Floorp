@@ -408,7 +408,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             Notification.VISIBILITY_PRIVATE : Notification.VISIBILITY_PUBLIC;
 
         final Notification notification = new Notification.Builder(this)
-            .setSmallIcon(R.drawable.flat_icon)
+            .setSmallIcon(R.drawable.ic_status_logo)
             .setLargeIcon(generateCoverArt(tab))
             .setContentTitle(tab.getTitle())
             .setContentText(tab.getURL())
