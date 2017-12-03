@@ -792,7 +792,11 @@ var BrowserApp = {
       });
 
     NativeWindow.contextmenus.add({
-      label: stringGetter("contextmenu.shareMedia"),
+      label: function(aTarget) {
+        return Strings.browser.GetStringFromName(
+          `contextmenu.share${videoClassifier(aTarget)}2`
+        );
+      },
       order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1,
       selector: NativeWindow.contextmenus._disableRestricted(
         "SHARE", NativeWindow.contextmenus.videoContext()),
@@ -802,7 +806,7 @@ var BrowserApp = {
         return {
           title: title,
           uri: url,
-          type: "video/*",
+          type: videoClassifier(aElement) === "Audio" ? "audio/*" : "video/*",
         };
       },
       icon: "drawable://ic_menu_share",
