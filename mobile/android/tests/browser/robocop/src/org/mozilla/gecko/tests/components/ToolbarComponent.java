@@ -75,7 +75,7 @@ public class ToolbarComponent extends BaseComponent {
 
     public ToolbarComponent assertUrl(final String expected) {
         assertIsEditing();
-        fAssertEquals("The Toolbar url is " + expected, expected, getUrlEditText().getText());
+        fAssertEquals("The Toolbar url is " + expected, expected, getUrlEditText().getText().toString());
         return this;
     }
 
