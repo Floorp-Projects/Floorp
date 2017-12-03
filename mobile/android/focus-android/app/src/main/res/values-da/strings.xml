@@ -32,7 +32,7 @@
   <string name="preference_subitem_autocomplete">Autofuldfør URL</string>
   <string name="preference_switch_autocomplete">Autofuldførelse</string>
   <string name="preference_category_autocomplete_preinstalled">Standard URL-liste</string>
-  <string name="preference_autocomplete_preinstalled_summary">Aktiver at %1$s autofuldfører over 450 populære URL\'er i addressefeltet.</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktiver at %1$s autofuldfører over 450 populære URL\'er i adressefeltet.</string>
   <string name="preference_category_autocomplete_custom">Brugerdefineret URL</string>
   <string name="preference_autocomplete_subitem_customlist">Brugerdefinerede URL\'er</string>
   <string name="preference_autocomplete_action_add">+ Tilføj brugerdefineret URL</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Kunchatu</string>
   <string name="action_ok">Va\'a</string>
+  <string name="action_save">Chika vaà</string>
   <string name="urlbar_hint">Ntukú a chaa ña kunu kuncheu</string>
   <string name="teaser">Ndukù Sèè. Kunchee. Sto\'o. Ntakua.</string>
   <string name="feedback_erase">Sto\'i ña ntsinu.</string>
@@ -26,6 +27,21 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Kuu kuachu\'un&#241;a.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Kuu nduku seu &#241;a\'a:\n  "<ul>"\n    "<li>Nduku &#241;a kunu nu kaa ndusu\'ku</li>"\n    "<li>Kasi &#241;a kuni kunche\'e &#241;a sau)</li>"\n    "<li>Stoo cookies tsi &#241;a ndukuku sata</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla sai. Kunikue iin Internet nuna &#241;a kuu kuchu\'un ntina yivi.<br/>\n<a href="%2$s">kavi cha kutua</a></p>]]></string>
   <string name="preference_category_search">Nduku</string>
   <string name="preference_search_engine_default">Tsa sa\'an yee</string>
+  <string name="preference_state_on">Kuna</string>
+  <string name="preference_state_off">Kasi</string>
+  <string name="preference_category_autocomplete_custom">Tana kunu URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Tana kunu URLs</string>
+  <string name="preference_autocomplete_action_add">+ Chaa URL</string>
+  <string name="preference_autocomplete_title_add">Chaa URL</string>
+  <string name="preference_autocomplete_title_remove">Stòo URLs nchau</string>
+  <string name="preference_autocomplete_learn_more">Skua\'a kuakaa</string>
+  <string name="preference_autocomplete_add_title">Chaa URL</string>
+  <string name="preference_autocomplete_add_hint">Chistiin a chaa URL</string>
+  <string name="preference_autocomplete_add_example">Kua: sivi.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Ntutsaa URL nchau.</string>
+  <string name="preference_autocomplete_menu_remove">Xitaá</string>
+  <string name="preference_autocomplete_action_remove_content_description">Xitaá</string>
   <string name="preference_language">Tu\'un</string>
   <string name="preference_language_systemdefault">Nkoi ta xi’na</string>
   <string name="preference_dialog_title_search_engine">Ntuku ta xi’na</string>
@@ -74,6 +90,9 @@
   <string name="search_add_manually_example">Sa\'an chau\'ña: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Chikaa tsi ña ndukuku</string>
   <string name="search_add_confirmation">Ntu tsa\'a tsi ña ndukuku.</string>
+  <string name="search_add_error_empty_name">Chaa sivi ña kunu nduku</string>
+  <string name="search_add_error_empty_search">Chaa tu\'un kunu ndukuku</string>
+  <string name="search_add_error_format">Ckunche\'e a vaà nchau ña ku ndukuku</string>
   <string name="content_description_clear_input">Stoo nu nikivu</string>
   <string name="content_description_dismiss_input">Nkucha\'a su\'u</string>
   <string name="content_description_erase">Stòo ña ntukuku sata</string>
