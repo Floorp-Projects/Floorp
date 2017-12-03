@@ -19,23 +19,22 @@
 
 #include "replace_malloc.h"
 #include "FdPrintf.h"
-
-#include "base/lock.h"
+#include "Mutex.h"
 
 static malloc_table_t sFuncs;
 static intptr_t sFd = 0;
 static bool sStdoutOrStderr = false;
 
-static Lock sLock;
+static Mutex sMutex;
 
 static void
 prefork() {
-  sLock.Acquire();
+  sMutex.Lock();
 }
 
 static void
 postfork() {
-  sLock.Release();
+  sMutex.Unlock();
 }
 
 static size_t
@@ -81,7 +80,7 @@ class LogAllocBridge : public ReplaceMallocBridge
 static void*
 replace_malloc(size_t aSize)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.malloc(aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu malloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
@@ -93,7 +92,7 @@ replace_malloc(size_t aSize)
 static int
 replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   int ret = sFuncs.posix_memalign(aPtr, aAlignment, aSize);
   if (ret == 0) {
     FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
@@ -105,7 +104,7 @@ replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
 static void*
 replace_aligned_alloc(size_t aAlignment, size_t aSize)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.aligned_alloc(aAlignment, aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
@@ -118,7 +117,7 @@ replace_aligned_alloc(size_t aAlignment, size_t aSize)
 static void*
 replace_calloc(size_t aNum, size_t aSize)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.calloc(aNum, aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
@@ -130,7 +129,7 @@ replace_calloc(size_t aNum, size_t aSize)
 static void*
 replace_realloc(void* aPtr, size_t aSize)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   void* new_ptr = sFuncs.realloc(aPtr, aSize);
   if (new_ptr || !aSize) {
     FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
@@ -142,7 +141,7 @@ replace_realloc(void* aPtr, size_t aSize)
 static void
 replace_free(void* aPtr)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   if (aPtr) {
     FdPrintf(sFd, "%zu %zu free(%p)\n", GetPid(), GetTid(), aPtr);
   }
@@ -152,7 +151,7 @@ replace_free(void* aPtr)
 static void*
 replace_memalign(size_t aAlignment, size_t aSize)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.memalign(aAlignment, aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
@@ -165,7 +164,7 @@ replace_memalign(size_t aAlignment, size_t aSize)
 static void*
 replace_valloc(size_t aSize)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.valloc(aSize);
   if (ptr) {
     FdPrintf(sFd, "%zu %zu valloc(%zu)=%p\n", GetPid(), GetTid(), aSize, ptr);
@@ -177,7 +176,7 @@ replace_valloc(size_t aSize)
 static void
 replace_jemalloc_stats(jemalloc_stats_t* aStats)
 {
-  AutoLock lock(sLock);
+  MutexAutoLock lock(sMutex);
   sFuncs.jemalloc_stats(aStats);
   FdPrintf(sFd, "%zu %zu jemalloc_stats()\n", GetPid(), GetTid());
 }
@@ -237,6 +236,7 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
     return;
   }
 
+  sMutex.Init();
   static LogAllocBridge bridge;
   sFuncs = *aTable;
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
