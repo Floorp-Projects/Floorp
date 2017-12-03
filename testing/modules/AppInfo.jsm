@@ -63,6 +63,7 @@ this.newAppInfo = function(options = {}) {
     invalidateCachesOnRestart() {},
     shouldBlockIncompatJaws: false,
     processType: origRuntime.processType,
+    uniqueProcessID: origRuntime.uniqueProcessID,
 
     // nsIWinAppHelper
     get userCanElevate() {
