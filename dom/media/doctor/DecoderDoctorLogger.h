@@ -37,6 +37,10 @@ namespace mozilla {
 class DecoderDoctorLogger
 {
 public:
+  // Called by nsLayoutStatics::Initialize() before any other media work.
+  // Pre-enables logging if MOZ_LOG requires DDLogger.
+  static void Init();
+
   // Is logging currently enabled? This is tested anyway in all public `Log...`
   // functions, but it may be used to prevent logging-only work in clients.
   static inline bool IsDDLoggingEnabled()
