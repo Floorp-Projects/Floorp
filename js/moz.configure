@@ -274,6 +274,14 @@ def gc_trace(value):
 set_define('JS_GC_TRACE', gc_trace)
 
 
+js_option('--enable-gczeal',
+          default=depends(when=moz_debug)(lambda: True),
+          help='Enable zealous GCing')
+
+set_define('JS_GC_ZEAL',
+           depends_if('--enable-gczeal')(lambda _: True))
+
+
 # Trace logging.
 # =======================================================
 js_option('--enable-trace-logging',
