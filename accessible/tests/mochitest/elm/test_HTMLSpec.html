@@ -835,6 +835,38 @@
       testElm("input_reset", obj);
 
       // ////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="time"
+
+      obj = {
+        role: ROLE_GROUPING,
+        children: [
+          { role: ROLE_SPINBUTTON },
+          { role: ROLE_TEXT_LEAF },
+          { role: ROLE_SPINBUTTON },
+          { role: ROLE_TEXT_LEAF },
+          { role: ROLE_ENTRY },
+          { role: ROLE_PUSHBUTTON }
+        ]
+      };
+      testElm("input_time", obj);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="date"
+
+      obj = {
+        role: ROLE_DATE_EDITOR,
+        children: [
+          { role: ROLE_SPINBUTTON },
+          { role: ROLE_TEXT_LEAF },
+          { role: ROLE_SPINBUTTON },
+          { role: ROLE_TEXT_LEAF },
+          { role: ROLE_SPINBUTTON },
+          { role: ROLE_PUSHBUTTON }
+        ]
+      };
+      testElm("input_date", obj);
+
+      // ////////////////////////////////////////////////////////////////////////
       // HTML:ins contained by paragraph
 
       obj = {
@@ -1590,6 +1622,8 @@
   <form>
     <input id="input_reset" type="reset">
   </form>
+  <input id="input_time" type="time" value="23:23">
+  <input id="input_date" type="date" value="2017-11-10">
 
   <p id="ins_container">normal<ins>Inserted</ins></p>
   <p id="kbd_container">normal<kbd>cmd</kbd></p>

@@ -598,7 +598,8 @@ TCPSocket::BufferedAmount()
   if (mMultiplexStream) {
     uint64_t available = 0;
     nsCOMPtr<nsIInputStream> stream(do_QueryInterface(mMultiplexStream));
-    stream->Available(&available);
+    nsresult rv = stream->Available(&available);
+    NS_ENSURE_SUCCESS(rv, 0);
     return available;
   }
   return 0;
