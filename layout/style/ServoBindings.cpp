@@ -310,12 +310,6 @@ Gecko_ElementState(RawGeckoElementBorrowed aElement)
   return aElement->StyleState().ServoValue();
 }
 
-EventStates::ServoType
-Gecko_DocumentState(const nsIDocument* aDocument)
-{
-  return aDocument->ThreadSafeGetDocumentState().ServoValue();
-}
-
 bool
 Gecko_IsRootElement(RawGeckoElementBorrowed aElement)
 {
