@@ -179,7 +179,6 @@ Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
 
 // Selector Matching.
 uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
-uint64_t Gecko_DocumentState(const nsIDocument* aDocument);
 bool Gecko_IsRootElement(RawGeckoElementBorrowed element);
 bool Gecko_MatchesElement(mozilla::CSSPseudoClassType type, RawGeckoElementBorrowed element);
 nsAtom* Gecko_Namespace(RawGeckoElementBorrowed element);
