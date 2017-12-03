@@ -843,13 +843,6 @@ public:
 
   virtual nsISupports* GetCurrentContentSink() override;
 
-  virtual mozilla::EventStates GetDocumentState() final;
-  // GetDocumentState() mutates the state due to lazy resolution;
-  // and can't be used during parallel traversal. Use this instead,
-  // and ensure GetDocumentState() has been called first.
-  // This will assert if the state is stale.
-  virtual mozilla::EventStates ThreadSafeGetDocumentState() const final;
-
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
@@ -1182,8 +1175,6 @@ protected:
   // Do not use this value directly. Call the |IsThirdParty()| method, which
   // caches its result here.
   mozilla::Maybe<bool> mIsThirdParty;
-private:
-  void UpdatePossiblyStaleDocumentState();
 
 public:
   RefPtr<mozilla::EventListenerManager> mListenerManager;
@@ -1269,9 +1260,6 @@ public:
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
   nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
-
-  mozilla::EventStates mDocumentState;
-  mozilla::EventStates mGotDocumentState;
 
   RefPtr<nsDOMNavigationTiming> mTiming;
 private:
