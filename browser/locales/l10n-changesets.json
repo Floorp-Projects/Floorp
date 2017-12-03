@@ -97,7 +97,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "892329eb0613"
+        "revision": "bfcca8495342"
     }, 
     "bn-IN": {
         "platforms": [
@@ -157,7 +157,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "fd244a79a1c1"
+        "revision": "46b29c781793"
     }, 
     "cy": {
         "platforms": [
@@ -782,7 +782,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0c1768f74118"
+        "revision": "224f6200b415"
     }, 
     "sk": {
         "platforms": [
