@@ -26,11 +26,8 @@
 }
 
 #emptyDownloads {
-  padding: 16px 25px;
+  padding: 16px 16px;
   margin: 0;
-  /* The panel can be wider than this description after the blocked subview is
-     shown, so center the text. */
-  text-align: center;
 }
 
 .downloadsPanelFooter {
