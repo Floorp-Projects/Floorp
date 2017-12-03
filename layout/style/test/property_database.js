@@ -6624,7 +6624,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
       "grayscale(-1)",
 
       "hue-rotate()",
-      "hue-rotate(0)",
       "hue-rotate(0.5 0.5)",
       "hue-rotate(0.5,)",
       "hue-rotate(0.5, 0.5)",
@@ -6666,6 +6665,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
       "sepia(-1)",
     ]
   };
+
+  // See https://github.com/w3c/fxtf-drafts/issues/228.
+  //
+  // This is updated in Stylo but not Gecko.
+  if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
+    gCSSProperties["filter"].other_values.push("hue-rotate(0)");
+  } else {
+    gCSSProperties["filter"].invalid_values.push("hue-rotate(0)");
+  }
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
