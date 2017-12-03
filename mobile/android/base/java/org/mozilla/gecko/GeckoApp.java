@@ -1411,8 +1411,10 @@ public abstract class GeckoApp extends GeckoActivity
 
         final String passedUri = getIntentURI(intent);
 
-        final boolean isExternalURL = passedUri != null;
-        final boolean isAboutHomeURL = isExternalURL && AboutPages.isAboutHome(passedUri);
+        final boolean intentHasURL = passedUri != null;
+        final boolean isAboutHomeURL = intentHasURL && AboutPages.isAboutHome(passedUri);
+        final boolean isAssistIntent = Intent.ACTION_ASSIST.equals(action);
+        final boolean needsNewForegroundTab = intentHasURL || isAssistIntent;
 
         // Start migrating as early as possible, can do this in
         // parallel with Gecko load.
@@ -1438,14 +1440,16 @@ public abstract class GeckoApp extends GeckoActivity
             handleSelectTabIntent(intent);
         // External URLs and new tab from widget should always be loaded regardless of whether Gecko is
         // already running.
-        } else if (isExternalURL) {
+        } else if (needsNewForegroundTab) {
             // Restore tabs before opening an external URL so that the new tab
             // is animated properly.
             Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
             processActionViewIntent(new Runnable() {
                 @Override
                 public void run() {
-                    if (isAboutHomeURL) {
+                    if (isAssistIntent) {
+                        Tabs.getInstance().addTab(Tabs.LOADURL_START_EDITING | Tabs.LOADURL_EXTERNAL);
+                    } else if (isAboutHomeURL) {
                         // respect the user preferences for about:home from external intent calls
                         loadStartupTab(Tabs.LOADURL_NEW_TAB, action);
                     } else {
@@ -1780,6 +1784,8 @@ public abstract class GeckoApp extends GeckoActivity
                     Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
                 }
             });
+        } else if (Intent.ACTION_ASSIST.equals(action)) {
+            Tabs.getInstance().addTab(Tabs.LOADURL_START_EDITING | Tabs.LOADURL_EXTERNAL);
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             final GeckoBundle data = new GeckoBundle(2);
             data.putString("uri", uri);
