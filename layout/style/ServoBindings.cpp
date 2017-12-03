@@ -323,13 +323,6 @@ Gecko_MatchesElement(CSSPseudoClassType aType,
   return nsCSSPseudoClasses::MatchesElement(aType, aElement).value();
 }
 
-nsAtom*
-Gecko_Namespace(RawGeckoElementBorrowed aElement)
-{
-  int32_t id = aElement->NodeInfo()->NamespaceID();
-  return nsContentUtils::NameSpaceManager()->NameSpaceURIAtomForServo(id);
-}
-
 // Dirtiness tracking.
 void
 Gecko_SetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
