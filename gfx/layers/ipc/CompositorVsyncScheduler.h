@@ -55,6 +55,7 @@ public:
   void ResumeComposition();
   void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
   void PostCompositeTask(TimeStamp aCompositeTimestamp);
+  void PostVRTask(TimeStamp aTimestamp);
   void Destroy();
   void ScheduleComposition();
   void CancelCurrentCompositeTask();
