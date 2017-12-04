@@ -71,16 +71,16 @@ add_task(async function() {
   win.removeEventListener("MozAfterPaint", afterPaintListener);
 
   let unexpectedRects = 0;
-  let foundTinyPaint = false;
+  let ignoreTinyPaint = true;
   for (let i = 1; i < frames.length; ++i) {
     let frame = frames[i], previousFrame = frames[i - 1];
-    if (!foundTinyPaint &&
+    if (ignoreTinyPaint &&
         previousFrame.width == 1 && previousFrame.height == 1) {
-      foundTinyPaint = true;
-      todo(false, "shouldn't first paint a 1x1px window");
+      todo(false, "shouldn't initially paint a 1x1px window");
       continue;
     }
 
+    ignoreTinyPaint = false;
     let rects = compareFrames(frame, previousFrame).filter(rect => {
       let inRange = (val, min, max) => min <= val && val <= max;
       let width = frame.width;
@@ -91,7 +91,8 @@ add_task(async function() {
 
       let exceptions = [
         {name: "bug 1403648 - urlbar down arrow shouldn't flicker",
-         condition: r => r.h == 5 && inRange(r.w, 8, 9) && // 5x9px area
+         condition: r => // 5x9px area, sometimes less at the end of the opacity transition
+                         inRange(r.h, 3, 5) && inRange(r.w, 7, 9) &&
                          inRange(r.y1, 40, 80) && // in the toolbar
                          // at ~80% of the window width
                          inRange(r.x1, width * .75, width * .9)
@@ -102,6 +103,14 @@ add_task(async function() {
                          inRange(r.y1, 40, 80) && // in the toolbar
                          // near the right end of screen
                          inRange(r.x1, width - 100, width - 50)
+        },
+
+        {name: "bug 1403648 - urlbar should be focused at first paint",
+         condition: r => inRange(r.y2, 60, 80) && // in the toolbar
+                         // taking 50% to 75% of the window width
+                         inRange(r.w, width * .5, width * .75) &&
+                         // starting at 15 to 25% of the window width
+                         inRange(r.x1, width * .15, width * .25)
         },
 
         {name: "bug 1421463 - reload toolbar icon shouldn't flicker",
