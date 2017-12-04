@@ -642,16 +642,6 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_SIMD'] = True
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True
 
-if CONFIG['JS_BUILD_BINAST']:
-    # Some parts of BinAST are designed only to test evolutions of the
-    # specification:
-    UNIFIED_SOURCES += ['frontend/BinTokenReaderTester.cpp']
-    # The rest of BinAST should eventually move to release.
-    UNIFIED_SOURCES += [
-        'frontend/BinSource.cpp',
-        'frontend/BinToken.cpp'
-    ]
-
 # Wasm code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64
 # so that it is easy to use the huge-mapping optimization for other
 # 64-bit platforms in the future.
