@@ -13,8 +13,8 @@ interface nsIContentViewerContainer : nsISupports {
 	void embed(in nsIContentViewer aDocViewer, in string aCommand, in nsISupports aExtraInfo);
 
   /**
-   * Allows the PrintEngine to make this call on 
-   * an internal interface to the DocShell
+   * Allows nsPrintJob to make this call on an internal interface to the
+   * DocShell.
    */
   void setIsPrinting(in boolean aIsPrinting);
 };

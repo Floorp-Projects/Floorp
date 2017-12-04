@@ -9,7 +9,7 @@
 #include "mozilla/Unused.h"
 #include "nsIContentViewer.h"
 #include "nsIServiceManager.h"
-#include "nsPrintEngine.h"
+#include "nsPrintJob.h"
 
 using namespace mozilla;
 
@@ -79,20 +79,20 @@ nsPagePrintTimer::Run()
 
   // donePrinting will be true if it completed successfully or
   // if the printing was cancelled
-  donePrinting = !mPrintEngine || mPrintEngine->PrintPage(mPrintObj, inRange);
+  donePrinting = !mPrintJob || mPrintJob->PrintPage(mPrintObj, inRange);
   if (donePrinting) {
 
     if (mWaitingForRemotePrint ||
         // If we are not waiting for the remote printing, it is the time to
         // end printing task by calling DonePrintingPages.
-        (!mPrintEngine || mPrintEngine->DonePrintingPages(mPrintObj, NS_OK))) {
+        (!mPrintJob || mPrintJob->DonePrintingPages(mPrintObj, NS_OK))) {
       initNewTimer = false;
       mDone = true;
     }
   }
 
   // Note that the Stop() destroys this after the print job finishes
-  // (The PrintEngine stops holding a reference when DonePrintingPages
+  // (The nsPrintJob stops holding a reference when DonePrintingPages
   // returns true.)
   Stop();
   if (initNewTimer) {
@@ -100,8 +100,8 @@ nsPagePrintTimer::Run()
     nsresult result = StartTimer(inRange);
     if (NS_FAILED(result)) {
       mDone = true;     // had a failure.. we are finished..
-      if (mPrintEngine) {
-        mPrintEngine->SetIsPrinting(false);
+      if (mPrintJob) {
+        mPrintJob->SetIsPrinting(false);
       }
     }
   }
@@ -149,8 +149,8 @@ nsPagePrintTimer::Notify(nsITimer *timer)
   if (mDocViewerPrint) {
     bool donePrePrint = true;
     // Don't start to pre-print if we're waiting on the parent still.
-    if (mPrintEngine && !mWaitingForRemotePrint) {
-      donePrePrint = mPrintEngine->PrePrintPage();
+    if (mPrintJob && !mWaitingForRemotePrint) {
+      donePrePrint = mPrintJob->PrePrintPage();
     }
 
     if (donePrePrint && !mWaitingForRemotePrint) {
@@ -185,8 +185,8 @@ nsPagePrintTimer::RemotePrintFinished()
   }
 
   // now clean up print or print the next webshell
-  if (mDone && mPrintEngine) {
-    mDone = mPrintEngine->DonePrintingPages(mPrintObj, NS_OK);
+  if (mDone && mPrintJob) {
+    mDone = mPrintJob->DonePrintingPages(mPrintObj, NS_OK);
   }
 
   mWaitingForRemotePrint->SetTarget(
@@ -221,7 +221,7 @@ nsPagePrintTimer::Fail()
 
   mDone = true;
   Stop();
-  if (mPrintEngine) {
-    mPrintEngine->CleanupOnFailure(NS_OK, false);
+  if (mPrintJob) {
+    mPrintJob->CleanupOnFailure(NS_OK, false);
   }
 }

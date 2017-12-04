@@ -13,7 +13,7 @@
 #include "nsIWebProgressListener.h"
 
 class nsPagePrintTimer;
-class nsPrintEngine;
+class nsPrintJob;
 
 namespace mozilla {
 namespace layout {
@@ -46,7 +46,7 @@ public:
 
   void SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer);
 
-  void SetPrintEngine(nsPrintEngine* aPrintEngine);
+  void SetPrintJob(nsPrintJob* aPrintJob);
 
   PRFileDesc* GetNextPageFD();
 
@@ -58,7 +58,7 @@ private:
   bool mDestroyed = false;
   nsresult mInitializationResult = NS_OK;
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
-  RefPtr<nsPrintEngine> mPrintEngine;
+  RefPtr<nsPrintJob> mPrintJob;
   PRFileDesc* mNextPageFD = nullptr;
 };
 

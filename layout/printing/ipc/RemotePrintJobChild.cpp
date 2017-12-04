@@ -8,7 +8,7 @@
 
 #include "mozilla/Unused.h"
 #include "nsPagePrintTimer.h"
-#include "nsPrintEngine.h"
+#include "nsPrintJob.h"
 #include "private/pprio.h"
 
 namespace mozilla {
@@ -89,9 +89,9 @@ RemotePrintJobChild::RecvPageProcessed(const mozilla::ipc::FileDescriptor& aFd)
 mozilla::ipc::IPCResult
 RemotePrintJobChild::RecvAbortPrint(const nsresult& aRv)
 {
-  MOZ_ASSERT(mPrintEngine);
+  MOZ_ASSERT(mPrintJob);
 
-  mPrintEngine->CleanupOnFailure(aRv, true);
+  mPrintJob->CleanupOnFailure(aRv, true);
   return IPC_OK();
 }
 
@@ -104,11 +104,11 @@ RemotePrintJobChild::SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer)
 }
 
 void
-RemotePrintJobChild::SetPrintEngine(nsPrintEngine* aPrintEngine)
+RemotePrintJobChild::SetPrintJob(nsPrintJob* aPrintJob)
 {
-  MOZ_ASSERT(aPrintEngine);
+  MOZ_ASSERT(aPrintJob);
 
-  mPrintEngine = aPrintEngine;
+  mPrintJob = aPrintJob;
 }
 
 // nsIWebProgressListener
@@ -178,7 +178,7 @@ void
 RemotePrintJobChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mPagePrintTimer = nullptr;
-  mPrintEngine = nullptr;
+  mPrintJob = nullptr;
 
   mDestroyed = true;
 }
