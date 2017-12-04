@@ -9,7 +9,7 @@
 
 using namespace mozilla;
 
-EventQueue::EventQueue(EventPriority aPriority)
+EventQueue::EventQueue()
 {
 }
 
