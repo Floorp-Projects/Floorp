@@ -31,7 +31,7 @@ class SourceBufferResource final : public MediaResource
 {
 public:
   SourceBufferResource();
-  nsresult Close();
+  nsresult Close() override;
   nsresult ReadAt(int64_t aOffset,
                   char* aBuffer,
                   uint32_t aCount,
