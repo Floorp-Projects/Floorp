@@ -8,7 +8,6 @@
 #define DNS_h_
 
 #include "nscore.h"
-#include "nsString.h"
 #include "prio.h"
 #include "prnetdb.h"
 #include "plstr.h"
@@ -134,27 +133,28 @@ public:
 
 class AddrInfo {
 public:
-  // Creates an AddrInfo object.
-  AddrInfo(const nsACString& host, const PRAddrInfo *prAddrInfo,
-           bool disableIPv4, bool filterNameCollision,
-           const nsACString& cname);
+  // Creates an AddrInfo object. It calls the AddrInfo(const char*, const char*)
+  // to initialize the host and the cname.
+  AddrInfo(const char *host, const PRAddrInfo *prAddrInfo, bool disableIPv4,
+           bool filterNameCollision, const char *cname);
 
-  // Creates a basic AddrInfo object (initialize only the host and the
-  // cname).
-  AddrInfo(const nsACString& host, const nsACString& cname);
-
+  // Creates a basic AddrInfo object (initialize only the host and the cname).
+  AddrInfo(const char *host, const char *cname);
   ~AddrInfo();
 
   void AddAddress(NetAddrElement *address);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  nsCString mHostName;
-  nsCString mCanonicalName;
+  char *mHostName;
+  char *mCanonicalName;
   uint32_t ttl;
   static const uint32_t NO_TTL_DATA = (uint32_t) -1;
 
   LinkedList<NetAddrElement> mAddresses;
+
+private:
+  void Init(const char *host, const char *cname);
 };
 
 // Copies the contents of a PRNetAddr to a NetAddr.

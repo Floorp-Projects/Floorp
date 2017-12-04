@@ -2051,6 +2051,10 @@ WebSocketChannel::PrimeNewOutgoingMessage()
   if (!mCurrentOut)
     return;
 
+  auto cleanupAfterFailure = MakeScopeExit([&] {
+    DeleteCurrentOutGoingMessage();
+  });
+
   WsMsgType msgType = mCurrentOut->GetMsgType();
 
   LOG(("WebSocketChannel::PrimeNewOutgoingMessage "
@@ -2070,6 +2074,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
     if (mClientClosed) {
       DeleteCurrentOutGoingMessage();
       PrimeNewOutgoingMessage();
+      cleanupAfterFailure.release();
       return;
     }
 
@@ -2258,6 +2263,8 @@ WebSocketChannel::PrimeNewOutgoingMessage()
   // mCurrentOut->Length() bytes from mCurrentOut. The latter may be
   // coaleseced into the former for small messages or as the result of the
   // compression process.
+
+  cleanupAfterFailure.release();
 }
 
 void

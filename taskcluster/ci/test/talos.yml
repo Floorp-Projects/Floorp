@@ -421,6 +421,7 @@ talos-xperf:
     description: "Talos xperf"
     try-name: xperf
     treeherder-symbol: tc-T(x)
+    virtualization: virtual
     run-on-projects:
         by-test-platform:
             windows7-32.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
@@ -430,17 +431,7 @@ talos-xperf:
             - --suite=xperf
             - --add-option
             - --webServer,localhost
-
-talos-xperf-stylo-disabled:
-    description: "Talos Stylo disabled xperf"
-    try-name: xperf-stylo-disabled
-    treeherder-symbol: tc-Tsd(x)
-    run-on-projects:
-        by-test-platform:
-            windows7-32.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: []
-    mozharness:
-        extra-options:
-            - --suite=xperf-stylo-disabled
-            - --add-option
-            - --webServer,localhost
+        config:
+            by-test-platform:
+                windows.*:
+                    - talos/windows_vm_config.py
