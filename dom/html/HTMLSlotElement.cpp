@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLSlotElementBinding.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsGkAtoms.h"
 #include "nsDocument.h"
 
@@ -15,12 +16,10 @@ NS_NewHTMLSlotElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                       mozilla::dom::FromParser aFromParser)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
-  /* Disabled for now
   if (nsContentUtils::IsWebComponentsEnabled()) {
     already_AddRefed<mozilla::dom::NodeInfo> nodeInfoArg(nodeInfo.forget());
     return new mozilla::dom::HTMLSlotElement(nodeInfoArg);
   }
-  */
 
   already_AddRefed<mozilla::dom::NodeInfo> nodeInfoArg(nodeInfo.forget());
   return new mozilla::dom::HTMLUnknownElement(nodeInfoArg);
@@ -50,11 +49,161 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSlotElement)
 
+nsresult
+HTMLSlotElement::BindToTree(nsIDocument* aDocument,
+                            nsIContent* aParent,
+                            nsIContent* aBindingParent,
+                            bool aCompileEventHandlers)
+{
+  RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
+
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ShadowRoot* containingShadow = GetContainingShadow();
+  if (containingShadow && !oldContainingShadow) {
+    containingShadow->AddSlot(this);
+  }
+
+  return NS_OK;
+}
+
+void
+HTMLSlotElement::UnbindFromTree(bool aDeep, bool aNullParent)
+{
+  RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
+
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  if (oldContainingShadow && !GetContainingShadow()) {
+    oldContainingShadow->RemoveSlot(this);
+  }
+}
+
+nsresult
+HTMLSlotElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                               const nsAttrValueOrString* aValue,
+                               bool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::name) {
+    if (ShadowRoot* containingShadow = GetContainingShadow()) {
+      containingShadow->RemoveSlot(this);
+    }
+  }
+
+  return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName, aValue,
+                                             aNotify);
+}
+
+nsresult
+HTMLSlotElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                              const nsAttrValue* aValue,
+                              const nsAttrValue* aOldValue,
+                              nsIPrincipal* aSubjectPrincipal,
+                              bool aNotify)
+{
+
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::name) {
+    if (ShadowRoot* containingShadow = GetContainingShadow()) {
+      containingShadow->AddSlot(this);
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aOldValue, aSubjectPrincipal,
+                                            aNotify);
+}
+
+/**
+ * Flatten assigned nodes given a slot, as in:
+ * https://dom.spec.whatwg.org/#find-flattened-slotables
+ */
+static void
+FlattenAssignedNodes(HTMLSlotElement* aSlot, nsTArray<RefPtr<nsINode>>& aNodes)
+{
+  if (!aSlot->GetContainingShadow()) {
+    return;
+  }
+
+  nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
+
+  // If assignedNodes is empty, use children of slot as fallback content.
+  if (assignedNodes.IsEmpty()) {
+    for (nsIContent* child = aSlot->AsContent()->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      if (!child->IsSlotable()) {
+        continue;
+      }
+
+      if (child->IsHTMLElement(nsGkAtoms::slot)) {
+        FlattenAssignedNodes(HTMLSlotElement::FromContent(child), aNodes);
+      } else {
+        aNodes.AppendElement(child);
+      }
+    }
+    return;
+  }
+
+  for (uint32_t i = 0; i < assignedNodes.Length(); i++) {
+    nsINode* assignedNode = assignedNodes[i];
+    if (assignedNode->IsHTMLElement(nsGkAtoms::slot)) {
+      FlattenAssignedNodes(
+        HTMLSlotElement::FromContent(assignedNode->AsContent()), aNodes);
+    } else {
+      aNodes.AppendElement(assignedNode);
+    }
+  }
+}
+
 void
 HTMLSlotElement::AssignedNodes(const AssignedNodesOptions& aOptions,
                                nsTArray<RefPtr<nsINode>>& aNodes)
 {
+  if (aOptions.mFlatten) {
+    return FlattenAssignedNodes(this, aNodes);
+  }
+
   aNodes = mAssignedNodes;
+}
+
+nsTArray<RefPtr<nsINode>>&
+HTMLSlotElement::AssignedNodes()
+{
+  return mAssignedNodes;
+}
+
+void
+HTMLSlotElement::InsertAssignedNode(uint32_t aIndex, nsINode* aNode)
+{
+  mAssignedNodes.InsertElementAt(aIndex, aNode);
+  aNode->AsContent()->SetAssignedSlot(this);
+}
+
+void
+HTMLSlotElement::AppendAssignedNode(nsINode* aNode)
+{
+  mAssignedNodes.AppendElement(aNode);
+  aNode->AsContent()->SetAssignedSlot(this);
+}
+
+void
+HTMLSlotElement::RemoveAssignedNode(nsINode* aNode)
+{
+  mAssignedNodes.RemoveElement(aNode);
+  aNode->AsContent()->SetAssignedSlot(nullptr);
+}
+
+void
+HTMLSlotElement::ClearAssignedNodes()
+{
+  for (uint32_t i = 0; i < mAssignedNodes.Length(); i++) {
+    mAssignedNodes[i]->AsContent()->SetAssignedSlot(nullptr);
+  }
+
+  mAssignedNodes.Clear();
 }
 
 JSObject*
