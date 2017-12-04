@@ -37,6 +37,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.PreferenceMatchers.withKey;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
@@ -133,8 +134,12 @@ public class SettingsScreenshots extends ScreenshotTest {
         onView(withText(getString(R.string.preference_autocomplete_custom_summary)))
                 .perform(click());
         /* Add custom URL */
-        onView(withText(getString(R.string.preference_autocomplete_subitem_customlist)))
+        final String key = InstrumentationRegistry
+                .getTargetContext()
+                .getString(R.string.pref_key_screen_custom_domains);
+        onData(withKey(key))
                 .perform(click());
+
         final String addCustomURLAction = getString(R.string.preference_autocomplete_action_add);
         onView(withText(addCustomURLAction))
                 .check(matches(isDisplayed()));
