@@ -67,6 +67,7 @@ ClientManagerService::~ClientManagerService()
 {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(mSourceTable.Count() == 0);
+  MOZ_DIAGNOSTIC_ASSERT(mManagerList.IsEmpty());
 
   MOZ_DIAGNOSTIC_ASSERT(sClientManagerServiceInstance == this);
   sClientManagerServiceInstance = nullptr;
@@ -132,6 +133,24 @@ ClientManagerService::FindSource(const nsID& aID, const PrincipalInfo& aPrincipa
   }
 
   return source;
+}
+
+void
+ClientManagerService::AddManager(ClientManagerParent* aManager)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(aManager);
+  MOZ_ASSERT(!mManagerList.Contains(aManager));
+  mManagerList.AppendElement(aManager);
+}
+
+void
+ClientManagerService::RemoveManager(ClientManagerParent* aManager)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(aManager);
+  DebugOnly<bool> removed = mManagerList.RemoveElement(aManager);
+  MOZ_ASSERT(removed);
 }
 
 } // namespace dom
