@@ -457,7 +457,6 @@ AS_BIN=$AS
 AR_EXTRACT='$(AR) x'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
-DIRENT_INO=d_ino
 MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
@@ -1150,10 +1149,6 @@ if test -n "$MOZ_LINKER"; then
   MOZ_LINKER_EXTRACT=1
   AC_CHECK_PROGS(XZ, xz)
 fi
-
-dnl Only one oddball right now (QNX), but this gives us flexibility
-dnl if any other platforms need to override this in the future.
-AC_DEFINE_UNQUOTED(D_INO,$DIRENT_INO)
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
