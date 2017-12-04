@@ -7886,6 +7886,13 @@ nsHttpChannel::PreferAlternativeDataType(const nsACString & aType)
 }
 
 NS_IMETHODIMP
+nsHttpChannel::GetPreferredAlternativeDataType(nsACString & aType)
+{
+  aType = mPreferredCachedAltDataType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpChannel::GetAlternativeDataType(nsACString & aType)
 {
     // must be called during or after OnStartRequest
