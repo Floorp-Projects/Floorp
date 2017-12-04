@@ -1031,6 +1031,11 @@ public:
 
     const VisitData* lastFetchedPlace = nullptr;
     uint32_t lastFetchedVisitCount = 0;
+    bool shouldChunkNotifications = mPlaces.Length() > NOTIFY_VISITS_CHUNK_SIZE;
+    InfallibleTArray<VisitData> notificationChunk;
+    if (shouldChunkNotifications) {
+      notificationChunk.SetCapacity(NOTIFY_VISITS_CHUNK_SIZE);
+    }
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       VisitData& place = mPlaces.ElementAt(i);
 
@@ -1100,6 +1105,21 @@ public:
       }
       NS_ENSURE_SUCCESS(rv, rv);
 
+      if (shouldChunkNotifications) {
+        int32_t numRemaining = mPlaces.Length() - (i + 1);
+        notificationChunk.AppendElement(place);
+        if (notificationChunk.Length() == NOTIFY_VISITS_CHUNK_SIZE ||
+            numRemaining == 0) {
+          // This will SwapElements on notificationChunk with an empty nsTArray
+          nsCOMPtr<nsIRunnable> event = new NotifyManyVisitsObservers(notificationChunk);
+          rv = NS_DispatchToMainThread(event);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          int32_t nextCapacity = std::min(NOTIFY_VISITS_CHUNK_SIZE, numRemaining);
+          notificationChunk.SetCapacity(nextCapacity);
+        }
+      }
+
       // If we get here, we must have been successful adding/updating this
       // visit/place, so update the count:
       mSuccessfulUpdatedCount++;
@@ -1118,9 +1138,13 @@ public:
     nsresult rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIRunnable> event = new NotifyManyVisitsObservers(mPlaces);
-    rv = NS_DispatchToMainThread(event);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If we don't need to chunk the notifications, just notify using the
+    // original mPlaces array.
+    if (!shouldChunkNotifications) {
+      nsCOMPtr<nsIRunnable> event = new NotifyManyVisitsObservers(mPlaces);
+      rv = NS_DispatchToMainThread(event);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     return NS_OK;
   }
