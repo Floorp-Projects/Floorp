@@ -251,9 +251,10 @@ _GetTTLData_Windows(const char* aHost, uint32_t* aResult, uint16_t aAddressFamil
 static MOZ_ALWAYS_INLINE nsresult
 _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
                       uint16_t aFlags, const char* aNetworkInterface,
-                      UniquePtr<AddrInfo>& aAddrInfo)
+                      AddrInfo** aAddrInfo)
 {
   MOZ_ASSERT(aCanonHost);
+  MOZ_ASSERT(aAddrInfo);
 
   // We accept the same aFlags that nsHostResolver::ResolveHost accepts, but we
   // need to translate the aFlags into a form that PR_GetAddrInfoByName
@@ -282,14 +283,14 @@ _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
   }
 
   bool filterNameCollision = !(aFlags & nsHostResolver::RES_ALLOW_NAME_COLLISION);
-  auto ai = MakeUnique<AddrInfo>(aCanonHost, prai, disableIPv4,
-                                 filterNameCollision, canonName);
+  nsAutoPtr<AddrInfo> ai(new AddrInfo(aCanonHost, prai, disableIPv4,
+                                      filterNameCollision, canonName));
   PR_FreeAddrInfo(prai);
   if (ai->mAddresses.isEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
-  aAddrInfo = Move(ai);
+  *aAddrInfo = ai.forget();
 
   return NS_OK;
 }
@@ -321,10 +322,9 @@ GetAddrInfoShutdown() {
 
 nsresult
 GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
-            const char* aNetworkInterface,
-            UniquePtr<AddrInfo>& aAddrInfo, bool aGetTtl)
+            const char* aNetworkInterface, AddrInfo** aAddrInfo, bool aGetTtl)
 {
-  if (NS_WARN_IF(!aHost)) {
+  if (NS_WARN_IF(!aHost) || NS_WARN_IF(!aAddrInfo)) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -335,7 +335,7 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
   }
 #endif
 
-  aAddrInfo = nullptr;
+  *aAddrInfo = nullptr;
   nsresult rv = _GetAddrInfo_Portable(aHost, aAddressFamily, aFlags,
                                       aNetworkInterface, aAddrInfo);
 
@@ -344,8 +344,8 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
     // Figure out the canonical name, or if that fails, just use the host name
     // we have.
     const char *name = nullptr;
-    if (aAddrInfo && aAddrInfo->mCanonicalName) {
-      name = aAddrInfo->mCanonicalName;
+    if (*aAddrInfo != nullptr && (*aAddrInfo)->mCanonicalName) {
+      name = (*aAddrInfo)->mCanonicalName;
     } else {
       name = aHost;
     }
@@ -354,7 +354,7 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
     uint32_t ttl = 0;
     nsresult ttlRv = _GetTTLData_Windows(name, &ttl, aAddressFamily);
     if (NS_SUCCEEDED(ttlRv)) {
-      aAddrInfo->ttl = ttl;
+      (*aAddrInfo)->ttl = ttl;
       LOG("Got TTL %u for %s (name = %s).", ttl, aHost, name);
     } else {
       LOG_WARNING("Could not get TTL for %s (cname = %s).", aHost, name);
