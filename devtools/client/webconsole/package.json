@@ -36,5 +36,8 @@
     "require-hacker": "^2.1.4",
     "reselect": "^3.0.1",
     "sinon": "^1.17.5"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.26.0"
   }
 }
