@@ -237,6 +237,13 @@ static const wchar_t* gBlockedInprocDlls[] = {
 };
 
 /**
+ * This is the blocklist for known "bad" remote clients that instantiate a11y.
+ */
+static const char* gBlockedRemoteClients[] = {
+  "tbnnotifier.exe" // Ask.com Toolbar, bug 1421018
+};
+
+/**
  * Check for the presence of any known "bad" injected DLLs that may be trying
  * to instantiate a11y.
  *
@@ -292,17 +299,24 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
     return true;
   }
 
-  // Blocklist checks for external clients should go here.
-  // return false if we should not instantiate.
-  /*
-  if (ClientShouldBeBlocked(clientExe)) {
-    return false;
+  nsresult rv;
+  if (!PR_GetEnv("MOZ_DISABLE_ACCESSIBLE_BLOCKLIST")) {
+    // Debugging option is not present, so check blocklist.
+    nsAutoString leafName;
+    rv = clientExe->GetLeafName(leafName);
+    if (NS_SUCCEEDED(rv)) {
+      for (size_t i = 0, len = ArrayLength(gBlockedRemoteClients); i < len; ++i) {
+        if (leafName.EqualsIgnoreCase(gBlockedRemoteClients[i])) {
+          // If client exe is in our blocklist, do not instantiate.
+          return false;
+        }
+      }
+    }
   }
-  */
 
   // Store full path to executable for support purposes.
   nsAutoString filePath;
-  nsresult rv = clientExe->GetPath(filePath);
+  rv = clientExe->GetPath(filePath);
   if (NS_SUCCEEDED(rv)) {
     a11y::SetInstantiator(filePath);
   }
@@ -909,4 +923,3 @@ LazyInstantiator::QueryService(REFGUID aServiceId, REFIID aServiceIid,
 
 } // namespace a11y
 } // namespace mozilla
-
