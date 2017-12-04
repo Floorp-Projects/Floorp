@@ -1256,6 +1256,14 @@ auto GeckoSurfaceTexture::UpdateTexImage() const -> void
 const char LayerSession::name[] =
         "org/mozilla/gecko/gfx/LayerSession";
 
+constexpr char LayerSession::GetCompositor_t::name[];
+constexpr char LayerSession::GetCompositor_t::signature[];
+
+auto LayerSession::GetCompositor() const -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetCompositor_t>::Call(LayerSession::mCtx, nullptr);
+}
+
 const char LayerSession::Compositor::name[] =
         "org/mozilla/gecko/gfx/LayerSession$Compositor";
 
