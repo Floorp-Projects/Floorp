@@ -74,11 +74,11 @@ public:
   bool Resize(int aWidth, int aHeight);
   bool SetImageDataFromBackBuffer(class WindowBackBuffer* aSourceBuffer);
 
-  bool MatchSize(int aWidth, int aHeight)
+  bool IsMatchingSize(int aWidth, int aHeight)
   {
     return aWidth == mWidth && aHeight == mHeight;
   }
-  bool MatchSize(class WindowBackBuffer *aBuffer)
+  bool IsMatchingSize(class WindowBackBuffer *aBuffer)
   {
     return aBuffer->mWidth == mWidth && aBuffer->mHeight == mHeight;
   }
@@ -97,6 +97,32 @@ private:
   int                 mHeight;
   bool                mAttached;
   nsWaylandDisplay*   mWaylandDisplay;
+};
+
+// WindowSurfaceWayland is an abstraction for wl_surface
+// and related management
+class WindowSurfaceWayland : public WindowSurface {
+public:
+  WindowSurfaceWayland(nsWindow *aWindow);
+  ~WindowSurfaceWayland();
+
+  already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion) override;
+  void                      Commit(const LayoutDeviceIntRegion& aInvalidRegion) final;
+  void                      FrameCallbackHandler();
+
+private:
+  WindowBackBuffer*         GetBufferToDraw(int aWidth, int aHeight);
+
+  // TODO: Do we need to hold a reference to nsWindow object?
+  nsWindow*                 mWindow;
+  nsWaylandDisplay*         mWaylandDisplay;
+  WindowBackBuffer*         mFrontBuffer;
+  WindowBackBuffer*         mBackBuffer;
+  wl_callback*              mFrameCallback;
+  wl_surface*               mFrameCallbackSurface;
+  bool                      mDelayedCommit;
+  bool                      mFullScreenDamage;
+  bool                      mIsMainThread;
 };
 
 }  // namespace widget
