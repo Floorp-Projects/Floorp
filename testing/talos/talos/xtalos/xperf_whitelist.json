@@ -11,6 +11,9 @@
   "C:\\$logfile": {
     "ignore": true
   },
+  "Z:\\$logfile": {
+    "ignore": true
+  },
   "C:\\Windows\\Prefetch\\{prefetch}.pf": {
     "ignore": true
   },
