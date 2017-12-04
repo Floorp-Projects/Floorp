@@ -54,6 +54,7 @@
 
   skin/classic/browser/notification-icons/camera-blocked.svg                (../shared/notification-icons/camera-blocked.svg)
   skin/classic/browser/notification-icons/camera.svg                        (../shared/notification-icons/camera.svg)
+  skin/classic/browser/notification-icons/canvas-blocked.svg                (../shared/notification-icons/canvas-blocked.svg)
   skin/classic/browser/notification-icons/canvas.svg                        (../shared/notification-icons/canvas.svg)
   skin/classic/browser/notification-icons/default-info.svg                  (../shared/notification-icons/default-info.svg)
   skin/classic/browser/notification-icons/desktop-notification-blocked.svg  (../shared/notification-icons/desktop-notification-blocked.svg)
