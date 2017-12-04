@@ -292,12 +292,11 @@ NS_IMPL_ISUPPORTS(nsWaylandDisplay, nsISupports);
 
 nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
   : mThreadId(PR_GetCurrentThread())
-  , mDisplay(aDisplay)
-  , mDisplay(aDisplay)
   // gfx::SurfaceFormat::B8G8R8A8 is a basic Wayland format
   // and is always present.
   , mFormat(gfx::SurfaceFormat::B8G8R8A8)
   , mShm(nullptr)
+  , mDisplay(aDisplay)
 {
   if (NS_IsMainThread()) {
     // Use default event queue in main thread operated by Gtk+.
