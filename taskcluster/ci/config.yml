@@ -81,5 +81,5 @@ try:
             - 'sm-fuzzing'
             - 'sm-rust-bindings'
         'win32':
-            - 'sm-plain'
-            - 'sm-compacting'
+            - 'sm-plain-windows'
+            - 'sm-compacting-windows'
