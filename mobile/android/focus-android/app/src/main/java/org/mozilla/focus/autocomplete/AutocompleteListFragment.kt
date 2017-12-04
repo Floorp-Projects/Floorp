@@ -264,7 +264,7 @@ open class AutocompleteListFragment : Fragment() {
             })
 
             handleView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
-            handleView.setOnTouchListener(View.OnTouchListener { _, event ->
+            handleView.setOnTouchListener({ _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                     itemTouchHelper.startDrag(this)
                 }
