@@ -41,7 +41,8 @@ add_task(async function() {
 
       let exceptions = [
         {name: "bug 1403648 - urlbar down arrow shouldn't flicker",
-         condition: r => r.h == 5 && inRange(r.w, 8, 9) && // 5x9px area
+         condition: r => // 5x9px area, sometimes less at the end of the opacity transition
+                         inRange(r.h, 3, 5) && inRange(r.w, 7, 9) &&
                          inRange(r.y1, 40, 80) && // in the toolbar
                          // at ~80% of the window width
                          inRange(r.x1, width * .75, width * .9)
