@@ -246,6 +246,26 @@ add_task(async function test_invalid_records() {
   ]);
 });
 
+add_task(async function test_unknowingly_invalid_records() {
+  _("Make sure we handle rejection of records by places gracefully.");
+  let oldCAU = store._canAddURI;
+  store._canAddURI = () => true;
+  try {
+    _("Make sure that when places rejects this record we record it as failed");
+    let guid = Utils.makeGUID();
+    let result = await store.applyIncomingBatch([
+      {id: guid,
+       histUri: "javascript:''",
+       title: "javascript:''",
+       visits: [{date: TIMESTAMP3,
+                 type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+    ]);
+    deepEqual(result, [guid]);
+  } finally {
+    store._canAddURI = oldCAU;
+  }
+});
+
 add_task(async function test_clamp_visit_dates() {
   let futureVisitTime = Date.now() + 5 * 60 * 1000;
   let recentVisitTime = Date.now() - 5 * 60 * 1000;
