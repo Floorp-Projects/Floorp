@@ -155,7 +155,7 @@ public:
 
   private:
     static const double constexpr EXPIRY_TIME_MILLISECONDS = 10 * 1000;
-    uint32_t mCsrc;
+    const uint32_t mCsrc;
     DOMHighResTimeStamp mTimestamp;
   };
 
@@ -203,7 +203,7 @@ public:
 
     // Creates a cycle, which we break with Detach
     RefPtr<MediaPipeline> mPipeline;
-    nsCOMPtr<nsIEventTarget> mStsThread;
+    const nsCOMPtr<nsIEventTarget> mStsThread;
   };
 
 protected:
@@ -250,10 +250,12 @@ protected:
   virtual void OnRtpPacketReceived() {};
   void IncrementRtcpPacketsReceived();
 
-  virtual nsresult SendPacket(TransportFlow* aFlow, const void* aData, int aLen);
+  virtual nsresult SendPacket(const TransportFlow* aFlow,
+                              const void* aData,
+                              int aLen);
 
   // Process slots on transports
-  void StateChange(TransportFlow* flow, TransportLayer::State);
+  void StateChange(TransportFlow* aFlow, TransportLayer::State);
   void RtpPacketReceived(TransportLayer* aLayer,
                          const unsigned char* aData,
                          size_t aLen);
@@ -264,7 +266,7 @@ protected:
                       const unsigned char* aData,
                       size_t aLen);
 
-  DirectionType mDirection;
+  const DirectionType mDirection;
   size_t mLevel;
   RefPtr<MediaSessionConduit> mConduit; // Our conduit. Written on the main
                                         // thread. Read on STS thread.
@@ -275,8 +277,8 @@ protected:
 
   // Pointers to the threads we need. Initialized at creation
   // and used all over the place.
-  nsCOMPtr<nsIEventTarget> mMainThread;
-  nsCOMPtr<nsIEventTarget> mStsThread;
+  const nsCOMPtr<nsIEventTarget> mMainThread;
+  const nsCOMPtr<nsIEventTarget> mStsThread;
 
   // Created in c'tor. Referenced by the conduit.
   RefPtr<PipelineTransport> mTransport;
@@ -294,12 +296,12 @@ protected:
   std::map<uint32_t, RtpCSRCStats> mCsrcStats;
 
   // Written in c'tor. Read on STS thread.
-  std::string mPc;
+  const std::string mPc;
   std::string mDescription;
 
   // Written in c'tor, all following accesses are on the STS thread.
   nsAutoPtr<MediaPipelineFilter> mFilter;
-  nsAutoPtr<webrtc::RtpHeaderParser> mRtpParser;
+  const nsAutoPtr<webrtc::RtpHeaderParser> mRtpParser;
 
   nsAutoPtr<PacketDumper> mPacketDumper;
 
@@ -307,7 +309,7 @@ private:
   // Gets the current time as a DOMHighResTimeStamp
   static DOMHighResTimeStamp GetNow();
 
-  bool IsRtp(const unsigned char* aData, size_t aLen);
+  bool IsRtp(const unsigned char* aData, size_t aLen) const;
   // Must be called on the STS thread.  Must be called after DetachMedia().
   void DetachTransport_s();
 };
@@ -325,7 +327,7 @@ public:
   NS_IMETHOD Run() override { return NS_OK; }
 
 private:
-  RefPtr<MediaSessionConduit> mConduit;
+  const RefPtr<MediaSessionConduit> mConduit;
 };
 
 // A specialization of pipeline for reading from an input device
@@ -350,7 +352,7 @@ public:
   // When the principal of the domtrack changes, it calls through to here
   // so that we can determine whether to enable track transmission.
   // `track` has to be null or equal `mDomTrack` for us to apply the update.
-  virtual void UpdateSinkIdentity_m(dom::MediaStreamTrack* aTrack,
+  virtual void UpdateSinkIdentity_m(const dom::MediaStreamTrack* aTrack,
                                     nsIPrincipal* aPrincipal,
                                     const PeerIdentity* aSinkIdentity);
 
@@ -376,11 +378,11 @@ protected:
   void SetDescription();
 
 private:
-  RefPtr<PipelineListener> mListener;
+  const bool mIsVideo;
+  const RefPtr<PipelineListener> mListener;
+  const RefPtr<VideoFrameFeeder> mFeeder;
   RefPtr<AudioProxyThread> mAudioProcessing;
-  RefPtr<VideoFrameFeeder> mFeeder;
   RefPtr<VideoFrameConverter> mConverter;
-  bool mIsVideo;
   RefPtr<dom::MediaStreamTrack> mDomTrack;
   bool mTransmitting;
 };
@@ -464,7 +466,7 @@ private:
   // Separate class to allow ref counting
   class PipelineListener;
 
-  RefPtr<PipelineRenderer> mRenderer;
+  const RefPtr<PipelineRenderer> mRenderer;
   RefPtr<PipelineListener> mListener;
 };
 

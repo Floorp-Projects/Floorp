@@ -335,18 +335,16 @@ protected:
     ImageFormat format = aImage->GetFormat();
     if (format == ImageFormat::PLANAR_YCBCR) {
       // Cast away constness b/c some of the accessors are non-const
-      PlanarYCbCrImage* yuv = const_cast<PlanarYCbCrImage*>(
-        static_cast<const PlanarYCbCrImage*>(aImage));
-
-      const PlanarYCbCrData* data = yuv->GetData();
+      const PlanarYCbCrData* data =
+        static_cast<const PlanarYCbCrImage*>(aImage)->GetData();
       if (data) {
         uint8_t* y = data->mYChannel;
         uint8_t* cb = data->mCbChannel;
         uint8_t* cr = data->mCrChannel;
         int32_t yStride = data->mYStride;
         int32_t cbCrStride = data->mCbCrStride;
-        uint32_t width = yuv->GetSize().width;
-        uint32_t height = yuv->GetSize().height;
+        uint32_t width = aImage->GetSize().width;
+        uint32_t height = aImage->GetSize().height;
 
         rtc::Callback0<void> callback_unused;
         rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
@@ -594,7 +592,7 @@ protected:
   }
 
   RefPtr<AudioSessionConduit> mConduit;
-  RefPtr<AutoTaskQueue> mTaskQueue;
+  const RefPtr<AutoTaskQueue> mTaskQueue;
   // Only accessed on mTaskQueue
   UniquePtr<AudioPacketizer<int16_t, int16_t>> mPacketizer;
   // A buffer to hold a single packet of audio.
@@ -625,7 +623,6 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
   , mRtpBytesSent(0)
   , mRtpBytesReceived(0)
   , mPc(aPc)
-  , mDescription()
   , mRtpParser(webrtc::RtpHeaderParser::Create())
   , mPacketDumper(new PacketDumper(mPc))
 {
@@ -989,7 +986,7 @@ MediaPipeline::UpdateRtcpMuxState(TransportInfo& aInfo)
 }
 
 nsresult
-MediaPipeline::SendPacket(TransportFlow* aFlow, const void* aData, int aLen)
+MediaPipeline::SendPacket(const TransportFlow* aFlow, const void* aData, int aLen)
 {
   ASSERT_ON_THREAD(mStsThread);
 
@@ -1273,7 +1270,7 @@ MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer,
 }
 
 bool
-MediaPipeline::IsRtp(const unsigned char* aData, size_t aLen)
+MediaPipeline::IsRtp(const unsigned char* aData, size_t aLen) const
 {
   if (aLen < 2)
     return false;
@@ -1523,8 +1520,14 @@ MediaPipelineTransmit::MediaPipelineTransmit(
                   aMainThread,
                   aStsThread,
                   aConduit)
-  , mListener(new PipelineListener(aConduit))
   , mIsVideo(aIsVideo)
+  , mListener(new PipelineListener(aConduit))
+  , mFeeder(aIsVideo ? MakeAndAddRef<VideoFrameFeeder>(mListener)
+                     : nullptr) // For video we send frames to an
+                                // async VideoFrameConverter that
+                                // calls back to a VideoFrameFeeder
+                                // that feeds I420 frames to
+                                // VideoConduit.
   , mDomTrack(aDomTrack)
   , mTransmitting(false)
 {
@@ -1534,14 +1537,8 @@ MediaPipelineTransmit::MediaPipelineTransmit(
       static_cast<AudioSessionConduit*>(aConduit.get()));
     mListener->SetAudioProxy(mAudioProcessing);
   } else { // Video
-    // For video we send frames to an async VideoFrameConverter that calls
-    // back to a VideoFrameFeeder that feeds I420 frames to VideoConduit.
-
-    mFeeder = MakeAndAddRef<VideoFrameFeeder>(mListener);
-
     mConverter = MakeAndAddRef<VideoFrameConverter>();
     mConverter->AddListener(mFeeder);
-
     mListener->SetVideoFrameConverter(mConverter);
   }
 }
@@ -1650,7 +1647,7 @@ MediaPipelineTransmit::IsVideo() const
 }
 
 void
-MediaPipelineTransmit::UpdateSinkIdentity_m(MediaStreamTrack* aTrack,
+MediaPipelineTransmit::UpdateSinkIdentity_m(const MediaStreamTrack* aTrack,
                                             nsIPrincipal* aPrincipal,
                                             const PeerIdentity* aSinkIdentity)
 {
@@ -2022,17 +2019,14 @@ MediaPipelineTransmit::PipelineListener::NewData(const MediaSegment& aMedia,
   if (aMedia.GetType() == MediaSegment::AUDIO) {
     MOZ_RELEASE_ASSERT(aRate > 0);
 
-    AudioSegment* audio =
-      const_cast<AudioSegment*>(static_cast<const AudioSegment*>(&aMedia));
-    for (AudioSegment::ChunkIterator iter(*audio); !iter.IsEnded();
+    const AudioSegment* audio = static_cast<const AudioSegment*>(&aMedia);
+    for (AudioSegment::ConstChunkIterator iter(*audio); !iter.IsEnded();
          iter.Next()) {
       mAudioProcessing->QueueAudioChunk(aRate, *iter, mEnabled);
     }
   } else {
-    VideoSegment* video =
-      const_cast<VideoSegment*>(static_cast<const VideoSegment*>(&aMedia));
-    VideoSegment::ChunkIterator iter(*video);
-    for (VideoSegment::ChunkIterator iter(*video); !iter.IsEnded();
+    const VideoSegment* video = static_cast<const VideoSegment*>(&aMedia);
+    for (VideoSegment::ConstChunkIterator iter(*video); !iter.IsEnded();
          iter.Next()) {
       mConverter->QueueVideoChunk(*iter, !mEnabled);
     }
@@ -2070,7 +2064,7 @@ public:
   void TrackAdded(TrackTicks aTime);
 
 private:
-  RefPtr<GenericReceiveListener> mListener;
+  const RefPtr<GenericReceiveListener> mListener;
 };
 
 class GenericReceiveListener : public MediaStreamListener
@@ -2170,7 +2164,7 @@ public:
         mListener->SetPrincipalHandle_msg(mPrincipalHandle);
       }
 
-      RefPtr<GenericReceiveListener> mListener;
+      const RefPtr<GenericReceiveListener> mListener;
       PrincipalHandle mPrincipalHandle;
     };
 
