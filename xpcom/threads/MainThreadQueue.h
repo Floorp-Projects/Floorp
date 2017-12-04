@@ -23,10 +23,10 @@ CreateMainThread(nsIIdlePeriod* aIdlePeriod, SynchronizedQueueT** aSynchronizedQ
   using MainThreadQueueT = PrioritizedEventQueue<InnerQueueT>;
 
   auto queue = MakeUnique<MainThreadQueueT>(
-    MakeUnique<InnerQueueT>(EventPriority::High),
-    MakeUnique<InnerQueueT>(EventPriority::Input),
-    MakeUnique<InnerQueueT>(EventPriority::Normal),
-    MakeUnique<InnerQueueT>(EventPriority::Idle),
+    MakeUnique<InnerQueueT>(),
+    MakeUnique<InnerQueueT>(),
+    MakeUnique<InnerQueueT>(),
+    MakeUnique<InnerQueueT>(),
     do_AddRef(aIdlePeriod));
 
   MainThreadQueueT* prioritized = queue.get();
