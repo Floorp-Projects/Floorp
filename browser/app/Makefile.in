@@ -78,24 +78,24 @@ MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_A
 .PHONY: repackage
 tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME) features
 	rm -rf $(dist_dest)
-	$(MKDIR) -p '$(dist_dest)/Contents/MacOS'
-	$(MKDIR) -p '$(dist_dest)/$(LPROJ)'
-	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents '$(dist_dest)' --exclude English.lproj
-	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ '$(dist_dest)/$(LPROJ)'
-	sed -e 's/%APP_VERSION%/$(MOZ_APP_VERSION)/' -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' -e 's/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/' -e 's/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/' -e 's|%MOZ_DEVELOPER_REPO_PATH%|$(topsrcdir)|' -e 's|%MOZ_DEVELOPER_OBJ_PATH%|$(topobjdir)|' $(srcdir)/macbuild/Contents/Info.plist.in > '$(dist_dest)/Contents/Info.plist'
-	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > '$(dist_dest)/$(LPROJ)/InfoPlist.strings'
-	rsync -a --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ '$(dist_dest)/Contents/Resources'
-	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ '$(dist_dest)/Contents/MacOS'
-	$(RM) '$(dist_dest)/Contents/MacOS/$(MOZ_APP_NAME)'
-	rsync -aL $(DIST)/bin/$(MOZ_APP_NAME) '$(dist_dest)/Contents/MacOS'
-	cp -RL $(DIST)/branding/firefox.icns '$(dist_dest)/Contents/Resources/firefox.icns'
-	cp -RL $(DIST)/branding/document.icns '$(dist_dest)/Contents/Resources/document.icns'
-	$(MKDIR) -p '$(dist_dest)/Contents/Library/LaunchServices'
+	$(MKDIR) -p $(dist_dest)/Contents/MacOS
+	$(MKDIR) -p $(dist_dest)/$(LPROJ)
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/$(LPROJ)
+	sed -e 's/%APP_VERSION%/$(MOZ_APP_VERSION)/' -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' -e 's/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/' -e 's/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/' -e 's|%MOZ_DEVELOPER_REPO_PATH%|$(topsrcdir)|' -e 's|%MOZ_DEVELOPER_OBJ_PATH%|$(topobjdir)|' $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
+	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/$(LPROJ)/InfoPlist.strings
+	rsync -a --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ $(dist_dest)/Contents/Resources
+	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ $(dist_dest)/Contents/MacOS
+	$(RM) $(dist_dest)/Contents/MacOS/$(MOZ_APP_NAME)
+	rsync -aL $(DIST)/bin/$(MOZ_APP_NAME) $(dist_dest)/Contents/MacOS
+	cp -RL $(DIST)/branding/firefox.icns $(dist_dest)/Contents/Resources/firefox.icns
+	cp -RL $(DIST)/branding/document.icns $(dist_dest)/Contents/Resources/document.icns
+	$(MKDIR) -p $(dist_dest)/Contents/Library/LaunchServices
 ifdef MOZ_UPDATER
-	mv -f '$(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater' '$(dist_dest)/Contents/Library/LaunchServices'
-	ln -s ../../../../Library/LaunchServices/org.mozilla.updater '$(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater'
+	mv -f $(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater $(dist_dest)/Contents/Library/LaunchServices
+	ln -s ../../../../Library/LaunchServices/org.mozilla.updater $(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater
 endif
-	printf APPLMOZB > '$(dist_dest)/Contents/PkgInfo'
+	printf APPLMOZB > $(dist_dest)/Contents/PkgInfo
 endif
 
 .PHONY: features
