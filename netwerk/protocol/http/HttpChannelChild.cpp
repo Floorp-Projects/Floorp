@@ -2958,6 +2958,13 @@ HttpChannelChild::PreferAlternativeDataType(const nsACString & aType)
 }
 
 NS_IMETHODIMP
+HttpChannelChild::GetPreferredAlternativeDataType(nsACString & aType)
+{
+  aType = mPreferredCachedAltDataType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelChild::GetAlternativeDataType(nsACString & aType)
 {
   // Must be called during or after OnStartRequest
