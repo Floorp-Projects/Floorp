@@ -373,30 +373,11 @@ struct ParamTraits<NPRect>
 };
 
 template <>
-struct ParamTraits<NPWindowType>
-{
-  typedef NPWindowType paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    aMsg->WriteInt16(int16_t(aParam));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    int16_t result;
-    if (aMsg->ReadInt16(aIter, &result)) {
-      *aResult = paramType(result);
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"%d", int16_t(aParam)));
-  }
-};
+struct ParamTraits<NPWindowType> :
+  public ContiguousEnumSerializerInclusive<NPWindowType,
+                                           NPWindowType::NPWindowTypeWindow,
+                                           NPWindowType::NPWindowTypeDrawable>
+{};
 
 template <>
 struct ParamTraits<mozilla::plugins::NPRemoteWindow>
@@ -670,76 +651,26 @@ struct ParamTraits<mozilla::plugins::IPCByteRange>
 };
 
 template <>
-struct ParamTraits<NPNVariable>
-{
-  typedef NPNVariable paramType;
+struct ParamTraits<NPNVariable> :
+  public ContiguousEnumSerializer<NPNVariable,
+                                  NPNVariable::NPNVxDisplay,
+                                  NPNVariable::NPNVLast>
+{};
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, int(aParam));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    int intval;
-    if (ReadParam(aMsg, aIter, &intval)) {
-      *aResult = paramType(intval);
-      return true;
-    }
-    return false;
-  }
-};
+// The only accepted value is NPNURLVariable::NPNURLVProxy
+template<>
+struct ParamTraits<NPNURLVariable> :
+  public ContiguousEnumSerializerInclusive<NPNURLVariable,
+                                           NPNURLVariable::NPNURLVProxy,
+                                           NPNURLVariable::NPNURLVProxy>
+{};
 
 template<>
-struct ParamTraits<NPNURLVariable>
-{
-  typedef NPNURLVariable paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, int(aParam));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    int intval;
-    if (ReadParam(aMsg, aIter, &intval) &&
-        intval == NPNURLVProxy) {
-      *aResult = paramType(intval);
-      return true;
-    }
-    return false;
-  }
-};
-
-
-template<>
-struct ParamTraits<NPCoordinateSpace>
-{
-  typedef NPCoordinateSpace paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, int32_t(aParam));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    int32_t intval;
-    if (ReadParam(aMsg, aIter, &intval)) {
-      switch (intval) {
-      case NPCoordinateSpacePlugin:
-      case NPCoordinateSpaceWindow:
-      case NPCoordinateSpaceFlippedWindow:
-      case NPCoordinateSpaceScreen:
-      case NPCoordinateSpaceFlippedScreen:
-        *aResult = paramType(intval);
-        return true;
-      }
-    }
-    return false;
-  }
-};
+struct ParamTraits<NPCoordinateSpace> :
+  public ContiguousEnumSerializerInclusive<NPCoordinateSpace,
+                                           NPCoordinateSpace::NPCoordinateSpacePlugin,
+                                           NPCoordinateSpace::NPCoordinateSpaceFlippedScreen>
+{};
 
 template <>
 struct ParamTraits<mozilla::plugins::NPAudioDeviceChangeDetailsIPC>
