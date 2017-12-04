@@ -600,7 +600,7 @@ private:
 
   const Kind mKind;
 
-  // Nullptr if this is an XBL style set, of if we've been already detached from
+  // Nullptr if this is an XBL style set, or if we've been already detached from
   // our shell.
   nsPresContext* MOZ_NON_OWNING_REF mPresContext = nullptr;
 
