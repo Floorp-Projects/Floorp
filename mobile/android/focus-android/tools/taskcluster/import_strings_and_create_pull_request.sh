@@ -13,8 +13,7 @@ cd "$(dirname "$0")"
 cd ../..
 
 # Import strings from L10N repository
-tools/l10n/import-strings.sh > import-log.txt
-cat import-log.txt
+tools/l10n/import-strings.sh | tee import-log.txt ; test ${PIPESTATUS[0]} -eq 0
 
 # Timestamp used in branch name and commit
 TIMESTAMP=`date "+%Y%m%d-%H%M%S"`
