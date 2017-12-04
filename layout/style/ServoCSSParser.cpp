@@ -21,11 +21,12 @@ ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
                              nscolor aCurrentColor,
                              const nsAString& aValue,
                              nscolor* aResultColor,
-                             bool* aWasCurrentColor)
+                             bool* aWasCurrentColor,
+                             css::Loader* aLoader)
 {
   return Servo_ComputeColor(aStyleSet ? aStyleSet->RawSet() : nullptr,
                             aCurrentColor, &aValue, aResultColor,
-                            aWasCurrentColor);
+                            aWasCurrentColor, aLoader);
 }
 
 /* static */ bool

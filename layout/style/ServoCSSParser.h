@@ -12,6 +12,12 @@
 #include "mozilla/ServoBindings.h"
 
 namespace mozilla {
+namespace css {
+class Loader;
+} // namespace css
+} // namespace mozilla
+
+namespace mozilla {
 
 class ServoCSSParser
 {
@@ -34,13 +40,17 @@ public:
    * @param aResultColor The resulting computed color value.
    * @param aWasCurrentColor Whether aValue was currentcolor. Can be nullptr
    *   if the caller doesn't care.
+   * @param aLoader The CSS loader for document we're parsing a color for,
+   *   so that parse errors can be reported to the console. If nullptr, errors
+   *   won't be reported to the console.
    * @return Whether aValue was successfully parsed and aResultColor was set.
    */
   static bool ComputeColor(ServoStyleSet* aStyleSet,
                            nscolor aCurrentColor,
                            const nsAString& aValue,
                            nscolor* aResultColor,
-                           bool* aWasCurrentColor = nullptr);
+                           bool* aWasCurrentColor = nullptr,
+                           css::Loader* aLoader = nullptr);
 
   /**
    * Parses a IntersectionObserver's initialization dictionary's rootMargin
