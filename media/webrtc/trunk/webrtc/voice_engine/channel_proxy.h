@@ -28,6 +28,7 @@ class AudioSinkInterface;
 class PacketRouter;
 class RtcEventLog;
 class RtcpRttStats;
+class RtpPacketObserver;
 class RtpPacketSender;
 class Transport;
 class TransportFeedbackObserver;
@@ -110,6 +111,9 @@ class ChannelProxy {
   virtual void DisassociateSendChannel();
 
   virtual void SetRtcpRttStats(RtcpRttStats* rtcp_rtt_stats);
+
+  virtual void SetRtpPacketObserver(
+      RtpPacketObserver* observer);
 
  private:
   Channel* channel() const;

@@ -874,7 +874,7 @@ struct ColorU {
 struct FontInstanceOptions {
   FontRenderMode render_mode;
   SubpixelDirection subpx_dir;
-  bool synthetic_italics;
+  FontInstanceFlags flags;
   // When bg_color.a is != 0 and render_mode is FontRenderMode::Subpixel,
   // the text will be rendered with bg_color.r/g/b as an opaque estimated
   // background color.
@@ -883,42 +883,38 @@ struct FontInstanceOptions {
   bool operator==(const FontInstanceOptions& aOther) const {
     return render_mode == aOther.render_mode &&
            subpx_dir == aOther.subpx_dir &&
-           synthetic_italics == aOther.synthetic_italics &&
+           flags == aOther.flags &&
            bg_color == aOther.bg_color;
   }
 };
 
 #if defined(XP_WIN)
 struct FontInstancePlatformOptions {
-  bool use_embedded_bitmap;
-  bool force_gdi_rendering;
+  uint32_t unused;
 
   bool operator==(const FontInstancePlatformOptions& aOther) const {
-    return use_embedded_bitmap == aOther.use_embedded_bitmap &&
-           force_gdi_rendering == aOther.force_gdi_rendering;
+    return unused == aOther.unused;
   }
 };
 #endif
 
 #if defined(XP_MACOSX)
 struct FontInstancePlatformOptions {
-  bool font_smoothing;
+  uint32_t unused;
 
   bool operator==(const FontInstancePlatformOptions& aOther) const {
-    return font_smoothing == aOther.font_smoothing;
+    return unused == aOther.unused;
   }
 };
 #endif
 
 #if !(defined(XP_MACOSX) || defined(XP_WIN))
 struct FontInstancePlatformOptions {
-  uint16_t flags;
   FontLCDFilter lcd_filter;
   FontHinting hinting;
 
   bool operator==(const FontInstancePlatformOptions& aOther) const {
-    return flags == aOther.flags &&
-           lcd_filter == aOther.lcd_filter &&
+    return lcd_filter == aOther.lcd_filter &&
            hinting == aOther.hinting;
   }
 };

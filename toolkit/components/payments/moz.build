@@ -23,3 +23,5 @@ SPHINX_TREES['docs'] = 'docs'
 TESTING_JS_MODULES += [
     'test/PaymentTestUtils.jsm',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

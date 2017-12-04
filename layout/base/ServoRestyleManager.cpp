@@ -427,7 +427,7 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
 }
 
 /* static */ void
-ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement)
+ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement, IncludeRoot aIncludeRoot)
 {
   if (!aElement->HasServoData()) {
     MOZ_ASSERT(!aElement->HasDirtyDescendantsForServo());
@@ -438,11 +438,13 @@ ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement)
   StyleChildrenIterator it(aElement);
   for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
     if (n->IsElement()) {
-      ClearServoDataFromSubtree(n->AsElement());
+      ClearServoDataFromSubtree(n->AsElement(), IncludeRoot::Yes);
     }
   }
 
-  aElement->ClearServoData();
+  if (MOZ_LIKELY(aIncludeRoot == IncludeRoot::Yes)) {
+    aElement->ClearServoData();
+  }
 }
 
 /* static */ void

@@ -859,6 +859,17 @@ class StreamId {
   char value_[kMaxSize+1]; // mozilla: make sure we have space to null term.
 };
 
+// Audio level of CSRCs See:
+// https://tools.ietf.org/html/rfc6465
+struct CsrcAudioLevelList {
+  CsrcAudioLevelList() : numAudioLevels(0) { }
+  CsrcAudioLevelList(const CsrcAudioLevelList&) = default;
+  CsrcAudioLevelList& operator=(const CsrcAudioLevelList&) = default;
+  uint8_t numAudioLevels;
+  // arrOfAudioLevels has the same ordering as RTPHeader.arrOfCSRCs
+  uint8_t arrOfAudioLevels[kRtpCsrcSize];
+};
+
 struct RTPHeaderExtension {
   RTPHeaderExtension();
   RTPHeaderExtension(const RTPHeaderExtension& rhs);
@@ -892,6 +903,7 @@ struct RTPHeaderExtension {
   StreamId repairedRtpStreamId;
 
   StreamId mId;
+  CsrcAudioLevelList csrcAudioLevels;
 };
 
 struct RTPHeader {

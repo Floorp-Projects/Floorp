@@ -341,7 +341,6 @@ private:
     NetAddr                 mSelfAddr; // getsockname()
     Atomic<bool, Relaxed>   mNetAddrIsSet;
     Atomic<bool, Relaxed>   mSelfAddrIsSet;
-    Atomic<bool, Relaxed>   mNetAddrPreResolved;
 
     nsAutoPtr<NetAddr>      mBindAddr;
 

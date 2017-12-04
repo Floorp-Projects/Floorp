@@ -45,7 +45,6 @@ img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAA
 img.onload = function () {
   ctx.imageSmoothingEnabled = false;
   ctx.save();
-  ctx.fillStyle = "rgb(127, 127, 127);";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.scale(16, 16);
   ctx.fillStyle = ctx.createPattern(img, 'no-repeat');
@@ -60,7 +59,6 @@ img.onload = function () {
 
   ctx.imageSmoothingEnabled = true;
   ctx.save();
-  ctx.fillStyle = "rgb(127, 127, 127);";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.scale(16, 16);
   ctx.fillStyle = ctx.createPattern(img, 'no-repeat');

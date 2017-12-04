@@ -391,21 +391,21 @@ ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutO
                                            Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
                                            std::vector<FontVariation>* aOutVariations)
 {
-  AntialiasMode aaMode = GetDefaultAAMode();
-  if (aaMode != AntialiasMode::SUBPIXEL) {
-    wr::FontInstanceOptions options;
-    options.render_mode =
-      aaMode == AntialiasMode::NONE ? wr::FontRenderMode::Mono : wr::FontRenderMode::Alpha;
-    options.subpx_dir = wr::SubpixelDirection::Horizontal;
-    options.synthetic_italics = false;
-    options.bg_color = wr::ToColorU(Color());
-    *aOutOptions = Some(options);
+  wr::FontInstanceOptions options;
+  options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode());
+  options.subpx_dir = wr::SubpixelDirection::Horizontal;
+  options.flags = 0;
+  if (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) {
+    options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
   }
-
-  wr::FontInstancePlatformOptions platformOptions;
-  platformOptions.use_embedded_bitmap = UseEmbeddedBitmaps();
-  platformOptions.force_gdi_rendering = ForceGDIMode();
-  *aOutPlatformOptions = Some(platformOptions);
+  if (UseEmbeddedBitmaps()) {
+    options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
+  }
+  if (ForceGDIMode()) {
+    options.flags |= wr::FontInstanceFlags::FORCE_GDI;
+  }
+  options.bg_color = wr::ToColorU(Color());
+  *aOutOptions = Some(options);
   return true;
 }
 

@@ -22,6 +22,7 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsServiceManagerUtils.h"
+#include "nsUnicodeProperties.h"
 #include "gfxPrefs.h"
 #include "cairo.h"
 #include "VsyncSource.h"
@@ -35,6 +36,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using namespace mozilla::unicode;
 using mozilla::intl::LocaleService;
 using mozilla::intl::OSPreferences;
 
@@ -166,19 +168,17 @@ gfxAndroidPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
     static const char kNotoSansCJKJP[] = "Noto Sans CJK JP";
     static const char kNotoColorEmoji[] = "Noto Color Emoji";
 
-    if (aNextCh == 0xfe0fu) {
-        // if char is followed by VS16, try for a color emoji glyph
-        aFontList.AppendElement(kNotoColorEmoji);
+    EmojiPresentation emoji = GetEmojiPresentation(aCh);
+    if (emoji != EmojiPresentation::TextOnly) {
+        if (aNextCh == kVariationSelector16 ||
+           (aNextCh != kVariationSelector15 &&
+            emoji == EmojiPresentation::EmojiDefault)) {
+            // if char is followed by VS16, try for a color emoji glyph
+            aFontList.AppendElement(kNotoColorEmoji);
+        }
     }
 
-    if (!IS_IN_BMP(aCh)) {
-        uint32_t p = aCh >> 16;
-        if (p == 1) { // try color emoji font, unless VS15 (text style) present
-            if (aNextCh != 0xfe0fu && aNextCh != 0xfe0eu) {
-                aFontList.AppendElement(kNotoColorEmoji);
-            }
-        }
-    } else {
+    if (IS_IN_BMP(aCh)) {
         // try language-specific "Droid Sans *" and "Noto Sans *" fonts for
         // certain blocks, as most devices probably have these
         uint8_t block = (aCh >> 8) & 0xff;

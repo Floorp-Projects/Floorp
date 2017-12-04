@@ -1687,22 +1687,10 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     referrer = referrerGrip.get();
   }
 
-  //
-  // block referrer if not on our white list...
-  //
-  static const char *const referrerWhiteList[] = {
-    "http",
-    "https",
-    "ftp",
-    nullptr
-  };
-  match = false;
-  const char *const *scheme = referrerWhiteList;
-  for (; *scheme && !match; ++scheme) {
-    rv = referrer->SchemeIs(*scheme, &match);
-    if (NS_FAILED(rv)) return rv;
+  // Enforce Referrer whitelist
+  if (!IsReferrerSchemeAllowed(referrer)) {
+    return NS_OK; // kick out....
   }
-  if (!match) return NS_OK; // kick out....
 
   //
   // Handle secure referrals.
@@ -3320,6 +3308,24 @@ HttpBaseChannel::AddCookiesToRequest()
   // If we are in the child process, we want the parent seeing any
   // cookie headers that might have been set by SetRequestHeader()
   SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, false);
+}
+
+/* static */
+bool
+HttpBaseChannel::IsReferrerSchemeAllowed(nsIURI *aReferrer)
+{
+  NS_ENSURE_TRUE(aReferrer, false);
+
+  nsAutoCString scheme;
+  nsresult rv = aReferrer->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (scheme.EqualsIgnoreCase("https") ||
+      scheme.EqualsIgnoreCase("http") ||
+      scheme.EqualsIgnoreCase("ftp")) {
+    return true;
+  }
+  return false;
 }
 
 bool

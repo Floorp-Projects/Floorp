@@ -1758,6 +1758,11 @@ html .toggle-button-end.vertical svg {
 .source-footer .blackbox-summary {
   color: var(--theme-body-color);
 }
+
+.source-footer .mapped-source {
+  color: var(--theme-body-color);
+  padding: 2.5px;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */

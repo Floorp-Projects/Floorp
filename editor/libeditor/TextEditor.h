@@ -187,18 +187,44 @@ protected:
                                          uint32_t aFlags,
                                          const nsACString& aCharset);
 
+  /**
+   * CreateBR() creates new <br> element and inserts it before the point,
+   * aNode - aOffset, and collapse selection if it's necessary.
+   *
+   * @param aNode       The container node to insert new <br> element.
+   * @param aOffset     The offset in aNode to insert new <br> element.
+   * @param aSelect     If eNone, this won't change selection.
+   *                    If eNext, selection will be collapsed after the <br>
+   *                    element.
+   *                    If ePrevious, selection will be collapsed at the <br>
+   *                    element.
+   * @return            The new <br> node.  If failed to create new <br> node,
+   *                    returns nullptr.
+   */
   already_AddRefed<Element> CreateBR(nsINode* aNode, int32_t aOffset,
                                      EDirection aSelect = eNone);
-  nsresult CreateBR(nsIDOMNode* aNode, int32_t aOffset,
-                    nsCOMPtr<nsIDOMNode>* outBRNode,
-                    EDirection aSelect = eNone);
-  already_AddRefed<Element> CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
-                                         int32_t* aInOutOffset,
-                                         EDirection aSelect);
-  nsresult CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
-                        int32_t* aInOutOffset,
-                        nsCOMPtr<nsIDOMNode>* outBRNode,
-                        EDirection aSelect);
+
+  /**
+   * CreateBRImpl() creates a <br> element and inserts it before aPointToInsert.
+   * Then, tries to collapse selection at or after the new <br> node if
+   * aSelect is not eNone.
+   * XXX Perhaps, this should be merged with CreateBR().
+   *
+   * @param aSelection          The selection of this editor.
+   * @param aPointToInsert      The DOM point where should be <br> node inserted
+   *                            before.
+   * @param aSelect             If eNone, this won't change selection.
+   *                            If eNext, selection will be collapsed after
+   *                            the <br> element.
+   *                            If ePrevious, selection will be collapsed at
+   *                            the <br> element.
+   * @return                    The new <br> node.  If failed to create new
+   *                            <br> node, returns nullptr.
+   */
+  already_AddRefed<Element>
+  CreateBRImpl(Selection& aSelection,
+               const EditorRawDOMPoint& aPointToInsert,
+               EDirection aSelect);
 
   /**
    * Factored methods for handling insertion of data from transferables

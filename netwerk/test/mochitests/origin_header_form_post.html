@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+    <script>
+     function submitForm() {
+         document.getElementById("form").submit();
+     }
+    </script>
+</head>
+<body onload="submitForm()">
+    <form action="http://Mochi.test:8888/tests/netwerk/test/mochitests/origin_header.sjs"
+          method="POST"
+          id="form">
+        <input type="submit" value="Submit POST">
+    </form>
+</body>
+</html>

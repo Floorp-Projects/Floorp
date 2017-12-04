@@ -62,11 +62,6 @@ xul|*.numberbox-input-box {
   border-width: 0;
 }
 
-xul|description {
-  font-size: 1.25rem;
-  line-height: 22px;
-}
-
 xul|*.text-link:-moz-focusring {
   color: var(--in-content-link-highlight);
   text-decoration: underline;
@@ -114,14 +109,6 @@ xul|*.spinbuttons-button > xul|*.button-box > xul|*.button-text {
 xul|textbox[type="search"]:not([searchbutton]) > .textbox-input-box > .textbox-search-sign {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
   margin-inline-end: 5px;
-}
-
-*|*.header-name {
-  font-size: 2rem;
-}
-
-*|*.category-name {
-  font-size: 1.45rem;
 }
 
 html|button {

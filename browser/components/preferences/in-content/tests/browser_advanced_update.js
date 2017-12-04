@@ -56,7 +56,6 @@ const mockUpdateManager = {
       name: "Firefox Developer Edition 49.0a2",
       statusText: "The Update was successfully installed",
       buildID: "20160728004010",
-      type: "minor",
       installDate: 1469763105156,
       detailsURL: "https://www.mozilla.org/firefox/aurora/"
     },
@@ -64,7 +63,6 @@ const mockUpdateManager = {
       name: "Firefox Developer Edition 43.0a2",
       statusText: "The Update was successfully installed",
       buildID: "20150929004011",
-      type: "minor",
       installDate: 1443585886224,
       detailsURL: "https://www.mozilla.org/firefox/aurora/"
     },
@@ -72,7 +70,6 @@ const mockUpdateManager = {
       name: "Firefox Developer Edition 42.0a2",
       statusText: "The Update was successfully installed",
       buildID: "20150920004018",
-      type: "major",
       installDate: 1442818147544,
       detailsURL: "https://www.mozilla.org/firefox/aurora/"
     }
@@ -146,7 +143,6 @@ add_task(async function() {
     updateData = mockUpdateManager.getUpdateAt(i);
 
     is(update.name, updateData.name + " (" + updateData.buildID + ")", "Wrong update name");
-    is(update.type, updateData.type == "major" ? "New Version" : "Security Update", "Wrong update type");
     is(update.installDate, formatInstallDate(updateData.installDate), "Wrong update installDate");
     is(update.detailsURL, updateData.detailsURL, "Wrong update detailsURL");
     is(update.status, updateData.statusText, "Wrong update status");

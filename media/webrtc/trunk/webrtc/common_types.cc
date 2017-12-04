@@ -50,7 +50,8 @@ RTPHeaderExtension::RTPHeaderExtension()
       voiceActivity(false),
       audioLevel(0),
       hasVideoRotation(false),
-      videoRotation(kVideoRotation_0) {
+      videoRotation(kVideoRotation_0),
+      csrcAudioLevels() {
 }
 
 RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& rhs) {

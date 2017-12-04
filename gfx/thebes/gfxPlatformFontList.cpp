@@ -960,20 +960,9 @@ gfxPlatformFontList::ResolveGenericFontNames(
     nsAtom* langGroup = GetLangGroupForPrefLang(aPrefLang);
     NS_ASSERTION(langGroup, "null lang group for pref lang");
 
-    // lookup and add platform fonts uniquely
-    for (const nsString& genericFamily : genericFamilies) {
-        gfxFontStyle style;
-        style.language = langGroup;
-        style.systemFont = false;
-        AutoTArray<gfxFontFamily*,10> families;
-        FindAndAddFamilies(genericFamily, &families, FindFamiliesFlags(0),
-                           &style);
-        for (gfxFontFamily* f : families) {
-            if (!aGenericFamilies->Contains(f)) {
-                aGenericFamilies->AppendElement(f);
-            }
-        }
-    }
+    gfxPlatformFontList::GetFontFamiliesFromGenericFamilies(genericFamilies,
+                                                           langGroup,
+                                                           aGenericFamilies);
 
 #if 0  // dump out generic mappings
     printf("%s ===> ", prefFontName.get());
@@ -985,6 +974,43 @@ gfxPlatformFontList::ResolveGenericFontNames(
 #endif
 }
 
+void
+gfxPlatformFontList::ResolveEmojiFontNames(
+    nsTArray<RefPtr<gfxFontFamily>>* aGenericFamilies)
+{
+    // emoji preference has no lang name
+    AutoTArray<nsString,4> genericFamilies;
+
+    nsAutoCString prefFontListName("font.name-list.emoji");
+    gfxFontUtils::AppendPrefsFontList(prefFontListName.get(), genericFamilies);
+
+    gfxPlatformFontList::GetFontFamiliesFromGenericFamilies(genericFamilies,
+                                                            nullptr,
+                                                            aGenericFamilies);
+}
+
+void
+gfxPlatformFontList::GetFontFamiliesFromGenericFamilies(
+    nsTArray<nsString>& aGenericNameFamilies,
+    nsAtom* aLangGroup,
+    nsTArray<RefPtr<gfxFontFamily>>* aGenericFamilies)
+{
+    // lookup and add platform fonts uniquely
+    for (const nsString& genericFamily : aGenericNameFamilies) {
+        gfxFontStyle style;
+        style.language = aLangGroup;
+        style.systemFont = false;
+        AutoTArray<gfxFontFamily*,10> families;
+        FindAndAddFamilies(genericFamily, &families, FindFamiliesFlags(0),
+                           &style);
+        for (gfxFontFamily* f : families) {
+            if (!aGenericFamilies->Contains(f)) {
+                aGenericFamilies->AppendElement(f);
+            }
+        }
+    }
+}
+
 nsTArray<RefPtr<gfxFontFamily>>*
 gfxPlatformFontList::GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
                                            eFontPrefLang aPrefLang)
@@ -992,6 +1018,17 @@ gfxPlatformFontList::GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
     // treat -moz-fixed as monospace
     if (aGenericType == eFamily_moz_fixed) {
         aGenericType = eFamily_monospace;
+    }
+
+    if (aGenericType == eFamily_moz_emoji) {
+        // Emoji font has no lang
+        PrefFontList* prefFonts = mEmojiPrefFont.get();
+        if (MOZ_UNLIKELY(!prefFonts)) {
+            prefFonts = new PrefFontList;
+            ResolveEmojiFontNames(prefFonts);
+            mEmojiPrefFont.reset(prefFonts);
+        }
+        return prefFonts;
     }
 
     PrefFontList* prefFonts =
@@ -1298,6 +1335,10 @@ gfxPlatformFontList::AppendPrefLang(eFontPrefLang aPrefLangs[], uint32_t& aLen, 
 mozilla::FontFamilyType
 gfxPlatformFontList::GetDefaultGeneric(eFontPrefLang aLang)
 {
+    if (aLang == eFontPrefLang_Emoji) {
+      return eFamily_moz_emoji;
+    }
+
     // initialize lang group pref font defaults (i.e. serif/sans-serif)
     if (MOZ_UNLIKELY(mDefaultGenericsLangGroup.IsEmpty())) {
         mDefaultGenericsLangGroup.AppendElements(ArrayLength(gPrefLangNames));

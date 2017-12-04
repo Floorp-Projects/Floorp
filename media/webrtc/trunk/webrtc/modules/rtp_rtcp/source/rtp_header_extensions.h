@@ -152,5 +152,17 @@ class MId {
   static bool Write(uint8_t* data, const std::string& mid);
 };
 
+class CsrcAudioLevel {
+ public:
+  static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
+  static constexpr const char* kUri =
+      "urn:ietf:params:rtp-hdrext:csrc-audio-level";
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data,
+                    CsrcAudioLevelList* csrcAudioLevels);
+  static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
+  static bool Write(uint8_t* data, const CsrcAudioLevelList& csrcAudioLevels);
+};
+
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_HEADER_EXTENSIONS_H_

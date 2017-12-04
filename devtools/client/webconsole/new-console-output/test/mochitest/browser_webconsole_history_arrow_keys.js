@@ -7,43 +7,38 @@
 
 // See Bugs 594497 and 619598.
 
-var jsterm, inputNode, values;
-
-var TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                "bug 594497 and bug 619598";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
+const TEST_VALUES = [
+  "document",
+  "window",
+  "document.body",
+  "document;\nwindow;\ndocument.body",
+  "document.location",
+];
 
-  let hud = yield openConsole();
-
-  setup(hud);
-  performTests();
-
-  jsterm = inputNode = values = null;
-});
-
-function setup(HUD) {
-  jsterm = HUD.jsterm;
-  inputNode = jsterm.inputNode;
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
+  let { jsterm } = hud;
 
   jsterm.focus();
-
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
 
-  values = ["document", "window", "document.body"];
-  values.push(values.join(";\n"), "document.location");
-
-  // Execute each of the values;
-  for (let i = 0; i < values.length; i++) {
-    jsterm.setInputValue(values[i]);
+  info("Execute each test value in the console");
+  for (let value of TEST_VALUES) {
+    jsterm.setInputValue(value);
     jsterm.execute();
   }
-}
 
-function performTests() {
+  performTests(jsterm);
+});
+
+function performTests(jsterm) {
+  let { inputNode } = jsterm;
+  let values = TEST_VALUES;
+
   EventUtils.synthesizeKey("VK_UP", {});
-
 
   is(jsterm.getInputValue(), values[4],
      "VK_UP: jsterm.getInputValue() #4 is correct");
@@ -148,7 +143,7 @@ function performTests() {
   EventUtils.synthesizeKey("VK_DOWN", {});
 
   is(jsterm.getInputValue(), values[4],
-     "VK_DOWN: jsterm.getInputValue() #4 is correct");
+    "VK_DOWN: jsterm.getInputValue() #4 is correct");
 
   EventUtils.synthesizeKey("VK_DOWN", {});
 

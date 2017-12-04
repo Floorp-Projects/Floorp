@@ -3056,7 +3056,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
         return nullptr;
 
     // 2. search pref fonts
-    gfxFont* font = WhichPrefFontSupportsChar(aCh);
+    gfxFont* font = WhichPrefFontSupportsChar(aCh, aNextCh);
     if (font) {
         *aMatchType = gfxTextRange::kPrefsFallback;
         return font;
@@ -3337,12 +3337,22 @@ gfxFontGroup::ContainsUserFont(const gfxUserFontEntry* aUserFont)
 }
 
 gfxFont*
-gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
+gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh, uint32_t aNextCh)
 {
-    // get the pref font list if it hasn't been set up already
-    uint32_t unicodeRange = FindCharUnicodeRange(aCh);
+    eFontPrefLang charLang;
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-    eFontPrefLang charLang = pfl->GetFontPrefLangFor(unicodeRange);
+
+    EmojiPresentation emoji = GetEmojiPresentation(aCh);
+    if ((emoji != EmojiPresentation::TextOnly &&
+         (aNextCh == kVariationSelector16 ||
+          (emoji == EmojiPresentation::EmojiDefault &&
+           aNextCh != kVariationSelector15)))) {
+        charLang = eFontPrefLang_Emoji;
+    } else {
+        // get the pref font list if it hasn't been set up already
+        uint32_t unicodeRange = FindCharUnicodeRange(aCh);
+        charLang = pfl->GetFontPrefLangFor(unicodeRange);
+    }
 
     // if the last pref font was the first family in the pref list, no need to recheck through a list of families
     if (mLastPrefFont && charLang == mLastPrefLang &&

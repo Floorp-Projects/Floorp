@@ -26,16 +26,16 @@ const TESTCASES = [
       "cc-name": "*".repeat(201),
     },
     expectedRecord: {
-      address: {
+      address: [{
         "given-name": "John",
         "organization": "*".repeat(200),
         "address-level1": "",
         "country": "US",
-      },
-      creditCard: {
+      }],
+      creditCard: [{
         "cc-number": "1111222233334444",
         "cc-name": "",
-      },
+      }],
     },
   },
   {
@@ -50,7 +50,8 @@ const TESTCASES = [
       "organization": "Mozilla",
     },
     expectedRecord: {
-      address: undefined,
+      address: [],
+      creditCard: [],
     },
   },
   {
@@ -66,11 +67,12 @@ const TESTCASES = [
       "country": "United States",
     },
     expectedRecord: {
-      address: {
+      address: [{
         "given-name": "John",
         "organization": "Mozilla",
         "country": "United States",
-      },
+      }],
+      creditCard: [],
     },
   },
   {
@@ -86,11 +88,12 @@ const TESTCASES = [
       "country": "United States",
     },
     expectedRecord: {
-      address: {
+      address: [{
         "given-name": "John",
         "organization": "Mozilla",
         "country": "US",
-      },
+      }],
+      creditCard: [],
     },
   },
   {
@@ -108,11 +111,12 @@ const TESTCASES = [
       "tel-national": "1234567890",
     },
     expectedRecord: {
-      address: {
+      address: [{
         "given-name": "John",
         "organization": "Mozilla",
         "tel": "+11234567890",
-      },
+      }],
+      creditCard: [],
     },
   },
   {
@@ -130,12 +134,13 @@ const TESTCASES = [
       "tel": "1234",
     },
     expectedRecord: {
-      address: {
+      address: [{
         "given-name": "John",
         "organization": "Mozilla",
         "country": "United States",
         "tel": "",
-      },
+      }],
+      creditCard: [],
     },
   },
   {
@@ -153,12 +158,13 @@ const TESTCASES = [
       "tel": "1234567890123456",
     },
     expectedRecord: {
-      address: {
+      address: [{
         "given-name": "John",
         "organization": "Mozilla",
         "country": "United States",
         "tel": "",
-      },
+      }],
+      creditCard: [],
     },
   },
   {
@@ -176,12 +182,13 @@ const TESTCASES = [
       "tel": "12345###!!!",
     },
     expectedRecord: {
-      address: {
+      address: [{
         "given-name": "John",
         "organization": "Mozilla",
         "country": "United States",
         "tel": "",
-      },
+      }],
+      creditCard: [],
     },
   },
   {
@@ -197,7 +204,8 @@ const TESTCASES = [
       "organization": "Mozilla",
     },
     expectedRecord: {
-      address: undefined,
+      address: [],
+      creditCard: [],
     },
   },
   {
@@ -215,7 +223,8 @@ const TESTCASES = [
       "organization": "Mozilla",
     },
     expectedRecord: {
-      address: undefined,
+      address: [],
+      creditCard: [],
     },
   },
   {
@@ -231,11 +240,12 @@ const TESTCASES = [
       "cc-exp": "2022-06",
     },
     expectedRecord: {
-      creditCard: {
+      address: [],
+      creditCard: [{
         "cc-number": "4444000022220000",
         "cc-name": "Foo Bar",
         "cc-exp": "2022-06",
-      },
+      }],
     },
   },
   {
@@ -247,9 +257,10 @@ const TESTCASES = [
       "cc-number": "4444000022220000",
     },
     expectedRecord: {
-      creditCard: {
+      address: [],
+      creditCard: [{
         "cc-number": "4444000022220000",
-      },
+      }],
     },
   },
   {
@@ -265,7 +276,8 @@ const TESTCASES = [
       "cc-exp": "2022-06",
     },
     expectedRecord: {
-      creditCard: undefined,
+      address: [],
+      creditCard: [],
     },
   },
   {
@@ -279,9 +291,80 @@ const TESTCASES = [
       "cc-exp": "2022-06",
     },
     expectedRecord: {
-      creditCard: undefined,
+      address: [],
+      creditCard: [],
     },
   },
+  {
+    description: "A form with multiple sections",
+    document: `<form>
+                <input id="given-name" autocomplete="given-name">
+                <input id="organization" autocomplete="organization">
+                <input id="country" autocomplete="country">
+
+                <input id="given-name-shipping" autocomplete="shipping given-name">
+                <input id="family-name-shipping" autocomplete="shipping family-name">
+                <input id="organization-shipping" autocomplete="shipping organization">
+                <input id="country-shipping" autocomplete="shipping country">
+
+                <input id="given-name-billing" autocomplete="billing given-name">
+                <input id="organization-billing" autocomplete="billing organization">
+                <input id="country-billing" autocomplete="billing country">
+
+                <input id="cc-number-section-one" autocomplete="section-one cc-number">
+                <input id="cc-name-section-one" autocomplete="section-one cc-name">
+
+                <input id="cc-number-section-two" autocomplete="section-two cc-number">
+                <input id="cc-name-section-two" autocomplete="section-two cc-name">
+                <input id="cc-exp-section-two" autocomplete="section-two cc-exp">
+               </form>`,
+    formValue: {
+      "given-name": "Bar",
+      "organization": "Foo",
+      "country": "US",
+
+      "given-name-shipping": "John",
+      "family-name-shipping": "Doe",
+      "organization-shipping": "Mozilla",
+      "country-shipping": "US",
+
+      "given-name-billing": "Foo",
+      "organization-billing": "Bar",
+      "country-billing": "US",
+
+      "cc-number-section-one": "4444000022220000",
+      "cc-name-section-one": "John",
+
+      "cc-number-section-two": "4444000022221111",
+      "cc-name-section-two": "Foo Bar",
+      "cc-exp-section-two": "2026-26",
+    },
+    expectedRecord: {
+      address: [{
+        "given-name": "Bar",
+        "organization": "Foo",
+        "country": "US",
+      }, {
+        "given-name": "John",
+        "family-name": "Doe",
+        "organization": "Mozilla",
+        "country": "US",
+      }, {
+        "given-name": "Foo",
+        "organization": "Bar",
+        "country": "US",
+      }],
+      creditCard: [{
+        "cc-number": "4444000022220000",
+        "cc-name": "John",
+      }, {
+        "cc-number": "4444000022221111",
+        "cc-name": "Foo Bar",
+        "cc-exp": "2026-26",
+      }],
+    },
+  },
+
 ];
 
 for (let testcase of TESTCASES) {
@@ -301,12 +384,9 @@ for (let testcase of TESTCASES) {
 
     let record = handler.createRecords();
 
-    for (let type in testcase.expectedRecord) {
-      if (!testcase.expectedRecord[type]) {
-        do_check_eq(record[type], undefined);
-      } else {
-        Assert.deepEqual(record[type].record, testcase.expectedRecord[type]);
-      }
+    let expectedRecord = testcase.expectedRecord;
+    for (let type in record) {
+      Assert.deepEqual(record[type].map(secRecord => secRecord.record), expectedRecord[type]);
     }
   });
 }

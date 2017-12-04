@@ -56,6 +56,11 @@ public:
   NS_METHOD_(MozExternalRefCountType) AddRef(void);
   NS_METHOD_(MozExternalRefCountType) Release(void);
 
+  // Close the resource, stop any listeners, channels, etc.
+  // Cancels any currently blocking Read request and forces that request to
+  // return an error.
+  virtual nsresult Close() { return NS_OK; }
+
   // These methods are called off the main thread.
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if

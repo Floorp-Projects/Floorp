@@ -211,13 +211,29 @@ public:
                                              nsCOMPtr<nsINode>* aSplitNode,
                                              int32_t* aSplitOffset);
 
-  // InsertBreak inserts a br node at {aInOutParent,aInOutOffset}
-  // and makes any needed adjustments to ws around that point.
-  // example of fixup: normalws after {aInOutParent,aInOutOffset}
-  //                   needs to begin with nbsp.
-  already_AddRefed<dom::Element> InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
-                                             int32_t* aInOutOffset,
-                                             nsIEditor::EDirection aSelect);
+  /**
+   * InsertBreak() inserts a <br> node at (before) aPointToInsert and delete
+   * unnecessary whitespaces around there and/or replaces whitespaces with
+   * non-breaking spaces.  Note that if the point is in a text node, the
+   * text node will be split and insert new <br> node between the left node
+   * and the right node.
+   *
+   * @param aSelection      The selection for the editor.
+   * @param aPointToInsert  The point to insert new <br> element.  Note that
+   *                        it'll be inserted before this point.  I.e., the
+   *                        point will be the point of new <br>.
+   * @param aSelect         If eNone, this won't change selection.
+   *                        If eNext, selection will be collapsed after the
+   *                        <br> element.
+   *                        If ePrevious, selection will be collapsed at the
+   *                        <br> element.
+   * @return                The new <br> node.  If failed to create new <br>
+   *                        node, returns nullptr.
+   */
+  already_AddRefed<dom::Element>
+  InsertBreak(Selection& aSelection,
+              const EditorRawDOMPoint& aPointToInsert,
+              nsIEditor::EDirection aSelect);
 
   /**
    * InsertTextImpl() inserts aStringToInsert to aPointToInsert and makes any
@@ -301,6 +317,15 @@ protected:
       , mLeft(nullptr)
       , mRight(nullptr)
     {}
+
+    EditorRawDOMPoint StartPoint() const
+    {
+      return EditorRawDOMPoint(mStartNode, mStartOffset);
+    }
+    EditorRawDOMPoint EndPoint() const
+    {
+      return EditorRawDOMPoint(mEndNode, mEndOffset);
+    }
   };
 
   // A WSPoint struct represents a unique location within the ws run.  It is
@@ -346,29 +371,105 @@ protected:
                             nsINode* aBlockParent);
   nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   nsresult PrepareToSplitAcrossBlocksPriv();
-  nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
-                       nsINode* aEndNode, int32_t aEndOffset);
-  WSPoint GetCharAfter(nsINode* aNode, int32_t aOffset);
-  WSPoint GetCharBefore(nsINode* aNode, int32_t aOffset);
-  WSPoint GetCharAfter(const WSPoint& aPoint);
-  WSPoint GetCharBefore(const WSPoint& aPoint);
+
+  /**
+   * DeleteRange() removes the range between aStartPoint and aEndPoint.
+   * When aStartPoint and aEndPoint are same point, does nothing.
+   * When aStartPoint and aEndPoint are in same text node, removes characters
+   * between them.
+   * When aStartPoint is in a text node, removes the text data after the point.
+   * When aEndPoint is in a text node, removes the text data before the point.
+   * Removes any nodes between them.
+   */
+  nsresult DeleteRange(const EditorRawDOMPoint& aStartPoint,
+                       const EditorRawDOMPoint& aEndPoint);
+
+  /**
+   * GetNextCharPoint() returns next character's point of aPoint.  If there is
+   * no character after aPoint, mTextNode is set to nullptr.
+   */
+  WSPoint GetNextCharPoint(const EditorRawDOMPoint& aPoint);
+  WSPoint GetNextCharPoint(const WSPoint& aPoint);
+
+  /**
+   * GetPreviousCharPoint() returns previous character's point of of aPoint.
+   * If there is no character before aPoint, mTextNode is set to nullptr.
+   */
+  WSPoint GetPreviousCharPoint(const EditorRawDOMPoint& aPoint);
+  WSPoint GetPreviousCharPoint(const WSPoint& aPoint);
+
+  /**
+   * GetNextCharPointInternal() and GetPreviousCharPointInternal() are
+   * helper methods of GetNextCharPoint(const EditorRawDOMPoint&) and
+   * GetPreviousCharPoint(const EditorRawDOMPoint&).  When the container
+   * isn't in mNodeArray, they call one of these methods.  Then, these
+   * methods look for nearest text node in mNodeArray from aPoint.
+   * Then, will call GetNextCharPoint(const WSPoint&) or
+   * GetPreviousCharPoint(const WSPoint&) and returns its result.
+   */
+  WSPoint GetNextCharPointInternal(const EditorRawDOMPoint& aPoint);
+  WSPoint GetPreviousCharPointInternal(const EditorRawDOMPoint& aPoint);
+
   nsresult ConvertToNBSP(WSPoint aPoint);
   void GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
                         dom::Text** outStartNode, int32_t* outStartOffset,
                         dom::Text** outEndNode, int32_t* outEndOffset);
-  void FindRun(nsINode* aNode, int32_t aOffset, WSFragment** outRun,
-               bool after);
+
+  /**
+   * FindNearestRun() looks for a WSFragment which is closest to specified
+   * direction from aPoint.
+   *
+   * @param aPoint      The point to start to look for.
+   * @param aForward    true if caller needs to look for a WSFragment after the
+   *                    point in the DOM tree.  Otherwise, i.e., before the
+   *                    point, false.
+   * @return            Found WSFragment instance.
+   *                    If aForward is true and:
+   *                      if aPoint is end of a run, returns next run.
+   *                      if aPoint is start of a run, returns the run.
+   *                      if aPoint is before the first run, returns the first
+   *                      run.
+   *                      If aPoint is after the last run, returns nullptr.
+   *                    If aForward is false and:
+   *                      if aPoint is end of a run, returns the run.
+   *                      if aPoint is start of a run, returns its next run.
+   *                      if aPoint is before the first run, returns nullptr.
+   *                      if aPoint is after the last run, returns the last run.
+   */
+  WSFragment* FindNearestRun(const EditorRawDOMPoint& aPoint, bool aForward);
+
   char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset);
-  WSPoint GetWSPointAfter(nsINode* aNode, int32_t aOffset);
-  WSPoint GetWSPointBefore(nsINode* aNode, int32_t aOffset);
   nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
-  nsresult CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
-                             int32_t aOffset);
+
+  /**
+   * ReplacePreviousNBSPIfUnncessary() replaces previous character of aPoint
+   * if it's a NBSP and it's unnecessary.
+   *
+   * @param aRun        Current text run.  aPoint must be in this run.
+   * @param aPoint      Current insertion point.  Its previous character is
+   *                    unnecessary NBSP will be checked.
+   */
+  nsresult ReplacePreviousNBSPIfUnncessary(WSFragment* aRun,
+                                           const EditorRawDOMPoint& aPoint);
+
   nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
                             int32_t aOffset);
 
   nsresult Scrub();
   bool IsBlockNode(nsINode* aNode);
+
+  EditorRawDOMPoint Point() const
+  {
+    return EditorRawDOMPoint(mNode, mOffset);
+  }
+  EditorRawDOMPoint StartPoint() const
+  {
+    return EditorRawDOMPoint(mStartNode, mStartOffset);
+  }
+  EditorRawDOMPoint EndPoint() const
+  {
+    return EditorRawDOMPoint(mEndNode, mEndOffset);
+  }
 
   // The node passed to our constructor.
   nsCOMPtr<nsINode> mNode;

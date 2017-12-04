@@ -442,14 +442,20 @@ var AboutNetAndCertErrorListener = {
       automatic: evt.detail
     });
 
-    // if we're enabling reports, send a report for this failure
+    // If we're enabling reports, send a report for this failure.
     if (evt.detail) {
-      let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
-      sendAsyncMessage("Browser:SendSSLErrorReport", {
-        uri: { host, port },
-        securityInfo: getSerializedSecurityInfo(docShell),
-      });
+      let win = evt.originalTarget.ownerGlobal;
+      let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell);
 
+      let {securityInfo} = docShell.failedChannel;
+      securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+      let {host, port} = win.document.mozDocumentURIIfNotForErrorPages;
+
+      let errorReporter = Cc["@mozilla.org/securityreporter;1"]
+                            .getService(Ci.nsISecurityReporter);
+      errorReporter.reportTLSError(securityInfo, host, port);
     }
   },
 };

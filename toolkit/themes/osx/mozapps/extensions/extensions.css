@@ -4,6 +4,10 @@
 
 %include ../../../shared/extensions/extensions.inc.css
 
+:root > * {
+  font-size: 1.36em;
+}
+
 .no-auto-hide > .menulist-dropmarker {
   padding-inline-start: 0px !important;
 }

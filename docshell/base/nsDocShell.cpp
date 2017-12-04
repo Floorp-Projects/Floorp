@@ -6420,10 +6420,6 @@ nsDocShell::SetIsActive(bool aIsActive)
   // Keep track ourselves.
   mIsActive = aIsActive;
 
-  if (TabChild* tc = TabChild::GetFrom(this)) {
-    tc->OnDocShellActivated(aIsActive);
-  }
-
   // Clear prerender flag if necessary.
   if (mIsPrerendered && aIsActive) {
     MOZ_ASSERT(mPrerenderGlobalHistory.get());
@@ -13028,8 +13024,10 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
     srcdoc = VoidString();
   }
 
+  // If there is no valid triggeringPrincipal, we deny the load
+  MOZ_ASSERT(triggeringPrincipal, "need a valid triggeringPrincipal to load from history");
   if (!triggeringPrincipal) {
-    triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+    return NS_ERROR_FAILURE;
   }
 
   // Passing nullptr as aSourceDocShell gives the same behaviour as before

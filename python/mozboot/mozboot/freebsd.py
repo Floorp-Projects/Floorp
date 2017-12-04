@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+import sys
 
 from mozboot.base import BaseBootstrapper
 
@@ -19,6 +20,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'gtar',
             'mercurial',
             'pkgconf',
+            'py%s%s-sqlite3' % sys.version_info[0:2],
             'rust',
             'watchman',
             'zip',
@@ -34,6 +36,9 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'v4l_compat',
             'yasm',
         ]
+
+        if not self.which('as'):
+            self.packages.append('binutils')
 
         if not self.which('unzip'):
             self.packages.append('unzip')

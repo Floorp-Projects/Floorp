@@ -53,6 +53,10 @@ interface PeerConnectionImpl  {
                   optional unsigned long interToneGap = 70);
   [Throws]
   DOMString getDTMFToneBuffer(RTCRtpSender sender);
+  sequence<RTCRtpSourceEntry> getRtpSources(MediaStreamTrack track,
+                                            DOMHighResTimeStamp rtpSourceNow);
+  DOMHighResTimeStamp getNowInRtpSourceReferenceTime();
+
   [Throws]
   void replaceTrackNoRenegotiation(TransceiverImpl transceiverImpl,
                                    MediaStreamTrack? withTrack);
@@ -61,6 +65,13 @@ interface PeerConnectionImpl  {
 
   void addRIDExtension(MediaStreamTrack recvTrack, unsigned short extensionId);
   void addRIDFilter(MediaStreamTrack recvTrack, DOMString rid);
+
+  // Inserts CSRC data for the RtpSourceObserver for testing
+  void insertAudioLevelForContributingSource(MediaStreamTrack recvTrack,
+                                             unsigned long source,
+                                             DOMHighResTimeStamp timestamp,
+                                             boolean hasLevel,
+                                             byte level);
 
   void enablePacketDump(unsigned long level,
                         mozPacketDumpType type,

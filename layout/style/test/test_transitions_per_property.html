@@ -311,6 +311,12 @@ var supported_properties = {
 };
 
 if (SpecialPowers.getBoolPref("layout.css.shape-outside.enabled")) {
+  supported_properties["shape-image-threshold"] =
+    [ test_float_zeroToOne_transition,
+      // shape-image-threshold (like opacity) is clamped in computed style
+      // (not parsing/interpolation)
+      test_float_zeroToOne_clamped ];
+
   supported_properties["shape-outside"] =
     [ test_basic_shape_or_url_transition ];
 }

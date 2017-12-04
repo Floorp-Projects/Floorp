@@ -41,6 +41,37 @@ runHeuristicsTest([
           {"section": "section-my", "addressType": "", "contactType": "", "fieldName": "country"},
         ],
       ],
+      [
+        [
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "name"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "organization"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+        ],
+        [
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+        ],
+        [
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
+          {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+          {"section": "", "addressType": "", "contactType": "work", "fieldName": "tel"},
+          {"section": "", "addressType": "", "contactType": "work", "fieldName": "email"},
+        ],
+        [
+          {"section": "", "addressType": "", "contactType": "home", "fieldName": "tel"},
+          {"section": "", "addressType": "", "contactType": "home", "fieldName": "email"},
+        ],
+      ],
     ],
   },
 ], "../../fixtures/");

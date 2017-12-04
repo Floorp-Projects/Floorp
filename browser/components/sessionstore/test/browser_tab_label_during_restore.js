@@ -40,10 +40,10 @@ add_task(async function() {
   await promiseBrowserState({
     windows: [{
       tabs: [
-        { entries: [{ url: REMOTE_URL }] },
-        { entries: [{ url: ABOUT_ROBOTS_URI }] },
-        { entries: [{ url: REMOTE_URL }] },
-        { entries: [{ url: NO_TITLE_URL }] },
+        { entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }] },
+        { entries: [{ url: ABOUT_ROBOTS_URI, triggeringPrincipal_base64 }] },
+        { entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }] },
+        { entries: [{ url: NO_TITLE_URL, triggeringPrincipal_base64 }] },
       ]
     }]
   });

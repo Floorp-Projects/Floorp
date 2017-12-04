@@ -2002,7 +2002,6 @@ skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget) == 1330051.svg 1330051-r
 == 1364280-2a.html 1364280-2-ref.html
 == 1364280-2b.html 1364280-2-ref.html
 == 1364280-2c.html 1364280-2-ref.html
-== 1364335.html 1364335-ref.html
 == 1364360-1.html 1364360-1-ref.html
 == 1365159-1.html 1365159-1-ref.html
 fails-if(!stylo||styloVsGecko) == 1365162-1.html 1365162-1-ref.html

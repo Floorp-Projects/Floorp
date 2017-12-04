@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillParent",
+XPCOMUtils.defineLazyModuleGetter(this, "formAutofillParent",
                                   "resource://formautofill/FormAutofillParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillUtils",
                                   "resource://formautofill/FormAutofillUtils.jsm");
@@ -110,8 +110,7 @@ function startup(data) {
   // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
   Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
 
-  let parent = new FormAutofillParent();
-  parent.init().catch(Cu.reportError);
+  formAutofillParent.init().catch(Cu.reportError);
   Services.ppmm.loadProcessScript("data:,new " + function() {
     Components.utils.import("resource://formautofill/FormAutofillContent.jsm");
   }, true);

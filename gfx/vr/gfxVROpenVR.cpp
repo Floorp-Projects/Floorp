@@ -21,6 +21,7 @@
 #endif
 
 #include "gfxVROpenVR.h"
+#include "VRManagerParent.h"
 #include "VRManager.h"
 #include "VRThread.h"
 
@@ -510,19 +511,19 @@ VRControllerOpenVR::UpdateVibrateHaptic(::vr::IVRSystem* aVRSystem,
                                         double aIntensity,
                                         double aDuration,
                                         uint64_t aVibrateIndex,
-                                        uint32_t aPromiseID)
+                                        const VRManagerPromise& aPromise)
 {
   // UpdateVibrateHaptic() only can be called by mVibrateThread
   MOZ_ASSERT(mVibrateThread == NS_GetCurrentThread());
 
   // It has been interrupted by loss focus.
   if (mIsVibrateStopped) {
-    VibrateHapticComplete(aPromiseID);
+    VibrateHapticComplete(aPromise);
     return;
   }
   // Avoid the previous vibrate event to override the new one.
   if (mVibrateIndex != aVibrateIndex) {
-    VibrateHapticComplete(aPromiseID);
+    VibrateHapticComplete(aPromise);
     return;
   }
 
@@ -541,25 +542,26 @@ VRControllerOpenVR::UpdateVibrateHaptic(::vr::IVRSystem* aVRSystem,
     MOZ_ASSERT(mVibrateThread);
 
     RefPtr<Runnable> runnable =
-      NewRunnableMethod<::vr::IVRSystem*, uint32_t, double, double, uint64_t, uint32_t>
-        ("VRControllerOpenVR::UpdateVibrateHaptic",
-         this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
-         aHapticIndex, aIntensity, duration - kVibrateRate, aVibrateIndex, aPromiseID);
+      NewRunnableMethod<::vr::IVRSystem*, uint32_t, double, double, uint64_t,
+        StoreCopyPassByConstLRef<VRManagerPromise>>(
+          "VRControllerOpenVR::UpdateVibrateHaptic",
+          this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
+          aHapticIndex, aIntensity, duration - kVibrateRate, aVibrateIndex, aPromise);
     NS_DelayedDispatchToCurrentThread(runnable.forget(), kVibrateRate);
   } else {
     // The pulse has completed
-    VibrateHapticComplete(aPromiseID);
+    VibrateHapticComplete(aPromise);
   }
 }
 
 void
-VRControllerOpenVR::VibrateHapticComplete(uint32_t aPromiseID)
+VRControllerOpenVR::VibrateHapticComplete(const VRManagerPromise& aPromise)
 {
   VRManager *vm = VRManager::Get();
-
-  VRListenerThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>(
-                                           "VRManager::NotifyVibrateHapticCompleted",
-                                           vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
+  VRListenerThreadHolder::Loop()->PostTask(
+    NewRunnableMethod<StoreCopyPassByConstLRef<VRManagerPromise>>(
+      "VRManager::NotifyVibrateHapticCompleted",
+      vm, &VRManager::NotifyVibrateHapticCompleted, aPromise));
 }
 
 void
@@ -567,7 +569,7 @@ VRControllerOpenVR::VibrateHaptic(::vr::IVRSystem* aVRSystem,
                                   uint32_t aHapticIndex,
                                   double aIntensity,
                                   double aDuration,
-                                  uint32_t aPromiseID)
+                                  const VRManagerPromise& aPromise)
 {
   // Spinning up the haptics thread at the first haptics call.
   if (!mVibrateThread) {
@@ -582,10 +584,11 @@ VRControllerOpenVR::VibrateHaptic(::vr::IVRSystem* aVRSystem,
   mIsVibrateStopped = false;
 
   RefPtr<Runnable> runnable =
-      NewRunnableMethod<::vr::IVRSystem*, uint32_t, double, double, uint64_t, uint32_t>
-        ("VRControllerOpenVR::UpdateVibrateHaptic",
-         this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
-         aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromiseID);
+      NewRunnableMethod<::vr::IVRSystem*, uint32_t, double, double, uint64_t,
+        StoreCopyPassByConstLRef<VRManagerPromise>>(
+          "VRControllerOpenVR::UpdateVibrateHaptic",
+          this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
+          aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
   mVibrateThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -996,18 +999,18 @@ VRSystemManagerOpenVR::VibrateHaptic(uint32_t aControllerIdx,
                                      uint32_t aHapticIndex,
                                      double aIntensity,
                                      double aDuration,
-                                     uint32_t aPromiseID)
+                                     const VRManagerPromise& aPromise)
 {
   // mVRSystem is available after VRDisplay is created
   // at GetHMDs().
-  if (!mVRSystem) {
+  if (!mVRSystem || (aControllerIdx >= mOpenVRController.Length())) {
     return;
   }
 
   RefPtr<impl::VRControllerOpenVR> controller = mOpenVRController[aControllerIdx];
   MOZ_ASSERT(controller);
 
-  controller->VibrateHaptic(mVRSystem, aHapticIndex, aIntensity, aDuration, aPromiseID);
+  controller->VibrateHaptic(mVRSystem, aHapticIndex, aIntensity, aDuration, aPromise);
 }
 
 void

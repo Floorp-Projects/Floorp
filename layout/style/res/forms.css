@@ -839,12 +839,10 @@ progress {
   vertical-align: -0.2em;
 
   /* Default style in case of there is -moz-appearance: none; */
-  border: 2px solid;
+  border: 1px solid ThreeDShadow;
+  border-right-color: ThreeDHighlight;
+  border-bottom-color: ThreeDHighlight;
   /* #e6e6e6 is a light gray. */
-  -moz-border-top-colors: ThreeDShadow #e6e6e6;
-  -moz-border-right-colors: ThreeDHighlight #e6e6e6;
-  -moz-border-bottom-colors: ThreeDHighlight #e6e6e6;
-  -moz-border-left-colors: ThreeDShadow #e6e6e6;
   background-color: #e6e6e6;
 }
 

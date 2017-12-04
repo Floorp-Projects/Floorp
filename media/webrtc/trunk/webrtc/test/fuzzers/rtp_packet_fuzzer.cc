@@ -101,6 +101,11 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
         packet.GetExtension<MId>(&mid);
         break;
       }
+      case kRtpExtensionCsrcAudioLevel: {
+        CsrcAudioLevelList levels;
+        packet.GetExtension<CsrcAudioLevel>(&levels);
+        break;
+      }
     }
   }
 }

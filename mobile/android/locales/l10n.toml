@@ -96,21 +96,22 @@ locales = [
     "uk",
     "ur",
     "uz",
+    "vi",
     "wo",
     "xh",
     "zam",
     "zh-CN",
     "zh-TW",
-    ]
+]
 
 [build]
 exclude-multi-locale = [
-    "be",
-    "bn-BD",
-    "ne-NP",
+    "ach",
+    "bs",
+    "ia",
+    "ltg",
+    "oc",
     "trs",
-    "wo",
-    "zam",
 ]
 
 [env]

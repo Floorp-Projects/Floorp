@@ -711,15 +711,7 @@ Declaration::GetPropertyValueInternal(
           !data->HasDefaultBorderImageSlice() ||
           !data->HasDefaultBorderImageWidth() ||
           !data->HasDefaultBorderImageOutset() ||
-          !data->HasDefaultBorderImageRepeat() ||
-          data->ValueFor(eCSSProperty__moz_border_top_colors)->GetUnit() !=
-            eCSSUnit_None ||
-          data->ValueFor(eCSSProperty__moz_border_right_colors)->GetUnit() !=
-            eCSSUnit_None ||
-          data->ValueFor(eCSSProperty__moz_border_bottom_colors)->GetUnit() !=
-            eCSSUnit_None ||
-          data->ValueFor(eCSSProperty__moz_border_left_colors)->GetUnit() !=
-            eCSSUnit_None) {
+          !data->HasDefaultBorderImageRepeat()) {
         break;
       }
 

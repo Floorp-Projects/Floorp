@@ -43,6 +43,12 @@ mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
 
+#ifdef NIGHTLY_BUILD
+#define DEBUG_SHUTDOWN(fmt, ...) printf_stderr("[DEBUG SHUTDOWN] %s: " fmt "\n", __func__, ##__VA_ARGS__)
+#else
+#define DEBUG_SHUTDOWN(...) do { } while (0)
+#endif
+
 namespace mozilla {
 
 
@@ -446,6 +452,7 @@ MediaFormatReader::ShutdownPromisePool::Shutdown()
 {
   MOZ_DIAGNOSTIC_ASSERT(!mShutdown);
   mShutdown = true;
+  DEBUG_SHUTDOWN("pool=%p count=%d", this, mPromises.Count());
   if (mPromises.Count() == 0) {
     mOnShutdownComplete->Resolve(true, __func__);
   }
@@ -463,6 +470,7 @@ MediaFormatReader::ShutdownPromisePool::Track(RefPtr<ShutdownPromise> aPromise)
     [aPromise, this]() {
       MOZ_DIAGNOSTIC_ASSERT(mPromises.Contains(aPromise));
       mPromises.RemoveEntry(aPromise);
+      DEBUG_SHUTDOWN("pool=%p shutdown=%s count=%d", this, mShutdown ? "true" : "false", mPromises.Count());
       if (mShutdown && mPromises.Count() == 0) {
         mOnShutdownComplete->Resolve(true, __func__);
       }
@@ -479,6 +487,7 @@ MediaFormatReader::DecoderData::ShutdownDecoder()
     return;
   }
 
+  DEBUG_SHUTDOWN("decoder: '%s' (%p) flush:%d", mDecoder->GetDescriptionName().get(), mDecoder.get(), mFlushing);
   if (mFlushing) {
     // Flush is is in action. Shutdown will be initiated after flush completes.
     MOZ_DIAGNOSTIC_ASSERT(mShutdownPromise);
@@ -1274,6 +1283,7 @@ MediaFormatReader::Shutdown()
     ShutdownDecoder(TrackInfo::kVideoTrack);
   }
 
+  DEBUG_SHUTDOWN("reader=%p shutdown demuxer=%p", this, mDemuxer.get());
   mShutdownPromisePool->Track(mDemuxer->Shutdown());
   mDemuxer = nullptr;
 
@@ -1308,11 +1318,13 @@ MediaFormatReader::TearDownDecoders()
     mAudio.mTaskQueue->BeginShutdown();
     mAudio.mTaskQueue->AwaitShutdownAndIdle();
     mAudio.mTaskQueue = nullptr;
+    DEBUG_SHUTDOWN("reader=%p shut down audio task queue", this);
   }
   if (mVideo.mTaskQueue) {
     mVideo.mTaskQueue->BeginShutdown();
     mVideo.mTaskQueue->AwaitShutdownAndIdle();
     mVideo.mTaskQueue = nullptr;
+    DEBUG_SHUTDOWN("reader=%p shut down video task queue", this);
   }
 
   mDecoderFactory = nullptr;

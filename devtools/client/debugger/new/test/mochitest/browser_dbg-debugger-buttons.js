@@ -43,7 +43,7 @@ add_task(async function() {
   assertPausedLocation(dbg);
 
   // resume
-  await clickResume(dbg)
+  await clickResume(dbg);
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
 

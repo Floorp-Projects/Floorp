@@ -10,8 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.mozilla.gecko.FennecNativeDriver.LogLevel;
-import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.LayerView.DrawListener;
+import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -351,21 +350,26 @@ public class FennecNativeActions implements Actions {
         private boolean mPaintDone;
         private boolean mListening;
 
-        private final LayerView mLayerView;
-        private final DrawListener mDrawListener;
+        private final GeckoView mGeckoView;
+        private final Runnable mDrawCallback;
 
         PaintExpecter() {
             final PaintExpecter expecter = this;
-            mLayerView = (LayerView) mSolo.getView(R.id.layer_view);
-            mDrawListener = new DrawListener() {
+            mGeckoView = (GeckoView) mSolo.getView(R.id.layer_view);
+            mDrawCallback = new Runnable() {
                 @Override
-                public void drawFinished() {
+                public void run() {
                     FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                             "Received drawFinished notification");
                     expecter.notifyOfEvent();
                 }
             };
-            mLayerView.addDrawListener(mDrawListener);
+            mGeckoView.post(new Runnable() {
+                @Override
+                public void run() {
+                    mGeckoView.getSession().getCompositorController().addDrawCallback(mDrawCallback);
+                }
+            });
             mListening = true;
         }
 
@@ -476,7 +480,12 @@ public class FennecNativeActions implements Actions {
 
             FennecNativeDriver.log(LogLevel.INFO,
                     "PaintExpecter: no longer listening for events");
-            mLayerView.removeDrawListener(mDrawListener);
+            mGeckoView.post(new Runnable() {
+                @Override
+                public void run() {
+                    mGeckoView.getSession().getCompositorController().removeDrawCallback(mDrawCallback);
+                }
+            });
             mListening = false;
         }
     }

@@ -243,10 +243,19 @@ private:
 
 public:
   /**
+   * Whether to clear all the style data (including the element itself), or just
+   * the descendants' data.
+   */
+  enum class IncludeRoot {
+    Yes,
+    No,
+  };
+
+  /**
    * Clears the ServoElementData and HasDirtyDescendants from all elements
    * in the subtree rooted at aElement.
    */
-  static void ClearServoDataFromSubtree(Element* aElement);
+  static void ClearServoDataFromSubtree(Element*, IncludeRoot = IncludeRoot::Yes);
 
   /**
    * Clears HasDirtyDescendants and RestyleData from all elements in the

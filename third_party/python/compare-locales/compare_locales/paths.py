@@ -135,7 +135,7 @@ class ProjectConfig(object):
         def filter_(module, path, entity=None):
             try:
                 rv = filter(module, path, entity=entity)
-            except:
+            except BaseException:  # we really want to handle EVERYTHING here
                 return 'error'
             rv = {
                 True: 'error',
@@ -434,7 +434,7 @@ class TOMLParser(object):
         try:
             with open(self.path, 'rb') as fin:
                 self.data = toml.load(fin)
-        except:
+        except (toml.TomlError, IOError):
             raise ConfigNotFound(self.path)
 
     def processEnv(self):
@@ -542,7 +542,7 @@ class L10nConfigParser(object):
         '''
         try:
             depth = cp.get('general', 'depth')
-        except:
+        except (NoSectionError, NoOptionError):
             depth = '.'
         return depth
 
@@ -554,13 +554,13 @@ class L10nConfigParser(object):
         '''
         filter_path = mozpath.join(mozpath.dirname(self.inipath), 'filter.py')
         try:
-            l = {}
-            execfile(filter_path, {}, l)
-            if 'test' in l and callable(l['test']):
-                filters = [l['test']]
+            local = {}
+            execfile(filter_path, {}, local)
+            if 'test' in local and callable(local['test']):
+                filters = [local['test']]
             else:
                 filters = []
-        except:
+        except BaseException:  # we really want to handle EVERYTHING here
             filters = []
 
         for c in self.children:

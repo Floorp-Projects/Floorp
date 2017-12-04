@@ -469,6 +469,20 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           header->extension.mId.Set(rtc::MakeArrayView(ptr, len + 1));
           break;
         }
+        case kRtpExtensionCsrcAudioLevel: {
+          auto& levels = header->extension.csrcAudioLevels;
+          levels.numAudioLevels = static_cast<uint8_t>(len + 1);
+          if (levels.numAudioLevels > kRtpCsrcSize)  {
+            LOG(LS_WARNING) << "Incorrect number of CSRC audio levels: " <<
+                levels.numAudioLevels;
+            levels.numAudioLevels = 0;
+            return;
+          }
+          for (uint8_t i = 0; i < levels.numAudioLevels; i++) {
+            levels.arrOfAudioLevels[i] = ptr[i] & 0x7f;
+          }
+          break;
+        }
         default:
         case kRtpExtensionNone:
         case kRtpExtensionNumberOfExtensions: {

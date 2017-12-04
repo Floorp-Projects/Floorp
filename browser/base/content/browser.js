@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource:///modules/E10SUtils.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
+  LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
@@ -1821,6 +1822,8 @@ var gBrowserInit = {
 
     gAccessibilityServiceIndicator.uninit();
 
+    LanguagePrompt.uninit();
+
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
     if (this._boundDelayedStartup) {
@@ -2284,33 +2287,6 @@ function BrowserOpenTab(event) {
   openUILinkIn(BROWSER_NEW_TAB_URL, where, { relatedToCurrent });
 }
 
-/* Called from the openLocation dialog. This allows that dialog to instruct
-   its opener to open a new window and then step completely out of the way.
-   Anything less byzantine is causing horrible crashes, rather believably,
-   though oddly only on Linux. */
-function delayedOpenWindow(chrome, flags, href, postData) {
-  // The other way to use setTimeout,
-  // setTimeout(openDialog, 10, chrome, "_blank", flags, url),
-  // doesn't work here.  The extra "magic" extra argument setTimeout adds to
-  // the callback function would confuse gBrowserInit.onLoad() by making
-  // window.arguments[1] be an integer instead of null.
-  setTimeout(function() { openDialog(chrome, "_blank", flags, href, null, null, postData); }, 10);
-}
-
-/* Required because the tab needs time to set up its content viewers and get the load of
-   the URI kicked off before becoming the active content area. */
-function delayedOpenTab(aUrl, aReferrer, aCharset, aPostData, aAllowThirdPartyFixup) {
-  gBrowser.loadOneTab(aUrl, {
-    referrerURI: aReferrer,
-    charset: aCharset,
-    postData: aPostData,
-    inBackground: false,
-    allowThirdPartyFixup: aAllowThirdPartyFixup,
-    // Bug 1367168: only use systemPrincipal till we can remove that function
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
-}
-
 var gLastOpenDirectory = {
   _lastDir: null,
   get path() {
@@ -2372,10 +2348,21 @@ function BrowserOpenFileWindow() {
   }
 }
 
-function BrowserCloseTabOrWindow() {
-  // If we're not a browser window, just close the window
+function BrowserCloseTabOrWindow(event) {
+  // If we're not a browser window, just close the window.
   if (window.location.href != getBrowserURL()) {
     closeWindow(true);
+    return;
+  }
+
+  // Keyboard shortcuts that would close a tab that is pinned select the first
+  // unpinned tab instead.
+  if (event &&
+      (event.ctrlKey || event.metaKey || event.altKey) &&
+      gBrowser.selectedTab.pinned) {
+    if (gBrowser.visibleTabs.length > gBrowser._numPinnedTabs) {
+      gBrowser.tabContainer.selectedIndex = gBrowser._numPinnedTabs;
+    }
     return;
   }
 
@@ -2915,7 +2902,6 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:OpenCaptivePortalPage", this);
     mm.addMessageListener("Browser:SiteBlockedError", this);
     mm.addMessageListener("Browser:EnableOnlineMode", this);
-    mm.addMessageListener("Browser:SendSSLErrorReport", this);
     mm.addMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.addMessageListener("Browser:ResetSSLPreferences", this);
     mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
@@ -2930,7 +2916,6 @@ var BrowserOnClick = {
     mm.removeMessageListener("Browser:CertExceptionError", this);
     mm.removeMessageListener("Browser:SiteBlockedError", this);
     mm.removeMessageListener("Browser:EnableOnlineMode", this);
-    mm.removeMessageListener("Browser:SendSSLErrorReport", this);
     mm.removeMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.removeMessageListener("Browser:ResetSSLPreferences", this);
     mm.removeMessageListener("Browser:SSLErrorReportTelemetry", this);
@@ -2973,11 +2958,6 @@ var BrowserOnClick = {
           msg.target.reload();
         }
       break;
-      case "Browser:SendSSLErrorReport":
-        this.onSSLErrorReport(msg.target,
-                              msg.data.uri,
-                              msg.data.securityInfo);
-      break;
       case "Browser:ResetSSLPreferences":
         let prefSSLImpact = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
                 return prefs.concat(Services.prefs.getChildList(root));
@@ -3004,23 +2984,6 @@ var BrowserOnClick = {
         goBackFromErrorPage();
       break;
     }
-  },
-
-  onSSLErrorReport(browser, uri, securityInfo) {
-    if (!Services.prefs.getBoolPref("security.ssl.errorReporting.enabled")) {
-      Cu.reportError("User requested certificate error report sending, but certificate error reporting is disabled");
-      return;
-    }
-
-    let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                           .getService(Ci.nsISerializationHelper);
-    let transportSecurityInfo = serhelper.deserializeObject(securityInfo);
-    transportSecurityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-
-    let errorReporter = Cc["@mozilla.org/securityreporter;1"]
-                          .getService(Ci.nsISecurityReporter);
-    errorReporter.reportTLSError(transportSecurityInfo,
-                                 uri.host, uri.port);
   },
 
   onCertError(browser, elementId, isTopFrame, location, securityInfoAsString) {
@@ -3525,15 +3488,6 @@ var PrintPreviewListener = {
     gBrowser.activateBrowserForPrintPreview(browser);
   },
 };
-
-function getMarkupDocumentViewer() {
-  return gBrowser.markupDocumentViewer;
-}
-
-// This function is obsolete. Newer code should use <tooltip page="true"/> instead.
-function FillInHTMLTooltip(tipElement) {
-  document.getElementById("aHTMLTooltip").fillInPageTooltip(tipElement);
-}
 
 var browserDragAndDrop = {
   canDropLink: aEvent => Services.droppedLinkHandler.canDropLink(aEvent, true),
@@ -6317,20 +6271,6 @@ var gPageStyleMenu = {
     mm.sendAsyncMessage("PageStyle:Disable");
   },
 };
-
-/* Legacy global page-style functions */
-var stylesheetFillPopup = gPageStyleMenu.fillPopup.bind(gPageStyleMenu);
-function stylesheetSwitchAll(contentWindow, title) {
-  // We ignore the contentWindow param. Add-ons don't appear to use
-  // it, and it's difficult to support in e10s (where it will be a
-  // CPOW).
-  gPageStyleMenu.switchStyleSheet(title);
-}
-function setStyleDisabled(disabled) {
-  if (disabled)
-    gPageStyleMenu.disableStyle();
-}
-
 
 var LanguageDetectionListener = {
   init() {

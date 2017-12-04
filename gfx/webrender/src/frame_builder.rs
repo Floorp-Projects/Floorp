@@ -21,7 +21,7 @@ use euclid::{SideOffsets2D, vec2};
 use frame::FrameId;
 use glyph_rasterizer::FontInstance;
 use gpu_cache::GpuCache;
-use internal_types::{FastHashMap, FastHashSet};
+use internal_types::{EdgeAaSegmentMask, FastHashMap, FastHashSet};
 use picture::{PictureCompositeMode, PictureKind, PicturePrimitive, RasterizationSpace};
 use prim_store::{TexelRect, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
@@ -755,20 +755,61 @@ impl FrameBuilder {
         &mut self,
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
-        content: RectangleContent,
-        scrollbar_info: Option<ScrollbarInfo>,
+        color: ColorF,
+        edge_aa_segment_mask: EdgeAaSegmentMask,
     ) {
-        if let RectangleContent::Fill(ColorF{a, ..}) = content {
-            if a == 0.0 {
-                // Don't add transparent rectangles to the draw list, but do consider them for hit
-                // testing. This allows specifying invisible hit testing areas.
-                self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
-                return;
-            }
+        if color.a == 0.0 {
+            // Don't add transparent rectangles to the draw list, but do consider them for hit
+            // testing. This allows specifying invisible hit testing areas.
+            self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
+            return;
         }
+
         let prim = RectanglePrimitive {
-            content,
-            edge_aa_segment_mask: info.edge_aa_segment_mask,
+            content: RectangleContent::Fill(color),
+            edge_aa_segment_mask,
+        };
+
+        self.add_primitive(
+            clip_and_scroll,
+            info,
+            Vec::new(),
+            PrimitiveContainer::Rectangle(prim),
+        );
+    }
+
+    pub fn add_clear_rectangle(
+        &mut self,
+        clip_and_scroll: ClipAndScrollInfo,
+        info: &LayerPrimitiveInfo,
+    ) {
+        let prim = RectanglePrimitive {
+            content: RectangleContent::Clear,
+            edge_aa_segment_mask: EdgeAaSegmentMask::empty(),
+        };
+
+        self.add_primitive(
+            clip_and_scroll,
+            info,
+            Vec::new(),
+            PrimitiveContainer::Rectangle(prim),
+        );
+    }
+
+    pub fn add_scroll_bar(
+        &mut self,
+        clip_and_scroll: ClipAndScrollInfo,
+        info: &LayerPrimitiveInfo,
+        color: ColorF,
+        scrollbar_info: ScrollbarInfo,
+    ) {
+        if color.a == 0.0 {
+            return;
+        }
+
+        let prim = RectanglePrimitive {
+            content: RectangleContent::Fill(color),
+            edge_aa_segment_mask: EdgeAaSegmentMask::empty(),
         };
 
         let prim_index = self.add_primitive(
@@ -778,13 +819,11 @@ impl FrameBuilder {
             PrimitiveContainer::Rectangle(prim),
         );
 
-        if let Some(ScrollbarInfo(clip_id, frame_rect)) = scrollbar_info {
-            self.scrollbar_prims.push(ScrollbarPrimitive {
-                prim_index,
-                clip_id,
-                frame_rect,
-            });
-        }
+        self.scrollbar_prims.push(ScrollbarPrimitive {
+            prim_index,
+            clip_id: scrollbar_info.0,
+            frame_rect: scrollbar_info.1,
+        });
     }
 
     pub fn add_line(
@@ -1286,9 +1325,9 @@ impl FrameBuilder {
             font.bg_color,
             render_mode,
             font.subpx_dir,
+            font.flags,
             font.platform_options,
             font.variations.clone(),
-            font.synthetic_italics,
         );
         let prim = TextRunPrimitiveCpu {
             font: prim_font,
@@ -1594,6 +1633,7 @@ impl FrameBuilder {
             ClearMode::Transparent,
             RasterizationSpace::Screen,
             child_tasks,
+            None,
         );
 
         pic.render_task_id = Some(render_tasks.add(root_render_task));

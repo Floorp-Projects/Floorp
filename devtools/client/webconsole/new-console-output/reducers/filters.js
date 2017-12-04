@@ -5,31 +5,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Immutable = require("devtools/client/shared/vendor/immutable");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
-const FilterState = Immutable.Record(constants.DEFAULT_FILTERS_VALUES);
+const FilterState = (overrides) => Object.freeze(
+  cloneState(constants.DEFAULT_FILTERS_VALUES, overrides)
+);
 
-function filters(state = new FilterState(), action) {
+function filters(state = FilterState(), action) {
   switch (action.type) {
     case constants.FILTER_TOGGLE:
       const {filter} = action;
-      const active = !state.get(filter);
-      return state.set(filter, active);
+      const active = !state[filter];
+      return cloneState(state, {[filter]: active});
     case constants.FILTERS_CLEAR:
-      return new FilterState();
+      return FilterState();
     case constants.DEFAULT_FILTERS_RESET:
-      return state.withMutations(record => {
-        constants.DEFAULT_FILTERS.forEach(filterName => {
-          record.set(filterName, constants.DEFAULT_FILTERS_VALUES[filterName]);
-        });
+      const newState = cloneState(state);
+      constants.DEFAULT_FILTERS.forEach(filterName => {
+        newState[filterName] = constants.DEFAULT_FILTERS_VALUES[filterName];
       });
+      return newState;
     case constants.FILTER_TEXT_SET:
-      let {text} = action;
-      return state.set(constants.FILTERS.TEXT, text);
+      const {text} = action;
+      return cloneState(state, {[constants.FILTERS.TEXT]: text});
   }
 
   return state;
+}
+
+function cloneState(state, overrides) {
+  return Object.assign({}, state, overrides);
 }
 
 exports.FilterState = FilterState;
