@@ -2511,9 +2511,15 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   bool fake = c.mFake.WasPassed()? c.mFake.Value() :
       Preferences::GetBool("media.navigator.streams.fake");
 
+  bool hasVideo = videoType != MediaSourceEnum::Other;
+  bool hasAudio = audioType != MediaSourceEnum::Other;
+  bool fakeCams = fake && videoType == MediaSourceEnum::Camera;
+  bool fakeMics = fake && audioType == MediaSourceEnum::Microphone;
+  bool realDevicesRequested = (!fakeCams && hasVideo) || (!fakeMics && hasAudio);
+
   bool askPermission =
       (!privileged || Preferences::GetBool("media.navigator.permission.force")) &&
-      (!fake || Preferences::GetBool("media.navigator.permission.fake"));
+      (realDevicesRequested || Preferences::GetBool("media.navigator.permission.fake"));
 
   RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowID, videoType,
                                                    audioType, fake);
