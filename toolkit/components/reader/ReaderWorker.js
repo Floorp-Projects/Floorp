@@ -42,12 +42,11 @@ var Agent = {
    *
    * @param {object} uri URI data for the document.
    * @param {string} serializedDoc The serialized document.
-   * @param {object} options Options object to pass to Readability.
    *
    * @return {object} Article object returned from Readability.
    */
-  parseDocument(uri, serializedDoc, options) {
+  parseDocument(uri, serializedDoc) {
     let doc = new JSDOMParser().parse(serializedDoc);
-    return new Readability(uri, doc, options).parse();
+    return new Readability(uri, doc).parse();
   },
 };
