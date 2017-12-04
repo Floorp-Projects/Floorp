@@ -16,6 +16,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "nsXBLPrototypeBinding.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 
@@ -300,6 +301,42 @@ already_AddRefed<nsContentList>
 ShadowRoot::GetElementsByClassName(const nsAString& aClasses)
 {
   return nsContentUtils::GetElementsByClassName(this, aClasses);
+}
+
+nsresult
+ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
+{
+  aVisitor.mCanHandle = true;
+
+  // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6
+  if (!aVisitor.mEvent->mFlags.mComposed) {
+    nsCOMPtr<nsIContent> originalTarget =
+      do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
+    if (originalTarget->GetContainingShadow() == this) {
+      // If we do stop propagation, we still want to propagate
+      // the event to chrome (nsPIDOMWindow::GetParentTarget()).
+      // The load event is special in that we don't ever propagate it
+      // to chrome.
+      nsCOMPtr<nsPIDOMWindowOuter> win = OwnerDoc()->GetWindow();
+      EventTarget* parentTarget = win && aVisitor.mEvent->mMessage != eLoad
+        ? win->GetParentTarget() : nullptr;
+
+      aVisitor.mParentTarget = parentTarget;
+      return NS_OK;
+    }
+  }
+
+  nsIContent* shadowHost = GetHost();
+  aVisitor.mParentTarget = shadowHost;
+
+  if (aVisitor.mOriginalTargetIsInAnon) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->mTarget));
+    if (content && content->GetBindingParent() == shadowHost) {
+      aVisitor.mEventTargetAtParent = shadowHost;
+    }
+ }
+
+  return NS_OK;
 }
 
 const HTMLSlotElement*
