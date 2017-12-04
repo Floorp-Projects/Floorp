@@ -268,9 +268,6 @@ protected:
 
   virtual bool
   DeallocPClientManagerParent(PClientManagerParent* aActor) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvPClientManagerConstructor(PClientManagerParent* aActor) override;
 };
 
 } // namespace ipc
