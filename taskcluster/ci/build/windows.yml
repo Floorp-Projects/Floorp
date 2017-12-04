@@ -481,7 +481,7 @@ win64-ccov/debug:
         tier: 3
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        max-run-time: 14400
+        max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
