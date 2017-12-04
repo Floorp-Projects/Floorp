@@ -320,5 +320,109 @@ nsWaylandDisplay::~nsWaylandDisplay()
   }
 }
 
+int
+WaylandShmPool::CreateTemporaryFile(int aSize)
+{
+  const char* tmppath = getenv("XDG_RUNTIME_DIR");
+  MOZ_RELEASE_ASSERT(tmppath, "Missing XDG_RUNTIME_DIR env variable.");
+
+  nsPrintfCString tmpname("%s/mozilla-shared-XXXXXX", tmppath);
+
+  char* filename;
+  int fd = -1;
+  int ret = 0;
+
+  if (tmpname.GetMutableData(&filename)) {
+    fd = mkstemp(filename);
+    if (fd >= 0) {
+      int flags = fcntl(fd, F_GETFD);
+      if (flags >= 0) {
+        fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+      }
+    }
+  }
+
+  if (fd >= 0) {
+    unlink(tmpname.get());
+  } else {
+    printf_stderr("Unable to create mapping file %s\n", filename);
+    MOZ_CRASH();
+  }
+
+#ifdef HAVE_POSIX_FALLOCATE
+  do {
+    ret = posix_fallocate(fd, 0, aSize);
+  } while (ret == EINTR);
+  if (ret != 0) {
+    close(fd);
+  }
+#else
+  do {
+    ret = ftruncate(fd, aSize);
+  } while (ret < 0 && errno == EINTR);
+  if (ret < 0) {
+    close(fd);
+  }
+#endif
+  MOZ_RELEASE_ASSERT(ret == 0, "Mapping file allocation failed.");
+
+  return fd;
+}
+
+WaylandShmPool::WaylandShmPool(nsWaylandDisplay* aWaylandDisplay, int aSize)
+  : mAllocatedSize(aSize)
+{
+  mShmPoolFd = CreateTemporaryFile(mAllocatedSize);
+  mImageData = mmap(nullptr, mAllocatedSize,
+                     PROT_READ | PROT_WRITE, MAP_SHARED, mShmPoolFd, 0);
+  MOZ_RELEASE_ASSERT(mImageData != MAP_FAILED,
+                     "Unable to map drawing surface!");
+
+  mShmPool = wl_shm_create_pool(aWaylandDisplay->GetShm(),
+                                mShmPoolFd, mAllocatedSize);
+
+  // We set our queue to get mShmPool events at compositor thread.
+  wl_proxy_set_queue((struct wl_proxy *)mShmPool,
+                     aWaylandDisplay->GetEventQueue());
+}
+
+bool
+WaylandShmPool::Resize(int aSize)
+{
+  // We do size increase only
+  if (aSize <= mAllocatedSize)
+    return true;
+
+  if (ftruncate(mShmPoolFd, aSize) < 0)
+    return false;
+
+#ifdef HAVE_POSIX_FALLOCATE
+  do {
+    errno = posix_fallocate(mShmPoolFd, 0, aSize);
+  } while (errno == EINTR);
+  if (errno != 0)
+    return false;
+#endif
+
+  wl_shm_pool_resize(mShmPool, aSize);
+
+  munmap(mImageData, mAllocatedSize);
+
+  mImageData = mmap(nullptr, aSize,
+                    PROT_READ | PROT_WRITE, MAP_SHARED, mShmPoolFd, 0);
+  if (mImageData == MAP_FAILED)
+    return false;
+
+  mAllocatedSize = aSize;
+  return true;
+}
+
+WaylandShmPool::~WaylandShmPool()
+{
+  munmap(mImageData, mAllocatedSize);
+  wl_shm_pool_destroy(mShmPool);
+  close(mShmPoolFd);
+}
+
 }  // namespace widget
 }  // namespace mozilla
