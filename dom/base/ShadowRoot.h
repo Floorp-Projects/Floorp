@@ -21,6 +21,9 @@ class nsIContent;
 class nsXBLPrototypeBinding;
 
 namespace mozilla {
+
+class EventChainPreVisitor;
+
 namespace dom {
 
 class Element;
@@ -131,6 +134,8 @@ public:
   {
     mIsComposedDocParticipant = aIsComposedDocParticipant;
   }
+
+  nsresult GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
 protected:
   virtual ~ShadowRoot();
