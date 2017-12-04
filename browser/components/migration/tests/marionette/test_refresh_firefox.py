@@ -44,13 +44,21 @@ class TestFirefoxRefresh(MarionetteTestCase):
           Services.logins.addLogin(myLogin)
         """, script_args=(self._username, self._password))
 
-    def createBookmark(self):
+    def createBookmarkInMenu(self):
         self.marionette.execute_script("""
           let url = arguments[0];
           let title = arguments[1];
           PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder,
             makeURI(url), 0, title);
         """, script_args=(self._bookmarkURL, self._bookmarkText))
+
+    def createBookmarksOnToolbar(self):
+        self.marionette.execute_script("""
+          for (let i = 1; i <= 5; i++) {
+            PlacesUtils.bookmarks.insertBookmark(PlacesUtils.toolbarFolderId,
+              makeURI(`about:rights?p=${i}`), 0, `Bookmark ${i}`);
+          }
+        """)
 
     def createHistory(self):
         error = self.runAsyncCode("""
@@ -200,13 +208,21 @@ class TestFirefoxRefresh(MarionetteTestCase):
         # Note that we expect 2 logins - one from us, one from sync.
         self.assertEqual(loginCount, 2, "No other logins are present")
 
-    def checkBookmark(self):
+    def checkBookmarkInMenu(self):
         titleInBookmarks = self.marionette.execute_script("""
           let url = arguments[0];
           let bookmarkIds = PlacesUtils.bookmarks.getBookmarkIdsForURI(makeURI(url), {}, {});
           return bookmarkIds.length == 1 ? PlacesUtils.bookmarks.getItemTitle(bookmarkIds[0]) : "";
         """, script_args=(self._bookmarkURL,))
         self.assertEqual(titleInBookmarks, self._bookmarkText)
+
+    def checkBookmarkToolbarVisibility(self):
+        toolbarVisible = self.marionette.execute_script("""
+          const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
+          let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+          return xulStore.getValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed")
+        """)
+        self.assertEqual(toolbarVisible, "false")
 
     def checkHistory(self):
         historyResult = self.runAsyncCode("""
@@ -378,18 +394,20 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def checkProfile(self, hasMigrated=False):
         self.checkPassword()
-        self.checkBookmark()
+        self.checkBookmarkInMenu()
         self.checkHistory()
         self.checkFormHistory()
         self.checkFormAutofill()
         self.checkCookie()
         self.checkSync(hasMigrated);
         if hasMigrated:
+            self.checkBookmarkToolbarVisibility()
             self.checkSession()
 
     def createProfileData(self):
         self.savePassword()
-        self.createBookmark()
+        self.createBookmarkInMenu()
+        self.createBookmarksOnToolbar()
         self.createHistory()
         self.createFormHistory()
         self.createFormAutofill()
