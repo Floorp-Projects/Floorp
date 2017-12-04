@@ -534,7 +534,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "addPresentationSurface";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView;Landroid/view/Surface;)V";
+                "(Lorg/mozilla/gecko/GeckoSession;Landroid/view/Surface;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -552,7 +552,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "invalidateAndScheduleComposite";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView;)V";
+                "(Lorg/mozilla/gecko/GeckoSession;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
