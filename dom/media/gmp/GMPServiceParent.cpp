@@ -975,12 +975,10 @@ GeckoMediaPluginServiceParent::PluginTerminated(const RefPtr<GMPParent>& aPlugin
   MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
 
   if (aPlugin->IsMarkedForDeletion()) {
-    nsCString path8;
+    nsString path;
     RefPtr<nsIFile> dir = aPlugin->GetDirectory();
-    nsresult rv = dir->GetNativePath(path8);
+    nsresult rv = dir->GetPath(path);
     NS_ENSURE_SUCCESS_VOID(rv);
-
-    nsString path = NS_ConvertUTF8toUTF16(path8);
     if (mPluginsWaitingForDeletion.Contains(path)) {
       RemoveOnGMPThread(path, true /* delete */, true /* can defer */);
     }
