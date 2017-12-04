@@ -1,0 +1,114 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#moz-reader-content {
+  display: none;
+  font-size: 1em;
+}
+
+a {
+  text-decoration: underline !important;
+  font-weight: normal;
+}
+
+a,
+a:visited,
+a:hover,
+a:active {
+  color: #00acff !important;
+}
+
+* {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+p {
+  line-height: 1.4em !important;
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Covers all images showing edge-to-edge using a 
+   an optional caption text */
+.wp-caption,
+figure {
+  display: block !important;
+  width: 100% !important;
+  margin: 0px !important;
+  margin-bottom: 32px !important;
+}
+
+/* Images marked to be shown edge-to-edge with an
+   optional captio ntext */
+p > img:only-child,
+p > a:only-child > img:only-child,
+.wp-caption img,
+figure img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Account for body padding to make image full width */
+img[moz-reader-full-width] {
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
+  max-width: none !important;
+}
+
+/* Image caption text */
+.caption,
+.wp-caption-text,
+figcaption {
+  font-size: 0.9em;
+  font-family: sans-serif;
+  margin: 0px !important;
+  padding-top: 4px !important;
+}
+
+/* Ensure all pre-formatted code inside the reader content
+   are properly wrapped inside content width */
+code,
+pre {
+  white-space: pre-wrap !important;
+  margin-bottom: 20px !important;
+}
+
+blockquote {
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+  padding: 0px !important;
+  padding-inline-start: 16px !important;
+  border: 0px !important;
+  border-left: 2px solid !important;
+}
+
+ul,
+ol {
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+  padding: 0px !important;
+  line-height: 1.5em;
+}
+
+ul {
+  padding-inline-start: 30px !important;
+  list-style: disc !important;
+}
+
+ol {
+  padding-inline-start: 35px !important;
+  list-style: decimal !important;
+}
+
+/* Hide elements with common "hidden" class names */
+.visually-hidden,
+.visuallyhidden,
+.hidden,
+.invisible,
+.sr-only {
+  display: none;
+}
