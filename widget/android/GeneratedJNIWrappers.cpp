@@ -1370,17 +1370,6 @@ auto LayerSession::Compositor::UpdateRootFrameMetrics(float a0, float a1, float 
     return mozilla::jni::Method<UpdateRootFrameMetrics_t>::Call(Compositor::mCtx, nullptr, a0, a1, a2);
 }
 
-const char LayerView::name[] =
-        "org/mozilla/gecko/gfx/LayerView";
-
-constexpr char LayerView::GetCompositor_t::name[];
-constexpr char LayerView::GetCompositor_t::signature[];
-
-auto LayerView::GetCompositor() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetCompositor_t>::Call(LayerView::mCtx, nullptr);
-}
-
 const char NativePanZoomController::name[] =
         "org/mozilla/gecko/gfx/NativePanZoomController";
 
