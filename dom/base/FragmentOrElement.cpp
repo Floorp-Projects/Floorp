@@ -184,6 +184,24 @@ nsIContent::GetAssignedSlotByMode() const
 }
 
 nsINode*
+nsIContent::GetFlattenedTreeParentForMaybeAssignedNode() const
+{
+  if (HTMLSlotElement* assignedSlot = GetAssignedSlot()) {
+    return assignedSlot;
+  }
+
+  HTMLSlotElement* parentSlot = HTMLSlotElement::FromContent(GetParent());
+  if (!parentSlot) {
+    return nullptr;
+  }
+
+  // If this is not an unassigned node, then it must be a fallback content.
+  MOZ_ASSERT(parentSlot->AssignedNodes().IsEmpty());
+
+  return parentSlot;
+}
+
+nsINode*
 nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
 {
   nsINode* parentNode = GetParentNode();
@@ -239,20 +257,11 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
   }
 
   if (nsContentUtils::HasDistributedChildren(parent)) {
-    // This node is distributed to insertion points, thus we
-    // need to consult the destination insertion points list to
-    // figure out where this node was inserted in the flattened tree.
-    // It may be the case that |parent| distributes its children
-    // but the child does not match any insertion points, thus
-    // the flattened tree parent is nullptr.
-    nsTArray<nsIContent*>* destInsertionPoints = GetExistingDestInsertionPoints();
-    if (!destInsertionPoints || destInsertionPoints->IsEmpty()) {
-      return nullptr;
-    }
-    parent = destInsertionPoints->LastElement()->GetParent();
-    MOZ_ASSERT(parent);
-  } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) ||
-             parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    return GetFlattenedTreeParentForMaybeAssignedNode();
+  }
+
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) ||
+      parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     // We need to check `parent` to properly handle the unassigned child case
     // below, since if we were never assigned we would never have the flag set.
     //
@@ -1056,42 +1065,10 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     }
   }
 
-  nsIContent* parent = GetParent();
-
-  // Web components have a special event chain that need to account
-  // for destination insertion points where nodes have been distributed.
-  nsTArray<nsIContent*>* destPoints = GetExistingDestInsertionPoints();
-  if (destPoints && !destPoints->IsEmpty()) {
-    // Push destination insertion points to aVisitor.mDestInsertionPoints.
-    for (uint32_t i = 0; i < destPoints->Length(); i++) {
-      nsIContent* point = destPoints->ElementAt(i);
-      aVisitor.mDestInsertionPoints.AppendElement(point);
-    }
-  }
-
-  ShadowRoot* thisShadowRoot = ShadowRoot::FromNode(this);
-  if (thisShadowRoot) {
-    if (!aVisitor.mEvent->mFlags.mComposed) {
-      // If we do stop propagation, we still want to propagate
-      // the event to chrome (nsPIDOMWindow::GetParentTarget()).
-      // The load event is special in that we don't ever propagate it
-      // to chrome.
-      nsCOMPtr<nsPIDOMWindowOuter> win = OwnerDoc()->GetWindow();
-      EventTarget* parentTarget = win && aVisitor.mEvent->mMessage != eLoad
-        ? win->GetParentTarget() : nullptr;
-
-      aVisitor.mParentTarget = parentTarget;
-      return NS_OK;
-    }
-
-    if (!aVisitor.mDestInsertionPoints.IsEmpty()) {
-      parent = aVisitor.mDestInsertionPoints.LastElement();
-      aVisitor.mDestInsertionPoints.SetLength(
-        aVisitor.mDestInsertionPoints.Length() - 1);
-    } else {
-      parent = thisShadowRoot->GetHost();
-    }
-  }
+  // Event parent is the assigned slot, if node is assigned, or node's parent
+  // otherwise.
+  HTMLSlotElement* slot = GetAssignedSlot();
+  nsIContent* parent = slot ? slot : GetParent();
 
   // Event may need to be retargeted if this is the root of a native
   // anonymous content subtree or event is dispatched somewhere inside XBL.

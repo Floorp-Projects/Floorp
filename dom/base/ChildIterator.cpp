@@ -6,6 +6,7 @@
 
 #include "ChildIterator.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsIAnonymousContentCreator.h"
@@ -57,14 +58,33 @@ GetMatchedNodesForPoint(nsIContent* aContent)
   // XXX handle <slot> element?
 }
 
+ExplicitChildIterator::ExplicitChildIterator(const nsIContent* aParent,
+                                             bool aStartAtBeginning)
+  : mParent(aParent),
+    mChild(nullptr),
+    mDefaultChild(nullptr),
+    mIsFirst(aStartAtBeginning),
+    mIndexInInserted(0)
+{
+  mParentAsSlot = HTMLSlotElement::FromContent(mParent);
+}
+
 nsIContent*
 ExplicitChildIterator::GetNextChild()
 {
   // If we're already in the inserted-children array, look there first
   if (mIndexInInserted) {
     MOZ_ASSERT(mChild);
-    MOZ_ASSERT(nsContentUtils::IsContentInsertionPoint(mChild));
     MOZ_ASSERT(!mDefaultChild);
+
+    if (mParentAsSlot) {
+      const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
+
+      mChild = (mIndexInInserted < assignedNodes.Length()) ?
+        assignedNodes[mIndexInInserted++]->AsContent() : nullptr;
+      return mChild;
+    }
 
     MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
     if (mIndexInInserted < assignedChildren.Length()) {
@@ -84,6 +104,19 @@ ExplicitChildIterator::GetNextChild()
 
     mChild = mChild->GetNextSibling();
   } else if (mIsFirst) {  // at the beginning of the child list
+    // For slot parent, iterate over assigned nodes if not empty, otherwise
+    // fall through and iterate over direct children (fallback content).
+    if (mParentAsSlot) {
+      const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
+      if (!assignedNodes.IsEmpty()) {
+        mIndexInInserted = 1;
+        mChild = assignedNodes[0]->AsContent();
+        mIsFirst = false;
+        return mChild;
+      }
+    }
+
     mChild = mParent->GetFirstChild();
     mIsFirst = false;
   } else if (mChild) { // in the middle of the child list
@@ -183,6 +216,12 @@ ExplicitChildIterator::Get() const
 {
   MOZ_ASSERT(!mIsFirst);
 
+  // When mParentAsSlot is set, mChild is always set to the current child. It
+  // does not matter whether mChild is an assigned node or a fallback content.
+  if (mParentAsSlot) {
+    return mChild;
+  }
+
   if (mIndexInInserted) {
     MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
     return assignedChildren[mIndexInInserted - 1];
@@ -196,6 +235,20 @@ ExplicitChildIterator::GetPreviousChild()
 {
   // If we're already in the inserted-children array, look there first
   if (mIndexInInserted) {
+
+    if (mParentAsSlot) {
+      const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
+
+      mChild = (--mIndexInInserted) ?
+        assignedNodes[mIndexInInserted - 1]->AsContent() : nullptr;
+
+      if (!mChild) {
+        mIsFirst = true;
+      }
+      return mChild;
+    }
+
     // NB: mIndexInInserted points one past the last returned child so we need
     // to look *two* indices back in order to return the previous child.
     MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
@@ -216,6 +269,18 @@ ExplicitChildIterator::GetPreviousChild()
   } else if (mChild) { // in the middle of the child list
     mChild = mChild->GetPreviousSibling();
   } else { // at the end of the child list
+    // For slot parent, iterate over assigned nodes if not empty, otherwise
+    // fall through and iterate over direct children (fallback content).
+    if (mParentAsSlot) {
+      const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
+      if (!assignedNodes.IsEmpty()) {
+        mIndexInInserted = assignedNodes.Length();
+        mChild = assignedNodes[mIndexInInserted - 1]->AsContent();
+        return mChild;
+      }
+    }
+
     mChild = mParent->GetLastChild();
   }
 

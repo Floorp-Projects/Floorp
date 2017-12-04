@@ -20,6 +20,7 @@
 #include "mozilla/webrender/RenderD3D11TextureHostOGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "PaintThread.h"
 
 namespace mozilla {
 
@@ -287,18 +288,37 @@ D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
   mHasSynchronization = HasKeyedMutex(aTexture);
 }
 
-D3D11TextureData::~D3D11TextureData()
+static void DestroyDrawTarget(RefPtr<DrawTarget>& aDT, RefPtr<ID3D11Texture2D>& aTexture)
 {
-#ifdef DEBUG
   // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
   // when it calls EndDraw. This EndDraw should not execute anything so it
   // shouldn't -really- need the lock but the debug layer chokes on this.
-  if (mDrawTarget) {
-    Lock(OpenMode::OPEN_NONE);
-    mDrawTarget = nullptr;
-    Unlock();
-  }
+#ifdef DEBUG
+  LockD3DTexture(aTexture.get());
 #endif
+  aDT = nullptr;
+#ifdef DEBUG
+  UnlockD3DTexture(aTexture.get());
+#endif
+  aTexture = nullptr;
+}
+
+D3D11TextureData::~D3D11TextureData()
+{
+  if (mDrawTarget) {
+    if (PaintThread::Get() && gfxPrefs::Direct2DDestroyDTOnPaintThread()) {
+      RefPtr<DrawTarget> dt = mDrawTarget;
+      RefPtr<ID3D11Texture2D> tex = mTexture;
+      RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::RunFunction",
+        [dt, tex]() mutable { DestroyDrawTarget(dt, tex); });
+      PaintThread::Get()->Dispatch(task);
+    }
+#ifdef DEBUG
+    else {
+      DestroyDrawTarget(mDrawTarget, mTexture);
+    }
+#endif
+  }
 }
 
 bool
