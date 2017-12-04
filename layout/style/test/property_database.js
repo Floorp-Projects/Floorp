@@ -7410,14 +7410,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.background-blend-mode.enabled")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.overflow-clip-box.enabled")) {
-  gCSSProperties["overflow-clip-box"] = {
-    domProp: "overflowClipBox",
+  gCSSProperties["overflow-clip-box-block"] = {
+    domProp: "overflowClipBoxBlock",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     applies_to_placeholder: true,
     initial_values: [ "padding-box" ],
     other_values: [ "content-box" ],
-    invalid_values: [ "none", "auto", "border-box", "0" ]
+    invalid_values: [ "auto", "border-box", "0", "padding-box padding-box" ]
+  };
+  gCSSProperties["overflow-clip-box-inline"] = {
+    domProp: "overflowClipBoxInline",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_placeholder: true,
+    initial_values: [ "padding-box" ],
+    other_values: [ "content-box" ],
+    invalid_values: [ "none", "border-box", "0", "content-box content-box" ]
+  };
+  gCSSProperties["overflow-clip-box"] = {
+    domProp: "overflowClipBox",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "overflow-clip-box-block", "overflow-clip-box-inline" ],
+    initial_values: [ "padding-box" ],
+    other_values: [ "content-box", "padding-box content-box", "content-box padding-box",
+                    "content-box content-box" ],
+    invalid_values: [ "none", "auto", "content-box none", "border-box", "0",
+                      "content-box, content-box" ]
   };
 }
 

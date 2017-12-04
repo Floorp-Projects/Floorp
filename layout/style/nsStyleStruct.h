@@ -2562,7 +2562,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   bool mBreakAfter;     // [reset]
   uint8_t mOverflowX;           // [reset] see nsStyleConsts.h
   uint8_t mOverflowY;           // [reset] see nsStyleConsts.h
-  uint8_t mOverflowClipBox;     // [reset] see nsStyleConsts.h
+  uint8_t mOverflowClipBoxBlock;     // [reset] see nsStyleConsts.h
+  uint8_t mOverflowClipBoxInline;    // [reset] see nsStyleConsts.h
   uint8_t mResize;              // [reset] see nsStyleConsts.h
   mozilla::StyleOrient mOrient; // [reset] see nsStyleConsts.h
   uint8_t mIsolation;           // [reset] see nsStyleConsts.h
