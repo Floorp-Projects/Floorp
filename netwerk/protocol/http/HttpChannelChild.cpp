@@ -229,8 +229,8 @@ HttpChannelChild::ReleaseMainThreadOnlyReferences()
   arrayToRelease.AppendElement(mRedirectChannelChild.forget());
 
   // To solve multiple inheritence of nsISupports in InterceptStreamListener
-  already_AddRefed<nsIStreamListener> listener = mInterceptListener.forget();
-  arrayToRelease.AppendElement(listener.take());
+  nsCOMPtr<nsIStreamListener> listener = mInterceptListener.forget();
+  arrayToRelease.AppendElement(listener.forget());
 
   arrayToRelease.AppendElement(mInterceptedRedirectListener.forget());
   arrayToRelease.AppendElement(mInterceptedRedirectContext.forget());
@@ -3738,9 +3738,7 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
                                  mSynthesizedInput, 0, 0, true, neckoTarget);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  if (aCacheInfoChannel) {
-    mSynthesizedCacheInfo = aCacheInfoChannel;
-  }
+  mSynthesizedCacheInfo = aCacheInfoChannel;
 
   rv = mSynthesizedResponsePump->AsyncRead(aStreamListener, nullptr);
   NS_ENSURE_SUCCESS_VOID(rv);
