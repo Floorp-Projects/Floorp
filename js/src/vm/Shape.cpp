@@ -618,15 +618,78 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
     return shape;
 }
 
+static MOZ_ALWAYS_INLINE Shape*
+PropertyTreeReadBarrier(Shape* parent, Shape* shape)
+{
+    JS::Zone* zone = shape->zone();
+    if (zone->needsIncrementalBarrier()) {
+        // We need a read barrier for the shape tree, since these are weak
+        // pointers.
+        Shape* tmp = shape;
+        TraceManuallyBarrieredEdge(zone->barrierTracer(), &tmp, "read barrier");
+        MOZ_ASSERT(tmp == shape);
+        return shape;
+    }
+
+    if (MOZ_LIKELY(!zone->isGCSweepingOrCompacting() ||
+                   !IsAboutToBeFinalizedUnbarriered(&shape)))
+    {
+        if (shape->isMarkedGray())
+            UnmarkGrayShapeRecursively(shape);
+        return shape;
+    }
+
+    // The shape we've found is unreachable and due to be finalized, so
+    // remove our weak reference to it and don't use it.
+    MOZ_ASSERT(parent->isMarkedAny());
+    parent->removeChild(shape);
+
+    return nullptr;
+}
+
 /* static */ Shape*
 NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id)
 {
     // Like addProperty(Internal), but optimized for the common case of adding a
     // new enumerable data property.
 
-    AutoKeepShapeTables keep(cx);
     AutoCheckShapeConsistency check(obj);
 
+    // Fast path for non-dictionary shapes with a single kid.
+    do {
+        AutoCheckCannotGC nogc;
+
+        Shape* lastProperty = obj->lastProperty();
+        if (lastProperty->inDictionary())
+            break;
+
+        KidsPointer* kidp = &lastProperty->kids;
+        if (!kidp->isShape())
+            break;
+
+        Shape* kid = kidp->toShape();
+        MOZ_ASSERT(!kid->inDictionary());
+
+        if (kid->propidRaw() != id ||
+            kid->isAccessorShape() ||
+            kid->attributes() != JSPROP_ENUMERATE ||
+            kid->base()->unowned() != lastProperty->base()->unowned())
+        {
+            break;
+        }
+
+        MOZ_ASSERT(kid->isDataProperty());
+
+        kid = PropertyTreeReadBarrier(lastProperty, kid);
+        if (!kid)
+            break;
+
+        if (!obj->setLastProperty(cx, kid))
+            return nullptr;
+        return kid;
+    } while (0);
+
+    AutoKeepShapeTables keep(cx);
     ShapeTable* table = nullptr;
     ShapeTable::Entry* entry = nullptr;
 
@@ -1676,30 +1739,9 @@ PropertyTree::inlinedGetChild(JSContext* cx, Shape* parent, Handle<StackShape> c
     }
 
     if (existingShape) {
-        JS::Zone* zone = existingShape->zone();
-        if (zone->needsIncrementalBarrier()) {
-            /*
-             * We need a read barrier for the shape tree, since these are weak
-             * pointers.
-             */
-            Shape* tmp = existingShape;
-            TraceManuallyBarrieredEdge(zone->barrierTracer(), &tmp, "read barrier");
-            MOZ_ASSERT(tmp == existingShape);
+        existingShape = PropertyTreeReadBarrier(parent, existingShape);
+        if (existingShape)
             return existingShape;
-        }
-        if (!zone->isGCSweepingOrCompacting() ||
-            !IsAboutToBeFinalizedUnbarriered(&existingShape))
-        {
-            if (existingShape->isMarkedGray())
-                UnmarkGrayShapeRecursively(existingShape);
-            return existingShape;
-        }
-        /*
-         * The shape we've found is unreachable and due to be finalized, so
-         * remove our weak reference to it and don't use it.
-         */
-        MOZ_ASSERT(parent->isMarkedAny());
-        parent->removeChild(existingShape);
     }
 
     RootedShape parentRoot(cx, parent);
