@@ -388,7 +388,7 @@ server.TCPListener = class {
     // Shutdown server socket, and no longer listen for new connections
     this.acceptConnections = false;
 
-    Services.obs.notifyObservers(this, NOTIFY_RUNNING);
+    Services.obs.notifyObservers(this, NOTIFY_RUNNING, false);
     this.alive = false;
   }
 
