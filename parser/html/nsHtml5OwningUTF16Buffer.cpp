@@ -4,6 +4,10 @@
 
 #include "nsHtml5OwningUTF16Buffer.h"
 
+#include "mozilla/Span.h"
+
+using namespace mozilla;
+
 nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(char16_t* aBuffer)
   : nsHtml5UTF16Buffer(aBuffer, 0),
     next(nullptr),
