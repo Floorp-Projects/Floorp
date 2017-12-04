@@ -8,15 +8,15 @@
       shadowDiv.style.border = "10px solid green";
 
       // Insertion point will match nothing and use fallback content.
-      var insertionPoint = document.createElement("content");
-      shadowDiv.appendChild(insertionPoint);
+      var slot = document.createElement("slot");
+      shadowDiv.appendChild(slot);
 
-      var shadowRoot = document.getElementById('outer').createShadowRoot();
+      var shadowRoot = document.getElementById('outer').attachShadow({mode: 'open'});
       shadowRoot.appendChild(shadowDiv);
 
       // Remove the insertion point from the ShadowRoot, "Hello" should no
       // longer be rendered.
-      shadowDiv.removeChild(insertionPoint);
+      shadowDiv.removeChild(slot);
     }
   </script>
 </head>

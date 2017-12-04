@@ -5,24 +5,18 @@
 <body>
 <div id="outer"><span id="distnode">text</span></div>
 <script>
-function run() {
-  var shadowRoot = document.getElementById('outer').createShadowRoot();
-  shadowRoot.innerHTML = '<div><content></content></div>';
-}
 
-function tweak() {
-  var distNode = document.getElementById("distnode");
-  distNode.textContent = "Hello World";
+  var shadowRoot = document.getElementById('outer').attachShadow({mode: 'open'});
+  shadowRoot.innerHTML = '<div><slot></slot></div>';
 
-  document.documentElement.removeAttribute("class");
-}
+  function tweak() {
+    var distNode = document.getElementById("distnode");
+    distNode.textContent = "Hello World";
 
-if (document.body.createShadowRoot) {
-  run();
+    document.documentElement.removeAttribute("class");
+	}
+
   window.addEventListener("MozReftestInvalidate", tweak);
-} else {
-  document.documentElement.className = "";
-}
 </script>
 </body>
 </html>
