@@ -95,7 +95,7 @@ public:
                      uint32_t aHapticIndex,
                      double aIntensity,
                      double aDuration,
-                     uint32_t aPromiseID);
+                     const VRManagerPromise& aPromise);
   void StopVibrateHaptic();
 
 protected:
@@ -107,8 +107,8 @@ private:
                            double aIntensity,
                            double aDuration,
                            uint64_t aVibrateIndex,
-                           uint32_t aPromiseID);
-  void VibrateHapticComplete(uint32_t aPromiseID);
+                           const VRManagerPromise& aPromise);
+  void VibrateHapticComplete(const VRManagerPromise& aPromise);
 
   // The index of tracked devices from ::vr::IVRSystem.
   uint32_t mTrackedIndex;
@@ -138,7 +138,7 @@ public:
                              uint32_t aHapticIndex,
                              double aIntensity,
                              double aDuration,
-                             uint32_t aPromiseID) override;
+                             const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
 
 protected:

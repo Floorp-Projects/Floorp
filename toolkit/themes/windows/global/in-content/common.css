@@ -55,14 +55,6 @@ html|input[type="checkbox"]:-moz-focusring + html|label:before {
   }
 }
 
-*|*.header-name {
-  font-size: 1.83rem;
-}
-
-*|*.category-name {
-  font-size: 1.33rem;
-}
-
 html|button {
   /* XUL button min-width */
   min-width: 6.3em;

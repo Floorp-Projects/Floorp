@@ -26,6 +26,7 @@ add_task(async function() {
   await waitForPaused(dbg);
   await waitForLoadedSource(dbg, "average.c");
   assertPausedLocation(dbg);
+  toggleCallStack(dbg);
 
   const frames = findAllElements(dbg, "frames");
   const firstFrameTitle = frames[0].querySelector(".title").textContent;

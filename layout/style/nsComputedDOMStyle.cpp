@@ -6570,6 +6570,14 @@ nsComputedDOMStyle::DoGetClipPath()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetShapeImageThreshold()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetNumber(StyleDisplay()->mShapeImageThreshold);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetShapeOutside()
 {
   return GetShapeSource(StyleDisplay()->mShapeOutside,

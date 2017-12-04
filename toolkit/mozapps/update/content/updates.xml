@@ -33,7 +33,6 @@
         <xul:label xbl:inherits="href=detailsURL,hidden=hideDetailsURL" class="text-link"
                    value="&update.details.label;"/>
       </xul:hbox>
-      <xul:label class="update-type" xbl:inherits="value=type"/>
       <xul:grid>
         <xul:columns>
           <xul:column class="update-label-column"/>
@@ -61,9 +60,6 @@
       <property name="installDate"
                 onget="return this.getAttribute('installDate');"
                 onset="this.setAttribute('installDate', val); return val;"/>
-      <property name="type"
-                onget="return this.getAttribute('type');"
-                onset="this.setAttribute('type', val); return val;"/>
       <property name="hideDetailsURL"
                 onget="return this.getAttribute('hideDetailsURL');"
                 onset="this.setAttribute('hideDetailsURL', val); return val;"/>

@@ -165,7 +165,7 @@ NS_IMPL_ISUPPORTS(TabChildSHistoryListener,
 
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
-nsTHashtable<nsPtrHashKey<TabChild>>* TabChild::sActiveTabs;
+nsTHashtable<nsPtrHashKey<TabChild>>* TabChild::sVisibleTabs;
 
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
@@ -428,7 +428,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDidLoadURLInit(false)
   , mAwaitingLA(false)
   , mSkipKeyPress(false)
-  , mLayerObserverEpoch(0)
+  , mLayerObserverEpoch(1)
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   , mNativeWindowHandle(0)
 #endif
@@ -436,7 +436,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mTopLevelDocAccessibleChild(nullptr)
 #endif
   , mPendingDocShellIsActive(false)
-  , mPendingDocShellPreserveLayers(false)
   , mPendingDocShellReceivedMessage(false)
   , mPendingDocShellBlockers(0)
   , mWidgetNativeData(0)
@@ -1151,11 +1150,11 @@ TabChild::ActorDestroy(ActorDestroyReason why)
 
 TabChild::~TabChild()
 {
-  if (sActiveTabs) {
-    sActiveTabs->RemoveEntry(this);
-    if (sActiveTabs->IsEmpty()) {
-      delete sActiveTabs;
-      sActiveTabs = nullptr;
+  if (sVisibleTabs) {
+    sVisibleTabs->RemoveEntry(this);
+    if (sVisibleTabs->IsEmpty()) {
+      delete sVisibleTabs;
+      sVisibleTabs = nullptr;
     }
   }
 
@@ -2662,38 +2661,57 @@ TabChild::RemovePendingDocShellBlocker()
   mPendingDocShellBlockers--;
   if (!mPendingDocShellBlockers && mPendingDocShellReceivedMessage) {
     mPendingDocShellReceivedMessage = false;
-    InternalSetDocShellIsActive(mPendingDocShellIsActive,
-                                mPendingDocShellPreserveLayers);
+    InternalSetDocShellIsActive(mPendingDocShellIsActive);
   }
 }
 
 void
-TabChild::OnDocShellActivated(bool aIsActive)
+TabChild::InternalSetDocShellIsActive(bool aIsActive)
 {
-  if (aIsActive) {
-    if (!sActiveTabs) {
-      sActiveTabs = new nsTHashtable<nsPtrHashKey<TabChild>>();
-    }
-    sActiveTabs->PutEntry(this);
-  } else {
-    if (sActiveTabs) {
-      sActiveTabs->RemoveEntry(this);
-      // We don't delete sActiveTabs here when it's empty since that
-      // could cause a lot of churn. Instead, we wait until ~TabChild.
-    }
+  // docshell is consider prerendered only if not active yet
+  mIsPrerendered &= !aIsActive;
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+
+  if (docShell) {
+    docShell->SetIsActive(aIsActive);
   }
 }
 
-void
-TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
+mozilla::ipc::IPCResult
+TabChild::RecvSetDocShellIsActive(const bool& aIsActive)
 {
+  // If we're currently waiting for window opening to complete, we need to hold
+  // off on setting the docshell active. We queue up the values we're receiving
+  // in the mWindowOpenDocShellActiveStatus.
+  if (mPendingDocShellBlockers > 0) {
+    mPendingDocShellReceivedMessage = true;
+    mPendingDocShellIsActive = aIsActive;
+    return IPC_OK();
+  }
+
+  InternalSetDocShellIsActive(aIsActive);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverEpoch)
+{
+  // Since requests to change the rendering state come in from both the hang
+  // monitor channel and the PContent channel, we have an ordering problem. This
+  // code ensures that we respect the order in which the requests were made and
+  // ignore stale requests.
+  if (mLayerObserverEpoch >= aLayerObserverEpoch) {
+    return IPC_OK();
+  }
+  mLayerObserverEpoch = aLayerObserverEpoch;
+
   auto clearForcePaint = MakeScopeExit([&] {
     // We might force a paint, or we might already have painted and this is a
     // no-op. In either case, once we exit this scope, we need to alert the
     // ProcessHangMonitor that we've finished responding to what might have
     // been a request to force paint. This is so that the BackgroundHangMonitor
     // for force painting can be made to wait again.
-    if (aIsActive) {
+    if (aEnabled) {
       ProcessHangMonitor::ClearForcePaint();
     }
   });
@@ -2705,34 +2723,31 @@ TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
 
     // We send the current layer observer epoch to the compositor so that
     // TabParent knows whether a layer update notification corresponds to the
-    // latest SetDocShellIsActive request that was made.
+    // latest RecvRenderLayers request that was made.
     lm->SetLayerObserverEpoch(mLayerObserverEpoch);
   }
 
-  // docshell is consider prerendered only if not active yet
-  mIsPrerendered &= !aIsActive;
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (docShell) {
-    bool wasActive;
-    docShell->GetIsActive(&wasActive);
-    if (aIsActive && wasActive) {
+  if (aEnabled) {
+    if (IsVisible()) {
       // This request is a no-op. In this case, we still want a MozLayerTreeReady
       // notification to fire in the parent (so that it knows that the child has
       // updated its epoch). ForcePaintNoOp does that.
       if (IPCOpen()) {
         Unused << SendForcePaintNoOp(mLayerObserverEpoch);
-        return;
+        return IPC_OK();
       }
     }
 
-    docShell->SetIsActive(aIsActive);
-  }
+    if (!sVisibleTabs) {
+      sVisibleTabs = new nsTHashtable<nsPtrHashKey<TabChild>>();
+    }
+    sVisibleTabs->PutEntry(this);
 
-  if (aIsActive) {
     MakeVisible();
 
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
     if (!docShell) {
-      return;
+      return IPC_OK();
     }
 
     // We don't use TabChildBase::GetPresShell() here because that would create
@@ -2740,6 +2755,8 @@ TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
     // cause JS to run, which we want to avoid. nsIDocShell::GetPresShell
     // returns null if no content viewer exists yet.
     if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
+      presShell->SetIsActive(true);
+
       if (nsIFrame* root = presShell->FrameConstructor()->GetRootFrame()) {
         FrameLayerBuilder::InvalidateAllLayersForFrame(
           nsLayoutUtils::GetDisplayRootFrame(root));
@@ -2763,36 +2780,16 @@ TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
       }
       APZCCallbackHelper::SuppressDisplayport(false, presShell);
     }
-  } else if (!aPreserveLayers) {
+  } else {
+    if (sVisibleTabs) {
+      sVisibleTabs->RemoveEntry(this);
+      // We don't delete sVisibleTabs here when it's empty since that
+      // could cause a lot of churn. Instead, we wait until ~TabChild.
+    }
+
     MakeHidden();
   }
-}
 
-mozilla::ipc::IPCResult
-TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
-                                  const bool& aPreserveLayers,
-                                  const uint64_t& aLayerObserverEpoch)
-{
-  // Since requests to change the active docshell come in from both the hang
-  // monitor channel and the PContent channel, we have an ordering problem. This
-  // code ensures that we respect the order in which the requests were made and
-  // ignore stale requests.
-  if (mLayerObserverEpoch >= aLayerObserverEpoch) {
-    return IPC_OK();
-  }
-  mLayerObserverEpoch = aLayerObserverEpoch;
-
-  // If we're currently waiting for window opening to complete, we need to hold
-  // off on setting the docshell active. We queue up the values we're receiving
-  // in the mWindowOpenDocShellActiveStatus.
-  if (mPendingDocShellBlockers > 0) {
-    mPendingDocShellReceivedMessage = true;
-    mPendingDocShellIsActive = aIsActive;
-    mPendingDocShellPreserveLayers = aPreserveLayers;
-    return IPC_OK();
-  }
-
-  InternalSetDocShellIsActive(aIsActive, aPreserveLayers);
   return IPC_OK();
 }
 
@@ -2940,6 +2937,9 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
       gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
       InitAPZState();
+      RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
+      MOZ_ASSERT(lm);
+      lm->SetLayerObserverEpoch(mLayerObserverEpoch);
     } else {
       NS_WARNING("Fallback to BasicLayerManager");
       mLayersConnected = Some(false);
@@ -3037,7 +3037,7 @@ TabChild::NotifyPainted()
 void
 TabChild::MakeVisible()
 {
-  if (mPuppetWidget && mPuppetWidget->IsVisible()) {
+  if (IsVisible()) {
     return;
   }
 
@@ -3049,25 +3049,45 @@ TabChild::MakeVisible()
 void
 TabChild::MakeHidden()
 {
-  if (mPuppetWidget && !mPuppetWidget->IsVisible()) {
+  if (!IsVisible()) {
     return;
   }
 
-  ClearCachedResources();
+  // Due to the nested event loop in ContentChild::ProvideWindowCommon,
+  // it's possible to be told to become hidden before we're finished
+  // setting up a layer manager. We should skip clearing cached layers
+  // in that case, since doing so might accidentally put is into
+  // BasicLayers mode.
+  if (mPuppetWidget && mPuppetWidget->HasLayerManager()) {
+    ClearCachedResources();
+  }
 
-  // Hide all plugins in this tab.
-  if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
-    if (nsPresContext* presContext = shell->GetPresContext()) {
-      nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-      nsIFrame* rootFrame = shell->FrameConstructor()->GetRootFrame();
-      rootPresContext->ComputePluginGeometryUpdates(rootFrame, nullptr, nullptr);
-      rootPresContext->ApplyPluginGeometryUpdates();
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (docShell) {
+    // Hide all plugins in this tab. We don't use TabChildBase::GetPresShell()
+    // here because that would create a content viewer if one doesn't exist yet.
+    // Creating a content viewer can cause JS to run, which we want to avoid.
+    // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
+    if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
+      if (nsPresContext* presContext = presShell->GetPresContext()) {
+        nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
+        nsIFrame* rootFrame = presShell->FrameConstructor()->GetRootFrame();
+        rootPresContext->ComputePluginGeometryUpdates(rootFrame, nullptr, nullptr);
+        rootPresContext->ApplyPluginGeometryUpdates();
+      }
+      presShell->SetIsActive(false);
     }
   }
 
   if (mPuppetWidget) {
     mPuppetWidget->Show(false);
   }
+}
+
+bool
+TabChild::IsVisible()
+{
+  return mPuppetWidget && mPuppetWidget->IsVisible();
 }
 
 NS_IMETHODIMP
@@ -3551,14 +3571,14 @@ TabChild::GetOuterRect()
 void
 TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
 {
-  if (!IPCOpen()) {
+  if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasLayerManager()) {
     // Don't bother doing anything now. Better to wait until we receive the
     // message on the PContent channel.
     return;
   }
 
   nsAutoScriptBlocker scriptBlocker;
-  RecvSetDocShellIsActive(true, false, aLayerObserverEpoch);
+  RecvRenderLayers(true, aLayerObserverEpoch);
 }
 
 void

@@ -21,7 +21,8 @@ import java.lang.StringBuffer;
 import java.lang.Math;
 
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.GeckoView;
+import org.mozilla.gecko.gfx.CompositorController;
 import org.mozilla.gecko.gfx.PanningPerfAPI;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -33,7 +34,7 @@ import android.view.View;
 
 import com.robotium.solo.Solo;
 
-public class FennecNativeDriver implements Driver, LayerView.GetPixelsResult {
+public class FennecNativeDriver implements Driver, CompositorController.GetPixelsCallback {
     private static final int FRAME_TIME_THRESHOLD = 25;     // allow 25ms per frame (40fps)
 
     private final Activity mActivity;
@@ -177,16 +178,16 @@ public class FennecNativeDriver implements Driver, LayerView.GetPixelsResult {
         return total * 100.0f;
     }
 
-    private LayerView getSurfaceView() {
-        final LayerView layerView = mSolo.getView(LayerView.class, 0);
+    private GeckoView getSurfaceView() {
+        final GeckoView geckoView = mSolo.getView(GeckoView.class, 0);
 
-        if (layerView == null) {
-            log(LogLevel.WARN, "getSurfaceView could not find LayerView");
+        if (geckoView == null) {
+            log(LogLevel.WARN, "getSurfaceView could not find GeckoView");
             for (final View v : mSolo.getViews()) {
                 log(LogLevel.WARN, "  View: " + v);
             }
         }
-        return layerView;
+        return geckoView;
     }
 
     private volatile boolean mGotPixelsResult;
@@ -250,12 +251,17 @@ public class FennecNativeDriver implements Driver, LayerView.GetPixelsResult {
 
     @Override
     public PaintedSurface getPaintedSurface() {
-        final LayerView view = getSurfaceView();
+        final GeckoView view = getSurfaceView();
         if (view == null) {
             return null;
         }
 
-        view.getPixels(this);
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                view.getSession().getCompositorController().getPixels(FennecNativeDriver.this);
+            }
+        });
 
         synchronized (this) {
             while (!mGotPixelsResult) {

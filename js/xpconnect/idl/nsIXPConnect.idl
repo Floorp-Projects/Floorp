@@ -14,8 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 
-struct JSFreeOp;
-
 class nsWrapperCache;
 %}
 
@@ -24,30 +22,18 @@ class nsWrapperCache;
 // NB: jsval and jsid are declared in nsrootidl.idl
 
 [ptr] native JSContextPtr(JSContext);
-[ptr] native JSClassPtr(JSClass);
-[ptr] native JSFreeOpPtr(JSFreeOp);
 [ptr] native JSObjectPtr(JSObject);
-[ptr] native JSValConstPtr(const JS::Value);
-      native JSEqualityOp(JSEqualityOp);
 [ptr] native JSScriptPtr(JSScript);
-[ptr] native voidPtrPtr(void*);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
-[ref] native JSCompartmentOptions(JS::CompartmentOptions);
-[ref] native JSCallArgsRef(const JS::CallArgs);
       native JSHandleId(JS::Handle<jsid>);
 
 /***************************************************************************/
 
 // forward declarations...
-interface nsIXPCScriptable;
-interface nsIXPConnect;
-interface nsIXPConnectWrappedNative;
 interface nsIInterfaceInfo;
-interface nsIXPCSecurityManager;
 interface nsIPrincipal;
 interface nsIClassInfo;
 interface nsIVariant;
-interface nsIStackFrame;
 interface nsIObjectInputStream;
 interface nsIObjectOutputStream;
 
@@ -62,24 +48,8 @@ interface nsIXPConnectJSObjectHolder : nsISupports
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
-    readonly attribute nsISupports      Native;
-    readonly attribute JSObjectPtr      JSObjectPrototype;
-
-    /**
-     * These are here as an aid to nsIXPCScriptable implementors
-     */
-
-    nsIInterfaceInfo FindInterfaceWithMember(in JSHandleId nameID);
-    nsIInterfaceInfo FindInterfaceWithName(in JSHandleId nameID);
-    [notxpcom] bool HasNativeMember(in JSHandleId name);
 
     void debugDump(in short depth);
-
-    /*
-     * NOTE: Add new IDL methods _before_ the C++ block below if you
-     * add them.  Otherwise the vtable won't be what xpidl thinks it
-     * is, since GetObjectPrincipal() is virtual.
-     */
 
 %{C++
     /**
@@ -404,16 +374,6 @@ interface nsIXPConnect : nsISupports
 
     // Methods added since mozilla 0.6....
 
-    /**
-    * This only succeeds if the native object is already wrapped by xpconnect.
-    * A new wrapper is *never* constructed.
-    */
-    nsIXPConnectWrappedNative
-    getWrappedNativeOfNativeObject(in JSContextPtr aJSContext,
-                                   in JSObjectPtr  aScope,
-                                   in nsISupports  aCOMObj,
-                                   in nsIIDRef     aIID);
-
     void
     setFunctionThisTranslator(in nsIIDRef aIID,
                               in nsIXPCFunctionThisTranslator aTranslator);
@@ -454,29 +414,6 @@ interface nsIXPConnect : nsISupports
     [noscript] jsval evalInSandboxObject(in AString source, in string filename,
                                          in JSContextPtr cx,
                                          in JSObjectPtr sandbox);
-
-    /**
-     * Trigger a JS garbage collection.
-     * Use a js::gcreason::Reason from jsfriendapi.h for the kind.
-     */
-    void GarbageCollect(in uint32_t reason);
-
-    /**
-     * Signals a good place to do an incremental GC slice, because the
-     * browser is drawing a frame.
-     */
-    void NotifyDidPaint();
-
-%{C++
-    /**
-     * Get the object principal for this wrapper.  Note that this may well end
-     * up being null; in that case one should seek principals elsewhere.  Null
-     * here does NOT indicate system principal or no principals at all, just
-     * that this wrapper doesn't have an intrinsic one.
-     */
-    virtual nsIPrincipal* GetPrincipal(JSObject* obj,
-                                       bool allowShortCircuit) const = 0;
-%}
 
     [noscript] void writeScript(in nsIObjectOutputStream aStream,
                                 in JSContextPtr aJSContext,

@@ -2043,7 +2043,7 @@ void
 JsepSessionImpl::SetupDefaultRtpExtensions()
 {
   AddAudioRtpExtension(webrtc::RtpExtension::kAudioLevelUri,
-                       SdpDirectionAttribute::Direction::kSendonly);
+                       SdpDirectionAttribute::Direction::kSendrecv);
   AddAudioRtpExtension(webrtc::RtpExtension::kMIdUri,
                        SdpDirectionAttribute::Direction::kSendrecv);
   AddVideoRtpExtension(webrtc::RtpExtension::kAbsSendTimeUri,

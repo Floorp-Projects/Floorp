@@ -20,6 +20,9 @@ var gExceptionPaths = [
   "resource://gre/defaults/pref/",
   "resource://shield-recipe-client/node_modules/jexl/lib/",
 
+  // These resources are referenced using relative paths from html files.
+  "resource://payments/",
+
   // https://github.com/mozilla/normandy/issues/577
   "resource://shield-recipe-client/test/",
 

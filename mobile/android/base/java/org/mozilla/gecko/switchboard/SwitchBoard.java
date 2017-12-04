@@ -142,34 +142,25 @@ public class SwitchBoard {
         }
 
         try {
-            // TODO: cache the array into a mapping so we don't do a loop everytime we are looking for a experiment key
             final JSONArray experiments = new JSONObject(config).getJSONArray(KEY_DATA);
-            JSONObject experiment = null;
 
+            // Allow repeated experiment names. Only return false after we've iterated all experiments and can't find a match.
             for (int i = 0; i < experiments.length(); i++) {
                 JSONObject entry = experiments.getJSONObject(i);
                 final String name = entry.getString(KEY_NAME);
-                if (name.equals(experimentName)) {
-                    experiment = entry;
-                    break;
+                final boolean isTarget = name.equals(experimentName);
+                if (isTarget) {
+                    final boolean isMatch = isMatch(c, entry.optJSONObject(KEY_MATCH));
+                    final JSONObject buckets = entry.getJSONObject(KEY_BUCKETS);
+                    final boolean isInBucket = isInBucket(c, buckets.getInt(KEY_MIN), buckets.getInt(KEY_MAX));
+                    if (isMatch && isInBucket) {
+                        return true;
+                    }
                 }
             }
 
-            if (experiment == null) {
-                return false;
-            }
+            return false;
 
-            if (!isMatch(c, experiment.optJSONObject(KEY_MATCH))) {
-                return false;
-            }
-
-            final JSONObject buckets = experiment.getJSONObject(KEY_BUCKETS);
-            final boolean inExperiment = isInBucket(c, buckets.getInt(KEY_MIN), buckets.getInt(KEY_MAX));
-
-            if (DEBUG) {
-                Log.d(TAG, experimentName + " = " + inExperiment);
-            }
-            return inExperiment;
         } catch (JSONException e) {
             // If the experiment name is not found in the JSON, just return false.
             // There is no need to log an error, since we don't really care if an

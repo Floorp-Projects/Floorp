@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{FontInstancePlatformOptions, FontKey, FontRenderMode};
+use api::{FontInstanceFlags, FontKey, FontRenderMode};
 use api::{ColorU, GlyphDimensions, GlyphKey, SubpixelDirection};
 use dwrote;
 use gamma_lut::{ColorLut, GammaLut};
 use glyph_rasterizer::{FontInstance, RasterizedGlyph};
 use internal_types::FastHashMap;
+use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
 lazy_static! {
@@ -21,6 +22,7 @@ lazy_static! {
 
 pub struct FontContext {
     fonts: FastHashMap<FontKey, dwrote::FontFace>,
+    simulations: FastHashMap<(FontKey, dwrote::DWRITE_FONT_SIMULATIONS), dwrote::FontFace>,
     gamma_lut: GammaLut,
     gdi_gamma_lut: GammaLut,
 }
@@ -39,15 +41,12 @@ fn dwrite_texture_type(render_mode: FontRenderMode) -> dwrote::DWRITE_TEXTURE_TY
 }
 
 fn dwrite_measure_mode(
-    render_mode: FontRenderMode,
-    options: Option<FontInstancePlatformOptions>,
+    font: &FontInstance,
 ) -> dwrote::DWRITE_MEASURING_MODE {
-    let FontInstancePlatformOptions { force_gdi_rendering, .. } =
-        options.unwrap_or_default();
-    if force_gdi_rendering {
+    if font.flags.contains(FontInstanceFlags::FORCE_GDI) {
         dwrote::DWRITE_MEASURING_MODE_GDI_CLASSIC
     } else {
-      match render_mode {
+      match font.render_mode {
           FontRenderMode::Mono | FontRenderMode::Bitmap => dwrote::DWRITE_MEASURING_MODE_GDI_CLASSIC,
           FontRenderMode::Alpha | FontRenderMode::Subpixel => dwrote::DWRITE_MEASURING_MODE_NATURAL,
       }
@@ -56,18 +55,15 @@ fn dwrite_measure_mode(
 
 fn dwrite_render_mode(
     font_face: &dwrote::FontFace,
-    render_mode: FontRenderMode,
+    font: &FontInstance,
     em_size: f32,
     measure_mode: dwrote::DWRITE_MEASURING_MODE,
-    options: Option<FontInstancePlatformOptions>,
 ) -> dwrote::DWRITE_RENDERING_MODE {
-    let dwrite_render_mode = match render_mode {
+    let dwrite_render_mode = match font.render_mode {
         FontRenderMode::Bitmap => dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC,
         FontRenderMode::Mono => dwrote::DWRITE_RENDERING_MODE_ALIASED,
         FontRenderMode::Alpha | FontRenderMode::Subpixel => {
-            let FontInstancePlatformOptions { force_gdi_rendering, .. } =
-                options.unwrap_or_default();
-            if force_gdi_rendering {
+            if font.flags.contains(FontInstanceFlags::FORCE_GDI) {
                 dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC
             } else {
                 font_face.get_recommended_rendering_mode_default_params(em_size, 1.0, measure_mode)
@@ -93,6 +89,7 @@ impl FontContext {
         let gdi_gamma = 2.3;
         FontContext {
             fonts: FastHashMap::default(),
+            simulations: FastHashMap::default(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
             gdi_gamma_lut: GammaLut::new(contrast, gdi_gamma, gdi_gamma),
         }
@@ -109,7 +106,7 @@ impl FontContext {
 
         if let Some(font_file) = dwrote::FontFile::new_from_data(&**data) {
             let face = font_file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE);
-            self.fonts.insert((*font_key).clone(), face);
+            self.fonts.insert(*font_key, face);
         } else {
             // XXX add_raw_font needs to have a way to return an error
             debug!("DWrite WR failed to load font from data, using Arial instead");
@@ -125,11 +122,13 @@ impl FontContext {
         let system_fc = dwrote::FontCollection::system();
         let font = system_fc.get_font_from_descriptor(&font_handle).unwrap();
         let face = font.create_font_face();
-        self.fonts.insert((*font_key).clone(), face);
+        self.fonts.insert(*font_key, face);
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
-        self.fonts.remove(font_key);
+        if let Some(_) = self.fonts.remove(font_key) {
+            self.simulations.retain(|k, _| k.0 != *font_key);
+        }
     }
 
     // Assumes RGB format from dwrite, which is 3 bytes per pixel as dwrite
@@ -150,12 +149,35 @@ impl FontContext {
         }
     }
 
+    fn get_font_face(
+        &mut self,
+        font: &FontInstance,
+    ) -> &dwrote::FontFace {
+        if !font.flags.intersects(FontInstanceFlags::SYNTHETIC_BOLD | FontInstanceFlags::SYNTHETIC_ITALICS) {
+            return self.fonts.get(&font.font_key).unwrap();
+        }
+        let mut sims = dwrote::DWRITE_FONT_SIMULATIONS_NONE;
+        if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
+            sims = sims | dwrote::DWRITE_FONT_SIMULATIONS_BOLD;
+        }
+        if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+            sims = sims | dwrote::DWRITE_FONT_SIMULATIONS_OBLIQUE;
+        }
+        match self.simulations.entry((font.font_key, sims)) {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => {
+                let normal_face = self.fonts.get(&font.font_key).unwrap();
+                entry.insert(normal_face.create_font_face_with_simulations(sims))
+            }
+        }
+    }
+
     fn create_glyph_analysis(
-        &self,
+        &mut self,
         font: &FontInstance,
         key: &GlyphKey,
     ) -> dwrote::GlyphRunAnalysis {
-        let face = self.fonts.get(&font.font_key).unwrap();
+        let face = self.get_font_face(font);
         let glyph = key.index as u16;
         let advance = 0.0f32;
         let offset = dwrote::GlyphOffset {
@@ -177,13 +199,12 @@ impl FontContext {
             bidiLevel: 0,
         };
 
-        let dwrite_measure_mode = dwrite_measure_mode(font.render_mode, font.platform_options);
+        let dwrite_measure_mode = dwrite_measure_mode(font);
         let dwrite_render_mode = dwrite_render_mode(
             face,
-            font.render_mode,
+            font,
             size,
             dwrite_measure_mode,
-            font.platform_options,
         );
 
         let (x_offset, y_offset) = font.get_subpx_offset(key);
@@ -216,7 +237,7 @@ impl FontContext {
 
     // TODO: Pipe GlyphOptions into glyph_dimensions too
     pub fn get_glyph_dimensions(
-        &self,
+        &mut self,
         font: &FontInstance,
         key: &GlyphKey,
     ) -> Option<GlyphDimensions> {
@@ -237,7 +258,7 @@ impl FontContext {
             return None;
         }
 
-        let face = self.fonts.get(&font.font_key).unwrap();
+        let face = self.get_font_face(font);
         face.get_design_glyph_metrics(&[key.index as u16], false)
             .first()
             .map(|metrics| {
@@ -301,7 +322,7 @@ impl FontContext {
         // If bitmaps are requested, then treat as a bitmap font to disable transforms.
         // If mono AA is requested, let that take priority over using bitmaps.
         font.render_mode != FontRenderMode::Mono &&
-            font.platform_options.unwrap_or_default().use_embedded_bitmap
+            font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS)
     }
 
     pub fn prepare_font(font: &mut FontInstance) {
@@ -345,9 +366,7 @@ impl FontContext {
         let lut_correction = match font.render_mode {
             FontRenderMode::Mono | FontRenderMode::Bitmap => &self.gdi_gamma_lut,
             FontRenderMode::Alpha | FontRenderMode::Subpixel => {
-                let FontInstancePlatformOptions { force_gdi_rendering, .. } =
-                    font.platform_options.unwrap_or_default();
-                if force_gdi_rendering {
+                if font.flags.contains(FontInstanceFlags::FORCE_GDI) {
                     &self.gdi_gamma_lut
                 } else {
                     &self.gamma_lut

@@ -22,7 +22,7 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   // Execute one POST request on the page and wait till its done.
-  let wait = waitForNetworkEvents(monitor, 0, 1);
+  let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
     content.wrappedJSObject.executeTest();
   });

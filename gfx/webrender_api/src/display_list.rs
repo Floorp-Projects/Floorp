@@ -315,7 +315,6 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         LayerPrimitiveInfo {
             rect: info.rect.translate(&offset),
             local_clip: info.local_clip.create_with_offset(offset),
-            edge_aa_segment_mask: info.edge_aa_segment_mask,
             is_backface_visible: info.is_backface_visible,
             tag: info.tag,
         }

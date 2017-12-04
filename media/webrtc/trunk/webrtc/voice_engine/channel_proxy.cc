@@ -293,6 +293,10 @@ void ChannelProxy::SetRtcpRttStats(RtcpRttStats* rtcp_rtt_stats) {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   channel()->SetRtcpRttStats(rtcp_rtt_stats);
 }
+void ChannelProxy::SetRtpPacketObserver(RtpPacketObserver* observer) {
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  channel()->SetRtpPacketObserver(observer);
+}
 
 Channel* ChannelProxy::channel() const {
   RTC_DCHECK(channel_owner_.channel());

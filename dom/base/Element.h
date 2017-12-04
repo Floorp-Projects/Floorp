@@ -33,6 +33,7 @@
 #include "nsISMILAttr.h"
 #include "mozilla/dom/DOMRect.h"
 #include "nsAttrValue.h"
+#include "nsAttrValueInlines.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMTokenListSupportedTokens.h"

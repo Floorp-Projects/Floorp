@@ -394,15 +394,14 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/BitmapUtils.java',
     'gfx/BufferedImage.java',
     'gfx/BufferedImageGLInfo.java',
+    'gfx/CompositorController.java',
     'gfx/DynamicToolbarAnimator.java',
     'gfx/FloatSize.java',
-    'gfx/FullScreenState.java',
     'gfx/GeckoDisplay.java',
     'gfx/GeckoSurface.java',
     'gfx/GeckoSurfaceTexture.java',
     'gfx/IntSize.java',
     'gfx/LayerSession.java',
-    'gfx/LayerView.java',
     'gfx/NativePanZoomController.java',
     'gfx/OverscrollEdgeEffect.java',
     'gfx/PanningPerfAPI.java',
@@ -462,7 +461,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'WakeLockDelegate.java',
 ]]
 
-if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT'] and CONFIG['MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE']:
     gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in [
         'media/GeckoHlsAudioRenderer.java',
         'media/GeckoHlsPlayer.java',
@@ -833,6 +832,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'prompts/PromptListItem.java',
     'prompts/PromptService.java',
     'prompts/TabInput.java',
+    'pwa/PwaUtils.java',
     'reader/ReaderModeUtils.java',
     'reader/ReadingListHelper.java',
     'reader/SavedReaderViewHelper.java',
@@ -1430,7 +1430,7 @@ gvjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
     'process/IProcessManager.java',
 ]]
 
-if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT'] and CONFIG['MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE']:
     gvjar.extra_jars += [
         'exoplayer2.jar',
     ]

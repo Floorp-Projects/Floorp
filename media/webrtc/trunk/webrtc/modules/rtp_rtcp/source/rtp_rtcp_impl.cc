@@ -47,6 +47,8 @@ RTPExtensionType StringToRtpExtensionType(const std::string& extension) {
     return kRtpExtensionRepairedRtpStreamId;
   if (extension == RtpExtension::kMIdUri)
     return kRtpExtensionMId;
+  if (extension == RtpExtension::kCsrcAudioLevelUri)
+    return kRtpExtensionCsrcAudioLevel;
   RTC_NOTREACHED() << "Looking up unsupported RTP extension.";
   return kRtpExtensionNone;
 }

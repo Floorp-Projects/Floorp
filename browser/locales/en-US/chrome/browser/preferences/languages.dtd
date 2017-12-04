@@ -15,4 +15,4 @@
 <!ENTITY languages.customize.selectLanguage.label       "Select a language to add…">
 <!ENTITY languages.customize.addButton.label            "Add">
 <!ENTITY languages.customize.addButton.accesskey        "A">
-
+<!ENTITY languages.customize.spoofEnglish               "Request English versions of web pages for enhanced privacy">

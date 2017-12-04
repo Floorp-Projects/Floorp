@@ -269,31 +269,23 @@ impl<T: NamedTag> GpuProfiler<T> {
 
 #[must_use]
 pub struct GpuMarker {
-    gl: Option<Rc<gl::Gl>>,
+    gl: Rc<gl::Gl>,
 }
 
 impl GpuMarker {
     fn new(gl: &Rc<gl::Gl>, message: &str) -> Self {
-        if gl.get_type() == gl::GlType::Gl {
-            gl.push_group_marker_ext(message);
-            GpuMarker { gl: Some(Rc::clone(gl)) }
-        } else {
-            GpuMarker { gl: None }
-        }
+        gl.push_group_marker_ext(message);
+        GpuMarker { gl: Rc::clone(gl) }
     }
 
     fn fire(gl: &Rc<gl::Gl>, message: &str) {
-        if gl.get_type() == gl::GlType::Gl {
-            gl.insert_event_marker_ext(message);
-        }
+        gl.insert_event_marker_ext(message);
     }
 }
 
 impl Drop for GpuMarker {
     fn drop(&mut self) {
-        if let Some(ref gl) = self.gl {
-            gl.pop_group_marker_ext();
-        }
+        self.gl.pop_group_marker_ext();
     }
 }
 

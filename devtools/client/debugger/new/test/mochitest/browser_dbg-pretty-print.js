@@ -32,8 +32,8 @@ add_task(async function() {
 
   // The pretty-print button should go away in the pretty-printed
   // source.
-  ok(!findElement(dbg, "editorFooter"), "Footer is hidden");
+  ok(!findElement(dbg, "prettyPrintButton"), "Pretty Print Button is hidden");
 
   await selectSource(dbg, "math.min.js");
-  ok(findElement(dbg, "editorFooter"), "Footer is hidden");
+  ok(findElement(dbg, "prettyPrintButton"), "Pretty Print Button is visible");
 });

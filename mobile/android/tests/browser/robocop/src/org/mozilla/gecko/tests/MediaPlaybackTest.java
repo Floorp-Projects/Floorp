@@ -213,7 +213,7 @@ abstract class MediaPlaybackTest extends OldBaseTest {
 
         Notification notification = sbns[0].getNotification();
         mAsserter.is(notification.icon,
-                     R.drawable.flat_icon,
+                     R.drawable.ic_status_logo,
                      "Notification shows correct small icon.");
         mAsserter.is(notification.extras.get(Notification.EXTRA_TITLE),
                      tab.getTitle(),

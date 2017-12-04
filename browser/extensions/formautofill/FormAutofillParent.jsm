@@ -27,7 +27,9 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillParent"];
+// We expose a singleton from this module. Some tests may import the
+// constructor via a backstage pass.
+this.EXPORTED_SYMBOLS = ["formAutofillParent"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -79,9 +81,29 @@ FormAutofillParent.prototype = {
   _active: null,
 
   /**
+   * The status of Form Autofill's initialization.
+   */
+  _initialized: false,
+
+  /**
+   * Exposes the status of Form Autofill's initialization. It can be used to
+   * determine whether Form Autofill is available for current users.
+   *
+   * @returns {boolean} Whether FormAutofillParent is initialized.
+   */
+  get initialized() {
+    return this._initialized;
+  },
+
+  /**
    * Initializes ProfileStorage and registers the message handler.
    */
   async init() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
     Services.obs.addObserver(this, "sync-pane-loaded");
     Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetRecords", this);
@@ -361,6 +383,7 @@ FormAutofillParent.prototype = {
   },
 
   _onAddressSubmit(address, target, timeStartedFillingMS) {
+    let showDoorhanger = null;
     if (address.guid) {
       // Avoid updating the fields that users don't modify.
       let originalAddress = this.profileStorage.addresses.get(address.guid);
@@ -373,7 +396,8 @@ FormAutofillParent.prototype = {
       if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record, true)) {
         this._recordFormFillingTime("address", "autofill-update", timeStartedFillingMS);
 
-        FormAutofillDoorhanger.show(target, "updateAddress").then((state) => {
+        showDoorhanger = async () => {
+          const state = await FormAutofillDoorhanger.show(target, "updateAddress");
           let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record, true);
           switch (state) {
             case "create":
@@ -391,15 +415,15 @@ FormAutofillParent.prototype = {
               break;
           }
           changedGUIDs.forEach(guid => this.profileStorage.addresses.notifyUsed(guid));
-        });
+        };
         // Address should be updated
         Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill_update", 1);
-        return;
+      } else {
+        this._recordFormFillingTime("address", "autofill", timeStartedFillingMS);
+        this.profileStorage.addresses.notifyUsed(address.guid);
+        // Address is merged successfully
+        Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill", 1);
       }
-      this._recordFormFillingTime("address", "autofill", timeStartedFillingMS);
-      this.profileStorage.addresses.notifyUsed(address.guid);
-      // Address is merged successfully
-      Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill", 1);
     } else {
       let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
       if (!changedGUIDs.length) {
@@ -411,22 +435,24 @@ FormAutofillParent.prototype = {
       // Show first time use doorhanger
       if (FormAutofillUtils.isAutofillAddressesFirstTimeUse) {
         Services.prefs.setBoolPref(FormAutofillUtils.ADDRESSES_FIRST_TIME_USE_PREF, false);
-        FormAutofillDoorhanger.show(target, "firstTimeUse").then((state) => {
+        showDoorhanger = async () => {
+          const state = await FormAutofillDoorhanger.show(target, "firstTimeUse");
           if (state !== "open-pref") {
             return;
           }
 
           target.ownerGlobal.openPreferences("panePrivacy",
                                              {origin: "autofillDoorhanger"});
-        });
+        };
       } else {
         // We want to exclude the first time form filling.
         Services.telemetry.scalarAdd("formautofill.addresses.fill_type_manual", 1);
       }
     }
+    return showDoorhanger;
   },
 
-  async _onCreditCardSubmit(creditCard, target, timeStartedFillingMS) {
+  _onCreditCardSubmit(creditCard, target, timeStartedFillingMS) {
     // Updates the used status for shield/heartbeat to recognize users who have
     // used Credit Card Autofill.
     let setUsedStatus = status => {
@@ -463,7 +489,7 @@ FormAutofillParent.prototype = {
         // Add probe to record credit card autofill(without modification).
         Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_autofill", 1);
         this._recordFormFillingTime("creditCard", "autofill", timeStartedFillingMS);
-        return;
+        return false;
       }
       // Add the probe to record credit card autofill with modification.
       Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_autofill_modified", 1);
@@ -483,55 +509,79 @@ FormAutofillParent.prototype = {
     let dupGuid = this.profileStorage.creditCards.getDuplicateGuid(creditCard.record);
     if (dupGuid) {
       this.profileStorage.creditCards.notifyUsed(dupGuid);
-      return;
+      return false;
     }
 
     // Indicate that the user has seen the doorhanger.
     setUsedStatus(2);
 
-    let state = await FormAutofillDoorhanger.show(target, creditCard.guid ? "updateCreditCard" : "addCreditCard");
-    if (state == "cancel") {
-      return;
-    }
-
-    if (state == "disable") {
-      Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
-      return;
-    }
-
-    // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
-    // APIs are refactored to be async functions (bug 1399367).
-    if (!await MasterPassword.ensureLoggedIn()) {
-      log.warn("User canceled master password entry");
-      return;
-    }
-
-    let changedGUIDs = [];
-    if (creditCard.guid) {
-      if (state == "update") {
-        this.profileStorage.creditCards.update(creditCard.guid, creditCard.record, true);
-        changedGUIDs.push(creditCard.guid);
-      } else if ("create") {
-        changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+    return async () => {
+      // Suppress the pending doorhanger from showing up if user disabled credit card in previous doorhanger.
+      if (!FormAutofillUtils.isAutofillCreditCardsEnabled) {
+        return;
       }
-    } else {
-      changedGUIDs.push(...this.profileStorage.creditCards.mergeToStorage(creditCard.record));
-      if (!changedGUIDs.length) {
-        changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+
+      const state = await FormAutofillDoorhanger.show(target, creditCard.guid ? "updateCreditCard" : "addCreditCard");
+      if (state == "cancel") {
+        return;
       }
-    }
-    changedGUIDs.forEach(guid => this.profileStorage.creditCards.notifyUsed(guid));
+
+      if (state == "disable") {
+        Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
+        return;
+      }
+
+      // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
+      // APIs are refactored to be async functions (bug 1399367).
+      if (!await MasterPassword.ensureLoggedIn()) {
+        log.warn("User canceled master password entry");
+        return;
+      }
+
+      let changedGUIDs = [];
+      if (creditCard.guid) {
+        if (state == "update") {
+          this.profileStorage.creditCards.update(creditCard.guid, creditCard.record, true);
+          changedGUIDs.push(creditCard.guid);
+        } else if ("create") {
+          changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+        }
+      } else {
+        changedGUIDs.push(...this.profileStorage.creditCards.mergeToStorage(creditCard.record));
+        if (!changedGUIDs.length) {
+          changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+        }
+      }
+      changedGUIDs.forEach(guid => this.profileStorage.creditCards.notifyUsed(guid));
+    };
   },
 
-  _onFormSubmit(data, target) {
+  async _onFormSubmit(data, target) {
     let {profile: {address, creditCard}, timeStartedFillingMS} = data;
 
-    if (address) {
-      this._onAddressSubmit(address, target, timeStartedFillingMS);
+    // Don't record filling time if any type of records has more than one section being
+    // populated. We've been recording the filling time, so the other cases that aren't
+    // recorded on the same basis should be out of the data samples. E.g. Filling time of
+    // populating one profile is different from populating two sections, therefore, we
+    // shouldn't record the later to regress the representation of existing statistics.
+    if (address.length > 1 || creditCard.length > 1) {
+      timeStartedFillingMS = null;
     }
-    if (creditCard) {
-      this._onCreditCardSubmit(creditCard, target, timeStartedFillingMS);
-    }
+
+    // Transmit the telemetry immediately in the meantime form submitted, and handle these pending
+    // doorhangers at a later.
+    await Promise.all([
+      address.map(addrRecord => this._onAddressSubmit(addrRecord, target, timeStartedFillingMS)),
+      creditCard.map(ccRecord => this._onCreditCardSubmit(ccRecord, target, timeStartedFillingMS)),
+    ].map(pendingDoorhangers => {
+      return pendingDoorhangers.filter(pendingDoorhanger => !!pendingDoorhanger &&
+                                                            typeof pendingDoorhanger == "function");
+    }).map(pendingDoorhangers => new Promise(async resolve => {
+      for (const showDoorhanger of pendingDoorhangers) {
+        await showDoorhanger();
+      }
+      resolve();
+    })));
   },
   /**
    * Set the probes for the filling time with specific filling type and form type.
@@ -552,3 +602,5 @@ FormAutofillParent.prototype = {
     histogram.add(`${formType}-${fillingType}`, Date.now() - startedFillingMS);
   },
 };
+
+this.formAutofillParent = new FormAutofillParent();

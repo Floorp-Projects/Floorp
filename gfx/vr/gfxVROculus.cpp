@@ -29,6 +29,7 @@
 #include "TextureD3D11.h"
 
 #include "gfxVROculus.h"
+#include "VRManagerParent.h"
 #include "VRThread.h"
 
 #include "mozilla/dom/GamepadEventTypes.h"
@@ -1343,19 +1344,19 @@ VRControllerOculus::UpdateVibrateHaptic(ovrSession aSession,
                                         double aIntensity,
                                         double aDuration,
                                         uint64_t aVibrateIndex,
-                                        uint32_t aPromiseID)
+                                        const VRManagerPromise& aPromise)
 {
   // UpdateVibrateHaptic() only can be called by mVibrateThread
   MOZ_ASSERT(mVibrateThread == NS_GetCurrentThread());
 
   // It has been interrupted by loss focus.
   if (mIsVibrateStopped) {
-    VibrateHapticComplete(aSession, aPromiseID, true);
+    VibrateHapticComplete(aSession, aPromise, true);
     return;
   }
   // Avoid the previous vibrate event to override the new one.
   if (mVibrateIndex != aVibrateIndex) {
-    VibrateHapticComplete(aSession, aPromiseID, false);
+    VibrateHapticComplete(aSession, aPromise, false);
     return;
   }
 
@@ -1400,19 +1401,20 @@ VRControllerOculus::UpdateVibrateHaptic(ovrSession aSession,
     MOZ_ASSERT(mVibrateThread);
 
     RefPtr<Runnable> runnable =
-      NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t, uint32_t>(
-        "VRControllerOculus::UpdateVibrateHaptic",
-        this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
-        aHapticIndex, aIntensity, (duration > kVibrateRate) ? remainingTime : 0, aVibrateIndex, aPromiseID);
+      NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t,
+        StoreCopyPassByConstLRef<VRManagerPromise>>(
+          "VRControllerOculus::UpdateVibrateHaptic",
+          this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
+          aHapticIndex, aIntensity, (duration > kVibrateRate) ? remainingTime : 0, aVibrateIndex, aPromise);
     NS_DelayedDispatchToCurrentThread(runnable.forget(),
                                       (duration > kVibrateRate) ? kVibrateRate : remainingTime);
   } else {
-    VibrateHapticComplete(aSession, aPromiseID, true);
+    VibrateHapticComplete(aSession, aPromise, true);
   }
 }
 
 void
-VRControllerOculus::VibrateHapticComplete(ovrSession aSession, uint32_t aPromiseID,
+VRControllerOculus::VibrateHapticComplete(ovrSession aSession, const VRManagerPromise& aPromise,
                                           bool aStop)
 {
   if (aStop) {
@@ -1440,9 +1442,10 @@ VRControllerOculus::VibrateHapticComplete(ovrSession aSession, uint32_t aPromise
   VRManager *vm = VRManager::Get();
   MOZ_ASSERT(vm);
 
-  VRListenerThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>(
-                                           "VRManager::NotifyVibrateHapticCompleted",
-                                           vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
+  VRListenerThreadHolder::Loop()->PostTask(
+    NewRunnableMethod<StoreCopyPassByConstLRef<VRManagerPromise>>(
+      "VRManager::NotifyVibrateHapticCompleted",
+      vm, &VRManager::NotifyVibrateHapticCompleted, aPromise));
 }
 
 void
@@ -1450,7 +1453,7 @@ VRControllerOculus::VibrateHaptic(ovrSession aSession,
                                   uint32_t aHapticIndex,
                                   double aIntensity,
                                   double aDuration,
-                                  uint32_t aPromiseID)
+                                  const VRManagerPromise& aPromise)
 {
   // Spinning up the haptics thread at the first haptics call.
   if (!mVibrateThread) {
@@ -1465,10 +1468,11 @@ VRControllerOculus::VibrateHaptic(ovrSession aSession,
   mIsVibrateStopped = false;
 
   RefPtr<Runnable> runnable =
-       NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t, uint32_t>
-         ("VRControllerOculus::UpdateVibrateHaptic",
+       NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t,
+        StoreCopyPassByConstLRef<VRManagerPromise>>(
+          "VRControllerOculus::UpdateVibrateHaptic",
           this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
-          aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromiseID);
+          aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
   mVibrateThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -1804,18 +1808,19 @@ VRSystemManagerOculus::VibrateHaptic(uint32_t aControllerIdx,
                                      uint32_t aHapticIndex,
                                      double aIntensity,
                                      double aDuration,
-                                     uint32_t aPromiseID)
+                                     const VRManagerPromise& aPromise)
 {
   // The session is available after VRDisplay is created
   // at GetHMDs().
-  if (!mSession || !mSession->IsTrackingReady()) {
+  if (!mSession || !mSession->IsTrackingReady() ||
+      (aControllerIdx >= mOculusController.Length())) {
     return;
   }
 
   RefPtr<impl::VRControllerOculus> controller = mOculusController[aControllerIdx];
   MOZ_ASSERT(controller);
 
-  controller->VibrateHaptic(mSession->Get(), aHapticIndex, aIntensity, aDuration, aPromiseID);
+  controller->VibrateHaptic(mSession->Get(), aHapticIndex, aIntensity, aDuration, aPromise);
 }
 
 void

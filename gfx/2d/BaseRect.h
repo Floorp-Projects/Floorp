@@ -418,10 +418,10 @@ struct BaseRect {
   // new |RoundAwayFromZero()| method.
   void Round()
   {
-    T x0 = static_cast<T>(floor(T(X()) + 0.5));
-    T y0 = static_cast<T>(floor(T(Y()) + 0.5));
-    T x1 = static_cast<T>(floor(T(XMost()) + 0.5));
-    T y1 = static_cast<T>(floor(T(YMost()) + 0.5));
+    T x0 = static_cast<T>(std::floor(T(X()) + 0.5f));
+    T y0 = static_cast<T>(std::floor(T(Y()) + 0.5f));
+    T x1 = static_cast<T>(std::floor(T(XMost()) + 0.5f));
+    T y1 = static_cast<T>(std::floor(T(YMost()) + 0.5f));
 
     x = x0;
     y = y0;
@@ -434,10 +434,10 @@ struct BaseRect {
   // original rectangle contains the resulting rectangle.
   void RoundIn()
   {
-    T x0 = static_cast<T>(ceil(T(X())));
-    T y0 = static_cast<T>(ceil(T(Y())));
-    T x1 = static_cast<T>(floor(T(XMost())));
-    T y1 = static_cast<T>(floor(T(YMost())));
+    T x0 = static_cast<T>(std::ceil(T(X())));
+    T y0 = static_cast<T>(std::ceil(T(Y())));
+    T x1 = static_cast<T>(std::floor(T(XMost())));
+    T y1 = static_cast<T>(std::floor(T(YMost())));
 
     x = x0;
     y = y0;
@@ -450,10 +450,10 @@ struct BaseRect {
   // resulting rectangle contains the original rectangle.
   void RoundOut()
   {
-    T x0 = static_cast<T>(floor(T(X())));
-    T y0 = static_cast<T>(floor(T(Y())));
-    T x1 = static_cast<T>(ceil(T(XMost())));
-    T y1 = static_cast<T>(ceil(T(YMost())));
+    T x0 = static_cast<T>(std::floor(T(X())));
+    T y0 = static_cast<T>(std::floor(T(Y())));
+    T x1 = static_cast<T>(std::ceil(T(XMost())));
+    T y1 = static_cast<T>(std::ceil(T(YMost())));
 
     x = x0;
     y = y0;

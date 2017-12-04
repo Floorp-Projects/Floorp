@@ -11,11 +11,11 @@
   <Param name="part" value="{searchTerms}"/>
   <Param name="uil" value="tr"/>
 </Url>
-<Url type="text/html" method="GET" template="https://yandex.com.tr/yandsearch">
+<Url type="text/html" method="GET" template="https://yandex.com.tr/search">
   <Param name="clid" value="2186727"/>
   <Param name="text" value="{searchTerms}"/>
 </Url>
-<Url type="application/x-moz-tabletsearch" method="GET" template="https://yandex.com.tr/yandsearch">
+<Url type="application/x-moz-tabletsearch" method="GET" template="https://yandex.com.tr/search">
   <Param name="clid" value="2186733"/>
   <Param name="text" value="{searchTerms}"/>
 </Url>

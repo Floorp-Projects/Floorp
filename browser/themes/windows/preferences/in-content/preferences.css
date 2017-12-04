@@ -4,19 +4,8 @@
 
 %include ../../../shared/incontentprefs/preferences.inc.css
 
-html *,
-page *,
-window * {
-  font-size: 1.25rem;
-}
-
-caption label {
-  font-size: 1.42rem;
-}
-
-.tip-caption,
-.help-label {
-  font-size: 1.08rem;
+:root > * {
+  font-size: 1.25em;
 }
 
 .actionsMenu > .menulist-label-box > .menulist-icon {

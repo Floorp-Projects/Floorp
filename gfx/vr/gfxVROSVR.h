@@ -88,7 +88,8 @@ public:
   virtual void ScanForControllers() override;
   virtual void RemoveControllers() override;
   virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                             double aIntensity, double aDuration, uint32_t aPromiseID) override;
+                             double aIntensity, double aDuration,
+                             const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
 
 protected:

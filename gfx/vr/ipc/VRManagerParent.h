@@ -100,6 +100,23 @@ private:
   bool mIsContentChild;
 };
 
+class VRManagerPromise final
+{
+  friend class VRManager;
+
+public:
+  explicit VRManagerPromise(RefPtr<VRManagerParent> aParent, uint32_t aPromiseID)
+  : mParent(aParent), mPromiseID(aPromiseID)
+  {}
+  ~VRManagerPromise() {
+    mParent = nullptr;
+  }
+
+private:
+  RefPtr<VRManagerParent> mParent;
+  uint32_t mPromiseID;
+};
+
 } // namespace mozilla
 } // namespace gfx
 

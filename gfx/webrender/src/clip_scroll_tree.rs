@@ -82,7 +82,7 @@ pub struct TransformUpdateState {
 }
 
 impl ClipScrollTree {
-    pub fn new() -> ClipScrollTree {
+    pub fn new() -> Self {
         let dummy_pipeline = PipelineId::dummy();
         ClipScrollTree {
             nodes: FastHashMap::default(),

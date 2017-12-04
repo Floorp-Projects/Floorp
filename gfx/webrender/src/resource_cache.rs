@@ -350,7 +350,7 @@ impl ResourceCache {
         let FontInstanceOptions {
             render_mode,
             subpx_dir,
-            synthetic_italics,
+            flags,
             bg_color,
             ..
         } = options.unwrap_or_default();
@@ -362,9 +362,9 @@ impl ResourceCache {
             bg_color,
             render_mode,
             subpx_dir,
+            flags,
             platform_options,
             variations,
-            synthetic_italics,
         );
         if self.glyph_rasterizer.is_bitmap_font(&instance) {
             instance.render_mode = instance.render_mode.limit_by(FontRenderMode::Bitmap);

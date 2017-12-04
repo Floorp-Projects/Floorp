@@ -1282,15 +1282,6 @@ var gCSSProperties = {
     other_values: [ "url(foo.xml)" ],
     invalid_values: []
   },
-  "-moz-border-bottom-colors": {
-    domProp: "MozBorderBottomColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
-  },
   "border-inline-end": {
     domProp: "borderInlineEnd",
     inherited: false,
@@ -1435,15 +1426,6 @@ var gCSSProperties = {
                     "space", "stretch space", "repeat space", "round space", "space space" ],
     invalid_values: [ "none", "stretch stretch stretch", "0", "10", "0%", "0px" ]
   },
-  "-moz-border-left-colors": {
-    domProp: "MozBorderLeftColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
-  },
   "border-radius": {
     domProp: "borderRadius",
     inherited: false,
@@ -1551,15 +1533,6 @@ var gCSSProperties = {
             ],
     invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
   },
-  "-moz-border-right-colors": {
-    domProp: "MozBorderRightColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
-  },
   "border-inline-start": {
     domProp: "borderInlineStart",
     inherited: false,
@@ -1612,15 +1585,6 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: [ "5%", "5" ]
-  },
-  "-moz-border-top-colors": {
-    domProp: "MozBorderTopColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
   },
   "-moz-box-align": {
     domProp: "MozBoxAlign",
@@ -3030,7 +2994,7 @@ var gCSSProperties = {
     domProp: "border",
     inherited: false,
     type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width", "-moz-border-top-colors", "-moz-border-right-colors", "-moz-border-bottom-colors", "-moz-border-left-colors", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat" ],
+    subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat" ],
     initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor", "calc(4px - 1px) none" ],
     other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid", "calc(2px) solid blue" ],
     invalid_values: [ "5%", "medium solid ff00ff", "5 solid green" ]
@@ -6435,6 +6399,15 @@ if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.shape-outside.enabled")) {
+  gCSSProperties["shape-image-threshold"] = {
+    domProp: "shapeImageThreshold",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0", "0.0000", "-3", ],
+    other_values: [ "0.4", "1", "17", "397.376", "3e1", "3e+1", "3e-1", "3e0", "3e+0", "3e-0" ],
+    invalid_values: [ "0px", "1px", "20%", "default", "auto" ]
+  };
+
   gCSSProperties["shape-outside"] = {
     domProp: "shapeOutside",
     inherited: false,
@@ -6651,7 +6624,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
       "grayscale(-1)",
 
       "hue-rotate()",
-      "hue-rotate(0)",
       "hue-rotate(0.5 0.5)",
       "hue-rotate(0.5,)",
       "hue-rotate(0.5, 0.5)",
@@ -6693,6 +6665,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
       "sepia(-1)",
     ]
   };
+
+  // See https://github.com/w3c/fxtf-drafts/issues/228.
+  //
+  // This is updated in Stylo but not Gecko.
+  if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
+    gCSSProperties["filter"].other_values.push("hue-rotate(0)");
+  } else {
+    gCSSProperties["filter"].invalid_values.push("hue-rotate(0)");
+  }
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
@@ -8103,42 +8084,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
   );
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
-  gCSSProperties["animation"].invalid_values.push("2s unset");
-  gCSSProperties["animation-direction"].invalid_values.push("normal, unset", "unset, normal");
-  gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
-  gCSSProperties["-moz-border-bottom-colors"].invalid_values.push("red unset", "unset red");
-  gCSSProperties["-moz-border-left-colors"].invalid_values.push("red unset", "unset red");
-  gCSSProperties["border-radius"].invalid_values.push("unset 2px", "unset / 2px", "2px unset", "2px / unset");
-  gCSSProperties["border-bottom-left-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["border-bottom-right-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["border-top-left-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["border-top-right-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-border-right-colors"].invalid_values.push("red unset", "unset red");
-  gCSSProperties["-moz-border-top-colors"].invalid_values.push("red unset", "unset red");
-  gCSSProperties["-moz-outline-radius"].invalid_values.push("unset 2px", "unset / 2px", "2px unset", "2px / unset");
-  gCSSProperties["-moz-outline-radius-bottomleft"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-outline-radius-bottomright"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-outline-radius-topleft"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-outline-radius-topright"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["background-image"].invalid_values.push("linear-gradient(unset, 10px 10px, from(blue))", "linear-gradient(unset, 10px 10px, blue 0)", "repeating-linear-gradient(unset, 10px 10px, blue 0)");
-  gCSSProperties["box-shadow"].invalid_values.push("unset, 2px 2px", "2px 2px, unset", "inset unset");
-  gCSSProperties["text-overflow"].invalid_values.push('"hello" unset', 'unset "hello"', 'clip unset', 'unset clip', 'unset inherit', 'unset none', 'initial unset');
-  gCSSProperties["text-shadow"].invalid_values.push("unset, 2px 2px", "2px 2px, unset");
-  gCSSProperties["transition"].invalid_values.push("2s unset");
-  gCSSProperties["transition-property"].invalid_values.push("unset, color", "color, unset");
-  if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
-    gCSSProperties["filter"].invalid_values.push("drop-shadow(unset, 2px 2px)", "drop-shadow(2px 2px, unset)");
-  }
-  if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
-    gCSSProperties["background-image"].invalid_values.push(
-      "-moz-linear-gradient(unset, 10px 10px, from(blue))",
-      "-moz-linear-gradient(unset, 10px 10px, blue 0)",
-      "-moz-repeating-linear-gradient(unset, 10px 10px, blue 0)",
-    );
-  }
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.text-align-unsafe-value.enabled")) {
   gCSSProperties["text-align"].other_values.push("true left");
 } else {
@@ -8332,4 +8277,84 @@ if (false) {
     other_values: [ "green", "#fc3" ],
     invalid_values: [ "000000", "ff00ff" ]
   };
+
+  gCSSProperties["-moz-border-bottom-colors"] = {
+    domProp: "MozBorderBottomColors",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    initial_values: [ "none" ],
+    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
+    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
+  };
+
+  gCSSProperties["-moz-border-left-colors"] = {
+    domProp: "MozBorderLeftColors",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    initial_values: [ "none" ],
+    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
+    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
+  };
+
+  gCSSProperties["-moz-border-right-colors"] = {
+    domProp: "MozBorderRightColors",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    initial_values: [ "none" ],
+    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
+    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
+  };
+
+  gCSSProperties["-moz-border-top-colors"] = {
+    domProp: "MozBorderTopColors",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    initial_values: [ "none" ],
+    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
+    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
+  };
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
+  gCSSProperties["animation"].invalid_values.push("2s unset");
+  gCSSProperties["animation-direction"].invalid_values.push("normal, unset", "unset, normal");
+  gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
+  if (gCSSProperties["-moz-border-bottom-colors"])
+    gCSSProperties["-moz-border-bottom-colors"].invalid_values.push("red unset", "unset red");
+  if (gCSSProperties["-moz-border-left-colors"])
+    gCSSProperties["-moz-border-left-colors"].invalid_values.push("red unset", "unset red");
+  if (gCSSProperties["-moz-border-right-colors"])
+    gCSSProperties["-moz-border-right-colors"].invalid_values.push("red unset", "unset red");
+  if (gCSSProperties["-moz-border-top-colors"])
+    gCSSProperties["-moz-border-top-colors"].invalid_values.push("red unset", "unset red");
+  gCSSProperties["border-radius"].invalid_values.push("unset 2px", "unset / 2px", "2px unset", "2px / unset");
+  gCSSProperties["border-bottom-left-radius"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["border-bottom-right-radius"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["border-top-left-radius"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["border-top-right-radius"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["-moz-outline-radius"].invalid_values.push("unset 2px", "unset / 2px", "2px unset", "2px / unset");
+  gCSSProperties["-moz-outline-radius-bottomleft"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["-moz-outline-radius-bottomright"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["-moz-outline-radius-topleft"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["-moz-outline-radius-topright"].invalid_values.push("unset 2px", "2px unset");
+  gCSSProperties["background-image"].invalid_values.push("linear-gradient(unset, 10px 10px, from(blue))", "linear-gradient(unset, 10px 10px, blue 0)", "repeating-linear-gradient(unset, 10px 10px, blue 0)");
+  gCSSProperties["box-shadow"].invalid_values.push("unset, 2px 2px", "2px 2px, unset", "inset unset");
+  gCSSProperties["text-overflow"].invalid_values.push('"hello" unset', 'unset "hello"', 'clip unset', 'unset clip', 'unset inherit', 'unset none', 'initial unset');
+  gCSSProperties["text-shadow"].invalid_values.push("unset, 2px 2px", "2px 2px, unset");
+  gCSSProperties["transition"].invalid_values.push("2s unset");
+  gCSSProperties["transition-property"].invalid_values.push("unset, color", "color, unset");
+  if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
+    gCSSProperties["filter"].invalid_values.push("drop-shadow(unset, 2px 2px)", "drop-shadow(2px 2px, unset)");
+  }
+  if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
+    gCSSProperties["background-image"].invalid_values.push(
+      "-moz-linear-gradient(unset, 10px 10px, from(blue))",
+      "-moz-linear-gradient(unset, 10px 10px, blue 0)",
+      "-moz-repeating-linear-gradient(unset, 10px 10px, blue 0)",
+    );
+  }
 }

@@ -18,6 +18,9 @@ class SearchBox extends Component {
       delay: PropTypes.number,
       keyShortcut: PropTypes.string,
       onChange: PropTypes.func,
+      onFocus: PropTypes.func,
+      onBlur: PropTypes.func,
+      onKeyDown: PropTypes.func,
       placeholder: PropTypes.string,
       type: PropTypes.string,
       autocompleteProvider: PropTypes.func,
@@ -96,14 +99,26 @@ class SearchBox extends Component {
   }
 
   onFocus() {
+    if (this.props.onFocus) {
+      this.props.onFocus();
+    }
+
     this.setState({ focused: true });
   }
 
   onBlur() {
+    if (this.props.onBlur) {
+      this.props.onBlur();
+    }
+
     this.setState({ focused: false });
   }
 
   onKeyDown(e) {
+    if (this.props.onKeyDown) {
+      this.props.onKeyDown();
+    }
+
     let { autocomplete } = this.refs;
     if (!autocomplete || autocomplete.state.list.length <= 0) {
       return;

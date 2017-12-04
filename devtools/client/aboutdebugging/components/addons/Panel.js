@@ -171,6 +171,7 @@ class AddonsPanel extends Component {
         sort: true
       }),
       dom.div({ className: "addons-tip"},
+        dom.div({ className: "addons-tip-icon"}),
         dom.span({
           className: "addons-web-ext-tip",
         }, Strings.GetStringFromName("webExtTip")),

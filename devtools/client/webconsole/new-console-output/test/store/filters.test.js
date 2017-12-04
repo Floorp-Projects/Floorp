@@ -213,8 +213,7 @@ describe("Clear filters", () => {
     store.dispatch(actions.filterToggle(FILTERS.NETXHR));
     store.dispatch(actions.filterTextSet("foobar"));
 
-    let filters = getAllFilters(store.getState());
-    expect(filters.toJS()).toEqual({
+    expect(getAllFilters(store.getState())).toEqual({
       // default
       [FILTERS.WARN]: true,
       [FILTERS.LOG]: true,
@@ -240,8 +239,7 @@ describe("Clear filters", () => {
 
     store.dispatch(actions.filtersClear());
 
-    filters = getAllFilters(store.getState());
-    expect(filters.toJS()).toEqual({
+    expect(getAllFilters(store.getState())).toEqual({
       [FILTERS.CSS]: false,
       [FILTERS.DEBUG]: true,
       [FILTERS.ERROR]: true,
@@ -278,8 +276,7 @@ describe("Resets filters", () => {
     store.dispatch(actions.filterToggle(FILTERS.NETXHR));
     store.dispatch(actions.filterTextSet("foobar"));
 
-    let filters = getAllFilters(store.getState());
-    expect(filters.toJS()).toEqual({
+    expect(getAllFilters(store.getState())).toEqual({
       // default
       [FILTERS.WARN]: true,
       [FILTERS.INFO]: true,
@@ -306,8 +303,7 @@ describe("Resets filters", () => {
 
     store.dispatch(actions.defaultFiltersReset());
 
-    filters = getAllFilters(store.getState());
-    expect(filters.toJS()).toEqual({
+    expect(getAllFilters(store.getState())).toEqual({
       // default
       [FILTERS.ERROR]: true,
       [FILTERS.WARN]: true,

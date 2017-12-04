@@ -335,6 +335,17 @@ CaptivePortalService::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
+void
+CaptivePortalService::NotifyConnectivityAvailable(bool aCaptive)
+{
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    nsCOMPtr<nsICaptivePortalService> cps(this);
+    observerService->NotifyObservers(cps, NS_CAPTIVE_PORTAL_CONNECTIVITY,
+                                     aCaptive ? u"captive" : u"clear");
+  }
+}
+
 //-----------------------------------------------------------------------------
 // CaptivePortalService::nsICaptivePortalCallback
 //-----------------------------------------------------------------------------
@@ -364,8 +375,10 @@ CaptivePortalService::Complete(bool success)
   if (success) {
     if (mEverBeenCaptive) {
       mState = UNLOCKED_PORTAL;
+      NotifyConnectivityAvailable(true);
     } else {
       mState = NOT_CAPTIVE;
+      NotifyConnectivityAvailable(false);
     }
   }
 
