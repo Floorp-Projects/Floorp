@@ -56,7 +56,7 @@
   <string name="preference_privacy_block_ads_summary">Manche Werbeanzeigen verfolgen Ihre Seitenbesuche, auch wenn Sie nicht auf die Anzeigen klicken</string>
   <string name="preference_privacy_block_analytics">Analyseverfolgung blockieren</string>
   <string name="preference_privacy_block_analytics_summary">Damit werden Aktivitäten wie Tippen und Blättern gesammelt, analysiert und ausgewertet</string>
-  <string name="preference_privacy_block_social">Verfolgung sozialer Netzwerke blockieren</string>
+  <string name="preference_privacy_block_social">Verfolgung durch soziale Netzwerke blockieren</string>
   <string name="preference_privacy_block_social_summary">Auf Websites eingebettet, um Ihre Besuche zu verfolgen und Funktionen wie Links zum Teilen anzuzeigen</string>
   <string name="preference_privacy_block_content">Andere Inhaltsverfolgung blockieren</string>
   <string name="preference_privacy_block_content_summary2">Dies kann dazu führen, dass manche Seiten sich ungewöhnlich verhalten</string>
@@ -74,7 +74,7 @@
   <string name="preference_privacy_notice">Datenschutzhinweis</string>
   <string name="preference_about">Über %1$s</string>
   <string name="preference_search_installed_search_engines">Installierte Suchmaschinen</string>
-  <string name="preference_search_restore">Standard-Suchmaschinen wiederherstellen</string>
+  <string name="preference_search_restore">Standardsuchmaschinen wiederherstellen</string>
   <string name="preference_search_add2">+ Weitere Suchmaschine hinzufügen</string>
   <string name="preference_search_remove_title">Suchmaschinen entfernen</string>
   <string name="preference_search_remove">Entfernen</string>
@@ -109,7 +109,7 @@
   <string name="content_description_open_tab">Tab öffnen</string>
   <string name="content_description_close_tab">Tab schließen</string>
   <string name="content_description_lock">Sichere Verbindung</string>
-  <string name="accessibility_announcement_loading">Wird geladen…</string>
+  <string name="accessibility_announcement_loading">Wird geladen …</string>
   <string name="accessibility_announcement_loading_finished">Website geladen</string>
   <string name="content_description_menu">Weitere Optionen</string>
   <string name="content_description_forward">Vorwärts navigieren</string>

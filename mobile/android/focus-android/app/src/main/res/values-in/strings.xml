@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Batal</string>
   <string name="action_ok">Oke</string>
+  <string name="action_save">Simpan</string>
   <string name="urlbar_hint">Cari atau masukkan alamat</string>
   <string name="teaser">Penjelajahan pribadi otomatis.\nJelajahi. Hapus. Ulangi.</string>
   <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
@@ -26,6 +27,12 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
+  <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
+  <string name="preference_autocomplete_add_hint">Tempel atau masukkan URL</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_menu_remove">Hapus</string>
+  <string name="preference_autocomplete_action_remove_content_description">Hapus</string>
+  <string name="preference_autocomplete_add_error">Periksa ulang URL yang Anda masukkan.</string>
   <string name="preference_language">Bahasa</string>
   <string name="preference_language_systemdefault">Bawaan sistem</string>
   <string name="preference_dialog_title_search_engine">Pencarian baku</string>
@@ -73,6 +80,8 @@
   <string name="search_add_manually_example">Contoh: contoh.id/search/?q=%s</string>
   <string name="accessibility_announcement_search">Tambah mesin pencari</string>
   <string name="search_add_confirmation">Mesin pencari baru ditambahkan.</string>
+  <string name="search_add_error_empty_name">Masukkan nama mesin pencari</string>
+  <string name="search_add_error_empty_search">Masukkan string pencarian</string>
   <string name="content_description_clear_input">Bersihkan masukan</string>
   <string name="content_description_dismiss_input">Tutup</string>
   <string name="content_description_erase">Hapus riwayat penjelajahan</string>

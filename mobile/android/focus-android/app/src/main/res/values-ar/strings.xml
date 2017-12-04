@@ -34,6 +34,7 @@
   <string name="preference_category_autocomplete_preinstalled">قائمة المسارات المبدئية</string>
   <string name="preference_autocomplete_preinstalled_summary">فعّله ليُكمل %1$s تلقائيا أكثر من ٤٥٠ عنوان وب في شريط العناوين.</string>
   <string name="preference_category_autocomplete_custom">مسار مخصص</string>
+  <string name="preference_autocomplete_subitem_customlist">المسارات المخصصة</string>
   <string name="preference_autocomplete_action_add">+ أضِف مسارا مخصصا</string>
   <string name="preference_autocomplete_title_add">أضِف مسارا مخصصا</string>
   <string name="preference_autocomplete_title_remove">أزِل المسارات المخصصة</string>

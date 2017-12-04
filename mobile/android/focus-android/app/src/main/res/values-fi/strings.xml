@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Peruuta</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Tallenna</string>
   <string name="urlbar_hint">Kirjoita osoite tai hakusana</string>
   <string name="teaser">Automaattisesti yksityistä selaamista.\nSelaa. Tyhjennä. Toista.</string>
   <string name="feedback_erase">Selaushistoria tyhjennetty.</string>
@@ -26,13 +27,19 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s asettaa sinut ohjaimiin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"K&#228;yt&#228; sit&#228; yksityiseen selaamiseen:\n  "<ul>"\n    "<li>Hae ja selaa suoraan ohjelmassa</li>"\n    "<li>"Est&#228; seuranta (tai muokkaa  asetuksia salliaksesi sen)"</li>"\n    "<li>Poista ev&#228;steet, haku ja selaushistoria napin painalluksella</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s on Mozillan kehitt&#228;m&#228; ohjelmisto. Teht&#228;v&#228;mme on edesauttaa tervett&#228;, avointa Internetti&#228;.<br/>\n<a href="%2$s">Lue lis&#228;&#228;</a></p>]]></string>
   <string name="preference_category_search">Haku</string>
   <string name="preference_search_engine_default">Oletus</string>
+  <string name="preference_autocomplete_learn_more">Lue lisää</string>
+  <string name="preference_autocomplete_menu_remove">Poista</string>
+  <string name="preference_autocomplete_action_remove_content_description">Poista</string>
   <string name="preference_language">Kieli</string>
   <string name="preference_language_systemdefault">Järjestelmän oletus</string>
   <string name="preference_dialog_title_search_engine">Oletushakukone</string>
   <string name="preference_category_privacy">Tietosuoja</string>
   <string name="preference_privacy_block_ads">Estä mainosseuraimet</string>
+  <string name="preference_privacy_block_ads_summary">Jotkin mainokset seuraavat sivustokäyntejä, vaikka et painaisi mainoksia</string>
   <string name="preference_privacy_block_analytics">Estä analytiikkaseuraimet</string>
+  <string name="preference_privacy_block_analytics_summary">Käytetään keräämään, analysoimaan ja mittaamaan toimintoja, kuten napautuksia ja vierityksiä</string>
   <string name="preference_privacy_block_social">Estä sosiaalisen median seuraimet</string>
+  <string name="preference_privacy_block_social_summary">Upotettu sivustoihin vierailujen seuraamiseksi ja toimintojen, kuten jakopainikkeiden, näyttämiseksi</string>
   <string name="preference_privacy_block_content">Estä muut sisältöseuraimet</string>
   <string name="preference_privacy_block_content_summary2">Tämän käyttöönotto saattaa johtaa joidenkin sivustojen odottamattomaan käytökseen</string>
   <string name="preference_privacy_secure_mode">Häivetila</string>
