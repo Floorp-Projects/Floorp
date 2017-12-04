@@ -48,9 +48,9 @@ public:
   void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
   void CreateVRTestSystem();
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                     double aIntensity, double aDuration, uint32_t aPromiseID);
+                     double aIntensity, double aDuration, const VRManagerPromise& aPromise);
   void StopVibrateHaptic(uint32_t aControllerIdx);
-  void NotifyVibrateHapticCompleted(uint32_t aPromiseID);
+  void NotifyVibrateHapticCompleted(const VRManagerPromise& aPromise);
   void DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult);
 
 protected:

@@ -16,10 +16,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
       ]],
-      [
-/*
-*/
-      ],
+      [],
     ],
   }, {
     fixturePath: "Checkout_Payment.html",
@@ -56,7 +53,7 @@ runHeuristicsTest([
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
       ]],
-      [[]],
+      [],
       [],
       [],
     ],

@@ -479,54 +479,6 @@ FinishCreate(XPCWrappedNativeScope* Scope,
     return NS_OK;
 }
 
-// static
-nsresult
-XPCWrappedNative::GetUsedOnly(nsISupports* Object,
-                              XPCWrappedNativeScope* Scope,
-                              XPCNativeInterface* Interface,
-                              XPCWrappedNative** resultWrapper)
-{
-    AutoJSContext cx;
-    MOZ_ASSERT(Object, "XPCWrappedNative::GetUsedOnly was called with a null Object");
-    MOZ_ASSERT(Interface);
-
-    RefPtr<XPCWrappedNative> wrapper;
-    nsWrapperCache* cache = nullptr;
-    CallQueryInterface(Object, &cache);
-    if (cache) {
-        RootedObject flat(cx, cache->GetWrapper());
-        if (!flat) {
-            *resultWrapper = nullptr;
-            return NS_OK;
-        }
-        wrapper = XPCWrappedNative::Get(flat);
-    } else {
-        nsCOMPtr<nsISupports> identity = do_QueryInterface(Object);
-
-        if (!identity) {
-            NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
-            return NS_ERROR_FAILURE;
-        }
-
-        Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
-
-        wrapper = map->Find(identity);
-        if (!wrapper) {
-            *resultWrapper = nullptr;
-            return NS_OK;
-        }
-    }
-
-    nsresult rv;
-    if (!wrapper->FindTearOff(Interface, false, &rv)) {
-        MOZ_ASSERT(NS_FAILED(rv), "returning NS_OK on failure");
-        return rv;
-    }
-
-    wrapper.forget(resultWrapper);
-    return NS_OK;
-}
-
 // This ctor is used if this object will have a proto.
 XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeProto* aProto)
@@ -2003,77 +1955,6 @@ JSObject*
 XPCWrappedNative::GetJSObject()
 {
     return GetFlatJSObject();
-}
-
-NS_IMETHODIMP XPCWrappedNative::GetNative(nsISupports * *aNative)
-{
-    // No need to QI here, we already have the correct nsISupports
-    // vtable.
-    nsCOMPtr<nsISupports> rval = mIdentity;
-    rval.forget(aNative);
-    return NS_OK;
-}
-
-NS_IMETHODIMP XPCWrappedNative::GetJSObjectPrototype(JSObject * *aJSObjectPrototype)
-{
-    *aJSObjectPrototype = HasProto() ?
-                GetProto()->GetJSProtoObject() : GetFlatJSObject();
-    return NS_OK;
-}
-
-nsIPrincipal*
-XPCWrappedNative::GetObjectPrincipal() const
-{
-    nsIPrincipal* principal = GetScope()->GetPrincipal();
-#ifdef DEBUG
-    // Because of inner window reuse, we can have objects with one principal
-    // living in a scope with a different (but same-origin) principal. So
-    // just check same-origin here.
-    nsCOMPtr<nsIScriptObjectPrincipal> objPrin(do_QueryInterface(mIdentity));
-    if (objPrin) {
-        bool equal;
-        if (!principal)
-            equal = !objPrin->GetPrincipal();
-        else
-            principal->Equals(objPrin->GetPrincipal(), &equal);
-        MOZ_ASSERT(equal, "Principal mismatch.  Expect bad things to happen");
-    }
-#endif
-    return principal;
-}
-
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(HandleId name,
-                                                        nsIInterfaceInfo * *_retval)
-{
-    RefPtr<XPCNativeInterface> iface;
-    XPCNativeMember*  member;
-
-    if (GetSet()->FindMember(name, &member, &iface) && iface) {
-        nsCOMPtr<nsIInterfaceInfo> temp = iface->GetInterfaceInfo();
-        temp.forget(_retval);
-    } else
-        *_retval = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(HandleId name,
-                                                      nsIInterfaceInfo * *_retval)
-{
-    XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
-    if (iface) {
-        nsCOMPtr<nsIInterfaceInfo> temp = iface->GetInterfaceInfo();
-        temp.forget(_retval);
-    } else
-        *_retval = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP_(bool)
-XPCWrappedNative::HasNativeMember(HandleId name)
-{
-    XPCNativeMember* member = nullptr;
-    uint16_t ignored;
-    return GetSet()->FindMember(name, &member, &ignored) && !!member;
 }
 
 NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)

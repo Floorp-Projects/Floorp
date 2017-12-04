@@ -50,7 +50,6 @@ caption {
 }
 
 groupbox {
-  font-size: 1em;
   margin-top: 0;
   margin-right: 4px;
   margin-left: 4px;
@@ -65,11 +64,6 @@ prefpane .groupbox-body {
 groupbox description {
   margin-right: 0;
   margin-left: 0;
-}
-
-label.menu-text,
-textbox.tree-input {
-  font-size: unset;
 }
 
 menulist label {

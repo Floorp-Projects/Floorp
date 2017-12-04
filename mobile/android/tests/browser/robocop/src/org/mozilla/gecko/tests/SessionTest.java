@@ -56,6 +56,7 @@ public abstract class SessionTest extends UITest {
     protected class PageInfo {
         private final String url;
         private final String title;
+        private final String triggeringPrincipal_base64;
 
         public PageInfo(String key) {
             if (key.startsWith("about:")) {
@@ -64,6 +65,8 @@ public abstract class SessionTest extends UITest {
                 url = getPage(key);
             }
             title = key;
+            triggeringPrincipal_base64 =
+              "SmIS26zLEdO3ZQBgsLbOywAAAAAAAAAAwAAAAAAAAEY=";
         }
     }
 
@@ -271,6 +274,8 @@ public abstract class SessionTest extends UITest {
                     final JSONObject entry = new JSONObject();
                     entry.put("url", page.url);
                     entry.put("title", page.title);
+                    entry.put("triggeringPrincipal_base64",
+                              page.triggeringPrincipal_base64);
                     entries.put(entry);
                 }
 
@@ -363,12 +368,17 @@ public abstract class SessionTest extends UITest {
                     final JSONObject entry = entries.getJSONObject(j);
                     final String url = entry.getString("url");
                     final String title = entry.optString("title");
+                    final String principal =
+                      entry.getString("triggeringPrincipal_base64");
                     final PageInfo page = pages[j];
 
                     asserter.is(url, page.url, "URL in JSON matches session URL");
                     if (!page.url.startsWith("about:")) {
                         asserter.is(title, page.title, "title in JSON matches session title");
                     }
+
+                    asserter.is(principal, page.triggeringPrincipal_base64,
+                                "principal in JSON matches session principal");
                 }
             }
         } catch (JSONException e) {

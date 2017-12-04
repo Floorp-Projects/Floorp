@@ -707,20 +707,19 @@
 <hbox id="dataCollectionCategory"
       class="subcategory"
       hidden="true"
-      data-category="panePrivacy"
-      data-subcategory="reports">
+      data-category="panePrivacy">
   <label class="header-name" flex="1">&dataCollection.label;</label>
 </hbox>
 
 <!-- Firefox Data Collection and Use -->
 #ifdef MOZ_DATA_REPORTING
-<groupbox id="dataCollectionGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+<groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
   <caption class="search-header" hidden="true"><label>&dataCollection.label;</label></caption>
 
-  <vbox>
-    <description>
-      <label class="tail-with-learn-more">&dataCollectionDesc.label;</label><label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
-    </description>
+  <description>
+    <label class="tail-with-learn-more">&dataCollectionDesc.label;</label><label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
+  </description>
+  <vbox data-subcategory="reports">
     <description flex="1">
       <checkbox id="submitHealthReportBox" label="&enableHealthReport2.label;"
                 class="tail-with-learn-more"
@@ -731,18 +730,19 @@
 #ifndef MOZ_TELEMETRY_REPORTING
     <description id="TelemetryDisabledDesc" class="indent tip-caption" control="telemetryGroup">&healthReportingDisabled.label;</description>
 #endif
-  </vbox>
+
 #ifdef MOZ_CRASHREPORTER
-  <hbox align="center">
-    <checkbox id="automaticallySubmitCrashesBox"
-              class="tail-with-learn-more"
-              preference="browser.crashReports.unsubmittedCheck.autoSubmit"
-              label="&alwaysSubmitCrashReports1.label;"
-              accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
-    <label id="crashReporterLearnMore"
-           class="learnMore text-link">&crashReporterLearnMore.label;</label>
-  </hbox>
+    <hbox align="center">
+      <checkbox id="automaticallySubmitCrashesBox"
+                class="tail-with-learn-more"
+                preference="browser.crashReports.unsubmittedCheck.autoSubmit"
+                label="&alwaysSubmitCrashReports1.label;"
+                accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
+      <label id="crashReporterLearnMore"
+             class="learnMore text-link">&crashReporterLearnMore.label;</label>
+    </hbox>
 #endif
+  </vbox>
 </groupbox>
 #endif
 

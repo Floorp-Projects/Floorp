@@ -47,7 +47,7 @@ function configureStore(hud, options = {}) {
 
   const initialState = {
     prefs: PrefState({ logLimit, sidebarToggle }),
-    filters: new FilterState({
+    filters: FilterState({
       error: Services.prefs.getBoolPref(PREFS.FILTER.ERROR),
       warn: Services.prefs.getBoolPref(PREFS.FILTER.WARN),
       info: Services.prefs.getBoolPref(PREFS.FILTER.INFO),

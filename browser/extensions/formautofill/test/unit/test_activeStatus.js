@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://formautofill/FormAutofillParent.jsm");
+let {FormAutofillParent} = Cu.import("resource://formautofill/FormAutofillParent.jsm", {});
 Cu.import("resource://formautofill/ProfileStorage.jsm");
 
 add_task(async function test_activeStatus_init() {

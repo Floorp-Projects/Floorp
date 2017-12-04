@@ -116,7 +116,7 @@ public:
                      uint32_t aHapticIndex,
                      double aIntensity,
                      double aDuration,
-                     uint32_t aPromiseID) override;
+                     const VRManagerPromise& aPromise) override;
   void StopVibrateHaptic(uint32_t aControllerIdx) override;
 
 protected:

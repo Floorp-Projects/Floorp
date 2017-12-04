@@ -213,7 +213,8 @@ class DTDChecker(Checker):
         if self.__known_entities is None and self.reference is not None:
             self.__known_entities = set()
             for ent in self.reference:
-                self.__known_entities.update(self.entities_for_value(ent.val))
+                self.__known_entities.update(
+                    self.entities_for_value(ent.raw_val))
         return self.__known_entities if self.__known_entities is not None \
             else self.entities_for_value(refValue)
 
@@ -248,7 +249,7 @@ class DTDChecker(Checker):
 
         Return a checker that offers just those entities.
         """
-        refValue, l10nValue = refEnt.val, l10nEnt.val
+        refValue, l10nValue = refEnt.raw_val, l10nEnt.raw_val
         # find entities the refValue references,
         # reusing markup from DTDParser.
         reflist = self.known_entities(refValue)
@@ -434,19 +435,15 @@ class FluentChecker(Checker):
     '''
     pattern = re.compile('.*\.ftl')
 
-    # Positions yielded by FluentChecker.check are absolute offsets from the
-    # beginning of the file.  This is different from the base Checker behavior
-    # which yields offsets from the beginning of the current entity's value.
     def check(self, refEnt, l10nEnt):
         ref_entry = refEnt.entry
         l10n_entry = l10nEnt.entry
         # verify that values match, either both have a value or none
         if ref_entry.value is not None and l10n_entry.value is None:
-            yield ('error', l10n_entry.span.start,
-                   'Missing value', 'fluent')
+            yield ('error', 0, 'Missing value', 'fluent')
         if ref_entry.value is None and l10n_entry.value is not None:
-            yield ('error', l10n_entry.value.span.start,
-                   'Obsolete value', 'fluent')
+            offset = l10n_entry.value.span.start - l10n_entry.span.start
+            yield ('error', offset, 'Obsolete value', 'fluent')
 
         # verify that we're having the same set of attributes
         ref_attr_names = set((attr.id.name for attr in ref_entry.attributes))
@@ -461,9 +458,12 @@ class FluentChecker(Checker):
         # only warn to not trigger a merge skip
         for attr_name, cnt in l10n_attr_counts.items():
             if cnt > 1:
+                offset = (
+                    l10n_entry.attributes[l10n_pos[attr_name]].span.start
+                    - l10n_entry.span.start)
                 yield (
                     'warning',
-                    l10n_entry.attributes[l10n_pos[attr_name]].span.start,
+                    offset,
                     'Attribute "{}" occurs {} times'.format(
                         attr_name, cnt),
                     'fluent')
@@ -471,8 +471,7 @@ class FluentChecker(Checker):
         missing_attr_names = sorted(ref_attr_names - l10n_attr_names,
                                     key=lambda k: ref_pos[k])
         for attr_name in missing_attr_names:
-            yield ('error', l10n_entry.span.start,
-                   'Missing attribute: ' + attr_name, 'fluent')
+            yield ('error', 0, 'Missing attribute: ' + attr_name, 'fluent')
 
         obsolete_attr_names = sorted(l10n_attr_names - ref_attr_names,
                                      key=lambda k: l10n_pos[k])
@@ -482,7 +481,7 @@ class FluentChecker(Checker):
             if attr.id.name in obsolete_attr_names
         ]
         for attr in obsolete_attrs:
-            yield ('error', attr.span.start,
+            yield ('error', attr.span.start - l10n_entry.span.start,
                    'Obsolete attribute: ' + attr.id.name, 'fluent')
 
 

@@ -38,7 +38,6 @@ var gUpdateHistory = {
         this._view.appendChild(element);
         element.name = bundle.getFormattedString("updateFullName",
           [update.name, update.buildID]);
-        element.type = bundle.getString("updateType_" + update.type);
         element.installDate = this._formatDate(update.installDate);
         if (update.detailsURL)
           element.detailsURL = update.detailsURL;

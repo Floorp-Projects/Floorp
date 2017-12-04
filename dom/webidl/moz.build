@@ -995,6 +995,7 @@ if CONFIG['MOZ_WEBRTC']:
         'RTCPeerConnectionStatic.webidl',
         'RTCRtpReceiver.webidl',
         'RTCRtpSender.webidl',
+        'RTCRtpSources.webidl',
         'RTCRtpTransceiver.webidl',
         'RTCSessionDescription.webidl',
         'TransceiverImpl.webidl',

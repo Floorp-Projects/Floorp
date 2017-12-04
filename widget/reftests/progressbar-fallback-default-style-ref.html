@@ -1,40 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <link rel='stylesheet' href='chrome://reftest/content/progress.css'>
   <style>
-    div.progress-element {
-      /**
-       * The purpose of this test is to not show the native style.
-       * -moz-appearance: progressbar;
-       */
-      display: inline-block;
-      height: 1em;
-      width: 10em;
-      vertical-align: -0.2em;
-
-      /* Default style in case of there is -moz-appearance: none; */
-      border: 2px solid;
-      -moz-border-top-colors: ThreeDShadow #e6e6e6;
-      -moz-border-right-colors: ThreeDHighlight #e6e6e6;
-      -moz-border-bottom-colors: ThreeDHighlight #e6e6e6;
-      -moz-border-left-colors: ThreeDShadow #e6e6e6;
-      background-color: #e6e6e6;
-    }
-
-    div.progress-bar {
-      /**
-       * The purpose of this test is to not show the native style.
-       * -moz-appearance: progresschunk;
-       */
-
-      height: 100%;
-      width: 100%;
-
-      box-sizing: border-box;
-
-      /* Default style in case of there is -moz-appearance: none; */
-      background-color: #0064b4;
-    }
-
     div.progress-element { padding: 5px; }
     body > div:nth-child(1)  { -moz-appearance: none; }
     body > div:nth-child(2) > .progress-bar { -moz-appearance: none; }

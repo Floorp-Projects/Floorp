@@ -40,7 +40,7 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(feature = "i128", feature(i128_type))]
 #![cfg_attr(all(feature = "i128", test), feature(i128))]
-#![doc(html_root_url = "https://docs.rs/byteorder/1.0.0")]
+#![doc(html_root_url = "https://docs.rs/byteorder/1.2.1")]
 
 #[cfg(feature = "std")]
 extern crate core;
@@ -611,9 +611,6 @@ pub trait ByteOrder
 
     /// Reads a IEEE754 single-precision (4 bytes) floating point number.
     ///
-    /// The return value is always defined; signaling NaN's may be turned into
-    /// quiet NaN's.
-    ///
     /// # Panics
     ///
     /// Panics when `buf.len() < 4`.
@@ -632,13 +629,10 @@ pub trait ByteOrder
     /// ```
     #[inline]
     fn read_f32(buf: &[u8]) -> f32 {
-        safe_u32_bits_to_f32(Self::read_u32(buf))
+        unsafe { transmute(Self::read_u32(buf)) }
     }
 
     /// Reads a IEEE754 double-precision (8 bytes) floating point number.
-    ///
-    /// The return value is always defined; signaling NaN's may be turned into
-    /// quiet NaN's.
     ///
     /// # Panics
     ///
@@ -658,7 +652,7 @@ pub trait ByteOrder
     /// ```
     #[inline]
     fn read_f64(buf: &[u8]) -> f64 {
-        safe_u64_bits_to_f64(Self::read_u64(buf))
+        unsafe { transmute(Self::read_u64(buf)) }
     }
 
     /// Writes a signed 16 bit integer `n` to `buf`.
@@ -1066,12 +1060,6 @@ pub trait ByteOrder
     /// Reads IEEE754 single-precision (4 bytes) floating point numbers from
     /// `src` into `dst`.
     ///
-    /// Note that this does not perform any checks on the floating point
-    /// conversion. In particular, if the `src` data encodes an undefined
-    /// floating point value for your environment, then the result may be
-    /// undefined behavior. For example, this function may produce signaling
-    /// NaN floating point values.
-    ///
     /// # Panics
     ///
     /// Panics when `src.len() != 4*dst.len()`.
@@ -1088,24 +1076,16 @@ pub trait ByteOrder
     /// LittleEndian::write_f32_into(&numbers_given, &mut bytes);
     ///
     /// let mut numbers_got = [0.0; 4];
-    /// unsafe {
-    ///     LittleEndian::read_f32_into_unchecked(&bytes, &mut numbers_got);
-    /// }
+    /// LittleEndian::read_f32_into_unchecked(&bytes, &mut numbers_got);
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
     #[inline]
-    unsafe fn read_f32_into_unchecked(src: &[u8], dst: &mut [f32]) {
-        Self::read_u32_into(src, transmute(dst));
+    fn read_f32_into_unchecked(src: &[u8], dst: &mut [f32]) {
+        Self::read_u32_into(src, unsafe { transmute(dst) });
     }
 
     /// Reads IEEE754 single-precision (4 bytes) floating point numbers from
     /// `src` into `dst`.
-    ///
-    /// Note that this does not perform any checks on the floating point
-    /// conversion. In particular, if the `src` data encodes an undefined
-    /// floating point value for your environment, then the result may be
-    /// undefined behavior. For example, this function may produce signaling
-    /// NaN floating point values.
     ///
     /// # Panics
     ///
@@ -1123,14 +1103,12 @@ pub trait ByteOrder
     /// LittleEndian::write_f64_into(&numbers_given, &mut bytes);
     ///
     /// let mut numbers_got = [0.0; 4];
-    /// unsafe {
-    ///     LittleEndian::read_f64_into_unchecked(&bytes, &mut numbers_got);
-    /// }
+    /// LittleEndian::read_f64_into_unchecked(&bytes, &mut numbers_got);
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
     #[inline]
-    unsafe fn read_f64_into_unchecked(src: &[u8], dst: &mut [f64]) {
-        Self::read_u64_into(src, transmute(dst));
+    fn read_f64_into_unchecked(src: &[u8], dst: &mut [f64]) {
+        Self::read_u64_into(src, unsafe { transmute(dst) });
     }
 
     /// Writes unsigned 16 bit integers from `src` into `dst`.
@@ -1590,10 +1568,6 @@ pub trait ByteOrder
     ///
     /// If the endianness matches the endianness of the host platform, then
     /// this is a no-op.
-    ///
-    /// Note that the results of this operation are guaranteed to be defined.
-    /// In particular, this method may replace signaling NaN values with
-    /// quiet NaN values.
     fn from_slice_f32(numbers: &mut [f32]);
 
     /// Converts the given slice of IEEE754 double-precision (8 bytes) floating
@@ -1601,10 +1575,6 @@ pub trait ByteOrder
     ///
     /// If the endianness matches the endianness of the host platform, then
     /// this is a no-op.
-    ///
-    /// Note that the results of this operation are guaranteed to be defined.
-    /// In particular, this method may replace signaling NaN values with
-    /// quiet NaN values.
     fn from_slice_f64(numbers: &mut [f64]);
 }
 
@@ -1964,7 +1934,7 @@ impl ByteOrder for BigEndian {
         if cfg!(target_endian = "little") {
             for n in numbers {
                 let int: u32 = unsafe { transmute(*n) };
-                *n = safe_u32_bits_to_f32(int.to_be());
+                *n = unsafe { transmute(int.to_be()) };
             }
         }
     }
@@ -1974,7 +1944,7 @@ impl ByteOrder for BigEndian {
         if cfg!(target_endian = "little") {
             for n in numbers {
                 let int: u64 = unsafe { transmute(*n) };
-                *n = safe_u64_bits_to_f64(int.to_be());
+                *n = unsafe { transmute(int.to_be()) };
             }
         }
     }
@@ -2167,7 +2137,7 @@ impl ByteOrder for LittleEndian {
         if cfg!(target_endian = "big") {
             for n in numbers {
                 let int: u32 = unsafe { transmute(*n) };
-                *n = safe_u32_bits_to_f32(int.to_le());
+                *n = unsafe { transmute(int.to_le()) };
             }
         }
     }
@@ -2177,47 +2147,9 @@ impl ByteOrder for LittleEndian {
         if cfg!(target_endian = "big") {
             for n in numbers {
                 let int: u64 = unsafe { transmute(*n) };
-                *n = safe_u64_bits_to_f64(int.to_le());
+                *n = unsafe { transmute(int.to_le()) };
             }
         }
-    }
-}
-
-#[inline]
-fn safe_u32_bits_to_f32(u: u32) -> f32 {
-    use core::f32::NAN;
-
-    const EXP_MASK: u32 = 0x7F800000;
-    const FRACT_MASK: u32 = 0x007FFFFF;
-
-    if u & EXP_MASK == EXP_MASK && u & FRACT_MASK != 0 {
-        // While IEEE 754-2008 specifies encodings for quiet NaNs and
-        // signaling ones, certains MIPS and PA-RISC CPUs treat signaling
-        // NaNs differently. Therefore, to be safe, we pass a known quiet
-        // NaN if u is any kind of NaN. The check above only assumes
-        // IEEE 754-1985 to be valid.
-        NAN
-    } else {
-        unsafe { transmute(u) }
-    }
-}
-
-#[inline]
-fn safe_u64_bits_to_f64(u: u64) -> f64 {
-    use core::f64::NAN;
-
-    const EXP_MASK: u64 = 0x7FF0000000000000;
-    const FRACT_MASK: u64 = 0x000FFFFFFFFFFFFF;
-
-    if u & EXP_MASK == EXP_MASK && u & FRACT_MASK != 0 {
-        // While IEEE 754-2008 specifies encodings for quiet NaNs and
-        // signaling ones, certains MIPS and PA-RISC CPUs treat signaling
-        // NaNs differently. Therefore, to be safe, we pass a known quiet
-        // NaN if u is any kind of NaN. The check above only assumes
-        // IEEE 754-1985 to be valid.
-        NAN
-    } else {
-        unsafe { transmute(u) }
     }
 }
 
@@ -2796,35 +2728,6 @@ mod test {
         let n = LittleEndian::read_uint(&[1, 2, 3, 4, 5, 6, 7, 8], 5);
         assert_eq!(n, 0x0504030201);
     }
-
-    #[test]
-    fn read_snan() {
-        use core::f32;
-        use core::f64;
-        use core::mem::transmute;
-
-        use {ByteOrder, BigEndian, LittleEndian};
-
-        let sf = BigEndian::read_f32(&[0xFF, 0x80, 0x00, 0x01]);
-        let sbits: u32 = unsafe { transmute(sf) };
-        assert_eq!(sbits, unsafe { transmute(f32::NAN) });
-        assert_eq!(sf.classify(), ::core::num::FpCategory::Nan);
-
-        let df = BigEndian::read_f64(&[0x7F, 0xF0, 0, 0, 0, 0, 0, 0x01]);
-        let dbits: u64 = unsafe { ::core::mem::transmute(df) };
-        assert_eq!(dbits, unsafe { transmute(f64::NAN) });
-        assert_eq!(df.classify(), ::core::num::FpCategory::Nan);
-
-        let sf = LittleEndian::read_f32(&[0x01, 0x00, 0x80, 0xFF]);
-        let sbits: u32 = unsafe { transmute(sf) };
-        assert_eq!(sbits, unsafe { transmute(f32::NAN) });
-        assert_eq!(sf.classify(), ::core::num::FpCategory::Nan);
-
-        let df = LittleEndian::read_f64(&[0x01, 0, 0, 0, 0, 0, 0xF0, 0x7F]);
-        let dbits: u64 = unsafe { ::core::mem::transmute(df) };
-        assert_eq!(dbits, unsafe { transmute(f64::NAN) });
-        assert_eq!(df.classify(), ::core::num::FpCategory::Nan);
-    }
 }
 
 #[cfg(test)]
@@ -2865,9 +2768,8 @@ mod stdtests {
                     fn prop(n: $ty_int) -> bool {
                         let mut wtr = vec![];
                         wtr.$write::<BigEndian>(n.clone()).unwrap();
-                        let mut rdr = Vec::new();
-                        rdr.extend(wtr[wtr.len()-$bytes..].iter().map(|&x| x));
-                        let mut rdr = Cursor::new(rdr);
+                        let offset = wtr.len() - $bytes;
+                        let mut rdr = Cursor::new(&mut wtr[offset..]);
                         n == rdr.$read::<BigEndian>($bytes).unwrap()
                     }
                     qc_sized(prop as fn($ty_int) -> bool, $max);
@@ -2889,7 +2791,12 @@ mod stdtests {
                     fn prop(n: $ty_int) -> bool {
                         let mut wtr = vec![];
                         wtr.$write::<NativeEndian>(n.clone()).unwrap();
-                        let mut rdr = Cursor::new(wtr);
+                        let offset = if cfg!(target_endian = "big") {
+                            wtr.len() - $bytes
+                        } else {
+                            0
+                        };
+                        let mut rdr = Cursor::new(&mut wtr[offset..]);
                         n == rdr.$read::<NativeEndian>($bytes).unwrap()
                     }
                     qc_sized(prop as fn($ty_int) -> bool, $max);

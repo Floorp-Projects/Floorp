@@ -648,7 +648,7 @@ impl RenderBackend {
             let mut debug_doc = debug_server::TreeNode::new("document");
 
             for (_, pipeline) in &doc.scene.pipelines {
-                let mut debug_dl = debug_server::TreeNode::new("display_list");
+                let mut debug_dl = debug_server::TreeNode::new("display-list");
                 self.traverse_items(&mut pipeline.display_list.iter(), &mut debug_dl);
                 debug_doc.add_child(debug_dl);
             }
@@ -669,7 +669,7 @@ impl RenderBackend {
         let mut debug_root = debug_server::ClipScrollTreeList::new();
 
         for (_, doc) in &self.documents {
-            let debug_node = debug_server::TreeNode::new("document clip_scroll tree");
+            let debug_node = debug_server::TreeNode::new("document clip-scroll tree");
             let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
 
             // TODO(gw): Restructure the storage of clip-scroll tree, clip store

@@ -76,7 +76,10 @@ this.InsecurePasswordUtils = {
 
       if (uri.schemeIs("http")) {
         isFormSubmitHTTP = true;
-        if (gContentSecurityManager.isOriginPotentiallyTrustworthy(principal)) {
+        if (gContentSecurityManager.isOriginPotentiallyTrustworthy(principal) ||
+            // Ignore sites with local IP addresses pointing to local forms.
+            (this._isPrincipalForLocalIPAddress(aForm.rootElement.nodePrincipal) &&
+             this._isPrincipalForLocalIPAddress(principal))) {
           isFormSubmitSecure = true;
         }
       } else {

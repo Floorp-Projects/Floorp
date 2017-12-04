@@ -29,11 +29,6 @@ public:
     nsIChannel* aChannel,
     bool aIsPrivateBrowsing);
 
-  // Close the resource, stop any listeners, channels, etc.
-  // Cancels any currently blocking Read request and forces that request to
-  // return an error.
-  virtual nsresult Close() = 0;
-
   // Pass true to limit the amount of readahead data (specified by
   // "media.cache_readahead_limit") or false to read as much as the
   // cache size allows.
@@ -133,10 +128,6 @@ protected:
   // load group, the request is removed from the group, the flags are set, and
   // then the request is added back to the load group.
   void ModifyLoadFlags(nsLoadFlags aFlags);
-
-  // Dispatches an event to call MediaDecoder::NotifyBytesConsumed(aNumBytes, aOffset)
-  // on the main thread. This is called automatically after every read.
-  void DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset);
 
   RefPtr<MediaResourceCallback> mCallback;
 

@@ -7,8 +7,8 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
+import org.mozilla.gecko.gfx.NativePanZoomController;
 import org.mozilla.gecko.gfx.GeckoDisplay;
-import org.mozilla.gecko.gfx.LayerView;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -32,8 +32,9 @@ import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
 
-public class GeckoView extends LayerView {
+public class GeckoView extends FrameLayout {
     private static final String LOGTAG = "GeckoView";
     private static final boolean DEBUG = false;
 
@@ -178,10 +179,16 @@ public class GeckoView extends LayerView {
         mSurfaceView.getHolder().addCallback(mDisplay);
     }
 
-    @Override
-    public void setSurfaceBackgroundColor(final int newColor) {
+    /**
+     * Set a color to cover the display surface while a document is being shown. The color
+     * is automatically cleared once the new document starts painting. Set to
+     * Color.TRANSPARENT to undo the cover.
+     *
+     * @param color Cover color.
+     */
+    public void coverUntilFirstPaint(final int color) {
         if (mSurfaceView != null) {
-            mSurfaceView.setBackgroundColor(newColor);
+            mSurfaceView.setBackgroundColor(color);
         }
     }
 
@@ -219,6 +226,13 @@ public class GeckoView extends LayerView {
             session.getPanZoomController().setScrollFactor(0.075f * metrics.densityDpi);
         }
 
+        session.getCompositorController().setFirstPaintCallback(new Runnable() {
+            @Override
+            public void run() {
+                coverUntilFirstPaint(Color.TRANSPARENT);
+            }
+        });
+
         mSession = session;
     }
 
@@ -232,6 +246,10 @@ public class GeckoView extends LayerView {
 
     public GeckoSessionSettings getSettings() {
         return mSession.getSettings();
+    }
+
+    public NativePanZoomController getPanZoomController() {
+        return mSession.getPanZoomController();
     }
 
     public DynamicToolbarAnimator getDynamicToolbarAnimator() {
@@ -248,7 +266,6 @@ public class GeckoView extends LayerView {
             mSession.openWindow(getContext().getApplicationContext());
         }
         mSession.attachView(this);
-        attachCompositor(mSession);
 
         super.onAttachedToWindow();
     }
@@ -408,12 +425,6 @@ public class GeckoView extends LayerView {
         }
         return mInputConnectionListener != null &&
                 mInputConnectionListener.onKeyMultiple(keyCode, repeatCount, event);
-    }
-
-    @Override
-    public boolean isIMEEnabled() {
-        return mInputConnectionListener != null &&
-                mInputConnectionListener.isIMEEnabled();
     }
 
     @Override

@@ -17,8 +17,7 @@ use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
 use frame_builder::{FrameBuilder, FrameBuilderConfig, ScrollbarInfo};
 use gpu_cache::GpuCache;
-use internal_types::{FastHashMap, FastHashSet, RenderedDocument};
-use prim_store::RectangleContent;
+use internal_types::{EdgeAaSegmentMask, FastHashMap, FastHashSet, RenderedDocument};
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{FontInstanceMap,ResourceCache, TiledImageMap};
 use scene::{Scene, StackingContextHelpers, ScenePipeline, SceneProperties};
@@ -111,8 +110,8 @@ impl<'a> FlattenContext<'a> {
                     self.builder.add_solid_rectangle(
                         ClipAndScrollInfo::simple(root_reference_frame_id),
                         &info,
-                        RectangleContent::Fill(bg_color),
-                        None,
+                        bg_color,
+                        EdgeAaSegmentMask::empty(),
                     );
                 }
             }
@@ -128,11 +127,11 @@ impl<'a> FlattenContext<'a> {
         if self.builder.config.enable_scrollbars {
             let scrollbar_rect = LayerRect::new(LayerPoint::zero(), LayerSize::new(10.0, 70.0));
             let container_rect = LayerRect::new(LayerPoint::zero(), *frame_size);
-            self.builder.add_solid_rectangle(
+            self.builder.add_scroll_bar(
                 ClipAndScrollInfo::simple(root_reference_frame_id),
                 &LayerPrimitiveInfo::new(scrollbar_rect),
-                RectangleContent::Fill(DEFAULT_SCROLLBAR_COLOR),
-                Some(ScrollbarInfo(root_scroll_frame_id, container_rect)),
+                DEFAULT_SCROLLBAR_COLOR,
+                ScrollbarInfo(root_scroll_frame_id, container_rect),
             );
         }
 
@@ -451,23 +450,21 @@ impl<'a> FlattenContext<'a> {
             SpecificDisplayItem::Rectangle(ref info) => {
                 if !self.try_to_add_rectangle_splitting_on_clip(
                     &prim_info,
-                    RectangleContent::Fill(info.color),
+                    info.color,
                     &clip_and_scroll,
                 ) {
                     self.builder.add_solid_rectangle(
                         clip_and_scroll,
                         &prim_info,
-                        RectangleContent::Fill(info.color),
-                        None,
+                        info.color,
+                        EdgeAaSegmentMask::empty(),
                     );
                 }
             }
             SpecificDisplayItem::ClearRectangle => {
-                self.builder.add_solid_rectangle(
+                self.builder.add_clear_rectangle(
                     clip_and_scroll,
                     &prim_info,
-                    RectangleContent::Clear,
-                    None,
                 );
             }
             SpecificDisplayItem::Line(ref info) => {
@@ -641,7 +638,7 @@ impl<'a> FlattenContext<'a> {
     fn try_to_add_rectangle_splitting_on_clip(
         &mut self,
         info: &LayerPrimitiveInfo,
-        content: RectangleContent,
+        color: ColorF,
         clip_and_scroll: &ClipAndScrollInfo,
     ) -> bool {
         if info.rect.size.area() < 200.0 { // arbitrary threshold
@@ -651,10 +648,8 @@ impl<'a> FlattenContext<'a> {
         // If this rectangle is not opaque, splitting the rectangle up
         // into an inner opaque region just ends up hurting batching and
         // doing more work than necessary.
-        if let RectangleContent::Fill(ColorF{a, ..}) = content {
-            if a != 1.0 {
-                return false;
-            }
+        if color.a != 1.0 {
+            return false;
         }
 
         self.opaque_parts.clear();
@@ -688,8 +683,8 @@ impl<'a> FlattenContext<'a> {
             self.builder.add_solid_rectangle(
                 *clip_and_scroll,
                 &prim_info,
-                content,
-                None,
+                color,
+                EdgeAaSegmentMask::empty(),
             );
             has_opaque = true;
         }
@@ -709,8 +704,8 @@ impl<'a> FlattenContext<'a> {
             self.builder.add_solid_rectangle(
                 *clip_and_scroll,
                 &prim_info,
-                content,
-                None,
+                color,
+                EdgeAaSegmentMask::empty(),
             );
         }
         true

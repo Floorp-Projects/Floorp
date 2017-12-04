@@ -13,11 +13,11 @@ runHeuristicsTest([
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"}, // select
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"},
-
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
-
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
+      ], [
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
       ]],
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
@@ -33,11 +33,11 @@ runHeuristicsTest([
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"}, // select
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"}, // select
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"}, // select
-
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
-
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
+      ], [
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
       ]],
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
@@ -46,7 +46,7 @@ runHeuristicsTest([
   }, {
     fixturePath: "SignIn.html",
     expectedResult: [
-      [[]],
+      [],
       [[ // Sign in
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
       ]],

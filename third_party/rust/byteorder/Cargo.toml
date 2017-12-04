@@ -12,7 +12,7 @@
 
 [package]
 name = "byteorder"
-version = "1.1.0"
+version = "1.2.1"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = "Library for reading/writing numbers in big-endian and little-endian."
 homepage = "https://github.com/BurntSushi/byteorder"
@@ -28,17 +28,16 @@ opt-level = 3
 [lib]
 name = "byteorder"
 bench = false
-[dev-dependencies.rand]
-version = "0.3"
-
 [dev-dependencies.quickcheck]
 version = "0.4"
 default-features = false
+
+[dev-dependencies.rand]
+version = "0.3"
 
 [features]
 default = ["std"]
 i128 = []
 std = []
 [badges.travis-ci]
-branch = "master"
-repository = "https://github.com/BurntSushi/byteorder"
+repository = "BurntSushi/byteorder"

@@ -520,16 +520,7 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_defines(obj, backend_file)
 
         elif isinstance(obj, GeneratedFile):
-            export_suffixes = (
-                '.c',
-                '.cpp',
-                '.h',
-                '.inc',
-                '.py',
-                '.rs',
-                'new', # 'new' is an output from make-stl-wrappers.py
-            )
-            tier = 'export' if any(f.endswith(export_suffixes) for f in obj.outputs) else 'misc'
+            tier = 'export' if obj.required_for_compile else 'misc'
             self._no_skip[tier].add(backend_file.relobjdir)
             first_output = obj.outputs[0]
             dep_file = "%s.pp" % first_output

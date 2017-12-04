@@ -20,10 +20,6 @@ const shared_test_modules = [
   "logging.js",
 ];
 
-const non_android_test_modules = [
-  "storageserver.js",
-];
-
 function expectImportsToSucceed(mm, base = MODULE_BASE) {
   for (let m of mm) {
     let resource = base + m;
@@ -60,9 +56,7 @@ function run_test() {
 
   if (AppConstants.platform != "android") {
     expectImportsToSucceed(non_android_modules);
-    expectImportsToSucceed(non_android_test_modules, TEST_BASE);
   } else {
     expectImportsToFail(non_android_modules);
-    expectImportsToFail(non_android_test_modules, TEST_BASE);
   }
 }

@@ -21,6 +21,7 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
 const PREF_SECTION_ENABLED = "extensions.formautofill.section.enabled";
+const DEFAULT_SECTION_NAME = "-moz-section-default";
 
 /**
  * A scanner for traversing all elements in a form and retrieving the field
@@ -35,11 +36,13 @@ class FieldScanner {
    * @param {Array.DOMElement} elements
    *        The elements from a form for each parser.
    */
-  constructor(elements) {
+  constructor(elements, {allowDuplicates = false, sectionEnabled = true}) {
     this._elementsWeakRef = Cu.getWeakReference(elements);
     this.fieldDetails = [];
     this._parsingIndex = 0;
     this._sections = [];
+    this._allowDuplicates = allowDuplicates;
+    this._sectionEnabled = sectionEnabled;
   }
 
   get _elements() {
@@ -112,22 +115,61 @@ class FieldScanner {
     });
   }
 
-  getSectionFieldDetails(allowDuplicates) {
-    // TODO: [Bug 1416664] If there is only one section which is not defined by
-    // `autocomplete` attribute, the sections should be classified by the
-    // heuristics.
-    return this._sections.map(section => {
-      if (allowDuplicates) {
-        return section.fieldDetails;
+  _classifySections() {
+    let fieldDetails = this._sections[0].fieldDetails;
+    this._sections = [];
+    let seenTypes = new Set();
+    let previousType;
+    let sectionCount = 0;
+
+    for (let fieldDetail of fieldDetails) {
+      if (!fieldDetail.fieldName) {
+        continue;
       }
-      return this._trimFieldDetails(section.fieldDetails);
-    });
+      if (seenTypes.has(fieldDetail.fieldName) &&
+          previousType != fieldDetail.fieldName) {
+        seenTypes.clear();
+        sectionCount++;
+      }
+      previousType = fieldDetail.fieldName;
+      seenTypes.add(fieldDetail.fieldName);
+      this._pushToSection(DEFAULT_SECTION_NAME + "-" + sectionCount, fieldDetail);
+    }
+  }
+
+  /**
+   * The result is an array contains the sections with its belonging field
+   * details. If `this._sections` contains one section only with the default
+   * section name (DEFAULT_SECTION_NAME), `this._classifySections` should be
+   * able to identify all sections in the heuristic way.
+   *
+   * @returns {Array<Object>}
+   *          The array with the sections, and the belonging fieldDetails are in
+   *          each section.
+   */
+  getSectionFieldDetails() {
+    // When the section feature is disabled, `getSectionFieldDetails` should
+    // provide a single section result.
+    if (!this._sectionEnabled) {
+      return [this._getFinalDetails(this.fieldDetails)];
+    }
+    if (this._sections.length == 0) {
+      return [];
+    }
+    if (this._sections.length == 1 && this._sections[0].name == DEFAULT_SECTION_NAME) {
+      this._classifySections();
+    }
+
+    return this._sections.map(section =>
+      this._getFinalDetails(section.fieldDetails)
+    );
   }
 
   /**
    * This function will prepare an autocomplete info object with getInfo
-   * function and push the detail to fieldDetails property. Any duplicated
-   * detail will be marked as _duplicated = true for the parser.
+   * function and push the detail to fieldDetails property.
+   * Any field will be pushed into `this._sections` based on the section name
+   * in `autocomplete` attribute.
    *
    * Any element without the related detail will be used for adding the detail
    * to the end of field details.
@@ -154,13 +196,6 @@ class FieldScanner {
       fieldInfo._reason = info._reason;
     }
 
-    // Store the association between the field metadata and the element.
-    if (this.findSameField(info) != -1) {
-      // A field with the same identifier already exists.
-      log.debug("Not collecting a field matching another with the same info:", info);
-      fieldInfo._duplicated = true;
-    }
-
     this.fieldDetails.push(fieldInfo);
     this._pushToSection(this._getSectionName(fieldInfo), fieldInfo);
   }
@@ -173,7 +208,7 @@ class FieldScanner {
     if (info.addressType) {
       names.push(info.addressType);
     }
-    return names.length ? names.join(" ") : "-moz-section-default";
+    return names.length ? names.join(" ") : DEFAULT_SECTION_NAME;
   }
 
   /**
@@ -190,22 +225,19 @@ class FieldScanner {
       throw new Error("Try to update the non-existing field detail.");
     }
     this.fieldDetails[index].fieldName = fieldName;
-
-    delete this.fieldDetails[index]._duplicated;
-    let indexSame = this.findSameField(this.fieldDetails[index]);
-    if (indexSame != index && indexSame != -1) {
-      this.fieldDetails[index]._duplicated = true;
-    }
   }
 
-  findSameField(info) {
-    return this.fieldDetails.findIndex(f => f.section == info.section &&
-                                       f.addressType == info.addressType &&
-                                       f.fieldName == info.fieldName);
+  _isSameField(field1, field2) {
+    return field1.section == field2.section &&
+           field1.addressType == field2.addressType &&
+           field1.fieldName == field2.fieldName;
   }
 
   /**
-   * Provide the field details without invalid field name and duplicated fields.
+   * Provide the final field details without invalid field name, and the
+   * duplicated fields will be removed as well. For the debugging purpose,
+   * the final `fieldDetails` will include the duplicated fields if
+   * `_allowDuplicates` is true.
    *
    * @param   {Array<Object>} fieldDetails
    *          The field details for trimming.
@@ -213,12 +245,20 @@ class FieldScanner {
    *          The array with the field details without invalid field name and
    *          duplicated fields.
    */
-  _trimFieldDetails(fieldDetails) {
-    return fieldDetails.filter(f => f.fieldName && !f._duplicated);
-  }
+  _getFinalDetails(fieldDetails) {
+    if (this._allowDuplicates) {
+      return fieldDetails.filter(f => f.fieldName);
+    }
 
-  getFieldDetails(allowDuplicates) {
-    return allowDuplicates ? this.fieldDetails : this._trimFieldDetails(this.fieldDetails);
+    let dedupedFieldDetails = [];
+    for (let fieldDetail of fieldDetails) {
+      if (fieldDetail.fieldName && !dedupedFieldDetails.find(f => this._isSameField(fieldDetail, f))) {
+        dedupedFieldDetails.push(fieldDetail);
+      } else {
+        log.debug("Not collecting an invalid field or matching another with the same info:", fieldDetail);
+      }
+    }
+    return dedupedFieldDetails;
   }
 
   elementExisting(index) {
@@ -651,7 +691,8 @@ this.FormAutofillHeuristics = {
       return [];
     }
 
-    let fieldScanner = new FieldScanner(eligibleFields);
+    let fieldScanner = new FieldScanner(eligibleFields,
+      {allowDuplicates, sectionEnabled: this._sectionEnabled});
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
@@ -666,13 +707,7 @@ this.FormAutofillHeuristics = {
 
     LabelUtils.clearLabelMap();
 
-    if (!this._sectionEnabled) {
-      // When the section feature is disabled, `getFormInfo` should provide a
-      // single section result.
-      return [fieldScanner.getFieldDetails(allowDuplicates)];
-    }
-
-    return fieldScanner.getSectionFieldDetails(allowDuplicates);
+    return fieldScanner.getSectionFieldDetails();
   },
 
   _regExpTableHashValue(...signBits) {

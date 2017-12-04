@@ -784,7 +784,6 @@ nsSocketTransport::nsSocketTransport()
     , mResolving(false)
     , mNetAddrIsSet(false)
     , mSelfAddrIsSet(false)
-    , mNetAddrPreResolved(false)
     , mLock("nsSocketTransport.mLock")
     , mFD(this)
     , mFDref(0)
@@ -1070,11 +1069,6 @@ nsSocketTransport::ResolveHost()
                 " bypass cache" : ""));
 
     nsresult rv;
-
-    if (mNetAddrPreResolved) {
-        mState = STATE_RESOLVING;
-        return PostEvent(MSG_DNS_LOOKUP_COMPLETE, NS_OK, nullptr);
-    }
 
     if (!mProxyHost.IsEmpty()) {
         if (!mProxyTransparent || mProxyTransparentResolvesHost) {

@@ -144,7 +144,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
       is(cue.lineAlign, "end", "Cue's line align should be end.");
 
       // Check that cue position align works properly
-      is(cue.positionAlign, "center", "Cue's default position alignment should be center.");
+      is(cue.positionAlign, "auto", "Cue's default position alignment should be auto.");
 
       cue.positionAlign = "line-left";
       is(cue.positionAlign, "line-left", "Cue's position align should be line-left.");

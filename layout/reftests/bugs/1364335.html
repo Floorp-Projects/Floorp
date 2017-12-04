@@ -1,9 +1,0 @@
-<!DOCTYPE html>
-<style>
-  span { color: green; }
-  :any-link + span { color: red; }
-</style>
-<body onload="window.oldColor = getComputedStyle(document.querySelector('span')).color;
-              document.querySelector('a').removeAttribute('href');">
-  <a href=""></a><span>This should be green</span>
-</body>

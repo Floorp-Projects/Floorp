@@ -579,7 +579,6 @@ HashCompleterRequest.prototype = {
                             aTableNames,
                             aPerHashCacheDuration) => {
         log("V4 fullhash response complete hash found callback: " +
-            JSON.stringify(aCompleteHash) + ", " +
             aTableNames + ", CacheDuration(" + aPerHashCacheDuration + ")");
 
         // Filter table names which we didn't requested.

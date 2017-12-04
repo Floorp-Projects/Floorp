@@ -6,6 +6,8 @@ target: obj-x86_64-pc-linux-gnu
 clang_checkers:
  - name: -*
    publish: !!bool no
+ - name: bugprone-forward-declaration-namespace
+   publish: !!bool yes
  - name: clang-analyzer-deadcode.DeadStores
    publish: !!bool yes
  - name: clang-analyzer-security.*
@@ -53,6 +55,8 @@ clang_checkers:
    publish: !!bool yes
  - name: readability-redundant-smartptr-get
    publish: !!bool no
+ - name: readability-static-accessed-through-instance
+   publish: !!bool yes
  - name: readability-uniqueptr-delete-release
    publish: !!bool yes
  - name: modernize-use-auto

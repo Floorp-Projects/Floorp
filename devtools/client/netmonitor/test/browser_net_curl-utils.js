@@ -25,7 +25,7 @@ add_task(function* () {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 1, 3);
+  let wait = waitForNetworkEvents(monitor, 4);
   yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
     content.wrappedJSObject.performRequests(url);
   });

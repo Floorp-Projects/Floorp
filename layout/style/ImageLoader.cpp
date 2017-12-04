@@ -324,22 +324,48 @@ ImageLoader::GetPresContext()
   return shell->GetPresContext();
 }
 
-void InvalidateImagesCallback(nsIFrame* aFrame,
-                              DisplayItemData* aItem)
+static bool
+IsRenderNoImages(uint32_t aDisplayItemKey)
 {
-  DisplayItemType type = GetDisplayItemTypeFromKey(aItem->GetDisplayItemKey());
+  DisplayItemType type = GetDisplayItemTypeFromKey(aDisplayItemKey);
   uint8_t flags = GetDisplayItemFlagsForType(type);
+  return flags & TYPE_RENDERS_NO_IMAGES;
+}
 
-  if (flags & TYPE_RENDERS_NO_IMAGES) {
-    return;
+void InvalidateImages(nsIFrame* aFrame)
+{
+  bool invalidateFrame = false;
+  const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
+  for (uint32_t i = 0; i < array.Length(); i++) {
+    DisplayItemData* data = DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
+    uint32_t displayItemKey = data->GetDisplayItemKey();
+    if (displayItemKey != 0 && !IsRenderNoImages(displayItemKey)) {
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        DisplayItemType type = GetDisplayItemTypeFromKey(displayItemKey);
+        printf_stderr("Invalidating display item(type=%d) based on frame %p \
+                       because it might contain an invalidated image\n",
+                       static_cast<uint32_t>(type), aFrame);
+      }
+
+      data->Invalidate();
+      invalidateFrame = true;
+    }
+  }
+  if (auto userDataTable =
+       aFrame->GetProperty(nsIFrame::WebRenderUserDataProperty())) {
+    for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
+      RefPtr<layers::WebRenderUserData> data = iter.UserData();
+      if (data->GetType() == layers::WebRenderAnimationData::UserDataType::eFallback &&
+          !IsRenderNoImages(data->GetDisplayItemKey())) {
+        static_cast<layers::WebRenderFallbackData*>(data.get())->SetInvalid(true);
+      }
+      invalidateFrame = true;
+    }
   }
 
-  if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-    printf_stderr("Invalidating display item(type=%d) based on frame %p \
-      because it might contain an invalidated image\n", static_cast<uint32_t>(type), aFrame);
+  if (invalidateFrame) {
+    aFrame->SchedulePaint();
   }
-  aItem->Invalidate();
-  aFrame->SchedulePaint();
 }
 
 void
@@ -359,7 +385,7 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet, bool aForcePaint)
         // might not find the right display item.
         frame->InvalidateFrame();
       } else {
-        FrameLayerBuilder::IterateRetainedDataFor(frame, InvalidateImagesCallback);
+        InvalidateImages(frame);
 
         // Update ancestor rendering observers (-moz-element etc)
         nsIFrame *f = frame;

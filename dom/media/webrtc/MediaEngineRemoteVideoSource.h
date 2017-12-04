@@ -84,9 +84,12 @@ public:
     return mMediaSource;
   }
 
-  bool ChooseCapability(const NormalizedConstraints &aConstraints,
-                        const MediaEnginePrefs &aPrefs,
-                        const nsString& aDeviceId) override;
+  bool ChooseCapability(
+    const NormalizedConstraints &aConstraints,
+    const MediaEnginePrefs &aPrefs,
+    const nsString& aDeviceId,
+    webrtc::CaptureCapability& aCapability,
+    const DistanceCalculation aCalculate) override;
 
   void Refresh(int aIndex);
 
@@ -107,6 +110,7 @@ private:
   nsresult
   UpdateSingleSource(const AllocationHandle* aHandle,
                      const NormalizedConstraints& aNetConstraints,
+                     const NormalizedConstraints& aNewConstraint,
                      const MediaEnginePrefs& aPrefs,
                      const nsString& aDeviceId,
                      const char** aOutBadConstraint) override;

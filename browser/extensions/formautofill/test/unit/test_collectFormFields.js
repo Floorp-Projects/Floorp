@@ -292,10 +292,22 @@ const TESTCASES = [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+      ],
+      creditCardFieldDetails: [],
+    }, {
+      addressFieldDetails: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+
+        // TODO Bug 1421181 - "tel-country-code" field should belong to the next
+        // section. There should be a way to group the related fields during the
+        // parsing stage.
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-country-code"},
+      ],
+      creditCardFieldDetails: [],
+    }, {
+      addressFieldDetails: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
@@ -461,13 +473,10 @@ for (let tc of TESTCASES) {
           Assert.equal(detail.elementWeakRef.get(), testCaseDetails[index].elementWeakRef.get(), "DOM reference");
         });
       }
-      for (let i = 0; i < testcase.sections.length; i++) {
-        let section = testcase.sections[i];
-        [
-          section.addressFieldDetails,
-          section.creditCardFieldDetails,
-        ].forEach(details => setElementWeakRef(details));
-      }
+      setElementWeakRef(testcase.sections.reduce((fieldDetails, section) => {
+        fieldDetails.push(...section.addressFieldDetails, ...section.creditCardFieldDetails);
+        return fieldDetails;
+      }, []));
       setElementWeakRef(testcase.validFieldDetails);
 
       let handler = new FormAutofillHandler(formLike);

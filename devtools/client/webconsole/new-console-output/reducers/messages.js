@@ -602,7 +602,7 @@ function passNetworkFilter(message, filters) {
   return (
     message.source !== MESSAGE_SOURCE.NETWORK ||
     message.isXHR === true ||
-    filters.get(FILTERS.NET) === true
+    filters[FILTERS.NET] === true
   );
 }
 
@@ -620,7 +620,7 @@ function passXhrFilter(message, filters) {
   return (
     message.source !== MESSAGE_SOURCE.NETWORK ||
     message.isXHR === false ||
-    filters.get(FILTERS.NETXHR) === true
+    filters[FILTERS.NETXHR] === true
   );
 }
 
@@ -637,7 +637,7 @@ function passLevelFilters(message, filters) {
   return (
     (message.source !== MESSAGE_SOURCE.CONSOLE_API &&
     message.source !== MESSAGE_SOURCE.JAVASCRIPT) ||
-    filters.get(message.level) === true
+    filters[message.level] === true
   );
 }
 
@@ -653,7 +653,7 @@ function passCssFilters(message, filters) {
   // or if the CSS filter is on.
   return (
     message.source !== MESSAGE_SOURCE.CSS ||
-    filters.get("css") === true
+    filters.css === true
   );
 }
 
@@ -665,7 +665,7 @@ function passCssFilters(message, filters) {
  * @returns {Boolean}
  */
 function passSearchFilters(message, filters) {
-  let text = (filters.get("text") || "").trim();
+  let text = (filters.text || "").trim();
 
   // If there is no search, the message passes the filter.
   if (!text) {

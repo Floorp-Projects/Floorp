@@ -1249,12 +1249,6 @@ js::SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg)
 }
 
 JS_FRIEND_API(void)
-JS::NotifyDidPaint(JSContext* cx)
-{
-    cx->runtime()->gc.notifyDidPaint();
-}
-
-JS_FRIEND_API(void)
 JS::NotifyGCRootsRemoved(JSContext* cx)
 {
     cx->runtime()->gc.notifyRootsRemoved();

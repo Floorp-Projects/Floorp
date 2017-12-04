@@ -346,6 +346,23 @@ setupPrototype(RTCStatsReport, {
   }
 });
 
+// Cache for RTPSourceEntries
+// Note: each cache is only valid for one JS event loop execution
+class RTCRtpSourceCache {
+  constructor() {
+    // The time in RTP source time (ms)
+    this.tsNowInRtpSourceTime = null;
+    // The time in JS
+    this.jsTimestamp = null;
+    // Time difference between JS time and RTP source time
+    this.timestampOffset = null;
+    // RTPSourceEntries cached by track id
+    this.rtpSourcesByTrackId = new Map();
+    // Has a cache wipe already been scheduled
+    this.scheduledClear = null;
+  }
+}
+
 class RTCPeerConnection {
   constructor() {
     this._receiveStreams = new Map();
@@ -366,10 +383,13 @@ class RTCPeerConnection {
 
     this._hasStunServer = this._hasTurnServer = false;
     this._iceGatheredRelayCandidates = false;
-
-  // TODO: Remove legacy API eventually
-  // see Bug 1328194
-  this._onGetStatsIsLegacy = false;
+    // Stored webrtc timing information
+    this._storedRtpSourceReferenceTime = null;
+    // TODO: Remove legacy API eventually
+    // see Bug 1328194
+    this._onGetStatsIsLegacy = false;
+    // Stores cached RTP sources state
+    this._rtpSourceCache = new RTCRtpSourceCache();
   }
 
   init(win) {
@@ -1225,6 +1245,45 @@ class RTCPeerConnection {
     this._transceivers.push(transceiver);
   }
 
+  /* Returns a dictionary with three keys:
+   * sources: a list of contributing and synchronization sources
+   * sourceClockOffset: an offset to apply to the source timestamp to get a
+   * very close approximation of the sample time with respect to the local
+   * clock.
+   * jsTimestamp: the current JS time
+   * Note: because the two clocks can drift with respect to each other, once
+   *  a timestamp offset has been calculated it should not be recalculated
+   *  until the timestamp changes, this way it will not appear as if a new
+   *  audio level sample has arrived.
+   */
+  _getRtpSources(receiver) {
+    let cache = this._rtpSourceCache;
+    // Schedule cache invalidation
+    if (!cache.scheduledClear) {
+      cache.scheduledClear = true;
+      Promise.resolve().then(() => {
+        this._rtpSourceCache = new RTCRtpSourceCache();
+      });
+    }
+    // Fetch the RTP source local time, store it for reuse, calculate
+    // the local offset, likewise store it for reuse.
+    if (cache.tsNowInRtpSourceTime !== undefined) {
+      cache.tsNowInRtpSourceTime = this._impl.getNowInRtpSourceReferenceTime();
+      cache.jsTimestamp = new Date().getTime();
+      cache.timestampOffset = cache.jsTimestamp - cache.tsNowInRtpSourceTime;
+    }
+    let id = receiver.track.id;
+    if (cache.rtpSourcesByTrackId[id] === undefined) {
+      cache.rtpSourcesByTrackId[id] =
+          this._impl.getRtpSources(receiver.track, cache.tsNowInRtpSourceTime);
+    }
+    return {
+      sources: cache.rtpSourcesByTrackId[id],
+      sourceClockOffset: cache.timestampOffset,
+      jsTimestamp: cache.jsTimestamp,
+    };
+  }
+
   addTransceiver(sendTrackOrKind, init) {
     let transceiver = this._addTransceiverNoEvents(sendTrackOrKind, init);
     this.updateNegotiationNeeded();
@@ -1321,6 +1380,24 @@ class RTCPeerConnection {
 
   getReceivers() {
     return this.getTransceivers().map(transceiver => transceiver.receiver);
+  }
+
+  // test-only: get the current time using the webrtc clock
+  mozGetNowInRtpSourceReferenceTime() {
+    return this._impl.getNowInRtpSourceReferenceTime();
+  }
+
+  // test-only: insert a contributing source entry for a track
+  mozInsertAudioLevelForContributingSource(receiver,
+                                           source,
+                                           timestamp,
+                                           hasLevel,
+                                           level) {
+    this._impl.insertAudioLevelForContributingSource(receiver.track,
+                                                     source,
+                                                     timestamp,
+                                                     hasLevel,
+                                                     level);
   }
 
   mozAddRIDExtension(receiver, extensionId) {
@@ -1988,7 +2065,12 @@ class RTCRtpReceiver {
         {
           _pc: pc,
           _transceiverImpl: transceiverImpl,
-          track: transceiverImpl.getReceiveTrack()
+          track: transceiverImpl.getReceiveTrack(),
+          // Sync and contributing sources must be kept cached so that timestamps
+          // remain stable, as the timestamp offset can vary
+          // note key = entry.source + entry.sourceType
+          _rtpSources: new Map(),
+          _rtpSourcesJsTimestamp: null,
         });
   }
 
@@ -1998,6 +2080,79 @@ class RTCRtpReceiver {
     return this._pc._async(
       async () => this._pc.getStats(this.track));
   }
+
+  _getRtpSource(source, type) {
+    this._fetchRtpSources();
+    return this._rtpSources.get(type + source).entry;
+  }
+
+  /* Fetch all of the RTP Contributing and Sync sources for the receiver
+   * and store them so they are available when asked for.
+   */
+  _fetchRtpSources() {
+    if (this._rtpSourcesJsTimestamp !== null) {
+      return;
+    }
+    // Queue microtask to mark the cache as stale after this task completes
+    Promise.resolve().then(() => this._rtpSourcesJsTimestamp = null);
+    let {sources, sourceClockOffset, jsTimestamp} =
+        this._pc._getRtpSources(this);
+    this._rtpSourcesJsTimestamp = jsTimestamp;
+    for (let entry of sources) {
+      // Set the clock offset for calculating the 10-second window
+      entry.sourceClockOffset = sourceClockOffset;
+      // Store the new entries or update existing entries
+      let key =  entry.source + entry.sourceType;
+      let cached = this._rtpSources.get(key);
+      if (cached === undefined) {
+        this._rtpSources.set(key, entry);
+      } else if (cached.timestamp != entry.timestamp) {
+        // Only update if the timestamp has changed
+        // This also prevents the sourceClockOffset from changing unecessarily
+        // which could cause a value to flutter at the edge of the 10 second
+        // window.
+        this._rtpSources.set(key, entry);
+      }
+    }
+    // Clear old entries
+    let cutoffTime = this._rtpSourcesJsTimestamp - 10 * 1000;
+    let removeKeys = [];
+    for (let entry of this._rtpSources.values()) {
+      if ((entry.timestamp + entry.sourceClockOffset) < cutoffTime) {
+        removeKeys.push(entry.source + entry.sourceType);
+      }
+    }
+    for (let delKey of removeKeys) {
+      this._rtpSources.delete(delKey);
+    }
+  }
+
+
+
+  _getRtpSourcesByType(type) {
+    this._fetchRtpSources();
+    // Only return the values from within the last 10 seconds as per the spec
+    let cutoffTime = this._rtpSourcesJsTimestamp - 10 * 1000;
+    let sources = [...this._rtpSources.values()].filter(
+      (entry) => {
+        return entry.sourceType == type &&
+            (entry.timestamp + entry.sourceClockOffset) >= cutoffTime;
+      }).map(e => ({
+        source: e.source,
+        timestamp: e.timestamp + e.sourceClockOffset,
+        audioLevel: e.audioLevel,
+      }));
+      return sources;
+  }
+
+  getContributingSources() {
+    return this._getRtpSourcesByType("contributing");
+  }
+
+  getSynchronizationSources() {
+    return this._getRtpSourcesByType("synchronization");
+  }
+
 }
 setupPrototype(RTCRtpReceiver, {
   classID: PC_RECEIVER_CID,

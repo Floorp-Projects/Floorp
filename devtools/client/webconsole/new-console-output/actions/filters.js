@@ -34,7 +34,7 @@ function filterToggle(filter) {
     });
     const filterState = getAllFilters(getState());
     Services.prefs.setBoolPref(PREFS.FILTER[filter.toUpperCase()],
-      filterState.get(filter));
+      filterState[filter]);
   };
 }
 
@@ -44,7 +44,7 @@ function filtersClear() {
       type: FILTERS_CLEAR,
     });
 
-    const filterState = getAllFilters(getState()).toJS();
+    const filterState = getAllFilters(getState());
     for (let filter in filterState) {
       if (filter !== FILTERS.TEXT) {
         Services.prefs.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);

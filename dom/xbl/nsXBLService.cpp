@@ -443,14 +443,18 @@ private:
 class MOZ_RAII AutoStyleElement
 {
 public:
-  explicit AutoStyleElement(Element* aElement)
+  AutoStyleElement(Element* aElement, bool* aResolveStyle)
     : mElement(aElement)
     , mHadData(aElement->HasServoData())
+    , mResolveStyle(aResolveStyle)
   {
+    MOZ_ASSERT(mResolveStyle);
     if (mHadData) {
-      ServoRestyleManager::ClearServoDataFromSubtree(mElement);
+      ServoRestyleManager::ClearServoDataFromSubtree(
+        mElement, ServoRestyleManager::IncludeRoot::No);
     }
   }
+
   ~AutoStyleElement()
   {
     nsIPresShell* presShell = mElement->OwnerDoc()->GetShell();
@@ -458,13 +462,18 @@ public:
       return;
     }
 
-    ServoStyleSet* servoSet = presShell->StyleSet()->AsServo();
-    servoSet->StyleNewSubtree(mElement);
+    if (*mResolveStyle) {
+      mElement->ClearServoData();
+
+      ServoStyleSet* servoSet = presShell->StyleSet()->AsServo();
+      servoSet->StyleNewSubtree(mElement);
+    }
   }
 
 private:
   Element* mElement;
   bool mHadData;
+  bool* mResolveStyle;
 };
 
 // This function loads a particular XBL file and installs all of the bindings
@@ -532,7 +541,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  AutoStyleElement styleElement(aContent->AsElement());
+  AutoStyleElement styleElement(aContent->AsElement(), aResolveStyle);
 
   // We loaded a style binding.  It goes on the end.
   // Install the binding on the content node.

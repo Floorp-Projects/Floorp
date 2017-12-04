@@ -221,6 +221,45 @@ function waitForAllRequestsFinished(monitor) {
   });
 }
 
+let finishedQueue = {};
+let updatingTypes = [
+  "NetMonitor:NetworkEventUpdating:RequestCookies",
+  "NetMonitor:NetworkEventUpdating:ResponseCookies",
+];
+let updatedTypes = [
+  "NetMonitor:NetworkEventUpdated:RequestCookies",
+  "NetMonitor:NetworkEventUpdated:ResponseCookies",
+];
+
+// Start collecting all networkEventUpdate event when panel is opened.
+// removeTab() should be called once all corresponded RECEIVED_* events finished.
+function startNetworkEventUpdateObserver(panelWin) {
+  updatingTypes.forEach((type) => panelWin.on(type, (event, actor) => {
+    let key = actor + "-" + event.replace("NetMonitor:NetworkEventUpdating:", "");
+    finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] + 1 : 1;
+  }));
+
+  updatedTypes.forEach((type) => panelWin.on(type, (event, actor) => {
+    let key = actor + "-" + event.replace("NetMonitor:NetworkEventUpdated:", "");
+    finishedQueue[key]--;
+  }));
+}
+
+function* waitForAllNetworkUpdateEvents() {
+  function checkNetworkEventUpdateState() {
+    for (let key in finishedQueue) {
+      if (finishedQueue[key] > 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  info("Wait for completion of all NetworkUpdateEvents packets...");
+  yield waitUntil(() => checkNetworkEventUpdateState());
+  finishedQueue = {};
+}
+
 function initNetMonitor(url, enableCache) {
   info("Initializing a network monitor pane.");
 
@@ -237,6 +276,8 @@ function initNetMonitor(url, enableCache) {
     info("Network monitor pane shown successfully.");
 
     let monitor = toolbox.getCurrentPanel();
+
+    startNetworkEventUpdateObserver(monitor.panelWin);
 
     if (!enableCache) {
       let panel = monitor.panelWin;
@@ -271,6 +312,9 @@ function restartNetMonitor(monitor, newUrl) {
     let tab = monitor.toolbox.target.tab;
     let url = newUrl || tab.linkedBrowser.currentURI.spec;
 
+    yield waitForAllNetworkUpdateEvents();
+    info("All pending requests finished.");
+
     let onDestroyed = monitor.once("destroyed");
     yield removeTab(tab);
     yield onDestroyed;
@@ -289,6 +333,7 @@ function teardown(monitor) {
     // done from FirefoxDataProvider.
     info("Wait for completion of all pending RDP requests...");
     yield waitForExistingRequests(monitor);
+    yield waitForAllNetworkUpdateEvents();
     info("All pending requests finished.");
 
     let onDestroyed = monitor.once("destroyed");
@@ -297,7 +342,7 @@ function teardown(monitor) {
   });
 }
 
-function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
+function waitForNetworkEvents(monitor, getRequests) {
   return new Promise((resolve) => {
     let panel = monitor.panelWin;
     let { getNetworkRequest } = panel.connector;
@@ -307,12 +352,8 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
     let awaitedEventsToListeners = [
       ["UPDATING_REQUEST_HEADERS", onGenericEvent],
       ["RECEIVED_REQUEST_HEADERS", onGenericEvent],
-      ["UPDATING_REQUEST_COOKIES", onGenericEvent],
-      ["RECEIVED_REQUEST_COOKIES", onGenericEvent],
       ["UPDATING_RESPONSE_HEADERS", onGenericEvent],
       ["RECEIVED_RESPONSE_HEADERS", onGenericEvent],
-      ["UPDATING_RESPONSE_COOKIES", onGenericEvent],
-      ["RECEIVED_RESPONSE_COOKIES", onGenericEvent],
       ["UPDATING_EVENT_TIMINGS", onGenericEvent],
       ["RECEIVED_EVENT_TIMINGS", onGenericEvent],
       ["PAYLOAD_READY", onPayloadReady]
@@ -359,10 +400,9 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
     }
 
     function maybeResolve(event, actor, networkInfo) {
-      info("> Network events progress: " +
-        "Payload: " + payloadReady + "/" + (getRequests + postRequests) + ", " +
-        "Generic: " + genericEvents + "/" +
-          ((getRequests + postRequests) * expectedGenericEvents) + ", " +
+      info("> Network event progress: " +
+        "Payload: " + payloadReady + "/" + getRequests + ", " +
+        "Generic: " + genericEvents + "/" + (getRequests * expectedGenericEvents) + ", " +
         "got " + event + " for " + actor);
 
       let url = networkInfo.request.url;
@@ -374,8 +414,8 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       // There are `expectedGenericEvents` updates which need to be fired for a request
       // to be considered finished. The "requestPostData" packet isn't fired for non-POST
       // requests.
-      if (payloadReady >= (getRequests + postRequests) &&
-        genericEvents >= (getRequests + postRequests) * expectedGenericEvents) {
+      if (payloadReady >= getRequests &&
+        genericEvents >= getRequests * expectedGenericEvents) {
         awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
         executeSoon(resolve);
       }

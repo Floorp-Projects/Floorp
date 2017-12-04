@@ -579,8 +579,7 @@ public:
    */
   void MakeVisible();
   void MakeHidden();
-
-  void OnDocShellActivated(bool aIsActive);
+  bool IsVisible();
 
   nsIContentChild* Manager() const { return mManager; }
 
@@ -777,20 +776,20 @@ public:
                                   const ScrollableLayerGuid& aGuid,
                                   const uint64_t& aInputBlockId);
 
-  static bool HasActiveTabs()
+  static bool HasVisibleTabs()
   {
-    return sActiveTabs && !sActiveTabs->IsEmpty();
+    return sVisibleTabs && !sVisibleTabs->IsEmpty();
   }
 
-  // Returns the set of TabChilds that are currently in the foreground. There
-  // can be multiple foreground TabChilds if Firefox has multiple windows
-  // open. There can also be zero foreground TabChilds if the foreground tab is
-  // in a different content process. Note that this function should only be
-  // called if HasActiveTabs() returns true.
-  static const nsTHashtable<nsPtrHashKey<TabChild>>& GetActiveTabs()
+  // Returns the set of TabChilds that are currently rendering layers. There
+  // can be multiple TabChilds in this state if Firefox has multiple windows
+  // open or is warming tabs up. There can also be zero TabChilds in this
+  // state. Note that this function should only be called if HasVisibleTabs()
+  // returns true.
+  static const nsTHashtable<nsPtrHashKey<TabChild>>& GetVisibleTabs()
   {
-    MOZ_ASSERT(HasActiveTabs());
-    return *sActiveTabs;
+    MOZ_ASSERT(HasVisibleTabs());
+    return *sVisibleTabs;
   }
 
 protected:
@@ -802,9 +801,9 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
 
-  virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive,
-                                                          const bool& aIsHidden,
-                                                          const uint64_t& aLayerObserverEpoch) override;
+  virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive) override;
+
+  virtual mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverEpoch) override;
 
   virtual mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                                     const bool& aForDocumentNavigation) override;
@@ -895,8 +894,7 @@ private:
                           const ScrollableLayerGuid& aGuid,
                           const uint64_t& aInputBlockId);
 
-  void InternalSetDocShellIsActive(bool aIsActive,
-                                   bool aPreserveLayers);
+  void InternalSetDocShellIsActive(bool aIsActive);
 
   bool CreateRemoteLayerManager(mozilla::layers::PCompositorBridgeChild* aCompositorChild);
 
@@ -986,17 +984,16 @@ private:
   bool mCoalesceMouseMoveEvents;
 
   bool mPendingDocShellIsActive;
-  bool mPendingDocShellPreserveLayers;
   bool mPendingDocShellReceivedMessage;
   uint32_t mPendingDocShellBlockers;
 
   WindowsHandle mWidgetNativeData;
 
-  // This state is used to keep track of the current active tabs (the ones in
-  // the foreground). There may be more than one if there are multiple browser
-  // windows open. There may be none if this process does not host any
-  // foreground tabs.
-  static nsTHashtable<nsPtrHashKey<TabChild>>* sActiveTabs;
+  // This state is used to keep track of the current visible tabs (the ones rendering
+  // layers). There may be more than one if there are multiple browser windows open, or
+  // tabs are being warmed up. There may be none if this process does not host any
+  // visible or warming tabs.
+  static nsTHashtable<nsPtrHashKey<TabChild>>* sVisibleTabs;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

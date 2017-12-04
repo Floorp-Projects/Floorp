@@ -470,6 +470,10 @@ protected:
 
   nsresult TabInTable(bool inIsShift, bool* outHandled);
 
+  /**
+   * InsertBR() inserts a new <br> element at selection.  If there is
+   * non-collapsed selection ranges, the selected ranges is deleted first.
+   */
   nsresult InsertBR();
 
   // Table Editing (implemented in nsTableEditor.cpp)

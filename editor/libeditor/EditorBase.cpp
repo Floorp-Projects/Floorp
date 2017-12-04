@@ -1869,6 +1869,119 @@ EditorBase::MoveNode(nsIContent* aNode,
   return InsertNode(*aNode, *aParent, aOffset);
 }
 
+void
+EditorBase::MoveAllChildren(nsINode& aContainer,
+                            const EditorRawDOMPoint& aPointToInsert,
+                            ErrorResult& aError)
+{
+  if (!aContainer.HasChildren()) {
+    return;
+  }
+  nsIContent* firstChild = aContainer.GetFirstChild();
+  if (NS_WARN_IF(!firstChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  nsIContent* lastChild = aContainer.GetLastChild();
+  if (NS_WARN_IF(!lastChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  return MoveChildren(*firstChild, *lastChild, aPointToInsert, aError);
+}
+
+void
+EditorBase::MovePreviousSiblings(nsIContent& aChild,
+                                 const EditorRawDOMPoint& aPointToInsert,
+                                 ErrorResult& aError)
+{
+  if (NS_WARN_IF(!aChild.GetParentNode())) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+  nsIContent* firstChild = aChild.GetParentNode()->GetFirstChild();
+  if (NS_WARN_IF(!firstChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  nsIContent* lastChild =
+    &aChild == firstChild ? firstChild : aChild.GetPreviousSibling();
+  if (NS_WARN_IF(!lastChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  return MoveChildren(*firstChild, *lastChild, aPointToInsert, aError);
+}
+
+void
+EditorBase::MoveChildren(nsIContent& aFirstChild,
+                         nsIContent& aLastChild,
+                         const EditorRawDOMPoint& aPointToInsert,
+                         ErrorResult& aError)
+{
+  nsCOMPtr<nsINode> oldContainer = aFirstChild.GetParentNode();
+  if (NS_WARN_IF(oldContainer != aLastChild.GetParentNode()) ||
+      NS_WARN_IF(!aPointToInsert.IsSet()) ||
+      NS_WARN_IF(!aPointToInsert.Container()->IsContainerNode())) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  // First, store all children which should be moved to the new container.
+  AutoTArray<nsCOMPtr<nsIContent>, 10> children;
+  for (nsIContent* child = &aFirstChild;
+       child;
+       child = child->GetNextSibling()) {
+    children.AppendElement(child);
+    if (child == &aLastChild) {
+      break;
+    }
+  }
+
+  if (NS_WARN_IF(children.LastElement() != &aLastChild)) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  nsCOMPtr<nsINode> newContainer = aPointToInsert.Container();
+  nsCOMPtr<nsIContent> nextNode = aPointToInsert.GetChildAtOffset();
+  for (size_t i = children.Length(); i > 0; --i) {
+    nsCOMPtr<nsIContent>& child = children[i - 1];
+    if (child->GetParentNode() != oldContainer) {
+      // If the child has been moved to different container, we shouldn't
+      // touch it.
+      continue;
+    }
+    oldContainer->RemoveChild(*child, aError);
+    if (NS_WARN_IF(aError.Failed())) {
+      return;
+    }
+    if (nextNode) {
+      // If we're not appending the children to the new container, we should
+      // check if referring next node of insertion point is still in the new
+      // container.
+      EditorRawDOMPoint pointToInsert(nextNode);
+      if (NS_WARN_IF(!pointToInsert.IsSet()) ||
+          NS_WARN_IF(pointToInsert.Container() != newContainer)) {
+        // The next node of insertion point has been moved by mutation observer.
+        // Let's stop moving the remaining nodes.
+        // XXX Or should we move remaining children after the last moved child?
+        aError.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+    }
+    newContainer->InsertBefore(*child, nextNode, aError);
+    if (NS_WARN_IF(aError.Failed())) {
+      return;
+    }
+    // If the child was inserted or appended properly, the following children
+    // should be inserted before it.  Otherwise, keep using current position.
+    if (child->GetParentNode() == newContainer) {
+      nextNode = child;
+    }
+  }
+}
+
 NS_IMETHODIMP
 EditorBase::AddEditorObserver(nsIEditorObserver* aObserver)
 {
@@ -2980,6 +3093,8 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
     return;
   }
 
+  // Fix the child before mutation observer may touch the DOM tree.
+  nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChildAtOffset();
   parent->InsertBefore(aNewLeftNode, aStartOfRightNode.Container(),
                        aError);
   if (NS_WARN_IF(aError.Failed())) {
@@ -3004,24 +3119,21 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
       MOZ_DIAGNOSTIC_ASSERT(!rightAsText && !leftAsText);
       // Otherwise it's an interior node, so shuffle around the children. Go
       // through list backwards so deletes don't interfere with the iteration.
-      // FYI: It's okay to use raw pointer for caching existing right node since
-      //      it's already grabbed by aStartOfRightNode.
-      nsINode* existingRightNode = aStartOfRightNode.Container();
-      nsCOMPtr<nsINodeList> childNodes = existingRightNode->ChildNodes();
-      // XXX This is wrong loop range if some children has already gone.
-      //     This will be fixed by a later patch.
-      for (int32_t i = aStartOfRightNode.Offset() - 1; i >= 0; i--) {
-        nsCOMPtr<nsIContent> childNode = childNodes->Item(i);
-        MOZ_RELEASE_ASSERT(childNode);
-        existingRightNode->RemoveChild(*childNode, aError);
-        if (NS_WARN_IF(aError.Failed())) {
-          break;
-        }
-        nsCOMPtr<nsIContent> firstChild = aNewLeftNode.GetFirstChild();
-        aNewLeftNode.InsertBefore(*childNode, firstChild, aError);
+      if (!firstChildOfRightNode) {
+        MoveAllChildren(*aStartOfRightNode.Container(),
+                        EditorRawDOMPoint(&aNewLeftNode, 0), aError);
         NS_WARNING_ASSERTION(!aError.Failed(),
-          "Failed to insert a child which is removed from the right node into "
-          "the left node");
+          "Failed to move all children from the right node to the left node");
+      } else if (NS_WARN_IF(aStartOfRightNode.Container() !=
+                              firstChildOfRightNode->GetParentNode())) {
+          // firstChildOfRightNode has been moved by mutation observer.
+          // In this case, we what should we do?  Use offset?  But we cannot
+          // check if the offset is still expected.
+      } else {
+        MovePreviousSiblings(*firstChildOfRightNode,
+                             EditorRawDOMPoint(&aNewLeftNode, 0), aError);
+        NS_WARNING_ASSERTION(!aError.Failed(),
+          "Failed to move some children from the right node to the left node");
       }
     }
   }
@@ -4084,7 +4196,7 @@ EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
          !atStartOfRightNode.Container()->GetAsText()) ||
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
-      ErrorResult error;
+      IgnoredErrorResult error;
       nsCOMPtr<nsIContent> newLeftNode =
         SplitNode(atStartOfRightNode.AsRaw(), error);
       if (NS_WARN_IF(error.Failed())) {
