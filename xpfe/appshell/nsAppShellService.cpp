@@ -733,36 +733,36 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 
   widgetInitData.mRTL = LocaleService::GetInstance()->IsAppLocaleRTL();
 
-  bool isUsingRemoteTabs = mozilla::BrowserTabsRemoteAutostart();
-  if (aChromeMask & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) {
-    isUsingRemoteTabs = true;
-  }
-
-  // Enforce the Private Browsing autoStart pref first.
-  bool isPrivateBrowsingWindow =
-    Preferences::GetBool("browser.privatebrowsing.autostart");
-  if (aChromeMask & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW) {
-    // Caller requested a private window
-    isPrivateBrowsingWindow = true;
-  }
-  widgetInitData.mIsPrivateBrowsing = isPrivateBrowsingWindow;
-
-  bool isParentPrivateBrowsingWindow = false;
-  nsCOMPtr<mozIDOMWindowProxy> domWin = do_GetInterface(aParent);
-  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(domWin);
-  nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(webNav);
-  if (!isPrivateBrowsingWindow && parentContext) {
-    // Ensure that we propagate any existing private browsing status
-    // from the parent, even if it will not actually be used
-    // as a parent value.
-    isParentPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
-  }
-
   nsresult rv = window->Initialize(parent, center ? aParent : nullptr,
                                    aUrl, aInitialWidth, aInitialHeight,
                                    aIsHiddenWindow, aOpeningTab,
                                    aOpenerWindow, widgetInitData);
+
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Enforce the Private Browsing autoStart pref first.
+  bool isPrivateBrowsingWindow =
+    Preferences::GetBool("browser.privatebrowsing.autostart");
+  bool isUsingRemoteTabs = mozilla::BrowserTabsRemoteAutostart();
+
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW) {
+    // Caller requested a private window
+    isPrivateBrowsingWindow = true;
+  }
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) {
+    isUsingRemoteTabs = true;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> domWin = do_GetInterface(aParent);
+  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(domWin);
+  nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(webNav);
+
+  if (!isPrivateBrowsingWindow && parentContext) {
+    // Ensure that we propagate any existing private browsing status
+    // from the parent, even if it will not actually be used
+    // as a parent value.
+    isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
+  }
 
   if (parentContext) {
     isUsingRemoteTabs = parentContext->UseRemoteTabs();
@@ -773,8 +773,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   nsCOMPtr<nsIWebNavigation> newWebNav = do_GetInterface(newDomWin);
   nsCOMPtr<nsILoadContext> thisContext = do_GetInterface(newWebNav);
   if (thisContext) {
-    thisContext->SetPrivateBrowsing(isPrivateBrowsingWindow ||
-                                    isParentPrivateBrowsingWindow);
+    thisContext->SetPrivateBrowsing(isPrivateBrowsingWindow);
     thisContext->SetRemoteTabs(isUsingRemoteTabs);
   }
 
