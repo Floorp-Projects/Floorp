@@ -12,8 +12,9 @@ Cu.import("resource://shield-recipe-client/lib/Utils.jsm", this);
 
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/docs/
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
 /* global sinon */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+loader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 
 // Make sinon assertions fail in a way that mochitest understands
 sinon.assert.fail = function(message) {
