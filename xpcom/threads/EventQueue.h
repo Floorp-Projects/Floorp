@@ -18,8 +18,7 @@ namespace mozilla {
 class EventQueue final : public AbstractEventQueue
 {
 public:
-  EventQueue() {}
-  explicit EventQueue(EventPriority aPriority);
+  EventQueue();
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 EventPriority aPriority,
