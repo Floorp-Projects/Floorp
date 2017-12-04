@@ -127,7 +127,7 @@ FlattenAssignedNodes(HTMLSlotElement* aSlot, nsTArray<RefPtr<nsINode>>& aNodes)
     return;
   }
 
-  nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
+  const nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
 
   // If assignedNodes is empty, use children of slot as fallback content.
   if (assignedNodes.IsEmpty()) {
@@ -169,8 +169,8 @@ HTMLSlotElement::AssignedNodes(const AssignedNodesOptions& aOptions,
   aNodes = mAssignedNodes;
 }
 
-nsTArray<RefPtr<nsINode>>&
-HTMLSlotElement::AssignedNodes()
+const nsTArray<RefPtr<nsINode>>&
+HTMLSlotElement::AssignedNodes() const
 {
   return mAssignedNodes;
 }
