@@ -6,6 +6,8 @@
 #include "nsHtml5TreeOpExecutor.h"
 #include "mozilla/Encoding.h"
 
+using namespace mozilla;
+
 nsHtml5SpeculativeLoad::nsHtml5SpeculativeLoad()
   :
 #ifdef DEBUG
