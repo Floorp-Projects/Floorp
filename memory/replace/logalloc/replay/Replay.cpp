@@ -33,11 +33,14 @@ die(const char* message)
 /* We don't want to be using malloc() to allocate our internal tracking
  * data, because that would change the parameters of what is being measured,
  * so we want to use data types that directly use mmap/VirtualAlloc. */
-template <typename T, size_t Len>
+template<typename T, size_t Len>
 class MappedArray
 {
 public:
-  MappedArray(): mPtr(nullptr) {}
+  MappedArray()
+    : mPtr(nullptr)
+  {
+  }
 
   ~MappedArray()
   {
@@ -50,21 +53,25 @@ public:
     }
   }
 
-  T& operator[] (size_t aIndex) const
+  T& operator[](size_t aIndex) const
   {
     if (mPtr) {
       return mPtr[aIndex];
     }
 
 #ifdef _WIN32
-    mPtr = reinterpret_cast<T*>(VirtualAlloc(nullptr, sizeof(T) * Len,
-             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+    mPtr = reinterpret_cast<T*>(VirtualAlloc(
+      nullptr, sizeof(T) * Len, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     if (mPtr == nullptr) {
       die("VirtualAlloc error");
     }
 #else
-    mPtr = reinterpret_cast<T*>(mmap(nullptr, sizeof(T) * Len,
-             PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0));
+    mPtr = reinterpret_cast<T*>(mmap(nullptr,
+                                     sizeof(T) * Len,
+                                     PROT_READ | PROT_WRITE,
+                                     MAP_ANON | MAP_PRIVATE,
+                                     -1,
+                                     0));
     if (mPtr == MAP_FAILED) {
       die("Mmap error");
     }
@@ -100,7 +107,7 @@ class MemSlotList
   MappedArray<MemSlotList, 1> mNext;
 
 public:
-  MemSlot& operator[] (size_t aIndex) const
+  MemSlot& operator[](size_t aIndex) const
   {
     if (aIndex < kGroupSize * kGroups) {
       return mSlots[aIndex / kGroupSize][aIndex % kGroupSize];
@@ -114,17 +121,25 @@ public:
 class Buffer
 {
 public:
-  Buffer() : mBuf(nullptr), mLength(0) {}
+  Buffer()
+    : mBuf(nullptr)
+    , mLength(0)
+  {
+  }
 
   Buffer(const void* aBuf, size_t aLength)
-    : mBuf(reinterpret_cast<const char*>(aBuf)), mLength(aLength)
-  {}
+    : mBuf(reinterpret_cast<const char*>(aBuf))
+    , mLength(aLength)
+  {
+  }
 
   /* Constructor for string literals. */
-  template <size_t Size>
+  template<size_t Size>
   explicit Buffer(const char (&aStr)[Size])
-    : mBuf(aStr), mLength(Size - 1)
-  {}
+    : mBuf(aStr)
+    , mLength(Size - 1)
+  {
+  }
 
   /* Returns a sub-buffer up-to but not including the given aNeedle character.
    * The "parent" buffer itself is altered to begin after the aNeedle
@@ -165,10 +180,10 @@ public:
   }
 
   /* Returns whether the two involved buffers have the same content. */
-  bool operator ==(Buffer aOther)
+  bool operator==(Buffer aOther)
   {
-    return mLength == aOther.mLength && (mBuf == aOther.mBuf ||
-                                         !strncmp(mBuf, aOther.mBuf, mLength));
+    return mLength == aOther.mLength &&
+           (mBuf == aOther.mBuf || !strncmp(mBuf, aOther.mBuf, mLength));
   }
 
   /* Returns whether the buffer is empty. */
@@ -195,13 +210,15 @@ private:
 };
 
 /* Helper class to read from a file descriptor line by line. */
-class FdReader {
+class FdReader
+{
 public:
   explicit FdReader(int aFd)
     : mFd(aFd)
     , mData(&mRawBuf, 0)
     , mBuf(&mRawBuf, sizeof(mRawBuf))
-  {}
+  {
+  }
 
   /* Read a line from the file descriptor and returns it as a Buffer instance */
   Buffer ReadLine()
@@ -273,13 +290,12 @@ MOZ_BEGIN_EXTERN_C
 
 /* Function declarations for all the replace_malloc _impl functions.
  * See memory/build/replace_malloc.c */
-#define MALLOC_DECL(name, return_type, ...) \
-  return_type name ## _impl(__VA_ARGS__);
+#define MALLOC_DECL(name, return_type, ...)                                    \
+  return_type name##_impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
-#define MALLOC_DECL(name, return_type, ...) \
-  return_type name(__VA_ARGS__);
+#define MALLOC_DECL(name, return_type, ...) return_type name(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 
@@ -287,13 +303,16 @@ MOZ_BEGIN_EXTERN_C
 /* mozjemalloc uses MozTagAnonymousMemory, which doesn't have an inline
  * implementation on Android */
 void
-MozTagAnonymousMemory(const void* aPtr, size_t aLength, const char* aTag) {}
+MozTagAnonymousMemory(const void* aPtr, size_t aLength, const char* aTag)
+{
+}
 
 /* mozjemalloc and jemalloc use pthread_atfork, which Android doesn't have.
  * While gecko has one in libmozglue, the replay program can't use that.
  * Since we're not going to fork anyways, make it a dummy function. */
 int
-pthread_atfork(void (*aPrepare)(void), void (*aParent)(void),
+pthread_atfork(void (*aPrepare)(void),
+               void (*aParent)(void),
                void (*aChild)(void))
 {
   return 0;
@@ -302,14 +321,15 @@ pthread_atfork(void (*aPrepare)(void), void (*aParent)(void),
 
 MOZ_END_EXTERN_C
 
-size_t parseNumber(Buffer aBuf)
+size_t
+parseNumber(Buffer aBuf)
 {
   if (!aBuf) {
     die("Malformed input");
   }
 
   size_t result = 0;
-  for (const char* c = aBuf.get(), *end = aBuf.GetEnd(); c < end; c++) {
+  for (const char *c = aBuf.get(), *end = aBuf.GetEnd(); c < end; c++) {
     if (*c < '0' || *c > '9') {
       die("Malformed input");
     }
@@ -323,7 +343,9 @@ size_t parseNumber(Buffer aBuf)
 class Replay
 {
 public:
-  Replay(): mOps(0) {
+  Replay()
+    : mOps(0)
+  {
 #ifdef _WIN32
     // See comment in FdPrintf.h as to why native win32 handles are used.
     mStdErr = reinterpret_cast<intptr_t>(GetStdHandle(STD_ERROR_HANDLE));
@@ -332,10 +354,7 @@ public:
 #endif
   }
 
-  MemSlot& operator[] (size_t index) const
-  {
-    return mSlots[index];
-  }
+  MemSlot& operator[](size_t index) const { return mSlots[index]; }
 
   void malloc(Buffer& aArgs, Buffer& aResult)
   {
@@ -436,9 +455,14 @@ public:
     ::jemalloc_stats(&stats);
     FdPrintf(mStdErr,
              "#%zu mapped: %zu; allocated: %zu; waste: %zu; dirty: %zu; "
-             "bookkeep: %zu; binunused: %zu\n", mOps, stats.mapped,
-             stats.allocated, stats.waste, stats.page_cache,
-             stats.bookkeeping, stats.bin_unused);
+             "bookkeep: %zu; binunused: %zu\n",
+             mOps,
+             stats.mapped,
+             stats.allocated,
+             stats.waste,
+             stats.page_cache,
+             stats.bookkeeping,
+             stats.bin_unused);
     /* TODO: Add more data, like actual RSS as measured by OS, but compensated
      * for the replay internal data. */
   }
@@ -461,7 +485,6 @@ private:
   size_t mOps;
   MemSlotList mSlots;
 };
-
 
 int
 main()

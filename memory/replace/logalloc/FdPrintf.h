@@ -17,10 +17,11 @@
  * APIs is that they don't support O_APPEND in a multi-process-safe way,
  * while CreateFile does.
  */
-extern void FdPrintf(intptr_t aFd, const char* aFormat, ...)
+extern void
+FdPrintf(intptr_t aFd, const char* aFormat, ...)
 #ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
+  __attribute__((format(printf, 2, 3)))
 #endif
-;
+  ;
 
 #endif /* __FdPrintf_h__ */
