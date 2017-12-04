@@ -291,6 +291,31 @@ add_task(async function() {
 });
 
 /**
+ * In this test, we check that the popup will hide if we navigate to another
+ * page.
+ */
+add_task(async function() {
+  incrementTest();
+  let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
+  let browser = await openNewTab(uri);
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popupshown");
+  await clickChildElement(browser);
+  await popupShownPromise;
+
+  checkPopupShow();
+  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
+  await BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
+  await BrowserTestUtils.browserLoaded(browser);
+
+  await popupHiddenPromise;
+
+  gBrowser.removeCurrentTab();
+});
+
+/**
  * In this test, we check that nothing happen if the invalid form is
  * submitted in a background tab.
  */

@@ -27,6 +27,23 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                          bool aPreallocateChildren) const override;
 
+  // nsIContent
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              bool aCompileEventHandlers) override;
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true) override;
+
+  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                 const nsAttrValueOrString* aValue,
+                                 bool aNotify) override;
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
+                                nsIPrincipal* aSubjectPrincipal,
+                                bool aNotify) override;
+
+  // WebIDL
   void SetName(const nsAString& aName, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::name, aName, aRv);
@@ -39,6 +56,13 @@ public:
 
   void AssignedNodes(const AssignedNodesOptions& aOptions,
                      nsTArray<RefPtr<nsINode>>& aNodes);
+
+  // Helper methods
+  const nsTArray<RefPtr<nsINode>>& AssignedNodes() const;
+  void InsertAssignedNode(uint32_t aIndex, nsINode* aNode);
+  void AppendAssignedNode(nsINode* aNode);
+  void RemoveAssignedNode(nsINode* aNode);
+  void ClearAssignedNodes();
 
 protected:
   virtual ~HTMLSlotElement();

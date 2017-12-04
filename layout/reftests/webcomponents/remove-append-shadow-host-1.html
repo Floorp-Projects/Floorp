@@ -6,7 +6,7 @@
     <div id="container"><div id="host"></div></div>
     <script>
       var host = document.getElementById("host");
-      var root = host.createShadowRoot();
+      var root = host.attachShadow({mode: 'open'});
       root.innerHTML = 'inside shadow DOM';
 
       var container = document.getElementById("container");

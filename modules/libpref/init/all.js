@@ -4859,6 +4859,10 @@ pref("gfx.direct2d.disabled", false);
 // blacklisting
 pref("gfx.direct2d.force-enabled", false);
 
+// Whether to defer destruction of Direct2D DrawTargets to the paint thread
+// when using OMTP.
+pref("gfx.direct2d.destroy-dt-on-paintthread", true);
+
 pref("gfx.direct3d11.enable-debug-layer", false);
 pref("gfx.direct3d11.break-on-error", false);
 

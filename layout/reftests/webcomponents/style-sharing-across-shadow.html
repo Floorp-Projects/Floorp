@@ -6,13 +6,13 @@
 <div></div>
 <script>
   let divs = document.querySelectorAll('div');
-  divs[0].createShadowRoot().innerHTML = `
+  divs[0].attachShadow({mode: 'open'}).innerHTML = `
     <style>
       * { color: green; }
     </style>
     <span>Should be green</span>
   `;
-  divs[1].createShadowRoot().innerHTML = `
+  divs[1].attachShadow({mode: 'open'}).innerHTML = `
     <style>
       * { color: initial; }
       [foo] { }

@@ -147,7 +147,6 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       isForBrowser = strcmp(aArgv[idx], "-notForBrowser");
       foundIsForBrowser = true;
     } else if (!strcmp(aArgv[idx], "-intPrefs")) {
-      SET_PREF_PHASE(BEGIN_INIT_PREFS);
       char* str = aArgv[idx + 1];
       while (*str) {
         int32_t index = strtol(str, &str, 10);
@@ -159,14 +158,12 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         // XXX: we assume these values as default values, which may not be
         // true. We also assume they are unlocked. Fortunately, these prefs
         // get reset properly by the first IPC message.
-        Pref pref(nsCString(ContentPrefs::GetContentPref(index)),
+        Pref pref(nsCString(ContentPrefs::GetEarlyPref(index)),
                   /* isLocked */ false, value, MaybePrefValue());
         prefsArray.AppendElement(pref);
       }
-      SET_PREF_PHASE(END_INIT_PREFS);
       foundIntPrefs = true;
     } else if (!strcmp(aArgv[idx], "-boolPrefs")) {
-      SET_PREF_PHASE(BEGIN_INIT_PREFS);
       char* str = aArgv[idx + 1];
       while (*str) {
         int32_t index = strtol(str, &str, 10);
@@ -175,14 +172,12 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MaybePrefValue value(PrefValue(!!strtol(str, &str, 10)));
         MOZ_ASSERT(str[0] == '|');
         str++;
-        Pref pref(nsCString(ContentPrefs::GetContentPref(index)),
+        Pref pref(nsCString(ContentPrefs::GetEarlyPref(index)),
                   /* isLocked */ false, value, MaybePrefValue());
         prefsArray.AppendElement(pref);
       }
-      SET_PREF_PHASE(END_INIT_PREFS);
       foundBoolPrefs = true;
     } else if (!strcmp(aArgv[idx], "-stringPrefs")) {
-      SET_PREF_PHASE(BEGIN_INIT_PREFS);
       char* str = aArgv[idx + 1];
       while (*str) {
         int32_t index = strtol(str, &str, 10);
@@ -192,13 +187,12 @@ ContentProcess::Init(int aArgc, char* aArgv[])
         MOZ_ASSERT(str[0] == ';');
         str++;
         MaybePrefValue value(PrefValue(nsCString(str, length)));
-        Pref pref(nsCString(ContentPrefs::GetContentPref(index)),
+        Pref pref(nsCString(ContentPrefs::GetEarlyPref(index)),
                   /* isLocked */ false, value, MaybePrefValue());
         prefsArray.AppendElement(pref);
         str += length + 1;
         MOZ_ASSERT(*(str - 1) == '|');
       }
-      SET_PREF_PHASE(END_INIT_PREFS);
       foundStringPrefs = true;
     } else if (!strcmp(aArgv[idx], "-schedulerPrefs")) {
       schedulerPrefs = aArgv[idx + 1];
@@ -240,7 +234,8 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       break;
     }
   }
-  Preferences::SetInitPreferences(&prefsArray);
+
+  Preferences::SetEarlyPreferences(&prefsArray);
   Scheduler::SetPrefs(schedulerPrefs);
   mContent.Init(IOThreadChild::message_loop(),
                 ParentPid(),

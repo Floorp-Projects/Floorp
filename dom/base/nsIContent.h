@@ -1049,6 +1049,12 @@ protected:
    */
   nsAtom* DoGetID() const;
 
+  /**
+   * Returns the assigned slot, if it exists, or the direct parent, if it's a
+   * fallback content of a slot.
+   */
+  nsINode* GetFlattenedTreeParentForMaybeAssignedNode() const;
+
 public:
 #ifdef DEBUG
   /**
