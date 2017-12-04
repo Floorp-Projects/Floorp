@@ -105,6 +105,8 @@ public:
     MOZ_RELEASE_ASSERT(aOptions.mCompositionOp == CompositionOp::OP_OVER);
     MOZ_RELEASE_ASSERT(aOptions.mAlpha == 1.0f);
     MOZ_RELEASE_ASSERT(aPattern.GetType() == PatternType::COLOR);
+    auto* colorPat = static_cast<const ColorPattern*>(&aPattern);
+    auto color = wr::ToColorF(colorPat->mColor);
 
     // Make sure the font exists, and can be serialized
     MOZ_RELEASE_ASSERT(aFont);
@@ -113,23 +115,17 @@ public:
       return;
     }
 
-    auto* colorPat = static_cast<const ColorPattern*>(&aPattern);
-    auto color = wr::ToColorF(colorPat->mColor);
-    auto glyphs = Range<const wr::GlyphInstance>(reinterpret_cast<const wr::GlyphInstance*>(aBuffer.mGlyphs), aBuffer.mNumGlyphs);
+    // 170 is the maximum size gfxFont is expected to hand us
+    AutoTArray<wr::GlyphInstance, 170> glyphs;
+    glyphs.SetLength(aBuffer.mNumGlyphs);
 
-    // Compare gfx::Glyph and wr::GlyphInstance to make sure that they are
-    // structurally equivalent to ensure that our cast above was ok
-    static_assert(std::is_same<decltype(aBuffer.mGlyphs[0].mIndex), decltype(glyphs[0].index)>()
-                  && std::is_same<decltype(aBuffer.mGlyphs[0].mPosition.x), decltype(glyphs[0].point.x)>()
-                  && std::is_same<decltype(aBuffer.mGlyphs[0].mPosition.y), decltype(glyphs[0].point.y)>()
-                  && offsetof(std::remove_reference<decltype(aBuffer.mGlyphs[0])>::type, mIndex) == offsetof(wr::GlyphInstance, index)
-                  && offsetof(std::remove_reference<decltype(aBuffer.mGlyphs[0])>::type, mPosition) == offsetof(wr::GlyphInstance, point)
-                  && offsetof(decltype(aBuffer.mGlyphs[0].mPosition), x) == offsetof(decltype(glyphs[0].point), x)
-                  && offsetof(decltype(aBuffer.mGlyphs[0].mPosition), y) == offsetof(decltype(glyphs[0].point), y)
-                  && std::is_standard_layout<decltype(aBuffer.mGlyphs[0])>::value == std::is_standard_layout<decltype(glyphs[0])>::value
-                  && sizeof(aBuffer.mGlyphs[0]) == sizeof(glyphs[0])
-                  && sizeof(aBuffer.mGlyphs[0].mPosition) == sizeof(glyphs[0].point)
-                  , "glyph buf types don't match");
+    for (size_t i = 0; i < aBuffer.mNumGlyphs; i++) {
+      wr::GlyphInstance& targetGlyph = glyphs[i];
+      const gfx::Glyph& sourceGlyph = aBuffer.mGlyphs[i];
+      targetGlyph.index = sourceGlyph.mIndex;
+      targetGlyph.point = mSc.ToRelativeLayoutPoint(
+          LayoutDevicePoint::FromUnknownPoint(sourceGlyph.mPosition));
+    }
 
     wr::GlyphOptions glyphOptions;
     glyphOptions.render_mode = wr::ToFontRenderMode(aOptions.mAntialiasMode, GetPermitSubpixelAA());
