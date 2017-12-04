@@ -65,6 +65,7 @@ try:
             - 'android-api-16-l10n'
         'linux':
             - 'linux-l10n'
+            - 'sm-arm-sim-linux32'
         'linux64':
             - 'linux64-l10n'
             - 'sm-plain-linux64'
