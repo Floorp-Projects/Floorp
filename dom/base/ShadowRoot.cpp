@@ -135,7 +135,7 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
 
   if (oldSlot && oldSlot != currentSlot) {
     // Move assigned nodes from old slot to new slot.
-    nsTArray<RefPtr<nsINode>>& assignedNodes = oldSlot->AssignedNodes();
+    const nsTArray<RefPtr<nsINode>>& assignedNodes = oldSlot->AssignedNodes();
     while (assignedNodes.Length() > 0) {
       nsINode* assignedNode = assignedNodes[0];
 
@@ -179,7 +179,7 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
       // Move assigned nodes from removed slot to the next slot in
       // tree order with the same name.
       if (doReplaceSlot) {
-        nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
+        const nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
         while (assignedNodes.Length() > 0) {
           nsINode* assignedNode = assignedNodes[0];
 
@@ -319,7 +319,7 @@ ShadowRoot::AssignSlotFor(nsIContent* aContent)
 
   // Find the appropriate position in the assigned node list for the
   // newly assigned content.
-  nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
+  const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
   nsIContent* currentContent = GetHost()->GetFirstChild();
   bool indexFound = false;
   uint32_t insertionIndex;
