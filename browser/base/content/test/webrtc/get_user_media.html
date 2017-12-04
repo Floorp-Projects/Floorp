@@ -32,7 +32,8 @@ function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
       mozMediaSource: aShare,
       mediaSource: aShare
     };
-  } else if (useFakeStreams) {
+  }
+  if (useFakeStreams) {
     opts.fake = true;
   }
 
