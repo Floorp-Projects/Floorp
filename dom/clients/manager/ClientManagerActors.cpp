@@ -37,5 +37,12 @@ DeallocClientManagerParent(PClientManagerParent* aActor)
   return true;
 }
 
+void
+InitClientManagerParent(PClientManagerParent* aActor)
+{
+  auto actor = static_cast<ClientManagerParent*>(aActor);
+  actor->Init();
+}
+
 } // namespace dom
 } // namespace mozilla

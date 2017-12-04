@@ -980,6 +980,13 @@ BackgroundParentImpl::DeallocPClientManagerParent(mozilla::dom::PClientManagerPa
   return mozilla::dom::DeallocClientManagerParent(aActor);
 }
 
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPClientManagerConstructor(mozilla::dom::PClientManagerParent* aActor)
+{
+  mozilla::dom::InitClientManagerParent(aActor);
+  return IPC_OK();
+}
+
 } // namespace ipc
 } // namespace mozilla
 

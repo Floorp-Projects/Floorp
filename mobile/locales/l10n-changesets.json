@@ -724,7 +724,8 @@
     "vi": {
         "platforms": [
             "android", 
-            "android-api-16"
+            "android-api-16", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 

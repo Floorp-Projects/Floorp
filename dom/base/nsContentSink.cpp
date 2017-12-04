@@ -682,6 +682,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
       anchor.Truncate();
       referrerPolicy.Truncate();
       crossOrigin.SetIsVoid(true);
+      as.Truncate();
 
       seenParameters = false;
     }
