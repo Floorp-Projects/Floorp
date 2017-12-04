@@ -553,7 +553,7 @@ public:
   virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                               int lengthMs, int attenuationDb) = 0;
 
-  virtual void GetRtpSources(int64_t aTimeNow,
+  virtual void GetRtpSources(const int64_t aTimeNow,
                              nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
 
 };
