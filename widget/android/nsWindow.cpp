@@ -1151,11 +1151,11 @@ class nsWindow::PMPMSupport final
 {
     PMPMSupport() = delete;
 
-    static LayerViewSupport* GetLayerViewSupport(jni::Object::Param aView)
+    static LayerViewSupport* GetLayerViewSupport(jni::Object::Param aSession)
     {
-        const auto& layerView = LayerView::Ref::From(aView);
+        const auto& session = LayerSession::Ref::From(aSession);
 
-        LayerSession::Compositor::LocalRef compositor = layerView->GetCompositor();
+        LayerSession::Compositor::LocalRef compositor = session->GetCompositor();
         if (!compositor) {
             return nullptr;
         }
@@ -1172,21 +1172,21 @@ public:
     static ANativeWindow* sWindow;
     static EGLSurface sSurface;
 
-    static void InvalidateAndScheduleComposite(jni::Object::Param aView)
+    static void InvalidateAndScheduleComposite(jni::Object::Param aSession)
     {
-        LayerViewSupport* const lvs = GetLayerViewSupport(aView);
+        LayerViewSupport* const lvs = GetLayerViewSupport(aSession);
         if (lvs) {
             lvs->SyncInvalidateAndScheduleComposite();
         }
     }
 
     static void AddPresentationSurface(const jni::Class::LocalRef& aCls,
-                                       jni::Object::Param aView,
+                                       jni::Object::Param aSession,
                                        jni::Object::Param aSurface)
     {
         RemovePresentationSurface();
 
-        LayerViewSupport* const lvs = GetLayerViewSupport(aView);
+        LayerViewSupport* const lvs = GetLayerViewSupport(aSession);
         if (!lvs) {
             return;
         }

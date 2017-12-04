@@ -10,8 +10,6 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.gfx.FullScreenState;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.health.StubbedHealthRecorder;
@@ -327,6 +325,7 @@ public abstract class GeckoApp extends GeckoActivity
     private boolean mRestartOnShutdown;
 
     private boolean mWasFirstTabShownAfterActivityUnhidden;
+    private boolean mIsFullscreen;
 
     abstract public int getLayout();
 
@@ -527,7 +526,7 @@ public abstract class GeckoApp extends GeckoActivity
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         // exit full-screen mode whenever the menu is opened
-        if (mLayerView != null && mLayerView.isFullScreen()) {
+        if (mIsFullscreen) {
             EventDispatcher.getInstance().dispatch("FullScreen:Exit", null);
         }
 
@@ -684,19 +683,10 @@ public abstract class GeckoApp extends GeckoActivity
             DevToolsAuthHelper.scan(this, callback);
 
         } else if ("DOMFullScreen:Start".equals(event)) {
-            // Local ref to layerView for thread safety
-            LayerView layerView = mLayerView;
-            if (layerView != null) {
-                layerView.setFullScreenState(message.getBoolean("rootElement")
-                        ? FullScreenState.ROOT_ELEMENT : FullScreenState.NON_ROOT_ELEMENT);
-            }
+            mIsFullscreen = true;
 
         } else if ("DOMFullScreen:Stop".equals(event)) {
-            // Local ref to layerView for thread safety
-            LayerView layerView = mLayerView;
-            if (layerView != null) {
-                layerView.setFullScreenState(FullScreenState.NONE);
-            }
+            mIsFullscreen = false;
 
         } else if ("Locale:Set".equals(event)) {
             setLocale(message.getString("locale"));
@@ -2247,7 +2237,7 @@ public abstract class GeckoApp extends GeckoActivity
             return;
         }
 
-        if (mLayerView != null && mLayerView.isFullScreen()) {
+        if (mIsFullscreen) {
             EventDispatcher.getInstance().dispatch("FullScreen:Exit", null);
             return;
         }
