@@ -745,7 +745,8 @@ SERVO_BINDING_FUNC(Servo_ComputeColor, bool,
                    nscolor current_color,
                    const nsAString* value,
                    nscolor* result_color,
-                   bool* was_current_color);
+                   bool* was_current_color,
+                   mozilla::css::Loader* loader)
 SERVO_BINDING_FUNC(Servo_ParseIntersectionObserverRootMargin, bool,
                    const nsAString* value,
                    nsCSSRect* result);
