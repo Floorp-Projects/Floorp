@@ -8,6 +8,7 @@
 #include "nsIPresShell.h"
 #include "nsNodeUtils.h"
 #include "nsIFrame.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
 #include "mozilla/UniquePtr.h"
 
@@ -595,7 +596,7 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aS
     return;
   }
 
-  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
+  auto bufferCopy = mozilla::MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -661,7 +662,7 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
     return;
   }
 
-  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
+  auto bufferCopy = mozilla::MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -704,7 +705,7 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, 
     return;
   }
 
-  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
+  auto bufferCopy = mozilla::MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -740,7 +741,7 @@ nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer, int32_t aStart, i
     return;
   }
 
-  auto bufferCopy = MakeUniqueFallible<char16_t[]>(aLength);
+  auto bufferCopy = mozilla::MakeUniqueFallible<char16_t[]>(aLength);
   if (!bufferCopy) {
     // Just assigning mBroken instead of generating tree op. The caller
     // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
@@ -1081,7 +1082,7 @@ nsHtml5TreeBuilder::EnsureBufferSpace(int32_t aLength)
 {
   // TODO: Unify nsHtml5Tokenizer::strBuf and nsHtml5TreeBuilder::charBuffer
   // so that this method becomes unnecessary.
-  CheckedInt<int32_t> worstCase(charBufferLen);
+  mozilla::CheckedInt<int32_t> worstCase(charBufferLen);
   worstCase += aLength;
   if (!worstCase.isValid()) {
     return false;
@@ -1119,7 +1120,7 @@ nsHtml5TreeBuilder::AllocateContentHandle()
   }
   if (mHandlesUsed == NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH) {
     mOldHandles.AppendElement(Move(mHandles));
-    mHandles = MakeUnique<nsIContent*[]>(NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH);
+    mHandles = mozilla::MakeUnique<nsIContent*[]>(NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH);
     mHandlesUsed = 0;
   }
 #ifdef DEBUG

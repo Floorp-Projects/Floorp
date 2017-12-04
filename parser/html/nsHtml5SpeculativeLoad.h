@@ -1,12 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #ifndef nsHtml5SpeculativeLoad_h
 #define nsHtml5SpeculativeLoad_h
 
 #include "nsString.h"
 #include "nsContentUtils.h"
+#include "nsHtml5DocumentMode.h"
+#include "nsHtml5String.h"
 
 class nsHtml5TreeOpExecutor;
 
