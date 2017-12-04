@@ -191,7 +191,7 @@ AreaPositionManager.prototype = {
       if (aNode == firstNode) {
         // Maybe we stored the horizontal distance between nodes,
         // if not, we'll use the width of the incoming node as a proxy:
-        xDiff = this._horizontalDistance || aSize.width;
+        xDiff = this._horizontalDistance || (this._dir == "ltr" ? 1 : -1) * aSize.width;
       } else {
         // If not, we should be able to get the distance to the previous node
         // and use the inverse, unless there's no room for another node (ie we
