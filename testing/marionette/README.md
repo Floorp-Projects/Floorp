@@ -65,4 +65,4 @@ for an answer as we might not be in your timezone.
 [WebDriver standard]: https://w3c.github.io/webdriver/webdriver-spec.html#handling-errors
 [reference client]: client/
 [subscribe]: https://lists.mozilla.org/listinfo/tools-marionette
-[archive]: http://groups.google.com/group/mozilla.tools.marionette
+[archive]: https://groups.google.com/group/mozilla.tools.marionette

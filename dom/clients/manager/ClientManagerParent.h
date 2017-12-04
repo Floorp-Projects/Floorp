@@ -63,6 +63,9 @@ class ClientManagerParent final : public PClientManagerParent
 public:
   ClientManagerParent();
   ~ClientManagerParent();
+
+  void
+  Init();
 };
 
 } // namespace dom
