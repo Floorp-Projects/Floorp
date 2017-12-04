@@ -1,7 +1,7 @@
 <!doctype html>
 <div id="host"></div>
 <script>
-  let root = host.createShadowRoot();
+  let root = host.attachShadow({mode: 'open'});
   root.innerHTML = `
     <style>
       #test {

@@ -7,19 +7,20 @@
       var outerShadow = document.createElement("div");
       outerShadow.style.border = "10px solid green";
 
-      var outerInsertionPoint = document.createElement("content");
+      var outerInsertionPoint = document.createElement("slot");
       outerShadow.appendChild(outerInsertionPoint);
 
       // div with style "border: 10px solid orange"
       var innerShadow = document.createElement("div");
       innerShadow.style.border = "10px solid orange";
 
-      var innerInsertionPoint = document.createElement("content");
-      innerShadow.appendChild(innerInsertionPoint);
+      var slot = document.createElement("slot");
+      innerShadow.appendChild(slot);
 
-      outerShadow.createShadowRoot().appendChild(innerShadow);
+      outerShadow.attachShadow({mode: 'open'}).appendChild(innerShadow);
 
-      var shadowRoot = document.getElementById('outer').createShadowRoot();
+      var shadowRoot =
+        document.getElementById('outer').attachShadow({mode: 'open'});
       shadowRoot.appendChild(outerShadow);
     }
   </script>

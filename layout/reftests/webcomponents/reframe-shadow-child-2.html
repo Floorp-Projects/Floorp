@@ -7,7 +7,7 @@
 </template>
 <div id="host"></div>
 <script>
-  let shadowRoot = document.getElementById("host").createShadowRoot();
+  let shadowRoot = document.getElementById("host").attachShadow({mode: 'open'});
   let tmpl = document.getElementById("tmpl");
   shadowRoot.appendChild(document.importNode(tmpl.content, true));
   document.body.offsetTop;
