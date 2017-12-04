@@ -39,6 +39,25 @@ private:
   wl_display*         mDisplay;
 };
 
+// Allocates and owns shared memory for Wayland drawing surface
+class WaylandShmPool {
+public:
+  WaylandShmPool(nsWaylandDisplay* aDisplay, int aSize);
+  ~WaylandShmPool();
+
+  bool                Resize(int aSize);
+  wl_shm_pool*        GetShmPool()    { return mShmPool;   };
+  void*               GetImageData()  { return mImageData; };
+
+private:
+  int CreateTemporaryFile(int aSize);
+
+  wl_shm_pool*        mShmPool;
+  int                 mShmPoolFd;
+  int                 mAllocatedSize;
+  void*               mImageData;
+};
+
 }  // namespace widget
 }  // namespace mozilla
 
