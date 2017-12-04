@@ -1256,6 +1256,19 @@ set_config('PROFILE_GEN_LDFLAGS', pgo_flags.gen_ldflags)
 set_config('PROFILE_USE_CFLAGS', pgo_flags.use_cflags)
 set_config('PROFILE_USE_LDFLAGS', pgo_flags.use_ldflags)
 
+
+@depends(c_compiler)
+def preprocess_option(compiler):
+    # The uses of PREPROCESS_OPTION depend on the spacing for -o/-Fi.
+    if compiler.type in ('gcc', 'clang'):
+        return '-E -o '
+    else:
+        return '-P -Fi'
+
+
+set_config('PREPROCESS_OPTION', preprocess_option)
+
+
 # We only want to include windows.configure when we are compiling on
 # Windows, for Windows.
 
