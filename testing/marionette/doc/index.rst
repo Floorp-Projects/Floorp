@@ -45,6 +45,7 @@ For developers
 .. toctree::
    :maxdepth: 1
 
+   ../CONTRIBUTING.md
    NewContributors.md
    Debugging.md
    PythonTests.md
