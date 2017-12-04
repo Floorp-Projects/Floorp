@@ -242,8 +242,7 @@ private:
 #define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(21)
 // Content is optional (and can be required).
 #define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(22)
-// Element is an unresolved custom element candidate
-#define NS_EVENT_STATE_UNRESOLVED NS_DEFINE_EVENT_STATE_MACRO(23)
+// Free bit                          NS_DEFINE_EVENT_STATE_MACRO(23)
 // Link has been visited.
 #define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(24)
 // Link hasn't been visited.
@@ -360,7 +359,6 @@ private:
   NS_EVENT_STATE_FOCUS_WITHIN |               \
   NS_EVENT_STATE_FULL_SCREEN |                \
   NS_EVENT_STATE_HOVER |                      \
-  NS_EVENT_STATE_UNRESOLVED |                 \
   NS_EVENT_STATE_URLTARGET                    \
 )
 
