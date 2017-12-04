@@ -45,10 +45,6 @@
 #include "GLBlitTextureImageHelper.h"
 #include "HeapCopyOfStackArray.h"
 
-#if MOZ_WIDGET_ANDROID
-#include "TexturePoolOGL.h"
-#endif
-
 #include "GeckoProfiler.h"
 
 namespace mozilla {
@@ -671,10 +667,6 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   mPixelsPerFrame = width * height;
   mPixelsFilled = 0;
-
-#ifdef MOZ_WIDGET_ANDROID
-  TexturePoolOGL::Fill(gl());
-#endif
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
