@@ -815,6 +815,8 @@
                          tooltiptext="&urlbar.persistentStorageBlocked.tooltip;"/>
                   <image data-permission-id="popup" class="blocked-permission-icon popup-icon" role="button"
                          tooltiptext="&urlbar.popupBlocked.tooltip;"/>
+                  <image data-permission-id="canvas/extractData" class="blocked-permission-icon canvas/extractData-icon" role="button"
+                         tooltiptext="&urlbar.canvasBlocked.tooltip;"/>
                 </box>
                 <box id="notification-popup-box"
                      hidden="true"
