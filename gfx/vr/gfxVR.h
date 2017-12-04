@@ -30,6 +30,7 @@ namespace gfx {
 class VRLayerParent;
 class VRDisplayHost;
 class VRControllerHost;
+class VRManagerPromise;
 
 enum class VRDeviceType : uint16_t {
   Oculus,
@@ -354,7 +355,7 @@ public:
   virtual void ScanForControllers() = 0;
   virtual void RemoveControllers() = 0;
   virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                             double aIntensity, double aDuration, uint32_t aPromiseID) = 0;
+                             double aIntensity, double aDuration, const VRManagerPromise& aPromise) = 0;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) = 0;
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, bool aTouched,
                       double aValue);

@@ -186,25 +186,6 @@ nsAttrValue::Shutdown()
   sEnumTableArray = nullptr;
 }
 
-nsAttrValue::ValueType
-nsAttrValue::Type() const
-{
-  switch (BaseType()) {
-    case eIntegerBase:
-    {
-      return static_cast<ValueType>(mBits & NS_ATTRVALUE_INTEGERTYPE_MASK);
-    }
-    case eOtherBase:
-    {
-      return GetMiscContainer()->mType;
-    }
-    default:
-    {
-      return static_cast<ValueType>(static_cast<uint16_t>(BaseType()));
-    }
-  }
-}
-
 void
 nsAttrValue::Reset()
 {

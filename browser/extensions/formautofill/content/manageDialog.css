@@ -2,8 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html {
+  /* Prevent unnecessary horizontal scroll bar from showing */
+  overflow-x: hidden;
+}
+
 div {
   display: flex;
+}
+
+button {
+  padding-right: 10px;
+  padding-left: 10px;
 }
 
 fieldset {

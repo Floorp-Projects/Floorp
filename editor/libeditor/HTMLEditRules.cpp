@@ -1438,20 +1438,27 @@ HTMLEditRules::WillInsertText(EditAction aAction,
         // is it a return?
         if (subStr.Equals(newlineStr)) {
           NS_ENSURE_STATE(mHTMLEditor);
-          nsCOMPtr<nsINode> curNode = currentPoint.Container();
-          int32_t curOffset = currentPoint.Offset();
           nsCOMPtr<Element> br =
-            mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset,
+            mHTMLEditor->CreateBRImpl(*aSelection, currentPoint.AsRaw(),
                                       nsIEditor::eNone);
           NS_ENSURE_STATE(br);
           pos++;
           if (br->GetNextSibling()) {
             pointToInsert.Set(br->GetNextSibling());
           } else {
-            pointToInsert.Set(curNode, curNode->Length());
+            pointToInsert.Set(currentPoint.Container(),
+                              currentPoint.Container()->Length());
           }
-          currentPoint.Set(curNode, curOffset);
-          MOZ_ASSERT(currentPoint == pointToInsert);
+          // XXX In most cases, pointToInsert and currentPoint are same here.
+          //     But if the <br> element has been moved to different point by
+          //     mutation observer, those points become different.
+          currentPoint.Set(br);
+          DebugOnly<bool> advanced = currentPoint.AdvanceOffset();
+          NS_WARNING_ASSERTION(advanced,
+            "Failed to advance offset after the new <br> element");
+          NS_WARNING_ASSERTION(currentPoint == pointToInsert,
+            "Perhaps, <br> element position has been moved to different point "
+            "by mutation observer");
         } else {
           NS_ENSURE_STATE(mHTMLEditor);
           EditorRawDOMPoint pointAfterInsertedString;
@@ -1502,20 +1509,29 @@ HTMLEditRules::WillInsertText(EditAction aAction,
         }
         // is it a return?
         else if (subStr.Equals(newlineStr)) {
-          nsCOMPtr<nsINode> curNode = currentPoint.Container();
-          int32_t curOffset = currentPoint.Offset();
-          nsCOMPtr<Element> br = wsObj.InsertBreak(address_of(curNode),
-                                                   &curOffset,
-                                                   nsIEditor::eNone);
-          NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
-          pos++;
-          if (br->GetNextSibling()) {
-            pointToInsert.Set(br->GetNextSibling());
-          } else {
-            pointToInsert.Set(curNode, curNode->Length());
+          RefPtr<Element> newBRElement =
+            wsObj.InsertBreak(*aSelection, currentPoint.AsRaw(),
+                              nsIEditor::eNone);
+          if (NS_WARN_IF(!newBRElement)) {
+            return NS_ERROR_FAILURE;
           }
-          currentPoint.Set(curNode, curOffset);
-          MOZ_ASSERT(currentPoint == pointToInsert);
+          pos++;
+          if (newBRElement->GetNextSibling()) {
+            pointToInsert.Set(newBRElement->GetNextSibling());
+          } else {
+            pointToInsert.Set(currentPoint.Container(),
+                              currentPoint.Container()->Length());
+          }
+          currentPoint.Set(newBRElement);
+          DebugOnly<bool> advanced = currentPoint.AdvanceOffset();
+          NS_WARNING_ASSERTION(advanced,
+            "Failed to advance offset to after the new <br> node");
+          // XXX If the newBRElement has been moved or removed by mutation
+          //     observer, we hit this assert.  We need to check if
+          //     newBRElement is in expected point, though, we must have
+          //     a lot of same bugs...
+          NS_WARNING_ASSERTION(currentPoint == pointToInsert,
+            "Perhaps, newBRElement has been moved or removed unexpectedly");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
           rv = wsObj.InsertText(*doc, subStr, currentPoint.AsRaw(),
@@ -1866,8 +1882,12 @@ HTMLEditRules::StandardBreakImpl(nsINode& aNode,
       node = splitPoint.Container();
       aOffset = splitPoint.Offset();
     }
-    brNode = wsObj.InsertBreak(address_of(node), &aOffset, nsIEditor::eNone);
-    NS_ENSURE_TRUE(brNode, NS_ERROR_FAILURE);
+    brNode =
+      wsObj.InsertBreak(aSelection, EditorRawDOMPoint(node, aOffset),
+                        nsIEditor::eNone);
+    if (NS_WARN_IF(!brNode)) {
+      return NS_ERROR_FAILURE;
+    }
   }
   node = brNode->GetParentNode();
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);

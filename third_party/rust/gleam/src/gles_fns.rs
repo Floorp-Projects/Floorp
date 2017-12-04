@@ -145,49 +145,95 @@ impl Gl for GlesFns {
         }
     }
 
-    #[allow(unused_variables)]
     fn gen_queries(&self, n: GLsizei) -> Vec<GLuint> {
-        panic!("not supported")
+        if !self.ffi_gl_.GenQueriesEXT.is_loaded() {
+            return Vec::new();
+        }
+        let mut result = vec![0; n as usize];
+        unsafe {
+            self.ffi_gl_.GenQueriesEXT(n, result.as_mut_ptr());
+        }
+        result
     }
 
-    #[allow(unused_variables)]
     fn begin_query(&self, target: GLenum, id: GLuint) {
-        panic!("not supported")
+        if !self.ffi_gl_.BeginQueryEXT.is_loaded() {
+            return;
+        }
+        unsafe {
+            self.ffi_gl_.BeginQueryEXT(target, id);
+        }
     }
 
-    #[allow(unused_variables)]
     fn end_query(&self, target: GLenum) {
-        panic!("not supported")
+        if !self.ffi_gl_.EndQueryEXT.is_loaded() {
+            return;
+        }
+        unsafe {
+            self.ffi_gl_.EndQueryEXT(target);
+        }
     }
 
-    #[allow(unused_variables)]
     fn query_counter(&self, id: GLuint, target: GLenum) {
-        panic!("not supported")
+        if !self.ffi_gl_.QueryCounterEXT.is_loaded() {
+            return;
+        }
+        unsafe {
+            self.ffi_gl_.QueryCounterEXT(id, target);
+        }
     }
 
-    #[allow(unused_variables)]
     fn get_query_object_iv(&self, id: GLuint, pname: GLenum) -> i32 {
-        panic!("not supported")
+        if !self.ffi_gl_.GetQueryObjectivEXT.is_loaded() {
+            return 0;
+        }
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetQueryObjectivEXT(id, pname, &mut result);
+        }
+        result
     }
 
-    #[allow(unused_variables)]
     fn get_query_object_uiv(&self, id: GLuint, pname: GLenum) -> u32 {
-        panic!("not supported")
+        if !self.ffi_gl_.GetQueryObjectuivEXT.is_loaded() {
+            return 0;
+        }
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetQueryObjectuivEXT(id, pname, &mut result);
+        }
+        result
     }
 
-    #[allow(unused_variables)]
     fn get_query_object_i64v(&self, id: GLuint, pname: GLenum) -> i64 {
-        panic!("not supported")
+        if !self.ffi_gl_.GetQueryObjecti64vEXT.is_loaded() {
+            return 0;
+        }
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetQueryObjecti64vEXT(id, pname, &mut result);
+        }
+        result
     }
 
-    #[allow(unused_variables)]
     fn get_query_object_ui64v(&self, id: GLuint, pname: GLenum) -> u64 {
-        panic!("not supported")
+        if !self.ffi_gl_.GetQueryObjectui64vEXT.is_loaded() {
+            return 0;
+        }
+        let mut result = 0;
+        unsafe {
+            self.ffi_gl_.GetQueryObjectui64vEXT(id, pname, &mut result);
+        }
+        result
     }
 
-    #[allow(unused_variables)]
     fn delete_queries(&self, queries: &[GLuint]) {
-        panic!("not supported")
+        if !self.ffi_gl_.DeleteQueriesEXT.is_loaded() {
+            return;
+        }
+        unsafe {
+            self.ffi_gl_.DeleteQueriesEXT(queries.len() as GLsizei, queries.as_ptr());
+        }
     }
 
     fn delete_vertex_arrays(&self, vertex_arrays: &[GLuint]) {
@@ -1486,16 +1532,28 @@ impl Gl for GlesFns {
         }
     }
 
-    #[allow(unused_variables)]
     fn insert_event_marker_ext(&self, message: &str) {
+        if self.ffi_gl_.InsertEventMarkerEXT.is_loaded() {
+            unsafe {
+                self.ffi_gl_.InsertEventMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
+            }
+        }
     }
 
-    #[allow(unused_variables)]
     fn push_group_marker_ext(&self, message: &str) {
+        if self.ffi_gl_.PushGroupMarkerEXT.is_loaded() {
+            unsafe {
+                self.ffi_gl_.PushGroupMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
+            }
+        }
     }
 
-    #[allow(unused_variables)]
     fn pop_group_marker_ext(&self) {
+        if self.ffi_gl_.PopGroupMarkerEXT.is_loaded() {
+            unsafe {
+                self.ffi_gl_.PopGroupMarkerEXT();
+            }
+        }
     }
 
     fn fence_sync(&self, condition: GLenum, flags: GLbitfield) -> GLsync {

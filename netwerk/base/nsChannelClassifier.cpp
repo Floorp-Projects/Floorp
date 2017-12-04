@@ -1099,15 +1099,21 @@ nsChannelClassifier::IsTrackerWhitelisted(nsIURI* aWhiteListURI,
   return uriClassifier->AsyncClassifyLocalWithTables(aWhiteListURI, trackingWhitelist, aCallback);
 }
 
+/* static */
 nsresult
 nsChannelClassifier::SendThreatHitReport(nsIChannel *aChannel,
-                                         const nsACString& aProvider)
+                                         const nsACString& aProvider,
+                                         const nsACString& aList,
+                                         const nsACString& aFullHash)
 {
+  NS_ENSURE_ARG_POINTER(aChannel);
 
   nsAutoCString provider(aProvider);
   nsPrintfCString reportEnablePref("browser.safebrowsing.provider.%s.dataSharing.enabled",
                                    provider.get());
   if (!Preferences::GetBool(reportEnablePref.get(), false)) {
+    LOG(("nsChannelClassifier::SendThreatHitReport data sharing disabled for %s",
+         provider.get()));
     return NS_OK;
   }
 
@@ -1117,7 +1123,8 @@ nsChannelClassifier::SendThreatHitReport(nsIChannel *aChannel,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsresult rv = uriClassifier->SendThreatHitReport(mChannel);
+  nsresult rv = uriClassifier->SendThreatHitReport(aChannel, aProvider, aList,
+                                                   aFullHash);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1160,7 +1167,7 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode,
           aErrorCode == NS_ERROR_PHISHING_URI ||
           aErrorCode == NS_ERROR_UNWANTED_URI ||
           aErrorCode == NS_ERROR_HARMFUL_URI) {
-        SendThreatHitReport(mChannel, aProvider);
+        SendThreatHitReport(mChannel, aProvider, aList, aFullHash);
       }
 
       mChannel->Cancel(aErrorCode);

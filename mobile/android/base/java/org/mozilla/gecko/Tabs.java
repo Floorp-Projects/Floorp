@@ -19,7 +19,6 @@ import android.support.annotation.Nullable;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -97,7 +96,7 @@ public class Tabs implements BundleEventListener {
 
     private Context mAppContext;
     private EventDispatcher mEventDispatcher;
-    private LayerView mLayerView;
+    private GeckoView mGeckoView;
     private ContentObserver mBookmarksContentObserver;
     private PersistTabsRunnable mPersistTabsRunnable;
     private int mPrivateClearColor;
@@ -178,12 +177,13 @@ public class Tabs implements BundleEventListener {
         mPrivateClearColor = Color.RED;
     }
 
-    public synchronized void attachToContext(Context context, LayerView layerView, EventDispatcher eventDispatcher) {
+    public synchronized void attachToContext(Context context, GeckoView geckoView,
+                                             EventDispatcher eventDispatcher) {
         final Context appContext = context.getApplicationContext();
 
         mAppContext = appContext;
         mEventDispatcher = eventDispatcher;
-        mLayerView = layerView;
+        mGeckoView = geckoView;
         mPrivateClearColor = ContextCompat.getColor(context, R.color.tabs_tray_grey_pressed);
         mAccountManager = AccountManager.get(appContext);
 
@@ -205,7 +205,7 @@ public class Tabs implements BundleEventListener {
     }
 
     public void detachFromContext() {
-        mLayerView = null;
+        mGeckoView = null;
     }
 
     /**
@@ -331,10 +331,6 @@ public class Tabs implements BundleEventListener {
         mSelectedTab.updatePageAction();
 
         notifyListeners(tab, TabEvents.SELECTED);
-
-        if (mLayerView != null) {
-            mLayerView.setClearColor(getTabColor(tab));
-        }
 
         if (oldTab != null) {
             notifyListeners(oldTab, TabEvents.UNSELECTED);
@@ -815,8 +811,10 @@ public class Tabs implements BundleEventListener {
             // are also selected/unselected, so it would be redundant to also listen
             // for ADDED/CLOSED events.
             case SELECTED:
-                if (mLayerView != null) {
-                    mLayerView.setSurfaceBackgroundColor(getTabColor(tab));
+                if (mGeckoView != null) {
+                    final int color = getTabColor(tab);
+                    mGeckoView.getSession().getCompositorController().setClearColor(color);
+                    mGeckoView.coverUntilFirstPaint(color);
                 }
                 queuePersistAllTabs();
             case UNSELECTED:

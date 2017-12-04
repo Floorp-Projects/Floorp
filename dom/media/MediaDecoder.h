@@ -39,8 +39,8 @@ class FrameStatistics;
 class VideoFrameContainer;
 class MediaFormatReader;
 class MediaDecoderStateMachine;
+struct MediaPlaybackEvent;
 
-enum class MediaEventType : int8_t;
 enum class Visibility : uint8_t;
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
@@ -424,7 +424,7 @@ protected:
     DurationChanged();
   }
 
-  virtual void OnPlaybackEvent(MediaEventType aEvent);
+  virtual void OnPlaybackEvent(MediaPlaybackEvent&& aEvent);
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
@@ -604,12 +604,6 @@ protected:
   // Duration of the media resource according to the state machine.
   Mirror<media::NullableTimeUnit> mStateMachineDuration;
 
-  // Current playback position in the stream. This is (approximately)
-  // where we're up to playing back the stream. This is not adjusted
-  // during decoder seek operations, but it's updated at the end when we
-  // start playing back again.
-  Mirror<int64_t> mPlaybackPosition;
-
   // Used to distinguish whether the audio is producing sound.
   Mirror<bool> mIsAudioDataAudible;
 
@@ -653,12 +647,6 @@ protected:
   // True if we want to resume video decoding even the media element is in the
   // background.
   bool mIsBackgroundVideoDecodingAllowed;
-
-  // Current decoding position in the stream. This is where the decoder
-  // is up to consuming the stream. This is not adjusted during decoder
-  // seek operations, but it's updated at the end when we start playing
-  // back again.
-  int64_t mDecoderPosition = 0;
 
 public:
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }

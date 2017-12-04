@@ -28,6 +28,8 @@ fn main() {
         "GL_EXT_texture_format_BGRA8888",
         "GL_OES_EGL_image",
         "GL_OES_EGL_image_external",
+        "GL_EXT_disjoint_timer_query",
+        "GL_EXT_debug_marker",
     ];
     let gles_reg = Registry::new(Api::Gles2, (3, 0), Profile::Core, Fallbacks::All, gles_extensions);
     gles_reg.write_bindings(gl_generator::StructGenerator, &mut file_gles)

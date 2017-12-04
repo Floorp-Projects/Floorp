@@ -881,12 +881,6 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoRequireNoGC
 extern JS_FRIEND_API(void)
 NotifyGCRootsRemoved(JSContext* cx);
 
-/*
- * Internal to Firefox.
- */
-extern JS_FRIEND_API(void)
-NotifyDidPaint(JSContext* cx);
-
 } /* namespace JS */
 
 /**

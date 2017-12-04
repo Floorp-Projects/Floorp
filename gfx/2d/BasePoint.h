@@ -91,8 +91,8 @@ struct BasePoint {
   // They are always rounding as floor(n + 0.5).
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
   Sub& Round() {
-    x = Coord(floor(T(x) + T(0.5)));
-    y = Coord(floor(T(y) + T(0.5)));
+    x = Coord(std::floor(T(x) + T(0.5f)));
+    y = Coord(std::floor(T(y) + T(0.5f)));
     return *static_cast<Sub*>(this);
   }
 

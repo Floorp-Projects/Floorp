@@ -236,4 +236,56 @@ nsAttrValue::GetIntInternal() const
          NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER;
 }
 
+inline nsAttrValue::ValueType
+nsAttrValue::Type() const
+{
+  switch (BaseType()) {
+    case eIntegerBase:
+    {
+      return static_cast<ValueType>(mBits & NS_ATTRVALUE_INTEGERTYPE_MASK);
+    }
+    case eOtherBase:
+    {
+      return GetMiscContainer()->mType;
+    }
+    default:
+    {
+      return static_cast<ValueType>(static_cast<uint16_t>(BaseType()));
+    }
+  }
+}
+
+inline nsAtom*
+nsAttrValue::GetAtomValue() const
+{
+  NS_PRECONDITION(Type() == eAtom, "wrong type");
+  return reinterpret_cast<nsAtom*>(GetPtr());
+}
+
+inline void
+nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const
+{
+  switch (Type()) {
+    case eString:
+    {
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
+      if (str) {
+        aResult.SetStringBuffer(str, str->StorageSize()/sizeof(char16_t) - 1);
+      }
+      // else aResult is already empty
+      return;
+    }
+    case eAtom:
+    {
+      nsAtom *atom = static_cast<nsAtom*>(GetPtr());
+      aResult.SetOwnedAtom(atom, mozilla::dom::DOMString::eNullNotExpected);
+      break;
+    }
+    default:
+    {
+      ToString(aResult.AsAString());
+    }
+  }
+}
+
 #endif

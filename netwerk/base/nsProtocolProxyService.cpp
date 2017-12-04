@@ -1166,8 +1166,10 @@ nsProtocolProxyService::SetupPACThread(nsIEventTarget *mainThreadEventTarget)
         rv = mPACMan->Init(nullptr);
     }
 
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+        mPACMan->Shutdown();
         mPACMan = nullptr;
+    }
     return rv;
 }
 

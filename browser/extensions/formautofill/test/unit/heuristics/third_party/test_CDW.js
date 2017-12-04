@@ -20,9 +20,10 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+      ], [
         // The below "tel-extension" is correct and removed due to the
         // duplicated field above.
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
       ]],
       [],
     ],
@@ -47,6 +48,8 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
 
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
+      ], [
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
       ]],
       [],
     ],
@@ -54,7 +57,7 @@ runHeuristicsTest([
     fixturePath: "Checkout_Logon.html",
     expectedResult: [
       [],
-      [[]],
+      [],
       [],
     ],
   },

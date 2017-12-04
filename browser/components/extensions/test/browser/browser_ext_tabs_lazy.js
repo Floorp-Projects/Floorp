@@ -1,10 +1,13 @@
 "use strict";
 
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+
 const SESSION = {
   windows: [{
     tabs: [
-      {entries: [{url: "about:blank"}]},
-      {entries: [{url: "https://example.com/"}]},
+      {entries: [{url: "about:blank", triggeringPrincipal_base64}]},
+      {entries: [{url: "https://example.com/", triggeringPrincipal_base64}]},
     ],
   }],
 };

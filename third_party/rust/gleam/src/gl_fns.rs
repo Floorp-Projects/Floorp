@@ -149,11 +149,11 @@ impl Gl for GlFns {
     }
 
     fn gen_queries(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0; n as usize];
         unsafe {
-            let mut result = vec![0; n as usize];
             self.ffi_gl_.GenQueries(n, result.as_mut_ptr());
-            return result;
         }
+        result
     }
 
     fn begin_query(&self, target: GLenum, id: GLuint) {
@@ -175,35 +175,35 @@ impl Gl for GlFns {
     }
 
     fn get_query_object_iv(&self, id: GLuint, pname: GLenum) -> i32 {
+        let mut result = 0;
         unsafe {
-            let mut result = 0;
             self.ffi_gl_.GetQueryObjectiv(id, pname, &mut result);
-            result
         }
+        result
     }
 
     fn get_query_object_uiv(&self, id: GLuint, pname: GLenum) -> u32 {
+        let mut result = 0;
         unsafe {
-            let mut result = 0;
             self.ffi_gl_.GetQueryObjectuiv(id, pname, &mut result);
-            result
         }
+        result
     }
 
     fn get_query_object_i64v(&self, id: GLuint, pname: GLenum) -> i64 {
+        let mut result = 0;
         unsafe {
-            let mut result = 0;
             self.ffi_gl_.GetQueryObjecti64v(id, pname, &mut result);
-            result
         }
+        result
     }
 
     fn get_query_object_ui64v(&self, id: GLuint, pname: GLenum) -> u64 {
+        let mut result = 0;
         unsafe {
-            let mut result = 0;
             self.ffi_gl_.GetQueryObjectui64v(id, pname, &mut result);
-            result
         }
+        result
     }
 
     fn delete_queries(&self, queries: &[GLuint]) {

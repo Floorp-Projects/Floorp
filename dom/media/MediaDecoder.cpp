@@ -403,7 +403,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mCurrentPosition, TimeUnit::Zero())
   , INIT_MIRROR(mStateMachineDuration, NullableTimeUnit())
-  , INIT_MIRROR(mPlaybackPosition, 0)
   , INIT_MIRROR(mIsAudioDataAudible, false)
   , INIT_CANONICAL(mVolume, aInit.mVolume)
   , INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch)
@@ -463,6 +462,9 @@ MediaDecoder::Shutdown()
 
   DiscardOngoingSeekIfExists();
 
+#ifdef NIGHTLY_BUILD
+  DUMP("[DEBUG SHUTDOWN] %s: decoder=%p state machine=%p", __func__, this, mDecoderStateMachine.get());
+#endif
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
@@ -528,38 +530,38 @@ MediaDecoder::~MediaDecoder()
 }
 
 void
-MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
+MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent)
 {
-  switch (aEvent) {
-    case MediaEventType::PlaybackEnded:
+  switch (aEvent.mType) {
+    case MediaPlaybackEvent::PlaybackEnded:
       PlaybackEnded();
       break;
-    case MediaEventType::SeekStarted:
+    case MediaPlaybackEvent::SeekStarted:
       SeekingStarted();
       break;
-    case MediaEventType::Loop:
+    case MediaPlaybackEvent::Loop:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeking"));
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
       break;
-    case MediaEventType::Invalidate:
+    case MediaPlaybackEvent::Invalidate:
       Invalidate();
       break;
-    case MediaEventType::EnterVideoSuspend:
+    case MediaPlaybackEvent::EnterVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozentervideosuspend"));
       break;
-    case MediaEventType::ExitVideoSuspend:
+    case MediaPlaybackEvent::ExitVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
       break;
-    case MediaEventType::StartVideoSuspendTimer:
+    case MediaPlaybackEvent::StartVideoSuspendTimer:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozstartvideosuspendtimer"));
       break;
-    case MediaEventType::CancelVideoSuspendTimer:
+    case MediaPlaybackEvent::CancelVideoSuspendTimer:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozcancelvideosuspendtimer"));
       break;
-    case MediaEventType::VideoOnlySeekBegin:
+    case MediaPlaybackEvent::VideoOnlySeekBegin:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozvideoonlyseekbegin"));
       break;
-    case MediaEventType::VideoOnlySeekCompleted:
+    case MediaPlaybackEvent::VideoOnlySeekCompleted:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozvideoonlyseekcompleted"));
       break;
     default:
@@ -1300,7 +1302,6 @@ MediaDecoder::ConnectMirrors(MediaDecoderStateMachine* aObject)
   mStateMachineDuration.Connect(aObject->CanonicalDuration());
   mBuffered.Connect(aObject->CanonicalBuffered());
   mCurrentPosition.Connect(aObject->CanonicalCurrentPosition());
-  mPlaybackPosition.Connect(aObject->CanonicalPlaybackOffset());
   mIsAudioDataAudible.Connect(aObject->CanonicalIsAudioDataAudible());
 }
 
@@ -1311,7 +1312,6 @@ MediaDecoder::DisconnectMirrors()
   mStateMachineDuration.DisconnectIfConnected();
   mBuffered.DisconnectIfConnected();
   mCurrentPosition.DisconnectIfConnected();
-  mPlaybackPosition.DisconnectIfConnected();
   mIsAudioDataAudible.DisconnectIfConnected();
 }
 
@@ -1416,12 +1416,7 @@ MediaDecoder::CanPlayThrough()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  bool val = CanPlayThroughImpl();
-  if (val != mCanPlayThrough) {
-    mCanPlayThrough = val;
-    mDecoderStateMachine->DispatchCanPlayThrough(val);
-  }
-  return val;
+  return CanPlayThroughImpl();
 }
 
 RefPtr<SetCDMPromise>

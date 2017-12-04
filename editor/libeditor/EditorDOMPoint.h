@@ -585,15 +585,17 @@ public:
       return RawRangeBoundary(mParent, mOffset.value());
     }
     if (mIsChildInitialized && mOffset.isSome()) {
-      // If we've already set both child and offset, we should use both of them
-      // to create RangeBoundaryBase instance because the constructor will
-      // validate the relation in debug build.
+      // If we've already set both child and offset, we should create
+      // RangeBoundary with offset after validation.
+#ifdef DEBUG
       if (mChild) {
-        return RawRangeBoundary(mParent, mChild->GetPreviousSibling(),
-                                mOffset.value());
+        MOZ_ASSERT(mParent == mChild->GetParentNode());
+        MOZ_ASSERT(mParent->GetChildAt(mOffset.value()) == mChild);
+      } else {
+        MOZ_ASSERT(mParent->Length() == mOffset.value());
       }
-      return RawRangeBoundary(mParent, mParent->GetLastChild(),
-                              mOffset.value());
+#endif // #ifdef DEBUG
+      return RawRangeBoundary(mParent,  mOffset.value());
     }
     // Otherwise, we should create RangeBoundaryBase only with available
     // information.
@@ -677,6 +679,7 @@ public:
     : mPoint(aPoint)
   {
     MOZ_ASSERT(aPoint.IsSetAndValid());
+    MOZ_ASSERT(mPoint.Container()->IsContainerNode());
     mChild = mPoint.GetChildAtOffset();
   }
 

@@ -10,10 +10,7 @@ import shutil
 import re
 from collections import defaultdict
 
-try:
-    from json import dumps
-except:
-    from simplejson import dumps
+from json import dumps
 
 from compare_locales import parser
 from compare_locales import paths, mozpath

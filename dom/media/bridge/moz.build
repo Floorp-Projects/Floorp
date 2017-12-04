@@ -23,6 +23,7 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/media-conduit',
     '/media/webrtc/signaling/src/mediapipeline',
     '/media/webrtc/signaling/src/peerconnection',
+    '/media/webrtc/trunk/',
 ]
 
 FINAL_LIBRARY = 'xul'

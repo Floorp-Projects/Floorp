@@ -1818,11 +1818,6 @@ impl RenderPass {
                                     // If so, just skip adding it!
                                     Some(cache_key) => match self.dynamic_tasks.entry(cache_key) {
                                         Entry::Occupied(entry) => {
-                                            // TODO(gw): We can easily handle invalidation of tasks that
-                                            // contain children in the future. Since we don't
-                                            // have any cases of that yet, just assert to simplify
-                                            // the current implementation.
-                                            debug_assert!(task.children.is_empty());
                                             debug_assert_eq!(entry.get().rect.size, size);
                                             task.kind = RenderTaskKind::Alias(entry.get().task_id);
                                             continue;

@@ -55,9 +55,9 @@ runHeuristicsTest([
   }, {
     fixturePath: "SignIn.html",
     expectedResult: [
-      [[ // ac-off
+      [ // ac-off
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-      ]],
+      ],
     ],
   },
 ], "../../../fixtures/third_party/OfficeDepot/");

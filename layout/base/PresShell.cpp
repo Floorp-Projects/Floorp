@@ -2963,14 +2963,8 @@ PresShell::DestroyFramesForAndRestyle(Element* aElement)
       //
       // FIXME(emilio): It'd be more ergonomic to just map the no data -> data
       // case to a reframe from the style system.
-      StyleChildrenIterator iter(aElement);
-      for (nsIContent* child = iter.GetNextChild();
-           child;
-           child = iter.GetNextChild()) {
-        if (child->IsElement()) {
-          ServoRestyleManager::ClearServoDataFromSubtree(child->AsElement());
-        }
-      }
+      ServoRestyleManager::ClearServoDataFromSubtree(
+          aElement, ServoRestyleManager::IncludeRoot::No);
     } else {
       // This is the case of an element that was redistributed but is no longer
       // bound to any insertion point. Just forget about all the data.

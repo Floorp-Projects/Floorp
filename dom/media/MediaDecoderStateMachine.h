@@ -114,20 +114,40 @@ class TaskQueue;
 
 extern LazyLogModule gMediaDecoderLog;
 
-enum class MediaEventType : int8_t
+struct MediaPlaybackEvent
 {
-  PlaybackStarted,
-  PlaybackStopped,
-  PlaybackEnded,
-  SeekStarted,
-  Loop,
-  Invalidate,
-  EnterVideoSuspend,
-  ExitVideoSuspend,
-  StartVideoSuspendTimer,
-  CancelVideoSuspendTimer,
-  VideoOnlySeekBegin,
-  VideoOnlySeekCompleted,
+  enum EventType
+  {
+    PlaybackStarted,
+    PlaybackStopped,
+    PlaybackProgressed,
+    PlaybackEnded,
+    SeekStarted,
+    Loop,
+    Invalidate,
+    EnterVideoSuspend,
+    ExitVideoSuspend,
+    StartVideoSuspendTimer,
+    CancelVideoSuspendTimer,
+    VideoOnlySeekBegin,
+    VideoOnlySeekCompleted,
+  } mType;
+
+  using DataType = Variant<Nothing, int64_t>;
+  DataType mData;
+
+  MOZ_IMPLICIT MediaPlaybackEvent(EventType aType)
+    : mType(aType)
+    , mData(Nothing{})
+  {
+  }
+
+  template<typename T>
+  MediaPlaybackEvent(EventType aType, T&& aArg)
+    : mType(aType)
+    , mData(Forward<T>(aArg))
+  {
+  }
 };
 
 enum class VideoDecodeMode : uint8_t
@@ -246,8 +266,10 @@ public:
                       MediaDecoderEventVisibility>&
   FirstFrameLoadedEvent() { return mFirstFrameLoadedEvent; }
 
-  MediaEventSource<MediaEventType>&
-  OnPlaybackEvent() { return mOnPlaybackEvent; }
+  MediaEventSource<MediaPlaybackEvent>& OnPlaybackEvent()
+  {
+    return mOnPlaybackEvent;
+  }
   MediaEventSource<MediaResult>&
   OnPlaybackErrorEvent() { return mOnPlaybackErrorEvent; }
 
@@ -659,7 +681,7 @@ private:
   MediaEventProducerExc<nsAutoPtr<MediaInfo>,
                         MediaDecoderEventVisibility> mFirstFrameLoadedEvent;
 
-  MediaEventProducer<MediaEventType> mOnPlaybackEvent;
+  MediaEventProducer<MediaPlaybackEvent> mOnPlaybackEvent;
   MediaEventProducer<MediaResult> mOnPlaybackErrorEvent;
 
   MediaEventProducer<DecoderDoctorEvent> mOnDecoderDoctorEvent;
@@ -669,6 +691,9 @@ private:
   const bool mIsMSE;
 
   bool mSeamlessLoopingAllowed;
+
+  // Current playback position in the stream in bytes.
+  int64_t mPlaybackOffset = 0;
 
 private:
   // The buffered range. Mirrored from the decoder thread.
@@ -704,9 +729,6 @@ private:
   // playback position.
   Canonical<media::TimeUnit> mCurrentPosition;
 
-  // Current playback position in the stream in bytes.
-  Canonical<int64_t> mPlaybackOffset;
-
   // Used to distinguish whether the audio is producing sound.
   Canonical<bool> mIsAudioDataAudible;
 
@@ -720,10 +742,6 @@ public:
   AbstractCanonical<media::TimeUnit>* CanonicalCurrentPosition()
   {
     return &mCurrentPosition;
-  }
-  AbstractCanonical<int64_t>* CanonicalPlaybackOffset()
-  {
-    return &mPlaybackOffset;
   }
   AbstractCanonical<bool>* CanonicalIsAudioDataAudible()
   {

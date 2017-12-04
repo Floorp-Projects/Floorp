@@ -600,7 +600,8 @@ private:
 
   const Kind mKind;
 
-  // Nullptr if this is an XBL style set.
+  // Nullptr if this is an XBL style set, or if we've been already detached from
+  // our shell.
   nsPresContext* MOZ_NON_OWNING_REF mPresContext = nullptr;
 
   // Because XBL style set could be used by multiple PresContext, we need to

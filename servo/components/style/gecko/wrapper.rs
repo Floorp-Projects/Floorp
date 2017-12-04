@@ -22,7 +22,6 @@ use context::{QuirksMode, SharedStyleContext, PostAnimationTasks, UpdateAnimatio
 use data::ElementData;
 use dom::{LayoutIterator, NodeInfo, OpaqueNode, TElement, TDocument, TNode};
 use element_state::{ElementState, DocumentState};
-use error_reporting::ParseErrorReporter;
 use font_metrics::{FontMetrics, FontMetricsProvider, FontMetricsQueryResult};
 use gecko::data::PerDocumentStyleData;
 use gecko::global_style_data::GLOBAL_STYLE_DATA;
@@ -68,7 +67,7 @@ use gecko_bindings::sugar::ownership::{HasArcFFI, HasSimpleFFI};
 use hash::FnvHashMap;
 use logical_geometry::WritingMode;
 use media_queries::Device;
-use properties::{ComputedValues, LonghandId, parse_style_attribute};
+use properties::{ComputedValues, LonghandId};
 use properties::{Importance, PropertyDeclaration, PropertyDeclarationBlock};
 use properties::animated_properties::{AnimationValue, AnimationValueMap};
 use properties::animated_properties::TransitionProperty;
@@ -89,7 +88,6 @@ use std::mem;
 use std::ops::DerefMut;
 use std::ptr;
 use string_cache::{Atom, Namespace, WeakAtom, WeakNamespace};
-use stylesheets::UrlExtraData;
 use stylist::Stylist;
 
 /// A simple wrapper over `nsIDocument`.
@@ -211,6 +209,7 @@ impl<'ln> GeckoNode<'ln> {
 
     /// WARNING: This logic is duplicated in Gecko's FlattenedTreeParentIsParent.
     /// Make sure to mirror any modifications in both places.
+    #[inline]
     fn flattened_tree_parent_is_parent(&self) -> bool {
         use gecko_bindings::structs::*;
         let flags = self.flags();
@@ -236,6 +235,7 @@ impl<'ln> GeckoNode<'ln> {
         true
     }
 
+    #[inline]
     fn flattened_tree_parent(&self) -> Option<Self> {
         let fast_path = self.flattened_tree_parent_is_parent();
         debug_assert!(fast_path == unsafe { bindings::Gecko_FlattenedTreeParentIsParent(self.0) });
@@ -246,6 +246,7 @@ impl<'ln> GeckoNode<'ln> {
         }
     }
 
+    #[inline]
     fn contains_non_whitespace_content(&self) -> bool {
         unsafe { Gecko_IsSignificantChild(self.0, true, false) }
     }
@@ -492,19 +493,7 @@ impl<'le> GeckoElement<'le> {
         self.as_node().get_bool_flag(nsINode_BooleanFlag::ElementMayHaveAnonymousChildren)
     }
 
-    /// Parse the style attribute of an element.
-    pub fn parse_style_attribute<R>(
-        value: &str,
-        url_data: &UrlExtraData,
-        quirks_mode: QuirksMode,
-        reporter: &R,
-    ) -> PropertyDeclarationBlock
-    where
-        R: ParseErrorReporter,
-    {
-        parse_style_attribute(value, url_data, reporter, quirks_mode)
-    }
-
+    #[inline]
     fn flags(&self) -> u32 {
         self.raw_node()._base._base_1.mFlags
     }
@@ -1124,6 +1113,10 @@ impl<'le> TElement for GeckoElement<'le> {
     where
         F: FnMut(&Atom),
     {
+        if !self.may_have_class() {
+            return;
+        }
+
         snapshot_helpers::each_class(self.0, callback, Gecko_ClassOrClassList)
     }
 
@@ -1917,6 +1910,15 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
 
     #[inline]
     fn is_root(&self) -> bool {
+        let parent_node = match self.as_node().parent_node() {
+            Some(parent_node) => parent_node,
+            None => return false,
+        };
+
+        if !parent_node.is_document() {
+            return false;
+        }
+
         unsafe {
             Gecko_IsRootElement(self.0)
         }
@@ -2131,10 +2133,12 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             return false;
         }
 
-        snapshot_helpers::has_class(self.0,
-                                    name,
-                                    case_sensitivity,
-                                    Gecko_ClassOrClassList)
+        snapshot_helpers::has_class(
+            self.0,
+            name,
+            case_sensitivity,
+            Gecko_ClassOrClassList,
+        )
     }
 
     #[inline]

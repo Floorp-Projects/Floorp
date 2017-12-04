@@ -2060,20 +2060,14 @@ FrameLayerBuilder::HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey
       return true;
     }
   }
-  return false;
-}
-
-void
-FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback)
-{
-  const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
-
-  for (uint32_t i = 0; i < array.Length(); i++) {
-    DisplayItemData* data = DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
-    if (data->mDisplayItemKey != 0) {
-      aCallback(aFrame, data);
+  if (auto userDataTable =
+       aFrame->GetProperty(nsIFrame::WebRenderUserDataProperty())) {
+    RefPtr<WebRenderUserData> data = userDataTable->Get(aDisplayItemKey);
+    if (data) {
+      return true;
     }
   }
+  return false;
 }
 
 DisplayItemData*
@@ -6276,6 +6270,12 @@ FrameLayerBuilder::GetMostRecentGeometry(nsDisplayItem* aItem)
   for (uint32_t i = 0; i < dataArray.Length(); i++) {
     DisplayItemData* data = DisplayItemData::AssertDisplayItemData(dataArray.ElementAt(i));
     if (data->GetDisplayItemKey() == itemPerFrameKey) {
+      return data->GetGeometry();
+    }
+  }
+  if (auto userDataTable =
+       aItem->Frame()->GetProperty(nsIFrame::WebRenderUserDataProperty())) {
+    if (RefPtr<WebRenderUserData> data = userDataTable->Get(itemPerFrameKey)) {
       return data->GetGeometry();
     }
   }

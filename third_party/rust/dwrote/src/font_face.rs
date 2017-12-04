@@ -8,7 +8,7 @@ use std::cell::UnsafeCell;
 use std::mem::zeroed;
 
 use comptr::ComPtr;
-use super::{FontMetrics, FontFile, DefaultDWriteRenderParams};
+use super::{FontMetrics, FontFile, DefaultDWriteRenderParams, DWriteFactory};
 
 use winapi;
 
@@ -35,18 +35,44 @@ impl FontFace {
         (*self.native.get()).as_ptr()
     }
 
+    unsafe fn get_raw_files(&self) -> Vec<*mut winapi::IDWriteFontFile> {
+        let mut number_of_files: u32 = 0;
+        let hr = (*self.native.get()).GetFiles(&mut number_of_files, ptr::null_mut());
+        assert!(hr == 0);
+
+        let mut file_ptrs: Vec<*mut winapi::IDWriteFontFile> =
+            vec![ptr::null_mut(); number_of_files as usize];
+        let hr = (*self.native.get()).GetFiles(&mut number_of_files, file_ptrs.as_mut_ptr());
+        assert!(hr == 0);
+        file_ptrs
+    }
+
     pub fn get_files(&self) -> Vec<FontFile> {
         unsafe {
-            let mut number_of_files: u32 = 0;
-            let hr = (*self.native.get()).GetFiles(&mut number_of_files, ptr::null_mut());
-            assert!(hr == 0);
-
-            let mut file_ptrs: Vec<*mut winapi::IDWriteFontFile> =
-                vec![ptr::null_mut(); number_of_files as usize];
-            let hr = (*self.native.get()).GetFiles(&mut number_of_files, file_ptrs.as_mut_ptr());
-            assert!(hr == 0);
-
+            let file_ptrs = self.get_raw_files();
             file_ptrs.iter().map(|p| FontFile::take(ComPtr::already_addrefed(*p))).collect()
+        }
+    }
+
+    pub fn create_font_face_with_simulations(&self, simulations: winapi::DWRITE_FONT_SIMULATIONS) -> FontFace {
+        unsafe {
+            let file_ptrs = self.get_raw_files();
+            let face_type = (*self.native.get()).GetType();
+            let face_index = (*self.native.get()).GetIndex();
+            let mut face: ComPtr<winapi::IDWriteFontFace> = ComPtr::new();
+            let hr = (*DWriteFactory()).CreateFontFace(
+                face_type,
+                file_ptrs.len() as u32,
+                file_ptrs.as_ptr(),
+                face_index,
+                simulations,
+                face.getter_addrefs()
+            );
+            for p in file_ptrs {
+                let _ = ComPtr::<winapi::IDWriteFontFile>::already_addrefed(p);
+            }
+            assert!(hr == 0);
+            FontFace::take(face)
         }
     }
 

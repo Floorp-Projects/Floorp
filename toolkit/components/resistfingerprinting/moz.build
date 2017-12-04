@@ -13,3 +13,7 @@ FINAL_LIBRARY = 'xul'
 EXPORTS += [
     'nsRFPService.h',
 ]
+
+EXTRA_JS_MODULES += [
+    'LanguagePrompt.jsm',
+]
