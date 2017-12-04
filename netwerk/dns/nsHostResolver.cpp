@@ -870,6 +870,9 @@ nsHostResolver::ResolveHost(const char             *host,
                         // addr_info.
                         MutexAutoLock lock(he->rec->addr_info_lock);
 
+                        // XXX: note that this actually leaks addr_info.
+                        // For some reason, freeing the memory causes a crash in
+                        // nsDNSRecord::GetNextAddr - see bug 1422173
                         he->rec->addr_info = nullptr;
                         if (unspecHe->rec->negative) {
                             he->rec->negative = unspecHe->rec->negative;
