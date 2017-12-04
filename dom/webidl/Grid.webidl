@@ -71,23 +71,9 @@ interface GridLine
   readonly attribute GridDeclaration type;
 
   /**
-   * Number is the 1-indexed index of the line in flow order. The
-   * first explicit line has number 1, and numbers increment by 1 for
-   * each line after that. Lines before the first explicit line
-   * have number 0, which is not a valid addressable line number, and
-   * should be filtered out by callers.
+   * Number is the 1-indexed index of the line in flow order.
    */
   readonly attribute unsigned long number;
-
-  /**
-   * NegativeNumber is the 1-indexed index of the line in reverse
-   * flow order. The last explicit line has negativeNumber -1, and
-   * negativeNumbers decrement by 1 for each line before that.
-   * Lines after the last explicit line have negativeNumber 0, which
-   * is not a valid addressable line number, and should be filtered
-   * out by callers.
-   */
-  readonly attribute long negativeNumber;
 };
 
 [ChromeOnly]
