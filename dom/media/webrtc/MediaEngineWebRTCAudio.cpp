@@ -22,13 +22,6 @@
 
 using namespace webrtc;
 
-#define CHANNELS 1
-#define ENCODING "L16"
-#define DEFAULT_PORT 5555
-
-#define SAMPLE_RATE(freq) ((freq)*2*8) // bps, 16-bit samples
-#define SAMPLE_LENGTH(freq) (((freq)*10)/1000)
-
 // These are restrictions from the webrtc.org code
 #define MAX_CHANNELS 2
 #define MAX_SAMPLING_FREQ 48000 // Hz - multiple of 100
@@ -144,7 +137,7 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
   while (aFrames) {
     if (!mSaved) {
       mSaved = (FarEndAudioChunk *) moz_xmalloc(sizeof(FarEndAudioChunk) +
-                                                (mChunkSize * channels - 1)*sizeof(int16_t));
+                                                (mChunkSize * channels - 1)*sizeof(AudioDataValue));
       mSaved->mSamples = mChunkSize;
       mSaved->mOverrun = aOverran;
       aOverran = false;
@@ -154,7 +147,7 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
       to_copy = aFrames;
     }
 
-    int16_t* dest = &(mSaved->mData[mSamplesSaved * channels]);
+    AudioDataValue* dest = &(mSaved->mData[mSamplesSaved * channels]);
     if (aChannels > MAX_CHANNELS) {
       AudioConverter converter(AudioConfig(aChannels, 0), AudioConfig(channels, 0));
       converter.Process(mDownmixBuffer, aBuffer, to_copy);
@@ -165,7 +158,7 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
 
 #ifdef LOG_FAREND_INSERTION
     if (fp) {
-      fwrite(&(mSaved->mData[mSamplesSaved * aChannels]), to_copy * aChannels, sizeof(int16_t), fp);
+      fwrite(&(mSaved->mData[mSamplesSaved * aChannels]), to_copy * aChannels, sizeof(AudioDataValue), fp);
     }
 #endif
     aFrames -= to_copy;
@@ -203,7 +196,7 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mExtendedFilter(aExtendedFilter)
   , mTrackID(TRACK_NONE)
   , mStarted(false)
-  , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
+  , mSampleFrequency(MediaEngine::USE_GRAPH_RATE)
   , mTotalFrames(0)
   , mLastLogFrames(0)
   , mSkipProcessing(false)
@@ -454,11 +447,23 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         // (Bug 1238038) fail allocation for a second device
         return NS_ERROR_FAILURE;
       }
+      if (mAudioInput->SetRecordingDevice(mCapIndex)) {
+         return NS_ERROR_FAILURE;
+      }
       mAudioInput->SetUserChannelCount(prefs.mChannels);
       if (!AllocChannel()) {
         FreeChannel();
         LOG(("Audio device is not initalized"));
         return NS_ERROR_FAILURE;
+      }
+      LOG(("Audio device %d allocated", mCapIndex));
+      {
+        // Update with the actual applied channelCount in order
+        // to store it in settings.
+        uint32_t channelCount = 0;
+        mAudioInput->GetChannelCount(channelCount);
+        MOZ_ASSERT(channelCount > 0);
+        prefs.mChannels = channelCount;
       }
       break;
 
@@ -676,6 +681,7 @@ MediaEngineWebRTCMicrophoneSource::NotifyOutputData(MediaStreamGraph* aGraph,
   }
 }
 
+// Only called if we're not in passthrough mode
 void
 MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
                                                        const AudioDataValue* aBuffer,
@@ -691,7 +697,7 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
       mPacketizer->Channels() != aChannels) {
     // It's ok to drop the audio still in the packetizer here.
     mPacketizer =
-      new AudioPacketizer<AudioDataValue, AudioDataValue>(aRate/100, aChannels);
+      new AudioPacketizer<AudioDataValue, float>(aRate/100, aChannels);
   }
 
   // On initial capture, throw away all far-end data except the most recent sample
@@ -704,6 +710,110 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
     }
   }
 
+  // Feed the far-end audio data (speakers) to the feedback input of the AEC.
+  while (mAudioOutputObserver->Size() > 0) {
+    // Bug 1414837: This will call `free()`, and we should remove it.
+    // Pop gives ownership.
+    UniquePtr<FarEndAudioChunk> buffer(mAudioOutputObserver->Pop()); // only call if size() > 0
+    if (!buffer) {
+      continue;
+    }
+    AudioDataValue* packetDataPointer = buffer->mData;
+    AutoTArray<AudioDataValue*, MAX_CHANNELS> deinterleavedPacketDataChannelPointers;
+    AudioDataValue* interleavedFarend = nullptr;
+    uint32_t channelCountFarend = 0;
+    uint32_t framesPerPacketFarend = 0;
+
+    // Downmix from aChannels to MAX_CHANNELS if needed
+    if (mAudioOutputObserver->PlayoutChannels() > MAX_CHANNELS) {
+      AudioConverter converter(AudioConfig(aChannels, 0, AudioConfig::FORMAT_DEFAULT),
+                               AudioConfig(MAX_CHANNELS, 0, AudioConfig::FORMAT_DEFAULT));
+      framesPerPacketFarend =
+        buffer->mSamples;
+      framesPerPacketFarend =
+        converter.Process(mInputDownmixBuffer,
+                          packetDataPointer,
+                          framesPerPacketFarend);
+      interleavedFarend = mInputDownmixBuffer.Data();
+      channelCountFarend = MAX_CHANNELS;
+      deinterleavedPacketDataChannelPointers.SetLength(MAX_CHANNELS);
+    } else {
+      uint32_t outputChannels = mAudioOutputObserver->PlayoutChannels();
+      interleavedFarend = packetDataPointer;
+      channelCountFarend = outputChannels;
+      framesPerPacketFarend = buffer->mSamples;
+      deinterleavedPacketDataChannelPointers.SetLength(outputChannels);
+    }
+
+    MOZ_ASSERT(interleavedFarend &&
+               (channelCountFarend == 1 || channelCountFarend == 2) &&
+               framesPerPacketFarend);
+
+    offset = 0;
+    for (size_t i = 0; i < deinterleavedPacketDataChannelPointers.Length(); ++i) {
+      deinterleavedPacketDataChannelPointers[i] = packetDataPointer + offset;
+      offset += framesPerPacketFarend;
+    }
+
+    // deinterleave back into the FarEndAudioChunk buffer to save an alloc.
+    // There is enough room because either there is the same number of
+    // channels/frames or we've just downmixed.
+    Deinterleave(interleavedFarend,
+                 framesPerPacketFarend,
+                 channelCountFarend,
+                 deinterleavedPacketDataChannelPointers.Elements());
+
+    // Having the same config for input and output means we potentially save
+    // some CPU. We won't need the output here, the API forces us to set a
+    // valid pointer with enough space.
+    StreamConfig inputConfig(mAudioOutputObserver->PlayoutFrequency(),
+                             channelCountFarend,
+                             false /* we don't use typing detection*/);
+    StreamConfig outputConfig = inputConfig;
+
+    // Prepare a channel pointers array, with enough storage for the
+    // frames.
+    //
+    // If this is a platform that uses s16 for audio input and output,
+    // convert to floats, the APM API we use only accepts floats.
+
+    float* inputData = nullptr;
+#ifdef MOZ_SAMPLE_TYPE_S16
+    // Convert to floats, use mInputBuffer for this.
+    size_t sampleCount = framesPerPacketFarend * channelCountFarend;
+    if (mInputBuffer.Length() < sampleCount) {
+      mInputBuffer.SetLength(sampleCount);
+    }
+    ConvertAudioSamples(buffer->mData, mInputBuffer.Data(), sampleCount);
+    inputData = mInputBuffer.Data();
+#else // MOZ_SAMPLE_TYPE_F32
+    inputData = buffer->mData;
+#endif
+
+    AutoTArray<float*, MAX_CHANNELS> channelsPointers;
+    channelsPointers.SetLength(channelCountFarend);
+    offset = 0;
+    for (size_t i = 0; i < channelsPointers.Length(); ++i) {
+      channelsPointers[i]  = inputData + offset;
+      offset += framesPerPacketFarend;
+    }
+
+    // Passing the same pointers here saves a copy inside this function.
+    int err =
+      mAudioProcessing->ProcessReverseStream(channelsPointers.Elements(),
+                                             inputConfig,
+                                             outputConfig,
+                                             channelsPointers.Elements());
+
+    if (err) {
+      MOZ_LOG(GetMediaManagerLog(), LogLevel::Error,
+          ("error in audio ProcessReverseStream(): %d", err));
+      return;
+    }
+  }
+
+  // Packetize our input data into 10ms chunks, deinterleave into planar channel
+  // buffers, process, and append to the right MediaStreamTrack.
   mPacketizer->Input(aBuffer, static_cast<uint32_t>(aFrames));
 
   while (mPacketizer->PacketsAvailable()) {
@@ -711,19 +821,72 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
       mPacketizer->Channels();
     if (mInputBuffer.Length() < samplesPerPacket) {
       mInputBuffer.SetLength(samplesPerPacket);
+      mDeinterleavedBuffer.SetLength(samplesPerPacket);
     }
-    int16_t* packet = mInputBuffer.Elements();
+    float* packet = mInputBuffer.Data();
     mPacketizer->Output(packet);
 
-    if (aChannels > MAX_CHANNELS) {
-      AudioConverter converter(AudioConfig(aChannels, 0, AudioConfig::FORMAT_S16),
-                               AudioConfig(MAX_CHANNELS, 0, AudioConfig::FORMAT_S16));
-      converter.Process(mInputDownmixBuffer, packet, mPacketizer->PacketSize());
-      mVoERender->ExternalRecordingInsertData(mInputDownmixBuffer.Data(),
-                                              mPacketizer->PacketSize() * MAX_CHANNELS,
-                                              aRate, 0);
-    } else {
-      mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
+    // Deinterleave the input data
+    // Prepare an array pointing to deinterleaved channels.
+    AutoTArray<float*, 8> deinterleavedPacketizedInputDataChannelPointers;
+    deinterleavedPacketizedInputDataChannelPointers.SetLength(aChannels);
+    offset = 0;
+    for (size_t i = 0; i < deinterleavedPacketizedInputDataChannelPointers.Length(); ++i) {
+      deinterleavedPacketizedInputDataChannelPointers[i] = mDeinterleavedBuffer.Data() + offset;
+      offset += aFrames;
+    }
+
+    // Deinterleave to mInputBuffer, pointed to by inputBufferChannelPointers.
+    Deinterleave(packet, mPacketizer->PacketSize(), aChannels,
+        deinterleavedPacketizedInputDataChannelPointers.Elements());
+
+    StreamConfig inputConfig(aRate,
+                             aChannels,
+                             false /* we don't use typing detection*/);
+    StreamConfig outputConfig = inputConfig;
+
+    // Bug 1404965: Get the right delay here, it saves some work down the line.
+    mAudioProcessing->set_stream_delay_ms(0);
+
+    // Bug 1414837: find a way to not allocate here.
+    RefPtr<SharedBuffer> buffer =
+      SharedBuffer::Create(mPacketizer->PacketSize() * aChannels * sizeof(float));
+    AudioSegment segment;
+
+    // Prepare channel pointers to the SharedBuffer created above.
+    AutoTArray<float*, 8> processedOutputChannelPointers;
+    AutoTArray<const float*, 8> processedOutputChannelPointersConst;
+    processedOutputChannelPointers.SetLength(aChannels);
+    processedOutputChannelPointersConst.SetLength(aChannels);
+
+    offset = 0;
+    for (size_t i = 0; i < processedOutputChannelPointers.Length(); ++i) {
+      processedOutputChannelPointers[i] = static_cast<float*>(buffer->Data()) + offset;
+      processedOutputChannelPointersConst[i] = static_cast<float*>(buffer->Data()) + offset;
+      offset += aFrames;
+    }
+
+    mAudioProcessing->ProcessStream(deinterleavedPacketizedInputDataChannelPointers.Elements(),
+                                    inputConfig,
+                                    outputConfig,
+                                    processedOutputChannelPointers.Elements());
+    MonitorAutoLock lock(mMonitor);
+    if (mState != kStarted)
+      return;
+
+    for (size_t i = 0; i < mSources.Length(); ++i) {
+      if (!mSources[i]) { // why ?!
+        continue;
+      }
+
+      // We already have planar audio data of the right format. Insert into the
+      // MSG.
+      MOZ_ASSERT(processedOutputChannelPointers.Length() == aChannels);
+      segment.AppendFrames(buffer.forget(),
+                           processedOutputChannelPointersConst,
+                           mPacketizer->PacketSize(),
+                           mPrincipalHandles[i]);
+      mSources[i]->AppendToTrack(mTrackID, &segment);
     }
   }
 }
@@ -750,7 +913,7 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
   }
 
   size_t len = mSources.Length();
-  for (size_t i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; ++i) {
     if (!mSources[i]) {
       continue;
     }
@@ -766,7 +929,7 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     MOZ_ASSERT(aChannels >= 1 && aChannels <= 8,
                "Support up to 8 channels");
 
-    nsAutoPtr<AudioSegment> segment(new AudioSegment());
+    AudioSegment segment;
     RefPtr<SharedBuffer> buffer =
       SharedBuffer::Create(aFrames * aChannels * sizeof(T));
     AutoTArray<const T*, 8> channels;
@@ -792,11 +955,11 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     }
 
     MOZ_ASSERT(aChannels == channels.Length());
-    segment->AppendFrames(buffer.forget(), channels, aFrames,
+    segment.AppendFrames(buffer.forget(), channels, aFrames,
                          mPrincipalHandles[i]);
-    segment->GetStartTime(insertTime);
+    segment.GetStartTime(insertTime);
 
-    mSources[i]->AppendToTrack(mTrackID, segment);
+    mSources[i]->AppendToTrack(mTrackID, &segment);
   }
 }
 
