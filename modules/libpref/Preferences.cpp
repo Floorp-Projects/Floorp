@@ -766,21 +766,6 @@ IsEarlyPref(const char* aPrefName)
   return BinarySearchIf(list, 0, prefsLen, StringComparator(aPrefName), &found);
 }
 
-static bool gInstallingCallback = false;
-
-class AutoInstallingCallback
-{
-public:
-  AutoInstallingCallback() { gInstallingCallback = true; }
-  ~AutoInstallingCallback() { gInstallingCallback = false; }
-};
-
-#define AUTO_INSTALLING_CALLBACK() AutoInstallingCallback installingRAII
-
-#else // DEBUG
-
-#define AUTO_INSTALLING_CALLBACK()
-
 #endif // DEBUG
 
 static Pref*
@@ -795,16 +780,11 @@ pref_HashTableLookup(const char* aPrefName)
         "accessing pref %s before early prefs are set", aPrefName);
     }
 
-    if (gPhase == ContentProcessPhase::eEarlyPrefsSet && !gInstallingCallback &&
+    if (gPhase == ContentProcessPhase::eEarlyPrefsSet &&
         !IsEarlyPref(aPrefName)) {
       // If you hit this crash, you have an early access of a non-early pref.
       // Consider moving the access later or add the pref to the whitelist of
       // early prefs in ContentPrefs.cpp and get review from a DOM peer.
-      //
-      // Note that accesses of non-early prefs that happen while
-      // installing a callback (e.g. VarCache) are considered acceptable. These
-      // accesses will fail, but once the proper pref value is set the callback
-      // will be immediately called, so things should work out.
       MOZ_CRASH_UNSAFE_PRINTF(
         "accessing non-early pref %s before late prefs are set", aPrefName);
     }
@@ -3442,11 +3422,12 @@ Preferences::SetEarlyPreferences(const nsTArray<dom::Pref>* aDomPrefs)
 {
   MOZ_ASSERT(!XRE_IsParentProcess());
 
+  gEarlyDomPrefs = new InfallibleTArray<dom::Pref>(mozilla::Move(*aDomPrefs));
+
 #ifdef DEBUG
   MOZ_ASSERT(gPhase == ContentProcessPhase::eNoPrefsSet);
   gPhase = ContentProcessPhase::eEarlyPrefsSet;
 #endif
-  gEarlyDomPrefs = new InfallibleTArray<dom::Pref>(mozilla::Move(*aDomPrefs));
 }
 
 /* static */ void
@@ -3454,13 +3435,14 @@ Preferences::SetLatePreferences(const nsTArray<dom::Pref>* aDomPrefs)
 {
   MOZ_ASSERT(!XRE_IsParentProcess());
 
+  for (unsigned int i = 0; i < aDomPrefs->Length(); i++) {
+    Preferences::SetPreference(aDomPrefs->ElementAt(i));
+  }
+
 #ifdef DEBUG
   MOZ_ASSERT(gPhase == ContentProcessPhase::eEarlyPrefsSet);
   gPhase = ContentProcessPhase::eEarlyAndLatePrefsSet;
 #endif
-  for (unsigned int i = 0; i < aDomPrefs->Length(); i++) {
-    Preferences::SetPreference(aDomPrefs->ElementAt(i));
-  }
 }
 
 /* static */ void
@@ -4729,7 +4711,6 @@ Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
   MOZ_ASSERT(aCallback);
   nsresult rv = RegisterCallback(aCallback, aPref, aClosure, aMatchKind);
   if (NS_SUCCEEDED(rv)) {
-    AUTO_INSTALLING_CALLBACK();
     (*aCallback)(aPref, aClosure);
   }
   return rv;
@@ -4799,10 +4780,7 @@ Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
-  {
-    AUTO_INSTALLING_CALLBACK();
-    *aCache = GetBool(aPref, aDefault);
-  }
+  *aCache = GetBool(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
@@ -4834,10 +4812,7 @@ Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
-  {
-    AUTO_INSTALLING_CALLBACK();
-    *aCache = Preferences::GetBool(aPref, aDefault);
-  }
+  *aCache = Preferences::GetBool(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
@@ -4867,10 +4842,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
-  {
-    AUTO_INSTALLING_CALLBACK();
-    *aCache = Preferences::GetInt(aPref, aDefault);
-  }
+  *aCache = Preferences::GetInt(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueInt = aDefault;
@@ -4899,10 +4871,7 @@ Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
-  {
-    AUTO_INSTALLING_CALLBACK();
-    *aCache = Preferences::GetInt(aPref, aDefault);
-  }
+  *aCache = Preferences::GetInt(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4932,10 +4901,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
-  {
-    AUTO_INSTALLING_CALLBACK();
-    *aCache = Preferences::GetUint(aPref, aDefault);
-  }
+  *aCache = Preferences::GetUint(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4967,10 +4933,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
-  {
-    AUTO_INSTALLING_CALLBACK();
-    *aCache = Preferences::GetUint(aPref, aDefault);
-  }
+  *aCache = Preferences::GetUint(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -5014,10 +4977,7 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
 #ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
 #endif
-  {
-    AUTO_INSTALLING_CALLBACK();
-    *aCache = Preferences::GetFloat(aPref, aDefault);
-  }
+  *aCache = Preferences::GetFloat(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueFloat = aDefault;
