@@ -7,12 +7,14 @@
 #define _mozilla_dom_ClientManagerService_h
 
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/MozPromise.h"
 #include "nsDataHashtable.h"
 
 namespace mozilla {
 
 namespace dom {
 
+class ClientManagerParent;
 class ClientSourceParent;
 
 // Define a singleton service to manage client activity throughout the
@@ -24,12 +26,23 @@ class ClientManagerService final
   // optimize for insertion, removal, and lookup by UUID.
   nsDataHashtable<nsIDHashKey, ClientSourceParent*> mSourceTable;
 
+  nsTArray<ClientManagerParent*> mManagerList;
+
+  bool mShutdown;
+
   ClientManagerService();
   ~ClientManagerService();
+
+  void
+  Shutdown();
 
 public:
   static already_AddRefed<ClientManagerService>
   GetOrCreateInstance();
+
+  // Returns nullptr if the service is not already created.
+  static already_AddRefed<ClientManagerService>
+  GetInstance();
 
   bool
   AddSource(ClientSourceParent* aSource);
@@ -40,6 +53,12 @@ public:
   ClientSourceParent*
   FindSource(const nsID& aID,
              const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+
+  void
+  AddManager(ClientManagerParent* aManager);
+
+  void
+  RemoveManager(ClientManagerParent* aManager);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManagerService)
 };

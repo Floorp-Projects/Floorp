@@ -895,6 +895,8 @@ def set_worker_type(config, tests):
             if test.get('suite', '') == 'talos' and 'ccov' not in test['build-platform']:
                 if try_options.get('taskcluster_worker'):
                     test['worker-type'] = win_worker_type_platform['hardware']
+                elif test['virtualization'] == 'virtual':
+                    test['worker-type'] = win_worker_type_platform[test['virtualization']]
                 else:
                     test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
             else:

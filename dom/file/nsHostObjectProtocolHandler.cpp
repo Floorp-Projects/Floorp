@@ -23,6 +23,7 @@
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsHostObjectURI.h"
+#include "nsIAsyncShutdown.h"
 #include "nsIMemoryReporter.h"
 #include "nsIPrincipal.h"
 #include "nsIUUIDGenerator.h"
@@ -437,6 +438,7 @@ NS_IMPL_ISUPPORTS(BlobURLsReporter, nsIMemoryReporter)
 
 class ReleasingTimerHolder final : public nsITimerCallback
                                  , public nsINamed
+                                 , public nsIAsyncShutdownBlocker
 {
 public:
   NS_DECL_ISUPPORTS
@@ -444,27 +446,98 @@ public:
   static void
   Create(const nsACString& aURI, bool aBroadcastToOtherProcesses)
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
     RefPtr<ReleasingTimerHolder> holder =
       new ReleasingTimerHolder(aURI, aBroadcastToOtherProcesses);
+
+    auto raii = mozilla::MakeScopeExit([&] {
+      holder->CancelTimerAndRevokeURI();
+    });
+
     nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(holder->mTimer),
                                           holder, RELEASING_TIMER,
                                           nsITimer::TYPE_ONE_SHOT,
                                           SystemGroup::EventTargetFor(TaskCategory::Other));
     NS_ENSURE_SUCCESS_VOID(rv);
+
+    nsCOMPtr<nsIAsyncShutdownClient> phase = GetShutdownPhase();
+    NS_ENSURE_TRUE_VOID(!!phase);
+
+    rv = phase->AddBlocker(holder, NS_LITERAL_STRING(__FILE__), __LINE__,
+                           NS_LITERAL_STRING("ReleasingTimerHolder shutdown"));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    raii.release();
   }
+
+  // nsITimerCallback interface
 
   NS_IMETHOD
   Notify(nsITimer* aTimer) override
   {
+    RevokeURI(mBroadcastToOtherProcesses);
+    return NS_OK;
+  }
+
+  // nsINamed interface
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("ReleasingTimerHolder");
+    return NS_OK;
+  }
+
+  // nsIAsyncShutdownBlocker interface
+
+  NS_IMETHOD
+  GetName(nsAString& aName) override
+  {
+    aName.AssignLiteral("ReleasingTimerHolder");
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  BlockShutdown(nsIAsyncShutdownClient* aClient) override
+  {
+    CancelTimerAndRevokeURI();
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetState(nsIPropertyBag**) override
+  {
+    return NS_OK;
+  }
+
+private:
+  ReleasingTimerHolder(const nsACString& aURI, bool aBroadcastToOtherProcesses)
+    : mURI(aURI)
+    , mBroadcastToOtherProcesses(aBroadcastToOtherProcesses)
+  {}
+
+  ~ReleasingTimerHolder()
+  {}
+
+  void
+  RevokeURI(bool aBroadcastToOtherProcesses)
+  {
+    // Remove the shutting down blocker
+    nsCOMPtr<nsIAsyncShutdownClient> phase = GetShutdownPhase();
+    if (phase) {
+      phase->RemoveBlocker(this);
+    }
+
     // If we have to broadcast the unregistration, let's do it now.
-    if (mBroadcastToOtherProcesses) {
+    if (aBroadcastToOtherProcesses) {
       BroadcastBlobURLUnregistration(mURI);
     }
 
     DataInfo* info = GetDataInfo(mURI, true /* We care about revoked dataInfo */);
     if (!info) {
       // Already gone!
-      return NS_OK;
+      return;
     }
 
     MOZ_ASSERT(info->mRevoked);
@@ -481,25 +554,31 @@ public:
       delete gDataTable;
       gDataTable = nullptr;
     }
-
-    return NS_OK;
   }
 
-  NS_IMETHOD
-  GetName(nsACString& aName) override
+  void
+  CancelTimerAndRevokeURI()
   {
-    aName.AssignLiteral("ReleasingTimerHolder");
-    return NS_OK;
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
+
+    RevokeURI(false /* aBroadcastToOtherProcesses */);
   }
 
-private:
-  ReleasingTimerHolder(const nsACString& aURI, bool aBroadcastToOtherProcesses)
-    : mURI(aURI)
-    , mBroadcastToOtherProcesses(aBroadcastToOtherProcesses)
-  {}
+  static nsCOMPtr<nsIAsyncShutdownClient>
+  GetShutdownPhase()
+  {
+    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+    NS_ENSURE_TRUE(!!svc, nullptr);
 
-  ~ReleasingTimerHolder()
-  {}
+    nsCOMPtr<nsIAsyncShutdownClient> phase;
+    nsresult rv = svc->GetXpcomWillShutdown(getter_AddRefs(phase));
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    return Move(phase);
+  }
 
   nsCString mURI;
   bool mBroadcastToOtherProcesses;
@@ -507,7 +586,8 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
-NS_IMPL_ISUPPORTS(ReleasingTimerHolder, nsITimerCallback, nsINamed)
+NS_IMPL_ISUPPORTS(ReleasingTimerHolder, nsITimerCallback, nsINamed,
+                  nsIAsyncShutdownBlocker)
 
 } // namespace mozilla
 

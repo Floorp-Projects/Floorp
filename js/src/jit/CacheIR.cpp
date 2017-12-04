@@ -2565,6 +2565,29 @@ HasPropIRGenerator::tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId,
 }
 
 bool
+HasPropIRGenerator::tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
+                                        uint32_t index, Int32OperandId indexId)
+{
+    if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
+        return false;
+
+    // Don't attach typed object stubs if the underlying storage could be
+    // detached, as the stub will always bail out.
+    if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
+        return false;
+
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+
+    writer.loadTypedElementExistsResult(objId, indexId, layout);
+
+    writer.returnFromIC();
+
+    trackAttached("TypedArrayObject");
+    return true;
+}
+
+bool
 HasPropIRGenerator::tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
                                          jsid key, ValOperandId keyId)
 {
@@ -2692,6 +2715,8 @@ HasPropIRGenerator::tryAttachStub()
         if (tryAttachDense(obj, objId, index, indexId))
             return true;
         if (tryAttachDenseHole(obj, objId, index, indexId))
+            return true;
+        if (tryAttachTypedArray(obj, objId, index, indexId))
             return true;
 
         trackNotAttached();
