@@ -994,6 +994,7 @@ add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 # - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
 @depends(check_build_environment, '--help')
 @imports(_from='__builtin__', _import='open')
+@imports('re')
 def milestone(build_env, _):
     milestone_path = os.path.join(build_env.topsrcdir,
                                   'config',
@@ -1008,7 +1009,18 @@ def milestone(build_env, _):
     elif 'a' not in milestone:
         is_release_or_beta = True
 
+    major_version = milestone.split('.')[0]
+    m = re.search(r"([ab]\d+)", milestone)
+    ab_patch = m.group(1) if m else ''
+
+    # Only expose the major version milestone in the UA string and hide the
+    # patch leve (bugs 572659 and 870868).
+    #
+    # Only expose major milestone and alpha version in the symbolversion
+    # string; as the name suggests, we use it for symbol versioning on Linux.
     return namespace(version=milestone,
+                     uaversion='%s.0' % major_version,
+                     symbolversion='%s%s' % (major_version, ab_patch),
                      is_nightly=is_nightly,
                      is_release_or_beta=is_release_or_beta)
 
@@ -1021,6 +1033,14 @@ set_config('RELEASE_OR_BETA', milestone.is_release_or_beta)
 set_define('RELEASE_OR_BETA', milestone.is_release_or_beta)
 add_old_configure_assignment('RELEASE_OR_BETA',
                              milestone.is_release_or_beta)
+set_define('MOZILLA_VERSION', depends(milestone)(lambda m: '"%s"' % m.version))
+set_config('MOZILLA_VERSION', milestone.version)
+set_define('MOZILLA_VERSION_U', milestone.version)
+set_define('MOZILLA_UAVERSION', depends(milestone)(lambda m: '"%s"' % m.uaversion))
+set_config('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
+# JS configure still wants to look at these.
+add_old_configure_assignment('MOZILLA_VERSION', milestone.version)
+add_old_configure_assignment('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh (and is made available to a project specific
