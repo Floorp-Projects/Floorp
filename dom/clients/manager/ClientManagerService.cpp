@@ -6,9 +6,13 @@
 
 #include "ClientManagerService.h"
 
+#include "ClientManagerParent.h"
 #include "ClientSourceParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SystemGroup.h"
+#include "nsIAsyncShutdown.h"
 
 namespace mozilla {
 namespace dom {
@@ -56,11 +60,105 @@ MatchPrincipalInfo(const PrincipalInfo& aLeft, const PrincipalInfo& aRight)
   MOZ_CRASH("unexpected principal type!");
 }
 
+class ClientShutdownBlocker final : public nsIAsyncShutdownBlocker
+{
+  RefPtr<GenericPromise::Private> mPromise;
+
+  ~ClientShutdownBlocker() = default;
+
+public:
+  explicit ClientShutdownBlocker(GenericPromise::Private* aPromise)
+    : mPromise(aPromise)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
+  }
+
+  NS_IMETHOD
+  GetName(nsAString& aNameOut) override
+  {
+    aNameOut =
+      NS_LITERAL_STRING("ClientManagerService: start destroying IPC actors early");
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  BlockShutdown(nsIAsyncShutdownClient* aClient) override
+  {
+    mPromise->Resolve(true, __func__);
+    aClient->RemoveBlocker(this);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetState(nsIPropertyBag**) override
+  {
+    return NS_OK;
+  }
+
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS(ClientShutdownBlocker, nsIAsyncShutdownBlocker)
+
+// Helper function the resolves a MozPromise when we detect that the browser
+// has begun to shutdown.
+RefPtr<GenericPromise>
+OnShutdown()
+{
+  RefPtr<GenericPromise::Private> ref = new GenericPromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("ClientManagerServer::OnShutdown",
+  [ref] () {
+    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+    if (!svc) {
+      ref->Resolve(true, __func__);
+      return;
+    }
+
+    nsCOMPtr<nsIAsyncShutdownClient> phase;
+    MOZ_ALWAYS_SUCCEEDS(svc->GetXpcomWillShutdown(getter_AddRefs(phase)));
+    if (!phase) {
+      ref->Resolve(true, __func__);
+      return;
+    }
+
+    nsCOMPtr<nsIAsyncShutdownBlocker> blocker = new ClientShutdownBlocker(ref);
+    nsresult rv =
+      phase->AddBlocker(blocker, NS_LITERAL_STRING(__FILE__), __LINE__,
+                        NS_LITERAL_STRING("ClientManagerService shutdown"));
+
+    if (NS_FAILED(rv)) {
+      ref->Resolve(true, __func__);
+      return;
+    }
+  });
+
+  MOZ_ALWAYS_SUCCEEDS(
+    SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  return ref.forget();
+}
+
 } // anonymous namespace
 
 ClientManagerService::ClientManagerService()
+  : mShutdown(false)
 {
   AssertIsOnBackgroundThread();
+
+  // While the ClientManagerService will be gracefully terminated as windows
+  // and workers are naturally killed, this can cause us to do extra work
+  // relatively late in the shutdown process.  To avoid this we eagerly begin
+  // shutdown at the first sign it has begun.  Since we handle normal shutdown
+  // gracefully we don't really need to block anything here.  We just begin
+  // destroying our IPC actors immediately.
+  OnShutdown()->Then(GetCurrentThreadSerialEventTarget(), __func__,
+    [] () {
+      RefPtr<ClientManagerService> svc = ClientManagerService::GetInstance();
+      if (svc) {
+        svc->Shutdown();
+      }
+    });
 }
 
 ClientManagerService::~ClientManagerService()
@@ -73,6 +171,26 @@ ClientManagerService::~ClientManagerService()
   sClientManagerServiceInstance = nullptr;
 }
 
+void
+ClientManagerService::Shutdown()
+{
+  AssertIsOnBackgroundThread();
+
+  // If many ClientManagerService are created and destroyed quickly we can
+  // in theory get more than one shutdown listener calling us.
+  if (mShutdown) {
+    return;
+  }
+  mShutdown = true;
+
+  // Begin destroying our various manager actors which will in turn destroy
+  // all source, handle, and operation actors.
+  AutoTArray<ClientManagerParent*, 16> list(mManagerList);
+  for (auto actor : list) {
+    Unused << PClientManagerParent::Send__delete__(actor);
+  }
+}
+
 // static
 already_AddRefed<ClientManagerService>
 ClientManagerService::GetOrCreateInstance()
@@ -81,6 +199,20 @@ ClientManagerService::GetOrCreateInstance()
 
   if (!sClientManagerServiceInstance) {
     sClientManagerServiceInstance = new ClientManagerService();
+  }
+
+  RefPtr<ClientManagerService> ref(sClientManagerServiceInstance);
+  return ref.forget();
+}
+
+// static
+already_AddRefed<ClientManagerService>
+ClientManagerService::GetInstance()
+{
+  AssertIsOnBackgroundThread();
+
+  if (!sClientManagerServiceInstance) {
+    return nullptr;
   }
 
   RefPtr<ClientManagerService> ref(sClientManagerServiceInstance);
@@ -142,6 +274,11 @@ ClientManagerService::AddManager(ClientManagerParent* aManager)
   MOZ_DIAGNOSTIC_ASSERT(aManager);
   MOZ_ASSERT(!mManagerList.Contains(aManager));
   mManagerList.AppendElement(aManager);
+
+  // If shutdown has already begun then immediately destroy the actor.
+  if (mShutdown) {
+    Unused << PClientManagerParent::Send__delete__(aManager);
+  }
 }
 
 void
