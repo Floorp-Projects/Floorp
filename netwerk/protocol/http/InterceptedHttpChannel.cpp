@@ -14,6 +14,7 @@ namespace net {
 NS_IMPL_ISUPPORTS_INHERITED(InterceptedHttpChannel,
                             HttpBaseChannel,
                             nsIInterceptedChannel,
+                            nsICacheInfoChannel,
                             nsIAsyncVerifyRedirectCallback,
                             nsIRequestObserver,
                             nsIStreamListener,
@@ -723,6 +724,7 @@ InterceptedHttpChannel::SynthesizeHeader(const nsACString& aName,
 NS_IMETHODIMP
 InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
                                                  nsIInterceptedBodyCallback* aBodyCallback,
+                                                 nsICacheInfoChannel* aSynthesizedCacheInfo,
                                                  const nsACString& aFinalURLSpec,
                                                  bool aResponseRedirected)
 {
@@ -754,6 +756,8 @@ InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
   // redirect we pass ownership of the callback to the new channel.
   mBodyCallback = aBodyCallback;
   aBodyCallback = nullptr;
+
+  mSynthesizedCacheInfo = aSynthesizedCacheInfo;
 
   if (!mSynthesizedResponseHead) {
     mSynthesizedResponseHead.reset(new nsHttpResponseHead());
@@ -1163,6 +1167,142 @@ InterceptedHttpChannel::CheckListenerChain()
     rv = retargetableListener->CheckListenerChain();
   }
   return rv;
+}
+
+//-----------------------------------------------------------------------------
+// InterceptedHttpChannel::nsICacheInfoChannel
+//-----------------------------------------------------------------------------
+// InterceptedHttpChannel does not really implement the nsICacheInfoChannel
+// interface, we tranfers parameters to the saved nsICacheInfoChannel(mSynthesizedCacheInfo)
+// from StartSynthesizedResponse. And we return false in IsFromCache and
+// NS_ERROR_NOT_AVAILABLE for all other methods while the saved
+// mSynthesizedCacheInfo does not exist.
+NS_IMETHODIMP
+InterceptedHttpChannel::IsFromCache(bool *value)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->IsFromCache(value);
+  }
+  *value = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetCacheEntryId(uint64_t *aCacheEntryId)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetCacheEntryId(aCacheEntryId);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetCacheTokenFetchCount(int32_t *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetCacheTokenFetchCount(_retval);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetCacheTokenExpirationTime(uint32_t *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetCacheTokenExpirationTime(_retval);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetCacheTokenCachedCharset(nsACString &_retval)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetCacheTokenCachedCharset(_retval);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::SetCacheTokenCachedCharset(const nsACString &aCharset)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->SetCacheTokenCachedCharset(aCharset);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::SetAllowStaleCacheContent(bool aAllowStaleCacheContent)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->SetAllowStaleCacheContent(aAllowStaleCacheContent);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetAllowStaleCacheContent(bool *aAllowStaleCacheContent)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetAllowStaleCacheContent(aAllowStaleCacheContent);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::PreferAlternativeDataType(const nsACString & aType)
+{
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+  mPreferredCachedAltDataType = aType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetPreferredAlternativeDataType(nsACString & aType)
+{
+  aType = mPreferredCachedAltDataType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetAlternativeDataType(nsACString & aType)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetAlternativeDataType(aType);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->OpenAlternativeOutputStream(type, _retval);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetCacheKey(nsISupports **key)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetCacheKey(key);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::SetCacheKey(nsISupports *key)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->SetCacheKey(key);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 } // namespace net
