@@ -579,7 +579,7 @@ V2_TRUNK_ROUTE_TEMPLATES = [
 
 V2_NIGHTLY_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.nightly.latest.{product}.{job-name}",
-    "index.{trust-domain}.v2.{project}.nightly.{build_date}.revision.{head_rev}.{product}.{job-name}",
+    "index.{trust-domain}.v2.{project}.nightly.{build_date}.revision.{head_rev}.{product}.{job-name}",  # noqa - too long
     "index.{trust-domain}.v2.{project}.nightly.{build_date}.latest.{product}.{job-name}",
     "index.{trust-domain}.v2.{project}.nightly.revision.{head_rev}.{product}.{job-name}",
 ]
@@ -587,13 +587,13 @@ V2_NIGHTLY_TEMPLATES = [
 V2_NIGHTLY_L10N_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.nightly.latest.{product}-l10n.{job-name}.{locale}",
     "index.{trust-domain}.v2.{project}.nightly.{build_date}.revision.{head_rev}.{product}-l10n.{job-name}.{locale}",  # noqa - too long
-    "index.{trust-domain}.v2.{project}.nightly.{build_date}.latest.{product}-l10n.{job-name}.{locale}",
-    "index.{trust-domain}.v2.{project}.nightly.revision.{head_rev}.{product}-l10n.{job-name}.{locale}",
+    "index.{trust-domain}.v2.{project}.nightly.{build_date}.latest.{product}-l10n.{job-name}.{locale}",  # noqa - too long
+    "index.{trust-domain}.v2.{project}.nightly.revision.{head_rev}.{product}-l10n.{job-name}.{locale}",  # noqa - too long
 ]
 
 V2_L10N_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.revision.{head_rev}.{product}-l10n.{job-name}.{locale}",
-    "index.{trust-domain}.v2.{project}.pushdate.{build_date_long}.{product}-l10n.{job-name}.{locale}",
+    "index.{trust-domain}.v2.{project}.pushdate.{build_date_long}.{product}-l10n.{job-name}.{locale}",  # noqa - too long
     "index.{trust-domain}.v2.{project}.latest.{product}-l10n.{job-name}.{locale}",
 ]
 
