@@ -110,19 +110,19 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 ifeq (bundle, $(MOZ_FS_LAYOUT))
 BINPATH = $(_BINPATH)
-DEFINES += -DAPPNAME='$(_APPNAME)'
+DEFINES += -DAPPNAME=$(_APPNAME)
 else
 # Every other platform just winds up in dist/bin
 BINPATH = bin
 endif
-DEFINES += -DBINPATH='$(BINPATH)'
+DEFINES += -DBINPATH=$(BINPATH)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 RESPATH = $(_APPNAME)/Contents/Resources
 else
 RESPATH = $(BINPATH)
 endif
-DEFINES += -DRESPATH="$(RESPATH)"
+DEFINES += -DRESPATH=$(RESPATH)
 
 LPROJ_ROOT = $(firstword $(subst -, ,$(AB_CD)))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
