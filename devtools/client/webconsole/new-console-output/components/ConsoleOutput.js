@@ -94,13 +94,17 @@ class ConsoleOutput extends Component {
     //   and we are already scrolled to the bottom
     // - the number of messages in the store changed
     //   and the new message is an evaluation result.
+    const isNewMessageEvaluationResult = messagesDelta > 0 &&
+      [...nextProps.messages.values()][nextProps.messages.size - 1].type
+        === MESSAGE_TYPE.RESULT;
+
     this.shouldScrollBottom =
       (
         !this.props.initialized &&
         nextProps.initialized &&
         isScrolledToBottom(lastChild, outputNode)
       ) ||
-      (messagesDelta > 0 && nextProps.messages.last().type === MESSAGE_TYPE.RESULT) ||
+      (isNewMessageEvaluationResult) ||
       (visibleMessagesDelta > 0 && isScrolledToBottom(lastChild, outputNode));
   }
 

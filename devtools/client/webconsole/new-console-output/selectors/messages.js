@@ -45,15 +45,20 @@ function getAllNetworkMessagesUpdateById(state) {
   return state.messages.networkMessagesUpdateById;
 }
 
+function getGroupsById(state) {
+  return state.messages.groupsById;
+}
+
 module.exports = {
-  getMessage,
-  getAllMessagesById,
-  getAllMessagesUiById,
-  getAllMessagesTableDataById,
   getAllGroupsById,
-  getCurrentGroup,
-  getVisibleMessages,
-  getFilteredMessagesCount,
-  getAllRepeatById,
+  getAllMessagesById,
+  getAllMessagesTableDataById,
+  getAllMessagesUiById,
   getAllNetworkMessagesUpdateById,
+  getAllRepeatById,
+  getCurrentGroup,
+  getFilteredMessagesCount,
+  getGroupsById,
+  getMessage,
+  getVisibleMessages,
 };
