@@ -137,12 +137,6 @@ if CONFIG['ENABLE_STREAMS']:
         'testReadableStream.cpp',
     ]
 
-if CONFIG['JS_BUILD_BINAST']:
-    UNIFIED_SOURCES += [
-        'testBinASTReader.cpp',
-        'testBinTokenReaderTester.cpp'
-    ]
-
 DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [
