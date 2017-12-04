@@ -10,19 +10,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-// XXXmano: we should move most/all of these constants to PlacesUtils
-const ORGANIZER_ROOT_BOOKMARKS = "place:folder=BOOKMARKS_MENU&excludeItems=1&queryType=1";
-
-// No change to the view, preserve current selection
-const RELOAD_ACTION_NOTHING = 0;
-// Inserting items new to the view, select the inserted rows
-const RELOAD_ACTION_INSERT = 1;
-// Removing items from the view, select the first item after the last selected
-const RELOAD_ACTION_REMOVE = 2;
-// Moving items within a view, don't treat the dropped items as additional
-// rows.
-const RELOAD_ACTION_MOVE = 3;
-
 /**
  * Represents an insertion point within a container where we can insert
  * items.
