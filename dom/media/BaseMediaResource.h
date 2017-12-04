@@ -29,6 +29,11 @@ public:
     nsIChannel* aChannel,
     bool aIsPrivateBrowsing);
 
+  // Close the resource, stop any listeners, channels, etc.
+  // Cancels any currently blocking Read request and forces that request to
+  // return an error.
+  virtual nsresult Close() = 0;
+
   // Pass true to limit the amount of readahead data (specified by
   // "media.cache_readahead_limit") or false to read as much as the
   // cache size allows.
