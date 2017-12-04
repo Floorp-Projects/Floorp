@@ -394,6 +394,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/BitmapUtils.java',
     'gfx/BufferedImage.java',
     'gfx/BufferedImageGLInfo.java',
+    'gfx/CompositorController.java',
     'gfx/DynamicToolbarAnimator.java',
     'gfx/FloatSize.java',
     'gfx/FullScreenState.java',
