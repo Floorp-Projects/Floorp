@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1363667",
+    title: "Test audio receiver getSynchronizationSources"
+  });
+
+  var waitForSyncSources = async (test) => {
+    let receivers = [...test.pcRemote.getReceivers(),
+                     ...test.pcLocal.getReceivers()];
+    is(receivers.length, 2, "Expected number of receivers");
+    // Wait for sync sources
+    while (true) {
+        if (receivers[0].getSynchronizationSources().length > 0 &&
+            receivers[1].getSynchronizationSources().length > 0) {
+        break;
+      }
+      await wait(250);
+    }
+  }
+
+  var testGetSynchronizationSources = async (test) => {
+    await waitForSyncSources(test);
+    let receivers = [...test.pcRemote.getReceivers(),
+                     ...test.pcLocal.getReceivers()];
+    for (let recv of receivers) {
+      let syncSources = recv.getSynchronizationSources();
+      ok(syncSources,
+         "Receiver has Synchronization sources " + JSON.stringify(syncSources));
+      is(syncSources.length, 1, "Each receiver has only a single sync source");
+      let source = recv.getSynchronizationSources()[0];
+      ok(source.audioLevel,
+         `Synchronization source has audio level. (${source.audioLevel})`);
+      ok(source.audioLevel < 128,
+         `Synchronization source audio level < 128. (${source.audioLevel})`);
+         ok(Number.isInteger(source.audioLevel),
+         `Synchronization source audio level is int. (${source.audioLevel})`);
+      ok(source.timestamp,
+         `Synchronization source has timestamp (${source.timestamp})`);
+      ok(Number.isInteger(source.timestamp),
+        `Synchronization source timestamp is int (${source.timestamp})`);
+    }
+  }
+
+  var testSynchronizationSourceCached = async (test) => {
+    await waitForSyncSources(test);
+    let receivers = [...test.pcRemote.getReceivers(),
+                     ...test.pcLocal.getReceivers()];
+    is(receivers.length, 2, "Expected number of receivers");
+    for (let recv of receivers) {
+      is(JSON.stringify(recv.getSynchronizationSources()),
+         JSON.stringify(recv.getSynchronizationSources()),
+         "Subsequent getSynchronizationSources calls are cached.");
+    }
+  }
+
+  var test;
+  runNetworkTest(function(options) {
+    test = new PeerConnectionTest(options);
+    test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+      [testGetSynchronizationSources,
+       testSynchronizationSourceCached]);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.pcLocal.audioElementsOnly = true;
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

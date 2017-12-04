@@ -73,6 +73,7 @@ html|hr {
 
 xul|caption {
   -moz-appearance: none;
+  font-size: 1.14em;
   margin: 0;
 }
 
@@ -80,7 +81,7 @@ html|h2,
 xul|caption xul|checkbox,
 xul|caption xul|label {
   font-weight: 600;
-  line-height: 22px;
+  line-height: 1.4em;
 }
 
 xul|caption xul|checkbox,
@@ -104,7 +105,6 @@ xul|groupbox {
   border: none;
   margin: 0;
   padding: 0;
-  font-size: 1.25rem;
 }
 
 xul|groupbox > xul|caption {
@@ -122,8 +122,6 @@ xul|groupbox xul|description {
 
 xul|tabpanels {
   -moz-appearance: none;
-  font-size: 1.25rem;
-  line-height: 22px;
   border: none;
   padding: 0;
   background-color: transparent;
@@ -163,11 +161,6 @@ xul|tab[selected] {
   background-color: var(--in-content-box-background-hover);
   padding-bottom: 0; /* compensate the 4px border */
   border-bottom: 4px solid var(--in-content-border-highlight);
-}
-
-xul|*.tab-text {
-  font-size: 1.3rem;
-  line-height: 22px;
 }
 
 /* html buttons */
@@ -239,8 +232,13 @@ html|button:disabled,
 html|select:disabled,
 xul|button[disabled="true"],
 xul|colorpicker[type="button"][disabled="true"],
-xul|menulist[disabled="true"] {
+xul|menulist[disabled="true"],
+xul|listbox[disabled="true"] {
   opacity: 0.5;
+}
+
+xul|listbox[disabled="true"] xul|listitem:hover {
+  background-color: transparent;
 }
 
 *|button.primary {
@@ -264,7 +262,6 @@ xul|colorpicker[type="button"] {
   width: 50px;
 }
 
-html|button,
 xul|button > xul|*.button-box,
 xul|menulist > xul|*.menulist-label-box {
   padding-right: 10px !important;
@@ -703,7 +700,8 @@ xul|*.radio-label-box {
 }
 
 *|*.category-name {
-  line-height: 22px;
+  font-size: 1.07em;
+  line-height: 1.4em;
   padding-bottom: 2px;
   padding-inline-start: 9px;
   margin: 0;
@@ -756,8 +754,9 @@ xul|*.radio-label-box {
 }
 
 *|*.header-name {
+  font-size: 1.46em;
   font-weight: 300;
-  line-height: 30px;
+  line-height: 1.3em;
   margin: 0;
   -moz-user-select: none;
 }

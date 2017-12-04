@@ -25,7 +25,8 @@ add_task(async function() {
   is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
   let doc = gBrowser.contentDocument;
   is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  ok(doc.querySelector("#locationBarGroup").hidden, "Location Bar prefs should be hidden when only Reports are requested");
+  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"), "Wait for the reports section is spotlighted.");
+  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -43,7 +44,8 @@ add_task(async function() {
   let selectedPane = gBrowser.contentWindow.history.state;
   is(selectedPane, "panePrivacy", "Privacy pane should be selected");
   is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  ok(doc.querySelector("#locationBarGroup").hidden, "Location Bar prefs should be hidden when only Reports are requested");
+  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"), "Wait for the reports section is spotlighted.");
+  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 

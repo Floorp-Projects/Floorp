@@ -49,7 +49,7 @@ class ManageRecords {
   }
 
   localizeDocument() {
-    document.documentElement.style.width = FormAutofillUtils.stringBundle.GetStringFromName("manageDialogsWidth");
+    document.documentElement.style.minWidth = FormAutofillUtils.stringBundle.GetStringFromName("manageDialogsWidth");
     FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
   }
 

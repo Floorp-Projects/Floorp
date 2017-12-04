@@ -394,8 +394,10 @@ VRManagerParent::RecvVibrateHaptic(const uint32_t& aControllerIdx,
                                    const uint32_t& aPromiseID)
 {
   VRManager* vm = VRManager::Get();
+  VRManagerPromise promise(this, aPromiseID);
+
   vm->VibrateHaptic(aControllerIdx, aHapticIndex, aIntensity,
-                    aDuration, aPromiseID);
+                    aDuration, promise);
   return IPC_OK();
 }
 

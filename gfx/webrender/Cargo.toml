@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.54.0"
+version = "0.55.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -10,7 +10,7 @@ build = "build.rs"
 default = ["freetype-lib"]
 freetype-lib = ["freetype/servo-freetype-sys"]
 profiler = ["thread_profiler/thread_profiler"]
-debugger = ["ws", "serde_json", "serde", "serde_derive"]
+debugger = ["ws", "serde_json", "serde", "serde_derive", "image", "base64"]
 
 [dependencies]
 app_units = "0.5.6"
@@ -18,7 +18,7 @@ bincode = "0.9"
 byteorder = "1.0"
 euclid = "0.15.5"
 fxhash = "0.2.1"
-gleam = "0.4.14"
+gleam = "0.4.15"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"
@@ -32,6 +32,8 @@ ws = { optional = true, version = "0.7.3" }
 serde_json = { optional = true, version = "1.0" }
 serde = { optional = true, version = "1.0" }
 serde_derive = { optional = true, version = "1.0" }
+image = { optional = true, version = "0.17" }
+base64 = { optional = true, version = "0.3.0" }
 
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
@@ -43,7 +45,7 @@ servo-glutin = "0.13"     # for the example apps
 freetype = { version = "0.3", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.4"
+dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.4"

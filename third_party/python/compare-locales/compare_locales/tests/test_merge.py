@@ -293,9 +293,9 @@ class TestDTD(unittest.TestCase, ContentMixin):
              'details': {
                  'l10n.dtd': [
                      {'error': u'Unparsed content "<!ENTY bar '
-                               u'\'gimmick\'>" '
+                               u'\'gimmick\'>\n" '
                                u'from line 2 column 1 to '
-                               u'line 2 column 22'},
+                               u'line 3 column 1'},
                      {'missingEntity': u'bar'}]
                 }
              })

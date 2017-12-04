@@ -412,6 +412,14 @@ bool RtpStreamReceiver::DeliverRtp(const uint8_t* rtp_packet,
         ss << ", repaired rid: " << header.extension.repairedRtpStreamId.data();
       if (!header.extension.mId.empty())
         ss << ", mid: " << header.extension.mId.data();
+      const auto& csrcLevels = header.extension.csrcAudioLevels;
+      if (csrcLevels.numAudioLevels) {
+        ss << ", csrc audio levels : {" << csrcLevels.arrOfAudioLevels[0];
+        for (uint8_t i = 1; i < csrcLevels.numAudioLevels; i++) {
+          ss << ", " << csrcLevels.arrOfAudioLevels[i];
+        }
+        ss << "}";
+      }
       LOG(LS_INFO) << ss.str();
       last_packet_log_ms_ = now_ms;
     }

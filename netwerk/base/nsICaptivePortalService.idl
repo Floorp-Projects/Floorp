@@ -56,4 +56,13 @@ interface nsICaptivePortalService : nsISupports
  */
 #define NS_IPC_CAPTIVE_PORTAL_SET_STATE "ipc:network:captive-portal-set-state"
 
+/**
+ * This notification will be emitted when the captive portal service has
+ * determined that we can connect to the internet.
+ * The service will pass either "captive" if there is an unlocked captive portal
+ * present, or "clear" if no captive portal was detected.
+ * Note: this notification only gets sent in the parent process.
+ */
+#define NS_CAPTIVE_PORTAL_CONNECTIVITY "network:captive-portal-connectivity"
+
 %}

@@ -168,6 +168,8 @@ function exportData(win, request) {
 
   data.json = new win.Text();
 
+  data.readyState = "uninitialized";
+
   let Locale = {
     $STR: key => {
       try {
@@ -241,17 +243,16 @@ function initialHTML(doc) {
           type: "text/css",
           href: baseURI + "css/main.css",
         }),
-        element("script", {
-          src: baseURI + "lib/require.js",
-          "data-main": baseURI + "viewer-config.js",
-          defer: true,
-        })
       ]),
       element("body", {}, [
         element("div", {"id": "content"}, [
           element("div", {"id": "json"})
-        ])
-      ])
+        ]),
+        element("script", {
+          src: baseURI + "lib/require.js",
+          "data-main": baseURI + "viewer-config.js",
+        }),
+      ]),
     ]).outerHTML;
 }
 

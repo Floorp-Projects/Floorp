@@ -4,10 +4,7 @@
 
 %include ../../../shared/incontentprefs/dialog.inc.css
 
-label,
-textbox,
-description,
-.tab-text,
-menulist label {
-  font-size: 1.11rem;
+:root > * {
+  font-size: 1.05em;
 }
+

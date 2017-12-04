@@ -7,7 +7,6 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h"
 
 #include "webrtc/base/checks.h"
@@ -314,6 +313,45 @@ size_t MId::ValueSize(const std::string& mid) {
 
 bool MId::Write(uint8_t* data, const std::string& mid) {
   return RtpStreamId::Write(data, mid);
+}
+
+// CSRCAudioLevel
+//  Sample Audio Level Encoding Using the One-Byte Header Format
+//  Note that the range of len is 1 to 15 which is encoded as 0 to 14
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |  ID   | len=2 |0|   level 1   |0|   level 2   |0|   level 3   |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+constexpr RTPExtensionType CsrcAudioLevel::kId;
+constexpr const char* CsrcAudioLevel::kUri;
+
+bool CsrcAudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
+                           CsrcAudioLevelList* csrcAudioLevels) {
+  if (data.size() < 1 || data.size() > kRtpCsrcSize)
+    return false;
+  csrcAudioLevels->numAudioLevels = data.size();
+  for(uint8_t i = 0; i < csrcAudioLevels->numAudioLevels; i++) {
+    // Ensure range is 0 to 127 inclusive
+    csrcAudioLevels->arrOfAudioLevels[i] = 0x7f & data[i];
+  }
+  return true;
+}
+
+size_t CsrcAudioLevel::ValueSize(const CsrcAudioLevelList& csrcAudioLevels) {
+  return csrcAudioLevels.numAudioLevels;
+}
+
+bool CsrcAudioLevel::Write(uint8_t* data,
+                           const CsrcAudioLevelList& csrcAudioLevels) {
+  RTC_DCHECK_GE(csrcAudioLevels.numAudioLevels, 0);
+  for(uint8_t i = 0; i < csrcAudioLevels.numAudioLevels; i++) {
+    data[i] = csrcAudioLevels.arrOfAudioLevels[i] & 0x7f;
+  }
+  // This extension if used must have at least one audio level
+  return csrcAudioLevels.numAudioLevels;
 }
 
 }  // namespace webrtc

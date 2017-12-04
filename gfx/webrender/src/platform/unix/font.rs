@@ -4,9 +4,7 @@
 
 use api::{ColorU, GlyphDimensions, GlyphKey, FontKey, FontRenderMode};
 use api::{FontInstancePlatformOptions, FontLCDFilter, FontHinting};
-use api::{NativeFontHandle, SubpixelDirection};
-use api::{FONT_FORCE_AUTOHINT, FONT_NO_AUTOHINT, FONT_EMBEDDED_BITMAP};
-use api::{FONT_EMBOLDEN, FONT_VERTICAL_LAYOUT, FONT_SUBPIXEL_BGR};
+use api::{FontInstanceFlags, NativeFontHandle, SubpixelDirection};
 use freetype::freetype::{FT_BBox, FT_Outline_Translate, FT_Pixel_Mode, FT_Render_Mode};
 use freetype::freetype::{FT_Done_Face, FT_Error, FT_Get_Char_Index, FT_Int32};
 use freetype::freetype::{FT_Done_FreeType, FT_Library_SetLcdFilter, FT_Pos};
@@ -153,7 +151,7 @@ impl FontContext {
         let face = self.faces.get(&font.font_key).unwrap();
 
         let mut load_flags = FT_LOAD_DEFAULT;
-        let FontInstancePlatformOptions { flags, hinting, .. } = font.platform_options.unwrap_or_default();
+        let FontInstancePlatformOptions { hinting, .. } = font.platform_options.unwrap_or_default();
         match (hinting, font.render_mode) {
             (FontHinting::None, _) => load_flags |= FT_LOAD_NO_HINTING,
             (FontHinting::Mono, _) => load_flags = FT_LOAD_TARGET_MONO,
@@ -163,24 +161,24 @@ impl FontContext {
                     SubpixelDirection::Vertical => FT_LOAD_TARGET_LCD_V,
                     _ => FT_LOAD_TARGET_LCD,
                 };
-                if (flags & FONT_FORCE_AUTOHINT) != 0 {
+                if font.flags.contains(FontInstanceFlags::FORCE_AUTOHINT) {
                     load_flags |= FT_LOAD_FORCE_AUTOHINT;
                 }
             }
             _ => {
-                if (flags & FONT_FORCE_AUTOHINT) != 0 {
+                if font.flags.contains(FontInstanceFlags::FORCE_AUTOHINT) {
                     load_flags |= FT_LOAD_FORCE_AUTOHINT;
                 }
             }
         }
 
-        if (flags & FONT_NO_AUTOHINT) != 0 {
+        if font.flags.contains(FontInstanceFlags::NO_AUTOHINT) {
             load_flags |= FT_LOAD_NO_AUTOHINT;
         }
-        if (flags & FONT_EMBEDDED_BITMAP) == 0 {
+        if font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS) {
             load_flags |= FT_LOAD_NO_BITMAP;
         }
-        if (flags & FONT_VERTICAL_LAYOUT) != 0 {
+        if font.flags.contains(FontInstanceFlags::VERTICAL_LAYOUT) {
             load_flags |= FT_LOAD_VERTICAL_LAYOUT;
         }
 
@@ -224,7 +222,7 @@ impl FontContext {
             let slot = unsafe { (*face.face).glyph };
             assert!(slot != ptr::null_mut());
 
-            if (flags & FONT_EMBOLDEN) != 0 {
+            if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
                 unsafe { FT_GlyphSlot_Embolden(slot) };
             }
 
@@ -385,15 +383,9 @@ impl FontContext {
         let face_flags = unsafe { (*face.face).face_flags };
         // If the face has embedded bitmaps, they should only be used if either
         // embedded bitmaps are explicitly requested or if the face has no outline.
-        if (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 {
-            let FontInstancePlatformOptions { flags, .. } = font.platform_options.unwrap_or_default();
-            if (flags & FONT_EMBEDDED_BITMAP) != 0 {
-                return true;
-            }
-            (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0
-        } else {
-            false
-        }
+        (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 &&
+            (font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS) ||
+                (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0)
     }
 
     fn choose_bitmap_size(&self, face: FT_Face, requested_size: f64) -> FT_Error {
@@ -451,7 +443,7 @@ impl FontContext {
                 dy - ((cbox.yMin + dy) & !63),
             );
 
-            if font.synthetic_italics {
+            if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
                 FT_GlyphSlot_Oblique(slot);
             }
         }
@@ -555,8 +547,7 @@ impl FontContext {
 
         // Extract the final glyph from FT format into RGBA8 format, which is
         // what WR expects.
-        let FontInstancePlatformOptions { flags, .. } = font.platform_options.unwrap_or_default();
-        let subpixel_bgr = (flags & FONT_SUBPIXEL_BGR) != 0;
+        let subpixel_bgr = font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR);
         let mut src_row = bitmap.buffer;
         let mut dest: usize = 0;
         while dest < final_buffer.len() {

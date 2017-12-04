@@ -4,6 +4,10 @@
 
 %include ../../../shared/extensions/extensions.inc.css
 
+:root > * {
+  font-size: 1.11em;
+}
+
 #header-utils-btn .toolbarbutton-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
   -moz-context-properties: fill;

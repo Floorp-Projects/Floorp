@@ -17,6 +17,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
 public final class GeckoSurfaceTexture extends SurfaceTexture {
     private static final String LOGTAG = "GeckoSurfaceTexture";
+    private static final int MAX_SURFACE_TEXTURES = 200;
     private static volatile int sNextHandle = 1;
     private static final HashMap<Integer, GeckoSurfaceTexture> sSurfaceTextures = new HashMap<Integer, GeckoSurfaceTexture>();
 
@@ -155,10 +156,6 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
         if (useCount == 0) {
             setListener(null);
 
-            synchronized (sSurfaceTextures) {
-                sSurfaceTextures.remove(mHandle);
-            }
-
             if (mAttachedContext == 0) {
                 release();
                 return;
@@ -188,6 +185,10 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
 
         for (GeckoSurfaceTexture tex : list) {
             try {
+                synchronized (sSurfaceTextures) {
+                    sSurfaceTextures.remove(tex.mHandle);
+                }
+
                 if (tex.isSingleBuffer()) {
                    tex.releaseTexImage();
                 }
@@ -213,26 +214,31 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
             throw new IllegalArgumentException("single buffer mode not supported on API version < 19");
         }
 
-        int handle = sNextHandle++;
-
-        final GeckoSurfaceTexture gst;
-        if (isSingleBufferSupported()) {
-            gst = new GeckoSurfaceTexture(handle, singleBufferMode);
-        } else {
-            gst = new GeckoSurfaceTexture(handle);
-        }
-
         synchronized (sSurfaceTextures) {
+            // We want to limit the maximum number of SurfaceTextures at any one time.
+            // This is because they use a large number of fds, and once the process' limit
+            // is reached bad things happen. See bug 1421586.
+            if (sSurfaceTextures.size() >= MAX_SURFACE_TEXTURES) {
+                return null;
+            }
+
+            int handle = sNextHandle++;
+
+            final GeckoSurfaceTexture gst;
+            if (isSingleBufferSupported()) {
+                gst = new GeckoSurfaceTexture(handle, singleBufferMode);
+            } else {
+                gst = new GeckoSurfaceTexture(handle);
+            }
+
             if (sSurfaceTextures.containsKey(handle)) {
                 gst.release();
                 throw new IllegalArgumentException("Already have a GeckoSurfaceTexture with that handle");
             }
 
             sSurfaceTextures.put(handle, gst);
+            return gst;
         }
-
-
-        return gst;
     }
 
     @WrapForJNI

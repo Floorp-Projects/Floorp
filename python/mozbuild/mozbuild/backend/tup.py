@@ -333,11 +333,6 @@ class TupOnly(CommonBackend, PartialBackend):
             'layout/style/test', # HostSimplePrograms
             'toolkit/library', # libxul.so
         )
-        install_exts = (
-            '.h',
-            '.inc',
-            'new', # 'new' is an output from make-stl-wrappers.py
-        )
         if obj.script and obj.method and obj.relobjdir not in skip_directories:
             backend_file.export_shell()
             cmd = self._py_action('file_generate')
@@ -355,7 +350,7 @@ class TupOnly(CommonBackend, PartialBackend):
             outputs.extend(obj.outputs)
             outputs.append('%s.pp' % obj.outputs[0])
 
-            extra_outputs = [self._installed_files] if any(f.endswith(install_exts) for f in obj.outputs) else None
+            extra_outputs = [self._installed_files] if obj.required_for_compile else None
 
             backend_file.rule(
                 display='python {script}:{method} -> [%o]'.format(script=obj.script, method=obj.method),

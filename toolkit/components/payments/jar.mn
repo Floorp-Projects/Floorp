@@ -10,8 +10,9 @@ toolkit.jar:
     content/payments/paymentDialog.xhtml              (content/paymentDialog.xhtml)
 %   resource payments %res/payments/
     res/payments                                      (res/paymentRequest.*)
+    res/payments/components/                          (res/components/*.js)
     res/payments/debugging.html                       (res/debugging.html)
     res/payments/debugging.js                         (res/debugging.js)
-    res/payments/components/                          (res/components/*.js)
     res/payments/mixins/                              (res/mixins/*.js)
+    res/payments/PaymentsStore.js                     (res/PaymentsStore.js)
     res/payments/vendor/                              (res/vendor/*)

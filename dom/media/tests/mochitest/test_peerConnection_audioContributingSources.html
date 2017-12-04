@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1363667",
+    title: "Test audio receiver getContributingSources"
+  });
+
+  var SpWrap = (pc) => SpecialPowers.wrap(pc._pc);
+
+  var SpRtpSourceNowTimestamp = (pc) => {
+    return SpecialPowers.wrap(pc._pc).mozGetNowInRtpSourceReferenceTime();
+  }
+  var SpInsertLevelForContributingSource = (pc, ...args) => {
+    return SpecialPowers.wrap(pc._pc).mozInsertLevelForContributingSource(
+        ...args);
+  }
+  // test_peerConnection_audioSynchronizationSources.html tests
+  // much of the functionality of getContributingSources as the implementation
+  // is shared.
+  var testGetContributingSources = async (test) => {
+    let remoteReceiver = test.pcRemote.getReceivers()[0];
+    let localReceiver = test.pcLocal.getReceivers()[0];
+
+    // Check that getContributingSources is empty as there is no MCU
+    is(remoteReceiver.getContributingSources().length, 0,
+       "remote contributing sources is empty");
+    is(localReceiver.getContributingSources().length, 0,
+       "local contributing sources is empty");
+    // Wait for the next JS event loop iteration, to clear the cache
+    await Promise.resolve().then();
+    // Insert new entries as if there were an MCU
+    let csrc0 = 124756;
+    let timestamp0 = SpWrap(test.pcRemote).mozGetNowInRtpSourceReferenceTime();
+    let timestampOffset = new Date().getTime() - timestamp0;
+    let hasAudioLevel0 = true;
+    let audioLevel0 = 34;
+
+    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
+        remoteReceiver,
+        csrc0,
+        timestamp0,
+        hasAudioLevel0,
+        audioLevel0);
+
+    let csrc1 = 5786;
+    let timestamp1 = timestamp0 - 200;
+    let hasAudioLevel1 = false;
+    let audioLevel1 = 0;
+
+    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
+        remoteReceiver,
+        csrc1,
+        timestamp1,
+        hasAudioLevel1,
+        audioLevel1);
+
+    let contributingSources = remoteReceiver.getContributingSources();
+    is(contributingSources.length, 2,
+       "Expected number of contributing sources");
+
+    // Check that both inserted were returned
+    let source0 = contributingSources.find(c => c.source == csrc0);
+    ok(source0, "first csrc was found");
+
+    let source1 = contributingSources.find(c => c.source == csrc1);
+    ok(source1, "second csrsc was found");
+
+    // Add a small margin of error in the timestamps
+    let compareTimestamps = (ts1, ts2) => Math.abs(ts1 - ts2) < 100;
+
+    // Check the CSRC with audioLevel
+    is(source0.audioLevel, audioLevel0,
+       `Contributing source has correct audio level. (${source0.audioLevel})`);
+    ok(compareTimestamps(source0.timestamp, timestamp0 + timestampOffset),
+       `Contributing source has correct timestamp (${source0.timestamp})`);
+
+    // Check the CSRC without audioLevel
+    is(source1.audioLevel, undefined,
+       `Contributing source has no audio level. (${source1.audioLevel})`);
+    ok(compareTimestamps(source1.timestamp, timestamp1 + timestampOffset),
+       `Contributing source has correct timestamp (${source1.timestamp})`);
+
+    // Check caching
+    is(JSON.stringify(contributingSources),
+       JSON.stringify(remoteReceiver.getContributingSources()),
+       "getContributingSources is cached");
+  }
+
+  var test;
+  runNetworkTest(function(options) {
+    test = new PeerConnectionTest(options);
+    test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+      [testGetContributingSources]);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.pcLocal.audioElementsOnly = true;
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

@@ -1101,21 +1101,22 @@ ClassOrClassList(Implementor* aElement, nsAtom** aClass, nsAtom*** aClassList)
 
   // For class values with only whitespace, Gecko just stores a string. For the
   // purposes of the style system, there is no class in this case.
-  if (attr->Type() == nsAttrValue::eString) {
+  nsAttrValue::ValueType type = attr->Type();
+  if (MOZ_UNLIKELY(type == nsAttrValue::eString)) {
     MOZ_ASSERT(nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
                  attr->GetStringValue()).IsEmpty());
     return 0;
   }
 
   // Single tokens are generally stored as an atom. Check that case.
-  if (attr->Type() == nsAttrValue::eAtom) {
+  if (type == nsAttrValue::eAtom) {
     *aClass = attr->GetAtomValue();
     return 1;
   }
 
   // At this point we should have an atom array. It is likely, but not
   // guaranteed, that we have two or more elements in the array.
-  MOZ_ASSERT(attr->Type() == nsAttrValue::eAtomArray);
+  MOZ_ASSERT(type == nsAttrValue::eAtomArray);
   nsTArray<RefPtr<nsAtom>>* atomArray = attr->GetAtomArrayValue();
   uint32_t length = atomArray->Length();
 
