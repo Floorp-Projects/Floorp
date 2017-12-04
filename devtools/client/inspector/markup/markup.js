@@ -520,7 +520,7 @@ MarkupView.prototype = {
     }
 
     let parent = target, container;
-    while (parent !== this.doc.body) {
+    while (parent) {
       if (parent.container) {
         container = parent.container;
         break;
