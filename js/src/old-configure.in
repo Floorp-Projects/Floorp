@@ -356,21 +356,6 @@ XCFLAGS="$X_CFLAGS"
 
 fi # COMPILE_ENVIRONMENT
 
-dnl ==============================================================
-dnl Get mozilla version from central milestone file
-dnl ==============================================================
-MOZILLA_VERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir`
-MOZILLA_UAVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --uaversion`
-MOZILLA_SYMBOLVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --symbolversion`
-if test -z "$MOZILLA_VERSION"; then
-  AC_MSG_ERROR([failed to read version info from milestone file])
-fi
-
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
-AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
-AC_SUBST(MOZILLA_SYMBOLVERSION)
-
 # Separate version into components for use in shared object naming etc
 changequote(,)
 MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`
@@ -1925,8 +1910,6 @@ dnl ========================================================
 MOZ_CHECK_ALLOCATOR
 
 AC_CHECK_FUNCS(setlocale localeconv)
-
-AC_SUBST(MOZILLA_VERSION)
 
 AC_SUBST(ac_configure_args)
 
