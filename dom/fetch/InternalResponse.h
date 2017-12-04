@@ -289,14 +289,13 @@ public:
   }
 
   already_AddRefed<nsICacheInfoChannel>
-  GetCacheInfoChannel()
+  TakeCacheInfoChannel()
   {
     if (mWrappedResponse) {
-      return mWrappedResponse->GetCacheInfoChannel();
+      return mWrappedResponse->TakeCacheInfoChannel();
     }
 
-    nsCOMPtr<nsICacheInfoChannel> ret = mCacheInfoChannel;
-    return ret.forget();
+    return mCacheInfoChannel.forget();
   }
 
   void

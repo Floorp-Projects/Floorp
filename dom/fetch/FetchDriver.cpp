@@ -107,6 +107,7 @@ public:
   eStatus Status();
   void Cancel();
   uint64_t GetAlternativeDataCacheEntryId();
+  const nsACString& GetAlternativeDataType() const;
   already_AddRefed<nsICacheInfoChannel> GetCacheInfoChannel();
   already_AddRefed<nsIInputStream> GetAlternativeInputStream();
 
@@ -169,6 +170,12 @@ uint64_t
 AlternativeDataStreamListener::GetAlternativeDataCacheEntryId()
 {
   return mAlternativeDataCacheEntryId;
+}
+
+const nsACString&
+AlternativeDataStreamListener::GetAlternativeDataType() const
+{
+  return mAlternativeDataType;
 }
 
 already_AddRefed<nsIInputStream>
@@ -851,29 +858,32 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   }
 
   nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(aRequest);
-  response->SetCacheInfoChannel(cic);
-  uint64_t cacheEntryId = 0;
-  // Skip the case that mAltDataListener->Status() equals to FALLBACK, that means
-  // the opened channel for alternative data loading is reused for loading the
-  // main data. FALLBACK also means that cacheEntryId from mAltDataListener is
-  // invalid.
-  if (cic &&
-      mAltDataListener &&
-      mAltDataListener->Status() != AlternativeDataStreamListener::FALLBACK &&
-      NS_SUCCEEDED(cic->GetCacheEntryId(&cacheEntryId))) {
-    // Verify the cache ID is the same with from alternative data cache.
-    // If the cache ID is different, droping the alternative data loading,
-    // otherwise setup the response's alternative body and cacheInfoChannel.
-    if (cacheEntryId != mAltDataListener->GetAlternativeDataCacheEntryId()) {
-      mAltDataListener->Cancel();
-    } else {
-      // AlternativeDataStreamListener::OnStartRequest had already been called,
-      // the alternative data input stream and cacheInfo channel must be created.
-      nsCOMPtr<nsICacheInfoChannel> cacheInfo = mAltDataListener->GetCacheInfoChannel();
-      nsCOMPtr<nsIInputStream> altInputStream = mAltDataListener->GetAlternativeInputStream();
-      MOZ_ASSERT(altInputStream && cacheInfo);
-      response->SetAlternativeBody(altInputStream);
-      response->SetCacheInfoChannel(cacheInfo);
+  if (cic && mAltDataListener) {
+    // Skip the case that mAltDataListener->Status() equals to FALLBACK, that means
+    // the opened channel for alternative data loading is reused for loading the
+    // main data.
+    if (mAltDataListener->Status() != AlternativeDataStreamListener::FALLBACK) {
+      // Verify the cache ID is the same with from alternative data cache.
+      // If the cache ID is different, droping the alternative data loading,
+      // otherwise setup the response's alternative body and cacheInfoChannel.
+      uint64_t cacheEntryId = 0;
+      if (NS_SUCCEEDED(cic->GetCacheEntryId(&cacheEntryId)) &&
+          cacheEntryId != mAltDataListener->GetAlternativeDataCacheEntryId()) {
+        mAltDataListener->Cancel();
+      } else {
+        // AlternativeDataStreamListener::OnStartRequest had already been called,
+        // the alternative data input stream and cacheInfo channel must be created.
+        nsCOMPtr<nsICacheInfoChannel> cacheInfo = mAltDataListener->GetCacheInfoChannel();
+        nsCOMPtr<nsIInputStream> altInputStream = mAltDataListener->GetAlternativeInputStream();
+        MOZ_ASSERT(altInputStream && cacheInfo);
+        response->SetAlternativeBody(altInputStream);
+        response->SetCacheInfoChannel(cacheInfo);
+      }
+    } else if (!mAltDataListener->GetAlternativeDataType().IsEmpty()) {
+      // If the status is FALLBACK and the mAltDataListener::mAlternativeDataType
+      // is not empty, that means the data need to be saved into cache, setup the
+      // response's nsICacheInfoChannel for caching the data after loading.
+      response->SetCacheInfoChannel(cic);
     }
   }
 
