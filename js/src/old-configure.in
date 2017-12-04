@@ -1554,17 +1554,6 @@ if test -n "$MOZ_DEBUG"; then
 fi
 
 dnl ========================================================
-dnl Zealous JavaScript GC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gczeal,
-[  --enable-gczeal         Enable zealous GCing],
-    JS_GC_ZEAL=1,
-    JS_GC_ZEAL= )
-if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
-    AC_DEFINE(JS_GC_ZEAL)
-fi
-
-dnl ========================================================
 dnl Enable breakpoint for artificial OOMs
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(oom-breakpoint,

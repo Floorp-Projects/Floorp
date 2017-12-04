@@ -6,7 +6,7 @@
       var shadowDiv = document.createElement("div");
       shadowDiv.style.border = "10px solid green";
 
-      var shadowRoot = document.getElementById('outer').createShadowRoot();
+      var shadowRoot = document.getElementById('outer').attachShadow({mode: 'open'});
       shadowRoot.appendChild(shadowDiv);
 
       var orangeDiv = document.createElement("div");

@@ -111,7 +111,7 @@ using namespace mozilla;
 #endif // DEBUG
 
 //===========================================================================
-// The old low-level prefs API
+// Low-level types and operations
 //===========================================================================
 
 typedef nsTArray<nsCString> PrefSaveData;
@@ -401,22 +401,18 @@ public:
       return NS_ERROR_UNEXPECTED;
     }
 
-    const char* stringVal = nullptr;
     if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
       // Do we have a default?
       if (!mHasDefaultValue) {
         return NS_ERROR_UNEXPECTED;
       }
-      stringVal = mDefaultValue.mStringVal;
+      MOZ_ASSERT(mDefaultValue.mStringVal);
+      aResult = mDefaultValue.mStringVal;
     } else {
-      stringVal = mUserValue.mStringVal;
+      MOZ_ASSERT(mUserValue.mStringVal);
+      aResult = mUserValue.mStringVal;
     }
 
-    if (!stringVal) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    aResult = stringVal;
     return NS_OK;
   }
 
@@ -535,64 +531,64 @@ public:
     mHasUserValue = false;
   }
 
-  nsresult SetValue(PrefType aType,
-                    PrefValueKind aKind,
-                    PrefValue aValue,
-                    bool aIsSticky,
-                    bool aForceSet,
-                    bool* aValueChanged,
-                    bool* aDirty)
+  nsresult SetDefaultValue(PrefType aType,
+                           PrefValue aValue,
+                           bool aIsSticky,
+                           bool* aValueChanged)
   {
-    if (aKind == PrefValueKind::Default) {
-      // Types must always match when setting the default value.
-      if (!IsType(aType)) {
-        return NS_ERROR_UNEXPECTED;
-      }
+    // Types must always match when setting the default value.
+    if (!IsType(aType)) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-      // Should we set the default value? Only if the pref is not locked, and
-      // doing so would change the default value.
-      if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
-        mDefaultValue.Replace(Type(), aType, aValue);
-        mHasDefaultValue = true;
-        if (aIsSticky) {
-          mIsSticky = true;
-        }
-        if (!mHasUserValue) {
-          *aValueChanged = true;
-        }
-        // What if we change the default to be the same as the user value?
-        // Should we clear the user value? Currently we don't.
+    // Should we set the default value? Only if the pref is not locked, and
+    // doing so would change the default value.
+    if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
+      mDefaultValue.Replace(Type(), aType, aValue);
+      mHasDefaultValue = true;
+      if (aIsSticky) {
+        mIsSticky = true;
       }
-    } else {
-      // If we have a default value, types must match when setting the user
-      // value.
-      if (mHasDefaultValue && !IsType(aType)) {
-        return NS_ERROR_UNEXPECTED;
+      if (!mHasUserValue) {
+        *aValueChanged = true;
       }
+      // What if we change the default to be the same as the user value?
+      // Should we clear the user value? Currently we don't.
+    }
+    return NS_OK;
+  }
 
-      // Should we clear the user value, if present? Only if the new user value
-      // matches the default value, and the pref isn't sticky, and we aren't
-      // force-setting it.
-      if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
-          !aForceSet) {
-        if (mHasUserValue) {
-          ClearUserValue();
-          if (!IsLocked()) {
-            *aDirty = true;
-            *aValueChanged = true;
-          }
-        }
+  nsresult SetUserValue(PrefType aType,
+                        PrefValue aValue,
+                        bool aFromFile,
+                        bool* aValueChanged)
+  {
+    // If we have a default value, types must match when setting the user
+    // value.
+    if (mHasDefaultValue && !IsType(aType)) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-        // Otherwise, should we set the user value? Only if doing so would
-        // change the user value.
-      } else if (!ValueMatches(PrefValueKind::User, aType, aValue)) {
-        mUserValue.Replace(Type(), aType, aValue);
-        SetType(aType);   // needed because we may have changed the type
-        mHasUserValue = true;
+    // Should we clear the user value, if present? Only if the new user value
+    // matches the default value, and the pref isn't sticky, and we aren't
+    // force-setting it.
+    if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
+        !aFromFile) {
+      if (mHasUserValue) {
+        ClearUserValue();
         if (!IsLocked()) {
-          *aDirty = true;
           *aValueChanged = true;
         }
+      }
+
+      // Otherwise, should we set the user value? Only if doing so would
+      // change the user value.
+    } else if (!ValueMatches(PrefValueKind::User, aType, aValue)) {
+      mUserValue.Replace(Type(), aType, aValue);
+      SetType(aType); // needed because we may have changed the type
+      mHasUserValue = true;
+      if (!IsLocked()) {
+        *aValueChanged = true;
       }
     }
     return NS_OK;
@@ -699,8 +695,6 @@ static PLDHashTableOps pref_HashTableOps = {
   nullptr,
 };
 
-//---------------------------------------------------------------------------
-
 static Pref*
 pref_HashTableLookup(const char* aPrefName);
 
@@ -734,13 +728,19 @@ pref_savePrefs()
   return savedPrefs;
 }
 
-  //
-  // Hash table functions
-  //
-
 #ifdef DEBUG
 
-static pref_initPhase gPhase = START;
+// For content processes, what prefs have been initialized?
+enum class ContentProcessPhase
+{
+  eNoPrefsSet,
+  eEarlyPrefsSet,
+  eEarlyAndLatePrefsSet,
+};
+
+// Note that this never changes in the parent process, and is only read in
+// content processes.
+static ContentProcessPhase gPhase = ContentProcessPhase::eNoPrefsSet;
 
 struct StringComparator
 {
@@ -758,11 +758,11 @@ struct StringComparator
 };
 
 static bool
-InInitArray(const char* aPrefName)
+IsEarlyPref(const char* aPrefName)
 {
   size_t prefsLen;
   size_t found;
-  const char** list = mozilla::dom::ContentPrefs::GetContentPrefs(&prefsLen);
+  const char** list = mozilla::dom::ContentPrefs::GetEarlyPrefs(&prefsLen);
   return BinarySearchIf(list, 0, prefsLen, StringComparator(aPrefName), &found);
 }
 
@@ -784,29 +784,34 @@ public:
 #endif // DEBUG
 
 static Pref*
-pref_HashTableLookup(const char* aKey)
+pref_HashTableLookup(const char* aPrefName)
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
-  MOZ_ASSERT((XRE_IsParentProcess() || gPhase != START),
-             "pref access before commandline prefs set");
 
-  // If you're hitting this assertion, you've added a pref access to start up.
-  // Consider moving it later or add it to the whitelist in ContentPrefs.cpp
-  // and get review from a DOM peer.
-  //
-  // Note that accesses of non-whitelisted prefs that happen while installing a
-  // callback (e.g. VarCache) are considered acceptable. These accesses will
-  // fail, but once the proper pref value is set the callback will be
-  // immediately called, so things should work out.
 #ifdef DEBUG
-  if (!XRE_IsParentProcess() && gPhase <= END_INIT_PREFS &&
-      !gInstallingCallback && !InInitArray(aKey)) {
-    MOZ_CRASH_UNSAFE_PRINTF(
-      "accessing non-init pref %s before the rest of the prefs are sent", aKey);
+  if (!XRE_IsParentProcess()) {
+    if (gPhase == ContentProcessPhase::eNoPrefsSet) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+        "accessing pref %s before early prefs are set", aPrefName);
+    }
+
+    if (gPhase == ContentProcessPhase::eEarlyPrefsSet && !gInstallingCallback &&
+        !IsEarlyPref(aPrefName)) {
+      // If you hit this crash, you have an early access of a non-early pref.
+      // Consider moving the access later or add the pref to the whitelist of
+      // early prefs in ContentPrefs.cpp and get review from a DOM peer.
+      //
+      // Note that accesses of non-early prefs that happen while
+      // installing a callback (e.g. VarCache) are considered acceptable. These
+      // accesses will fail, but once the proper pref value is set the callback
+      // will be immediately called, so things should work out.
+      MOZ_CRASH_UNSAFE_PRINTF(
+        "accessing non-early pref %s before late prefs are set", aPrefName);
+    }
   }
 #endif
 
-  return static_cast<Pref*>(gHashTable->Search(aKey));
+  return static_cast<Pref*>(gHashTable->Search(aPrefName));
 }
 
 static nsresult
@@ -815,7 +820,7 @@ pref_SetPref(const char* aPrefName,
              PrefValueKind aKind,
              PrefValue aValue,
              bool aIsSticky,
-             bool aForceSet)
+             bool aFromFile)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -834,9 +839,13 @@ pref_SetPref(const char* aPrefName,
     pref->SetType(aType);
   }
 
-  bool valueChanged = false, handleDirty = false;
-  nsresult rv = pref->SetValue(
-    aType, aKind, aValue, aIsSticky, aForceSet, &valueChanged, &handleDirty);
+  bool valueChanged = false;
+  nsresult rv;
+  if (aKind == PrefValueKind::Default) {
+    rv = pref->SetDefaultValue(aType, aValue, aIsSticky, &valueChanged);
+  } else {
+    rv = pref->SetUserValue(aType, aValue, aFromFile, &valueChanged);
+  }
   if (NS_FAILED(rv)) {
     NS_WARNING(
       nsPrintfCString(
@@ -850,10 +859,10 @@ pref_SetPref(const char* aPrefName,
     return rv;
   }
 
-  if (handleDirty) {
-    Preferences::HandleDirty();
-  }
   if (valueChanged) {
+    if (aKind == PrefValueKind::User && XRE_IsParentProcess()) {
+      Preferences::HandleDirty();
+    }
     NotifyCallbacks(aPrefName);
   }
 
@@ -1063,16 +1072,9 @@ Parser::HandleValue(const char* aPrefName,
                     bool aIsDefault,
                     bool aIsSticky)
 {
-  PrefValueKind kind;
-  bool forceSet;
-  if (aIsDefault) {
-    kind = PrefValueKind::Default;
-    forceSet = false;
-  } else {
-    kind = PrefValueKind::User;
-    forceSet = true;
-  }
-  pref_SetPref(aPrefName, aType, kind, aValue, aIsSticky, forceSet);
+  PrefValueKind kind =
+    aIsDefault ? PrefValueKind::Default : PrefValueKind::User;
+  pref_SetPref(aPrefName, aType, kind, aValue, aIsSticky, /* fromFile */ true);
 }
 
 // Report an error or a warning. If not specified, just dump to stderr.
@@ -2715,10 +2717,6 @@ nsPrefLocalizedString::nsPrefLocalizedString() = default;
 
 nsPrefLocalizedString::~nsPrefLocalizedString() = default;
 
-//
-// nsISupports Implementation
-//
-
 NS_IMPL_ADDREF(nsPrefLocalizedString)
 NS_IMPL_RELEASE(nsPrefLocalizedString)
 
@@ -2778,7 +2776,7 @@ nsRelativeFilePref::SetRelativeToKey(const nsACString& aRelativeToKey)
 }
 
 //===========================================================================
-// Core prefs code
+// class Preferences and related things
 //===========================================================================
 
 namespace mozilla {
@@ -2790,12 +2788,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 void
 Preferences::HandleDirty()
 {
-  if (!XRE_IsParentProcess()) {
-    // This path is hit a lot when setting up prefs for content processes. Just
-    // ignore it in that case, because content processes aren't responsible for
-    // saving prefs.
-    return;
-  }
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   if (!gHashTable || !sPreferences) {
     return;
@@ -2824,9 +2817,6 @@ Preferences::HandleDirty()
 
 static nsresult
 openPrefFile(nsIFile* aFile);
-
-static nsresult
-pref_LoadPrefsInDirList(const char* aListId);
 
 static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
 static const char kChannelPref[] = "app.update.channel";
@@ -3288,7 +3278,8 @@ public:
 
 } // namespace
 
-static InfallibleTArray<dom::Pref>* gInitDomPrefs;
+// A list of prefs sent early from the parent, via the command line.
+static InfallibleTArray<dom::Pref>* gEarlyDomPrefs;
 
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
@@ -3316,12 +3307,12 @@ Preferences::GetInstanceForService()
   }
 
   if (!XRE_IsParentProcess()) {
-    MOZ_ASSERT(gInitDomPrefs);
-    for (unsigned int i = 0; i < gInitDomPrefs->Length(); i++) {
-      Preferences::SetPreference(gInitDomPrefs->ElementAt(i));
+    MOZ_ASSERT(gEarlyDomPrefs);
+    for (unsigned int i = 0; i < gEarlyDomPrefs->Length(); i++) {
+      Preferences::SetPreference(gEarlyDomPrefs->ElementAt(i));
     }
-    delete gInitDomPrefs;
-    gInitDomPrefs = nullptr;
+    delete gEarlyDomPrefs;
+    gEarlyDomPrefs = nullptr;
 
   } else {
     // Check if there is a deployment configuration file. If so, set up the
@@ -3406,12 +3397,6 @@ Preferences::Shutdown()
   }
 }
 
-//-----------------------------------------------------------------------------
-
-//
-// Constructor/Destructor
-//
-
 Preferences::Preferences()
   : mRootBranch(new nsPrefBranch("", PrefValueKind::User))
   , mDefaultRootBranch(new nsPrefBranch("", PrefValueKind::Default))
@@ -3441,10 +3426,6 @@ Preferences::~Preferences()
   gPrefNameArena.Clear();
 }
 
-//
-// nsISupports Implementation
-//
-
 NS_IMPL_ADDREF(Preferences)
 NS_IMPL_RELEASE(Preferences)
 
@@ -3456,19 +3437,36 @@ NS_INTERFACE_MAP_BEGIN(Preferences)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-//
-// nsIPrefService Implementation
-//
+/* static */ void
+Preferences::SetEarlyPreferences(const nsTArray<dom::Pref>* aDomPrefs)
+{
+  MOZ_ASSERT(!XRE_IsParentProcess());
+
+#ifdef DEBUG
+  MOZ_ASSERT(gPhase == ContentProcessPhase::eNoPrefsSet);
+  gPhase = ContentProcessPhase::eEarlyPrefsSet;
+#endif
+  gEarlyDomPrefs = new InfallibleTArray<dom::Pref>(mozilla::Move(*aDomPrefs));
+}
 
 /* static */ void
-Preferences::SetInitPreferences(nsTArray<dom::Pref>* aDomPrefs)
+Preferences::SetLatePreferences(const nsTArray<dom::Pref>* aDomPrefs)
 {
-  gInitDomPrefs = new InfallibleTArray<dom::Pref>(mozilla::Move(*aDomPrefs));
+  MOZ_ASSERT(!XRE_IsParentProcess());
+
+#ifdef DEBUG
+  MOZ_ASSERT(gPhase == ContentProcessPhase::eEarlyPrefsSet);
+  gPhase = ContentProcessPhase::eEarlyAndLatePrefsSet;
+#endif
+  for (unsigned int i = 0; i < aDomPrefs->Length(); i++) {
+    Preferences::SetPreference(aDomPrefs->ElementAt(i));
+  }
 }
 
 /* static */ void
 Preferences::InitializeUserPrefs()
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!sPreferences->mCurrentFile, "Should only initialize prefs once");
 
   // Prefs which are set before we initialize the profile are silently
@@ -3678,6 +3676,8 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
 /* static */ void
 Preferences::GetPreference(dom::Pref* aDomPref)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   Pref* pref = pref_HashTableLookup(aDomPref->name().get());
   if (pref && pref->HasAdvisablySizedValues()) {
     pref->ToDomPref(aDomPref);
@@ -3687,6 +3687,8 @@ Preferences::GetPreference(dom::Pref* aDomPref)
 void
 Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<Pref*>(iter.Get());
@@ -3699,16 +3701,11 @@ Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 }
 
 #ifdef DEBUG
-void
-Preferences::SetInitPhase(pref_initPhase aPhase)
+bool
+Preferences::AreAllPrefsSetInContentProcess()
 {
-  gPhase = aPhase;
-}
-
-pref_initPhase
-Preferences::InitPhase()
-{
-  return gPhase;
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  return gPhase == ContentProcessPhase::eEarlyAndLatePrefsSet;
 }
 #endif
 
@@ -3902,6 +3899,8 @@ Preferences::SavePrefFileInternal(nsIFile* aFile, SaveMethod aSaveMethod)
 nsresult
 Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   if (!gHashTable) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -3964,10 +3963,6 @@ openPrefFile(nsIFile* aFile)
 
   return NS_OK;
 }
-
-//
-// Some stuff that gets called from Pref_Init()
-//
 
 static int
 pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2, void* /* unused */)
@@ -4084,42 +4079,6 @@ pref_LoadPrefsInDir(nsIFile* aDir,
   }
 
   return rv;
-}
-
-static nsresult
-pref_LoadPrefsInDirList(const char* aListId)
-{
-  nsresult rv;
-  nsCOMPtr<nsIProperties> dirSvc(
-    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> list;
-  dirSvc->Get(aListId, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(list));
-  if (!list) {
-    return NS_OK;
-  }
-
-  bool hasMore;
-  while (NS_SUCCEEDED(list->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> elem;
-    list->GetNext(getter_AddRefs(elem));
-    if (!elem) {
-      continue;
-    }
-
-    nsCOMPtr<nsIFile> path = do_QueryInterface(elem);
-    if (!path) {
-      continue;
-    }
-
-    // Do we care if a file provided by this process fails to load?
-    pref_LoadPrefsInDir(path, nullptr, 0);
-  }
-
-  return NS_OK;
 }
 
 static nsresult
@@ -4274,9 +4233,33 @@ Preferences::InitInitialObjects()
     }
   }
 
-  rv = pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST);
+  nsCOMPtr<nsIProperties> dirSvc(
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(
-    rv, Err("pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST) failed"));
+    rv, Err("do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID) failed"));
+
+  nsCOMPtr<nsISimpleEnumerator> list;
+  dirSvc->Get(NS_APP_PREFS_DEFAULTS_DIR_LIST,
+              NS_GET_IID(nsISimpleEnumerator),
+              getter_AddRefs(list));
+  if (list) {
+    bool hasMore;
+    while (NS_SUCCEEDED(list->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> elem;
+      list->GetNext(getter_AddRefs(elem));
+      if (!elem) {
+        continue;
+      }
+
+      nsCOMPtr<nsIFile> path = do_QueryInterface(elem);
+      if (!path) {
+        continue;
+      }
+
+      // Do we care if a file provided by this process fails to load?
+      pref_LoadPrefsInDir(path, nullptr, 0);
+    }
+  }
 
 #ifdef MOZ_WIDGET_ANDROID
   // Set up the correct default for toolkit.telemetry.enabled. If this build
@@ -4334,10 +4317,6 @@ Preferences::InitInitialObjects()
 
   return Ok();
 }
-
-//----------------------------------------------------------------------------
-// Static utilities
-//----------------------------------------------------------------------------
 
 /* static */ nsresult
 Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
@@ -4464,7 +4443,7 @@ Preferences::SetCStringInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
-                      /* forceSet */ false);
+                      /* fromFile */ false);
 }
 
 /* static */ nsresult
@@ -4490,7 +4469,7 @@ Preferences::SetBoolInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
-                      /* forceSet */ false);
+                      /* fromFile */ false);
 }
 
 /* static */ nsresult
@@ -4514,7 +4493,7 @@ Preferences::SetIntInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
-                      /* forceSet */ false);
+                      /* fromFile */ false);
 }
 
 /* static */ nsresult

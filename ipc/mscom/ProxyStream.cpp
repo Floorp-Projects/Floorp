@@ -331,7 +331,9 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
 
     marshalResult = ::CoMarshalInterface(stream, aIID, aObject, MSHCTX_LOCAL,
                                          nullptr, mshlFlags);
+#if !defined(MOZ_DEV_EDITION)
     MOZ_DIAGNOSTIC_ASSERT(marshalResult != E_INVALIDARG);
+#endif // !defined(MOZ_DEV_EDITION)
     if (FAILED(marshalResult)) {
       return;
     }

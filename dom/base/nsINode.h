@@ -419,6 +419,12 @@ public:
         IsNodeOfType(eDATA_NODE));
   }
 
+  bool
+  IsSlotable() const
+  {
+    return IsElement() || IsNodeOfType(eTEXT);
+  }
+
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   /**
