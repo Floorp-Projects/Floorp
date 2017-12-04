@@ -1503,7 +1503,7 @@ PeerConnectionMedia::UpdateRemoteStreamPrincipals_m(nsIPrincipal* aPrincipal)
 }
 
 void
-PeerConnectionMedia::UpdateSinkIdentity_m(MediaStreamTrack* aTrack,
+PeerConnectionMedia::UpdateSinkIdentity_m(const MediaStreamTrack* aTrack,
                                           nsIPrincipal* aPrincipal,
                                           const PeerIdentity* aSinkIdentity)
 {
