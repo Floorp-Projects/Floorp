@@ -134,6 +134,8 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 namespace mozilla {
 namespace widget {
 
+#define BUFFER_BPP 4
+
 // TODO: How many rendering threads do we actualy handle?
 static nsCOMArray<nsWaylandDisplay> gWaylandDisplays;
 static StaticMutex gWaylandDisplaysMutex;
@@ -417,11 +419,123 @@ WaylandShmPool::Resize(int aSize)
   return true;
 }
 
+void
+WaylandShmPool::SetImageDataFromPool(class WaylandShmPool* aSourcePool,
+                                     int aImageDataSize)
+{
+  MOZ_ASSERT(mAllocatedSize <= aImageDataSize, "WaylandShmPool overflows!");
+  memcpy(mImageData, aSourcePool->GetImageData(), aImageDataSize);
+}
+
 WaylandShmPool::~WaylandShmPool()
 {
   munmap(mImageData, mAllocatedSize);
   wl_shm_pool_destroy(mShmPool);
   close(mShmPoolFd);
+}
+
+static void
+buffer_release(void *data, wl_buffer *buffer)
+{
+  auto surface = reinterpret_cast<WindowBackBuffer*>(data);
+  surface->Detach();
+}
+
+static const struct wl_buffer_listener buffer_listener = {
+  buffer_release
+};
+
+void WindowBackBuffer::Create(int aWidth, int aHeight)
+{
+  MOZ_ASSERT(!IsAttached(), "We can't resize attached buffers.");
+
+  int newBufferSize = aWidth*aHeight*BUFFER_BPP;
+  mShmPool.Resize(newBufferSize);
+
+  mWaylandBuffer = wl_shm_pool_create_buffer(mShmPool.GetShmPool(), 0,
+                                            aWidth, aHeight, aWidth*BUFFER_BPP,
+                                            WL_SHM_FORMAT_ARGB8888);
+  wl_proxy_set_queue((struct wl_proxy *)mWaylandBuffer,
+                     mWaylandDisplay->GetEventQueue());
+  wl_buffer_add_listener(mWaylandBuffer, &buffer_listener, this);
+
+  mWidth = aWidth;
+  mHeight = aHeight;
+}
+
+void WindowBackBuffer::Release()
+{
+  wl_buffer_destroy(mWaylandBuffer);
+  mWidth = mHeight = 0;
+}
+
+WindowBackBuffer::WindowBackBuffer(nsWaylandDisplay* aWaylandDisplay,
+                                   int aWidth, int aHeight)
+ : mShmPool(aWaylandDisplay, aWidth*aHeight*BUFFER_BPP)
+  ,mWaylandBuffer(nullptr)
+  ,mWidth(aWidth)
+  ,mHeight(aHeight)
+  ,mAttached(false)
+  ,mWaylandDisplay(aWaylandDisplay)
+{
+  Create(aWidth, aHeight);
+}
+
+WindowBackBuffer::~WindowBackBuffer()
+{
+  Release();
+}
+
+bool
+WindowBackBuffer::Resize(int aWidth, int aHeight)
+{
+  if (aWidth == mWidth && aHeight == mHeight)
+    return true;
+
+  Release();
+  Create(aWidth, aHeight);
+
+  return (mWaylandBuffer != nullptr);
+}
+
+void
+WindowBackBuffer::Attach(wl_surface* aSurface)
+{
+  wl_surface_attach(aSurface, mWaylandBuffer, 0, 0);
+  wl_surface_commit(aSurface);
+  wl_display_flush(mWaylandDisplay->GetDisplay());
+  mAttached = true;
+}
+
+void
+WindowBackBuffer::Detach()
+{
+  mAttached = false;
+}
+
+bool
+WindowBackBuffer::SetImageDataFromBackBuffer(
+  class WindowBackBuffer* aSourceBuffer)
+{
+  if (!MatchSize(aSourceBuffer)) {
+    Resize(aSourceBuffer->mWidth, aSourceBuffer->mHeight);
+  }
+
+  mShmPool.SetImageDataFromPool(aSourceBuffer->mShmPool,
+    aSourceBuffer->mWidth * aSourceBuffer->mHeight * BUFFER_BPP);
+  return true;
+}
+
+already_AddRefed<gfx::DrawTarget>
+WindowBackBuffer::Lock(const LayoutDeviceIntRegion& aRegion)
+{
+  gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
+  gfx::IntSize lockSize(bounds.XMost(), bounds.YMost());
+
+  return gfxPlatform::CreateDrawTargetForData(static_cast<unsigned char*>(mShmPool.GetImageData()),
+                                              lockSize,
+                                              BUFFER_BPP * mWidth,
+                                              mWaylandDisplay->GetSurfaceFormat());
 }
 
 }  // namespace widget

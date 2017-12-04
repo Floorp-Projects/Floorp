@@ -48,6 +48,7 @@ public:
   bool                Resize(int aSize);
   wl_shm_pool*        GetShmPool()    { return mShmPool;   };
   void*               GetImageData()  { return mImageData; };
+  void                SetImageDataFromPool(class WaylandShmPool* aSourcePool);
 
 private:
   int CreateTemporaryFile(int aSize);
@@ -56,6 +57,46 @@ private:
   int                 mShmPoolFd;
   int                 mAllocatedSize;
   void*               mImageData;
+};
+
+// Holds actual graphics data for wl_surface
+class WindowBackBuffer {
+public:
+  WindowBackBuffer(nsWaylandDisplay* aDisplay, int aWidth, int aHeight);
+  ~WindowBackBuffer();
+
+  already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion);
+
+  void Attach(wl_surface* aSurface);
+  void Detach();
+  bool IsAttached() { return mAttached; }
+
+  bool Resize(int aWidth, int aHeight);
+  bool SetImageDataFromBackBuffer(class WindowBackBuffer* aSourceBuffer);
+
+  bool MatchSize(int aWidth, int aHeight)
+  {
+    return aWidth == mWidth && aHeight == mHeight;
+  }
+  bool MatchSize(class WindowBackBuffer *aBuffer)
+  {
+    return aBuffer->mWidth == mWidth && aBuffer->mHeight == mHeight;
+  }
+
+private:
+  void Create(int aWidth, int aHeight);
+  void Release();
+
+  // WaylandShmPool provides actual shared memory we draw into
+  WaylandShmPool      mShmPool;
+
+  // wl_buffer is a wayland object that encapsulates the shared memory
+  // and passes it to wayland compositor by wl_surface object.
+  wl_buffer*          mWaylandBuffer;
+  int                 mWidth;
+  int                 mHeight;
+  bool                mAttached;
+  nsWaylandDisplay*   mWaylandDisplay;
 };
 
 }  // namespace widget
