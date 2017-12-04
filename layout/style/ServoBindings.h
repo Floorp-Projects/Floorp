@@ -239,8 +239,6 @@ bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElementOrPseudo,
                        mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
                        RawServoAnimationValueMapBorrowedMut aAnimationValues);
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed element);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
 void Gecko_CopyAnimationNames(RawGeckoStyleAnimationListBorrowedMut aDest,
