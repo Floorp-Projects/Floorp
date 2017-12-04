@@ -1240,14 +1240,7 @@ def add_nightly_l10n_index_routes(config, task, force_locale=None):
 @transforms.add
 def add_index_routes(config, tasks):
     for task in tasks:
-        index = task.get('index')
-
-        if not index:
-            yield task
-            continue
-
-        index_type = index.get('type', 'generic')
-        task = index_builders[index_type](config, task)
+        index = task.get('index', {})
 
         # The default behavior is to rank tasks according to their tier
         extra_index = task.setdefault('extra', {}).setdefault('index', {})
@@ -1262,6 +1255,13 @@ def add_index_routes(config, tasks):
             extra_index['rank'] = int(config.params['build_date'])
         else:
             extra_index['rank'] = rank
+
+        if not index:
+            yield task
+            continue
+
+        index_type = index.get('type', 'generic')
+        task = index_builders[index_type](config, task)
 
         del task['index']
         yield task
