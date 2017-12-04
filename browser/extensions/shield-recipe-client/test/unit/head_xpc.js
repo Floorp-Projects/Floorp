@@ -1,5 +1,7 @@
 "use strict";
 
+// List these manually due to bug 1366719.
+/* global Cc, Ci, Cu */
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
