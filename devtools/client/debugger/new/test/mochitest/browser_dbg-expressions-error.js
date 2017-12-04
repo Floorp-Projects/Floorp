@@ -47,7 +47,7 @@ async function editExpression(dbg, input) {
   info("updating the expression");
   dblClickElement(dbg, "expressionNode", 1);
   // Position cursor reliably at the end of the text.
-  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION")
+  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
   pressKey(dbg, "End");
   type(dbg, input);
   pressKey(dbg, "Enter");
@@ -59,7 +59,7 @@ async function editExpression(dbg, input) {
  * resume, and wait for the expression to finish being evaluated.
  */
 async function addBadExpression(dbg, input) {
-  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION")
+  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
 
   findElementWithSelector(dbg, expressionSelectors.input).focus();
   type(dbg, input);
@@ -70,7 +70,6 @@ async function addBadExpression(dbg, input) {
   ok(dbg.selectors.isEvaluatingExpression(dbg.getState()));
   await resume(dbg);
   await evaluation;
-
 }
 
 add_task(async function() {

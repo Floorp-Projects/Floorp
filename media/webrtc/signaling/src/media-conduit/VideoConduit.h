@@ -80,12 +80,11 @@ public:
 
   /**
   * Add rtp extensions to the the VideoSendStream
-  * TODO(@@NG) promote this the MediaConduitInterface when the VoE rework
-  * hits Webrtc.org.
   */
-  void SetLocalRTPExtensions(bool aIsSend,
-                             const std::vector<webrtc::RtpExtension>& extensions) override;
-  std::vector<webrtc::RtpExtension> GetLocalRTPExtensions(bool aIsSend) const override;
+  void
+  SetLocalRTPExtensions(bool aIsSend, const RtpExtList& extensions) override;
+
+  RtpExtList GetLocalRTPExtensions(bool aIsSend) const override;
 
   /**
    * Set up A/V sync between this (incoming) VideoConduit and an audio conduit.

@@ -61,7 +61,7 @@ public:
   // Same but for points
   wr::LayoutPoint ToRelativeLayoutPoint(const LayoutDevicePoint& aPoint) const
   {
-    return wr::ToLayoutPoint(aPoint - mOrigin);
+    return wr::ToLayoutPoint(aPoint);
   }
 
 
@@ -77,7 +77,6 @@ public:
 
 private:
   wr::DisplayListBuilder* mBuilder;
-  LayoutDevicePoint mOrigin;
   gfx::Matrix4x4 mTransform;
   gfx::Size mScale;
   gfx::Matrix mInheritedTransform;

@@ -7,7 +7,6 @@ package org.mozilla.gecko.prompts;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.Tab;

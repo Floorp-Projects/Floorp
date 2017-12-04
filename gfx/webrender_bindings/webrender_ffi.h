@@ -29,6 +29,46 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 void gecko_profiler_register_thread(const char* threadname);
 void gecko_profiler_unregister_thread();
 
+// Prelude of types necessary before including webrender_ffi_generated.h
+namespace mozilla {
+namespace wr {
+
+struct FontInstanceFlags {
+  uint32_t bits;
+
+  bool operator==(const FontInstanceFlags& aOther) const {
+    return bits == aOther.bits;
+  }
+
+  FontInstanceFlags& operator=(uint32_t aBits) {
+    bits = aBits;
+    return *this;
+  }
+
+  FontInstanceFlags& operator|=(uint32_t aBits) {
+    bits |= aBits;
+    return *this;
+  }
+
+  enum : uint32_t {
+    SYNTHETIC_ITALICS = 1 << 0,
+    SYNTHETIC_BOLD    = 1 << 1,
+    EMBEDDED_BITMAPS  = 1 << 2,
+    SUBPIXEL_BGR      = 1 << 3,
+
+    FORCE_GDI         = 1 << 16,
+
+    FONT_SMOOTHING    = 1 << 16,
+
+    FORCE_AUTOHINT    = 1 << 16,
+    NO_AUTOHINT       = 1 << 17,
+    VERTICAL_LAYOUT   = 1 << 18
+  };
+};
+
+} // namespace wr
+} // namespace mozilla
+
 } // extern "C"
 
 // Some useful defines to stub out webrender binding functions for when we

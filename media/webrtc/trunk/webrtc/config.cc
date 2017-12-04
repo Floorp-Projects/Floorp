@@ -84,12 +84,17 @@ const char* RtpExtension::kMIdUri =
     "urn:ietf:params:rtp-hdrext:sdes:mid";
 const int RtpExtension::kMIdDefaultId = 9;
 
+const char* RtpExtension::kCsrcAudioLevelUri =
+    "urn:ietf:params:rtp-hdrext:csrc-audio-level";
+const int RtpExtension::kCsrcAudioLevelDefaultId = 10;
+
 bool RtpExtension::IsSupportedForAudio(const std::string& uri) {
   return uri == webrtc::RtpExtension::kAudioLevelUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
          uri == webrtc::RtpExtension::kRtpStreamIdUri ||
          uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri ||
-         uri == webrtc::RtpExtension::kMIdUri;
+         uri == webrtc::RtpExtension::kMIdUri ||
+         uri == webrtc::RtpExtension::kCsrcAudioLevelUri;
 }
 
 bool RtpExtension::IsSupportedForVideo(const std::string& uri) {

@@ -392,20 +392,6 @@ nsXPConnect::GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info)
   return XPTInterfaceInfoManager::GetSingleton()->GetInfoForIID(aIID, info);
 }
 
-nsresult
-nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
-{
-  nsresult rv = XPTInterfaceInfoManager::GetSingleton()->GetInfoForName(name, info);
-  return NS_FAILED(rv) ? NS_OK : NS_ERROR_NO_INTERFACE;
-}
-
-NS_IMETHODIMP
-nsXPConnect::GarbageCollect(uint32_t reason)
-{
-    mRuntime->GarbageCollect(reason);
-    return NS_OK;
-}
-
 void
 xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration)
 {
@@ -769,40 +755,6 @@ xpc::UnwrapReflectorToISupports(JSObject* reflector)
 }
 
 NS_IMETHODIMP
-nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
-                                            JSObject * aScopeArg,
-                                            nsISupports* aCOMObj,
-                                            const nsIID & aIID,
-                                            nsIXPConnectWrappedNative** _retval)
-{
-    MOZ_ASSERT(aJSContext, "bad param");
-    MOZ_ASSERT(aScopeArg, "bad param");
-    MOZ_ASSERT(aCOMObj, "bad param");
-    MOZ_ASSERT(_retval, "bad param");
-
-    *_retval = nullptr;
-
-    RootedObject aScope(aJSContext, aScopeArg);
-
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    RefPtr<XPCNativeInterface> iface =
-        XPCNativeInterface::GetNewOrUsed(&aIID);
-    if (!iface)
-        return NS_ERROR_FAILURE;
-
-    XPCWrappedNative* wrapper;
-
-    nsresult rv = XPCWrappedNative::GetUsedOnly(aCOMObj, scope, iface, &wrapper);
-    if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
-    *_retval = static_cast<nsIXPConnectWrappedNative*>(wrapper);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
                                        nsIXPCFunctionThisTranslator* aTranslator)
 {
@@ -979,34 +931,6 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
     return NS_OK;
 }
 
-nsIPrincipal*
-nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
-{
-    MOZ_ASSERT(IS_WN_REFLECTOR(obj), "What kind of wrapper is this?");
-
-    XPCWrappedNative* xpcWrapper = XPCWrappedNative::Get(obj);
-    if (xpcWrapper) {
-        if (allowShortCircuit) {
-            nsIPrincipal* result = xpcWrapper->GetObjectPrincipal();
-            if (result) {
-                return result;
-            }
-        }
-
-        // If not, check if it points to an nsIScriptObjectPrincipal
-        nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-            do_QueryInterface(xpcWrapper->Native());
-        if (objPrin) {
-            nsIPrincipal* result = objPrin->GetPrincipal();
-            if (result) {
-                return result;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
 namespace xpc {
 
 bool
@@ -1072,13 +996,6 @@ SetLocationForGlobal(JSObject* global, nsIURI* locationURI)
 }
 
 } // namespace xpc
-
-NS_IMETHODIMP
-nsXPConnect::NotifyDidPaint()
-{
-    JS::NotifyDidPaint(XPCJSContext::Get()->Context());
-    return NS_OK;
-}
 
 static nsresult
 WriteScriptOrFunction(nsIObjectOutputStream* stream, JSContext* cx,

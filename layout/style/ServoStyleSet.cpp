@@ -179,6 +179,12 @@ ServoStyleSet::Shutdown()
   ClearNonInheritingStyleContexts();
   mRawSet = nullptr;
   mStyleRuleMap = nullptr;
+
+  // Also drop the reference to the pres context to avoid notifications from our
+  // stylesheets to dereference a null restyle manager, see bug 1422634.
+  //
+  // We should really fix bug 154199...
+  mPresContext = nullptr;
 }
 
 void

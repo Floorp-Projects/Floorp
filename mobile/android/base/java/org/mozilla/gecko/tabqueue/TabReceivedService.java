@@ -62,7 +62,7 @@ public class TabReceivedService extends IntentService {
 
         final String notificationTitle = getNotificationTitle(intent.getStringExtra(BrowserContract.EXTRA_CLIENT_GUID));
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        builder.setSmallIcon(R.drawable.flat_icon);
+        builder.setSmallIcon(R.drawable.ic_status_logo);
         builder.setContentTitle(notificationTitle);
         builder.setWhen(System.currentTimeMillis());
         builder.setAutoCancel(true);

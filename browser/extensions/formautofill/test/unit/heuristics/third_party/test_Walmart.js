@@ -9,7 +9,7 @@ runHeuristicsTest([
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
       ]],
-      [[]],
+      [],
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "password"}, // ac-off
@@ -25,7 +25,7 @@ runHeuristicsTest([
   }, {
     fixturePath: "Payment.html",
     expectedResult: [
-      [[]],
+      [],
       [
         [
           {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "given-name"},
@@ -50,7 +50,7 @@ runHeuristicsTest([
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
       ]],
-      [[]],
+      [],
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},

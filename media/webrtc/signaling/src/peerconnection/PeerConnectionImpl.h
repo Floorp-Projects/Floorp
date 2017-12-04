@@ -73,6 +73,7 @@ class DOMMediaStream;
 namespace dom {
 class RTCCertificate;
 struct RTCConfiguration;
+struct RTCRtpSourceEntry;
 class RTCDTMFSender;
 struct RTCIceServer;
 struct RTCOfferOptions;
@@ -427,6 +428,15 @@ public:
     rv = GetDTMFToneBuffer(sender, outToneBuffer);
   }
 
+  NS_IMETHODIMP_TO_ERRORRESULT(GetRtpSources, ErrorResult &rv,
+      dom::MediaStreamTrack& aRecvTrack,
+      DOMHighResTimeStamp aRtpSourceNow,
+      nsTArray<dom::RTCRtpSourceEntry>& outRtpSources) {
+    rv = GetRtpSources(aRecvTrack, aRtpSourceNow, outRtpSources);
+  }
+
+  DOMHighResTimeStamp GetNowInRtpSourceReferenceTime();
+
   NS_IMETHODIMP_TO_ERRORRESULT(ReplaceTrackNoRenegotiation, ErrorResult &rv,
                                TransceiverImpl& aTransceiver,
                                mozilla::dom::MediaStreamTrack* aWithTrack)
@@ -455,6 +465,22 @@ public:
   nsresult
   GetParameters(dom::MediaStreamTrack& aTrack,
                 std::vector<JsepTrack::JsConstraints>* aOutConstraints);
+
+  // test-only: called from contributing sources mochitests.
+  NS_IMETHODIMP_TO_ERRORRESULT(InsertAudioLevelForContributingSource,
+                               ErrorResult &rv,
+                               dom::MediaStreamTrack& aRecvTrack,
+                               unsigned long aSource,
+                               DOMHighResTimeStamp aTimestamp,
+                               bool aHasLevel,
+                               uint8_t aLevel)
+ {
+   rv = InsertAudioLevelForContributingSource(aRecvTrack,
+                                              aSource,
+                                              aTimestamp,
+                                              aHasLevel,
+                                              aLevel);
+ }
 
   // test-only: called from simulcast mochitests.
   NS_IMETHODIMP_TO_ERRORRESULT(AddRIDExtension, ErrorResult &rv,

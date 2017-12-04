@@ -5,18 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'nsWinCharset.cpp',
     'OSPreferences_win.cpp'
 ]
 
 FINAL_LIBRARY = 'xul'
-
-GENERATED_FILES = [
-    'wincharset.properties.h',
-]
-wincharset = GENERATED_FILES['wincharset.properties.h']
-wincharset.script = '../props2arrays.py'
-wincharset.inputs = ['wincharset.properties']
 
 LOCAL_INCLUDES += [
     '..',

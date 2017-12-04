@@ -127,9 +127,10 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       for (var n = 0; n < a.length; ++n) {
         if (v === a[n]) {
           this.set(k, v);
-          break;
+          return true;
         }
       }
+      return false;
     },
     // Accept a setting if its a valid digits value (int or float)
     digitsValue: function(k, v) {
@@ -150,7 +151,13 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
         }
       }
       return false;
-    }
+    },
+    // Delete a setting
+    del: function (k) {
+      if (this.has(k)) {
+        delete this.values[k];
+      }
+    },
   };
 
   // Helper function to parse input into groups separated by 'groupDelim', and
@@ -189,7 +196,6 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     // 4.4.2 WebVTT cue settings
     function consumeCueSettings(input, cue) {
       var settings = new Settings();
-
       parseOptions(input, function (k, v) {
         switch (k) {
         case "region":
@@ -216,9 +222,14 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
           break;
         case "position":
           vals = v.split(",");
-          settings.percent(k, vals[0]);
-          if (vals.length === 2) {
-            settings.alt("positionAlign", vals[1], ["line-left", "center", "line-right", "auto"]);
+          if (settings.percent(k, vals[0])) {
+            if (vals.length === 2) {
+              if (!settings.alt("positionAlign", vals[1], ["line-left", "center", "line-right"])) {
+                // Remove the "position" value because the "positionAlign" is not expected value.
+                // It will be set to default value below.
+                settings.del(k);
+              }
+            }
           }
           break;
         case "size":
@@ -231,6 +242,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       }, /:/, /\t|\n|\f|\r| /); // groupDelim is ASCII whitespace
 
       // Apply default values for any missing fields.
+      // https://w3c.github.io/webvtt/#collect-a-webvtt-block step 11.4.1.3
       cue.region = settings.get("region", null);
       cue.vertical = settings.get("vertical", "");
       cue.line = settings.get("line", "auto");
@@ -239,7 +251,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       cue.size = settings.get("size", 100);
       cue.align = settings.get("align", "center");
       cue.position = settings.get("position", "auto");
-      cue.positionAlign = settings.get("positionAlign", "center");
+      cue.positionAlign = settings.get("positionAlign", "auto");
     }
 
     function skipWhitespace() {

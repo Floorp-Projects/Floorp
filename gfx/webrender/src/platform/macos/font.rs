@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
-use api::{FontVariation, NativeFontHandle};
+use api::{FontInstanceFlags, FontVariation, NativeFontHandle};
 use api::{GlyphKey, SubpixelDirection};
 use app_units::Au;
 use core_foundation::array::{CFArray, CFArrayRef};
@@ -282,7 +282,7 @@ impl FontContext {
             Err(_) => return,
             Ok(cg_font) => cg_font,
         };
-        self.cg_fonts.insert((*font_key).clone(), cg_font);
+        self.cg_fonts.insert(*font_key, cg_font);
     }
 
     pub fn add_native_font(&mut self, font_key: &FontKey, native_font_handle: NativeFontHandle) {
@@ -291,21 +291,12 @@ impl FontContext {
         }
 
         self.cg_fonts
-            .insert((*font_key).clone(), native_font_handle.0);
+            .insert(*font_key, native_font_handle.0);
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
         if let Some(_) = self.cg_fonts.remove(font_key) {
-            // Unstable Rust has a retain() method on HashMap that will
-            // let us do this in-place. https://github.com/rust-lang/rust/issues/36648
-            let ct_font_keys = self.ct_fonts
-                .keys()
-                .filter(|k| k.0 == *font_key)
-                .cloned()
-                .collect::<Vec<_>>();
-            for ct_font_key in ct_font_keys {
-                self.ct_fonts.remove(&ct_font_key);
-            }
+            self.ct_fonts.retain(|k, _| k.0 != *font_key);
         }
     }
 
@@ -425,7 +416,7 @@ impl FontContext {
                 font.subpx_dir = SubpixelDirection::None;
             }
             FontRenderMode::Alpha => {
-                font.color = if font.platform_options.unwrap_or_default().font_smoothing {
+                font.color = if font.flags.contains(FontInstanceFlags::FONT_SMOOTHING) {
                     // Only the G channel is used to index grayscale tables,
                     // so use R and B to preserve light/dark determination.
                     let ColorU { g, a, .. } = font.color.luminance_color().quantized_ceil();
@@ -545,7 +536,7 @@ impl FontContext {
         // to both the Subpixel and the "Alpha + smoothing" modes, but not to
         // the "Alpha without smoothing" and Mono modes.
         let use_white_on_black = should_use_white_on_black(font.color);
-        let use_font_smoothing = font.platform_options.unwrap_or_default().font_smoothing;
+        let use_font_smoothing = font.flags.contains(FontInstanceFlags::FONT_SMOOTHING);
         let (antialias, smooth, text_color, bg_color, bg_alpha, invert) =
             match (font.render_mode, use_font_smoothing) {
                 (FontRenderMode::Subpixel, _) |

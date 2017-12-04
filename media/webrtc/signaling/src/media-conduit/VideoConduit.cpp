@@ -323,17 +323,18 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
 
 void
 WebrtcVideoConduit::SetLocalRTPExtensions(bool aIsSend,
-  const std::vector<webrtc::RtpExtension> & aExtensions)
+                                          const RtpExtList & aExtensions)
 {
   auto& extList = aIsSend ? mSendStreamConfig.rtp.extensions :
                   mRecvStreamConfig.rtp.extensions;
   extList = aExtensions;
 }
 
-std::vector<webrtc::RtpExtension>
+RtpExtList
 WebrtcVideoConduit::GetLocalRTPExtensions(bool aIsSend) const
 {
-  return aIsSend ? mSendStreamConfig.rtp.extensions : mRecvStreamConfig.rtp.extensions;
+  return aIsSend ? mSendStreamConfig.rtp.extensions :
+                   mRecvStreamConfig.rtp.extensions;
 }
 
 bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
@@ -547,7 +548,8 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig* aConfig,
     return new rtc::RefCountedObject<
         webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
 
-  } else if (aConfig->mName == "VP8") {
+  }
+  if (aConfig->mName == "VP8") {
     webrtc::VideoCodecVP8 vp8_settings =
         webrtc::VideoEncoder::GetDefaultVp8Settings();
     vp8_settings.automaticResizeOn = automatic_resize;
@@ -557,7 +559,8 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig* aConfig,
     return new rtc::RefCountedObject<
         webrtc::VideoEncoderConfig::Vp8EncoderSpecificSettings>(vp8_settings);
 
-  } else if (aConfig->mName == "VP9") {
+  }
+  if (aConfig->mName == "VP9") {
     webrtc::VideoCodecVP9 vp9_settings =
         webrtc::VideoEncoder::GetDefaultVp9Settings();
     if (is_screencast) {

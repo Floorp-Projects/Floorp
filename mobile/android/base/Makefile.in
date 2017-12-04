@@ -153,10 +153,6 @@ GECKOVIEW_JARS = \
   sync-thirdparty.jar \
   $(NULL)
 
-ifdef MOZ_ANDROID_HLS_SUPPORT
-GECKOVIEW_JARS += exoplayer2.jar
-endif
-
 ifdef MOZ_WEBRTC
 GECKOVIEW_JARS += webrtc.jar
 endif

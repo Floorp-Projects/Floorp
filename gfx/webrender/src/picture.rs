@@ -6,7 +6,7 @@ use api::{BorderRadiusKind, ColorF, ClipAndScrollInfo, FilterOp, MixBlendMode};
 use api::{device_length, DeviceIntRect, DeviceIntSize, PipelineId};
 use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerSize, LayerVector2D, Shadow};
 use api::{ClipId, PremultipliedColorF};
-use box_shadow::BLUR_SAMPLE_SCALE;
+use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowCacheKey};
 use frame_builder::PrimitiveContext;
 use gpu_cache::GpuDataRequest;
 use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
@@ -61,6 +61,7 @@ pub enum PictureKind {
         clip_mode: BoxShadowClipMode,
         radii_kind: BorderRadiusKind,
         content_rect: LayerRect,
+        cache_key: BoxShadowCacheKey,
     },
     Image {
         // If a mix-blend-mode, contains the render task for
@@ -153,6 +154,7 @@ impl PicturePrimitive {
         blur_regions: Vec<LayerRect>,
         clip_mode: BoxShadowClipMode,
         radii_kind: BorderRadiusKind,
+        cache_key: BoxShadowCacheKey,
         pipeline_id: PipelineId,
     ) -> Self {
         PicturePrimitive {
@@ -165,6 +167,7 @@ impl PicturePrimitive {
                 clip_mode,
                 radii_kind,
                 content_rect: LayerRect::zero(),
+                cache_key,
             },
             pipeline_id,
             cull_children: false,
@@ -317,6 +320,7 @@ impl PicturePrimitive {
                             ClearMode::Transparent,
                             self.rasterization_kind,
                             child_tasks,
+                            None,
                         );
 
                         let blur_radius = device_length(blur_radius, prim_context.device_pixel_ratio);
@@ -331,6 +335,7 @@ impl PicturePrimitive {
                             &[],
                             ClearMode::Transparent,
                             PremultipliedColorF::TRANSPARENT,
+                            None,
                         );
 
                         let blur_render_task_id = render_tasks.add(blur_render_task);
@@ -347,6 +352,7 @@ impl PicturePrimitive {
                             ClearMode::Transparent,
                             self.rasterization_kind,
                             child_tasks,
+                            None,
                         );
 
                         let readback_task_id = render_tasks.add(RenderTask::new_readback(*prim_screen_rect));
@@ -376,6 +382,7 @@ impl PicturePrimitive {
                                 ClearMode::Transparent,
                                 self.rasterization_kind,
                                 child_tasks,
+                                None,
                             );
 
                             self.render_task_id = Some(render_tasks.add(picture_task));
@@ -392,6 +399,7 @@ impl PicturePrimitive {
                             ClearMode::Transparent,
                             self.rasterization_kind,
                             child_tasks,
+                            None,
                         );
 
                         self.render_task_id = Some(render_tasks.add(picture_task));
@@ -436,6 +444,7 @@ impl PicturePrimitive {
                     ClearMode::Transparent,
                     self.rasterization_kind,
                     Vec::new(),
+                    None,
                 );
 
                 let picture_task_id = render_tasks.add(picture_task);
@@ -448,11 +457,12 @@ impl PicturePrimitive {
                     &[],
                     ClearMode::Transparent,
                     color.premultiplied(),
+                    None,
                 );
 
                 self.render_task_id = Some(render_tasks.add(render_task));
             }
-            PictureKind::BoxShadow { blur_radius, clip_mode, ref blur_regions, color, content_rect, .. } => {
+            PictureKind::BoxShadow { blur_radius, clip_mode, ref blur_regions, color, content_rect, cache_key, .. } => {
                 let blur_radius = device_length(blur_radius, prim_context.device_pixel_ratio);
 
                 // TODO(gw): Rounding the content rect here to device pixels is not
@@ -490,6 +500,7 @@ impl PicturePrimitive {
                     ClearMode::Zero,
                     self.rasterization_kind,
                     Vec::new(),
+                    Some(cache_key),
                 );
 
                 let picture_task_id = render_tasks.add(picture_task);
@@ -502,6 +513,7 @@ impl PicturePrimitive {
                     blur_regions,
                     blur_clear_mode,
                     color.premultiplied(),
+                    Some(cache_key),
                 );
 
                 self.render_task_id = Some(render_tasks.add(render_task));

@@ -6,6 +6,7 @@ reftest.jar:
   content/httpd.jsm (../../../netwerk/test/httpserver/httpd.js)
   content/StructuredLog.jsm (../../../testing/modules/StructuredLog.jsm)
   content/input.css (../../../editor/reftests/xul/input.css)
+  content/progress.css (../../../layout/reftests/forms/progress/style.css)
 *  content/manifest.jsm (manifest.jsm)
 *  content/reftest.jsm (reftest.jsm)
   content/reftest.xul (reftest.xul)

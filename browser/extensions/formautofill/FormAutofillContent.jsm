@@ -416,7 +416,7 @@ var FormAutofillContent = {
     }
 
     let records = handler.createRecords();
-    if (!Object.keys(records).length) {
+    if (!Object.values(records).some(typeRecords => typeRecords.length)) {
       return true;
     }
 

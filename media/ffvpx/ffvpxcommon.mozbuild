@@ -66,6 +66,8 @@ if CONFIG['GNU_CC']:
             '-Wno-incompatible-pointer-types-discards-qualifiers',
             '-Wno-string-conversion',
             '-Wno-visibility',
+            # Workaround for https://bugs.llvm.org/show_bug.cgi?id=26828#c4 :
+            '-ffreestanding',
         ]
     else:
         CFLAGS += [

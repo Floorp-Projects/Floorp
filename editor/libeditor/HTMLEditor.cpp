@@ -1049,15 +1049,15 @@ HTMLEditor::InsertBR()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsINode> selNode;
-  int32_t selOffset;
-  nsresult rv =
-    GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  EditorRawDOMPoint atStartOfSelection(GetStartPoint(selection));
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // position selection after br
-  RefPtr<Element> br = CreateBR(selNode, selOffset, nsIEditor::eNext);
-  if (NS_WARN_IF(!br)) {
+  // CreateBRImpl() will set selection after the new <br> element.
+  RefPtr<Element> newBRElement =
+    CreateBRImpl(*selection, atStartOfSelection, nsIEditor::eNext);
+  if (NS_WARN_IF(!newBRElement)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -1508,13 +1508,16 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       }
       // check for inserting a whole table at the end of a block. If so insert
       // a br after it.
-      if (HTMLEditUtils::IsTable(node)) {
-        if (IsLastEditableChild(element)) {
-          nsCOMPtr<nsIDOMNode> brNode;
-          rv = CreateBR(parentSelectedDOMNode, offsetForInsert + 1,
-                        address_of(brNode));
-          NS_ENSURE_SUCCESS(rv, rv);
-          selection->Collapse(parentSelectedDOMNode, offsetForInsert+1);
+      if (HTMLEditUtils::IsTable(node) &&
+          IsLastEditableChild(element)) {
+        // Collapse selection to the new <br> element node after creating it.
+        RefPtr<Element> newBRElement =
+          CreateBRImpl(*selection,
+                       EditorRawDOMPoint(parentSelectedDOMNode,
+                                         offsetForInsert + 1),
+                       ePrevious);
+        if (NS_WARN_IF(!newBRElement)) {
+          return NS_ERROR_FAILURE;
         }
       }
     }

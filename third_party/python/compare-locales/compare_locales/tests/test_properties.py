@@ -22,11 +22,15 @@ two_lines_triple = This line is one of two and ends in \\\
 and still has another line coming
 ''', (
             ('one_line', 'This is one line'),
+            ('Whitespace', '\n'),
             ('two_line', u'This is the first of two lines'),
+            ('Whitespace', '\n'),
             ('one_line_trailing', u'This line ends in \\'),
+            ('Whitespace', '\n'),
             ('Junk', 'and has junk\n'),
             ('two_lines_triple', 'This line is one of two and ends in \\'
-             'and still has another line coming')))
+             'and still has another line coming'),
+            ('Whitespace', '\n')))
 
     def testProperties(self):
         # port of netwerk/test/PropertiesTest.cpp
@@ -63,7 +67,11 @@ and an end''', (('bar', 'one line with a # part that looks like a comment '
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 foo=value
-''', (('Comment', 'MPL'), ('foo', 'value')))
+''', (
+            ('Comment', 'MPL'),
+            ('Whitespace', '\n\n'),
+            ('foo', 'value'),
+            ('Whitespace', '\n')))
 
     def test_escapes(self):
         self.parser.readContents(r'''
@@ -87,15 +95,20 @@ second = string
 
 #
 #commented out
-''', (('first', 'string'), ('second', 'string'),
-            ('Comment', 'commented out')))
+''', (
+            ('first', 'string'),
+            ('Whitespace', '\n'),
+            ('second', 'string'),
+            ('Whitespace', '\n\n'),
+            ('Comment', 'commented out'),
+            ('Whitespace', '\n')))
 
     def test_trailing_newlines(self):
         self._test('''\
 foo = bar
 
 \x20\x20
-  ''', (('foo', 'bar'),))
+  ''', (('foo', 'bar'), ('Whitespace', '\n\n\x20\x20\n ')))
 
     def test_just_comments(self):
         self._test('''\
@@ -105,7 +118,11 @@ foo = bar
 
 # LOCALIZATION NOTE These strings are used inside the Promise debugger
 # which is available as a panel in the Debugger.
-''', (('Comment', 'MPL'), ('Comment', 'LOCALIZATION NOTE')))
+''', (
+            ('Comment', 'MPL'),
+            ('Whitespace', '\n\n'),
+            ('Comment', 'LOCALIZATION NOTE'),
+            ('Whitespace', '\n')))
 
     def test_just_comments_without_trailing_newline(self):
         self._test('''\
@@ -115,7 +132,9 @@ foo = bar
 
 # LOCALIZATION NOTE These strings are used inside the Promise debugger
 # which is available as a panel in the Debugger.''', (
-            ('Comment', 'MPL'), ('Comment', 'LOCALIZATION NOTE')))
+            ('Comment', 'MPL'),
+            ('Whitespace', '\n\n'),
+            ('Comment', 'LOCALIZATION NOTE')))
 
     def test_trailing_comment_and_newlines(self):
         self._test('''\
@@ -124,13 +143,15 @@ foo = bar
 
 
 
-''',  (('Comment', 'LOCALIZATION NOTE'),))
+''',  (
+            ('Comment', 'LOCALIZATION NOTE'),
+            ('Whitespace', '\n\n\n')))
 
     def test_empty_file(self):
         self._test('', tuple())
         self._test('\n', (('Whitespace', '\n'),))
         self._test('\n\n', (('Whitespace', '\n\n'),))
-        self._test(' \n\n', (('Whitespace', ' \n\n'),))
+        self._test(' \n\n', (('Whitespace', '\n\n'),))
 
     def test_positions(self):
         self.parser.readContents('''\
@@ -145,6 +166,14 @@ escaped value
         self.assertEqual(two.value_position(), (2, 7))
         self.assertEqual(two.value_position(-1), (3, 14))
         self.assertEqual(two.value_position(10), (3, 3))
+
+    # Bug 1399059 comment 18
+    def test_z(self):
+        self.parser.readContents('''\
+one = XYZ ABC
+''')
+        one, = list(self.parser)
+        self.assertEqual(one.val, 'XYZ ABC')
 
 
 if __name__ == '__main__':

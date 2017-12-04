@@ -4438,13 +4438,16 @@ TEST_F(JsepSessionTest, TestExtmap)
   auto& answerMediaAttrs = parsedAnswer->GetMediaSection(0).GetAttributeList();
   ASSERT_TRUE(answerMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
   auto& answerExtmap = answerMediaAttrs.GetExtmap().mExtmaps;
-  ASSERT_EQ(2U, answerExtmap.size());
-  ASSERT_EQ("urn:ietf:params:rtp-hdrext:sdes:mid",
-      answerExtmap[0].extensionname);
+  ASSERT_EQ(3U, answerExtmap.size());
+  ASSERT_EQ("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+      offerExtmap[0].extensionname);
   ASSERT_EQ(1U, offerExtmap[0].entry);
+  ASSERT_EQ("urn:ietf:params:rtp-hdrext:sdes:mid",
+      answerExtmap[1].extensionname);
+  ASSERT_EQ(2U, offerExtmap[1].entry);
   // We ensure that the entry for "bar" matches what was in the offer
-  ASSERT_EQ("bar", answerExtmap[1].extensionname);
-  ASSERT_EQ(4U, answerExtmap[1].entry);
+  ASSERT_EQ("bar", answerExtmap[2].extensionname);
+  ASSERT_EQ(4U, answerExtmap[2].entry);
 }
 
 TEST_F(JsepSessionTest, TestExtmapWithDuplicates)

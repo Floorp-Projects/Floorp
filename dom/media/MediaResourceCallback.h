@@ -53,9 +53,6 @@ public:
   // Notify that the "cache suspended" status of MediaResource changes.
   virtual void NotifySuspendedStatusChanged(bool aSuspendedByCache) {}
 
-  // Notify the number of bytes read from the resource.
-  virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) {}
-
 protected:
   virtual ~MediaResourceCallback() {}
 };

@@ -190,3 +190,18 @@ pub struct UvRect {
     pub uv0: DevicePoint,
     pub uv1: DevicePoint,
 }
+
+bitflags! {
+    /// Each bit of the edge AA mask is:
+    /// 0, when the edge of the primitive needs to be considered for AA
+    /// 1, when the edge of the segment needs to be considered for AA
+    ///
+    /// *Note*: the bit values have to match the shader logic in
+    /// `write_transform_vertex()` function.
+    pub struct EdgeAaSegmentMask: u8 {
+        const LEFT = 0x1;
+        const TOP = 0x2;
+        const RIGHT = 0x4;
+        const BOTTOM = 0x8;
+    }
+}

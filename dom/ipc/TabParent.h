@@ -782,6 +782,15 @@ private:
   // the tab's docshell is inactive.
   bool mPreserveLayers;
 
+  // Holds the most recent value passed to the RenderLayers function. This
+  // does not necessarily mean that the layers have finished rendering
+  // and have uploaded - for that, use mHasLayers.
+  bool mRenderLayers;
+
+  // True if the compositor has reported that the TabChild has uploaded
+  // layers.
+  bool mHasLayers;
+
   // True if this TabParent has had its layer tree sent to the compositor
   // at least once.
   bool mHasPresented;

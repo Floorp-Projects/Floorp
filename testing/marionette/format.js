@@ -4,7 +4,13 @@
 
 "use strict";
 
+const {utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Log.jsm");
+
 this.EXPORTED_SYMBOLS = ["pprint", "truncate"];
+
+const log = Log.repository.getLogger("Marionette");
 
 const MAX_STRING_LENGTH = 250;
 
@@ -22,22 +28,21 @@ const MAX_STRING_LENGTH = 250;
  *     let htmlElement = document.querySelector("input#foo");
  *     pprint`Expected element ${htmlElement}`;
  *     => 'Expected element <input id="foo" class="bar baz" type="input">'
+ *
+ *     pprint`Current window: ${window}`;
+ *     => '[object Window https://www.mozilla.org/]'
  * </code></pre>
  */
 function pprint(ss, ...values) {
-  function prettyObject(obj) {
-    let proto = Object.prototype.toString.call(obj);
-    let s = "";
-    try {
-      s = JSON.stringify(obj);
-    } catch (e) {
-      if (e instanceof TypeError) {
-        s = `<${e.message}>`;
-      } else {
-        throw e;
-      }
+  function pretty(val) {
+    let proto = Object.prototype.toString.call(val);
+
+    if (val && val.nodeType === 1) {
+      return prettyElement(val);
+    } else if (["[object Window]", "[object ChromeWindow]"].includes(proto)) {
+      return prettyWindowGlobal(val);
     }
-    return proto + " " + s;
+    return prettyObject(val);
   }
 
   function prettyElement(el) {
@@ -53,20 +58,36 @@ function pprint(ss, ...values) {
     return `<${el.localName}${idents}>`;
   }
 
+  function prettyWindowGlobal(win) {
+    let proto = Object.prototype.toString.call(win);
+    return `[${proto.substring(1, proto.length - 1)} ${win.location}]`;
+  }
+
+  function prettyObject(obj) {
+    let proto = Object.prototype.toString.call(obj);
+    let s = "";
+    try {
+      s = JSON.stringify(obj);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        s = `<${e.message}>`;
+      } else {
+        throw e;
+      }
+    }
+    return `${proto} ${s}`;
+  }
+
   let res = [];
   for (let i = 0; i < ss.length; i++) {
     res.push(ss[i]);
     if (i < values.length) {
-      let val = values[i];
       let s;
       try {
-        if (val && val.nodeType === 1) {
-          s = prettyElement(val);
-        } else {
-          s = prettyObject(val);
-        }
+        s = pretty(values[i]);
       } catch (e) {
-        s = typeof val;
+        log.warn("Problem pretty printing:", e);
+        s = typeof values[i];
       }
       res.push(s);
     }

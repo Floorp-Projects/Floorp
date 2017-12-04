@@ -37,14 +37,9 @@ function startTest(test, token)
 
   function onVideoEnded(ev) {
     ok(true, TimeStamp(token) + " (ENCRYPTED) content playback ended.");
-    v.removeEventListener("ended", onVideoEnded);
 
     function playClearVideo() {
-      var p1 = once(v, 'ended', (e) => {
-        ok(true, TimeStamp(token) + " (CLEAR) content playback ended.");
-        console.log(" bipbop.mp4 playback ended !!");
-      });
-      var p2 = once(v, 'loadeddata', (e) => {
+      var p1 = once(v, 'loadeddata', (e) => {
         ok(true, TimeStamp(token) + " Receiving event 'loadeddata' for (CLEAR) content.");
         canvasElem = document.createElement('canvas');
         document.body.appendChild(canvasElem);
@@ -62,7 +57,7 @@ function startTest(test, token)
       });
       v.src = 'bipbop_225w_175kbps.mp4';
       v.play();
-      Promise.all([p1, p2, closeSessions()]).then(() => {
+      Promise.all([p1]).then(() => {
         manager.finished(token);
       }, () => {
         ok(false, TimeStamp(token) + " Something wrong.");
@@ -70,7 +65,7 @@ function startTest(test, token)
       });
     }
 
-    Promise.all(sessions.map(s => s.close()))
+    closeSessions()
     .then(() => {
       v.setMediaKeys(null)
       .then(() => {
@@ -82,7 +77,7 @@ function startTest(test, token)
     });
   }
 
-  v.addEventListener("ended", onVideoEnded);
+  once(v, "ended", onVideoEnded);
 
   // Create a MediaKeys object and set to HTMLMediaElement then start the playback.
   Promise.all([

@@ -9,12 +9,8 @@ prefwindow,
   font: message-box !important;
 }
 
-label,
-textbox,
-description,
-.tab-text,
-menulist label {
-  font-size: 1.36rem;
+:root > * {
+  font-size: 1.18em;
 }
 
 caption {

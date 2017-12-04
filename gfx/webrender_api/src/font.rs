@@ -203,12 +203,53 @@ pub struct GlyphOptions {
     pub render_mode: FontRenderMode,
 }
 
+bitflags! {
+    #[repr(C)]
+    #[derive(Deserialize, Serialize)]
+    pub struct FontInstanceFlags: u32 {
+        // Common flags
+        const SYNTHETIC_ITALICS = 1 << 0;
+        const SYNTHETIC_BOLD    = 1 << 1;
+        const EMBEDDED_BITMAPS  = 1 << 2;
+        const SUBPIXEL_BGR      = 1 << 3;
+
+        // Windows flags
+        const FORCE_GDI         = 1 << 16;
+
+        // Mac flags
+        const FONT_SMOOTHING    = 1 << 16;
+
+        // FreeType flags
+        const FORCE_AUTOHINT    = 1 << 16;
+        const NO_AUTOHINT       = 1 << 17;
+        const VERTICAL_LAYOUT   = 1 << 18;
+    }
+}
+
+impl Default for FontInstanceFlags {
+    #[cfg(target_os = "windows")]
+    fn default() -> FontInstanceFlags {
+        FontInstanceFlags::empty()
+    }
+
+    #[cfg(target_os = "macos")]
+    fn default() -> FontInstanceFlags {
+        FontInstanceFlags::FONT_SMOOTHING
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    fn default() -> FontInstanceFlags {
+        FontInstanceFlags::empty()
+    }
+}
+
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstanceOptions {
     pub render_mode: FontRenderMode,
     pub subpx_dir: SubpixelDirection,
-    pub synthetic_italics: bool,
+    pub flags: FontInstanceFlags,
     /// When bg_color.a is != 0 and render_mode is FontRenderMode::Subpixel,
     /// the text will be rendered with bg_color.r/g/b as an opaque estimated
     /// background color.
@@ -220,7 +261,7 @@ impl Default for FontInstanceOptions {
         FontInstanceOptions {
             render_mode: FontRenderMode::Subpixel,
             subpx_dir: SubpixelDirection::Horizontal,
-            synthetic_italics: false,
+            flags: Default::default(),
             bg_color: ColorU::new(0, 0, 0, 0),
         }
     }
@@ -230,16 +271,14 @@ impl Default for FontInstanceOptions {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstancePlatformOptions {
-    pub use_embedded_bitmap: bool,
-    pub force_gdi_rendering: bool,
+    pub unused: u32,
 }
 
 #[cfg(target_os = "windows")]
 impl Default for FontInstancePlatformOptions {
     fn default() -> FontInstancePlatformOptions {
         FontInstancePlatformOptions {
-            use_embedded_bitmap: false,
-            force_gdi_rendering: false,
+            unused: 0,
         }
     }
 }
@@ -248,24 +287,17 @@ impl Default for FontInstancePlatformOptions {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstancePlatformOptions {
-    pub font_smoothing: bool,
+    pub unused: u32,
 }
 
 #[cfg(target_os = "macos")]
 impl Default for FontInstancePlatformOptions {
     fn default() -> FontInstancePlatformOptions {
         FontInstancePlatformOptions {
-            font_smoothing: true,
+            unused: 0,
         }
     }
 }
-
-pub const FONT_FORCE_AUTOHINT: u16  = 0b1;
-pub const FONT_NO_AUTOHINT: u16     = 0b10;
-pub const FONT_EMBEDDED_BITMAP: u16 = 0b100;
-pub const FONT_EMBOLDEN: u16        = 0b1000;
-pub const FONT_VERTICAL_LAYOUT: u16 = 0b10000;
-pub const FONT_SUBPIXEL_BGR: u16    = 0b100000;
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 #[repr(u8)]
@@ -292,7 +324,6 @@ pub enum FontHinting {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstancePlatformOptions {
-    pub flags: u16,
     pub lcd_filter: FontLCDFilter,
     pub hinting: FontHinting,
 }
@@ -301,7 +332,6 @@ pub struct FontInstancePlatformOptions {
 impl Default for FontInstancePlatformOptions {
     fn default() -> FontInstancePlatformOptions {
         FontInstancePlatformOptions {
-            flags: 0,
             lcd_filter: FontLCDFilter::Default,
             hinting: FontHinting::LCD,
         }

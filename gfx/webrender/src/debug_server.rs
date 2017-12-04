@@ -9,6 +9,8 @@ use std::sync::mpsc::{channel, Receiver};
 use std::sync::mpsc::Sender;
 use std::thread;
 use ws;
+use base64::encode;
+use image;
 
 // Messages that are sent from the render backend to the renderer
 // debug command queue. These are sent in a separate queue so
@@ -58,8 +60,10 @@ impl ws::Handler for Server {
                     "enable_gpu_sample_queries" => DebugCommand::EnableGpuSampleQueries(true),
                     "disable_gpu_sample_queries" => DebugCommand::EnableGpuSampleQueries(false),
                     "fetch_passes" => DebugCommand::FetchPasses,
+                    "fetch_screenshot" => DebugCommand::FetchScreenshot,
                     "fetch_documents" => DebugCommand::FetchDocuments,
-                    "fetch_clipscrolltree" => DebugCommand::FetchClipScrollTree,
+                    "fetch_clip_scroll_tree" => DebugCommand::FetchClipScrollTree,
+                    "fetch_render_tasks" => DebugCommand::FetchRenderTasks,
                     msg => {
                         println!("unknown msg {}", msg);
                         return Ok(());
@@ -255,7 +259,7 @@ pub struct DocumentList {
 }
 
 impl DocumentList {
-    pub fn new() -> DocumentList {
+    pub fn new() -> Self {
         DocumentList {
             kind: "documents",
             root: TreeNode::new("root"),
@@ -264,6 +268,28 @@ impl DocumentList {
 
     pub fn add(&mut self, item: TreeNode) {
         self.root.add_child(item);
+    }
+}
+
+#[derive(Serialize)]
+pub struct Screenshot {
+    kind: &'static str,
+    data: String
+}
+
+impl Screenshot {
+    pub fn new(width: u32, height: u32, data: Vec<u8>) -> Self {
+        let mut output = Vec::with_capacity((width * height) as usize);
+        {
+            let encoder = image::png::PNGEncoder::new(&mut output);
+            encoder.encode(&data, width, height, image::ColorType::RGBA(8)).unwrap();
+        }
+
+        let data = encode(&output);
+        Screenshot {
+            kind: "screenshot",
+            data
+        }
     }
 }
 
@@ -277,9 +303,28 @@ pub struct ClipScrollTreeList {
 }
 
 impl ClipScrollTreeList {
-    pub fn new() -> ClipScrollTreeList {
+    pub fn new() -> Self {
         ClipScrollTreeList {
-            kind: "clipscrolltree",
+            kind: "clip_scroll_tree",
+            root: TreeNode::new("root"),
+        }
+    }
+
+    pub fn add(&mut self, item: TreeNode) {
+        self.root.add_child(item);
+    }
+}
+
+#[derive(Serialize)]
+pub struct RenderTaskList {
+    kind: &'static str,
+    root: TreeNode,
+}
+
+impl RenderTaskList {
+    pub fn new() -> Self {
+        RenderTaskList {
+            kind: "render_tasks",
             root: TreeNode::new("root"),
         }
     }
