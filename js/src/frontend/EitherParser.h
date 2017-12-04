@@ -39,17 +39,17 @@ class EitherParser
     struct TokenStreamMatcher
     {
         template<class Parser>
-        TokenStream& match(Parser* parser) {
+        TokenStreamAnyChars& match(Parser* parser) {
             return parser->tokenStream;
         }
     };
 
   public:
-    TokenStream& tokenStream() {
+    TokenStreamAnyChars& tokenStream() {
         return parser.match(TokenStreamMatcher());
     }
 
-    const TokenStream& tokenStream() const {
+    const TokenStreamAnyChars& tokenStream() const {
         return parser.match(TokenStreamMatcher());
     }
 
@@ -224,6 +224,34 @@ class EitherParser
     template<typename... Args>
     MOZ_MUST_USE bool reportNoOffset(Args&&... args) {
         return parser.match(ParserBaseMatcher()).reportNoOffset(mozilla::Forward<Args>(args)...);
+    }
+
+  private:
+    template<typename... StoredArgs>
+    struct ReportExtraWarningMatcher
+    {
+        mozilla::Tuple<StoredArgs...> args;
+
+        template<typename... Args>
+        explicit ReportExtraWarningMatcher(Args&&... actualArgs)
+          : args { mozilla::Forward<Args>(actualArgs)... }
+        {}
+
+        template<class Parser>
+        MOZ_MUST_USE bool match(Parser* parser) {
+            return CallGenericFunction(&TokenStream::reportExtraWarningErrorNumberVA,
+                                       &parser->tokenStream,
+                                       args,
+                                       typename mozilla::IndexSequenceFor<StoredArgs...>::Type());
+        }
+    };
+
+  public:
+    template<typename... Args>
+    MOZ_MUST_USE bool reportExtraWarningErrorNumberVA(Args&&... args) {
+        ReportExtraWarningMatcher<typename mozilla::Decay<Args>::Type...>
+            matcher { mozilla::Forward<Args>(args)... };
+        return parser.match(mozilla::Move(matcher));
     }
 };
 
