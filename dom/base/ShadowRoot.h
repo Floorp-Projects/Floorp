@@ -73,10 +73,26 @@ public:
 private:
 
   /**
-   * Redistributes a node of the pool, and returns whether the distribution
+   * Try to reassign an element to a slot and returns whether the assignment
    * changed.
    */
-  bool RedistributeElement(Element*);
+  bool MaybeReassignElement(Element* aElement, const nsAttrValue* aOldValue);
+
+  /**
+   * Try to assign aContent to a slot in the shadow tree, returns the assigned
+   * slot if found.
+   */
+  const HTMLSlotElement* AssignSlotFor(nsIContent* aContent);
+
+  /**
+   * Unassign aContent from the assigned slot in the shadow tree, returns the
+   * assigned slot if found.
+   *
+   * Note: slot attribute of aContent may have changed already, so pass slot
+   *       name explicity here.
+   */
+  const HTMLSlotElement* UnassignSlotFor(nsIContent* aContent,
+                                         const nsAString& aSlotName);
 
   /**
    * Called when we redistribute content after insertion points have changed.
@@ -86,6 +102,9 @@ private:
   bool IsPooledNode(nsIContent* aChild) const;
 
 public:
+  void AddSlot(HTMLSlotElement* aSlot);
+  void RemoveSlot(HTMLSlotElement* aSlot);
+
   void SetInsertionPointChanged() { mInsertionPointChanged = true; }
 
   void SetAssociatedBinding(nsXBLBinding* aBinding) { mAssociatedBinding = aBinding; }
@@ -117,6 +136,11 @@ protected:
   virtual ~ShadowRoot();
 
   ShadowRootMode mMode;
+
+  // Map from name of slot to an array of all slots in the shadow DOM with with
+  // the given name. The slots are stored as a weak pointer because the elements
+  // are in the shadow tree and should be kept alive by its parent.
+  nsClassHashtable<nsStringHashKey, nsTArray<mozilla::dom::HTMLSlotElement*>> mSlotMap;
 
   nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
   nsXBLPrototypeBinding* mProtoBinding;

@@ -14,6 +14,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLSlotElement.h"
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -107,6 +108,87 @@ ShadowRoot::FromNode(nsINode* aNode)
   }
 
   return nullptr;
+}
+
+void
+ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
+{
+  MOZ_ASSERT(aSlot);
+
+  // Note that if name attribute missing, the slot is a default slot.
+ nsAutoString name;
+  aSlot->GetName(name);
+
+  nsTArray<HTMLSlotElement*>* currentSlots = mSlotMap.LookupOrAdd(name);
+  MOZ_ASSERT(currentSlots);
+
+  HTMLSlotElement* oldSlot = currentSlots->IsEmpty() ?
+    nullptr : currentSlots->ElementAt(0);
+
+  TreeOrderComparator comparator;
+  currentSlots->InsertElementSorted(aSlot, comparator);
+
+  HTMLSlotElement* currentSlot = currentSlots->ElementAt(0);
+  if (currentSlot != aSlot) {
+    return;
+  }
+
+  if (oldSlot && oldSlot != currentSlot) {
+    // Move assigned nodes from old slot to new slot.
+    nsTArray<RefPtr<nsINode>>& assignedNodes = oldSlot->AssignedNodes();
+    while (assignedNodes.Length() > 0) {
+      nsINode* assignedNode = assignedNodes[0];
+
+      oldSlot->RemoveAssignedNode(assignedNode);
+      currentSlot->AppendAssignedNode(assignedNode);
+    }
+  } else {
+    // Otherwise add appropriate nodes to this slot from the host.
+    for (nsIContent* child = GetHost()->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      nsAutoString slotName;
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
+      if (child->IsSlotable() && slotName.Equals(name)) {
+        currentSlot->AppendAssignedNode(child);
+      }
+    }
+  }
+}
+
+void
+ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
+{
+  MOZ_ASSERT(aSlot);
+
+  nsAutoString name;
+  aSlot->GetName(name);
+
+  nsTArray<HTMLSlotElement*>* currentSlots = mSlotMap.Get(name);
+
+  if (currentSlots) {
+    if (currentSlots->Length() == 1) {
+      MOZ_ASSERT(currentSlots->ElementAt(0) == aSlot);
+      mSlotMap.Remove(name);
+      aSlot->ClearAssignedNodes();
+    } else {
+      bool doReplaceSlot = currentSlots->ElementAt(0) == aSlot;
+      currentSlots->RemoveElement(aSlot);
+      HTMLSlotElement* replacementSlot = currentSlots->ElementAt(0);
+
+      // Move assigned nodes from removed slot to the next slot in
+      // tree order with the same name.
+      if (doReplaceSlot) {
+        nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
+        while (assignedNodes.Length() > 0) {
+          nsINode* assignedNode = assignedNodes[0];
+
+          aSlot->RemoveAssignedNode(assignedNode);
+          replacementSlot->AppendAssignedNode(assignedNode);
+        }
+      }
+    }
+  }
 }
 
 void
@@ -218,6 +300,92 @@ already_AddRefed<nsContentList>
 ShadowRoot::GetElementsByClassName(const nsAString& aClasses)
 {
   return nsContentUtils::GetElementsByClassName(this, aClasses);
+}
+
+const HTMLSlotElement*
+ShadowRoot::AssignSlotFor(nsIContent* aContent)
+{
+  nsAutoString slotName;
+  // Note that if slot attribute is missing, assign it to the first default
+  // slot, if exists.
+  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
+  nsTArray<HTMLSlotElement*>* slots = mSlotMap.Get(slotName);
+  if (!slots) {
+    return nullptr;
+  }
+
+  HTMLSlotElement* slot = slots->ElementAt(0);
+  MOZ_ASSERT(slot);
+
+  // Find the appropriate position in the assigned node list for the
+  // newly assigned content.
+  nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
+  nsIContent* currentContent = GetHost()->GetFirstChild();
+  bool indexFound = false;
+  uint32_t insertionIndex;
+  for (uint32_t i = 0; i < assignedNodes.Length(); i++) {
+    // Seek through the host's explicit children until the
+    // assigned content is found.
+    while (currentContent && currentContent != assignedNodes[i]) {
+      if (currentContent == aContent) {
+        indexFound = true;
+        insertionIndex = i;
+      }
+
+      currentContent = currentContent->GetNextSibling();
+    }
+
+    if (indexFound) {
+      break;
+    }
+  }
+
+  if (indexFound) {
+    slot->InsertAssignedNode(insertionIndex, aContent);
+  } else {
+    slot->AppendAssignedNode(aContent);
+  }
+
+  return slot;
+}
+
+const HTMLSlotElement*
+ShadowRoot::UnassignSlotFor(nsIContent* aNode, const nsAString& aSlotName)
+{
+  // Find the insertion point to which the content belongs. Note that if slot
+  // attribute is missing, unassign it from the first default slot, if exists.
+  nsTArray<HTMLSlotElement*>* slots = mSlotMap.Get(aSlotName);
+  if (!slots) {
+    return nullptr;
+  }
+
+  HTMLSlotElement* slot = slots->ElementAt(0);
+  MOZ_ASSERT(slot);
+
+  if (!slot->AssignedNodes().Contains(aNode)) {
+    return nullptr;
+  }
+
+  slot->RemoveAssignedNode(aNode);
+  return slot;
+}
+
+bool
+ShadowRoot::MaybeReassignElement(Element* aElement,
+                                 const nsAttrValue* aOldValue)
+{
+  nsIContent* parent = aElement->GetParent();
+  if (parent && parent == GetHost()) {
+    const HTMLSlotElement* oldSlot = UnassignSlotFor(aElement,
+      aOldValue ? aOldValue->GetStringValue() : EmptyString());
+    const HTMLSlotElement* newSlot = AssignSlotFor(aElement);
+
+    if (oldSlot != newSlot) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void
@@ -332,7 +500,12 @@ ShadowRoot::AttributeChanged(nsIDocument* aDocument,
                              int32_t aModType,
                              const nsAttrValue* aOldValue)
 {
-  if (!IsPooledNode(aElement)) {
+  if (aNameSpaceID != kNameSpaceID_None || aAttribute != nsGkAtoms::slot) {
+    return;
+  }
+
+  // Attributes may change insertion point matching, find its new distribution.
+  if (!MaybeReassignElement(aElement, aOldValue)) {
     return;
   }
 
@@ -366,11 +539,18 @@ ShadowRoot::ContentInserted(nsIDocument* aDocument,
                             nsIContent* aContainer,
                             nsIContent* aChild)
 {
-  if (mInsertionPointChanged) {
-    DistributeAllNodes();
-    mInsertionPointChanged = false;
+  // Check to ensure that the content is in the same anonymous tree
+  // as the container because anonymous content may report its container
+  // as the host but it may not be in the host's child list.
+  if (!nsContentUtils::IsInSameAnonymousTree(aContainer, aChild)) {
     return;
   }
+
+  if (!aChild->IsSlotable() || aContainer != GetHost()) {
+    return;
+  }
+
+  AssignSlotFor(aChild);
 }
 
 void
@@ -379,11 +559,20 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
                            nsIContent* aChild,
                            nsIContent* aPreviousSibling)
 {
-  if (mInsertionPointChanged) {
-    DistributeAllNodes();
-    mInsertionPointChanged = false;
+  // Check to ensure that the content is in the same anonymous tree
+  // as the container because anonymous content may report its container
+  // as the host but it may not be in the host's child list.
+ if (!nsContentUtils::IsInSameAnonymousTree(aContainer, aChild)) {
     return;
   }
+
+  if (!aChild->IsSlotable() || aContainer != GetHost()) {
+    return;
+  }
+
+  nsAutoString slotName;
+  aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
+  UnassignSlotFor(aChild, slotName);
 }
 
 nsresult
