@@ -70,25 +70,17 @@ GridLine::Number() const
   return mNumber;
 }
 
-int32_t
-GridLine::NegativeNumber() const
-{
-  return mNegativeNumber;
-}
-
 void
 GridLine::SetLineValues(const nsTArray<nsString>& aNames,
                         double aStart,
                         double aBreadth,
                         uint32_t aNumber,
-                        int32_t aNegativeNumber,
                         GridDeclaration aType)
 {
   mNames = aNames;
   mStart = aStart;
   mBreadth = aBreadth;
   mNumber = aNumber;
-  mNegativeNumber = aNegativeNumber;
   mType = aType;
 }
 

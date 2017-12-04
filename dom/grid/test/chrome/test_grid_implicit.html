@@ -267,22 +267,11 @@ function runTests() {
       4,
       5,
     ];
-    let expectedNegativeNumber = [
-      -7,
-      -6,
-      -5,
-      -4,
-      -3,
-      -2,
-      -1,
-      0,
-    ];
 
     for (let i = 0; i < grid.cols.lines.length; i++) {
       let line = grid.cols.lines[i];
       is(line.type, expectedType[i], "Line index " + i + " has expected type.");
       is(line.number, expectedNumber[i], "Line index " + i + " has expected number.");
-      is(line.negativeNumber, expectedNegativeNumber[i], "Line index " + i + " has expected negative number.");
     }
   }
 
