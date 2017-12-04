@@ -28,12 +28,14 @@ static bool sStdoutOrStderr = false;
 static Mutex sMutex;
 
 static void
-prefork() {
+prefork()
+{
   sMutex.Lock();
 }
 
 static void
-postfork() {
+postfork()
+{
   sMutex.Unlock();
 }
 
@@ -55,17 +57,17 @@ GetTid()
 
 #ifdef ANDROID
 /* See mozglue/android/APKOpen.cpp */
-extern "C" MOZ_EXPORT __attribute__((weak))
-void* __dso_handle;
+extern "C" MOZ_EXPORT __attribute__((weak)) void* __dso_handle;
 
 /* Android doesn't have pthread_atfork defined in pthread.h */
-extern "C" MOZ_EXPORT
-int pthread_atfork(void (*)(void), void (*)(void), void (*)(void));
+extern "C" MOZ_EXPORT int
+pthread_atfork(void (*)(void), void (*)(void), void (*)(void));
 #endif
 
 class LogAllocBridge : public ReplaceMallocBridge
 {
-  virtual void InitDebugFd(mozilla::DebugFdRegistry& aRegistry) override {
+  virtual void InitDebugFd(mozilla::DebugFdRegistry& aRegistry) override
+  {
     if (!sStdoutOrStderr) {
       aRegistry.RegisterHandle(sFd);
     }
@@ -91,8 +93,13 @@ replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   int ret = sFuncs.posix_memalign(aPtr, aAlignment, aSize);
-  FdPrintf(sFd, "%zu %zu posix_memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
-           aAlignment, aSize, (ret == 0) ? *aPtr : nullptr);
+  FdPrintf(sFd,
+           "%zu %zu posix_memalign(%zu,%zu)=%p\n",
+           GetPid(),
+           GetTid(),
+           aAlignment,
+           aSize,
+           (ret == 0) ? *aPtr : nullptr);
   return ret;
 }
 
@@ -101,8 +108,13 @@ replace_aligned_alloc(size_t aAlignment, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.aligned_alloc(aAlignment, aSize);
-  FdPrintf(sFd, "%zu %zu aligned_alloc(%zu,%zu)=%p\n", GetPid(), GetTid(),
-           aAlignment, aSize, ptr);
+  FdPrintf(sFd,
+           "%zu %zu aligned_alloc(%zu,%zu)=%p\n",
+           GetPid(),
+           GetTid(),
+           aAlignment,
+           aSize,
+           ptr);
   return ptr;
 }
 
@@ -111,8 +123,8 @@ replace_calloc(size_t aNum, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.calloc(aNum, aSize);
-  FdPrintf(sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum,
-           aSize, ptr);
+  FdPrintf(
+    sFd, "%zu %zu calloc(%zu,%zu)=%p\n", GetPid(), GetTid(), aNum, aSize, ptr);
   return ptr;
 }
 
@@ -121,8 +133,13 @@ replace_realloc(void* aPtr, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* new_ptr = sFuncs.realloc(aPtr, aSize);
-  FdPrintf(sFd, "%zu %zu realloc(%p,%zu)=%p\n", GetPid(), GetTid(), aPtr,
-           aSize, new_ptr);
+  FdPrintf(sFd,
+           "%zu %zu realloc(%p,%zu)=%p\n",
+           GetPid(),
+           GetTid(),
+           aPtr,
+           aSize,
+           new_ptr);
   return new_ptr;
 }
 
@@ -139,8 +156,13 @@ replace_memalign(size_t aAlignment, size_t aSize)
 {
   MutexAutoLock lock(sMutex);
   void* ptr = sFuncs.memalign(aAlignment, aSize);
-  FdPrintf(sFd, "%zu %zu memalign(%zu,%zu)=%p\n", GetPid(), GetTid(),
-           aAlignment, aSize, ptr);
+  FdPrintf(sFd,
+           "%zu %zu memalign(%zu,%zu)=%p\n",
+           GetPid(),
+           GetTid(),
+           aAlignment,
+           aSize,
+           ptr);
   return ptr;
 }
 
@@ -170,7 +192,7 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
   char* log = getenv("MALLOC_LOG");
   if (log && *log) {
     int fd = 0;
-    const char *fd_num = log;
+    const char* fd_num = log;
     while (*fd_num) {
       /* Reject non digits. */
       if (*fd_num < '0' || *fd_num > '9') {
@@ -194,9 +216,13 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
     if (fd > 0) {
       handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
     } else {
-      handle = CreateFileA(log, FILE_APPEND_DATA, FILE_SHARE_READ |
-                           FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS,
-                           FILE_ATTRIBUTE_NORMAL, nullptr);
+      handle = CreateFileA(log,
+                           FILE_APPEND_DATA,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE,
+                           nullptr,
+                           OPEN_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL,
+                           nullptr);
     }
     if (handle != INVALID_HANDLE_VALUE) {
       sFd = reinterpret_cast<intptr_t>(handle);
@@ -220,7 +246,7 @@ replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge)
   static LogAllocBridge bridge;
   sFuncs = *aTable;
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
-#define MALLOC_DECL(name, ...) aTable->name = replace_ ## name;
+#define MALLOC_DECL(name, ...) aTable->name = replace_##name;
 #include "malloc_decls.h"
   aTable->jemalloc_stats = replace_jemalloc_stats;
   if (!getenv("MALLOC_LOG_MINIMAL")) {
