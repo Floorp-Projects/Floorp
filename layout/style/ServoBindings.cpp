@@ -446,28 +446,6 @@ Gecko_UnsetDirtyStyleAttr(RawGeckoElementBorrowed aElement)
   decl->UnsetDirty();
 }
 
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed aElement)
-{
-  // This function duplicates a lot of the code in
-  // Gecko_GetStyleAttrDeclarationBlock above because I haven't worked out a way
-  // to persuade hazard analysis that a pointer-to-lambda is ok yet.
-  MOZ_ASSERT(aElement, "Invalid GeckoElement");
-
-  DeclarationBlock* decl =
-    const_cast<dom::Element*>(aElement)->GetSMILOverrideStyleDeclaration();
-  if (!decl) {
-    return nullptr;
-  }
-  if (decl->IsGecko()) {
-    // XXX This can happen when nodes are adopted from a Gecko-style-backend
-    //     document into a Servo-style-backend document.  See bug 1330051.
-    NS_WARNING("stylo: requesting a Gecko declaration block?");
-    return nullptr;
-  }
-  return decl->AsServo()->RefRawStrong();
-}
-
 const RawServoDeclarationBlockStrong*
 AsRefRawStrong(const RefPtr<RawServoDeclarationBlock>& aDecl)
 {
