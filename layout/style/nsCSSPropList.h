@@ -3264,10 +3264,30 @@ CSS_PROP_SHORTHAND(
     Overflow,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_DISPLAY(
+CSS_PROP_SHORTHAND(
     overflow-clip-box,
     overflow_clip_box,
     OverflowClipBox,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
+    "layout.css.overflow-clip-box.enabled")
+CSS_PROP_DISPLAY(
+    overflow-clip-box-block,
+    overflow_clip_box_block,
+    OverflowClipBoxBlock,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
+    "layout.css.overflow-clip-box.enabled",
+    VARIANT_HK,
+    kOverflowClipBoxKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Discrete)
+CSS_PROP_DISPLAY(
+    overflow-clip-box-inline,
+    overflow_clip_box_inline,
+    OverflowClipBoxInline,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_ENABLED_IN_UA_SHEETS |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
