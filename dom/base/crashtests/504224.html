@@ -3,21 +3,27 @@
 <title>Crash [@ nsFocusManager::GetCommonAncestor], part 2</title>
 </head>
 <body>
-<iframe src="file_504224.html" id="content"></iframe>
 <script>
-var src=document.getElementById('src');
+function oniframeload() {
+  window.frames[0].location.reload();
+};
+</script>
+<iframe src="file_504224.html" id="content" onload="oniframeload();" ></iframe>
+<script>
+var src='file_504224.html';
 setInterval(function() {
-  if (!document.getElementById('content')) {
-    var x=document.createElement('iframe');
+  var x = document.getElementById('content');
+  if (!x) {
+    x=document.createElement('iframe');
     x.src=src;
     x.id = 'content';
     document.body.appendChild(x);
-    setTimeout(function() { window.focus(); document.documentElement.removeAttribute('class'); }, 100);
-  } else {
-    window.frames[0].location.reload();
+    setTimeout(function() {
+      window.focus();
+      document.documentElement.removeAttribute('class');
+    }, 100);
   }
 }, 500);
 </script>
 </body>
 </html>
-
