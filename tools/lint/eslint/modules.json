@@ -152,7 +152,7 @@
   "passwords.jsm": ["Password", "DumpPasswords"],
   "PdfJsNetwork.jsm": ["NetworkManager"],
   "PhoneNumberMetaData.jsm": ["PHONE_NUMBER_META_DATA"],
-  "PlacesUtils.jsm": ["PlacesUtils", "PlacesAggregatedTransaction", "PlacesCreateFolderTransaction", "PlacesCreateBookmarkTransaction", "PlacesCreateSeparatorTransaction", "PlacesCreateLivemarkTransaction", "PlacesMoveItemTransaction", "PlacesRemoveItemTransaction", "PlacesEditItemTitleTransaction", "PlacesEditBookmarkURITransaction", "PlacesEditLivemarkFeedURITransaction", "PlacesEditLivemarkSiteURITransaction", "PlacesSetItemAnnotationTransaction", "PlacesSetPageAnnotationTransaction", "PlacesEditBookmarkKeywordTransaction", "PlacesEditBookmarkPostDataTransaction", "PlacesEditItemDateAddedTransaction", "PlacesEditItemLastModifiedTransaction", "PlacesSortFolderByNameTransaction", "PlacesTagURITransaction", "PlacesUntagURITransaction"],
+  "PlacesUtils.jsm": ["PlacesUtils", "PlacesAggregatedTransaction", "PlacesCreateFolderTransaction", "PlacesCreateBookmarkTransaction", "PlacesCreateSeparatorTransaction", "PlacesCreateLivemarkTransaction", "PlacesMoveItemTransaction", "PlacesRemoveItemTransaction", "PlacesEditItemTitleTransaction", "PlacesEditBookmarkURITransaction", "PlacesSetItemAnnotationTransaction", "PlacesSetPageAnnotationTransaction", "PlacesEditBookmarkKeywordTransaction", "PlacesEditBookmarkPostDataTransaction", "PlacesEditItemDateAddedTransaction", "PlacesEditItemLastModifiedTransaction", "PlacesSortFolderByNameTransaction", "PlacesTagURITransaction", "PlacesUntagURITransaction"],
   "PluginProvider.jsm": [],
   "PointerAdapter.jsm": ["PointerRelay", "PointerAdapter"],
   "policies.js": ["ErrorHandler", "SyncScheduler"],
