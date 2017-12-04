@@ -426,7 +426,7 @@ child:
     async SetConnectivity(bool connectivity);
     async SetCaptivePortalState(int32_t aState);
 
-    async NotifyVisited(URIParams uri);
+    async NotifyVisited(URIParams[] uri);
 
     async PreferenceUpdate(Pref pref);
     async VarUpdate(GfxVarUpdate var);
