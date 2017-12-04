@@ -8,13 +8,13 @@
       shadowDiv.style.border = "10px solid green";
 
       // Insertion point will match nothing and use fallback content.
-      var insertionPoint = document.createElement("content");
-      shadowDiv.appendChild(insertionPoint);
+      var slot = document.createElement("slot");
+      shadowDiv.appendChild(slot);
 
       // Append three nodes as children to use as fallback content.
-      insertionPoint.innerHTML = '<span style="background-color: orange">Hello</span> <span style="background-color: green">World</span>';
+      slot.innerHTML = '<span style="background-color: orange">Hello</span> <span style="background-color: green">World</span>';
 
-      var shadowRoot = document.getElementById('outer').createShadowRoot();
+      var shadowRoot = document.getElementById('outer').attachShadow({mode: 'open'});
       shadowRoot.appendChild(shadowDiv);
     }
   </script>
