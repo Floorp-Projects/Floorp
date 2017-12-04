@@ -7,11 +7,9 @@
     <script>
       var host, root;
 
-      function run() {
-        host = document.getElementById("host");
-        root = host.createShadowRoot();
-        root.innerHTML = 'a <content></content> c';
-      }
+      host = document.getElementById("host");
+      root = host.attachShadow({mode: 'open'});
+      root.innerHTML = 'a <slot></slot> c';
 
       function tweak() {
         var span = document.createElement("span");
@@ -23,12 +21,7 @@
         document.documentElement.removeAttribute("class");
       }
 
-      if (document.body.createShadowRoot) {
-        run();
-        window.addEventListener("MozReftestInvalidate", tweak);
-      } else {
-        document.documentElement.className = "";
-      }
+      window.addEventListener("MozReftestInvalidate", tweak);
     </script>
   </body>
 </html>
