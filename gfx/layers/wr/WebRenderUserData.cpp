@@ -246,10 +246,10 @@ WebRenderFallbackData::~WebRenderFallbackData()
 {
 }
 
-nsAutoPtr<nsDisplayItemGeometry>
+nsDisplayItemGeometry*
 WebRenderFallbackData::GetGeometry()
 {
-  return mGeometry;
+  return mGeometry.get();
 }
 
 void

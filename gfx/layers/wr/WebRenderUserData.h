@@ -58,6 +58,7 @@ public:
   uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
   void RemoveFromTable();
   virtual void ClearCachedResources() {};
+  virtual nsDisplayItemGeometry* GetGeometry() { return nullptr; }
 protected:
   virtual ~WebRenderUserData();
 
@@ -121,7 +122,7 @@ public:
   virtual WebRenderFallbackData* AsFallbackData() override { return this; }
   virtual UserDataType GetType() override { return UserDataType::eFallback; }
   static UserDataType Type() { return UserDataType::eFallback; }
-  nsAutoPtr<nsDisplayItemGeometry> GetGeometry();
+  nsDisplayItemGeometry* GetGeometry() override;
   void SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry);
   nsRect GetBounds() { return mBounds; }
   void SetBounds(const nsRect& aRect) { mBounds = aRect; }

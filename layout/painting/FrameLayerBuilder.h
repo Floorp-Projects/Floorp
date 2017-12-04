@@ -555,8 +555,6 @@ public:
 
   typedef void (*DisplayItemDataCallback)(nsIFrame *aFrame, DisplayItemData* aItem);
 
-  static void IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback);
-
   /**
    * Save transform that was in aLayer when we last painted, and the position
    * of the active scrolled root frame. It must be an integer
