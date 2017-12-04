@@ -239,6 +239,7 @@ extern const char* CacheKindNames[];
     _(LoadDenseElementResult)             \
     _(LoadDenseElementHoleResult)         \
     _(LoadDenseElementExistsResult)       \
+    _(LoadTypedElementExistsResult)       \
     _(LoadDenseElementHoleExistsResult)   \
     _(LoadTypedElementResult)             \
     _(LoadInt32ArrayLengthResult)         \
@@ -930,6 +931,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::LoadDenseElementExistsResult, obj);
         writeOperandId(index);
     }
+    void loadTypedElementExistsResult(ObjOperandId obj, Int32OperandId index, TypedThingLayout layout) {
+        writeOpWithOperandId(CacheOp::LoadTypedElementExistsResult, obj);
+        writeOperandId(index);
+        buffer_.writeByte(uint32_t(layout));
+    }
     void loadDenseElementHoleExistsResult(ObjOperandId obj, Int32OperandId index) {
         writeOpWithOperandId(CacheOp::LoadDenseElementHoleExistsResult, obj);
         writeOperandId(index);
@@ -1439,6 +1445,8 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
                         uint32_t index, Int32OperandId indexId);
     bool tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
                             uint32_t index, Int32OperandId indexId);
+    bool tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
+                             uint32_t index, Int32OperandId indexId);
     bool tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
                             HandleId key, ValOperandId keyId);
     bool tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);

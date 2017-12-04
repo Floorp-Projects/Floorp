@@ -50,6 +50,7 @@ namespace jit {
     _(LoadDenseElementHoleResult)         \
     _(LoadDenseElementExistsResult)       \
     _(LoadDenseElementHoleExistsResult)   \
+    _(LoadTypedElementExistsResult)       \
     _(LoadTypedElementResult)             \
     _(LoadObjectResult)                   \
     _(LoadTypeOfObjectResult)             \
