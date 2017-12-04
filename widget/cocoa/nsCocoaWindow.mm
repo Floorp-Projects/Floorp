@@ -488,6 +488,11 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   mWindow = [[windowClass alloc] initWithContentRect:contentRect styleMask:features 
                                  backing:NSBackingStoreBuffered defer:YES];
 
+  // Make sure that window titles don't leak to disk in private browsing mode
+  // due to macOS' resume feature.
+  [mWindow setRestorable:NO];
+  [mWindow disableSnapshotRestoration];
+
   // setup our notification delegate. Note that setDelegate: does NOT retain.
   mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
   [mWindow setDelegate:mDelegate];
