@@ -130,7 +130,7 @@ public:
     return wr::WrImageKey{ GetNamespace(), GetNextResourceId() };
   }
 
-  void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<wr::GlyphInstance>& aGlyphs,
+  void PushGlyphs(wr::DisplayListBuilder& aBuilder, Range<const wr::GlyphInstance> aGlyphs,
                   gfx::ScaledFont* aFont, const wr::ColorF& aColor,
                   const StackingContextHelper& aSc,
                   const wr::LayerRect& aBounds, const wr::LayerRect& aClip,
