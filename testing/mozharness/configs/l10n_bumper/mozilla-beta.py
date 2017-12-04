@@ -41,12 +41,18 @@ config = {
         "name": "Firefox l10n changesets",
         "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fx%(MAJOR_VERSION)s",
         "ignore_config": {
-            "ja": ["macosx64"],
-            "ja-JP-mac": ["linux", "linux64", "win32", "win64"],
+            "ja": ["macosx64", "macosx64-devedition"],
+            "ja-JP-mac": [
+                "linux", "linux-devedition", "linux64", "linux64-devedition",
+                "win32", "win32-devedition", "win64", "win64-devedition",
+            ],
         },
         "platform_configs": [{
-            "platforms": ["linux64", "linux", "macosx64",
-                          "win32", "win64"],
+            "platforms": [
+                "linux", "linux-devedition", "linux64", "linux64-devedition",
+                "macosx64", "macosx64-devedition", "win32", "win32-devedition",
+                "win64", "win64-devedition",
+            ],
             "path": "browser/locales/shipped-locales",
             "format": "shipped-locales",
         }],
