@@ -3429,30 +3429,6 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.jump(&returnLabel_);
     }
 
-    void pop2xI32ForIntMulDiv(RegI32* r0, RegI32* r1) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        // srcDest must be eax, and edx will be clobbered.
-        need2xI32(specific.eax, specific.edx);
-        *r1 = popI32();
-        *r0 = popI32ToSpecific(specific.eax);
-        freeI32(specific.edx);
-#else
-        pop2xI32(r0, r1);
-#endif
-    }
-
-    void pop2xI64ForIntDiv(RegI64* r0, RegI64* r1) {
-#ifdef JS_CODEGEN_X64
-        // srcDest must be rax, and rdx will be clobbered.
-        need2xI64(specific.rax, specific.rdx);
-        *r1 = popI64();
-        *r0 = popI64ToSpecific(specific.rax);
-        freeI64(specific.rdx);
-#else
-        pop2xI64(r0, r1);
-#endif
-    }
-
     void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
         masm.branchTest32(Assembler::Zero, rhs, rhs, trap(Trap::IntegerDivideByZero));
     }
@@ -3489,7 +3465,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
 #ifndef RABALDR_INT_DIV_I64_CALLOUT
-    void quotientI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned,
+    void quotientI64(RegI64 rhs, RegI64 srcDest, RegI64 reserved, IsUnsigned isUnsigned,
                      bool isConst, int64_t c)
     {
         Label done;
@@ -3503,7 +3479,7 @@ class BaseCompiler final : public BaseCompilerInterface
 # if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg == rax);
-        MOZ_ASSERT(isAvailableI64(specific.rdx));
+        MOZ_ASSERT(reserved == specific.rdx);
         if (isUnsigned) {
             masm.xorq(rdx, rdx);
             masm.udivq(rhs.reg);
@@ -3517,7 +3493,7 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.bind(&done);
     }
 
-    void remainderI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned,
+    void remainderI64(RegI64 rhs, RegI64 srcDest, RegI64 reserved, IsUnsigned isUnsigned,
                       bool isConst, int64_t c)
     {
         Label done;
@@ -3531,7 +3507,7 @@ class BaseCompiler final : public BaseCompilerInterface
 # if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg == rax);
-        MOZ_ASSERT(isAvailableI64(specific.rdx));
+        MOZ_ASSERT(reserved == specific.rdx);
 
         if (isUnsigned) {
             masm.xorq(rdx, rdx);
@@ -3547,26 +3523,6 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.bind(&done);
     }
 #endif // RABALDR_INT_DIV_I64_CALLOUT
-
-    void pop2xI32ForShiftOrRotate(RegI32* r0, RegI32* r1) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        *r1 = popI32(specific.ecx);
-        *r0 = popI32();
-#else
-        pop2xI32(r0, r1);
-#endif
-    }
-
-    void pop2xI64ForShiftOrRotate(RegI64* r0, RegI64* r1) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        needI32(specific.ecx);
-        *r1 = widenI32(specific.ecx);
-        *r1 = popI64ToSpecific(*r1);
-        *r0 = popI64();
-#else
-        pop2xI64(r0, r1);
-#endif
-    }
 
     RegI32 needRotate64Temp() {
 #if defined(JS_CODEGEN_X86)
@@ -3601,29 +3557,6 @@ class BaseCompiler final : public BaseCompilerInterface
         return needI32();
 #else
         MOZ_CRASH("BaseCompiler platform hook: needPopcnt64Temp");
-#endif
-    }
-
-    RegI64 popI32ForSignExtendI64() {
-#if defined(JS_CODEGEN_X86)
-        need2xI32(specific.edx, specific.eax);
-        RegI32 r0 = popI32ToSpecific(specific.eax);
-        RegI64 x0 = specific.edx_eax;
-        (void)r0;               // x0 is the widening of r0
-#else
-        RegI32 r0 = popI32();
-        RegI64 x0 = widenI32(r0);
-#endif
-        return x0;
-    }
-
-    RegI64 popI64ForSignExtendI64() {
-#if defined(JS_CODEGEN_X86)
-        need2xI32(specific.edx, specific.eax);
-        // Low on top, high underneath
-        return popI64ToSpecific(specific.edx_eax);
-#else
-        return popI64();
 #endif
     }
 
@@ -4210,51 +4143,6 @@ class BaseCompiler final : public BaseCompilerInterface
 
 #endif
 
-    void xchg64(MemoryAccessDesc* access, ValType type, WantResult wantResult)
-    {
-#if defined(JS_CODEGEN_X86)
-        RegI64 rd = specific.edx_eax;
-        needI64(rd);
-        needI32(specific.ecx);
-        // Claim scratch after the need() calls because they may need it to
-        // sync.
-        ScratchEBX scratch(*this);
-        RegI64 rv = specific.ecx_ebx;
-#elif defined(JS_CODEGEN_ARM)
-        RegI64 rv = needI64Pair();
-        RegI64 rd = needI64Pair();
-#else
-        RegI64 rv, rd;
-        MOZ_CRASH("BaseCompiler porting interface: xchg64");
-#endif
-
-        popI64ToSpecific(rv);
-
-        AccessCheck check;
-        RegI32 rp = popMemoryAccess(access, &check);
-        RegI32 tls = maybeLoadTlsForAccess(check);
-        prepareMemoryAccess(access, &check, tls, rp);
-        ATOMIC_PTR(srcAddr, access, tls, rp);
-
-        masm.atomicExchange64(srcAddr, rv, rd);
-
-        if (wantResult)
-            pushI64(rd);
-        else
-            freeI64(rd);
-
-        maybeFreeI32(tls);
-        freeI32(rp);
-
-#if defined(JS_CODEGEN_X86)
-        freeI32(specific.ecx);
-#elif defined(JS_CODEGEN_ARM)
-        freeI64(rv);
-#else
-        MOZ_CRASH("BaseCompiler porting interface: xchg64");
-#endif
-    }
-
     RegI32 needAtomicRMWTemp(AtomicOp op, MemoryAccessDesc* access) {
 #if defined(JS_CODEGEN_X86)
         // Handled specially in atomicRMW
@@ -4427,13 +4315,127 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     ////////////////////////////////////////////////////////////
+    //
+    // Generally speaking, ABOVE this point there should be no
+    // value stack manipulation (calls to popI32 etc).
+    //
+    ////////////////////////////////////////////////////////////
 
-    // Generally speaking, ABOVE this point there should be no value
-    // stack manipulation (calls to popI32 etc).
+    ////////////////////////////////////////////////////////////
+    //
+    // Platform-specific popping and register targeting.
+    //
+    // These fall into two groups, popping methods for simple needs, and RAII
+    // wrappers for more complex behavior.
 
+    // The simple popping methods pop values into targeted registers; the caller
+    // can free registers using standard functions.  These are always called
+    // popXForY where X says something about types and Y something about the
+    // operation being targeted.
+
+    void pop2xI32ForMulDivI32(RegI32* r0, RegI32* r1, RegI32* reserved) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+        // r0 must be eax, and edx will be clobbered.
+        need2xI32(specific.eax, specific.edx);
+        *r1 = popI32();
+        *r0 = popI32ToSpecific(specific.eax);
+        *reserved = specific.edx;
+#else
+        pop2xI32(r0, r1);
+#endif
+    }
+
+    void pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp, RegI64* reserved) {
+#if defined(JS_CODEGEN_X64)
+        // r0 must be rax, and rdx will be clobbered.
+        need2xI64(specific.rax, specific.rdx);
+        *r1 = popI64();
+        *r0 = popI64ToSpecific(specific.rax);
+        *reserved = specific.rdx;
+#elif defined(JS_CODEGEN_X86)
+        // As for x64, though edx is part of r0.
+        need2xI32(specific.eax, specific.edx);
+        *r1 = popI64();
+        *r0 = popI64ToSpecific(specific.edx_eax);
+        *temp = needI32();
+#else
+        pop2xI64(r0, r1);
+        *temp = needI32();
+#endif
+    }
+
+    void pop2xI64ForDivI64(RegI64* r0, RegI64* r1, RegI64* reserved) {
+#ifdef JS_CODEGEN_X64
+        // r0 must be rax, and rdx will be clobbered.
+        need2xI64(specific.rax, specific.rdx);
+        *r1 = popI64();
+        *r0 = popI64ToSpecific(specific.rax);
+        *reserved = specific.rdx;
+#else
+        pop2xI64(r0, r1);
+#endif
+    }
+
+    void pop2xI32ForShiftOrRotate(RegI32* r0, RegI32* r1) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+        // r1 must be ecx for a variable shift.
+        *r1 = popI32(specific.ecx);
+        *r0 = popI32();
+#else
+        pop2xI32(r0, r1);
+#endif
+    }
+
+    void pop2xI64ForShiftOrRotate(RegI64* r0, RegI64* r1) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+        // r1 must be ecx for a variable shift.
+        needI32(specific.ecx);
+        *r1 = popI64ToSpecific(widenI32(specific.ecx));
+        *r0 = popI64();
+#else
+        pop2xI64(r0, r1);
+#endif
+    }
+
+    void popI32ForSignExtendI64(RegI64* r0) {
+#if defined(JS_CODEGEN_X86)
+        // r0 must be edx:eax for cdq
+        need2xI32(specific.edx, specific.eax);
+        *r0 = specific.edx_eax;
+        popI32ToSpecific(specific.eax);
+#else
+        *r0 = widenI32(popI32());
+#endif
+    }
+
+    void popI64ForSignExtendI64(RegI64* r0) {
+#if defined(JS_CODEGEN_X86)
+        // r0 must be edx:eax for cdq
+        need2xI32(specific.edx, specific.eax);
+        // Low on top, high underneath
+        *r0 = popI64ToSpecific(specific.edx_eax);
+#else
+        *r0 = popI64();
+#endif
+    }
+
+    // The RAII wrappers are used because we sometimes have to free partial
+    // registers, as when part of a register is the scratch register that has
+    // been temporarily used, or not free a register at all, as when the
+    // register is the same as the destination register (but only on some
+    // platforms, not on all).  These are called PopX{32,64}Regs where X is the
+    // operation being targeted.
+
+    // (To be implemented)
+
+    ////////////////////////////////////////////////////////////
+    //
     // Generally speaking, BELOW this point there should be no
-    // platform dependencies.  We make an exception for x86 register
-    // targeting, which is not too hard to keep clean.
+    // platform dependencies.  We make very occasional exceptions
+    // when it doesn't become messy and further abstraction is
+    // not desirable.
+    //
+    ////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////
     //
@@ -4810,6 +4812,9 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool emitWait(ValType type, uint32_t byteSize);
     MOZ_MUST_USE bool emitWake();
     MOZ_MUST_USE bool emitAtomicXchg(ValType type, Scalar::Type viewType);
+#ifndef JS_64BIT
+    void emitAtomicXchg64(MemoryAccessDesc* access, ValType type, WantResult wantResult);
+#endif
 };
 
 void
@@ -4923,9 +4928,10 @@ BaseCompiler::emitSubtractF64()
 void
 BaseCompiler::emitMultiplyI32()
 {
-    RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+    RegI32 r0, r1, reserved;
+    pop2xI32ForMulDivI32(&r0, &r1, &reserved);
     masm.mul32(r1, r0);
+    maybeFreeI32(reserved);
     freeI32(r1);
     pushI32(r0);
 }
@@ -4933,24 +4939,11 @@ BaseCompiler::emitMultiplyI32()
 void
 BaseCompiler::emitMultiplyI64()
 {
-    RegI64 r0, r1;
+    RegI64 r0, r1, reserved;
     RegI32 temp;
-#if defined(JS_CODEGEN_X64)
-    // srcDest must be rax, and rdx will be clobbered.
-    need2xI64(specific.rax, specific.rdx);
-    r1 = popI64();
-    r0 = popI64ToSpecific(specific.rax);
-    freeI64(specific.rdx);
-#elif defined(JS_CODEGEN_X86)
-    need2xI32(specific.eax, specific.edx);
-    r1 = popI64();
-    r0 = popI64ToSpecific(specific.edx_eax);
-    temp = needI32();
-#else
-    pop2xI64(&r0, &r1);
-    temp = needI32();
-#endif
+    pop2xI64ForMulI64(&r0, &r1, &temp, &reserved);
     masm.mul64(r1, r0, temp);
+    maybeFreeI64(reserved);
     maybeFreeI32(temp);
     freeI64(r1);
     pushI64(r0);
@@ -4994,8 +4987,8 @@ BaseCompiler::emitQuotientI32()
         }
     } else {
         bool isConst = peekConstI32(&c);
-        RegI32 r0, r1;
-        pop2xI32ForIntMulDiv(&r0, &r1);
+        RegI32 r0, r1, reserved;
+        pop2xI32ForMulDivI32(&r0, &r1, &reserved);
 
         Label done;
         if (!isConst || c == 0)
@@ -5005,6 +4998,7 @@ BaseCompiler::emitQuotientI32()
         masm.quotient32(r1, r0, IsUnsigned(false));
         masm.bind(&done);
 
+        maybeFreeI32(reserved);
         freeI32(r1);
         pushI32(r0);
     }
@@ -5023,8 +5017,8 @@ BaseCompiler::emitQuotientU32()
         }
     } else {
         bool isConst = peekConstI32(&c);
-        RegI32 r0, r1;
-        pop2xI32ForIntMulDiv(&r0, &r1);
+        RegI32 r0, r1, reserved;
+        pop2xI32ForMulDivI32(&r0, &r1, &reserved);
 
         Label done;
         if (!isConst || c == 0)
@@ -5032,6 +5026,7 @@ BaseCompiler::emitQuotientU32()
         masm.quotient32(r1, r0, IsUnsigned(true));
         masm.bind(&done);
 
+        maybeFreeI32(reserved);
         freeI32(r1);
         pushI32(r0);
     }
@@ -5060,8 +5055,8 @@ BaseCompiler::emitRemainderI32()
         pushI32(r);
     } else {
         bool isConst = peekConstI32(&c);
-        RegI32 r0, r1;
-        pop2xI32ForIntMulDiv(&r0, &r1);
+        RegI32 r0, r1, reserved;
+        pop2xI32ForMulDivI32(&r0, &r1, &reserved);
 
         Label done;
         if (!isConst || c == 0)
@@ -5071,6 +5066,7 @@ BaseCompiler::emitRemainderI32()
         masm.remainder32(r1, r0, IsUnsigned(false));
         masm.bind(&done);
 
+        maybeFreeI32(reserved);
         freeI32(r1);
         pushI32(r0);
     }
@@ -5087,8 +5083,8 @@ BaseCompiler::emitRemainderU32()
         pushI32(r);
     } else {
         bool isConst = peekConstI32(&c);
-        RegI32 r0, r1;
-        pop2xI32ForIntMulDiv(&r0, &r1);
+        RegI32 r0, r1, reserved;
+        pop2xI32ForMulDivI32(&r0, &r1, &reserved);
 
         Label done;
         if (!isConst || c == 0)
@@ -5096,6 +5092,7 @@ BaseCompiler::emitRemainderU32()
         masm.remainder32(r1, r0, IsUnsigned(true));
         masm.bind(&done);
 
+        maybeFreeI32(reserved);
         freeI32(r1);
         pushI32(r0);
     }
@@ -5122,9 +5119,10 @@ BaseCompiler::emitQuotientI64()
         }
     } else {
         bool isConst = peekConstI64(&c);
-        RegI64 r0, r1;
-        pop2xI64ForIntDiv(&r0, &r1);
-        quotientI64(r1, r0, IsUnsigned(false), isConst, c);
+        RegI64 r0, r1, reserved;
+        pop2xI64ForDivI64(&r0, &r1, &reserved);
+        quotientI64(r1, r0, reserved, IsUnsigned(false), isConst, c);
+        maybeFreeI64(reserved);
         freeI64(r1);
         pushI64(r0);
     }
@@ -5147,9 +5145,10 @@ BaseCompiler::emitQuotientU64()
         }
     } else {
         bool isConst = peekConstI64(&c);
-        RegI64 r0, r1;
-        pop2xI64ForIntDiv(&r0, &r1);
-        quotientI64(r1, r0, IsUnsigned(true), isConst, c);
+        RegI64 r0, r1, reserved;
+        pop2xI64ForDivI64(&r0, &r1, &reserved);
+        quotientI64(r1, r0, reserved, IsUnsigned(true), isConst, c);
+        maybeFreeI64(reserved);
         freeI64(r1);
         pushI64(r0);
     }
@@ -5182,9 +5181,10 @@ BaseCompiler::emitRemainderI64()
         pushI64(r);
     } else {
         bool isConst = peekConstI64(&c);
-        RegI64 r0, r1;
-        pop2xI64ForIntDiv(&r0, &r1);
-        remainderI64(r1, r0, IsUnsigned(false), isConst, c);
+        RegI64 r0, r1, reserved;
+        pop2xI64ForDivI64(&r0, &r1, &reserved);
+        remainderI64(r1, r0, reserved, IsUnsigned(false), isConst, c);
+        maybeFreeI64(reserved);
         freeI64(r1);
         pushI64(r0);
     }
@@ -5205,9 +5205,10 @@ BaseCompiler::emitRemainderU64()
         pushI64(r);
     } else {
         bool isConst = peekConstI64(&c);
-        RegI64 r0, r1;
-        pop2xI64ForIntDiv(&r0, &r1);
-        remainderI64(r1, r0, IsUnsigned(true), isConst, c);
+        RegI64 r0, r1, reserved;
+        pop2xI64ForDivI64(&r0, &r1, &reserved);
+        remainderI64(r1, r0, reserved, IsUnsigned(true), isConst, c);
+        maybeFreeI64(reserved);
         freeI64(r1);
         pushI64(r0);
     }
@@ -5836,7 +5837,8 @@ BaseCompiler::emitExtendI32_16()
 void
 BaseCompiler::emitExtendI64_8()
 {
-    RegI64 r = popI64ForSignExtendI64();
+    RegI64 r;
+    popI64ForSignExtendI64(&r);
     masm.move8To64SignExtend(lowPart(r), r);
     pushI64(r);
 }
@@ -5844,7 +5846,8 @@ BaseCompiler::emitExtendI64_8()
 void
 BaseCompiler::emitExtendI64_16()
 {
-    RegI64 r = popI64ForSignExtendI64();
+    RegI64 r;
+    popI64ForSignExtendI64(&r);
     masm.move16To64SignExtend(lowPart(r), r);
     pushI64(r);
 }
@@ -5852,15 +5855,17 @@ BaseCompiler::emitExtendI64_16()
 void
 BaseCompiler::emitExtendI64_32()
 {
-    RegI64 x0 = popI64ForSignExtendI64();
-    masm.move32To64SignExtend(lowPart(x0), x0);
-    pushI64(x0);
+    RegI64 r;
+    popI64ForSignExtendI64(&r);
+    masm.move32To64SignExtend(lowPart(r), r);
+    pushI64(r);
 }
 
 void
 BaseCompiler::emitExtendI32ToI64()
 {
-    RegI64 x0 = popI32ForSignExtendI64();
+    RegI64 x0;
+    popI32ForSignExtendI64(&x0);
     masm.move32To64SignExtend(lowPart(x0), x0);
     pushI64(x0);
 }
@@ -8035,7 +8040,7 @@ BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType)
 #ifdef JS_64BIT
     MOZ_CRASH("Should not happen");
 #else
-    xchg64(&access, type, WantResult(false));
+    emitAtomicXchg64(&access, type, WantResult(false));
 #endif
 
     return true;
@@ -8104,11 +8109,59 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
     if (rv != rd)
         freeI64(rv);
 #else
-    xchg64(&access, type, WantResult(true));
+    emitAtomicXchg64(&access, type, WantResult(true));
 #endif
 
     return true;
 }
+
+#ifndef JS_64BIT
+void
+BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access, ValType type, WantResult wantResult)
+{
+# if defined(JS_CODEGEN_X86)
+    RegI64 rd = specific.edx_eax;
+    needI64(rd);
+    needI32(specific.ecx);
+    // Claim scratch after the need() calls because they may need it to
+    // sync.
+    ScratchEBX scratch(*this);
+    RegI64 rv = specific.ecx_ebx;
+# elif defined(JS_CODEGEN_ARM)
+    RegI64 rv = needI64Pair();
+    RegI64 rd = needI64Pair();
+# else
+    RegI64 rv, rd;
+    MOZ_CRASH("BaseCompiler porting interface: xchg64");
+# endif
+
+    popI64ToSpecific(rv);
+
+    AccessCheck check;
+    RegI32 rp = popMemoryAccess(access, &check);
+    RegI32 tls = maybeLoadTlsForAccess(check);
+    prepareMemoryAccess(access, &check, tls, rp);
+    ATOMIC_PTR(srcAddr, access, tls, rp);
+
+    masm.atomicExchange64(srcAddr, rv, rd);
+
+    if (wantResult)
+        pushI64(rd);
+    else
+        freeI64(rd);
+
+    maybeFreeI32(tls);
+    freeI32(rp);
+
+# if defined(JS_CODEGEN_X86)
+    freeI32(specific.ecx);
+# elif defined(JS_CODEGEN_ARM)
+    freeI64(rv);
+# else
+    MOZ_CRASH("BaseCompiler porting interface: xchg64");
+# endif
+}
+#endif
 
 bool
 BaseCompiler::emitWait(ValType type, uint32_t byteSize)
