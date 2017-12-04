@@ -3597,20 +3597,9 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
       bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
     }
-    if (aSecondaryReferenceFrame) {
-      nsDisplayTableThemedBackground* bgItem =
-        new (aBuilder) nsDisplayTableThemedBackground(aBuilder,
-                                                      aSecondaryReferenceFrame,
-                                                      bgRect,
-                                                      aFrame);
-      bgItem->Init(aBuilder);
-      bgItemList.AppendNewToTop(bgItem);
-    } else {
-      nsDisplayThemedBackground* bgItem =
-        new (aBuilder) nsDisplayThemedBackground(aBuilder, aFrame, bgRect);
-      bgItem->Init(aBuilder);
-      bgItemList.AppendNewToTop(bgItem);
-    }
+    nsDisplayThemedBackground* bgItem =
+      new (aBuilder) nsDisplayThemedBackground(aBuilder, aFrame, bgRect);
+    bgItemList.AppendNewToTop(bgItem);
     aList->AppendToTop(&bgItemList);
     return true;
   }
@@ -4249,28 +4238,17 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
   , mBackgroundRect(aBackgroundRect)
 {
   MOZ_COUNT_CTOR(nsDisplayThemedBackground);
-}
 
-nsDisplayThemedBackground::~nsDisplayThemedBackground()
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
-  MOZ_COUNT_DTOR(nsDisplayThemedBackground);
-#endif
-}
-
-void
-nsDisplayThemedBackground::Init(nsDisplayListBuilder* aBuilder)
-{
-  const nsStyleDisplay* disp = StyleFrame()->StyleDisplay();
+  const nsStyleDisplay* disp = mFrame->StyleDisplay();
   mAppearance = disp->mAppearance;
-  StyleFrame()->IsThemed(disp, &mThemeTransparency);
+  mFrame->IsThemed(disp, &mThemeTransparency);
 
   // Perform necessary RegisterThemeGeometry
-  nsITheme* theme = StyleFrame()->PresContext()->GetTheme();
+  nsITheme* theme = mFrame->PresContext()->GetTheme();
   nsITheme::ThemeGeometryType type =
-    theme->ThemeGeometryTypeForWidget(StyleFrame(), disp->mAppearance);
+    theme->ThemeGeometryTypeForWidget(mFrame, disp->mAppearance);
   if (type != nsITheme::eThemeGeometryTypeUnknown) {
-    RegisterThemeGeometry(aBuilder, this, StyleFrame(), type);
+    RegisterThemeGeometry(aBuilder, this, aFrame, type);
   }
 
   if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
@@ -4279,6 +4257,13 @@ nsDisplayThemedBackground::Init(nsDisplayListBuilder* aBuilder)
   }
 
   mBounds = GetBoundsInternal();
+}
+
+nsDisplayThemedBackground::~nsDisplayThemedBackground()
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  MOZ_COUNT_DTOR(nsDisplayThemedBackground);
+#endif
 }
 
 void
@@ -4342,25 +4327,13 @@ nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
                                          nsRect* aClipRect)
 {
   // XXXzw this ignores aClipRect.
-  nsPresContext* presContext = StyleFrame()->PresContext();
+  nsPresContext* presContext = mFrame->PresContext();
   nsITheme *theme = presContext->GetTheme();
   nsRect drawing(mBackgroundRect);
-  theme->GetWidgetOverflow(presContext->DeviceContext(), StyleFrame(), mAppearance,
+  theme->GetWidgetOverflow(presContext->DeviceContext(), mFrame, mAppearance,
                            &drawing);
   drawing.IntersectRect(drawing, aBounds);
-  theme->DrawWidgetBackground(aCtx, StyleFrame(), mAppearance, mBackgroundRect, drawing);
-}
-
-bool
-nsDisplayThemedBackground::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                                   mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                                   const StackingContextHelper& aSc,
-                                                   mozilla::layers::WebRenderLayerManager* aManager,
-                                                   nsDisplayListBuilder* aDisplayListBuilder)
-{
-  nsITheme *theme = StyleFrame()->PresContext()->GetTheme();
-  return theme->CreateWebRenderCommandsForWidget(aBuilder, aResources, aSc, aManager,
-                                                 StyleFrame(), mAppearance, mBackgroundRect);
+  theme->DrawWidgetBackground(aCtx, mFrame, mAppearance, mBackgroundRect, drawing);
 }
 
 bool
@@ -4390,7 +4363,7 @@ nsDisplayThemedBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuil
     // painting area.
     aInvalidRegion->Xor(bounds, geometry->mBounds);
   }
-  nsITheme* theme = StyleFrame()->PresContext()->GetTheme();
+  nsITheme* theme = mFrame->PresContext()->GetTheme();
   if (theme->WidgetAppearanceDependsOnWindowFocus(mAppearance) &&
       IsWindowActive() != geometry->mWindowIsActive) {
     aInvalidRegion->Or(*aInvalidRegion, bounds);
