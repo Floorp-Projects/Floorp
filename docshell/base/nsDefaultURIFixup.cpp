@@ -261,6 +261,11 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
       uriString.ReplaceLiteral(0, 3, "http");
       scheme.AssignLiteral("http");
       info->mFixupChangedProtocol = true;
+    } else if (scheme.LowerCaseEqualsLiteral("htp")) {
+      // htp -> http.
+      uriString.ReplaceLiteral(0, 3, "http");
+      scheme.AssignLiteral("http");
+      info->mFixupChangedProtocol = true;
     } else if (scheme.LowerCaseEqualsLiteral("ttps")) {
       // ttps -> https.
       uriString.ReplaceLiteral(0, 4, "https");
@@ -274,6 +279,11 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
     } else if (scheme.LowerCaseEqualsLiteral("ps")) {
       // ps -> https.
       uriString.ReplaceLiteral(0, 2, "https");
+      scheme.AssignLiteral("https");
+      info->mFixupChangedProtocol = true;
+    } else if (scheme.LowerCaseEqualsLiteral("htps")) {
+      // htps -> https.
+      uriString.ReplaceLiteral(0, 4, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
     } else if (scheme.LowerCaseEqualsLiteral("ile")) {
