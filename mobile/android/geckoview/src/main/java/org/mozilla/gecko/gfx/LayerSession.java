@@ -59,8 +59,6 @@ public class LayerSession {
     /* package */ final static int IS_COMPOSITOR_CONTROLLER_OPEN    = 21;
 
     protected class Compositor extends JNIObject {
-        public LayerView layerView;
-
         public boolean isReady() {
             return LayerSession.this.isCompositorReady();
         }
@@ -72,10 +70,6 @@ public class LayerSession {
 
         @WrapForJNI(calledFrom = "ui")
         private void onCompositorDetached() {
-            if (layerView != null) {
-                layerView.clearDrawListeners();
-                layerView = null;
-            }
             // Clear out any pending calls on the UI thread.
             LayerSession.this.onCompositorDetached();
             disposeNative();
@@ -124,9 +118,7 @@ public class LayerSession {
 
         @WrapForJNI(calledFrom = "ui")
         private void recvScreenPixels(int width, int height, int[] pixels) {
-            if (layerView != null) {
-                layerView.recvScreenPixels(width, height, pixels);
-            }
+            LayerSession.this.recvScreenPixels(width, height, pixels);
         }
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
@@ -170,6 +162,7 @@ public class LayerSession {
     private NativePanZoomController mNPZC;
     private OverscrollEdgeEffect mOverscroll;
     private DynamicToolbarAnimator mToolbar;
+    private CompositorController mController;
 
     private boolean mAttachedCompositor;
     private boolean mCalledCreateCompositor;
@@ -237,6 +230,23 @@ public class LayerSession {
             mToolbar = new DynamicToolbarAnimator(this);
         }
         return mToolbar;
+    }
+
+    /**
+     * Get the CompositorController instance for this session.
+     *
+     * @return CompositorController instance.
+     */
+    public @NonNull CompositorController getCompositorController() {
+        ThreadUtils.assertOnUiThread();
+
+        if (mController == null) {
+            mController = new CompositorController(this);
+            if (mCompositorReady) {
+                mController.onCompositorReady();
+            }
+        }
+        return mController;
     }
 
     /**
@@ -354,6 +364,10 @@ public class LayerSession {
             ThreadUtils.assertOnUiThread();
         }
 
+        if (mController != null) {
+            mController.onCompositorDetached();
+        }
+
         mAttachedCompositor = false;
         mCalledCreateCompositor = false;
         mCompositorReady = false;
@@ -376,24 +390,21 @@ public class LayerSession {
                     @Override
                     public void run() {
                         onCompositorReady();
-                        if (mCompositor.layerView != null) {
-                            mCompositor.layerView.onCompositorReady();
-                        }
                     }
                 });
                 break;
             }
 
             case FIRST_PAINT: {
-                if (mCompositor.layerView != null) {
-                    mCompositor.layerView.setSurfaceBackgroundColor(Color.TRANSPARENT);
+                if (mController != null) {
+                    mController.onFirstPaint();
                 }
                 break;
             }
 
             case LAYERS_UPDATED: {
-                if (mCompositor.layerView != null) {
-                    mCompositor.layerView.notifyDrawListeners();
+                if (mController != null) {
+                    mController.notifyDrawCallbacks();
                 }
                 break;
             }
@@ -419,6 +430,12 @@ public class LayerSession {
         }
     }
 
+    /* package */ void recvScreenPixels(int width, int height, int[] pixels) {
+        if (mController != null) {
+            mController.recvScreenPixels(width, height, pixels);
+        }
+    }
+
     /* package */ boolean isCompositorReady() {
         return mCompositorReady;
     }
@@ -429,6 +446,10 @@ public class LayerSession {
         }
 
         mCompositorReady = true;
+
+        if (mController != null) {
+            mController.onCompositorReady();
+        }
 
         if (mSurface != null) {
             // If we have a valid surface, resume the
