@@ -981,11 +981,11 @@
           mid: "sdparta_0"
         }
       ]);
+    await negotiationNeeded(pc1);
 
     trickle(pc2, pc1);
     await pc2.setLocalDescription(answer);
 
-    await negotiationNeeded(pc1);
     await iceConnected(pc1);
     await iceConnected(pc2);
 
