@@ -10,6 +10,7 @@
 #include "HttpBaseChannel.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIInputStream.h"
+#include "nsICacheInfoChannel.h"
 #include "nsIChannelWithDivertableParentListener.h"
 #include "nsIThreadRetargetableRequest.h"
 
@@ -50,6 +51,7 @@ namespace net {
 class InterceptedHttpChannel final : public HttpBaseChannel
                                    , public HttpAsyncAborter<InterceptedHttpChannel>
                                    , public nsIInterceptedChannel
+                                   , public nsICacheInfoChannel
                                    , public nsIAsyncVerifyRedirectCallback
                                    , public nsIStreamListener
                                    , public nsIChannelWithDivertableParentListener
@@ -58,6 +60,7 @@ class InterceptedHttpChannel final : public HttpBaseChannel
 {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIINTERCEPTEDCHANNEL
+  NS_DECL_NSICACHEINFOCHANNEL
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
@@ -74,6 +77,7 @@ private:
   nsCOMPtr<nsISupports> mReleaseHandle;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIInterceptedBodyCallback> mBodyCallback;
+  nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   RefPtr<nsInputStreamPump> mPump;
   RefPtr<ADivertableParentChannel> mParentChannel;
   TimeStamp mFinishResponseStart;
