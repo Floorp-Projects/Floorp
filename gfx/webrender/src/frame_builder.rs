@@ -21,13 +21,14 @@ use euclid::{SideOffsets2D, vec2};
 use frame::FrameId;
 use glyph_rasterizer::FontInstance;
 use gpu_cache::GpuCache;
-use internal_types::{EdgeAaSegmentMask, FastHashMap, FastHashSet};
+use gpu_types::ClipScrollNodeData;
+use internal_types::{FastHashMap, FastHashSet};
 use picture::{PictureCompositeMode, PictureKind, PicturePrimitive, RasterizationSpace};
-use prim_store::{TexelRect, YuvImagePrimitiveCpu};
+use prim_store::{BrushAntiAliasMode, BrushKind, BrushPrimitive, TexelRect, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
 use prim_store::{PrimitiveContainer, PrimitiveIndex, SpecificPrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
-use prim_store::{RectangleContent, RectanglePrimitive, TextRunPrimitiveCpu};
+use prim_store::{BrushSegmentDescriptor, TextRunPrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_task::{ClearMode, RenderTask, RenderTaskId, RenderTaskTree};
 use resource_cache::ResourceCache;
@@ -397,7 +398,7 @@ impl FrameBuilder {
         };
 
         // For each filter, create a new image with that composite mode.
-        for filter in &composite_ops.filters {
+        for filter in composite_ops.filters.iter().rev() {
             let src_prim = PicturePrimitive::new_image(
                 Some(PictureCompositeMode::Filter(*filter)),
                 false,
@@ -756,7 +757,8 @@ impl FrameBuilder {
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
         color: ColorF,
-        edge_aa_segment_mask: EdgeAaSegmentMask,
+        segments: Option<Box<BrushSegmentDescriptor>>,
+        aa_mode: BrushAntiAliasMode,
     ) {
         if color.a == 0.0 {
             // Don't add transparent rectangles to the draw list, but do consider them for hit
@@ -765,16 +767,19 @@ impl FrameBuilder {
             return;
         }
 
-        let prim = RectanglePrimitive {
-            content: RectangleContent::Fill(color),
-            edge_aa_segment_mask,
-        };
+        let prim = BrushPrimitive::new(
+            BrushKind::Solid {
+                color,
+            },
+            segments,
+            aa_mode,
+        );
 
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Rectangle(prim),
+            PrimitiveContainer::Brush(prim),
         );
     }
 
@@ -783,16 +788,17 @@ impl FrameBuilder {
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
     ) {
-        let prim = RectanglePrimitive {
-            content: RectangleContent::Clear,
-            edge_aa_segment_mask: EdgeAaSegmentMask::empty(),
-        };
+        let prim = BrushPrimitive::new(
+            BrushKind::Clear,
+            None,
+            BrushAntiAliasMode::Primitive,
+        );
 
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Rectangle(prim),
+            PrimitiveContainer::Brush(prim),
         );
     }
 
@@ -807,16 +813,19 @@ impl FrameBuilder {
             return;
         }
 
-        let prim = RectanglePrimitive {
-            content: RectangleContent::Fill(color),
-            edge_aa_segment_mask: EdgeAaSegmentMask::empty(),
-        };
+        let prim = BrushPrimitive::new(
+            BrushKind::Solid {
+                color,
+            },
+            None,
+            BrushAntiAliasMode::Primitive,
+        );
 
         let prim_index = self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Rectangle(prim),
+            PrimitiveContainer::Brush(prim),
         );
 
         self.scrollbar_prims.push(ScrollbarPrimitive {
@@ -1576,6 +1585,7 @@ impl FrameBuilder {
         profile_counters: &mut FrameProfileCounters,
         device_pixel_ratio: f32,
         scene_properties: &SceneProperties,
+        node_data: &[ClipScrollNodeData],
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -1618,6 +1628,7 @@ impl FrameBuilder {
             scene_properties,
             SpecificPrimitiveIndex(0),
             &self.screen_rect.to_i32(),
+            node_data,
         );
 
         let pic = &mut self.prim_store.cpu_pictures[0];
@@ -1698,7 +1709,7 @@ impl FrameBuilder {
         resource_cache.begin_frame(frame_id);
         gpu_cache.begin_frame();
 
-        let mut node_data = Vec::new();
+        let mut node_data = Vec::with_capacity(clip_scroll_tree.nodes.len());
         clip_scroll_tree.update_tree(
             &self.screen_rect.to_i32(),
             device_pixel_ratio,
@@ -1723,6 +1734,7 @@ impl FrameBuilder {
             &mut profile_counters,
             device_pixel_ratio,
             scene_properties,
+            &node_data,
         );
 
         let mut passes = Vec::new();

@@ -525,7 +525,7 @@ impl PicturePrimitive {
         }
     }
 
-    pub fn write_gpu_blocks(&self, mut _request: GpuDataRequest) {
+    pub fn write_gpu_blocks(&self, _request: &mut GpuDataRequest) {
         // TODO(gw): We'll need to write the GPU blocks
         //           here specific to a brush primitive
         //           once we start drawing pictures as brushes!

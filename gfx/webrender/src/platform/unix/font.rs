@@ -175,7 +175,7 @@ impl FontContext {
         if font.flags.contains(FontInstanceFlags::NO_AUTOHINT) {
             load_flags |= FT_LOAD_NO_AUTOHINT;
         }
-        if font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS) {
+        if !font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS) {
             load_flags |= FT_LOAD_NO_BITMAP;
         }
         if font.flags.contains(FontInstanceFlags::VERTICAL_LAYOUT) {
@@ -194,8 +194,8 @@ impl FontContext {
                 self.choose_bitmap_size(face.face, req_size)
             }
         } else {
-            let (major, minor) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-            let shape = font.transform.pre_scale(major.recip() as f32, minor.recip() as f32);
+            let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+            let shape = font.transform.pre_scale(x_scale.recip() as f32, y_scale.recip() as f32);
             let mut ft_shape = FT_Matrix {
                 xx: (shape.scale_x * 65536.0) as FT_Fixed,
                 xy: (shape.skew_x * -65536.0) as FT_Fixed,
@@ -206,8 +206,8 @@ impl FontContext {
                 FT_Set_Transform(face.face, &mut ft_shape, ptr::null_mut());
                 FT_Set_Char_Size(
                     face.face,
-                    (req_size * major * 64.0 + 0.5) as FT_F26Dot6,
-                    (req_size * minor * 64.0 + 0.5) as FT_F26Dot6,
+                    (req_size * x_scale * 64.0 + 0.5) as FT_F26Dot6,
+                    (req_size * y_scale * 64.0 + 0.5) as FT_F26Dot6,
                     0,
                     0,
                 )
@@ -493,9 +493,10 @@ impl FontContext {
             Some(val) => val,
             None => return None,
         };
+        let GlyphDimensions { mut left, mut top, width, height, .. } = dimensions;
 
         // For spaces and other non-printable characters, early out.
-        if dimensions.width == 0 || dimensions.height == 0 {
+        if width == 0 || height == 0 {
             return None;
         }
 
@@ -515,10 +516,8 @@ impl FontContext {
                 error!("Unsupported {:?}", format);
                 return None;
             }
-        }
+        };
 
-        let bitmap = unsafe { &(*slot).bitmap };
-        let pixel_mode = unsafe { mem::transmute(bitmap.pixel_mode as u32) };
         info!(
             "Rasterizing {:?} as {:?} with dimensions {:?}",
             key,
@@ -526,6 +525,8 @@ impl FontContext {
             dimensions
         );
 
+        let bitmap = unsafe { &(*slot).bitmap };
+        let pixel_mode = unsafe { mem::transmute(bitmap.pixel_mode as u32) };
         let (actual_width, actual_height) = match pixel_mode {
             FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
                 assert!(bitmap.width % 3 == 0);
@@ -542,7 +543,6 @@ impl FontContext {
             }
             _ => panic!("Unsupported {:?}", pixel_mode),
         };
-        let (left, top) = unsafe { ((*slot).bitmap_left, (*slot).bitmap_top) };
         let mut final_buffer = vec![0; (actual_width * actual_height * 4) as usize];
 
         // Extract the final glyph from FT format into RGBA8 format, which is
@@ -625,9 +625,19 @@ impl FontContext {
             dest = row_end;
         }
 
+        match format {
+            FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
+                unsafe {
+                    left += (*slot).bitmap_left;
+                    top += (*slot).bitmap_top - actual_height;
+                }
+            }
+            _ => {}
+        }
+
         Some(RasterizedGlyph {
-            left: (dimensions.left + left) as f32,
-            top: (dimensions.top + top - actual_height) as f32,
+            left: left as f32,
+            top: top as f32,
             width: actual_width as u32,
             height: actual_height as u32,
             scale,

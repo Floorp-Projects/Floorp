@@ -5,7 +5,7 @@
 use api::{ClipId, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixel};
 use api::{LayerPoint, LayerRect, PremultipliedColorF};
 use box_shadow::BoxShadowCacheKey;
-use clip::{ClipSource, ClipSourcesWeakHandle, ClipStore};
+use clip::{ClipSourcesWeakHandle};
 use clip_scroll_tree::CoordinateSystemId;
 use euclid::TypedSize2D;
 use gpu_types::{ClipScrollNodeIndex};
@@ -164,25 +164,6 @@ pub enum RenderTaskLocation {
     Dynamic(Option<(DeviceIntPoint, RenderTargetIndex)>, DeviceIntSize),
 }
 
-#[derive(Debug, Copy, Clone)]
-#[repr(C)]
-pub enum MaskSegment {
-    // This must match the SEGMENT_ values in clip_shared.glsl!
-    All = 0,
-    TopLeftCorner,
-    TopRightCorner,
-    BottomLeftCorner,
-    BottomRightCorner,
-}
-
-#[derive(Debug, Copy, Clone)]
-#[repr(C)]
-pub enum MaskGeometryKind {
-    Default, // Draw the entire rect
-    CornersOnly, // Draw the corners (simple axis aligned mask)
-             // TODO(gw): Add more types here (e.g. 4 rectangles outside the inner rect)
-}
-
 #[derive(Debug, Clone)]
 pub struct ClipWorkItem {
     pub scroll_node_data_index: ClipScrollNodeIndex,
@@ -190,52 +171,10 @@ pub struct ClipWorkItem {
     pub coordinate_system_id: CoordinateSystemId,
 }
 
-impl ClipWorkItem {
-    fn get_geometry_kind(
-        &self,
-        clip_store: &ClipStore,
-        prim_coordinate_system_id: CoordinateSystemId
-    ) -> MaskGeometryKind {
-        let clips = clip_store
-            .get_opt(&self.clip_sources)
-            .expect("bug: clip handle should be valid")
-            .clips();
-        let mut rounded_rect_count = 0;
-
-        for &(ref clip, _) in clips {
-            match *clip {
-                ClipSource::Rectangle(..) => {
-                    if !self.has_compatible_coordinate_system(prim_coordinate_system_id) {
-                        return MaskGeometryKind::Default;
-                    }
-                },
-                ClipSource::RoundedRectangle(..) => {
-                    rounded_rect_count += 1;
-                }
-                ClipSource::Image(..) | ClipSource::BorderCorner(..) => {
-                    return MaskGeometryKind::Default;
-                }
-            }
-        }
-
-        if rounded_rect_count == 1 {
-            MaskGeometryKind::CornersOnly
-        } else {
-            MaskGeometryKind::Default
-        }
-    }
-
-    fn has_compatible_coordinate_system(&self, other_id: CoordinateSystemId) -> bool {
-        self.coordinate_system_id == other_id
-    }
-}
-
 #[derive(Debug)]
 pub struct CacheMaskTask {
     actual_rect: DeviceIntRect,
-    inner_rect: DeviceIntRect,
     pub clips: Vec<ClipWorkItem>,
-    pub geometry_kind: MaskGeometryKind,
     pub coordinate_system_id: CoordinateSystemId,
 }
 
@@ -353,38 +292,20 @@ impl RenderTask {
     pub fn new_mask(
         key: Option<ClipId>,
         outer_rect: DeviceIntRect,
-        inner_rect: DeviceIntRect,
         clips: Vec<ClipWorkItem>,
-        clip_store: &ClipStore,
-        is_axis_aligned: bool,
         prim_coordinate_system_id: CoordinateSystemId,
-    ) -> Option<RenderTask> {
-        // TODO(gw): This optimization is very conservative for now.
-        //           For now, only draw optimized geometry if it is
-        //           a single aligned rect mask with rounded corners.
-        //           In the future, we'll expand this to handle the
-        //           more complex types of clip mask geometry.
-        let geometry_kind = if is_axis_aligned &&
-            clips.len() == 1 &&
-            inner_rect.size != DeviceIntSize::zero() {
-            clips[0].get_geometry_kind(clip_store, prim_coordinate_system_id)
-        } else {
-            MaskGeometryKind::Default
-        };
-
-        Some(RenderTask {
+    ) -> RenderTask {
+        RenderTask {
             cache_key: key.map(RenderTaskKey::CacheMask),
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, outer_rect.size),
             kind: RenderTaskKind::CacheMask(CacheMaskTask {
                 actual_rect: outer_rect,
-                inner_rect: inner_rect,
                 clips,
-                geometry_kind,
                 coordinate_system_id: prim_coordinate_system_id,
             }),
             clear_mode: ClearMode::One,
-        })
+        }
     }
 
     // Construct a render task to apply a blur to a primitive.
@@ -529,12 +450,7 @@ impl RenderTask {
                         task.actual_rect.origin.y as f32,
                         0.0,
                     ],
-                    [
-                        task.inner_rect.origin.x as f32,
-                        task.inner_rect.origin.y as f32,
-                        (task.inner_rect.origin.x + task.inner_rect.size.width) as f32,
-                        (task.inner_rect.origin.y + task.inner_rect.size.height) as f32,
-                    ],
+                    [0.0; 4],
                 )
             }
             RenderTaskKind::VerticalBlur(ref task) |
@@ -673,7 +589,6 @@ impl RenderTask {
             RenderTaskKind::CacheMask(ref task) => {
                 pt.new_level(format!("CacheMask with {} clips", task.clips.len()));
                 pt.add_item(format!("rect: {:?}", task.actual_rect));
-                pt.add_item(format!("geometry: {:?}", task.geometry_kind));
             }
             RenderTaskKind::VerticalBlur(ref task) => {
                 pt.new_level("VerticalBlur".to_owned());
