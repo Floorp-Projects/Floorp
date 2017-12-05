@@ -816,6 +816,35 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Selection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Selection)
 
+const RangeBoundary&
+Selection::AnchorRef()
+{
+  if (!mAnchorFocusRange) {
+    static RangeBoundary sEmpty;
+    return sEmpty;
+  }
+
+  if (GetDirection() == eDirNext) {
+    return mAnchorFocusRange->StartRef();
+  }
+
+  return mAnchorFocusRange->EndRef();
+}
+
+const RangeBoundary&
+Selection::FocusRef()
+{
+  if (!mAnchorFocusRange) {
+    static RangeBoundary sEmpty;
+    return sEmpty;
+  }
+
+  if (GetDirection() == eDirNext){
+    return mAnchorFocusRange->EndRef();
+  }
+
+  return mAnchorFocusRange->StartRef();
+}
 
 NS_IMETHODIMP
 Selection::GetAnchorNode(nsIDOMNode** aAnchorNode)
@@ -827,19 +856,6 @@ Selection::GetAnchorNode(nsIDOMNode** aAnchorNode)
 
   *aAnchorNode = nullptr;
   return NS_OK;
-}
-
-nsINode*
-Selection::GetAnchorNode()
-{
-  if (!mAnchorFocusRange)
-    return nullptr;
-
-  if (GetDirection() == eDirNext) {
-    return mAnchorFocusRange->GetStartContainer();
-  }
-
-  return mAnchorFocusRange->GetEndContainer();
 }
 
 NS_IMETHODIMP
@@ -862,19 +878,6 @@ Selection::GetFocusNode(nsIDOMNode** aFocusNode)
   return NS_OK;
 }
 
-nsINode*
-Selection::GetFocusNode()
-{
-  if (!mAnchorFocusRange)
-    return nullptr;
-
-  if (GetDirection() == eDirNext){
-    return mAnchorFocusRange->GetEndContainer();
-  }
-
-  return mAnchorFocusRange->GetStartContainer();
-}
-
 NS_IMETHODIMP
 Selection::GetFocusOffset(int32_t* aFocusOffset)
 {
@@ -894,60 +897,6 @@ Selection::SetAnchorFocusRange(int32_t indx)
   else{
     mAnchorFocusRange = mRanges[indx].mRange;
   }
-}
-
-uint32_t
-Selection::AnchorOffset()
-{
-  if (!mAnchorFocusRange)
-    return 0;
-
-  if (GetDirection() == eDirNext){
-    return mAnchorFocusRange->StartOffset();
-  }
-
-  return mAnchorFocusRange->EndOffset();
-}
-
-uint32_t
-Selection::FocusOffset()
-{
-  if (!mAnchorFocusRange)
-    return 0;
-
-  if (GetDirection() == eDirNext){
-    return mAnchorFocusRange->EndOffset();
-  }
-
-  return mAnchorFocusRange->StartOffset();
-}
-
-nsIContent*
-Selection::GetChildAtAnchorOffset()
-{
-  if (!mAnchorFocusRange) {
-    return nullptr;
-  }
-
-  if (GetDirection() == eDirNext) {
-    return mAnchorFocusRange->GetChildAtStartOffset();
-  }
-
-  return mAnchorFocusRange->GetChildAtEndOffset();
-}
-
-nsIContent*
-Selection::GetChildAtFocusOffset()
-{
-  if (!mAnchorFocusRange) {
-    return nullptr;
-  }
-
-  if (GetDirection() == eDirNext){
-    return mAnchorFocusRange->GetChildAtEndOffset();
-  }
-
-  return mAnchorFocusRange->GetChildAtStartOffset();
 }
 
 static nsresult
