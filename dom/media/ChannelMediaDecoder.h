@@ -130,7 +130,10 @@ private:
     bool mReliable; // True if mRate is a reliable estimate.
   };
   // The actual playback rate computation.
-  PlaybackRateInfo ComputePlaybackRate();
+  static PlaybackRateInfo ComputePlaybackRate(
+    const MediaChannelStatistics& aStats,
+    BaseMediaResource* aResource,
+    double aDuration);
 
   // Something has changed that could affect the computed playback rate,
   // so recompute it.
