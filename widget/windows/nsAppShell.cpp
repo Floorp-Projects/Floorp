@@ -27,6 +27,11 @@
 #include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
 
+#if defined(ACCESSIBILITY)
+#include "mozilla/a11y/Compatibility.h"
+#include "mozilla/a11y/Platform.h"
+#endif // defined(ACCESSIBILITY)
+
 // These are two messages that the code in winspool.drv on Windows 7 explicitly
 // waits for while it is pumping other Windows messages, during display of the
 // Printer Properties dialog.
@@ -161,6 +166,89 @@ nsAppShell::~nsAppShell()
   }
 }
 
+#if defined(ACCESSIBILITY)
+
+static ULONG gUiaMsg;
+static HHOOK gUiaHook;
+
+static void InitUIADetection();
+
+static LRESULT CALLBACK
+UiaHookProc(int aCode, WPARAM aWParam, LPARAM aLParam)
+{
+  if (aCode < 0) {
+    return ::CallNextHookEx(nullptr, aCode, aWParam, aLParam);
+  }
+
+  auto cwp = reinterpret_cast<CWPSTRUCT*>(aLParam);
+  if (gUiaMsg && cwp->message == gUiaMsg) {
+    Maybe<bool> shouldCallNextHook =
+      a11y::Compatibility::OnUIAMessage(cwp->wParam, cwp->lParam);
+    if (shouldCallNextHook.isSome()) {
+      // We've got an instantiator, disconnect this hook
+      if (::UnhookWindowsHookEx(gUiaHook)) {
+        gUiaHook = nullptr;
+      }
+
+      if (!shouldCallNextHook.value()) {
+        return 0;
+      }
+    }
+  }
+
+  return ::CallNextHookEx(nullptr, aCode, aWParam, aLParam);
+}
+
+static void
+InitUIADetection()
+{
+  if (gUiaHook) {
+    // In this case we want to re-hook so that the hook is always called ahead
+    // of UIA's hook.
+    if (::UnhookWindowsHookEx(gUiaHook)) {
+      gUiaHook = nullptr;
+    }
+  }
+
+  if (!gUiaMsg) {
+    // This is the message that UIA sends to trigger a command. UIA's
+    // CallWndProc looks for this message and then handles the request.
+    // Our hook gets in front of UIA's hook and examines the message first.
+    gUiaMsg = ::RegisterWindowMessageW(L"HOOKUTIL_MSG");
+  }
+
+  if (!gUiaHook) {
+    gUiaHook = ::SetWindowsHookEx(WH_CALLWNDPROC, &UiaHookProc, nullptr,
+                                  ::GetCurrentThreadId());
+  }
+}
+
+NS_IMETHODIMP
+nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
+                    const char16_t* aData)
+{
+  if (XRE_IsParentProcess() && !strcmp(aTopic, "dll-loaded-main-thread")) {
+    if (a11y::PlatformDisabledState() != a11y::ePlatformIsDisabled && !gUiaHook) {
+      nsDependentString dllName(aData);
+
+      if (StringEndsWith(dllName, NS_LITERAL_STRING("uiautomationcore.dll"),
+                         nsCaseInsensitiveStringComparator())) {
+        InitUIADetection();
+
+        // Now that we've handled the observer notification, we can remove it
+        nsCOMPtr<nsIObserverService> obsServ(mozilla::services::GetObserverService());
+        obsServ->RemoveObserver(this, "dll-loaded-main-thread");
+      }
+    }
+
+    return NS_OK;
+  }
+
+  return nsBaseAppShell::Observe(aSubject, aTopic, aData);
+}
+
+#endif // defined(ACCESSIBILITY)
+
 nsresult
 nsAppShell::Init()
 {
@@ -204,6 +292,15 @@ nsAppShell::Init()
       screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperWin>());
       ScreenHelperWin::RefreshScreens();
     }
+
+#if defined(ACCESSIBILITY)
+    if (::GetModuleHandleW(L"uiautomationcore.dll")) {
+      InitUIADetection();
+    } else {
+      nsCOMPtr<nsIObserverService> obsServ(mozilla::services::GetObserverService());
+      obsServ->AddObserver(this, "dll-loaded-main-thread", false);
+    }
+#endif // defined(ACCESSIBILITY)
   }
 
   return nsBaseAppShell::Init();
@@ -235,6 +332,17 @@ nsAppShell::Run(void)
 NS_IMETHODIMP
 nsAppShell::Exit(void)
 {
+#if defined(ACCESSIBILITY)
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsIObserverService> obsServ(mozilla::services::GetObserverService());
+    obsServ->RemoveObserver(this, "dll-loaded-main-thread");
+
+    if (gUiaHook && ::UnhookWindowsHookEx(gUiaHook)) {
+      gUiaHook = nullptr;
+    }
+  }
+#endif // defined(ACCESSIBILITY)
+
   return nsBaseAppShell::Exit();
 }
 

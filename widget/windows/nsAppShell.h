@@ -41,6 +41,12 @@ public:
 protected:
   NS_IMETHOD Run();
   NS_IMETHOD Exit();
+
+#if defined(ACCESSIBILITY)
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override;
+#endif // defined(ACCESSIBILITY)
+
   virtual void ScheduleNativeEventCallback();
   virtual bool ProcessNextNativeEvent(bool mayWait);
   virtual ~nsAppShell();
