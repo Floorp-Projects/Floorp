@@ -57,6 +57,8 @@ Structure:
       "experiments": [<string>, /* … */], // Optional, array of identifiers
                                     // for the active experiments
       "flashUsage": <integer>, // number of times flash plugin is played since last upload
+      "defaultBrowser": <boolean> // true if the user has set Firefox as default browser
+
     }
 
 Field details
@@ -186,7 +188,7 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 
 Version history
 ---------------
-
+* v10: added ``defaultBrowser`` to know if the user has set Firefox as default browser
 * v9: changed ``arch`` to contain device arch rather than the one we built against
 * v8: added ``flashUsage``
 * v7: added ``sessionCount`` & ``sessionDuration``  & ``campaignId``
