@@ -73,8 +73,7 @@ public:
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,          \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
   void                                                                       \
-  Get##method_(nsAString& aValue, nsIPrincipal& aSubjectPrincipal,           \
-               mozilla::ErrorResult& rv)                                     \
+  Get##method_(nsAString& aValue, mozilla::ErrorResult& rv)                  \
   {                                                                          \
     rv = GetPropertyValue(eCSSProperty_##id_, aValue);                       \
   }                                                                          \

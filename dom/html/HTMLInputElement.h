@@ -714,7 +714,7 @@ public:
     SetUnsignedIntAttr(nsGkAtoms::size, aValue, DEFAULT_COLS, aRv);
   }
 
-  void GetSrc(nsAString& aValue, nsIPrincipal&)
+  void GetSrc(nsAString& aValue)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aValue);
   }

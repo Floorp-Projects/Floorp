@@ -440,7 +440,6 @@ Location::GetHref(nsAString& aHref)
 
 void
 Location::SetHref(const nsAString& aHref,
-                  nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv)
 {
   JSContext *cx = nsContentUtils::GetCurrentJSContext();

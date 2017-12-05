@@ -87,10 +87,7 @@ public:
 
   // XPCOM GetName() is OK
 
-  void GetValue(nsString& val, nsIPrincipal&)
-  {
-    GetValue(val);
-  }
+  // XPCOM GetValue() is OK
 
   void SetValue(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv);
 
