@@ -88,34 +88,6 @@ frame.Manager = class {
         }
         return {value: false};
 
-      // handleModal is called when we need to switch frames to the main
-      // process due to a modal dialog interrupt
-      case "MarionetteFrame:handleModal":
-        // If previousRemoteFrame was set, that means we switched into a
-        // remote frame.  If this is the case, then we want to switch back
-        // into the system frame.  If it isn't the case, then we're in a
-        // non-OOP environment, so we don't need to handle remote frames.
-        let isLocal = true;
-        if (this.currentRemoteFrame !== null) {
-          isLocal = false;
-          this.removeMessageManagerListeners(
-              this.currentRemoteFrame.messageManager.get());
-
-          // store the previous frame so we can switch back to it when
-          // the modal is dismissed
-          this.previousRemoteFrame = this.currentRemoteFrame;
-
-          // by setting currentRemoteFrame to null,
-          // it signifies we're in the main process
-          this.currentRemoteFrame = null;
-          this.driver.messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
-              .getService(Ci.nsIMessageBroadcaster);
-        }
-
-        this.handledModal = true;
-        this.driver.sendOk(this.driver.command_id);
-        return {value: isLocal};
-
       case "MarionetteFrame:getCurrentFrameId":
         if (this.currentRemoteFrame !== null) {
           return this.currentRemoteFrame.frameId;
@@ -202,7 +174,6 @@ frame.Manager = class {
     mm.addWeakMessageListener("Marionette:register", this.driver);
     mm.addWeakMessageListener("Marionette:listenersAttached", this.driver);
     mm.addWeakMessageListener("Marionette:GetLogLevel", this.driver);
-    mm.addWeakMessageListener("MarionetteFrame:handleModal", this);
     mm.addWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
     mm.addWeakMessageListener("MarionetteFrame:getInterruptedState", this);
   }
@@ -228,7 +199,6 @@ frame.Manager = class {
     mm.removeWeakMessageListener("Marionette:GetLogLevel", this.driver);
     mm.removeWeakMessageListener("Marionette:listenersAttached", this.driver);
     mm.removeWeakMessageListener("Marionette:register", this.driver);
-    mm.removeWeakMessageListener("MarionetteFrame:handleModal", this);
     mm.removeWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
   }
 };
