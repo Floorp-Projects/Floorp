@@ -60,7 +60,8 @@ public:
     }
     mAccumulatedBytes += aBytes;
   }
-  double GetRateAtLastStop(bool* aReliable) {
+  double GetRateAtLastStop(bool* aReliable) const
+  {
     double seconds = mAccumulatedTime.ToSeconds();
     *aReliable = (seconds >= 1.0) ||
                  (mAccumulatedBytes >= RELIABLE_DATA_THRESHOLD);
@@ -68,7 +69,8 @@ public:
       return 0.0;
     return static_cast<double>(mAccumulatedBytes)/seconds;
   }
-  double GetRate(bool* aReliable) {
+  double GetRate(bool* aReliable) const
+  {
     TimeDuration time = mAccumulatedTime;
     if (mIsStarted) {
       time += TimeStamp::Now() - mLastStartTime;
