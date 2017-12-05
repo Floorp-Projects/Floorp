@@ -43,9 +43,7 @@
 #  define MOZALLOC_INLINE inline
 #endif
 
-#if defined(__cplusplus)
-extern "C" {
-#endif /* ifdef __cplusplus */
+MOZ_BEGIN_EXTERN_C
 
 /*
  * We need to use malloc_impl and free_impl in this file when they are
@@ -120,9 +118,7 @@ MFBT_API void* moz_xvalloc(size_t size)
 #endif /* if defined(HAVE_VALLOC) */
 
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* ifdef __cplusplus */
+MOZ_END_EXTERN_C
 
 
 #ifdef __cplusplus
