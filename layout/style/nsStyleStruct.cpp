@@ -3578,8 +3578,7 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   , mBreakAfter(false)
   , mOverflowX(NS_STYLE_OVERFLOW_VISIBLE)
   , mOverflowY(NS_STYLE_OVERFLOW_VISIBLE)
-  , mOverflowClipBoxBlock(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
-  , mOverflowClipBoxInline(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
+  , mOverflowClipBox(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
   , mResize(NS_STYLE_RESIZE_NONE)
   , mOrient(StyleOrient::Inline)
   , mIsolation(NS_STYLE_ISOLATION_AUTO)
@@ -3643,8 +3642,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mBreakAfter(aSource.mBreakAfter)
   , mOverflowX(aSource.mOverflowX)
   , mOverflowY(aSource.mOverflowY)
-  , mOverflowClipBoxBlock(aSource.mOverflowClipBoxBlock)
-  , mOverflowClipBoxInline(aSource.mOverflowClipBoxInline)
+  , mOverflowClipBox(aSource.mOverflowClipBox)
   , mResize(aSource.mResize)
   , mOrient(aSource.mOrient)
   , mIsolation(aSource.mIsolation)
@@ -3827,8 +3825,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       || mBreakAfter != aNewData.mBreakAfter
       || mAppearance != aNewData.mAppearance
       || mOrient != aNewData.mOrient
-      || mOverflowClipBoxBlock != aNewData.mOverflowClipBoxBlock
-      || mOverflowClipBoxInline != aNewData.mOverflowClipBoxInline) {
+      || mOverflowClipBox != aNewData.mOverflowClipBox) {
     hint |= nsChangeHint_AllReflowHints |
             nsChangeHint_RepaintFrame;
   }
