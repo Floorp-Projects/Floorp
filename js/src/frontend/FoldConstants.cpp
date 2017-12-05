@@ -188,17 +188,22 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
         if (*result)
             return true;
 
-        if (ParseNode* catchScope = node->pn_kid2) {
-            MOZ_ASSERT(catchScope->isKind(PNK_LEXICALSCOPE));
+        if (ParseNode* catchList = node->pn_kid2) {
+            for (ParseNode* lexicalScope = catchList->pn_head;
+                 lexicalScope;
+                 lexicalScope = lexicalScope->pn_next)
+            {
+                MOZ_ASSERT(lexicalScope->isKind(PNK_LEXICALSCOPE));
 
-            ParseNode* catchNode = catchScope->pn_expr;
-            MOZ_ASSERT(catchNode->isKind(PNK_CATCH));
+                ParseNode* catchNode = lexicalScope->pn_expr;
+                MOZ_ASSERT(catchNode->isKind(PNK_CATCH));
 
-            ParseNode* catchStatements = catchNode->pn_right;
-            if (!ContainsHoistedDeclaration(cx, catchStatements, result))
-                return false;
-            if (*result)
-                return true;
+                ParseNode* catchStatements = catchNode->pn_kid3;
+                if (!ContainsHoistedDeclaration(cx, catchStatements, result))
+                    return false;
+                if (*result)
+                    return true;
+            }
         }
 
         if (ParseNode* finallyBlock = node->pn_kid3)
@@ -365,6 +370,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       case PNK_NEW:
       case PNK_GENERATOR:
       case PNK_PARAMSBODY:
+      case PNK_CATCHLIST:
       case PNK_CATCH:
       case PNK_FORIN:
       case PNK_FOROF:
@@ -1200,8 +1206,8 @@ FoldTry(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& pars
     if (!Fold(cx, &statements, parser))
         return false;
 
-    if (ParseNode*& catchScope = node->pn_kid2) {
-        if (!Fold(cx, &catchScope, parser))
+    if (ParseNode*& catchList = node->pn_kid2) {
+        if (!Fold(cx, &catchList, parser))
             return false;
     }
 
@@ -1217,14 +1223,19 @@ static bool
 FoldCatch(JSContext* cx, ParseNode* node, Parser<FullParseHandler, char16_t>& parser)
 {
     MOZ_ASSERT(node->isKind(PNK_CATCH));
-    MOZ_ASSERT(node->isArity(PN_BINARY));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
 
-    if (ParseNode*& declPattern = node->pn_left) {
+    if (ParseNode*& declPattern = node->pn_kid1) {
         if (!Fold(cx, &declPattern, parser))
             return false;
     }
 
-    if (ParseNode*& statements = node->pn_right) {
+    if (ParseNode*& cond = node->pn_kid2) {
+        if (!FoldCondition(cx, &cond, parser))
+            return false;
+    }
+
+    if (ParseNode*& statements = node->pn_kid3) {
         if (!Fold(cx, &statements, parser))
             return false;
     }
@@ -1713,6 +1724,7 @@ Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler, char16_t>& parser)
       case PNK_OBJECT:
       case PNK_STATEMENTLIST:
       case PNK_CLASSMETHODLIST:
+      case PNK_CATCHLIST:
       case PNK_TEMPLATE_STRING_LIST:
       case PNK_VAR:
       case PNK_CONST:

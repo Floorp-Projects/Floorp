@@ -7,9 +7,16 @@ try {} catch (x) {
     }
 }
 
+try {} catch (x if y) {
+    try {} catch (x if y) {
+        try {} catch (x if y) {
+        }
+    }
+}
+
 while (false) {
-    try {} catch ({x,y}) {
-        try {} catch ({a,b,c,d}) {
+    try {} catch ({x,y} if x) {
+        try {} catch ({a,b,c,d} if a) {
             if (b) break;
             if (c) continue;
         }

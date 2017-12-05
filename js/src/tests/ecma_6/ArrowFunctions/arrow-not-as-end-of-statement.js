@@ -72,6 +72,22 @@ switch (1)
    break;
 }
 
+try
+{
+  // Catch guards are non-standard, so ignore a syntax error.
+  eval(`try
+  {
+  }
+  catch (x if a => {})
+  {
+  }`);
+}
+catch (e)
+{
+  assertEq(e instanceof SyntaxError, true,
+           "should only have thrown SyntaxError, instead got " + e);
+}
+
 assertEq(0[a => {}], undefined);
 
 class Y {};
