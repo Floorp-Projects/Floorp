@@ -25,6 +25,8 @@ def fill_template(config, tasks):
         task['dependencies'] = {'build': dep.label}
         task['worker']['env']['GECKO_HEAD_REPOSITORY'] = config.params['head_repository']
         task['worker']['env']['GECKO_HEAD_REV'] = config.params['head_rev']
+        task['worker']['env']['SYMBOL_SECRET'] = task['worker']['env']['SYMBOL_SECRET'].format(
+            level=config.params['level'])
 
         build_platform = dep.attributes.get('build_platform')
         build_type = dep.attributes.get('build_type')
