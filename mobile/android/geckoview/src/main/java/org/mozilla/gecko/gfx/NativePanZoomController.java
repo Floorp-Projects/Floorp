@@ -18,7 +18,7 @@ import android.view.InputDevice;
 
 import java.util.ArrayList;
 
-public class NativePanZoomController extends JNIObject {
+public final class NativePanZoomController extends JNIObject {
     private static final String LOGTAG = "GeckoNPZC";
 
     private final LayerSession mSession;

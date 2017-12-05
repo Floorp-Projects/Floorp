@@ -11,64 +11,52 @@
 </head>
 
 <body>
-  <div id="container" class="container">
-    <div id="reader-header" class="header">
-      <style scoped>
-        @import url("chrome://global/skin/aboutReaderControls.css");
-      </style>
-      <a id="reader-domain" class="domain"></a>
+  <div class="container">
+    <div class="header reader-header">
+      <a class="domain reader-domain"></a>
       <div class="domain-border"></div>
-      <h1 id="reader-title"></h1>
-      <div id="reader-credits" class="credits"></div>
-      <div id="meta-data" class="meta-data">
-        <div id="reader-estimated-time"></div>
+      <h1 class="reader-title"></h1>
+      <div class="credits reader-credits"></div>
+      <div class="meta-data">
+        <div class="reader-estimated-time"></div>
       </div>
     </div>
 
     <hr>
 
     <div class="content">
-      <style scoped>
-        @import url("chrome://global/skin/aboutReaderContent.css");
-      </style>
-      <div id="moz-reader-content"></div>
+      <div class="moz-reader-content"></div>
     </div>
 
     <div>
-      <style scoped>
-        @import url("chrome://global/skin/aboutReaderControls.css");
-      </style>
-      <div id="reader-message"></div>
+      <div class="reader-message"></div>
     </div>
   </div>
 
-  <ul id="reader-toolbar" class="toolbar">
-    <style scoped>
-      @import url("chrome://global/skin/aboutReaderControls.css");
-    </style>
-    <li><button id="close-button" class="button close-button"/></li>
-    <ul id="style-dropdown" class="dropdown">
+  <ul class="toolbar reader-toolbar">
+    <li><button class="button close-button"/></li>
+    <ul class="dropdown style-dropdown">
       <li><button class="dropdown-toggle button style-button"/></li>
-      <li id="reader-popup" class="dropdown-popup">
-        <div id="font-type-buttons"></div>
+      <li class="dropdown-popup">
+        <div class="font-type-buttons"></div>
         <hr>
-        <div id="font-size-buttons">
-          <button id="font-size-minus" class="minus-button"/>
-          <button id="font-size-sample"/>
-          <button id="font-size-plus" class="plus-button"/>
+        <div class="font-size-buttons">
+          <button class="minus-button"/>
+          <button class="font-size-sample"/>
+          <button class="plus-button"/>
         </div>
         <hr>
-        <div id="content-width-buttons">
-          <button id="content-width-minus" class="content-width-minus-button"/>
-          <button id="content-width-plus" class="content-width-plus-button"/>
+        <div class="content-width-buttons">
+          <button class="content-width-minus-button"/>
+          <button class="content-width-plus-button"/>
         </div>
         <hr>
-        <div id="line-height-buttons">
-          <button id="line-height-minus" class="line-height-minus-button"/>
-          <button id="line-height-plus" class="line-height-plus-button"/>
+        <div class="line-height-buttons">
+          <button class="line-height-minus-button"/>
+          <button class="line-height-plus-button"/>
         </div>
         <hr>
-        <div id="color-scheme-buttons"></div>
+        <div class="color-scheme-buttons"></div>
         <div class="dropdown-arrow"/>
       </li>
     </ul>

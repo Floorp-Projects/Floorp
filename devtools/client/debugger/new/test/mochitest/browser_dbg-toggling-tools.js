@@ -4,10 +4,6 @@
 function getSplitConsole(dbg) {
   const { toolbox, win } = dbg;
 
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
-  });
-
   if (!win) {
     win = toolbox.win;
   }

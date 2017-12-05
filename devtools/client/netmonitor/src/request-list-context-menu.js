@@ -11,6 +11,7 @@ const { saveAs } = require("devtools/client/shared/file-saver");
 const { copyString } = require("devtools/shared/platform/clipboard");
 const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
 const { HarExporter } = require("./har/har-exporter");
+const { openRequestInTab } = require("devtools/client/netmonitor/src/utils/firefox/open-request-in-tab");
 const {
   getSelectedRequest,
   getSortedRequests,
@@ -182,7 +183,7 @@ class RequestListContextMenu {
       label: L10N.getStr("netmonitor.context.newTab"),
       accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
       visible: !!selectedRequest,
-      click: () => this.openRequestInTab(url),
+      click: () => this.openRequestInTab(selectedRequest),
     });
 
     menu.push({
@@ -217,9 +218,8 @@ class RequestListContextMenu {
   /**
    * Opens selected item in a new tab.
    */
-  openRequestInTab(url) {
-    let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-    win.openUILinkIn(url, "tab", { relatedToCurrent: true });
+  openRequestInTab(selectedRequest) {
+    openRequestInTab(selectedRequest);
   }
 
   /**

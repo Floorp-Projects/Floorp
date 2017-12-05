@@ -2984,31 +2984,6 @@ Element::GetEventListenerManagerForAttr(nsAtom* aAttrName,
   return GetOrCreateListenerManager();
 }
 
-BorrowedAttrInfo
-Element::GetAttrInfo(int32_t aNamespaceID, nsAtom* aName) const
-{
-  NS_ASSERTION(nullptr != aName, "must have attribute name");
-  NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
-               "must have a real namespace ID!");
-
-  int32_t index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
-  if (index < 0) {
-    return BorrowedAttrInfo(nullptr, nullptr);
-  }
-
-  return mAttrsAndChildren.AttrInfoAt(index);
-}
-
-BorrowedAttrInfo
-Element::GetAttrInfoAt(uint32_t aIndex) const
-{
-  if (aIndex >= mAttrsAndChildren.AttrCount()) {
-    return BorrowedAttrInfo(nullptr, nullptr);
-  }
-
-  return mAttrsAndChildren.AttrInfoAt(aIndex);
-}
-
 bool
 Element::GetAttr(int32_t aNameSpaceID, nsAtom* aName,
                  nsAString& aResult) const
@@ -3164,18 +3139,6 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
   return NS_OK;
-}
-
-const nsAttrName*
-Element::GetAttrNameAt(uint32_t aIndex) const
-{
-  return mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
-}
-
-uint32_t
-Element::GetAttrCount() const
-{
-  return mAttrsAndChildren.AttrCount();
 }
 
 void

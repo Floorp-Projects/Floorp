@@ -19,7 +19,7 @@ byteorder = "1.0"
 euclid = "0.15.5"
 fxhash = "0.2.1"
 gleam = "0.4.15"
-lazy_static = "0.2"
+lazy_static = "1"
 log = "0.3"
 num-traits = "0.1.32"
 time = "0.1"
@@ -28,6 +28,7 @@ webrender_api = {path = "../webrender_api"}
 bitflags = "1.0"
 thread_profiler = "0.1.1"
 plane-split = "0.6"
+smallvec = "0.5"
 ws = { optional = true, version = "0.7.3" }
 serde_json = { optional = true, version = "1.0" }
 serde = { optional = true, version = "1.0" }

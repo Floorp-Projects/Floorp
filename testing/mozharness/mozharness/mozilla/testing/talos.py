@@ -14,6 +14,7 @@ import pprint
 import copy
 import re
 import shutil
+import subprocess
 import json
 
 import mozharness
@@ -701,8 +702,18 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
                                % os.path.join(env['MOZ_UPLOAD_DIR'],
                                               fname_pattern % 'raw'))
 
+        def launch_in_debug_mode(cmdline):
+            cmdline = set(cmdline)
+            debug_opts = {'--debug', '--debugger', '--debugger_args'}
+
+            return bool(debug_opts.intersection(cmdline))
+
         command = [python, run_tests] + options + mozlog_opts
-        self.return_code = self.run_command(command, cwd=self.workdir,
+        if launch_in_debug_mode(command):
+            talos_process = subprocess.Popen(command, cwd=self.workdir, env=env)
+            talos_process.wait()
+        else:
+            self.return_code = self.run_command(command, cwd=self.workdir,
                                             output_timeout=output_timeout,
                                             output_parser=parser,
                                             env=env)

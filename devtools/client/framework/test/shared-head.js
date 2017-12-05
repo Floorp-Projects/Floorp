@@ -118,6 +118,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.previousHost");
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
+  Services.prefs.clearUserPref("devtools.toolbox.splitconsoleHeight");
 });
 
 registerCleanupFunction(function* cleanup() {

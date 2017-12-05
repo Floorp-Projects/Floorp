@@ -149,3 +149,52 @@ RootAccessibleWrap::accNavigate(
   pvarEndUpAt->vt = VT_DISPATCH;
   return S_OK;
 }
+
+STDMETHODIMP
+RootAccessibleWrap::get_accFocus(
+      /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
+{
+  HRESULT hr = DocAccessibleWrap::get_accFocus(pvarChild);
+  if (FAILED(hr) || pvarChild->vt != VT_EMPTY) {
+    // We got a definite result (either failure or an accessible).
+    return hr;
+  }
+
+  // The base implementation reported no focus.
+  // Focus might be in a remote document.
+  // (The base implementation can't handle this.)
+  // Get the document in the active tab.
+  ProxyAccessible* docProxy = GetPrimaryRemoteTopLevelContentDoc();
+  if (!docProxy) {
+    return hr;
+  }
+  Accessible* docAcc = WrapperFor(docProxy);
+  if (!docAcc) {
+    return E_FAIL;
+  }
+  RefPtr<IDispatch> docDisp = NativeAccessible(docAcc);
+  if (!docDisp) {
+    return E_FAIL;
+  }
+  RefPtr<IAccessible> docIa;
+  hr = docDisp->QueryInterface(IID_IAccessible, (void**)getter_AddRefs(docIa));
+  MOZ_ASSERT(SUCCEEDED(hr));
+  MOZ_ASSERT(docIa);
+
+  // Ask this document for its focused descendant.
+  // We return this as is to the client except for CHILDID_SELF (see below).
+  hr = docIa->get_accFocus(pvarChild);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  if (pvarChild->vt == VT_I4 && pvarChild->lVal == CHILDID_SELF) {
+    // The document itself has focus.
+    // We're handling a call to accFocus on the root accessible,
+    // so replace CHILDID_SELF with the document accessible.
+    pvarChild->vt = VT_DISPATCH;
+    docDisp.forget(&pvarChild->pdispVal);
+  }
+
+  return S_OK;
+}

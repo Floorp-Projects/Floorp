@@ -18,10 +18,6 @@ const TEST_URI = "data:text/html;charset=utf-8,<html><style>" +
                  "};" +
                  "</style><div></div></html>";
 
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
-});
-
 addRDMTask(TEST_URI, function* ({ ui, manager }) {
   info("Open the responsive design mode and set its size to 500x500 to start");
   yield setViewportSize(ui, manager, 500, 500);

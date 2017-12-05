@@ -32,9 +32,7 @@ is(secMan.isSystemPrincipal(sysPrincipal), true,
    "Should have system principal here");
 
 
-var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
-                getService(SpecialPowers.Ci.nsIIOService);
-var inheritingURI = ioService.newURI("javascript:1+1");
+var inheritingURI = SpecialPowers.Services.io.newURI("javascript:1+1");
 
 // First try a normal call to checkLoadURIWithPrincipal
 try {

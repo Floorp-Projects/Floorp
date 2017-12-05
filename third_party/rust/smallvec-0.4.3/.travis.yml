@@ -1,0 +1,14 @@
+language: rust
+rust:
+  - nightly
+  - beta
+  - stable
+script: |
+  cargo build --verbose &&
+  cargo build --all-features --verbose &&
+  cargo test --verbose &&
+  cargo test --all-features --verbose &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || cargo test --verbose --no-default-features) &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || cargo bench --verbose bench)
+notifications:
+  webhooks: http://build.servo.org:54856/travis

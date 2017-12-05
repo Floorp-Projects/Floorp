@@ -33,7 +33,13 @@ class RequestListHeaderContextMenu {
   }
 
   get visibleColumns() {
-    return [...this.columns].filter(([_, shown]) => shown);
+    let visible = [];
+    for (let column in this.columns) {
+      if (this.columns[column]) {
+        visible.push(column);
+      }
+    }
+    return visible;
   }
 
   /**
@@ -44,7 +50,8 @@ class RequestListHeaderContextMenu {
     let subMenu = { timings: [], responseHeaders: [] };
     let onlyOneColumn = this.visibleColumns.length === 1;
 
-    for (let [column, shown] of this.columns) {
+    for (let column in this.columns) {
+      let shown = this.columns[column];
       let label = nonLocalizedHeaders.includes(column)
           ? stringMap[column] || column
           : L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`);

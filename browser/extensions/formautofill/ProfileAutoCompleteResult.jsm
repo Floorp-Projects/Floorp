@@ -53,6 +53,11 @@ class ProfileAutoCompleteResult {
       return fieldSet;
     }, new Set())].filter(field => allFieldNames.includes(field));
 
+    // Force return success code if the focused field is auto-filled in order
+    // to show clear form button popup.
+    if (isInputAutofilled) {
+      resultCode = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+    }
     // The result code of this result object.
     if (resultCode) {
       this.searchResult = resultCode;
