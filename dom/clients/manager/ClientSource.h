@@ -93,7 +93,29 @@ public:
 
   nsISerialEventTarget*
   EventTarget() const;
+
+  void
+  Traverse(nsCycleCollectionTraversalCallback& aCallback,
+           const char* aName,
+           uint32_t aFlags);
 };
+
+inline void
+ImplCycleCollectionUnlink(UniquePtr<ClientSource>& aField)
+{
+  aField.reset();
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            UniquePtr<ClientSource>& aField,
+                            const char* aName,
+                            uint32_t aFlags)
+{
+  if (aField) {
+    aField->Traverse(aCallback, aName, aFlags);
+  }
+}
 
 } // namespace dom
 } // namespace mozilla
