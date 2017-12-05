@@ -20,7 +20,6 @@
 <!ENTITY downloadCert.message1 "You have been asked to trust a new Certificate Authority (CA).">
 <!ENTITY downloadCert.trustSSL "Trust this CA to identify websites.">
 <!ENTITY downloadCert.trustEmail "Trust this CA to identify email users.">
-<!ENTITY downloadCert.trustObjSign "Trust this CA to identify software developers.">
 <!ENTITY downloadCert.message3 "Before trusting this CA for any purpose, you should examine its certificate and its policy and procedures (if available).">
 <!ENTITY downloadCert.viewCert.label "View">
 <!ENTITY downloadCert.viewCert.text "Examine CA certificate">

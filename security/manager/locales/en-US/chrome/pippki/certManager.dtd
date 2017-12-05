@@ -38,7 +38,6 @@
 <!ENTITY certmgr.editcert.edittrust           "Edit trust settings:">
 <!ENTITY certmgr.editcert.trustssl            "This certificate can identify websites.">
 <!ENTITY certmgr.editcert.trustemail          "This certificate can identify mail users.">
-<!ENTITY certmgr.editcert.trustobjsign        "This certificate can identify software makers.">
 
 <!ENTITY certmgr.deletecert.title             "Delete Certificate">
 

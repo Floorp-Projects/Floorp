@@ -13,5 +13,6 @@
     <integer name="max_search_suggestions">2</integer>
     <integer name="max_saved_suggestions">2</integer>
     <integer name="shift_duration_suggestion">500</integer>
+    <integer name="assist_launch_icon_res">0</integer>
 
 </resources>

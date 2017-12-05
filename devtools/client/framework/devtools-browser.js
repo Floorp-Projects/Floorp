@@ -376,9 +376,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     if (processId) {
       return this._getContentProcessTarget(processId)
           .then(target => {
-            // Display a new toolbox, in a new window, with debugger by default
-            return gDevTools.showToolbox(target, "jsdebugger",
-                                         Toolbox.HostType.WINDOW);
+            // Display a new toolbox in a new window
+            return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
           });
     }
 
