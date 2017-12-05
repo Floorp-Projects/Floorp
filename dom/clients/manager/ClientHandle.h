@@ -9,6 +9,7 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/ClientThing.h"
+#include "mozilla/MozPromise.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -22,6 +23,7 @@ class ClientManager;
 class ClientHandleChild;
 class ClientOpConstructorArgs;
 class PClientManagerChild;
+class ServiceWorkerDescriptor;
 
 // The ClientHandle allows code to take a simple ClientInfo struct and
 // convert it into a live actor-backed object attached to a particular
@@ -61,6 +63,12 @@ class ClientHandle final : public ClientThing<ClientHandleChild>
 public:
   const ClientInfo&
   Info() const;
+
+  // Mark the ClientSource attached to this handle as controlled by the
+  // given service worker.  The promise will resolve true if the ClientSource
+  // is successfully marked or reject if the operation could not be completed.
+  RefPtr<GenericPromise>
+  Control(const ServiceWorkerDescriptor& aServiceWorker);
 
   NS_INLINE_DECL_REFCOUNTING(ClientHandle);
 };

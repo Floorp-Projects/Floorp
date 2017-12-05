@@ -12,8 +12,19 @@
 namespace mozilla {
 namespace dom {
 
+class ClientSource;
+
 class ClientSourceOpChild final : public PClientSourceOpChild
 {
+  MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
+
+  ClientSource*
+  GetSource() const;
+
+  template <typename Method, typename Args>
+  void
+  DoSourceOp(Method aMethod, const Args& aArgs);
+
   // PClientSourceOpChild interface
   void
   ActorDestroy(ActorDestroyReason aReason) override;

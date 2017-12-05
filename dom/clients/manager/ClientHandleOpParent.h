@@ -6,13 +6,21 @@
 #ifndef _mozilla_dom_ClientHandleOpParent_h
 #define _mozilla_dom_ClientHandleOpParent_h
 
+#include "ClientOpPromise.h"
 #include "mozilla/dom/PClientHandleOpParent.h"
 
 namespace mozilla {
 namespace dom {
 
+class ClientSourceParent;
+
 class ClientHandleOpParent final : public PClientHandleOpParent
 {
+  MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
+
+  ClientSourceParent*
+  GetSource() const;
+
   // PClientHandleOpParent interface
   void
   ActorDestroy(ActorDestroyReason aReason) override;
