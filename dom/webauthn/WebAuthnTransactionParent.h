@@ -35,6 +35,9 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvRequestCancel(const uint64_t& aTransactionId) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvDestroyMe() override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:

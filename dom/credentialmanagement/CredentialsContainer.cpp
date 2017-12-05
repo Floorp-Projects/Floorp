@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CredentialsContainer, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CredentialsContainer, mParent, mManager)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CredentialsContainer)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CredentialsContainer)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CredentialsContainer)
@@ -28,6 +28,16 @@ CredentialsContainer::CredentialsContainer(nsPIDOMWindowInner* aParent) :
 CredentialsContainer::~CredentialsContainer()
 {}
 
+void
+CredentialsContainer::EnsureWebAuthnManager()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mManager) {
+    mManager = new WebAuthnManager(mParent);
+  }
+}
+
 JSObject*
 CredentialsContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -37,22 +47,22 @@ CredentialsContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 already_AddRefed<Promise>
 CredentialsContainer::Get(const CredentialRequestOptions& aOptions)
 {
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
-  return mgr->GetAssertion(mParent, aOptions.mPublicKey, aOptions.mSignal);
+  EnsureWebAuthnManager();
+  return mManager->GetAssertion(aOptions.mPublicKey, aOptions.mSignal);
 }
 
 already_AddRefed<Promise>
 CredentialsContainer::Create(const CredentialCreationOptions& aOptions)
 {
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
-  return mgr->MakeCredential(mParent, aOptions.mPublicKey, aOptions.mSignal);
+  EnsureWebAuthnManager();
+  return mManager->MakeCredential(aOptions.mPublicKey, aOptions.mSignal);
 }
 
 already_AddRefed<Promise>
 CredentialsContainer::Store(const Credential& aCredential)
 {
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
-  return mgr->Store(mParent, aCredential);
+  EnsureWebAuthnManager();
+  return mManager->Store(aCredential);
 }
 
 } // namespace dom

@@ -42,7 +42,7 @@
 #include "mozilla/net/HttpBackgroundChannelChild.h"
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
-#include "mozilla/dom/WebAuthnTransactionChildBase.h"
+#include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
 
@@ -86,7 +86,7 @@ using mozilla::dom::cache::PCacheStreamControlChild;
 using mozilla::dom::LocalStorage;
 using mozilla::dom::StorageDBChild;
 
-using mozilla::dom::WebAuthnTransactionChildBase;
+using mozilla::dom::WebAuthnTransactionChild;
 
 // -----------------------------------------------------------------------------
 // BackgroundChildImpl::ThreadLocal
@@ -607,8 +607,8 @@ bool
 BackgroundChildImpl::DeallocPWebAuthnTransactionChild(PWebAuthnTransactionChild* aActor)
 {
   MOZ_ASSERT(aActor);
-  RefPtr<dom::WebAuthnTransactionChildBase> child =
-    dont_AddRef(static_cast<dom::WebAuthnTransactionChildBase*>(aActor));
+  RefPtr<dom::WebAuthnTransactionChild> child =
+    dont_AddRef(static_cast<dom::WebAuthnTransactionChild*>(aActor));
   return true;
 }
 
