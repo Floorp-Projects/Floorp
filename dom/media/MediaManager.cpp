@@ -3736,6 +3736,10 @@ SourceListener::Remove()
 
   // If it's destroyed, don't call - listener will be removed and we'll be notified!
   if (!mStream->IsDestroyed()) {
+    // We disable pulling before removing so we don't risk having live tracks
+    // without a listener attached - that wouldn't produce data and would be
+    // illegal to the graph.
+    mStream->SetPullEnabled(false);
     mStream->RemoveListener(this);
   }
 }
