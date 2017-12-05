@@ -100,10 +100,11 @@ function test5() {
     for (var i=0; i<40; i++) {
 	try {
 	    throw i;
-	} catch (e if e % 2) {
-	    res += e;
 	} catch (e) {
-	    res += e * 3;
+          if (e % 2)
+	       res += e;
+          else
+	       res += e * 3;
 	}
     }
     return res;
