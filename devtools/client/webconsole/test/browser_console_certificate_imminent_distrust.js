@@ -93,7 +93,7 @@ function runTestLoop(theHud) {
     gHud = theHud;
   }
   gHud.jsterm.clearOutput();
-  gContentBrowser.addEventListener("load", onLoad, true);
+  BrowserTestUtils.browserLoaded(gContentBrowser).then(onLoad);
   if (gCurrentTest.pref) {
     SpecialPowers.pushPrefEnv({"set": gCurrentTest.pref},
       function () {
@@ -105,8 +105,6 @@ function runTestLoop(theHud) {
 }
 
 function onLoad() {
-  gContentBrowser.removeEventListener("load", onLoad, true);
-
   waitForSuccess({
     name: gCurrentTest.name,
     validator: function () {
