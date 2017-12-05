@@ -12,6 +12,7 @@ module.exports = {
     }],
     "max-len": ["error", 78, {
       "ignoreStrings": true,
+      "ignoreTemplateLiterals": true,
       "ignoreUrls": true,
     }],
     "no-fallthrough": "error",

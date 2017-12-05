@@ -4,14 +4,16 @@
 
 use super::shader_source;
 use api::{ColorF, ImageFormat};
-use api::{DeviceIntRect, DeviceUintSize};
+use api::{DeviceIntRect, DeviceUintRect, DeviceUintSize};
 use euclid::Transform3D;
 use gleam::gl;
 use internal_types::{FastHashMap, RenderTargetInfo};
+use smallvec::SmallVec;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::Read;
 use std::iter::repeat;
+use std::marker::PhantomData;
 use std::mem;
 use std::ops::Add;
 use std::path::PathBuf;
@@ -114,6 +116,15 @@ pub struct VertexDescriptor {
 enum FBOTarget {
     Read,
     Draw,
+}
+
+/// Method of uploading texel data from CPU to GPU.
+#[derive(Debug, Clone)]
+pub enum UploadMethod {
+    /// Just call `glTexSubImage` directly with the CPU data pointer
+    Immediate,
+    /// Accumulate the changes in PBO first before transferring to a texture.
+    PixelBuffer(VertexUsageHint),
 }
 
 pub fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
@@ -582,13 +593,13 @@ pub struct Device {
     bound_textures: [gl::GLuint; 16],
     bound_program: gl::GLuint,
     bound_vao: gl::GLuint,
-    bound_pbo: gl::GLuint,
     bound_read_fbo: FBOId,
     bound_draw_fbo: FBOId,
     default_read_fbo: gl::GLuint,
     default_draw_fbo: gl::GLuint,
 
-    pub device_pixel_ratio: f32,
+    device_pixel_ratio: f32,
+    upload_method: UploadMethod,
 
     // HW or API capabilties
     capabilities: Capabilities,
@@ -612,6 +623,7 @@ impl Device {
     pub fn new(
         gl: Rc<gl::Gl>,
         resource_override_path: Option<PathBuf>,
+        upload_method: UploadMethod,
         _file_changed_handler: Box<FileWatcherHandler>,
         cached_programs: Option<Rc<ProgramCache>>,
     ) -> Device {
@@ -621,9 +633,10 @@ impl Device {
         Device {
             gl,
             resource_override_path,
-            // This is initialized to 1 by default, but it is set
-            // every frame by the call to begin_frame().
+            // This is initialized to 1 by default, but it is reset
+            // at the beginning of each frame in `Renderer::bind_frame_data`.
             device_pixel_ratio: 1.0,
+            upload_method,
             inside_frame: false,
 
             capabilities: Capabilities {
@@ -633,7 +646,6 @@ impl Device {
             bound_textures: [0; 16],
             bound_program: 0,
             bound_vao: 0,
-            bound_pbo: 0,
             bound_read_fbo: FBOId(0),
             bound_draw_fbo: FBOId(0),
             default_read_fbo: 0,
@@ -654,6 +666,10 @@ impl Device {
         &self.gl
     }
 
+    pub fn set_device_pixel_ratio(&mut self, ratio: f32) {
+        self.device_pixel_ratio = ratio;
+    }
+
     pub fn update_program_cache(&mut self, cached_programs: Rc<ProgramCache>) {
         self.cached_programs = Some(cached_programs);
     }
@@ -669,7 +685,6 @@ impl Device {
     pub fn reset_state(&mut self) {
         self.bound_textures = [0; 16];
         self.bound_vao = 0;
-        self.bound_pbo = 0;
         self.bound_read_fbo = FBOId(0);
         self.bound_draw_fbo = FBOId(0);
     }
@@ -727,7 +742,6 @@ impl Device {
 
         // Pixel op state
         self.gl.pixel_store_i(gl::UNPACK_ALIGNMENT, 1);
-        self.bound_pbo = 0;
         self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
 
         // Default is sampler 0, always
@@ -1073,7 +1087,6 @@ impl Device {
 
     pub fn free_texture_storage(&mut self, texture: &mut Texture) {
         debug_assert!(self.inside_frame);
-        debug_assert_eq!(self.bound_pbo, 0);
 
         if texture.format == ImageFormat::Invalid {
             return;
@@ -1322,111 +1335,45 @@ impl Device {
         pbo.id = 0;
     }
 
-    pub fn bind_pbo(&mut self, pbo: Option<&PBO>) {
+    pub fn upload_texture<'a, T>(
+        &'a mut self,
+        texture: &'a Texture,
+        pbo: &PBO,
+        upload_count: usize,
+    ) -> TextureUploader<'a, T> {
         debug_assert!(self.inside_frame);
-        let pbo_id = pbo.map_or(0, |pbo| pbo.id);
-
-        if self.bound_pbo != pbo_id {
-            self.bound_pbo = pbo_id;
-
-            self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, pbo_id);
-        }
-    }
-
-    pub fn update_pbo_data<T>(&mut self, data: &[T]) {
-        debug_assert!(self.inside_frame);
-        debug_assert_ne!(self.bound_pbo, 0);
-
-        gl::buffer_data(&*self.gl, gl::PIXEL_UNPACK_BUFFER, data, gl::STREAM_DRAW);
-    }
-
-    pub fn orphan_pbo(&mut self, new_size: usize) {
-        debug_assert!(self.inside_frame);
-        debug_assert_ne!(self.bound_pbo, 0);
-
-        self.gl.buffer_data_untyped(
-            gl::PIXEL_UNPACK_BUFFER,
-            new_size as isize,
-            ptr::null(),
-            gl::STREAM_DRAW,
-        );
-    }
-
-    pub fn update_texture_from_pbo(
-        &mut self,
-        texture: &Texture,
-        x0: u32,
-        y0: u32,
-        width: u32,
-        height: u32,
-        layer_index: i32,
-        stride: Option<u32>,
-        offset: usize,
-    ) {
-        debug_assert!(self.inside_frame);
-
-        let (gl_format, bpp, data_type) = match texture.format {
-            ImageFormat::A8 => (GL_FORMAT_A, 1, gl::UNSIGNED_BYTE),
-            ImageFormat::RGB8 => (gl::RGB, 3, gl::UNSIGNED_BYTE),
-            ImageFormat::BGRA8 => (get_gl_format_bgra(self.gl()), 4, gl::UNSIGNED_BYTE),
-            ImageFormat::RG8 => (gl::RG, 2, gl::UNSIGNED_BYTE),
-            ImageFormat::RGBAF32 => (gl::RGBA, 16, gl::FLOAT),
-            ImageFormat::Invalid => unreachable!(),
-        };
-
-        let row_length = match stride {
-            Some(value) => value / bpp,
-            None => width,
-        };
-
-        if let Some(..) = stride {
-            self.gl
-                .pixel_store_i(gl::UNPACK_ROW_LENGTH, row_length as gl::GLint);
-        }
-
         self.bind_texture(DEFAULT_TEXTURE, texture);
 
-        match texture.target {
-            gl::TEXTURE_2D_ARRAY => {
-                self.gl.tex_sub_image_3d_pbo(
-                    texture.target,
-                    0,
-                    x0 as gl::GLint,
-                    y0 as gl::GLint,
-                    layer_index,
-                    width as gl::GLint,
-                    height as gl::GLint,
-                    1,
-                    gl_format,
-                    data_type,
-                    offset,
-                );
-            }
-            gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES => {
-                self.gl.tex_sub_image_2d_pbo(
-                    texture.target,
-                    0,
-                    x0 as gl::GLint,
-                    y0 as gl::GLint,
-                    width as gl::GLint,
-                    height as gl::GLint,
-                    gl_format,
-                    data_type,
-                    offset,
-                );
-            }
-            _ => panic!("BUG: Unexpected texture target!"),
-        }
+        let buffer = match self.upload_method {
+            UploadMethod::Immediate => None,
+            UploadMethod::PixelBuffer(hint) => {
+                let upload_size = upload_count * mem::size_of::<T>();
+                self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, pbo.id);
+                if upload_size != 0 {
+                    self.gl.buffer_data_untyped(
+                        gl::PIXEL_UNPACK_BUFFER,
+                        upload_size as _,
+                        ptr::null(),
+                        hint.to_gl(),
+                    );
+                }
+                Some(PixelBuffer::new(hint.to_gl(), upload_size))
+            },
+        };
 
-        // Reset row length to 0, otherwise the stride would apply to all texture uploads.
-        if let Some(..) = stride {
-            self.gl.pixel_store_i(gl::UNPACK_ROW_LENGTH, 0 as gl::GLint);
+        TextureUploader {
+            target: UploadTarget {
+                gl: &*self.gl,
+                texture,
+            },
+            buffer,
+            marker: PhantomData,
         }
     }
 
     pub fn read_pixels(&mut self, width: i32, height: i32) -> Vec<u8> {
         self.gl.read_pixels(
-            0, 0, 
+            0, 0,
             width as i32, height as i32,
             gl::RGBA,
             gl::UNSIGNED_BYTE
@@ -1765,5 +1712,174 @@ fn gl_type_for_texture_format(format: ImageFormat) -> gl::GLuint {
     match format {
         ImageFormat::RGBAF32 => gl::FLOAT,
         _ => gl::UNSIGNED_BYTE,
+    }
+}
+
+
+struct UploadChunk {
+    rect: DeviceUintRect,
+    layer_index: i32,
+    stride: Option<u32>,
+    offset: usize,
+}
+
+struct PixelBuffer {
+    usage: gl::GLenum,
+    size_allocated: usize,
+    size_used: usize,
+    // small vector avoids heap allocation for a single chunk
+    chunks: SmallVec<[UploadChunk; 1]>,
+}
+
+impl PixelBuffer {
+    fn new(
+        usage: gl::GLenum,
+        size_allocated: usize,
+    ) -> Self {
+        PixelBuffer {
+            usage,
+            size_allocated,
+            size_used: 0,
+            chunks: SmallVec::new(),
+        }
+    }
+}
+
+struct UploadTarget<'a> {
+    gl: &'a gl::Gl,
+    texture: &'a Texture,
+}
+
+pub struct TextureUploader<'a, T> {
+    target: UploadTarget<'a>,
+    buffer: Option<PixelBuffer>,
+    marker: PhantomData<T>,
+}
+
+impl<'a, T> Drop for TextureUploader<'a, T> {
+    fn drop(&mut self) {
+        if let Some(buffer) = self.buffer.take() {
+            for chunk in buffer.chunks {
+                self.target.update_impl(chunk);
+            }
+            self.target.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
+        }
+    }
+}
+
+impl<'a, T> TextureUploader<'a, T> {
+    pub fn upload(
+        &mut self,
+        rect: DeviceUintRect,
+        layer_index: i32,
+        stride: Option<u32>,
+        data: &[T],
+    ) {
+        match self.buffer {
+            Some(ref mut buffer) => {
+                let upload_size = mem::size_of::<T>() * data.len();
+                if buffer.size_used + upload_size > buffer.size_allocated {
+                    // flush
+                    for chunk in buffer.chunks.drain() {
+                        self.target.update_impl(chunk);
+                    }
+                    buffer.size_used = 0;
+                }
+
+                if upload_size > buffer.size_allocated {
+                    gl::buffer_data(
+                        self.target.gl,
+                        gl::PIXEL_UNPACK_BUFFER,
+                        data,
+                        buffer.usage,
+                    );
+                    buffer.size_allocated = upload_size;
+                } else {
+                    gl::buffer_sub_data(
+                        self.target.gl,
+                        gl::PIXEL_UNPACK_BUFFER,
+                        buffer.size_used as _,
+                        data,
+                    );
+                }
+
+                buffer.chunks.push(UploadChunk {
+                    rect, layer_index, stride,
+                    offset: buffer.size_used,
+                });
+                buffer.size_used += upload_size;
+            }
+            None => {
+                self.target.update_impl(UploadChunk {
+                    rect, layer_index, stride,
+                    offset: data.as_ptr() as _,
+                });
+            }
+        }
+    }
+}
+
+impl<'a> UploadTarget<'a> {
+    fn update_impl(&mut self, chunk: UploadChunk) {
+        let (gl_format, bpp, data_type) = match self.texture.format {
+            ImageFormat::A8 => (GL_FORMAT_A, 1, gl::UNSIGNED_BYTE),
+            ImageFormat::RGB8 => (gl::RGB, 3, gl::UNSIGNED_BYTE),
+            ImageFormat::BGRA8 => (get_gl_format_bgra(self.gl), 4, gl::UNSIGNED_BYTE),
+            ImageFormat::RG8 => (gl::RG, 2, gl::UNSIGNED_BYTE),
+            ImageFormat::RGBAF32 => (gl::RGBA, 16, gl::FLOAT),
+            ImageFormat::Invalid => unreachable!(),
+        };
+
+        let row_length = match chunk.stride {
+            Some(value) => value / bpp,
+            None => self.texture.width,
+        };
+
+        if chunk.stride.is_some() {
+            self.gl.pixel_store_i(
+                gl::UNPACK_ROW_LENGTH,
+                row_length as _,
+            );
+        }
+
+        let pos = chunk.rect.origin;
+        let size = chunk.rect.size;
+
+        match self.texture.target {
+            gl::TEXTURE_2D_ARRAY => {
+                self.gl.tex_sub_image_3d_pbo(
+                    self.texture.target,
+                    0,
+                    pos.x as _,
+                    pos.y as _,
+                    chunk.layer_index,
+                    size.width as _,
+                    size.height as _,
+                    1,
+                    gl_format,
+                    data_type,
+                    chunk.offset,
+                );
+            }
+            gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES => {
+                self.gl.tex_sub_image_2d_pbo(
+                    self.texture.target,
+                    0,
+                    pos.x as _,
+                    pos.y as _,
+                    size.width as _,
+                    size.height as _,
+                    gl_format,
+                    data_type,
+                    chunk.offset,
+                );
+            }
+            _ => panic!("BUG: Unexpected texture target!"),
+        }
+
+        // Reset row length to 0, otherwise the stride would apply to all texture uploads.
+        if chunk.stride.is_some() {
+            self.gl.pixel_store_i(gl::UNPACK_ROW_LENGTH, 0 as _);
+        }
     }
 }

@@ -73,6 +73,11 @@ SyncedTabsDeckComponent.prototype = {
     Services.obs.addObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED);
     Services.obs.addObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION);
     Services.obs.addObserver(this, "weave:service:login:change");
+    // If the Sync service is not ready, in init() > updatePanel() we will
+    // show a blank screen. If tab syncing is disabled, we will not get any other
+    // ui-refreshing notifications! We listen to :ready in order to check again
+    // if this engine is disabled and refresh the UI one last time.
+    Services.obs.addObserver(this, "weave:service:ready");
 
     // Go ahead and trigger sync
     this._SyncedTabs.syncTabs()
@@ -95,6 +100,7 @@ SyncedTabsDeckComponent.prototype = {
     Services.obs.removeObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED);
     Services.obs.removeObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION);
     Services.obs.removeObserver(this, "weave:service:login:change");
+    Services.obs.removeObserver(this, "weave:service:ready");
     this._deckView.destroy();
   },
 
@@ -104,6 +110,9 @@ SyncedTabsDeckComponent.prototype = {
         this._syncedTabsListStore.getData();
         this.updatePanel();
         break;
+      case "weave:service:ready":
+        Services.obs.removeObserver(this, "weave:service:ready");
+        // Intended fallthrough.
       case FxAccountsCommon.ONLOGIN_NOTIFICATION:
       case "weave:service:login:change":
         this.updatePanel();

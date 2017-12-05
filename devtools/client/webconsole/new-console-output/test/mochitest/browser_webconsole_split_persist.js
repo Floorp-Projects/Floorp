@@ -112,8 +112,6 @@
 
   function finish() {
     toolbox = TEST_URI = null;
-    Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
-    Services.prefs.clearUserPref("devtools.toolbox.splitconsoleHeight");
     finishTest();
   }
 }

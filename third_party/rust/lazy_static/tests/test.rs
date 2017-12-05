@@ -27,10 +27,6 @@ lazy_static! {
     static ref UNSAFE: u32 = unsafe {
         std::mem::transmute::<i32, u32>(-1)
     };
-
-    // This *should* triggger warn(dead_code) by design.
-    static ref UNUSED: () = ();
-
 }
 
 lazy_static! {
@@ -84,16 +80,26 @@ mod visibility {
         static ref BAR: Box<u32> = Box::new(98);
     }
 
+    pub mod inner {
+        lazy_static! {
+            pub(in visibility) static ref BAZ: Box<u32> = Box::new(42);
+            pub(crate) static ref BAG: Box<u32> = Box::new(37);
+        }
+    }
+
     #[test]
     fn sub_test() {
         assert_eq!(**FOO, 0);
         assert_eq!(**BAR, 98);
+        assert_eq!(**inner::BAZ, 42);
+        assert_eq!(**inner::BAG, 37);
     }
 }
 
 #[test]
 fn test_visibility() {
     assert_eq!(*visibility::FOO, Box::new(0));
+    assert_eq!(*visibility::inner::BAG, Box::new(37));
 }
 
 // This should not cause a warning about a missing Copy implementation

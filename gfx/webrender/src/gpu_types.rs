@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{LayerVector2D, LayerRect, LayerToWorldTransform, WorldToLayerTransform};
+use api::{LayerVector2D, LayerRect, LayerToWorldTransform};
 use gpu_cache::GpuCacheAddress;
 use render_task::RenderTaskAddress;
 
@@ -154,7 +154,7 @@ pub struct BrushInstance {
     pub scroll_id: ClipScrollNodeIndex,
     pub clip_task_address: RenderTaskAddress,
     pub z: i32,
-    pub flags: i32,
+    pub segment_kind: i32,
     pub user_data0: i32,
     pub user_data1: i32,
 }
@@ -168,7 +168,7 @@ impl From<BrushInstance> for PrimitiveInstance {
                 ((instance.clip_id.0 as i32) << 16) | instance.scroll_id.0 as i32,
                 instance.clip_task_address.0 as i32,
                 instance.z,
-                instance.flags,
+                instance.segment_kind,
                 instance.user_data0,
                 instance.user_data1,
             ]
@@ -186,7 +186,7 @@ pub enum BrushImageKind {
     Mirror = 2,     // A top left corner only (mirror across x/y axes)
 }
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Copy, Debug, Clone, PartialEq)]
 #[repr(C)]
 pub struct ClipScrollNodeIndex(pub u32);
 
@@ -194,9 +194,19 @@ pub struct ClipScrollNodeIndex(pub u32);
 #[repr(C)]
 pub struct ClipScrollNodeData {
     pub transform: LayerToWorldTransform,
-    pub inv_transform: WorldToLayerTransform,
+
+    /// Viewport rectangle clipped against parent viewport rectangles.  This is
+    /// in the coordinate system of the node origin.  Precisely, it combines the
+    /// local clipping rectangles of all the parent nodes on the way to the root,
+    /// including those of `ClipRegion` rectangles.  The combined clip is reset to
+    /// maximum when an incompatible coordinate system is encountered.
     pub local_clip_rect: LayerRect,
+
+    /// The scroll offset of all the nodes between us and our parent reference frame.
+    /// This is used to calculate intersections between us and content or nodes that
+    /// are also direct children of our reference frame.
     pub reference_frame_relative_scroll_offset: LayerVector2D,
+
     pub scroll_offset: LayerVector2D,
     pub transform_kind: f32,
     pub padding: [f32; 3],
@@ -206,7 +216,6 @@ impl ClipScrollNodeData {
     pub fn invalid() -> ClipScrollNodeData {
         ClipScrollNodeData {
             transform: LayerToWorldTransform::identity(),
-            inv_transform: WorldToLayerTransform::identity(),
             local_clip_rect: LayerRect::zero(),
             reference_frame_relative_scroll_offset: LayerVector2D::zero(),
             scroll_offset: LayerVector2D::zero(),

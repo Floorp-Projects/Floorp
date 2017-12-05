@@ -9,7 +9,7 @@ use clip::ClipSource;
 use ellipse::Ellipse;
 use frame_builder::FrameBuilder;
 use gpu_cache::GpuDataRequest;
-use internal_types::EdgeAaSegmentMask;
+use prim_store::{BrushAntiAliasMode, BrushSegmentDescriptor, BrushSegmentKind};
 use prim_store::{BorderPrimitiveCpu, PrimitiveContainer, TexelRect};
 use util::{lerp, pack_as_float};
 
@@ -374,56 +374,84 @@ impl FrameBuilder {
         let has_no_curve = radius.is_zero();
 
         if has_no_curve && all_corners_simple && all_edges_simple {
-            let p0 = info.rect.origin;
-            let p1 = info.rect.bottom_right();
-            let rect_width = info.rect.size.width;
-            let rect_height = info.rect.size.height;
-            let mut info = info.clone();
+            let inner_rect = LayerRect::new(
+                LayerPoint::new(
+                    info.rect.origin.x + left_len,
+                    info.rect.origin.y + top_len,
+                ),
+                LayerSize::new(
+                    info.rect.size.width - left_len - right_len,
+                    info.rect.size.height - top_len - bottom_len,
+                ),
+            );
 
             // Add a solid rectangle for each visible edge/corner combination.
             if top_edge == BorderEdgeKind::Solid {
-                info.rect = LayerRect::new(p0, LayerSize::new(rect_width, top_len));
+                let descriptor = BrushSegmentDescriptor::new(
+                    &info.rect,
+                    &inner_rect,
+                    Some(&[
+                        BrushSegmentKind::TopLeft,
+                        BrushSegmentKind::TopMid,
+                        BrushSegmentKind::TopRight
+                    ]),
+                );
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
                     border.top.color,
-                    EdgeAaSegmentMask::BOTTOM,
+                    Some(Box::new(descriptor)),
+                    BrushAntiAliasMode::Segment,
                 );
             }
             if left_edge == BorderEdgeKind::Solid {
-                info.rect = LayerRect::new(
-                    LayerPoint::new(p0.x, p0.y + top_len),
-                    LayerSize::new(left_len, rect_height - top_len - bottom_len),
+                let descriptor = BrushSegmentDescriptor::new(
+                    &info.rect,
+                    &inner_rect,
+                    Some(&[
+                        BrushSegmentKind::MidLeft,
+                    ]),
                 );
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
                     border.left.color,
-                    EdgeAaSegmentMask::RIGHT,
+                    Some(Box::new(descriptor)),
+                    BrushAntiAliasMode::Segment,
                 );
             }
             if right_edge == BorderEdgeKind::Solid {
-                info.rect = LayerRect::new(
-                    LayerPoint::new(p1.x - right_len, p0.y + top_len),
-                    LayerSize::new(right_len, rect_height - top_len - bottom_len),
+                let descriptor = BrushSegmentDescriptor::new(
+                    &info.rect,
+                    &inner_rect,
+                    Some(&[
+                        BrushSegmentKind::MidRight,
+                    ]),
                 );
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
                     border.right.color,
-                    EdgeAaSegmentMask::LEFT,
+                    Some(Box::new(descriptor)),
+                    BrushAntiAliasMode::Segment,
                 );
             }
             if bottom_edge == BorderEdgeKind::Solid {
-                info.rect = LayerRect::new(
-                    LayerPoint::new(p0.x, p1.y - bottom_len),
-                    LayerSize::new(rect_width, bottom_len),
+                let descriptor = BrushSegmentDescriptor::new(
+                    &info.rect,
+                    &inner_rect,
+                    Some(&[
+                        BrushSegmentKind::BottomLeft,
+                        BrushSegmentKind::BottomMid,
+                        BrushSegmentKind::BottomRight
+                    ]),
                 );
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &info,
                     border.bottom.color,
-                    EdgeAaSegmentMask::TOP,
+                    Some(Box::new(descriptor)),
+                    BrushAntiAliasMode::Segment,
                 );
             }
         } else {

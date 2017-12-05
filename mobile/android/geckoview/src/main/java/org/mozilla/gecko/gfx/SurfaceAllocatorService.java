@@ -12,7 +12,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-public class SurfaceAllocatorService extends Service {
+public final class SurfaceAllocatorService extends Service {
 
     private static final String LOGTAG = "SurfaceAllocatorService";
 

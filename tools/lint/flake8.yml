@@ -23,6 +23,7 @@ flake8:
         - testing/mochitest
         - testing/mozbase
         - testing/mozharness/mozfile
+        - testing/mozharness/mozharness/mozilla/mar.py
         - testing/mozharness/mozinfo
         - testing/mozharness/scripts
         - testing/remotecppunittests.py

@@ -57,8 +57,7 @@ QuitterObserver.prototype = {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "Quitter.Quit":
-        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-        appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
         break;
     }
   }

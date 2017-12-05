@@ -8,17 +8,15 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 
 do_get_profile();
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
-
 var gDBConn = null;
 
 function getTestDB() {
-  var db = dirSvc.get("ProfD", Ci.nsIFile);
+  var db = Services.dirsvc.get("ProfD", Ci.nsIFile);
   db.append("test_storage.sqlite");
   return db;
 }
@@ -82,10 +80,6 @@ function asyncCleanup() {
   deleteTestDB();
 }
 
-function getService() {
-  return Cc["@mozilla.org/storage/service;1"].getService(Ci.mozIStorageService);
-}
-
 /**
  * Get a connection to the test database.  Creates and caches the connection
  * if necessary, otherwise reuses the existing cached connection. This
@@ -95,7 +89,7 @@ function getService() {
  */
 function getOpenedDatabase() {
   if (!gDBConn) {
-    gDBConn = getService().openDatabase(getTestDB());
+    gDBConn = Services.storage.openDatabase(getTestDB());
   }
   return gDBConn;
 }
@@ -109,7 +103,7 @@ function getOpenedDatabase() {
  */
 function getOpenedUnsharedDatabase() {
   if (!gDBConn) {
-    gDBConn = getService().openUnsharedDatabase(getTestDB());
+    gDBConn = Services.storage.openUnsharedDatabase(getTestDB());
   }
   return gDBConn;
 }
@@ -122,7 +116,7 @@ function getOpenedUnsharedDatabase() {
  * @returns the mozIStorageConnection for the file.
  */
 function getDatabase(aFile) {
-  return getService().openDatabase(aFile);
+  return Services.storage.openDatabase(aFile);
 }
 
 function createStatement(aSQL) {
@@ -278,7 +272,7 @@ function openAsyncDatabase(file, options) {
         properties.setProperty(k, options[k]);
       }
     }
-    getService().openAsyncDatabase(file, properties, function(status, db) {
+    Services.storage.openAsyncDatabase(file, properties, function(status, db) {
       if (Components.isSuccessCode(status)) {
         resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
       } else {

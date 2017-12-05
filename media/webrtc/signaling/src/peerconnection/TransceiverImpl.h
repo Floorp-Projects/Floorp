@@ -59,6 +59,11 @@ public:
                   dom::MediaStreamTrack* aSendTrack,
                   WebRtcCallWrapper* aCallWrapper);
 
+  bool IsValid() const
+  {
+    return !!mConduit;
+  }
+
   nsresult UpdateSendTrack(dom::MediaStreamTrack* aSendTrack);
 
   nsresult UpdateSinkIdentity(dom::MediaStreamTrack* aTrack,

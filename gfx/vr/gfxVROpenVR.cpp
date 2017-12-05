@@ -353,6 +353,7 @@ VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!mIsPresenting) {
     return false;
   }
@@ -503,7 +504,7 @@ VRControllerOpenVR::UpdateVibrateHaptic(::vr::IVRSystem* aVRSystem,
                                         const VRManagerPromise& aPromise)
 {
   // UpdateVibrateHaptic() only can be called by mVibrateThread
-  MOZ_ASSERT(mVibrateThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mVibrateThread->GetThread() == NS_GetCurrentThread());
 
   // It has been interrupted by loss focus.
   if (mIsVibrateStopped) {
@@ -529,6 +530,7 @@ VRControllerOpenVR::UpdateVibrateHaptic(::vr::IVRSystem* aVRSystem,
   const double kVibrateRate = 5.0;
   if (duration >= kVibrateRate) {
     MOZ_ASSERT(mVibrateThread);
+    MOZ_ASSERT(mVibrateThread->IsActive());
 
     RefPtr<Runnable> runnable =
       NewRunnableMethod<::vr::IVRSystem*, uint32_t, double, double, uint64_t,
@@ -536,7 +538,7 @@ VRControllerOpenVR::UpdateVibrateHaptic(::vr::IVRSystem* aVRSystem,
           "VRControllerOpenVR::UpdateVibrateHaptic",
           this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
           aHapticIndex, aIntensity, duration - kVibrateRate, aVibrateIndex, aPromise);
-    NS_DelayedDispatchToCurrentThread(runnable.forget(), kVibrateRate);
+    mVibrateThread->PostDelayedTask(runnable.forget(), kVibrateRate);
   } else {
     // The pulse has completed
     VibrateHapticComplete(aPromise);
@@ -562,23 +564,19 @@ VRControllerOpenVR::VibrateHaptic(::vr::IVRSystem* aVRSystem,
 {
   // Spinning up the haptics thread at the first haptics call.
   if (!mVibrateThread) {
-    nsresult rv = NS_NewThread(getter_AddRefs(mVibrateThread));
-    MOZ_ASSERT(mVibrateThread);
-
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false, "Failed to create async thread.");
-    }
+    mVibrateThread = new VRThread(NS_LITERAL_CSTRING("OpenVR_Vibration"));
   }
+  mVibrateThread->Start();
   ++mVibrateIndex;
   mIsVibrateStopped = false;
 
   RefPtr<Runnable> runnable =
-      NewRunnableMethod<::vr::IVRSystem*, uint32_t, double, double, uint64_t,
-        StoreCopyPassByConstLRef<VRManagerPromise>>(
-          "VRControllerOpenVR::UpdateVibrateHaptic",
-          this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
-          aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
-  mVibrateThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+    NewRunnableMethod<::vr::IVRSystem*, uint32_t, double, double, uint64_t,
+      StoreCopyPassByConstLRef<VRManagerPromise>>(
+        "VRControllerOpenVR::UpdateVibrateHaptic",
+        this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
+        aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
+  mVibrateThread->PostTask(runnable.forget());
 }
 
 void

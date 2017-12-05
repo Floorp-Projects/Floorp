@@ -89,7 +89,7 @@ pub use rules_and_declarations::{DeclarationParser, DeclarationListParser, parse
 pub use rules_and_declarations::{RuleListParser, parse_one_rule};
 pub use rules_and_declarations::{AtRuleType, QualifiedRuleParser, AtRuleParser};
 pub use from_bytes::{stylesheet_encoding, EncodingSupport};
-pub use color::{RGBA, Color, parse_color_keyword};
+pub use color::{RGBA, Color, parse_color_keyword, AngleOrNumber, NumberOrPercentage, ColorComponentParser};
 pub use nth::parse_nth;
 pub use serializer::{ToCss, CssStringWriter, serialize_identifier, serialize_string, TokenSerializationType};
 pub use parser::{Parser, Delimiter, Delimiters, ParserState, ParserInput};

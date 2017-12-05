@@ -1148,6 +1148,10 @@ PeerConnectionMedia::AddTransceiver(
       aSendTrack,
       mCall.get());
 
+  if (!transceiver->IsValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (aSendTrack) {
     // implement checking for peerIdentity (where failure == black/silence)
     nsIDocument* doc = mParent->GetWindow()->GetExtantDoc();

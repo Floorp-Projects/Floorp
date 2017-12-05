@@ -111,6 +111,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let searchPermitted = isAddressField ?
                           FormAutofillUtils.isAutofillAddressesEnabled :
                           FormAutofillUtils.isAutofillCreditCardsEnabled;
+    let AutocompleteResult = isAddressField ? AddressResult : CreditCardResult;
 
     ProfileAutocomplete.lastProfileAutoCompleteFocusedInput = focusedInput;
     // Fallback to form-history if ...
@@ -122,8 +123,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
         (!isInputAutofilled && filledRecordGUID) || (isAddressField &&
         allFieldNames.filter(field => savedFieldNames.has(field)).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD)) {
       if (focusedInput.autocomplete == "off") {
-        // Create a dummy AddressResult as an empty search result.
-        let result = new AddressResult("", "", [], [], {});
+        // Create a dummy result as an empty search result.
+        let result = new AutocompleteResult("", "", [], [], {});
         listener.onSearchResult(this, result);
         return;
       }
@@ -135,6 +136,13 @@ AutofillProfileAutoCompleteSearch.prototype = {
           ProfileAutocomplete.lastProfileAutoCompleteResult = result;
         },
       });
+      return;
+    }
+
+    if (isInputAutofilled) {
+      let result = new AutocompleteResult(searchString, "", [], [], {isInputAutofilled});
+      listener.onSearchResult(this, result);
+      ProfileAutocomplete.lastProfileAutoCompleteResult = result;
       return;
     }
 
@@ -156,21 +164,13 @@ AutofillProfileAutoCompleteSearch.prototype = {
 
       let adaptedRecords = handler.getAdaptedProfiles(records, focusedInput);
       let result = null;
-      if (isAddressField) {
-        result = new AddressResult(searchString,
-                                   info.fieldName,
-                                   allFieldNames,
-                                   adaptedRecords,
-                                   {isInputAutofilled});
-      } else {
-        let isSecure = InsecurePasswordUtils.isFormSecure(handler.form);
+      let isSecure = InsecurePasswordUtils.isFormSecure(handler.form);
 
-        result = new CreditCardResult(searchString,
+      result = new AutocompleteResult(searchString,
                                       info.fieldName,
                                       allFieldNames,
                                       adaptedRecords,
                                       {isSecure, isInputAutofilled});
-      }
       listener.onSearchResult(this, result);
       ProfileAutocomplete.lastProfileAutoCompleteResult = result;
     });

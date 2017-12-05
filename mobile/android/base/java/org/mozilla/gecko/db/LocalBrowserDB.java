@@ -40,9 +40,9 @@ import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
-import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.StringUtils;
 

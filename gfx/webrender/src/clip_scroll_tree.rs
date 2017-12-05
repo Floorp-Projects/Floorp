@@ -8,7 +8,7 @@ use api::{PropertyBinding, LayoutTransform, ScrollLayerState, ScrollLocation, Wo
 use clip::ClipStore;
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState, StickyFrameInfo};
 use gpu_cache::GpuCache;
-use gpu_types::ClipScrollNodeData;
+use gpu_types::{ClipScrollNodeIndex, ClipScrollNodeData};
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
 use render_task::ClipChain;
@@ -385,7 +385,7 @@ impl ClipScrollTree {
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        node_data: &mut Vec<ClipScrollNodeData>,
+        gpu_node_data: &mut Vec<ClipScrollNodeData>,
         scene_properties: &SceneProperties,
     ) {
         // TODO(gw): This is an ugly borrow check workaround to clone these.
@@ -397,15 +397,23 @@ impl ClipScrollTree {
                 None => return,
             };
 
+            // We set this early so that we can use it to populate the ClipChain.
+            node.node_data_index = ClipScrollNodeIndex(gpu_node_data.len() as u32);
+
             node.update(
                 &mut state,
-                node_data,
                 device_pixel_ratio,
                 clip_store,
                 resource_cache,
                 gpu_cache,
                 scene_properties,
             );
+
+            node.push_gpu_node_data(&state, gpu_node_data);
+
+            if !node.children.is_empty() {
+                node.prepare_state_for_children(&mut state, gpu_node_data);
+            }
 
             node.children.clone()
         };
@@ -418,7 +426,7 @@ impl ClipScrollTree {
                 clip_store,
                 resource_cache,
                 gpu_cache,
-                node_data,
+                gpu_node_data,
                 scene_properties,
             );
         }
@@ -551,10 +559,6 @@ impl ClipScrollTree {
             node.local_viewport_rect
         ));
         pt.add_item(format!("local_clip_rect: {:?}", node.local_clip_rect));
-        pt.add_item(format!(
-            "combined_local_viewport_rect: {:?}",
-            node.combined_local_viewport_rect
-        ));
         pt.add_item(format!(
             "world_viewport_transform: {:?}",
             node.world_viewport_transform

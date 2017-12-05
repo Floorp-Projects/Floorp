@@ -56,6 +56,15 @@ module.exports = {
     "uneval": false
   },
 
+  "overrides": [{
+    // Turn off use-services for xml files. XBL bindings are going away, and
+    // working out the valid globals for those is difficult.
+    "files": "**/*.xml",
+    "rules": {
+      "mozilla/use-services": "off"
+    }
+  }],
+
   "parserOptions": {
     "ecmaFeatures": {
       "experimentalObjectRestSpread": true
@@ -148,6 +157,7 @@ module.exports = {
     "mozilla/no-useless-removeEventListener": "error",
     "mozilla/use-default-preference-values": "error",
     "mozilla/use-ownerGlobal": "error",
+    "mozilla/use-services": "error",
 
     // Always require parenthesis for new calls
     // "new-parens": "error",

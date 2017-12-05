@@ -12,17 +12,17 @@ Cu.import("resource://testing-common/ContentTaskUtils.jsm");
 this.EXPORTED_SYMBOLS = [ "NarrateTestUtils" ];
 
 this.NarrateTestUtils = {
-  TOGGLE: "#narrate-toggle",
-  POPUP: "#narrate-dropdown .dropdown-popup",
-  VOICE_SELECT: "#narrate-voices .select-toggle",
-  VOICE_OPTIONS: "#narrate-voices .options",
-  VOICE_SELECTED: "#narrate-voices .options .option.selected",
-  VOICE_SELECT_LABEL: "#narrate-voices .select-toggle .current-voice",
-  RATE: "#narrate-rate-input",
-  START: "#narrate-dropdown:not(.speaking) #narrate-start-stop",
-  STOP: "#narrate-dropdown.speaking #narrate-start-stop",
-  BACK: "#narrate-skip-previous",
-  FORWARD: "#narrate-skip-next",
+  TOGGLE: ".narrate-toggle",
+  POPUP: ".narrate-dropdown .dropdown-popup",
+  VOICE_SELECT: ".narrate-voices .select-toggle",
+  VOICE_OPTIONS: ".narrate-voices .options",
+  VOICE_SELECTED: ".narrate-voices .options .option.selected",
+  VOICE_SELECT_LABEL: ".narrate-voices .select-toggle .current-voice",
+  RATE: ".narrate-rate-input",
+  START: ".narrate-dropdown:not(.speaking) .narrate-start-stop",
+  STOP: ".narrate-dropdown.speaking .narrate-start-stop",
+  BACK: ".narrate-skip-previous",
+  FORWARD: ".narrate-skip-next",
 
   isVisible(element) {
     let style = element.ownerGlobal.getComputedStyle(element);
@@ -68,7 +68,7 @@ this.NarrateTestUtils = {
     }
 
     let voiceOption = window.document.querySelector(
-      `#narrate-voices .option[data-value="${voiceUri}"]`);
+      `.narrate-voices .option[data-value="${voiceUri}"]`);
 
     voiceOption.focus();
     voiceOption.click();

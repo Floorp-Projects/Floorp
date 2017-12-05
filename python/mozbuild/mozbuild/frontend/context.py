@@ -320,18 +320,24 @@ class BaseCompileFlags(ContextDerivedValue, dict):
 class HostCompileFlags(BaseCompileFlags):
     def __init__(self, context):
         self._context = context
+        main_src_dir = mozpath.dirname(context.main_path)
 
         self.flag_variables = (
             ('HOST_CXXFLAGS', context.config.substs.get('HOST_CXXFLAGS'),
-             ('HOST_CXXFLAGS',)),
+             ('HOST_CXXFLAGS', 'HOST_CXX_LDFLAGS')),
             ('HOST_CFLAGS', context.config.substs.get('HOST_CFLAGS'),
-             ('HOST_CFLAGS',)),
+             ('HOST_CFLAGS', 'HOST_C_LDFLAGS')),
             ('HOST_OPTIMIZE', self._optimize_flags(),
-             ('HOST_CFLAGS', 'HOST_CXXFLAGS')),
-            ('RTL', None, ('HOST_CFLAGS',)),
+             ('HOST_CFLAGS', 'HOST_CXXFLAGS', 'HOST_C_LDFLAGS', 'HOST_CXX_LDFLAGS')),
+            ('RTL', None, ('HOST_CFLAGS', 'HOST_C_LDFLAGS')),
             ('HOST_DEFINES', None, ('HOST_CFLAGS', 'HOST_CXXFLAGS')),
-            ('MOZBUILD_HOST_CFLAGS', [], ('HOST_CFLAGS',)),
-            ('MOZBUILD_HOST_CXXFLAGS', [], ('HOST_CXXFLAGS',)),
+            ('MOZBUILD_HOST_CFLAGS', [], ('HOST_CFLAGS', 'HOST_C_LDFLAGS')),
+            ('MOZBUILD_HOST_CXXFLAGS', [], ('HOST_CXXFLAGS', 'HOST_CXX_LDFLAGS')),
+            ('BASE_INCLUDES', ['-I%s' % main_src_dir, '-I%s' % context.objdir],
+             ('HOST_CFLAGS', 'HOST_CXXFLAGS')),
+            ('LOCAL_INCLUDES', None, ('HOST_CFLAGS', 'HOST_CXXFLAGS')),
+            ('EXTRA_INCLUDES', ['-I%s/dist/include' % context.config.topobjdir],
+             ('HOST_CFLAGS', 'HOST_CXXFLAGS')),
         )
         BaseCompileFlags.__init__(self, context)
 
@@ -348,9 +354,12 @@ class AsmFlags(BaseCompileFlags):
     def __init__(self, context):
         self._context = context
         self.flag_variables = (
-            ('OS', context.config.substs.get('ASFLAGS'), ('ASFLAGS',)),
-            ('DEBUG', self._debug_flags(), ('ASFLAGS',)),
-            ('MOZBUILD', None, ('ASFLAGS',)),
+            ('DEFINES', None, ('SFLAGS',)),
+            ('LIBRARY_DEFINES', None, ('SFLAGS',)),
+            ('OS', context.config.substs.get('ASFLAGS'), ('ASFLAGS', 'SFLAGS')),
+            ('DEBUG', self._debug_flags(), ('ASFLAGS', 'SFLAGS')),
+            ('LOCAL_INCLUDES', None, ('SFLAGS',)),
+            ('MOZBUILD', None, ('ASFLAGS', 'SFLAGS')),
         )
         BaseCompileFlags.__init__(self, context)
 

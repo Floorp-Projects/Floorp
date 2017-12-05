@@ -2641,8 +2641,20 @@ public:
    * Document state bits have the form NS_DOCUMENT_STATE_* and are declared in
    * nsIDocument.h.
    */
-  virtual mozilla::EventStates GetDocumentState() = 0;
-  virtual mozilla::EventStates ThreadSafeGetDocumentState() const = 0;
+  mozilla::EventStates GetDocumentState()
+  {
+    UpdatePossiblyStaleDocumentState();
+    return ThreadSafeGetDocumentState();
+  }
+
+  // GetDocumentState() mutates the state due to lazy resolution;
+  // and can't be used during parallel traversal. Use this instead,
+  // and ensure GetDocumentState() has been called first.
+  // This will assert if the state is stale.
+  mozilla::EventStates ThreadSafeGetDocumentState() const
+  {
+    return mDocumentState;
+  }
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
@@ -3263,6 +3275,8 @@ protected:
   }
 
 private:
+  void UpdatePossiblyStaleDocumentState();
+
   mutable std::bitset<eDeprecatedOperationCount> mDeprecationWarnedAbout;
   mutable std::bitset<eDocumentWarningCount> mDocWarningWarnedAbout;
 
@@ -3421,6 +3435,9 @@ protected:
   // Last time this document or a one of its sub-documents was focused.  If
   // focus has never occurred then mLastFocusTime.IsNull() will be true.
   mozilla::TimeStamp mLastFocusTime;
+
+  mozilla::EventStates mDocumentState;
+  mozilla::EventStates mGotDocumentState;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;

@@ -18,6 +18,7 @@
 #include "nsPresContext.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h" // For CompositeOperation
 #include "mozilla/dom/Element.h"
@@ -712,19 +713,12 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   }
 
   // Parse property
-  // FIXME this is using the wrong base uri (bug 1343919)
-  RefPtr<URLExtraData> data = new URLExtraData(doc->GetDocumentURI(),
-                                               doc->GetDocumentURI(),
-                                               doc->NodePrincipal());
-  NS_ConvertUTF16toUTF8 value(aString);
+  ServoCSSParser::ParsingEnvironment env =
+    ServoCSSParser::GetParsingEnvironment(doc);
   RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-    Servo_ParseProperty(aPropID,
-                        &value,
-                        data,
-                        ParsingMode::AllowUnitlessLength |
-                        ParsingMode::AllowAllNumericValues,
-                        doc->GetCompatibilityMode(),
-                        doc->CSSLoader()).Consume();
+    ServoCSSParser::ParseProperty(aPropID, aString, env,
+                                  ParsingMode::AllowUnitlessLength |
+                                    ParsingMode::AllowAllNumericValues);
   if (!servoDeclarationBlock) {
     return result;
   }

@@ -7,7 +7,6 @@
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const I = require("devtools/client/shared/vendor/immutable");
 const { propertiesEqual } = require("../utils/request-utils");
 const { RESPONSE_HEADERS } = require("../constants");
 
@@ -100,7 +99,7 @@ class RequestListItem extends Component {
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_REQ_ITEM_PROPS, this.props.item, nextProps.item) ||
       !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps) ||
-      !I.is(this.props.columns, nextProps.columns);
+      this.props.columns !== nextProps.columns;
   }
 
   componentDidUpdate(prevProps) {
@@ -141,32 +140,32 @@ class RequestListItem extends Component {
         onContextMenu,
         onMouseDown,
       },
-        columns.get("status") && RequestListColumnStatus({ item }),
-        columns.get("method") && RequestListColumnMethod({ item }),
-        columns.get("file") && RequestListColumnFile({ item }),
-        columns.get("protocol") && RequestListColumnProtocol({ item }),
-        columns.get("scheme") && RequestListColumnScheme({ item }),
-        columns.get("domain") && RequestListColumnDomain({ item,
-                                                           onSecurityIconMouseDown }),
-        columns.get("remoteip") && RequestListColumnRemoteIP({ item }),
-        columns.get("cause") && RequestListColumnCause({ item, onCauseBadgeMouseDown }),
-        columns.get("type") && RequestListColumnType({ item }),
-        columns.get("cookies") && RequestListColumnCookies({ connector, item }),
-        columns.get("setCookies") && RequestListColumnSetCookies({ connector, item }),
-        columns.get("transferred") && RequestListColumnTransferredSize({ item }),
-        columns.get("contentSize") && RequestListColumnContentSize({ item }),
-        columns.get("startTime") &&
+        columns.status && RequestListColumnStatus({ item }),
+        columns.method && RequestListColumnMethod({ item }),
+        columns.file && RequestListColumnFile({ item }),
+        columns.protocol && RequestListColumnProtocol({ item }),
+        columns.scheme && RequestListColumnScheme({ item }),
+        columns.domain && RequestListColumnDomain({ item,
+                                                    onSecurityIconMouseDown }),
+        columns.remoteip && RequestListColumnRemoteIP({ item }),
+        columns.cause && RequestListColumnCause({ item, onCauseBadgeMouseDown }),
+        columns.type && RequestListColumnType({ item }),
+        columns.cookies && RequestListColumnCookies({ connector, item }),
+        columns.setCookies && RequestListColumnSetCookies({ connector, item }),
+        columns.transferred && RequestListColumnTransferredSize({ item }),
+        columns.contentSize && RequestListColumnContentSize({ item }),
+        columns.startTime &&
           RequestListColumnStartTime({ item, firstRequestStartedMillis }),
-        columns.get("endTime") &&
+        columns.endTime &&
           RequestListColumnEndTime({ item, firstRequestStartedMillis }),
-        columns.get("responseTime") &&
+        columns.responseTime &&
           RequestListColumnResponseTime({ item, firstRequestStartedMillis }),
-        columns.get("duration") && RequestListColumnDuration({ item }),
-        columns.get("latency") && RequestListColumnLatency({ item }),
-        ...RESPONSE_HEADERS.filter(header => columns.get(header)).map(
+        columns.duration && RequestListColumnDuration({ item }),
+        columns.latency && RequestListColumnLatency({ item }),
+        ...RESPONSE_HEADERS.filter(header => columns[header]).map(
           header => RequestListColumnResponseHeader({ item, header }),
         ),
-        columns.get("waterfall") &&
+        columns.waterfall &&
           RequestListColumnWaterfall({ item, firstRequestStartedMillis,
                                        onWaterfallMouseDown }),
       )

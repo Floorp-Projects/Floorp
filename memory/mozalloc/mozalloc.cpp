@@ -147,27 +147,6 @@ moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
     // else: (0 == err) or (EINVAL == err)
     return err;
 }
-int
-moz_posix_memalign(void **ptr, size_t alignment, size_t size)
-{
-    int code = posix_memalign_impl(ptr, alignment, size);
-    if (code)
-        return code;
-
-#if defined(XP_DARWIN)
-    // Workaround faulty OSX posix_memalign, which provides memory with the
-    // incorrect alignment sometimes, but returns 0 as if nothing was wrong.
-    size_t mask = alignment - 1;
-    if (((size_t)(*ptr) & mask) != 0) {
-        void* old = *ptr;
-        code = moz_posix_memalign(ptr, alignment, size);
-        free(old);
-    }
-#endif
-
-    return code;
-
-}
 #endif // if defined(HAVE_POSIX_MEMALIGN)
 
 #if defined(HAVE_MEMALIGN)

@@ -20,7 +20,7 @@ import android.view.Surface;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 
-public final class SurfaceAllocator {
+/* package */ final class SurfaceAllocator {
     private static final String LOGTAG = "SurfaceAllocator";
 
     private static SurfaceAllocatorConnection sConnection;

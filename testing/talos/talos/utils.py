@@ -30,7 +30,7 @@ class Timer(object):
 
     def elapsed(self):
         seconds = time.time() - self._start_time
-        return time.strftime("%H:%M:%S", time.gmtime(seconds))
+        return time.strftime('%H:%M:%S', time.gmtime(seconds))
 
 
 class TalosError(Exception):
@@ -117,11 +117,11 @@ def parse_pref(value):
     return Preferences.cast(value)
 
 
-def GenerateBrowserCommandLine(browser_path, extra_args, profile_dir,
-                               url, profiling_info=None):
+def GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, url, profiling_info=None):
     # TODO: allow for spaces in file names on Windows
     command_args = [browser_path.strip()]
-    if platform.system() == "Darwin":
+
+    if platform.system() == 'Darwin':
         command_args.extend(['-foreground'])
 
     if isinstance(extra_args, list):
@@ -162,3 +162,10 @@ def indexed_items(itr):
         yield prev_i, prev_val
         prev_i, prev_val = i, val
     yield -1, prev_val
+
+
+def run_in_debug_mode(browser_config):
+    if browser_config.get('debug') or browser_config.get('debugger') or \
+            browser_config.get('debugg_args'):
+        return True
+    return False

@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Avoid adding ID selector rules in this style sheet, since they could
+ * inadvertently match elements in the article content. */
+
 body {
   padding: 64px 51px;
 }
@@ -43,80 +46,80 @@ body.serif .remove-button  {
   font-family: Georgia, "Times New Roman", serif;
 }
 
-#container {
+.container {
   max-width: 30em;
   margin: 0 auto;
 }
 
-#container.font-size1 {
+.container.font-size1 {
   font-size: 12px;
 }
 
-#container.font-size2 {
+.container.font-size2 {
   font-size: 14px;
 }
 
-#container.font-size3 {
+.container.font-size3 {
   font-size: 16px;
 }
 
-#container.font-size4  {
+.container.font-size4  {
   font-size: 18px;
 }
 
-#container.font-size5 {
+.container.font-size5 {
   font-size: 20px;
 }
 
-#container.font-size6 {
+.container.font-size6 {
   font-size: 22px;
 }
 
-#container.font-size7 {
+.container.font-size7 {
   font-size: 24px;
 }
 
-#container.font-size8 {
+.container.font-size8 {
   font-size: 26px;
 }
 
-#container.font-size9 {
+.container.font-size9 {
   font-size: 28px;
 }
 
-#container.content-width1 {
+.container.content-width1 {
   max-width: 20em;
 }
 
-#container.content-width2 {
+.container.content-width2 {
   max-width: 25em;
 }
 
-#container.content-width3 {
+.container.content-width3 {
   max-width: 30em;
 }
 
-#container.content-width4  {
+.container.content-width4  {
   max-width: 35em;
 }
 
-#container.content-width5 {
+.container.content-width5 {
   max-width: 40em;
 }
 
-#container.content-width6 {
+.container.content-width6 {
   max-width: 45em;
 }
 
-#container.content-width7 {
+.container.content-width7 {
   max-width: 50em;
 }
 
-#container.content-width8 {
+.container.content-width8 {
   max-width: 55em;
 }
 
-#container.content-width9 {
+.container.content-width9 {
   max-width: 60em;
 }
 
@@ -162,4 +165,577 @@ body:not(.loaded) .toolbar:-moz-locale-dir(ltr) {
 
 body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
   transform: translateX(100%);
+}
+
+.light-button {
+  color: #333333;
+  background-color: #ffffff;
+}
+
+.dark-button {
+  color: #eeeeee;
+  background-color: #333333;
+}
+
+.sepia-button {
+  color: #5b4636;
+  background-color: #f4ecd8;
+}
+
+.sans-serif-button {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.serif-button {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* Loading/error message */
+
+.reader-message {
+  margin-top: 40px;
+  display: none;
+  text-align: center;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+/* Header */
+
+.header {
+  text-align: start;
+  display: none;
+}
+
+.domain {
+  font-size: 0.9em;
+  line-height: 1.48em;
+  padding-bottom: 4px;
+  font-family: Helvetica, Arial, sans-serif;
+  text-decoration: none;
+  border-bottom: 1px solid;
+  color: #0095dd;
+}
+
+.header > h1 {
+  font-size: 1.6em;
+  line-height: 1.25em;
+  width: 100%;
+  margin: 30px 0;
+  padding: 0;
+}
+
+.header > .credits {
+  font-size: 0.9em;
+  line-height: 1.48em;
+  margin: 0 0 10px 0;
+  padding: 0;
+  font-style: italic;
+}
+
+.header > .meta-data {
+  font-size: 0.65em;
+  margin: 0 0 15px 0;
+}
+
+/*======= Controls toolbar =======*/
+
+.toolbar {
+  font-family: Helvetica, Arial, sans-serif;
+  position: fixed;
+  height: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background-color: #fbfbfb;
+  -moz-user-select: none;
+  border-right: 1px solid #b5b5b5;
+  z-index: 1;
+}
+
+.button {
+  display: block;
+  background-size: 24px 24px;
+  background-repeat: no-repeat;
+  color: #333;
+  background-color: #fbfbfb;
+  height: 40px;
+  padding: 0;
+}
+
+.toolbar .button {
+  width: 40px;
+  background-position: center;
+  margin-right: -1px;
+  border-top: 0;
+  border-left: 0;
+  border-right: 1px solid #b5b5b5;
+  border-bottom: 1px solid #c1c1c1;
+}
+
+.button[hidden] {
+  display: none;
+}
+
+.dropdown {
+  text-align: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown li {
+  margin: 0;
+  padding: 0;
+}
+
+/*======= Popup =======*/
+
+.dropdown-popup {
+  min-width: 300px;
+  text-align: start;
+  position: absolute;
+  left: 48px; /* offset to account for toolbar width */
+  z-index: 1000;
+  background-color: #fbfbfb;
+  visibility: hidden;
+  border-radius: 4px;
+  border: 1px solid #b5b5b5;
+  border-bottom-width: 0;
+  box-shadow: 0 1px 3px #c1c1c1;
+}
+
+.keep-open .dropdown-popup {
+  z-index: initial;
+}
+
+.dropdown-popup > hr {
+  display: none;
+}
+
+.open > .dropdown-popup {
+  visibility: visible;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  top: 30px; /* offset arrow from top of popup */
+  left: -16px;
+  width: 16px;
+  height: 24px;
+  background-image: url("chrome://global/skin/reader/RM-Type-Controls-Arrow.svg");
+  display: block;
+}
+
+/*======= Font style popup =======*/
+
+.font-type-buttons,
+.font-size-buttons,
+.color-scheme-buttons,
+.content-width-buttons,
+.line-height-buttons {
+  display: flex;
+  flex-direction: row;
+}
+
+.font-type-buttons > button:first-child {
+  border-top-left-radius: 3px;
+}
+.font-type-buttons > button:last-child {
+  border-top-right-radius: 3px;
+}
+.color-scheme-buttons > button:first-child {
+  border-bottom-left-radius: 3px;
+}
+.color-scheme-buttons > button:last-child {
+  border-bottom-right-radius: 3px;
+}
+
+.font-type-buttons > button,
+.font-size-buttons > button,
+.color-scheme-buttons > button,
+.content-width-buttons > button,
+.line-height-buttons > button {
+  text-align: center;
+  border: 0;
+}
+
+.font-type-buttons > button,
+.font-size-buttons > button,
+.content-width-buttons > button,
+.line-height-buttons > button {
+  width: 50%;
+  background-color: transparent;
+  border-left: 1px solid #B5B5B5;
+  border-bottom: 1px solid #B5B5B5;
+}
+
+.color-scheme-buttons > button {
+  width: 33.33%;
+  font-size: 14px;
+}
+
+.color-scheme-buttons > .dark-button {
+  margin-top: -1px;
+  height: 61px;
+}
+
+.font-type-buttons > button:first-child,
+.font-size-buttons > button:first-child,
+.content-width-buttons > button:first-child,
+.line-height-buttons > button:first-child {
+  border-left: 0;
+}
+
+.font-type-buttons > button {
+  display: inline-block;
+  font-size: 62px;
+  height: 100px;
+}
+
+.font-size-buttons > button,
+.color-scheme-buttons > button,
+.content-width-buttons > button,
+.line-height-buttons > button {
+  height: 60px;
+}
+
+.font-type-buttons > button:active:hover,
+.font-type-buttons > button.selected,
+.color-scheme-buttons > button:active:hover,
+.color-scheme-buttons > button.selected {
+  box-shadow: inset 0 -3px 0 0 #fc6420;
+}
+
+.font-type-buttons > button:active:hover,
+.font-type-buttons > button.selected {
+  border-bottom: 1px solid #FC6420;
+}
+
+/* Make the serif button content the same size as the sans-serif button content. */
+.font-type-buttons > button > .description {
+  color: #666;
+  font-size: 12px;
+  margin-top: -5px;
+}
+
+/* Font sizes are different per-platform, so we need custom CSS to line them up. */
+%ifdef XP_MACOSX
+.font-type-buttons > .sans-serif-button > .name {
+  margin-top: 10px;
+}
+
+.font-type-buttons > .sans-serif-button > .description {
+  margin-top: -4px;
+}
+
+.font-type-buttons > .serif-button > .name {
+  font-size: 63px;
+}
+%elifdef XP_WIN
+.font-type-buttons > .sans-serif-button > .name {
+  margin-top: 2px;
+}
+
+.font-type-buttons > .sans-serif-button > .description {
+  margin-top: -4px;
+}
+
+.font-type-buttons > .serif-button > .name {
+  font-size: 63px;
+}
+%else
+.font-type-buttons > .sans-serif-button > .name {
+  margin-top: 5px;
+}
+
+.font-type-buttons > .sans-serif-button > .description {
+  margin-top: -8px;
+}
+
+.font-type-buttons > .serif-button > .name {
+  font-size: 70px;
+}
+%endif
+
+.button:hover,
+.font-size-buttons > button:hover,
+.font-type-buttons > button:hover,
+.content-width-buttons > button:hover,
+.line-height-buttons > button:hover {
+  background-color: #ebebeb;
+}
+
+.dropdown.open,
+.button:active,
+.font-size-buttons > button:active,
+.font-size-buttons > button.selected,
+.content-width-buttons > button:active,
+.content-width-buttons > button.selected,
+.line-height-buttons > button:active,
+.line-height-buttons > button.selected {
+  background-color: #dadada;
+}
+
+/* Only used on Android */
+.font-size-sample {
+  display: none;
+}
+
+.minus-button,
+.plus-button,
+.content-width-minus-button,
+.content-width-plus-button,
+.line-height-minus-button,
+.line-height-plus-button {
+  background-color: transparent;
+  border: 0;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/*======= Toolbar icons =======*/
+
+.close-button {
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg");
+  -moz-context-properties: fill;
+  fill: #808080;
+  height: 68px;
+  background-position: center 8px;
+}
+
+.close-button:hover {
+  fill: #fff;
+  background-color: #d94141;
+  border-bottom: 1px solid #d94141;
+  border-right: 1px solid #d94141;
+}
+
+.close-button:hover:active {
+  background-color: #AE2325;
+  border-bottom: 1px solid #AE2325;
+  border-right: 1px solid #AE2325;
+}
+
+.style-button {
+  background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
+}
+
+.minus-button {
+  background-image: url("chrome://global/skin/reader/RM-Minus-24x24.svg");
+}
+
+.plus-button {
+  background-image: url("chrome://global/skin/reader/RM-Plus-24x24.svg");
+}
+
+.content-width-minus-button {
+  background-size: 42px 16px;
+  background-image: url("chrome://global/skin/reader/RM-Content-Width-Minus-42x16.svg");
+}
+
+.content-width-plus-button {
+  background-size: 44px 16px;
+  background-image: url("chrome://global/skin/reader/RM-Content-Width-Plus-44x16.svg");
+}
+
+.line-height-minus-button {
+  background-size: 34px 14px;
+  background-image: url("chrome://global/skin/reader/RM-Line-Height-Minus-38x14.svg");
+}
+
+.line-height-plus-button {
+  background-size: 34px 24px;
+  background-image: url("chrome://global/skin/reader/RM-Line-Height-Plus-38x24.svg");
+}
+
+@media print {
+  .toolbar {
+    display: none !important;
+  }
+}
+
+/*======= Article content =======*/
+
+/* Note that any class names from the original article that we want to match on
+ * must be added to CLASSES_TO_PRESERVE in ReaderMode.jsm, so that
+ * Readability.js doesn't strip them out */
+
+.moz-reader-content {
+  display: none;
+  font-size: 1em;
+  line-height: 1.6em;
+}
+
+.moz-reader-content.line-height1 {
+  line-height: 1em;
+}
+
+.moz-reader-content.line-height2 {
+  line-height: 1.2em;
+}
+
+.moz-reader-content.line-height3 {
+  line-height: 1.4em;
+}
+
+.moz-reader-content.line-height4 {
+  line-height: 1.6em;
+}
+
+.moz-reader-content.line-height5 {
+  line-height: 1.8em;
+}
+
+.moz-reader-content.line-height6 {
+  line-height: 2.0em;
+}
+
+.moz-reader-content.line-height7 {
+  line-height: 2.2em;
+}
+
+.moz-reader-content.line-height8 {
+  line-height: 2.4em;
+}
+
+.moz-reader-content.line-height9 {
+  line-height: 2.6em;
+}
+
+@media print {
+  .moz-reader-content p,
+  .moz-reader-content code,
+  .moz-reader-content pre,
+  .moz-reader-content blockquote,
+  .moz-reader-content ul,
+  .moz-reader-content ol,
+  .moz-reader-content li,
+  .moz-reader-content figure,
+  .moz-reader-content .wp-caption {
+    margin: 0 0 10px 0 !important;
+    padding: 0 !important;
+  }
+}
+
+.moz-reader-content h1,
+.moz-reader-content h2,
+.moz-reader-content h3 {
+  font-weight: bold;
+}
+
+.moz-reader-content h1 {
+  font-size: 1.6em;
+  line-height: 1.25em;
+}
+
+.moz-reader-content h2 {
+  font-size: 1.2em;
+  line-height: 1.51em;
+}
+
+.moz-reader-content h3 {
+  font-size: 1em;
+  line-height: 1.66em;
+}
+
+.moz-reader-content a:link {
+  text-decoration: underline;
+  font-weight: normal;
+}
+
+.moz-reader-content a:link,
+.moz-reader-content a:link:hover,
+.moz-reader-content a:link:active {
+  color: #0095dd;
+}
+
+.moz-reader-content a:visited {
+  color: #c2e;
+}
+
+.moz-reader-content * {
+  max-width: 100%;
+  height: auto;
+}
+
+.moz-reader-content p,
+.moz-reader-content p,
+.moz-reader-content code,
+.moz-reader-content pre,
+.moz-reader-content blockquote,
+.moz-reader-content ul,
+.moz-reader-content ol,
+.moz-reader-content li,
+.moz-reader-content figure,
+.moz-reader-content .wp-caption {
+  margin: -10px -10px 20px -10px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.moz-reader-content li {
+  margin-bottom: 0;
+}
+
+.moz-reader-content li > ul,
+.moz-reader-content li > ol {
+  margin-bottom: -10px;
+}
+
+.moz-reader-content p > img:only-child,
+.moz-reader-content p > a:only-child > img:only-child,
+.moz-reader-content .wp-caption img,
+.moz-reader-content figure img {
+  display: block;
+}
+
+.moz-reader-content img[moz-reader-center] {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.moz-reader-content .caption,
+.moz-reader-content .wp-caption-text
+.moz-reader-content figcaption {
+  font-size: 0.9em;
+  line-height: 1.48em;
+  font-style: italic;
+}
+
+.moz-reader-content code,
+.moz-reader-content pre {
+  white-space: pre-wrap;
+}
+
+.moz-reader-content blockquote {
+  padding: 0;
+  padding-inline-start: 16px;
+}
+
+.moz-reader-content ul,
+.moz-reader-content ol {
+  padding: 0;
+}
+
+.moz-reader-content ul {
+  padding-inline-start: 30px;
+  list-style: disc;
+}
+
+.moz-reader-content ol {
+  padding-inline-start: 30px;
+  list-style: decimal;
+}
+
+/* Hide elements with common "hidden" class names */
+.moz-reader-content .visually-hidden,
+.moz-reader-content .visuallyhidden,
+.moz-reader-content .hidden,
+.moz-reader-content .invisible,
+.moz-reader-content .sr-only {
+  display: none;
 }

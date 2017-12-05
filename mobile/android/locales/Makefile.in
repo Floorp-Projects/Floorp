@@ -38,6 +38,7 @@ libs-%:
 	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
 	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
+	@$(MAKE) multilocale.json-$* AB_CD=$* XPI_NAME=locale-$*
 ifeq ($(OS_TARGET),Android)
 	@$(MAKE) -C $(DEPTH)/mobile/android/base/locales AB_CD=$* XPI_NAME=locale-$*
 endif
