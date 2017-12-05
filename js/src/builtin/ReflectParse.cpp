@@ -475,7 +475,7 @@ class NodeBuilder
 
     MOZ_MUST_USE bool switchCase(HandleValue expr, NodeVector& elts, TokenPos* pos, MutableHandleValue dst);
 
-    MOZ_MUST_USE bool catchClause(HandleValue var, HandleValue guard, HandleValue body, TokenPos* pos,
+    MOZ_MUST_USE bool catchClause(HandleValue var, HandleValue body, TokenPos* pos,
                                   MutableHandleValue dst);
 
     MOZ_MUST_USE bool prototypeMutation(HandleValue val, TokenPos* pos, MutableHandleValue dst);
@@ -527,7 +527,7 @@ class NodeBuilder
     MOZ_MUST_USE bool switchStatement(HandleValue disc, NodeVector& elts, bool lexical, TokenPos* pos,
                                       MutableHandleValue dst);
 
-    MOZ_MUST_USE bool tryStatement(HandleValue body, NodeVector& guarded, HandleValue unguarded,
+    MOZ_MUST_USE bool tryStatement(HandleValue body, HandleValue handler,
                                    HandleValue finally, TokenPos* pos, MutableHandleValue dst);
 
     MOZ_MUST_USE bool debuggerStatement(TokenPos* pos, MutableHandleValue dst);
@@ -954,21 +954,16 @@ NodeBuilder::switchStatement(HandleValue disc, NodeVector& elts, bool lexical, T
 }
 
 bool
-NodeBuilder::tryStatement(HandleValue body, NodeVector& guarded, HandleValue unguarded,
+NodeBuilder::tryStatement(HandleValue body, HandleValue handler,
                           HandleValue finally, TokenPos* pos, MutableHandleValue dst)
 {
-    RootedValue guardedHandlers(cx);
-    if (!newArray(guarded, &guardedHandlers))
-        return false;
-
     RootedValue cb(cx, callbacks[AST_TRY_STMT]);
     if (!cb.isNull())
-        return callback(cb, body, guardedHandlers, unguarded, opt(finally), pos, dst);
+        return callback(cb, body, handler, opt(finally), pos, dst);
 
     return newNode(AST_TRY_STMT, pos,
                    "block", body,
-                   "guardedHandlers", guardedHandlers,
-                   "handler", unguarded,
+                   "handler", handler,
                    "finalizer", finally,
                    dst);
 }
@@ -1451,16 +1446,15 @@ NodeBuilder::switchCase(HandleValue expr, NodeVector& elts, TokenPos* pos, Mutab
 }
 
 bool
-NodeBuilder::catchClause(HandleValue var, HandleValue guard, HandleValue body, TokenPos* pos,
+NodeBuilder::catchClause(HandleValue var, HandleValue body, TokenPos* pos,
                          MutableHandleValue dst)
 {
     RootedValue cb(cx, callbacks[AST_CATCH]);
     if (!cb.isNull())
-        return callback(cb, opt(var), opt(guard), body, pos, dst);
+        return callback(cb, opt(var), body, pos, dst);
 
     return newNode(AST_CATCH, pos,
                    "param", var,
-                   "guard", guard,
                    "body", body,
                    dst);
 }
@@ -1680,7 +1674,7 @@ class ASTSerializer
     bool switchStatement(ParseNode* pn, MutableHandleValue dst);
     bool switchCase(ParseNode* pn, MutableHandleValue dst);
     bool tryStatement(ParseNode* pn, MutableHandleValue dst);
-    bool catchClause(ParseNode* pn, bool* isGuarded, MutableHandleValue dst);
+    bool catchClause(ParseNode* pn, MutableHandleValue dst);
 
     bool optExpression(ParseNode* pn, MutableHandleValue dst) {
         if (!pn) {
@@ -2173,23 +2167,19 @@ ASTSerializer::switchStatement(ParseNode* pn, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::catchClause(ParseNode* pn, bool* isGuarded, MutableHandleValue dst)
+ASTSerializer::catchClause(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT_IF(pn->pn_kid1, pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
-    MOZ_ASSERT_IF(pn->pn_kid2, pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
-    MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+    MOZ_ASSERT(pn->isKind(PNK_CATCH));
+    MOZ_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
+    MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
 
-    RootedValue var(cx), guard(cx), body(cx);
+    RootedValue var(cx), body(cx);
 
-    if (!optPattern(pn->pn_kid1, &var) ||
-        !optExpression(pn->pn_kid2, &guard)) {
+    if (!optPattern(pn->pn_left, &var))
         return false;
-    }
 
-    *isGuarded = !guard.isMagic(JS_SERIALIZE_NO_NODE);
-
-    return statement(pn->pn_kid3, &body) &&
-           builder.catchClause(var, guard, body, &pn->pn_pos, dst);
+    return statement(pn->pn_right, &body) &&
+           builder.catchClause(var, body, &pn->pn_pos, dst);
 }
 
 bool
@@ -2203,28 +2193,16 @@ ASTSerializer::tryStatement(ParseNode* pn, MutableHandleValue dst)
     if (!statement(pn->pn_kid1, &body))
         return false;
 
-    NodeVector guarded(cx);
-    RootedValue unguarded(cx, NullValue());
-
-    if (ParseNode* catchList = pn->pn_kid2) {
-        if (!guarded.reserve(catchList->pn_count))
+    RootedValue handler(cx, NullValue());
+    if (ParseNode* catchScope = pn->pn_kid2) {
+        MOZ_ASSERT(catchScope->isKind(PNK_LEXICALSCOPE));
+        if (!catchClause(catchScope->scopeBody(), &handler))
             return false;
-
-        for (ParseNode* next = catchList->pn_head; next; next = next->pn_next) {
-            RootedValue clause(cx);
-            bool isGuarded;
-            if (!catchClause(next->pn_expr, &isGuarded, &clause))
-                return false;
-            if (isGuarded)
-                guarded.infallibleAppend(clause);
-            else
-                unguarded = clause;
-        }
     }
 
     RootedValue finally(cx);
     return optStatement(pn->pn_kid3, &finally) &&
-           builder.tryStatement(body, guarded, unguarded, finally, &pn->pn_pos, dst);
+           builder.tryStatement(body, handler, finally, &pn->pn_pos, dst);
 }
 
 bool
