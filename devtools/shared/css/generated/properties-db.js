@@ -3053,7 +3053,8 @@ exports.CSS_PROPERTIES = {
       "-moz-outline-radius-topright",
       "outline-style",
       "outline-width",
-      "overflow-clip-box",
+      "overflow-clip-box-block",
+      "overflow-clip-box-inline",
       "overflow-x",
       "overflow-y",
       "padding-block-end",
@@ -9952,6 +9953,14 @@ exports.PREFERENCES = [
   ],
   [
     "overflow-clip-box",
+    "layout.css.overflow-clip-box.enabled"
+  ],
+  [
+    "overflow-clip-box-block",
+    "layout.css.overflow-clip-box.enabled"
+  ],
+  [
+    "overflow-clip-box-inline",
     "layout.css.overflow-clip-box.enabled"
   ],
   [
