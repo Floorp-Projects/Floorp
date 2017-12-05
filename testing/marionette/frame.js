@@ -80,14 +80,6 @@ frame.Manager = class {
     for (let i = 0; i < this.remoteFrames.length; i++) {
       let f = this.remoteFrames[i];
       let fmm = f.messageManager.get();
-      try {
-        fmm.sendAsyncMessage("aliveCheck", {});
-      } catch (e) {
-        if (e.result == Cr.NS_ERROR_NOT_INITIALIZED) {
-          this.remoteFrames.splice(i--, 1);
-          continue;
-        }
-      }
 
       if (fmm == mm) {
         this.currentRemoteFrame = f;
