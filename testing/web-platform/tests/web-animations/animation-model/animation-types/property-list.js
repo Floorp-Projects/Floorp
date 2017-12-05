@@ -1054,12 +1054,6 @@ const gCSSProperties = {
     types: [
     ]
   },
-  'overflow-clip-box': {
-    // https://developer.mozilla.org/en/docs/Web/CSS/overflow-clip-box
-    types: [
-      { type: 'discrete', options: [ [ 'padding-box', 'content-box' ] ] }
-    ]
-  },
   'overflow-wrap': {
     // https://drafts.csswg.org/css-text-3/#propdef-overflow-wrap
     types: [

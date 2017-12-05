@@ -575,11 +575,22 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
   // overflow area doesn't include the frame bounds.
   aMetrics->UnionOverflowAreasWithDesiredBounds();
 
-  if (MOZ_UNLIKELY(StyleDisplay()->mOverflowClipBox ==
+  auto* disp = StyleDisplay();
+  if (MOZ_UNLIKELY(disp->mOverflowClipBoxBlock ==
+                     NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX ||
+                   disp->mOverflowClipBoxInline ==
                      NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
     nsOverflowAreas childOverflow;
     nsLayoutUtils::UnionChildOverflow(mHelper.mScrolledFrame, childOverflow);
     nsRect childScrollableOverflow = childOverflow.ScrollableOverflow();
+    if (disp->mOverflowClipBoxBlock == NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX) {
+      padding.BStart(wm) = nscoord(0);
+      padding.BEnd(wm) = nscoord(0);
+    }
+    if (disp->mOverflowClipBoxInline == NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX) {
+      padding.IStart(wm) = nscoord(0);
+      padding.IEnd(wm) = nscoord(0);
+    }
     childScrollableOverflow.Inflate(padding.GetPhysicalMargin(wm));
     nsRect contentArea =
       wm.IsVertical() ? nsRect(0, 0, computedBSize, availISize)
@@ -3458,15 +3469,31 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   Maybe<nsRect> contentBoxClip;
   Maybe<const DisplayItemClipChain*> extraContentBoxClipForNonCaretContent;
-  if (MOZ_UNLIKELY(mOuter->StyleDisplay()->mOverflowClipBox ==
-                     NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
+  if (MOZ_UNLIKELY(disp->mOverflowClipBoxBlock ==
+                     NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX ||
+                   disp->mOverflowClipBoxInline ==
+                      NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
+    WritingMode wm = mScrolledFrame->GetWritingMode();
+    bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
+                                : disp->mOverflowClipBoxInline) ==
+               NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+    bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
+                                : disp->mOverflowClipBoxBlock) ==
+               NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
     // We only clip if there is *scrollable* overflow, to avoid clipping
     // *visual* overflow unnecessarily.
     nsRect clipRect = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
     nsRect so = mScrolledFrame->GetScrollableOverflowRect();
-    if (clipRect.width != so.width || clipRect.height != so.height ||
-        so.x < 0 || so.y < 0) {
-      clipRect.Deflate(mOuter->GetUsedPadding());
+    if ((cbH && (clipRect.width != so.width || so.x < 0)) ||
+        (cbV && (clipRect.height != so.height || so.y < 0))) {
+      nsMargin padding = mOuter->GetUsedPadding();
+      if (!cbH) {
+        padding.left = padding.right = nscoord(0);
+      }
+      if (!cbV) {
+        padding.top = padding.bottom = nscoord(0);
+      }
+      clipRect.Deflate(padding);
 
       // The non-inflated clip needs to be set on all non-caret items.
       // We prepare an extra DisplayItemClipChain here that will be intersected
