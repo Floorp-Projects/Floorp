@@ -199,9 +199,6 @@ function* installAddon({document, path, name, isWebExtension}) {
   let file = getSupportsFile(path);
   MockFilePicker.setFiles([file.file]);
 
-  let addonList = getTemporaryAddonList(document);
-  let addonListMutation = waitForMutation(addonList, { childList: true });
-
   let onAddonInstalled;
 
   if (isWebExtension) {
@@ -231,19 +228,11 @@ function* installAddon({document, path, name, isWebExtension}) {
   yield onAddonInstalled;
   ok(true, "Addon installed and running its bootstrap.js file");
 
-  // Check that the addon appears in the UI
-  yield addonListMutation;
-  let names = [...addonList.querySelectorAll(".target-name")];
-  names = names.map(element => element.textContent);
-  ok(names.includes(name),
-    "The addon name appears in the list of addons: " + names);
+  info("Wait for the addon to appear in the UI");
+  yield waitUntilAddonContainer(name, document);
 }
 
 function* uninstallAddon({document, id, name}) {
-  let addonList = getAddonListWithAddon(document, id);
-  let addonListMutation = waitForMutation(addonList.parentNode,
-                                          { childList: true, subtree: true });
-
   // Now uninstall this addon
   yield new Promise(done => {
     AddonManager.getAddonByID(id, addon => {
@@ -262,18 +251,14 @@ function* uninstallAddon({document, id, name}) {
     });
   });
 
-  yield addonListMutation;
+  info("Wait until the addon is removed from about:debugging");
+  yield waitUntil(() => !getAddonContainer(name, document), 100);
+}
 
-  // If parentNode is none, that means the entire addonList was removed from the
-  // document. This happens when the addon we are removing is the last one.
-  if (addonList.parentNode !== null) {
-    // Ensure that the UI removes the addon from the list
-    let names = [...addonList.querySelectorAll(".target-name")];
-    names = names.map(element => element.textContent);
-    ok(!names.includes(name),
-      "After uninstall, the addon name disappears from the list of addons: "
-      + names);
-  }
+function getAddonCount(document) {
+  const addonListContainer = getAddonList(document);
+  let addonElements = addonListContainer.querySelectorAll(".target");
+  return addonElements.length;
 }
 
 /**
@@ -283,38 +268,25 @@ function* uninstallAddon({document, id, name}) {
  * @return {Promise}
  */
 function waitForInitialAddonList(document) {
-  const addonListContainer = getAddonList(document);
-  let addonCount = addonListContainer.querySelectorAll(".target");
-  addonCount = addonCount ? [...addonCount].length : -1;
-  info("Waiting for add-ons to load. Current add-on count: " + addonCount);
-
-  // This relies on the network speed of the actor responding to the
-  // listAddons() request and also the speed of openAboutDebugging().
-  let result;
-  if (addonCount > 0) {
-    info("Actually, the add-ons have already loaded");
-    result = Promise.resolve();
-  } else {
-    result = waitForMutation(addonListContainer, { childList: true });
-  }
-  return result;
+  info("Waiting for add-ons to load. Current add-on count: " + getAddonCount(document));
+  return waitUntil(() => getAddonCount(document) > 0, 100);
 }
 
-function waitForInstallMessages(target) {
-  return new Promise(resolve => {
-    let observer = new MutationObserver((mutations) => {
-      const messageAdded = mutations.some((mutation) => {
-        return [...mutation.addedNodes].some((node) => {
-          return node.classList.contains("addon-target-messages");
-        });
-      });
-      if (messageAdded) {
-        observer.disconnect();
-        resolve();
-      }
-    });
-    observer.observe(target, { childList: true });
+function getAddonContainer(name, document) {
+  let nameElements = [...document.querySelectorAll("#addons-panel .target-name")];
+  let nameElement = nameElements.filter(element => element.textContent === name)[0];
+  if (nameElement) {
+    return nameElement.closest(".addon-target-container");
+  }
+
+  return null;
+}
+
+function* waitUntilAddonContainer(name, document) {
+  yield waitUntil(() => {
+    return getAddonContainer(name, document);
   });
+  return getAddonContainer(name, document);
 }
 
 /**
