@@ -11,6 +11,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 
+#include "mozilla/SystemGroup.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
