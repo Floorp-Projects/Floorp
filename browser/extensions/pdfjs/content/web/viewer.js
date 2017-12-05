@@ -95,7 +95,7 @@ var _pdfjsLib = __webpack_require__(1);
 const CSS_UNITS = 96.0 / 72.0;
 const DEFAULT_SCALE_VALUE = 'auto';
 const DEFAULT_SCALE = 1.0;
-const MIN_SCALE = 0.25;
+const MIN_SCALE = 0.10;
 const MAX_SCALE = 10.0;
 const UNKNOWN_SCALE = 0;
 const MAX_AUTO_SCALE = 1.25;
@@ -5299,6 +5299,9 @@ class PDFSidebarResizer {
     _boundEvents.mouseMove = this._mouseMove.bind(this);
     _boundEvents.mouseUp = this._mouseUp.bind(this);
     this.resizer.addEventListener('mousedown', evt => {
+      if (evt.button !== 0) {
+        return;
+      }
       this.outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
       window.addEventListener('mousemove', _boundEvents.mouseMove);
       window.addEventListener('mouseup', _boundEvents.mouseUp);
