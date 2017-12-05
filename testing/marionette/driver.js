@@ -507,24 +507,6 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
   let nullPrevious = this.curBrowser.curFrameId === null;
   let listenerWindow = Services.wm.getOuterWindowWithId(id);
 
-  // go in here if we're already in a remote frame
-  if (this.curBrowser.frameManager.currentRemoteFrame !== null &&
-      (!listenerWindow || this.mm == this.curBrowser.frameManager
-          .currentRemoteFrame.messageManager.get())) {
-    // The outerWindowID from an OOP frame will not be meaningful to
-    // the parent process here, since each process maintains its own
-    // independent window list.  So, it will either be null (!listenerWindow)
-    // if we're already in a remote frame, or it will point to some
-    // random window, which will hopefully cause an href mismatch.
-    // Currently this only happens in B2G for OOP frames registered in
-    // Marionette:switchToFrame, so we'll acknowledge the switchToFrame
-    // message here.
-    //
-    // TODO: Should have a better way of determining that this message
-    // is from a remote frame.
-    this.curBrowser.frameManager.currentRemoteFrame.targetFrameId = id;
-  }
-
   // We want to ignore frames that are XUL browsers that aren't in the "main"
   // tabbrowser, but accept things on Fennec (which doesn't have a
   // xul:tabbrowser), and accept HTML iframes (because tests depend on it),
@@ -1834,15 +1816,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
 
   } else if (this.context == Context.Content) {
     cmd.commandID = cmd.id;
-
-    let res = await this.listener.switchToFrame(cmd.parameters);
-    if (res) {
-      let {win: winId, frame: frameId} = res;
-      this.mm = this.curBrowser.frameManager.getFrameMM(winId, frameId);
-
-      await this.registerPromise();
-      await this.listeningPromise();
-    }
+    await this.listener.switchToFrame(cmd.parameters);
   }
 };
 
@@ -3354,11 +3328,6 @@ GeckoDriver.prototype.receiveMessage = function(message) {
           this.currentFrameElement = null;
         }
       }
-      break;
-
-    case "Marionette:emitTouchEvent":
-      globalMessageManager.broadcastAsyncMessage(
-          "MarionetteMainListener:emitTouchEvent", message.json);
       break;
 
     case "Marionette:register":
