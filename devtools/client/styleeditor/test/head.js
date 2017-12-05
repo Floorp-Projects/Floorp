@@ -46,13 +46,8 @@ var navigateTo = function (url) {
   info(`Navigating to ${url}`);
   let browser = gBrowser.selectedBrowser;
 
-  return new Promise(resolve => {
-    browser.addEventListener("load", function () {
-      resolve();
-    }, {capture: true, once: true});
-
-    browser.loadURI(url);
-  });
+  browser.loadURI(url);
+  return BrowserTestUtils.browserLoaded(browser);
 };
 
 var navigateToAndWaitForStyleSheets = Task.async(function* (url, ui) {

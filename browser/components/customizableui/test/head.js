@@ -401,7 +401,7 @@ function promiseTabHistoryNavigation(aDirection = -1, aConditionFn) {
     }
     gBrowser.addEventListener("pageshow", listener, true);
 
-    content.history.go(aDirection);
+    gBrowser.contentWindowAsCPOW.history.go(aDirection);
 
   });
 }

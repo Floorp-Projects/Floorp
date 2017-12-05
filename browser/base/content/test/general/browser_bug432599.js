@@ -45,11 +45,11 @@ function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function() {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     waitForStarChange(false, initTest);
-  }, {capture: true, once: true});
+  });
 
-  content.location = testURL;
+  gBrowser.loadURI(testURL);
 }
 
 function initTest() {

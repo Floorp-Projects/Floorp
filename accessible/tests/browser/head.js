@@ -130,8 +130,14 @@ function waitForEvent(eventType, expectedId) {
     let eventObserver = {
       observe(subject) {
         let event = subject.QueryInterface(Ci.nsIAccessibleEvent);
+        let id;
+        try {
+          id = event.accessible.id;
+        } catch (e) {
+          // This can throw NS_ERROR_FAILURE.
+        }
         if (event.eventType === eventType &&
-            event.accessible.id === expectedId) {
+            id === expectedId) {
           Services.obs.removeObserver(this, "accessible-event");
           resolve(event);
         }

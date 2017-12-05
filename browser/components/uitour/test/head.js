@@ -263,7 +263,7 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
   gTestTab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.selectedTab = gTestTab;
 
-  gTestTab.linkedBrowser.addEventListener("load", function() {
+  BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser).then(() => {
     if (gMultiProcessBrowser) {
       // When e10s is enabled, make gContentAPI and gContentWindow proxies which has every property
       // return a function which calls the method of the same name on
@@ -352,7 +352,7 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
     }
 
     waitForFocus(callback, gTestTab.linkedBrowser);
-  }, {capture: true, once: true});
+  });
 }
 
 // Wrapper for UITourTest to be used by add_task tests.

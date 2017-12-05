@@ -25,7 +25,7 @@ add_task(function* () {
 });
 
 function consoleOpened() {
-  let console = content.console;
+  let console = gBrowser.contentWindowAsCPOW.console;
   console.log("sentinel log");
   return waitForMessages({
     webconsole: hud,
@@ -63,7 +63,7 @@ function countMessageNodes() {
   let outputNode = hud.outputNode;
 
   let messageNodes = outputNode.querySelectorAll(".message");
-  content.console.log(messageNodes.length);
+  gBrowser.contentWindowAsCPOW.console.log(messageNodes.length);
   let displayedMessageNodes = 0;
   let view = hud.iframeWindow;
   for (let i = 0; i < messageNodes.length; i++) {
