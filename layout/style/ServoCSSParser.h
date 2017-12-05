@@ -49,31 +49,6 @@ public:
    */
   static bool ParseIntersectionObserverRootMargin(const nsAString& aValue,
                                                   nsCSSRect* aResult);
-
-  /**
-   * Parses a @counter-style name.
-   *
-   * @param aValue The name to parse.
-   * @return The name as an atom, lowercased if a built-in counter style name,
-   *   or nullptr if parsing failed or if the name was invalid (like "inherit").
-   */
-  static already_AddRefed<nsAtom> ParseCounterStyleName(const nsAString& aValue);
-
-  /**
-   * Parses a @counter-style descriptor.
-   *
-   * @param aDescriptor The descriptor to parse.
-   * @param aValue The value of the descriptor.
-   * @param aURLExtraData URL data for parsing. This would be used for
-   *   image value URL resolution.
-   * @param aResult The nsCSSValue to store the result in.
-   * @return Whether parsing succeeded.
-   */
-  static bool
-  ParseCounterStyleDescriptor(nsCSSCounterDesc aDescriptor,
-                              const nsAString& aValue,
-                              URLExtraData* aURLExtraData,
-                              nsCSSValue& aResult);
 };
 
 } // namespace mozilla
