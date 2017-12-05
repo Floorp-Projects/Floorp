@@ -315,7 +315,13 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
 
   MediaDecoderOwner* owner = GetOwner();
   if (NS_SUCCEEDED(aStatus) || aStatus == NS_BASE_STREAM_CLOSED) {
-    UpdatePlaybackRate(ComputePlaybackRate());
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction("ChannelMediaDecoder::UpdatePlaybackRate", [
+        rate = ComputePlaybackRate(),
+        res = RefPtr<BaseMediaResource>(mResource)
+      ]() { UpdatePlaybackRate(rate, res); });
+    nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     owner->DownloadSuspended();
     // NotifySuspendedStatusChanged will tell the element that download
     // has been suspended "by the cache", which is true since we never
@@ -379,7 +385,13 @@ ChannelMediaDecoder::DurationChanged()
   AbstractThread::AutoEnter context(AbstractMainThread());
   MediaDecoder::DurationChanged();
   // Duration has changed so we should recompute playback rate
-  UpdatePlaybackRate(ComputePlaybackRate());
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableFunction("ChannelMediaDecoder::UpdatePlaybackRate", [
+      rate = ComputePlaybackRate(),
+      res = RefPtr<BaseMediaResource>(mResource)
+    ]() { UpdatePlaybackRate(rate, res); });
+  nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void
@@ -389,8 +401,16 @@ ChannelMediaDecoder::DownloadProgressed()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
   GetOwner()->DownloadProgressed();
+
   auto rate = ComputePlaybackRate();
-  UpdatePlaybackRate(rate);
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ChannelMediaDecoder::UpdatePlaybackRate",
+    [ rate, res = RefPtr<BaseMediaResource>(mResource) ]() {
+      UpdatePlaybackRate(rate, res);
+    });
+  nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
   MediaStatistics stats = GetStatistics(rate);
   GetStateMachine()->DispatchCanPlayThrough(stats.CanPlayThrough());
   mResource->ThrottleReadahead(ShouldThrottleDownload(stats));
@@ -412,11 +432,11 @@ ChannelMediaDecoder::ComputePlaybackRate()
   return { rate, reliable };
 }
 
-void
-ChannelMediaDecoder::UpdatePlaybackRate(const PlaybackRateInfo& aInfo)
+/* static */ void
+ChannelMediaDecoder::UpdatePlaybackRate(const PlaybackRateInfo& aInfo,
+                                        BaseMediaResource* aResource)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mResource);
+  MOZ_ASSERT(!NS_IsMainThread());
 
   uint32_t rate = aInfo.mRate;
 
@@ -429,7 +449,7 @@ ChannelMediaDecoder::UpdatePlaybackRate(const PlaybackRateInfo& aInfo)
     rate = std::max(rate, 10000u);
   }
 
-  mResource->SetPlaybackRate(rate);
+  aResource->SetPlaybackRate(rate);
 }
 
 MediaStatistics
