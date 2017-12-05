@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+const {interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -51,8 +51,6 @@ frame.Manager = class {
     this.currentRemoteFrame = null;
     // frame we'll need to restore once interrupt is gone
     this.previousRemoteFrame = null;
-    // set to true when we have been interrupted by a modal
-    this.handledModal = false;
     this.driver = driver;
   }
 
@@ -62,32 +60,6 @@ frame.Manager = class {
   /*eslint-disable*/
   receiveMessage(message) {
     switch (message.name) {
-      case "MarionetteFrame:getInterruptedState":
-        // this will return true if the calling frame was interrupted by a modal dialog
-        if (this.previousRemoteFrame) {
-          // get the frame window of the interrupted frame
-          let interruptedFrame = Services.wm.getOuterWindowWithId(
-              this.previousRemoteFrame.windowId);
-
-          if (this.previousRemoteFrame.frameId !== null) {
-            // find OOP frame
-            let iframes = interruptedFrame.document.getElementsByTagName("iframe");
-            interruptedFrame = iframes[this.previousRemoteFrame.frameId];
-          }
-
-          // check if the interrupted frame is the same as the calling frame
-          if (interruptedFrame.src == message.target.src) {
-            return {value: this.handledModal};
-          }
-
-        // we get here if previousRemoteFrame and currentRemoteFrame are null,
-        // i.e. if we're in a non-OOP process, or we haven't switched into an OOP frame,
-        // in which case, handledModal can't be set to true
-        } else if (this.currentRemoteFrame === null) {
-          return {value: this.handledModal};
-        }
-        return {value: false};
-
       case "MarionetteFrame:getCurrentFrameId":
         if (this.currentRemoteFrame !== null) {
           return this.currentRemoteFrame.frameId;
@@ -156,9 +128,7 @@ frame.Manager = class {
 
   /**
    * Adds message listeners to the driver,  listening for
-   * messages from content frame scripts.  It also adds a
-   * MarionetteFrame:getInterruptedState message listener to the
-   * FrameManager, so the frame manager's state can be checked by the frame.
+   * messages from content frame scripts.
    *
    * @param {nsIMessageListenerManager} mm
    *     The message manager object, typically
@@ -175,14 +145,10 @@ frame.Manager = class {
     mm.addWeakMessageListener("Marionette:listenersAttached", this.driver);
     mm.addWeakMessageListener("Marionette:GetLogLevel", this.driver);
     mm.addWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
-    mm.addWeakMessageListener("MarionetteFrame:getInterruptedState", this);
   }
 
   /**
    * Removes listeners for messages from content frame scripts.
-   * We do not remove the MarionetteFrame:getInterruptedState
-   * message listener, because we want to allow all known frames to
-   * contact the frame manager so that it can check if it was interrupted.
    *
    * @param {nsIMessageListenerManager} mm
    *     The message manager object, typically
