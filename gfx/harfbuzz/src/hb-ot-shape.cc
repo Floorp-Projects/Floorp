@@ -108,7 +108,7 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
     /* We really want to find a 'vert' feature if there's any in the font, no
      * matter which script/langsys it is listed (or not) under.
      * See various bugs referenced from:
-     * https://github.com/behdad/harfbuzz/issues/63 */
+     * https://github.com/harfbuzz/harfbuzz/issues/63 */
     map->add_feature (HB_TAG ('v','e','r','t'), 1, F_GLOBAL | F_GLOBAL_SEARCH);
   }
 
@@ -817,10 +817,15 @@ hb_ot_shape_internal (hb_ot_shape_context_t *c)
 {
   c->buffer->deallocate_var_all ();
   c->buffer->scratch_flags = HB_BUFFER_SCRATCH_FLAG_DEFAULT;
-  if (likely (!_hb_unsigned_int_mul_overflows (c->buffer->len, HB_BUFFER_MAX_EXPANSION_FACTOR)))
+  if (likely (!_hb_unsigned_int_mul_overflows (c->buffer->len, HB_BUFFER_MAX_LEN_FACTOR)))
   {
-    c->buffer->max_len = MAX (c->buffer->len * HB_BUFFER_MAX_EXPANSION_FACTOR,
+    c->buffer->max_len = MAX (c->buffer->len * HB_BUFFER_MAX_LEN_FACTOR,
 			      (unsigned) HB_BUFFER_MAX_LEN_MIN);
+  }
+  if (likely (!_hb_unsigned_int_mul_overflows (c->buffer->len, HB_BUFFER_MAX_OPS_FACTOR)))
+  {
+    c->buffer->max_ops = MAX (c->buffer->len * HB_BUFFER_MAX_OPS_FACTOR,
+			      (unsigned) HB_BUFFER_MAX_OPS_MIN);
   }
 
   bool disable_otl = c->plan->shaper->disable_otl && c->plan->shaper->disable_otl (c->plan);
@@ -861,6 +866,7 @@ hb_ot_shape_internal (hb_ot_shape_context_t *c)
   c->buffer->props.direction = c->target_direction;
 
   c->buffer->max_len = HB_BUFFER_MAX_LEN_DEFAULT;
+  c->buffer->max_ops = HB_BUFFER_MAX_OPS_DEFAULT;
   c->buffer->deallocate_var_all ();
 }
 

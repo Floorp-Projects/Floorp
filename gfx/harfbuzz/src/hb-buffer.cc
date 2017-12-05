@@ -722,6 +722,7 @@ hb_buffer_create (void)
     return hb_buffer_get_empty ();
 
   buffer->max_len = HB_BUFFER_MAX_LEN_DEFAULT;
+  buffer->max_ops = HB_BUFFER_MAX_OPS_DEFAULT;
 
   buffer->reset ();
 
@@ -749,6 +750,7 @@ hb_buffer_get_empty (void)
     HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
     HB_BUFFER_SCRATCH_FLAG_DEFAULT,
     HB_BUFFER_MAX_LEN_DEFAULT,
+    HB_BUFFER_MAX_OPS_DEFAULT,
 
     HB_BUFFER_CONTENT_TYPE_INVALID,
     HB_SEGMENT_PROPERTIES_DEFAULT,

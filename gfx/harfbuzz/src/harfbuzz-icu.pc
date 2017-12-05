@@ -5,7 +5,7 @@ includedir=/usr/local/include
 
 Name: harfbuzz
 Description: HarfBuzz text shaping library ICU integration
-Version: 1.7.1
+Version: 1.7.2
 
 Requires: harfbuzz
 Requires.private: icu-uc
