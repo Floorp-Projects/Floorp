@@ -1014,12 +1014,18 @@ nsXULAppInfo::GetAccessibilityInstantiator(nsAString &aInstantiator)
     aInstantiator = NS_LITERAL_STRING("");
     return NS_OK;
   }
-  nsAutoString oopClientInfo, ipClientInfo;
+  nsAutoString ipClientInfo;
   a11y::Compatibility::GetHumanReadableConsumersStr(ipClientInfo);
   aInstantiator.Append(ipClientInfo);
   aInstantiator.AppendLiteral("|");
-  a11y::GetInstantiator(oopClientInfo);
-  aInstantiator.Append(oopClientInfo);
+
+  nsCOMPtr<nsIFile> oopClientExe;
+  if (a11y::GetInstantiator(getter_AddRefs(oopClientExe))) {
+    nsAutoString oopClientInfo;
+    if (NS_SUCCEEDED(oopClientExe->GetPath(oopClientInfo))) {
+      aInstantiator.Append(oopClientInfo);
+    }
+  }
 #else
   aInstantiator = NS_LITERAL_STRING("");
 #endif

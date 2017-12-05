@@ -52,8 +52,8 @@ bool IsHandlerRegistered();
 /*
  * Name of platform service that instantiated accessibility
  */
-void SetInstantiator(const nsAString& aInstantiator);
-bool GetInstantiator(nsAString& aInstantiator);
+void SetInstantiator(const uint32_t aInstantiatorPid);
+bool GetInstantiator(nsIFile** aOutInstantiator);
 #endif
 
 /**

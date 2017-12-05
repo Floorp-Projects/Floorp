@@ -7,6 +7,7 @@
 #ifndef COMPATIBILITY_MANAGER_H
 #define COMPATIBILITY_MANAGER_H
 
+#include "mozilla/Maybe.h"
 #include "nsString.h"
 #include <stdint.h>
 
@@ -57,6 +58,10 @@ public:
    */
   static void Init();
 
+  static Maybe<bool> OnUIAMessage(WPARAM aWParam, LPARAM aLParam);
+
+  static Maybe<DWORD> GetUiaRemotePid() { return sUiaRemotePid; }
+
   /**
    * return true if a known, non-UIA a11y consumer is present
    */
@@ -90,6 +95,7 @@ private:
 
 private:
   static uint32_t sConsumers;
+  static Maybe<DWORD> sUiaRemotePid;
 };
 
 } // a11y namespace
