@@ -836,12 +836,12 @@ nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
     if (result.mHScrollbar) {
       result.mHScrollbar->SetScrollbarMediatorContent(GetContent());
       nsIFrame* f = do_QueryFrame(result.mHScrollbar);
-      result.mHScrollbarContent = f->GetContent();
+      result.mHScrollbarContent = f->GetContent()->AsElement();
     }
     if (result.mVScrollbar) {
       result.mVScrollbar->SetScrollbarMediatorContent(GetContent());
       nsIFrame* f = do_QueryFrame(result.mVScrollbar);
-      result.mVScrollbarContent = f->GetContent();
+      result.mVScrollbarContent = f->GetContent()->AsElement();
     }
   }
   return result;

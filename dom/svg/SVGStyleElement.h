@@ -44,7 +44,7 @@ public:
                               bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
-  using nsIContent::SetAttr;
+  using Element::SetAttr;
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
                            nsAtom* aPrefix, const nsAString& aValue,
                            nsIPrincipal* aSubjectPrincipal,
