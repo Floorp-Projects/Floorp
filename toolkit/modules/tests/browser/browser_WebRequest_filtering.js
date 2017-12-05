@@ -108,9 +108,5 @@ add_task(async function filter_types() {
 });
 
 function waitForLoad(browser = gBrowser.selectedBrowser) {
-  return new Promise(resolve => {
-    browser.addEventListener("load", function() {
-      resolve();
-    }, {capture: true, once: true});
-  });
+  return BrowserTestUtils.browserLoaded(browser);
 }

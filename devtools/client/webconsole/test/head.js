@@ -227,7 +227,7 @@ var waitForTab = Task.async(function* () {
   yield once(gBrowser.tabContainer, "TabOpen");
   let tab = gBrowser.selectedTab;
   let browser = tab.linkedBrowser;
-  yield once(browser, "load", true);
+  yield BrowserTestUtils.browserLoaded(browser);
   info("The tab load completed");
   return tab;
 });

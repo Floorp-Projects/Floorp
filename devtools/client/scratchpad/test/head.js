@@ -93,10 +93,10 @@ function openTabAndScratchpad(aOptions = {})
   return new promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     let {selectedBrowser} = gBrowser;
-    selectedBrowser.addEventListener("load", function () {
+    BrowserTestUtils.browserLoaded(selectedBrowser).then(function () {
       openScratchpad((win, sp) => resolve([win, sp]), aOptions);
-    }, {capture: true, once: true});
-    content.location = "data:text/html;charset=utf8," + (aOptions.tabContent || "");
+    });
+    gBrowser.loadURI("data:text/html;charset=utf8," + (aOptions.tabContent || ""));
   });
 }
 

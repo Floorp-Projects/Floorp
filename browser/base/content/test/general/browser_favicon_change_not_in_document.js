@@ -20,8 +20,8 @@ add_task(async function() {
   let domLinkChangedFired = 0;
   const linkAddedHandler = event => domLinkAddedFired++;
   const linkChangedhandler = event => domLinkChangedFired++;
-  gBrowser.addEventListener("DOMLinkAdded", linkAddedHandler);
-  gBrowser.addEventListener("DOMLinkChanged", linkChangedhandler);
+  BrowserTestUtils.addContentEventListener(gBrowser.selectedBrowser, "DOMLinkAdded", linkAddedHandler);
+  BrowserTestUtils.addContentEventListener(gBrowser.selectedBrowser, "DOMLinkChanged", linkChangedhandler);
   extraTab.linkedBrowser.loadURI(TEST_URL);
   let expectedFavicon = "http://example.org/yet-another-icon";
   await promiseTabLoaded(extraTab);
@@ -39,7 +39,5 @@ add_task(async function() {
   is(domLinkAddedFired, 2, "Should fire the correct number of DOMLinkAdded event.");
   is(domLinkChangedFired, 0, "Should not fire any DOMLinkChanged event.");
 
-  gBrowser.removeEventListener("DOMLinkAdded", linkAddedHandler);
-  gBrowser.removeEventListener("DOMLinkChanged", linkChangedhandler);
   gBrowser.removeTab(extraTab);
 });
