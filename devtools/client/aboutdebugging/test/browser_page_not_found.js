@@ -11,25 +11,29 @@ add_task(function* () {
   let element = document.querySelector(".header-name");
   is(element.textContent, "Page not found", "Show error page");
 
-  yield openPanel(document, "addons-panel");
+  info("Opening addons-panel panel");
+  document.querySelector("[aria-controls='addons-panel']").click();
+  yield waitUntilElement("#addons-panel", document);
+
   yield waitForInitialAddonList(document);
   element = document.querySelector(".header-name");
   is(element.textContent, "Add-ons", "Show Addons");
 
-  yield changeAboutDebuggingHash(document, "invalid-hash");
+  info("Opening about:debugging#invalid-hash");
+  window.openUILinkIn("about:debugging#invalid-hash", "current");
+  yield waitUntilElement(".error-page", document);
+
   element = document.querySelector(".header-name");
   is(element.textContent, "Page not found", "Show error page");
 
   gBrowser.goBack();
-  yield waitForMutation(
-    document.querySelector(".main-content"), {childList: true});
+  yield waitUntilElement("#addons-panel", document);
   yield waitForInitialAddonList(document);
   element = document.querySelector(".header-name");
   is(element.textContent, "Add-ons", "Show Addons");
 
   gBrowser.goBack();
-  yield waitForMutation(
-    document.querySelector(".main-content"), {childList: true});
+  yield waitUntilElement(".error-page", document);
   element = document.querySelector(".header-name");
   is(element.textContent, "Page not found", "Show error page");
 
