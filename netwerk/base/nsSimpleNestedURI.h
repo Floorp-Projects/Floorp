@@ -77,8 +77,8 @@ public:
         , public BaseURIMutator<nsSimpleNestedURI>
     {
         NS_DECL_ISUPPORTS
-        NS_FORWARD_SAFE_NSIURISETTERS(mURI)
         NS_DEFINE_NSIMUTATOR_COMMON
+        NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
 
         explicit Mutator() { }
     private:
