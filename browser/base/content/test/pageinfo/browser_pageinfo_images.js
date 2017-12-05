@@ -5,7 +5,7 @@ function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  gBrowser.selectedBrowser.addEventListener("load", function() {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,
                                    "mediaTab");
 
@@ -26,9 +26,9 @@ function test() {
         });
       });
     }, {capture: true, once: true});
-  }, {capture: true, once: true});
+  });
 
-  content.location =
+  gBrowser.selectedBrowser.loadURI(
     "data:text/html," +
     "<html>" +
     "  <head>" +
@@ -44,5 +44,5 @@ function test() {
     "    <a href='' style='cursor: url(about:logo?d),default;'>test link</a>" + // Cursor
     "    <object type='image/svg+xml' width=20 height=20 data='file:///dummy_object.svg'></object>" + // Object
     "  </body>" +
-    "</html>";
+    "</html>");
 }

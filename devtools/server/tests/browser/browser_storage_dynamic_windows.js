@@ -164,10 +164,10 @@ function testAddIframe(front) {
     front.on("stores-update", onStoresUpdate);
 
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    let iframe = content.document.createElement("iframe");
+    let iframe = gBrowser.contentDocumentAsCPOW.createElement("iframe");
     iframe.src = ALT_DOMAIN_SECURED + "storage-secured-iframe.html";
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    content.document.querySelector("body").appendChild(iframe);
+    gBrowser.contentDocumentAsCPOW.querySelector("body").appendChild(iframe);
   });
 }
 

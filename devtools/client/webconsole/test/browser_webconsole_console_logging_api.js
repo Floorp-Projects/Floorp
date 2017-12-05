@@ -24,7 +24,7 @@ add_task(function* () {
 });
 
 function* testMethod(method, hud, outputNode) {
-  let console = content.console;
+  let console = gBrowser.contentWindowAsCPOW.console;
 
   hud.jsterm.clearOutput();
 

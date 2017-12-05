@@ -57,7 +57,7 @@ registerCleanupFunction(() => {
  */
 function* openTab(url, options = {}) {
   let tab = yield addTab(url, options);
-  let content = tab.linkedBrowser.contentWindow;
+  let content = tab.linkedBrowser.contentWindowAsCPOW;
 
   gWindow = content.wrappedJSObject;
 
