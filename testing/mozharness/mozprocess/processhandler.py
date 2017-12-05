@@ -671,6 +671,7 @@ falling back to not using job objects for managing child processes"""
         self.args = args
         self.cwd = cwd
         self.didTimeout = False
+        self.didOutputTimeout = False
         self._ignore_children = ignore_children
         self.keywordargs = kwargs
         self.read_buffer = ''
@@ -692,6 +693,7 @@ falling back to not using job objects for managing child processes"""
 
         def on_timeout():
             self.didTimeout = True
+            self.didOutputTimeout = self.reader.didOutputTimeout
             if kill_on_timeout:
                 self.kill()
         onTimeout.insert(0, on_timeout)
@@ -715,8 +717,13 @@ falling back to not using job objects for managing child processes"""
 
     @property
     def timedOut(self):
-        """True if the process has timed out."""
+        """True if the process has timed out for any reason."""
         return self.didTimeout
+
+    @property
+    def outputTimedOut(self):
+        """True if the process has timed out for no output."""
+        return self.didOutputTimeout
 
     @property
     def commandline(self):
@@ -736,6 +743,7 @@ falling back to not using job objects for managing child processes"""
         being killed.
         """
         self.didTimeout = False
+        self.didOutputTimeout = False
 
         # default arguments
         args = dict(stdout=subprocess.PIPE,
@@ -917,6 +925,7 @@ class ProcessReader(object):
         self.timeout_callback = timeout_callback or (lambda: True)
         self.timeout = timeout
         self.output_timeout = output_timeout
+        self.didOutputTimeout = False
         self.thread = None
 
     def _create_stream_reader(self, name, stream, queue, callback):
@@ -978,6 +987,7 @@ class ProcessReader(object):
             if not has_line:
                 if output_timeout is not None and now > output_timeout:
                     timed_out = True
+                    self.didOutputTimeout = True
                     break
             else:
                 if output_timeout is not None:
