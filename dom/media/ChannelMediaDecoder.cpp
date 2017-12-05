@@ -131,11 +131,30 @@ ChannelMediaDecoder::ResourceCallback::NotifySuspendedStatusChanged(
   }
 }
 
+void
+ChannelMediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
+                                                           int64_t aOffset)
+{
+  RefPtr<ResourceCallback> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ChannelMediaDecoder::ResourceCallback::NotifyBytesConsumed",
+    [=]() {
+    if (self->mDecoder) {
+      self->mDecoder->NotifyBytesConsumed(aBytes, aOffset);
+    }
+  });
+  mAbstractMainThread->Dispatch(r.forget());
+}
+
 ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   : MediaDecoder(aInit)
   , mResourceCallback(new ResourceCallback(aInit.mOwner->AbstractMainThread()))
+  , mWatchManager(this, aInit.mOwner->AbstractMainThread())
 {
   mResourceCallback->Connect(this);
+
+  // mIgnoreProgressData
+  mWatchManager.Watch(mLogicallySeeking, &ChannelMediaDecoder::SeekingChanged);
 }
 
 /* static */
@@ -202,6 +221,7 @@ MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine()
 void
 ChannelMediaDecoder::Shutdown()
 {
+  mWatchManager.Shutdown();
   mResourceCallback->Disconnect();
   MediaDecoder::Shutdown();
 
@@ -286,6 +306,30 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   } else {
     NetworkError(MediaResult(aStatus, "Download aborted"));
   }
+}
+
+void
+ChannelMediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+
+  if (mIgnoreProgressData) {
+    return;
+  }
+
+  MOZ_ASSERT(GetStateMachine());
+  mDecoderPosition = aOffset + aBytes;
+}
+
+void
+ChannelMediaDecoder::SeekingChanged()
+{
+  // Stop updating the bytes downloaded for progress notifications when
+  // seeking to prevent wild changes to the progress notification.
+  MOZ_ASSERT(NS_IsMainThread());
+  mIgnoreProgressData = mLogicallySeeking;
 }
 
 bool
@@ -400,7 +444,7 @@ ChannelMediaDecoder::GetStatistics(const PlaybackRateInfo& aInfo)
   MediaStatistics result;
   result.mDownloadRate =
     mResource->GetDownloadRate(&result.mDownloadRateReliable);
-  result.mDownloadPosition = mResource->GetCachedDataEnd(mPlaybackPosition);
+  result.mDownloadPosition = mResource->GetCachedDataEnd(mDecoderPosition);
   result.mTotalBytes = mResource->GetLength();
   result.mPlaybackRate = aInfo.mRate;
   result.mPlaybackRateReliable = aInfo.mReliable;
