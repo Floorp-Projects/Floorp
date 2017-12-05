@@ -164,7 +164,6 @@ frame.Manager = class {
         this.currentRemoteFrame = f;
         this.addMessageManagerListeners(mm);
 
-        mm.sendAsyncMessage("Marionette:restart");
         return oopFrame.id;
       }
     }
