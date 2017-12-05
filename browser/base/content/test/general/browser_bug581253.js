@@ -24,8 +24,7 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
 
   Assert.ok(await PlacesUtils.bookmarks.fetch({url: testURL}), "the test url is bookmarked");
 
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
-  content.location = testURL;
+  gBrowser.loadURI(testURL);
 
   await BrowserTestUtils.waitForCondition(
     () => BookmarkingUI.status == BookmarkingUI.STATUS_STARRED,

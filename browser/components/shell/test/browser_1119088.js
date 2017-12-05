@@ -4,8 +4,6 @@ let NS_MAC_USER_LIB_DIR = "ULibDir";
 
 
 function onPageLoad() {
-  gBrowser.selectedBrowser.removeEventListener("load", onPageLoad, true);
-
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIDirectoryServiceProvider);
 
@@ -34,7 +32,8 @@ function onPageLoad() {
   let shell = Cc["@mozilla.org/browser/shell-service;1"].
               getService(Ci.nsIShellService);
 
-  let image = content.document.images[0];
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
+  let image = gBrowser.contentDocumentAsCPOW.images[0];
   shell.setDesktopBackground(image, 0, "logo.png");
 
   setTimeout(function() {
@@ -59,8 +58,8 @@ function onPageLoad() {
 
 function test() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", onPageLoad, true);
-  content.location = "about:logo";
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onPageLoad, false, "about:logo");
+  gBrowser.loadURI("about:logo");
 
   waitForExplicitFinish();
 }

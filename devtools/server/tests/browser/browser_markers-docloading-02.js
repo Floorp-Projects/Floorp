@@ -12,7 +12,7 @@ const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_innerHTML.html");
   // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let doc = browser.contentDocument;
+  let doc = browser.contentDocumentAsCPOW;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
