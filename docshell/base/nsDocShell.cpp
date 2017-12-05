@@ -955,7 +955,8 @@ nsDocShell::DestroyChildren()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDocShell,
                                    nsDocLoader,
                                    mSessionStorageManager,
-                                   mScriptGlobal)
+                                   mScriptGlobal,
+                                   mInitialClientSource)
 
 NS_IMPL_ADDREF_INHERITED(nsDocShell, nsDocLoader)
 NS_IMPL_RELEASE_INHERITED(nsDocShell, nsDocLoader)
@@ -7053,7 +7054,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDel
    * LoadURI(...) will cancel all refresh timers... This causes the
    * Timer and its refreshData instance to be released...
    */
-  LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, true);
+  LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL, true);
 
   return NS_OK;
 }

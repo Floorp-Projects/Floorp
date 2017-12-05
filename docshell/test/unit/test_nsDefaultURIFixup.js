@@ -12,6 +12,11 @@ var data = [
     fixed: 'http://www.example.com/',
   },
   {
+    // htp -> http.
+    wrong: 'htp://www.example.com/',
+    fixed: 'http://www.example.com/',
+  },
+  {
     // ttps -> https.
     wrong: 'ttps://www.example.com/',
     fixed: 'https://www.example.com/',
@@ -24,6 +29,11 @@ var data = [
   {
     // ps -> https.
     wrong: 'ps://www.example.com/',
+    fixed: 'https://www.example.com/',
+  },
+  {
+    // htps -> https.
+    wrong: 'htps://www.example.com/',
     fixed: 'https://www.example.com/',
   },
   {

@@ -1484,6 +1484,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleObservers)
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mClientSource)
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepads)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
@@ -1595,7 +1597,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   // that IdleRequest objects have been traced and will remove
   // themselves while unlinking.
 
-  tmp->mClientSource.reset();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mClientSource)
 
   if (tmp->IsChromeWindow()) {
     if (tmp->mChromeFields.mMessageManager) {

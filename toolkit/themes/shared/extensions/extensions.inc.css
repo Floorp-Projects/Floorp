@@ -289,15 +289,6 @@ button.warning {
   display: none;
 }
 
-.nav-button {
-  list-style-image: url(chrome://mozapps/skin/extensions/navigation.svg);
-  margin-top: 15px;
-  margin-bottom: 15px;
-  border-color: transparent;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
 /*** sorters ***/
 
 .sort-controls {
