@@ -114,7 +114,8 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
     STREAM_FORMAT,
     STREAM_FREQUENCY,
     layout_infos[in_layout].channels,
-    in_layout
+    in_layout,
+    CUBEB_STREAM_PREF_NONE
   };
 
   cubeb_stream_params out_params = {
@@ -124,7 +125,8 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
     // smaller than or equal to the input channels.
     (out_layout == CUBEB_LAYOUT_UNDEFINED) ?
       layout_infos[in_layout].channels : layout_infos[out_layout].channels,
-    out_layout
+    out_layout,
+    CUBEB_STREAM_PREF_NONE
    };
 
   if (!cubeb_should_downmix(&in_params, &out_params)) {

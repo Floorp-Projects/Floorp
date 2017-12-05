@@ -743,6 +743,12 @@ cbjack_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_
   if (input_device || output_device)
     return CUBEB_ERROR_NOT_SUPPORTED;
 
+  // Loopback is unsupported
+  if ((input_stream_params && (input_stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK)) ||
+      (output_stream_params && (output_stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK))) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
   *stream = NULL;
 
   // Find a free stream.

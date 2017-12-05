@@ -414,6 +414,11 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     return CUBEB_ERROR_DEVICE_UNAVAILABLE;
   }
 
+  if (output_stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK) {
+    /* Loopback is not supported */
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
   *stream = NULL;
 
   memset(&wfx, 0, sizeof(wfx));

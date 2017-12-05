@@ -333,6 +333,7 @@ void test_resampler_duplex(uint32_t input_channels, uint32_t output_channels,
   input_params.rate = input_rate;
   state.output_rate = output_params.rate = output_rate;
   state.target_rate = target_rate;
+  input_params.prefs = output_params.prefs = CUBEB_STREAM_PREF_NONE;
   long got;
 
   cubeb_resampler * resampler =
