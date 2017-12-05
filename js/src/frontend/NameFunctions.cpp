@@ -638,11 +638,9 @@ class NameResolver
             if (!resolve(cur->pn_kid1, prefix))
                 return false;
             MOZ_ASSERT(cur->pn_kid2 || cur->pn_kid3);
-            if (ParseNode* catchScope = cur->pn_kid2) {
-                MOZ_ASSERT(catchScope->isKind(PNK_LEXICALSCOPE));
-                MOZ_ASSERT(catchScope->scopeBody()->isKind(PNK_CATCH));
-                MOZ_ASSERT(catchScope->scopeBody()->isArity(PN_BINARY));
-                if (!resolve(catchScope->scopeBody(), prefix))
+            if (ParseNode* catchList = cur->pn_kid2) {
+                MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
+                if (!resolve(catchList, prefix))
                     return false;
             }
             if (ParseNode* finallyBlock = cur->pn_kid3) {
@@ -656,12 +654,16 @@ class NameResolver
           // contain any expression.  The catch statements, of course, may
           // contain arbitrary expressions.
           case PNK_CATCH:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (cur->pn_left) {
-              if (!resolve(cur->pn_left, prefix))
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            if (cur->pn_kid1) {
+              if (!resolve(cur->pn_kid1, prefix))
                   return false;
             }
-            if (!resolve(cur->pn_right, prefix))
+            if (cur->pn_kid2) {
+                if (!resolve(cur->pn_kid2, prefix))
+                    return false;
+            }
+            if (!resolve(cur->pn_kid3, prefix))
                 return false;
             break;
 
@@ -755,6 +757,18 @@ class NameResolver
                 MOZ_ASSERT(!item->pn_right->expr());
             }
 #endif
+            break;
+          }
+
+          case PNK_CATCHLIST: {
+            MOZ_ASSERT(cur->isArity(PN_LIST));
+            for (ParseNode* catchNode = cur->pn_head; catchNode; catchNode = catchNode->pn_next) {
+                MOZ_ASSERT(catchNode->isKind(PNK_LEXICALSCOPE));
+                MOZ_ASSERT(catchNode->scopeBody()->isKind(PNK_CATCH));
+                MOZ_ASSERT(catchNode->scopeBody()->isArity(PN_TERNARY));
+                if (!resolve(catchNode->scopeBody(), prefix))
+                    return false;
+            }
             break;
           }
 

@@ -11,10 +11,7 @@ function nightlyOnly(error, f) {
     try {
       f();
       throw new Error("use of feature expected to fail on release and beta, but succeeded; please update test");
-    } catch (e) {
-      if (!(e instanceof error)) {
-        throw e;
-      }
+    } catch (e if e instanceof error) {
       // All is well.
     }
   } else {

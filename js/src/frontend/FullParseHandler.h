@@ -592,10 +592,10 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_THROW, pos, expr);
     }
 
-    ParseNode* newTryStatement(uint32_t begin, ParseNode* body, ParseNode* catchScope,
+    ParseNode* newTryStatement(uint32_t begin, ParseNode* body, ParseNode* catchList,
                                ParseNode* finallyBlock) {
-        TokenPos pos(begin, (finallyBlock ? finallyBlock : catchScope)->pn_pos.end);
-        return new_<TernaryNode>(PNK_TRY, body, catchScope, finallyBlock, pos);
+        TokenPos pos(begin, (finallyBlock ? finallyBlock : catchList)->pn_pos.end);
+        return new_<TernaryNode>(PNK_TRY, body, catchList, finallyBlock, pos);
     }
 
     ParseNode* newDebuggerStatement(const TokenPos& pos) {
@@ -610,19 +610,9 @@ class FullParseHandler
         return new_<PropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
     }
 
-    bool setupCatchScope(ParseNode* lexicalScope, ParseNode* catchName, ParseNode* catchBody) {
-        ParseNode* catchpn;
-        if (catchName) {
-            catchpn = new_<BinaryNode>(PNK_CATCH, JSOP_NOP, catchName, catchBody);
-        } else {
-            catchpn = new_<BinaryNode>(PNK_CATCH, JSOP_NOP, catchBody->pn_pos, catchName,
-                                       catchBody);
-        }
-        if (!catchpn)
-            return false;
-        lexicalScope->setScopeBody(catchpn);
-        return true;
-    }
+    inline MOZ_MUST_USE bool addCatchBlock(ParseNode* catchList, ParseNode* lexicalScope,
+                                           ParseNode* catchName, ParseNode* catchGuard,
+                                           ParseNode* catchBody);
 
     inline MOZ_MUST_USE bool setLastFunctionFormalParameterDefault(ParseNode* funcpn,
                                                                    ParseNode* pn);
@@ -779,6 +769,10 @@ class FullParseHandler
         return decl->pn_head;
     }
 
+    ParseNode* newCatchList(const TokenPos& pos) {
+        return new_<ListNode>(PNK_CATCHLIST, JSOP_NOP, pos);
+    }
+
     ParseNode* newCommaExpressionList(ParseNode* kid) {
         return new_<ListNode>(PNK_COMMA, JSOP_NOP, kid);
     }
@@ -857,6 +851,19 @@ class FullParseHandler
         return lazyOuterFunction_->closedOverBindings()[lazyClosedOverBindingIndex++];
     }
 };
+
+inline bool
+FullParseHandler::addCatchBlock(ParseNode* catchList, ParseNode* lexicalScope,
+                                ParseNode* catchName, ParseNode* catchGuard,
+                                ParseNode* catchBody)
+{
+    ParseNode* catchpn = new_<TernaryNode>(PNK_CATCH, catchName, catchGuard, catchBody);
+    if (!catchpn)
+        return false;
+    catchList->append(lexicalScope);
+    lexicalScope->setScopeBody(catchpn);
+    return true;
+}
 
 inline bool
 FullParseHandler::setLastFunctionFormalParameterDefault(ParseNode* funcpn,

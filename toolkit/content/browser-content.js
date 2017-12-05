@@ -75,90 +75,44 @@ var ClickEventHandler = {
     return false;
   },
 
-  isScrollableElement(aNode) {
-    if (aNode instanceof content.HTMLElement) {
-      return !(aNode instanceof content.HTMLSelectElement) || aNode.multiple;
-    }
-
-    return aNode instanceof content.XULElement;
-  },
-
-  getXBLNodes(parent, array) {
-    let anonNodes = content.document.getAnonymousNodes(parent);
-    let nodes = Array.from(anonNodes || parent.childNodes || []);
-    for (let node of nodes) {
-      if (node.nodeName == "children") {
-        return true;
-      }
-      if (this.getXBLNodes(node, array)) {
-        array.push(node);
-        return true;
-      }
-    }
-    return false;
-  },
-
-  * parentNodeIterator(aNode) {
-    while (aNode) {
-      yield aNode;
-
-      let parent = aNode.parentNode;
-      if (parent && parent instanceof content.XULElement) {
-        let anonNodes = content.document.getAnonymousNodes(parent);
-        if (anonNodes && !Array.from(anonNodes).includes(aNode)) {
-          // XBL elements are skipped by parentNode property.
-          // Yield elements between parent and <children> here.
-          let nodes = [];
-          this.getXBLNodes(parent, nodes);
-          for (let node of nodes) {
-            yield node;
-          }
-        }
-      }
-
-      aNode = parent;
-    }
-  },
-
   findNearestScrollableElement(aNode) {
     // this is a list of overflow property values that allow scrolling
     const scrollingAllowed = ["scroll", "auto"];
 
     // go upward in the DOM and find any parent element that has a overflow
     // area and can therefore be scrolled
-    this._scrollable = null;
-    for (let node of this.parentNodeIterator(aNode)) {
+    for (this._scrollable = aNode; this._scrollable;
+         this._scrollable = this._scrollable.parentNode) {
       // do not use overflow based autoscroll for <html> and <body>
-      // Elements or non-html/non-xul elements such as svg or Document nodes
+      // Elements or non-html elements such as svg or Document nodes
       // also make sure to skip select elements that are not multiline
-      if (!this.isScrollableElement(node)) {
+      if (!(this._scrollable instanceof content.HTMLElement) ||
+          ((this._scrollable instanceof content.HTMLSelectElement) && !this._scrollable.multiple)) {
         continue;
       }
 
-      var overflowx = node.ownerGlobal
-                          .getComputedStyle(node)
+      var overflowx = this._scrollable.ownerGlobal
+                          .getComputedStyle(this._scrollable)
                           .getPropertyValue("overflow-x");
-      var overflowy = node.ownerGlobal
-                          .getComputedStyle(node)
+      var overflowy = this._scrollable.ownerGlobal
+                          .getComputedStyle(this._scrollable)
                           .getPropertyValue("overflow-y");
       // we already discarded non-multiline selects so allow vertical
       // scroll for multiline ones directly without checking for a
       // overflow property
-      var scrollVert = node.scrollTopMax &&
-        (node instanceof content.HTMLSelectElement ||
+      var scrollVert = this._scrollable.scrollTopMax &&
+        (this._scrollable instanceof content.HTMLSelectElement ||
          scrollingAllowed.indexOf(overflowy) >= 0);
 
       // do not allow horizontal scrolling for select elements, it leads
       // to visual artifacts and is not the expected behavior anyway
-      if (!(node instanceof content.HTMLSelectElement) &&
-          node.scrollLeftMin != node.scrollLeftMax &&
+      if (!(this._scrollable instanceof content.HTMLSelectElement) &&
+          this._scrollable.scrollLeftMin != this._scrollable.scrollLeftMax &&
           scrollingAllowed.indexOf(overflowx) >= 0) {
         this._scrolldir = scrollVert ? "NSEW" : "EW";
-        this._scrollable = node;
         break;
       } else if (scrollVert) {
         this._scrolldir = "NS";
-        this._scrollable = node;
         break;
       }
     }

@@ -5,20 +5,13 @@ function foo(aObject)
             if (!aObject)
                 return;
         }
-        catch (ex) {
-            if (ex.name != "TypeError")
-                throw ex;
-        }
+        catch (ex if (ex.name == "TypeError")) { }
         finally {
         }
         undefined.x;
     }
-    catch (ex) {
-        if (ex.name != "TypeError")
-            throw ex;
-        if (ex.name != "TypeError")
-            throw ex;
-    }
+    catch (ex if (ex.name == "TypeError")) { }
+    catch (ex if (ex.name == "TypeError")) { }
     finally {
     }
 }
