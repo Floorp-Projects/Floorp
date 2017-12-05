@@ -29,8 +29,6 @@
               id="trustSSL"/>
     <checkbox label="&certmgr.editcert.trustemail;"
               id="trustEmail"/>
-    <checkbox label="&certmgr.editcert.trustobjsign;"
-              id="trustObjSign"/>
   </vbox>
 
 </dialog>

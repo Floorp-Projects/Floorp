@@ -142,6 +142,22 @@
                 <data android:scheme="https" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <!-- Pre Lollipop devices display a generic search icon, if none is
+                 provided here. To use this we need to set the resource to 0.
+                 For Lollipop and later the search launcher icon ist used.
+                 To retrieve the resource value the Bundle.getInt() method is
+                 used, so we use integer resources instead of drawables, because
+                 setting a drawable referenced to 0 results in errors when used
+                 as a real drawable resource somewhere else. -->
+            <meta-data
+                android:name="com.android.systemui.action_assist_icon"
+                android:resource="@integer/assist_launch_icon_res"/>
+
             <!-- For XPI installs from websites and the download manager. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

@@ -38,12 +38,12 @@ public class RestrictionProvider extends BroadcastReceiver {
             @Override
             public void run() {
                 final Bundle oldRestrictions = intent.getBundleExtra(Intent.EXTRA_RESTRICTIONS_BUNDLE);
-                RestrictionCache.migrateRestrictionsIfNeeded(oldRestrictions);
-
                 final Bundle extras = new Bundle();
-
-                ArrayList<RestrictionEntry> entries = initRestrictions(context, oldRestrictions);
-                extras.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS_LIST, entries);
+                if (oldRestrictions != null) {
+                    RestrictionCache.migrateRestrictionsIfNeeded(oldRestrictions);
+                    ArrayList<RestrictionEntry> entries = initRestrictions(context, oldRestrictions);
+                    extras.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS_LIST, entries);
+                }
 
                 result.setResult(Activity.RESULT_OK, null, extras);
                 result.finish();

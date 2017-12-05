@@ -50,13 +50,6 @@ static const char* pcmLogTag = "PeerConnectionMedia";
 #endif
 #define LOGTAG pcmLogTag
 
-//XXX(pkerr) What about bitrate settings? Going with the defaults for now.
-RefPtr<WebRtcCallWrapper>
-CreateCall()
-{
-  return WebRtcCallWrapper::Create();
-}
-
 NS_IMETHODIMP PeerConnectionMedia::ProtocolProxyQueryHandler::
 OnProxyAvailable(nsICancelable *request,
                  nsIChannel *aChannel,
@@ -293,9 +286,6 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return rv;
   }
   ConnectSignals(mIceCtxHdlr->ctx().get());
-
-  // This webrtc:Call instance will be shared by audio and video media conduits.
-  mCall = CreateCall();
 
   return NS_OK;
 }
@@ -1145,6 +1135,10 @@ PeerConnectionMedia::AddTransceiver(
     dom::MediaStreamTrack* aSendTrack,
     RefPtr<TransceiverImpl>* aTransceiverImpl)
 {
+  if (!mCall) {
+    mCall = WebRtcCallWrapper::Create();
+  }
+
   RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
       mParent->GetHandle(),
       aJsepTransceiver,

@@ -33,7 +33,6 @@
      -  "do you want to?"
      -  * trust for SSL
      -  * trust for email
-     -  * trust for object signing
     -->
   <vbox>
     <description id="trustHeader"/>
@@ -41,8 +40,6 @@
               id="trustSSL"/>
     <checkbox label="&downloadCert.trustEmail;"
               id="trustEmail"/>
-    <checkbox label="&downloadCert.trustObjSign;"
-              id="trustObjSign"/>
   </vbox>
 
   <separator/>
