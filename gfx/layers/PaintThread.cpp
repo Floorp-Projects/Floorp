@@ -51,49 +51,6 @@ CapturedBufferState::PrepareBuffer()
          (!mBufferInitialize || mBufferInitialize->CopyBuffer());
 }
 
-void
-CapturedBufferState::GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients)
-{
-  if (mBufferFinalize) {
-    if (TextureClient* source = mBufferFinalize->mSource->GetClient()) {
-      aTextureClients.AppendElement(source);
-    }
-    if (TextureClient* sourceOnWhite = mBufferFinalize->mSource->GetClientOnWhite()) {
-      aTextureClients.AppendElement(sourceOnWhite);
-    }
-    if (TextureClient* destination = mBufferFinalize->mDestination->GetClient()) {
-      aTextureClients.AppendElement(destination);
-    }
-    if (TextureClient* destinationOnWhite = mBufferFinalize->mDestination->GetClientOnWhite()) {
-      aTextureClients.AppendElement(destinationOnWhite);
-    }
-  }
-
-  if (mBufferUnrotate) {
-    if (TextureClient* client = mBufferUnrotate->mBuffer->GetClient()) {
-      aTextureClients.AppendElement(client);
-    }
-    if (TextureClient* clientOnWhite = mBufferUnrotate->mBuffer->GetClientOnWhite()) {
-      aTextureClients.AppendElement(clientOnWhite);
-    }
-  }
-
-  if (mBufferInitialize) {
-    if (TextureClient* source = mBufferInitialize->mSource->GetClient()) {
-      aTextureClients.AppendElement(source);
-    }
-    if (TextureClient* sourceOnWhite = mBufferInitialize->mSource->GetClientOnWhite()) {
-      aTextureClients.AppendElement(sourceOnWhite);
-    }
-    if (TextureClient* destination = mBufferInitialize->mDestination->GetClient()) {
-      aTextureClients.AppendElement(destination);
-    }
-    if (TextureClient* destinationOnWhite = mBufferInitialize->mDestination->GetClientOnWhite()) {
-      aTextureClients.AppendElement(destinationOnWhite);
-    }
-  }
-}
-
 bool
 CapturedTiledPaintState::Copy::CopyBuffer()
 {
@@ -283,7 +240,7 @@ PaintThread::PrepareBuffer(CapturedBufferState* aState)
   RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
   RefPtr<CapturedBufferState> state(aState);
 
-  cbc->NotifyBeginAsyncPrepareBuffer(state);
+  cbc->NotifyBeginAsyncPaint(state);
 
   RefPtr<PaintThread> self = this;
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PrepareBuffer",
@@ -316,7 +273,7 @@ PaintThread::AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
     gfxCriticalNote << "Failed to prepare buffers on the paint thread.";
   }
 
-  aBridge->NotifyFinishedAsyncPrepareBuffer(aState);
+  aBridge->NotifyFinishedAsyncPaint(aState);
 }
 
 void
@@ -392,7 +349,7 @@ PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
   RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
   RefPtr<CapturedTiledPaintState> state(aState);
 
-  cbc->NotifyBeginAsyncTiledPaint(state);
+  cbc->NotifyBeginAsyncPaint(state);
 
   RefPtr<PaintThread> self = this;
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintTiledContents",
@@ -446,7 +403,7 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
     NS_ReleaseOnMainThreadSystemGroup("CapturePaintState::DrawTargetCapture", aState->mCapture.forget());
   }
 
-  aBridge->NotifyFinishedAsyncTiledPaint(aState);
+  aBridge->NotifyFinishedAsyncPaint(aState);
 }
 
 void
