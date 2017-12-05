@@ -113,9 +113,6 @@ MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
 #if defined(HAVE_POSIX_MEMALIGN)
 MFBT_API MOZ_MUST_USE
 int moz_xposix_memalign(void **ptr, size_t alignment, size_t size);
-
-MFBT_API MOZ_MUST_USE
-int moz_posix_memalign(void **ptr, size_t alignment, size_t size);
 #endif /* if defined(HAVE_POSIX_MEMALIGN) */
 
 
