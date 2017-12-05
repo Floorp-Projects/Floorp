@@ -682,6 +682,19 @@ JsepSessionImpl::SetLocalDescription(JsepSdpType type, const std::string& sdp)
   rv = ValidateLocalDescription(*parsed);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  switch (type) {
+    case kJsepSdpOffer:
+      rv = ValidateOffer(*parsed);
+      break;
+    case kJsepSdpAnswer:
+    case kJsepSdpPranswer:
+      rv = ValidateAnswer(*mPendingRemoteDescription, *parsed);
+      break;
+    case kJsepSdpRollback:
+      MOZ_CRASH(); // Handled above
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (type == kJsepSdpOffer) {
     // Save in case we need to rollback
     mOldTransceivers.clear();
@@ -734,12 +747,8 @@ JsepSessionImpl::SetLocalDescriptionAnswer(JsepSdpType type,
   MOZ_ASSERT(mState == kJsepStateHaveRemoteOffer);
   mPendingLocalDescription = Move(answer);
 
-  nsresult rv = ValidateAnswer(*mPendingRemoteDescription,
-                               *mPendingLocalDescription);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = HandleNegotiatedSession(mPendingLocalDescription,
-                               mPendingRemoteDescription);
+  nsresult rv = HandleNegotiatedSession(mPendingLocalDescription,
+                                        mPendingRemoteDescription);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCurrentRemoteDescription = Move(mPendingRemoteDescription);
@@ -802,6 +811,19 @@ JsepSessionImpl::SetRemoteDescription(JsepSdpType type, const std::string& sdp)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ValidateRemoteDescription(*parsed);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (type) {
+    case kJsepSdpOffer:
+      rv = ValidateOffer(*parsed);
+      break;
+    case kJsepSdpAnswer:
+    case kJsepSdpPranswer:
+      rv = ValidateAnswer(*mPendingLocalDescription, *parsed);
+      break;
+    case kJsepSdpRollback:
+      MOZ_CRASH(); // Handled above
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool iceLite =
@@ -1301,9 +1323,6 @@ JsepSessionImpl::SetRemoteDescriptionOffer(UniquePtr<Sdp> offer)
 {
   MOZ_ASSERT(mState == kJsepStateStable);
 
-  nsresult rv = ValidateOffer(*offer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mPendingRemoteDescription = Move(offer);
 
   SetState(kJsepStateHaveRemoteOffer);
@@ -1319,12 +1338,8 @@ JsepSessionImpl::SetRemoteDescriptionAnswer(JsepSdpType type,
 
   mPendingRemoteDescription = Move(answer);
 
-  nsresult rv = ValidateAnswer(*mPendingLocalDescription,
-                               *mPendingRemoteDescription);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = HandleNegotiatedSession(mPendingLocalDescription,
-                               mPendingRemoteDescription);
+  nsresult rv = HandleNegotiatedSession(mPendingLocalDescription,
+                                        mPendingRemoteDescription);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCurrentRemoteDescription = Move(mPendingRemoteDescription);
