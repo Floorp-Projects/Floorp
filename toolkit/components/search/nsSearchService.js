@@ -2833,7 +2833,9 @@ SearchService.prototype = {
   },
 
   resetToOriginalDefaultEngine: function SRCH_SVC__resetToOriginalDefaultEngine() {
-    this.currentEngine = this.originalDefaultEngine;
+    let originalDefaultEngine = this.originalDefaultEngine;
+    originalDefaultEngine.hidden = false;
+    this.currentEngine = originalDefaultEngine;
   },
 
   _buildCache: function SRCH_SVC__buildCache() {
