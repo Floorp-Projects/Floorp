@@ -2,13 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DevicePoint, DeviceRect, DeviceSize, LayerPoint, LayerRect, LayerSize};
-use api::{LayerToWorldTransform, LayoutPoint, LayoutRect, LayoutSize, WorldPoint3D};
+use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect};
+use api::{DeviceSize, LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, WorldRect};
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D};
 use euclid::TypedTransform3D;
 use num_traits::Zero;
-use std::f32::consts::FRAC_1_SQRT_2;
 use std::i32;
 use std::f32;
 
@@ -17,8 +15,6 @@ const NEARLY_ZERO: f32 = 1.0 / 4096.0;
 
 // TODO: Implement these in euclid!
 pub trait MatrixHelpers<Src, Dst> {
-    fn transform_rect(&self, rect: &TypedRect<f32, Src>) -> TypedRect<f32, Dst>;
-    fn is_identity(&self) -> bool;
     fn preserves_2d_axis_alignment(&self) -> bool;
     fn has_perspective_component(&self) -> bool;
     fn has_2d_inverse(&self) -> bool;
@@ -28,18 +24,6 @@ pub trait MatrixHelpers<Src, Dst> {
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
-    fn transform_rect(&self, rect: &TypedRect<f32, Src>) -> TypedRect<f32, Dst> {
-        let top_left = self.transform_point2d(&rect.origin);
-        let top_right = self.transform_point2d(&rect.top_right());
-        let bottom_left = self.transform_point2d(&rect.bottom_left());
-        let bottom_right = self.transform_point2d(&rect.bottom_right());
-        TypedRect::from_points(&[top_left, top_right, bottom_right, bottom_left])
-    }
-
-    fn is_identity(&self) -> bool {
-        *self == TypedTransform3D::identity()
-    }
-
     // A port of the preserves2dAxisAlignment function in Skia.
     // Defined in the SkMatrix44 class.
     fn preserves_2d_axis_alignment(&self) -> bool {
@@ -95,14 +79,10 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
 
     fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src> {
         TypedRect::from_points(&[
-            self.inverse_project(&rect.origin)
-                .unwrap_or(TypedPoint2D::zero()),
-            self.inverse_project(&rect.top_right())
-                .unwrap_or(TypedPoint2D::zero()),
-            self.inverse_project(&rect.bottom_left())
-                .unwrap_or(TypedPoint2D::zero()),
-            self.inverse_project(&rect.bottom_right())
-                .unwrap_or(TypedPoint2D::zero()),
+            self.inverse_project(&rect.origin).unwrap_or(TypedPoint2D::zero()),
+            self.inverse_project(&rect.top_right()).unwrap_or(TypedPoint2D::zero()),
+            self.inverse_project(&rect.bottom_left()).unwrap_or(TypedPoint2D::zero()),
+            self.inverse_project(&rect.bottom_right()).unwrap_or(TypedPoint2D::zero()),
         ])
     }
 
@@ -158,6 +138,27 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     (b - a) * t + a
 }
 
+pub fn calculate_screen_bounding_rect(
+    transform: &LayerToWorldTransform,
+    rect: &LayerRect,
+    device_pixel_ratio: f32
+) -> DeviceIntRect {
+    let rect = WorldRect::from_points(&[
+        transform.transform_point2d(&rect.origin),
+        transform.transform_point2d(&rect.top_right()),
+        transform.transform_point2d(&rect.bottom_left()),
+        transform.transform_point2d(&rect.bottom_right()),
+    ]) * device_pixel_ratio;
+
+    let rect = DeviceRect::new(
+        DevicePoint::new(rect.origin.x, rect.origin.y),
+        DeviceSize::new(rect.size.width, rect.size.height),
+    );
+
+    let max_rect = DeviceRect::max_rect();
+    rect.round_out().intersection(&max_rect).unwrap_or(max_rect).to_i32()
+}
+
 pub fn _subtract_rect<U>(
     rect: &TypedRect<f32, U>,
     other: &TypedRect<f32, U>,
@@ -201,14 +202,6 @@ pub fn _subtract_rect<U>(
     }
 }
 
-pub fn get_normal(x: f32) -> Option<f32> {
-    if x.is_normal() {
-        Some(x)
-    } else {
-        None
-    }
-}
-
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(u32)]
 pub enum TransformedRectKind {
@@ -216,153 +209,9 @@ pub enum TransformedRectKind {
     Complex = 1,
 }
 
-#[derive(Debug, Clone)]
-pub struct TransformedRect {
-    pub local_rect: LayerRect,
-    pub bounding_rect: DeviceIntRect,
-    pub inner_rect: DeviceIntRect,
-    pub vertices: [WorldPoint3D; 4],
-    pub kind: TransformedRectKind,
-}
-
-impl TransformedRect {
-    pub fn new(
-        rect: &LayerRect,
-        transform: &LayerToWorldTransform,
-        device_pixel_ratio: f32,
-    ) -> TransformedRect {
-        let kind = if transform.preserves_2d_axis_alignment() {
-            TransformedRectKind::AxisAligned
-        } else {
-            TransformedRectKind::Complex
-        };
-
-
-        let vertices = [
-            transform.transform_point3d(&rect.origin.to_3d()),
-            transform.transform_point3d(&rect.bottom_left().to_3d()),
-            transform.transform_point3d(&rect.bottom_right().to_3d()),
-            transform.transform_point3d(&rect.top_right().to_3d()),
-        ];
-
-        let (mut xs, mut ys) = ([0.0; 4], [0.0; 4]);
-
-        for (vertex, (x, y)) in vertices.iter().zip(xs.iter_mut().zip(ys.iter_mut())) {
-            *x = get_normal(vertex.x).unwrap_or(0.0);
-            *y = get_normal(vertex.y).unwrap_or(0.0);
-        }
-
-        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        ys.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-        let outer_min_dp = (DevicePoint::new(xs[0], ys[0]) * device_pixel_ratio).floor();
-        let outer_max_dp = (DevicePoint::new(xs[3], ys[3]) * device_pixel_ratio).ceil();
-        let inner_min_dp = (DevicePoint::new(xs[1], ys[1]) * device_pixel_ratio).ceil();
-        let inner_max_dp = (DevicePoint::new(xs[2], ys[2]) * device_pixel_ratio).floor();
-
-        let max_rect = DeviceRect::max_rect();
-        let bounding_rect = DeviceRect::new(outer_min_dp, (outer_max_dp - outer_min_dp).to_size())
-            .intersection(&max_rect)
-            .unwrap_or(max_rect)
-            .to_i32();
-        let inner_rect = DeviceRect::new(inner_min_dp, (inner_max_dp - inner_min_dp).to_size())
-            .intersection(&max_rect)
-            .unwrap_or(max_rect)
-            .to_i32();
-
-        TransformedRect {
-            local_rect: *rect,
-            vertices,
-            bounding_rect,
-            inner_rect,
-            kind,
-        }
-    }
-}
-
 #[inline(always)]
 pub fn pack_as_float(value: u32) -> f32 {
     value as f32 + 0.5
-}
-
-
-pub trait ComplexClipRegionHelpers {
-    /// Return the approximately largest aligned rectangle that is fully inside
-    /// the provided clip region.
-    fn get_inner_rect_full(&self) -> Option<LayoutRect>;
-    /// Split the clip region into 2 sets of rectangles: opaque and transparent.
-    /// Guarantees no T-junctions in the produced split.
-    /// Attempts to cover more space in opaque, where it reasonably makes sense.
-    fn split_rectangles(
-        &self,
-        opaque: &mut Vec<LayoutRect>,
-        transparent: &mut Vec<LayoutRect>,
-    );
-}
-
-impl ComplexClipRegionHelpers for ComplexClipRegion {
-    fn get_inner_rect_full(&self) -> Option<LayoutRect> {
-        // this `k` is optimal for a simple case of all border radii being equal
-        let k = 1.0 - 0.5 * FRAC_1_SQRT_2; // could be nicely approximated to `0.3`
-        extract_inner_rect_impl(&self.rect, &self.radii, k)
-    }
-
-    fn split_rectangles(
-        &self,
-        opaque: &mut Vec<LayoutRect>,
-        transparent: &mut Vec<LayoutRect>,
-    ) {
-        fn rect(p0: LayoutPoint, p1: LayoutPoint) -> Option<LayoutRect> {
-            if p0.x != p1.x && p0.y != p1.y {
-                Some(LayerRect::new(p0.min(p1), (p1 - p0).abs().to_size()))
-            } else {
-                None
-            }
-        }
-
-        let inner = match extract_inner_rect_impl(&self.rect, &self.radii, 1.0) {
-            Some(rect) => rect,
-            None => {
-                transparent.push(self.rect);
-                return
-            },
-        };
-        let left_top = inner.origin - self.rect.origin;
-        let right_bot = self.rect.bottom_right() - inner.bottom_right();
-
-        // fill in the opaque parts
-        opaque.push(inner);
-        if left_top.x > 0.0 {
-            opaque.push(LayerRect::new(
-                LayoutPoint::new(self.rect.origin.x, inner.origin.y),
-                LayoutSize::new(left_top.x, inner.size.height),
-            ));
-        }
-        if right_bot.y > 0.0 {
-            opaque.push(LayerRect::new(
-                LayoutPoint::new(inner.origin.x, inner.origin.y + inner.size.height),
-                LayoutSize::new(inner.size.width, right_bot.y),
-            ));
-        }
-        if right_bot.x > 0.0 {
-            opaque.push(LayerRect::new(
-                LayoutPoint::new(inner.origin.x + inner.size.width, inner.origin.y),
-                LayoutSize::new(right_bot.x, inner.size.height),
-            ));
-        }
-        if left_top.y > 0.0 {
-            opaque.push(LayerRect::new(
-                LayoutPoint::new(inner.origin.x, self.rect.origin.y),
-                LayoutSize::new(inner.size.width, left_top.y),
-            ));
-        }
-
-        // fill in the transparent parts
-        transparent.extend(rect(self.rect.origin, inner.origin));
-        transparent.extend(rect(self.rect.bottom_left(), inner.bottom_left()));
-        transparent.extend(rect(self.rect.bottom_right(), inner.bottom_right()));
-        transparent.extend(rect(self.rect.top_right(), inner.top_right()));
-    }
 }
 
 #[inline]

@@ -31,8 +31,7 @@ void main(void) {
 
     ClipVertexInfo vi = write_clip_tile_vertex(local_rect,
                                                layer,
-                                               area,
-                                               cmi.segment);
+                                               area);
 
     vPos = vi.local_pos;
     vLayer = res.layer;

@@ -351,10 +351,10 @@ void main(void) {
         // direction of the center of the ellipse (a different offset for each corner).
 
         // Get signed distance from the inner/outer clips.
-        float d0 = distance_to_ellipse(p, vRadii0.xy);
-        float d1 = distance_to_ellipse(p, vRadii0.zw);
-        float d2 = distance_to_ellipse(p, vRadii1.xy);
-        float d3 = distance_to_ellipse(p, vRadii1.zw);
+        float d0 = distance_to_ellipse(p, vRadii0.xy, aa_range);
+        float d1 = distance_to_ellipse(p, vRadii0.zw, aa_range);
+        float d2 = distance_to_ellipse(p, vRadii1.xy, aa_range);
+        float d3 = distance_to_ellipse(p, vRadii1.zw, aa_range);
 
         // SDF subtract main radii
         float d_main = max(d0, -d1);

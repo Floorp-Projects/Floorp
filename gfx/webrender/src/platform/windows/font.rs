@@ -185,8 +185,8 @@ impl FontContext {
             ascenderOffset: 0.0,
         };
 
-        let (.., minor) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-        let size = (font.size.to_f64_px() * minor) as f32;
+        let (.., y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+        let size = (font.size.to_f64_px() * y_scale) as f32;
 
         let glyph_run = dwrote::DWRITE_GLYPH_RUN {
             fontFace: unsafe { face.as_ptr() },
@@ -208,7 +208,7 @@ impl FontContext {
         );
 
         let (x_offset, y_offset) = font.get_subpx_offset(key);
-        let shape = font.transform.pre_scale(minor.recip() as f32, minor.recip() as f32);
+        let shape = font.transform.pre_scale(y_scale.recip() as f32, y_scale.recip() as f32);
         let transform = dwrote::DWRITE_MATRIX {
             m11: shape.scale_x,
             m12: shape.skew_y,
