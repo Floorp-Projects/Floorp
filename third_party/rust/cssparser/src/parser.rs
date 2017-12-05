@@ -5,7 +5,7 @@
 use cow_rc_str::CowRcStr;
 use smallvec::SmallVec;
 use std::ops::Range;
-use std::ascii::AsciiExt;
+#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::ops::BitOr;
 use tokenizer::{Token, Tokenizer, SourcePosition, SourceLocation};
 

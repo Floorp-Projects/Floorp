@@ -33,6 +33,11 @@ mod codegen {
 }
 
 fn main() {
+    if std::mem::size_of::<Option<bool>>() == 1 {
+        // https://github.com/rust-lang/rust/pull/45225
+        println!("cargo:rustc-cfg=rustc_has_pr45225")
+    }
+
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let tokenizer_rs = Path::new(&manifest_dir).join("src/tokenizer.rs");
     codegen::main(&tokenizer_rs);
