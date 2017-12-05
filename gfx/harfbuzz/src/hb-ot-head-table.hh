@@ -64,11 +64,11 @@ struct head
   FixedVersion<>version;		/* Version of the head table--currently
 					 * 0x00010000u for version 1.0. */
   FixedVersion<>fontRevision;		/* Set by font manufacturer. */
-  ULONG		checkSumAdjustment;	/* To compute: set it to 0, sum the
-					 * entire font as ULONG, then store
+  UINT32		checkSumAdjustment;	/* To compute: set it to 0, sum the
+					 * entire font as UINT32, then store
 					 * 0xB1B0AFBAu - sum. */
-  ULONG		magicNumber;		/* Set to 0x5F0F3CF5u. */
-  USHORT	flags;			/* Bit 0: Baseline for font at y=0;
+  UINT32		magicNumber;		/* Set to 0x5F0F3CF5u. */
+  UINT16	flags;			/* Bit 0: Baseline for font at y=0;
 					 * Bit 1: Left sidebearing point at x=0;
 					 * Bit 2: Instructions may depend on point size;
 					 * Bit 3: Force ppem to integer values for all
@@ -114,18 +114,18 @@ struct head
 					 * encoded in the cmap subtables represent proper
 					 * support for those code points.
 					 * Bit 15: Reserved, set to 0. */
-  USHORT	unitsPerEm;		/* Valid range is from 16 to 16384. This value
+  UINT16	unitsPerEm;		/* Valid range is from 16 to 16384. This value
 					 * should be a power of 2 for fonts that have
 					 * TrueType outlines. */
   LONGDATETIME	created;		/* Number of seconds since 12:00 midnight,
 					   January 1, 1904. 64-bit integer */
   LONGDATETIME	modified;		/* Number of seconds since 12:00 midnight,
 					   January 1, 1904. 64-bit integer */
-  SHORT		xMin;			/* For all glyph bounding boxes. */
-  SHORT		yMin;			/* For all glyph bounding boxes. */
-  SHORT		xMax;			/* For all glyph bounding boxes. */
-  SHORT		yMax;			/* For all glyph bounding boxes. */
-  USHORT	macStyle;		/* Bit 0: Bold (if set to 1);
+  INT16		xMin;			/* For all glyph bounding boxes. */
+  INT16		yMin;			/* For all glyph bounding boxes. */
+  INT16		xMax;			/* For all glyph bounding boxes. */
+  INT16		yMax;			/* For all glyph bounding boxes. */
+  UINT16	macStyle;		/* Bit 0: Bold (if set to 1);
 					 * Bit 1: Italic (if set to 1)
 					 * Bit 2: Underline (if set to 1)
 					 * Bit 3: Outline (if set to 1)
@@ -133,16 +133,16 @@ struct head
 					 * Bit 5: Condensed (if set to 1)
 					 * Bit 6: Extended (if set to 1)
 					 * Bits 7-15: Reserved (set to 0). */
-  USHORT	lowestRecPPEM;		/* Smallest readable size in pixels. */
-  SHORT		fontDirectionHint;	/* Deprecated (Set to 2).
+  UINT16	lowestRecPPEM;		/* Smallest readable size in pixels. */
+  INT16		fontDirectionHint;	/* Deprecated (Set to 2).
 					 * 0: Fully mixed directional glyphs;
 					 * 1: Only strongly left to right;
 					 * 2: Like 1 but also contains neutrals;
 					 * -1: Only strongly right to left;
 					 * -2: Like -1 but also contains neutrals. */
   public:
-  SHORT		indexToLocFormat;	/* 0 for short offsets, 1 for long. */
-  SHORT		glyphDataFormat;	/* 0 for current format. */
+  INT16		indexToLocFormat;	/* 0 for short offsets, 1 for long. */
+  INT16		glyphDataFormat;	/* 0 for current format. */
 
   DEFINE_SIZE_STATIC (54);
 };

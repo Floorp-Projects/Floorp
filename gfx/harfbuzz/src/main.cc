@@ -106,8 +106,8 @@ main (int argc, char **argv)
 
       switch (table.tag) {
 
-      case GSUBGPOS::GSUBTag:
-      case GSUBGPOS::GPOSTag:
+      case HB_OT_TAG_GSUB:
+      case HB_OT_TAG_GPOS:
 	{
 
 	const GSUBGPOS &g = *CastP<GSUBGPOS> (font_data + table.offset);

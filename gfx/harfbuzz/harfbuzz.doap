@@ -13,7 +13,7 @@
   <!--download-page
   rdf:resource=""/-->
   <bug-database
-  rdf:resource="https://github.com/behdad/harfbuzz/issues" />
+  rdf:resource="https://github.com/harfbuzz/harfbuzz/issues" />
 
   <maintainer>
     <foaf:Person>
