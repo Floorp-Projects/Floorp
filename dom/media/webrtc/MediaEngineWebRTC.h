@@ -114,7 +114,17 @@ public:
                   TrackID aID,
                   StreamTime aDesiredTime,
                   const PrincipalHandle& aPrincipalHandle) override
-  {}
+  {
+    // The AudioCapture setup code in MediaManager creates a dummy
+    // SourceMediaStream that is not actually exposed to content.
+    // We append null data here just to keep the MediaStreamGraph happy.
+    StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
+    if (delta > 0) {
+      AudioSegment segment;
+      segment.AppendNullData(delta);
+      aSource->AppendToTrack(aID, &segment);
+    }
+  }
   dom::MediaSourceEnum GetMediaSource() const override
   {
     return dom::MediaSourceEnum::AudioCapture;
