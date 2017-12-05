@@ -220,9 +220,9 @@ public:
 
   void GetResponseHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal, ErrorResult& aRv) const;
 
-  void SetRequestHeader(const nsCString& header, const nsCString& value, ErrorResult& aRv);
+  void SetRequestHeader(const nsCString& header, const nsCString& value, bool merge, ErrorResult& aRv);
 
-  void SetResponseHeader(const nsCString& header, const nsCString& value, ErrorResult& aRv);
+  void SetResponseHeader(const nsCString& header, const nsCString& value, bool merge, ErrorResult& aRv);
 
 
   using EventTarget::EventListenerAdded;
