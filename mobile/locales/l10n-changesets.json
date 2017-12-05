@@ -371,7 +371,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "4474e36780a5"
+        "revision": "b8e7d0417218"
     }, 
     "it": {
         "platforms": [
@@ -585,7 +585,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b18a98972e31"
+        "revision": "f19c6c2e4915"
     }, 
     "ro": {
         "platforms": [
@@ -727,7 +727,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "9cafb05397d2"
+        "revision": "298efb0393d0"
     }, 
     "xh": {
         "platforms": [
