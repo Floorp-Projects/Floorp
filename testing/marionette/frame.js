@@ -182,22 +182,6 @@ frame.Manager = class {
     return oopFrame.id;
   }
 
-  /*
-   * This function handles switching back to the frame that was
-   * interrupted by the modal dialog.  It gets called by the interrupted
-   * frame once the dialog is dismissed and the frame resumes its process.
-   */
-  switchToModalOrigin() {
-    // only handle this if we indeed switched out of the modal's
-    // originating frame
-    if (this.previousRemoteFrame !== null) {
-      this.currentRemoteFrame = this.previousRemoteFrame;
-      let mm = this.currentRemoteFrame.messageManager.get();
-      this.addMessageManagerListeners(mm);
-    }
-    this.handledModal = false;
-  }
-
   /**
    * Adds message listeners to the driver,  listening for
    * messages from content frame scripts.  It also adds a
@@ -215,7 +199,6 @@ frame.Manager = class {
     mm.addWeakMessageListener("Marionette:emitTouchEvent", this.driver);
     mm.addWeakMessageListener("Marionette:log", this.driver);
     mm.addWeakMessageListener("Marionette:shareData", this.driver);
-    mm.addWeakMessageListener("Marionette:switchToModalOrigin", this.driver);
     mm.addWeakMessageListener("Marionette:switchedToFrame", this.driver);
     mm.addWeakMessageListener("Marionette:getVisibleCookies", this.driver);
     mm.addWeakMessageListener("Marionette:register", this.driver);
@@ -228,11 +211,9 @@ frame.Manager = class {
 
   /**
    * Removes listeners for messages from content frame scripts.
-   * We do not remove the MarionetteFrame:getInterruptedState or
-   * the Marionette:switchToModalOrigin message listener, because we
-   * want to allow all known frames to contact the frame manager so
-   * that it can check if it was interrupted, and if so, it will call
-   * switchToModalOrigin when its process gets resumed.
+   * We do not remove the MarionetteFrame:getInterruptedState
+   * message listener, because we want to allow all known frames to
+   * contact the frame manager so that it can check if it was interrupted.
    *
    * @param {nsIMessageListenerManager} mm
    *     The message manager object, typically

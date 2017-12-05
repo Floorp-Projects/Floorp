@@ -738,10 +738,6 @@ function checkForInterrupted() {
     if (previousContainer) {
       curContainer = legacyactions.container = previousContainer;
       previousContainer = null;
-    // else we're in OOP environment, so we'll switch to the original
-    // OOP frame
-    } else {
-      sendSyncMessage("Marionette:switchToModalOrigin");
     }
     sendSyncMessage("Marionette:switchedToFrame", {restorePrevious: true});
   }
