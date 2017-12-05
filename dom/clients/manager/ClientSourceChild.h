@@ -11,12 +11,13 @@
 namespace mozilla {
 namespace dom {
 
+class ClientSource;
 class ClientSourceConstructorArgs;
 template <typename ActorType> class ClientThing;
 
 class ClientSourceChild final : public PClientSourceChild
 {
-  ClientThing<ClientSourceChild>* mSource;
+  ClientSource* mSource;
   bool mTeardownStarted;
 
   // PClientSourceChild interface
@@ -41,6 +42,9 @@ public:
 
   void
   RevokeOwner(ClientThing<ClientSourceChild>* aThing);
+
+  ClientSource*
+  GetSource() const;
 
   void
   MaybeStartTeardown();
