@@ -1,3 +1,13 @@
+Overview of changes leading to 1.7.2
+Monday, December 4, 2017
+====================================
+
+- Optimize hb_set_add_range().
+- Misc fixes.
+- New API:
+hb_coretext_font_create()
+
+
 Overview of changes leading to 1.7.1
 Tuesday, November 14, 2017
 ====================================
@@ -33,7 +43,7 @@ Monday, October 23nd, 2017
 
 - Yesterday's release had a bad crasher; don't use it.  That's what
   happens when one works on Sunday...
-  https://github.com/behdad/harfbuzz/issues/578
+  https://github.com/harfbuzz/harfbuzz/issues/578
 - Build fixes for FreeBSD and Chrome Android.
 
 
@@ -42,7 +52,7 @@ Sunday, October 22nd, 2017
 ====================================
 
 - Don't skip over COMBINING GRAPHEME JOINER when ligating, etc.
-  To be refined: https://github.com/behdad/harfbuzz/issues/554
+  To be refined: https://github.com/harfbuzz/harfbuzz/issues/554
 - Faster hb_set_t implementation.
 - Don't use deprecated ICU API.
 - Fix undefined-behavior in Myanmar shaper, introduced in 1.6.0
@@ -443,7 +453,7 @@ Tuesday, February 23, 2016
 - CoreText: Drastically speed up font initialization.
 - CoreText: Fix tiny leak.
 - Group ZWJ/ZWNJ with previous syllable under cluster-level=0.
-  https://github.com/behdad/harfbuzz/issues/217
+  https://github.com/harfbuzz/harfbuzz/issues/217
 - Add test/shaping/README.md about how to add tests to the suite.
 
 
@@ -459,8 +469,8 @@ Friday, February 19, 2016
 - Allow GPOS cursive connection on marks, and fix the interaction with
   mark attachment.  This work resulted in some changes to how mark
   attachments work.  See:
-  https://github.com/behdad/harfbuzz/issues/211
-  https://github.com/behdad/harfbuzz/commit/86c68c7a2c971efe8e35b1f1bd99401dc8b688d2
+  https://github.com/harfbuzz/harfbuzz/issues/211
+  https://github.com/harfbuzz/harfbuzz/commit/86c68c7a2c971efe8e35b1f1bd99401dc8b688d2
 - Graphite2 shaper: improved negative advance handling (eg. Nastaliq).
 - Add nmake-based build system for Windows.
 - Minor speedup.
@@ -501,7 +511,7 @@ Wednesday, November 26, 2015
 ====================================
 
 - Fix badly-broken fallback shaper that affected terminology.
-  https://github.com/behdad/harfbuzz/issues/187
+  https://github.com/harfbuzz/harfbuzz/issues/187
 - Fix y_scaling in Graphite shaper.
 - API changes:
   * An unset glyph_h_origin() function in font-funcs now (sensibly)
@@ -523,11 +533,11 @@ Wednesday, November 18, 2015
 ====================================
 
 - Implement 'stch' stretch feature for Syriac Abbreviation Mark.
-  https://github.com/behdad/harfbuzz/issues/141
+  https://github.com/harfbuzz/harfbuzz/issues/141
 - Disable use of decompose_compatibility() callback.
 - Implement "shaping" of various Unicode space characters, even
   if the font does not support them.
-  https://github.com/behdad/harfbuzz/issues/153
+  https://github.com/harfbuzz/harfbuzz/issues/153
 - If font does not support U+2011 NO-BREAK HYPHEN, fallback to
   U+2010 HYPHEN.
 - Changes resulting from libFuzzer continuous fuzzing:
@@ -550,7 +560,7 @@ Thursday, October 15, 2015
 - Revert default load-flags of fonts created using hb_ft_font_create()
   back to FT_LOAD_DEFAULT|FT_LOAD_NO_HINTING.  This was changed in
   last release (1.0.5), but caused major issues, so revert.
-  https://github.com/behdad/harfbuzz/issues/143
+  https://github.com/harfbuzz/harfbuzz/issues/143
 
 
 Overview of changes leading to 1.0.5
@@ -558,7 +568,7 @@ Tuesday, October 13, 2015
 ====================================
 
 - Fix multiple memory access bugs discovered using libFuzzer.
-  https://github.com/behdad/harfbuzz/issues/139
+  https://github.com/harfbuzz/harfbuzz/issues/139
   Everyone should upgrade to this version as soon as possible.
   We now have continuous fuzzing set up, to avoid issues like
   these creeping in again.

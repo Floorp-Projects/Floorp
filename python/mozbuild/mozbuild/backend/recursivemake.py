@@ -520,16 +520,38 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_defines(obj, backend_file)
 
         elif isinstance(obj, GeneratedFile):
-            tier = 'export' if obj.required_for_compile else 'misc'
+            if obj.required_for_compile:
+                tier = 'export'
+            elif obj.localized:
+                tier = 'libs'
+            else:
+                tier = 'misc'
             self._no_skip[tier].add(backend_file.relobjdir)
             first_output = obj.outputs[0]
             dep_file = "%s.pp" % first_output
+
+            if obj.inputs:
+                if obj.localized:
+                    # Localized generated files can have locale-specific inputs, which are
+                    # indicated by paths starting with `en-US/`.
+                    def srcpath(p):
+                        bits = p.split('en-US/', 1)
+                        if len(bits) == 2:
+                            e, f = bits
+                            assert(not e)
+                            return '$(call MERGE_FILE,%s)' % f
+                        return self._pretty_path(p, backend_file)
+                    inputs = [srcpath(f) for f in obj.inputs]
+                else:
+                    inputs = [self._pretty_path(f, backend_file) for f in obj.inputs]
+            else:
+                inputs = []
 
             # If we're doing this during export that means we need it during
             # compile, but if we have an artifact build we don't run compile,
             # so we can skip it altogether or let the rule run as the result of
             # something depending on it.
-            if tier == 'misc' or not self.environment.is_artifact_build:
+            if tier != 'export' or not self.environment.is_artifact_build:
                 backend_file.write('%s:: %s\n' % (tier, first_output))
             for output in obj.outputs:
                 if output != first_output:
@@ -537,15 +559,21 @@ class RecursiveMakeBackend(CommonBackend):
                 backend_file.write('GARBAGE += %s\n' % output)
             backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
             if obj.script:
-                backend_file.write("""{output}: {script}{inputs}{backend}
+                backend_file.write("""{output}: {script}{inputs}{backend}{repack_force}
 \t$(REPORT_BUILD)
-\t$(call py_action,file_generate,{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs}{flags})
+\t$(call py_action,file_generate,{locale}{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs}{flags})
 
 """.format(output=first_output,
            dep_file=dep_file,
-           inputs=' ' + ' '.join([self._pretty_path(f, backend_file) for f in obj.inputs]) if obj.inputs else '',
+           inputs=' ' + ' '.join(inputs) if inputs else '',
            flags=' ' + ' '.join(shell_quote(f) for f in obj.flags) if obj.flags else '',
            backend=' backend.mk' if obj.flags else '',
+           # Locale repacks repack multiple locales from a single configured objdir,
+           # so standard mtime dependencies won't work properly when the build is re-run
+           # with a different locale as input. IS_LANGUAGE_REPACK will reliably be set
+           # in this situation, so simply force the generation to run in that case.
+           repack_force=' $(if $(IS_LANGUAGE_REPACK),FORCE)' if obj.localized else '',
+           locale='--locale=$(AB_CD) ' if obj.localized else '',
            script=obj.script,
            method=obj.method))
 
@@ -1454,17 +1482,21 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _write_localized_files_files(self, files, name, backend_file):
         for f in files:
-            # The emitter asserts that all files start with `en-US/`
-            e, f = f.split('en-US/')
-            assert(not e)
-            if '*' in f:
-                # We can't use MERGE_FILE for wildcards because it takes
-                # only the first match internally. This is only used
-                # in one place in the tree currently so we'll hardcode
-                # that specific behavior for now.
-                backend_file.write('%s += $(wildcard $(LOCALE_SRCDIR)/%s)\n' % (name, f))
+            if not isinstance(f, ObjDirPath):
+                # The emitter asserts that all srcdir files start with `en-US/`
+                e, f = f.split('en-US/')
+                assert(not e)
+                if '*' in f:
+                    # We can't use MERGE_FILE for wildcards because it takes
+                    # only the first match internally. This is only used
+                    # in one place in the tree currently so we'll hardcode
+                    # that specific behavior for now.
+                    backend_file.write('%s += $(wildcard $(LOCALE_SRCDIR)/%s)\n' % (name, f))
+                else:
+                    backend_file.write('%s += $(call MERGE_FILE,%s)\n' % (name, f))
             else:
-                backend_file.write('%s += $(call MERGE_FILE,%s)\n' % (name, f))
+                # Objdir files are allowed from LOCALIZED_GENERATED_FILES
+                backend_file.write('%s += %s\n' % (name, self._pretty_path(f, backend_file)))
 
     def _process_localized_files(self, obj, files, backend_file):
         target = obj.install_target

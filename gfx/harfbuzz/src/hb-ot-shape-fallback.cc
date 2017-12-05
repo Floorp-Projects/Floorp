@@ -218,10 +218,10 @@ position_mark (const hb_ot_shape_plan_t *plan,
     case HB_UNICODE_COMBINING_CLASS_DOUBLE_BELOW:
     case HB_UNICODE_COMBINING_CLASS_DOUBLE_ABOVE:
       if (buffer->props.direction == HB_DIRECTION_LTR) {
-	pos.x_offset += base_extents.x_bearing - mark_extents.width / 2 - mark_extents.x_bearing;
+	pos.x_offset += base_extents.x_bearing + base_extents.width - mark_extents.width / 2 - mark_extents.x_bearing;
         break;
       } else if (buffer->props.direction == HB_DIRECTION_RTL) {
-	pos.x_offset += base_extents.x_bearing + base_extents.width - mark_extents.width / 2 - mark_extents.x_bearing;
+	pos.x_offset += base_extents.x_bearing - mark_extents.width / 2 - mark_extents.x_bearing;
         break;
       }
       HB_FALLTHROUGH;

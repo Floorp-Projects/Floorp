@@ -3774,18 +3774,31 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
       // asr is scrolled. Even if we wrap a fixed background layer, that's
       // fine, because the item will have a scrolled clip that limits the
       // item with respect to asr.
-      thisItemList.AppendNewToTop(
-        new (aBuilder) nsDisplayBlendMode(aBuilder, aFrame, &thisItemList,
-                                          bg->mImage.mLayers[i].mBlendMode,
-                                          asr, i + 1));
+      if (aSecondaryReferenceFrame) {
+        thisItemList.AppendNewToTop(
+          new (aBuilder) nsDisplayTableBlendMode(aBuilder, aSecondaryReferenceFrame, &thisItemList,
+                                                 bg->mImage.mLayers[i].mBlendMode,
+                                                 asr, i + 1, aFrame));
+      } else {
+        thisItemList.AppendNewToTop(
+          new (aBuilder) nsDisplayBlendMode(aBuilder, aFrame, &thisItemList,
+                                            bg->mImage.mLayers[i].mBlendMode,
+                                            asr, i + 1));
+      }
     }
     bgItemList.AppendToTop(&thisItemList);
   }
 
   if (needBlendContainer) {
     DisplayListClipState::AutoSaveRestore blendContainerClip(aBuilder);
-    bgItemList.AppendNewToTop(
-      nsDisplayBlendContainer::CreateForBackgroundBlendMode(aBuilder, aFrame, &bgItemList, asr));
+    if (aSecondaryReferenceFrame) {
+      bgItemList.AppendNewToTop(
+        nsDisplayTableBlendContainer::CreateForBackgroundBlendMode(aBuilder, aSecondaryReferenceFrame,
+                                                                   &bgItemList, asr, aFrame));
+    } else {
+      bgItemList.AppendNewToTop(
+        nsDisplayBlendContainer::CreateForBackgroundBlendMode(aBuilder, aFrame, &bgItemList, asr));
+    }
   }
 
   aList->AppendToTop(&bgItemList);
@@ -6939,6 +6952,15 @@ nsDisplayBlendContainer::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 
   return nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, sc,
                                                     aManager, aDisplayListBuilder);
+}
+
+/* static */ nsDisplayTableBlendContainer*
+nsDisplayTableBlendContainer::CreateForBackgroundBlendMode(nsDisplayListBuilder* aBuilder,
+                                                           nsIFrame* aFrame, nsDisplayList* aList,
+                                                           const ActiveScrolledRoot* aActiveScrolledRoot,
+                                                           nsIFrame* aAncestorFrame)
+{
+  return new (aBuilder) nsDisplayTableBlendContainer(aBuilder, aFrame, aList, aActiveScrolledRoot, true, aAncestorFrame);
 }
 
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,

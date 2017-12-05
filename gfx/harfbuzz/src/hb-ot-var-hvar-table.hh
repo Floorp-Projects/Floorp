@@ -55,7 +55,7 @@ struct DeltaSetIndexMap
     unsigned int u = 0;
     { /* Fetch it. */
       unsigned int w = get_width ();
-      const BYTE *p = mapData + w * v;
+      const UINT8 *p = mapData + w * v;
       for (; w; w--)
 	u = (u << 8) + *p++;
     }
@@ -78,10 +78,10 @@ struct DeltaSetIndexMap
   { return (format & 0xF) + 1; }
 
   protected:
-  USHORT	format;		/* A packed field that describes the compressed
+  UINT16	format;		/* A packed field that describes the compressed
 				 * representation of delta-set indices. */
-  USHORT	mapCount;	/* The number of mapping entries. */
-  BYTE		mapData[VAR];	/* The delta-set index mapping data. */
+  UINT16	mapCount;	/* The number of mapping entries. */
+  UINT8		mapData[VAR];	/* The delta-set index mapping data. */
 
   public:
   DEFINE_SIZE_ARRAY (4, mapData);
