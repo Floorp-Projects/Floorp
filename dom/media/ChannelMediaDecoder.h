@@ -141,7 +141,9 @@ private:
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
   // at any time.
-  MediaStatistics GetStatistics(const PlaybackRateInfo& aInfo);
+  static MediaStatistics GetStatistics(const PlaybackRateInfo& aInfo,
+                                       BaseMediaResource* aRes,
+                                       int64_t aPlaybackPosition);
 
   bool ShouldThrottleDownload(const MediaStatistics& aStats);
 
@@ -159,6 +161,8 @@ private:
   // during decoder seek operations, but it's updated at the end when we
   // start playing back again.
   int64_t mPlaybackPosition = 0;
+
+  bool mCanPlayThrough = false;
 };
 
 } // namespace mozilla
