@@ -32,22 +32,3 @@ ServoCSSParser::ParseIntersectionObserverRootMargin(const nsAString& aValue,
 {
   return Servo_ParseIntersectionObserverRootMargin(&aValue, aResult);
 }
-
-/* static */ already_AddRefed<nsAtom>
-ServoCSSParser::ParseCounterStyleName(const nsAString& aValue)
-{
-  NS_ConvertUTF16toUTF8 value(aValue);
-  nsAtom* atom = Servo_ParseCounterStyleName(&value);
-  return already_AddRefed<nsAtom>(atom);
-}
-
-/* static */ bool
-ServoCSSParser::ParseCounterStyleDescriptor(nsCSSCounterDesc aDescriptor,
-                                            const nsAString& aValue,
-                                            URLExtraData* aURLExtraData,
-                                            nsCSSValue& aResult)
-{
-  NS_ConvertUTF16toUTF8 value(aValue);
-  return Servo_ParseCounterStyleDescriptor(aDescriptor, &value, aURLExtraData,
-                                           &aResult);
-}
