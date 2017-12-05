@@ -216,7 +216,6 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
   let request = {
     callID: aCallID,
     windowID: aWindowID,
-    origin: aContentWindow.origin,
     documentURI: aContentWindow.document.documentURI,
     secure: aSecure,
     requestTypes,
