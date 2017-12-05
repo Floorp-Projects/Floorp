@@ -5137,11 +5137,21 @@ nsComputedDOMStyle::DoGetOverflowY()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetOverflowClipBox()
+nsComputedDOMStyle::DoGetOverflowClipBoxBlock()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBox,
+    nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBoxBlock,
+                                   nsCSSProps::kOverflowClipBoxKTable));
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetOverflowClipBoxInline()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBoxInline,
                                    nsCSSProps::kOverflowClipBoxKTable));
   return val.forget();
 }
