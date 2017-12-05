@@ -32,32 +32,10 @@ function* openAboutDebugging(page, win) {
   let document = browser.contentDocument;
   let window = browser.contentWindow;
 
-  if (!document.querySelector(".app")) {
-    yield waitForMutation(document.body, { childList: true });
-  }
+  info("Wait until the main about debugging container is available");
+  yield waitUntilElement(".app", document);
 
   return { tab, document, window };
-}
-
-/**
- * Change url hash for current about:debugging tab, return a promise after
- * new content is loaded.
- * @param  {DOMDocument}  document   container document from current tab
- * @param  {String}       hash       hash for about:debugging
- * @return {Promise}
- */
-function changeAboutDebuggingHash(document, hash) {
-  info(`Opening about:debugging#${hash}`);
-  window.openUILinkIn(`about:debugging#${hash}`, "current");
-  return waitForMutation(
-    document.querySelector(".main-content"), {childList: true});
-}
-
-function openPanel(document, panelId) {
-  info(`Opening ${panelId} panel`);
-  document.querySelector(`[aria-controls="${panelId}"]`).click();
-  return waitForMutation(
-    document.querySelector(".main-content"), {childList: true});
 }
 
 function closeAboutDebugging(tab) {
@@ -287,39 +265,6 @@ function* waitUntilAddonContainer(name, document) {
     return getAddonContainer(name, document);
   });
   return getAddonContainer(name, document);
-}
-
-/**
- * Returns a promise that will resolve after receiving a mutation matching the
- * provided mutation options on the provided target.
- * @param {Node} target
- * @param {Object} mutationOptions
- * @return {Promise}
- */
-function waitForMutation(target, mutationOptions) {
-  return new Promise(resolve => {
-    let observer = new MutationObserver(() => {
-      observer.disconnect();
-      resolve();
-    });
-    observer.observe(target, mutationOptions);
-  });
-}
-
-/**
- * Returns a promise that will resolve after receiving a mutation in the subtree of the
- * provided target. Depending on the current React implementation, a text change might be
- * observable as a childList mutation or a characterData mutation.
- *
- * @param {Node} target
- * @return {Promise}
- */
-function waitForContentMutation(target) {
-  return waitForMutation(target, {
-    characterData: true,
-    childList: true,
-    subtree: true
-  });
 }
 
 /**
