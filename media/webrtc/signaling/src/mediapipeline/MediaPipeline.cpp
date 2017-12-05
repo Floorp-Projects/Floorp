@@ -2040,33 +2040,6 @@ MediaPipelineTransmit::PipelineListener::SetCurrentFrames(
   NewData(aSegment);
 }
 
-class TrackAddedCallback
-{
-public:
-  virtual void TrackAdded(TrackTicks aCurrentTicks) = 0;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackAddedCallback);
-
-protected:
-  virtual ~TrackAddedCallback() {}
-};
-
-class GenericReceiveListener;
-
-class GenericReceiveCallback : public TrackAddedCallback
-{
-public:
-  explicit GenericReceiveCallback(GenericReceiveListener* aListener)
-    : mListener(aListener)
-  {
-  }
-
-  void TrackAdded(TrackTicks aTime);
-
-private:
-  const RefPtr<GenericReceiveListener> mListener;
-};
-
 class GenericReceiveListener : public MediaStreamListener
 {
 public:
