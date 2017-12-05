@@ -101,9 +101,11 @@ add_task(function* testUnknownManifestProperty() {
     isWebExtension: true
   });
 
-  let container = document.querySelector(`[data-addon-id="${addonId}"]`);
+  info("Wait until the addon appears in about:debugging");
+  let container = yield waitUntilAddonContainer(addonName, document);
 
-  yield waitForInstallMessages(container);
+  info("Wait until the installation message appears for the new addon");
+  yield waitUntilElement(".addon-target-messages", container);
 
   let messages = container.querySelectorAll(".addon-target-message");
   ok(messages.length === 1, "there is one message");

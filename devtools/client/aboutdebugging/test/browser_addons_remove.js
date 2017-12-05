@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const PACKAGED_ADDON_NAME = "bug 1273184";
+
 function getTargetEl(document, id) {
   return document.querySelector(`[data-addon-id="${id}"]`);
 }
@@ -26,14 +28,11 @@ add_task(function* removeLegacyExtension() {
 
   ok(getTargetEl(document, addonID), "add-on is shown");
 
-  // Click the remove button and wait for the DOM to change.
-  const addonListMutation = waitForMutation(
-    getTemporaryAddonList(document).parentNode,
-    { childList: true, subtree: true });
+  info("Click on the remove button and wait until the addon container is removed");
   getRemoveButton(document, addonID).click();
-  yield addonListMutation;
+  yield waitUntil(() => !getTargetEl(document, addonID), 100);
 
-  ok(!getTargetEl(document, addonID), "add-on is not shown");
+  info("add-on is not shown");
 
   yield closeAboutDebugging(tab);
 });
@@ -55,14 +54,11 @@ add_task(function* removeWebextension() {
 
   ok(getTargetEl(document, addonID), "add-on is shown");
 
-  // Click the remove button and wait for the DOM to change.
-  const addonListMutation = waitForMutation(
-    getTemporaryAddonList(document).parentNode,
-    { childList: true, subtree: true });
+  info("Click on the remove button and wait until the addon container is removed");
   getRemoveButton(document, addonID).click();
-  yield addonListMutation;
+  yield waitUntil(() => !getTargetEl(document, addonID), 100);
 
-  ok(!getTargetEl(document, addonID), "add-on is not shown");
+  info("add-on is not shown");
 
   yield closeAboutDebugging(tab);
 });
@@ -70,11 +66,12 @@ add_task(function* removeWebextension() {
 add_task(function* onlyTempInstalledAddonsCanBeRemoved() {
   const { tab, document } = yield openAboutDebugging("addons");
   yield waitForInitialAddonList(document);
-  const onAddonListUpdated = waitForMutation(getAddonList(document),
-                                             { childList: true });
+
   yield installAddonWithManager(getSupportsFile("addons/bug1273184.xpi").file);
-  yield onAddonListUpdated;
   const addon = yield getAddonByID("bug1273184@tests");
+
+  info("Wait until addon appears in about:debugging#addons");
+  yield waitUntilAddonContainer(PACKAGED_ADDON_NAME, document);
 
   const removeButton = getRemoveButton(document, addon.id);
   ok(!removeButton, "remove button is not shown");
