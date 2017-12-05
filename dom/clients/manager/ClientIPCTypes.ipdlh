@@ -56,12 +56,18 @@ struct ClientSourceExecutionReadyArgs
   FrameType frameType;
 };
 
+struct ClientControlledArgs
+{
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
 struct ClientOpenWindowArgs
 {
 };
 
-struct ClientOpConstructorArgs
+union ClientOpConstructorArgs
 {
+  ClientControlledArgs;
 };
 
 struct ClientNavigateOpConstructorArgs

@@ -226,5 +226,25 @@ ClientSourceParent::DetachHandle(ClientHandleParent* aClientHandle)
   mHandleList.RemoveElement(aClientHandle);
 }
 
+RefPtr<ClientOpPromise>
+ClientSourceParent::StartOp(const ClientOpConstructorArgs& aArgs)
+{
+  RefPtr<ClientOpPromise::Private> promise =
+    new ClientOpPromise::Private(__func__);
+
+  // If we are being controlled, remember that data before propagating
+  // on to the ClientSource.
+  if (aArgs.type() == ClientOpConstructorArgs::TClientControlledArgs) {
+    mController.reset();
+    mController.emplace(aArgs.get_ClientControlledArgs().serviceWorker());
+  }
+
+  // Constructor failure will reject the promise via ActorDestroy().
+  ClientSourceOpParent* actor = new ClientSourceOpParent(aArgs, promise);
+  Unused << SendPClientSourceOpConstructor(actor, aArgs);
+
+  return promise.forget();
+}
+
 } // namespace dom
 } // namespace mozilla

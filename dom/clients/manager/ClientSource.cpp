@@ -257,6 +257,37 @@ ClientSource::Info() const
   return mClientInfo;
 }
 
+void
+ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+
+  if (mController.isSome() && mController.ref() == aServiceWorker) {
+    return;
+  }
+
+  mController.reset();
+  mController.emplace(aServiceWorker);
+}
+
+RefPtr<ClientOpPromise>
+ClientSource::Control(const ClientControlledArgs& aArgs)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+
+  SetController(ServiceWorkerDescriptor(aArgs.serviceWorker()));
+
+  RefPtr<ClientOpPromise> ref =
+    ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+  return ref.forget();
+}
+
+const Maybe<ServiceWorkerDescriptor>&
+ClientSource::GetController() const
+{
+  return mController;
+}
+
 nsISerialEventTarget*
 ClientSource::EventTarget() const
 {
