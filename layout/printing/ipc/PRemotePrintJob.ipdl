@@ -22,9 +22,9 @@ parent:
   async InitializePrint(nsString aDocumentTitle, nsString aPrintToFile,
                         int32_t aStartPage, int32_t aEndPage);
 
-  // Translate the stored page recording and play back the events to the real
-  // print device.
-  async ProcessPage(nsCString aPageFileName);
+  // Translate the page recording writen into |fd| and play back the events to
+  // the real print device.
+  async ProcessPage();
 
   // This informs the real print device that we've finished, so it can trigger
   // the actual print.
@@ -45,11 +45,13 @@ parent:
 
 child:
   // Inform the child that the print has been initialized in the parent or has
-  // failed with result aRv.
-  async PrintInitializationResult(nsresult aRv);
+  // failed with result aRv. Includes a file descriptor which the first page
+  // can be written to.
+  async PrintInitializationResult(nsresult aRv, FileDescriptor aFd);
 
-  // Inform the child that the latest page has been processed remotely.
-  async PageProcessed();
+  // Inform the child that the latest page has been processed remotely. Includes
+  // a file descriptor which the next page can be written to.
+  async PageProcessed(FileDescriptor aFd);
 
   async __delete__();
 };

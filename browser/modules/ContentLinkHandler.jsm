@@ -28,6 +28,9 @@ const SIZES_TELEMETRY_ENUM = {
 const FAVICON_PARSING_TIMEOUT = 100;
 const FAVICON_RICH_ICON_MIN_WIDTH = 96;
 
+const TYPE_ICO = "image/x-icon";
+const TYPE_SVG = "image/svg+xml";
+
 /*
  * Create a nsITimer.
  *
@@ -120,10 +123,27 @@ function setIconForLink(aIconInfo, aChromeGlobal) {
 }
 
 /**
- * Checks whether the icon info represents an ICO image.
+ * Guess a type for an icon based on its declared type or file extension.
  */
-function isICO(icon) {
-  return icon.type == "image/x-icon" || icon.type == "image/vnd.microsoft.icon";
+function guessType(icon) {
+  // No type with no icon
+  if (!icon) {
+    return "";
+  }
+
+  // Use the file extension to guess at a type we're interested in
+  if (!icon.type) {
+    let extension = icon.iconUri.filePath.split(".").pop();
+    switch (extension) {
+      case "ico":
+        return TYPE_ICO;
+      case "svg":
+        return TYPE_SVG;
+    }
+  }
+
+  // Fuzzily prefer the type or fall back to the declared type
+  return icon.type == "image/vnd.microsoft.icon" ? TYPE_ICO : icon.type || "";
 }
 
 /*
@@ -142,9 +162,7 @@ function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
   if (!load)
     return;
 
-  let preferredIcon = {
-    type: null
-  };
+  let preferredIcon;
   let preferredWidth = 16 * Math.ceil(aChromeGlobal.content.devicePixelRatio);
   // Other links with the "icon" tag are the default icons
   let defaultIcon;
@@ -157,11 +175,11 @@ function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
       // First check for svg. If it's not available check for an icon with a
       // size adapt to the current resolution. If both are not available, prefer
       // ico files. When multiple icons are in the same set, the latest wins.
-      if (icon.type == "image/svg+xml") {
+      if (guessType(icon) == TYPE_SVG) {
         preferredIcon = icon;
-      } else if (icon.width == preferredWidth && preferredIcon.type != "image/svg+xml") {
+      } else if (icon.width == preferredWidth && guessType(preferredIcon) != TYPE_SVG) {
         preferredIcon = icon;
-      } else if (isICO(icon) && (preferredIcon.type == null || isICO(preferredIcon))) {
+      } else if (guessType(icon) == TYPE_ICO && (!preferredIcon || guessType(preferredIcon) == TYPE_ICO)) {
         preferredIcon = icon;
       }
     }
@@ -185,7 +203,7 @@ function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
   if (largestRichIcon) {
     setIconForLink(largestRichIcon, aChromeGlobal);
   }
-  if (preferredIcon.type) {
+  if (preferredIcon) {
     setIconForLink(preferredIcon, aChromeGlobal);
   } else if (defaultIcon) {
     setIconForLink(defaultIcon, aChromeGlobal);

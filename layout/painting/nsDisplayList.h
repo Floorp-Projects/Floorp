@@ -4358,7 +4358,8 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayEventReceiver {
 public:
   nsDisplayCompositorHitTestInfo(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                  mozilla::gfx::CompositorHitTestInfo aHitTestInfo,
-                                 uint32_t aIndex = 0);
+                                 uint32_t aIndex = 0,
+                                 const mozilla::Maybe<nsRect>& aArea = mozilla::Nothing());
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayCompositorHitTestInfo()
@@ -4368,7 +4369,6 @@ public:
 #endif
 
   mozilla::gfx::CompositorHitTestInfo HitTestInfo() const { return mHitTestInfo; }
-  void SetArea(const nsRect& aArea);
 
   bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -4385,7 +4385,7 @@ public:
 private:
   mozilla::gfx::CompositorHitTestInfo mHitTestInfo;
   mozilla::Maybe<mozilla::layers::FrameMetrics::ViewID> mScrollTarget;
-  mozilla::Maybe<nsRect> mArea;
+  nsRect mArea;
   uint32_t mIndex;
   mozilla::Maybe<int32_t> mOverrideZIndex;
 };

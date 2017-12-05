@@ -4957,7 +4957,8 @@ nsDisplayEventReceiver::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder&
 nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuilder* aBuilder,
                                                                nsIFrame* aFrame,
                                                                mozilla::gfx::CompositorHitTestInfo aHitTestInfo,
-                                                               uint32_t aIndex)
+                                                               uint32_t aIndex,
+                                                               const mozilla::Maybe<nsRect>& aArea)
   : nsDisplayEventReceiver(aBuilder, aFrame)
   , mHitTestInfo(aHitTestInfo)
   , mIndex(aIndex)
@@ -4975,12 +4976,29 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
     MOZ_ASSERT(mHitTestInfo & CompositorHitTestInfo::eScrollbar);
     mScrollTarget = Some(aBuilder->GetCurrentScrollbarTarget());
   }
-}
 
-void
-nsDisplayCompositorHitTestInfo::SetArea(const nsRect& aArea)
-{
-  mArea = Some(aArea);
+  if (aArea.isSome()) {
+    mArea = *aArea;
+  } else {
+    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(mFrame);
+    if (scrollFrame) {
+      // If the frame is content of a scrollframe, then we need to pick up the
+      // area corresponding to the overflow rect as well. Otherwise the parts of
+      // the overflow that are not occupied by descendants get skipped and the
+      // APZ code sends touch events to the content underneath instead.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+      mArea = mFrame->GetScrollableOverflowRect();
+    } else {
+      mArea = nsRect(nsPoint(0, 0), mFrame->GetSize());
+    }
+
+    // Note that it's important to do this call to ToReferenceFrame here in the
+    // nsDisplayCompositorHitTestInfo constructor, because then we'll hit the good
+    // fast path (because aBuilder will already have the info we want cached).
+    // This is as opposed to, say, calling it in CreateWebRenderCommands where
+    // we would not hit the fast path.
+    mArea += aBuilder->ToReferenceFrame(mFrame);
+  }
 }
 
 bool
@@ -4990,31 +5008,13 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
                                                         mozilla::layers::WebRenderLayerManager* aManager,
                                                         nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (mArea.isNothing()) {
-    nsRect borderBox;
-    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(mFrame);
-    if (scrollFrame) {
-      // If the frame is content of a scrollframe, then we need to pick up the
-      // area corresponding to the overflow rect as well. Otherwise the parts of
-      // the overflow that are not occupied by descendants get skipped and the
-      // APZ code sends touch events to the content underneath instead.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
-      borderBox = mFrame->GetScrollableOverflowRect();
-    } else {
-      borderBox = nsRect(nsPoint(0, 0), mFrame->GetSize());
-    }
-
-    if (borderBox.IsEmpty()) {
-      return true;
-    }
-
-    mArea = Some(borderBox + aDisplayListBuilder->ToReferenceFrame(mFrame));
+  if (mArea.IsEmpty()) {
+    return true;
   }
 
-  MOZ_ASSERT(mArea.isSome());
   wr::LayoutRect rect = aSc.ToRelativeLayoutRect(
       LayoutDeviceRect::FromAppUnits(
-          *mArea,
+          mArea,
           mFrame->PresContext()->AppUnitsPerDevPixel()));
 
   // XXX: eventually this scrollId computation and the SetHitTestInfo

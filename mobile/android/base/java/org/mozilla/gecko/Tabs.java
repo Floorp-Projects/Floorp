@@ -84,6 +84,8 @@ public class Tabs implements BundleEventListener {
     public static final int LOADURL_EXTERNAL     = 1 << 7;
     /** Indicates the tab is the first shown after Firefox is hidden and restored. */
     public static final int LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN = 1 << 8;
+    /** Indicates that we should enter editing mode after opening the tab. */
+    public static final int LOADURL_START_EDITING = 1 << 9;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
 
@@ -758,7 +760,8 @@ public class Tabs implements BundleEventListener {
         AUDIO_PLAYING_CHANGE,
         OPENED_FROM_TABS_TRAY,
         MEDIA_PLAYING_CHANGE,
-        MEDIA_PLAYING_RESUME
+        MEDIA_PLAYING_RESUME,
+        START_EDITING,
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {
@@ -987,6 +990,7 @@ public class Tabs implements BundleEventListener {
         boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
         boolean external = (flags & LOADURL_EXTERNAL) != 0;
         final boolean isFirstShownAfterActivityUnhidden = (flags & LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN) != 0;
+        final boolean startEditing = (flags & LOADURL_START_EDITING) != 0;
 
         data.putString("url", url);
         data.putString("engine", searchEngine);
@@ -1065,26 +1069,40 @@ public class Tabs implements BundleEventListener {
             selectTab(tabToSelect.getId());
         }
 
+        if (startEditing) {
+            notifyListeners(tabToSelect, TabEvents.START_EDITING);
+        }
+
         // Load favicon instantly for about:home page because it's already cached
         if (AboutPages.isBuiltinIconPage(url)) {
             tabToSelect.loadFavicon();
         }
 
-
         return tabToSelect;
     }
 
     /**
-     * Opens a new tab and loads either about:home or, if PREFS_HOMEPAGE_FOR_EVERY_NEW_TAB is set,
-     * the user's homepage.
+     * Opens a new tab and loads a page according to the user's preferences (by default about:home).
      */
     @RobocopTarget
     public Tab addTab() {
-        return loadUrl(getHomepageForNewTab(mAppContext), Tabs.LOADURL_NEW_TAB);
+        return addTab(Tabs.LOADURL_NONE);
     }
 
+    /**
+     * Opens a new tab and loads a page according to the user's preferences (by default about:home).
+     */
     public Tab addPrivateTab() {
-        return loadUrl(getHomepageForNewTab(mAppContext), Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
+        return addTab(Tabs.LOADURL_PRIVATE);
+    }
+
+    /**
+     * Opens a new tab and loads a page according to the user's preferences (by default about:home).
+     *
+     * @param flags additional flags used when opening the tab
+     */
+    public Tab addTab(int flags) {
+        return loadUrl(getHomepageForNewTab(mAppContext), flags | Tabs.LOADURL_NEW_TAB);
     }
 
     /**
