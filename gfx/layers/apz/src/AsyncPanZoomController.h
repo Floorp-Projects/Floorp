@@ -928,7 +928,8 @@ protected:
                                  CSSOM-View smooth scroll-behavior */
     WHEEL_SCROLL,             /* Smooth scrolling to a destination for a wheel event. */
     KEYBOARD_SCROLL,          /* Smooth scrolling to a destination for a keyboard event. */
-    AUTOSCROLL                /* Autoscroll animation. */
+    AUTOSCROLL,               /* Autoscroll animation. */
+    SCROLLBAR_DRAG            /* Async scrollbar drag. */
   };
   // This is in theory protected by |mRecursiveMutex|; that is, it should be held whenever
   // this is updated. In practice though... see bug 897017.

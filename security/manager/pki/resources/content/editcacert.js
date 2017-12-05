@@ -31,11 +31,6 @@ function onLoad() {
   let emailCheckbox = document.getElementById("trustEmail");
   emailCheckbox.checked = gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                                 Ci.nsIX509CertDB.TRUSTED_EMAIL);
-
-  let objSignCheckbox = document.getElementById("trustObjSign");
-  objSignCheckbox.checked =
-    gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                          Ci.nsIX509CertDB.TRUSTED_OBJSIGN);
 }
 
 /**
@@ -46,13 +41,9 @@ function onLoad() {
 function onDialogAccept() {
   let sslCheckbox = document.getElementById("trustSSL");
   let emailCheckbox = document.getElementById("trustEmail");
-  let objSignCheckbox = document.getElementById("trustObjSign");
   let trustSSL = sslCheckbox.checked ? Ci.nsIX509CertDB.TRUSTED_SSL : 0;
   let trustEmail = emailCheckbox.checked ? Ci.nsIX509CertDB.TRUSTED_EMAIL : 0;
-  let trustObjSign = objSignCheckbox.checked ? Ci.nsIX509CertDB.TRUSTED_OBJSIGN
-                                             : 0;
 
-  gCertDB.setCertTrust(gCert, Ci.nsIX509Cert.CA_CERT,
-                       trustSSL | trustEmail | trustObjSign);
+  gCertDB.setCertTrust(gCert, Ci.nsIX509Cert.CA_CERT, trustSSL | trustEmail);
   return true;
 }

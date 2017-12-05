@@ -200,9 +200,9 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
   NS_ASSERTION(n || !aNode->IsSelectionDescendant(),
                "orphan selection descendant");
 
-  // Collect the potential ranges and their selection objects.
-  RangeHashTable ancestorSelectionRanges;
+  // Collect the selection objects for potential ranges.
   nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
+  Selection* prevSelection = nullptr;
   uint32_t maxRangeCount = 0;
   for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
     LinkedList<nsRange>* ranges = n->GetExistingCommonAncestorRanges();
@@ -213,35 +213,64 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
       MOZ_ASSERT(range->IsInSelection(),
                  "Why is this range registeed with a node?");
       // Looks like that IsInSelection() assert fails sometimes...
-      if (!range->Collapsed() && range->IsInSelection()) {
-        ancestorSelectionRanges.PutEntry(range);
+      if (range->IsInSelection()) {
         Selection* selection = range->mSelection;
-        ancestorSelections.PutEntry(selection);
+        if (prevSelection != selection) {
+          prevSelection = selection;
+          ancestorSelections.PutEntry(selection);
+        }
         maxRangeCount = std::max(maxRangeCount, selection->RangeCount());
       }
     }
   }
 
-  if (!ancestorSelectionRanges.IsEmpty()) {
-    nsTArray<const nsRange*> sortedRanges(maxRangeCount);
+  IsItemInRangeComparator comparator = { aNode, aStartOffset, aEndOffset };
+  if (!ancestorSelections.IsEmpty()) {
     for (auto iter = ancestorSelections.ConstIter(); !iter.Done(); iter.Next()) {
       Selection* selection = iter.Get()->GetKey();
-      // Sort the found ranges for |selection| in document order
+      // Binary search the sorted ranges in this selection.
       // (Selection::GetRangeAt returns its ranges ordered).
-      for (uint32_t i = 0, len = selection->RangeCount(); i < len; ++i) {
-        nsRange* range = selection->GetRangeAt(i);
-        if (ancestorSelectionRanges.Contains(range)) {
-          sortedRanges.AppendElement(range);
+      size_t low = 0;
+      size_t high = selection->RangeCount();
+
+      while (high != low) {
+        size_t middle = low + (high - low) / 2;
+
+        const nsRange* const range = selection->GetRangeAt(middle);
+        int result = comparator(range);
+        if (result == 0) {
+          if (!range->Collapsed())
+            return true;
+
+          const nsRange* middlePlus1;
+          const nsRange* middleMinus1;
+          // if node end > start of middle+1, result = 1
+          if (middle + 1 < high &&
+              (middlePlus1 = selection->GetRangeAt(middle + 1)) &&
+              nsContentUtils::ComparePoints(
+                aNode, static_cast<int32_t>(aEndOffset),
+                middlePlus1->GetStartContainer(),
+                static_cast<int32_t>(middlePlus1->StartOffset())) > 0) {
+              result = 1;
+          // if node start < end of middle - 1, result = -1
+          } else if (middle >= 1 &&
+              (middleMinus1 = selection->GetRangeAt(middle - 1)) &&
+              nsContentUtils::ComparePoints(
+                aNode, static_cast<int32_t>(aStartOffset),
+                middleMinus1->GetEndContainer(),
+                static_cast<int32_t>(middleMinus1->EndOffset())) < 0) {
+            result = -1;
+          } else {
+            return false;
+          }
+        }
+
+        if (result < 0) {
+          high = middle;
+        } else {
+          low = middle + 1;
         }
       }
-      MOZ_ASSERT(!sortedRanges.IsEmpty());
-      // Binary search the now sorted ranges.
-      IsItemInRangeComparator comparator = { aNode, aStartOffset, aEndOffset };
-      size_t unused;
-      if (mozilla::BinarySearchIf(sortedRanges, 0, sortedRanges.Length(), comparator, &unused)) {
-        return true;
-      }
-      sortedRanges.ClearAndRetainStorage();
     }
   }
   return false;

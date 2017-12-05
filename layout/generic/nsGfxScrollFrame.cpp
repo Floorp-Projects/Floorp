@@ -3650,8 +3650,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         CompositorHitTestInfo info = CompositorHitTestInfo::eVisibleToHitTest
                                    | CompositorHitTestInfo::eDispatchToContent;
         nsDisplayCompositorHitTestInfo* hitInfo =
-            new (aBuilder) nsDisplayCompositorHitTestInfo(aBuilder, mScrolledFrame, info, 1);
-        hitInfo->SetArea(mScrollPort + aBuilder->ToReferenceFrame(mOuter));
+            new (aBuilder) nsDisplayCompositorHitTestInfo(aBuilder, mScrolledFrame, info, 1,
+                Some(mScrollPort + aBuilder->ToReferenceFrame(mOuter)));
         AppendInternalItemToTop(scrolledContent, hitInfo, zIndex);
       }
       if (aBuilder->IsBuildingLayerEventRegions()) {

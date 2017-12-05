@@ -26,7 +26,7 @@ promise_test(function(t) {
 
     // Wait a moment so we can confirm the startTime doesn't change (and
     // doesn't simply reflect the current time).
-    return waitForFrame();
+    return waitForNextFrame();
   }).then(function() {
     div.style.animationDuration = '200s';
     var animation = div.getAnimations()[0];
