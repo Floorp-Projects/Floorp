@@ -33,6 +33,7 @@
 #include "nsWindowsHelpers.h"
 #include "WindowsDllBlocklist.h"
 #include "mozilla/AutoProfilerLabel.h"
+#include "mozilla/WindowsDllServices.h"
 
 using namespace mozilla;
 
@@ -930,3 +931,140 @@ DllBlocklist_CheckStatus()
     return false;
   return true;
 }
+
+// ============================================================================
+// This section is for DLL Services
+// ============================================================================
+
+
+static SRWLOCK gDllServicesLock = SRWLOCK_INIT;
+static mozilla::detail::DllServicesBase* gDllServices;
+
+class MOZ_RAII AutoSharedLock final
+{
+public:
+  explicit AutoSharedLock(SRWLOCK& aLock)
+    : mLock(aLock)
+  {
+    ::AcquireSRWLockShared(&aLock);
+  }
+
+  ~AutoSharedLock()
+  {
+    ::ReleaseSRWLockShared(&mLock);
+  }
+
+  AutoSharedLock(const AutoSharedLock&) = delete;
+  AutoSharedLock(AutoSharedLock&&) = delete;
+  AutoSharedLock& operator=(const AutoSharedLock&) = delete;
+  AutoSharedLock& operator=(AutoSharedLock&&) = delete;
+
+private:
+  SRWLOCK& mLock;
+};
+
+class MOZ_RAII AutoExclusiveLock final
+{
+public:
+  explicit AutoExclusiveLock(SRWLOCK& aLock)
+    : mLock(aLock)
+  {
+    ::AcquireSRWLockExclusive(&aLock);
+  }
+
+  ~AutoExclusiveLock()
+  {
+    ::ReleaseSRWLockExclusive(&mLock);
+  }
+
+  AutoExclusiveLock(const AutoExclusiveLock&) = delete;
+  AutoExclusiveLock(AutoExclusiveLock&&) = delete;
+  AutoExclusiveLock& operator=(const AutoExclusiveLock&) = delete;
+  AutoExclusiveLock& operator=(AutoExclusiveLock&&) = delete;
+
+private:
+  SRWLOCK& mLock;
+};
+
+// These types are documented on MSDN but not provided in any SDK headers
+
+enum DllNotificationReason
+{
+  LDR_DLL_NOTIFICATION_REASON_LOADED = 1,
+  LDR_DLL_NOTIFICATION_REASON_UNLOADED = 2
+};
+
+typedef struct _LDR_DLL_LOADED_NOTIFICATION_DATA {
+  ULONG Flags;                    //Reserved.
+  PCUNICODE_STRING FullDllName;   //The full path name of the DLL module.
+  PCUNICODE_STRING BaseDllName;   //The base file name of the DLL module.
+  PVOID DllBase;                  //A pointer to the base address for the DLL in memory.
+  ULONG SizeOfImage;              //The size of the DLL image, in bytes.
+} LDR_DLL_LOADED_NOTIFICATION_DATA, *PLDR_DLL_LOADED_NOTIFICATION_DATA;
+
+typedef struct _LDR_DLL_UNLOADED_NOTIFICATION_DATA {
+  ULONG Flags;                    //Reserved.
+  PCUNICODE_STRING FullDllName;   //The full path name of the DLL module.
+  PCUNICODE_STRING BaseDllName;   //The base file name of the DLL module.
+  PVOID DllBase;                  //A pointer to the base address for the DLL in memory.
+  ULONG SizeOfImage;              //The size of the DLL image, in bytes.
+} LDR_DLL_UNLOADED_NOTIFICATION_DATA, *PLDR_DLL_UNLOADED_NOTIFICATION_DATA;
+
+typedef union _LDR_DLL_NOTIFICATION_DATA {
+  LDR_DLL_LOADED_NOTIFICATION_DATA Loaded;
+  LDR_DLL_UNLOADED_NOTIFICATION_DATA Unloaded;
+} LDR_DLL_NOTIFICATION_DATA, *PLDR_DLL_NOTIFICATION_DATA;
+
+typedef const LDR_DLL_NOTIFICATION_DATA* PCLDR_DLL_NOTIFICATION_DATA;
+
+typedef VOID (CALLBACK* PLDR_DLL_NOTIFICATION_FUNCTION)(
+          ULONG aReason,
+          PCLDR_DLL_NOTIFICATION_DATA aNotificationData,
+          PVOID aContext);
+
+NTSTATUS NTAPI
+LdrRegisterDllNotification(ULONG aFlags,
+                           PLDR_DLL_NOTIFICATION_FUNCTION aCallback,
+                           PVOID aContext, PVOID* aCookie);
+
+static PVOID gNotificationCookie;
+
+static VOID CALLBACK
+DllLoadNotification(ULONG aReason, PCLDR_DLL_NOTIFICATION_DATA aNotificationData,
+                    PVOID aContext)
+{
+  if (aReason != LDR_DLL_NOTIFICATION_REASON_LOADED) {
+    // We don't care about unloads
+    return;
+  }
+
+  AutoSharedLock lock(gDllServicesLock);
+  if (!gDllServices) {
+    return;
+  }
+
+  PCUNICODE_STRING fullDllName = aNotificationData->Loaded.FullDllName;
+  gDllServices->DispatchDllLoadNotification(fullDllName);
+}
+
+MFBT_API void
+DllBlocklist_SetDllServices(mozilla::detail::DllServicesBase* aSvc)
+{
+  AutoExclusiveLock lock(gDllServicesLock);
+
+  if (aSvc && !gNotificationCookie) {
+    auto pLdrRegisterDllNotification =
+      reinterpret_cast<decltype(&::LdrRegisterDllNotification)>(
+        ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"),
+                         "LdrRegisterDllNotification"));
+
+    MOZ_DIAGNOSTIC_ASSERT(pLdrRegisterDllNotification);
+
+    NTSTATUS ntStatus = pLdrRegisterDllNotification(0, &DllLoadNotification,
+                                                    nullptr, &gNotificationCookie);
+    MOZ_DIAGNOSTIC_ASSERT(NT_SUCCESS(ntStatus));
+  }
+
+  gDllServices = aSvc;
+}
+
