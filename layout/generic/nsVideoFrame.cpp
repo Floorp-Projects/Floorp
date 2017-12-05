@@ -93,7 +93,6 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsNodeInfoManager *nodeInfoManager = GetContent()->GetComposedDoc()->NodeInfoManager();
   RefPtr<NodeInfo> nodeInfo;
-  Element *element;
 
   if (HasVideoElement()) {
     // Create an anonymous image element as a child to hold the poster
@@ -104,8 +103,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                                             kNameSpaceID_XHTML,
                                             nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-    element = NS_NewHTMLImageElement(nodeInfo.forget());
-    mPosterImage = element;
+    mPosterImage = NS_NewHTMLImageElement(nodeInfo.forget());
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
 
     // Set the nsImageLoadingContent::ImageState() to 0. This means that the
@@ -117,7 +115,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
     imgContent->ForceImageState(true, 0);
     // And now have it update its internal state
-    element->UpdateState(false);
+    mPosterImage->UpdateState(false);
 
     UpdatePosterSource(false);
 

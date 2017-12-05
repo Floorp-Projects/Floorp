@@ -827,7 +827,7 @@ nsTreeContentView::SetCellValue(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell)
       cell->SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, true);
   }
@@ -858,7 +858,7 @@ nsTreeContentView::SetCellText(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell)
       cell->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aValue, true);
   }
@@ -1565,7 +1565,7 @@ nsTreeContentView::UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aC
   }
 }
 
-nsIContent*
+Element*
 nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
 {
   RefPtr<nsAtom> colAtom(aCol.GetAtom());
@@ -1573,18 +1573,18 @@ nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
 
   // Traverse through cells, try to find the cell by "ref" attribute or by cell
   // index in a row. "ref" attribute has higher priority.
-  nsIContent* result = nullptr;
+  Element* result = nullptr;
   int32_t j = 0;
   dom::FlattenedChildIterator iter(aContainer);
   for (nsIContent* cell = iter.GetNextChild(); cell; cell = iter.GetNextChild()) {
     if (cell->IsXULElement(nsGkAtoms::treecell)) {
       if (colAtom && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ref,
                                        colAtom, eCaseMatters)) {
-        result = cell;
+        result = cell->AsElement();
         break;
       }
       else if (j == colIndex) {
-        result = cell;
+        result = cell->AsElement();
       }
       j++;
     }
