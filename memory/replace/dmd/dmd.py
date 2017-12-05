@@ -34,7 +34,7 @@ allocatorFns = [
     'calloc',
     # Matches realloc, replace_realloc, moz_xrealloc, vpx_realloc, js_realloc, pod_realloc, pod_reallocCanGC.
     'realloc',
-    # Matches memalign, posix_memalign, replace_memalign, replace_posix_memalign, moz_xmemalign, moz_xposix_memalign, vpx_memalign, malloc_zone_memalign.
+    # Matches memalign, posix_memalign, replace_memalign, replace_posix_memalign, moz_xmemalign, vpx_memalign, malloc_zone_memalign.
     'memalign',
     'operator new(',
     'operator new[](',
