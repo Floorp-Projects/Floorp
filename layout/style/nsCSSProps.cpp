@@ -2930,12 +2930,6 @@ static const nsCSSPropertyID gOverflowSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSPropertyID gOverflowClipBoxSubpropTable[] = {
-  eCSSProperty_overflow_clip_box_block,
-  eCSSProperty_overflow_clip_box_inline,
-  eCSSProperty_UNKNOWN
-};
-
 static const nsCSSPropertyID gPaddingSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_padding_top,
