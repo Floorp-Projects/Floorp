@@ -87,19 +87,6 @@ testOne("testCatchFinally",
          nothing();             // +8
         `, "1689");
 
-// The same but without a finally clause.  This relies on a
-// SpiderMonkey extension, because otherwise there's no way to see
-// extra instructions at the end of a catch.
-testOne("testCatch",
-        `try {
-           throw new TypeError();
-         } catch (e if e instanceof TypeError) {
-           ${bitOfCode}
-         } catch (e) {          // +6
-         }                      // +7
-         nothing();             // +8
-        `, "189");
-
 // Test the instruction at the end of a "finally" clause.
 testOne("testFinally",
         `try {

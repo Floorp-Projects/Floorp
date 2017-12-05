@@ -24,7 +24,9 @@ function test()
   {
     try {
       yield iter;
-    } catch (e if e == null) {
+    } catch (e) {
+      if (e != null)
+        throw e;
       actual += 'CATCH,';
       print("CATCH");
     } finally {
