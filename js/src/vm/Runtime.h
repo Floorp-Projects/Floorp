@@ -642,9 +642,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     /* Default locale for Internationalization API */
     js::ActiveThreadData<char*> defaultLocale;
 
-    /* Default JSVersion. */
-    js::ActiveThreadData<JSVersion> defaultVersion_;
-
     /* If true, new scripts must be created with PC counter information. */
     js::ActiveThreadOrIonCompileData<bool> profilingScripts;
 
@@ -740,9 +737,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     /* Gets current default locale. String remains owned by context. */
     const char* getDefaultLocale();
-
-    JSVersion defaultVersion() const { return defaultVersion_; }
-    void setDefaultVersion(JSVersion v) { defaultVersion_ = v; }
 
     /* Garbage collector state, used by jsgc.c. */
     js::gc::GCRuntime   gc;

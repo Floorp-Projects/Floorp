@@ -48,7 +48,7 @@ struct MathValueRecord
   }
 
   protected:
-  SHORT			value;		/* The X or Y value in design units */
+  INT16			value;		/* The X or Y value in design units */
   OffsetTo<Device>	deviceTable;	/* Offset to the device table - from the
 					 * beginning of parent table. May be nullptr.
 					 * Suggested format for device table is 1. */
@@ -154,10 +154,10 @@ struct MathConstants
   }
 
   protected:
-  SHORT percentScaleDown[2];
-  USHORT minHeight[2];
+  INT16 percentScaleDown[2];
+  UINT16 minHeight[2];
   MathValueRecord mathValueRecords[51];
-  SHORT radicalDegreeBottomRaisePercent;
+  INT16 radicalDegreeBottomRaisePercent;
 
   public:
   DEFINE_SIZE_STATIC (214);
@@ -279,7 +279,7 @@ struct MathKern
   }
 
   protected:
-  USHORT	  heightCount;
+  UINT16	  heightCount;
   MathValueRecord mathValueRecords[VAR]; /* Array of correction heights at
 					  * which the kern value changes.
 					  * Sorted by the height value in
@@ -425,7 +425,7 @@ struct MathGlyphVariantRecord
 
   protected:
   GlyphID variantGlyph;       /* Glyph ID for the variant. */
-  USHORT  advanceMeasurement; /* Advance width/height, in design units, of the
+  UINT16  advanceMeasurement; /* Advance width/height, in design units, of the
 			       * variant, in the direction of requested
 			       * glyph extension. */
 
@@ -433,7 +433,7 @@ struct MathGlyphVariantRecord
   DEFINE_SIZE_STATIC (4);
 };
 
-struct PartFlags : USHORT
+struct PartFlags : UINT16
 {
   enum Flags {
     Extender	= 0x0001u, /* If set, the part can be skipped or repeated. */
@@ -473,15 +473,15 @@ struct MathGlyphPartRecord
 
   protected:
   GlyphID   glyph;		  /* Glyph ID for the part. */
-  USHORT    startConnectorLength; /* Advance width/ height of the straight bar
+  UINT16    startConnectorLength; /* Advance width/ height of the straight bar
 				   * connector material, in design units, is at
 				   * the beginning of the glyph, in the
 				   * direction of the extension. */
-  USHORT    endConnectorLength;   /* Advance width/ height of the straight bar
+  UINT16    endConnectorLength;   /* Advance width/ height of the straight bar
 				   * connector material, in design units, is at
 				   * the end of the glyph, in the direction of
 				   * the extension. */
-  USHORT    fullAdvance;	  /* Full advance width/height for this part,
+  UINT16    fullAdvance;	  /* Full advance width/height for this part,
 				   * in the direction of the extension.
 				   * In design units. */
   PartFlags partFlags;		  /* Part qualifiers. */
@@ -651,7 +651,7 @@ struct MathVariants
   }
 
   protected:
-  USHORT	     minConnectorOverlap; /* Minimum overlap of connecting
+  UINT16	     minConnectorOverlap; /* Minimum overlap of connecting
 					   * glyphs during glyph construction,
 					   * in design units. */
   OffsetTo<Coverage> vertGlyphCoverage;   /* Offset to Coverage table -
@@ -660,10 +660,10 @@ struct MathVariants
   OffsetTo<Coverage> horizGlyphCoverage;  /* Offset to Coverage table -
 					   * from the beginning of MathVariants
 					   * table. */
-  USHORT	     vertGlyphCount;      /* Number of glyphs for which
+  UINT16	     vertGlyphCount;      /* Number of glyphs for which
 					   * information is provided for
 					   * vertically growing variants. */
-  USHORT	     horizGlyphCount;     /* Number of glyphs for which
+  UINT16	     horizGlyphCount;     /* Number of glyphs for which
 					   * information is provided for
 					   * horizontally growing variants. */
 

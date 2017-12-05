@@ -44,7 +44,7 @@ struct SingleSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       /* TODO Switch to range-based API to work around malicious fonts.
-       * https://github.com/behdad/harfbuzz/issues/363 */
+       * https://github.com/harfbuzz/harfbuzz/issues/363 */
       hb_codepoint_t glyph_id = iter.get_glyph ();
       if (c->glyphs->has (glyph_id))
 	c->glyphs->add ((glyph_id + deltaGlyphID) & 0xFFFFu);
@@ -58,7 +58,7 @@ struct SingleSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       /* TODO Switch to range-based API to work around malicious fonts.
-       * https://github.com/behdad/harfbuzz/issues/363 */
+       * https://github.com/harfbuzz/harfbuzz/issues/363 */
       hb_codepoint_t glyph_id = iter.get_glyph ();
       c->input->add (glyph_id);
       c->output->add ((glyph_id + deltaGlyphID) & 0xFFFFu);
@@ -110,11 +110,11 @@ struct SingleSubstFormat1
   }
 
   protected:
-  USHORT	format;			/* Format identifier--format = 1 */
+  UINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
-  SHORT		deltaGlyphID;		/* Add to original GlyphID to get
+  INT16		deltaGlyphID;		/* Add to original GlyphID to get
 					 * substitute GlyphID */
   public:
   DEFINE_SIZE_STATIC (6);
@@ -130,7 +130,7 @@ struct SingleSubstFormat2
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       if (c->glyphs->has (iter.get_glyph ()))
 	c->glyphs->add (substitute[iter.get_coverage ()]);
     }
@@ -144,7 +144,7 @@ struct SingleSubstFormat2
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       c->input->add (iter.get_glyph ());
       c->output->add (substitute[iter.get_coverage ()]);
     }
@@ -195,7 +195,7 @@ struct SingleSubstFormat2
   }
 
   protected:
-  USHORT	format;			/* Format identifier--format = 2 */
+  UINT16	format;			/* Format identifier--format = 2 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -249,7 +249,7 @@ struct SingleSubst
 
   protected:
   union {
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   SingleSubstFormat1	format1;
   SingleSubstFormat2	format2;
   } u;
@@ -287,7 +287,7 @@ struct Sequence
       return_trace (true);
     }
     /* Spec disallows this, but Uniscribe allows it.
-     * https://github.com/behdad/harfbuzz/issues/253 */
+     * https://github.com/harfbuzz/harfbuzz/issues/253 */
     else if (unlikely (count == 0))
     {
       c->buffer->delete_glyph ();
@@ -339,7 +339,7 @@ struct MultipleSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       if (c->glyphs->has (iter.get_glyph ()))
 	(this+sequence[iter.get_coverage ()]).closure (c);
     }
@@ -400,7 +400,7 @@ struct MultipleSubstFormat1
   }
 
   protected:
-  USHORT	format;			/* Format identifier--format = 1 */
+  UINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -442,7 +442,7 @@ struct MultipleSubst
 
   protected:
   union {
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   MultipleSubstFormat1	format1;
   } u;
 };
@@ -461,7 +461,7 @@ struct AlternateSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       if (c->glyphs->has (iter.get_glyph ())) {
 	const AlternateSet &alt_set = this+alternateSet[iter.get_coverage ()];
 	unsigned int count = alt_set.len;
@@ -479,7 +479,7 @@ struct AlternateSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       c->input->add (iter.get_glyph ());
       const AlternateSet &alt_set = this+alternateSet[iter.get_coverage ()];
       unsigned int count = alt_set.len;
@@ -552,7 +552,7 @@ struct AlternateSubstFormat1
   }
 
   protected:
-  USHORT	format;			/* Format identifier--format = 1 */
+  UINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -594,7 +594,7 @@ struct AlternateSubst
 
   protected:
   union {
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   AlternateSubstFormat1	format1;
   } u;
 };
@@ -792,7 +792,7 @@ struct LigatureSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       if (c->glyphs->has (iter.get_glyph ()))
 	(this+ligatureSet[iter.get_coverage ()]).closure (c);
     }
@@ -806,7 +806,7 @@ struct LigatureSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       c->input->add (iter.get_glyph ());
       (this+ligatureSet[iter.get_coverage ()]).collect_glyphs (c);
     }
@@ -868,7 +868,7 @@ struct LigatureSubstFormat1
   }
 
   protected:
-  USHORT	format;			/* Format identifier--format = 1 */
+  UINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -918,7 +918,7 @@ struct LigatureSubst
 
   protected:
   union {
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   LigatureSubstFormat1	format1;
   } u;
 };
@@ -961,7 +961,7 @@ struct ReverseChainSingleSubstFormat1
     for (iter.init (this+coverage); iter.more (); iter.next ())
     {
       if (unlikely (iter.get_coverage () >= count))
-        break; /* Work around malicious fonts. https://github.com/behdad/harfbuzz/issues/363 */
+        break; /* Work around malicious fonts. https://github.com/harfbuzz/harfbuzz/issues/363 */
       if (c->glyphs->has (iter.get_glyph ()))
 	c->glyphs->add (substitute[iter.get_coverage ()]);
     }
@@ -1016,11 +1016,11 @@ struct ReverseChainSingleSubstFormat1
 
   unsigned int start_index = 0, end_index = 0;
     if (match_backtrack (c,
-			 backtrack.len, (USHORT *) backtrack.array,
+			 backtrack.len, (UINT16 *) backtrack.array,
 			 match_coverage, this,
 			 &start_index) &&
         match_lookahead (c,
-			 lookahead.len, (USHORT *) lookahead.array,
+			 lookahead.len, (UINT16 *) lookahead.array,
 			 match_coverage, this,
 			 1, &end_index))
     {
@@ -1048,7 +1048,7 @@ struct ReverseChainSingleSubstFormat1
   }
 
   protected:
-  USHORT	format;			/* Format identifier--format = 1 */
+  UINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of table */
@@ -1082,7 +1082,7 @@ struct ReverseChainSingleSubst
 
   protected:
   union {
-  USHORT				format;		/* Format identifier */
+  UINT16				format;		/* Format identifier */
   ReverseChainSingleSubstFormat1	format1;
   } u;
 };
@@ -1128,7 +1128,7 @@ struct SubstLookupSubTable
 
   protected:
   union {
-  USHORT			sub_format;
+  UINT16			sub_format;
   SingleSubst			single;
   MultipleSubst			multiple;
   AlternateSubst		alternate;
@@ -1280,9 +1280,11 @@ struct SubstLookup : Lookup
     if (unlikely (get_type () == SubstLookupSubTable::Extension))
     {
       /* The spec says all subtables of an Extension lookup should
-       * have the same type.  This is specially important if one has
-       * a reverse type! */
+       * have the same type, which shall not be the Extension type
+       * itself. This is specially important if one has a reverse type! */
       unsigned int type = get_subtable (0).u.extension.get_type ();
+      if (unlikely (type == SubstLookupSubTable::Extension))
+	return_trace (false);
       unsigned int count = get_subtable_count ();
       for (unsigned int i = 1; i < count; i++)
         if (get_subtable (i).u.extension.get_type () != type)
