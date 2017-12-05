@@ -21,7 +21,7 @@ add_task(async function() {
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
-  let bindingPromise = waitForEvent(gBrowser.selectedBrowser, "PluginBindingAttached", null, true, true);
+  let bindingPromise = BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "PluginBindingAttached", true, null, true);
   await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
   await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
   await bindingPromise;

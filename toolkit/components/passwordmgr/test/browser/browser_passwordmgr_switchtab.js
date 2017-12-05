@@ -35,9 +35,7 @@ add_task(async function test() {
     gBrowser.removeTab(tab);
   });
 
-  tab.linkedBrowser.addEventListener("load", () => {
-    finish();
-  }, true);
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => finish());
   tab.linkedBrowser.loadURI("http://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs");
 
   });

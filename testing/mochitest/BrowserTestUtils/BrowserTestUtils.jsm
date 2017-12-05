@@ -1581,11 +1581,27 @@ this.BrowserTestUtils = {
    * Opens a tab with a given uri and params object. If the params object is not set
    * or the params parameter does not include a triggeringPricnipal then this function
    * provides a params object using the systemPrincipal as the default triggeringPrincipal.
+   *
+   * @param {xul:tabbrowser} tabbrowser
+   *        The gBrowser object to open the tab with.
+   * @param {string} uri
+   *        The URI to open in the new tab.
+   * @param {object} params [optional]
+   *        Parameters object for gBrowser.addTab.
+   * @param {function} beforeLoadFunc [optional]
+   *        A function to run after that xul:browser has been created but before the URL is
+   *        loaded. Can spawn a content task in the tab, for example.
    */
-  addTab(browser, uri, params = {}) {
+  addTab(tabbrowser, uri, params = {}, beforeLoadFunc = null) {
     if (!params.triggeringPrincipal) {
       params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     }
-    return browser.addTab(uri, params);
+    if (beforeLoadFunc) {
+      let window = tabbrowser.ownerGlobal;
+      window.addEventListener("TabOpen", function(e) {
+        beforeLoadFunc(e.target);
+      }, {once: true});
+    }
+    return tabbrowser.addTab(uri, params);
   }
 };

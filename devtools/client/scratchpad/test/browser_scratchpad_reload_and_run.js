@@ -17,11 +17,11 @@ function test()
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
     openScratchpad(runTests);
-  }, {capture: true, once: true});
+  });
 
-  content.location = "data:text/html,Scratchpad test for bug 740948";
+  gBrowser.loadURI("data:text/html,Scratchpad test for bug 740948");
 }
 
 function runTests()
@@ -54,8 +54,8 @@ function runTests()
   let browser = gBrowser.selectedBrowser;
 
   let deferred = defer();
-  browser.addEventListener("DOMWindowCreated", function () {
-    browser.contentWindow.addEventListener("foo", function () {
+  browser.contentWindowAsCPOW.addEventListener("DOMWindowCreated", function () {
+    browser.contentWindowAsCPOW.addEventListener("foo", function () {
       is(browser.contentWindow.document.body.innerHTML, "Modified text",
         "After reloading, HTML is different.");
 
@@ -64,7 +64,7 @@ function runTests()
     }, {capture: true, once: true});
   }, {capture: true, once: true});
 
-  ok(browser.contentWindow.document.body.innerHTML !== "Modified text",
+  ok(browser.contentWindowAsCPOW.document.body.innerHTML !== "Modified text",
       "Before reloading, HTML is intact.");
   sp.reloadAndRun().then(deferred.promise).then(finish);
 }
