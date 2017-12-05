@@ -134,7 +134,8 @@ private:
 
   // Something has changed that could affect the computed playback rate,
   // so recompute it.
-  void UpdatePlaybackRate(const PlaybackRateInfo& aInfo);
+  static void UpdatePlaybackRate(const PlaybackRateInfo& aInfo,
+                                 BaseMediaResource* aResource);
 
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
