@@ -1519,9 +1519,9 @@ BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame)
 }
 
 bool
-BaselineThrowInitializedThis(JSContext* cx)
+BaselineThrowInitializedThis(JSContext* cx, BaselineFrame* frame)
 {
-    return ThrowInitializedThis(cx);
+    return ThrowInitializedThis(cx, frame);
 }
 
 

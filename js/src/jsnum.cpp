@@ -94,7 +94,12 @@ ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start, const CharT* en
         return false;
 
     char* estr;
-    *dp = js_strtod_harder(cx->dtoaState, cstr, &estr);
+    int err = 0;
+    *dp = js_strtod_harder(cx->dtoaState, cstr, &estr, &err);
+    if (err == JS_DTOA_ENOMEM) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
 
     return true;
 }
@@ -1841,8 +1846,9 @@ js_strtod(JSContext* cx, const CharT* begin, const CharT* end, const CharT** dEn
         return false;
 
     /* Everything else. */
+    int err;
     char* ep;
-    *d = js_strtod_harder(cx->dtoaState, chars.begin(), &ep);
+    *d = js_strtod_harder(cx->dtoaState, chars.begin(), &ep, &err);
 
     MOZ_ASSERT(ep >= chars.begin());
 

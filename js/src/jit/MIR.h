@@ -10112,7 +10112,8 @@ class MArraySlice
     CompilerObject templateObj_;
     gc::InitialHeap initialHeap_;
 
-    MArraySlice(MDefinition* obj, MDefinition* begin, MDefinition* end,
+    MArraySlice(CompilerConstraintList* constraints, MDefinition* obj,
+                MDefinition* begin, MDefinition* end,
                 JSObject* templateObj, gc::InitialHeap initialHeap)
       : MTernaryInstruction(classOpcode, obj, begin, end),
         templateObj_(templateObj),

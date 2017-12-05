@@ -10697,7 +10697,8 @@ CodeGenerator::visitToAsyncIter(LToAsyncIter* lir)
     callVM(ToAsyncIterInfo, lir);
 }
 
-typedef bool (*ToIdFn)(JSContext*, HandleValue, MutableHandleValue);
+typedef bool (*ToIdFn)(JSContext*, HandleScript, jsbytecode*, HandleValue,
+                       MutableHandleValue);
 static const VMFunction ToIdInfo = FunctionInfo<ToIdFn>(ToIdOperation, "ToIdOperation");
 
 void
@@ -10709,7 +10710,9 @@ CodeGenerator::visitToIdV(LToIdV* lir)
     ValueOperand input = ToValue(lir, LToIdV::Input);
 
     OutOfLineCode* ool = oolCallVM(ToIdInfo, lir,
-                                   ArgList(ToValue(lir, LToIdV::Input)),
+                                   ArgList(ImmGCPtr(current->mir()->info().script()),
+                                           ImmPtr(lir->mir()->resumePoint()->pc()),
+                                           ToValue(lir, LToIdV::Input)),
                                    StoreValueTo(out));
 
     Register tag = masm.splitTagForTest(input);

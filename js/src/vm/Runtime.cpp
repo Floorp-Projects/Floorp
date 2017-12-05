@@ -174,7 +174,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     oomCallback(nullptr),
     debuggerMallocSizeOf(ReturnZeroSize),
     lastAnimationTime(0),
-    performanceMonitoring_(),
+    performanceMonitoring_(thisFromCtor()),
     stackFormat_(parentRuntime ? js::StackFormat::Default
                                : js::StackFormat::SpiderMonkey)
 {

@@ -985,7 +985,7 @@ class DebugEnvironments
 
   public:
     void trace(JSTracer* trc);
-    void sweep();
+    void sweep(JSRuntime* rt);
     void finish();
 #ifdef JS_GC_ZEAL
     void checkHashTablesAfterMovingGC(JSRuntime* rt);
