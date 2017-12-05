@@ -237,7 +237,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "58846f22350f"
+        "revision": "3d55245dd9d8"
     }, 
     "es-AR": {
         "platforms": [
@@ -357,7 +357,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "bf66310c0312"
+        "revision": "75c959aa2560"
     }, 
     "gd": {
         "platforms": [
@@ -377,7 +377,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "88c30135d9e1"
+        "revision": "99003c9cd063"
     }, 
     "gn": {
         "platforms": [
@@ -397,7 +397,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "8801cb31ba3d"
+        "revision": "c656b46d1276"
     }, 
     "he": {
         "platforms": [
@@ -437,7 +437,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "94c80dae4636"
+        "revision": "333b259c4c84"
     }, 
     "hu": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "41bc289a45fb"
+        "revision": "3ce5e84c7b6a"
     }, 
     "kab": {
         "platforms": [
@@ -622,7 +622,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "059cc10fa016"
+        "revision": "15e140accdd8"
     }, 
     "mr": {
         "platforms": [
@@ -772,7 +772,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "450809da135c"
+        "revision": "04316570390a"
     }, 
     "si": {
         "platforms": [
@@ -802,7 +802,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "65157a3e4898"
+        "revision": "0f8b3c572d24"
     }, 
     "son": {
         "platforms": [
@@ -862,7 +862,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "ebf361fbc6fa"
+        "revision": "c658cbf3379e"
     }, 
     "th": {
         "platforms": [
@@ -882,7 +882,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "5bc969239a65"
+        "revision": "06aefa8aca79"
     }, 
     "uk": {
         "platforms": [
