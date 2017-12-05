@@ -33,7 +33,7 @@ function openEditCertTrustDialog() {
 }
 
 add_task(async function setup() {
-  // Initially trust ca.pem for SSL, but not e-mail or object signing.
+  // Initially trust ca.pem for SSL but not e-mail.
   gCert = await readCertificate("ca.pem", "CT,,");
   Assert.ok(gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                   Ci.nsIX509CertDB.TRUSTED_SSL),
@@ -41,9 +41,6 @@ add_task(async function setup() {
   Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                    Ci.nsIX509CertDB.TRUSTED_EMAIL),
             "Sanity check: ca.pem should not be trusted for e-mail");
-  Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                   Ci.nsIX509CertDB.TRUSTED_OBJSIGN),
-            "Sanity check: ca.pem should not be trusted for object signing");
 });
 
 // Tests the following:
@@ -55,13 +52,10 @@ add_task(async function testAcceptDialog() {
 
   let sslCheckbox = win.document.getElementById("trustSSL");
   let emailCheckbox = win.document.getElementById("trustEmail");
-  let objSignCheckbox = win.document.getElementById("trustObjSign");
   Assert.ok(sslCheckbox.checked,
             "Cert should be trusted for SSL in UI");
   Assert.ok(!emailCheckbox.checked,
             "Cert should not be trusted for e-mail in UI");
-  Assert.ok(!objSignCheckbox.checked,
-            "Cert should not be trusted for object signing in UI");
 
   sslCheckbox.checked = false;
   emailCheckbox.checked = true;
@@ -76,9 +70,6 @@ add_task(async function testAcceptDialog() {
   Assert.ok(gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                   Ci.nsIX509CertDB.TRUSTED_EMAIL),
             "Cert should now be trusted for e-mail");
-  Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                   Ci.nsIX509CertDB.TRUSTED_OBJSIGN),
-            "Cert should still not be trusted for object signing");
 });
 
 // Tests the following:
@@ -90,17 +81,13 @@ add_task(async function testCancelDialog() {
 
   let sslCheckbox = win.document.getElementById("trustSSL");
   let emailCheckbox = win.document.getElementById("trustEmail");
-  let objSignCheckbox = win.document.getElementById("trustObjSign");
   Assert.ok(!sslCheckbox.checked,
             "Cert should not be trusted for SSL in UI");
   Assert.ok(emailCheckbox.checked,
             "Cert should be trusted for e-mail in UI");
-  Assert.ok(!objSignCheckbox.checked,
-            "Cert should not be trusted for object signing in UI");
 
   sslCheckbox.checked = true;
   emailCheckbox.checked = false;
-  objSignCheckbox.checked = true;
 
   info("Canceling dialog");
   win.document.getElementById("editCaCert").cancelDialog();
@@ -112,7 +99,4 @@ add_task(async function testCancelDialog() {
   Assert.ok(gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                   Ci.nsIX509CertDB.TRUSTED_EMAIL),
             "Cert should still be trusted for e-mail");
-  Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
-                                   Ci.nsIX509CertDB.TRUSTED_OBJSIGN),
-            "Cert should still not be trusted for object signing");
 });

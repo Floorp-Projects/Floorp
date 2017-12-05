@@ -41,7 +41,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories": "As histórias mais interessantes na web, selecionadas baseadas no que você lê. Do Pocket, agora parte da Mozilla.",
   "section_disclaimer_topstories_linktext": "Saiba como funciona.",
   "section_disclaimer_topstories_buttontext": "Ok, entendi",
-  "welcome_title": "Bem-vindo ao novo separador",
+  "welcome_title": "Bem-vindo(a) ao novo separador",
   "welcome_body": "O Firefox irá utilizar este espaço para lhe mostrar os seus marcadores, artigos, vídeos, e páginas mais relevantes que visitou recentemente, para que possa regressar a estes mais facilmente.",
   "welcome_label": "A identificar os seus destaques",
   "time_label_less_than_minute": "<1m",
@@ -52,7 +52,7 @@ window.gActivityStreamStrings = {
   "settings_pane_header": "Preferências de novo separador",
   "settings_pane_body2": "Escolha o que vê nesta página.",
   "settings_pane_search_header": "Pesquisa",
-  "settings_pane_search_body": "Pesquise na Web a partir do seu novo separador.",
+  "settings_pane_search_body": "Pesquise na Web a partir do seu 'Novo separador'.",
   "settings_pane_topsites_header": "Sites mais visitados",
   "settings_pane_topsites_body": "Aceda aos websites que mais visita.",
   "settings_pane_topsites_options_showmore": "Mostrar duas linhas",
@@ -93,6 +93,6 @@ window.gActivityStreamStrings = {
   "highlights_empty_state": "Comece a navegar, e iremos mostrar-lhe alguns dos ótimos artigos, vídeos, e outras páginas que visitou recentemente ou adicionou aos marcadores aqui.",
   "topstories_empty_state": "Já apanhou tudo. Verifique mais tarde para mais histórias principais de {provider}. Não pode esperar? Selecione um tópico popular para encontrar mais boas histórias de toda a web.",
   "manual_migration_explanation2": "Experimente o Firefox com marcadores, histórico e palavras-passe de outro navegador.",
-  "manual_migration_cancel_button": "Não obrigado",
+  "manual_migration_cancel_button": "Não, obrigado",
   "manual_migration_import_button": "Importar agora"
 };

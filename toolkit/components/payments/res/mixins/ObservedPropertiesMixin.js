@@ -57,6 +57,9 @@ function ObservedPropertiesMixin(superClass) {
     }
 
     attributeChangedCallback(attr, oldValue, newValue) {
+      if (super.attributeChangedCallback) {
+        super.attributeChangedCallback(attr, oldValue, newValue);
+      }
       if (oldValue === newValue) {
         return;
       }

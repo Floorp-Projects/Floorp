@@ -122,7 +122,6 @@ add_task(async function testAcceptDialogReturnValues() {
   let [win, retVals] = await openCertDownloadDialog(TEST_CASES[0].cert);
   win.document.getElementById("trustSSL").checked = true;
   win.document.getElementById("trustEmail").checked = false;
-  win.document.getElementById("trustObjSign").checked = true;
   info("Accepting dialog");
   win.document.getElementById("download_cert").acceptDialog();
   await BrowserTestUtils.windowClosed(win);
@@ -133,8 +132,6 @@ add_task(async function testAcceptDialogReturnValues() {
             "Return value should signal SSL trust checkbox was checked");
   Assert.ok(!retVals.get("trustForEmail"),
             "Return value should signal E-mail trust checkbox was unchecked");
-  Assert.ok(retVals.get("trustForObjSign"),
-            "Return value should signal Obj Sign trust checkbox was checked");
 });
 
 // Test that the right values are returned when the dialog is canceled.

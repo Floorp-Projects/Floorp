@@ -1702,20 +1702,22 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
     }
   }
 
+  bool hasVideo = aVideoType != MediaSourceEnum::Other;
+  bool hasAudio = aAudioType != MediaSourceEnum::Other;
+  bool fakeCams = aFake && aVideoType == MediaSourceEnum::Camera;
+  bool fakeMics = aFake && aAudioType == MediaSourceEnum::Microphone;
+  bool realDevicesRequested = (!fakeCams && hasVideo) || (!fakeMics && hasAudio);
+
   RefPtr<Runnable> task = NewTaskFrom([id, aWindowId, audioLoopDev,
                                        videoLoopDev, aVideoType,
-                                       aAudioType, aFake]() mutable {
+                                       aAudioType, hasVideo, hasAudio,
+                                       fakeCams, fakeMics, realDevicesRequested]() {
     // Only enumerate what's asked for, and only fake cams and mics.
-    bool hasVideo = aVideoType != MediaSourceEnum::Other;
-    bool hasAudio = aAudioType != MediaSourceEnum::Other;
-    bool fakeCams = aFake && aVideoType == MediaSourceEnum::Camera;
-    bool fakeMics = aFake && aAudioType == MediaSourceEnum::Microphone;
-
     RefPtr<MediaEngine> fakeBackend, realBackend;
     if (fakeCams || fakeMics) {
       fakeBackend = new MediaEngineDefault();
     }
-    if ((!fakeCams && hasVideo) || (!fakeMics && hasAudio)) {
+    if (realDevicesRequested) {
       MediaManager* manager = MediaManager::GetIfExists();
       MOZ_RELEASE_ASSERT(manager); // Must exist while media thread is alive
       realBackend = manager->GetBackend(aWindowId);
@@ -1758,9 +1760,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
     }));
   });
 
-  if (!aFake &&
-      (aVideoType == MediaSourceEnum::Camera ||
-       aAudioType == MediaSourceEnum::Microphone) &&
+  if (realDevicesRequested &&
       Preferences::GetBool("media.navigator.permission.device", false)) {
     // Need to ask permission to retrieve list of all devices;
     // notify frontend observer and wait for callback notification to post task.
@@ -2511,9 +2511,15 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   bool fake = c.mFake.WasPassed()? c.mFake.Value() :
       Preferences::GetBool("media.navigator.streams.fake");
 
+  bool hasVideo = videoType != MediaSourceEnum::Other;
+  bool hasAudio = audioType != MediaSourceEnum::Other;
+  bool fakeCams = fake && videoType == MediaSourceEnum::Camera;
+  bool fakeMics = fake && audioType == MediaSourceEnum::Microphone;
+  bool realDevicesRequested = (!fakeCams && hasVideo) || (!fakeMics && hasAudio);
+
   bool askPermission =
       (!privileged || Preferences::GetBool("media.navigator.permission.force")) &&
-      (!fake || Preferences::GetBool("media.navigator.permission.fake"));
+      (realDevicesRequested || Preferences::GetBool("media.navigator.permission.fake"));
 
   RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowID, videoType,
                                                    audioType, fake);

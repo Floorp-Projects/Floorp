@@ -132,7 +132,7 @@ describe("TelemetryFeed", () => {
 
       const session2 = instance.addSession("foo", "about:home");
 
-      assert.propertyNotVal(session2.perf, "load_trigger_type",
+      assert.notPropertyVal(session2.perf, "load_trigger_type",
         "first_window_opened");
     });
     it("should set load_trigger_ts to the value of perfService.timeOrigin", () => {

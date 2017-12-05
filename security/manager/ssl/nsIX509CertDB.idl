@@ -67,7 +67,6 @@ interface nsIX509CertDB : nsISupports {
   const unsigned long UNTRUSTED       =      0;
   const unsigned long TRUSTED_SSL     = 1 << 0;
   const unsigned long TRUSTED_EMAIL   = 1 << 1;
-  const unsigned long TRUSTED_OBJSIGN = 1 << 2;
 
   /**
    *  Will find a certificate based on its dbkey
@@ -155,8 +154,11 @@ interface nsIX509CertDB : nsISupports {
   /**
    * @param cert        The certificate for which to modify trust.
    * @param trustString decoded by CERT_DecodeTrustString. 3 comma separated
-   *                    characters, indicating SSL, Email, and Obj signing
-   *                    trust.
+   *                    characters, indicating SSL, Email, and Object signing
+   *                    trust. The object signing trust flags are effectively
+   *                    ignored by gecko, but they still must be specified (at
+   *                    least by a final trailing comma) because this argument
+   *                    is passed to CERT_DecodeTrustString.
    */
   [must_use]
   void setCertTrustFromString(in nsIX509Cert cert, in ACString trustString);
@@ -284,7 +286,10 @@ interface nsIX509CertDB : nsISupports {
    * @param trust String describing the trust settings to assign the
    *              certificate. Decoded by CERT_DecodeTrustString. Consists of 3
    *              comma separated sets of characters, indicating SSL, Email, and
-   *              Object signing trust.
+   *              Object signing trust. The object signing trust flags are
+   *              effectively ignored by gecko, but they still must be specified
+   *              (at least by a final trailing comma) because this argument is
+   *              passed to CERT_DecodeTrustString.
    * @return nsIX509Cert the resulting certificate
    */
   [must_use]
@@ -359,7 +364,10 @@ interface nsIX509CertDB : nsISupports {
    * @param trust String describing the trust settings to assign the
    *              certificate. Decoded by CERT_DecodeTrustString. Consists of 3
    *              comma separated sets of characters, indicating SSL, Email, and
-   *              Object signing trust.
+   *              Object signing trust. The object signing trust flags are
+   *              effectively ignored by gecko, but they still must be specified
+   *              (at least by a final trailing comma) because this argument is
+   *              passed to CERT_DecodeTrustString.
    * @return nsIX509Cert the resulting certificate
    */
   [must_use]

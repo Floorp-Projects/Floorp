@@ -67,7 +67,7 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_header": "ส่วนย่อย",
   "settings_pane_snippets_body": "อ่านข้อมูลอัปเดตที่สั้นและไพเราะจาก Mozilla เกี่ยวกับ Firefox, วัฒนธรรมอินเทอร์เน็ต และมีมแบบสุ่มเป็นครั้งคราว",
   "settings_pane_done_button": "เสร็จสิ้น",
-  "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+  "settings_pane_topstories_options_sponsored": "แสดงเรื่องราวที่ได้รับการสนับสนุน",
   "edit_topsites_button_text": "แก้ไข",
   "edit_topsites_button_label": "ปรับแต่งส่วนไซต์เด่นของคุณ",
   "edit_topsites_showmore_button": "แสดงเพิ่มเติม",
