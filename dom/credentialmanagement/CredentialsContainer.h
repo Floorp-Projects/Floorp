@@ -12,6 +12,8 @@
 namespace mozilla {
 namespace dom {
 
+class WebAuthnManager;
+
 class CredentialsContainer final : public nsISupports
                                  , public nsWrapperCache
 {
@@ -32,15 +34,20 @@ public:
 
   already_AddRefed<Promise>
   Get(const CredentialRequestOptions& aOptions);
+
   already_AddRefed<Promise>
   Create(const CredentialCreationOptions& aOptions);
+
   already_AddRefed<Promise>
   Store(const Credential& aCredential);
 
 private:
   ~CredentialsContainer();
 
+  void EnsureWebAuthnManager();
+
   nsCOMPtr<nsPIDOMWindowInner> mParent;
+  RefPtr<WebAuthnManager> mManager;
 };
 
 } // namespace dom
