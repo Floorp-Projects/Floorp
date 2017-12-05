@@ -741,28 +741,21 @@ function emitTouchEvent(type, touch) {
       .getInterface(Ci.nsIWebNavigation)
       .QueryInterface(Ci.nsIDocShell);
   if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
-    // if we're in APZ and we're scrolling, we must use
-    // sendNativeTouchPoint to dispatch our touchmove events
-    let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
-
-    // only call emitTouchEventForIFrame if we're inside an iframe.
-    if (index != null) {
-      let ev = {
-        index,
-        type,
-        id: touch.identifier,
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        screenX: touch.screenX,
-        screenY: touch.screenY,
-        radiusX: touch.radiusX,
-        radiusY: touch.radiusY,
-        rotation: touch.rotationAngle,
-        force: touch.force,
-      };
-      sendSyncMessage("Marionette:emitTouchEvent", ev);
-      return;
-    }
+    let ev = {
+      index: 0,
+      type,
+      id: touch.identifier,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      screenX: touch.screenX,
+      screenY: touch.screenY,
+      radiusX: touch.radiusX,
+      radiusY: touch.radiusY,
+      rotation: touch.rotationAngle,
+      force: touch.force,
+    };
+    sendSyncMessage("Marionette:emitTouchEvent", ev);
+    return;
   }
 
   // we get here if we're not in asyncPacZoomEnabled land, or if we're
