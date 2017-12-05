@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Hủy</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Lưu</string>
   <string name="urlbar_hint">Tìm kiếm hoặc nhập địa chỉ</string>
   <string name="teaser">Duyệt web riêng tư.\nDuyệt. Xóa. Lặp lại.</string>
   <string name="feedback_erase">Lịch sử duyệt web của bạn đã bị xóa.</string>
@@ -26,14 +27,39 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gi&#250;p b&#7841;n ki&#7875;m so&#225;t.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"S&#7917; d&#7909;ng n&#243; nh&#432; m&#7897;t tr&#236;nh duy&#7879;t ri&#234;ng t&#432;:\n  "<ul>"\n    "<li>T&#236;m ki&#7871;m v&#224; duy&#7879;t ngay trong &#7913;ng d&#7909;ng</li>"\n    "<li>Ch&#7863;n c&#225;c tr&#236;nh theo d&#245;i (ho&#7863;c c&#7853;p nh&#7853;t c&#224;i &#273;&#7863;t &#273;&#7875; cho ph&#233;p c&#225;c tr&#236;nh theo d&#245;i)</li>"\n    "<li>X&#243;a cookie c&#361;ng nh&#432; l&#7883;ch s&#7917; t&#236;m ki&#7871;m v&#224; duy&#7879;t web khi xong phi&#234;n l&#224;m vi&#7879;c</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#273;&#432;&#7907;c s&#7843;n xu&#7845;t b&#7903;i Mozilla. Nhi&#7879;m v&#7909; c&#7911;a ch&#250;ng t&#244;i l&#224; th&#250;c &#273;&#7849;y m&#7897;t Internet l&#224;nh m&#7841;nh, c&#7903;i m&#7903;.<br/>\n<a href="%2$s">T&#236;m hi&#7875;u th&#234;m</a></p>]]></string>
   <string name="preference_category_search">Tìm kiếm</string>
   <string name="preference_search_engine_default">Mặc định</string>
+  <string name="preference_state_on">Bật</string>
+  <string name="preference_state_off">Tắt</string>
+  <string name="preference_subitem_autocomplete">URL tự động điền</string>
+  <string name="preference_switch_autocomplete">Tự động điền</string>
+  <string name="preference_category_autocomplete_preinstalled">Danh sách URL mặc định</string>
+  <string name="preference_autocomplete_preinstalled_summary">Cho phép tự đồng điền %1$s trên 450 URL phổ biến trên thanh địa chỉ.</string>
+  <string name="preference_category_autocomplete_custom">URL tùy chỉnh</string>
+  <string name="preference_autocomplete_subitem_customlist">URL tùy chỉnh</string>
+  <string name="preference_autocomplete_action_add">+ Thêm URL tùy chỉnh</string>
+  <string name="preference_autocomplete_title_add">Thêm URL tùy chỉnh</string>
+  <string name="preference_autocomplete_title_remove">Loại bỏ các URL tùy chỉnh</string>
+  <string name="preference_autocomplete_learn_more">Tìm hiểu thêm</string>
+  <string name="preference_autocomplete_custom_summary">Thêm và quản lý các URL tùy chỉnh tự động điền.</string>
+  <string name="preference_autocomplete_add_title">URL muốn thêm</string>
+  <string name="preference_autocomplete_add_hint">Dán hoặc nhập URL</string>
+  <string name="preference_autocomplete_add_example">Ví dụ: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">URL tùy chỉnh mới đã được thêm vào.</string>
+  <string name="preference_autocomplete_menu_remove">Loại bỏ</string>
+  <string name="preference_autocomplete_action_remove_content_description">Loại bỏ</string>
+  <string name="preference_autocomplete_add_error">Kiểm tra lại URL mà bạn đã nhập.</string>
   <string name="preference_language">Ngôn ngữ</string>
   <string name="preference_language_systemdefault">Mặc định của hệ thống</string>
   <string name="preference_dialog_title_search_engine">Công cụ tìm kiếm mặc định</string>
   <string name="preference_category_privacy">Riêng tư</string>
   <string name="preference_privacy_block_ads">Chặn trình theo dõi quảng cáo</string>
+  <string name="preference_privacy_block_ads_summary">Một số quảng cáo theo dõi lượt truy cập trang, ngay cả khi bạn không click vào quảng cáo</string>
   <string name="preference_privacy_block_analytics">Chặn trình theo dõi phân tích</string>
+  <string name="preference_privacy_block_analytics_summary">Được sử dụng để thu thập, phân tích và đo lường các hoạt động như chạm và cuộn trang</string>
   <string name="preference_privacy_block_social">Chặn trình theo dõi xã hội</string>
+  <string name="preference_privacy_block_social_summary">Được nhúng vào các trang để theo dõi lượt truy cập của bạn và để hiển thị tính năng chẳng hạn như các nút chia sẻ</string>
   <string name="preference_privacy_block_content">Chặn trình theo dõi khác</string>
+  <string name="preference_privacy_block_content_summary2">Việc kích hoạt có thể khiến một số trang hoạt động không như mong đợi</string>
   <string name="preference_privacy_secure_mode">Chế độ ẩn</string>
   <string name="preference_privacy_stealth_summary">Ẩn trang web khi chuyển ứng dụng khác</string>
   <string name="preference_category_performance">Hiệu suất</string>
@@ -49,14 +75,21 @@
   <string name="preference_about">Thông tin về %1$s</string>
   <string name="preference_search_installed_search_engines">Công cụ tìm kiếm đã cài đặt</string>
   <string name="preference_search_restore">Khôi phục công cụ tìm kiếm mặc định</string>
+  <string name="preference_search_add2">+ Thêm công cụ tìm kiếm khác</string>
   <string name="preference_search_remove_title">Gỡ bỏ công cụ tìm kiếm</string>
   <string name="preference_search_remove">Gỡ bỏ</string>
   <string name="tutorial_search_manually_add">Thêm thủ công</string>
   <string name="tutorial_search_title">Thêm công cụ tìm kiếm</string>
   <string name="tutorial_search_step1">1. Vào trang chủ công cụ tìm kiếm.</string>
+  <string name="tutorial_search_step2">2. Chạm vào trong ô tìm kiếm của công cụ tìm kiếm.</string>
+  <string name="tutorial_search_step2_alternative">2. Nhấn và giữ ô tìm kiếm của công cụ tìm kiếm.</string>
+  <string name="tutorial_search_step3">3. Nhấn vào biểu tưởng kính lúp trên bàn phím để thêm công cụ tìm kiếm.</string>
   <string name="action_option_add_search_engine">Thêm công cụ tìm kiếm</string>
   <string name="tutorial_search_step3_alternative">3. Chạm %1$s</string>
+  <string name="tutorial_search_step4">4. Nếu bạn không thấy biểu tượng kính lúp, thử thêm công cụ tìm kiếm theo cách thủ công.</string>
+  <string name="tutorial_search_step4_alternative">4. Nếu bạn không nhìn thấy %1$s, thử thêm công cụ tìm kiếm theo cách thủ công.</string>
   <string name="tutorial_search_finish">GET STARTED</string>
+  <string name="search_add_hint">Nhấn vào biểu tượng kính lúp trên bàn phím để thêm công cụ tìm kiếm này.</string>
   <string name="search_add_manually_name">Tên hiển thị</string>
   <string name="search_add_manually_name_hint">Tên công cụ tìm kiếm</string>
   <string name="search_add_manually_string">Chuỗi tìm kiếm để sử dụng</string>
@@ -65,6 +98,9 @@
   <string name="search_add_manually_example">Ví dụ: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Thêm công cụ tìm kiếm</string>
   <string name="search_add_confirmation">Đã thêm công cụ tìm kiếm mới.</string>
+  <string name="search_add_error_empty_name">Nhập tên công cụ tìm kiếm</string>
+  <string name="search_add_error_empty_search">Nhập chuỗi tìm kiếm</string>
+  <string name="search_add_error_format">Kiểm tra xem chuỗi tìm kiếm có đúng với định dạng như ở ví dụ không</string>
   <string name="content_description_clear_input">Xóa trắng</string>
   <string name="content_description_dismiss_input">Bỏ qua</string>
   <string name="content_description_erase">Xóa lịch sử duyệt web</string>
@@ -120,6 +156,7 @@
   <string name="contextmenu_open_in_new_tab">Mở liên kết trong thẻ mới</string>
   <string name="contextmenu_image_warning"><![CDATA["Ảnh đã lưu và chia sẻ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">s&#7869; kh&#244;ng x&#243;a</b>" khi bạn xóa lịch sử %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Tăng quyền riêng tư của bạn</string>
+  <string name="firstrun_defaultbrowser_text2">Duyệt web ở chế độ riêng tư để nâng cao bảo mật. Giúp làm giảm thời gian tải trang và chặn các quảng cáo và nội dung mà có thể theo dõi bạn trên các trang web.</string>
   <string name="firstrun_search_title">Tìm kiếm của bạn, theo cách của bạn</string>
   <string name="firstrun_search_text">Đang tìm kiếm với cái gì khác? Chọn công cụ tìm kiếm khác thành mặc định trong Cài đặt.</string>
   <string name="firstrun_shortcut_title">Thêm lối tắt tới màn hình chính của bạn</string>
@@ -133,6 +170,7 @@
   <string name="dialog_addtohomescreen_title">Thêm vào màn hình chính</string>
   <string name="dialog_addtohomescreen_action_add">Thêm</string>
   <string name="dialog_addtohomescreen_action_cancel">Hủy bỏ</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Lối tắt sẽ mở mà không có trình chống theo dõi</string>
   <string name="dialog_opentab_title">Mở liên kết trong thẻ đã chọn</string>
   <string name="dialog_opentab_action_open">Mở</string>
   <string name="notification_browsing_session_channel_name">Phiên duyệt web riêng tư</string>

@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">መሰረዝ</string>
+  <string name="action_ok">እሺ</string>
+  <string name="action_save">ማስቀመጥ</string>
+  <string name="urlbar_hint">ፍለጋ ወይም አድራሻ ያስገቡ</string>
+  <string name="teaser">አውቶማቲክ የግል አሰሳ\nያስሱ. ደምስስ. ድገም.</string>
+  <string name="feedback_erase">የአሰሳ ታሪክዎ ተደምስሷል</string>
+  <string name="search_hint">ምፈልገው %1$s</string>
+  <string name="menu_share">ያጋሩ…\n\n</string>
+  <string name="menu_open_with_default_browser">ይክፈቱ በ %1$s</string>
+  <string name="menu_open_with_a_browser">ይክፈቱ በ…</string>
+  <string name="menu_add_to_home_screen">ወደ መነሻ ማያ ገጽ ማከል\n</string>
+  <string name="menu_whats_new">አዲስ ምን አለ</string>
+  <string name="menu_settings">ቅንብሮች</string>
+  <string name="menu_about">ስለ</string>
+  <string name="menu_help">እገዛ</string>
+  <string name="menu_rights">የእርስዎ መብቶች</string>
+  <string name="menu_trackers_blocked_title">ተከታታዮች ታግደዋል</string>
+  <string name="share_dialog_title">በኩል ያጋሩ</string>
+  <string name="notification_erase_text">የአሰሳ ታሪክን አጥፋ</string>
+  <string name="notification_action_open">ክፈት</string>
+  <string name="notification_action_erase_and_open">አጠፉ እና ክፈት</string>
+  <string name="shortcut_erase_short_label">አጠፉ</string>
+  <string name="shortcut_erase_long_label">የአሰሳ ታሪክን አጥፋ</string>
+  <string name="text_selection_search_action">በግል ይፈልጉ</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" %1$s &#4720;&#4678;&#4899;&#4899;&#4650; &#4758;&#4725;"</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#4773;&#4757;&#4848; &#4877;&#4621; &#4768;&#4659;&#4669; &#4845;&#4896;&#4672;&#4633;:\n<ul>"\n    "<li>&#4704;&#4632;&#4720;&#4877;&#4704;&#4650;&#4843;&#4813; &#4813;&#4661;&#4901; &#4845;&#4936;&#4621;&#4873; &#4773;&#4755; &#4843;&#4661;&#4657;</li>"\n    "<li>&#4632;&#4776;&#4723;&#4720;&#4843;&#4814;&#4733;&#4757; &#4768;&#4877;&#4853;(&#4808;&#4845;&#4637; &#4632;&#4776;&#4723;&#4720;&#4843;&#4814;&#4733;&#4757; &#4616;&#4632;&#4941;&#4672;&#4853; &#4677;&#4757;&#4709;&#4654;&#4733;&#4757; &#4843;&#4824;&#4637;&#4753;)</li>"\n    "<li>&#4777;&#4778;&#4814;&#4733;&#4757; &#4773;&#4757;&#4850;&#4609;&#4637; &#4840;&#4941;&#4616;&#4875; &#4773;&#4755; &#4840;&#4768;&#4656;&#4659; &#4723;&#4650;&#4781;&#4757; &#4616;&#4632;&#4656;&#4648;&#4829; &#4843;&#4661;&#4808;&#4877;&#4849;</li>" \n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#4840;&#4720;&#4672;&#4648;&#4928;&#4813; &#4704;&#4638;&#4826;&#4619; &#4752;&#4813;:: &#4840;&#4773;&#4763; &#4720;&#4621;&#4773;&#4782; &#4900;&#4755;&#4635; &#4773;&#4755; &#4781;&#4941;&#4725; &#4704;&#4845;&#4752; &#4632;&#4648;&#4709;&#4757; &#4635;&#4704;&#4648;&#4723;&#4723;&#4725; &#4752;&#4813;::<br/>\n<a href="%2$s">&#4720;&#4904;&#4635;&#4650; &#4773;&#4808;&#4677;</a></p>"\n\n    \n"]]></string>
+  <string name="preference_category_search">ፍለጋ</string>
+  <string name="preference_search_engine_default">ነባሪ</string>
+  <string name="preference_state_on">በርቷል</string>
+  <string name="preference_state_off">ጠፍቷል</string>
+  <string name="preference_subitem_autocomplete">URL ራስ-አጠናቅቅ</string>
+  <string name="preference_switch_autocomplete">ራስ-አጠናቅቅ</string>
+  <string name="preference_category_autocomplete_preinstalled">ነባሪ URL ዝርዝር\n</string>
+  <string name="preference_autocomplete_preinstalled_summary">ሊኖራቸው የሚችል ያንቁ %1$s ራስ-አጠናቅቅ ተጠናቋል 450 ታዋቂ URLs በአድራሻ አሞሌ ውስጥ::</string>
+  <string name="preference_category_autocomplete_custom">ብጁ URL</string>
+  <string name="preference_autocomplete_subitem_customlist">ብጁ URLs</string>
+  <string name="preference_autocomplete_action_add">+ ብጁ አክል URL</string>
+  <string name="preference_autocomplete_title_add">ብጁ አክል URL</string>
+  <string name="preference_autocomplete_title_remove">አስወግድ ብጁ URLs</string>
+  <string name="preference_autocomplete_learn_more">ተጨማሪ እወቅ</string>
+</resources>

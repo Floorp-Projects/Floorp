@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Отказ</string>
   <string name="action_ok">Добре</string>
+  <string name="action_save">Запазване</string>
   <string name="urlbar_hint">Търсене или въвеждане на адрес</string>
   <string name="teaser">Винаги поверително.\nЧетене. Изчистване. Повтаряне.</string>
   <string name="feedback_erase">Историята на разглеждане е изчистена</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1074;&#1080; &#1076;&#1072;&#1074;&#1072; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1048;&#1079;&#1087;&#1086;&#1083;&#1079;&#1074;&#1072;&#1081;&#1090;&#1077; &#1075;&#1086;, &#1079;&#1072; &#1076;&#1072; &#1088;&#1072;&#1079;&#1075;&#1083;&#1077;&#1078;&#1076;&#1072;&#1090;&#1077; &#1087;&#1086;&#1074;&#1077;&#1088;&#1080;&#1090;&#1077;&#1083;&#1085;&#1086;:\n  "<ul>"\n    "<li>&#1058;&#1098;&#1088;&#1089;&#1077;&#1085;&#1077; &#1080; &#1088;&#1072;&#1079;&#1075;&#1083;&#1077;&#1078;&#1076;&#1072;&#1085;&#1077; &#1080;&#1079;&#1094;&#1103;&#1083;&#1086; &#1074; &#1087;&#1088;&#1080;&#1083;&#1086;&#1078;&#1077;&#1085;&#1080;&#1077;&#1090;&#1086;</li>"\n    "<li>&#1057;&#1087;&#1080;&#1088;&#1072;&#1085;&#1077; &#1085;&#1072; &#1087;&#1088;&#1086;&#1089;&#1083;&#1077;&#1076;&#1103;&#1074;&#1072;&#1085;&#1077;&#1090;&#1086; (&#1080;&#1083;&#1080; &#1087;&#1086;&#1079;&#1074;&#1086;&#1083;&#1103;&#1074;&#1072;&#1085;&#1077; &#1089; &#1087;&#1088;&#1086;&#1084;&#1103;&#1085;&#1072; &#1074; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;&#1090;&#1077;)</li>"\n    "<li>&#1048;&#1079;&#1095;&#1080;&#1089;&#1090;&#1074;&#1072;&#1085;&#1077; &#1085;&#1072; &#1073;&#1080;&#1089;&#1082;&#1074;&#1080;&#1090;&#1082;&#1080;&#1090;&#1077;, &#1090;&#1098;&#1088;&#1089;&#1077;&#1085;&#1080;&#1103;&#1090;&#1072; &#1080; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1103;&#1090;&#1072; &#1085;&#1072; &#1088;&#1072;&#1079;&#1075;&#1083;&#1077;&#1078;&#1076;&#1072;&#1085;&#1077;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1089;&#1077; &#1088;&#1072;&#1079;&#1088;&#1072;&#1073;&#1086;&#1090;&#1074;&#1072; &#1086;&#1090; Mozilla. &#1053;&#1072;&#1096;&#1072;&#1090;&#1072; &#1084;&#1080;&#1089;&#1080;&#1103; &#1077; &#1076;&#1072; &#1088;&#1072;&#1079;&#1074;&#1080;&#1074;&#1072;&#1084;&#1077; &#1079;&#1076;&#1088;&#1072;&#1074; &#1080; &#1086;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085; &#1048;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;.<br/>\n<a href="%2$s">&#1053;&#1072;&#1091;&#1095;&#1077;&#1090;&#1077; &#1087;&#1086;&#1074;&#1077;&#1095;&#1077;</a></p>]]></string>
   <string name="preference_category_search">Търсене</string>
   <string name="preference_search_engine_default">Използвана търсеща машина</string>
+  <string name="preference_state_on">Включено</string>
+  <string name="preference_state_off">Изключено</string>
+  <string name="preference_subitem_autocomplete">Автоматично довършване на адреси</string>
+  <string name="preference_switch_autocomplete">Автоматично довършване</string>
+  <string name="preference_category_autocomplete_preinstalled">Фабричен списък на адреси</string>
+  <string name="preference_autocomplete_preinstalled_summary">Включете, за да имате в лентата за адреси на %1$s автоматично довършване на повече от 450 популярни адреси.</string>
+  <string name="preference_category_autocomplete_custom">Потребителски адрес</string>
+  <string name="preference_autocomplete_subitem_customlist">Потребителски адреси</string>
+  <string name="preference_autocomplete_action_add">+ Добавяне на потребителски адрес</string>
+  <string name="preference_autocomplete_title_add">Добавяне на потребителски адрес</string>
+  <string name="preference_autocomplete_title_remove">Премахване на потребителски адрес</string>
+  <string name="preference_autocomplete_learn_more">Научете повече</string>
+  <string name="preference_autocomplete_custom_summary">Добавяне и управление на автоматичното довършване на потребителски адреси.</string>
+  <string name="preference_autocomplete_add_title">Адрес за добавяне</string>
+  <string name="preference_autocomplete_add_hint">Поставете или въведете адрес</string>
+  <string name="preference_autocomplete_add_example">Пример: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Добавен е нов потребителски адрес.</string>
+  <string name="preference_autocomplete_menu_remove">Премахване</string>
+  <string name="preference_autocomplete_action_remove_content_description">Премахване</string>
+  <string name="preference_autocomplete_add_error">Проверете пак адреса, който въведохте.</string>
   <string name="preference_language">Език</string>
   <string name="preference_language_systemdefault">Стандартният за системата</string>
   <string name="preference_dialog_title_search_engine">Избиране на търсеща машина</string>
@@ -76,6 +98,9 @@
   <string name="search_add_manually_example">Пример: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Добавяне на търсачка</string>
   <string name="search_add_confirmation">Добавена е нова търсачка.</string>
+  <string name="search_add_error_empty_name">Въведете име на търсачка</string>
+  <string name="search_add_error_empty_search">Въведете низ за търсене</string>
+  <string name="search_add_error_format">Проверете дали низът за търсене отговаря на формата в примера</string>
   <string name="content_description_clear_input">Изчистване на полето</string>
   <string name="content_description_dismiss_input">Затваряне</string>
   <string name="content_description_erase">Изчистване историята на разглеждането</string>

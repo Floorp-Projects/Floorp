@@ -30,6 +30,8 @@
   <string name="preference_state_on">চালু</string>
   <string name="preference_state_off">বন্ধ</string>
   <string name="preference_autocomplete_learn_more">আরও জানুন</string>
+  <string name="preference_autocomplete_add_example">উদাহরণ: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
   <string name="preference_autocomplete_menu_remove">অপসারণ</string>
   <string name="preference_autocomplete_action_remove_content_description">অপসারণ</string>
   <string name="preference_language">ভাষা</string>

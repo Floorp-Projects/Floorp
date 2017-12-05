@@ -27,8 +27,13 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
+  <string name="preference_state_on">Aktif</string>
+  <string name="preference_state_off">Nonaktif</string>
+  <string name="preference_autocomplete_title_remove">Hapus URLs ubahsuai</string>
   <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
+  <string name="preference_autocomplete_add_title">URL untuk ditambahkan</string>
   <string name="preference_autocomplete_add_hint">Tempel atau masukkan URL</string>
+  <string name="preference_autocomplete_add_example">Contoh: contoh.id</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
   <string name="preference_autocomplete_menu_remove">Hapus</string>
   <string name="preference_autocomplete_action_remove_content_description">Hapus</string>

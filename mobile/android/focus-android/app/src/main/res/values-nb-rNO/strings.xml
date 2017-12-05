@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Avbryt</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Lagre</string>
   <string name="urlbar_hint">Søk eller oppgi adresse</string>
   <string name="teaser">Automatisk privat nettlesing.\nSurf. Slett. Gjenta.</string>
   <string name="feedback_erase">Din nettleserhistorikk har blitt slettet.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gir deg kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bruk den som en privat nettleser:\n  "<ul>"\n    "<li>S&#248;k og surf rett i appen</li>"\n    "<li>Blokker sporere (eller oppdater innstillingene for &#229; tillate sporere)</li>"\n    "<li>Slett for &#229; fjerne infokapsler samt s&#248;k- og nettleserhistorikk</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er produsert av Mozilla. V&#229;r misjon er &#229; fremme et sunt, &#229;pent Internett.<br/>\n<a href="%2$s">Les mer</a></p>]]></string>
   <string name="preference_category_search">Søk</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_state_on">På</string>
+  <string name="preference_state_off">Av</string>
+  <string name="preference_subitem_autocomplete">Autofullfør nettadresse</string>
+  <string name="preference_switch_autocomplete">Netadresse-autofullføring</string>
+  <string name="preference_category_autocomplete_preinstalled">Standard nettadresseliste</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktiver at %1$s autofullfører over 450 populære nettadresser i adressefeltet.</string>
+  <string name="preference_category_autocomplete_custom">Tilpasset nettadresse</string>
+  <string name="preference_autocomplete_subitem_customlist">Tilpassede nettadresser</string>
+  <string name="preference_autocomplete_action_add">+ Legg til egendefinert nettadresse</string>
+  <string name="preference_autocomplete_title_add">Legg til egendefinert nettadresse</string>
+  <string name="preference_autocomplete_title_remove">Fjern tilpassede nettadresser</string>
+  <string name="preference_autocomplete_learn_more">Les mer</string>
+  <string name="preference_autocomplete_custom_summary">Legg til og administrer tilpassede nettadresser for autofullføring.</string>
+  <string name="preference_autocomplete_add_title">Nettadresse å legge til</string>
+  <string name="preference_autocomplete_add_hint">Lim inn eller skriv inn nettadresse</string>
+  <string name="preference_autocomplete_add_example">Eksempel: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Ny tilpasset nettadresse lagt til.</string>
+  <string name="preference_autocomplete_menu_remove">Fjern</string>
+  <string name="preference_autocomplete_action_remove_content_description">Fjern</string>
+  <string name="preference_autocomplete_add_error">Dobbeltsjekk nettadressen du skrev inn.</string>
   <string name="preference_language">Språk</string>
   <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standard søkemotor</string>
@@ -76,6 +98,9 @@
   <string name="search_add_manually_example">Eksempel: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Legg til søkemotor</string>
   <string name="search_add_confirmation">Ny søkemotor lagt til.</string>
+  <string name="search_add_error_empty_name">Skriv inn søkemotornavn</string>
+  <string name="search_add_error_empty_search">Skriv inn søkestreng</string>
+  <string name="search_add_error_format">Kontroller at søkestrengen passer med eksempelformatet</string>
   <string name="content_description_clear_input">Tøm skrivefeltet</string>
   <string name="content_description_dismiss_input">Lukk</string>
   <string name="content_description_erase">Slett nettleserhistorikk</string>

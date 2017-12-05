@@ -39,10 +39,12 @@
   <string name="preference_autocomplete_title_add">Ajouter une adresse personnalisée</string>
   <string name="preference_autocomplete_title_remove">Supprimer des adresses personnalisées</string>
   <string name="preference_autocomplete_learn_more">En savoir plus</string>
+  <string name="preference_autocomplete_custom_summary">Ajouter et gérer des adresses personnalisées pour la saisie semi-automatique.</string>
   <string name="preference_autocomplete_add_title">Adresse web à ajouter</string>
   <string name="preference_autocomplete_add_hint">Coller ou saisir une adresse web</string>
   <string name="preference_autocomplete_add_example">Exemple : example.com</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nouvelle adresse personnalisée ajoutée.</string>
   <string name="preference_autocomplete_menu_remove">Supprimer</string>
   <string name="preference_autocomplete_action_remove_content_description">Supprimer</string>
   <string name="preference_autocomplete_add_error">Veuillez vérifier l’adresse saisie.</string>
@@ -98,6 +100,7 @@
   <string name="search_add_confirmation">Nouveau moteur de recherche ajouté.</string>
   <string name="search_add_error_empty_name">Saisir le nom du moteur de recherche</string>
   <string name="search_add_error_empty_search">Saisir une chaîne de recherche</string>
+  <string name="search_add_error_format">Vérifiez que la chaîne de recherche suit le format de l’exemple</string>
   <string name="content_description_clear_input">Effacer le texte saisi</string>
   <string name="content_description_dismiss_input">Fermer</string>
   <string name="content_description_erase">Effacer l’historique de navigation</string>

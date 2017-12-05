@@ -32,12 +32,14 @@
   <string name="preference_subitem_autocomplete">Autofullfør nettadresse</string>
   <string name="preference_switch_autocomplete">Autofullfør</string>
   <string name="preference_category_autocomplete_preinstalled">Standard nettadresseliste</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktiver %1$s til å autofullføre over 450 populære nettadresser i adressefeltet.</string>
   <string name="preference_category_autocomplete_custom">Tilpassa nettadresse</string>
   <string name="preference_autocomplete_subitem_customlist">Tilpassa nettadresser</string>
   <string name="preference_autocomplete_action_add">+ Legg til tilpassa nettadresse</string>
   <string name="preference_autocomplete_title_add">Legg til tilpassa nettadresse</string>
   <string name="preference_autocomplete_title_remove">Fjern tilpassa nettadresser</string>
   <string name="preference_autocomplete_learn_more">Les meir</string>
+  <string name="preference_autocomplete_custom_summary">Legg til og handter tilpassa autofullførte nettadressesr.</string>
   <string name="preference_autocomplete_add_title">Nettadresse å leggje til</string>
   <string name="preference_autocomplete_add_hint">Lim inn eller skriv inn adresse</string>
   <string name="preference_autocomplete_add_example">Døme: example.com</string>
@@ -45,6 +47,7 @@
   <string name="preference_autocomplete_add_confirmation">Ny tilpassa nettadresse lagt til.</string>
   <string name="preference_autocomplete_menu_remove">Fjern</string>
   <string name="preference_autocomplete_action_remove_content_description">Fjern</string>
+  <string name="preference_autocomplete_add_error">Dobbelsjekk nettadressa du skreiv inn.</string>
   <string name="preference_language">Språk</string>
   <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standard søkemotor</string>
