@@ -39,6 +39,7 @@ SOURCES += [
     'TestNoRefcountedInsideLambdas.cpp',
     'TestOverrideBaseCall.cpp',
     'TestOverrideBaseCallAnnotation.cpp',
+    'TestParamTraitsEnum.cpp',
     'TestRefCountedCopyConstructor.cpp',
     'TestSprintfLiteral.cpp',
     'TestStackClass.cpp',
