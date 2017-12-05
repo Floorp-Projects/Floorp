@@ -14,22 +14,24 @@ class SideBar extends Component {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      sidebarVisible: PropTypes.bool
+      sidebarVisible: PropTypes.bool,
+      grip: PropTypes.object,
     };
   }
 
   constructor(props) {
     super(props);
-    this.onClickSidebarToggle = this.onClickSidebarToggle.bind(this);
+    this.onClickSidebarClose = this.onClickSidebarClose.bind(this);
   }
 
-  onClickSidebarToggle() {
-    this.props.dispatch(actions.sidebarToggle());
+  onClickSidebarClose() {
+    this.props.dispatch(actions.sidebarClose());
   }
 
   render() {
     let {
       sidebarVisible,
+      grip,
     } = this.props;
 
     let endPanel = dom.aside({
@@ -40,12 +42,12 @@ class SideBar extends Component {
       },
         dom.button({
           className: "devtools-button sidebar-close-button",
-          onClick: this.onClickSidebarToggle
+          onClick: this.onClickSidebarClose
         })
       ),
       dom.aside({
         className: "sidebar-contents"
-      }, "Sidebar WIP")
+      }, JSON.stringify(grip, null, 2))
     );
 
     return (
@@ -66,6 +68,7 @@ class SideBar extends Component {
 function mapStateToProps(state, props) {
   return {
     sidebarVisible: state.ui.sidebarVisible,
+    grip: state.ui.gripInSidebar,
   };
 }
 
