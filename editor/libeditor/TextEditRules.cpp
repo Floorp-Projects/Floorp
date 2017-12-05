@@ -1385,9 +1385,12 @@ TextEditRules::CreateTrailingBRIfNeeded()
   }
 
   // Morph it back to a mozBR
-  lastChild->UnsetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom, false);
-  lastChild->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                     NS_LITERAL_STRING("_moz"), true);
+  lastChild->AsElement()->UnsetAttr(kNameSpaceID_None,
+                                    kMOZEditorBogusNodeAttrAtom,
+                                    false);
+  lastChild->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                                  NS_LITERAL_STRING("_moz"),
+                                  true);
   return NS_OK;
 }
 

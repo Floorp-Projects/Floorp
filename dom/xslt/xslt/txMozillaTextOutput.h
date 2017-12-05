@@ -16,6 +16,12 @@ class nsITransformObserver;
 class nsIDocument;
 class nsIContent;
 
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
+
 class txMozillaTextOutput : public txAOutputXMLEventHandler
 {
 public:
@@ -30,7 +36,7 @@ public:
                                   bool aLoadedAsData);
 
 private:
-    nsresult createXHTMLElement(nsAtom* aName, nsIContent** aResult);
+    nsresult createXHTMLElement(nsAtom* aName, mozilla::dom::Element** aResult);
 
     nsCOMPtr<nsIContent> mTextParent;
     nsWeakPtr mObserver;

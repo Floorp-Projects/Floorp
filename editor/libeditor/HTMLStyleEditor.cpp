@@ -731,21 +731,19 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
       }
       nsresult rv = RemoveContainer(&aNode);
       NS_ENSURE_SUCCESS(rv, rv);
-    } else {
+    } else if (aNode.IsElement()) {
       // otherwise we just want to eliminate the attribute
       RefPtr<nsAtom> attribute = NS_Atomize(*aAttribute);
-      if (aNode.HasAttr(kNameSpaceID_None, attribute)) {
+      if (aNode.AsElement()->HasAttr(kNameSpaceID_None, attribute)) {
         // if this matching attribute is the ONLY one on the node,
         // then remove the whole node.  Otherwise just nix the attribute.
-        if (IsOnlyAttribute(&aNode, *aAttribute)) {
+        if (IsOnlyAttribute(aNode.AsElement(), *aAttribute)) {
           nsresult rv = RemoveContainer(&aNode);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
         } else {
-          nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(&aNode);
-          NS_ENSURE_TRUE(elem, NS_ERROR_NULL_POINTER);
-          nsresult rv = RemoveAttribute(elem, *aAttribute);
+          nsresult rv = RemoveAttribute(aNode.AsElement(), attribute);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -796,14 +794,14 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
 }
 
 bool
-HTMLEditor::IsOnlyAttribute(const nsIContent* aContent,
+HTMLEditor::IsOnlyAttribute(const Element* aElement,
                             const nsAString& aAttribute)
 {
-  MOZ_ASSERT(aContent);
+  MOZ_ASSERT(aElement);
 
-  uint32_t attrCount = aContent->GetAttrCount();
+  uint32_t attrCount = aElement->GetAttrCount();
   for (uint32_t i = 0; i < attrCount; ++i) {
-    const nsAttrName* name = aContent->GetAttrNameAt(i);
+    const nsAttrName* name = aElement->GetAttrNameAt(i);
     if (!name->NamespaceEquals(kNameSpaceID_None)) {
       return false;
     }

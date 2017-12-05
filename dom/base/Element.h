@@ -430,6 +430,11 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                               int32_t aModType) const;
 
+  virtual nsresult WalkContentStyleRules(nsRuleWalker* aRuleWalker)
+  {
+    return NS_OK;
+  }
+
   inline Directionality GetDirectionality() const {
     if (HasFlag(NODE_HAS_DIRECTION_RTL)) {
       return eDir_RTL;
@@ -697,8 +702,6 @@ public:
   already_AddRefed<mozilla::dom::NodeInfo>
   GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
-  using nsIContent::SetAttr;
-
   /**
    * Helper for SetAttr/SetParsedAttr. This method will return true if aNotify
    * is true or there are mutation listeners that must be triggered, the
@@ -758,9 +761,6 @@ public:
    */
   nsresult SetSingleClassFromParser(nsAtom* aSingleClassName);
 
-  virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
-                           const nsAString& aValue, nsIPrincipal* aSubjectPrincipal,
-                           bool aNotify) override;
   // aParsedValue receives the old value of the attribute. That's useful if
   // either the input or output value of aParsedValue is StoresOwnData.
   nsresult SetParsedAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
@@ -777,19 +777,97 @@ public:
   inline bool AttrValueIs(int32_t aNameSpaceID, nsAtom* aName,
                           nsAtom* aValue,
                           nsCaseTreatment aCaseSensitive) const;
-  virtual int32_t FindAttrValueIn(int32_t aNameSpaceID,
-                                  nsAtom* aName,
-                                  AttrValuesArray* aValues,
-                                  nsCaseTreatment aCaseSensitive) const override;
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aAttribute,
-                             bool aNotify) override;
+  int32_t FindAttrValueIn(int32_t aNameSpaceID,
+                          nsAtom* aName,
+                          AttrValuesArray* aValues,
+                          nsCaseTreatment aCaseSensitive) const override;
 
-  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const final override
+  /**
+   * Set attribute values. All attribute values are assumed to have a
+   * canonical string representation that can be used for these
+   * methods. The SetAttr method is assumed to perform a translation
+   * of the canonical form into the underlying content specific
+   * form.
+   *
+   * @param aNameSpaceID the namespace of the attribute
+   * @param aName the name of the attribute
+   * @param aValue the value to set
+   * @param aNotify specifies how whether or not the document should be
+   *        notified of the attribute change.
+   */
+  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                   const nsAString& aValue, bool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
+  }
+  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
+                   const nsAString& aValue, bool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, aPrefix, aValue, nullptr, aNotify);
+  }
+  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName, const nsAString& aValue,
+                   nsIPrincipal* aTriggeringPrincipal, bool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aTriggeringPrincipal, aNotify);
+  }
+
+  /**
+   * Set attribute values. All attribute values are assumed to have a
+   * canonical String representation that can be used for these
+   * methods. The SetAttr method is assumed to perform a translation
+   * of the canonical form into the underlying content specific
+   * form.
+   *
+   * @param aNameSpaceID the namespace of the attribute
+   * @param aName the name of the attribute
+   * @param aPrefix the prefix of the attribute
+   * @param aValue the value to set
+   * @param aMaybeScriptedPrincipal the principal of the scripted caller responsible
+   *        for setting the attribute, or null if no scripted caller can be
+   *        determined. A null value here does not guarantee that there is no
+   *        scripted caller, but a non-null value does guarantee that a scripted
+   *        caller with the given principal is directly responsible for the
+   *        attribute change.
+   * @param aNotify specifies how whether or not the document should be
+   *        notified of the attribute change.
+   */
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                           nsAtom* aPrefix, const nsAString& aValue,
+                           nsIPrincipal* aMaybeScriptedPrincipal,
+                           bool aNotify);
+
+  /**
+   * Remove an attribute so that it is no longer explicitly specified.
+   *
+   * @param aNameSpaceID the namespace id of the attribute
+   * @param aAttr the name of the attribute to unset
+   * @param aNotify specifies whether or not the document should be
+   * notified of the attribute change
+   */
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID,
+                             nsAtom* aAttribute,
+                             bool aNotify);
+
+  /**
+   * Get the namespace / name / prefix of a given attribute.
+   *
+   * @param   aIndex the index of the attribute name
+   * @returns The name at the given index, or null if the index is
+   *          out-of-bounds.
+   * @note    The document returned by NodeInfo()->GetDocument() (if one is
+   *          present) is *not* necessarily the owner document of the element.
+   * @note    The pointer returned by this function is only valid until the
+   *          next call of either GetAttrNameAt or SetAttr on the element.
+   */
+  const nsAttrName* GetAttrNameAt(uint32_t aIndex) const
   {
     return mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
   }
 
-  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const final override
+  /**
+   * Gets the attribute info (name and value) for this element at a given index.
+   */
+  BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const
   {
     if (aIndex >= mAttrsAndChildren.AttrCount()) {
       return BorrowedAttrInfo(nullptr, nullptr);
@@ -798,7 +876,12 @@ public:
     return mAttrsAndChildren.AttrInfoAt(aIndex);
   }
 
-  virtual uint32_t GetAttrCount() const final override
+  /**
+   * Get the number of all specified attributes.
+   *
+   * @return the number of attributes
+   */
+  uint32_t GetAttrCount() const
   {
     return mAttrsAndChildren.AttrCount();
   }
@@ -1470,7 +1553,7 @@ public:
 
   void SetAttr(nsAtom* aAttr, const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
   {
-    aError = nsIContent::SetAttr(kNameSpaceID_None, aAttr, aValue, &aTriggeringPrincipal, true);
+    aError = SetAttr(kNameSpaceID_None, aAttr, aValue, &aTriggeringPrincipal, true);
   }
 
   /**

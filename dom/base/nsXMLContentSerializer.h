@@ -209,13 +209,13 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    */
   void GenerateNewPrefix(nsAString& aPrefix);
 
-  uint32_t ScanNamespaceDeclarations(nsIContent* aContent,
-                                     nsIContent *aOriginalElement,
+  uint32_t ScanNamespaceDeclarations(mozilla::dom::Element* aContent,
+                                     mozilla::dom::Element* aOriginalElement,
                                      const nsAString& aTagNamespaceURI);
 
   MOZ_MUST_USE
-  virtual bool SerializeAttributes(nsIContent* aContent,
-                                   nsIContent *aOriginalElement,
+  virtual bool SerializeAttributes(mozilla::dom::Element* aContent,
+                                   mozilla::dom::Element* aOriginalElement,
                                    nsAString& aTagPrefix,
                                    const nsAString& aTagNamespaceURI,
                                    nsAtom* aTagName,
@@ -243,10 +243,10 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * by setting aForceFormat to true.
    * @return boolean  true if the element can be output
    */
-  virtual bool CheckElementStart(nsIContent * aContent,
-                                   bool & aForceFormat,
-                                   nsAString& aStr,
-                                   nsresult& aResult);
+  virtual bool CheckElementStart(Element* aElement,
+                                 bool & aForceFormat,
+                                 nsAString& aStr,
+                                 nsresult& aResult);
 
   /**
    * This method is responsible for appending the '>' at the end of the start

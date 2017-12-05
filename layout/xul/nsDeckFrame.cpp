@@ -178,7 +178,7 @@ nsDeckFrame::RemoveFrame(ChildListID aListID,
       // This is going to cause us to handle the index change in IndexedChanged,
       // but since the new index will match mIndex, it's essentially a noop.
       nsContentUtils::AddScriptRunner(new nsSetAttrRunnable(
-        mContent, nsGkAtoms::selectedIndex, mIndex));
+        mContent->AsElement(), nsGkAtoms::selectedIndex, mIndex));
     }
   }
   nsBoxFrame::RemoveFrame(aListID, aOldFrame);
