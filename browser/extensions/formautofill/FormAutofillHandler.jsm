@@ -99,6 +99,10 @@ class FormAutofillSection {
     return this._validDetails;
   }
 
+  set focusedInput(element) {
+    this._focusedDetail = this.getFieldDetailByElement(element);
+  }
+
   getFieldDetailByElement(element) {
     return this._validDetails.find(
       detail => detail.elementWeakRef.get() == element
@@ -138,8 +142,8 @@ class FormAutofillSection {
     return this._validDetails.find(detail => detail.fieldName == fieldName);
   }
 
-  _getTargetSet(element) {
-    let fieldDetail = this.getFieldDetailByElement(element);
+  _getTargetSet() {
+    let fieldDetail = this._focusedDetail;
     if (!fieldDetail) {
       return null;
     }
@@ -152,13 +156,13 @@ class FormAutofillSection {
     return null;
   }
 
-  getFieldDetailsByElement(element) {
-    let targetSet = this._getTargetSet(element);
+  _getFieldDetails() {
+    let targetSet = this._getTargetSet();
     return targetSet ? targetSet.fieldDetails : [];
   }
 
-  getFilledRecordGUID(element) {
-    let targetSet = this._getTargetSet(element);
+  getFilledRecordGUID() {
+    let targetSet = this._getTargetSet();
     return targetSet ? targetSet.filledRecordGUID : null;
   }
 
@@ -366,16 +370,13 @@ class FormAutofillSection {
    *
    * @param {Object} profile
    *        A profile to be filled in.
-   * @param {HTMLElement} focusedInput
-   *        A focused input element needed to determine the address or credit
-   *        card field.
    */
-  async autofillFields(profile, focusedInput) {
-    let focusedDetail = this.getFieldDetailByElement(focusedInput);
+  async autofillFields(profile) {
+    let focusedDetail = this._focusedDetail;
     if (!focusedDetail) {
       throw new Error("No fieldDetail for the focused input.");
     }
-    let targetSet = this._getTargetSet(focusedInput);
+    let targetSet = this._getTargetSet();
     if (FormAutofillUtils.isCreditCardField(focusedDetail.fieldName)) {
       // When Master Password is enabled by users, the decryption process
       // should prompt Master Password dialog to get the decrypted credit
@@ -415,6 +416,7 @@ class FormAutofillSection {
         // anyway.
         // For the others, the fields should be only filled when their values
         // are empty.
+        let focusedInput = focusedDetail.elementWeakRef.get();
         if (element == focusedInput ||
             (element != focusedInput && !element.value)) {
           element.setUserInput(value);
@@ -447,10 +449,8 @@ class FormAutofillSection {
    *
    * @param {Object} profile
    *        A profile to be previewed with
-   * @param {HTMLElement} focusedInput
-   *        A focused input element for determining credit card or address fields.
    */
-  previewFormFields(profile, focusedInput) {
+  previewFormFields(profile) {
     log.debug("preview profile: ", profile);
 
     // Always show the decrypted credit card number when Master Password is
@@ -459,7 +459,7 @@ class FormAutofillSection {
       profile["cc-number"] = profile["cc-number-decrypted"];
     }
 
-    let fieldDetails = this.getFieldDetailsByElement(focusedInput);
+    let fieldDetails = this._getFieldDetails();
     for (let fieldDetail of fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       let value = profile[fieldDetail.fieldName] || "";
@@ -492,14 +492,11 @@ class FormAutofillSection {
 
   /**
    * Clear preview text and background highlight of all fields.
-   *
-   * @param {HTMLElement} focusedInput
-   *        A focused input element for determining credit card or address fields.
    */
-  clearPreviewedFormFields(focusedInput) {
+  clearPreviewedFormFields() {
     log.debug("clear previewed fields in:", this.form);
 
-    let fieldDetails = this.getFieldDetailsByElement(focusedInput);
+    let fieldDetails = this._getFieldDetails();
     for (let fieldDetail of fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
@@ -521,12 +518,9 @@ class FormAutofillSection {
 
   /**
    * Clear value and highlight style of all filled fields.
-   *
-   * @param {Object} focusedInput
-   *        A focused input element for determining credit card or address fields.
    */
-  clearPopulatedForm(focusedInput) {
-    let fieldDetails = this.getFieldDetailsByElement(focusedInput);
+  clearPopulatedForm() {
+    let fieldDetails = this._getFieldDetails();
     for (let fieldDetail of fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
@@ -807,6 +801,26 @@ class FormAutofillHandler {
     this.timeStartedFillingMS = null;
   }
 
+  set focusedInput(element) {
+    let section = this._sectionCache.get(element);
+    if (!section) {
+      section = this.sections.find(
+        s => s.getFieldDetailByElement(element)
+      );
+      this._sectionCache.set(element, section);
+    }
+
+    this._focusedSection = section;
+
+    if (section) {
+      section.focusedInput = element;
+    }
+  }
+
+  get activeSection() {
+    return this._focusedSection;
+  }
+
   /**
    * Check the form is necessary to be updated. This function should be able to
    * detect any changes including all control elements in the form.
@@ -909,48 +923,6 @@ class FormAutofillHandler {
     return allValidDetails;
   }
 
-  getSectionByElement(element) {
-    let section = this._sectionCache.get(element);
-    if (!section) {
-      section = this.sections.find(
-        s => s.getFieldDetailByElement(element)
-      );
-      this._sectionCache.set(element, section);
-    }
-    return section;
-  }
-
-  getAllFieldNames(focusedInput) {
-    let section = this.getSectionByElement(focusedInput);
-    return section.allFieldNames;
-  }
-
-  previewFormFields(profile, focusedInput) {
-    let section = this.getSectionByElement(focusedInput);
-    section.previewFormFields(profile, focusedInput);
-  }
-
-  clearPreviewedFormFields(focusedInput) {
-    let section = this.getSectionByElement(focusedInput);
-    section.clearPreviewedFormFields(focusedInput);
-  }
-
-  clearPopulatedForm(focusedInput) {
-    let section = this.getSectionByElement(focusedInput);
-    section.clearPopulatedForm(focusedInput);
-  }
-
-  getFilledRecordGUID(focusedInput) {
-    let section = this.getSectionByElement(focusedInput);
-    return section.getFilledRecordGUID(focusedInput);
-  }
-
-  getAdaptedProfiles(originalProfiles, focusedInput) {
-    let section = this.getSectionByElement(focusedInput);
-    section.getAdaptedProfiles(originalProfiles);
-    return originalProfiles;
-  }
-
   hasFilledSection() {
     return this.sections.some(section => section.isFilled());
   }
@@ -961,13 +933,10 @@ class FormAutofillHandler {
    *
    * @param {Object} profile
    *        A profile to be filled in.
-   * @param {HTMLElement} focusedInput
-   *        A focused input element needed to determine the address or credit
-   *        card field.
    */
-  async autofillFormFields(profile, focusedInput) {
+  async autofillFormFields(profile) {
     let noFilledSectionsPreviously = !this.hasFilledSection();
-    await this.getSectionByElement(focusedInput).autofillFields(profile, focusedInput);
+    await this.activeSection.autofillFields(profile);
 
     const onChangeHandler = e => {
       if (!e.isTrusted) {
