@@ -574,7 +574,6 @@ function startListeners() {
   addMessageListenerId("Marionette:switchToParentFrame", switchToParentFrame);
   addMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
-  addMessageListenerId("Marionette:sleepSession", sleepSession);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
   addMessageListenerId("Marionette:reftestWait", reftestWaitFn);
   addMessageListener("Marionette:DOM:AddEventListener", domAddEventListener);
@@ -588,23 +587,6 @@ function startListeners() {
 function newSession(msg) {
   capabilities = session.Capabilities.fromJSON(msg.json);
   resetValues();
-}
-
-/**
- * Puts the current session to sleep, so all listeners are removed except
- * for the 'restart' listener.
- */
-function sleepSession() {
-  deleteSession();
-  addMessageListener("Marionette:restart", restart);
-}
-
-/**
- * Restarts all our listeners after this listener was put to sleep
- */
-function restart() {
-  removeMessageListener("Marionette:restart", restart);
-  registerSelf();
 }
 
 /**
@@ -658,7 +640,6 @@ function deleteSession() {
   removeMessageListenerId(
       "Marionette:switchToShadowRoot", switchToShadowRootFn);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
-  removeMessageListenerId("Marionette:sleepSession", sleepSession);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
 
   seenEls.clear();
