@@ -115,7 +115,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "28b75c298bc6"
+        "revision": "28d09f0d299f"
     }, 
     "cy": {
         "platforms": [
@@ -155,7 +155,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "46268b9bb97f"
+        "revision": "30d3b3292811"
     }, 
     "en-GB": {
         "platforms": [
@@ -243,7 +243,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "f7e926214ae2"
+        "revision": "c3589dcebc55"
     }, 
     "fi": {
         "platforms": [
@@ -299,7 +299,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "4381a332bab1"
+        "revision": "a0fb121e6ae4"
     }, 
     "gu-IN": {
         "platforms": [
@@ -379,7 +379,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "327fbce3dedb"
+        "revision": "cf6cd990d0a3"
     }, 
     "ja": {
         "platforms": [
@@ -395,7 +395,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "01abd3465b63"
+        "revision": "41bc289a45fb"
     }, 
     "kab": {
         "platforms": [
@@ -490,7 +490,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "107ff60ff4f2"
+        "revision": "67f697e5ba65"
     }, 
     "my": {
         "platforms": [
@@ -593,7 +593,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "ab5027348afa"
+        "revision": "01d60add546d"
     }, 
     "ru": {
         "platforms": [
@@ -617,7 +617,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "8e64b810a6b6"
+        "revision": "1751f0e69579"
     }, 
     "son": {
         "platforms": [
@@ -641,7 +641,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "2a1058bcd532"
+        "revision": "81382299f1ef"
     }, 
     "sv-SE": {
         "platforms": [
