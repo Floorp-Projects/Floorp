@@ -4483,13 +4483,9 @@ EditorBase::DeleteSelectionAndCreateElement(nsAtom& aTag)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, nullptr);
 
-  EditorRawDOMPoint pointToInsert(selection->GetChildAtAnchorOffset());
+  EditorRawDOMPoint pointToInsert(selection->AnchorRef());
   if (!pointToInsert.IsSet()) {
-    // Perhaps, the anchor point is in a text node.
-    pointToInsert.Set(selection->GetAnchorNode(), selection->AnchorOffset());
-    if (NS_WARN_IF(!pointToInsert.IsSet())) {
-      return nullptr;
-    }
+    return nullptr;
   }
   RefPtr<Element> newElement = CreateNode(&aTag, pointToInsert);
 
@@ -4548,56 +4544,49 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
 
   // If the selection is a chardata node, split it if necessary and compute
   // where to put the new node
-  nsCOMPtr<nsINode> node = selection->GetAnchorNode();
-  MOZ_ASSERT(node, "Selection has no ranges in it");
-
-  if (!node || !node->IsNodeOfType(nsINode::eDATA_NODE)) {
+  EditorDOMPoint atAnchor(selection->AnchorRef());
+  if (NS_WARN_IF(!atAnchor.IsSet()) ||
+      !atAnchor.Container()->IsNodeOfType(nsINode::eDATA_NODE)) {
     return NS_OK;
   }
 
-  NS_ASSERTION(node->GetParentNode(),
-               "It's impossible to insert into chardata with no parent -- "
-               "fix the caller");
-  NS_ENSURE_STATE(node->GetParentNode());
+  if (NS_WARN_IF(!atAnchor.Container()->GetParentNode())) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // XXX We want Selection::AnchorRef()
-  uint32_t offset = selection->AnchorOffset();
-
-  if (!offset) {
-    EditorRawDOMPoint atNode(node);
-    if (NS_WARN_IF(!atNode.IsSetAndValid())) {
+  if (atAnchor.IsStartOfContainer()) {
+    EditorRawDOMPoint atAnchorContainer(atAnchor.Container());
+    if (NS_WARN_IF(!atAnchorContainer.IsSetAndValid())) {
       return NS_ERROR_FAILURE;
     }
     ErrorResult error;
-    selection->Collapse(atNode, error);
+    selection->Collapse(atAnchorContainer, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
     return NS_OK;
   }
 
-  if (offset == node->Length()) {
-    EditorRawDOMPoint afterNode(node);
-    if (NS_WARN_IF(!afterNode.AdvanceOffset())) {
+  if (atAnchor.IsEndOfContainer()) {
+    EditorRawDOMPoint afterAnchorContainer(atAnchor.Container());
+    if (NS_WARN_IF(!afterAnchorContainer.AdvanceOffset())) {
       return NS_ERROR_FAILURE;
     }
     ErrorResult error;
-    selection->Collapse(afterNode, error);
+    selection->Collapse(afterAnchorContainer, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
     return NS_OK;
   }
 
-  EditorRawDOMPoint atStartOfRightNode(node, offset);
-  MOZ_ASSERT(atStartOfRightNode.IsSetAndValid());
   ErrorResult error;
-  nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStartOfRightNode, error);
+  nsCOMPtr<nsIContent> newLeftNode = SplitNode(atAnchor.AsRaw(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
 
-  EditorRawDOMPoint atRightNode(atStartOfRightNode.Container());
+  EditorRawDOMPoint atRightNode(atAnchor.Container());
   if (NS_WARN_IF(!atRightNode.IsSet())) {
     return NS_ERROR_FAILURE;
   }
