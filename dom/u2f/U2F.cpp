@@ -9,13 +9,13 @@
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "nsContentUtils.h"
 #include "nsICryptoHash.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsURLParsers.h"
-#include "U2FTransactionChild.h"
 #include "U2FUtil.h"
 #include "hasht.h"
 
@@ -293,9 +293,9 @@ U2F::~U2F()
   }
 
   if (mChild) {
-    RefPtr<U2FTransactionChild> c;
+    RefPtr<WebAuthnTransactionChild> c;
     mChild.swap(c);
-    c->Send__delete__(c);
+    c->Disconnect();
   }
 
   mRegisterCallback.reset();
@@ -437,8 +437,8 @@ U2F::Register(const nsAString& aAppId,
 }
 
 void
-U2F::FinishRegister(const uint64_t& aTransactionId,
-                    nsTArray<uint8_t>& aRegBuffer)
+U2F::FinishMakeCredential(const uint64_t& aTransactionId,
+                          nsTArray<uint8_t>& aRegBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -566,9 +566,9 @@ U2F::Sign(const nsAString& aAppId,
 }
 
 void
-U2F::FinishSign(const uint64_t& aTransactionId,
-                nsTArray<uint8_t>& aCredentialId,
-                nsTArray<uint8_t>& aSigBuffer)
+U2F::FinishGetAssertion(const uint64_t& aTransactionId,
+                        nsTArray<uint8_t>& aCredentialId,
+                        nsTArray<uint8_t>& aSigBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -749,7 +749,7 @@ U2F::MaybeCreateBackgroundActor()
     return false;
   }
 
-  RefPtr<U2FTransactionChild> mgr(new U2FTransactionChild(this));
+  RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild(this));
   PWebAuthnTransactionChild* constructedMgr =
     actorChild->SendPWebAuthnTransactionConstructor(mgr);
 
