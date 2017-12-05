@@ -155,10 +155,6 @@ class JSAPITest
         return jsvalToSource(val);
     }
 
-    JSAPITestString toSource(JSVersion v) {
-        return JSAPITestString(JS_VersionToString(v));
-    }
-
     // Note that in some still-supported GCC versions (we think anything before
     // GCC 4.6), this template does not work when the second argument is
     // nullptr. It infers type U = long int. Use CHECK_NULL instead.
