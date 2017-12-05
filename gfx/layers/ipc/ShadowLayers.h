@@ -388,6 +388,10 @@ public:
 
   nsIEventTarget* GetEventTarget() { return mEventTarget; };
 
+  virtual bool IsThreadSafe() const override { return false; }
+
+  virtual RefPtr<KnowsCompositor> GetForMedia() override;
+
 protected:
   virtual ~ShadowLayerForwarder();
 
