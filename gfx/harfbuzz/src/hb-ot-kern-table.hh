@@ -104,8 +104,8 @@ struct KernClassTable
   }
 
   protected:
-  USHORT		firstGlyph;	/* First glyph in class range. */
-  ArrayOf<USHORT>	classes;	/* Glyph classes. */
+  UINT16		firstGlyph;	/* First glyph in class range. */
+  ArrayOf<UINT16>	classes;	/* Glyph classes. */
   public:
   DEFINE_SIZE_ARRAY (4, classes);
 };
@@ -136,7 +136,7 @@ struct KernSubTableFormat2
   }
 
   protected:
-  USHORT	rowWidth;	/* The width, in bytes, of a row in the table. */
+  UINT16	rowWidth;	/* The width, in bytes, of a row in the table. */
   OffsetTo<KernClassTable>
 		leftClassTable;	/* Offset from beginning of this subtable to
 				 * left-hand class table. */
@@ -275,19 +275,19 @@ struct KernOT : KernTable<KernOT>
     };
 
     protected:
-    USHORT	versionZ;	/* Unused. */
-    USHORT	length;		/* Length of the subtable (including this header). */
-    BYTE	format;		/* Subtable format. */
-    BYTE	coverage;	/* Coverage bits. */
+    UINT16	versionZ;	/* Unused. */
+    UINT16	length;		/* Length of the subtable (including this header). */
+    UINT8	format;		/* Subtable format. */
+    UINT8	coverage;	/* Coverage bits. */
     KernSubTable subtable;	/* Subtable data. */
     public:
     DEFINE_SIZE_MIN (6);
   };
 
   protected:
-  USHORT	version;	/* Version--0x0000u */
-  USHORT	nTables;	/* Number of subtables in the kerning table. */
-  BYTE		data[VAR];
+  UINT16	version;	/* Version--0x0000u */
+  UINT16	nTables;	/* Number of subtables in the kerning table. */
+  UINT8		data[VAR];
   public:
   DEFINE_SIZE_ARRAY (4, data);
 };
@@ -314,10 +314,10 @@ struct KernAAT : KernTable<KernAAT>
     };
 
     protected:
-    ULONG	length;		/* Length of the subtable (including this header). */
-    BYTE	coverage;	/* Coverage bits. */
-    BYTE	format;		/* Subtable format. */
-    USHORT	tupleIndex;	/* The tuple index (used for variations fonts).
+    UINT32	length;		/* Length of the subtable (including this header). */
+    UINT8	coverage;	/* Coverage bits. */
+    UINT8	format;		/* Subtable format. */
+    UINT16	tupleIndex;	/* The tuple index (used for variations fonts).
 				 * This value specifies which tuple this subtable covers. */
     KernSubTable subtable;	/* Subtable data. */
     public:
@@ -325,9 +325,9 @@ struct KernAAT : KernTable<KernAAT>
   };
 
   protected:
-  ULONG		version;	/* Version--0x00010000u */
-  ULONG		nTables;	/* Number of subtables in the kerning table. */
-  BYTE		data[VAR];
+  UINT32		version;	/* Version--0x00010000u */
+  UINT32		nTables;	/* Number of subtables in the kerning table. */
+  UINT8		data[VAR];
   public:
   DEFINE_SIZE_ARRAY (8, data);
 };
@@ -358,24 +358,29 @@ struct kern
 
   struct accelerator_t
   {
-    inline void init (const kern *table_, unsigned int table_length_)
+    inline void init (hb_face_t *face)
     {
-      table = table_;
-      table_length = table_length_;
+      blob = Sanitizer<kern>::sanitize (face->reference_table (HB_OT_TAG_kern));
+      table = Sanitizer<kern>::lock_instance (blob);
+      table_length = hb_blob_get_length (blob);
     }
-    inline void fini (void) {}
+    inline void fini (void)
+    {
+      hb_blob_destroy (blob);
+    }
 
     inline int get_h_kerning (hb_codepoint_t left, hb_codepoint_t right) const
     { return table->get_h_kerning (left, right, table_length); }
 
     private:
+    hb_blob_t *blob;
     const kern *table;
     unsigned int table_length;
   };
 
   protected:
   union {
-  USHORT		major;
+  UINT16		major;
   KernOT		ot;
   KernAAT		aat;
   } u;

@@ -1076,12 +1076,6 @@ class MOZ_RAII JSAutoRequest
 #endif
 };
 
-extern JS_PUBLIC_API(const char*)
-JS_VersionToString(JSVersion version);
-
-extern JS_PUBLIC_API(JSVersion)
-JS_StringToVersion(const char* string);
-
 namespace JS {
 
 class JS_PUBLIC_API(ContextOptions) {

@@ -34,3 +34,8 @@ if CONFIG['MOZ_CRASHREPORTER']:
         LOCALIZED_FILES += [
             'en-US/crashreporter/crashreporter.ini'
         ]
+
+LOCALIZED_GENERATED_FILES += ['update.locale']
+update_locale = LOCALIZED_GENERATED_FILES['update.locale']
+update_locale.script = 'generate_update_locale.py'
+LOCALIZED_FILES += ['!update.locale']
