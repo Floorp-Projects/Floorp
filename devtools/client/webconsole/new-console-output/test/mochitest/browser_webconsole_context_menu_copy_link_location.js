@@ -22,14 +22,15 @@ add_task(async function() {
   info("Test Copy URL menu item for text log");
 
   info("Logging a text message in the content window");
+  let onLogMessage = waitForMessage(hud, "simple text message");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.console.log("simple text message");
   });
-  let message = await waitFor(() => findMessage(hud, "simple text message"));
+  let message = await onLogMessage;
   ok(message, "Text log found in the console");
 
   info("Open and check the context menu for the logged text message");
-  let menuPopup = await openContextMenu(hud, message);
+  let menuPopup = await openContextMenu(hud, message.node);
   let copyURLItem = menuPopup.querySelector(CONTEXT_MENU_ID);
   ok(!copyURLItem, "Copy URL menu item is hidden for a simple text message");
 
@@ -39,15 +40,16 @@ add_task(async function() {
   info("Test Copy URL menu item for network log");
 
   info("Reload the content window to produce a network log");
+  let onNetworkMessage = waitForMessage(hud, "test-console.html");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.location.reload();
   });
 
-  message = await waitFor(() => findMessage(hud, "test-console.html"));
+  message = await onNetworkMessage;
   ok(message, "Network log found in the console");
 
   info("Open and check the context menu for the logged network message");
-  menuPopup = await openContextMenu(hud, message);
+  menuPopup = await openContextMenu(hud, message.node);
   copyURLItem = menuPopup.querySelector(CONTEXT_MENU_ID);
   ok(copyURLItem, "Copy url menu item is available in context menu");
 
