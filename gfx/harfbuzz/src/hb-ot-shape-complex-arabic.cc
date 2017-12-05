@@ -36,7 +36,7 @@
 #define HB_BUFFER_SCRATCH_FLAG_ARABIC_HAS_STCH HB_BUFFER_SCRATCH_FLAG_COMPLEX0
 
 /* See:
- * https://github.com/behdad/harfbuzz/commit/6e6f82b6f3dde0fc6c3c7d991d9ec6cfff57823d#commitcomment-14248516 */
+ * https://github.com/harfbuzz/harfbuzz/commit/6e6f82b6f3dde0fc6c3c7d991d9ec6cfff57823d#commitcomment-14248516 */
 #define HB_ARABIC_GENERAL_CATEGORY_IS_WORD(gen_cat) \
 	(FLAG_UNSAFE (gen_cat) & \
 	 (FLAG (HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED) | \
@@ -198,7 +198,7 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
    * pause for Arabic, not other scripts.
    *
    * A pause after calt is required to make KFGQPC Uthmanic Script HAFS
-   * work correctly.  See https://github.com/behdad/harfbuzz/issues/505
+   * work correctly.  See https://github.com/harfbuzz/harfbuzz/issues/505
    */
 
   map->add_gsub_pause (nuke_joiners);

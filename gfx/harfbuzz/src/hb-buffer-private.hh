@@ -35,14 +35,24 @@
 #include "hb-unicode-private.hh"
 
 
-#ifndef HB_BUFFER_MAX_EXPANSION_FACTOR
-#define HB_BUFFER_MAX_EXPANSION_FACTOR 32
+#ifndef HB_BUFFER_MAX_LEN_FACTOR
+#define HB_BUFFER_MAX_LEN_FACTOR 32
 #endif
 #ifndef HB_BUFFER_MAX_LEN_MIN
 #define HB_BUFFER_MAX_LEN_MIN 8192
 #endif
 #ifndef HB_BUFFER_MAX_LEN_DEFAULT
 #define HB_BUFFER_MAX_LEN_DEFAULT 0x3FFFFFFF /* Shaping more than a billion chars? Let us know! */
+#endif
+
+#ifndef HB_BUFFER_MAX_OPS_FACTOR
+#define HB_BUFFER_MAX_OPS_FACTOR 64
+#endif
+#ifndef HB_BUFFER_MAX_OPS_MIN
+#define HB_BUFFER_MAX_OPS_MIN 1024
+#endif
+#ifndef HB_BUFFER_MAX_OPS_DEFAULT
+#define HB_BUFFER_MAX_OPS_DEFAULT 0x1FFFFFFF /* Shaping more than a billion operations? Let us know! */
 #endif
 
 static_assert ((sizeof (hb_glyph_info_t) == 20), "");
@@ -84,6 +94,7 @@ struct hb_buffer_t {
   hb_codepoint_t replacement; /* U+FFFD or something else. */
   hb_buffer_scratch_flags_t scratch_flags; /* Have space-flallback, etc. */
   unsigned int max_len; /* Maximum allowed len. */
+  int max_ops; /* Maximum allowed operations. */
 
   /* Buffer contents */
   hb_buffer_content_type_t content_type;
@@ -101,17 +112,6 @@ struct hb_buffer_t {
   hb_glyph_info_t     *info;
   hb_glyph_info_t     *out_info;
   hb_glyph_position_t *pos;
-
-  inline hb_glyph_info_t &cur (unsigned int i = 0) { return info[idx + i]; }
-  inline hb_glyph_info_t cur (unsigned int i = 0) const { return info[idx + i]; }
-
-  inline hb_glyph_position_t &cur_pos (unsigned int i = 0) { return pos[idx + i]; }
-  inline hb_glyph_position_t cur_pos (unsigned int i = 0) const { return pos[idx + i]; }
-
-  inline hb_glyph_info_t &prev (void) { return out_info[out_len ? out_len - 1 : 0]; }
-  inline hb_glyph_info_t prev (void) const { return out_info[out_len ? out_len - 1 : 0]; }
-
-  inline bool has_separate_output (void) const { return info != out_info; }
 
   unsigned int serial;
 
@@ -132,6 +132,10 @@ struct hb_buffer_t {
 #ifndef HB_NDEBUG
   uint8_t allocated_var_bits;
 #endif
+
+
+  /* Methods */
+
   inline void allocate_var (unsigned int start, unsigned int count)
   {
 #ifndef HB_NDEBUG
@@ -168,8 +172,17 @@ struct hb_buffer_t {
 #endif
   }
 
+  inline hb_glyph_info_t &cur (unsigned int i = 0) { return info[idx + i]; }
+  inline hb_glyph_info_t cur (unsigned int i = 0) const { return info[idx + i]; }
 
-  /* Methods */
+  inline hb_glyph_position_t &cur_pos (unsigned int i = 0) { return pos[idx + i]; }
+  inline hb_glyph_position_t cur_pos (unsigned int i = 0) const { return pos[idx + i]; }
+
+  inline hb_glyph_info_t &prev (void) { return out_info[out_len ? out_len - 1 : 0]; }
+  inline hb_glyph_info_t prev (void) const { return out_info[out_len ? out_len - 1 : 0]; }
+
+  inline bool has_separate_output (void) const { return info != out_info; }
+
 
   HB_INTERNAL void reset (void);
   HB_INTERNAL void clear (void);

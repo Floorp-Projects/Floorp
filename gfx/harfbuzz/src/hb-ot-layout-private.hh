@@ -273,13 +273,13 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
        * what we do for joiners in Indic-like shapers, but since the
        * FVSes are GC=Mn, we have use a separate bit to remember them.
        * Fixes:
-       * https://github.com/behdad/harfbuzz/issues/234 */
+       * https://github.com/harfbuzz/harfbuzz/issues/234 */
       else if (unlikely (hb_in_range (u, 0x180Bu, 0x180Du))) props |= UPROPS_MASK_HIDDEN;
       /* TAG characters need similar treatment. Fixes:
-       * https://github.com/behdad/harfbuzz/issues/463 */
+       * https://github.com/harfbuzz/harfbuzz/issues/463 */
       else if (unlikely (hb_in_range (u, 0xE0020u, 0xE007Fu))) props |= UPROPS_MASK_HIDDEN;
       /* COMBINING GRAPHEME JOINER should not be skipped; at least some times.
-       * https://github.com/behdad/harfbuzz/issues/554 */
+       * https://github.com/harfbuzz/harfbuzz/issues/554 */
       else if (unlikely (u == 0x034Fu)) props |= UPROPS_MASK_HIDDEN;
     }
     else if (unlikely (HB_UNICODE_GENERAL_CATEGORY_IS_NON_ENCLOSING_MARK_OR_MODIFIER_SYMBOL (gen_cat)))
@@ -305,7 +305,7 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
       /* Recategorize emoji skin-tone modifiers as Unicode mark, so they
        * behave correctly in non-native directionality.  They originally
        * are MODIFIER_SYMBOL.  Fixes:
-       * https://github.com/behdad/harfbuzz/issues/169
+       * https://github.com/harfbuzz/harfbuzz/issues/169
        */
       if (unlikely (hb_in_range (u, 0x1F3FBu, 0x1F3FFu)))
       {
