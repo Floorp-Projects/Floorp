@@ -159,7 +159,6 @@
 #ifdef XP_WIN
 #include <process.h>
 #include <shlobj.h>
-#include "mozilla/WindowsDllServices.h"
 #include "nsThreadUtils.h"
 #include <comdef.h>
 #include <wbemidl.h>
@@ -1654,40 +1653,6 @@ ScopedXPCOMStartup::CreateAppSupport(nsISupports* aOuter, REFNSIID aIID, void** 
 }
 
 nsINativeAppSupport* ScopedXPCOMStartup::gNativeAppSupport;
-
-#if defined(XP_WIN)
-
-class DllNotifications : public mozilla::DllServices
-{
-public:
-  DllNotifications()
-  {
-    Enable();
-  }
-
-  ~DllNotifications() = default;
-
-private:
-  void NotifyDllLoad(const bool aIsMainThread, const nsString& aDllName) override;
-};
-
-void
-DllNotifications::NotifyDllLoad(const bool aIsMainThread,
-                                const nsString& aDllName)
-{
-  const char* topic;
-
-  if (aIsMainThread) {
-    topic = "dll-loaded-main-thread";
-  } else {
-    topic = "dll-loaded-non-main-thread";
-  }
-
-  nsCOMPtr<nsIObserverService> obsServ(mozilla::services::GetObserverService());
-  obsServ->NotifyObservers(nullptr, topic, aDllName.get());
-}
-
-#endif // defined(XP_WIN)
 
 static void DumpArbitraryHelp()
 {
@@ -4336,10 +4301,6 @@ XREMain::XRE_mainRun()
 {
   nsresult rv = NS_OK;
   NS_ASSERTION(mScopedXPCOM, "Scoped xpcom not initialized.");
-
-#if defined(XP_WIN)
-  DllNotifications dllNotifications;
-#endif // defined(XP_WIN)
 
 #ifdef NS_FUNCTION_TIMER
   // initialize some common services, so we don't pay the cost for these at odd times later on;
