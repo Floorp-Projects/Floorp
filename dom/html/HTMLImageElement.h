@@ -98,7 +98,7 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::ismap, aIsMap, aError);
   }
-  uint32_t Width()
+  MOZ_CAN_RUN_SCRIPT uint32_t Width()
   {
     return GetWidthHeightForImage(mCurrentRequest).width;
   }
@@ -106,7 +106,7 @@ public:
   {
     SetUnsignedIntAttr(nsGkAtoms::width, aWidth, 0, aError);
   }
-  uint32_t Height()
+  MOZ_CAN_RUN_SCRIPT uint32_t Height()
   {
     return GetWidthHeightForImage(mCurrentRequest).height;
   }
