@@ -26,7 +26,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.NotificationListener;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.BitmapUtils;
 
 /**
  * Client for posting notifications.
