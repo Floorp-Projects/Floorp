@@ -43,10 +43,10 @@ function test() {
       gBrowser.tabContainer.addEventListener("TabOpen", function (e) {
         ok(true, "A new tab loaded");
 
-        gBrowser.addEventListener("DOMContentLoaded", function (e) {
+        BrowserTestUtils.waitForContentEvent(e.target.linkedBrowser, "DOMContentLoaded").then(function () {
           // Pass along the new tab's URI.
           resolve(gBrowser.currentURI.spec);
-        }, {once: true});
+        });
       }, {once: true});
     });
   }

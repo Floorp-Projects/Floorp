@@ -24,10 +24,10 @@ function addTab(aURI, aIndex) {
   if (aIndex == 0)
     gBrowser.removeTab(gBrowser.tabs[0], {skipPermitUnload: true});
 
-  tab.linkedBrowser.addEventListener("load", function(event) {
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     if (++count == URIS.length)
       executeSoon(doTabsTest);
-  }, {capture: true, once: true});
+  });
 }
 
 function doTabsTest() {
