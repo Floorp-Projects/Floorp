@@ -2542,18 +2542,14 @@ MediaCacheStream::SetReadMode(ReadMode aMode)
 void
 MediaCacheStream::SetPlaybackRate(uint32_t aBytesPerSecond)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aBytesPerSecond > 0, "Zero playback rate not allowed");
 
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "MediaCacheStream::SetPlaybackRate",
-    [ =, client = RefPtr<ChannelMediaResource>(mClient) ]() {
-      AutoLock lock(mMediaCache->Monitor());
-      if (!mClosed && mPlaybackBytesPerSecond != aBytesPerSecond) {
-        mPlaybackBytesPerSecond = aBytesPerSecond;
-        mMediaCache->QueueUpdate(lock);
-      }
-    });
-  OwnerThread()->Dispatch(r.forget());
+  AutoLock lock(mMediaCache->Monitor());
+  if (!mClosed && mPlaybackBytesPerSecond != aBytesPerSecond) {
+    mPlaybackBytesPerSecond = aBytesPerSecond;
+    mMediaCache->QueueUpdate(lock);
+  }
 }
 
 nsresult
