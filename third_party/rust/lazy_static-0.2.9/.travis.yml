@@ -15,10 +15,6 @@ script:
   travis-cargo --only nightly build -- --features spin_no_std &&
   travis-cargo --only nightly test -- --features spin_no_std &&
   travis-cargo --only nightly bench -- --features spin_no_std &&
-  travis-cargo --only nightly clean &&
-  travis-cargo --only nightly build -- --features compiletest &&
-  travis-cargo --only nightly test -- --features compiletest &&
-  travis-cargo --only nightly clean &&
   travis-cargo --only stable doc
 after_success:
 - travis-cargo --only stable doc-upload
