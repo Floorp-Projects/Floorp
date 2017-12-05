@@ -15,7 +15,6 @@
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -122,177 +121,6 @@ public:
     }
   }
 };
-
-class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
-  public nsIObserver
-{
-  public:
-    NS_DECL_ISUPPORTS
-
-    explicit BackgroundVideoDecodingPermissionObserver(MediaDecoder* aDecoder)
-      : mDecoder(aDecoder)
-      , mIsRegisteredForEvent(false)
-    {
-      MOZ_ASSERT(mDecoder);
-    }
-
-    NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                       const char16_t* aData) override
-    {
-      if (!MediaPrefs::ResumeVideoDecodingOnTabHover()) {
-        return NS_OK;
-      }
-
-      if (!IsValidEventSender(aSubject)) {
-        return NS_OK;
-      }
-
-      if (strcmp(aTopic, "unselected-tab-hover") == 0) {
-        mDecoder->mIsBackgroundVideoDecodingAllowed = !NS_strcmp(aData, u"true");
-        mDecoder->UpdateVideoDecodeMode();
-      }
-      return NS_OK;
-    }
-
-    void RegisterEvent() {
-      MOZ_ASSERT(!mIsRegisteredForEvent);
-      nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-      if (observerService) {
-        observerService->AddObserver(this, "unselected-tab-hover", false);
-        mIsRegisteredForEvent = true;
-        if (nsContentUtils::IsInStableOrMetaStableState()) {
-          // Events shall not be fired synchronously to prevent anything visible
-          // from the scripts while we are in stable state.
-          if (nsCOMPtr<nsIDocument> doc = GetOwnerDoc()) {
-            doc->Dispatch(TaskCategory::Other,
-              NewRunnableMethod(
-                "MediaDecoder::BackgroundVideoDecodingPermissionObserver::EnableEvent",
-                this, &MediaDecoder::BackgroundVideoDecodingPermissionObserver::EnableEvent));
-          }
-        } else {
-          EnableEvent();
-        }
-      }
-    }
-
-    void UnregisterEvent() {
-      MOZ_ASSERT(mIsRegisteredForEvent);
-      nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-      if (observerService) {
-        observerService->RemoveObserver(this, "unselected-tab-hover");
-        mIsRegisteredForEvent = false;
-        mDecoder->mIsBackgroundVideoDecodingAllowed = false;
-        mDecoder->UpdateVideoDecodeMode();
-        if (nsContentUtils::IsInStableOrMetaStableState()) {
-          // Events shall not be fired synchronously to prevent anything visible
-          // from the scripts while we are in stable state.
-          if (nsCOMPtr<nsIDocument> doc = GetOwnerDoc()) {
-            doc->Dispatch(TaskCategory::Other,
-              NewRunnableMethod(
-                "MediaDecoder::BackgroundVideoDecodingPermissionObserver::DisableEvent",
-                this, &MediaDecoder::BackgroundVideoDecodingPermissionObserver::DisableEvent));
-          }
-        } else {
-          DisableEvent();
-        }
-      }
-    }
-  private:
-    ~BackgroundVideoDecodingPermissionObserver() {
-      MOZ_ASSERT(!mIsRegisteredForEvent);
-    }
-
-    void EnableEvent() const
-    {
-      nsIDocument* doc = GetOwnerDoc();
-      if (!doc) {
-        return;
-      }
-
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(doc,
-                                 NS_LITERAL_STRING("UnselectedTabHover:Enable"),
-                                 /* Bubbles */ true,
-                                 /* OnlyChromeDispatch */ true);
-      asyncDispatcher->PostDOMEvent();
-    }
-
-    void DisableEvent() const
-    {
-      nsIDocument* doc = GetOwnerDoc();
-      if (!doc) {
-        return;
-      }
-
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(doc,
-                                 NS_LITERAL_STRING("UnselectedTabHover:Disable"),
-                                 /* Bubbles */ true,
-                                 /* OnlyChromeDispatch */ true);
-      asyncDispatcher->PostDOMEvent();
-    }
-
-    already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const
-    {
-      nsIDocument* doc = GetOwnerDoc();
-      if (!doc) {
-        return nullptr;
-      }
-
-      nsCOMPtr<nsPIDOMWindowInner> innerWin = doc->GetInnerWindow();
-      if (!innerWin) {
-        return nullptr;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> outerWin = innerWin->GetOuterWindow();
-      if (!outerWin) {
-        return nullptr;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> topWin = outerWin->GetTop();
-      return topWin.forget();
-    }
-
-    nsIDocument* GetOwnerDoc() const
-    {
-      if (!mDecoder->mOwner) {
-        return nullptr;
-      }
-
-      return mDecoder->mOwner->GetDocument();
-    }
-
-    bool IsValidEventSender(nsISupports* aSubject) const
-    {
-      nsCOMPtr<nsPIDOMWindowInner> senderInner(do_QueryInterface(aSubject));
-      if (!senderInner) {
-        return false;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> senderOuter = senderInner->GetOuterWindow();
-      if (!senderOuter) {
-        return false;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> senderTop = senderOuter->GetTop();
-      if (!senderTop) {
-        return false;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
-      if (!ownerTop) {
-        return false;
-      }
-
-      return ownerTop == senderTop;
-    }
-    // The life cycle of observer would always be shorter than decoder, so we
-    // use raw pointer here.
-    MediaDecoder* mDecoder;
-    bool mIsRegisteredForEvent;
-};
-
-NS_IMPL_ISUPPORTS(MediaDecoder::BackgroundVideoDecodingPermissionObserver, nsIObserver)
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
@@ -1198,6 +1026,13 @@ MediaDecoder::UpdateVideoDecodeMode()
     LOG("UpdateVideoDecodeMode(), set Suspend because the element is not visible.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
   }
+}
+
+void
+MediaDecoder::SetIsBackgroundVideoDecodingAllowed(bool aAllowed)
+{
+  mIsBackgroundVideoDecodingAllowed = aAllowed;
+  UpdateVideoDecodeMode();
 }
 
 bool

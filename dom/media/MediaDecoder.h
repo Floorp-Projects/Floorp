@@ -7,6 +7,7 @@
 #if !defined(MediaDecoder_h_)
 #define MediaDecoder_h_
 
+#include "BackgroundVideoDecodingPermissionObserver.h"
 #include "DecoderDoctorDiagnostics.h"
 #include "MediaContainerType.h"
 #include "MediaDecoderOwner.h"
@@ -305,6 +306,8 @@ private:
   bool HasSuspendTaint() const;
 
   void UpdateVideoDecodeMode();
+
+  void SetIsBackgroundVideoDecodingAllowed(bool aAllowed);
 
   /******
    * The following methods must only be called on the main
@@ -641,7 +644,6 @@ protected:
   // We can allow video decoding in background when we match some special
   // conditions, eg. when the cursor is hovering over the tab. This observer is
   // used to listen the related events.
-  class BackgroundVideoDecodingPermissionObserver;
   RefPtr<BackgroundVideoDecodingPermissionObserver> mVideoDecodingOberver;
 
   // True if we want to resume video decoding even the media element is in the
