@@ -108,7 +108,7 @@ class MapObject : public NativeObject {
 
     enum { NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
 
-    static MOZ_MUST_USE bool getKeysAndValuesInterleaved(HandleObject obj,
+    static MOZ_MUST_USE bool getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
                                             JS::MutableHandle<GCVector<JS::Value>> entries);
     static MOZ_MUST_USE bool entries(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
@@ -257,7 +257,7 @@ class SetObject : public NativeObject {
     static bool is(HandleValue v);
     static bool is(HandleObject o);
 
-    static bool isBuiltinAdd(HandleValue add);
+    static bool isBuiltinAdd(HandleValue add, JSContext* cx);
 
     static MOZ_MUST_USE bool iterator_impl(JSContext* cx, const CallArgs& args, IteratorKind kind);
 
@@ -305,7 +305,7 @@ class SetIteratorObject : public NativeObject
 };
 
 using SetInitGetPrototypeOp = NativeObject* (*)(JSContext*, Handle<GlobalObject*>);
-using SetInitIsBuiltinOp = bool (*)(HandleValue);
+using SetInitIsBuiltinOp = bool (*)(HandleValue, JSContext*);
 
 template <SetInitGetPrototypeOp getPrototypeOp, SetInitIsBuiltinOp isBuiltinOp>
 static MOZ_MUST_USE bool
@@ -336,7 +336,7 @@ IsOptimizableInitForSet(JSContext* cx, HandleObject setObject, HandleValue itera
 
     // Get the referred value, ensure it holds the canonical add function.
     RootedValue add(cx, setProto->getSlot(addShape->slot()));
-    if (!isBuiltinOp(add))
+    if (!isBuiltinOp(add, cx))
         return true;
 
     ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);

@@ -38,7 +38,7 @@ AutoKeepShapeTables::~AutoKeepShapeTables()
 }
 
 inline
-StackBaseShape::StackBaseShape(const Class* clasp, uint32_t objectFlags)
+StackBaseShape::StackBaseShape(JSContext* cx, const Class* clasp, uint32_t objectFlags)
   : flags(objectFlags),
     clasp(clasp)
 {}

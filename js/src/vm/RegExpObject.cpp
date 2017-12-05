@@ -1196,7 +1196,7 @@ RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 
 /* RegExpCompartment */
 
-RegExpCompartment::RegExpCompartment()
+RegExpCompartment::RegExpCompartment(Zone* zone)
   : matchResultTemplateObject_(nullptr),
     optimizableRegExpPrototypeShape_(nullptr),
     optimizableRegExpInstanceShape_(nullptr)
@@ -1260,7 +1260,7 @@ RegExpZone::init()
 }
 
 void
-RegExpCompartment::sweep()
+RegExpCompartment::sweep(JSRuntime* rt)
 {
     if (matchResultTemplateObject_ &&
         IsAboutToBeFinalized(&matchResultTemplateObject_))
