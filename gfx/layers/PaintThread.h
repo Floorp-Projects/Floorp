@@ -44,6 +44,21 @@ public:
   , mContentType(aContentType)
   {}
 
+  template<typename F>
+  void ForEachTextureClient(F aClosure) const
+  {
+    aClosure(mTextureClient);
+    if (mTextureClientOnWhite) {
+      aClosure(mTextureClientOnWhite);
+    }
+  }
+
+  void DropTextureClients()
+  {
+    mTextureClient = nullptr;
+    mTextureClientOnWhite = nullptr;
+  }
+
   nsIntRegion mRegionToDraw;
   RefPtr<TextureClient> mTextureClient;
   RefPtr<TextureClient> mTextureClientOnWhite;
@@ -100,7 +115,56 @@ public:
    * for the frame.
    */
   bool PrepareBuffer();
-  void GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients);
+
+  template<typename F>
+  void ForEachTextureClient(F aClosure) const
+  {
+    if (mBufferFinalize) {
+      if (TextureClient* source = mBufferFinalize->mSource->GetClient()) {
+        aClosure(source);
+      }
+      if (TextureClient* sourceOnWhite = mBufferFinalize->mSource->GetClientOnWhite()) {
+        aClosure(sourceOnWhite);
+      }
+      if (TextureClient* destination = mBufferFinalize->mDestination->GetClient()) {
+        aClosure(destination);
+      }
+      if (TextureClient* destinationOnWhite = mBufferFinalize->mDestination->GetClientOnWhite()) {
+        aClosure(destinationOnWhite);
+      }
+    }
+
+    if (mBufferUnrotate) {
+      if (TextureClient* client = mBufferUnrotate->mBuffer->GetClient()) {
+        aClosure(client);
+      }
+      if (TextureClient* clientOnWhite = mBufferUnrotate->mBuffer->GetClientOnWhite()) {
+        aClosure(clientOnWhite);
+      }
+    }
+
+    if (mBufferInitialize) {
+      if (TextureClient* source = mBufferInitialize->mSource->GetClient()) {
+        aClosure(source);
+      }
+      if (TextureClient* sourceOnWhite = mBufferInitialize->mSource->GetClientOnWhite()) {
+        aClosure(sourceOnWhite);
+      }
+      if (TextureClient* destination = mBufferInitialize->mDestination->GetClient()) {
+        aClosure(destination);
+      }
+      if (TextureClient* destinationOnWhite = mBufferInitialize->mDestination->GetClientOnWhite()) {
+        aClosure(destinationOnWhite);
+      }
+    }
+  }
+
+  void DropTextureClients()
+  {
+    mBufferFinalize = Nothing();
+    mBufferUnrotate = Nothing();
+    mBufferInitialize = Nothing();
+  }
 
   Maybe<Copy> mBufferFinalize;
   Maybe<Unrotate> mBufferUnrotate;
@@ -157,6 +221,19 @@ public:
   : mTargetTiled(aTargetTiled)
   , mCapture(aCapture)
   {}
+
+  template<typename F>
+  void ForEachTextureClient(F aClosure) const
+  {
+    for (auto client : mClients) {
+      aClosure(client);
+    }
+  }
+
+  void DropTextureClients()
+  {
+    mClients.clear();
+  }
 
   RefPtr<gfx::DrawTarget> mTargetTiled;
   RefPtr<gfx::DrawTargetCapture> mCapture;
