@@ -769,6 +769,14 @@ SERVO_BINDING_FUNC(Servo_ParseFontDescriptor, bool,
                    const nsAString* value,
                    RawGeckoURLExtraData* data,
                    nsCSSValueBorrowedMut);
+SERVO_BINDING_FUNC(Servo_ParseFontShorthandForMatching, bool,
+                   const nsAString* value,
+                   RawGeckoURLExtraData* data,
+                   RefPtr<SharedFontList>* family,
+                   nsCSSValueBorrowedMut style,
+                   nsCSSValueBorrowedMut stretch,
+                   nsCSSValueBorrowedMut weight);
+
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
