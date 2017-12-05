@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.gfx;
+package org.mozilla.gecko.util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +23,6 @@ import android.support.annotation.ColorInt;
 import android.support.v7.graphics.Palette;
 import android.util.Base64;
 import android.util.Log;
-
-import org.mozilla.gecko.util.HardwareUtils;
 
 public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";

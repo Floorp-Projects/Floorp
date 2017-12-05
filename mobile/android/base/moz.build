@@ -269,6 +269,7 @@ gujar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
     'util/ActivityResultHandler.java',
     'util/ActivityResultHandlerMap.java',
     'util/ActivityUtils.java',
+    'util/BitmapUtils.java',
     'util/BundleEventListener.java',
     'util/ContextUtils.java',
     'util/DateUtil.java',
@@ -307,6 +308,7 @@ gujar.extra_jars = [
     CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
+    CONFIG['ANDROID_PALETTE_V7_AAR_LIB'],
     'constants.jar',
     'gecko-mozglue.jar',
 ]
@@ -391,7 +393,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'GeckoThread.java',
     'GeckoView.java',
     'GeckoVRManager.java',
-    'gfx/BitmapUtils.java',
     'gfx/BufferedImage.java',
     'gfx/BufferedImageGLInfo.java',
     'gfx/CompositorController.java',
