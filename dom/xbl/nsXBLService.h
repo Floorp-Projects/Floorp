@@ -46,7 +46,7 @@ class nsXBLService final : public nsSupportsWeakReference
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.  aOriginPrincipal must not be null here.
-  nsresult LoadBindings(nsIContent* aContent, nsIURI* aURL,
+  nsresult LoadBindings(mozilla::dom::Element* aElement, nsIURI* aURL,
                         nsIPrincipal* aOriginPrincipal,
                         nsXBLBinding** aBinding, bool* aResolveStyle);
 
@@ -72,8 +72,8 @@ private:
   virtual ~nsXBLService();
 
 protected:
-  // This function clears out the bindings on a given content node.
-  nsresult FlushStyleBindings(nsIContent* aContent);
+  // This function clears out the bindings on a given element.
+  void FlushStyleBindings(mozilla::dom::Element*);
 
   // This method synchronously loads and parses an XBL file.
   nsresult FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,

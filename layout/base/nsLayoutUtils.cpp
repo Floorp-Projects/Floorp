@@ -8477,47 +8477,47 @@ nsLayoutUtils::PostRestyleEvent(Element* aElement,
   }
 }
 
-nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent,
+nsSetAttrRunnable::nsSetAttrRunnable(Element* aElement,
                                      nsAtom* aAttrName,
                                      const nsAString& aValue)
   : mozilla::Runnable("nsSetAttrRunnable")
-  , mContent(aContent)
+  , mElement(aElement)
   , mAttrName(aAttrName)
   , mValue(aValue)
 {
-  NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+  NS_ASSERTION(aElement && aAttrName, "Missing stuff, prepare to crash");
 }
 
-nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent,
+nsSetAttrRunnable::nsSetAttrRunnable(Element* aElement,
                                      nsAtom* aAttrName,
                                      int32_t aValue)
   : mozilla::Runnable("nsSetAttrRunnable")
-  , mContent(aContent)
+  , mElement(aElement)
   , mAttrName(aAttrName)
 {
-  NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+  NS_ASSERTION(aElement && aAttrName, "Missing stuff, prepare to crash");
   mValue.AppendInt(aValue);
 }
 
 NS_IMETHODIMP
 nsSetAttrRunnable::Run()
 {
-  return mContent->SetAttr(kNameSpaceID_None, mAttrName, mValue, true);
+  return mElement->SetAttr(kNameSpaceID_None, mAttrName, mValue, true);
 }
 
-nsUnsetAttrRunnable::nsUnsetAttrRunnable(nsIContent* aContent,
+nsUnsetAttrRunnable::nsUnsetAttrRunnable(Element* aElement,
                                          nsAtom* aAttrName)
   : mozilla::Runnable("nsUnsetAttrRunnable")
-  , mContent(aContent)
+  , mElement(aElement)
   , mAttrName(aAttrName)
 {
-  NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+  NS_ASSERTION(aElement && aAttrName, "Missing stuff, prepare to crash");
 }
 
 NS_IMETHODIMP
 nsUnsetAttrRunnable::Run()
 {
-  return mContent->UnsetAttr(kNameSpaceID_None, mAttrName, true);
+  return mElement->UnsetAttr(kNameSpaceID_None, mAttrName, true);
 }
 
 /**
