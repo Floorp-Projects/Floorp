@@ -7,8 +7,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Extension Compatibility')
 
-TEST_DIRS += ['tests']
-
 EXTRA_COMPONENTS += [
     'addoncompat.manifest',
     'defaultShims.js',
