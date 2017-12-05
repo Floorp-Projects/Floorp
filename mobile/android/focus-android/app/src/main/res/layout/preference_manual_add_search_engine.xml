@@ -10,7 +10,8 @@
     android:paddingLeft="@dimen/preference_root_layout_vertical_padding"
     android:paddingRight="@dimen/preference_root_layout_vertical_padding"
     android:paddingTop="@dimen/preference_root_layout_vertical_padding"
-    android:paddingBottom="@dimen/preference_root_layout_vertical_padding">
+    android:paddingBottom="@dimen/preference_root_layout_vertical_padding"
+    android:importantForAutofill="noExcludeDescendants">
 
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
