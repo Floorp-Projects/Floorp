@@ -2436,7 +2436,7 @@ MediaCacheStream::GetNextCachedData(int64_t aOffset)
 int64_t
 MediaCacheStream::GetCachedDataEnd(int64_t aOffset)
 {
-  // TODO: Assert non-main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   return GetCachedDataEndInternal(lock, aOffset);
 }
@@ -2943,7 +2943,7 @@ nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
 double
 MediaCacheStream::GetDownloadRate(bool* aIsReliable)
 {
-  // TODO: Assert non-main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   return mDownloadStatistics.GetRate(aIsReliable);
 }
