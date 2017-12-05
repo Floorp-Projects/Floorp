@@ -95,8 +95,13 @@ public:
 
   NS_DECL_NSISTREAMLISTENER
 
-  RefPtr<MediaDocument>      mDocument;
-  nsCOMPtr<nsIStreamListener>  mNextStream;
+  void DropDocumentRef()
+  {
+    mDocument = nullptr;
+  }
+
+  RefPtr<MediaDocument> mDocument;
+  nsCOMPtr<nsIStreamListener> mNextStream;
 };
 
 } // namespace dom
