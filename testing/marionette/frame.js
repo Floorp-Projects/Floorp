@@ -112,9 +112,6 @@ frame.Manager = class {
    *     ChromeMessageBroadcaster or ChromeMessageSender.
    */
   addMessageManagerListeners(mm) {
-    mm.addWeakMessageListener("Marionette:ok", this.driver);
-    mm.addWeakMessageListener("Marionette:done", this.driver);
-    mm.addWeakMessageListener("Marionette:error", this.driver);
     mm.addWeakMessageListener("Marionette:emitTouchEvent", this.driver);
     mm.addWeakMessageListener("Marionette:switchedToFrame", this.driver);
     mm.addWeakMessageListener("Marionette:getVisibleCookies", this.driver);
@@ -131,9 +128,6 @@ frame.Manager = class {
    *     ChromeMessageBroadcaster or ChromeMessageSender.
    */
   removeMessageManagerListeners(mm) {
-    mm.removeWeakMessageListener("Marionette:ok", this.driver);
-    mm.removeWeakMessageListener("Marionette:done", this.driver);
-    mm.removeWeakMessageListener("Marionette:error", this.driver);
     mm.removeWeakMessageListener("Marionette:switchedToFrame", this.driver);
     mm.removeWeakMessageListener("Marionette:getVisibleCookies", this.driver);
     mm.removeWeakMessageListener(
