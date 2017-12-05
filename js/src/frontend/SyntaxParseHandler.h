@@ -313,7 +313,7 @@ class SyntaxParseHandler
     }
 
     Node newThrowStatement(Node expr, const TokenPos& pos) { return NodeThrow; }
-    Node newTryStatement(uint32_t begin, Node body, Node catchScope, Node finallyBlock) {
+    Node newTryStatement(uint32_t begin, Node body, Node catchList, Node finallyBlock) {
         return NodeGeneric;
     }
     Node newDebuggerStatement(const TokenPos& pos) { return NodeGeneric; }
@@ -325,9 +325,8 @@ class SyntaxParseHandler
 
     Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeElement; }
 
-    MOZ_MUST_USE bool setupCatchScope(Node letBlock, Node catchName, Node catchBody) {
-        return true;
-    }
+    MOZ_MUST_USE bool addCatchBlock(Node catchList, Node letBlock, Node catchName,
+                                    Node catchGuard, Node catchBody) { return true; }
 
     MOZ_MUST_USE bool setLastFunctionFormalParameterDefault(Node funcpn, Node pn) { return true; }
 
@@ -406,6 +405,10 @@ class SyntaxParseHandler
 
     // This method should only be called from parsers using FullParseHandler.
     Node singleBindingFromDeclaration(Node decl) = delete;
+
+    Node newCatchList(const TokenPos& pos) {
+        return NodeGeneric;
+    }
 
     Node newCommaExpressionList(Node kid) {
         return NodeGeneric;

@@ -120,11 +120,11 @@ function caseClause(test, stmts) {
 function defaultClause(stmts) {
     return Pattern({ type: "SwitchCase", test: null, consequent: stmts });
 }
-function catchClause(id, body) {
-    return Pattern({ type: "CatchClause", param: id, body: body });
+function catchClause(id, guard, body) {
+    return Pattern({ type: "CatchClause", param: id, guard: guard, body: body });
 }
-function tryStmt(body, handler, fin) {
-    return Pattern({ type: "TryStatement", block: body, handler: handler, finalizer: fin });
+function tryStmt(body, guarded, unguarded, fin) {
+    return Pattern({ type: "TryStatement", block: body, guardedHandlers: guarded, handler: unguarded, finalizer: fin });
 }
 
 function superProp(id) {

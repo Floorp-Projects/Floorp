@@ -174,8 +174,10 @@ return {
     returnStatement: function(expr) {
         return expr ? ["ReturnStmt", {}, expr] : ["ReturnStmt", {}];
     },
-    tryStatement: function(body, handler, fin) {
-        var node = ["TryStmt", body, handler];
+    tryStatement: function(body, catches, fin) {
+        if (catches.length > 1)
+            throw new SyntaxError("multiple catch clauses not supported");
+        var node = ["TryStmt", body, catches[0] || ["Empty"]];
         if (fin)
             node.push(fin);
         return node;
@@ -192,7 +194,9 @@ return {
             stmts.unshift("DefaultCase", {});
         return stmts;
     },
-    catchClause: function(param, body) {
+    catchClause: function(param, guard, body) {
+        if (guard)
+            throw new SyntaxError("catch guards not supported");
         param[0] = "IdPatt";
         return ["CatchClause", {}, param, body];
     },

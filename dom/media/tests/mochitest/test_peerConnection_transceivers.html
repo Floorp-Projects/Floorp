@@ -423,12 +423,11 @@
       pc.addTransceiver("foo");
       ok(false, 'addTransceiver("foo") throws');
     }
+    catch (e if e instanceof TypeError) {
+      ok(true, 'addTransceiver("foo") throws a TypeError');
+    }
     catch (e) {
-      if (e instanceof TypeError) {
-        ok(true, 'addTransceiver("foo") throws a TypeError');
-      } else {
-        ok(false, 'addTransceiver("foo") throws a TypeError');
-      }
+      ok(false, 'addTransceiver("foo") throws a TypeError');
     }
 
     hasProps(pc.getTransceivers(), []);
