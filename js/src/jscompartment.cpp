@@ -66,7 +66,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     realmData(nullptr),
     allocationMetadataBuilder(nullptr),
     lastAnimationTime(0),
-    regExps(),
+    regExps(zone),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
     objectMetadataState(ImmediateMetadata()),
@@ -873,14 +873,15 @@ JSCompartment::sweepRegExps()
      * code for the lifetime of the JIT script. Thus, we must perform
      * sweeping after clearing jit code.
      */
-    regExps.sweep();
+    regExps.sweep(runtimeFromAnyThread());
 }
 
 void
 JSCompartment::sweepDebugEnvironments()
 {
+    JSRuntime* rt = runtimeFromAnyThread();
     if (debugEnvs)
-        debugEnvs->sweep();
+        debugEnvs->sweep(rt);
 }
 
 void

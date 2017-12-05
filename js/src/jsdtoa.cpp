@@ -73,9 +73,13 @@ static const uint8_t dtoaModes[] = {
     2};  /* DTOSTR_PRECISION */
 
 double
-js_strtod_harder(DtoaState* state, const char* s00, char** se)
+js_strtod_harder(DtoaState* state, const char* s00, char** se, int* err)
 {
-    return _strtod(state, s00, se);
+    double retval;
+    if (err)
+        *err = 0;
+    retval = _strtod(state, s00, se);
+    return retval;
 }
 
 char*

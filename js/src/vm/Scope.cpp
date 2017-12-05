@@ -128,7 +128,7 @@ CreateEnvironmentShape(JSContext* cx, BindingIter& bi, const Class* cls,
         return nullptr;
 
     RootedAtom name(cx);
-    StackBaseShape stackBase(cls, baseShapeFlags);
+    StackBaseShape stackBase(cx, cls, baseShapeFlags);
     for (; bi; bi++) {
         BindingLocation loc = bi.location();
         if (loc.kind() == BindingLocation::Kind::Environment) {

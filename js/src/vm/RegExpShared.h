@@ -324,9 +324,9 @@ class RegExpCompartment
     ArrayObject* createMatchResultTemplateObject(JSContext* cx);
 
   public:
-    explicit RegExpCompartment();
+    explicit RegExpCompartment(Zone* zone);
 
-    void sweep();
+    void sweep(JSRuntime* rt);
 
     /* Get or create template object used to base the result of .exec() on. */
     ArrayObject* getOrCreateMatchResultTemplateObject(JSContext* cx) {

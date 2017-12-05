@@ -583,7 +583,7 @@ bool
 ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame);
 
 bool
-ThrowInitializedThis(JSContext* cx);
+ThrowInitializedThis(JSContext* cx, AbstractFramePtr frame);
 
 bool
 DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
