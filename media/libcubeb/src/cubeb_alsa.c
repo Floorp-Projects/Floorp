@@ -890,6 +890,10 @@ alsa_stream_init_single(cubeb * ctx, cubeb_stream ** stream, char const * stream
 
   *stream = NULL;
 
+  if (stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
   switch (stream_params->format) {
   case CUBEB_SAMPLE_S16LE:
     format = SND_PCM_FORMAT_S16_LE;

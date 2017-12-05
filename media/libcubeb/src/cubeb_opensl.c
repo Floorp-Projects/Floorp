@@ -1291,6 +1291,11 @@ opensl_validate_stream_param(cubeb_stream_params * stream_params)
        (stream_params->channels < 1 || stream_params->channels > 32))) {
     return CUBEB_ERROR_INVALID_FORMAT;
   }
+  if ((stream_params &&
+       (stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK))) {
+    LOG("Loopback is not supported");
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
   return CUBEB_OK;
 }
 
