@@ -82,9 +82,9 @@ impl FontTransform {
     pub fn compute_scale(&self) -> Option<(f64, f64)> {
         let det = self.determinant();
         if det != 0.0 {
-            let major = (self.scale_x as f64).hypot(self.skew_y as f64);
-            let minor = det.abs() / major;
-            Some((major, minor))
+            let x_scale = (self.scale_x as f64).hypot(self.skew_y as f64);
+            let y_scale = det.abs() / x_scale;
+            Some((x_scale, y_scale))
         } else {
             None
         }
@@ -191,6 +191,19 @@ impl FontInstance {
             FontRenderMode::Bitmap => {
                 if color_bitmaps { GlyphFormat::ColorBitmap } else { GlyphFormat::Alpha }
             }
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_extra_strikes(&self, x_scale: f64) -> usize {
+        if self.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
+            let mut bold_offset = self.size.to_f64_px() / 48.0;
+            if bold_offset < 1.0 {
+                bold_offset = 0.25 + 0.75 * bold_offset;
+            }
+            (bold_offset * x_scale).max(1.0).round() as usize
+        } else {
+            0
         }
     }
 }

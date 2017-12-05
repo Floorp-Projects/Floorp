@@ -51,7 +51,8 @@ vec4 brush_fs() {
     if (vLocalPos.x < vClipCenter_Radius.x && vLocalPos.y < vClipCenter_Radius.y) {
         // Apply ellipse clip on corner.
         d = distance_to_ellipse(vLocalPos - vClipCenter_Radius.xy,
-                                vClipCenter_Radius.zw);
+                                vClipCenter_Radius.zw,
+                                aa_range);
         d = distance_aa(aa_range, d);
     }
 
