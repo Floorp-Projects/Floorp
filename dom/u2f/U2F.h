@@ -12,6 +12,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/U2FBinding.h"
+#include "mozilla/dom/WebAuthnManagerBase.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 #include "nsProxyRelease.h"
@@ -24,7 +25,7 @@ class nsISerialEventTarget;
 namespace mozilla {
 namespace dom {
 
-class U2FTransactionChild;
+class WebAuthnTransactionChild;
 class U2FRegisterCallback;
 class U2FSignCallback;
 
@@ -59,6 +60,7 @@ private:
 };
 
 class U2F final : public nsIDOMEventListener
+                , public WebAuthnManagerBase
                 , public nsWrapperCache
 {
 public:
@@ -97,18 +99,22 @@ public:
        const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
        ErrorResult& aRv);
 
-  void
-  FinishRegister(const uint64_t& aTransactionId, nsTArray<uint8_t>& aRegBuffer);
+  // WebAuthnManagerBase
 
   void
-  FinishSign(const uint64_t& aTransactionId,
-             nsTArray<uint8_t>& aCredentialId,
-             nsTArray<uint8_t>& aSigBuffer);
+  FinishMakeCredential(const uint64_t& aTransactionId,
+                       nsTArray<uint8_t>& aRegBuffer) override;
 
   void
-  RequestAborted(const uint64_t& aTransactionId, const nsresult& aError);
+  FinishGetAssertion(const uint64_t& aTransactionId,
+                     nsTArray<uint8_t>& aCredentialId,
+                     nsTArray<uint8_t>& aSigBuffer) override;
 
-  void ActorDestroyed();
+  void
+  RequestAborted(const uint64_t& aTransactionId,
+                 const nsresult& aError) override;
+
+  void ActorDestroyed() override;
 
 private:
   ~U2F();
@@ -135,7 +141,7 @@ private:
   Maybe<nsMainThreadPtrHandle<U2FSignCallback>> mSignCallback;
 
   // IPC Channel to the parent process.
-  RefPtr<U2FTransactionChild> mChild;
+  RefPtr<WebAuthnTransactionChild> mChild;
 
   // The current transaction, if any.
   Maybe<U2FTransaction> mTransaction;
