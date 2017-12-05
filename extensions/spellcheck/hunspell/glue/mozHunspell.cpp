@@ -164,13 +164,18 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const char16_t *aDictionary)
 
   nsAutoCString dictFileName, affFileName;
 
-  // XXX This isn't really good. nsIFile->NativePath isn't safe for all
-  // character sets on Windows.
-  // A better way would be to QI to nsIFile, and get a filehandle
-  // from there. Only problem is that hunspell wants a path
-
+#ifdef XP_WIN
+  nsAutoString affFileNameU;
+  nsresult rv = affFile->GetPath(affFileNameU);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Hunspell 1.5+ supports UTF-8 file paths on Windows
+  // by prefixing "\\\\?\\".
+  affFileName.AssignLiteral("\\\\?\\");
+  AppendUTF16toUTF8(affFileNameU, affFileName);
+#else
   nsresult rv = affFile->GetNativePath(affFileName);
   NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   if (mAffixFileName.Equals(affFileName.get()))
     return NS_OK;
