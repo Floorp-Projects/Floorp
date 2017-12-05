@@ -184,14 +184,6 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("try {} catch (e) {} finally { ");
   test("try {} catch (e) {} finally {} ");
 
-  test("try {} catch (e if ");
-  test("try {} catch (e if e  ");
-  test("try {} catch (e if e instanceof ");
-  test("try {} catch (e if e instanceof x ");
-  test("try {} catch (e if e instanceof x) ");
-  test("try {} catch (e if e instanceof x) { ");
-  test("try {} catch (e if e instanceof x) {} ");
-
   // ---- Declarations ----
 
   // var

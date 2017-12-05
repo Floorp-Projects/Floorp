@@ -7,7 +7,9 @@ function isPatternSyntaxError(pattern) {
     try {
         new RegExp(pattern);
         return false;
-    } catch (e if e instanceof SyntaxError) {
+    } catch (e) {
+        if (!(e instanceof SyntaxError))
+            throw e;
         return true;
     }
 }
