@@ -158,7 +158,7 @@ public:
   }
 
   template<typename PT, typename CT>
-  explicit EditorDOMPointBase(const EditorDOMPointBase<PT, CT>& aOther)
+  MOZ_IMPLICIT EditorDOMPointBase(const EditorDOMPointBase<PT, CT>& aOther)
     : mParent(aOther.mParent)
     , mChild(aOther.mChild)
     , mOffset(aOther.mOffset)

@@ -344,51 +344,42 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   }
 
   if (!handled) {
-    // The rules code (WillDoAction above) might have changed the selection.
-    // refresh our memory...
-    nsCOMPtr<nsIDOMNode> parentNode;
-    int32_t offsetOfNewNode;
-    rv = GetStartNodeAndOffset(selection, getter_AddRefs(parentNode), &offsetOfNewNode);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(parentNode, NS_ERROR_FAILURE);
-
     // Adjust position based on the first node we are going to insert.
-    NormalizeEOLInsertPosition(nodeList[0], address_of(parentNode),
-                               &offsetOfNewNode);
+    // FYI: WillDoAction() above might have changed the selection.
+    EditorDOMPoint pointToInsert =
+      GetBetterInsertionPointFor(nodeList[0], GetStartPoint(selection));
+    if (NS_WARN_IF(!pointToInsert.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
 
     // if there are any invisible br's after our insertion point, remove them.
     // this is because if there is a br at end of what we paste, it will make
     // the invisible br visible.
-    WSRunObject wsObj(this, parentNode, offsetOfNewNode);
+    WSRunObject wsObj(this, pointToInsert.Container(), pointToInsert.Offset());
     if (wsObj.mEndReasonNode &&
         TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
         !IsVisibleBRElement(wsObj.mEndReasonNode)) {
+      AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
       rv = DeleteNode(wsObj.mEndReasonNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // Remember if we are in a link.
-    bool bStartedInLink = IsInLink(parentNode);
+    bool bStartedInLink = IsInLink(pointToInsert.Container()->AsDOMNode());
 
     // Are we in a text node? If so, split it.
-    if (IsTextNode(parentNode)) {
-      nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parentNode);
-      EditorRawDOMPoint pointToSplit(parentContent, offsetOfNewNode);
-      if (NS_WARN_IF(!pointToSplit.IsSet())) {
-        return NS_ERROR_FAILURE;
-      }
+    if (IsTextNode(pointToInsert.Container())) {
       SplitNodeResult splitNodeResult =
-        SplitNodeDeep(*parentContent, pointToSplit,
+        SplitNodeDeep(*pointToInsert.Container()->AsContent(),
+                      pointToInsert.AsRaw(),
                       SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
-      EditorRawDOMPoint splitPoint(splitNodeResult.SplitPoint());
-      if (NS_WARN_IF(!splitPoint.IsSet())) {
+      pointToInsert = splitNodeResult.SplitPoint();
+      if (NS_WARN_IF(!pointToInsert.IsSet())) {
         return NS_ERROR_FAILURE;
       }
-      parentNode = do_QueryInterface(splitPoint.Container());
-      offsetOfNewNode = splitPoint.Offset();
     }
 
     // build up list of parents of first node in list that are either
@@ -429,19 +420,16 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                endListAndTableArray, highWaterMark);
     }
 
-    // Loop over the node list and paste the nodes:
-    nsCOMPtr<nsIDOMNode> parentBlock;
-    nsCOMPtr<nsINode> parentNodeNode = do_QueryInterface(parentNode);
-    NS_ENSURE_STATE(parentNodeNode || !parentNode);
-    if (IsBlockNode(parentNodeNode)) {
-      parentBlock = parentNode;
-    } else if (parentNodeNode) {
-      parentBlock = GetAsDOMNode(GetBlockNodeParent(parentNodeNode));
-    }
+    MOZ_ASSERT(pointToInsert.Container()->GetChildAt(pointToInsert.Offset()) ==
+                 pointToInsert.GetChildAtOffset());
 
+    // Loop over the node list and paste the nodes:
+    nsCOMPtr<nsINode> parentBlock =
+      IsBlockNode(pointToInsert.Container()) ?
+        pointToInsert.Container() :
+        GetBlockNodeParent(pointToInsert.Container());
     nsCOMPtr<nsIContent> lastInsertNode;
     nsCOMPtr<nsINode> insertedContextParent;
-    EditorDOMPoint pointToInsert(parentNodeNode, offsetOfNewNode);
     for (OwningNonNull<nsINode>& curNode : nodeList) {
       if (NS_WARN_IF(curNode == fragmentAsNodeNode) ||
           NS_WARN_IF(TextEditUtils::IsBody(curNode))) {

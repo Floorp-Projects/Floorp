@@ -708,12 +708,19 @@ protected:
   bool IsVisibleBRElement(nsINode* aNode);
 
   /**
-   * Utility routine to possibly adjust the insertion position when
-   * inserting a block level element.
+   * GetBetterInsertionPointFor() returns better insertion point to insert
+   * aNodeToInsert.
+   *
+   * @param aNodeToInsert       The node to insert.
+   * @param aPointToInsert      A candidate point to insert the node.
+   * @return                    Better insertion point if next visible node
+   *                            is a <br> element and previous visible node
+   *                            is neither none, another <br> element nor
+   *                            different block level element.
    */
-  void NormalizeEOLInsertPosition(nsINode* firstNodeToInsert,
-                                  nsCOMPtr<nsIDOMNode>* insertParentNode,
-                                  int32_t* insertOffset);
+  EditorRawDOMPoint
+  GetBetterInsertionPointFor(nsINode& aNodeToInsert,
+                             const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * Helpers for block transformations.
