@@ -22,6 +22,115 @@
 #include <fcntl.h>
 #include <errno.h>
 
+/*
+  Wayland multi-thread rendering scheme
+
+  Every rendering thread (main thread, compositor thread) contains its own
+  nsWaylandDisplay object connected to Wayland compositor (Mutter, Weston, etc.)
+
+  WindowSurfaceWayland implements WindowSurface class and draws nsWindow by
+  WindowSurface interface (Lock, Commit) to screen through nsWaylandDisplay.
+
+  ----------------------
+  | Wayland compositor |
+  ----------------------
+             ^
+             |
+  ----------------------
+  |  nsWaylandDisplay  |
+  ----------------------
+        ^          ^
+        |          |
+        |          |
+        |       ---------------------------------        ------------------
+        |       | WindowSurfaceWayland          |<------>| nsWindow       |
+        |       |                               |        ------------------
+        |       |  -----------------------      |
+        |       |  | WindowBackBuffer    |      |
+        |       |  |                     |      |
+        |       |  | ------------------- |      |
+        |       |  | |  WaylandShmPool | |      |
+        |       |  | ------------------- |      |
+        |       |  -----------------------      |
+        |       |                               |
+        |       |  -----------------------      |
+        |       |  | WindowBackBuffer    |      |
+        |       |  |                     |      |
+        |       |  | ------------------- |      |
+        |       |  | |  WaylandShmPool | |      |
+        |       |  | ------------------- |      |
+        |       |  -----------------------      |
+        |       ---------------------------------
+        |
+        |
+  ---------------------------------        ------------------
+  | WindowSurfaceWayland          |<------>| nsWindow       |
+  |                               |        ------------------
+  |  -----------------------      |
+  |  | WindowBackBuffer    |      |
+  |  |                     |      |
+  |  | ------------------- |      |
+  |  | |  WaylandShmPool | |      |
+  |  | ------------------- |      |
+  |  -----------------------      |
+  |                               |
+  |  -----------------------      |
+  |  | WindowBackBuffer    |      |
+  |  |                     |      |
+  |  | ------------------- |      |
+  |  | |  WaylandShmPool | |      |
+  |  | ------------------- |      |
+  |  -----------------------      |
+  ---------------------------------
+
+nsWaylandDisplay
+
+Is our connection to Wayland display server,
+holds our display connection (wl_display) and event queue (wl_event_queue).
+
+nsWaylandDisplay is created for every thread which sends data to Wayland
+compositor. Wayland events for main thread is served by default Gtk+ loop,
+for other threads (compositor) we must create wl_event_queue and run event loop.
+
+
+WindowSurfaceWayland
+
+Is a Wayland implementation of WindowSurface class for WindowSurfaceProvider,
+we implement Lock() and Commit() interfaces from WindowSurface
+for actual drawing.
+
+One WindowSurfaceWayland draws one nsWindow so those are tied 1:1.
+At Wayland level it holds one wl_surface object.
+
+To perform visualiation of nsWindow, WindowSurfaceWayland contains one
+wl_surface and two wl_buffer objects (owned by WindowBackBuffer)
+as we use double buffering. When nsWindow drawing is finished to wl_buffer,
+the wl_buffer is attached to wl_surface and it's sent to Wayland compositor.
+
+
+WindowBackBuffer
+
+Manages one wl_buffer. It owns wl_buffer object, owns WaylandShmPool
+(which provides shared memory) and ties them together.
+
+Wl_buffer is a main Wayland object with actual graphics data.
+Wl_buffer basically represent one complete window screen.
+When double buffering is involved every window (GdkWindow for instance)
+utilises two wl_buffers which are cycled. One is filed with data by application
+and one is rendered by compositor.
+
+
+WaylandShmPool
+
+WaylandShmPool acts as a manager of shared memory for WindowBackBuffer.
+Allocates it, holds reference to it and releases it.
+
+We allocate shared memory (shm) by mmap(..., MAP_SHARED,...) as an interface
+between us and wayland compositor. We draw our graphics data to the shm and
+handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
+(wl_buffer/wl_surface).
+*/
+
 namespace mozilla {
 namespace widget {
 
