@@ -37,6 +37,8 @@ import java.util.Set;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String SETTINGS_SCREEN_NAME = "settingsScreenName";
+    public static final int ALPHA_ENABLED = 255;
+    public static final int ALPHA_DISABLED = 130;
 
     private boolean localeUpdated;
     private SettingsScreen settingsScreen;
