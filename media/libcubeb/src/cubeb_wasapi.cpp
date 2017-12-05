@@ -193,12 +193,12 @@ struct cubeb_stream {
   /* Mixer pameters. We need to convert the input stream to this
      samplerate/channel layout, as WASAPI does not resample nor upmix
      itself. */
-  cubeb_stream_params input_mix_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
-  cubeb_stream_params output_mix_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
+  cubeb_stream_params input_mix_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
+  cubeb_stream_params output_mix_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
   /* Stream parameters. This is what the client requested,
    * and what will be presented in the callback. */
-  cubeb_stream_params input_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
-  cubeb_stream_params output_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
+  cubeb_stream_params input_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
+  cubeb_stream_params output_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
   /* The input and output device, or NULL for default. */
   std::unique_ptr<const wchar_t[]> input_device;
   std::unique_ptr<const wchar_t[]> output_device;
@@ -207,6 +207,10 @@ struct cubeb_stream {
   cubeb_state_callback state_callback = nullptr;
   cubeb_data_callback data_callback = nullptr;
   wasapi_refill_callback refill_callback = nullptr;
+  /* True when a loopback device is requested with no output device. In this
+     case a dummy output device is opened to drive the loopback, but should not
+     be exposed. */
+  bool has_dummy_output = false;
   void * user_ptr = nullptr;
   /* Lifetime considerations:
      - client, render_client, audio_clock and audio_stream_volume are interface
@@ -564,9 +568,9 @@ refill(cubeb_stream * stm, void * input_buffer, long input_frames_count,
 {
   XASSERT(!stm->draining);
   /* If we need to upmix after resampling, resample into the mix buffer to
-     avoid a copy. */
+     avoid a copy. Avoid exposing output if it is a dummy stream. */
   void * dest = nullptr;
-  if (has_output(stm)) {
+  if (has_output(stm) && !stm->has_dummy_output) {
     if (cubeb_should_mix(&stm->output_stream_params, &stm->output_mix_params)) {
       dest = stm->mix_buffer.data();
     } else {
@@ -595,9 +599,10 @@ refill(cubeb_stream * stm, void * input_buffer, long input_frames_count,
 
   /* If this is not true, there will be glitches.
      It is alright to have produced less frames if we are draining, though. */
-  XASSERT(out_frames == output_frames_needed || stm->draining || !has_output(stm));
+  XASSERT(out_frames == output_frames_needed || stm->draining || !has_output(stm) || stm->has_dummy_output);
 
-  if (has_output(stm) && cubeb_should_mix(&stm->output_stream_params, &stm->output_mix_params)) {
+  // We don't bother mixing dummy output as it will be silenced, otherwise mix output if needed
+  if (!stm->has_dummy_output && has_output(stm) && cubeb_should_mix(&stm->output_stream_params, &stm->output_mix_params)) {
     XASSERT(dest == stm->mix_buffer.data());
     unsigned long dest_len = out_frames * stm->output_stream_params.channels;
     XASSERT(dest_len <= stm->mix_buffer.size() / stm->bytes_per_sample);
@@ -612,22 +617,12 @@ refill(cubeb_stream * stm, void * input_buffer, long input_frames_count,
 
 /* This helper grabs all the frames available from a capture client, put them in
  * linear_input_buffer. linear_input_buffer should be cleared before the
- * callback exits. */
+ * callback exits. This helper does not work with exclusive mode streams. */
 bool get_input_buffer(cubeb_stream * stm)
 {
-  HRESULT hr;
-  UINT32 padding_in;
-
   XASSERT(has_input(stm));
 
-  hr = stm->input_client->GetCurrentPadding(&padding_in);
-  if (FAILED(hr)) {
-    LOG("Failed to get padding");
-    return false;
-  }
-  XASSERT(padding_in <= stm->input_buffer_frame_count);
-  UINT32 total_available_input = padding_in;
-
+  HRESULT hr;
   BYTE * input_packet = NULL;
   DWORD flags;
   UINT64 dev_pos;
@@ -635,16 +630,17 @@ bool get_input_buffer(cubeb_stream * stm)
   /* Get input packets until we have captured enough frames, and put them in a
    * contiguous buffer. */
   uint32_t offset = 0;
-  while (offset != total_available_input) {
-    hr = stm->capture_client->GetNextPacketSize(&next);
+  // If the input stream is event driven we should only ever expect to read a
+  // single packet each time. However, if we're pulling from the stream we may
+  // need to grab multiple packets worth of frames that have accumulated (so
+  // need a loop).
+  for (hr = stm->capture_client->GetNextPacketSize(&next);
+       next > 0;
+       hr = stm->capture_client->GetNextPacketSize(&next)) {
+
     if (FAILED(hr)) {
       LOG("cannot get next packet size: %lx", hr);
       return false;
-    }
-    /* This can happen if the capture stream has stopped. Just return in this
-     * case. */
-    if (!next) {
-      break;
     }
 
     UINT32 packet_size;
@@ -658,6 +654,21 @@ bool get_input_buffer(cubeb_stream * stm)
       return false;
     }
     XASSERT(packet_size == next);
+    // We do not explicitly handle the AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY
+    // flag. There a two primary (non exhaustive) scenarios we anticipate this
+    // flag being set in:
+    //   - The first GetBuffer after Start has this flag undefined. In this
+    //     case the flag may be set but is meaningless and can be ignored.
+    //   - If a glitch is introduced into the input. This should not happen
+    //     for event based inputs, and should be mitigated by using a dummy
+    //     stream to drive input in the case of input only loopback. Without
+    //     a dummy output, input only loopback would glitch on silence. However,
+    //     the dummy input should push silence to the loopback and prevent
+    //     discontinuities. See https://blogs.msdn.microsoft.com/matthew_van_eerde/2008/12/16/sample-wasapi-loopback-capture-record-what-you-hear/
+    // As the first scenario can be ignored, and we anticipate the second
+    // scenario is mitigated, we ignore the flag.
+    // For more info: https://msdn.microsoft.com/en-us/library/windows/desktop/dd370859(v=vs.85).aspx,
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd371458(v=vs.85).aspx
     if (flags & AUDCLNT_BUFFERFLAGS_SILENT) {
       LOG("insert silence: ps=%u", packet_size);
       stm->linear_input_buffer->push_silence(packet_size * stm->input_stream_params.channels);
@@ -687,8 +698,7 @@ bool get_input_buffer(cubeb_stream * stm)
     offset += packet_size;
   }
 
-  XASSERT(stm->linear_input_buffer->length() >= total_available_input &&
-          offset == total_available_input);
+  XASSERT(stm->linear_input_buffer->length() >= offset);
 
   return true;
 }
@@ -774,18 +784,36 @@ refill_callback_duplex(cubeb_stream * stm)
     return false;
   }
 
-  ALOGV("Duplex callback: input frames: %Iu, output frames: %Iu",
-        input_frames, output_frames);
+  if (stm->has_dummy_output) {
+    ALOGV("Duplex callback (dummy output): input frames: %Iu, output frames: %Iu",
+          input_frames, output_frames);
 
-  refill(stm,
-         stm->linear_input_buffer->data(),
-         input_frames,
-         output_buffer,
-         output_frames);
+    // We don't want to expose the dummy output to the callback so don't pass
+    // the output buffer (it will be released later with silence in it)
+    refill(stm,
+           stm->linear_input_buffer->data(),
+           input_frames,
+           nullptr,
+           0);
+  } else {
+    ALOGV("Duplex callback: input frames: %Iu, output frames: %Iu",
+          input_frames, output_frames);
+
+    refill(stm,
+           stm->linear_input_buffer->data(),
+           input_frames,
+           output_buffer,
+           output_frames);
+  }
 
   stm->linear_input_buffer->clear();
 
-  hr = stm->render_client->ReleaseBuffer(output_frames, 0);
+  if (stm->has_dummy_output) {
+    // If output is a dummy output, make sure it's silent
+    hr = stm->render_client->ReleaseBuffer(output_frames, AUDCLNT_BUFFERFLAGS_SILENT);
+  } else {
+    hr = stm->render_client->ReleaseBuffer(output_frames, 0);
+  }
   if (FAILED(hr)) {
     LOG("failed to release buffer: %lx", hr);
     return false;
@@ -1517,6 +1545,11 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 {
   com_ptr<IMMDevice> device;
   HRESULT hr;
+  bool is_loopback = stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK;
+  if (is_loopback && direction != eCapture) {
+    LOG("Loopback pref can only be used with capture streams!\n");
+    return CUBEB_ERROR;
+  }
 
   stm->stream_reset_lock.assert_current_thread_owns();
   bool try_again = false;
@@ -1530,9 +1563,16 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
         return CUBEB_ERROR;
       }
     } else {
-      hr = get_default_endpoint(device, direction);
+      // If caller has requested loopback but not specified a device, look for
+      // the default render device. Otherwise look for the default device
+      // appropriate to the direction.
+      hr = get_default_endpoint(device, is_loopback ? eRender : direction);
       if (FAILED(hr)) {
-        LOG("Could not get default %s endpoint, error: %lx\n", DIRECTION_NAME, hr);
+        if (is_loopback) {
+          LOG("Could not get default render endpoint for loopback, error: %lx\n", hr);
+        } else {
+          LOG("Could not get default %s endpoint, error: %lx\n", DIRECTION_NAME, hr);
+        }
         return CUBEB_ERROR;
       }
     }
@@ -1603,9 +1643,18 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
       mix_params->format, mix_params->rate, mix_params->channels,
       CUBEB_CHANNEL_LAYOUT_MAPS[mix_params->layout].name);
 
+  DWORD flags = AUDCLNT_STREAMFLAGS_NOPERSIST;
+
+  // Check if a loopback device should be requested. Note that event callbacks
+  // do not work with loopback devices, so only request these if not looping.
+  if (is_loopback) {
+    flags |= AUDCLNT_STREAMFLAGS_LOOPBACK;
+  } else {
+    flags |= AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
+  }
+
   hr = audio_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
-                                AUDCLNT_STREAMFLAGS_NOPERSIST,
+                                flags,
                                 frames_to_hns(stm, stm->latency),
                                 0,
                                 mix_format.get(),
@@ -1626,11 +1675,14 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
     stm->mix_buffer.resize(frames_to_bytes_before_mix(stm, *buffer_frame_count));
   }
 
-  hr = audio_client->SetEventHandle(event);
-  if (FAILED(hr)) {
-    LOG("Could set the event handle for the %s client %lx.",
-        DIRECTION_NAME, hr);
-    return CUBEB_ERROR;
+  // Events are used if not looping back
+  if (!is_loopback) {
+    hr = audio_client->SetEventHandle(event);
+    if (FAILED(hr)) {
+      LOG("Could set the event handle for the %s client %lx.",
+          DIRECTION_NAME, hr);
+      return CUBEB_ERROR;
+    }
   }
 
   hr = audio_client->GetService(riid, render_or_capture_client.receive_vpp());
@@ -1689,6 +1741,27 @@ int setup_wasapi_stream(cubeb_stream * stm)
     stm->linear_input_buffer->push_silence(stm->input_buffer_frame_count *
                                            stm->input_stream_params.channels *
                                            silent_buffer_count);
+  }
+
+  // If we don't have an output device but are requesting a loopback device,
+  // we attempt to open that same device in output mode in order to drive the
+  // loopback via the output events.
+  stm->has_dummy_output = false;
+  if (!has_output(stm) && stm->input_stream_params.prefs & CUBEB_STREAM_PREF_LOOPBACK) {
+    stm->output_stream_params.rate = stm->input_stream_params.rate;
+    stm->output_stream_params.channels = stm->input_stream_params.channels;
+    stm->output_stream_params.layout = stm->input_stream_params.layout;
+    if (stm->input_device) {
+      size_t len = wcslen(stm->input_device.get());
+      std::unique_ptr<wchar_t[]> tmp(new wchar_t[len + 1]);
+      if (wcsncpy_s(tmp.get(), len + 1, stm->input_device.get(), len) != 0) {
+        LOG("Failed to copy device identifier while copying input stream"
+            " configuration to output stream configuration to drive loopback.");
+        return CUBEB_ERROR;
+      }
+      stm->output_device = move(tmp);
+    }
+    stm->has_dummy_output = true;
   }
 
   if (has_output(stm)) {

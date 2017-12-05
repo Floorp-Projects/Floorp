@@ -279,11 +279,19 @@ sndio_stream_init(cubeb * context,
   memset(s, 0, sizeof(cubeb_stream));
   s->mode = 0;
   if (input_stream_params) {
+    if (input_stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK) {
+      DPR("sndio_stream_init(), loopback not supported\n");
+      goto err;
+    }
     s->mode |= SIO_REC;
     format = input_stream_params->format;
     rate = input_stream_params->rate;
   }
   if (output_stream_params) {
+    if (output_stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK) {
+      DPR("sndio_stream_init(), loopback not supported\n");
+      goto err;
+    }
     s->mode |= SIO_PLAY;
     format = output_stream_params->format;
     rate = output_stream_params->rate;

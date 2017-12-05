@@ -95,6 +95,7 @@ TEST(cubeb, tone)
   params.rate = SAMPLE_FREQUENCY;
   params.channels = 1;
   params.layout = CUBEB_LAYOUT_MONO;
+  params.prefs = CUBEB_STREAM_PREF_NONE;
 
   std::unique_ptr<cb_user_data> user_data(new cb_user_data());
   ASSERT_TRUE(!!user_data) << "Error allocating user data";
