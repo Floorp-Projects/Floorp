@@ -132,7 +132,8 @@ struct TileClient
                                nsIntRegion& aAddPaintedRegion,
                                TilePaintFlags aFlags,
                                RefPtr<TextureClient>* aTextureClientOnWhite,
-                               std::vector<CapturedTiledPaintState::Copy>* aCopies);
+                               std::vector<CapturedTiledPaintState::Copy>* aCopies,
+                               std::vector<RefPtr<TextureClient>>* aClients);
 
   void DiscardFrontBuffer();
 
@@ -171,7 +172,8 @@ private:
   void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
                                    nsIntRegion& aAddPaintedRegion,
                                    TilePaintFlags aFlags,
-                                   std::vector<CapturedTiledPaintState::Copy>* aCopies);
+                                   std::vector<CapturedTiledPaintState::Copy>* aCopies,
+                                   std::vector<RefPtr<TextureClient>>* aClients);
 };
 
 /**
