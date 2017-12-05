@@ -3367,11 +3367,6 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       }
       break;
 
-    case "Marionette:log":
-      // log server-side messages
-      logger.info(message.json.message);
-      break;
-
     case "Marionette:switchedToFrame":
       if (message.json.restorePrevious) {
         this.currentFrameElement = this.previousFrameElement;

@@ -197,7 +197,6 @@ frame.Manager = class {
     mm.addWeakMessageListener("Marionette:done", this.driver);
     mm.addWeakMessageListener("Marionette:error", this.driver);
     mm.addWeakMessageListener("Marionette:emitTouchEvent", this.driver);
-    mm.addWeakMessageListener("Marionette:log", this.driver);
     mm.addWeakMessageListener("Marionette:shareData", this.driver);
     mm.addWeakMessageListener("Marionette:switchedToFrame", this.driver);
     mm.addWeakMessageListener("Marionette:getVisibleCookies", this.driver);
@@ -223,7 +222,6 @@ frame.Manager = class {
     mm.removeWeakMessageListener("Marionette:ok", this.driver);
     mm.removeWeakMessageListener("Marionette:done", this.driver);
     mm.removeWeakMessageListener("Marionette:error", this.driver);
-    mm.removeWeakMessageListener("Marionette:log", this.driver);
     mm.removeWeakMessageListener("Marionette:shareData", this.driver);
     mm.removeWeakMessageListener("Marionette:switchedToFrame", this.driver);
     mm.removeWeakMessageListener("Marionette:getVisibleCookies", this.driver);
