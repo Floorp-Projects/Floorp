@@ -110,9 +110,13 @@ HTMLSelectListAccessible::CurrentItem()
 void
 HTMLSelectListAccessible::SetCurrentItem(Accessible* aItem)
 {
-  aItem->GetContent()->SetAttr(kNameSpaceID_None,
-                               nsGkAtoms::selected, NS_LITERAL_STRING("true"),
-                               true);
+  if (!aItem->GetContent()->IsElement())
+    return;
+
+  aItem->GetContent()->AsElement()->SetAttr(kNameSpaceID_None,
+                                            nsGkAtoms::selected,
+                                            NS_LITERAL_STRING("true"),
+                                            true);
 }
 
 bool

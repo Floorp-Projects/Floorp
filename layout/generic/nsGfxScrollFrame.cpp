@@ -4775,14 +4775,14 @@ ScrollFrameHelper::UpdateScrollbarPosition()
 
   nsPoint pt = GetScrollPosition();
   if (mVScrollbarBox) {
-    SetCoordAttribute(mVScrollbarBox->GetContent(), nsGkAtoms::curpos,
-                      pt.y - GetScrolledRect().y);
+    SetCoordAttribute(mVScrollbarBox->GetContent()->AsElement(),
+                      nsGkAtoms::curpos, pt.y - GetScrolledRect().y);
     if (!weakFrame.IsAlive()) {
       return;
     }
   }
   if (mHScrollbarBox) {
-    SetCoordAttribute(mHScrollbarBox->GetContent(), nsGkAtoms::curpos,
+    SetCoordAttribute(mHScrollbarBox->GetContent()->AsElement(), nsGkAtoms::curpos,
                       pt.x - GetScrolledRect().x);
     if (!weakFrame.IsAlive()) {
       return;
@@ -5451,18 +5451,18 @@ nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState)
 }
 
 void
-ScrollFrameHelper::FinishReflowForScrollbar(nsIContent* aContent,
-                                                nscoord aMinXY, nscoord aMaxXY,
-                                                nscoord aCurPosXY,
-                                                nscoord aPageIncrement,
-                                                nscoord aIncrement)
+ScrollFrameHelper::FinishReflowForScrollbar(Element* aElement,
+                                            nscoord aMinXY, nscoord aMaxXY,
+                                            nscoord aCurPosXY,
+                                            nscoord aPageIncrement,
+                                            nscoord aIncrement)
 {
   // Scrollbars assume zero is the minimum position, so translate for them.
-  SetCoordAttribute(aContent, nsGkAtoms::curpos, aCurPosXY - aMinXY);
-  SetScrollbarEnabled(aContent, aMaxXY - aMinXY);
-  SetCoordAttribute(aContent, nsGkAtoms::maxpos, aMaxXY - aMinXY);
-  SetCoordAttribute(aContent, nsGkAtoms::pageincrement, aPageIncrement);
-  SetCoordAttribute(aContent, nsGkAtoms::increment, aIncrement);
+  SetCoordAttribute(aElement, nsGkAtoms::curpos, aCurPosXY - aMinXY);
+  SetScrollbarEnabled(aElement, aMaxXY - aMinXY);
+  SetCoordAttribute(aElement, nsGkAtoms::maxpos, aMaxXY - aMinXY);
+  SetCoordAttribute(aElement, nsGkAtoms::pageincrement, aPageIncrement);
+  SetCoordAttribute(aElement, nsGkAtoms::increment, aIncrement);
 }
 
 bool
@@ -5526,10 +5526,11 @@ ScrollFrameHelper::ReflowFinished()
   NS_ASSERTION(!mFrameIsUpdatingScrollbar, "We shouldn't be reentering here");
   mFrameIsUpdatingScrollbar = true;
 
-  nsCOMPtr<nsIContent> vScroll =
-    mVScrollbarBox ? mVScrollbarBox->GetContent() : nullptr;
-  nsCOMPtr<nsIContent> hScroll =
-    mHScrollbarBox ? mHScrollbarBox->GetContent() : nullptr;
+  // FIXME(emilio): Why this instead of mHScrollbarContent / mVScrollbarContent?
+  RefPtr<Element> vScroll =
+    mVScrollbarBox ? mVScrollbarBox->GetContent()->AsElement() : nullptr;
+  RefPtr<Element> hScroll =
+    mHScrollbarBox ? mHScrollbarBox->GetContent()->AsElement() : nullptr;
 
   // Note, in some cases mOuter may get deleted while finishing reflow
   // for scrollbars. XXXmats is this still true now that we have a script
@@ -5871,22 +5872,22 @@ static bool ShellIsAlive(nsWeakPtr& aWeakPtr)
 #endif
 
 void
-ScrollFrameHelper::SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos)
+ScrollFrameHelper::SetScrollbarEnabled(Element* aElement, nscoord aMaxPos)
 {
   DebugOnly<nsWeakPtr> weakShell(
     do_GetWeakReference(mOuter->PresShell()));
   if (aMaxPos) {
-    aContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
+    aElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
   } else {
-    aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
+    aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
                       NS_LITERAL_STRING("true"), true);
   }
   MOZ_ASSERT(ShellIsAlive(weakShell), "pres shell was destroyed by scrolling");
 }
 
 void
-ScrollFrameHelper::SetCoordAttribute(nsIContent* aContent, nsAtom* aAtom,
-                                         nscoord aSize)
+ScrollFrameHelper::SetCoordAttribute(Element* aElement, nsAtom* aAtom,
+                                     nscoord aSize)
 {
   DebugOnly<nsWeakPtr> weakShell(
     do_GetWeakReference(mOuter->PresShell()));
@@ -5898,13 +5899,13 @@ ScrollFrameHelper::SetCoordAttribute(nsIContent* aContent, nsAtom* aAtom,
   nsAutoString newValue;
   newValue.AppendInt(pixelSize);
 
-  if (aContent->AttrValueIs(kNameSpaceID_None, aAtom, newValue, eCaseMatters)) {
+  if (aElement->AttrValueIs(kNameSpaceID_None, aAtom, newValue, eCaseMatters)) {
     return;
   }
 
   AutoWeakFrame weakFrame(mOuter);
-  nsCOMPtr<nsIContent> kungFuDeathGrip = aContent;
-  aContent->SetAttr(kNameSpaceID_None, aAtom, newValue, true);
+  RefPtr<Element> kungFuDeathGrip = aElement;
+  aElement->SetAttr(kNameSpaceID_None, aAtom, newValue, true);
   MOZ_ASSERT(ShellIsAlive(weakShell), "pres shell was destroyed by scrolling");
   if (!weakFrame.IsAlive()) {
     return;

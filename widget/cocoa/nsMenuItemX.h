@@ -17,6 +17,12 @@
 class nsMenuItemIconX;
 class nsMenuX;
 
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
+
 enum {
   knsMenuItemNoModifier      = 0,
   knsMenuItemShiftModifier   = (1 << 0),
@@ -61,15 +67,16 @@ protected:
   void UncheckRadioSiblings(nsIContent* inCheckedElement);
   void SetKeyEquiv();
 
-  EMenuItemType             mType;
+  EMenuItemType                 mType;
+
   // nsMenuItemX objects should always have a valid native menu item.
-  NSMenuItem*               mNativeMenuItem;      // [strong]
-  nsMenuX*                  mMenuParent;          // [weak]
-  nsMenuGroupOwnerX*        mMenuGroupOwner;      // [weak]
-  nsCOMPtr<nsIContent>      mCommandContent;
+  NSMenuItem*                   mNativeMenuItem;      // [strong]
+  nsMenuX*                      mMenuParent;          // [weak]
+  nsMenuGroupOwnerX*            mMenuGroupOwner;      // [weak]
+  RefPtr<mozilla::dom::Element> mCommandElement;
   // The icon object should never outlive its creating nsMenuItemX object.
-  RefPtr<nsMenuItemIconX> mIcon;
-  bool                      mIsChecked;
+  RefPtr<nsMenuItemIconX>       mIcon;
+  bool                          mIsChecked;
 };
 
 #endif // nsMenuItemX_h_

@@ -51,7 +51,7 @@ nsMenuGroupOwnerX::~nsMenuGroupOwnerX()
 }
 
 
-nsresult nsMenuGroupOwnerX::Create(nsIContent* aContent)
+nsresult nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent)
 {
   if (!aContent)
     return NS_ERROR_INVALID_ARG;

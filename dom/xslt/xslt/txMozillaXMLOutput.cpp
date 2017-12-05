@@ -688,7 +688,7 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, bool aIsHTML)
     }
     else if (aElement->IsHTMLElement(nsGkAtoms::tr) && aIsHTML &&
              NS_PTR_TO_INT32(mTableStateStack.peek()) == TABLE) {
-        nsCOMPtr<nsIContent> tbody;
+        RefPtr<Element> tbody;
         rv = createHTMLElement(nsGkAtoms::tbody, getter_AddRefs(tbody));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -708,7 +708,7 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, bool aIsHTML)
              mOutputFormat.mMethod == eHTMLOutput) {
         // Insert META tag, according to spec, 16.2, like
         // <META http-equiv="Content-Type" content="text/html; charset=EUC-JP">
-        nsCOMPtr<nsIContent> meta;
+        RefPtr<Element> meta;
         rv = createHTMLElement(nsGkAtoms::meta, getter_AddRefs(meta));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -915,8 +915,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
 }
 
 nsresult
-txMozillaXMLOutput::createHTMLElement(nsAtom* aName,
-                                      nsIContent** aResult)
+txMozillaXMLOutput::createHTMLElement(nsAtom* aName, Element** aResult)
 {
     NS_ASSERTION(mOutputFormat.mMethod == eHTMLOutput,
                  "need to adjust createHTMLElement");
