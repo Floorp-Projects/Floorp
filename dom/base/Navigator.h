@@ -171,7 +171,6 @@ public:
                   ErrorResult& aRv) const;
   bool JavaEnabled(CallerType aCallerType, ErrorResult& aRv);
   uint64_t HardwareConcurrency();
-  bool CpuHasSSE2();
   bool TaintEnabled()
   {
     return false;
