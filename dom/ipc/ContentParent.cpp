@@ -4591,11 +4591,18 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
       if (frameLoader) {
         frameLoader->GetTabParent(getter_AddRefs(aNewTabParent));
       }
+    } else if (NS_SUCCEEDED(aResult) && !frameLoaderOwner) {
+      // Fall through to the normal window opening code path when there is no
+      // window which we can open a new tab in.
+      openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
     } else {
       *aWindowIsNew = false;
     }
 
-    return IPC_OK();
+    // If we didn't retarget our window open into a new window, we should return now.
+    if (openLocation != nsIBrowserDOMWindow::OPEN_NEWWINDOW) {
+      return IPC_OK();
+    }
   }
 
   nsCOMPtr<nsPIWindowWatcher> pwwatch =
