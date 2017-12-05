@@ -142,6 +142,7 @@ load 944579.html
 pref(security.fileuri.strict_origin_policy,false) load 950000.html
 load 951893.xhtml
 load 987013.html
+pref(layers.force-active,true) load 1008983.html
 load 1011218.html
 load 1034403-1.html
 load 1056516.html
