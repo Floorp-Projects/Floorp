@@ -4,10 +4,9 @@
 
 "use strict";
 
-const {interfaces: Ci, results: Cr, utils: Cu} = Components;
+const {results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["frame"];
 
@@ -53,20 +52,6 @@ frame.Manager = class {
     this.previousRemoteFrame = null;
     this.driver = driver;
   }
-
-  /**
-   * Receives all messages from content messageManager.
-   */
-  /*eslint-disable*/
-  receiveMessage(message) {
-    switch (message.name) {
-      case "MarionetteFrame:getCurrentFrameId":
-        if (this.currentRemoteFrame !== null) {
-          return this.currentRemoteFrame.frameId;
-        }
-    }
-  }
-  /* eslint-enable*/
 
   getOopFrame(winId, frameId) {
     // get original frame window
@@ -144,7 +129,6 @@ frame.Manager = class {
     mm.addWeakMessageListener("Marionette:register", this.driver);
     mm.addWeakMessageListener("Marionette:listenersAttached", this.driver);
     mm.addWeakMessageListener("Marionette:GetLogLevel", this.driver);
-    mm.addWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
   }
 
   /**
@@ -165,9 +149,5 @@ frame.Manager = class {
     mm.removeWeakMessageListener("Marionette:GetLogLevel", this.driver);
     mm.removeWeakMessageListener("Marionette:listenersAttached", this.driver);
     mm.removeWeakMessageListener("Marionette:register", this.driver);
-    mm.removeWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
   }
 };
-
-frame.Manager.prototype.QueryInterface = XPCOMUtils.generateQI(
-    [Ci.nsIMessageListener, Ci.nsISupportsWeakReference]);
