@@ -339,8 +339,7 @@ bool
 ChannelMediaDecoder::CanPlayThroughImpl()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_TRUE(GetStateMachine(), false);
-  return GetStatistics(ComputePlaybackRate()).CanPlayThrough();
+  return mCanPlayThrough;
 }
 
 bool
@@ -402,18 +401,30 @@ ChannelMediaDecoder::DownloadProgressed()
   AbstractThread::AutoEnter context(AbstractMainThread());
   GetOwner()->DownloadProgressed();
 
-  auto rate = ComputePlaybackRate();
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ChannelMediaDecoder::UpdatePlaybackRate",
-    [ rate, res = RefPtr<BaseMediaResource>(mResource) ]() {
-      UpdatePlaybackRate(rate, res);
-    });
-  nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-  MediaStatistics stats = GetStatistics(rate);
-  GetStateMachine()->DispatchCanPlayThrough(stats.CanPlayThrough());
-  mResource->ThrottleReadahead(ShouldThrottleDownload(stats));
+  using StatsPromise = MozPromise<MediaStatistics, bool, true>;
+  InvokeAsync(GetStateMachine()->OwnerThread(),
+              __func__,
+              [
+                rate = ComputePlaybackRate(),
+                res = RefPtr<BaseMediaResource>(mResource),
+                pos = mPlaybackPosition
+              ]() {
+                UpdatePlaybackRate(rate, res);
+                MediaStatistics stats = GetStatistics(rate, res, pos);
+                return StatsPromise::CreateAndResolve(stats, __func__);
+              })
+    ->Then(
+      mAbstractMainThread,
+      __func__,
+      [ =, self = RefPtr<ChannelMediaDecoder>(this) ](MediaStatistics aStats) {
+        if (IsShutdown()) {
+          return;
+        }
+        mCanPlayThrough = aStats.CanPlayThrough();
+        GetStateMachine()->DispatchCanPlayThrough(mCanPlayThrough);
+        mResource->ThrottleReadahead(ShouldThrottleDownload(aStats));
+      },
+      []() { MOZ_ASSERT_UNREACHABLE("Promise not resolved"); });
 }
 
 ChannelMediaDecoder::PlaybackRateInfo
@@ -452,20 +463,20 @@ ChannelMediaDecoder::UpdatePlaybackRate(const PlaybackRateInfo& aInfo,
   aResource->SetPlaybackRate(rate);
 }
 
-MediaStatistics
-ChannelMediaDecoder::GetStatistics(const PlaybackRateInfo& aInfo)
+/* static */ MediaStatistics
+ChannelMediaDecoder::GetStatistics(const PlaybackRateInfo& aInfo,
+                                   BaseMediaResource* aRes,
+                                   int64_t aPlaybackPosition)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mResource);
+  MOZ_ASSERT(!NS_IsMainThread());
 
   MediaStatistics result;
-  result.mDownloadRate =
-    mResource->GetDownloadRate(&result.mDownloadRateReliable);
-  result.mDownloadPosition = mResource->GetCachedDataEnd(mPlaybackPosition);
-  result.mTotalBytes = mResource->GetLength();
+  result.mDownloadRate = aRes->GetDownloadRate(&result.mDownloadRateReliable);
+  result.mDownloadPosition = aRes->GetCachedDataEnd(aPlaybackPosition);
+  result.mTotalBytes = aRes->GetLength();
   result.mPlaybackRate = aInfo.mRate;
   result.mPlaybackRateReliable = aInfo.mReliable;
-  result.mPlaybackPosition = mPlaybackPosition;
+  result.mPlaybackPosition = aPlaybackPosition;
   return result;
 }
 
