@@ -260,7 +260,7 @@ RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHa
 
 RenderDXGIYCbCrTextureHostOGL::~RenderDXGIYCbCrTextureHostOGL()
 {
-  MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
+  MOZ_COUNT_DTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
   DeleteTextureHandle();
 }
 
