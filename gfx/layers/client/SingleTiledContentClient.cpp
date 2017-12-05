@@ -144,6 +144,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   // The dirty region relative to the top-left of the tile.
   nsIntRegion tileDirtyRegion = paintRegion.MovedBy(-mTilingOrigin);
 
+  std::vector<RefPtr<TextureClient>> paintClients;
   std::vector<CapturedTiledPaintState::Copy> paintCopies;
   std::vector<CapturedTiledPaintState::Clear> paintClears;
 
@@ -156,7 +157,8 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                         extraPainted,
                         aFlags,
                         &backBufferOnWhite,
-                        &paintCopies);
+                        &paintCopies,
+                        &paintClients);
 
   // Mark the area we need to paint in the back buffer as invalid in the
   // front buffer as they will become out of sync.
@@ -293,6 +295,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     RefPtr<CapturedTiledPaintState> capturedState =
       new CapturedTiledPaintState(dt,
                                   captureDT);
+    capturedState->mClients = std::move(paintClients);
     capturedState->mClients.push_back(backBuffer);
     if (backBufferOnWhite) {
       capturedState->mClients.push_back(backBufferOnWhite);
