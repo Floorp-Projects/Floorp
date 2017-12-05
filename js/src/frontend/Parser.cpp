@@ -6775,10 +6775,9 @@ Parser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
      * kid2 is the catch node list or null
      * kid3 is the finally statement
      *
-     * catch nodes are ternary.
-     * kid1 is the lvalue (possible identifier, TOK_LB, or TOK_LC)
-     * kid2 is the catch guard or null if no guard
-     * kid3 is the catch block
+     * catch nodes are binary.
+     * left is the catch-name/pattern or null
+     * right is the catch block
      *
      * catch lvalue nodes are either:
      *   a single identifier
@@ -6811,118 +6810,80 @@ Parser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
                                                               JSMSG_CURLY_OPENED, openedPos));
     }
 
-    bool hasUnconditionalCatch = false;
-    Node catchList = null();
+    Node catchScope = null();
     TokenKind tt;
     if (!tokenStream.getToken(&tt))
         return null();
     if (tt == TOK_CATCH) {
-        catchList = handler.newCatchList(pos());
-        if (!catchList)
+        /*
+         * Create a lexical scope node around the whole catch clause,
+         * including the head.
+         */
+        ParseContext::Statement stmt(pc, StatementKind::Catch);
+        ParseContext::Scope scope(this);
+        if (!scope.init(pc))
             return null();
 
-        do {
-            Node pnblock;
+        /*
+         * Legal catch forms are:
+         *   catch (lhs) {
+         *   catch {
+         * where lhs is a name or a destructuring left-hand side.
+         */
+        bool omittedBinding;
+        if (!tokenStream.matchToken(&omittedBinding, TOK_LC))
+            return null();
 
-            /* Check for another catch after unconditional catch. */
-            if (hasUnconditionalCatch) {
-                error(JSMSG_CATCH_AFTER_GENERAL);
+        Node catchName;
+        if (omittedBinding) {
+            catchName = null();
+        } else {
+            MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
+
+            if (!tokenStream.getToken(&tt))
                 return null();
-            }
-
-            /*
-             * Create a lexical scope node around the whole catch clause,
-             * including the head.
-             */
-            ParseContext::Statement stmt(pc, StatementKind::Catch);
-            ParseContext::Scope scope(this);
-            if (!scope.init(pc))
-                return null();
-
-            /*
-             * Legal catch forms are:
-             *   catch (lhs) {
-             *   catch (lhs if <boolean_expression>) {
-             *   catch {
-             * where lhs is a name or a destructuring left-hand side.
-             * The second is legal only #ifdef JS_HAS_CATCH_GUARD.
-             */
-            bool omittedBinding;
-            if (!tokenStream.matchToken(&omittedBinding, TOK_LC))
-                return null();
-
-            Node catchName;
-            Node catchGuard = null();
-
-            if (omittedBinding) {
-                catchName = null();
-            } else {
-                MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
-
-                if (!tokenStream.getToken(&tt))
+            switch (tt) {
+              case TOK_LB:
+              case TOK_LC:
+                catchName = destructuringDeclaration(DeclarationKind::CatchParameter,
+                                                     yieldHandling, tt);
+                if (!catchName)
                     return null();
-                switch (tt) {
-                  case TOK_LB:
-                  case TOK_LC:
-                    catchName = destructuringDeclaration(DeclarationKind::CatchParameter,
-                                                         yieldHandling, tt);
-                    if (!catchName)
-                        return null();
-                    break;
+                break;
 
-                  default: {
-                    if (!TokenKindIsPossibleIdentifierName(tt)) {
-                        error(JSMSG_CATCH_IDENTIFIER);
-                        return null();
-                    }
-
-                    catchName = bindingIdentifier(DeclarationKind::SimpleCatchParameter,
-                                                  yieldHandling);
-                    if (!catchName)
-                        return null();
-                    break;
-                  }
+              default: {
+                if (!TokenKindIsPossibleIdentifierName(tt)) {
+                    error(JSMSG_CATCH_IDENTIFIER);
+                    return null();
                 }
 
-#if JS_HAS_CATCH_GUARD
-                /*
-                 * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
-                 * to avoid conflicting with the JS2/ECMAv4 type annotation
-                 * catchguard syntax.
-                 */
-                bool matched;
-                if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
+                catchName = bindingIdentifier(DeclarationKind::SimpleCatchParameter,
+                                              yieldHandling);
+                if (!catchName)
                     return null();
-                if (matched) {
-                    catchGuard = expr(InAllowed, yieldHandling, TripledotProhibited);
-                    if (!catchGuard)
-                        return null();
-                }
-#endif
-                MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
-
-                MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+                break;
+              }
             }
 
-            Node catchBody = catchBlockStatement(yieldHandling, scope);
-            if (!catchBody)
-                return null();
+            MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
 
-            if (!catchGuard)
-                hasUnconditionalCatch = true;
+            MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+        }
 
-            pnblock = finishLexicalScope(scope, catchBody);
-            if (!pnblock)
-                return null();
+        Node catchBody = catchBlockStatement(yieldHandling, scope);
+        if (!catchBody)
+            return null();
 
-            if (!handler.addCatchBlock(catchList, pnblock, catchName, catchGuard, catchBody))
-                return null();
-            handler.setEndPosition(catchList, pos().end);
-            handler.setEndPosition(pnblock, pos().end);
+        catchScope = finishLexicalScope(scope, catchBody);
+        if (!catchScope)
+            return null();
 
-            if (!tokenStream.getToken(&tt, TokenStream::Operand))
-                return null();
-        } while (tt == TOK_CATCH);
+        if (!handler.setupCatchScope(catchScope, catchName, catchBody))
+            return null();
+        handler.setEndPosition(catchScope, pos().end);
+
+        if (!tokenStream.getToken(&tt, TokenStream::Operand))
+            return null();
     }
 
     Node finallyBlock = null();
@@ -6951,12 +6912,12 @@ Parser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
     } else {
         tokenStream.ungetToken();
     }
-    if (!catchList && !finallyBlock) {
+    if (!catchScope && !finallyBlock) {
         error(JSMSG_CATCH_OR_FINALLY);
         return null();
     }
 
-    return handler.newTryStatement(begin, innerBlock, catchList, finallyBlock);
+    return handler.newTryStatement(begin, innerBlock, catchScope, finallyBlock);
 }
 
 template <class ParseHandler, typename CharT>
