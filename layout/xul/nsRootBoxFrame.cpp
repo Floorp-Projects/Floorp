@@ -55,8 +55,8 @@ public:
 
   virtual nsPopupSetFrame* GetPopupSetFrame() override;
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) override;
-  virtual nsIContent* GetDefaultTooltip() override;
-  virtual void SetDefaultTooltip(nsIContent* aTooltip) override;
+  virtual Element* GetDefaultTooltip() override;
+  virtual void SetDefaultTooltip(Element* aTooltip) override;
   virtual nsresult AddTooltipSupport(nsIContent* aNode) override;
   virtual nsresult RemoveTooltipSupport(nsIContent* aNode) override;
 
@@ -94,7 +94,7 @@ public:
   nsPopupSetFrame* mPopupSetFrame;
 
 protected:
-  nsIContent* mDefaultTooltip;
+  Element* mDefaultTooltip;
 };
 
 //----------------------------------------------------------------------
@@ -231,14 +231,14 @@ nsRootBoxFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
   }
 }
 
-nsIContent*
+Element*
 nsRootBoxFrame::GetDefaultTooltip()
 {
   return mDefaultTooltip;
 }
 
 void
-nsRootBoxFrame::SetDefaultTooltip(nsIContent* aTooltip)
+nsRootBoxFrame::SetDefaultTooltip(Element* aTooltip)
 {
   mDefaultTooltip = aTooltip;
 }

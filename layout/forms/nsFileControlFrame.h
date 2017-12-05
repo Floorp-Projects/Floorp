@@ -136,12 +136,12 @@ protected:
    * The text box input.
    * @see nsFileControlFrame::CreateAnonymousContent
    */
-  nsCOMPtr<nsIContent> mTextContent;
+  RefPtr<Element> mTextContent;
   /**
    * The button to open a file or directory picker.
    * @see nsFileControlFrame::CreateAnonymousContent
    */
-  nsCOMPtr<nsIContent> mBrowseFilesOrDirs;
+  RefPtr<Element> mBrowseFilesOrDirs;
 
   /**
    * Drag and drop mouse listener.

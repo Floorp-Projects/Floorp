@@ -40,7 +40,7 @@ nsStandaloneNativeMenu::Init(nsIDOMElement * aDOMElement)
   if (!content->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup))
     return NS_ERROR_FAILURE;
 
-  rv = nsMenuGroupOwnerX::Create(content);
+  rv = nsMenuGroupOwnerX::Create(content->AsElement());
   if (NS_FAILED(rv))
     return rv;
 

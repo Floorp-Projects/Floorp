@@ -778,17 +778,22 @@ nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix)
     // return the prefix (i.e. the attribute localName).
     for (nsIContent* content = element; content;
          content = content->GetParent()) {
-      uint32_t attrCount = content->GetAttrCount();
+      if (!content->IsElement()) {
+        continue;
+      }
+
+      Element* element = content->AsElement();
+      uint32_t attrCount = element->GetAttrCount();
 
       for (uint32_t i = 0; i < attrCount; ++i) {
-        const nsAttrName* name = content->GetAttrNameAt(i);
+        const nsAttrName* name = element->GetAttrNameAt(i);
 
         if (name->NamespaceEquals(kNameSpaceID_XMLNS) &&
-            content->AttrValueIs(kNameSpaceID_XMLNS, name->LocalName(),
+            element->AttrValueIs(kNameSpaceID_XMLNS, name->LocalName(),
                                  aNamespaceURI, eCaseMatters)) {
           // If the localName is "xmlns", the prefix we output should be
           // null.
-          nsAtom *localName = name->LocalName();
+          nsAtom* localName = name->LocalName();
 
           if (localName != nsGkAtoms::xmlns) {
             localName->ToString(aPrefix);

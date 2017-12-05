@@ -421,10 +421,10 @@ nsIdentifierMapEntry::GetImageIdElement()
 }
 
 void
-nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
+nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<Element>* aElements)
 {
-  for (size_t i = 0; i < mIdContentList.Length(); ++i) {
-    aElements->AppendObject(mIdContentList[i]);
+  for (Element* element : mIdContentList) {
+    aElements->AppendObject(element);
   }
 }
 

@@ -5058,13 +5058,13 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     tagName = content->NodeInfo()->QualifiedName();
 
     // see if we need to add xmlns declarations
-    uint32_t count = content->GetAttrCount();
+    uint32_t count = content->AsElement()->GetAttrCount();
     bool setDefaultNamespace = false;
     if (count > 0) {
       uint32_t index;
 
       for (index = 0; index < count; index++) {
-        const BorrowedAttrInfo info = content->GetAttrInfoAt(index);
+        const BorrowedAttrInfo info = content->AsElement()->GetAttrInfoAt(index);
         const nsAttrName* name = info.mName;
         if (name->NamespaceEquals(kNameSpaceID_XMLNS)) {
           info.mValue->ToString(uriStr);

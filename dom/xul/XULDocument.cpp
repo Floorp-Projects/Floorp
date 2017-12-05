@@ -158,7 +158,7 @@ nsRefMapEntry::GetFirstElement()
 }
 
 void
-nsRefMapEntry::AppendAll(nsCOMArray<nsIContent>* aElements)
+nsRefMapEntry::AppendAll(nsCOMArray<Element>* aElements)
 {
     for (size_t i = 0; i < mRefContentList.Length(); ++i) {
         aElements->AppendObject(mRefContentList[i]);
@@ -1098,7 +1098,7 @@ XULDocument::ContentRemoved(nsIDocument* aDocument,
 
 void
 XULDocument::GetElementsForID(const nsAString& aID,
-                              nsCOMArray<nsIContent>& aElements)
+                              nsCOMArray<Element>& aElements)
 {
     aElements.Clear();
 
@@ -2059,7 +2059,7 @@ XULDocument::ApplyPersistentAttributes()
 nsresult
 XULDocument::ApplyPersistentAttributesInternal()
 {
-    nsCOMArray<nsIContent> elements;
+    nsCOMArray<Element> elements;
 
     nsAutoCString utf8uri;
     nsresult rv = mDocumentURI->GetSpec(utf8uri);
@@ -2107,7 +2107,7 @@ XULDocument::ApplyPersistentAttributesInternal()
 
 nsresult
 XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
-                                                 nsCOMArray<nsIContent>& aElements)
+                                                 nsCOMArray<Element>& aElements)
 {
     nsAutoCString utf8uri;
     nsresult rv = mDocumentURI->GetSpec(utf8uri);
@@ -2147,12 +2147,12 @@ XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
         uint32_t cnt = aElements.Count();
 
         for (int32_t i = int32_t(cnt) - 1; i >= 0; --i) {
-            nsCOMPtr<nsIContent> element = aElements.SafeObjectAt(i);
+            RefPtr<Element> element = aElements.SafeObjectAt(i);
             if (!element) {
                  continue;
             }
 
-            rv = element->SetAttr(kNameSpaceID_None, attr, value, PR_TRUE);
+            Unused << element->SetAttr(kNameSpaceID_None, attr, value, true);
         }
     }
 
@@ -3153,7 +3153,7 @@ XULDocument::MaybeBroadcast()
             for (uint32_t i = 0; i < mDelayedAttrChangeBroadcasts.Length(); ++i) {
                 nsAtom* attrName = mDelayedAttrChangeBroadcasts[i].mAttrName;
                 if (mDelayedAttrChangeBroadcasts[i].mNeedsAttrChange) {
-                    nsCOMPtr<nsIContent> listener =
+                    nsCOMPtr<Element> listener =
                         do_QueryInterface(mDelayedAttrChangeBroadcasts[i].mListener);
                     const nsString& value = mDelayedAttrChangeBroadcasts[i].mAttr;
                     if (mDelayedAttrChangeBroadcasts[i].mSetAttr) {
@@ -3610,7 +3610,7 @@ XULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype,
 
 nsresult
 XULDocument::AddAttributes(nsXULPrototypeElement* aPrototype,
-                           nsIContent* aElement)
+                           Element* aElement)
 {
     nsresult rv;
 
@@ -3694,12 +3694,12 @@ XULDocument::CreateTemplateBuilder(Element* aElement)
 
         // Create a <treechildren> if one isn't there already.
         // XXXvarga what about attributes?
-        nsCOMPtr<nsIContent> bodyContent;
+        RefPtr<Element> bodyContent;
         nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL,
                                           nsGkAtoms::treechildren,
                                           getter_AddRefs(bodyContent));
 
-        if (! bodyContent) {
+        if (!bodyContent) {
             bodyContent =
                 document->CreateElem(nsDependentAtomString(nsGkAtoms::treechildren),
                                      nullptr, kNameSpaceID_XUL);
@@ -3760,7 +3760,7 @@ XULDocument::OverlayForwardReference::Resolve()
     // Resolve a forward reference from an overlay element; attempt to
     // hook it up into the main document.
     nsresult rv;
-    nsCOMPtr<nsIContent> target;
+    RefPtr<Element> target;
 
     nsIPresShell *shell = mDocument->GetShell();
     bool notify = shell && shell->DidInitialize();
@@ -3818,23 +3818,23 @@ XULDocument::OverlayForwardReference::Resolve()
 
 
 nsresult
-XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
-                                            nsIContent* aOverlayNode,
+XULDocument::OverlayForwardReference::Merge(Element* aTargetElement,
+                                            Element* aOverlayElement,
                                             bool aNotify)
 {
     // This function is given:
-    // aTargetNode:  the node in the document whose 'id' attribute
-    //               matches a toplevel node in our overlay.
-    // aOverlayNode: the node in the overlay document that matches
-    //               a node in the actual document.
-    // aNotify:      whether or not content manipulation methods should
-    //               use the aNotify parameter. After the initial
-    //               reflow (i.e. in the dynamic overlay merge case),
-    //               we want all the content manipulation methods we
-    //               call to notify so that frames are constructed
-    //               etc. Otherwise do not, since that's during initial
-    //               document construction before StartLayout has been
-    //               called which will do everything for us.
+    // aTargetElement:  the element in the document whose 'id' attribute
+    //                  matches a toplevel node in our overlay.
+    // aOverlayElement: the element in the overlay document that matches
+    //                  an element in the actual document.
+    // aNotify:         whether or not content manipulation methods should
+    //                  use the aNotify parameter. After the initial
+    //                  reflow (i.e. in the dynamic overlay merge case),
+    //                  we want all the content manipulation methods we
+    //                  call to notify so that frames are constructed
+    //                  etc. Otherwise do not, since that's during initial
+    //                  document construction before StartLayout has been
+    //                  called which will do everything for us.
     //
     // This function merges the tree from the overlay into the tree in
     // the document, overwriting attributes and appending child content
@@ -3846,27 +3846,27 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     // actual document.
     uint32_t i;
     const nsAttrName* name;
-    for (i = 0; (name = aOverlayNode->GetAttrNameAt(i)); ++i) {
+    for (i = 0; (name = aOverlayElement->GetAttrNameAt(i)); ++i) {
         // We don't want to swap IDs, they should be the same.
         if (name->Equals(nsGkAtoms::id))
             continue;
 
         // In certain cases merging command or observes is unsafe, so don't.
         if (!aNotify) {
-            if (aTargetNode->NodeInfo()->Equals(nsGkAtoms::observes,
-                                                kNameSpaceID_XUL))
+            if (aTargetElement->NodeInfo()->Equals(nsGkAtoms::observes,
+                                                   kNameSpaceID_XUL))
                 continue;
 
             if (name->Equals(nsGkAtoms::observes) &&
-                aTargetNode->HasAttr(kNameSpaceID_None, nsGkAtoms::observes))
+                aTargetElement->HasAttr(kNameSpaceID_None, nsGkAtoms::observes))
                 continue;
 
             if (name->Equals(nsGkAtoms::command) &&
-                aTargetNode->HasAttr(kNameSpaceID_None, nsGkAtoms::command) &&
-                !aTargetNode->NodeInfo()->Equals(nsGkAtoms::key,
-                                                 kNameSpaceID_XUL) &&
-                !aTargetNode->NodeInfo()->Equals(nsGkAtoms::menuitem,
-                                                 kNameSpaceID_XUL))
+                aTargetElement->HasAttr(kNameSpaceID_None, nsGkAtoms::command) &&
+                !aTargetElement->NodeInfo()->Equals(nsGkAtoms::key,
+                                                    kNameSpaceID_XUL) &&
+                !aTargetElement->NodeInfo()->Equals(nsGkAtoms::menuitem,
+                                                   kNameSpaceID_XUL))
                 continue;
         }
 
@@ -3875,27 +3875,23 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         nsAtom* prefix = name->GetPrefix();
 
         nsAutoString value;
-        aOverlayNode->GetAttr(nameSpaceID, attr, value);
+        aOverlayElement->GetAttr(nameSpaceID, attr, value);
 
         // Element in the overlay has the 'removeelement' attribute set
         // so remove it from the actual document.
-        if (attr == nsGkAtoms::removeelement &&
-            value.EqualsLiteral("true")) {
-
-            nsCOMPtr<nsINode> parent = aTargetNode->GetParentNode();
+        if (attr == nsGkAtoms::removeelement && value.EqualsLiteral("true")) {
+            nsCOMPtr<nsINode> parent = aTargetElement->GetParentNode();
             if (!parent) return NS_ERROR_FAILURE;
-            rv = RemoveElement(parent, aTargetNode);
+            rv = RemoveElement(parent, aTargetElement);
             if (NS_FAILED(rv)) return rv;
-
             return NS_OK;
         }
 
-        rv = aTargetNode->SetAttr(nameSpaceID, attr, prefix, value, aNotify);
-        if (!NS_FAILED(rv) && !aNotify)
-            rv = mDocument->BroadcastAttributeChangeFromOverlay(aTargetNode,
-                                                                nameSpaceID,
-                                                                attr, prefix,
-                                                                value);
+        rv = aTargetElement->SetAttr(nameSpaceID, attr, prefix, value, aNotify);
+        if (!NS_FAILED(rv) && !aNotify) {
+            rv = mDocument->BroadcastAttributeChangeFromOverlay(
+                    aTargetElement, nameSpaceID, attr, prefix, value);
+        }
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -3907,23 +3903,23 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     // to merge inside that subtree. If not, we just append the tree to
     // the parent like any other.
 
-    uint32_t childCount = aOverlayNode->GetChildCount();
+    uint32_t childCount = aOverlayElement->GetChildCount();
 
     // This must be a strong reference since it will be the only
     // reference to a content object during part of this loop.
     nsCOMPtr<nsIContent> currContent;
 
     for (i = 0; i < childCount; ++i) {
-        currContent = aOverlayNode->GetFirstChild();
+        currContent = aOverlayElement->GetFirstChild();
 
         nsAtom *idAtom = currContent->GetID();
 
-        nsIContent *elementInDocument = nullptr;
+        Element* elementInDocument = nullptr;
         if (idAtom) {
             nsDependentAtomString id(idAtom);
 
             if (!id.IsEmpty()) {
-                nsIDocument *doc = aTargetNode->GetUncomposedDoc();
+                nsIDocument *doc = aTargetElement->GetUncomposedDoc();
                 //XXXsmaug should we use ShadowRoot::GetElementById()
                 //         if doc is null?
                 if (!doc) return NS_ERROR_FAILURE;
@@ -3938,30 +3934,31 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         // node. Otherwise, we just do an append as if the element had
         // no id attribute.
         if (elementInDocument) {
-            // Given two parents, aTargetNode and aOverlayNode, we want
+            // Given two parents, aTargetElement and aOverlayElement, we want
             // to call merge on currContent if we find an associated
             // node in the document with the same id as currContent that
             // also has aTargetNode as its parent.
 
-            nsIContent *elementParent = elementInDocument->GetParent();
+            nsIContent* elementParent = elementInDocument->GetParent();
 
             nsAtom *parentID = elementParent->GetID();
-            if (parentID &&
-                aTargetNode->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
-                                         nsDependentAtomString(parentID),
-                                         eCaseMatters)) {
+            if (parentID && aTargetElement->GetID() == parentID) {
                 // The element matches. "Go Deep!"
-                rv = Merge(elementInDocument, currContent, aNotify);
+                //
+                // Note that currContent is necessarily an element, because
+                // elementInDocument can only be non-null when currContent has a
+                // non-null ID.
+                rv = Merge(elementInDocument, currContent->AsElement(), aNotify);
                 if (NS_FAILED(rv)) return rv;
-                aOverlayNode->RemoveChildAt(0, false);
+                aOverlayElement->RemoveChildAt(0, false);
 
                 continue;
             }
         }
 
-        aOverlayNode->RemoveChildAt(0, false);
+        aOverlayElement->RemoveChildAt(0, false);
 
-        rv = InsertElement(aTargetNode, currContent, aNotify);
+        rv = InsertElement(aTargetElement, currContent, aNotify);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -4092,7 +4089,7 @@ XULDocument::BroadcastAttributeChangeFromOverlay(nsIContent* aNode,
             (bl->mAttribute != nsGkAtoms::_asterisk))
             continue;
 
-        nsCOMPtr<nsIContent> l = do_QueryReferent(bl->mListener);
+        nsCOMPtr<Element> l = do_QueryReferent(bl->mListener);
         if (l) {
             rv = l->SetAttr(aNameSpaceID, aAttribute,
                             aPrefix, aValue, false);
@@ -4255,8 +4252,7 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
 }
 
 nsresult
-XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild,
-                           bool aNotify)
+XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
 {
     // Insert aChild appropriately into aParent, accounting for a
     // 'pos' attribute set on aChild.
@@ -4306,7 +4302,6 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild,
     }
 
     if (!wasInserted) {
-
         aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::position, posStr);
         if (!posStr.IsEmpty()) {
             nsresult rv;

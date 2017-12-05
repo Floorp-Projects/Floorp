@@ -280,7 +280,7 @@ NS_NewXULElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
 }
 
 void
-NS_TrustedNewXULElement(nsIContent** aResult,
+NS_TrustedNewXULElement(Element** aResult,
                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;

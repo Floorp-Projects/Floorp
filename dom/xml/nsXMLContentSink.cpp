@@ -980,7 +980,7 @@ nsXMLContentSink::HandleStartElement(const char16_t *aName,
   NS_ENSURE_SUCCESS(result, result);
 
   // Set the attributes on the new content element
-  result = AddAttributes(aAtts, content);
+  result = AddAttributes(aAtts, content->AsElement());
 
   if (NS_OK == result) {
     // Store the element
@@ -1413,7 +1413,7 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
 
 nsresult
 nsXMLContentSink::AddAttributes(const char16_t** aAtts,
-                                nsIContent* aContent)
+                                Element* aContent)
 {
   // Add tag attributes to the content attributes
   RefPtr<nsAtom> prefix, localName;

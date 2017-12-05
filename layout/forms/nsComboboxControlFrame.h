@@ -284,7 +284,7 @@ private:
 protected:
   nsFrameList              mPopupFrames;             // additional named child list
   nsCOMPtr<nsIContent>     mDisplayContent;          // Anonymous content used to display the current selection
-  nsCOMPtr<nsIContent>     mButtonContent;           // Anonymous content for the button
+  RefPtr<Element>     mButtonContent;                // Anonymous content for the button
   nsContainerFrame*        mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame
   nsIFrame*                mDropdownFrame;           // dropdown list frame
