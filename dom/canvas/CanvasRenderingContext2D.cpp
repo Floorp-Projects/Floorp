@@ -1166,7 +1166,8 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
   nsIDocument* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
   css::Loader* loader = document ? document->CSSLoader() : nullptr;
 
-  if (document->IsStyledByServo()) {
+  // FIXME(bug 1420026).
+  if (false) {
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     ServoStyleSet* set = presShell ? presShell->StyleSet()->AsServo() : nullptr;
 
