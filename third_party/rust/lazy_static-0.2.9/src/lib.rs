@@ -86,24 +86,13 @@ fn main() {
 
 # Implementation details
 
-The `Deref` implementation uses a hidden static variable that is guarded by a atomic check on each access.
-
-# Cargo features
-
-This crate provides two cargo features:
-
-- `nightly`: This uses unstable language features only available on the nightly release channel for a more optimal implementation. In practice this currently means avoiding a heap allocation per static. This feature might get deprecated at a later point once all relevant optimizations are usable from stable.
-- `spin_no_std` (implies `nightly`): This allows using this crate in a no-std environment, by depending on the standalone `spin` crate.
-
-Both features depend on unstable language features, which means
-no guarantees can be made about them in regard to SemVer stability.
+The `Deref` implementation uses a hidden static variable that is guarded by a atomic check on each access. On stable Rust, the macro may need to allocate each static on the heap.
 
 */
 
-#![cfg_attr(feature="spin_no_std", feature(const_fn))]
-#![cfg_attr(feature="nightly", feature(unreachable))]
+#![cfg_attr(feature="nightly", feature(const_fn, allow_internal_unstable, core_intrinsics, const_unsafe_cell_new))]
 
-#![doc(html_root_url = "https://docs.rs/lazy_static/1.0.0")]
+#![doc(html_root_url = "https://docs.rs/lazy_static/0.2.8")]
 #![no_std]
 
 #[cfg(not(feature="nightly"))]
@@ -124,14 +113,27 @@ pub mod lazy;
 pub use core::ops::Deref as __Deref;
 
 #[macro_export]
+#[cfg_attr(feature="nightly", allow_internal_unstable)]
 #[doc(hidden)]
 macro_rules! __lazy_static_internal {
-    // optional visibility restrictions are wrapped in `()` to allow for
-    // explicitly passing otherwise implicit information about private items
-    ($(#[$attr:meta])* ($($vis:tt)*) static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
-        __lazy_static_internal!(@MAKE TY, $(#[$attr])*, ($($vis)*), $N);
+    ($(#[$attr:meta])* static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
+        __lazy_static_internal!(@PRIV, $(#[$attr])* static ref $N : $T = $e; $($t)*);
+    };
+    ($(#[$attr:meta])* pub(in $pub_in:path) static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
+        __lazy_static_internal!(@PUB_IN, $pub_in, $(#[$attr])* static ref $N : $T = $e; $($t)*);
+    };
+    ($(#[$attr:meta])* pub static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
+        __lazy_static_internal!(@PUB, $(#[$attr])* static ref $N : $T = $e; $($t)*);
+    };
+    (@PUB_IN, $pub_in:path, $(#[$attr:meta])* static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
+        __lazy_static_internal!(@MAKE TY, PUB_IN, $pub_in, $(#[$attr])*, $N);
         __lazy_static_internal!(@TAIL, $N : $T = $e);
-        lazy_static!($($t)*);
+        __lazy_static_internal!($($t)*);
+    };
+    (@$VIS:ident, $(#[$attr:meta])* static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
+        __lazy_static_internal!(@MAKE TY, $VIS, $(#[$attr])*, $N);
+        __lazy_static_internal!(@TAIL, $N : $T = $e);
+        __lazy_static_internal!($($t)*);
     };
     (@TAIL, $N:ident : $T:ty = $e:expr) => {
         impl $crate::__Deref for $N {
@@ -157,30 +159,47 @@ macro_rules! __lazy_static_internal {
             }
         }
     };
-    // `vis` is wrapped in `()` to prevent parsing ambiguity
-    (@MAKE TY, $(#[$attr:meta])*, ($($vis:tt)*), $N:ident) => {
+    (@MAKE TY, PUB, $(#[$attr:meta])*, $N:ident) => {
         #[allow(missing_copy_implementations)]
         #[allow(non_camel_case_types)]
         #[allow(dead_code)]
         $(#[$attr])*
-        $($vis)* struct $N {__private_field: ()}
+        pub struct $N {__private_field: ()}
         #[doc(hidden)]
-        $($vis)* static $N: $N = $N {__private_field: ()};
+        pub static $N: $N = $N {__private_field: ()};
+    };
+    (@MAKE TY, PUB_IN, $pub_in:path, $(#[$attr:meta])*, $N:ident) => {
+        #[allow(missing_copy_implementations)]
+        #[allow(non_camel_case_types)]
+        #[allow(dead_code)]
+        $(#[$attr])*
+        pub(in $pub_in) struct $N {__private_field: ()}
+        #[doc(hidden)]
+        pub(in $pub_in) static $N: $N = $N {__private_field: ()};
+    };
+    (@MAKE TY, PRIV, $(#[$attr:meta])*, $N:ident) => {
+        #[allow(missing_copy_implementations)]
+        #[allow(non_camel_case_types)]
+        #[allow(dead_code)]
+        $(#[$attr])*
+        struct $N {__private_field: ()}
+        #[doc(hidden)]
+        static $N: $N = $N {__private_field: ()};
     };
     () => ()
 }
 
 #[macro_export]
+#[cfg_attr(feature="nightly", allow_internal_unstable)]
 macro_rules! lazy_static {
     ($(#[$attr:meta])* static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
-        // use `()` to explicitly forward the information about private items
-        __lazy_static_internal!($(#[$attr])* () static ref $N : $T = $e; $($t)*);
+        __lazy_static_internal!(@PRIV, $(#[$attr])* static ref $N : $T = $e; $($t)*);
+    };
+    ($(#[$attr:meta])* pub (in $pub_in:path) static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
+        __lazy_static_internal!(@PUB_IN, $pub_in, $(#[$attr])* static ref $N : $T = $e; $($t)*);
     };
     ($(#[$attr:meta])* pub static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
-        __lazy_static_internal!($(#[$attr])* (pub) static ref $N : $T = $e; $($t)*);
-    };
-    ($(#[$attr:meta])* pub ($($vis:tt)+) static ref $N:ident : $T:ty = $e:expr; $($t:tt)*) => {
-        __lazy_static_internal!($(#[$attr])* (pub ($($vis)+)) static ref $N : $T = $e; $($t)*);
+        __lazy_static_internal!(@PUB, $(#[$attr])* static ref $N : $T = $e; $($t)*);
     };
     () => ()
 }
