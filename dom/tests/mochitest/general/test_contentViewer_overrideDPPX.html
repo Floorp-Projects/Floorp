@@ -238,7 +238,7 @@ const gTests = {
         let mql = window.matchMedia(`(resolution: ${dppx}dppx)`);
 
         mql.addListener(function listener() {
-          ok("MediaQueryList's listener invoked.")
+          ok(true, "MediaQueryList's listener invoked.")
           mql.removeListener(listener);
           resolve();
         });
@@ -247,7 +247,7 @@ const gTests = {
         let mql = frameWindow.matchMedia(`(resolution: ${dppx}dppx)`);
 
         mql.addListener(function listener() {
-          ok("frame's MediaQueryList's listener invoked.")
+          ok(true, "frame's MediaQueryList's listener invoked.")
           mql.removeListener(listener);
           resolve();
         });
@@ -270,7 +270,7 @@ const gTests = {
         let mql = window.matchMedia(`(resolution: ${dppx}dppx)`);
 
         mql.addListener(function listener() {
-          ok("MediaQueryList's listener for dppx invoked.");
+          ok(true, "MediaQueryList's listener for dppx invoked.");
           mql.removeListener(listener);
           overridden = true;
           resolve();
@@ -289,14 +289,14 @@ const gTests = {
       })
     ];
 
+    setOverrideDPPX(dppx);
+    setFullZoom(zoom);
+
     promises[0]
       .then(() => setOverrideDPPX(0))
       .then(promises[1])
       .then(() => setFullZoom(originalZoom))
       .then(done, e => {throw e});
-
-    setOverrideDPPX(dppx);
-    setFullZoom(zoom);
   },
   "test OverrideDPPX is kept on document navigation": (done) => {
     assertValuesAreInitial();
