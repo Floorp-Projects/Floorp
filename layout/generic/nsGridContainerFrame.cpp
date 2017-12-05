@@ -1633,12 +1633,6 @@ struct nsGridContainerFrame::Tracks
         if (aIndex < lineNameLists.Length()) {
           lineNames.AppendElements(lineNameLists[aIndex]);
         }
-        if (aIndex == repeatAutoEnd) {
-          uint32_t i = aIndex + 1;
-          if (i < lineNameLists.Length()) {
-            lineNames.AppendElements(lineNameLists[i]);
-          }
-        }
       }
       if (aIndex <= repeatAutoEnd && aIndex > repeatAutoStart) {
         lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListAfter);
@@ -1646,7 +1640,7 @@ struct nsGridContainerFrame::Tracks
       if (aIndex < repeatAutoEnd && aIndex >= repeatAutoStart) {
         lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListBefore);
       }
-      if (aIndex >= repeatAutoEnd && aIndex > repeatAutoStart) {
+      if (aIndex > repeatAutoEnd && aIndex > repeatAutoStart) {
         uint32_t i = aIndex - repeatEndDelta;
         if (i < lineNameLists.Length()) {
           lineNames.AppendElements(lineNameLists[i]);
@@ -6241,10 +6235,22 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
       columnLineNames.AppendElement(explicitNames);
     }
+    // Get the explicit names that follow a repeat auto declaration.
+    nsTArray<nsString> colNamesFollowingRepeat;
+    if (gridColTemplate.HasRepeatAuto()) {
+      // The line name list after the repeatAutoIndex holds the line names
+      // for the first explicit line after the repeat auto declaration.
+      uint32_t repeatAutoEnd = gridColTemplate.mRepeatAutoIndex + 1;
+      MOZ_ASSERT(repeatAutoEnd < gridColTemplate.mLineNameLists.Length());
+      colNamesFollowingRepeat.AppendElements(
+        gridColTemplate.mLineNameLists[repeatAutoEnd]);
+    }
+
     ComputedGridLineInfo* columnLineInfo = new ComputedGridLineInfo(
       Move(columnLineNames),
       gridColTemplate.mRepeatAutoLineNameListBefore,
-      gridColTemplate.mRepeatAutoLineNameListAfter);
+      gridColTemplate.mRepeatAutoLineNameListAfter,
+      Move(colNamesFollowingRepeat));
     SetProperty(GridColumnLineInfo(), columnLineInfo);
 
     // Generate row lines next.
@@ -6262,10 +6268,22 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
       rowLineNames.AppendElement(explicitNames);
     }
+    // Get the explicit names that follow a repeat auto declaration.
+    nsTArray<nsString> rowNamesFollowingRepeat;
+    if (gridRowTemplate.HasRepeatAuto()) {
+      // The line name list after the repeatAutoIndex holds the line names
+      // for the first explicit line after the repeat auto declaration.
+      uint32_t repeatAutoEnd = gridRowTemplate.mRepeatAutoIndex + 1;
+      MOZ_ASSERT(repeatAutoEnd < gridRowTemplate.mLineNameLists.Length());
+      rowNamesFollowingRepeat.AppendElements(
+        gridRowTemplate.mLineNameLists[repeatAutoEnd]);
+    }
+
     ComputedGridLineInfo* rowLineInfo = new ComputedGridLineInfo(
       Move(rowLineNames),
       gridRowTemplate.mRepeatAutoLineNameListBefore,
-      gridRowTemplate.mRepeatAutoLineNameListAfter);
+      gridRowTemplate.mRepeatAutoLineNameListAfter,
+      Move(rowNamesFollowingRepeat));
     SetProperty(GridRowLineInfo(), rowLineInfo);
 
     // Generate area info for explicit areas. Implicit areas are handled
