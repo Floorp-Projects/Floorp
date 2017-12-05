@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WebAuthnTransactionParent.h"
+#include "U2FTransactionParent.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
@@ -12,8 +12,8 @@ namespace mozilla {
 namespace dom {
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionParent::RecvRequestRegister(const uint64_t& aTransactionId,
-                                               const WebAuthnMakeCredentialInfo& aTransactionInfo)
+U2FTransactionParent::RecvRequestRegister(const uint64_t& aTransactionId,
+                                          const WebAuthnMakeCredentialInfo& aTransactionInfo)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
@@ -22,8 +22,8 @@ WebAuthnTransactionParent::RecvRequestRegister(const uint64_t& aTransactionId,
 }
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionParent::RecvRequestSign(const uint64_t& aTransactionId,
-                                           const WebAuthnGetAssertionInfo& aTransactionInfo)
+U2FTransactionParent::RecvRequestSign(const uint64_t& aTransactionId,
+                                      const WebAuthnGetAssertionInfo& aTransactionInfo)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
@@ -32,7 +32,7 @@ WebAuthnTransactionParent::RecvRequestSign(const uint64_t& aTransactionId,
 }
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionParent::RecvRequestCancel(const uint64_t& aTransactionId)
+U2FTransactionParent::RecvRequestCancel(const uint64_t& aTransactionId)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
@@ -41,11 +41,12 @@ WebAuthnTransactionParent::RecvRequestCancel(const uint64_t& aTransactionId)
 }
 
 void
-WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy)
+U2FTransactionParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->MaybeClearTransaction(this);
 }
-}
-}
+
+} // namespace dom
+} // namespace mozilla

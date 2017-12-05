@@ -9,6 +9,7 @@
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
 #include "WebAuthnCoseIdentifiers.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
@@ -39,6 +40,7 @@ const uint8_t FLAG_UV = 0x04; // User was Verified (biometrics, etc.); this
  **********************************************************************/
 
 namespace {
+StaticRefPtr<WebAuthnManager> gWebAuthnManager;
 static mozilla::LazyLogModule gWebAuthnManagerLog("webauthnmanager");
 }
 
@@ -145,29 +147,37 @@ RelaxSameOrigin(nsPIDOMWindowInner* aParent,
   return NS_OK;
 }
 
-void
-WebAuthnManager::ListenForVisibilityEvents()
+static void
+ListenForVisibilityEvents(nsPIDOMWindowInner* aParent,
+                          WebAuthnManager* aListener)
 {
-  nsCOMPtr<nsIDocument> doc = mParent->GetExtantDoc();
+  MOZ_ASSERT(aParent);
+  MOZ_ASSERT(aListener);
+
+  nsCOMPtr<nsIDocument> doc = aParent->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return;
   }
 
-  nsresult rv = doc->AddSystemEventListener(kVisibilityChange, this,
+  nsresult rv = doc->AddSystemEventListener(kVisibilityChange, aListener,
                                             /* use capture */ true,
                                             /* wants untrusted */ false);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
-void
-WebAuthnManager::StopListeningForVisibilityEvents()
+static void
+StopListeningForVisibilityEvents(nsPIDOMWindowInner* aParent,
+                                 WebAuthnManager* aListener)
 {
-  nsCOMPtr<nsIDocument> doc = mParent->GetExtantDoc();
+  MOZ_ASSERT(aParent);
+  MOZ_ASSERT(aListener);
+
+  nsCOMPtr<nsIDocument> doc = aParent->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return;
   }
 
-  nsresult rv = doc->RemoveSystemEventListener(kVisibilityChange, this,
+  nsresult rv = doc->RemoveSystemEventListener(kVisibilityChange, aListener,
                                                /* use capture */ true);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
@@ -176,18 +186,16 @@ WebAuthnManager::StopListeningForVisibilityEvents()
  * WebAuthnManager Implementation
  **********************************************************************/
 
-WebAuthnManager::WebAuthnManager(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
+WebAuthnManager::WebAuthnManager()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aParent);
 }
 
 void
 WebAuthnManager::ClearTransaction()
 {
   if (!NS_WARN_IF(mTransaction.isNothing())) {
-    StopListeningForVisibilityEvents();
+    StopListeningForVisibilityEvents(mTransaction.ref().mParent, this);
   }
 
   mTransaction.reset();
@@ -225,7 +233,7 @@ WebAuthnManager::~WebAuthnManager()
   if (mChild) {
     RefPtr<WebAuthnTransactionChild> c;
     mChild.swap(c);
-    c->Disconnect();
+    c->Send__delete__(c);
   }
 }
 
@@ -243,7 +251,7 @@ WebAuthnManager::MaybeCreateBackgroundActor()
     return false;
   }
 
-  RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild(this));
+  RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild());
   PWebAuthnTransactionChild* constructedMgr =
     actor->SendPWebAuthnTransactionConstructor(mgr);
 
@@ -257,17 +265,42 @@ WebAuthnManager::MaybeCreateBackgroundActor()
   return true;
 }
 
+//static
+WebAuthnManager*
+WebAuthnManager::GetOrCreate()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (gWebAuthnManager) {
+    return gWebAuthnManager;
+  }
+
+  gWebAuthnManager = new WebAuthnManager();
+  ClearOnShutdown(&gWebAuthnManager);
+  return gWebAuthnManager;
+}
+
+//static
+WebAuthnManager*
+WebAuthnManager::Get()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return gWebAuthnManager;
+}
+
 already_AddRefed<Promise>
-WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
+WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
+                                const MakePublicKeyCredentialOptions& aOptions,
                                 const Optional<OwningNonNull<AbortSignal>>& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aParent);
 
   if (mTransaction.isSome()) {
     CancelTransaction(NS_ERROR_ABORT);
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
@@ -283,7 +316,7 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
 
   nsString origin;
   nsCString rpId;
-  rv = GetOrigin(mParent, origin, rpId);
+  rv = GetOrigin(aParent, origin, rpId);
   if (NS_WARN_IF(rv.Failed())) {
     promise->MaybeReject(rv);
     return promise.forget();
@@ -321,7 +354,7 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
     // Otherwise, reject promise with a DOMException whose name is
     // "SecurityError", and terminate this algorithm.
 
-    if (NS_FAILED(RelaxSameOrigin(mParent, aOptions.mRp.mId.Value(), rpId))) {
+    if (NS_FAILED(RelaxSameOrigin(aParent, aOptions.mRp.mId.Value(), rpId))) {
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
       return promise.forget();
     }
@@ -465,7 +498,7 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
                                   extensions,
                                   authSelection);
 
-  ListenForVisibilityEvents();
+  ListenForVisibilityEvents(aParent, this);
 
   AbortSignal* signal = nullptr;
   if (aSignal.WasPassed()) {
@@ -474,7 +507,8 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
   }
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(WebAuthnTransaction(promise,
+  mTransaction = Some(WebAuthnTransaction(aParent,
+                                          promise,
                                           rpIdHash,
                                           clientDataJSON,
                                           signal));
@@ -484,16 +518,18 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
 }
 
 already_AddRefed<Promise>
-WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
+WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
+                              const PublicKeyCredentialRequestOptions& aOptions,
                               const Optional<OwningNonNull<AbortSignal>>& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aParent);
 
   if (mTransaction.isSome()) {
     CancelTransaction(NS_ERROR_ABORT);
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
@@ -509,7 +545,7 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
 
   nsString origin;
   nsCString rpId;
-  rv = GetOrigin(mParent, origin, rpId);
+  rv = GetOrigin(aParent, origin, rpId);
   if (NS_WARN_IF(rv.Failed())) {
     promise->MaybeReject(rv);
     return promise.forget();
@@ -535,7 +571,7 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
     // Otherwise, reject promise with a DOMException whose name is
     // "SecurityError", and terminate this algorithm.
 
-    if (NS_FAILED(RelaxSameOrigin(mParent, aOptions.mRpId.Value(), rpId))) {
+    if (NS_FAILED(RelaxSameOrigin(aParent, aOptions.mRpId.Value(), rpId))) {
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
       return promise.forget();
     }
@@ -625,7 +661,7 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
                                 allowList,
                                 extensions);
 
-  ListenForVisibilityEvents();
+  ListenForVisibilityEvents(aParent, this);
 
   AbortSignal* signal = nullptr;
   if (aSignal.WasPassed()) {
@@ -634,7 +670,8 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
   }
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(WebAuthnTransaction(promise,
+  mTransaction = Some(WebAuthnTransaction(aParent,
+                                          promise,
                                           rpIdHash,
                                           clientDataJSON,
                                           signal));
@@ -644,15 +681,17 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
 }
 
 already_AddRefed<Promise>
-WebAuthnManager::Store(const Credential& aCredential)
+WebAuthnManager::Store(nsPIDOMWindowInner* aParent,
+                       const Credential& aCredential)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aParent);
 
   if (mTransaction.isSome()) {
     CancelTransaction(NS_ERROR_ABORT);
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
@@ -777,12 +816,12 @@ WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
   // values returned from the authenticator as well as the clientDataJSON
   // computed earlier.
   RefPtr<AuthenticatorAttestationResponse> attestation =
-      new AuthenticatorAttestationResponse(mParent);
+      new AuthenticatorAttestationResponse(mTransaction.ref().mParent);
   attestation->SetClientDataJSON(clientDataBuf);
   attestation->SetAttestationObject(attObj);
 
   RefPtr<PublicKeyCredential> credential =
-      new PublicKeyCredential(mParent);
+      new PublicKeyCredential(mTransaction.ref().mParent);
   credential->SetId(keyHandleBase64Url);
   credential->SetType(NS_LITERAL_STRING("public-key"));
   credential->SetRawId(keyHandleBuf);
@@ -862,12 +901,13 @@ WebAuthnManager::FinishGetAssertion(const uint64_t& aTransactionId,
   // with the values returned from the authenticator as well as the
   // clientDataJSON computed earlier.
   RefPtr<AuthenticatorAssertionResponse> assertion =
-    new AuthenticatorAssertionResponse(mParent);
+    new AuthenticatorAssertionResponse(mTransaction.ref().mParent);
   assertion->SetClientDataJSON(clientDataBuf);
   assertion->SetAuthenticatorData(authenticatorDataBuf);
   assertion->SetSignature(signatureBuf);
 
-  RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mParent);
+  RefPtr<PublicKeyCredential> credential =
+    new PublicKeyCredential(mTransaction.ref().mParent);
   credential->SetId(credentialBase64Url);
   credential->SetType(NS_LITERAL_STRING("public-key"));
   credential->SetRawId(credentialBuf);

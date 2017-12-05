@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_WebAuthnTransactionParent_h
-#define mozilla_dom_WebAuthnTransactionParent_h
+#ifndef mozilla_dom_U2FTransactionParent_h
+#define mozilla_dom_U2FTransactionParent_h
 
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 
@@ -18,11 +18,11 @@
 namespace mozilla {
 namespace dom {
 
-class WebAuthnTransactionParent final : public PWebAuthnTransactionParent
+class U2FTransactionParent final : public PWebAuthnTransactionParent
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(WebAuthnTransactionParent);
-  WebAuthnTransactionParent() = default;
+  NS_INLINE_DECL_REFCOUNTING(U2FTransactionParent);
+  U2FTransactionParent() = default;
 
   virtual mozilla::ipc::IPCResult
   RecvRequestRegister(const uint64_t& aTransactionId,
@@ -38,10 +38,10 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
-  ~WebAuthnTransactionParent() = default;
+  ~U2FTransactionParent() = default;
 };
 
 }
 }
 
-#endif //mozilla_dom_WebAuthnTransactionParent_h
+#endif //mozilla_dom_U2FTransactionParent_h
