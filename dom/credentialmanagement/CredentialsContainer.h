@@ -8,6 +8,7 @@
 #define mozilla_dom_CredentialsContainer_h
 
 #include "mozilla/dom/CredentialManagementBinding.h"
+#include "mozilla/dom/WebAuthnManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,15 +33,20 @@ public:
 
   already_AddRefed<Promise>
   Get(const CredentialRequestOptions& aOptions);
+
   already_AddRefed<Promise>
   Create(const CredentialCreationOptions& aOptions);
+
   already_AddRefed<Promise>
   Store(const Credential& aCredential);
 
 private:
   ~CredentialsContainer();
 
+  void EnsureWebAuthnManager();
+
   nsCOMPtr<nsPIDOMWindowInner> mParent;
+  RefPtr<WebAuthnManager> mManager;
 };
 
 } // namespace dom
