@@ -147,6 +147,41 @@ function getServiceWorkerContainer(name, document) {
 }
 
 /**
+ * Wait until a service worker "container" element is found with a specific service worker
+ * name, in the provided document.
+ * Returns a promise that resolves the service worker container element.
+ *
+ * @param  {String} name
+ *         expected service worker name
+ * @param  {DOMDocument} document
+ *         #service-workers section container document
+ * @return {Promise} promise that resolves the service worker container element.
+ */
+function* waitUntilServiceWorkerContainer(name, document) {
+  yield waitUntil(() => {
+    return getServiceWorkerContainer(name, document);
+  }, 100);
+  return getServiceWorkerContainer(name, document);
+}
+
+/**
+ * Wait until a selector matches an element in a given parent node.
+ * Returns a promise that resolves the matched element.
+ *
+ * @param {String} selector
+ *        CSS selector to match.
+ * @param {DOMNode} parent
+ *        Parent that should contain the element.
+ * @return {Promise} promise that resolves the matched DOMNode.
+ */
+function* waitUntilElement(selector, parent) {
+  yield waitUntil(() => {
+    return parent.querySelector(selector);
+  }, 100);
+  return parent.querySelector(selector);
+}
+
+/**
  * Depending on whether there are tabs opened, return either a
  * target list element or its container.
  * @param  {DOMDocument}  document   #tabs section container document
@@ -441,10 +476,9 @@ function* waitForServiceWorkerActivation(swUrl, document) {
 
   let targetElement = name.parentNode.parentNode;
   let targetStatus = targetElement.querySelector(".target-status");
-  while (targetStatus.textContent === "Registering") {
-    // Wait for the status to leave the "registering" stage.
-    yield waitForMutation(serviceWorkersElement, { childList: true, subtree: true });
-  }
+  yield waitUntil(() => {
+    return targetStatus.textContent !== "Registering";
+  }, 100);
 }
 
 /**
