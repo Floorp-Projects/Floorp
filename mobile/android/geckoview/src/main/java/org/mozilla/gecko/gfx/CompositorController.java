@@ -15,7 +15,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CompositorController {
+public final class CompositorController {
     private final LayerSession.Compositor mCompositor;
 
     public interface GetPixelsCallback {
