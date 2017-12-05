@@ -46,21 +46,26 @@ function checkFrequency(an) {
   // We should have no energy when checking the data largely outside the index
   // for 440Hz (the frequency of the sine wave), start checking an octave above,
   // the Opus compression can add some harmonics to the pure since wave.
-  var index = binIndexForFrequency(880, an);
-  var underTreshold = true;
-  for (var i = index; i < frequencyArray.length; i++) {
-    // Let some slack, there might be some noise here because of int -> float
-    // conversion or the Opus encoding.
-    if (frequencyArray[i] > an.minDecibels + 40) {
-      return false;
+  var maxNoiseIndex = binIndexForFrequency(880, an);
+  for (var i = maxNoiseIndex + 1; i < frequencyArray.length; i++) {
+    if (frequencyArray[i] > frequencyArray[maxNoiseIndex]) {
+       maxNoiseIndex = i;
     }
   }
 
   // On the other hand, we should find a peak at 440Hz. Our sine wave is not
   // attenuated, we're expecting the peak to reach 0dBFs.
-  index = binIndexForFrequency(440, an);
-  info("energy at 440: " + frequencyArray[index] + ", threshold " + (an.maxDecibels - 10));
+  var index = binIndexForFrequency(440, an);
+  info("energy at 440: " + frequencyArray[index] +
+       ", threshold " + (an.maxDecibels - 10) +
+       "; max noise at index " + maxNoiseIndex +
+       ": " + frequencyArray[maxNoiseIndex] );
   if (frequencyArray[index] < (an.maxDecibels - 10)) {
+    return false;
+  }
+  // Let some slack, there might be some noise here because of int -> float
+  // conversion or the Opus encoding.
+  if (frequencyArray[maxNoiseIndex] > an.minDecibels + 40) {
     return false;
   }
 
@@ -73,6 +78,10 @@ audioElement.loop = true;
 var ac = new AudioContext();
 var mediaElementSource = ac.createMediaElementSource(audioElement);
 var an = ac.createAnalyser();
+// Use no smoothing as this would just average with previous
+// getFloatFrequencyData() calls.  Non-seamless looping would introduce noise,
+// and smoothing would spread this into calls after the loop point.
+an.smoothingTimeConstant = 0;
 frequencyArray = new Float32Array(an.frequencyBinCount);
 
 // Uncomment this to check what the analyser is doing.

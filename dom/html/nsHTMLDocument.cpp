@@ -486,6 +486,12 @@ nsHTMLDocument::TryFallback(int32_t& aCharsetSource,
     return;
 
   aCharsetSource = kCharsetFromFallback;
+  bool isFile = false;
+  if (FallbackEncoding::sFallbackToUTF8ForFile && mDocumentURI &&
+      NS_SUCCEEDED(mDocumentURI->SchemeIs("file", &isFile)) && isFile) {
+    aEncoding = UTF_8_ENCODING;
+    return;
+  }
   aEncoding = FallbackEncoding::FromLocale();
 }
 

@@ -1131,13 +1131,6 @@ JS_EXPORT_API(void) DumpJSStack()
     xpc_DumpJSStack(true, true, false);
 }
 
-JS_EXPORT_API(const char*) PrintJSStack()
-{
-    if (JSContext* cx = nsContentUtils::GetCurrentJSContext())
-        return xpc_PrintJSStack(cx, true, true, false).release();
-    return "There is no JSContext on the stack.\n";
-}
-
 JS_EXPORT_API(void) DumpCompleteHeap()
 {
     nsCOMPtr<nsICycleCollectorListener> listener =

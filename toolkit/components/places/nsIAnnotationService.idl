@@ -112,7 +112,8 @@ interface nsIAnnotationService : nsISupports
      *
      * For item annotations, aSource should be a change source constant from
      * nsINavBookmarksService::SOURCE_*, and defaults to SOURCE_DEFAULT if
-     * omitted.
+     * omitted. Setting an item annotation also notifies
+     * `nsINavBookmarkObserver::onItemChanged` for the affected item.
      *
      * The annotation "favicon" is special. Favicons are stored in the favicon
      * service, but are special cased in the protocol handler so they look like
@@ -340,6 +341,9 @@ interface nsIAnnotationService : nsISupports
     /**
      * Removes a specific annotation. Succeeds even if the annotation is
      * not found.
+     *
+     * Removing an item annotation also notifies
+     * `nsINavBookmarkObserver::onItemChanged` for the affected item.
      */
     void removePageAnnotation(in nsIURI aURI,
                               in AUTF8String aName);
@@ -351,6 +355,9 @@ interface nsIAnnotationService : nsISupports
      * Removes all annotations for the given page/item.
      * We may want some other similar functions to get annotations with given
      * flags (once we have flags defined).
+     *
+     * Unlike the other item methods, `removeItemAnnotations` does *not* notify
+     * `nsINavBookmarkObserver::onItemChanged` for the affected item.
      */
     void removePageAnnotations(in nsIURI aURI);
     void removeItemAnnotations(in long long aItemId,
