@@ -15,8 +15,12 @@
  *             *** THESE ARE NOT GENERAL PURPOSE CONVERTERS ***              *
  *                                                                           *
  *    NS_CopyNativeToUnicode / NS_CopyUnicodeToNative should only be used    *
- *    for converting *FILENAMES* between native and unicode. They are not    *
+ *    for converting *FILENAMES* between bytes and UTF-16. They are not      *
  *    designed or tested for general encoding converter use.                 *
+ *                                                                           *
+ *    On Windows, these functions convert to and from the system's legacy    *
+ *    code page, which cannot represent all of Unicode. Elsewhere, these     *
+ *    convert to and from UTF-8.                                             *
  *                                                                           *
 \*****************************************************************************/
 
@@ -34,30 +38,15 @@ nsresult NS_CopyUnicodeToNative(const nsAString& aInput, nsACString& aOutput);
  * name in UTF-8 out of nsIFile, we can just use |GetNativeLeafName| rather
  * than using |GetLeafName| and converting the result to UTF-8 if the file
  * system  encoding is UTF-8.
- * On Unix (but not on Mac OS X), it depends on the locale and is not known
- * in advance (at the compilation time) so that this function needs to be
- * a real function. On Mac OS X it's always UTF-8 while on Windows
- * and other platforms (e.g. OS2), it's never UTF-8.
  */
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(ANDROID)
-bool NS_IsNativeUTF8();
-#else
-inline bool
+inline constexpr bool
 NS_IsNativeUTF8()
 {
-#if defined(XP_MACOSX) || defined(ANDROID)
-  return true;
-#else
+#ifdef XP_WIN
   return false;
+#else
+  return true;
 #endif
 }
-#endif
-
-
-/**
- * internal
- */
-void NS_StartupNativeCharsetUtils();
-void NS_ShutdownNativeCharsetUtils();
 
 #endif // nsNativeCharsetUtils_h__
