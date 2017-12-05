@@ -96,8 +96,9 @@ function classesEnabled()
     new Function("class B { constructor() { } }; class D extends B { constructor() { super(); } }");
     return true;
   }
-  catch (e if e instanceof SyntaxError)
-  {
+  catch (e) {
+    if (!(e instanceof SyntaxError))
+      throw e;
     return false;
   }
 }

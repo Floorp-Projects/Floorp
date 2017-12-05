@@ -2,7 +2,10 @@
 try {
     eval('new.target');
     assertEq(false, true);
-} catch (e if e instanceof SyntaxError) { }
+} catch (e) {
+    if (!(e instanceof SyntaxError))
+        throw e;
+}
 
 // new.target is invalid inside eval inside top-level arrow functions
 assertThrowsInstanceOf(() => eval('new.target'), SyntaxError);
@@ -12,7 +15,10 @@ let ieval = eval;
 try {
     (function () { return ieval('new.target'); })();
     assertEq(false, true);
-} catch (e if e instanceof SyntaxError) { }
+} catch (e) {
+    if (!(e instanceof SyntaxError))
+        throw e;
+}
 
 function assertNewTarget(expected) {
     assertEq(eval('new.target'), expected);
