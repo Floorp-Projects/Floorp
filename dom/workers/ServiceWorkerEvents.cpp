@@ -346,7 +346,8 @@ public:
 
     // Get the alternative data type saved in the InternalResponse
     nsAutoCString altDataType;
-    nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel = mInternalResponse->TakeCacheInfoChannel();
+    nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
+      mInternalResponse->TakeCacheInfoChannel().get();
     if (cacheInfoChannel) {
       cacheInfoChannel->GetAlternativeDataType(altDataType);
     }

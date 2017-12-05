@@ -10,6 +10,7 @@
 #include "nsIInputStream.h"
 #include "nsICacheInfoChannel.h"
 #include "nsISupportsImpl.h"
+#include "nsProxyRelease.h"
 
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/ResponseBinding.h"
@@ -279,23 +280,24 @@ public:
   }
 
   void
-  SetCacheInfoChannel(nsICacheInfoChannel* aCacheInfoChannel)
+  SetCacheInfoChannel(const nsMainThreadPtrHandle<nsICacheInfoChannel>& aCacheInfoChannel)
   {
     if (mWrappedResponse) {
       return mWrappedResponse->SetCacheInfoChannel(aCacheInfoChannel);
     }
-
+    MOZ_ASSERT(!mCacheInfoChannel);
     mCacheInfoChannel = aCacheInfoChannel;
   }
 
-  already_AddRefed<nsICacheInfoChannel>
+  nsMainThreadPtrHandle<nsICacheInfoChannel>
   TakeCacheInfoChannel()
   {
     if (mWrappedResponse) {
       return mWrappedResponse->TakeCacheInfoChannel();
     }
-
-    return mCacheInfoChannel.forget();
+    nsMainThreadPtrHandle<nsICacheInfoChannel> rtn = mCacheInfoChannel;
+    mCacheInfoChannel = nullptr;
+    return rtn;
   }
 
   void
@@ -380,7 +382,7 @@ private:
 
   // For alternative data such as JS Bytecode cached in the HTTP cache.
   nsCOMPtr<nsIInputStream> mAlternativeBody;
-  nsCOMPtr<nsICacheInfoChannel> mCacheInfoChannel;
+  nsMainThreadPtrHandle<nsICacheInfoChannel> mCacheInfoChannel;
 
 public:
   static const int64_t UNKNOWN_BODY_SIZE = -1;
