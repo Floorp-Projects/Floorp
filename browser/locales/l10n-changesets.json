@@ -157,7 +157,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "28b75c298bc6"
+        "revision": "28d09f0d299f"
     }, 
     "cy": {
         "platforms": [
@@ -197,7 +197,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a345df481b9e"
+        "revision": "31cccbb54f98"
     }, 
     "el": {
         "platforms": [
@@ -207,7 +207,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "46268b9bb97f"
+        "revision": "14b54422211a"
     }, 
     "en-GB": {
         "platforms": [
@@ -317,7 +317,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f7e926214ae2"
+        "revision": "c3589dcebc55"
     }, 
     "fi": {
         "platforms": [
@@ -387,7 +387,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "4381a332bab1"
+        "revision": "1d8d0a55cd6c"
     }, 
     "gu-IN": {
         "platforms": [
@@ -417,7 +417,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "4dccafe480ad"
+        "revision": "1e593f1f0277"
     }, 
     "hr": {
         "platforms": [
@@ -437,7 +437,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "23a4be0d5638"
+        "revision": "94c80dae4636"
     }, 
     "hu": {
         "platforms": [
@@ -477,7 +477,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b8e7d0417218"
+        "revision": "6000a48e376f"
     }, 
     "it": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "dba7f535b66f"
+        "revision": "cf6cd990d0a3"
     }, 
     "ja": {
         "platforms": [
@@ -512,7 +512,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "01abd3465b63"
+        "revision": "41bc289a45fb"
     }, 
     "kab": {
         "platforms": [
@@ -572,7 +572,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0bdad2cf2883"
+        "revision": "0ab26fda46bc"
     }, 
     "lt": {
         "platforms": [
@@ -592,7 +592,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "8b0a0777344b"
+        "revision": "9937fbcb6c92"
     }, 
     "mai": {
         "platforms": [
@@ -622,7 +622,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "ac69da2bb94f"
+        "revision": "059cc10fa016"
     }, 
     "mr": {
         "platforms": [
@@ -642,7 +642,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "107ff60ff4f2"
+        "revision": "67f697e5ba65"
     }, 
     "my": {
         "platforms": [
@@ -732,7 +732,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "7a0afbbc85df"
+        "revision": "bd75c070aa1b"
     }, 
     "pt-PT": {
         "platforms": [
@@ -742,7 +742,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a9725a30dd1d"
+        "revision": "fec0456cb10e"
     }, 
     "rm": {
         "platforms": [
@@ -762,7 +762,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "c33551cf7cc2"
+        "revision": "01d60add546d"
     }, 
     "ru": {
         "platforms": [
@@ -802,7 +802,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "8e64b810a6b6"
+        "revision": "65157a3e4898"
     }, 
     "son": {
         "platforms": [
@@ -832,7 +832,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "2a1058bcd532"
+        "revision": "81382299f1ef"
     }, 
     "sv-SE": {
         "platforms": [
@@ -882,7 +882,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "d2982f7b42ce"
+        "revision": "5bc969239a65"
     }, 
     "uk": {
         "platforms": [
@@ -942,7 +942,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "9941778aa12b"
+        "revision": "5043fc071aff"
     }, 
     "zh-TW": {
         "platforms": [
