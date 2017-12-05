@@ -6116,8 +6116,10 @@ HTMLEditRules::GetNodesForOperation(
         // The new end parent becomes the parent node of the text.
         // XXX We want nsRange::SetEnd(const RawRangeBoundary&)
         EditorRawDOMPoint atContainerOfSplitNode(atEnd.Container());
-        range->SetEnd(atContainerOfSplitNode.Container(),
-                      atContainerOfSplitNode.Offset());
+        range->SetEnd(atContainerOfSplitNode, error);
+        if (NS_WARN_IF(error.Failed())) {
+          error.SuppressException();
+        }
       }
     }
   }
@@ -6614,8 +6616,11 @@ HTMLEditRules::GetNodesFromPoint(
     return NS_ERROR_INVALID_ARG;
   }
   RefPtr<nsRange> range = new nsRange(aPoint.Container());
-  DebugOnly<nsresult> rv = range->SetStart(aPoint.Container(), aPoint.Offset());
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  IgnoredErrorResult error;
+  range->SetStart(aPoint, error);
+  if (NS_WARN_IF(error.Failed())) {
+    MOZ_ASSERT(!error.Failed());
+  }
 
   // Expand the range to include adjacent inlines
   PromoteRange(*range, aOperation);
@@ -8640,16 +8645,19 @@ HTMLEditRules::ConfirmSelectionInBody()
 nsresult
 HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
 {
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // first make sure aRange is in the document.  It might not be if
   // portions of our editting action involved manipulating nodes
   // prior to placing them in the document (e.g., populating a list item
   // before placing it in its list)
-  nsCOMPtr<nsINode> startNode = aRange->GetStartContainer();
-  if (NS_WARN_IF(!startNode)) {
+  const RangeBoundary& atStart = aRange->StartRef();
+  if (NS_WARN_IF(!atStart.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  NS_ENSURE_STATE(mHTMLEditor);
-  if (!mHTMLEditor->IsDescendantOfRoot(startNode)) {
+  if (!mHTMLEditor->IsDescendantOfRoot(atStart.Container())) {
     // just return - we don't need to adjust mDocChangeRange in this case
     return NS_OK;
   }
@@ -8675,8 +8683,11 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
     NS_ENSURE_SUCCESS(rv, rv);
     // Positive result means mDocChangeRange start is after aRange start.
     if (result > 0) {
-      rv = mDocChangeRange->SetStart(startNode, aRange->StartOffset());
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult error;
+      mDocChangeRange->SetStart(atStart.AsRaw(), error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
     }
 
     // compare ends of ranges
@@ -8685,12 +8696,15 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
     NS_ENSURE_SUCCESS(rv, rv);
     // Negative result means mDocChangeRange end is before aRange end.
     if (result < 0) {
-      nsINode* endNode = aRange->GetEndContainer();
-      if (NS_WARN_IF(!endNode)) {
+      const RangeBoundary& atEnd = aRange->EndRef();
+      if (NS_WARN_IF(!atEnd.IsSet())) {
         return NS_ERROR_FAILURE;
       }
-      rv = mDocChangeRange->SetEnd(endNode, aRange->EndOffset());
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult error;
+      mDocChangeRange->SetEnd(atEnd.AsRaw(), error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
     }
   }
   return NS_OK;
