@@ -6,7 +6,5 @@ module.exports = {
   ],
   "rules": {
     "no-throw-literal": 2,
-
-    "mozilla/use-services": "error",
   },
 }

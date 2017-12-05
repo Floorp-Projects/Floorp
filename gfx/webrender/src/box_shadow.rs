@@ -9,8 +9,7 @@ use api::{PipelineId};
 use app_units::Au;
 use clip::ClipSource;
 use frame_builder::FrameBuilder;
-use internal_types::EdgeAaSegmentMask;
-use prim_store::{PrimitiveContainer, RectangleContent, RectanglePrimitive};
+use prim_store::{BrushAntiAliasMode, PrimitiveContainer};
 use prim_store::{BrushMaskKind, BrushKind, BrushPrimitive};
 use picture::PicturePrimitive;
 use util::RectHelpers;
@@ -131,10 +130,14 @@ impl FrameBuilder {
                 clip_and_scroll,
                 &fast_info,
                 clips,
-                PrimitiveContainer::Rectangle(RectanglePrimitive {
-                    content: RectangleContent::Fill(*color),
-                    edge_aa_segment_mask: EdgeAaSegmentMask::empty(),
-                }),
+                PrimitiveContainer::Brush(
+                    BrushPrimitive::new(BrushKind::Solid {
+                            color: *color,
+                        },
+                        None,
+                        BrushAntiAliasMode::Primitive,
+                    )
+                ),
             );
         } else {
             let blur_offset = BLUR_SAMPLE_SCALE * blur_radius;
@@ -178,12 +181,14 @@ impl FrameBuilder {
                         width = MASK_CORNER_PADDING + corner_size.width.max(BLUR_SAMPLE_SCALE * blur_radius);
                         height = MASK_CORNER_PADDING + corner_size.height.max(BLUR_SAMPLE_SCALE * blur_radius);
 
-                        brush_prim = BrushPrimitive {
-                            kind: BrushKind::Mask {
+                        brush_prim = BrushPrimitive::new(
+                            BrushKind::Mask {
                                 clip_mode: brush_clip_mode,
                                 kind: BrushMaskKind::Corner(corner_size),
-                            }
-                        };
+                            },
+                            None,
+                            BrushAntiAliasMode::Primitive,
+                        );
                     } else {
                         // Create a minimal size primitive mask to blur. In this
                         // case, we ensure the size of each corner is the same,
@@ -205,12 +210,14 @@ impl FrameBuilder {
                         let clip_rect = LayerRect::new(LayerPoint::zero(),
                                                        LayerSize::new(width, height));
 
-                        brush_prim = BrushPrimitive {
-                            kind: BrushKind::Mask {
+                        brush_prim = BrushPrimitive::new(
+                            BrushKind::Mask {
                                 clip_mode: brush_clip_mode,
                                 kind: BrushMaskKind::RoundedRect(clip_rect, shadow_radius),
-                            }
-                        };
+                            },
+                            None,
+                            BrushAntiAliasMode::Primitive,
+                        );
                     };
 
                     // Construct a mask primitive to add to the picture.
@@ -288,12 +295,14 @@ impl FrameBuilder {
                     }
 
                     let brush_rect = brush_rect.inflate(inflate_size, inflate_size);
-                    let brush_prim = BrushPrimitive {
-                        kind: BrushKind::Mask {
+                    let brush_prim = BrushPrimitive::new(
+                        BrushKind::Mask {
                             clip_mode: brush_clip_mode,
                             kind: BrushMaskKind::RoundedRect(clip_rect, shadow_radius),
-                        }
-                    };
+                        },
+                        None,
+                        BrushAntiAliasMode::Primitive,
+                    );
                     let brush_info = LayerPrimitiveInfo::new(brush_rect);
                     let brush_prim_index = self.create_primitive(
                         &brush_info,

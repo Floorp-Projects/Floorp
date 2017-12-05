@@ -6,9 +6,25 @@
 
 ReplaceMalloc('logalloc')
 
-include('logalloc.mozbuild')
+SOURCES += [
+    'FdPrintf.cpp',
+    'LogAlloc.cpp',
+]
+
+DisableStlWrapping()
+NO_PGO = True
+DEFINES['MOZ_NO_MOZALLOC'] = True
+
+LOCAL_INCLUDES += [
+    '/memory/build',
+]
+
+# Android doesn't have pthread_atfork, but we have our own in mozglue.
+if CONFIG['OS_TARGET'] == 'Android' and FORCE_SHARED_LIB:
+    USE_LIBS += [
+        'mozglue',
+    ]
 
 DIRS += [
-    'minimal',
     'replay',
 ]

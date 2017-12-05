@@ -9,7 +9,6 @@
 
 #include "nsTArray.h"
 #include "nsIScreen.h"
-#include "nsIThread.h"
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
 
@@ -25,6 +24,8 @@ class MacIOSurface;
 #endif
 namespace mozilla {
 namespace gfx {
+class VRThread;
+
 namespace impl {
 
 class VRDisplayOpenVR : public VRDisplayHost
@@ -114,7 +115,7 @@ private:
   uint32_t mTrackedIndex;
   nsTArray<float> mTrigger;
   nsTArray<float> mAxisMove;
-  nsCOMPtr<nsIThread> mVibrateThread;
+  RefPtr<VRThread> mVibrateThread;
   Atomic<bool> mIsVibrateStopped;
 };
 

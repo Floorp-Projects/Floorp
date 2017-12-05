@@ -12,7 +12,12 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
-const {InvalidArgumentError} = Cu.import("chrome://marionette/content/error.js", {});
+const {
+  InvalidArgumentError,
+} = Cu.import("chrome://marionette/content/error.js", {});
+const {
+  pprint,
+} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = ["session"];
 
@@ -202,7 +207,8 @@ session.Proxy = class {
 
     // Parse hostname and optional port from host
     function fromHost(scheme, host) {
-      assert.string(host);
+      assert.string(host,
+          pprint`Expected proxy "host" to be a string, got ${host}`);
 
       if (host.includes("://")) {
         throw new InvalidArgumentError(`${host} contains a scheme`);
@@ -253,10 +259,12 @@ session.Proxy = class {
       return p;
     }
 
-    assert.object(json);
+    assert.object(json, pprint`Expected "proxy" to be an object, got ${json}`);
 
-    assert.in("proxyType", json);
-    p.proxyType = assert.string(json.proxyType);
+    assert.in("proxyType", json,
+        pprint`Expected "proxyType" in "proxy" object, got ${json}`);
+    p.proxyType = assert.string(json.proxyType,
+        pprint`Expected "proxyType" to be a string, got ${json.proxyType}`);
 
     switch (p.proxyType) {
       case "autodetect":
@@ -265,7 +273,9 @@ session.Proxy = class {
         break;
 
       case "pac":
-        p.proxyAutoconfigUrl = assert.string(json.proxyAutoconfigUrl);
+        p.proxyAutoconfigUrl = assert.string(json.proxyAutoconfigUrl,
+            `Expected "proxyAutoconfigUrl" to be a string, ` +
+            pprint`got ${json.proxyAutoconfigUrl}`);
         break;
 
       case "manual":
@@ -283,9 +293,11 @@ session.Proxy = class {
           p.socksVersion = assert.positiveInteger(json.socksVersion);
         }
         if (typeof json.noProxy != "undefined") {
-          let entries = assert.array(json.noProxy);
+          let entries = assert.array(json.noProxy,
+              pprint`Expected "noProxy" to be an array, got ${json.noProxy}`);
           p.noProxy = entries.map(entry => {
-            assert.string(entry);
+            assert.string(entry,
+                pprint`Expected "noProxy" entry to be a string, got ${entry}`);
             return stripBracketsFromIpv6Hostname(entry);
           });
         }

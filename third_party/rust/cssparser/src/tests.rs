@@ -881,7 +881,6 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
         Token::PrefixMatch => "^=".to_json(),
         Token::SuffixMatch => "$=".to_json(),
         Token::SubstringMatch => "*=".to_json(),
-        Token::Column => "||".to_json(),
         Token::CDO => "<!--".to_json(),
         Token::CDC => "-->".to_json(),
 

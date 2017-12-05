@@ -27,12 +27,8 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment)
              "Alignment must be multiple of pointer size");
 
   mSize = aSize;
-#if defined(MOZ_MEMORY)
+#if defined(MOZ_MEMORY) || defined(HAVE_POSIX_MEMALIGN)
   if (posix_memalign(&mBuf, aAlignment, aSize) != 0) {
-    return false;
-  }
-#elif defined(HAVE_POSIX_MEMALIGN)
-  if (moz_posix_memalign(&mBuf, aAlignment, aSize) != 0) {
     return false;
   }
 #else

@@ -18,6 +18,19 @@ const PARSE_ERROR_TOO_MANY_ELEMENTS = 1;
 const PARSE_ERROR_WORKER = 2;
 const PARSE_ERROR_NO_ARTICLE = 3;
 
+// Class names to preserve in the readerized output. We preserve these class
+// names so that rules in aboutReader.css can match them.
+const CLASSES_TO_PRESERVE = [
+  "caption",
+  "hidden",
+  "invisble",
+  "sr-only",
+  "visually-hidden",
+  "visuallyhidden",
+  "wp-caption",
+  "wp-caption-text",
+];
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -453,9 +466,13 @@ this.ReaderMode = {
                      createInstance(Ci.nsIDOMSerializer);
     let serializedDoc = serializer.serializeToString(doc);
 
+    let options = {
+      classesToPreserve: CLASSES_TO_PRESERVE,
+    };
+
     let article = null;
     try {
-      article = await ReaderWorker.post("parseDocument", [uriParam, serializedDoc]);
+      article = await ReaderWorker.post("parseDocument", [uriParam, serializedDoc, options]);
     } catch (e) {
       Cu.reportError("Error in ReaderWorker: " + e);
       histogram.add(PARSE_ERROR_WORKER);

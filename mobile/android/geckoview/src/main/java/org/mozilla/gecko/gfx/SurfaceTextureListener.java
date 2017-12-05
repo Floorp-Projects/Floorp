@@ -10,7 +10,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 import android.graphics.SurfaceTexture;
 
-final class SurfaceTextureListener
+/* package */ final class SurfaceTextureListener
     extends JNIObject implements SurfaceTexture.OnFrameAvailableListener
 {
     @WrapForJNI(calledFrom = "gecko")

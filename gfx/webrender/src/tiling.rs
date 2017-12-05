@@ -20,13 +20,13 @@ use gpu_types::{BlurDirection, BlurInstance, BrushInstance, BrushImageKind, Clip
 use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
 use gpu_types::{ClipScrollNodeIndex, ClipScrollNodeData};
 use internal_types::{FastHashMap, SourceTexture};
-use internal_types::BatchTextures;
+use internal_types::{BatchTextures};
 use picture::{PictureCompositeMode, PictureKind, PicturePrimitive, RasterizationSpace};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
-use prim_store::{BrushMaskKind, BrushKind, DeferredResolve, PrimitiveRun, RectangleContent};
+use prim_store::{BrushPrimitive, BrushMaskKind, BrushKind, BrushSegmentKind, DeferredResolve, PrimitiveRun};
 use profiler::FrameProfileCounters;
-use render_task::{ClipWorkItem, MaskGeometryKind, MaskSegment};
+use render_task::{ClipWorkItem};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKey, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, RenderTaskLocation, RenderTaskTree};
 use renderer::BlendMode;
@@ -119,23 +119,6 @@ impl AlphaBatchHelpers for PrimitiveStore {
                     FontRenderMode::Alpha |
                     FontRenderMode::Mono |
                     FontRenderMode::Bitmap => BlendMode::PremultipliedAlpha,
-                }
-            },
-            PrimitiveKind::Rectangle => {
-                let rectangle_cpu = &self.cpu_rectangles[metadata.cpu_prim_index.0];
-                match rectangle_cpu.content {
-                    RectangleContent::Fill(..) => if needs_blending {
-                        BlendMode::PremultipliedAlpha
-                    } else {
-                        BlendMode::None
-                    },
-                    RectangleContent::Clear => {
-                        // TODO: If needs_blending == false, we could use BlendMode::None
-                        // to clear the rectangle, but then we'd need to draw the rectangle
-                        // with alpha == 0.0 instead of alpha == 1.0, and the RectanglePrimitive
-                        // would need to know about that.
-                        BlendMode::PremultipliedDestOut
-                    },
                 }
             },
             PrimitiveKind::Border |
@@ -410,7 +393,64 @@ fn add_to_batch(
 
     match prim_metadata.prim_kind {
         PrimitiveKind::Brush => {
-            panic!("BUG: brush type not expected in an alpha task (yet)");
+            let brush = &ctx.prim_store.cpu_brushes[prim_metadata.cpu_prim_index.0];
+            let base_instance = BrushInstance {
+                picture_address: task_address,
+                prim_address: prim_cache_address,
+                clip_id,
+                scroll_id,
+                clip_task_address,
+                z,
+                segment_kind: 0,
+                user_data0: 0,
+                user_data1: 0,
+            };
+
+            match brush.segment_desc {
+                Some(ref segment_desc) => {
+                    let opaque_batch = batch_list.opaque_batch_list.get_suitable_batch(
+                        brush.get_batch_key(
+                            BlendMode::None
+                        ),
+                        item_bounding_rect
+                    );
+                    let alpha_batch = batch_list.alpha_batch_list.get_suitable_batch(
+                        brush.get_batch_key(
+                            BlendMode::PremultipliedAlpha
+                        ),
+                        item_bounding_rect
+                    );
+
+                    for (i, segment) in segment_desc.segments.iter().enumerate() {
+                        if ((1 << i) & segment_desc.enabled_segments) != 0 {
+                            let is_inner = i == BrushSegmentKind::Center as usize;
+                            let needs_blending = !prim_metadata.opacity.is_opaque ||
+                                                 segment.clip_task_id.is_some() ||
+                                                 (!is_inner && transform_kind == TransformedRectKind::Complex);
+
+                            let clip_task_address = segment
+                                .clip_task_id
+                                .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
+
+                            let instance = PrimitiveInstance::from(BrushInstance {
+                                segment_kind: 1 + i as i32,
+                                clip_task_address,
+                                ..base_instance
+                            });
+
+                            if needs_blending {
+                                alpha_batch.push(instance);
+                            } else {
+                                opaque_batch.push(instance);
+                            }
+                        }
+                    }
+                }
+                None => {
+                    let batch = batch_list.get_suitable_batch(brush.get_batch_key(blend_mode), item_bounding_rect);
+                    batch.push(PrimitiveInstance::from(base_instance));
+                }
+            }
         }
         PrimitiveKind::Border => {
             let border_cpu =
@@ -463,16 +503,6 @@ fn add_to_batch(
             for border_segment in 0 .. 4 {
                 batch.push(base_instance.build(border_segment, 0, 0));
             }
-        }
-        PrimitiveKind::Rectangle => {
-            let needs_clipping = prim_metadata.clip_task_id.is_some();
-            let kind = BatchKind::Transformable(
-                transform_kind,
-                TransformBatchKind::Rectangle(needs_clipping),
-            );
-            let key = BatchKey::new(kind, blend_mode, no_textures);
-            let batch = batch_list.get_suitable_batch(key, item_bounding_rect);
-            batch.push(base_instance.build(0, 0, 0));
         }
         PrimitiveKind::Line => {
             let kind =
@@ -609,7 +639,7 @@ fn add_to_batch(
                                 scroll_id,
                                 clip_task_address,
                                 z,
-                                flags: 0,
+                                segment_kind: 0,
                                 user_data0: cache_task_address.0 as i32,
                                 user_data1: BrushImageKind::Simple as i32,
                             };
@@ -638,7 +668,7 @@ fn add_to_batch(
                                 scroll_id,
                                 clip_task_address,
                                 z,
-                                flags: 0,
+                                segment_kind: 0,
                                 user_data0: cache_task_address.0 as i32,
                                 user_data1: image_kind as i32,
                             };
@@ -1083,7 +1113,6 @@ impl ClipBatcher {
         coordinate_system_id: CoordinateSystemId,
         resource_cache: &ResourceCache,
         gpu_cache: &GpuCache,
-        geometry_kind: MaskGeometryKind,
         clip_store: &ClipStore,
     ) {
         let mut coordinate_system_id = coordinate_system_id;
@@ -1122,43 +1151,17 @@ impl ClipBatcher {
                         if work_item.coordinate_system_id != coordinate_system_id {
                             self.rectangles.push(ClipMaskInstance {
                                 clip_data_address: gpu_address,
-                                segment: MaskSegment::All as i32,
                                 ..instance
                             });
                             coordinate_system_id = work_item.coordinate_system_id;
                         }
-                    },
-                    ClipSource::RoundedRectangle(..) => match geometry_kind {
-                        MaskGeometryKind::Default => {
-                            self.rectangles.push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                segment: MaskSegment::All as i32,
-                                ..instance
-                            });
-                        }
-                        MaskGeometryKind::CornersOnly => {
-                            self.rectangles.push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                segment: MaskSegment::TopLeftCorner as i32,
-                                ..instance
-                            });
-                            self.rectangles.push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                segment: MaskSegment::TopRightCorner as i32,
-                                ..instance
-                            });
-                            self.rectangles.push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                segment: MaskSegment::BottomLeftCorner as i32,
-                                ..instance
-                            });
-                            self.rectangles.push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                segment: MaskSegment::BottomRightCorner as i32,
-                                ..instance
-                            });
-                        }
-                    },
+                    }
+                    ClipSource::RoundedRectangle(..) => {
+                        self.rectangles.push(ClipMaskInstance {
+                            clip_data_address: gpu_address,
+                            ..instance
+                        });
+                    }
                     ClipSource::BorderCorner(ref source) => {
                         self.border_clears.push(ClipMaskInstance {
                             clip_data_address: gpu_address,
@@ -1666,12 +1669,16 @@ impl RenderTarget for AlphaRenderTarget {
                                             scroll_id: ClipScrollNodeIndex(0),
                                             clip_task_address: RenderTaskAddress(0),
                                             z: 0,
-                                            flags: 0,
+                                            segment_kind: 0,
                                             user_data0: 0,
                                             user_data1: 0,
                                         };
                                         let brush = &ctx.prim_store.cpu_brushes[sub_metadata.cpu_prim_index.0];
                                         let batch = match brush.kind {
+                                            BrushKind::Solid { .. } |
+                                            BrushKind::Clear => {
+                                                unreachable!("bug: unexpected brush here");
+                                            }
                                             BrushKind::Mask { ref kind, .. } => {
                                                 match *kind {
                                                     BrushMaskKind::Corner(..) => &mut self.brush_mask_corners,
@@ -1702,7 +1709,6 @@ impl RenderTarget for AlphaRenderTarget {
                     task_info.coordinate_system_id,
                     &ctx.resource_cache,
                     gpu_cache,
-                    task_info.geometry_kind,
                     clip_store,
                 );
             }
@@ -1863,7 +1869,6 @@ impl RenderPass {
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum TransformBatchKind {
-    Rectangle(bool),
     TextRun(GlyphFormat),
     Image(ImageBufferKind),
     YuvImage(ImageBufferKind, YuvFormat, YuvColorSpace),
@@ -1877,7 +1882,8 @@ pub enum TransformBatchKind {
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum BrushBatchKind {
-    Image(RenderTargetKind)
+    Image(RenderTargetKind),
+    Solid,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -2096,4 +2102,28 @@ fn make_polygon(
         transform.m43 as f64,
         transform.m44 as f64);
     Polygon::from_transformed_rect(rect.cast().unwrap(), mat, anchor)
+}
+
+impl BrushPrimitive {
+    fn get_batch_key(&self, blend_mode: BlendMode) -> BatchKey {
+        match self.kind {
+            BrushKind::Solid { .. } => {
+                BatchKey::new(
+                    BatchKind::Brush(BrushBatchKind::Solid),
+                    blend_mode,
+                    BatchTextures::no_texture(),
+                )
+            }
+            BrushKind::Clear => {
+                BatchKey::new(
+                    BatchKind::Brush(BrushBatchKind::Solid),
+                    BlendMode::PremultipliedDestOut,
+                    BatchTextures::no_texture(),
+                )
+            }
+            BrushKind::Mask { .. } => {
+                unreachable!("bug: mask brushes not expected in normal alpha pass");
+            }
+        }
+    }
 }

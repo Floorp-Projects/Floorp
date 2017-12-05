@@ -43,17 +43,7 @@
 #  define MOZALLOC_INLINE inline
 #endif
 
-/* Workaround build problem with Sun Studio 12 */
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#  undef MOZ_MUST_USE
-#  define MOZ_MUST_USE
-#  undef MOZ_ALLOCATOR
-#  define MOZ_ALLOCATOR
-#endif
-
-#if defined(__cplusplus)
-extern "C" {
-#endif /* ifdef __cplusplus */
+MOZ_BEGIN_EXTERN_C
 
 /*
  * We need to use malloc_impl and free_impl in this file when they are
@@ -113,9 +103,6 @@ MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
 #if defined(HAVE_POSIX_MEMALIGN)
 MFBT_API MOZ_MUST_USE
 int moz_xposix_memalign(void **ptr, size_t alignment, size_t size);
-
-MFBT_API MOZ_MUST_USE
-int moz_posix_memalign(void **ptr, size_t alignment, size_t size);
 #endif /* if defined(HAVE_POSIX_MEMALIGN) */
 
 
@@ -131,9 +118,7 @@ MFBT_API void* moz_xvalloc(size_t size)
 #endif /* if defined(HAVE_VALLOC) */
 
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* ifdef __cplusplus */
+MOZ_END_EXTERN_C
 
 
 #ifdef __cplusplus

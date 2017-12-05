@@ -30,10 +30,12 @@ from ..frontend.data import (
     GeneratedFile,
     GeneratedSources,
     HostDefines,
+    HostSources,
     JARManifest,
     ObjdirFiles,
     PerSourceFlag,
     Sources,
+    VariablePassthru,
 )
 from ..util import (
     FileAvoidWrite,
@@ -49,9 +51,8 @@ class BackendTupfile(object):
     """Represents a generated Tupfile.
     """
 
-    def __init__(self, srcdir, objdir, environment, topsrcdir, topobjdir):
+    def __init__(self, objdir, environment, topsrcdir, topobjdir):
         self.topsrcdir = topsrcdir
-        self.srcdir = srcdir
         self.objdir = objdir
         self.relobjdir = mozpath.relpath(objdir, topobjdir)
         self.environment = environment
@@ -64,6 +65,8 @@ class BackendTupfile(object):
         self.per_source_flags = defaultdict(list)
         self.local_flags = defaultdict(list)
         self.sources = defaultdict(list)
+        self.host_sources = defaultdict(list)
+        self.variables = {}
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -118,25 +121,31 @@ class BackendTupfile(object):
         )
 
     def gen_sources_rules(self, extra_inputs):
+        sources = self.sources
+        host_sources = self.host_sources
+        as_dash_c = self.variables.get('AS_DASH_C_FLAG', self.environment.substs['AS_DASH_C_FLAG'])
         compilers = [
-            ('.S', 'AS', 'ASFLAGS'),
-            ('.cpp', 'CXX', 'CXXFLAGS'),
-            ('.c', 'CC', 'CFLAGS'),
+            (sources['.S'], 'AS', 'SFLAGS', '-c', ''),
+            (sources['.s'], 'AS', 'ASFLAGS', as_dash_c, ''),
+            (sources['.cpp'], 'CXX', 'CXXFLAGS', '-c', ''),
+            (sources['.c'], 'CC', 'CFLAGS', '-c', ''),
+            (host_sources['.cpp'], 'HOST_CXX', 'HOST_CXXFLAGS', '-c', 'host_'),
+            (host_sources['.c'], 'HOST_CC', 'HOST_CFLAGS', '-c', 'host_'),
         ]
-        for extension, compiler, flags in compilers:
-            srcs = sorted(self.sources[extension])
-            for src in srcs:
+        for srcs, compiler, flags, dash_c, prefix in compilers:
+            for src in sorted(srcs):
                 # AS can be set to $(CC), so we need to call expand_variables on
                 # the compiler to get the real value.
-                cmd = [expand_variables(self.environment.substs[compiler], self.environment.substs)]
+                compiler_value = self.variables.get(compiler, self.environment.substs[compiler])
+                cmd = [expand_variables(compiler_value, self.environment.substs)]
                 cmd.extend(shell_quote(f) for f in self.local_flags[flags])
                 cmd.extend(shell_quote(f) for f in self.per_source_flags[src])
-                cmd.extend(['-c', '%f', '-o', '%o'])
+                cmd.extend([dash_c, '%f', '-o', '%o'])
                 self.rule(
                     cmd=cmd,
                     inputs=[src],
                     extra_inputs=extra_inputs,
-                    outputs=['%B.o'],
+                    outputs=[prefix + '%B.o'],
                     display='%s %%f' % compiler,
                 )
 
@@ -163,22 +172,6 @@ class TupOnly(CommonBackend, PartialBackend):
     def _init(self):
         CommonBackend._init(self)
 
-        self._supported_dirs = (
-            'services',
-            'servo',
-            'startupcache',
-            'storage',
-            'taskcluster',
-            'testing',
-            'third_party',
-            'toolkit',
-            'tools',
-            'uriloader',
-            'view',
-            'widget',
-            'xpcom',
-            'xpfe',
-        )
         self._backend_files = {}
         self._cmd = MozbuildObject.from_environment()
         self._manifest_entries = OrderedDefaultDict(set)
@@ -198,15 +191,14 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def _get_backend_file(self, relativedir):
         objdir = mozpath.join(self.environment.topobjdir, relativedir)
-        srcdir = mozpath.join(self.environment.topsrcdir, relativedir)
         if objdir not in self._backend_files:
             self._backend_files[objdir] = \
-                    BackendTupfile(srcdir, objdir, self.environment,
+                    BackendTupfile(objdir, self.environment,
                                    self.environment.topsrcdir, self.environment.topobjdir)
         return self._backend_files[objdir]
 
     def _get_backend_file_for(self, obj):
-        return self._get_backend_file(obj.relativedir)
+        return self._get_backend_file(obj.relobjdir)
 
     def _py_action(self, action):
         cmd = [
@@ -273,8 +265,11 @@ class TupOnly(CommonBackend, PartialBackend):
         elif isinstance(obj, ComputedFlags):
             self._process_computed_flags(obj, backend_file)
         elif isinstance(obj, (Sources, GeneratedSources)):
-            if obj.relobjdir.startswith(self._supported_dirs):
-                backend_file.sources[obj.canonical_suffix].extend(obj.files)
+            backend_file.sources[obj.canonical_suffix].extend(obj.files)
+        elif isinstance(obj, HostSources):
+            backend_file.host_sources[obj.canonical_suffix].extend(obj.files)
+        elif isinstance(obj, VariablePassthru):
+            backend_file.variables = obj.variables
 
         return True
 
@@ -444,9 +439,8 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def _process_unified_sources(self, obj):
         backend_file = self._get_backend_file_for(obj)
-        if obj.relobjdir.startswith(self._supported_dirs):
-            files = [f[0] for f in obj.unified_source_mapping]
-            backend_file.sources[obj.canonical_suffix].extend(files)
+        files = [f[0] for f in obj.unified_source_mapping]
+        backend_file.sources[obj.canonical_suffix].extend(files)
 
     def _handle_idl_manager(self, manager):
         if self.environment.is_artifact_build:
@@ -527,12 +521,13 @@ class TupOnly(CommonBackend, PartialBackend):
 
         backend_file = self._get_backend_file('ipc/ipdl')
         outheaderdir = '_ipdlheaders'
+        srcdir = mozpath.join(self.environment.topsrcdir, 'ipc/ipdl')
         cmd = [
             '$(PYTHON_PATH)',
             '$(PLY_INCLUDE)',
-            '%s/ipdl.py' % backend_file.srcdir,
-            '--sync-msg-list=%s/sync-messages.ini' % backend_file.srcdir,
-            '--msg-metadata=%s/message-metadata.ini' % backend_file.srcdir,
+            '%s/ipdl.py' % srcdir,
+            '--sync-msg-list=%s/sync-messages.ini' % srcdir,
+            '--msg-metadata=%s/message-metadata.ini' % srcdir,
             '--outheaders-dir=%s' % outheaderdir,
             '--outcpp-dir=.',
         ]
@@ -567,6 +562,7 @@ class TupOnly(CommonBackend, PartialBackend):
             extra_outputs=[self._installed_files],
             check_unchanged=True,
         )
+        backend_file.sources['.cpp'].extend(u[0] for u in unified_ipdl_cppsrcs_mapping)
 
     def _handle_webidl_build(self, bindings_dir, unified_source_mapping,
                              webidls, expected_build_output_files,
@@ -599,6 +595,11 @@ class TupOnly(CommonBackend, PartialBackend):
             extra_outputs=[self._installed_files],
             check_unchanged=True,
         )
+        backend_file.sources['.cpp'].extend(u[0] for u in unified_source_mapping)
+        backend_file.sources['.cpp'].extend(sorted(global_define_files))
+
+        test_backend_file = self._get_backend_file('dom/bindings/test')
+        test_backend_file.sources['.cpp'].extend(sorted('../%sBinding.cpp' % s for s in webidls.all_test_stems()))
 
 
 class TupBackend(HybridBackend(TupOnly, RecursiveMakeBackend)):

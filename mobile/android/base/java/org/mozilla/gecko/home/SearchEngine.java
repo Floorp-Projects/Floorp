@@ -6,7 +6,7 @@
 package org.mozilla.gecko.home;
 
 import android.support.annotation.NonNull;
-import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.R;
 

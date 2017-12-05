@@ -135,8 +135,7 @@ function execAsync(aStmt, aOptions, aResults) {
   if ("cancel" in aOptions && aOptions.cancel)
     pending.cancel();
 
-  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-  tm.spinEventLoopUntil(() => completed || _quit);
+  Services.tm.spinEventLoopUntil(() => completed || _quit);
 
   return pending;
 }

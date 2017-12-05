@@ -107,7 +107,7 @@ class RequestListHeader extends Component {
           className: "devtools-toolbar requests-list-headers",
           onContextMenu: this.onContextMenu
         },
-          HEADERS.filter((header) => columns.get(header.name)).map((header) => {
+          HEADERS.filter((header) => columns[header.name]).map((header) => {
             let name = header.name;
             let boxName = header.boxName || name;
             let label = header.noLocalization

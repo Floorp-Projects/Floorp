@@ -13,9 +13,17 @@ add_task(function* () {
 
   let { document, store, parent } = monitor.panelWin;
 
-  for (let [column, shown] of store.getState().ui.columns) {
-    let visibleColumns = [...store.getState().ui.columns]
-      .filter(([_, visible]) => visible);
+  let initialColumns = store.getState().ui.columns;
+  for (let column in initialColumns) {
+    let shown = initialColumns[column];
+
+    let columns = store.getState().ui.columns;
+    let visibleColumns = [];
+    for (let c in columns) {
+      if (columns[c]) {
+        visibleColumns.push(c);
+      }
+    }
 
     if (visibleColumns.length === 1) {
       if (!shown) {

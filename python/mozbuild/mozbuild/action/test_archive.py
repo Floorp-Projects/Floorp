@@ -152,6 +152,15 @@ ARCHIVE_FILES = {
             'source': buildconfig.topsrcdir,
             'base': 'testing',
             'pattern': 'firefox-ui/**',
+            'ignore': [
+                'firefox-ui/tests',
+            ]
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': '',
+            'pattern': 'testing/firefox-ui/tests',
+            'dest': 'firefox-ui/tests',
         },
         {
             'source': buildconfig.topsrcdir,

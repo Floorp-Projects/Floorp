@@ -1,3 +1,6 @@
+/* Avoid adding ID selector rules in this style sheet, since they could
+ * inadvertently match elements in the article content. */
+
 .narrating {
   position: relative;
   z-index: 1;
@@ -43,4 +46,191 @@ body.sepia .narrate-word-highlight {
 
 body.dark .narrate-word-highlight {
   border-bottom-color: #6f6f6f;
+}
+
+.narrate-dropdown {
+  --border-color: #e5e5e5;
+}
+
+.narrate-toggle > svg {
+  display: block;
+  margin: 0 8px;
+}
+
+.narrate-dropdown > .dropdown-popup button {
+  background-color: transparent;
+}
+
+.narrate-dropdown > .dropdown-popup button:hover:not(:disabled) {
+  background-color: #eaeaea;
+}
+
+.narrate-row {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.narrate-row:not(:first-child) {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Control buttons */
+
+.narrate-control > button {
+  background-size: 24px 24px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  height: 64px;
+  width: 100px;
+  border: none;
+  color: #666;
+  box-sizing: border-box;
+}
+
+.narrate-control > button:not(:first-child) {
+  border-left: 1px solid var(--border-color);
+}
+
+.narrate-skip-previous {
+  border-top-left-radius: 3px;
+  background-image: url("chrome://global/skin/narrate/back.svg");
+  -moz-context-properties: fill;
+  fill: rgb(128 128 128);
+}
+
+.narrate-skip-next {
+  border-top-right-radius: 3px;
+  background-image: url("chrome://global/skin/narrate/forward.svg");
+  -moz-context-properties: fill;
+  fill: rgb(128 128 128);
+}
+
+.narrate-skip-previous:disabled,
+.narrate-skip-next:disabled {
+  fill: rgb(128 128 128 / 50%);
+}
+
+.narrate-start-stop {
+  background-image: url("chrome://global/skin/narrate/start.svg");
+}
+
+.narrate-dropdown.speaking .narrate-start-stop {
+  background-image: url("chrome://global/skin/narrate/stop.svg");
+}
+
+/* Rate control */
+
+.narrate-rate::before, .narrate-rate::after {
+  content: '';
+  width: 48px;
+  height: 40px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 24px auto;
+}
+
+.narrate-rate::before {
+  background-image: url("chrome://global/skin/narrate/slow.svg");
+}
+
+.narrate-rate::after {
+  background-image: url("chrome://global/skin/narrate/fast.svg");
+}
+
+.narrate-rate-input {
+  margin: 0 1px;
+  flex-grow: 1;
+}
+
+.narrate-rate-input::-moz-range-track {
+  background-color: #979797;
+  height: 2px;
+}
+
+.narrate-rate-input::-moz-range-progress {
+  background-color: #2EA3FF;
+  height: 2px;
+}
+
+.narrate-rate-input::-moz-range-thumb {
+  background-color: #808080;
+  height: 16px;
+  width: 16px;
+  border-radius: 8px;
+  border-width: 0;
+}
+
+.narrate-rate-input:active::-moz-range-thumb {
+  background-color: #2EA3FF;
+}
+
+/* Voice selection */
+
+.voiceselect {
+  width: 100%;
+}
+
+.voiceselect > button.select-toggle,
+.voiceselect > .options > button.option {
+  -moz-appearance: none;
+  border: none;
+  width: 100%;
+  min-height: 40px;
+}
+
+.voiceselect.open > button.select-toggle {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.voiceselect > button.select-toggle::after {
+  content: '';
+  background-image: url("chrome://global/skin/narrate/arrow.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  display: inline-block;
+  width: 1.5em;
+  height: 1em;
+  vertical-align: middle;
+}
+
+.voiceselect > .options > button.option:not(:first-child) {
+  border-top: 1px solid var(--border-color);
+}
+
+.voiceselect > .options > button.option  {
+  box-sizing: border-box;
+}
+
+.voiceselect > .options:not(.hovering) > button.option:focus {
+  background-color: #eaeaea;
+}
+
+.voiceselect > .options:not(.hovering) > button.option:hover:not(:focus) {
+  background-color: transparent;
+}
+
+.voiceselect > .options > button.option::-moz-focus-inner {
+  outline: none;
+  border: 0;
+}
+
+.voiceselect > .options {
+  display: none;
+  overflow-y: auto;
+}
+
+.voiceselect.open > .options {
+  display: block;
+}
+
+.current-voice {
+  color: #7f7f7f;
+}
+
+.voiceselect:not(.open) > button,
+.voiceselect .option:last-child {
+  border-radius: 0 0 3px 3px;
 }

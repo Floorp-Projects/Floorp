@@ -31,7 +31,7 @@ job-template:
       by-build-platform:
          default: browser/locales/l10n-changesets.json
          android-api-16-nightly: mobile/locales/l10n-changesets.json
-   locales-per-chunk: 2
+   locales-per-chunk: 5
    run-on-projects: ['release']
    ignore-locales:
       by-build-platform:

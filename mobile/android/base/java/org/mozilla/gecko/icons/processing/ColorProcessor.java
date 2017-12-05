@@ -8,9 +8,9 @@ package org.mozilla.gecko.icons.processing;
 import android.graphics.Bitmap;
 import android.support.annotation.ColorInt;
 
-import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.util.BitmapUtils;
 
 /**
  * Processor implementation to extract the dominant color from the icon and attach it to the icon

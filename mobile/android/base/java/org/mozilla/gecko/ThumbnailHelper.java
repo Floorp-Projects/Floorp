@@ -6,7 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;

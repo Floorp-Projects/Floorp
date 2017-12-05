@@ -1163,13 +1163,34 @@ bool
 CanvasRenderingContext2D::ParseColor(const nsAString& aString,
                                      nscolor* aColor)
 {
-  nsIDocument* document = mCanvasElement
-                          ? mCanvasElement->OwnerDoc()
-                          : nullptr;
+  nsIDocument* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
+  css::Loader* loader = document ? document->CSSLoader() : nullptr;
+
+  // FIXME(bug 1420026).
+  if (false) {
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    ServoStyleSet* set = presShell ? presShell->StyleSet()->AsServo() : nullptr;
+
+    // First, try computing the color without handling currentcolor.
+    bool wasCurrentColor = false;
+    if (!ServoCSSParser::ComputeColor(set, NS_RGB(0, 0, 0), aString, aColor,
+                                      &wasCurrentColor, loader)) {
+      return false;
+    }
+
+    if (wasCurrentColor) {
+      // Otherwise, get the value of the color property, flushing style
+      // if necessary.
+      RefPtr<nsStyleContext> canvasStyle =
+        nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr, presShell);
+      *aColor = canvasStyle->StyleColor()->mColor;
+    }
+    return true;
+  }
 
   // Pass the CSS Loader object to the parser, to allow parser error
   // reports to include the outer window ID.
-  nsCSSParser parser(document ? document->CSSLoader() : nullptr);
+  nsCSSParser parser(loader);
   nsCSSValue value;
   if (!parser.ParseColorString(aString, nullptr, 0, value)) {
     return false;
@@ -2821,15 +2842,11 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
                      aDocument->GetDocumentURI(),
                      aDocument->NodePrincipal());
 
-  NS_ConvertUTF16toUTF8 value(aPropertyValue);
-
+  ServoCSSParser::ParsingEnvironment env(data,
+                                         aDocument->GetCompatibilityMode(),
+                                         aDocument->CSSLoader());
   RefPtr<RawServoDeclarationBlock> servoDeclarations =
-    Servo_ParseProperty(aProperty,
-                        &value,
-                        data,
-                        ParsingMode::Default,
-                        aDocument->GetCompatibilityMode(),
-                        aDocument->CSSLoader()).Consume();
+    ServoCSSParser::ParseProperty(aProperty, aPropertyValue, env);
 
   if (!servoDeclarations) {
     // We got a syntax error.  The spec says this value must be ignored.

@@ -199,7 +199,6 @@ langpack-%: IS_LANGPACK=1
 langpack-%: AB_CD=$*
 langpack-%:
 	@echo 'Making langpack $(LANGPACK_FILE)'
-	@$(MAKE) multilocale.json-$(AB_CD)
 	@$(MAKE) libs-$(AB_CD)
 	@$(MAKE) package-langpack-$(AB_CD)
 

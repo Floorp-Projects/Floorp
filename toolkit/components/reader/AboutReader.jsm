@@ -55,14 +55,15 @@ var AboutReader = function(mm, win, articlePromise) {
     this._articlePromise = articlePromise;
   }
 
-  this._headerElementRef = Cu.getWeakReference(doc.getElementById("reader-header"));
-  this._domainElementRef = Cu.getWeakReference(doc.getElementById("reader-domain"));
-  this._titleElementRef = Cu.getWeakReference(doc.getElementById("reader-title"));
-  this._readTimeElementRef = Cu.getWeakReference(doc.getElementById("reader-estimated-time"));
-  this._creditsElementRef = Cu.getWeakReference(doc.getElementById("reader-credits"));
-  this._contentElementRef = Cu.getWeakReference(doc.getElementById("moz-reader-content"));
-  this._toolbarElementRef = Cu.getWeakReference(doc.getElementById("reader-toolbar"));
-  this._messageElementRef = Cu.getWeakReference(doc.getElementById("reader-message"));
+  this._headerElementRef = Cu.getWeakReference(doc.querySelector(".reader-header"));
+  this._domainElementRef = Cu.getWeakReference(doc.querySelector(".reader-domain"));
+  this._titleElementRef = Cu.getWeakReference(doc.querySelector(".reader-title"));
+  this._readTimeElementRef = Cu.getWeakReference(doc.querySelector(".reader-estimated-time"));
+  this._creditsElementRef = Cu.getWeakReference(doc.querySelector(".reader-credits"));
+  this._contentElementRef = Cu.getWeakReference(doc.querySelector(".moz-reader-content"));
+  this._toolbarElementRef = Cu.getWeakReference(doc.querySelector(".reader-toolbar"));
+  this._messageElementRef = Cu.getWeakReference(doc.querySelector(".reader-message"));
+  this._containerElementRef = Cu.getWeakReference(doc.querySelector(".container"));
 
   this._scrollOffset = win.pageYOffset;
 
@@ -173,6 +174,10 @@ AboutReader.prototype = {
     return this._messageElementRef.get();
   },
 
+  get _containerElement() {
+    return this._containerElementRef.get();
+  },
+
   get _isToolbarVertical() {
     if (this._toolbarVertical !== undefined) {
       return this._toolbarVertical;
@@ -200,26 +205,26 @@ AboutReader.prototype = {
 
       case "Reader:AddButton": {
         if (message.data.id && message.data.image &&
-            !this._doc.getElementById(message.data.id)) {
+            !this._doc.getElementsByClassName(message.data.id)[0]) {
           let btn = this._doc.createElement("button");
-          btn.setAttribute("class", "button");
-          btn.setAttribute("style", "background-image: url('" + message.data.image + "')");
-          btn.setAttribute("id", message.data.id);
+          btn.dataset.buttonid = message.data.id;
+          btn.className = "button " + message.data.id;
+          btn.style.backgroundImage = "url('" + message.data.image + "')";
           if (message.data.title)
-            btn.setAttribute("title", message.data.title);
+            btn.title = message.data.title;
           if (message.data.text)
             btn.textContent = message.data.text;
-          let tb = this._doc.getElementById("reader-toolbar");
+          let tb = this._toolbarElement;
           tb.appendChild(btn);
           this._setupButton(message.data.id, button => {
-            this._mm.sendAsyncMessage("Reader:Clicked-" + button.getAttribute("id"), { article: this._article });
+            this._mm.sendAsyncMessage("Reader:Clicked-" + button.dataset.buttonid, { article: this._article });
           });
         }
         break;
       }
       case "Reader:RemoveButton": {
         if (message.data.id) {
-          let btn = this._doc.getElementById(message.data.id);
+          let btn = this._doc.getElementsByClassName(message.data.id)[0];
           if (btn)
             btn.remove();
         }
@@ -303,7 +308,7 @@ AboutReader.prototype = {
   },
 
   _setFontSize(newFontSize) {
-    let containerClasses = this._doc.getElementById("container").classList;
+    let containerClasses = this._containerElement.classList;
 
     if (this._fontSize > 0)
       containerClasses.remove("font-size" + this._fontSize);
@@ -318,14 +323,14 @@ AboutReader.prototype = {
     const FONT_SIZE_MAX = 9;
 
     // Sample text shown in Android UI.
-    let sampleText = this._doc.getElementById("font-size-sample");
+    let sampleText = this._doc.querySelector(".font-size-sample");
     sampleText.textContent = gStrings.GetStringFromName("aboutReader.fontTypeSample");
 
     let currentSize = Services.prefs.getIntPref("reader.font_size");
     currentSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, currentSize));
 
-    let plusButton = this._doc.getElementById("font-size-plus");
-    let minusButton = this._doc.getElementById("font-size-minus");
+    let plusButton = this._doc.querySelector(".plus-button");
+    let minusButton = this._doc.querySelector(".minus-button");
 
     function updateControls() {
       if (currentSize === FONT_SIZE_MIN) {
@@ -375,7 +380,7 @@ AboutReader.prototype = {
   },
 
   _setContentWidth(newContentWidth) {
-    let containerClasses = this._doc.getElementById("container").classList;
+    let containerClasses = this._containerElement.classList;
 
     if (this._contentWidth > 0)
       containerClasses.remove("content-width" + this._contentWidth);
@@ -392,8 +397,8 @@ AboutReader.prototype = {
     let currentContentWidth = Services.prefs.getIntPref("reader.content_width");
     currentContentWidth = Math.max(CONTENT_WIDTH_MIN, Math.min(CONTENT_WIDTH_MAX, currentContentWidth));
 
-    let plusButton = this._doc.getElementById("content-width-plus");
-    let minusButton = this._doc.getElementById("content-width-minus");
+    let plusButton = this._doc.querySelector(".content-width-plus-button");
+    let minusButton = this._doc.querySelector(".content-width-minus-button");
 
     function updateControls() {
       if (currentContentWidth === CONTENT_WIDTH_MIN) {
@@ -443,7 +448,7 @@ AboutReader.prototype = {
   },
 
   _setLineHeight(newLineHeight) {
-    let contentClasses = this._doc.getElementById("moz-reader-content").classList;
+    let contentClasses = this._contentElement.classList;
 
     if (this._lineHeight > 0)
       contentClasses.remove("line-height" + this._lineHeight);
@@ -460,8 +465,8 @@ AboutReader.prototype = {
     let currentLineHeight = Services.prefs.getIntPref("reader.line_height");
     currentLineHeight = Math.max(LINE_HEIGHT_MIN, Math.min(LINE_HEIGHT_MAX, currentLineHeight));
 
-    let plusButton = this._doc.getElementById("line-height-plus");
-    let minusButton = this._doc.getElementById("line-height-minus");
+    let plusButton = this._doc.querySelector(".line-height-plus-button");
+    let minusButton = this._doc.querySelector(".line-height-minus-button");
 
     function updateControls() {
       if (currentLineHeight === LINE_HEIGHT_MIN) {
@@ -876,7 +881,7 @@ AboutReader.prototype = {
 
   _setupSegmentedButton(id, options, initialValue, callback) {
     let doc = this._doc;
-    let segmentedButton = doc.getElementById(id);
+    let segmentedButton = doc.getElementsByClassName(id)[0];
 
     for (let i = 0; i < options.length; i++) {
       let option = options[i];
@@ -930,7 +935,7 @@ AboutReader.prototype = {
       this._setButtonTip(id, titleEntity);
     }
 
-    let button = this._doc.getElementById(id);
+    let button = this._doc.getElementsByClassName(id)[0];
     if (textEntity) {
       button.textContent = gStrings.GetStringFromName(textEntity);
     }
@@ -951,12 +956,12 @@ AboutReader.prototype = {
    * @param   Localizable string providing UI element usage tip.
    */
   _setButtonTip(id, titleEntity) {
-    let button = this._doc.getElementById(id);
+    let button = this._doc.getElementsByClassName(id)[0];
     button.setAttribute("title", gStrings.GetStringFromName(titleEntity));
   },
 
   _setupStyleDropdown() {
-    let dropdownToggle = this._doc.querySelector("#style-dropdown .dropdown-toggle");
+    let dropdownToggle = this._doc.querySelector(".style-dropdown .dropdown-toggle");
     dropdownToggle.setAttribute("title", gStrings.GetStringFromName("aboutReader.toolbar.typeControls"));
   },
 

@@ -354,6 +354,7 @@ VRDisplayOSVR::SubmitFrame(MacIOSurface* aMacIOSurface,
                            const gfx::Rect& aRightEyeRect)
 {
   // XXX Add code to submit frame
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   return false;
 }
 
@@ -365,6 +366,7 @@ VRDisplayOSVR::SubmitFrame(const mozilla::layers::EGLImageDescriptor*,
                            const gfx::Rect& aRightEyeRect)
 {
   // XXX Add code to submit frame
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   return false;
 }
 

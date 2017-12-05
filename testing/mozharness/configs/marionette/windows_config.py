@@ -35,9 +35,9 @@ config = {
         'run-tests',
     ],
     "default_blob_upload_servers": [
-         "https://blobupload.elasticbeanstalk.com",
+        "https://blobupload.elasticbeanstalk.com",
     ],
-    "blob_uploader_auth_file" : os.path.join(os.getcwd(), "oauth.txt"),
+    "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
     "download_minidump_stackwalk": True,
     "download_symbols": "ondemand",
     "suite_definitions": {
@@ -52,7 +52,7 @@ config = {
                 "--symbols-path=%(symbols_path)s"
             ],
             "run_filename": "",
-            "testsdir": ""
+            "testsdir": "marionette"
         },
     },
 }

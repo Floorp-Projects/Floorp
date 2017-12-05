@@ -144,11 +144,134 @@ impl ToCss for Color {
     }
 }
 
+/// Either a number or a percentage.
+pub enum NumberOrPercentage {
+    /// `<number>`.
+    Number {
+        /// The numeric value parsed, as a float.
+        value: f32,
+    },
+    /// `<percentage>`
+    Percentage {
+        /// The value as a float, divided by 100 so that the nominal range is
+        /// 0.0 to 1.0.
+        unit_value: f32,
+    },
+}
+
+impl NumberOrPercentage {
+    fn unit_value(&self) -> f32 {
+        match *self {
+            NumberOrPercentage::Number { value } => value,
+            NumberOrPercentage::Percentage { unit_value } => unit_value,
+        }
+    }
+}
+
+/// Either an angle or a number.
+pub enum AngleOrNumber {
+    /// `<number>`.
+    Number {
+        /// The numeric value parsed, as a float.
+        value: f32,
+    },
+    /// `<angle>`
+    Angle {
+        /// The value as a number of degrees.
+        degrees: f32,
+    },
+}
+
+impl AngleOrNumber {
+    fn degrees(&self) -> f32 {
+        match *self {
+            AngleOrNumber::Number { value } => value,
+            AngleOrNumber::Angle { degrees } => degrees,
+        }
+    }
+}
+
+/// A trait that can be used to hook into how `cssparser` parses color
+/// components, with the intention of implementing more complicated behavior.
+///
+/// For example, this is used by Servo to support calc() in color.
+pub trait ColorComponentParser<'i> {
+    /// A custom error type that can be returned from the parsing functions.
+    type Error: 'i;
+
+    /// Parse an `<angle>` or `<number>`.
+    ///
+    /// Returns the result in degrees.
+    fn parse_angle_or_number<'t>(
+        &self,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<AngleOrNumber, ParseError<'i, Self::Error>> {
+        let location = input.current_source_location();
+        Ok(match *input.next()? {
+            Token::Number { value, .. } => AngleOrNumber::Number { value },
+            Token::Dimension { value: v, ref unit, .. } => {
+                let degrees = match_ignore_ascii_case! { &*unit,
+                    "deg" => v,
+                    "grad" => v * 360. / 400.,
+                    "rad" => v * 360. / (2. * PI),
+                    "turn" => v * 360.,
+                    _ => return Err(location.new_unexpected_token_error(Token::Ident(unit.clone()))),
+                };
+
+                AngleOrNumber::Angle { degrees }
+            }
+            ref t => return Err(location.new_unexpected_token_error(t.clone()))
+        })
+    }
+
+    /// Parse a `<percentage>` value.
+    ///
+    /// Returns the result in a number from 0.0 to 1.0.
+    fn parse_percentage<'t>(
+        &self,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<f32, ParseError<'i, Self::Error>> {
+        input.expect_percentage().map_err(From::from)
+    }
+
+    /// Parse a `<number>` value.
+    fn parse_number<'t>(
+        &self,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<f32, ParseError<'i, Self::Error>> {
+        input.expect_number().map_err(From::from)
+    }
+
+    /// Parse a `<number>` value or a `<percentage>` value.
+    fn parse_number_or_percentage<'t>(
+        &self,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<NumberOrPercentage, ParseError<'i, Self::Error>> {
+        let location = input.current_source_location();
+        Ok(match *input.next()? {
+            Token::Number { value, .. } => NumberOrPercentage::Number { value },
+            Token::Percentage { unit_value, .. } => NumberOrPercentage::Percentage { unit_value },
+            ref t => return Err(location.new_unexpected_token_error(t.clone()))
+        })
+    }
+}
+
+struct DefaultComponentParser;
+impl<'i> ColorComponentParser<'i> for DefaultComponentParser {
+    type Error = ();
+}
+
 impl Color {
     /// Parse a <color> value, per CSS Color Module Level 3.
     ///
     /// FIXME(#2) Deprecated CSS2 System Colors are not supported yet.
-    pub fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Color, BasicParseError<'i>> {
+    pub fn parse_with<'i, 't, ComponentParser>(
+        component_parser: &ComponentParser,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Color, ParseError<'i, ComponentParser::Error>>
+    where
+        ComponentParser: ColorComponentParser<'i>,
+    {
         // FIXME: remove clone() when lifetimes are non-lexical
         let location = input.current_source_location();
         let token = input.next()?.clone();
@@ -159,11 +282,19 @@ impl Color {
             Token::Ident(ref value) => parse_color_keyword(&*value),
             Token::Function(ref name) => {
                 return input.parse_nested_block(|arguments| {
-                    parse_color_function(&*name, arguments).map_err(|e| e.into())
-                }).map_err(ParseError::<()>::basic);
+                    parse_color_function(component_parser, &*name, arguments)
+                })
             }
             _ => Err(())
-        }.map_err(|()| location.new_basic_unexpected_token_error(token))
+        }.map_err(|()| location.new_unexpected_token_error(token))
+    }
+
+    /// Parse a <color> value, per CSS Color Module Level 3.
+    pub fn parse<'i, 't>(
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Color, BasicParseError<'i>> {
+        let component_parser = DefaultComponentParser;
+        Self::parse_with(&component_parser, input).map_err(ParseError::basic)
     }
 
     /// Parse a color hash, without the leading '#' character.
@@ -195,9 +326,7 @@ impl Color {
             _ => Err(())
         }
     }
-
 }
-
 
 #[inline]
 fn rgb(red: u8, green: u8, blue: u8) -> Color {
@@ -420,11 +549,18 @@ fn clamp_floor_256_f32(val: f32) -> u8 {
 }
 
 #[inline]
-fn parse_color_function<'i, 't>(name: &str, arguments: &mut Parser<'i, 't>) -> Result<Color, BasicParseError<'i>> {
+fn parse_color_function<'i, 't, ComponentParser>(
+    component_parser: &ComponentParser,
+    name: &str,
+    arguments: &mut Parser<'i, 't>
+) -> Result<Color, ParseError<'i, ComponentParser::Error>>
+where
+    ComponentParser: ColorComponentParser<'i>,
+{
     let (red, green, blue, uses_commas) = match_ignore_ascii_case! { name,
-        "rgb" | "rgba" => parse_rgb_components_rgb(arguments)?,
-        "hsl" | "hsla" => parse_rgb_components_hsl(arguments)?,
-        _ => return Err(arguments.new_basic_unexpected_token_error(Token::Ident(name.to_owned().into()))),
+        "rgb" | "rgba" => parse_rgb_components_rgb(component_parser, arguments)?,
+        "hsl" | "hsla" => parse_rgb_components_hsl(component_parser, arguments)?,
+        _ => return Err(arguments.new_unexpected_token_error(Token::Ident(name.to_owned().into()))),
     };
 
     let alpha = if !arguments.is_exhausted() {
@@ -433,18 +569,7 @@ fn parse_color_function<'i, 't>(name: &str, arguments: &mut Parser<'i, 't>) -> R
         } else {
             arguments.expect_delim('/')?;
         };
-        let location = arguments.current_source_location();
-        match *arguments.next()? {
-            Token::Number { value: v, .. } => {
-                clamp_unit_f32(v)
-            }
-            Token::Percentage { unit_value: v, .. } => {
-                clamp_unit_f32(v)
-            }
-            ref t => {
-                return Err(location.new_basic_unexpected_token_error(t.clone()))
-            }
-        }
+        clamp_unit_f32(component_parser.parse_number_or_percentage(arguments)?.unit_value())
     } else {
         255
     };
@@ -455,93 +580,73 @@ fn parse_color_function<'i, 't>(name: &str, arguments: &mut Parser<'i, 't>) -> R
 
 
 #[inline]
-fn parse_rgb_components_rgb<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u8, u8, u8, bool), BasicParseError<'i>> {
-    let red: u8;
-    let green: u8;
-    let blue: u8;
-    let mut uses_commas = false;
-
+fn parse_rgb_components_rgb<'i, 't, ComponentParser>(
+    component_parser: &ComponentParser,
+    arguments: &mut Parser<'i, 't>
+) -> Result<(u8, u8, u8, bool), ParseError<'i, ComponentParser::Error>>
+where
+    ComponentParser: ColorComponentParser<'i>,
+{
     // Either integers or percentages, but all the same type.
     // https://drafts.csswg.org/css-color/#rgb-functions
-    // FIXME: remove .clone() when lifetimes are non-lexical.
-    let location = arguments.current_source_location();
-    match arguments.next()?.clone() {
-        Token::Number { value: v, .. } => {
-            red = clamp_floor_256_f32(v);
-            green = clamp_floor_256_f32(match arguments.next()?.clone() {
-                Token::Number { value: v, .. } => v,
-                Token::Comma => {
-                    uses_commas = true;
-                    arguments.expect_number()?
-                }
-                t => return Err(location.new_basic_unexpected_token_error(t))
-            });
-            if uses_commas {
-                arguments.expect_comma()?;
-            }
-            blue = clamp_floor_256_f32(arguments.expect_number()?);
+    let (red, is_number) = match component_parser.parse_number_or_percentage(arguments)? {
+        NumberOrPercentage::Number { value } => {
+            (clamp_floor_256_f32(value), true)
         }
-        Token::Percentage { unit_value, .. } => {
-            red = clamp_unit_f32(unit_value);
-            green = clamp_unit_f32(match arguments.next()?.clone() {
-                Token::Percentage { unit_value, .. } => unit_value,
-                Token::Comma => {
-                    uses_commas = true;
-                    arguments.expect_percentage()?
-                }
-                t => return Err(location.new_basic_unexpected_token_error(t))
-            });
-            if uses_commas {
-                arguments.expect_comma()?;
-            }
-            blue = clamp_unit_f32(arguments.expect_percentage()?);
+        NumberOrPercentage::Percentage { unit_value } => {
+            (clamp_unit_f32(unit_value), false)
         }
-        t => return Err(location.new_basic_unexpected_token_error(t))
     };
-    return Ok((red, green, blue, uses_commas));
+
+    let uses_commas = arguments.try(|i| i.expect_comma()).is_ok();
+
+    let green;
+    let blue;
+    if is_number {
+        green = clamp_floor_256_f32(component_parser.parse_number(arguments)?);
+        if uses_commas {
+            arguments.expect_comma()?;
+        }
+        blue = clamp_floor_256_f32(component_parser.parse_number(arguments)?);
+    } else {
+        green = clamp_unit_f32(component_parser.parse_percentage(arguments)?);
+        if uses_commas {
+            arguments.expect_comma()?;
+        }
+        blue = clamp_unit_f32(component_parser.parse_percentage(arguments)?);
+    }
+
+    Ok((red, green, blue, uses_commas))
 }
 
 #[inline]
-fn parse_rgb_components_hsl<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u8, u8, u8, bool), BasicParseError<'i>> {
-    let mut uses_commas = false;
+fn parse_rgb_components_hsl<'i, 't, ComponentParser>(
+    component_parser: &ComponentParser,
+    arguments: &mut Parser<'i, 't>
+) -> Result<(u8, u8, u8, bool), ParseError<'i, ComponentParser::Error>>
+where
+    ComponentParser: ColorComponentParser<'i>,
+{
     // Hue given as an angle
     // https://drafts.csswg.org/css-values/#angles
-    let location = arguments.current_source_location();
-    let hue_degrees = match *arguments.next()? {
-        Token::Number { value: v, .. } => v,
-        Token::Dimension { value: v, ref unit, .. } => {
-            match_ignore_ascii_case! { &*unit,
-                "deg" => v,
-                "grad" => v * 360. / 400.,
-                "rad" => v * 360. / (2. * PI),
-                "turn" => v * 360.,
-                _ => return Err(location.new_basic_unexpected_token_error(Token::Ident(unit.clone()))),
-            }
-        }
-        ref t => return Err(location.new_basic_unexpected_token_error(t.clone()))
-    };
+    let hue_degrees = component_parser.parse_angle_or_number(arguments)?.degrees();
+
     // Subtract an integer before rounding, to avoid some rounding errors:
     let hue_normalized_degrees = hue_degrees - 360. * (hue_degrees / 360.).floor();
     let hue = hue_normalized_degrees / 360.;
 
     // Saturation and lightness are clamped to 0% ... 100%
     // https://drafts.csswg.org/css-color/#the-hsl-notation
-    let location = arguments.current_source_location();
-    let saturation = match arguments.next()?.clone() {
-        Token::Percentage { unit_value, .. } => unit_value,
-        Token::Comma => {
-            uses_commas = true;
-            arguments.expect_percentage()?
-        }
-        t => return Err(location.new_basic_unexpected_token_error(t))
-    };
+    let uses_commas = arguments.try(|i| i.expect_comma()).is_ok();
+
+    let saturation = component_parser.parse_percentage(arguments)?;
     let saturation = saturation.max(0.).min(1.);
 
     if uses_commas {
         arguments.expect_comma()?;
     }
 
-    let lightness = arguments.expect_percentage()?;
+    let lightness = component_parser.parse_percentage(arguments)?;
     let lightness = lightness.max(0.).min(1.);
 
     // https://drafts.csswg.org/css-color/#hsl-color

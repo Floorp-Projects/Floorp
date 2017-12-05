@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ComplexClipRegion, DeviceIntRect, ImageMask, ImageRendering, LayerPoint};
-use api::{ClipMode, LayerRect};
-use api::{LayerToWorldTransform, LayoutPoint, LayoutVector2D, LocalClip};
+use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, ImageMask, ImageRendering};
+use api::{LayerPoint, LayerRect, LayerToWorldTransform, LayoutPoint, LayoutVector2D, LocalClip};
 use border::BorderCornerClipSource;
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use prim_store::{ClipData, ImageMaskData};
 use resource_cache::ResourceCache;
-use util::{extract_inner_rect_safe, MaxRect, TransformedRect};
+use util::{MaxRect, calculate_screen_bounding_rect, extract_inner_rect_safe};
 
 pub type ClipStore = FreeList<ClipSources>;
 pub type ClipSourcesHandle = FreeListHandle<ClipSources>;
@@ -253,12 +252,12 @@ impl ClipSources {
         device_pixel_ratio: f32,
     ) -> (DeviceIntRect, Option<DeviceIntRect>) {
         let screen_inner_rect =
-            TransformedRect::new(&self.local_inner_rect, transform, device_pixel_ratio);
+            calculate_screen_bounding_rect(transform, &self.local_inner_rect, device_pixel_ratio);
         let screen_outer_rect = self.local_outer_rect.map(|outer_rect|
-            TransformedRect::new(&outer_rect, transform, device_pixel_ratio).bounding_rect
+            calculate_screen_bounding_rect(transform, &outer_rect, device_pixel_ratio)
         );
 
-        (screen_inner_rect.bounding_rect, screen_outer_rect)
+        (screen_inner_rect, screen_outer_rect)
     }
 }
 
