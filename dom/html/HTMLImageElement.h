@@ -142,10 +142,6 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::alt, aAlt, aError);
   }
-  void GetSrc(nsAString& aSrc, nsIPrincipal&)
-  {
-    GetSrc(aSrc);
-  }
   void GetSrc(nsAString& aSrc)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
@@ -158,7 +154,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }
-  void GetSrcset(nsAString& aSrcset, nsIPrincipal&)
+  void GetSrcset(nsAString& aSrcset)
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }
