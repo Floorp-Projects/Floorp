@@ -44,7 +44,7 @@ function cleanupLocaleTests() {
  */
 function createUtf16Database() {
   print("Creating the in-memory UTF-16-encoded database.");
-  let conn = getService().openSpecialDatabase("memory");
+  let conn = Services.storage.openSpecialDatabase("memory");
   conn.executeSimpleSQL("PRAGMA encoding = 'UTF-16'");
 
   print("Make sure the encoding was set correctly and is now UTF-16.");

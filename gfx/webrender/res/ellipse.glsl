@@ -55,13 +55,20 @@ float sdEllipse( vec2 p, in vec2 ab ) {
     return length(r - p ) * sign(p.y-r.y);
 }
 
-float distance_to_ellipse(vec2 p, vec2 radii) {
+float distance_to_ellipse(vec2 p, vec2 radii, float aa_range) {
     // sdEllipse fails on exact circles, so handle equal
     // radii here. The branch coherency should make this
     // a performance win for the circle case too.
+    float len = length(p);
     if (radii.x == radii.y) {
-        return length(p) - radii.x;
+        return len - radii.x;
     } else {
+        if (len < min(radii.x, radii.y) - aa_range) {
+          return -aa_range;
+        } else if (len > max(radii.x, radii.y) + aa_range) {
+          return aa_range;
+        }
+
         return sdEllipse(p, radii);
     }
 }
@@ -70,14 +77,16 @@ float clip_against_ellipse_if_needed(
     vec2 pos,
     float current_distance,
     vec4 ellipse_center_radius,
-    vec2 sign_modifier
+    vec2 sign_modifier,
+    float aa_range
 ) {
     if (!all(lessThan(sign_modifier * pos, sign_modifier * ellipse_center_radius.xy))) {
       return current_distance;
     }
 
     return distance_to_ellipse(pos - ellipse_center_radius.xy,
-                               ellipse_center_radius.zw);
+                               ellipse_center_radius.zw,
+                               aa_range);
 }
 
 float rounded_rect(vec2 pos,
@@ -95,22 +104,26 @@ float rounded_rect(vec2 pos,
     current_distance = clip_against_ellipse_if_needed(pos,
                                                       current_distance,
                                                       clip_center_radius_tl,
-                                                      vec2(1.0));
+                                                      vec2(1.0),
+                                                      aa_range);
 
     current_distance = clip_against_ellipse_if_needed(pos,
                                                       current_distance,
                                                       clip_center_radius_tr,
-                                                      vec2(-1.0, 1.0));
+                                                      vec2(-1.0, 1.0),
+                                                      aa_range);
 
     current_distance = clip_against_ellipse_if_needed(pos,
                                                       current_distance,
                                                       clip_center_radius_br,
-                                                      vec2(-1.0));
+                                                      vec2(-1.0),
+                                                      aa_range);
 
     current_distance = clip_against_ellipse_if_needed(pos,
                                                       current_distance,
                                                       clip_center_radius_bl,
-                                                      vec2(1.0, -1.0));
+                                                      vec2(1.0, -1.0),
+                                                      aa_range);
 
     // Apply AA
     // See comment in ps_border_corner about the choice of constants.

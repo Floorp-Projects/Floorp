@@ -744,7 +744,9 @@ SERVO_BINDING_FUNC(Servo_ComputeColor, bool,
                    RawServoStyleSetBorrowedOrNull set,
                    nscolor current_color,
                    const nsAString* value,
-                   nscolor* result_color);
+                   nscolor* result_color,
+                   bool* was_current_color,
+                   mozilla::css::Loader* loader)
 SERVO_BINDING_FUNC(Servo_ParseIntersectionObserverRootMargin, bool,
                    const nsAString* value,
                    nsCSSRect* result);
@@ -755,6 +757,26 @@ SERVO_BINDING_FUNC(Servo_ParseTransformIntoMatrix, bool,
                    const nsAString* value,
                    bool* contains_3d_transform,
                    RawGeckoGfxMatrix4x4* result);
+SERVO_BINDING_FUNC(Servo_ParseCounterStyleName, nsAtom*,
+                   const nsACString* value);
+SERVO_BINDING_FUNC(Servo_ParseCounterStyleDescriptor, bool,
+                   nsCSSCounterDesc aDescriptor,
+                   const nsACString* aValue,
+                   RawGeckoURLExtraData* aURLExtraData,
+                   nsCSSValue* aResult);
+SERVO_BINDING_FUNC(Servo_ParseFontDescriptor, bool,
+                   nsCSSFontDesc desc_id,
+                   const nsAString* value,
+                   RawGeckoURLExtraData* data,
+                   nsCSSValueBorrowedMut);
+SERVO_BINDING_FUNC(Servo_ParseFontShorthandForMatching, bool,
+                   const nsAString* value,
+                   RawGeckoURLExtraData* data,
+                   RefPtr<SharedFontList>* family,
+                   nsCSSValueBorrowedMut style,
+                   nsCSSValueBorrowedMut stretch,
+                   nsCSSValueBorrowedMut weight);
+
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \

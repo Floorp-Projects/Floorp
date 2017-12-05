@@ -284,6 +284,7 @@ VROculusSession::StopPresentation()
 
 VROculusSession::~VROculusSession()
 {
+  mSubmitThread = nullptr;
   Uninitialize(true);
 }
 
@@ -356,16 +357,19 @@ VROculusSession::Refresh(bool aForceRefresh)
       // fill the HMD with black / no layers.
       if (mSession && mTextureSet) {
         if (!aForceRefresh) {
-          // ovr_SubmitFrame is only allowed been run at Compositor thread,
-          // so we post this task to Compositor thread and let it determine
-          // if reloading library.
+          // VROculusSession didn't start submitting frames yet.
+          if (!mSubmitThread) {
+            return;
+          }
+          // ovr_SubmitFrame is running at VR Submit thread,
+          // so we post this task to VR Submit thread and let it paint
+          // a black frame.
           mDrawBlack = true;
-          MessageLoop* loop = layers::CompositorThreadHolder::Loop();
-          loop->PostTask(NewRunnableMethod<bool>(
+          MOZ_ASSERT(mSubmitThread->IsActive());
+          mSubmitThread->PostTask(NewRunnableMethod<bool>(
             "gfx::VROculusSession::Refresh",
             this,
             &VROculusSession::Refresh, true));
-
           return;
         }
         ovrLayerEyeFov layer;
@@ -1095,6 +1099,7 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
+  MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!CreateD3DObjects()) {
     return false;
   }
@@ -1245,6 +1250,7 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
     return false;
   }
 
+  mSession->mSubmitThread = mSubmitThread;
   return true;
 }
 
@@ -1347,7 +1353,7 @@ VRControllerOculus::UpdateVibrateHaptic(ovrSession aSession,
                                         const VRManagerPromise& aPromise)
 {
   // UpdateVibrateHaptic() only can be called by mVibrateThread
-  MOZ_ASSERT(mVibrateThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mVibrateThread->GetThread() == NS_GetCurrentThread());
 
   // It has been interrupted by loss focus.
   if (mIsVibrateStopped) {
@@ -1406,8 +1412,7 @@ VRControllerOculus::UpdateVibrateHaptic(ovrSession aSession,
           "VRControllerOculus::UpdateVibrateHaptic",
           this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
           aHapticIndex, aIntensity, (duration > kVibrateRate) ? remainingTime : 0, aVibrateIndex, aPromise);
-    NS_DelayedDispatchToCurrentThread(runnable.forget(),
-                                      (duration > kVibrateRate) ? kVibrateRate : remainingTime);
+    mVibrateThread->PostDelayedTask(runnable.forget(), (duration > kVibrateRate) ? kVibrateRate : remainingTime);
   } else {
     VibrateHapticComplete(aSession, aPromise, true);
   }
@@ -1457,23 +1462,19 @@ VRControllerOculus::VibrateHaptic(ovrSession aSession,
 {
   // Spinning up the haptics thread at the first haptics call.
   if (!mVibrateThread) {
-    nsresult rv = NS_NewThread(getter_AddRefs(mVibrateThread));
-    MOZ_ASSERT(mVibrateThread);
-
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false, "Failed to create async thread.");
-    }
+    mVibrateThread = new VRThread(NS_LITERAL_CSTRING("Oculus_Vibration"));
   }
+  mVibrateThread->Start();
   ++mVibrateIndex;
   mIsVibrateStopped = false;
 
   RefPtr<Runnable> runnable =
-       NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t,
-        StoreCopyPassByConstLRef<VRManagerPromise>>(
-          "VRControllerOculus::UpdateVibrateHaptic",
-          this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
-          aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
-  mVibrateThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+    NewRunnableMethod<ovrSession, uint32_t, double, double, uint64_t,
+      StoreCopyPassByConstLRef<VRManagerPromise>>(
+        "VRControllerOculus::UpdateVibrateHaptic",
+        this, &VRControllerOculus::UpdateVibrateHaptic, aSession,
+        aHapticIndex, aIntensity, aDuration, mVibrateIndex, aPromise);
+  mVibrateThread->PostTask(runnable.forget());
 }
 
 void

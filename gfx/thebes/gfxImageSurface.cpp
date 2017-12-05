@@ -96,9 +96,9 @@ TryAllocAlignedBytes(size_t aSize)
     void* ptr;
     // Try to align for fast alpha recovery.  This should only help
     // cairo too, can't hurt.
-    return moz_posix_memalign(&ptr,
-                              1 << gfxAlphaRecovery::GoodAlignmentLog2(),
-                              aSize) ?
+    return posix_memalign(&ptr,
+                          1 << gfxAlphaRecovery::GoodAlignmentLog2(),
+                          aSize) ?
              nullptr : ptr;
 #else
     // Oh well, hope that luck is with us in the allocator

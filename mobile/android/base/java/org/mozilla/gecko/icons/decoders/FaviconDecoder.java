@@ -9,7 +9,7 @@ import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
 
-import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.BitmapUtils;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

@@ -20,6 +20,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/Sprintf.h"
@@ -206,6 +207,22 @@ FontFaceSet::ParseFontShorthandForMatching(
                             uint8_t& aStyle,
                             ErrorResult& aRv)
 {
+  if (mDocument->IsStyledByServo()) {
+    nsCSSValue style;
+    nsCSSValue stretch;
+    nsCSSValue weight;
+    RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(mDocument);
+    if (!ServoCSSParser::ParseFontShorthandForMatching(
+          aFont, url, aFamilyList, style, stretch, weight)) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return;
+    }
+    aWeight = weight.GetIntValue();
+    aStretch = stretch.GetIntValue();
+    aStyle = style.GetIntValue();
+    return;
+  }
+
   // Parse aFont as a 'font' property value.
   RefPtr<Declaration> declaration = new Declaration;
   declaration->InitializeEmpty();

@@ -6,23 +6,22 @@
 use api::{BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF, ComplexClipRegion};
 use api::{DeviceUintRect, DeviceUintSize, DisplayItemRef, DocumentLayer, Epoch, FilterOp};
 use api::{ImageDisplayItem, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect};
-use api::{LayerSize, LayerVector2D};
-use api::{LayoutRect, LayoutSize};
+use api::{LayerSize, LayerVector2D, LayoutSize};
 use api::{LocalClip, PipelineId, ScrollClamping, ScrollEventPhase, ScrollLayerState};
 use api::{ScrollLocation, ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext};
-use api::{ClipMode, TileOffset, TransformStyle, WorldPoint};
+use api::{TileOffset, TransformStyle, WorldPoint};
 use clip::ClipRegion;
 use clip_scroll_node::StickyFrameInfo;
 use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
 use frame_builder::{FrameBuilder, FrameBuilderConfig, ScrollbarInfo};
 use gpu_cache::GpuCache;
-use internal_types::{EdgeAaSegmentMask, FastHashMap, FastHashSet, RenderedDocument};
+use internal_types::{FastHashMap, FastHashSet, RenderedDocument};
+use prim_store::{BrushAntiAliasMode};
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{FontInstanceMap,ResourceCache, TiledImageMap};
 use scene::{Scene, StackingContextHelpers, ScenePipeline, SceneProperties};
 use tiling::CompositeOps;
-use util::ComplexClipRegionHelpers;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Eq, Ord)]
 pub struct FrameId(pub u32);
@@ -42,11 +41,6 @@ struct FlattenContext<'a> {
     tiled_image_map: TiledImageMap,
     pipeline_epochs: Vec<(PipelineId, Epoch)>,
     replacements: Vec<(ClipId, ClipId)>,
-    /// Opaque rectangle vector, stored here in order to
-    /// avoid re-allocation on each use.
-    opaque_parts: Vec<LayoutRect>,
-    /// Same for the transparent rectangles.
-    transparent_parts: Vec<LayoutRect>,
     output_pipelines: &'a FastHashSet<PipelineId>,
 }
 
@@ -111,7 +105,8 @@ impl<'a> FlattenContext<'a> {
                         ClipAndScrollInfo::simple(root_reference_frame_id),
                         &info,
                         bg_color,
-                        EdgeAaSegmentMask::empty(),
+                        None,
+                        BrushAntiAliasMode::Primitive,
                     );
                 }
             }
@@ -448,18 +443,13 @@ impl<'a> FlattenContext<'a> {
                 }
             }
             SpecificDisplayItem::Rectangle(ref info) => {
-                if !self.try_to_add_rectangle_splitting_on_clip(
+                self.builder.add_solid_rectangle(
+                    clip_and_scroll,
                     &prim_info,
                     info.color,
-                    &clip_and_scroll,
-                ) {
-                    self.builder.add_solid_rectangle(
-                        clip_and_scroll,
-                        &prim_info,
-                        info.color,
-                        EdgeAaSegmentMask::empty(),
-                    );
-                }
+                    None,
+                    BrushAntiAliasMode::Primitive,
+                );
             }
             SpecificDisplayItem::ClearRectangle => {
                 self.builder.add_clear_rectangle(
@@ -629,86 +619,6 @@ impl<'a> FlattenContext<'a> {
             }
         }
         None
-    }
-
-    /// Try to optimize the rendering of a solid rectangle that is clipped by a single
-    /// rounded rectangle, by only masking the parts of the rectangle that intersect
-    /// the rounded parts of the clip. This is pretty simple now, so has a lot of
-    /// potential for further optimizations.
-    fn try_to_add_rectangle_splitting_on_clip(
-        &mut self,
-        info: &LayerPrimitiveInfo,
-        color: ColorF,
-        clip_and_scroll: &ClipAndScrollInfo,
-    ) -> bool {
-        if info.rect.size.area() < 200.0 { // arbitrary threshold
-            // too few pixels, don't bother adding instances
-            return false;
-        }
-        // If this rectangle is not opaque, splitting the rectangle up
-        // into an inner opaque region just ends up hurting batching and
-        // doing more work than necessary.
-        if color.a != 1.0 {
-            return false;
-        }
-
-        self.opaque_parts.clear();
-        self.transparent_parts.clear();
-
-        match info.local_clip {
-            LocalClip::Rect(_) => return false,
-            LocalClip::RoundedRect(_, ref region) => {
-                if region.mode == ClipMode::ClipOut {
-                    return false;
-                }
-                region.split_rectangles(
-                    &mut self.opaque_parts,
-                    &mut self.transparent_parts,
-                );
-            }
-        };
-
-        let local_clip = LocalClip::from(*info.local_clip.clip_rect());
-        let mut has_opaque = false;
-
-        for opaque in &self.opaque_parts {
-            let prim_info = LayerPrimitiveInfo {
-                rect: match opaque.intersection(&info.rect) {
-                    Some(rect) => rect,
-                    None => continue,
-                },
-                local_clip,
-                .. info.clone()
-            };
-            self.builder.add_solid_rectangle(
-                *clip_and_scroll,
-                &prim_info,
-                color,
-                EdgeAaSegmentMask::empty(),
-            );
-            has_opaque = true;
-        }
-
-        if !has_opaque {
-            return false
-        }
-
-        for transparent in &self.transparent_parts {
-            let prim_info = LayerPrimitiveInfo {
-                rect: match transparent.intersection(&info.rect) {
-                    Some(rect) => rect,
-                    None => continue,
-                },
-                .. info.clone()
-            };
-            self.builder.add_solid_rectangle(
-                *clip_and_scroll,
-                &prim_info,
-                color,
-                EdgeAaSegmentMask::empty(),
-            );
-        }
-        true
     }
 
     /// Decomposes an image display item that is repeated into an image per individual repetition.
@@ -1122,8 +1032,6 @@ impl FrameContext {
                 tiled_image_map: resource_cache.get_tiled_image_map(),
                 pipeline_epochs: Vec::new(),
                 replacements: Vec::new(),
-                opaque_parts: Vec::new(),
-                transparent_parts: Vec::new(),
                 output_pipelines,
             };
 

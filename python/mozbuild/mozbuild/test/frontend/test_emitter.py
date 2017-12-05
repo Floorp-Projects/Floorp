@@ -215,7 +215,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('asflags', extra_substs={
             'ASFLAGS': ['-safeseh'],
         })
-        as_sources, sources, ldflags, asflags, lib, flags = self.read_topsrcdir(reader)
+        as_sources, sources, ldflags, lib, flags, asflags = self.read_topsrcdir(reader)
         self.assertIsInstance(asflags, ComputedFlags)
         self.assertEqual(asflags.flags['OS'], reader.config.substs['ASFLAGS'])
         self.assertEqual(asflags.flags['MOZBUILD'], ['-no-integrated-as'])
@@ -437,12 +437,12 @@ class TestEmitterBasic(unittest.TestCase):
                                  YASM_ASFLAGS='-foo',
                              ))
 
-        sources, passthru, ldflags, asflags, lib, flags = self.read_topsrcdir(reader)
+        sources, passthru, ldflags, lib, flags, asflags = self.read_topsrcdir(reader)
 
         self.assertIsInstance(passthru, VariablePassthru)
         self.assertIsInstance(ldflags, ComputedFlags)
-        self.assertIsInstance(asflags, ComputedFlags)
         self.assertIsInstance(flags, ComputedFlags)
+        self.assertIsInstance(asflags, ComputedFlags)
 
         self.assertEqual(asflags.flags['OS'], reader.config.substs['YASM_ASFLAGS'])
 
@@ -1027,13 +1027,13 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('sources')
         objs = self.read_topsrcdir(reader)
 
-        computed_flags = objs.pop()
-        self.assertIsInstance(computed_flags, ComputedFlags)
-        # The second to last object is a Linkable.
-        linkable = objs.pop()
-        self.assertTrue(linkable.cxx_link)
         as_flags = objs.pop()
         self.assertIsInstance(as_flags, ComputedFlags)
+        computed_flags = objs.pop()
+        self.assertIsInstance(computed_flags, ComputedFlags)
+        # The third to last object is a Linkable.
+        linkable = objs.pop()
+        self.assertTrue(linkable.cxx_link)
         ld_flags = objs.pop()
         self.assertIsInstance(ld_flags, ComputedFlags)
         self.assertEqual(len(objs), 6)
@@ -1062,9 +1062,11 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('sources-just-c')
         objs = self.read_topsrcdir(reader)
 
+        as_flags = objs.pop()
+        self.assertIsInstance(as_flags, ComputedFlags)
         flags = objs.pop()
         self.assertIsInstance(flags, ComputedFlags)
-        # The second to last object is a Linkable.
+        # The third to last object is a Linkable.
         linkable = objs.pop()
         self.assertFalse(linkable.cxx_link)
 
@@ -1087,14 +1089,16 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('generated-sources')
         objs = self.read_topsrcdir(reader)
 
+        as_flags = objs.pop()
+        self.assertIsInstance(as_flags, ComputedFlags)
         flags = objs.pop()
         self.assertIsInstance(flags, ComputedFlags)
-        # The second to last object is a Linkable.
+        # The third to last object is a Linkable.
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
         flags = objs.pop()
         self.assertIsInstance(flags, ComputedFlags)
-        self.assertEqual(len(objs), 7)
+        self.assertEqual(len(objs), 6)
 
         generated_sources = [o for o in objs if isinstance(o, GeneratedSources)]
         self.assertEqual(len(generated_sources), 6)

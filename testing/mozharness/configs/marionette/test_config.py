@@ -24,7 +24,7 @@ config = {
                 "--symbols-path=%(symbols_path)s"
             ],
             "run_filename": "",
-            "testsdir": ""
+            "testsdir": "marionette"
         },
     },
 }

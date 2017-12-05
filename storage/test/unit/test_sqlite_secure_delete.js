@@ -35,7 +35,7 @@ add_test(function test_delete_removes_data() {
   const TEST_STRING = "SomeRandomStringToFind";
 
   let file = getTestDB();
-  let db = getService().openDatabase(file);
+  let db = Services.storage.openDatabase(file);
 
   // Create the table and insert the data.
   db.createTable("test", "data TEXT");

@@ -9,15 +9,18 @@ apps:
     command: desktop-launch firefox
     desktop: opt/firefox/distribution/firefox.desktop
     plugs:
-      - unity7
-      - network
+      - browser-sandbox
+      - camera
+      - desktop
+      - desktop-legacy
+      - gsettings
       - home
-      - x11
+      - network
       - opengl
       - pulseaudio
-      - gsettings
-      - camera
-      - browser-sandbox
+      - unity7
+      - wayland
+      - x11
 
 plugs:
   browser-sandbox:

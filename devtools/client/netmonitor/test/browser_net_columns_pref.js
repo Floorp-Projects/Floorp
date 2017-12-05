@@ -24,15 +24,23 @@ add_task(function* () {
   yield hideColumn("status");
   yield hideColumn("contentSize");
 
-  ok(!Services.prefs.getCharPref("devtools.netmonitor.visibleColumns").includes("status"),
-    "Pref should be synced for status");
-  ok(!Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
-    .includes("contentSize"), "Pref should be synced for contentSize");
+  let visibleColumns = JSON.parse(
+    Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
+  );
+
+  ok(!visibleColumns.includes("status"),
+     "Pref should be synced for status");
+  ok(!visibleColumns.includes("contentSize"),
+    "Pref should be synced for contentSize");
 
   yield showColumn("status");
 
-  ok(Services.prefs.getCharPref("devtools.netmonitor.visibleColumns").includes("status"),
-  "Pref should be synced for status");
+  visibleColumns = JSON.parse(
+    Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
+  );
+
+  ok(visibleColumns.includes("status"),
+    "Pref should be synced for status");
 
   function* hideColumn(column) {
     info(`Clicking context-menu item for ${column}`);
