@@ -764,6 +764,11 @@ SERVO_BINDING_FUNC(Servo_ParseCounterStyleDescriptor, bool,
                    const nsACString* aValue,
                    RawGeckoURLExtraData* aURLExtraData,
                    nsCSSValue* aResult);
+SERVO_BINDING_FUNC(Servo_ParseFontDescriptor, bool,
+                   nsCSSFontDesc desc_id,
+                   const nsAString* value,
+                   RawGeckoURLExtraData* data,
+                   nsCSSValueBorrowedMut);
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
