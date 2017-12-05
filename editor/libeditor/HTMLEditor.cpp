@@ -1356,80 +1356,64 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   return BeginningOfDocument();
 }
 
-void
-HTMLEditor::NormalizeEOLInsertPosition(nsINode* firstNodeToInsert,
-                                       nsCOMPtr<nsIDOMNode>* insertParentNode,
-                                       int32_t* insertOffset)
+EditorRawDOMPoint
+HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
+                                       const EditorRawDOMPoint& aPointToInsert)
 {
-  /*
-    This function will either correct the position passed in,
-    or leave the position unchanged.
-
-    When the (first) item to insert is a block level element,
-    and our insertion position is after the last visible item in a line,
-    i.e. the insertion position is just before a visible line break <br>,
-    we want to skip to the position just after the line break (see bug 68767)
-
-    However, our logic to detect whether we should skip or not
-    needs to be more clever.
-    We must not skip when the caret appears to be positioned at the beginning
-    of a block, in that case skipping the <br> would not insert the <br>
-    at the caret position, but after the current empty line.
-
-    So we have several cases to test:
-
-    1) We only ever want to skip, if the next visible thing after the current position is a break
-
-    2) We do not want to skip if there is no previous visible thing at all
-       That is detected if the call to PriorVisibleNode gives us an offset of zero.
-       Because PriorVisibleNode always positions after the prior node, we would
-       see an offset > 0, if there were a prior node.
-
-    3) We do not want to skip, if both the next and the previous visible things are breaks.
-
-    4) We do not want to skip if the previous visible thing is in a different block
-       than the insertion position.
-  */
-
-  if (!IsBlockNode(firstNodeToInsert)) {
-    return;
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return aPointToInsert;
   }
 
-  WSRunObject wsObj(this, *insertParentNode, *insertOffset);
-  nsCOMPtr<nsINode> nextVisNode, prevVisNode;
-  int32_t nextVisOffset=0;
-  WSType nextVisType;
-  int32_t prevVisOffset=0;
-  WSType prevVisType;
-
-  nsCOMPtr<nsINode> parent(do_QueryInterface(*insertParentNode));
-  wsObj.NextVisibleNode(parent, *insertOffset, address_of(nextVisNode), &nextVisOffset, &nextVisType);
-  if (!nextVisNode) {
-    return;
+  // If the node to insert is not a block level element, we can insert it
+  // at any point.
+  if (!IsBlockNode(&aNodeToInsert)) {
+    return aPointToInsert;
   }
 
-  if (!(nextVisType & WSType::br)) {
-    return;
+  WSRunObject wsObj(this, aPointToInsert.Container(), aPointToInsert.Offset());
+
+  // If the insertion position is after the last visible item in a line,
+  // i.e., the insertion position is just before a visible line break <br>,
+  // we want to skip to the position just after the line break (see bug 68767).
+  nsCOMPtr<nsINode> nextVisibleNode;
+  int32_t nextVisibleOffset = 0;
+  WSType nextVisibleType;
+  wsObj.NextVisibleNode(aPointToInsert.Container(), aPointToInsert.Offset(),
+                        address_of(nextVisibleNode),
+                        &nextVisibleOffset, &nextVisibleType);
+  // So, if the next visible node isn't a <br> element, we can insert the block
+  // level element to the point.
+  if (!nextVisibleNode ||
+      !(nextVisibleType & WSType::br)) {
+    return aPointToInsert;
   }
 
-  wsObj.PriorVisibleNode(parent, *insertOffset, address_of(prevVisNode), &prevVisOffset, &prevVisType);
-  if (!prevVisNode) {
-    return;
+  // However, we must not skip next <br> element when the caret appears to be
+  // positioned at the beginning of a block, in that case skipping the <br>
+  // would not insert the <br> at the caret position, but after the current
+  // empty line.
+  nsCOMPtr<nsINode> previousVisibleNode;
+  int32_t previousVisibleOffset = 0;
+  WSType previousVisibleType;
+  wsObj.PriorVisibleNode(aPointToInsert.Container(), aPointToInsert.Offset(),
+                         address_of(previousVisibleNode),
+                         &previousVisibleOffset, &previousVisibleType);
+  // So, if there is no previous visible node,
+  // or, if both nodes of the insertion point is <br> elements,
+  // or, if the previous visible node is different block,
+  // we need to skip the following <br>.  So, otherwise, we can insert the
+  // block at the insertion point.
+  if (!previousVisibleNode ||
+      (previousVisibleType & WSType::br) ||
+      (previousVisibleType & WSType::thisBlock)) {
+    return aPointToInsert;
   }
 
-  if (prevVisType & WSType::br) {
-    return;
-  }
-
-  if (prevVisType & WSType::thisBlock) {
-    return;
-  }
-
-  int32_t brOffset=0;
-  nsCOMPtr<nsIDOMNode> brNode = GetNodeLocation(GetAsDOMNode(nextVisNode), &brOffset);
-
-  *insertParentNode = brNode;
-  *insertOffset = brOffset + 1;
+  EditorRawDOMPoint afterBRNode(nextVisibleNode);
+  DebugOnly<bool> advanced = afterBRNode.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced,
+    "Failed to advance offset to after the <br> node");
+  return afterBRNode;
 }
 
 NS_IMETHODIMP
@@ -1490,19 +1474,23 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       }
     }
 
-    nsINode* parentSelectedNode = selection->GetAnchorNode();
-    if (parentSelectedNode) {
-      int32_t offsetForInsert = selection->AnchorOffset();
+    if (selection->GetAnchorNode()) {
+      EditorRawDOMPoint atAnchor;
+      if (selection->GetChildAtAnchorOffset()) {
+        atAnchor.Set(selection->GetChildAtAnchorOffset());
+      } else {
+        atAnchor.Set(selection->GetAnchorNode(), selection->AnchorOffset());
+      }
       // Adjust position based on the node we are going to insert.
-      nsCOMPtr<nsIDOMNode> parentSelectedDOMNode =
-        GetAsDOMNode(parentSelectedNode);
-      NormalizeEOLInsertPosition(element, address_of(parentSelectedDOMNode),
-                                 &offsetForInsert);
+      EditorRawDOMPoint pointToInsert =
+        GetBetterInsertionPointFor(*element, atAnchor);
+      if (NS_WARN_IF(!pointToInsert.IsSet())) {
+        return NS_ERROR_FAILURE;
+      }
 
       EditorDOMPoint insertedPoint =
         InsertNodeIntoProperAncestor(
-          *element, EditorRawDOMPoint(parentSelectedDOMNode, offsetForInsert),
-          SplitAtEdges::eAllowToCreateEmptyContainer);
+          *element, pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(!insertedPoint.IsSet())) {
         return NS_ERROR_FAILURE;
       }
