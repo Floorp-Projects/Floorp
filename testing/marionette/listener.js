@@ -49,8 +49,6 @@ Cu.importGlobalProperties(["URL"]);
 
 let listenerId = null; // unique ID of this listener
 let curContainer = {frame: content, shadowRoot: null};
-let previousContainer = null;
-
 
 // Listen for click event to indicate one click has happened, so actions
 // code can send dblclick event, also resetClick and cancelTimer
@@ -73,7 +71,7 @@ const SUPPORTED_STRATEGIES = new Set([
 
 let capabilities;
 
-let legacyactions = new legacyaction.Chain(checkForInterrupted);
+let legacyactions = new legacyaction.Chain();
 
 // last touch for each fingerId
 let multiLast = {};
@@ -719,30 +717,6 @@ function resetValues() {
   action.inputsToCancel = [];
 }
 
-function wasInterrupted() {
-  if (previousContainer) {
-    let element = content.document.elementFromPoint(
-        (content.innerWidth / 2), (content.innerHeight / 2));
-    if (element.id.indexOf("modal-dialog") == -1) {
-      return true;
-    }
-    return false;
-  }
-  return sendSyncMessage("MarionetteFrame:getInterruptedState", {})[0].value;
-}
-
-function checkForInterrupted() {
-  if (wasInterrupted()) {
-    // if previousContainer is set, then we're in a single process
-    // environment
-    if (previousContainer) {
-      curContainer = legacyactions.container = previousContainer;
-      previousContainer = null;
-    }
-    sendSyncMessage("Marionette:switchedToFrame", {restorePrevious: true});
-  }
-}
-
 async function execute(script, args, timeout, opts) {
   opts.timeout = timeout;
   let sb = sandbox.createMutable(curContainer.frame);
@@ -756,58 +730,56 @@ async function executeInSandbox(script, args, timeout, opts) {
 }
 
 function emitTouchEvent(type, touch) {
-  if (!wasInterrupted()) {
-    logger.info(`Emitting Touch event of type ${type} ` +
-        `to element with id: ${touch.target.id} ` +
-        `and tag name: ${touch.target.tagName} ` +
-        `at coordinates (${touch.clientX}), ` +
-        `${touch.clientY}) relative to the viewport`);
+  logger.info(`Emitting Touch event of type ${type} ` +
+      `to element with id: ${touch.target.id} ` +
+      `and tag name: ${touch.target.tagName} ` +
+      `at coordinates (${touch.clientX}), ` +
+      `${touch.clientY}) relative to the viewport`);
 
-    const win = curContainer.frame;
-    let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIWebNavigation)
-        .QueryInterface(Ci.nsIDocShell);
-    if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
-      // if we're in APZ and we're scrolling, we must use
-      // sendNativeTouchPoint to dispatch our touchmove events
-      let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
+  const win = curContainer.frame;
+  let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation)
+      .QueryInterface(Ci.nsIDocShell);
+  if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
+    // if we're in APZ and we're scrolling, we must use
+    // sendNativeTouchPoint to dispatch our touchmove events
+    let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
 
-      // only call emitTouchEventForIFrame if we're inside an iframe.
-      if (index != null) {
-        let ev = {
-          index,
-          type,
-          id: touch.identifier,
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          screenX: touch.screenX,
-          screenY: touch.screenY,
-          radiusX: touch.radiusX,
-          radiusY: touch.radiusY,
-          rotation: touch.rotationAngle,
-          force: touch.force,
-        };
-        sendSyncMessage("Marionette:emitTouchEvent", ev);
-        return;
-      }
-    }
-
-    // we get here if we're not in asyncPacZoomEnabled land, or if we're
-    // the main process
-    let domWindowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
-    domWindowUtils.sendTouchEvent(
+    // only call emitTouchEventForIFrame if we're inside an iframe.
+    if (index != null) {
+      let ev = {
+        index,
         type,
-        [touch.identifier],
-        [touch.clientX],
-        [touch.clientY],
-        [touch.radiusX],
-        [touch.radiusY],
-        [touch.rotationAngle],
-        [touch.force],
-        1,
-        0);
+        id: touch.identifier,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        screenX: touch.screenX,
+        screenY: touch.screenY,
+        radiusX: touch.radiusX,
+        radiusY: touch.radiusY,
+        rotation: touch.rotationAngle,
+        force: touch.force,
+      };
+      sendSyncMessage("Marionette:emitTouchEvent", ev);
+      return;
+    }
   }
+
+  // we get here if we're not in asyncPacZoomEnabled land, or if we're
+  // the main process
+  let domWindowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+  domWindowUtils.sendTouchEvent(
+      type,
+      [touch.identifier],
+      [touch.clientX],
+      [touch.clientY],
+      [touch.radiusX],
+      [touch.radiusY],
+      [touch.rotationAngle],
+      [touch.force],
+      1,
+      0);
 }
 
 /**
