@@ -241,8 +241,8 @@ public:
     return GetReferrerPolicyAsEnum();
   }
 
-  int32_t X();
-  int32_t Y();
+  MOZ_CAN_RUN_SCRIPT int32_t X();
+  MOZ_CAN_RUN_SCRIPT int32_t Y();
   void GetLowsrc(nsAString& aLowsrc)
   {
     GetURIAttr(nsGkAtoms::lowsrc, nullptr, aLowsrc);
@@ -376,7 +376,7 @@ protected:
   // only that it is valid.
   bool TryCreateResponsiveSelector(nsIContent *aSourceNode);
 
-  CSSIntPoint GetXY();
+  MOZ_CAN_RUN_SCRIPT CSSIntPoint GetXY();
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
   void UpdateFormOwner();
 
