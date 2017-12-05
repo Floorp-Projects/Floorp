@@ -33,8 +33,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
-#define MOZALLOC_HAVE_XMALLOC
-
 #if defined(MOZ_ALWAYS_INLINE_EVEN_DEBUG)
 #  define MOZALLOC_INLINE MOZ_ALWAYS_INLINE_EVEN_DEBUG
 #elif defined(HAVE_FORCEINLINE)
