@@ -28,5 +28,3 @@
 == clip-auto.html clip-auto-ref.html
 == clip-rect-auto.html clip-rect-auto-ref.html
 == width-rounding.html width-rounding-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) == overflow-clip-box-1.html overflow-clip-box-1-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) == overflow-clip-box-2.html overflow-clip-box-2-ref.html
