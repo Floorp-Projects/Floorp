@@ -75,6 +75,14 @@ var ClickEventHandler = {
     return false;
   },
 
+  isScrollableElement(aNode) {
+    if (aNode instanceof content.HTMLElement) {
+      return !(aNode instanceof content.HTMLSelectElement) || aNode.multiple;
+    }
+
+    return aNode instanceof content.XULElement;
+  },
+
   findNearestScrollableElement(aNode) {
     // this is a list of overflow property values that allow scrolling
     const scrollingAllowed = ["scroll", "auto"];
@@ -84,10 +92,9 @@ var ClickEventHandler = {
     for (this._scrollable = aNode; this._scrollable;
          this._scrollable = this._scrollable.parentNode) {
       // do not use overflow based autoscroll for <html> and <body>
-      // Elements or non-html elements such as svg or Document nodes
+      // Elements or non-html/non-xul elements such as svg or Document nodes
       // also make sure to skip select elements that are not multiline
-      if (!(this._scrollable instanceof content.HTMLElement) ||
-          ((this._scrollable instanceof content.HTMLSelectElement) && !this._scrollable.multiple)) {
+      if (!this.isScrollableElement(this._scrollable)) {
         continue;
       }
 
