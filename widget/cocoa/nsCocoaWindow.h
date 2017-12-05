@@ -354,8 +354,7 @@ protected:
 
   nsresult             CreateNativeWindow(const NSRect &aRect,
                                           nsBorderStyle aBorderStyle,
-                                          bool aRectIsFrameRect,
-                                          bool aIsPrivateBrowsing);
+                                          bool aRectIsFrameRect);
   nsresult             CreatePopupContentView(const LayoutDeviceIntRect &aRect,
                                               nsWidgetInitData* aInitData);
   void                 DestroyNativeWindow();
