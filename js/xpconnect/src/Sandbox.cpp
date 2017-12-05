@@ -1843,7 +1843,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative* wrappe
 nsresult
 xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& source,
                    const nsACString& filename, int32_t lineNo,
-                   JSVersion jsVersion, MutableHandleValue rval)
+                   MutableHandleValue rval)
 {
     JS_AbortIfWrongThread(cx);
     rval.set(UndefinedValue());

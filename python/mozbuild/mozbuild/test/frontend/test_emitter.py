@@ -461,6 +461,7 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, GeneratedFile)
+            self.assertFalse(o.localized)
 
         expected = ['bar.c', 'foo.c', ('xpidllex.py', 'xpidlyacc.py'), ]
         for o, f in zip(objs, expected):
@@ -469,6 +470,53 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertEqual(o.script, None)
             self.assertEqual(o.method, None)
             self.assertEqual(o.inputs, [])
+
+    def test_localized_generated_files(self):
+        reader = self.reader('localized-generated-files')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 2)
+        for o in objs:
+            self.assertIsInstance(o, GeneratedFile)
+            self.assertTrue(o.localized)
+
+        expected = ['abc.ini', ('bar', 'baz'), ]
+        for o, f in zip(objs, expected):
+            expected_filename = f if isinstance(f, tuple) else (f,)
+            self.assertEqual(o.outputs, expected_filename)
+            self.assertEqual(o.script, None)
+            self.assertEqual(o.method, None)
+            self.assertEqual(o.inputs, [])
+
+    def test_localized_files_from_generated(self):
+        """Test that using LOCALIZED_GENERATED_FILES and then putting the output in
+        LOCALIZED_FILES as an objdir path works.
+        """
+        reader = self.reader('localized-files-from-generated')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 2)
+        self.assertIsInstance(objs[0], GeneratedFile)
+        self.assertIsInstance(objs[1], LocalizedFiles)
+
+    def test_localized_files_not_localized_generated(self):
+        """Test that using GENERATED_FILES and then putting the output in
+        LOCALIZED_FILES as an objdir path produces an error.
+        """
+        reader = self.reader('localized-files-not-localized-generated')
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'Objdir file listed in LOCALIZED_FILES not in LOCALIZED_GENERATED_FILES:'):
+            objs = self.read_topsrcdir(reader)
+
+
+    def test_localized_generated_files_final_target_files(self):
+        """Test that using LOCALIZED_GENERATED_FILES and then putting the output in
+        FINAL_TARGET_FILES as an objdir path produces an error.
+        """
+        reader = self.reader('localized-generated-files-final-target-files')
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'Outputs of LOCALIZED_GENERATED_FILES cannot be used in FINAL_TARGET_FILES:'):
+            objs = self.read_topsrcdir(reader)
 
     def test_generated_files_method_names(self):
         reader = self.reader('generated-files-method-names')

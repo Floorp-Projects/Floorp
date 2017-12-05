@@ -5014,9 +5014,36 @@ public:
 
   NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
 
-private:
+protected:
   uint8_t mBlendMode;
   uint32_t mIndex;
+};
+
+class nsDisplayTableBlendMode : public nsDisplayBlendMode
+{
+public:
+  nsDisplayTableBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                          nsDisplayList* aList, uint8_t aBlendMode,
+                          const ActiveScrolledRoot* aActiveScrolledRoot,
+                          uint32_t aIndex, nsIFrame* aAncestorFrame)
+    : nsDisplayBlendMode(aBuilder, aFrame, aList, aBlendMode, aActiveScrolledRoot, aIndex)
+    , mAncestorFrame(aAncestorFrame)
+    , mTableType(GetTableTypeFromFrame(aAncestorFrame))
+  { }
+
+  virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
+
+  virtual uint32_t GetPerFrameKey() const override {
+    return (mIndex << (TYPE_BITS + static_cast<uint8_t>(TableTypeBits::COUNT))) |
+           (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
+           nsDisplayItem::GetPerFrameKey();
+  }
+
+  NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
+
+protected:
+  nsIFrame* mAncestorFrame;
+  TableType mTableType;
 };
 
 class nsDisplayBlendContainer : public nsDisplayWrapList {
@@ -5070,7 +5097,7 @@ public:
     }
     NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
 
-private:
+protected:
     nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             nsDisplayList* aList,
                             const ActiveScrolledRoot* aActiveScrolledRoot,
@@ -5085,6 +5112,38 @@ private:
     // context or appending background.
     bool mIsForBackground;
 };
+
+class nsDisplayTableBlendContainer : public nsDisplayBlendContainer
+{
+public:
+  static nsDisplayTableBlendContainer*
+  CreateForBackgroundBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                               nsDisplayList* aList,
+                               const ActiveScrolledRoot* aActiveScrolledRoot,
+                               nsIFrame* aAncestorFrame);
+  virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
+
+  virtual uint32_t GetPerFrameKey() const override {
+    return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
+           nsDisplayItem::GetPerFrameKey();
+  }
+
+  NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
+
+protected:
+  nsDisplayTableBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                               nsDisplayList* aList,
+                               const ActiveScrolledRoot* aActiveScrolledRoot,
+                               bool aIsForBackground, nsIFrame* aAncestorFrame)
+    : nsDisplayBlendContainer(aBuilder, aFrame, aList, aActiveScrolledRoot, aIsForBackground)
+    , mAncestorFrame(aAncestorFrame)
+    , mTableType(GetTableTypeFromFrame(aAncestorFrame))
+  { }
+
+  nsIFrame* mAncestorFrame;
+  TableType mTableType;
+};
+
 
 /**
  * nsDisplayOwnLayer constructor flags. If we nest this class inside

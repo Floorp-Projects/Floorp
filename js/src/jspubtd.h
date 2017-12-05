@@ -46,22 +46,6 @@ struct Zone;
 
 } // namespace JS
 
-/*
- * Run-time version enumeration.  For compile-time version checking, please use
- * the JS_HAS_* macros in jsversion.h, or use MOZJS_MAJOR_VERSION,
- * MOZJS_MINOR_VERSION, MOZJS_PATCH_VERSION, and MOZJS_ALPHA definitions.
- */
-enum JSVersion {
-    JSVERSION_ECMA_3  = 148,
-    JSVERSION_1_6     = 160,
-    JSVERSION_1_7     = 170,
-    JSVERSION_1_8     = 180,
-    JSVERSION_ECMA_5  = 185,
-    JSVERSION_DEFAULT = 0,
-    JSVERSION_UNKNOWN = -1,
-    JSVERSION_LATEST  = JSVERSION_ECMA_5
-};
-
 /* Result of typeof operator enumeration. */
 enum JSType {
     JSTYPE_UNDEFINED,           /* undefined */

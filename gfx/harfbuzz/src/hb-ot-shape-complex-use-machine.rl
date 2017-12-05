@@ -90,7 +90,7 @@ CS	= 43; # CONS_WITH_STACKER
 
 
 consonant_modifiers = CMAbv* CMBlw* ((H B | SUB) VS? CMAbv? CMBlw*)*;
-# Override: Allow two MBlw. https://github.com/behdad/harfbuzz/issues/376
+# Override: Allow two MBlw. https://github.com/harfbuzz/harfbuzz/issues/376
 medial_consonants = MPre? MAbv? MBlw?.MBlw? MPst?;
 dependent_vowels = VPre* VAbv* VBlw* VPst*;
 vowel_modifiers = VMPre* VMAbv* VMBlw* VMPst*;

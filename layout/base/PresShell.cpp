@@ -3627,9 +3627,27 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*                aFrame,
     if (sf) {
       nsPoint oldPosition = sf->GetScrollPosition();
       nsRect targetRect = rect;
-      if (container->StyleDisplay()->mOverflowClipBox ==
+      // Inflate the scrolled rect by the container's padding in each dimension,
+      // unless we have 'overflow-clip-box-*: content-box' in that dimension.
+      auto* disp = container->StyleDisplay();
+      if (disp->mOverflowClipBoxBlock ==
+            NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX ||
+          disp->mOverflowClipBoxInline ==
             NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX) {
+        WritingMode wm = container->GetWritingMode();
+        bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
+                                    : disp->mOverflowClipBoxInline) ==
+                   NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+        bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
+                                    : disp->mOverflowClipBoxBlock) ==
+                   NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
         nsMargin padding = container->GetUsedPadding();
+        if (!cbH) {
+          padding.left = padding.right = nscoord(0);
+        }
+        if (!cbV) {
+          padding.top = padding.bottom = nscoord(0);
+        }
         targetRect.Inflate(padding);
       }
       ScrollToShowRect(sf, targetRect - sf->GetScrolledFrame()->GetPosition(),

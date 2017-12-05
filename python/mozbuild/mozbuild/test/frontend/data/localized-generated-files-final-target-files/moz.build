@@ -1,0 +1,6 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+LOCALIZED_GENERATED_FILES += [ 'abc.ini' ]
+FINAL_TARGET_FILES += [ '!abc.ini' ]

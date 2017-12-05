@@ -161,7 +161,7 @@ struct RangeRecord
 
   GlyphID	start;		/* First GlyphID in the range */
   GlyphID	end;		/* Last GlyphID in the range */
-  USHORT	value;		/* Value */
+  UINT16	value;		/* Value */
   public:
   DEFINE_SIZE_STATIC (6);
 };
@@ -175,7 +175,7 @@ struct IndexArray : ArrayOf<Index>
 				   unsigned int *_indexes /* OUT */) const
   {
     if (_count) {
-      const USHORT *arr = this->sub_array (start_offset, _count);
+      const UINT16 *arr = this->sub_array (start_offset, _count);
       unsigned int count = *_count;
       for (unsigned int i = 0; i < count; i++)
 	_indexes[i] = arr[i];
@@ -216,9 +216,9 @@ struct LangSys
     return_trace (c->check_struct (this) && featureIndex.sanitize (c));
   }
 
-  Offset<>	lookupOrderZ;	/* = Null (reserved for an offset to a
+  Offset16	lookupOrderZ;	/* = Null (reserved for an offset to a
 				 * reordering table) */
-  USHORT	reqFeatureIndex;/* Index of a feature required for this
+  UINT16	reqFeatureIndex;/* Index of a feature required for this
 				 * language system--if no required features
 				 * = 0xFFFFu */
   IndexArray	featureIndex;	/* Array of indices into the FeatureList */
@@ -343,12 +343,12 @@ struct FeatureParamsSize
       return_trace (true);
   }
 
-  USHORT	designSize;	/* Represents the design size in 720/inch
+  UINT16	designSize;	/* Represents the design size in 720/inch
 				 * units (decipoints).  The design size entry
 				 * must be non-zero.  When there is a design
 				 * size but no recommended size range, the
 				 * rest of the array will consist of zeros. */
-  USHORT	subfamilyID;	/* Has no independent meaning, but serves
+  UINT16	subfamilyID;	/* Has no independent meaning, but serves
 				 * as an identifier that associates fonts
 				 * in a subfamily. All fonts which share a
 				 * Preferred or Font Family name and which
@@ -358,7 +358,7 @@ struct FeatureParamsSize
 				 * same subfamily value. If this value is
 				 * zero, the remaining fields in the array
 				 * will be ignored. */
-  USHORT	subfamilyNameID;/* If the preceding value is non-zero, this
+  UINT16	subfamilyNameID;/* If the preceding value is non-zero, this
 				 * value must be set in the range 256 - 32767
 				 * (inclusive). It records the value of a
 				 * field in the name table, which must
@@ -372,10 +372,10 @@ struct FeatureParamsSize
 				 * subfamily in a menu.  Applications will
 				 * choose the appropriate version based on
 				 * their selection criteria. */
-  USHORT	rangeStart;	/* Large end of the recommended usage range
+  UINT16	rangeStart;	/* Large end of the recommended usage range
 				 * (inclusive), stored in 720/inch units
 				 * (decipoints). */
-  USHORT	rangeEnd;	/* Small end of the recommended usage range
+  UINT16	rangeEnd;	/* Small end of the recommended usage range
 				   (exclusive), stored in 720/inch units
 				 * (decipoints). */
   public:
@@ -393,12 +393,12 @@ struct FeatureParamsStylisticSet
     return_trace (c->check_struct (this));
   }
 
-  USHORT	version;	/* (set to 0): This corresponds to a “minor”
+  UINT16	version;	/* (set to 0): This corresponds to a “minor”
 				 * version number. Additional data may be
 				 * added to the end of this Feature Parameters
 				 * table in the future. */
 
-  USHORT	uiNameID;	/* The 'name' table name ID that specifies a
+  UINT16	uiNameID;	/* The 'name' table name ID that specifies a
 				 * string (or strings, for multiple languages)
 				 * for a user-interface label for this
 				 * feature.  The values of uiLabelNameId and
@@ -426,25 +426,25 @@ struct FeatureParamsCharacterVariants
 		  characters.sanitize (c));
   }
 
-  USHORT	format;			/* Format number is set to 0. */
-  USHORT	featUILableNameID;	/* The ‘name’ table name ID that
+  UINT16	format;			/* Format number is set to 0. */
+  UINT16	featUILableNameID;	/* The ‘name’ table name ID that
 					 * specifies a string (or strings,
 					 * for multiple languages) for a
 					 * user-interface label for this
 					 * feature. (May be nullptr.) */
-  USHORT	featUITooltipTextNameID;/* The ‘name’ table name ID that
+  UINT16	featUITooltipTextNameID;/* The ‘name’ table name ID that
 					 * specifies a string (or strings,
 					 * for multiple languages) that an
 					 * application can use for tooltip
 					 * text for this feature. (May be
 					 * nullptr.) */
-  USHORT	sampleTextNameID;	/* The ‘name’ table name ID that
+  UINT16	sampleTextNameID;	/* The ‘name’ table name ID that
 					 * specifies sample text that
 					 * illustrates the effect of this
 					 * feature. (May be nullptr.) */
-  USHORT	numNamedParameters;	/* Number of named parameters. (May
+  UINT16	numNamedParameters;	/* Number of named parameters. (May
 					 * be zero.) */
-  USHORT	firstParamUILabelNameID;/* The first ‘name’ table name ID
+  UINT16	firstParamUILabelNameID;/* The first ‘name’ table name ID
 					 * used to specify strings for
 					 * user-interface labels for the
 					 * feature parameters. (Must be zero
@@ -562,7 +562,7 @@ struct Feature
 typedef RecordListOf<Feature> FeatureList;
 
 
-struct LookupFlag : USHORT
+struct LookupFlag : UINT16
 {
   enum Flags {
     RightToLeft		= 0x0001u,
@@ -608,7 +608,7 @@ struct Lookup
     unsigned int flag = lookupFlag;
     if (unlikely (flag & LookupFlag::UseMarkFilteringSet))
     {
-      const USHORT &markFilteringSet = StructAfter<USHORT> (subTable);
+      const UINT16 &markFilteringSet = StructAfter<UINT16> (subTable);
       flag += (markFilteringSet << 16);
     }
     return flag;
@@ -640,7 +640,7 @@ struct Lookup
     if (unlikely (!subTable.serialize (c, num_subtables))) return_trace (false);
     if (lookupFlag & LookupFlag::UseMarkFilteringSet)
     {
-      USHORT &markFilteringSet = StructAfter<USHORT> (subTable);
+      UINT16 &markFilteringSet = StructAfter<UINT16> (subTable);
       markFilteringSet.set (lookup_props >> 16);
     }
     return_trace (true);
@@ -653,18 +653,18 @@ struct Lookup
     if (!(c->check_struct (this) && subTable.sanitize (c))) return_trace (false);
     if (lookupFlag & LookupFlag::UseMarkFilteringSet)
     {
-      const USHORT &markFilteringSet = StructAfter<USHORT> (subTable);
+      const UINT16 &markFilteringSet = StructAfter<UINT16> (subTable);
       if (!markFilteringSet.sanitize (c)) return_trace (false);
     }
     return_trace (true);
   }
 
   private:
-  USHORT	lookupType;		/* Different enumerations for GSUB and GPOS */
-  USHORT	lookupFlag;		/* Lookup qualifiers */
-  ArrayOf<Offset<> >
+  UINT16	lookupType;		/* Different enumerations for GSUB and GPOS */
+  UINT16	lookupFlag;		/* Lookup qualifiers */
+  ArrayOf<Offset16>
 		subTable;		/* Array of SubTables */
-  USHORT	markFilteringSetX[VAR];	/* Index (base 0) into GDEF mark glyph sets
+  UINT16	markFilteringSetX[VAR];	/* Index (base 0) into GDEF mark glyph sets
 					 * structure. This field is only present if bit
 					 * UseMarkFilteringSet of lookup flags is set. */
   public:
@@ -737,7 +737,7 @@ struct CoverageFormat1
   private:
 
   protected:
-  USHORT	coverageFormat;	/* Format identifier--format = 1 */
+  UINT16	coverageFormat;	/* Format identifier--format = 1 */
   SortedArrayOf<GlyphID>
 		glyphArray;	/* Array of GlyphIDs--in numerical order */
   public:
@@ -860,7 +860,7 @@ struct CoverageFormat2
   private:
 
   protected:
-  USHORT	coverageFormat;	/* Format identifier--format = 2 */
+  UINT16	coverageFormat;	/* Format identifier--format = 2 */
   SortedArrayOf<RangeRecord>
 		rangeRecord;	/* Array of glyph ranges--ordered by
 				 * Start GlyphID. rangeCount entries
@@ -985,7 +985,7 @@ struct Coverage
 
   protected:
   union {
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   CoverageFormat1	format1;
   CoverageFormat2	format2;
   } u;
@@ -1047,9 +1047,9 @@ struct ClassDefFormat1
   }
 
   protected:
-  USHORT	classFormat;		/* Format identifier--format = 1 */
+  UINT16	classFormat;		/* Format identifier--format = 1 */
   GlyphID	startGlyph;		/* First GlyphID of the classValueArray */
-  ArrayOf<USHORT>
+  ArrayOf<UINT16>
 		classValue;		/* Array of Class Values--one per GlyphID */
   public:
   DEFINE_SIZE_ARRAY (6, classValue);
@@ -1107,7 +1107,7 @@ struct ClassDefFormat2
   }
 
   protected:
-  USHORT	classFormat;	/* Format identifier--format = 2 */
+  UINT16	classFormat;	/* Format identifier--format = 2 */
   SortedArrayOf<RangeRecord>
 		rangeRecord;	/* Array of glyph ranges--ordered by
 				 * Start GlyphID */
@@ -1155,7 +1155,7 @@ struct ClassDef
 
   protected:
   union {
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   ClassDefFormat1	format1;
   ClassDefFormat2	format2;
   } u;
@@ -1240,8 +1240,8 @@ struct VarRegionList
   }
 
   protected:
-  USHORT	axisCount;
-  USHORT	regionCount;
+  UINT16	axisCount;
+  UINT16	regionCount;
   VarRegionAxis	axesZ[VAR];
   public:
   DEFINE_SIZE_ARRAY (4, axesZ);
@@ -1265,13 +1265,13 @@ struct VarData
    unsigned int count = regionIndices.len;
    unsigned int scount = shortCount;
 
-   const BYTE *bytes = &StructAfter<BYTE> (regionIndices);
-   const BYTE *row = bytes + inner * (scount + count);
+   const UINT8 *bytes = &StructAfter<UINT8> (regionIndices);
+   const UINT8 *row = bytes + inner * (scount + count);
 
    float delta = 0.;
    unsigned int i = 0;
 
-   const SHORT *scursor = reinterpret_cast<const SHORT *> (row);
+   const INT16 *scursor = reinterpret_cast<const INT16 *> (row);
    for (; i < scount; i++)
    {
      float scalar = regions.evaluate (regionIndices.array[i], coords, coord_count);
@@ -1293,15 +1293,15 @@ struct VarData
     return_trace (c->check_struct (this) &&
 		  regionIndices.sanitize(c) &&
 		  shortCount <= regionIndices.len &&
-		  c->check_array (&StructAfter<BYTE> (regionIndices),
+		  c->check_array (&StructAfter<UINT8> (regionIndices),
 				  get_row_size (), itemCount));
   }
 
   protected:
-  USHORT		itemCount;
-  USHORT		shortCount;
-  ArrayOf<USHORT>	regionIndices;
-  BYTE			bytesX[VAR];
+  UINT16		itemCount;
+  UINT16		shortCount;
+  ArrayOf<UINT16>	regionIndices;
+  UINT8			bytesX[VAR];
   public:
   DEFINE_SIZE_ARRAY2 (6, regionIndices, bytesX);
 };
@@ -1337,9 +1337,9 @@ struct VariationStore
   }
 
   protected:
-  USHORT				format;
+  UINT16				format;
   LOffsetTo<VarRegionList>		regions;
-  OffsetArrayOf<VarData, ULONG>		dataSets;
+  OffsetArrayOf<VarData, UINT32>		dataSets;
   public:
   DEFINE_SIZE_ARRAY (8, dataSets);
 };
@@ -1366,8 +1366,8 @@ struct ConditionFormat1
   }
 
   protected:
-  USHORT	format;		/* Format identifier--format = 1 */
-  USHORT	axisIndex;
+  UINT16	format;		/* Format identifier--format = 1 */
+  UINT16	axisIndex;
   F2DOT14	filterRangeMinValue;
   F2DOT14	filterRangeMaxValue;
   public:
@@ -1396,7 +1396,7 @@ struct Condition
 
   protected:
   union {
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   ConditionFormat1	format1;
   } u;
   public:
@@ -1421,7 +1421,7 @@ struct ConditionSet
   }
 
   protected:
-  OffsetArrayOf<Condition, ULONG> conditions;
+  OffsetArrayOf<Condition, UINT32> conditions;
   public:
   DEFINE_SIZE_ARRAY (2, conditions);
 };
@@ -1437,7 +1437,7 @@ struct FeatureTableSubstitutionRecord
   }
 
   protected:
-  USHORT		featureIndex;
+  UINT16		featureIndex;
   LOffsetTo<Feature>	feature;
   public:
   DEFINE_SIZE_STATIC (6);
@@ -1557,8 +1557,8 @@ struct HintingDevice
   inline unsigned int get_size (void) const
   {
     unsigned int f = deltaFormat;
-    if (unlikely (f < 1 || f > 3 || startSize > endSize)) return 3 * USHORT::static_size;
-    return USHORT::static_size * (4 + ((endSize - startSize) >> (4 - f)));
+    if (unlikely (f < 1 || f > 3 || startSize > endSize)) return 3 * UINT16::static_size;
+    return UINT16::static_size * (4 + ((endSize - startSize) >> (4 - f)));
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) const
@@ -1603,14 +1603,14 @@ struct HintingDevice
   }
 
   protected:
-  USHORT	startSize;		/* Smallest size to correct--in ppem */
-  USHORT	endSize;		/* Largest size to correct--in ppem */
-  USHORT	deltaFormat;		/* Format of DeltaValue array data: 1, 2, or 3
+  UINT16	startSize;		/* Smallest size to correct--in ppem */
+  UINT16	endSize;		/* Largest size to correct--in ppem */
+  UINT16	deltaFormat;		/* Format of DeltaValue array data: 1, 2, or 3
 					 * 1	Signed 2-bit value, 8 values per uint16
 					 * 2	Signed 4-bit value, 4 values per uint16
 					 * 3	Signed 8-bit value, 2 values per uint16
 					 */
-  USHORT	deltaValue[VAR];	/* Array of compressed data */
+  UINT16	deltaValue[VAR];	/* Array of compressed data */
   public:
   DEFINE_SIZE_ARRAY (6, deltaValue);
 };
@@ -1641,9 +1641,9 @@ struct VariationDevice
   }
 
   protected:
-  USHORT	outerIndex;
-  USHORT	innerIndex;
-  USHORT	deltaFormat;	/* Format identifier for this table: 0x0x8000 */
+  UINT16	outerIndex;
+  UINT16	innerIndex;
+  UINT16	deltaFormat;	/* Format identifier for this table: 0x0x8000 */
   public:
   DEFINE_SIZE_STATIC (6);
 };
@@ -1651,10 +1651,10 @@ struct VariationDevice
 struct DeviceHeader
 {
   protected:
-  USHORT		reserved1;
-  USHORT		reserved2;
+  UINT16		reserved1;
+  UINT16		reserved2;
   public:
-  USHORT		format;		/* Format identifier */
+  UINT16		format;		/* Format identifier */
   public:
   DEFINE_SIZE_STATIC (6);
 };
