@@ -33,7 +33,7 @@ function configureStore(connector) {
     requests: new Requests(),
     sort: new Sort(),
     timingMarkers: new TimingMarkers(),
-    ui: new UI({
+    ui: UI({
       columns: getColumnState()
     }),
   };
@@ -55,16 +55,15 @@ function configureStore(connector) {
  * Get column state from preferences.
  */
 function getColumnState() {
-  let columns = new Columns();
+  let columns = Columns();
   let visibleColumns = getPref("devtools.netmonitor.visibleColumns");
 
-  for (let [col] of columns) {
-    columns = columns.withMutations((state) => {
-      state.set(col, visibleColumns.includes(col));
-    });
+  const state = {};
+  for (let col in columns) {
+    state[col] = visibleColumns.includes(col);
   }
 
-  return columns;
+  return state;
 }
 
 /**

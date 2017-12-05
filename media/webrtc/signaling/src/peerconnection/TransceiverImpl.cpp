@@ -56,6 +56,10 @@ TransceiverImpl::TransceiverImpl(
     InitAudio();
   }
 
+  if (!IsValid()) {
+    return;
+  }
+
   mConduit->SetPCHandle(mPCHandle);
 
   StartReceiveStream();
@@ -78,6 +82,14 @@ TransceiverImpl::InitAudio()
 {
   mConduit = AudioSessionConduit::Create();
 
+  if (!mConduit) {
+    MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
+                        ": Failed to create AudioSessionConduit");
+    // TODO(bug 1422897): We need a way to record this when it happens in the
+    // wild.
+    return;
+  }
+
   mReceivePipeline = new MediaPipelineReceiveAudio(
       mPCHandle,
       mMainThread.get(),
@@ -90,6 +102,14 @@ void
 TransceiverImpl::InitVideo()
 {
   mConduit = VideoSessionConduit::Create(mCallWrapper);
+
+  if (!mConduit) {
+    MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
+                        ": Failed to create VideoSessionConduit");
+    // TODO(bug 1422897): We need a way to record this when it happens in the
+    // wild.
+    return;
+  }
 
   mReceivePipeline = new MediaPipelineReceiveVideo(
       mPCHandle,

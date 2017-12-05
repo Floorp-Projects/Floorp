@@ -16,7 +16,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
  * from the app time so it can be specified manually.
  */
 @WrapForJNI(exceptionMode = "nsresult")
-public class StackScroller {
+/* package */ final class StackScroller {
     private int mMode;
 
     private final SplineStackScroller mScrollerX;

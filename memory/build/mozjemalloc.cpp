@@ -129,7 +129,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DoublyLinkedList.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
@@ -141,6 +140,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/fallible.h"
 #include "rb.h"
+#include "Mutex.h"
 #include "Utils.h"
 
 using namespace mozilla;
@@ -535,82 +535,6 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 
 static void*
 base_alloc(size_t aSize);
-
-// Mutexes based on spinlocks.  We can't use normal pthread spinlocks in all
-// places, because they require malloc()ed memory, which causes bootstrapping
-// issues in some cases.
-struct Mutex
-{
-#if defined(XP_WIN)
-  CRITICAL_SECTION mMutex;
-#elif defined(XP_DARWIN)
-  OSSpinLock mMutex;
-#else
-  pthread_mutex_t mMutex;
-#endif
-
-  inline bool Init();
-
-  inline void Lock();
-
-  inline void Unlock();
-};
-
-// Mutex that can be used for static initialization.
-// On Windows, CRITICAL_SECTION requires a function call to be initialized,
-// but for the initialization lock, a static initializer calling the
-// function would be called too late. We need no-function-call
-// initialization, which SRWLock provides.
-// Ideally, we'd use the same type of locks everywhere, but SRWLocks
-// everywhere incur a performance penalty. See bug 1418389.
-#if defined(XP_WIN)
-struct StaticMutex
-{
-  SRWLOCK mMutex;
-
-  constexpr StaticMutex()
-    : mMutex(SRWLOCK_INIT)
-  {
-  }
-
-  inline void Lock();
-
-  inline void Unlock();
-};
-#else
-struct StaticMutex : public Mutex
-{
-  constexpr StaticMutex()
-#if defined(XP_DARWIN)
-    : Mutex{ OS_SPINLOCK_INIT }
-#elif defined(XP_LINUX) && !defined(ANDROID)
-    : Mutex{ PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP }
-#else
-    : Mutex{ PTHREAD_MUTEX_INITIALIZER }
-#endif
-  {
-  }
-};
-#endif
-
-template<typename T>
-struct MOZ_RAII AutoLock
-{
-  explicit AutoLock(T& aMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mMutex(aMutex)
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mMutex.Lock();
-  }
-
-  ~AutoLock() { mMutex.Unlock(); }
-
-private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
-  T& mMutex;
-};
-
-using MutexAutoLock = AutoLock<Mutex>;
 
 // Set to true once the allocator has been initialized.
 static Atomic<bool> malloc_initialized(false);
@@ -1091,8 +1015,8 @@ private:
   void* RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize);
 
   void* RallocHuge(void* aPtr, size_t aSize, size_t aOldSize);
-public:
 
+public:
   inline void* Malloc(size_t aSize, bool aZero);
 
   void* Palloc(size_t aAlignment, size_t aSize);
@@ -1263,10 +1187,11 @@ static size_t base_committed;
 // ******
 // Arenas.
 
-// The arena associated with the current thread (per jemalloc_thread_local_arena)
-// On OSX, __thread/thread_local circles back calling malloc to allocate storage
-// on first access on each thread, which leads to an infinite loop, but
-// pthread-based TLS somehow doesn't have this problem.
+// The arena associated with the current thread (per
+// jemalloc_thread_local_arena) On OSX, __thread/thread_local circles back
+// calling malloc to allocate storage on first access on each thread, which
+// leads to an infinite loop, but pthread-based TLS somehow doesn't have this
+// problem.
 #if !defined(XP_DARWIN)
 static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
 #else
@@ -1363,80 +1288,6 @@ pthread_atfork(void (*)(void), void (*)(void), void (*)(void));
 #endif
 
 // ***************************************************************************
-// Begin mutex.  We can't use normal pthread mutexes in all places, because
-// they require malloc()ed memory, which causes bootstrapping issues in some
-// cases. We also can't use constructors, because for statics, they would fire
-// after the first use of malloc, resetting the locks.
-
-// Initializes a mutex. Returns whether initialization succeeded.
-bool
-Mutex::Init()
-{
-#if defined(XP_WIN)
-  if (!InitializeCriticalSectionAndSpinCount(&mMutex, 5000)) {
-    return false;
-  }
-#elif defined(XP_DARWIN)
-  mMutex = OS_SPINLOCK_INIT;
-#elif defined(XP_LINUX) && !defined(ANDROID)
-  pthread_mutexattr_t attr;
-  if (pthread_mutexattr_init(&attr) != 0) {
-    return false;
-  }
-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ADAPTIVE_NP);
-  if (pthread_mutex_init(&mMutex, &attr) != 0) {
-    pthread_mutexattr_destroy(&attr);
-    return false;
-  }
-  pthread_mutexattr_destroy(&attr);
-#else
-  if (pthread_mutex_init(&mMutex, nullptr) != 0) {
-    return false;
-  }
-#endif
-  return true;
-}
-
-void
-Mutex::Lock()
-{
-#if defined(XP_WIN)
-  EnterCriticalSection(&mMutex);
-#elif defined(XP_DARWIN)
-  OSSpinLockLock(&mMutex);
-#else
-  pthread_mutex_lock(&mMutex);
-#endif
-}
-
-void
-Mutex::Unlock()
-{
-#if defined(XP_WIN)
-  LeaveCriticalSection(&mMutex);
-#elif defined(XP_DARWIN)
-  OSSpinLockUnlock(&mMutex);
-#else
-  pthread_mutex_unlock(&mMutex);
-#endif
-}
-
-#if defined(XP_WIN)
-void
-StaticMutex::Lock()
-{
-  AcquireSRWLockExclusive(&mMutex);
-}
-
-void
-StaticMutex::Unlock()
-{
-  ReleaseSRWLockExclusive(&mMutex);
-}
-#endif
-
-// End mutex.
-// ***************************************************************************
 // Begin Utility functions/macros.
 
 // Return the chunk address for allocation address a.
@@ -1461,7 +1312,8 @@ _getprogname(void)
 }
 
 // Fill the given range of memory with zeroes or junk depending on opt_junk and
-// opt_zero. Callers can force filling with zeroes through the aForceZero argument.
+// opt_zero. Callers can force filling with zeroes through the aForceZero
+// argument.
 static inline void
 ApplyZeroOrJunk(void* aPtr, size_t aSize)
 {
@@ -1685,15 +1537,15 @@ pages_map(void* aAddr, size_t aSize)
   void* ret;
 #if defined(__ia64__) ||                                                       \
   (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
-  // The JS engine assumes that all allocated pointers have their high 17 bits clear,
-  // which ia64's mmap doesn't support directly. However, we can emulate it by passing
-  // mmap an "addr" parameter with those bits clear. The mmap will return that address,
-  // or the nearest available memory above that address, providing a near-guarantee
-  // that those bits are clear. If they are not, we return nullptr below to indicate
-  // out-of-memory.
+  // The JS engine assumes that all allocated pointers have their high 17 bits
+  // clear, which ia64's mmap doesn't support directly. However, we can emulate
+  // it by passing mmap an "addr" parameter with those bits clear. The mmap will
+  // return that address, or the nearest available memory above that address,
+  // providing a near-guarantee that those bits are clear. If they are not, we
+  // return nullptr below to indicate out-of-memory.
   //
-  // The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual
-  // address space.
+  // The addr is chosen as 0x0000070000000000, which still allows about 120TB of
+  // virtual address space.
   //
   // See Bug 589735 for more information.
   bool check_placement = true;
@@ -1746,7 +1598,8 @@ pages_map(void* aAddr, size_t aSize)
     munmap(ret, aSize);
     ret = nullptr;
   }
-  // If the caller requested a specific memory location, verify that's what mmap returned.
+  // If the caller requested a specific memory location, verify that's what mmap
+  // returned.
   else if (check_placement && ret != aAddr) {
 #else
   else if (aAddr && ret != aAddr) {
@@ -2635,8 +2488,8 @@ arena_t::DeallocChunk(arena_chunk_t* aChunk)
     mStats.committed -= gChunkHeaderNumPages;
   }
 
-  // Remove run from the tree of available runs, so that the arena does not use it.
-  // Dirty page flushing only uses the tree of dirty chunks, so leaving this
+  // Remove run from the tree of available runs, so that the arena does not use
+  // it. Dirty page flushing only uses the tree of dirty chunks, so leaving this
   // chunk in the chunks_* trees is sufficient for that purpose.
   mRunsAvail.Remove(&aChunk->map[gChunkHeaderNumPages]);
 
@@ -3731,8 +3584,7 @@ arena_t::RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize)
   // Try to avoid moving the allocation.
   if (aOldSize <= gMaxLargeClass && sizeClass.Size() == aOldSize) {
     if (aSize < aOldSize) {
-      memset(
-        (void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
+      memset((void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
     }
     return aPtr;
   }

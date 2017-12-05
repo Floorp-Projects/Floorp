@@ -18,7 +18,7 @@ import org.mozilla.gecko.GeckoAppShell;
 /**
  * This class receives HW vsync events through a {@link Choreographer}.
  */
-public final class VsyncSource implements Choreographer.FrameCallback {
+/* package */ final class VsyncSource implements Choreographer.FrameCallback {
     private static final String LOGTAG = "GeckoVsyncSource";
 
     @WrapForJNI

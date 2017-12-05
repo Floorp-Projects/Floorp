@@ -21,8 +21,8 @@ import org.mozilla.gecko.util.UIAsyncTask;
 import java.io.InputStream;
 import java.net.URL;
 
-import static org.mozilla.gecko.gfx.BitmapUtils.getBitmapFromDataURI;
-import static org.mozilla.gecko.gfx.BitmapUtils.getResource;
+import static org.mozilla.gecko.util.BitmapUtils.getBitmapFromDataURI;
+import static org.mozilla.gecko.util.BitmapUtils.getResource;
 
 public class ResourceDrawableUtils {
     private static final String LOGTAG = "ResourceDrawableUtils";

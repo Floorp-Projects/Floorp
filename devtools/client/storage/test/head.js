@@ -13,7 +13,6 @@ Services.scriptloader.loadSubScript(
   this);
 
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
-const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
 const DOM_CACHE = "dom.caches.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
@@ -44,7 +43,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
   Services.prefs.clearUserPref(DOM_CACHE);
   Services.prefs.clearUserPref(DUMPEMIT_PREF);
-  Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
   Services.prefs.clearUserPref(STORAGE_PREF);
 });
 

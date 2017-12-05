@@ -4,7 +4,7 @@
 
 use dtoa_short::{self, Notation};
 use itoa;
-use std::ascii::AsciiExt;
+#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::fmt::{self, Write};
 use std::io;
 use std::str;
@@ -110,7 +110,6 @@ impl<'a> ToCss for Token<'a> {
             Token::PrefixMatch => dest.write_str("^=")?,
             Token::SuffixMatch => dest.write_str("$=")?,
             Token::SubstringMatch => dest.write_str("*=")?,
-            Token::Column => dest.write_str("||")?,
             Token::CDO => dest.write_str("<!--")?,
             Token::CDC => dest.write_str("-->")?,
 
@@ -455,7 +454,6 @@ impl<'a> Token<'a> {
             Token::Comment(_) => DelimSlash,
             Token::DashMatch => DashMatch,
             Token::SubstringMatch => SubstringMatch,
-            Token::Column => DelimBar,
             Token::CDC => CDC,
             Token::Function(_) => Function,
             Token::ParenthesisBlock => OpenParen,

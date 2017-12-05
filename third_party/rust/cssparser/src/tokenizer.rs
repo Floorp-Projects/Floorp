@@ -6,7 +6,7 @@
 
 use std::ops::Range;
 use std::char;
-use std::ascii::AsciiExt;
+#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::i32;
 
 use parser::ParserState;
@@ -131,9 +131,6 @@ pub enum Token<'a> {
 
     /// A `*=` [`<substring-match-token>`](https://drafts.csswg.org/css-syntax/#substring-match-token-diagram)
     SubstringMatch,
-
-    /// A `||` [`<column-token>`](https://drafts.csswg.org/css-syntax/#column-token-diagram)
-    Column,
 
     /// A `<!--` [`<CDO-token>`](https://drafts.csswg.org/css-syntax/#CDO-token-diagram)
     CDO,
@@ -653,7 +650,6 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
         b'{' => { tokenizer.advance(1); CurlyBracketBlock },
         b'|' => {
             if tokenizer.starts_with(b"|=") { tokenizer.advance(2); DashMatch }
-            else if tokenizer.starts_with(b"||") { tokenizer.advance(2); Column }
             else { tokenizer.advance(1); Delim('|') }
         },
         b'}' => { tokenizer.advance(1); CloseCurlyBracket },
