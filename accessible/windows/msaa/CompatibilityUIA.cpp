@@ -72,6 +72,8 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
     remotePid = Nothing();
   });
 
+  Telemetry::AutoTimer<Telemetry::A11Y_UIA_DETECTION_TIMING_MS> timer;
+
   static auto pNtQuerySystemInformation =
     reinterpret_cast<decltype(&::NtQuerySystemInformation)>(
       ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"),
