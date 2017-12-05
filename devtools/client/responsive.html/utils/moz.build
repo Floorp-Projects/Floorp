@@ -7,6 +7,7 @@
 DevToolsModules(
     'css.js',
     'e10s.js',
+    'key.js',
     'l10n.js',
     'message.js',
     'window.js',
