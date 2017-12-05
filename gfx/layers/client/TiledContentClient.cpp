@@ -479,7 +479,8 @@ CopyFrontToBack(TextureClient* aFront,
                 TextureClient* aBack,
                 const gfx::IntRect& aRectToCopy,
                 TilePaintFlags aFlags,
-                std::vector<CapturedTiledPaintState::Copy>* aCopies)
+                std::vector<CapturedTiledPaintState::Copy>* aCopies,
+                std::vector<RefPtr<TextureClient>>* aClients)
 {
   bool asyncPaint = !!(aFlags & TilePaintFlags::Async);
   OpenMode asyncFlags = asyncPaint ? OpenMode::OPEN_ASYNC : OpenMode::OPEN_NONE;
@@ -511,6 +512,7 @@ CopyFrontToBack(TextureClient* aFront,
   };
 
   if (asyncPaint && aCopies) {
+    aClients->push_back(aFront);
     aCopies->push_back(copy);
   } else {
     copy.CopyBuffer();
@@ -522,7 +524,8 @@ void
 TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
                                         nsIntRegion& aAddPaintedRegion,
                                         TilePaintFlags aFlags,
-                                        std::vector<CapturedTiledPaintState::Copy>* aCopies)
+                                        std::vector<CapturedTiledPaintState::Copy>* aCopies,
+                                        std::vector<RefPtr<TextureClient>>* aClients)
 {
   if (mBackBuffer && mFrontBuffer) {
     gfx::IntSize tileSize = mFrontBuffer->GetSize();
@@ -550,10 +553,10 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
       // region, but we can reevaluate this if it becomes an issue.
       const IntRect rectToCopy = regionToCopy.GetBounds();
       gfx::IntRect gfxRectToCopy(rectToCopy.x, rectToCopy.y, rectToCopy.Width(), rectToCopy.Height());
-      if (CopyFrontToBack(mFrontBuffer, mBackBuffer, gfxRectToCopy, aFlags, aCopies)) {
+      if (CopyFrontToBack(mFrontBuffer, mBackBuffer, gfxRectToCopy, aFlags, aCopies, aClients)) {
         if (mBackBufferOnWhite) {
           MOZ_ASSERT(mFrontBufferOnWhite);
-          if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy, aFlags, aCopies)) {
+          if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy, aFlags, aCopies, aClients)) {
             mInvalidBack.SetEmpty();
           }
         }
@@ -655,7 +658,8 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
                           nsIntRegion& aAddPaintedRegion,
                           TilePaintFlags aFlags,
                           RefPtr<TextureClient>* aBackBufferOnWhite,
-                          std::vector<CapturedTiledPaintState::Copy>* aCopies)
+                          std::vector<CapturedTiledPaintState::Copy>* aCopies,
+                          std::vector<RefPtr<TextureClient>>* aClients)
 {
   if (!mAllocator) {
     gfxCriticalError() << "[TileClient] Missing TextureClientAllocator.";
@@ -710,7 +714,7 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
       mInvalidBack = IntRect(IntPoint(), mBackBufferOnWhite->GetSize());
     }
 
-    ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion, aFlags, aCopies);
+    ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion, aFlags, aCopies, aClients);
   }
 
   OpenMode lockMode = aFlags & TilePaintFlags::Async ? OpenMode::OPEN_READ_WRITE_ASYNC
@@ -1151,7 +1155,8 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
                         extraPainted,
                         aFlags,
                         &backBufferOnWhite,
-                        &mPaintCopies);
+                        &mPaintCopies,
+                        &mPaintTilesTextureClients);
 
   // Mark the area we need to paint in the back buffer as invalid in the
   // front buffer as they will become out of sync.
