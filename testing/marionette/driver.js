@@ -136,10 +136,7 @@ this.GeckoDriver = function(appId, server) {
   this.mainFrame = null;
   // chrome iframe that currently has focus
   this.curFrame = null;
-  this.mozBrowserClose = null;
   this.currentFrameElement = null;
-  // frame ID of the current remote frame, used for mozbrowserclose events
-  this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
 
@@ -1843,14 +1840,8 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
       let {win: winId, frame: frameId} = res;
       this.mm = this.curBrowser.frameManager.getFrameMM(winId, frameId);
 
-      let registerBrowsers = this.registerPromise();
-      let browserListening = this.listeningPromise();
-
-      this.oopFrameId =
-          this.curBrowser.frameManager.switchToFrame(winId, frameId);
-
-      await registerBrowsers;
-      await browserListening;
+      await this.registerPromise();
+      await this.listeningPromise();
     }
   }
 };
@@ -1889,7 +1880,6 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
           "Command 'singleTap' is not yet available in chrome context");
 
     case Context.Content:
-      this.addFrameCloseListener("tap");
       await this.listener.singleTap(webEl, x, y);
       break;
   }
@@ -1970,7 +1960,6 @@ GeckoDriver.prototype.actionChain = async function(cmd, resp) {
       break;
 
     case Context.Content:
-      this.addFrameCloseListener("action chain");
       resp.body.value = await this.listener.actionChain(chain, nextId);
       break;
   }
@@ -1997,8 +1986,6 @@ GeckoDriver.prototype.multiAction = async function(cmd) {
   this._assertAndDismissModal();
 
   let {value, max_length} = cmd.parameters; // eslint-disable-line camelcase
-
-  this.addFrameCloseListener("multi action chain");
   await this.listener.multiAction(value, max_length);
 };
 
@@ -2151,13 +2138,6 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
       break;
 
     case Context.Content:
-      // We need to protect against the click causing an OOP frame
-      // to close.  This fires the mozbrowserclose event when it closes
-      // so we need to listen for it and then just send an error back.
-      // The person making the call should be aware something is not right
-      // and handle accordingly.
-      this.addFrameCloseListener("click");
-
       let click = this.listener.clickElement(
           {webElRef: webEl.toJSON(), pageTimeout: this.timeouts.pageLoad});
 
@@ -3356,17 +3336,6 @@ GeckoDriver.prototype.uninstallAddon = function(cmd) {
 /* eslint-disable consistent-return */
 GeckoDriver.prototype.receiveMessage = function(message) {
   switch (message.name) {
-    case "Marionette:ok":
-    case "Marionette:done":
-    case "Marionette:error":
-      // check if we need to remove the mozbrowserclose listener
-      if (this.mozBrowserClose !== null) {
-        let win = this.getCurrentWindow();
-        win.removeEventListener("mozbrowserclose", this.mozBrowserClose, true);
-        this.mozBrowserClose = null;
-      }
-      break;
-
     case "Marionette:switchedToFrame":
       if (message.json.restorePrevious) {
         this.currentFrameElement = this.previousFrameElement;
