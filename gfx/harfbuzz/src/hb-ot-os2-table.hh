@@ -50,50 +50,50 @@ struct os2
   }
 
   public:
-  USHORT	version;
+  UINT16	version;
 
   /* Version 0 */
-  SHORT		xAvgCharWidth;
-  USHORT	usWeightClass;
-  USHORT	usWidthClass;
-  USHORT	fsType;
-  SHORT		ySubscriptXSize;
-  SHORT		ySubscriptYSize;
-  SHORT		ySubscriptXOffset;
-  SHORT		ySubscriptYOffset;
-  SHORT		ySuperscriptXSize;
-  SHORT		ySuperscriptYSize;
-  SHORT		ySuperscriptXOffset;
-  SHORT		ySuperscriptYOffset;
-  SHORT		yStrikeoutSize;
-  SHORT		yStrikeoutPosition;
-  SHORT		sFamilyClass;
-  BYTE		panose[10];
-  ULONG		ulUnicodeRange[4];
+  INT16		xAvgCharWidth;
+  UINT16	usWeightClass;
+  UINT16	usWidthClass;
+  UINT16	fsType;
+  INT16		ySubscriptXSize;
+  INT16		ySubscriptYSize;
+  INT16		ySubscriptXOffset;
+  INT16		ySubscriptYOffset;
+  INT16		ySuperscriptXSize;
+  INT16		ySuperscriptYSize;
+  INT16		ySuperscriptXOffset;
+  INT16		ySuperscriptYOffset;
+  INT16		yStrikeoutSize;
+  INT16		yStrikeoutPosition;
+  INT16		sFamilyClass;
+  UINT8		panose[10];
+  UINT32		ulUnicodeRange[4];
   Tag		achVendID;
-  USHORT	fsSelection;
-  USHORT	usFirstCharIndex;
-  USHORT	usLastCharIndex;
-  SHORT		sTypoAscender;
-  SHORT		sTypoDescender;
-  SHORT		sTypoLineGap;
-  USHORT	usWinAscent;
-  USHORT	usWinDescent;
+  UINT16	fsSelection;
+  UINT16	usFirstCharIndex;
+  UINT16	usLastCharIndex;
+  INT16		sTypoAscender;
+  INT16		sTypoDescender;
+  INT16		sTypoLineGap;
+  UINT16	usWinAscent;
+  UINT16	usWinDescent;
 
   /* Version 1 */
-  //ULONG ulCodePageRange1;
-  //ULONG ulCodePageRange2;
+  //UINT32 ulCodePageRange1;
+  //UINT32 ulCodePageRange2;
 
   /* Version 2 */
-  //SHORT sxHeight;
-  //SHORT sCapHeight;
-  //USHORT  usDefaultChar;
-  //USHORT  usBreakChar;
-  //USHORT  usMaxContext;
+  //INT16 sxHeight;
+  //INT16 sCapHeight;
+  //UINT16  usDefaultChar;
+  //UINT16  usBreakChar;
+  //UINT16  usMaxContext;
 
   /* Version 5 */
-  //USHORT  usLowerOpticalPointSize;
-  //USHORT  usUpperOpticalPointSize;
+  //UINT16  usLowerOpticalPointSize;
+  //UINT16  usUpperOpticalPointSize;
 
   public:
   DEFINE_SIZE_STATIC (78);

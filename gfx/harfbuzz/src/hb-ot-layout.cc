@@ -601,6 +601,7 @@ unsigned int
 hb_ot_layout_table_get_lookup_count (hb_face_t    *face,
 				     hb_tag_t      table_tag)
 {
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return 0;
   switch (table_tag)
   {
     case HB_OT_TAG_GSUB:
