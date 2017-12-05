@@ -199,6 +199,85 @@ array_construct(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 IsWrappedArrayConstructor(JSContext* cx, const Value& v, bool* result);
 
+class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
+{
+    /*
+     * An ArraySpeciesLookup holds the following:
+     *
+     *  Array.prototype (arrayProto_)
+     *      To ensure that the incoming array has the standard proto.
+     *
+     *  Array.prototype's shape (arrayProtoShape_)
+     *      To ensure that Array.prototype has not been modified.
+     *
+     *  Array (arrayConstructor_)
+     *  Array's shape (arrayConstructorShape_)
+     *       To ensure that Array has not been modified.
+     *
+     *  Array.prototype's slot number for constructor (arrayProtoConstructorSlot_)
+     *      To quickly retrieve and ensure that the Array constructor
+     *      stored in the slot has not changed.
+     *
+     *  Array's shape for the @@species getter. (arraySpeciesShape_)
+     *  Array's canonical value for @@species (canonicalSpeciesFunc_)
+     *      To quickly retrieve and ensure that the @@species getter for Array
+     *      has not changed.
+     */
+
+    // Pointer to canonical Array.prototype and Array.
+    NativeObject* arrayProto_;
+    NativeObject* arrayConstructor_;
+
+    // Shape of matching Array, and slot containing the @@species
+    // property, and the canonical value.
+    Shape* arrayConstructorShape_;
+#ifdef DEBUG
+    Shape* arraySpeciesShape_;
+    JSFunction* canonicalSpeciesFunc_;
+#endif
+
+    // Shape of matching Array.prototype object, and slot containing the
+    // constructor for it.
+    Shape* arrayProtoShape_;
+    uint32_t arrayProtoConstructorSlot_;
+
+    enum class State : uint8_t {
+        // Flags marking the lazy initialization of the above fields.
+        Uninitialized,
+        Initialized,
+
+        // The disabled flag is set when we don't want to try optimizing
+        // anymore because core objects were changed.
+        Disabled
+    };
+
+    State state_;
+
+    // Initialize the internal fields.
+    void initialize(JSContext* cx);
+
+    // Reset the cache.
+    void reset();
+
+    // Check if the global array-related objects have not been messed with
+    // in a way that would disable this cache.
+    bool isArrayStateStillSane();
+
+  public:
+    ArraySpeciesLookup() {
+        reset();
+    }
+
+    // Try to optimize the @@species lookup for an array.
+    bool tryOptimizeArray(JSContext* cx, ArrayObject* array);
+
+    // Purge the cache and all info associated with it.
+    void purge() {
+        if (state_ == State::Initialized)
+            reset();
+    }
+};
+
 } /* namespace js */
 
 #endif /* jsarray_h */

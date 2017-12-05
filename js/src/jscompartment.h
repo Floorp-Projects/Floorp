@@ -726,6 +726,8 @@ struct JSCompartment
 
     js::RegExpCompartment        regExps;
 
+    js::ArraySpeciesLookup       arraySpeciesLookup;
+
     using IteratorCache = js::HashSet<js::PropertyIteratorObject*,
                                       js::IteratorHashPolicy,
                                       js::SystemAllocPolicy>;
