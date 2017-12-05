@@ -397,7 +397,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "d0eea414f3b0"
+        "revision": "8801cb31ba3d"
     }, 
     "he": {
         "platforms": [
@@ -562,7 +562,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "30692c673f5d"
+        "revision": "713eee84d390"
     }, 
     "lij": {
         "platforms": [
