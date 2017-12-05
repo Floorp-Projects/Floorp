@@ -1443,22 +1443,13 @@ function switchToParentFrame(msg) {
 function switchToFrame(msg) {
   let commandID = msg.json.commandID;
   let foundFrame = null;
-  let frames = [];
-  let parWindow = null;
 
-  // Check of the curContainer.frame reference is dead
+  // check if curContainer.frame reference is dead
+  let frames = [];
   try {
     frames = curContainer.frame.frames;
-    // Until Bug 761935 lands, we won't have multiple nested OOP
-    // iframes. We will only have one.  parWindow will refer to the iframe
-    // above the nested OOP frame.
-    parWindow = curContainer.frame.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   } catch (e) {
-    // We probably have a dead compartment so accessing it is going to
-    // make Firefox very upset. Let's now try redirect everything to the
-    // top frame even if the user has given us a frame since search doesnt
-    // look up.
+    // dead comparment, redirect to top frame
     msg.json.id = null;
     msg.json.element = null;
   }
@@ -1567,22 +1558,12 @@ function switchToFrame(msg) {
   let frameWebEl = seenEls.add(curContainer.frame.wrappedJSObject);
   sendSyncMessage("Marionette:switchedToFrame", {"frameValue": frameWebEl.uuid});
 
-  if (curContainer.frame.contentWindow === null) {
-    // The frame we want to switch to is a remote/OOP frame;
-    // notify our parent to handle the switch
-    curContainer.frame = content;
-    let rv = {win: parWindow, frame: foundFrame};
-    sendResponse(rv, commandID);
-
-  } else {
-    curContainer.frame = curContainer.frame.contentWindow;
-
-    if (msg.json.focus) {
-      curContainer.frame.focus();
-    }
-
-    sendOk(commandID);
+  curContainer.frame = curContainer.frame.contentWindow;
+  if (msg.json.focus) {
+    curContainer.frame.focus();
   }
+
+  sendOk(commandID);
 }
 
 /**

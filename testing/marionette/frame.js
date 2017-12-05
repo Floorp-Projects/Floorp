@@ -13,94 +13,16 @@ this.EXPORTED_SYMBOLS = ["frame"];
 /** @namespace */
 this.frame = {};
 
-const FRAME_SCRIPT = "chrome://marionette/content/listener.js";
-
-/**
- * An object representing a frame that Marionette has loaded a
- * frame script in.
- */
-frame.RemoteFrame = function(windowId, frameId) {
-  // outerWindowId relative to main process
-  this.windowId = windowId;
-  // actual frame relative to the windowId's frames list
-  this.frameId = frameId;
-  // assigned frame ID, used for messaging
-  this.targetFrameId = this.frameId;
-  // list of OOP frames that has the frame script loaded
-  this.remoteFrames = [];
-};
-
 /**
  * The FrameManager will maintain the list of Out Of Process (OOP)
  * frames and will handle frame switching between them.
- *
- * It handles explicit frame switching (switchToFrame), and implicit
- * frame switching, which occurs when a modal dialog is triggered in B2G.
  *
  * @param {GeckoDriver} driver
  *     Reference to the driver instance.
  */
 frame.Manager = class {
   constructor(driver) {
-    // messageManager maintains the messageManager
-    // for the current process' chrome frame or the global message manager
-
-    // holds a member of the remoteFrames (for an OOP frame)
-    // or null (for the main process)
-    this.currentRemoteFrame = null;
-    // frame we'll need to restore once interrupt is gone
-    this.previousRemoteFrame = null;
     this.driver = driver;
-  }
-
-  getOopFrame(winId, frameId) {
-    // get original frame window
-    let outerWin = Services.wm.getOuterWindowWithId(winId);
-    // find the OOP frame
-    let f = outerWin.document.getElementsByTagName("iframe")[frameId];
-    return f;
-  }
-
-  getFrameMM(winId, frameId) {
-    let oopFrame = this.getOopFrame(winId, frameId);
-    let mm = oopFrame.frameLoader.messageManager;
-    return mm;
-  }
-
-  /**
-   * Switch to OOP frame.  We're handling this here so we can maintain
-   * a list of remote frames.
-   */
-  switchToFrame(winId, frameId) {
-    let oopFrame = this.getOopFrame(winId, frameId);
-    let mm = this.getFrameMM(winId, frameId);
-
-    // see if this frame already has our frame script loaded in it;
-    // if so, just wake it up
-    for (let i = 0; i < this.remoteFrames.length; i++) {
-      let f = this.remoteFrames[i];
-      let fmm = f.messageManager.get();
-
-      if (fmm == mm) {
-        this.currentRemoteFrame = f;
-        this.addMessageManagerListeners(mm);
-
-        return oopFrame.id;
-      }
-    }
-
-    // if we get here, then we need to load the frame script in this frame,
-    // and set the frame's ChromeMessageSender as the active message manager
-    // the driver will listen to.
-    this.addMessageManagerListeners(mm);
-    let f = new frame.RemoteFrame(winId, frameId);
-    f.messageManager = Cu.getWeakReference(mm);
-    this.remoteFrames.push(f);
-    this.currentRemoteFrame = f;
-
-    mm.loadFrameScript(FRAME_SCRIPT, true, true);
-
-    return oopFrame.id;
   }
 
   /**
@@ -112,7 +34,6 @@ frame.Manager = class {
    *     ChromeMessageBroadcaster or ChromeMessageSender.
    */
   addMessageManagerListeners(mm) {
-    mm.addWeakMessageListener("Marionette:emitTouchEvent", this.driver);
     mm.addWeakMessageListener("Marionette:switchedToFrame", this.driver);
     mm.addWeakMessageListener("Marionette:getVisibleCookies", this.driver);
     mm.addWeakMessageListener("Marionette:register", this.driver);
