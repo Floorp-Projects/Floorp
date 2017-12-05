@@ -10,7 +10,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
-#include "mozilla/dom/WebAuthnManagerBase.h"
 #include "nsIDOMEventListener.h"
 
 /*
@@ -64,11 +63,13 @@ class WebAuthnTransactionChild;
 class WebAuthnTransaction
 {
 public:
-  WebAuthnTransaction(const RefPtr<Promise>& aPromise,
+  WebAuthnTransaction(nsPIDOMWindowInner* aParent,
+                      const RefPtr<Promise>& aPromise,
                       const nsTArray<uint8_t>& aRpIdHash,
                       const nsCString& aClientData,
                       AbortSignal* aSignal)
-    : mPromise(aPromise)
+    : mParent(aParent)
+    , mPromise(aPromise)
     , mRpIdHash(aRpIdHash)
     , mClientData(aClientData)
     , mSignal(aSignal)
@@ -76,6 +77,9 @@ public:
   {
     MOZ_ASSERT(mId > 0);
   }
+
+  // Parent of the context we're running the transaction in.
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
 
   // JS Promise representing the transaction status.
   RefPtr<Promise> mPromise;
@@ -102,54 +106,48 @@ private:
   }
 };
 
-class WebAuthnManager final : public WebAuthnManagerBase
-                            , public nsIDOMEventListener
+class WebAuthnManager final : public nsIDOMEventListener
                             , public AbortFollower
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  explicit WebAuthnManager(nsPIDOMWindowInner* aParent);
+  static WebAuthnManager* GetOrCreate();
+  static WebAuthnManager* Get();
 
   already_AddRefed<Promise>
-  MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
+  MakeCredential(nsPIDOMWindowInner* aParent,
+                 const MakePublicKeyCredentialOptions& aOptions,
                  const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
   already_AddRefed<Promise>
-  GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
+  GetAssertion(nsPIDOMWindowInner* aParent,
+               const PublicKeyCredentialRequestOptions& aOptions,
                const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
   already_AddRefed<Promise>
-  Store(const Credential& aCredential);
-
-  // WebAuthnManagerBase
+  Store(nsPIDOMWindowInner* aParent, const Credential& aCredential);
 
   void
   FinishMakeCredential(const uint64_t& aTransactionId,
-                       nsTArray<uint8_t>& aRegBuffer) override;
+                       nsTArray<uint8_t>& aRegBuffer);
 
   void
   FinishGetAssertion(const uint64_t& aTransactionId,
                      nsTArray<uint8_t>& aCredentialId,
-                     nsTArray<uint8_t>& aSigBuffer) override;
+                     nsTArray<uint8_t>& aSigBuffer);
 
   void
-  RequestAborted(const uint64_t& aTransactionId,
-                 const nsresult& aError) override;
-
-  void ActorDestroyed() override;
-
-  // AbortFollower
+  RequestAborted(const uint64_t& aTransactionId, const nsresult& aError);
 
   void Abort() override;
 
-private:
-  virtual ~WebAuthnManager();
+  void ActorDestroyed();
 
-  // Visibility event handling.
-  void ListenForVisibilityEvents();
-  void StopListeningForVisibilityEvents();
+private:
+  WebAuthnManager();
+  virtual ~WebAuthnManager();
 
   // Clears all information we have about the current transaction.
   void ClearTransaction();
@@ -160,9 +158,6 @@ private:
   void CancelTransaction(const nsresult& aError);
 
   bool MaybeCreateBackgroundActor();
-
-  // The parent window.
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
 
   // IPC Channel to the parent process.
   RefPtr<WebAuthnTransactionChild> mChild;
