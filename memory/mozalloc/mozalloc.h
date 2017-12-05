@@ -43,14 +43,6 @@
 #  define MOZALLOC_INLINE inline
 #endif
 
-/* Workaround build problem with Sun Studio 12 */
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#  undef MOZ_MUST_USE
-#  define MOZ_MUST_USE
-#  undef MOZ_ALLOCATOR
-#  define MOZ_ALLOCATOR
-#endif
-
 #if defined(__cplusplus)
 extern "C" {
 #endif /* ifdef __cplusplus */
