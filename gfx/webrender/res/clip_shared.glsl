@@ -50,38 +50,8 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
 // which is the intersection of all clip instances of a given primitive
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Layer layer,
-                                      ClipArea area,
-                                      int segment) {
-    vec2 outer_p0 = area.screen_origin;
-    vec2 outer_p1 = outer_p0 + area.common_data.task_rect.size;
-    vec2 inner_p0 = area.inner_rect.xy;
-    vec2 inner_p1 = area.inner_rect.zw;
-
-    vec2 p0, p1;
-    switch (segment) {
-        case SEGMENT_ALL:
-            p0 = outer_p0;
-            p1 = outer_p1;
-            break;
-        case SEGMENT_CORNER_TL:
-            p0 = outer_p0;
-            p1 = inner_p0;
-            break;
-        case SEGMENT_CORNER_BL:
-            p0 = vec2(outer_p0.x, outer_p1.y);
-            p1 = vec2(inner_p0.x, inner_p1.y);
-            break;
-        case SEGMENT_CORNER_TR:
-            p0 = vec2(outer_p1.x, outer_p1.y);
-            p1 = vec2(inner_p1.x, inner_p1.y);
-            break;
-        case SEGMENT_CORNER_BR:
-            p0 = vec2(outer_p1.x, outer_p0.y);
-            p1 = vec2(inner_p1.x, inner_p0.y);
-            break;
-    }
-
-    vec2 actual_pos = mix(p0, p1, aPosition.xy);
+                                      ClipArea area) {
+    vec2 actual_pos = area.screen_origin + aPosition.xy * area.common_data.task_rect.size;
 
     vec4 layer_pos = get_layer_pos(actual_pos / uDevicePixelRatio, layer);
 

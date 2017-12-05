@@ -12,24 +12,38 @@
 
 [package]
 name = "lazy_static"
-version = "0.2.9"
+version = "1.0.0"
 authors = ["Marvin Löbel <loebel.marvin@gmail.com>"]
 description = "A macro for declaring lazily evaluated statics in Rust."
 documentation = "https://docs.rs/lazy_static"
 readme = "README.md"
 keywords = ["macro", "lazy", "static"]
-categories = ["no-std", "rust-patterns"]
+categories = ["no-std", "rust-patterns", "memory-management"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-lang-nursery/lazy-static.rs"
+[dependencies.compiletest_rs]
+version = "0.3"
+optional = true
+
 [dependencies.spin]
-version = "0.4"
+version = "0.4.6"
 optional = true
 
 [features]
-spin_no_std = ["nightly", "spin"]
+compiletest = ["compiletest_rs"]
 nightly = []
+spin_no_std = ["nightly", "spin"]
 [badges.appveyor]
 repository = "rust-lang-nursery/lazy-static.rs"
+
+[badges.is-it-maintained-issue-resolution]
+repository = "rust-lang-nursery/lazy-static.rs"
+
+[badges.is-it-maintained-open-issues]
+repository = "rust-lang-nursery/lazy-static.rs"
+
+[badges.maintenance]
+status = "passively-maintained"
 
 [badges.travis-ci]
 repository = "rust-lang-nursery/lazy-static.rs"

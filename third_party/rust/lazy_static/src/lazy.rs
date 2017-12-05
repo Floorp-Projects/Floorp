@@ -9,6 +9,7 @@ extern crate std;
 
 use self::std::prelude::v1::*;
 use self::std::sync::Once;
+pub use self::std::sync::ONCE_INIT;
 
 pub struct Lazy<T: Sync>(pub *const T, pub Once);
 
@@ -34,7 +35,6 @@ unsafe impl<T: Sync> Sync for Lazy<T> {}
 #[doc(hidden)]
 macro_rules! __lazy_static_create {
     ($NAME:ident, $T:ty) => {
-        use std::sync::ONCE_INIT;
-        static mut $NAME: $crate::lazy::Lazy<$T> = $crate::lazy::Lazy(0 as *const $T, ONCE_INIT);
+        static mut $NAME: $crate::lazy::Lazy<$T> = $crate::lazy::Lazy(0 as *const $T, $crate::lazy::ONCE_INIT);
     }
 }

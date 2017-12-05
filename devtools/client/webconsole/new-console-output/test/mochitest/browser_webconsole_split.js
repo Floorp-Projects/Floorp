@@ -6,71 +6,68 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for splitting";
+const {Toolbox} = require("devtools/client/framework/toolbox");
 
-function test() {
-  waitForExplicitFinish();
-  // Test is slow on Linux EC2 instances - Bug 962931
-  requestLongerTimeout(2);
+// Test is slow on Linux EC2 instances - Bug 962931
+requestLongerTimeout(2);
 
-  let {Toolbox} = require("devtools/client/framework/toolbox");
+add_task(async function () {
   let toolbox;
 
-  loadTab(TEST_URI).then(testConsoleLoadOnDifferentPanel);
+  await addTab(TEST_URI);
+  await testConsoleLoadOnDifferentPanel();
+  await testKeyboardShortcuts();
+  await checkAllTools();
 
-  function testConsoleLoadOnDifferentPanel() {
+  info("Testing host types");
+  checkHostType(Toolbox.HostType.BOTTOM);
+  checkToolboxUI();
+  await toolbox.switchHost(Toolbox.HostType.SIDE);
+  checkHostType(Toolbox.HostType.SIDE);
+  checkToolboxUI();
+  await toolbox.switchHost(Toolbox.HostType.WINDOW);
+  checkHostType(Toolbox.HostType.WINDOW);
+  checkToolboxUI();
+  await toolbox.switchHost(Toolbox.HostType.BOTTOM);
+
+  async function testConsoleLoadOnDifferentPanel() {
     info("About to check console loads even when non-webconsole panel is open");
 
-    openPanel("inspector").then(() => {
-      toolbox.on("webconsole-ready", () => {
-        ok(true, "Webconsole has been triggered as loaded while another tool " +
-                 "is active");
-        testKeyboardShortcuts();
-      });
-
-      // Opens split console.
-      toolbox.toggleSplitConsole();
-    });
+    await openPanel("inspector");
+    let webconsoleReady = toolbox.once("webconsole-ready");
+    toolbox.toggleSplitConsole();
+    await webconsoleReady;
+    ok(true, "Webconsole has been triggered as loaded while another tool is active");
   }
 
-  function testKeyboardShortcuts() {
+  async function testKeyboardShortcuts() {
     info("About to check that panel responds to ESCAPE keyboard shortcut");
 
-    toolbox.once("split-console", () => {
-      ok(true, "Split console has been triggered via ESCAPE keypress");
-      checkAllTools();
-    });
-
-    // Closes split console.
+    let splitConsoleReady = toolbox.once("split-console");
     EventUtils.sendKey("ESCAPE", toolbox.win);
+    await splitConsoleReady;
+    ok(true, "Split console has been triggered via ESCAPE keypress");
   }
 
-  function checkAllTools() {
+  async function checkAllTools() {
     info("About to check split console with each panel individually.");
+    await openAndCheckPanel("jsdebugger");
+    await openAndCheckPanel("inspector");
+    await openAndCheckPanel("styleeditor");
+    await openAndCheckPanel("performance");
+    await openAndCheckPanel("netmonitor");
 
-    Task.spawn(function* () {
-      yield openAndCheckPanel("jsdebugger");
-      yield openAndCheckPanel("inspector");
-      yield openAndCheckPanel("styleeditor");
-      yield openAndCheckPanel("performance");
-      yield openAndCheckPanel("netmonitor");
-
-      yield checkWebconsolePanelOpened();
-      testBottomHost();
-    });
+    await checkWebconsolePanelOpened();
   }
 
   function getCurrentUIState() {
-    let win = toolbox.win;
     let deck = toolbox.doc.querySelector("#toolbox-deck");
     let webconsolePanel = toolbox.webconsolePanel;
     let splitter = toolbox.doc.querySelector("#toolbox-console-splitter");
 
-    let containerHeight = parseFloat(win.getComputedStyle(deck.parentNode)
-      .getPropertyValue("height"));
-    let deckHeight = parseFloat(win.getComputedStyle(deck)
-      .getPropertyValue("height"));
-    let webconsoleHeight = parseFloat(win.getComputedStyle(webconsolePanel)
-      .getPropertyValue("height"));
+    let containerHeight = deck.parentNode.getBoundingClientRect().height;
+    let deckHeight = deck.getBoundingClientRect().height;
+    let webconsoleHeight = webconsolePanel.getBoundingClientRect().height;
     let splitterVisibility = !splitter.getAttribute("hidden");
     let openedConsolePanel = toolbox.currentToolId === "webconsole";
     let cmdButton = toolbox.doc.querySelector("#command-button-splitconsole");
@@ -85,11 +82,11 @@ function test() {
     };
   }
 
-  const checkWebconsolePanelOpened = Task.async(function* () {
+  async function checkWebconsolePanelOpened() {
     info("About to check special cases when webconsole panel is open.");
 
     // Start with console split, so we can test for transition to main panel.
-    yield toolbox.toggleSplitConsole();
+    await toolbox.toggleSplitConsole();
 
     let currentUIState = getCurrentUIState();
 
@@ -103,7 +100,7 @@ function test() {
        "The console panel is not the current tool");
     ok(currentUIState.buttonSelected, "The command button is selected");
 
-    yield openPanel("webconsole");
+    await openPanel("webconsole");
     currentUIState = getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility,
@@ -118,7 +115,7 @@ function test() {
        "The command button is still selected.");
 
     // Make sure splitting console does nothing while webconsole is opened
-    yield toolbox.toggleSplitConsole();
+    await toolbox.toggleSplitConsole();
 
     currentUIState = getCurrentUIState();
 
@@ -134,7 +131,7 @@ function test() {
        "The command button is still selected.");
 
     // Make sure that split state is saved after opening another panel
-    yield openPanel("inspector");
+    await openPanel("inspector");
     currentUIState = getCurrentUIState();
     ok(currentUIState.splitterVisibility,
        "Splitter is visible when console is split");
@@ -147,10 +144,10 @@ function test() {
     ok(currentUIState.buttonSelected,
        "The command button is still selected.");
 
-    yield toolbox.toggleSplitConsole();
-  });
+    await toolbox.toggleSplitConsole();
+  }
 
-  const checkToolboxUI = Task.async(function* () {
+  async function checkToolboxUI() {
     let currentUIState = getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility, "Splitter is hidden by default");
@@ -162,7 +159,7 @@ function test() {
        "The console panel is not the current tool");
     ok(!currentUIState.buttonSelected, "The command button is not selected.");
 
-    yield toolbox.toggleSplitConsole();
+    await toolbox.toggleSplitConsole();
 
     currentUIState = getCurrentUIState();
 
@@ -179,7 +176,7 @@ function test() {
        "The console panel is not the current tool");
     ok(currentUIState.buttonSelected, "The command button is selected.");
 
-    yield toolbox.toggleSplitConsole();
+    await toolbox.toggleSplitConsole();
 
     currentUIState = getCurrentUIState();
 
@@ -191,47 +188,16 @@ function test() {
     ok(!currentUIState.openedConsolePanel,
        "The console panel is not the current tool");
     ok(!currentUIState.buttonSelected, "The command button is not selected.");
-  });
+  }
 
-  function openPanel(toolId) {
-    let deferred = defer();
+  async function openPanel(toolId) {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target, toolId).then(function (box) {
-      toolbox = box;
-      deferred.resolve();
-    }).catch(console.error);
-    return deferred.promise;
+    toolbox = await gDevTools.showToolbox(target, toolId);
   }
 
-  function openAndCheckPanel(toolId) {
-    return openPanel(toolId).then(() => {
-      info("Checking toolbox for " + toolId);
-      return checkToolboxUI(toolbox.getCurrentPanel());
-    });
-  }
-
-  function testBottomHost() {
-    checkHostType(Toolbox.HostType.BOTTOM);
-
-    checkToolboxUI();
-
-    toolbox.switchHost(Toolbox.HostType.SIDE).then(testSidebarHost);
-  }
-
-  function testSidebarHost() {
-    checkHostType(Toolbox.HostType.SIDE);
-
-    checkToolboxUI();
-
-    toolbox.switchHost(Toolbox.HostType.WINDOW).then(testWindowHost);
-  }
-
-  function testWindowHost() {
-    checkHostType(Toolbox.HostType.WINDOW);
-
-    checkToolboxUI();
-
-    toolbox.switchHost(Toolbox.HostType.BOTTOM).then(testDestroy);
+  async function openAndCheckPanel(toolId) {
+    await openPanel(toolId);
+    await checkToolboxUI(toolbox.getCurrentPanel());
   }
 
   function checkHostType(hostType) {
@@ -240,16 +206,4 @@ function test() {
     let pref = Services.prefs.getCharPref("devtools.toolbox.host");
     is(pref, hostType, "host pref is " + hostType);
   }
-
-  function testDestroy() {
-    toolbox.destroy().then(function () {
-      let target = TargetFactory.forTab(gBrowser.selectedTab);
-      gDevTools.showToolbox(target).then(finish);
-    });
-  }
-
-  function finish() {
-    toolbox = null;
-    finishTest();
-  }
-}
+});

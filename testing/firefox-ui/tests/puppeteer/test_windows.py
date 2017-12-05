@@ -11,34 +11,7 @@ from marionette_driver.errors import NoSuchWindowException
 from marionette_harness import MarionetteTestCase
 
 
-class BaseWindowTestCase(PuppeteerMixin, MarionetteTestCase):
-
-    def setUp(self):
-        """
-        These tests open and close windows pretty rapidly, which
-        (since bug 1261842) can cause content processes to be
-        spawned and discarded in large numbers. By default, Firefox
-        has a 5 second timeout for shutting down content processes,
-        but we can get into cases where the content process just
-        doesn't have enough time to get itself all sorted before
-        the timeout gets hit, which results in the parent killing
-        the content process manually, which generates a crash report,
-        which causes these tests to orange. We side-step this by
-        setting dom.ipc.tabs.shutdownTimeoutSecs to 0, which disables
-        the shutdown timer.
-        """
-        super(BaseWindowTestCase, self).setUp()
-
-        self.marionette.set_pref('dom.ipc.tabs.shutdownTimeoutSecs', 0)
-
-    def tearDown(self):
-        try:
-            self.marionette.clear_pref('dom.ipc.tabs.shutdownTimeoutSecs')
-        finally:
-            super(BaseWindowTestCase, self).tearDown()
-
-
-class TestWindows(BaseWindowTestCase):
+class TestWindows(PuppeteerMixin, MarionetteTestCase):
 
     def tearDown(self):
         try:
@@ -103,7 +76,7 @@ class TestWindows(BaseWindowTestCase):
         self.browser.switch_to()
 
 
-class TestBaseWindow(BaseWindowTestCase):
+class TestBaseWindow(PuppeteerMixin, MarionetteTestCase):
 
     def tearDown(self):
         try:
@@ -213,7 +186,7 @@ class TestBaseWindow(BaseWindowTestCase):
         win1.switch_to()
 
 
-class TestBrowserWindow(BaseWindowTestCase):
+class TestBrowserWindow(PuppeteerMixin, MarionetteTestCase):
 
     def tearDown(self):
         try:

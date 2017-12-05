@@ -21,7 +21,7 @@ Form autofill test: clear form button
 
 const MOCK_STORAGE = [{
   organization: "Sesame Street",
-  "street-address": "123 Sesame Street.",
+  "street-address": "2 Harrison St\nline2\nline3",
   tel: "+13453453456",
 }, {
   organization: "Mozilla",
@@ -55,6 +55,15 @@ add_task(async function simple_clear() {
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
 
   await triggerPopupAndHoverItem("#tel", 0);
+  doKey("return");
+  checkIsFormCleared();
+});
+
+add_task(async function clear_adapted_record() {
+  await triggerPopupAndHoverItem("#street-address", 0);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+
+  await triggerPopupAndHoverItem("#street-address", 0);
   doKey("return");
   checkIsFormCleared();
 });

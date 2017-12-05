@@ -107,6 +107,31 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  // Information needed to parse a declaration for Servo side.
+  // Put this in public so other Servo parsing functions can reuse this.
+  struct MOZ_STACK_CLASS ServoCSSParsingEnvironment
+  {
+    RefPtr<mozilla::URLExtraData> mUrlExtraData;
+    nsCompatibility mCompatMode;
+    mozilla::css::Loader* mLoader;
+
+    ServoCSSParsingEnvironment(mozilla::URLExtraData* aUrlData,
+                               nsCompatibility aCompatMode,
+                               mozilla::css::Loader* aLoader)
+      : mUrlExtraData(aUrlData)
+      , mCompatMode(aCompatMode)
+      , mLoader(aLoader)
+    {}
+
+    ServoCSSParsingEnvironment(already_AddRefed<mozilla::URLExtraData> aUrlData,
+                               nsCompatibility aCompatMode,
+                               mozilla::css::Loader* aLoader)
+      : mUrlExtraData(aUrlData)
+      , mCompatMode(aCompatMode)
+      , mLoader(aLoader)
+    {}
+  };
+
 protected:
   // The reason for calling GetCSSDeclaration.
   enum Operation {
@@ -152,30 +177,6 @@ protected:
     mozilla::css::Loader* MOZ_UNSAFE_REF("user of CSSParsingEnviroment must hold an owning "
                                          "reference; reference counting here has unacceptable "
                                          "performance overhead (see bug 649163)") mCSSLoader;
-  };
-
-  // Information neded to parse a declaration for Servo side.
-  struct MOZ_STACK_CLASS ServoCSSParsingEnvironment
-  {
-    RefPtr<mozilla::URLExtraData> mUrlExtraData;
-    nsCompatibility mCompatMode;
-    mozilla::css::Loader* mLoader;
-
-    ServoCSSParsingEnvironment(mozilla::URLExtraData* aUrlData,
-                               nsCompatibility aCompatMode,
-                               mozilla::css::Loader* aLoader)
-      : mUrlExtraData(aUrlData)
-      , mCompatMode(aCompatMode)
-      , mLoader(aLoader)
-    {}
-
-    ServoCSSParsingEnvironment(already_AddRefed<mozilla::URLExtraData> aUrlData,
-                               nsCompatibility aCompatMode,
-                               mozilla::css::Loader* aLoader)
-      : mUrlExtraData(aUrlData)
-      , mCompatMode(aCompatMode)
-      , mLoader(aLoader)
-    {}
   };
 
   // On failure, mPrincipal should be set to null in aCSSParseEnv.

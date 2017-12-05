@@ -6,7 +6,7 @@
 
 use cow_rc_str::CowRcStr;
 use parser::{parse_until_before, parse_until_after, parse_nested_block, ParserState};
-use std::ascii::AsciiExt;
+#[allow(unused_imports)] use std::ascii::AsciiExt;
 use super::{Token, Parser, Delimiter, ParseError, BasicParseError, BasicParseErrorKind};
 
 /// Parse `!important`.

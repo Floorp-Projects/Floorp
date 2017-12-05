@@ -783,9 +783,26 @@ public:
                                   nsCaseTreatment aCaseSensitive) const override;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aAttribute,
                              bool aNotify) override;
-  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override;
-  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const override;
-  virtual uint32_t GetAttrCount() const override;
+
+  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const final override
+  {
+    return mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
+  }
+
+  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const final override
+  {
+    if (aIndex >= mAttrsAndChildren.AttrCount()) {
+      return BorrowedAttrInfo(nullptr, nullptr);
+    }
+
+    return mAttrsAndChildren.AttrInfoAt(aIndex);
+  }
+
+  virtual uint32_t GetAttrCount() const final override
+  {
+    return mAttrsAndChildren.AttrCount();
+  }
+
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   /**
@@ -1326,7 +1343,19 @@ public:
    * is, this should only be called from methods that only care about attrs
    * that effectively live in mAttrsAndChildren.
    */
-  virtual BorrowedAttrInfo GetAttrInfo(int32_t aNamespaceID, nsAtom* aName) const;
+  BorrowedAttrInfo GetAttrInfo(int32_t aNamespaceID, nsAtom* aName) const
+  {
+    NS_ASSERTION(aName, "must have attribute name");
+    NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
+                 "must have a real namespace ID!");
+
+    int32_t index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
+    if (index < 0) {
+      return BorrowedAttrInfo(nullptr, nullptr);
+    }
+
+    return mAttrsAndChildren.AttrInfoAt(index);
+  }
 
   /**
    * Called when we have been adopted, and the information of the

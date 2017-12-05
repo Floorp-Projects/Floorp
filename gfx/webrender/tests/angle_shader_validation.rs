@@ -94,13 +94,13 @@ const SHADERS: &[Shader] = &[
         name: "ps_text_run",
         features: PRIM_FEATURES,
     },
-    Shader {
-        name: "ps_rectangle",
-        features: &["", "TRANSFORM", "CLIP_FEATURE", "TRANSFORM,CLIP_FEATURE"],
-    },
     // Brush shaders
     Shader {
         name: "brush_mask",
+        features: &[],
+    },
+    Shader {
+        name: "brush_solid",
         features: &[],
     },
     Shader {

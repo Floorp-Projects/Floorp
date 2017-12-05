@@ -11,6 +11,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/CSSCounterStyleRuleBinding.h"
+#include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h"
 #include "nsStyleUtil.h"
 
@@ -132,9 +133,17 @@ nsCSSCounterStyleRule::GetName(nsAString& aName)
 NS_IMETHODIMP
 nsCSSCounterStyleRule::SetName(const nsAString& aName)
 {
-  nsCSSParser parser;
-  if (RefPtr<nsAtom> name = parser.ParseCounterStyleName(aName, nullptr)) {
-    nsIDocument* doc = GetDocument();
+  RefPtr<nsAtom> name;
+
+  nsIDocument* doc = GetDocument();
+  if (!doc || doc->IsStyledByServo()) {
+    name = ServoCSSParser::ParseCounterStyleName(aName);
+  } else {
+    nsCSSParser parser;
+    name = parser.ParseCounterStyleName(aName, nullptr);
+  }
+
+  if (name) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 
     mName = name;
@@ -403,20 +412,33 @@ nsresult
 nsCSSCounterStyleRule::SetDescriptor(nsCSSCounterDesc aDescID,
                                      const nsAString& aValue)
 {
-  nsCSSParser parser;
   nsCSSValue value;
-  nsIURI* baseURL = nullptr;
-  nsIPrincipal* principal = nullptr;
-  if (StyleSheet* sheet = GetStyleSheet()) {
-    baseURL = sheet->GetBaseURI();
-    principal = sheet->Principal();
+  bool ok;
+
+  StyleSheet* sheet = GetStyleSheet();
+
+#ifdef MOZ_STYLO
+  bool useServo = !sheet || sheet->IsServo();
+#else
+  bool useServo = false;
+#endif
+
+  if (useServo) {
+    URLExtraData* data = sheet ? sheet->AsServo()->URLData() : nullptr;
+    ok = ServoCSSParser::ParseCounterStyleDescriptor(aDescID, aValue, data,
+                                                     value);
+  } else {
+    nsCSSParser parser;
+    nsIURI* baseURL = sheet ? sheet->GetBaseURI() : nullptr;
+    nsIPrincipal* principal = sheet ? sheet->Principal() : nullptr;
+    ok = parser.ParseCounterDescriptor(aDescID, aValue, nullptr,
+                                       baseURL, principal, value);
   }
-  if (parser.ParseCounterDescriptor(aDescID, aValue, nullptr,
-                                    baseURL, principal, value)) {
-    if (CheckDescValue(GetSystem(), aDescID, value)) {
-      SetDesc(aDescID, value);
-    }
+
+  if (ok && CheckDescValue(GetSystem(), aDescID, value)) {
+    SetDesc(aDescID, value);
   }
+
   return NS_OK;
 }
 

@@ -30,9 +30,9 @@
 #include "mozilla/css/Declaration.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/KeyframeUtils.h" // KeyframeUtils::ParseProperty
 #include "mozilla/Likely.h"
 #include "mozilla/ServoBindings.h" // RawServoDeclarationBlock
+#include "mozilla/ServoCSSParser.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
 #include "nsIDocument.h"
@@ -5477,7 +5477,8 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
     }
 
     RefPtr<RawServoDeclarationBlock> declarations =
-      KeyframeUtils::ParseProperty(aProperty, aValue, doc);
+      ServoCSSParser::ParseProperty(aProperty, aValue,
+                                    ServoCSSParser::GetParsingEnvironment(doc));
 
     if (!declarations) {
       return result;

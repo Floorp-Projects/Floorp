@@ -20,7 +20,7 @@ class TestMarionette(MarionetteTestCase):
             func=self.test_correct_test_name.__name__,
         )
 
-        self.assertEqual(self.marionette.test_name, expected_test_name)
+        self.assertIn(expected_test_name, self.marionette.test_name)
 
     @run_if_manage_instance("Only runnable if Marionette manages the instance")
     @skip_if_mobile("Bug 1322993 - Missing temporary folder")
