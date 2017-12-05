@@ -15,7 +15,7 @@ import java.util.LinkedList;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
-public final class GeckoSurfaceTexture extends SurfaceTexture {
+/* package */ final class GeckoSurfaceTexture extends SurfaceTexture {
     private static final String LOGTAG = "GeckoSurfaceTexture";
     private static final int MAX_SURFACE_TEXTURES = 200;
     private static volatile int sNextHandle = 1;

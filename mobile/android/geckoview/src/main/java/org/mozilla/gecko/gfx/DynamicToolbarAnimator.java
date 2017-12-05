@@ -14,7 +14,7 @@ import android.util.Log;
 import java.util.EnumSet;
 import java.util.Set;
 
-public class DynamicToolbarAnimator {
+public final class DynamicToolbarAnimator {
     private static final String LOGTAG = "GeckoDynamicToolbarAnimator";
 
     public static enum PinReason {
