@@ -10,7 +10,8 @@ const {
   INITIALIZE,
   PERSIST_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
-  SIDEBAR_TOGGLE,
+  SIDEBAR_CLOSE,
+  SHOW_OBJECT_IN_SIDEBAR,
   TIMESTAMPS_TOGGLE,
   MESSAGES_CLEAR,
 } = require("devtools/client/webconsole/new-console-output/constants");
@@ -26,6 +27,7 @@ const UiState = (overrides) => Object.freeze(Object.assign({
   persistLogs: false,
   sidebarVisible: false,
   timestampsVisible: true,
+  gripInSidebar: null
 }, overrides));
 
 function ui(state = UiState(), action) {
@@ -38,12 +40,20 @@ function ui(state = UiState(), action) {
       return Object.assign({}, state, {timestampsVisible: action.visible});
     case SELECT_NETWORK_MESSAGE_TAB:
       return Object.assign({}, state, {networkMessageActiveTabId: action.id});
-    case SIDEBAR_TOGGLE:
-      return Object.assign({}, state, {sidebarVisible: !state.sidebarVisible});
+    case SIDEBAR_CLOSE:
+      return Object.assign({}, state, {
+        sidebarVisible: !state.sidebarVisible,
+        gripInSidebar: null
+      });
     case INITIALIZE:
       return Object.assign({}, state, {initialized: true});
     case MESSAGES_CLEAR:
-      return Object.assign({}, state, {sidebarVisible: false});
+      return Object.assign({}, state, {sidebarVisible: false, gripInSidebar: null});
+    case SHOW_OBJECT_IN_SIDEBAR:
+      if (action.grip === state.gripInSidebar) {
+        return state;
+      }
+      return Object.assign({}, state, {sidebarVisible: true, gripInSidebar: action.grip});
   }
 
   return state;
