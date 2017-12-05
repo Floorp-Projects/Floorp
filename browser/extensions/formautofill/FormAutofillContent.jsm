@@ -106,8 +106,9 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let isAddressField = FormAutofillUtils.isAddressField(info.fieldName);
     let isInputAutofilled = info.state == FIELD_STATES.AUTO_FILLED;
     let handler = FormAutofillContent.getFormHandler(focusedInput);
-    let allFieldNames = handler.getAllFieldNames(focusedInput);
-    let filledRecordGUID = handler.getFilledRecordGUID(focusedInput);
+    let activeSection = handler.activeSection;
+    let allFieldNames = activeSection.allFieldNames;
+    let filledRecordGUID = activeSection.getFilledRecordGUID();
     let searchPermitted = isAddressField ?
                           FormAutofillUtils.isAutofillAddressesEnabled :
                           FormAutofillUtils.isAutofillCreditCardsEnabled;
@@ -162,7 +163,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
       // Sort addresses by timeLastUsed for showing the lastest used address at top.
       records.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
 
-      let adaptedRecords = handler.getAdaptedProfiles(records, focusedInput);
+      let adaptedRecords = activeSection.getAdaptedProfiles(records);
       let result = null;
       let isSecure = InsecurePasswordUtils.isFormSecure(handler.form);
 
@@ -299,7 +300,7 @@ let ProfileAutocomplete = {
     let {fieldName} = FormAutofillContent.getInputDetails(focusedInput);
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
-    formHandler.autofillFormFields(profile, focusedInput).then(() => {
+    formHandler.autofillFormFields(profile).then(() => {
       autocompleteController.searchString = profile[fieldName];
     });
   },
@@ -312,7 +313,7 @@ let ProfileAutocomplete = {
 
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
-    formHandler.clearPreviewedFormFields(focusedInput);
+    formHandler.activeSection.clearPreviewedFormFields();
   },
 
   _previewSelectedProfile(selectedIndex) {
@@ -330,7 +331,7 @@ let ProfileAutocomplete = {
     let profile = JSON.parse(this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex));
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
-    formHandler.previewFormFields(profile, focusedInput);
+    formHandler.activeSection.previewFormFields(profile);
   },
 };
 
@@ -489,7 +490,7 @@ var FormAutofillContent = {
 
   getAllFieldNames(element) {
     let formHandler = this.getFormHandler(element);
-    return formHandler ? formHandler.getAllFieldNames(element) : null;
+    return formHandler ? formHandler.activeSection.allFieldNames : null;
   },
 
   identifyAutofillFields(element) {
@@ -505,6 +506,7 @@ var FormAutofillContent = {
       let formLike = FormLikeFactory.createFromField(element);
       formHandler = new FormAutofillHandler(formLike);
     } else if (!formHandler.updateFormIfNeeded(element)) {
+      formHandler.focusedInput = element;
       this.log.debug("No control is removed or inserted since last collection.");
       return;
     }
@@ -517,6 +519,7 @@ var FormAutofillContent = {
     validDetails.forEach(detail =>
       this._markAsAutofillField(detail.elementWeakRef.get())
     );
+    formHandler.focusedInput = element;
   },
 
   clearForm() {
@@ -526,7 +529,7 @@ var FormAutofillContent = {
     }
 
     let formHandler = this.getFormHandler(focusedInput);
-    formHandler.clearPopulatedForm(focusedInput);
+    formHandler.activeSection.clearPopulatedForm();
     autocompleteController.searchString = "";
   },
 
