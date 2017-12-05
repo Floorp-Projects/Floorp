@@ -126,6 +126,7 @@ load 783041-4.html
 load 798853.html # bug 868792
 load 805760-1.html
 skip-if(Android) load 815489.html # bug 1216304
+load 812826.html
 load 836225-1.html
 load 839745-1.html
 load 856784-1.html
