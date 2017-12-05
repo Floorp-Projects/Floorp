@@ -110,7 +110,7 @@ public:
                   mozilla::ErrorResult& rv) {
     rv = SetCssText(aString, &aSubjectPrincipal);
   }
-  void GetCssText(nsString& aString, nsIPrincipal& aSubjectPrincipal) {
+  void GetCssText(nsString& aString) {
     // Cast to nsAString& so we end up calling our virtual
     // |GetCssText(nsAString& aCssText)| overload, which does the real work.
     GetCssText(static_cast<nsAString&>(aString));

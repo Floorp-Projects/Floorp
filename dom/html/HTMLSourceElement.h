@@ -54,7 +54,7 @@ public:
   MediaSource* GetSrcMediaSource() { return mSrcMediaSource; };
 
   // WebIDL
-  void GetSrc(nsString& aSrc, nsIPrincipal&)
+  void GetSrc(nsString& aSrc)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }
@@ -82,7 +82,7 @@ public:
     SetHTMLAttr(nsGkAtoms::type, aType, rv);
   }
 
-  void GetSrcset(DOMString& aSrcset, nsIPrincipal&)
+  void GetSrcset(DOMString& aSrcset)
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }

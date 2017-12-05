@@ -1220,10 +1220,6 @@ public:
                                     nsTArray<RefPtr<Animation>>& aAnimations);
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  void GetInnerHTML(nsAString& aInnerHTML, nsIPrincipal& aSubjectPrincipal)
-  {
-    GetInnerHTML(aInnerHTML);
-  }
   virtual void SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal& aSubjectPrincipal, ErrorResult& aError);
   void GetOuterHTML(nsAString& aOuterHTML);
   void SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError);
