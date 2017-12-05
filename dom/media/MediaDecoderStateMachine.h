@@ -196,6 +196,9 @@ public:
     DECODER_STATE_SHUTDOWN
   };
 
+  // Returns the state machine task queue.
+  TaskQueue* OwnerThread() const { return mTaskQueue; }
+
   RefPtr<MediaDecoder::DebugInfoPromise> RequestDebugInfo();
 
   void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
@@ -336,9 +339,6 @@ private:
   bool HasAudio() const { return mInfo.ref().HasAudio(); }
   bool HasVideo() const { return mInfo.ref().HasVideo(); }
   const MediaInfo& Info() const { return mInfo.ref(); }
-
-  // Returns the state machine task queue.
-  TaskQueue* OwnerThread() const { return mTaskQueue; }
 
   // Schedules the shared state machine thread to run the state machine.
   void ScheduleStateMachine();
