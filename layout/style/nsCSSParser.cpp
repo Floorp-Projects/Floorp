@@ -9122,7 +9122,7 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSPropertyID aPropID)
   nsAString* ident = NextIdent();
   if (ident) {
     if (ident->LowerCaseEqualsLiteral("subgrid")) {
-      if (!nsLayoutUtils::IsGridTemplateSubgridValueEnabled()) {
+      if (!StylePrefs::sGridTemplateSubgridValueEnabled) {
         REPORT_UNEXPECTED(PESubgridNotSupported);
         return false;
       }
@@ -9310,7 +9310,7 @@ CSSParserImpl::ParseGridTemplate(bool aForGridShorthand)
   nsAString* ident = NextIdent();
   if (ident) {
     if (ident->LowerCaseEqualsLiteral("subgrid")) {
-      if (!nsLayoutUtils::IsGridTemplateSubgridValueEnabled()) {
+      if (!StylePrefs::sGridTemplateSubgridValueEnabled) {
         REPORT_UNEXPECTED(PESubgridNotSupported);
         return false;
       }
