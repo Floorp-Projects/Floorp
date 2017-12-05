@@ -72,8 +72,8 @@ async function test() {
   });
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  content.location = "https://example.com/browser/browser/base/content/test/pageinfo/image.html";
-  await waitForEvent(gBrowser.selectedBrowser, "load");
+  gBrowser.selectedBrowser.loadURI("https://example.com/browser/browser/base/content/test/pageinfo/image.html");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let spec = gBrowser.selectedBrowser.currentURI.spec;
 

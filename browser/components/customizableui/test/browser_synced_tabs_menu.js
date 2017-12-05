@@ -162,9 +162,7 @@ add_task(async function() {
   is(gBrowser.tabs.length, 2, "there's a new tab");
   await new Promise(resolve => {
     if (gBrowser.selectedBrowser.currentURI.spec == "about:blank") {
-      gBrowser.selectedBrowser.addEventListener("load", function(e) {
-        resolve();
-      }, {capture: true, once: true});
+      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(resolve);
       return;
     }
     // the new tab has already transitioned away from about:blank so we

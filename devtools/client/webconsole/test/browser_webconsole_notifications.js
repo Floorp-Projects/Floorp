@@ -26,7 +26,7 @@ function waitForEvents(onConsoleOpened) {
   function webConsoleCreated(id) {
     Services.obs.removeObserver(observer, "web-console-created");
     ok(HUDService.getHudReferenceById(id), "We have a hud reference");
-    content.wrappedJSObject.console.log("adding a log message");
+    gBrowser.contentWindowAsCPOW.wrappedJSObject.console.log("adding a log message");
   }
 
   function webConsoleDestroyed(id) {

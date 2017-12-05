@@ -9,11 +9,12 @@ var ctx = {};
 // how many load events should happen on that page (one for the toplevel doc
 // and one for each subframe) and wait until we receive the expected number
 // of events.
-function nShotsListener(aElem, aType, aCallback, aCount) {
+function nShotsListener(aBrowser, aType, aCallback, aCount) {
   let count = aCount;
-  aElem.addEventListener(aType, function listenerCallback() {
+  let removeFunc;
+  removeFunc = BrowserTestUtils.addContentEventListener(aBrowser, aType, function listenerCallback() {
     if (--count == 0) {
-      aElem.removeEventListener(aType, listenerCallback, true);
+      removeFunc();
 
       // aCallback is executed asynchronously, which is handy because load
       // events fire before mIsDocumentLoaded is actually set to true. :(
@@ -22,8 +23,8 @@ function nShotsListener(aElem, aType, aCallback, aCount) {
   }, true);
 }
 
-function oneShotListener(aElem, aType, aCallback) {
-  nShotsListener(aElem, aType, aCallback, 1);
+function oneShotListener(aBrowser, aType, aCallback) {
+  nShotsListener(aBrowser, aType, aCallback, 1);
 }
 
 function waitForPageshow(aBrowser, callback) {
