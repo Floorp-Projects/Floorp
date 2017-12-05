@@ -119,11 +119,23 @@ NewConsoleOutputWrapper.prototype = {
             ? messageVariable.textContent : null;
 
         // Retrieve closes actor id from the DOM.
-        let actorEl = target.closest("[data-link-actor-id]");
+        let actorEl = target.closest("[data-link-actor-id]") ||
+                      target.querySelector("[data-link-actor-id]");
         let actor = actorEl ? actorEl.dataset.linkActorId : null;
 
+        let rootObjectInspector = target.closest(".object-inspector");
+        let rootActor = rootObjectInspector ?
+                        rootObjectInspector.querySelector("[data-link-actor-id]") : null;
+        let rootActorId = rootActor ? rootActor.dataset.linkActorId : null;
+
+        let sidebarTogglePref = store.getState().prefs.sidebarToggle;
+        let openSidebar = sidebarTogglePref ? (messageId) => {
+          store.dispatch(actions.showObjectInSidebar(rootActorId, messageId));
+        } : null;
+
         let menu = createContextMenu(this.jsterm, this.parentNode,
-          { actor, clipboardText, variableText, message, serviceContainer });
+          { actor, clipboardText, variableText, message,
+            serviceContainer, openSidebar, rootActorId });
 
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
