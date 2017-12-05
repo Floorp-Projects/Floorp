@@ -139,7 +139,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     numCompartments(0),
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
-    defaultVersion_(JSVERSION_DEFAULT),
     profilingScripts(false),
     scriptAndCountsVector(nullptr),
     lcovOutput_(),

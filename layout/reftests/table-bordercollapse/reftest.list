@@ -6,6 +6,8 @@
 == bug1379306.html bug1379306-ref.html
 == bug1394226.html bug1394226-ref.html
 != bug1394226.html bug1394226-notref.html
+== bug1405929.html bug1405929-ref.html
+== bug1405929-2.html bug1405929-2-ref.html
 == bc_dyn_cell1.html bc_dyn_cell1_ref.html
 == bc_dyn_cell2.html bc_dyn_cell2_ref.html
 == bc_dyn_cell3.html bc_dyn_cell3_ref.html

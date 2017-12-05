@@ -692,7 +692,7 @@ hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2, T lo3, T hi3)
  * one enum to another...  So this doesn't provide the type-checking that I
  * originally had in mind... :(.
  *
- * For MSVC warnings, see: https://github.com/behdad/harfbuzz/pull/163
+ * For MSVC warnings, see: https://github.com/harfbuzz/harfbuzz/pull/163
  */
 #ifdef _MSC_VER
 # pragma warning(disable:4200)

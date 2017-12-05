@@ -1022,9 +1022,12 @@ class TreeMetadataEmitter(LoggingMixin):
                 computed_host_flags.resolve_flags('RTL', [rtl_flag])
 
         generated_files = set()
+        localized_generated_files = set()
         for obj in self._process_generated_files(context):
             for f in obj.outputs:
                 generated_files.add(f)
+                if obj.localized:
+                    localized_generated_files.add(f)
             yield obj
 
         for path in context['CONFIGURE_SUBST_FILES']:
@@ -1120,17 +1123,17 @@ class TreeMetadataEmitter(LoggingMixin):
                 for f in files:
                     if (var in ('FINAL_TARGET_PP_FILES',
                                 'OBJDIR_PP_FILES',
-                                'LOCALIZED_FILES',
                                 'LOCALIZED_PP_FILES') and
                         not isinstance(f, SourcePath)):
                         raise SandboxValidationError(
                                 ('Only source directory paths allowed in ' +
                                  '%s: %s')
                                 % (var, f,), context)
-                    if var.startswith('LOCALIZED_') and not f.startswith('en-US/'):
-                        raise SandboxValidationError(
-                                '%s paths must start with `en-US/`: %s'
-                                % (var, f,), context)
+                    if var.startswith('LOCALIZED_'):
+                        if isinstance(f, SourcePath) and not f.startswith('en-US/'):
+                            raise SandboxValidationError(
+                                    '%s paths must start with `en-US/`: %s'
+                                    % (var, f,), context)
                     if not isinstance(f, ObjDirPath):
                         path = f.full_path
                         if '*' not in path and not os.path.exists(path):
@@ -1147,6 +1150,21 @@ class TreeMetadataEmitter(LoggingMixin):
                             raise SandboxValidationError(
                                 ('Objdir file listed in %s not in ' +
                                  'GENERATED_FILES: %s') % (var, f), context)
+
+                        if var.startswith('LOCALIZED_'):
+                            # Further require that LOCALIZED_FILES are from
+                            # LOCALIZED_GENERATED_FILES.
+                            if f.target_basename not in localized_generated_files:
+                                raise SandboxValidationError(
+                                    ('Objdir file listed in %s not in ' +
+                                     'LOCALIZED_GENERATED_FILES: %s') % (var, f), context)
+                        else:
+                            # Additionally, don't allow LOCALIZED_GENERATED_FILES to be used
+                            # in anything *but* LOCALIZED_FILES.
+                            if f.target_basename in localized_generated_files:
+                                raise SandboxValidationError(
+                                    ('Outputs of LOCALIZED_GENERATED_FILES cannot be used in %s: ' +
+                                     '%s') % (var, f), context)
 
             # Addons (when XPI_NAME is defined) and Applications (when
             # DIST_SUBDIR is defined) use a different preferences directory
@@ -1287,45 +1305,47 @@ class TreeMetadataEmitter(LoggingMixin):
                                 unicode(path),
                                 [Path(context, path + '.in')])
 
-        generated_files = context.get('GENERATED_FILES')
-        if not generated_files:
+        generated_files = context.get('GENERATED_FILES') or []
+        localized_generated_files = context.get('LOCALIZED_GENERATED_FILES') or []
+        if not (generated_files or localized_generated_files):
             return
 
-        for f in generated_files:
-            flags = generated_files[f]
-            outputs = f
-            inputs = []
-            if flags.script:
-                method = "main"
-                script = SourcePath(context, flags.script).full_path
+        for (localized, gen) in ((False, generated_files), (True, localized_generated_files)):
+            for f in gen:
+                flags = gen[f]
+                outputs = f
+                inputs = []
+                if flags.script:
+                    method = "main"
+                    script = SourcePath(context, flags.script).full_path
 
-                # Deal with cases like "C:\\path\\to\\script.py:function".
-                if '.py:' in script:
-                    script, method = script.rsplit('.py:', 1)
-                    script += '.py'
+                    # Deal with cases like "C:\\path\\to\\script.py:function".
+                    if '.py:' in script:
+                        script, method = script.rsplit('.py:', 1)
+                        script += '.py'
 
-                if not os.path.exists(script):
-                    raise SandboxValidationError(
-                        'Script for generating %s does not exist: %s'
-                        % (f, script), context)
-                if os.path.splitext(script)[1] != '.py':
-                    raise SandboxValidationError(
-                        'Script for generating %s does not end in .py: %s'
-                        % (f, script), context)
-
-                for i in flags.inputs:
-                    p = Path(context, i)
-                    if (isinstance(p, SourcePath) and
-                            not os.path.exists(p.full_path)):
+                    if not os.path.exists(script):
                         raise SandboxValidationError(
-                            'Input for generating %s does not exist: %s'
-                            % (f, p.full_path), context)
-                    inputs.append(p)
-            else:
-                script = None
-                method = None
-            yield GeneratedFile(context, script, method, outputs, inputs,
-                                flags.flags)
+                            'Script for generating %s does not exist: %s'
+                            % (f, script), context)
+                    if os.path.splitext(script)[1] != '.py':
+                        raise SandboxValidationError(
+                            'Script for generating %s does not end in .py: %s'
+                            % (f, script), context)
+
+                    for i in flags.inputs:
+                        p = Path(context, i)
+                        if (isinstance(p, SourcePath) and
+                                not os.path.exists(p.full_path)):
+                            raise SandboxValidationError(
+                                'Input for generating %s does not exist: %s'
+                                % (f, p.full_path), context)
+                        inputs.append(p)
+                else:
+                    script = None
+                    method = None
+                yield GeneratedFile(context, script, method, outputs, inputs,
+                                    flags.flags, localized=localized)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():

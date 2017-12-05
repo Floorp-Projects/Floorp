@@ -20,6 +20,3 @@ chrome-%:
 	@$(MAKE) -C $(DEPTH)/dom/locales/ chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/security/manager/locales/ chrome AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
-
-libs:: update.locale
-	sed -e 's/%AB_CD%/$(AB_CD)/' $< > $(FINAL_TARGET)/update.locale
