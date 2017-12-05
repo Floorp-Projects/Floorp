@@ -23,7 +23,6 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
-import org.mozilla.gecko.gfx.BitmapUtils;
 
 import java.lang.reflect.Constructor;
 

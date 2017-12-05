@@ -13,7 +13,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.R;
 
 /**
