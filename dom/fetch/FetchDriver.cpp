@@ -25,6 +25,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
+#include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsHttpChannel.h"
@@ -877,13 +878,21 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
         nsCOMPtr<nsIInputStream> altInputStream = mAltDataListener->GetAlternativeInputStream();
         MOZ_ASSERT(altInputStream && cacheInfo);
         response->SetAlternativeBody(altInputStream);
-        response->SetCacheInfoChannel(cacheInfo);
+        nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
+          new nsMainThreadPtrHolder<nsICacheInfoChannel>("nsICacheInfoChannel",
+                                                         cacheInfo,
+                                                         false));
+        response->SetCacheInfoChannel(handle);
       }
     } else if (!mAltDataListener->GetAlternativeDataType().IsEmpty()) {
       // If the status is FALLBACK and the mAltDataListener::mAlternativeDataType
       // is not empty, that means the data need to be saved into cache, setup the
       // response's nsICacheInfoChannel for caching the data after loading.
-      response->SetCacheInfoChannel(cic);
+      nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
+        new nsMainThreadPtrHolder<nsICacheInfoChannel>("nsICacheInfoChannel",
+                                                       cic,
+                                                       false));
+      response->SetCacheInfoChannel(handle);
     }
   }
 
