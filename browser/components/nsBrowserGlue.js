@@ -1746,35 +1746,6 @@ BrowserGlue.prototype = {
     this.AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },
 
-  /**
-   * Uncollapses PersonalToolbar if its collapsed status is not
-   * persisted, and user customized it or changed default bookmarks.
-   *
-   * If the user does not have a persisted value for the toolbar's
-   * "collapsed" attribute, try to determine whether it's customized.
-   */
-  _maybeToggleBookmarkToolbarVisibility() {
-    const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
-    const NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE = 3;
-    let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
-
-    if (!xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed")) {
-      // We consider the toolbar customized if it has more than NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-      // children, or if it has a persisted currentset value.
-      let toolbarIsCustomized = xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "currentset");
-      let getToolbarFolderCount = () => {
-        let toolbarFolder = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
-        let toolbarChildCount = toolbarFolder.childCount;
-        toolbarFolder.containerOpen = false;
-        return toolbarChildCount;
-      };
-
-      if (toolbarIsCustomized || getToolbarFolderCount() > NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE) {
-        xulStore.setValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed", "false");
-      }
-    }
-  },
-
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
     const UI_VERSION = 59;
@@ -1786,15 +1757,6 @@ BrowserGlue.prototype = {
     } else {
       // This is a new profile, nothing to migrate.
       Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
-
-      try {
-        // New profiles may have existing bookmarks (imported from another browser or
-        // copied into the profile) and we want to show the bookmark toolbar for them
-        // in some cases.
-        this._maybeToggleBookmarkToolbarVisibility();
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
       return;
     }
 
