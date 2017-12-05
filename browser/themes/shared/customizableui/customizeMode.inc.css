@@ -580,6 +580,14 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin: 0 -7px;
 }
 
+%ifdef XP_UNIX
+%ifndef XP_MACOSX
+#customization-palette[whimsypong] > toolbarpaletteitem > toolbarspring {
+  font-size: 12px;
+}
+%endif
+%endif
+
 #wp-lives,
 #wp-ball {
   /* Don't need HiDPI versions since the size used will be scaled down to 20x20. */
