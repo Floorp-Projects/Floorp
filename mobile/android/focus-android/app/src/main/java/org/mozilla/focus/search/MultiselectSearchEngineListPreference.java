@@ -4,8 +4,11 @@
 
 package org.mozilla.focus.search;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CompoundButton;
 
 import org.mozilla.focus.R;
@@ -21,6 +24,13 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
 
     public MultiselectSearchEngineListPreference(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+    }
+
+    @Override
+    protected View onCreateView(ViewGroup parent) {
+        View view = super.onCreateView(parent);
+        this.bindEngineCheckboxesToMenu();
+        return view;
     }
 
     @Override
@@ -47,5 +57,28 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
             }
         }
         return engineIdSet;
+    }
+
+    // Whenever an engine is checked or unchecked, we notify the menu
+    protected void bindEngineCheckboxesToMenu() {
+        for (int i = 0; i < searchEngineGroup.getChildCount(); i++) {
+            final CompoundButton engineButton = (CompoundButton) searchEngineGroup.getChildAt(i);
+            engineButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    ((Activity) getContext()).invalidateOptionsMenu();
+                }
+            });
+        }
+    }
+
+    public boolean atLeastOneEngineChecked() {
+        for (int i = 0; i < searchEngineGroup.getChildCount(); i++) {
+            final CompoundButton engineButton = (CompoundButton) searchEngineGroup.getChildAt(i);
+            if (engineButton.isChecked()) {
+               return true;
+            }
+        }
+        return false;
     }
 }

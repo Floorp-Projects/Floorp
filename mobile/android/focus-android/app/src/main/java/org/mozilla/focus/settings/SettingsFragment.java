@@ -120,12 +120,25 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(final Menu menu) {
         switch (settingsScreen) {
             case SEARCH_ENGINES:
                 if (SearchEngineManager.hasAllDefaultSearchEngines(getSearchEngineSharedPreferences())) {
                     menu.findItem(R.id.menu_restore_default_engines).setEnabled(false);
                 }
+                break;
+            case REMOVE_ENGINES:
+                // We disable the trash icon when no engine is checked, enable it otherwise
+                getView().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        final MultiselectSearchEngineListPreference pref = (MultiselectSearchEngineListPreference) getPreferenceScreen()
+                                .findPreference(getResources()
+                                        .getString(R.string.pref_key_multiselect_search_engine_list));
+                        MenuItem menuDeleteItem = menu.findItem(R.id.menu_delete_items);
+                        SettingsFragment.this.setMenuItemEnabled(menuDeleteItem, pref.atLeastOneEngineChecked());
+                    }
+                });
                 break;
             default:
                 return;
@@ -289,5 +302,12 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     protected SharedPreferences getSearchEngineSharedPreferences() {
         return getActivity().getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE);
+    }
+
+    protected void setMenuItemEnabled(MenuItem menuItem, boolean enabled) {
+        menuItem.setEnabled(enabled)
+                .getIcon()
+                .mutate()
+                .setAlpha(enabled ? SettingsFragment.ALPHA_ENABLED : SettingsFragment.ALPHA_DISABLED);
     }
 }
