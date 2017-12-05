@@ -354,7 +354,7 @@ methods of other kinds of objects.
 
     **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
-<code>clearBreakpoints(handler, [<i>offset</i>])</code>
+<code>clearBreakpoint(handler, [<i>offset</i>])</code>
 :   **If the instance refers to a `JSScript`**, remove all breakpoints set in
     this [`Debugger`][debugger-object] instance that use <i>handler</i> as
     their handler. If <i>offset</i> is given, remove only those breakpoints
