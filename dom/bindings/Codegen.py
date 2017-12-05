@@ -9437,7 +9437,8 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('JSJitSetterCallArgs', 'args')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args,
+                                        canRunScript=True)
 
     def definition_body(self):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
