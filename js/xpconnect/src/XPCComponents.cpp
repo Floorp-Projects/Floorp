@@ -2211,24 +2211,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     if (!JS_ValueToObject(cx, sandboxVal, &sandbox) || !sandbox)
         return NS_ERROR_INVALID_ARG;
 
-    // Optional third argument: JS version, as a string.
-    JSVersion jsVersion = JSVERSION_DEFAULT;
-    if (optionalArgc >= 1) {
-        JSString* jsVersionStr = ToString(cx, version);
-        if (!jsVersionStr)
-            return NS_ERROR_INVALID_ARG;
-
-        JSAutoByteString bytes(cx, jsVersionStr);
-        if (!bytes)
-            return NS_ERROR_INVALID_ARG;
-
-        // Treat non-default version designation as default.
-        if (JS_StringToVersion(bytes.ptr()) == JSVERSION_UNKNOWN &&
-            strcmp(bytes.ptr(), "latest"))
-        {
-            return NS_ERROR_INVALID_ARG;
-        }
-    }
+    // Optional third argument: JS version, as a string, is unused.
 
     // Optional fourth and fifth arguments: filename and line number.
     int32_t lineNo = (optionalArgc >= 3) ? lineNumber : 1;
@@ -2246,8 +2229,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
         }
     }
 
-    return xpc::EvalInSandbox(cx, sandbox, source, filename, lineNo,
-                              jsVersion, retval);
+    return xpc::EvalInSandbox(cx, sandbox, source, filename, lineNo, retval);
 }
 
 NS_IMETHODIMP
