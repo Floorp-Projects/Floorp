@@ -1185,6 +1185,29 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
       }
     } else {
       stream->mStartBlocking = WillUnderrun(stream, aEndBlockingDecisions);
+
+      SourceMediaStream* s = stream->AsSourceStream();
+      if (s && s->mPullEnabled) {
+        for (StreamTracks::TrackIter i(s->mTracks); !i.IsEnded(); i.Next()) {
+          if (i->IsEnded()) {
+            continue;
+          }
+          if (i->GetEnd() < stream->GraphTimeToStreamTime(aEndBlockingDecisions)) {
+            LOG(LogLevel::Error,
+                ("SourceMediaStream %p track %u (%s) is live and pulled, but wasn't fed "
+                 "enough data. Listeners=%zu. Track-end=%f, Iteration-end=%f",
+                 stream,
+                 i->GetID(),
+                 (i->GetType() == MediaSegment::AUDIO ? "audio" : "video"),
+                 stream->mListeners.Length(),
+                 MediaTimeToSeconds(i->GetEnd()),
+                 MediaTimeToSeconds(stream->GraphTimeToStreamTime(aEndBlockingDecisions))));
+            MOZ_DIAGNOSTIC_ASSERT(false,
+                                  "A non-finished SourceMediaStream wasn't fed "
+                                  "enough data by NotifyPull");
+          }
+        }
+      }
     }
   }
 
