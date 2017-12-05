@@ -126,7 +126,7 @@ function onTestPropFound(aResults) {
 
 function onFooObjFetchAfterUpdate(aVar) {
   info("onFooObjFetchAfterUpdate");
-  let expectedValue = content.document.title + content.location +
+  let expectedValue = gBrowser.contentTitle + gBrowser.currentURI.spec +
                       "[object HTMLParagraphElement]";
 
   return findVariableViewProperties(aVar, [
@@ -138,7 +138,7 @@ function onUpdatedTestPropFound(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the updated |testProp| property value");
 
-  is(content.wrappedJSObject.fooObj.testProp, aResults[0].value,
+  is(gBrowser.contentWindowAsCPOW.wrappedJSObject.fooObj.testProp, aResults[0].value,
      "|fooObj.testProp| value has been updated");
 
   // Check that property name updates work.
@@ -168,9 +168,9 @@ function onRenamedTestPropFound(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the renamed |testProp| property");
 
-  ok(!content.wrappedJSObject.fooObj.testProp,
+  ok(!gBrowser.contentWindowAsCPOW.wrappedJSObject.fooObj.testProp,
      "|fooObj.testProp| has been deleted");
-  is(content.wrappedJSObject.fooObj.testUpdatedProp, aResults[0].value,
+  is(gBrowser.contentWindowAsCPOW.wrappedJSObject.fooObj.testUpdatedProp, aResults[0].value,
      "|fooObj.testUpdatedProp| is correct");
 
   // Check that property value updates that cause exceptions are reported in
@@ -223,6 +223,6 @@ function testPropDelete(aProp) {
   return waitForSuccess({
     name: "property deleted",
     timeout: 60000,
-    validator: () => !("testUpdatedProp" in content.wrappedJSObject.fooObj)
+    validator: () => !("testUpdatedProp" in gBrowser.contentWindowAsCPOW.wrappedJSObject.fooObj)
   });
 }
