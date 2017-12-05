@@ -86,7 +86,9 @@ function assertDecl(src, patt) {
 function assertError(src, errorType) {
     try {
         Reflect.parse(src);
-    } catch (expected if expected instanceof errorType) {
+    } catch (expected) {
+        if (!(expected instanceof errorType))
+            throw expected;
         return;
     }
     throw new Error("expected " + errorType.name + " for " + uneval(src));

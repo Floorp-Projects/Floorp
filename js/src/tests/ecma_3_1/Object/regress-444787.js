@@ -53,14 +53,13 @@ function test()
       actual = Object.getPrototypeOf(instance);
       reportCompare(expect, actual, summary + ': new ' + type.name);
     }
-    catch(ex if ex instanceof TypeError)
-    {
-      print('Ignore ' + ex);
-    }
-    catch(ex)
-    {
-      actual = ex + '';
-      reportCompare(expect, actual, summary + ': new ' + type.name);
+    catch(ex) {
+      if (ex instanceof TypeError) {
+        print('Ignore ' + ex);
+      } else {
+        actual = ex + '';
+        reportCompare(expect, actual, summary + ': new ' + type.name);
+      }
     }
 
   }
