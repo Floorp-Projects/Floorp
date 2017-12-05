@@ -301,9 +301,6 @@ class TryFinallyControl : public BytecodeEmitter::NestableControl
     // The subroutine when emitting a finally block.
     JumpList gosubs;
 
-    // Offset of the last catch guard, if any.
-    JumpList guardJump;
-
     TryFinallyControl(BytecodeEmitter* bce, StatementKind kind)
       : NestableControl(bce, kind),
         emittingSubroutine_(false)
@@ -1524,7 +1521,6 @@ class MOZ_STACK_CLASS TryEmitter
     // DontUseControl is used by yield* and the internal try-catch around
     // IteratorClose. These internal uses must:
     //   * have only one catch block
-    //   * have no catch guard
     //   * have JSOP_GOTO at the end of catch-block
     //   * have no non-local-jump
     //   * don't use finally block for normal completion of try-block and
@@ -1634,14 +1630,9 @@ class MOZ_STACK_CLASS TryEmitter
 
   public:
     bool emitCatch() {
-        if (state_ == Try) {
-            if (!emitTryEnd())
-                return false;
-        } else {
-            MOZ_ASSERT(state_ == Catch);
-            if (!emitCatchEnd(true))
-                return false;
-        }
+        MOZ_ASSERT(state_ == Try);
+        if (!emitTryEnd())
+            return false;
 
         MOZ_ASSERT(bce_->stackDepth == depth_);
 
@@ -1672,28 +1663,10 @@ class MOZ_STACK_CLASS TryEmitter
             if (!bce_->emitJump(JSOP_GOSUB, &controlInfo_->gosubs))
                 return false;
             MOZ_ASSERT(bce_->stackDepth == depth_);
-        }
 
-        // Jump over the remaining catch blocks.  This will get fixed
-        // up to jump to after catch/finally.
-        if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_))
-            return false;
-
-        // If this catch block had a guard clause, patch the guard jump to
-        // come here.
-        if (controlInfo_->guardJump.offset != -1) {
-            if (!bce_->emitJumpTargetAndPatch(controlInfo_->guardJump))
+            // Jump over the finally block.
+            if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_))
                 return false;
-            controlInfo_->guardJump.offset = -1;
-
-            // If this catch block is the last one, rethrow, delegating
-            // execution of any finally block to the exception handler.
-            if (!hasNext) {
-                if (!bce_->emit1(JSOP_EXCEPTION))
-                    return false;
-                if (!bce_->emit1(JSOP_THROW))
-                    return false;
-            }
         }
 
         return true;
@@ -3222,7 +3195,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         return true;
 
       case PNK_STATEMENTLIST:
-      case PNK_CATCHLIST:
       // Strict equality operations and logical operators are well-behaved and
       // perform no conversions.
       case PNK_OR:
@@ -3411,9 +3383,9 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
             return false;
         if (*answer)
             return true;
-        if (ParseNode* catchList = pn->pn_kid2) {
-            MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
-            if (!checkSideEffects(catchList, answer))
+        if (ParseNode* catchScope = pn->pn_kid2) {
+            MOZ_ASSERT(catchScope->isKind(PNK_LEXICALSCOPE));
+            if (!checkSideEffects(catchScope, answer))
                 return false;
             if (*answer)
                 return true;
@@ -3425,20 +3397,14 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         return true;
 
       case PNK_CATCH:
-        MOZ_ASSERT(pn->isArity(PN_TERNARY));
-        if (ParseNode* name = pn->pn_kid1) {
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        if (ParseNode* name = pn->pn_left) {
             if (!checkSideEffects(name, answer))
                 return false;
             if (*answer)
                 return true;
         }
-        if (ParseNode* cond = pn->pn_kid2) {
-            if (!checkSideEffects(cond, answer))
-                return false;
-            if (*answer)
-                return true;
-        }
-        return checkSideEffects(pn->pn_kid3, answer);
+        return checkSideEffects(pn->pn_right, answer);
 
       case PNK_SWITCH:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
@@ -6615,20 +6581,13 @@ bool
 BytecodeEmitter::emitCatch(ParseNode* pn)
 {
     // We must be nested under a try-finally statement.
-    TryFinallyControl& controlInfo = innermostNestableControl->as<TryFinallyControl>();
+    MOZ_ASSERT(innermostNestableControl->is<TryFinallyControl>());
 
     /* Pick up the pending exception and bind it to the catch variable. */
     if (!emit1(JSOP_EXCEPTION))
         return false;
 
-    /*
-     * Dup the exception object if there is a guard for rethrowing to use
-     * it later when rethrowing or in other catches.
-     */
-    if (pn->pn_kid2 && !emit1(JSOP_DUP))
-        return false;
-
-    ParseNode* pn2 = pn->pn_kid1;
+    ParseNode* pn2 = pn->pn_left;
     if (!pn2) {
         // Catch parameter was omitted; just discard the exception.
         if (!emit1(JSOP_POP))
@@ -6655,47 +6614,8 @@ BytecodeEmitter::emitCatch(ParseNode* pn)
         }
     }
 
-    // If there is a guard expression, emit it and arrange to jump to the next
-    // catch block if the guard expression is false.
-    if (pn->pn_kid2) {
-        if (!emitTree(pn->pn_kid2))
-            return false;
-
-        // If the guard expression is false, fall through, pop the block scope,
-        // and jump to the next catch block.  Otherwise jump over that code and
-        // pop the dupped exception.
-        JumpList guardCheck;
-        if (!emitJump(JSOP_IFNE, &guardCheck))
-            return false;
-
-        {
-            NonLocalExitControl nle(this, NonLocalExitControl::Throw);
-
-            // Move exception back to cx->exception to prepare for
-            // the next catch.
-            if (!emit1(JSOP_THROWING))
-                return false;
-
-            // Leave the scope for this catch block.
-            if (!nle.prepareForNonLocalJump(&controlInfo))
-                return false;
-
-            // Jump to the next handler added by emitTry.
-            if (!emitJump(JSOP_GOTO, &controlInfo.guardJump))
-                return false;
-        }
-
-        // Back to normal control flow.
-        if (!emitJumpTargetAndPatch(guardCheck))
-            return false;
-
-        // Pop duplicated exception object as we no longer need it.
-        if (!emit1(JSOP_POP))
-            return false;
-    }
-
     /* Emit the catch body. */
-    return emitTree(pn->pn_kid3);
+    return emitTree(pn->pn_right);
 }
 
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See the
@@ -6703,11 +6623,11 @@ BytecodeEmitter::emitCatch(ParseNode* pn)
 MOZ_NEVER_INLINE bool
 BytecodeEmitter::emitTry(ParseNode* pn)
 {
-    ParseNode* catchList = pn->pn_kid2;
+    ParseNode* catchScope = pn->pn_kid2;
     ParseNode* finallyNode = pn->pn_kid3;
 
     TryEmitter::Kind kind;
-    if (catchList) {
+    if (catchScope) {
         if (finallyNode)
             kind = TryEmitter::TryCatchFinally;
         else
@@ -6725,43 +6645,25 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         return false;
 
     // If this try has a catch block, emit it.
-    if (catchList) {
-        MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
-
+    if (catchScope) {
         // The emitted code for a catch block looks like:
         //
         // [pushlexicalenv]             only if any local aliased
         // exception
-        // if there is a catchguard:
-        //   dup
         // setlocal 0; pop              assign or possibly destructure exception
-        // if there is a catchguard:
-        //   < catchguard code >
-        //   ifne POST
-        //   debugleaveblock
-        //   [poplexicalenv]            only if any local aliased
-        //   throwing                   pop exception to cx->exception
-        //   goto <next catch block>
-        //   POST: pop
         // < catch block contents >
         // debugleaveblock
         // [poplexicalenv]              only if any local aliased
-        // goto <end of catch blocks>   non-local; finally applies
-        //
-        // If there's no catch block without a catchguard, the last <next catch
-        // block> points to rethrow code.  This code will [gosub] to the finally
-        // code if appropriate, and is also used for the catch-all trynote for
-        // capturing exceptions thrown from catch{} blocks.
-        //
-        for (ParseNode* pn3 = catchList->pn_head; pn3; pn3 = pn3->pn_next) {
-            if (!tryCatch.emitCatch())
-                return false;
+        // if there is a finally block:
+        //   gosub <finally>
+        //   goto <after finally>
+        if (!tryCatch.emitCatch())
+            return false;
 
-            // Emit the lexical scope and catch body.
-            MOZ_ASSERT(pn3->isKind(PNK_LEXICALSCOPE));
-            if (!emitTree(pn3))
-                return false;
-        }
+        // Emit the lexical scope and catch body.
+        MOZ_ASSERT(catchScope->isKind(PNK_LEXICALSCOPE));
+        if (!emitTree(catchScope))
+            return false;
     }
 
     // Emit the finally handler, if there is one.
@@ -6896,7 +6798,7 @@ BytecodeEmitter::emitLexicalScope(ParseNode* pn)
     EmitterScope emitterScope(this);
     ScopeKind kind;
     if (body->isKind(PNK_CATCH))
-        kind = (!body->pn_kid1 || body->pn_kid1->isKind(PNK_NAME))
+        kind = (!body->pn_left || body->pn_left->isKind(PNK_NAME))
                ? ScopeKind::SimpleCatch
                : ScopeKind::Catch;
     else
