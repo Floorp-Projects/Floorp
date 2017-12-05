@@ -600,6 +600,9 @@ class Descriptor(DescriptorProvider):
         def ensureValidCanOOMExtendedAttribute(attr):
             ensureValidBoolExtendedAttribute(attr, "CanOOM")
 
+        def ensureValidNeedsSubjectPrincipalExtendedAttribute(attr):
+            ensureValidBoolExtendedAttribute(attr, "NeedsSubjectPrincipal")
+
         def maybeAppendInfallibleToAttrs(attrs, throws):
             ensureValidThrowsExtendedAttribute(throws)
             if throws is None:
@@ -610,9 +613,15 @@ class Descriptor(DescriptorProvider):
             if canOOM is not None:
                 attrs.append("canOOM")
 
+        def maybeAppendNeedsSubjectPrincipalToAttrs(attrs, needsSubjectPrincipal):
+            ensureValidNeedsSubjectPrincipalExtendedAttribute(needsSubjectPrincipal)
+            if needsSubjectPrincipal is not None:
+                attrs.append("needsSubjectPrincipal")
+
         name = member.identifier.name
         throws = self.interface.isJSImplemented() or member.getExtendedAttribute("Throws")
         canOOM = member.getExtendedAttribute("CanOOM")
+        needsSubjectPrincipal = member.getExtendedAttribute("NeedsSubjectPrincipal")
         if member.isMethod():
             # JSObject-returning [NewObject] methods must be fallible,
             # since they have to (fallibly) allocate the new JSObject.
@@ -622,6 +631,8 @@ class Descriptor(DescriptorProvider):
             attrs = self.extendedAttributes['all'].get(name, [])
             maybeAppendInfallibleToAttrs(attrs, throws)
             maybeAppendCanOOMToAttrs(attrs, canOOM)
+            maybeAppendNeedsSubjectPrincipalToAttrs(attrs,
+                                                    needsSubjectPrincipal)
             return attrs
 
         assert member.isAttr()
@@ -636,6 +647,12 @@ class Descriptor(DescriptorProvider):
             canOOMAttr = "GetterCanOOM" if getter else "SetterCanOOM"
             canOOM = member.getExtendedAttribute(canOOMAttr)
         maybeAppendCanOOMToAttrs(attrs, canOOM)
+        if needsSubjectPrincipal is None:
+            needsSubjectPrincipalAttr = (
+                "GetterNeedsSubjectPrincipal" if getter else "SetterNeedsSubjectPrincipal")
+            needsSubjectPrincipal = member.getExtendedAttribute(
+                needsSubjectPrincipalAttr)
+        maybeAppendNeedsSubjectPrincipalToAttrs(attrs, needsSubjectPrincipal)
         return attrs
 
     def supportsIndexedProperties(self):
