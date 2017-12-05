@@ -285,7 +285,7 @@ nsRange::~nsRange()
   NS_ASSERTION(!IsInSelection(), "deleting nsRange that is in use");
 
   // we want the side effects (releases and list removals)
-  DoSetRange(nullptr, 0, nullptr, 0, nullptr);
+  DoSetRange(RawRangeBoundary(), RawRangeBoundary(), nullptr);
 }
 
 nsRange::nsRange(nsINode* aNode)
@@ -859,14 +859,14 @@ nsRange::IsPointInRange(nsIDOMNode* aContainer, uint32_t aOffset, bool* aResult)
   }
 
   ErrorResult rv;
-  *aResult = IsPointInRange(*container, aOffset, rv);
+  *aResult = IsPointInRange(RawRangeBoundary(container, aOffset), rv);
   return rv.StealNSResult();
 }
 
 bool
-nsRange::IsPointInRange(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
+nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
-  uint16_t compareResult = ComparePoint(aContainer, aOffset, aRv);
+  uint16_t compareResult = ComparePoint(aPoint, aRv);
   // If the node isn't in the range's document, it clearly isn't in the range.
   if (aRv.ErrorCodeIs(NS_ERROR_DOM_WRONG_DOCUMENT_ERR)) {
     aRv.SuppressException();
@@ -886,42 +886,46 @@ nsRange::ComparePoint(nsIDOMNode* aContainer, uint32_t aOffset,
   NS_ENSURE_TRUE(container, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 
   ErrorResult rv;
-  *aResult = ComparePoint(*container, aOffset, rv);
+  *aResult = ComparePoint(RawRangeBoundary(container, aOffset), rv);
   return rv.StealNSResult();
 }
 
 int16_t
-nsRange::ComparePoint(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
+nsRange::ComparePoint(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
+  if (NS_WARN_IF(!aPoint.IsSet())) {
+    // FYI: Shouldn't reach this case if it's called by JS.  Therefore, it's
+    //      okay to warn.
+    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    return 0;
+  }
+
   // our range is in a good state?
   if (!mIsPositioned) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return 0;
   }
 
-  if (!nsContentUtils::ContentIsDescendantOf(&aContainer, mRoot)) {
+  if (!nsContentUtils::ContentIsDescendantOf(aPoint.Container(), mRoot)) {
     aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
     return 0;
   }
 
-  if (aContainer.NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+  if (aPoint.Container()->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
     aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return 0;
   }
 
-  if (aOffset > aContainer.Length()) {
+  if (aPoint.Offset() > aPoint.Container()->Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return 0;
   }
 
-  int32_t cmp = nsContentUtils::ComparePoints(&aContainer, aOffset,
-                                              mStart.Container(),
-                                              mStart.Offset());
+  int32_t cmp = nsContentUtils::ComparePoints(aPoint, mStart.AsRaw());
   if (cmp <= 0) {
     return cmp;
   }
-  if (nsContentUtils::ComparePoints(mEnd.Container(), mEnd.Offset(),
-                                    &aContainer, aOffset) == -1) {
+  if (nsContentUtils::ComparePoints(mEnd.AsRaw(), aPoint) == -1) {
     return 1;
   }
 
@@ -1378,7 +1382,7 @@ nsRange::SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  aRv = SetStart(&aNode, aOffset);
+  SetStart(RawRangeBoundary(&aNode, aOffset), aRv);
 }
 
 NS_IMETHODIMP
@@ -1394,33 +1398,29 @@ nsRange::SetStart(nsIDOMNode* aContainer, uint32_t aOffset)
   return rv.StealNSResult();
 }
 
-/* virtual */ nsresult
-nsRange::SetStart(nsINode* aContainer, uint32_t aOffset)
+void
+nsRange::SetStart(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
-  nsINode* newRoot = IsValidBoundary(aContainer);
+  nsINode* newRoot = IsValidBoundary(aPoint.Container());
   if (!newRoot) {
-    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    return;
   }
 
-  if (!IsValidOffset(aContainer, aOffset)) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (!aPoint.IsSetAndValid()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
   }
 
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new start is after end.
   if (!mIsPositioned || newRoot != mRoot ||
-      nsContentUtils::ComparePoints(aContainer,
-                                    static_cast<int32_t>(aOffset),
-                                    mEnd.Container(), mEnd.Offset()) == 1) {
-    DoSetRange(aContainer, aOffset, aContainer, aOffset, newRoot);
-
-    return NS_OK;
+      nsContentUtils::ComparePoints(aPoint, mEnd.AsRaw()) == 1) {
+    DoSetRange(aPoint, aPoint, newRoot);
+    return;
   }
 
-  RawRangeBoundary newStart(aContainer, aOffset);
-  DoSetRange(newStart, mEnd.AsRaw(), mRoot);
-
-  return NS_OK;
+  DoSetRange(aPoint, mEnd.AsRaw(), mRoot);
 }
 
 void
@@ -1518,7 +1518,7 @@ nsRange::SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
     return;
   }
   AutoInvalidateSelection atEndOfBlock(this);
-  aRv = SetEnd(&aNode, aOffset);
+  SetEnd(RawRangeBoundary(&aNode, aOffset), aRv);
 }
 
 NS_IMETHODIMP
@@ -1534,34 +1534,29 @@ nsRange::SetEnd(nsIDOMNode* aContainer, uint32_t aOffset)
   return rv.StealNSResult();
 }
 
-/* virtual */ nsresult
-nsRange::SetEnd(nsINode* aContainer, uint32_t aOffset)
+void
+nsRange::SetEnd(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
-  nsINode* newRoot = IsValidBoundary(aContainer);
+  nsINode* newRoot = IsValidBoundary(aPoint.Container());
   if (!newRoot) {
-    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    return;
   }
 
-  if (!IsValidOffset(aContainer, aOffset)) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (!aPoint.IsSetAndValid()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
   }
 
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new end is before start.
   if (!mIsPositioned || newRoot != mRoot ||
-      nsContentUtils::ComparePoints(mStart.Container(),
-                                    static_cast<int32_t>(mStart.Offset()),
-                                    aContainer,
-                                    static_cast<int32_t>(aOffset)) == 1) {
-    DoSetRange(aContainer, aOffset, aContainer, aOffset, newRoot);
-
-    return NS_OK;
+      nsContentUtils::ComparePoints(mStart.AsRaw(), aPoint) == 1) {
+    DoSetRange(aPoint, aPoint, newRoot);
+    return;
   }
 
-  RawRangeBoundary newEnd(aContainer, aOffset);
-  DoSetRange(mStart.AsRaw(), newEnd, mRoot);
-
-  return NS_OK;
+  DoSetRange(mStart.AsRaw(), aPoint, mRoot);
 }
 
 void
@@ -1640,18 +1635,6 @@ nsRange::SetStartAndEnd(const RawRangeBoundary& aStart,
   // Otherwise, set the range as specified.
   DoSetRange(aStart, aEnd, newStartRoot);
   return NS_OK;
-}
-
-nsresult
-nsRange::SetStartAndEnd(nsINode* aStartContainer, uint32_t aStartOffset,
-                        nsINode* aEndContainer, uint32_t aEndOffset)
-{
-  if (NS_WARN_IF(!aStartContainer) || NS_WARN_IF(!aEndContainer)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return SetStartAndEnd(RawRangeBoundary(aStartContainer, aStartOffset),
-                        RawRangeBoundary(aEndContainer, aEndOffset));
 }
 
 void
@@ -1804,7 +1787,8 @@ nsRange::SelectNode(nsINode& aNode, ErrorResult& aRv)
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  DoSetRange(container, index, container, index + 1, newRoot);
+  DoSetRange(RawRangeBoundary(container, index),
+             RawRangeBoundary(container, index + 1), newRoot);
 }
 
 NS_IMETHODIMP
@@ -1842,7 +1826,8 @@ nsRange::SelectNodeContents(nsINode& aNode, ErrorResult& aRv)
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  DoSetRange(&aNode, 0, &aNode, aNode.Length(), newRoot);
+  DoSetRange(RawRangeBoundary(&aNode, 0),
+             RawRangeBoundary(&aNode, aNode.Length()), newRoot);
 }
 
 // The Subtree Content Iterator only returns subtrees that are
