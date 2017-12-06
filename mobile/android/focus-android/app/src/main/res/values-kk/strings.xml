@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Бас тарту</string>
   <string name="action_ok">ОК</string>
+  <string name="action_save">Сақтау</string>
   <string name="urlbar_hint">Іздеу немесе адрес</string>
   <string name="teaser">Автоматты түрдегі жекелік шолу.\nШолу. Өшіру. Қайталау.</string>
   <string name="feedback_erase">Сіздің шолу тарихыңыз өшірілді.</string>

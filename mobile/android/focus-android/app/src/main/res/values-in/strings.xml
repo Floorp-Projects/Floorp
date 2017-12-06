@@ -29,12 +29,22 @@
   <string name="preference_search_engine_default">Baku</string>
   <string name="preference_state_on">Aktif</string>
   <string name="preference_state_off">Nonaktif</string>
+  <string name="preference_subitem_autocomplete">Lengkapi-otomatis URL</string>
+  <string name="preference_switch_autocomplete">Lengkapi-otomatis</string>
+  <string name="preference_category_autocomplete_preinstalled">Daftar URL Baku</string>
+  <string name="preference_autocomplete_preinstalled_summary">Aktifkan agar %1$s melengkapi otomatis lebih dari 450 URL populer di bilah alamat.</string>
+  <string name="preference_category_autocomplete_custom">URL Ubahsuai</string>
+  <string name="preference_autocomplete_subitem_customlist">URL Ubahsuai</string>
+  <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
+  <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
   <string name="preference_autocomplete_title_remove">Hapus URLs ubahsuai</string>
   <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
+  <string name="preference_autocomplete_custom_summary">Tambahkan dan kelola lengkapi-otomatis URL ubahsuai.</string>
   <string name="preference_autocomplete_add_title">URL untuk ditambahkan</string>
   <string name="preference_autocomplete_add_hint">Tempel atau masukkan URL</string>
   <string name="preference_autocomplete_add_example">Contoh: contoh.id</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">URL ubahsuai baru ditambahkan.</string>
   <string name="preference_autocomplete_menu_remove">Hapus</string>
   <string name="preference_autocomplete_action_remove_content_description">Hapus</string>
   <string name="preference_autocomplete_add_error">Periksa ulang URL yang Anda masukkan.</string>
@@ -72,6 +82,7 @@
   <string name="tutorial_search_title">Tambah mesin pencari</string>
   <string name="tutorial_search_step1">1. Buka laman beranda mesin pencari.</string>
   <string name="tutorial_search_step2">2. Ketuk kolom pencarian mesin pencari.</string>
+  <string name="tutorial_search_step2_alternative">2. Tekan lama pada kolom pencarian mesin pencari.</string>
   <string name="tutorial_search_step3">3. Ketuk ikon kaca pembesar di atas papan tik untuk menambahkan mesin pencari.</string>
   <string name="action_option_add_search_engine">Tambah mesin pencari</string>
   <string name="tutorial_search_step3_alternative">3. Ketuk %1$s</string>
@@ -81,12 +92,15 @@
   <string name="search_add_hint">Ketuk ikon kaca pembesar di atas papan tik untuk menambahkan mesin pencari ini.</string>
   <string name="search_add_manually_name">Nama untuk ditampilkan</string>
   <string name="search_add_manually_name_hint">Nama mesin pencari</string>
+  <string name="search_add_manually_string">String pencarian untuk digunakan</string>
   <string name="search_add_manually_save">Simpan</string>
+  <string name="search_add_manually_string_hint">Tempel atau masukkan string. Jika diperlukan, ganti istilah pencarian dengan: %s.</string>
   <string name="search_add_manually_example">Contoh: contoh.id/search/?q=%s</string>
   <string name="accessibility_announcement_search">Tambah mesin pencari</string>
   <string name="search_add_confirmation">Mesin pencari baru ditambahkan.</string>
   <string name="search_add_error_empty_name">Masukkan nama mesin pencari</string>
   <string name="search_add_error_empty_search">Masukkan string pencarian</string>
+  <string name="search_add_error_format">Periksa apakah string pencarian cocok dengan format Contoh</string>
   <string name="content_description_clear_input">Bersihkan masukan</string>
   <string name="content_description_dismiss_input">Tutup</string>
   <string name="content_description_erase">Hapus riwayat penjelajahan</string>

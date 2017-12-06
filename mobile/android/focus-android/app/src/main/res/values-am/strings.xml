@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="action_cancel">መሰረዝ</string>
+  <string name="action_cancel">ሰርዝ</string>
   <string name="action_ok">እሺ</string>
   <string name="action_save">ማስቀመጥ</string>
   <string name="urlbar_hint">ፍለጋ ወይም አድራሻ ያስገቡ</string>
@@ -39,4 +39,25 @@
   <string name="preference_autocomplete_title_add">ብጁ አክል URL</string>
   <string name="preference_autocomplete_title_remove">አስወግድ ብጁ URLs</string>
   <string name="preference_autocomplete_learn_more">ተጨማሪ እወቅ</string>
+  <string name="preference_autocomplete_custom_summary">አክል ወይም አደራጅ ብጁ ራስ-አጠናቅቅ URLs</string>
+  <string name="preference_autocomplete_add_title">URL መጨመር</string>
+  <string name="preference_autocomplete_add_hint">ለጥፍ ወይም ግባ URL</string>
+  <string name="preference_autocomplete_add_example">ምሳሌ : ምሳሌ.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">አዲስ ብጁ URL ታክሏል</string>
+  <string name="preference_autocomplete_menu_remove">አስወግድ</string>
+  <string name="preference_autocomplete_action_remove_content_description">አስወግድ</string>
+  <string name="preference_category_privacy">የግል መብት መጠበቅ</string>
+  <string name="download_dialog_action_download">አውርድ</string>
+  <string name="firstrun_skip_button">እለፍ</string>
+  <string name="firstrun_next_button">ቀጣይ</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">ወደ መነሻ ማያ ገጽ ጨምር</string>
+  <string name="dialog_addtohomescreen_action_add">ጨምር</string>
+  <string name="dialog_addtohomescreen_action_cancel">አጥፋ</string>
+  <string name="dialog_opentab_title">በተመረጠው ትር መገናኛውን ክፈት</string>
+  <string name="dialog_opentab_action_open">ክፍት</string>
+  <string name="notification_browsing_session_channel_name">የግል የማሰሻ ክፍል</string>
+  <string name="tabs_tray_action_erase">የማሰሻ ታሪክን አጥፋ</string>
+  <string name="download_firefox">ፋየርፎክስ አውርድ</string>
 </resources>

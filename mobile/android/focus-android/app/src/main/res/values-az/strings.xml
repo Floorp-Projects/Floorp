@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Ləğv et</string>
   <string name="action_ok">Tamam</string>
+  <string name="action_save">Saxla</string>
   <string name="urlbar_hint">Ünvanı daxil et və ya axtar</string>
   <string name="teaser">Avtomatik məxfi səyahət.\nGəz. Poz. Təkrarla.</string>
   <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
@@ -26,14 +27,39 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s sizi idar&#601;nin ba&#351;&#305;na qoyur</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bunu m&#601;xfi s&#601;yyah olaraq i&#351;l&#601;din:\n  "<ul>"\n    "<li>Birba&#351;a t&#601;tbiqd&#601; axtar&#305;n v&#601; g&#601;zin</li>"\n    "<li>&#304;zl&#601;yicil&#601;ri &#601;ng&#601;ll&#601;yin (v&#601; ya t&#601;nziml&#601;m&#601;d&#601;n icaz&#601; verin)</li>"\n    "<li>&#199;&#601;r&#601;zl&#601;ri, axtar&#305;&#351; v&#601; g&#601;zm&#601; tarix&#231;&#601;sini silm&#601;k &#252;&#231;&#252;n pozun</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s q&#252;rurla Mozilla t&#601;r&#601;find&#601;n. Missiyam&#305;z sa&#287;lam v&#601; a&#231;&#305;q interneti t&#601;min etm&#601;kdir.<br/>\n<a href="%2$s">&#399;trafl&#305; &#246;yr&#601;n</a></p>]]></string>
   <string name="preference_category_search">Axtar</string>
   <string name="preference_search_engine_default">İlkin hal</string>
+  <string name="preference_state_on">Açıq</string>
+  <string name="preference_state_off">Bağlı</string>
+  <string name="preference_subitem_autocomplete">Ünvan Avtomatik Tamamlama</string>
+  <string name="preference_switch_autocomplete">Avtomatik Tamamlama</string>
+  <string name="preference_category_autocomplete_preinstalled">Ön seçili ünvan siyahısı</string>
+  <string name="preference_autocomplete_preinstalled_summary">%1$s səyyahının 450 məşhur ünvanı avtomatik tamamlamasını aktivləşdirin.</string>
+  <string name="preference_category_autocomplete_custom">Fərdi Ünvan</string>
+  <string name="preference_autocomplete_subitem_customlist">Fərdi Ünvanlar</string>
+  <string name="preference_autocomplete_action_add">+ Fərdi ünvan əlavə et</string>
+  <string name="preference_autocomplete_title_add">Fərdi ünvan əlavə et</string>
+  <string name="preference_autocomplete_title_remove">Fərdi ünvanı sil</string>
+  <string name="preference_autocomplete_learn_more">Ətraflı öyrən</string>
+  <string name="preference_autocomplete_custom_summary">Avtomatik tamamlanacaq fərdi ünvanları idarə edin.</string>
+  <string name="preference_autocomplete_add_title">Əlavə ediləcək ünvan</string>
+  <string name="preference_autocomplete_add_hint">Ünvanı yapışdırın və ya daxil edin</string>
+  <string name="preference_autocomplete_add_example">Məsələn: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Yeni fərdi ünvan əlavə edildi.</string>
+  <string name="preference_autocomplete_menu_remove">Sil</string>
+  <string name="preference_autocomplete_action_remove_content_description">Sil</string>
+  <string name="preference_autocomplete_add_error">Daxil etdiyiniz ünvanı bir də yoxlayın.</string>
   <string name="preference_language">Dil</string>
   <string name="preference_language_systemdefault">Sistemin dili</string>
   <string name="preference_dialog_title_search_engine">Əsas Axtarış</string>
   <string name="preference_category_privacy">Məxfilik</string>
   <string name="preference_privacy_block_ads">Reklam izləyicilərini əngəllə</string>
+  <string name="preference_privacy_block_ads_summary">Bəzi reklamlar onlara klikləməsəniz belə sayt ziyarətlərinizi izləyirlər</string>
   <string name="preference_privacy_block_analytics">Analiz izləyicilərini əngəllə</string>
+  <string name="preference_privacy_block_analytics_summary">Toxunma və sürüşdürmə kimi aktivlikləri yığıb, ölçüb, analiz etmək üçün işlədilir</string>
   <string name="preference_privacy_block_social">Sosial izləyiciləri əngəllə</string>
+  <string name="preference_privacy_block_social_summary">Ziyarətinizi izləmək və paylaşma düymələri kimi funksionallıqları göstərmək üçün saytlara yerləşdirilir</string>
   <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
+  <string name="preference_privacy_block_content_summary2">Aktivləşdirmə bəzi səhifələrdə gözlənilməz səhvlərə səbəb ola bilər</string>
   <string name="preference_privacy_secure_mode">Görünməzlik</string>
   <string name="preference_privacy_stealth_summary">Tətbiqlər arası keçərkən saytları gizlət</string>
   <string name="preference_category_performance">Məhsuldarlıq</string>
@@ -49,6 +75,7 @@
   <string name="preference_about">%1$s Haqqında</string>
   <string name="preference_search_installed_search_engines">Quraşdırılmış axtarış mühərrikləri</string>
   <string name="preference_search_restore">İlkin axtarış nizamlarını bərpa et</string>
+  <string name="preference_search_add2">+ Digər axtarış mühərriyini əlavə et</string>
   <string name="preference_search_remove_title">Axtarış mühərriklərini sil</string>
   <string name="preference_search_remove">Sil</string>
   <string name="tutorial_search_manually_add">Əl ilə əlavə et</string>
@@ -71,6 +98,9 @@
   <string name="search_add_manually_example">Məsələn: mozillaz.org/search/?q=%s</string>
   <string name="accessibility_announcement_search">Axtarış mühərriyini əlavə et</string>
   <string name="search_add_confirmation">Yeni axtarış mühərriyi əlavə edildi.</string>
+  <string name="search_add_error_empty_name">Axtarış mühərriyinin adını daxil edin</string>
+  <string name="search_add_error_empty_search">Axtarış mətnini daxil edin</string>
+  <string name="search_add_error_format">Axtarış mətninin nümunədəki formata uyğun olduğunu yoxlayın</string>
   <string name="content_description_clear_input">Girişi təmizlə</string>
   <string name="content_description_dismiss_input">Ləğv et</string>
   <string name="content_description_erase">Səyahət tarixçəsini təmizlə</string>

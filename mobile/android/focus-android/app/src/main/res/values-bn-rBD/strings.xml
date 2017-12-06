@@ -29,9 +29,16 @@
   <string name="preference_search_engine_default">পূর্বনির্ধারিত</string>
   <string name="preference_state_on">চালু</string>
   <string name="preference_state_off">বন্ধ</string>
+  <string name="preference_category_autocomplete_preinstalled">ডিফল্ট URL লিস্ট</string>
+  <string name="preference_category_autocomplete_custom">কাস্টোম URL</string>
+  <string name="preference_autocomplete_subitem_customlist">কাস্টোম URLs</string>
+  <string name="preference_autocomplete_action_add">+ কাস্টোম URL যোগ করুন</string>
+  <string name="preference_autocomplete_title_add">কাস্টোম URL যোগ করুন</string>
+  <string name="preference_autocomplete_title_remove">কাস্টোম URL মুছে দিন</string>
   <string name="preference_autocomplete_learn_more">আরও জানুন</string>
   <string name="preference_autocomplete_add_example">উদাহরণ: example.com</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">নতুন কাস্টোম URL যোগ করা হয়েছে।</string>
   <string name="preference_autocomplete_menu_remove">অপসারণ</string>
   <string name="preference_autocomplete_action_remove_content_description">অপসারণ</string>
   <string name="preference_language">ভাষা</string>
@@ -63,6 +70,7 @@
   <string name="preference_search_add2">+ অন্য অনুসন্ধান ইঞ্জিন যোগ করুন</string>
   <string name="preference_search_remove_title">অনুসন্ধান ইঞ্জিন অপসারণ করুন</string>
   <string name="preference_search_remove">অপসারণ</string>
+  <string name="tutorial_search_manually_add">ম্যানুয়ালি যোগ করুন</string>
   <string name="tutorial_search_title">অনুসন্ধান ইঞ্জিন যোগ</string>
   <string name="tutorial_search_step1">1. অনুসন্ধান ইঞ্জিন নীড়পাতায় যান।</string>
   <string name="action_option_add_search_engine">অনুসন্ধান ইঞ্জিন যোগ</string>
@@ -78,6 +86,7 @@
   <string name="content_description_dismiss_input">খারিজ</string>
   <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
   <string name="content_description_fab_expand">প্রসারণ</string>
+  <string name="content_description_tab_counter">ট্যাব খোলা: %1$s</string>
   <string name="content_description_open_tab">ট্যাব খুলুন</string>
   <string name="content_description_close_tab">ট্যাব বন্ধ করুন</string>
   <string name="content_description_lock">সুরক্ষিত কানেকশন</string>
@@ -128,6 +137,7 @@
   <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা কঠোর করুন</string>
   <string name="firstrun_defaultbrowser_text2">ব্যাক্তিগত ব্রাউজিং কে আরেক উচ্চতায় নিয়ে যান। বিজ্ঞাপন আর অন্যান্য কনটেন্ট ব্লক করুন, যারা আপনাকে সকল ওয়েবসাইটে অনুসরণ করে বেড়ায় আর আপনার পেজ লোডিং টাইম অনেকগুন বাড়িয়ে দেয়।</string>
   <string name="firstrun_shortcut_title">নীড় স্ক্রিনে শর্টকাট যোগ করুন</string>
+  <string name="firstrun_privacy_title">গোপনীয়তাকে অভ্যাসে পরিনত করুন</string>
   <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
   <string name="firstrun_skip_button">উপেক্ষা</string>
   <string name="firstrun_next_button">পরবর্তী</string>
