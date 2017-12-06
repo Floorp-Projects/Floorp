@@ -57,7 +57,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'nsPluginNativeWindow.cpp',
-        'nsPluginsDirDarwin.cpp',
+    ]
+    SOURCES += [
+        'nsPluginsDirDarwin.cpp', # conflict with mozilla::EventPriority
     ]
 else:
     UNIFIED_SOURCES += [
