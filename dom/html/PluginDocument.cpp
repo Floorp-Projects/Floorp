@@ -48,14 +48,6 @@ public:
 
   void StartLayout() { MediaDocument::StartLayout(); }
 
-  virtual void Destroy()
-  {
-    if (mStreamListener) {
-      mStreamListener->DropDocumentRef();
-    }
-    MediaDocument::Destroy();
-  }
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PluginDocument, MediaDocument)
 protected:
   ~PluginDocument() override;
