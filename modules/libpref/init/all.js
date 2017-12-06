@@ -2188,7 +2188,7 @@ pref("network.auth.subresource-http-auth-allow", 2);
 // false - it is not allowed.
 // If network.auth.subresource-http-auth-allow has values 0 or 1 this pref does not
 // have any effect.
-pref("network.auth.subresource-img-cross-origin-http-auth-allow", true);
+pref("network.auth.subresource-img-cross-origin-http-auth-allow", false);
 
 // This preference controls whether to allow sending default credentials (SSO) to
 // NTLM/Negotiate servers allowed in the "trusted uri" list when navigating them
