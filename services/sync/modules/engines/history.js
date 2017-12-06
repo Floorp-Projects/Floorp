@@ -314,7 +314,11 @@ HistoryStore.prototype = {
 
     let i, k;
     for (i = 0; i < curVisitsAsArray.length; i++) {
-      curVisits.add(curVisitsAsArray[i].date + "," + curVisitsAsArray[i].type);
+      // Same logic as used in the loop below to generate visitKey.
+      let {date, type} = curVisitsAsArray[i];
+      let dateObj = PlacesUtils.toDate(date);
+      let millis = PlacesSyncUtils.history.clampVisitDate(dateObj).getTime();
+      curVisits.add(`${millis},${type}`);
     }
 
     // Walk through the visits, make sure we have sound data, and eliminate
@@ -340,8 +344,7 @@ HistoryStore.prototype = {
       let originalVisitDate = PlacesUtils.toDate(Math.round(visit.date));
       visit.date = PlacesSyncUtils.history.clampVisitDate(originalVisitDate);
 
-      let visitDateAsPRTime = PlacesUtils.toPRTime(visit.date);
-      let visitKey = visitDateAsPRTime + "," + visit.type;
+      let visitKey = `${visit.date.getTime()},${visit.type}`;
       if (curVisits.has(visitKey)) {
         // Visit is a dupe, don't increment 'k' so the element will be
         // overwritten.
