@@ -698,6 +698,13 @@ public:
   void SetPullEnabled(bool aEnabled);
 
   /**
+   * Extract any state updates pending in the stream, and apply them.
+   * Returns true if the stream is now finished.
+   */
+  bool ExtractPendingInput(StreamTime aDesiredUpToTime,
+                           bool* aEnsureNextIteration);
+
+  /**
    * These add/remove DirectListeners, which allow bypassing the graph and any
    * synchronization delays for e.g. PeerConnection, which wants the data ASAP
    * and lets the far-end handle sync and playout timing.
