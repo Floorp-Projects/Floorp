@@ -375,7 +375,7 @@ option('--enable-av1',
 def av1(value, target, milestone):
     enabled = bool(value)
     if value.origin == 'default' and milestone.is_nightly:
-        enabled = target.os != 'Android'
+        enabled = target.os != 'Android' and target.cpu != 'x86'
     if enabled:
         return True
 
