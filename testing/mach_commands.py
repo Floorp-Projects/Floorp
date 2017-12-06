@@ -64,7 +64,7 @@ class TestConfig(object):
         level_desc = "The default log level to use when running tests with `mach test`."
         level_choices = [l.lower() for l in log_levels]
         return [
-            ('test.format', 'string', format_desc, 'tbpl', {'choices': format_choices}),
+            ('test.format', 'string', format_desc, 'mach', {'choices': format_choices}),
             ('test.level', 'string', level_desc, 'info', {'choices': level_choices}),
         ]
 
