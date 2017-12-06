@@ -791,22 +791,11 @@ child:
      *        Whether to activate or deactivate the docshell.
      * @param aPreserveLayers
      *        Whether layer trees should be preserved for inactive docshells.
-     */
-    async SetDocShellIsActive(bool aIsActive);
-
-    /**
-     * If aEnabled is true, tells the child to paint and upload layers to
-     * the compositor. If aEnabled is false, the child stops painting and
-     * clears the layers from the compositor.
-     *
-     * @param aEnabled
-     *        True if the child should render and upload layers, false if the
-     *        child should clear layers.
      * @param aLayerObserverEpoch
      *        The layer observer epoch for this activation. This message should be
      *        ignored if this epoch has already been observed (via ForcePaint).
      */
-    async RenderLayers(bool aEnabled, uint64_t aLayerObserverEpoch);
+    async SetDocShellIsActive(bool aIsActive, bool aPreserveLayers, uint64_t aLayerObserverEpoch);
 
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.
