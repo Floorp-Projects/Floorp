@@ -950,7 +950,14 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   // We want to be sure that we stop the creation of the channel if the blob URL
   // is copy-and-pasted on a different context (ex. private browsing or
   // containers).
+  //
+  // We also allow the system principal to create the channel regardless of the
+  // OriginAttributes.  This is primarily for the benefit of mechanisms like
+  // the Download API that explicitly create a channel with the system
+  // principal and which is never mutated to have a non-zero mPrivateBrowsingId
+  // or container.
   if (aLoadInfo &&
+      !nsContentUtils::IsSystemPrincipal(aLoadInfo->LoadingPrincipal()) &&
       !ChromeUtils::IsOriginAttributesEqualIgnoringFPD(aLoadInfo->GetOriginAttributes(),
                                                          BasePrincipal::Cast(principal)->OriginAttributesRef())) {
     return NS_ERROR_DOM_BAD_URI;
