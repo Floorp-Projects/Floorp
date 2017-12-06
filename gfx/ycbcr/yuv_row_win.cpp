@@ -12,9 +12,11 @@ extern "C" {
 
 #if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)
 #if defined(__clang__)
-// clang-cl may erroneously discard the symbol `kCoefficientsRgbY`
-// https://bugs.llvm.org/show_bug.cgi?id=35290
-volatile auto keep_kCoefficientsRgbY_alive = &kCoefficientsRgbY;
+// clang-cl has a bug where it doesn't mangle names in inline asm
+// so let's do the mangling in the preprocessor (ugh)
+// (but we still need to declare a dummy extern for the parser)
+extern void* _kCoefficientsRgbY;
+#define kCoefficientsRgbY _kCoefficientsRgbY
 #endif
 
 __declspec(naked)
