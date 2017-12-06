@@ -43,12 +43,6 @@ MockWebBrowserPrint::GetCurrentPrintSettings(nsIPrintSettings **aCurrentPrintSet
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetCurrentChildDOMWindow(mozIDOMWindowProxy **aCurrentPrintSettings)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 MockWebBrowserPrint::GetDoingPrint(bool *aDoingPrint)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
