@@ -3664,6 +3664,9 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransformStyle(aSource.mTransformStyle)
   , mTransformBox(aSource.mTransformBox)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
+  , mSpecifiedRotate(aSource.mSpecifiedRotate)
+  , mSpecifiedTranslate(aSource.mSpecifiedTranslate)
+  , mSpecifiedScale(aSource.mSpecifiedScale)
   , mTransformOrigin{ aSource.mTransformOrigin[0],
                       aSource.mTransformOrigin[1],
                       aSource.mTransformOrigin[2] }
@@ -3721,6 +3724,12 @@ nsStyleDisplay::~nsStyleDisplay()
 {
   ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTransform",
                                 mSpecifiedTransform);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedRotate",
+                                mSpecifiedRotate);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTranslate",
+                                mSpecifiedTranslate);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedScale",
+                                mSpecifiedScale);
 
   MOZ_COUNT_DTOR(nsStyleDisplay);
 }
@@ -3737,6 +3746,23 @@ nsStyleDisplay::FinishStyle(nsPresContext* aPresContext)
       shapeImage->ResolveImage(aPresContext);
     }
   }
+}
+
+static inline nsChangeHint
+CompareTransformValues(const RefPtr<nsCSSValueSharedList>& aList,
+                       const RefPtr<nsCSSValueSharedList>& aNewList)
+{
+  nsChangeHint result = nsChangeHint(0);
+  if (!aList != !aNewList || (aList && *aList != *aNewList)) {
+    result |= nsChangeHint_UpdateTransformLayer;
+    if (aList && aNewList) {
+      result |= nsChangeHint_UpdatePostTransformOverflow;
+    } else {
+      result |= nsChangeHint_UpdateOverflow;
+    }
+  }
+
+  return result;
 }
 
 nsChangeHint
@@ -3867,18 +3893,14 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
      */
     nsChangeHint transformHint = nsChangeHint(0);
 
-    if (!mSpecifiedTransform != !aNewData.mSpecifiedTransform ||
-        (mSpecifiedTransform &&
-         *mSpecifiedTransform != *aNewData.mSpecifiedTransform)) {
-      transformHint |= nsChangeHint_UpdateTransformLayer;
-
-      if (mSpecifiedTransform &&
-          aNewData.mSpecifiedTransform) {
-        transformHint |= nsChangeHint_UpdatePostTransformOverflow;
-      } else {
-        transformHint |= nsChangeHint_UpdateOverflow;
-      }
-    }
+    transformHint |= CompareTransformValues(mSpecifiedTransform,
+                                            aNewData.mSpecifiedTransform);
+    transformHint |= CompareTransformValues(mSpecifiedRotate, aNewData.
+                                            mSpecifiedRotate);
+    transformHint |= CompareTransformValues(mSpecifiedTranslate,
+                                            aNewData.mSpecifiedTranslate);
+    transformHint |= CompareTransformValues(mSpecifiedScale,
+                                            aNewData.mSpecifiedScale);
 
     const nsChangeHint kUpdateOverflowAndRepaintHint =
       nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
