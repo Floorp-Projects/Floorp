@@ -33,9 +33,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
         '/toolkit/xre',
     ]
-    USE_LIBS += [
-        'updatecommon-standalone',
-    ]
     OS_LIBS += [
         'comctl32',
         'ws2_32',
@@ -48,16 +45,12 @@ elif CONFIG['OS_ARCH'] == 'Linux' and CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
     USE_LIBS += [
         'nss',
         'signmar',
-        'updatecommon',
     ]
     OS_LIBS += CONFIG['NSPR_LIBS']
-else:
-    USE_LIBS += [
-        'updatecommon',
-    ]
 
 USE_LIBS += [
     'mar',
+    'updatecommon',
     'xz-embedded',
 ]
 
