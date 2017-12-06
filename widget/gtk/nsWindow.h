@@ -435,6 +435,7 @@ private:
     nsWindow          *GetContainerWindow();
     void               SetUrgencyHint(GtkWidget *top_window, bool state);
     void               SetDefaultIcon(void);
+    void               SetWindowDecoration(nsBorderStyle aStyle);
     void               InitButtonEvent(mozilla::WidgetMouseEvent& aEvent,
                                        GdkEventButton* aGdkEvent);
     bool               DispatchCommandEvent(nsAtom* aCommand);
@@ -452,7 +453,6 @@ private:
     void               ClearCachedResources();
     nsIWidgetListener* GetListener();
     bool               IsComposited() const;
-
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
