@@ -755,6 +755,7 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
         self.assertEqual("complete", self.ready_state)
         self.marionette.find_element(By.ID, "slow")
 
+    @skip("Bug 1422741 - Causes following tests to fail in loading remote browser")
     @run_if_e10s("Requires e10s mode enabled")
     def test_strategy_after_remoteness_change(self):
         """Bug 1378191 - Reset of capabilities after listener reload"""
