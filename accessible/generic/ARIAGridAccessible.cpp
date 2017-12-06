@@ -465,16 +465,18 @@ ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
   if (IsARIARole(nsGkAtoms::table))
     return NS_OK;
 
-  nsIContent *content = aAccessible->GetContent();
+  nsIContent* content = aAccessible->GetContent();
   NS_ENSURE_STATE(content);
 
   nsresult rv = NS_OK;
-  if (aIsSelected)
-    rv = content->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
-                          NS_LITERAL_STRING("true"), aNotify);
-  else
-    rv = content->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
-                          NS_LITERAL_STRING("false"), aNotify);
+  if (content->IsElement()) {
+    if (aIsSelected)
+      rv = content->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
+                                         NS_LITERAL_STRING("true"), aNotify);
+    else
+      rv = content->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
+                                         NS_LITERAL_STRING("false"), aNotify);
+  }
 
   NS_ENSURE_SUCCESS(rv, rv);
 

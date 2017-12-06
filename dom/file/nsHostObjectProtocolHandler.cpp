@@ -494,7 +494,8 @@ public:
   NS_IMETHOD
   GetName(nsAString& aName) override
   {
-    aName.AssignLiteral("ReleasingTimerHolder");
+    aName.AssignLiteral("ReleasingTimerHolder for blobURL: ");
+    aName.Append(NS_ConvertUTF8toUTF16(mURI));
     return NS_OK;
   }
 

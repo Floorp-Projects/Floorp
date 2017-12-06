@@ -64,15 +64,15 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
 }
 
 bool
-nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
-                                                 nsIContent *aOriginalElement,
+nsHTMLContentSerializer::SerializeHTMLAttributes(Element* aElement,
+                                                 Element* aOriginalElement,
                                                  nsAString& aTagPrefix,
                                                  const nsAString& aTagNamespaceURI,
                                                  nsAtom* aTagName,
                                                  int32_t aNamespace,
                                                  nsAString& aStr)
 {
-  int32_t count = aContent->GetAttrCount();
+  int32_t count = aElement->GetAttrCount();
   if (!count)
     return true;
 
@@ -81,7 +81,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
   for (int32_t index = 0; index < count; index++) {
-    const nsAttrName* name = aContent->GetAttrNameAt(index);
+    const nsAttrName* name = aElement->GetAttrNameAt(index);
     int32_t namespaceID = name->NamespaceID();
     nsAtom* attrName = name->LocalName();
 
@@ -91,7 +91,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
         StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
       continue;
     }
-    aContent->GetAttr(namespaceID, attrName, valueStr);
+    aElement->GetAttr(namespaceID, attrName, valueStr);
 
     //
     // Filter out special case of <br type="_moz"> or <br _moz*>,
@@ -109,7 +109,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
       // This is handled separately in SerializeLIValueAttribute()
       continue;
     }
-    bool isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
+    bool isJS = IsJavaScript(aElement, attrName, namespaceID, valueStr);
 
     if (((attrName == nsGkAtoms::href &&
           (namespaceID == kNameSpaceID_None ||
@@ -120,7 +120,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
         // Would be nice to handle OBJECT tags, but that gets more complicated
         // since we have to search the tag list for CODEBASE as well. For now,
         // just leave them relative.
-        nsCOMPtr<nsIURI> uri = aContent->GetBaseURI();
+        nsCOMPtr<nsIURI> uri = aElement->GetBaseURI();
         if (uri) {
           nsAutoString absURI;
           rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);
@@ -137,7 +137,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
       // If we're serializing a <meta http-equiv="content-type">,
       // use the proper value, rather than what's in the document.
       nsAutoString header;
-      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+      aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
       if (header.LowerCaseEqualsLiteral("content-type")) {
         valueStr = NS_LITERAL_STRING("text/html; charset=") +
           NS_ConvertASCIItoUTF16(mCharset);
@@ -173,22 +173,20 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 {
   NS_ENSURE_ARG(aElement);
 
-  nsIContent* content = aElement;
-
   bool forceFormat = false;
   nsresult rv = NS_OK;
-  if (!CheckElementStart(content, forceFormat, aStr, rv)) {
+  if (!CheckElementStart(aElement, forceFormat, aStr, rv)) {
     // When we go to AppendElementEnd for this element, we're going to
     // MaybeLeaveFromPreContent().  So make sure to MaybeEnterInPreContent()
     // now, so our PreLevel() doesn't get confused.
-    MaybeEnterInPreContent(content);
+    MaybeEnterInPreContent(aElement);
     return rv;
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAtom *name = content->NodeInfo()->NameAtom();
-  int32_t ns = content->GetNameSpaceID();
+  nsAtom *name = aElement->NodeInfo()->NameAtom();
+  int32_t ns = aElement->GetNameSpaceID();
 
   bool lineBreakBeforeOpen = LineBreakBeforeOpen(ns, name);
 
@@ -224,7 +222,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), aStr), NS_ERROR_OUT_OF_MEMORY);
 
-  MaybeEnterInPreContent(content);
+  MaybeEnterInPreContent(aElement);
 
   // for block elements, we increase the indentation
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel())
@@ -264,7 +262,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
   // Even LI passed above have to go through this
   // for serializing attributes other than "value".
   nsAutoString dummyPrefix;
-  NS_ENSURE_TRUE(SerializeHTMLAttributes(content,
+  NS_ENSURE_TRUE(SerializeHTMLAttributes(aElement,
                                          aOriginalElement,
                                          dummyPrefix,
                                          EmptyString(),
@@ -287,21 +285,18 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
     NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(AfterElementStart(content, aOriginalElement, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AfterElementStart(aElement, aOriginalElement, aStr), NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
-                                          nsAString& aStr)
+nsHTMLContentSerializer::AppendElementEnd(Element* aElement, nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
-  nsIContent* content = aElement;
-
-  nsAtom *name = content->NodeInfo()->NameAtom();
-  int32_t ns = content->GetNameSpaceID();
+  nsAtom *name = aElement->NodeInfo()->NameAtom();
+  int32_t ns = aElement->GetNameSpaceID();
 
   if (ns == kNameSpaceID_XHTML &&
       (name == nsGkAtoms::script ||
@@ -312,7 +307,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
   }
 
   bool forceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
-                     content->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
+                     aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     DecrIndentation(name);
@@ -344,7 +339,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     if (!isContainer) {
       // Keep this in sync with the cleanup at the end of this method.
       MOZ_ASSERT(name != nsGkAtoms::body);
-      MaybeLeaveFromPreContent(content);
+      MaybeLeaveFromPreContent(aElement);
       return NS_OK;
     }
   }
@@ -376,7 +371,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
   NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
 
   // Keep this cleanup in sync with the IsContainer() early return above.
-  MaybeLeaveFromPreContent(content);
+  MaybeLeaveFromPreContent(aElement);
 
   if ((mDoFormat || forceFormat)&& !mDoRaw  && !PreLevel()
       && LineBreakAfterClose(ns, name)) {

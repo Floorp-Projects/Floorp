@@ -289,7 +289,7 @@ private:
 class nsXULMenuCommandEvent : public mozilla::Runnable
 {
 public:
-  nsXULMenuCommandEvent(nsIContent* aMenu,
+  nsXULMenuCommandEvent(mozilla::dom::Element* aMenu,
                         bool aIsTrusted,
                         bool aShift,
                         bool aControl,
@@ -316,7 +316,7 @@ public:
   void SetCloseMenuMode(CloseMenuMode aCloseMenuMode) { mCloseMenuMode = aCloseMenuMode; }
 
 private:
-  nsCOMPtr<nsIContent> mMenu;
+  RefPtr<mozilla::dom::Element> mMenu;
   bool mIsTrusted;
   bool mShift;
   bool mControl;

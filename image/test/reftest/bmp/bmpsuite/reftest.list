@@ -5,3 +5,4 @@
 include g/reftest.list
 include q/reftest.list
 include b/reftest.list
+include x/reftest.list

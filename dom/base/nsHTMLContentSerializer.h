@@ -17,7 +17,6 @@
 #include "nsXHTMLContentSerializer.h"
 #include "nsString.h"
 
-class nsIContent;
 class nsAtom;
 
 class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
@@ -37,8 +36,8 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
  protected:
 
   MOZ_MUST_USE
-  virtual bool SerializeHTMLAttributes(nsIContent* aContent,
-                                       nsIContent *aOriginalElement,
+  virtual bool SerializeHTMLAttributes(mozilla::dom::Element* aContent,
+                                       mozilla::dom::Element* aOriginalElement,
                                        nsAString& aTagPrefix,
                                        const nsAString& aTagNamespaceURI,
                                        nsAtom* aTagName,

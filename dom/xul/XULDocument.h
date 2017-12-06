@@ -64,7 +64,7 @@ public:
   }
 
   mozilla::dom::Element* GetFirstElement();
-  void AppendAll(nsCOMArray<nsIContent>* aElements);
+  void AppendAll(nsCOMArray<mozilla::dom::Element>* aElements);
   /**
    * @return true if aElement was added, false if we failed due to OOM
    */
@@ -126,7 +126,7 @@ public:
 
     // nsIXULDocument interface
     virtual void GetElementsForID(const nsAString& aID,
-                                  nsCOMArray<nsIContent>& aElements) override;
+                                  nsCOMArray<mozilla::dom::Element>& aElements) override;
 
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent) override;
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent) override;
@@ -262,7 +262,7 @@ protected:
     nsresult ApplyPersistentAttributes();
     nsresult ApplyPersistentAttributesInternal();
     nsresult ApplyPersistentAttributesToElements(const nsAString &aID,
-                                                 nsCOMArray<nsIContent>& aElements);
+                                                 nsCOMArray<Element>& aElements);
 
     nsresult
     AddElementToDocumentPre(Element* aElement);
@@ -440,7 +440,7 @@ protected:
     /**
      * Add attributes from the prototype to the element.
      */
-    nsresult AddAttributes(nsXULPrototypeElement* aPrototype, nsIContent* aElement);
+    nsresult AddAttributes(nsXULPrototypeElement* aPrototype, Element* aElement);
 
     /**
      * The prototype-script of the current transcluded script that is being
@@ -545,13 +545,13 @@ protected:
     {
     protected:
         XULDocument* mDocument;      // [WEAK]
-        nsCOMPtr<nsIContent> mOverlay; // [OWNER]
+        nsCOMPtr<Element> mOverlay; // [OWNER]
         bool mResolved;
 
-        nsresult Merge(nsIContent* aTargetNode, nsIContent* aOverlayNode, bool aNotify);
+        nsresult Merge(Element* aTargetNode, Element* aOverlayNode, bool aNotify);
 
     public:
-        OverlayForwardReference(XULDocument* aDocument, nsIContent* aOverlay)
+        OverlayForwardReference(XULDocument* aDocument, Element* aOverlay)
             : mDocument(aDocument), mOverlay(aOverlay), mResolved(false) {}
 
         virtual ~OverlayForwardReference();
@@ -598,6 +598,8 @@ protected:
                                  Element *aListener,
                                  const nsAString &aAttr);
 
+    // FIXME: This should probably be renamed, there's nothing guaranteeing that
+    // aChild is an Element as far as I can tell!
     static
     nsresult
     InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify);

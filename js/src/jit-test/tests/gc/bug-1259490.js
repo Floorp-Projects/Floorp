@@ -1,4 +1,8 @@
-try { eval("3 ** 4") } catch (e if e instanceof SyntaxError) { quit(); };
+try { eval("3 ** 4") } catch (e) {
+    if (!(e instanceof SyntaxError))
+        throw e;
+    quit();
+}
 eval(`
 
 gczeal(8);

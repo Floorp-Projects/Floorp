@@ -26,7 +26,6 @@
 #include "YuvStamper.h"
 #endif
 
-#define AUDIO_RATE mozilla::MediaEngine::DEFAULT_SAMPLE_RATE
 #define DEFAULT_AUDIO_TIMER_MS 10
 namespace mozilla {
 
@@ -332,6 +331,7 @@ NS_IMPL_ISUPPORTS0(MediaEngineDefaultAudioSource)
 MediaEngineDefaultAudioSource::MediaEngineDefaultAudioSource()
   : MediaEngineAudioSource(kReleased)
   , mLastNotify(0)
+  , mFreq(1000)
 {}
 
 MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource()
@@ -382,10 +382,8 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
     return NS_ERROR_FAILURE;
   }
 
+  mFreq = aPrefs.mFreq ? aPrefs.mFreq : 1000;
   mState = kAllocated;
-  // generate sine wave (default 1KHz)
-  mSineGenerator = new SineWaveGenerator(AUDIO_RATE,
-                                         static_cast<uint32_t>(aPrefs.mFreq ? aPrefs.mFreq : 1000));
   *aOutHandle = nullptr;
   return NS_OK;
 }
@@ -409,9 +407,15 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID,
     return NS_ERROR_FAILURE;
   }
 
+
+  if (!mSineGenerator) {
+    // generate sine wave (default 1KHz)
+    mSineGenerator = new SineWaveGenerator(aStream->GraphRate(), mFreq);
+  }
+
   // AddTrack will take ownership of segment
   AudioSegment* segment = new AudioSegment();
-  aStream->AddAudioTrack(aID, AUDIO_RATE, 0, segment, SourceMediaStream::ADDTRACK_QUEUED);
+  aStream->AddAudioTrack(aID, aStream->GraphRate(), 0, segment, SourceMediaStream::ADDTRACK_QUEUED);
 
   // Remember TrackID so we can finish later
   mTrackID = aID;
@@ -467,7 +471,7 @@ MediaEngineDefaultAudioSource::NotifyPull(MediaStreamGraph* aGraph,
   MOZ_ASSERT(aID == mTrackID);
   AudioSegment segment;
   // avoid accumulating rounding errors
-  TrackTicks desired = aSource->TimeToTicksRoundUp(AUDIO_RATE, aDesiredTime);
+  TrackTicks desired = aSource->TimeToTicksRoundUp(aGraph->GraphRate(), aDesiredTime);
   TrackTicks delta = desired - mLastNotify;
   mLastNotify += delta;
   AppendToSegment(segment, delta, aPrincipalHandle);
