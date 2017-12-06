@@ -278,7 +278,7 @@ BytecodeCompiler::handleParseFailure(const Directives& newDirectives)
         // Syntax parsing has now been disabled in the parser, so retry
         // the parse.
         parser->clearAbortedSyntaxParse();
-    } else if (parser->tokenStream.hadError() || directives == newDirectives) {
+    } else if (parser->anyChars.hadError() || directives == newDirectives) {
         return false;
     }
 
@@ -402,7 +402,7 @@ BytecodeCompiler::compileModule()
 
     module->init(script);
 
-    ModuleBuilder builder(cx, module, parser->tokenStream);
+    ModuleBuilder builder(cx, module, parser->anyChars);
     if (!builder.init())
         return nullptr;
 

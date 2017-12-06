@@ -1204,7 +1204,7 @@ GlobalObject::initModuleProto(JSContext* cx, Handle<GlobalObject*> global)
 // ModuleBuilder
 
 ModuleBuilder::ModuleBuilder(JSContext* cx, HandleModuleObject module,
-                             const frontend::TokenStream& tokenStream)
+                             const frontend::TokenStreamAnyChars& tokenStream)
   : cx_(cx),
     module_(cx, module),
     tokenStream_(tokenStream),

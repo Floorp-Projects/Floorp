@@ -388,6 +388,20 @@ class StrictModeGetter {
     virtual bool strictMode() = 0;
 };
 
+struct TokenStreamFlags
+{
+    bool isEOF:1;           // Hit end of file.
+    bool isDirtyLine:1;     // Non-whitespace since start of line.
+    bool sawOctalEscape:1;  // Saw an octal character escape.
+    bool hadError:1;        // Hit a syntax error, at start or during a
+                            // token.
+
+    TokenStreamFlags()
+      : isEOF(), isDirtyLine(), sawOctalEscape(), hadError()
+    {}
+};
+
+
 /**
  * TokenStream types and constants that are used in both TokenStreamAnyChars
  * and TokenStreamSpecific.  Do not add any non-static data members to this
@@ -399,23 +413,11 @@ class TokenStreamShared
     static constexpr size_t ntokens = 4; // 1 current + 2 lookahead, rounded
                                          // to power of 2 to avoid divmod by 3
 
-    static constexpr unsigned maxLookahead = 2;
     static constexpr unsigned ntokensMask = ntokens - 1;
 
-    struct Flags
-    {
-        bool isEOF:1;           // Hit end of file.
-        bool isDirtyLine:1;     // Non-whitespace since start of line.
-        bool sawOctalEscape:1;  // Saw an octal character escape.
-        bool hadError:1;        // Hit a syntax error, at start or during a
-                                // token.
-
-        Flags()
-          : isEOF(), isDirtyLine(), sawOctalEscape(), hadError()
-        {}
-    };
-
   public:
+    static constexpr unsigned maxLookahead = 2;
+
     static constexpr uint32_t NoOffset = UINT32_MAX;
 
     using Modifier = Token::Modifier;
@@ -721,6 +723,13 @@ class TokenStreamAnyChars
 
     bool hasLookahead() const { return lookahead > 0; }
 
+    // Push the last scanned token back into the stream.
+    void ungetToken() {
+        MOZ_ASSERT(lookahead < maxLookahead);
+        lookahead++;
+        cursor = (cursor - 1) & ntokensMask;
+    }
+
   public:
     MOZ_MUST_USE bool compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
                                      unsigned flags, unsigned errorNumber, va_list args);
@@ -755,7 +764,7 @@ class TokenStreamAnyChars
     unsigned            cursor;             // index of last parsed token
     unsigned            lookahead;          // count of lookahead tokens
     unsigned            lineno;             // current line number
-    Flags               flags;              // flags -- see above
+    TokenStreamFlags    flags;              // flags -- see above
     size_t              linebase;           // start of current line
     size_t              prevLinebase;       // start of previous line;  size_t(-1) if on the first line
     const char*         filename_;          // input filename or null
@@ -898,6 +907,36 @@ class TokenStreamCharsBase
 
     MOZ_MUST_USE bool appendMultiUnitCodepointToTokenbuf(uint32_t codepoint);
 
+    class MOZ_STACK_CLASS Position
+    {
+      public:
+        // The JS_HAZ_ROOTED is permissible below because: 1) the only field in
+        // Position that can keep GC things alive is Token, 2) the only GC
+        // things Token can keep alive are atoms, and 3) the AutoKeepAtoms&
+        // passed to the constructor here represents that collection of atoms
+        // is disabled while atoms in Tokens in this Position are alive.  DON'T
+        // ADD NON-ATOM GC THING POINTERS HERE!  They would create a rooting
+        // hazard that JS_HAZ_ROOTED will cause to be ignored.
+        explicit Position(AutoKeepAtoms&) { }
+
+      private:
+        Position(const Position&) = delete;
+
+        // Technically this should only friend TokenStreamSpecific instantiated
+        // with CharT (letting the AnyCharsAccess parameter vary), but C++
+        // doesn't allow partial friend specialization.
+        template<typename, class> friend class TokenStreamSpecific;
+
+        const CharT* buf;
+        TokenStreamFlags flags;
+        unsigned lineno;
+        size_t linebase;
+        size_t prevLinebase;
+        Token currentToken;
+        unsigned lookahead;
+        Token lookaheadTokens[TokenStreamShared::maxLookahead];
+    } JS_HAZ_ROOTED;
+
   protected:
     /** User input buffer. */
     TokenBuf userbuf;
@@ -986,10 +1025,10 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   : public TokenStreamChars<CharT, AnyCharsAccess>,
     public TokenStreamShared
 {
+  public:
     using CharsBase = TokenStreamChars<CharT, AnyCharsAccess>;
     using CharsSharedBase = TokenStreamCharsBase<CharT>;
 
-  public:
     // Anything inherited through a base class whose type depends upon this
     // class's template parameters can only be accessed through a dependent
     // name: prefixed with |this|, by explicit qualification, and so on.  (This
@@ -1014,6 +1053,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     using CharsSharedBase::userbuf;
     using CharsSharedBase::tokenbuf;
+
+    using typename CharsSharedBase::Position;
 
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -1149,15 +1190,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         return getTokenInternal(ttp, modifier);
     }
 
-    // Push the last scanned token back into the stream.
-    void ungetToken() {
-        TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-        MOZ_ASSERT(anyChars.lookahead < maxLookahead);
-        anyChars.lookahead++;
-        anyChars.cursor = (anyChars.cursor - 1) & ntokensMask;
-    }
-
     MOZ_MUST_USE bool peekToken(TokenKind* ttp, Modifier modifier = None) {
         TokenStreamAnyChars& anyChars = anyCharsAccess();
         if (anyChars.lookahead > 0) {
@@ -1168,7 +1200,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         }
         if (!getTokenInternal(ttp, modifier))
             return false;
-        ungetToken();
+        anyChars.ungetToken();
         return true;
     }
 
@@ -1178,7 +1210,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
             TokenKind tt;
             if (!getTokenInternal(&tt, modifier))
                 return false;
-            ungetToken();
+            anyChars.ungetToken();
             MOZ_ASSERT(anyChars.hasLookahead());
         } else {
             MOZ_ASSERT(!anyChars.flags.hadError);
@@ -1238,7 +1270,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         if (!getToken(&tmp, modifier))
             return false;
         const Token& next = anyChars.currentToken();
-        ungetToken();
+        anyChars.ungetToken();
 
         const auto& srcCoords = anyChars.srcCoords;
         *ttp = srcCoords.lineNum(curr.pos.end) == srcCoords.lineNum(next.pos.begin)
@@ -1255,7 +1287,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         if (token == tt) {
             *matchedp = true;
         } else {
-            ungetToken();
+            anyCharsAccess().ungetToken();
             *matchedp = false;
         }
         return true;
@@ -1284,34 +1316,11 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         return true;
     }
 
-    class MOZ_STACK_CLASS Position {
-      public:
-        // The JS_HAZ_ROOTED is permissible below because: 1) the only field in
-        // Position that can keep GC things alive is Token, 2) the only GC
-        // things Token can keep alive are atoms, and 3) the AutoKeepAtoms&
-        // passed to the constructor here represents that collection of atoms
-        // is disabled while atoms in Tokens in this Position are alive.  DON'T
-        // ADD NON-ATOM GC THING POINTERS HERE!  They would create a rooting
-        // hazard that JS_HAZ_ROOTED will cause to be ignored.
-        explicit Position(AutoKeepAtoms&) { }
-
-      private:
-        Position(const Position&) = delete;
-        friend class TokenStreamSpecific;
-        const CharT* buf;
-        Flags flags;
-        unsigned lineno;
-        size_t linebase;
-        size_t prevLinebase;
-        Token currentToken;
-        unsigned lookahead;
-        Token lookaheadTokens[maxLookahead];
-    } JS_HAZ_ROOTED;
-
     MOZ_MUST_USE bool advance(size_t position);
+
     void tell(Position*);
     void seek(const Position& pos);
-    MOZ_MUST_USE bool seek(const Position& pos, const TokenStreamSpecific& other);
+    MOZ_MUST_USE bool seek(const Position& pos, const TokenStreamAnyChars& other);
 
     const CharT* rawCharPtrAt(size_t offset) const {
         return userbuf.rawCharPtrAt(offset);
