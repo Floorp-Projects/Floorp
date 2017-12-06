@@ -23,6 +23,7 @@ def SignedAppFile(name, flags):
         files = files[part]
     files += ['!%s' % name]
 
+
 # Except for unusual testcases (unknown issuer, unsigned app, empty
 # signerInfos), the naming scheme is as follows:
 # app_mf{-1,-256}_sf{-1,-256}_p7{-1,-256}.zip, where:
@@ -59,3 +60,7 @@ def SignedAppFile(name, flags):
 #                args.append('-p')
 #                args.append('sha%s' % p7_alg)
 #            SignedAppFile(filename, args)
+
+# COSE test-cases
+#SignedAppFile('cose_signed.zip', ['-c', 'ES256'])
+#SignedAppFile('cose_multiple_signed.zip', ['-c', 'ES256', '-c', 'ES384'])

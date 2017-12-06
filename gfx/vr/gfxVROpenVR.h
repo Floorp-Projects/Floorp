@@ -31,7 +31,6 @@ namespace impl {
 class VRDisplayOpenVR : public VRDisplayHost
 {
 public:
-  virtual void NotifyVSync() override;
   void ZeroSensor() override;
   bool GetIsHmdPresent();
 
@@ -55,7 +54,7 @@ public:
   explicit VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
                            ::vr::IVRChaperone *aVRChaperone,
                            ::vr::IVRCompositor *aVRCompositor);
-
+  void Refresh();
 protected:
   virtual ~VRDisplayOpenVR();
   void Destroy();
@@ -71,7 +70,6 @@ protected:
 
   void UpdateStageParameters();
   void UpdateEyeParameters(gfx::Matrix4x4* aHeadToEyeTransforms = nullptr);
-  void PollEvents();
   bool SubmitFrame(void* aTextureHandle,
                    ::vr::ETextureType aTextureType,
                    const IntSize& aSize,
@@ -128,7 +126,10 @@ public:
 
   virtual void Destroy() override;
   virtual void Shutdown() override;
-  virtual bool GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
+  virtual void NotifyVSync() override;
+  virtual void Enumerate() override;
+  virtual bool ShouldInhibitEnumeration() override;
+  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&

@@ -340,12 +340,6 @@ VRDisplayGVR::SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor
   return true;
 }
 
-void
-VRDisplayGVR::NotifyVSync()
-{
-  VRDisplayHost::NotifyVSync();
-}
-
 static void
 FillMatrix(gfx::Matrix4x4 &target, const gvr_mat4f& source)
 {
@@ -712,19 +706,40 @@ VRSystemManagerGVR::Shutdown()
 
 }
 
-bool
-VRSystemManagerGVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult)
+void
+VRSystemManagerGVR::Enumerate()
 {
   if (!GeckoVRManager::IsGVRPresent()) {
-    return false;
+    return;
   }
 
   if (!mGVRHMD) {
     mGVRHMD = new VRDisplayGVR();
   }
+}
 
-  aHMDResult.AppendElement(mGVRHMD);
-  return true;
+bool
+VRSystemManagerGVR::ShouldInhibitEnumeration()
+{
+  if (VRSystemManager::ShouldInhibitEnumeration()) {
+    return true;
+  }
+  if (mGVRHMD) {
+    // When we find an a VR device, don't
+    // allow any further enumeration as it
+    // may get picked up redundantly by other
+    // API's.
+    return true;
+  }
+  return false;
+}
+
+void
+VRSystemManagerGVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
+{
+  if (mGVRHMD) {
+    aHMDResult.AppendElement(mGVRHMD);
+  }
 }
 
 bool

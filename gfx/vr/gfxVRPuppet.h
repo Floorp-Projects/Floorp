@@ -9,6 +9,7 @@
 
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
+#include "nsRefPtrHashtable.h"
 
 #include "gfxVR.h"
 #include "VRDisplayHost.h"
@@ -24,7 +25,6 @@ class VRDisplayPuppet : public VRDisplayHost
 {
 public:
   void SetDisplayInfo(const VRDisplayInfo& aDisplayInfo);
-  virtual void NotifyVSync() override;
   void SetSensorState(const VRHMDSensorState& aSensorState);
   void ZeroSensor() override;
 
@@ -50,6 +50,7 @@ protected:
 
 public:
   explicit VRDisplayPuppet();
+  void Refresh();
 
 protected:
   virtual ~VRDisplayPuppet();
@@ -107,10 +108,17 @@ class VRSystemManagerPuppet : public VRSystemManager
 {
 public:
   static already_AddRefed<VRSystemManagerPuppet> Create();
+  uint32_t CreateTestDisplay();
+  void ClearTestDisplays();
+  void SetPuppetDisplayInfo(const uint32_t& aDeviceID,
+                            const VRDisplayInfo& aDisplayInfo);
+  void SetPuppetDisplaySensorState(const uint32_t& aDeviceID,
+                                   const VRHMDSensorState& aSensorState);
 
   virtual void Destroy() override;
   virtual void Shutdown() override;
-  virtual bool GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
+  virtual void Enumerate() override;
+  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
@@ -123,6 +131,7 @@ public:
                              double aDuration,
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
+  virtual void NotifyVSync() override;
 
 protected:
   VRSystemManagerPuppet();
@@ -139,9 +148,15 @@ private:
                           const dom::GamepadPoseState& aPose,
                           VRControllerHost* aController);
 
-  // there can only be one
-  RefPtr<impl::VRDisplayPuppet> mPuppetHMD;
+  // Enumerated puppet hardware devices, as seen by Web APIs:
+  nsTArray<RefPtr<impl::VRDisplayPuppet>> mPuppetHMDs;
   nsTArray<RefPtr<impl::VRControllerPuppet>> mPuppetController;
+
+  // Emulated hardware state, persistent through VRSystemManager::Shutdown():
+  static const uint32_t kMaxPuppetDisplays = 5;
+  uint32_t mPuppetDisplayCount;
+  VRDisplayInfo mPuppetDisplayInfo[kMaxPuppetDisplays];
+  VRHMDSensorState mPuppetDisplaySensorState[kMaxPuppetDisplays];
 };
 
 } // namespace gfx

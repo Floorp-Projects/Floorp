@@ -348,7 +348,10 @@ public:
 
   virtual void Destroy() = 0;
   virtual void Shutdown() = 0;
-  virtual bool GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) = 0;
+  virtual void Enumerate() = 0;
+  virtual void NotifyVSync();
+  virtual bool ShouldInhibitEnumeration();
+  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) = 0;
   virtual bool GetIsPresenting() = 0;
   virtual void HandleInput() = 0;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult) = 0;

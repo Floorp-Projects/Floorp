@@ -98,7 +98,7 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::ismap, aIsMap, aError);
   }
-  uint32_t Width()
+  MOZ_CAN_RUN_SCRIPT uint32_t Width()
   {
     return GetWidthHeightForImage(mCurrentRequest).width;
   }
@@ -106,7 +106,7 @@ public:
   {
     SetUnsignedIntAttr(nsGkAtoms::width, aWidth, 0, aError);
   }
-  uint32_t Height()
+  MOZ_CAN_RUN_SCRIPT uint32_t Height()
   {
     return GetWidthHeightForImage(mCurrentRequest).height;
   }
@@ -142,10 +142,6 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::alt, aAlt, aError);
   }
-  void GetSrc(nsAString& aSrc, nsIPrincipal&)
-  {
-    GetSrc(aSrc);
-  }
   void GetSrc(nsAString& aSrc)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
@@ -158,7 +154,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }
-  void GetSrcset(nsAString& aSrcset, nsIPrincipal&)
+  void GetSrcset(nsAString& aSrcset)
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }
@@ -241,8 +237,8 @@ public:
     return GetReferrerPolicyAsEnum();
   }
 
-  int32_t X();
-  int32_t Y();
+  MOZ_CAN_RUN_SCRIPT int32_t X();
+  MOZ_CAN_RUN_SCRIPT int32_t Y();
   void GetLowsrc(nsAString& aLowsrc)
   {
     GetURIAttr(nsGkAtoms::lowsrc, nullptr, aLowsrc);
@@ -376,7 +372,7 @@ protected:
   // only that it is valid.
   bool TryCreateResponsiveSelector(nsIContent *aSourceNode);
 
-  CSSIntPoint GetXY();
+  MOZ_CAN_RUN_SCRIPT CSSIntPoint GetXY();
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
   void UpdateFormOwner();
 

@@ -2190,7 +2190,7 @@ IonCacheIRCompiler::emitLoadTypedObjectResult()
     LoadTypedThingData(masm, layout, obj, scratch1);
 
     Address fieldAddr(scratch1, fieldOffset);
-    emitLoadTypedObjectResultShared(fieldAddr, scratch2, layout, typeDescr, output);
+    emitLoadTypedObjectResultShared(fieldAddr, scratch2, typeDescr, output);
     return true;
 }
 

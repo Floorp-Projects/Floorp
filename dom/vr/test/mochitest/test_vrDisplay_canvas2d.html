@@ -6,6 +6,7 @@
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="VRSimulationDriver.js"></script>
     <script src="runVRTest.js"></script>
   </head>
   <body>
@@ -35,12 +36,14 @@
           var img = document.createElement('img');
           img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 
-          return navigator.getVRDisplays().then((displays) => {
-            assert_equals(displays.length, 1, "displays.length must be one after attach.");
-            vrDisplay = displays[0];
-            var frameData = new VRFrameData();
-            return vrDisplay.requestPresent([{source: canvas}]).then(() => {
-              requestPresentTest();
+          return VRSimulationDriver.AttachWebVRDisplay().then(() => {
+            return navigator.getVRDisplays().then((displays) => {
+              assert_equals(displays.length, 1, "displays.length must be one after attach.");
+              vrDisplay = displays[0];
+              var frameData = new VRFrameData();
+              return vrDisplay.requestPresent([{source: canvas}]).then(() => {
+                requestPresentTest();
+              });
             });
           });
         }, "Finish running WebVR Canvas2D test.");

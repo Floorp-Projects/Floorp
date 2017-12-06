@@ -150,6 +150,10 @@ public:
 
   ipc::IShmemAllocator* GetShmemAllocator();
 
+  virtual bool IsThreadSafe() const override { return false; }
+
+  virtual RefPtr<KnowsCompositor> GetForMedia() override;
+
 private:
   friend class CompositorBridgeChild;
 

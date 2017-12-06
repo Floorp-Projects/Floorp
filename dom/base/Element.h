@@ -1121,8 +1121,8 @@ public:
   already_AddRefed<Attr> SetAttributeNodeNS(Attr& aNewAttr,
                                             ErrorResult& aError);
 
-  already_AddRefed<DOMRectList> GetClientRects();
-  already_AddRefed<DOMRect> GetBoundingClientRect();
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<DOMRectList> GetClientRects();
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<DOMRect> GetBoundingClientRect();
 
   // Shadow DOM v1
   already_AddRefed<ShadowRoot> AttachShadow(const ShadowRootInit& aInit,
@@ -1145,60 +1145,60 @@ private:
   void ScrollIntoView(const ScrollIntoViewOptions &aOptions);
 public:
   void ScrollIntoView(const BooleanOrScrollIntoViewOptions& aObject);
-  void Scroll(double aXScroll, double aYScroll);
-  void Scroll(const ScrollToOptions& aOptions);
-  void ScrollTo(double aXScroll, double aYScroll);
-  void ScrollTo(const ScrollToOptions& aOptions);
-  void ScrollBy(double aXScrollDif, double aYScrollDif);
-  void ScrollBy(const ScrollToOptions& aOptions);
+  MOZ_CAN_RUN_SCRIPT void Scroll(double aXScroll, double aYScroll);
+  MOZ_CAN_RUN_SCRIPT void Scroll(const ScrollToOptions& aOptions);
+  MOZ_CAN_RUN_SCRIPT void ScrollTo(double aXScroll, double aYScroll);
+  MOZ_CAN_RUN_SCRIPT void ScrollTo(const ScrollToOptions& aOptions);
+  MOZ_CAN_RUN_SCRIPT void ScrollBy(double aXScrollDif, double aYScrollDif);
+  MOZ_CAN_RUN_SCRIPT void ScrollBy(const ScrollToOptions& aOptions);
   /* Scrolls without flushing the layout.
    * aDx is the x offset, aDy the y offset in CSS pixels.
    * Returns true if we actually scrolled.
    */
-  bool ScrollByNoFlush(int32_t aDx, int32_t aDy);
-  int32_t ScrollTop();
-  void SetScrollTop(int32_t aScrollTop);
-  int32_t ScrollLeft();
-  void SetScrollLeft(int32_t aScrollLeft);
-  int32_t ScrollWidth();
-  int32_t ScrollHeight();
-  void MozScrollSnap();
-  int32_t ClientTop()
+  MOZ_CAN_RUN_SCRIPT bool ScrollByNoFlush(int32_t aDx, int32_t aDy);
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollTop();
+  MOZ_CAN_RUN_SCRIPT void SetScrollTop(int32_t aScrollTop);
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollLeft();
+  MOZ_CAN_RUN_SCRIPT void SetScrollLeft(int32_t aScrollLeft);
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollWidth();
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollHeight();
+  MOZ_CAN_RUN_SCRIPT void MozScrollSnap();
+  MOZ_CAN_RUN_SCRIPT int32_t ClientTop()
   {
     return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().y);
   }
-  int32_t ClientLeft()
+  MOZ_CAN_RUN_SCRIPT int32_t ClientLeft()
   {
     return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().x);
   }
-  int32_t ClientWidth()
+  MOZ_CAN_RUN_SCRIPT int32_t ClientWidth()
   {
     return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().Width());
   }
-  int32_t ClientHeight()
+  MOZ_CAN_RUN_SCRIPT int32_t ClientHeight()
   {
     return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().Height());
   }
-  int32_t ScrollTopMin()
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMin()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     return sf ?
            nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().y) : 0;
   }
-  int32_t ScrollTopMax()
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMax()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     return sf ?
            nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().YMost()) :
            0;
   }
-  int32_t ScrollLeftMin()
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMin()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     return sf ?
            nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().x) : 0;
   }
-  int32_t ScrollLeftMax()
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMax()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     return sf ?
@@ -1237,10 +1237,6 @@ public:
                                     nsTArray<RefPtr<Animation>>& aAnimations);
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  void GetInnerHTML(nsAString& aInnerHTML, nsIPrincipal& aSubjectPrincipal)
-  {
-    GetInnerHTML(aInnerHTML);
-  }
   virtual void SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal& aSubjectPrincipal, ErrorResult& aError);
   void GetOuterHTML(nsAString& aOuterHTML);
   void SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError);
@@ -1589,6 +1585,7 @@ protected:
    * @param aScroll       Destination of scroll, in CSS pixels
    * @param aOptions      Dictionary of options to be evaluated
    */
+  MOZ_CAN_RUN_SCRIPT
   void Scroll(const CSSIntPoint& aScroll, const ScrollOptions& aOptions);
 
   /**
@@ -1829,8 +1826,9 @@ private:
    * Get this element's client area rect in app units.
    * @return the frame's client area
    */
-  nsRect GetClientAreaRect();
+  MOZ_CAN_RUN_SCRIPT nsRect GetClientAreaRect();
 
+  MOZ_CAN_RUN_SCRIPT
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr,
                                      FlushType aFlushType = FlushType::Layout);
 

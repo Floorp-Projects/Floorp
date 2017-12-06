@@ -290,5 +290,19 @@ ClientManagerService::RemoveManager(ClientManagerParent* aManager)
   MOZ_ASSERT(removed);
 }
 
+RefPtr<ClientOpPromise>
+ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
+{
+  RefPtr<ClientOpPromise> ref;
+
+  ClientSourceParent* source = FindSource(aArgs.id(), aArgs.principalInfo());
+  if (!source || !source->ExecutionReady()) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    return ref.forget();
+  }
+
+  return source->StartOp(aArgs);
+}
+
 } // namespace dom
 } // namespace mozilla

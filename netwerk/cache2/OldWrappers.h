@@ -156,6 +156,10 @@ public:
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  NS_IMETHOD Dismiss() override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   NS_IMETHOD AsyncDoom(nsICacheEntryDoomCallback* listener) override;
   NS_IMETHOD GetPersistent(bool *aPersistToDisk) override;

@@ -8,7 +8,7 @@
  */
 
 interface CSSStyleDeclaration {
-  [CEReactions, NeedsSubjectPrincipal, SetterThrows]
+  [CEReactions, SetterNeedsSubjectPrincipal, SetterThrows]
   attribute DOMString cssText;
 
   readonly attribute unsigned long length;

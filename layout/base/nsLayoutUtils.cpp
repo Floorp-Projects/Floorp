@@ -7744,8 +7744,9 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (aSurfaceFlags & SFE_USE_ELEMENT_SIZE_IF_VECTOR &&
       element &&
       imgContainer->GetType() == imgIContainer::TYPE_VECTOR) {
-    imgWidth = element->Width();
-    imgHeight = element->Height();
+    // We're holding a strong ref to "element" via "content".
+    imgWidth = MOZ_KnownLive(element)->Width();
+    imgHeight = MOZ_KnownLive(element)->Height();
   } else {
     rv = imgContainer->GetWidth(&imgWidth);
     nsresult rv2 = imgContainer->GetHeight(&imgHeight);

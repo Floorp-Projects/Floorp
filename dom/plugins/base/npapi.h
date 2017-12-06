@@ -473,6 +473,7 @@ typedef enum {
   , NPNVsupportsCompositingCoreAnimationPluginsBool = 74656 /* TRUE if the browser supports
                                                                CA model compositing */
 #endif
+  , NPNVLast
 } NPNVariable;
 
 typedef enum {

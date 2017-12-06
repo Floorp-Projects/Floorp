@@ -42,7 +42,7 @@ interface HTMLDocument : Document {
   [CEReactions, Throws]
   void writeln(DOMString... text);
 
-  [CEReactions, SetterThrows, NeedsSubjectPrincipal]
+  [CEReactions, SetterThrows, SetterNeedsSubjectPrincipal]
            attribute DOMString designMode;
   [CEReactions, Throws, NeedsSubjectPrincipal]
   boolean execCommand(DOMString commandId, optional boolean showUI = false,

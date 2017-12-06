@@ -20,6 +20,7 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::ipc::BackgroundParent;
 using mozilla::ipc::IPCResult;
 using mozilla::ipc::PrincipalInfo;
@@ -80,6 +81,15 @@ ClientSourceParent::KillInvalidChild()
   // we start the actor destruction immediately above.
   nsCOMPtr<nsIRunnable> r = new KillContentParentRunnable(Move(process));
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+}
+
+mozilla::ipc::IPCResult
+ClientSourceParent::RecvWorkerSyncPing()
+{
+  AssertIsOnBackgroundThread();
+  // Do nothing here.  This is purely a sync message allowing the child to
+  // confirm that the actor has been created on the parent process.
+  return IPC_OK();
 }
 
 IPCResult
@@ -209,6 +219,12 @@ ClientSourceParent::IsFrozen() const
   return mFrozen;
 }
 
+bool
+ClientSourceParent::ExecutionReady() const
+{
+  return mExecutionReady;
+}
+
 void
 ClientSourceParent::AttachHandle(ClientHandleParent* aClientHandle)
 {
@@ -224,6 +240,26 @@ ClientSourceParent::DetachHandle(ClientHandleParent* aClientHandle)
   MOZ_DIAGNOSTIC_ASSERT(aClientHandle);
   MOZ_ASSERT(mHandleList.Contains(aClientHandle));
   mHandleList.RemoveElement(aClientHandle);
+}
+
+RefPtr<ClientOpPromise>
+ClientSourceParent::StartOp(const ClientOpConstructorArgs& aArgs)
+{
+  RefPtr<ClientOpPromise::Private> promise =
+    new ClientOpPromise::Private(__func__);
+
+  // If we are being controlled, remember that data before propagating
+  // on to the ClientSource.
+  if (aArgs.type() == ClientOpConstructorArgs::TClientControlledArgs) {
+    mController.reset();
+    mController.emplace(aArgs.get_ClientControlledArgs().serviceWorker());
+  }
+
+  // Constructor failure will reject the promise via ActorDestroy().
+  ClientSourceOpParent* actor = new ClientSourceOpParent(aArgs, promise);
+  Unused << SendPClientSourceOpConstructor(actor, aArgs);
+
+  return promise.forget();
 }
 
 } // namespace dom

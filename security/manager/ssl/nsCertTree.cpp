@@ -55,7 +55,8 @@ CompareCacheHashEntryPtr::~CompareCacheHashEntryPtr()
 }
 
 CompareCacheHashEntry::CompareCacheHashEntry()
-:key(nullptr)
+  : key(nullptr)
+  , mCritInit()
 {
   for (int i = 0; i < max_criterions; ++i) {
     mCritInit[i] = false;
@@ -153,6 +154,8 @@ NS_IMPL_ISUPPORTS(nsCertTree, nsICertTree, nsITreeView)
 
 nsCertTree::nsCertTree()
   : mTreeArray(nullptr)
+  , mNumOrgs(0)
+  , mNumRows(0)
   , mCompareCache(&gMapOps, sizeof(CompareCacheHashEntryPtr),
                   kInitialCacheLength)
 {

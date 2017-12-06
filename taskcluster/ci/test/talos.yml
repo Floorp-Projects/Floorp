@@ -1,6 +1,11 @@
 job-defaults:
     max-run-time: 3600
     suite: talos
+    tier:
+        by-test-platform:
+            windows10-64-ccov/.*: 3
+            linux64-ccov/.*: 3
+            default: default
     virtualization:
         by-test-platform:
             windows10-64-ccov/.*: virtual

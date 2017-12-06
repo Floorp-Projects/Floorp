@@ -38,12 +38,13 @@
       function startTest() {
         promise_test((test) => {
           listenControllerEvents();
-          return navigator.getVRDisplays().then((displays) => {
-            vrDisplay = displays[0];
-            assert_equals(displays.length, 1, "displays.length must be one after attach.");
-            assert_equals(displays[0].displayId, 1, "displayId must be one.");
-            addController();
-            addController();
+          return VRSimulationDriver.AttachWebVRDisplay().then(() => {
+            return navigator.getVRDisplays().then((displays) => {
+              vrDisplay = displays[0];
+              assert_equals(displays.length, 1, "displays.length must be one after attach.");
+              addController();
+              addController();
+            });
           });
         }, "Finish to add VRDisplay.");
       }
