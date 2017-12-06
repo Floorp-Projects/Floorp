@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+%define fieldBorderColor hsla(240,5%,5%,.25)
+%define fieldHoverBorderColor hsla(240,5%,5%,.35)
+
 :root {
   /* 28x28 box - 16x16 image = 12x12 padding, 6 on each side */
   --urlbar-icon-padding: 6px;
@@ -23,7 +26,7 @@
 .searchbar-textbox {
   -moz-appearance: none;
   background-clip: content-box;
-  border: 1px solid hsla(240,5%,5%,.25);
+  border: 1px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
   padding: 0;
@@ -35,7 +38,7 @@
 
 #urlbar:hover,
 .searchbar-textbox:hover {
-  border-color: hsla(240,5%,5%,.35);
+  border-color: @fieldHoverBorderColor@;
   box-shadow: 0 1px 6px rgba(0,0,0,.1);
 }
 
@@ -47,7 +50,12 @@
 
 #urlbar:not([focused="true"]):-moz-lwtheme,
 #navigator-toolbox .searchbar-textbox:not([focused="true"]):-moz-lwtheme {
-  border-color: var(--url-and-searchbar-border-color, hsla(240,5%,5%,.25));
+  border-color: var(--lwt-toolbar-field-border-color, @fieldBorderColor@);
+}
+
+#urlbar:not([focused="true"]):-moz-lwtheme:hover,
+#navigator-toolbox .searchbar-textbox:not([focused="true"]):-moz-lwtheme:hover {
+  border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
 
 #urlbar:-moz-lwtheme:hover,

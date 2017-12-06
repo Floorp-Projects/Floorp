@@ -46,6 +46,7 @@ RefPtr<ID2D1Factory1> D2DFactory()
 
 DrawTargetD2D1::DrawTargetD2D1()
   : mPushedLayers(1)
+  , mSnapshotLock(make_shared<Mutex>("DrawTargetD2D1::mSnapshotLock"))
   , mUsedCommandListsSincePurge(0)
   , mComplexBlendsWithListInList(0)
   , mDeviceSeq(0)
@@ -91,9 +92,7 @@ DrawTargetD2D1::~DrawTargetD2D1()
 already_AddRefed<SourceSurface>
 DrawTargetD2D1::Snapshot()
 {
-  if (!mSnapshotLock) {
-    mSnapshotLock = make_shared<Mutex>("DrawTargetD2D1::mSnapshotLock");
-  }
+  MutexAutoLock lock(*mSnapshotLock);
   if (mSnapshot) {
     RefPtr<SourceSurface> snapshot(mSnapshot);
     return snapshot.forget();

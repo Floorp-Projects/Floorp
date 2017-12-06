@@ -9,13 +9,17 @@ p {
   display: flex;
 }
 
-form {
+form,
+div {
   flex-wrap: wrap;
+}
+
+form {
   /* Add extra space to ensure invalid input box is displayed properly */
   padding: 2px;
 }
 
-form > label,
+form label,
 form > p {
   margin: 0 0 0.5em !important;
 }
