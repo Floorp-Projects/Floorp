@@ -2187,18 +2187,15 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     // Synthetic-bold strikes are each offset one device pixel in run direction.
     // (these values are only needed if IsSyntheticBold() is true)
-    if (IsSyntheticBold()) {
+    // WebRender handles synthetic bold independently via FontInstanceFlags,
+    // so just ignore requests in that case.
+    if (IsSyntheticBold() && !textDrawer) {
         gfx::Float xscale = CalcXScale(aRunParams.context->GetDrawTarget());
         fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
         if (xscale != 0.0) {
             // use as many strikes as needed for the the increased advance
             fontParams.extraStrikes =
                 std::max(1, NS_lroundf(GetSyntheticBoldOffset() / xscale));
-
-            if (textDrawer) {
-                textDrawer->FoundUnsupportedFeature();
-                return;
-            }
         }
     } else {
         fontParams.synBoldOnePixelOffset = 0;
