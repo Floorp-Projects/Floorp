@@ -24,6 +24,7 @@
 #include "fdlibm.h"
 #include "jslibmath.h"
 
+#include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"
 #include "threading/Mutex.h"
@@ -595,6 +596,10 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::Wake:
         *abiType = Args_General2;
         return FuncCast(Instance::wake, *abiType);
+#if defined(JS_CODEGEN_MIPS32)
+      case SymbolicAddress::js_jit_gAtomic64Lock:
+        return &js::jit::gAtomic64Lock;
+#endif
       case SymbolicAddress::Limit:
         break;
     }
@@ -621,6 +626,9 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::CallImport_F64:
       case SymbolicAddress::CoerceInPlace_ToInt32:    // GenerateImportJitExit
       case SymbolicAddress::CoerceInPlace_ToNumber:
+#if defined(JS_CODEGEN_MIPS32)
+      case SymbolicAddress::js_jit_gAtomic64Lock:
+#endif
         return false;
       case SymbolicAddress::ToInt32:
       case SymbolicAddress::DivI64:
