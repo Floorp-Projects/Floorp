@@ -38,11 +38,11 @@ class IconGenerator {
          * on top of a generic launcher icon shape that we provide.
          */
         @JvmStatic
-        fun generateCharacterIcon(context: Context, character: Char) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            generateAdaptiveLauncherIcon(context, character)
-        } else {
-            generateLauncherIconPreOreo(context, character)
-        }
+        private fun generateCharacterIcon(context: Context, character: Char) =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    generateAdaptiveLauncherIcon(context, character)
+                else
+                    generateLauncherIconPreOreo(context, character)
 
         /*
          * This method needs to be separate from generateAdaptiveLauncherIcon so that we can generate
