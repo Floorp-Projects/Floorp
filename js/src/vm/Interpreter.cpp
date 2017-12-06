@@ -465,9 +465,9 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
     if (fun->isNative()) {
         MOZ_ASSERT_IF(construct, !fun->isConstructor());
         JSNative native = fun->native();
-        if (!construct && args.ignoresReturnValue()) {
+        if (!construct && args.ignoresReturnValue() && fun->hasJitInfo()) {
             const JSJitInfo* jitInfo = fun->jitInfo();
-            if (jitInfo && jitInfo->type() == JSJitInfo::IgnoresReturnValueNative)
+            if (jitInfo->type() == JSJitInfo::IgnoresReturnValueNative)
                 native = jitInfo->ignoresReturnValueMethod;
         }
         return CallJSNative(cx, native, args);
@@ -511,7 +511,7 @@ InternalCall(JSContext* cx, const AnyInvokeArgs& args)
         HandleValue fval = args.calleev();
         if (!fval.isObject() || !fval.toObject().is<JSFunction>() ||
             !fval.toObject().as<JSFunction>().isNative() ||
-            !fval.toObject().as<JSFunction>().jitInfo() ||
+            !fval.toObject().as<JSFunction>().hasJitInfo() ||
             fval.toObject().as<JSFunction>().jitInfo()->needsOuterizedThisObject())
         {
             JSObject* thisObj = &args.thisv().toObject();

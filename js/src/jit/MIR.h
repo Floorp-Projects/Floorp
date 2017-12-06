@@ -4147,7 +4147,6 @@ class MInitElemGetterSetter
     INSTRUCTION_HEADER(InitElemGetterSetter)
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, object), (1, idValue), (2, value))
-
 };
 
 // WrappedFunction wraps a JSFunction so it can safely be used off-thread.
@@ -4174,6 +4173,7 @@ class WrappedFunction : public TempObject
     // fun->native() and fun->jitInfo() can safely be called off-thread: these
     // fields never change.
     JSNative native() const { return fun_->native(); }
+    bool hasJitInfo() const { return fun_->hasJitInfo(); }
     const JSJitInfo* jitInfo() const { return fun_->jitInfo(); }
 
     JSFunction* rawJSFunction() const { return fun_; }
