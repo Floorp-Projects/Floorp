@@ -2234,7 +2234,7 @@ js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun)
         return nullptr;
 
     MOZ_ASSERT(fun->native() == InstantiateAsmJS);
-    MOZ_ASSERT(!fun->jitInfo());
+    MOZ_ASSERT(!fun->hasJitInfo());
     clone->initNative(InstantiateAsmJS, nullptr);
 
     clone->setGroup(fun->group());
@@ -2254,7 +2254,7 @@ js::CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun)
     if (!clone)
         return nullptr;
 
-    clone->initNative(fun->native(), fun->jitInfo());
+    clone->initNative(fun->native(), fun->hasJitInfo() ? fun->jitInfo() : nullptr);
     return clone;
 }
 

@@ -77,7 +77,6 @@ class ABIArgGenerator
     ABIArg next(MIRType argType);
     ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
-
 };
 
 // These registers may be volatile or nonvolatile.

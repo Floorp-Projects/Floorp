@@ -5420,7 +5420,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing, bool ignoresReturnValue)
 AbortReasonOr<bool>
 IonBuilder::testShouldDOMCall(TypeSet* inTypes, JSFunction* func, JSJitInfo::OpType opType)
 {
-    if (!func->isNative() || !func->jitInfo())
+    if (!func->isNative() || !func->hasJitInfo())
         return false;
 
     // If all the DOM objects flowing through are legal with this
@@ -7191,7 +7191,7 @@ IonBuilder::addTypeBarrier(MDefinition* def, TemporaryTypeSet* observed, Barrier
 AbortReasonOr<Ok>
 IonBuilder::pushDOMTypeBarrier(MInstruction* ins, TemporaryTypeSet* observed, JSFunction* func)
 {
-    MOZ_ASSERT(func && func->isNative() && func->jitInfo());
+    MOZ_ASSERT(func && func->isNative() && func->hasJitInfo());
 
     const JSJitInfo* jitinfo = func->jitInfo();
     bool barrier = DOMCallNeedsBarrier(jitinfo, observed);
