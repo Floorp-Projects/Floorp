@@ -11,7 +11,6 @@
  ********************************************************************
 
  function: highlevel encoder setup struct separated out for vorbisenc clarity
- last mod: $Id$
 
  ********************************************************************/
 
