@@ -732,6 +732,8 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
     static const unsigned UNOPTIMIZABLE_CALL_FLAG = 0x1;
 
     static const uint32_t MAX_OPTIMIZED_STUBS = 16;
+    static const uint32_t MAX_SCRIPTED_STUBS = 7;
+    static const uint32_t MAX_NATIVE_STUBS = 7;
 
   private:
     explicit ICCall_Fallback(JitCode* stubCode)
@@ -746,8 +748,15 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
         return extra_ & UNOPTIMIZABLE_CALL_FLAG;
     }
 
+    unsigned scriptedStubCount() const {
+        return numStubsWithKind(Call_Scripted);
+    }
     bool scriptedStubsAreGeneralized() const {
         return hasStub(Call_AnyScripted);
+    }
+
+    unsigned nativeStubCount() const {
+        return numStubsWithKind(Call_Native);
     }
     bool nativeStubsAreGeneralized() const {
         // Return hasStub(Call_AnyNative) after Call_AnyNative stub is added.
