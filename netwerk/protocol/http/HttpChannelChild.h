@@ -207,7 +207,8 @@ private:
                      InterceptStreamListener* aListener,
                      nsIInputStream* aInput,
                      nsIInterceptedBodyCallback* aCallback,
-                     nsAutoPtr<nsHttpResponseHead>& aHead);
+                     nsAutoPtr<nsHttpResponseHead>& aHead,
+                     nsICacheInfoChannel* aCacheInfo);
 
     NS_IMETHOD Run() override;
     void OverrideWithSynthesizedResponse();
@@ -218,6 +219,7 @@ private:
     nsCOMPtr<nsIInputStream> mInput;
     nsCOMPtr<nsIInterceptedBodyCallback> mCallback;
     nsAutoPtr<nsHttpResponseHead> mHead;
+    nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   };
 
   // Sets the event target for future IPC messages. Messages will either be
@@ -269,10 +271,12 @@ private:
   void OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
                                        nsIInputStream* aSynthesizedInput,
                                        nsIInterceptedBodyCallback* aSynthesizedCallback,
-                                       InterceptStreamListener* aStreamListener);
+                                       InterceptStreamListener* aStreamListener,
+                                       nsICacheInfoChannel* aCacheInfoChannel);
 
   void ForceIntercepted(nsIInputStream* aSynthesizedInput,
-                        nsIInterceptedBodyCallback* aSynthesizedCallback);
+                        nsIInterceptedBodyCallback* aSynthesizedCallback,
+                        nsICacheInfoChannel* aCacheInfo);
 
   // Try send DeletingChannel message to parent side. Dispatch an async task to
   // main thread if invoking on non-main thread.
@@ -298,6 +302,8 @@ private:
   int32_t      mCacheFetchCount;
   uint32_t     mCacheExpirationTime;
   nsCString    mCachedCharset;
+
+  nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
 
   nsCString mProtocolVersion;
 

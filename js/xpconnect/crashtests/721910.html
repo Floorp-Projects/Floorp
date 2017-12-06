@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+a = Int8Array(0x01000000);
+p = Proxy.create({ get: function(r, name) { return a[name]; } });
+try { Int8Array(p); } catch(e) { }
+
+</script>
+</head>
+
+<body></body>
+</html>

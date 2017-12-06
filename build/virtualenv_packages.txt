@@ -55,6 +55,7 @@ mozilla.pth:third_party/python/mock-1.0.0
 mozilla.pth:xpcom/typelib/xpt/tools
 mozilla.pth:tools/docs
 mozilla.pth:media/webrtc/trunk/tools/gyp/pylib
+mozilla.pth:third_party/python/cbor2
 mozilla.pth:third_party/python/pyasn1
 mozilla.pth:third_party/python/pyasn1-modules
 mozilla.pth:third_party/python/rsa

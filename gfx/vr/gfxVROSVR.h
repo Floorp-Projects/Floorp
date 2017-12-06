@@ -80,7 +80,10 @@ public:
   static already_AddRefed<VRSystemManagerOSVR> Create();
   virtual void Destroy() override;
   virtual void Shutdown() override;
-  virtual bool GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
+  virtual void NotifyVSync() override;
+  virtual void Enumerate() override;
+  virtual bool ShouldInhibitEnumeration() override;
+  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&

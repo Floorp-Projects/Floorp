@@ -5229,6 +5229,20 @@ pref("dom.vr.openvr.enabled", true);
 // See Bug 1310663 (Linux)
 pref("dom.vr.openvr.enabled", false);
 #endif
+// Minimum number of milliseconds that the browser will wait before
+// attempting to poll again for connected VR controllers.  The browser
+// will not attempt to poll for VR controllers until it needs to use them.
+pref("dom.vr.controller.enumerate.interval", 1000);
+// Minimum number of milliseconds that the browser will wait before
+// attempting to poll again for connected VR displays.  The browser
+// will not attempt to poll for VR displays until it needs to use
+// them, such as when detecting a WebVR site.
+pref("dom.vr.display.enumerate.interval", 5000);
+// Minimum number of milliseconds that the VR session will be kept
+// alive after the browser and content no longer are using the
+// hardware.  If a VR multitasking environment, this should be set
+// very low or set to 0.
+pref("dom.vr.inactive.timeout", 5000);
 // Pose prediction reduces latency effects by returning future predicted HMD
 // poses to callers of the WebVR API.  This currently only has an effect for
 // Oculus Rift on SDK 0.8 or greater.

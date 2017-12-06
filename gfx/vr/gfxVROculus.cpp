@@ -205,8 +205,11 @@ VROculusSession::VROculusSession()
   , mSession(nullptr)
   , mInitFlags((ovrInitFlags)0)
   , mTextureSet(nullptr)
-  , mPresenting(false)
+  , mRequestPresentation(false)
+  , mRequestTracking(false)
   , mDrawBlack(false)
+  , mIsConnected(false)
+  , mIsMounted(false)
 {
 }
 
@@ -220,26 +223,47 @@ VROculusSession::Get()
 bool
 VROculusSession::IsTrackingReady() const
 {
-  return mSession != nullptr;
+  // We should return true only if the HMD is connected and we
+  // are ready for tracking
+  MOZ_ASSERT(!mIsConnected || mSession);
+  return mIsConnected;
 }
 
 bool
-VROculusSession::IsRenderReady() const
+VROculusSession::IsPresentationReady() const
 {
   return !mRenderTargets.IsEmpty();
+}
+
+bool
+VROculusSession::IsMounted() const
+{
+  return mIsMounted;
 }
 
 void
 VROculusSession::StopTracking()
 {
-  Uninitialize(true);
+  if (mRequestTracking) {
+    mRequestTracking = false;
+    Refresh();
+  }
+}
+
+void
+VROculusSession::StartTracking()
+{
+  if (!mRequestTracking) {
+    mRequestTracking = true;
+    Refresh();
+  }
 }
 
 void
 VROculusSession::StartPresentation(const IntSize& aSize)
 {
-  if (!mPresenting) {
-    mPresenting = true;
+  if (!mRequestPresentation) {
+    mRequestPresentation = true;
     mTelemetry.Clear();
     mTelemetry.mPresentationStart = TimeStamp::Now();
 
@@ -259,9 +283,9 @@ VROculusSession::StartPresentation(const IntSize& aSize)
 void
 VROculusSession::StopPresentation()
 {
-  if (mPresenting) {
+  if (mRequestPresentation) {
     mLastPresentationEnd = TimeStamp::Now();
-    mPresenting = false;
+    mRequestPresentation = false;
 
     const TimeDuration duration = mLastPresentationEnd - mTelemetry.mPresentationStart;
     Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 1);
@@ -317,6 +341,8 @@ VROculusSession::StopSession()
 {
   if (mSession) {
     ovr_Destroy(mSession);
+    mIsConnected = false;
+    mIsMounted = false;
     mSession = nullptr;
   }
 }
@@ -339,9 +365,14 @@ VROculusSession::Refresh(bool aForceRefresh)
     return;
   }
 
+  if (!mRequestTracking) {
+    Uninitialize(true);
+    return;
+  }
+
   ovrInitFlags flags = (ovrInitFlags)(ovrInit_RequestVersion | ovrInit_MixedRendering);
   bool bInvisible = true;
-  if (mPresenting) {
+  if (mRequestPresentation) {
     bInvisible = false;
   } else if (!mLastPresentationEnd.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastPresentationEnd;
@@ -389,15 +420,25 @@ VROculusSession::Refresh(bool aForceRefresh)
     Uninitialize(false);
   }
 
-  Initialize(flags);
+  if(!Initialize(flags)) {
+    // If we fail to initialize, ensure the Oculus libraries
+    // are unloaded, as we can't poll for ovrSessionStatus::ShouldQuit
+    // without an active ovrSession.
+    Uninitialize(true);
+  }
 
   if (mSession) {
     ovrSessionStatus status;
     if (OVR_SUCCESS(ovr_GetSessionStatus(mSession, &status))) {
+      mIsConnected = status.HmdPresent;
+      mIsMounted = status.HmdMounted;
       if (status.ShouldQuit) {
         mLastShouldQuit = TimeStamp::Now();
         Uninitialize(true);
       }
+    } else {
+      mIsConnected = false;
+      mIsMounted = false;
     }
   }
 }
@@ -442,7 +483,7 @@ VROculusSession::Initialize(ovrInitFlags aFlags)
 bool
 VROculusSession::StartRendering()
 {
-  if (!mPresenting) {
+  if (!mRequestPresentation) {
     // Nothing to do if we aren't presenting
     return true;
   }
@@ -978,7 +1019,7 @@ VRDisplayOculus::StartPresentation()
     return;
   }
   mSession->StartPresentation(IntSize(mDisplayInfo.mEyeResolution.width * 2, mDisplayInfo.mEyeResolution.height));
-  if (!mSession->IsRenderReady()) {
+  if (!mSession->IsPresentationReady()) {
     return;
   }
 
@@ -1109,7 +1150,7 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
     return false;
   }
 
-  if (!mSession->IsRenderReady()) {
+  if (!mSession->IsPresentationReady()) {
     return false;
   }
   /**
@@ -1255,18 +1296,10 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
 }
 
 void
-VRDisplayOculus::NotifyVSync()
+VRDisplayOculus::Refresh()
 {
-  mSession->Refresh();
-  if (mSession->IsTrackingReady()) {
-    ovrSessionStatus sessionStatus;
-    ovrResult ovr = ovr_GetSessionStatus(mSession->Get(), &sessionStatus);
-    mDisplayInfo.mIsConnected = (ovr == ovrSuccess && sessionStatus.HmdPresent);
-  } else {
-    mDisplayInfo.mIsConnected = false;
-  }
-
-  VRDisplayHost::NotifyVSync();
+  mDisplayInfo.mIsConnected = mSession->IsTrackingReady();
+  mDisplayInfo.mIsMounted = mSession->IsMounted();
 }
 
 VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplayID)
@@ -1522,37 +1555,66 @@ VRSystemManagerOculus::Shutdown()
   mDisplay = nullptr;
 }
 
+void
+VRSystemManagerOculus::NotifyVSync()
+{
+  VRSystemManager::NotifyVSync();
+  if (!mSession) {
+    return;
+  }
+  mSession->Refresh();
+  if (mDisplay) {
+    mDisplay->Refresh();
+  }
+  // Detect disconnection
+  if (!mSession->IsTrackingReady()) {
+    // No HMD connected
+    mDisplay = nullptr;
+  }
+}
+
 bool
-VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
+VRSystemManagerOculus::ShouldInhibitEnumeration()
+{
+  if (VRSystemManager::ShouldInhibitEnumeration()) {
+    return true;
+  }
+  if (mDisplay) {
+    // When we find an Oculus VR device, don't
+    // allow any further enumeration as it
+    // may get picked up redundantly by other
+    // API's such as OpenVR.
+    return true;
+  }
+  if (mSession && mSession->IsQuitTimeoutActive()) {
+    // When we are responding to ShouldQuit, we return true here
+    // to prevent further enumeration by other VRSystemManager's such as
+    // VRSystemManagerOpenVR which would also enumerate the connected Oculus
+    // HMD, resulting in interference with the Oculus runtime software updates.
+    return true;
+  }
+  return false;
+}
+
+void
+VRSystemManagerOculus::Enumerate()
 {
   if (!mSession) {
     mSession = new VROculusSession();
   }
-  mSession->Refresh();
-  if (mSession->IsQuitTimeoutActive()) {
-    // We have responded to a ShouldQuit flag set by the Oculus runtime
-    // and are waiting for a timeout duration to elapse before allowing
-    // re-initialization of the Oculus OVR lib.  We return true in this case
-    // to prevent further enumeration by other VRSystemManager's such as
-    // VRSystemManagerOpenVR which would also enumerate the connected Oculus
-    // HMD, resulting in interference with the Oculus runtime software updates.
-    mDisplay = nullptr;
-    return true;
-  }
-
-  if (!mSession->IsTrackingReady()) {
-    // No HMD connected.
-    mDisplay = nullptr;
-  } else if (mDisplay == nullptr) {
+  mSession->StartTracking();
+  if (mDisplay == nullptr && mSession->IsTrackingReady()) {
     // HMD Detected
     mDisplay = new VRDisplayOculus(mSession);
   }
+}
 
+void
+VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
+{
   if (mDisplay) {
     aHMDResult.AppendElement(mDisplay);
-    return true;
   }
-  return false;
 }
 
 bool

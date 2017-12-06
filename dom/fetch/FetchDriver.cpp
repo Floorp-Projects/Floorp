@@ -25,6 +25,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
+#include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsHttpChannel.h"
@@ -57,6 +58,268 @@ ShouldCheckSRI(const InternalRequest* const aRequest,
 }
 
 } // anonymous namespace
+
+//-----------------------------------------------------------------------------
+// AlternativeDataStreamListener
+//-----------------------------------------------------------------------------
+class AlternativeDataStreamListener final : public nsIStreamListener,
+                                            public nsIThreadRetargetableStreamListener
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+
+  // The status of AlternativeDataStreamListener
+  // LOADING: is the initial status, loading the alternative data
+  // COMPLETED: Alternative data loading is completed
+  // CANCELED: Alternative data loading is canceled, this would make
+  //           AlternativeDataStreamListener ignore all channel callbacks
+  // FALLBACK: fallback the channel callbacks to FetchDriver
+  // Depends on different situaions, the status transition could be followings
+  // 1. LOADING->COMPLETED
+  //    This is the normal status transition for alternative data loading
+  //
+  // 2. LOADING->CANCELED
+  //    LOADING->COMPLETED->CANCELED
+  //    Alternative data loading could be canceled when cacheId from alternative
+  //    data channel does not match with from main data channel(The cacheID
+  //    checking is in FetchDriver::OnStartRequest).
+  //    Notice the alternative data loading could finish before the cacheID
+  //    checking, so the statust transition could be LOADING->COMPLETED->CANCELED
+  //
+  // 3. LOADING->FALLBACK
+  //    For the case that alternative data loading could not be initialized, i.e.
+  //    alternative data does not exist or no preferred alternative data type is
+  //    requested. Once the status becomes FALLBACK, AlternativeDataStreamListener
+  //    transits the channel callback request to FetchDriver, and the status
+  //    should not go back to LOADING, COMPLETED, or CANCELED anymore.
+  enum eStatus {
+    LOADING = 0,
+    COMPLETED,
+    CANCELED,
+    FALLBACK
+  };
+
+  AlternativeDataStreamListener(FetchDriver* aFetchDriver,
+                                nsIChannel* aChannel,
+                                const nsACString& aAlternativeDataType);
+  eStatus Status();
+  void Cancel();
+  uint64_t GetAlternativeDataCacheEntryId();
+  const nsACString& GetAlternativeDataType() const;
+  already_AddRefed<nsICacheInfoChannel> GetCacheInfoChannel();
+  already_AddRefed<nsIInputStream> GetAlternativeInputStream();
+
+private:
+  ~AlternativeDataStreamListener() = default;
+
+  // This creates a strong reference cycle with FetchDriver and its
+  // mAltDataListener. We need to clear at least one reference of them once the
+  // data loading finishes.
+  RefPtr<FetchDriver> mFetchDriver;
+  nsCString mAlternativeDataType;
+  nsCOMPtr<nsIInputStream> mPipeAlternativeInputStream;
+  nsCOMPtr<nsIOutputStream> mPipeAlternativeOutputStream;
+  uint64_t mAlternativeDataCacheEntryId;
+  nsCOMPtr<nsICacheInfoChannel> mCacheInfoChannel;
+  nsCOMPtr<nsIChannel> mChannel;
+  Atomic<eStatus> mStatus;
+};
+
+NS_IMPL_ISUPPORTS(AlternativeDataStreamListener,
+                  nsIStreamListener,
+                  nsIThreadRetargetableStreamListener)
+
+AlternativeDataStreamListener::AlternativeDataStreamListener(FetchDriver* aFetchDriver,
+                                                             nsIChannel* aChannel,
+                                                             const nsACString& aAlternativeDataType)
+  : mFetchDriver(aFetchDriver)
+  , mAlternativeDataType(aAlternativeDataType)
+  , mAlternativeDataCacheEntryId(0)
+  , mChannel(aChannel)
+  , mStatus(AlternativeDataStreamListener::LOADING)
+{
+  MOZ_DIAGNOSTIC_ASSERT(mFetchDriver);
+  MOZ_DIAGNOSTIC_ASSERT(mChannel);
+}
+
+AlternativeDataStreamListener::eStatus
+AlternativeDataStreamListener::Status()
+{
+  return mStatus;
+}
+
+void
+AlternativeDataStreamListener::Cancel()
+{
+  mAlternativeDataCacheEntryId = 0;
+  mCacheInfoChannel = nullptr;
+  mPipeAlternativeOutputStream = nullptr;
+  mPipeAlternativeInputStream = nullptr;
+  if (mChannel && mStatus != AlternativeDataStreamListener::FALLBACK) {
+    // if mStatus is fallback, we need to keep channel to forward request back to
+    // FetchDriver
+    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel = nullptr;
+  }
+  mStatus = AlternativeDataStreamListener::CANCELED;
+}
+
+uint64_t
+AlternativeDataStreamListener::GetAlternativeDataCacheEntryId()
+{
+  return mAlternativeDataCacheEntryId;
+}
+
+const nsACString&
+AlternativeDataStreamListener::GetAlternativeDataType() const
+{
+  return mAlternativeDataType;
+}
+
+already_AddRefed<nsIInputStream>
+AlternativeDataStreamListener::GetAlternativeInputStream()
+{
+  nsCOMPtr<nsIInputStream> inputStream = mPipeAlternativeInputStream;
+  return inputStream.forget();
+}
+
+already_AddRefed<nsICacheInfoChannel>
+AlternativeDataStreamListener::GetCacheInfoChannel()
+{
+  nsCOMPtr<nsICacheInfoChannel> channel = mCacheInfoChannel;
+  return channel.forget();
+}
+
+NS_IMETHODIMP
+AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest,
+                                              nsISupports* aContext)
+{
+  workers::AssertIsOnMainThread();
+  MOZ_ASSERT(!mAlternativeDataType.IsEmpty());
+  // Checking the alternative data type is the same between we asked and the
+  // saved in the channel.
+  nsAutoCString alternativeDataType;
+  nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(aRequest);
+  mStatus = AlternativeDataStreamListener::LOADING;
+  if (cic &&
+      NS_SUCCEEDED(cic->GetAlternativeDataType(alternativeDataType)) &&
+      mAlternativeDataType.Equals(alternativeDataType) &&
+      NS_SUCCEEDED(cic->GetCacheEntryId(&mAlternativeDataCacheEntryId))) {
+
+    MOZ_DIAGNOSTIC_ASSERT(!mPipeAlternativeInputStream);
+    MOZ_DIAGNOSTIC_ASSERT(!mPipeAlternativeOutputStream);
+    nsresult rv = NS_NewPipe(
+      getter_AddRefs(mPipeAlternativeInputStream),
+      getter_AddRefs(mPipeAlternativeOutputStream),
+      0 /* default segment size */,
+      UINT32_MAX /* infinite pipe */,
+      true /* non-blocking input, otherwise you deadlock */,
+      false /* blocking output, since the pipe is 'in'finite */);
+
+    if (NS_FAILED(rv)) {
+      mFetchDriver->FailWithNetworkError(rv);
+      return rv;
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(!mCacheInfoChannel);
+    mCacheInfoChannel = cic;
+
+    // call FetchDriver::HttpFetch to load main body
+    MOZ_ASSERT(mFetchDriver);
+    return mFetchDriver->HttpFetch();
+
+  } else {
+    // Needn't load alternative data, since alternative data does not exist.
+    // Set status to FALLBACK to reuse the opened channel to load main body, then
+    // call FetchDriver::OnStartRequest to continue the work.
+    // Unfortunately can't change the stream listener to mFetchDriver, need to
+    // keep AlternativeDataStreamListener alive to redirect OnDataAvailable and
+    // OnStopRequest to mFetchDriver.
+    MOZ_ASSERT(alternativeDataType.IsEmpty());
+    mStatus = AlternativeDataStreamListener::FALLBACK;
+    mAlternativeDataCacheEntryId = 0;
+    MOZ_ASSERT(mFetchDriver);
+    return mFetchDriver->OnStartRequest(aRequest, aContext);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AlternativeDataStreamListener::OnDataAvailable(nsIRequest* aRequest,
+                                               nsISupports* aContext,
+                                               nsIInputStream* aInputStream,
+                                               uint64_t aOffset,
+                                               uint32_t aCount)
+{
+  if (mStatus == AlternativeDataStreamListener::LOADING) {
+    MOZ_ASSERT(mPipeAlternativeOutputStream);
+    uint32_t read;
+    return aInputStream->ReadSegments(NS_CopySegmentToStream,
+                                      mPipeAlternativeOutputStream,
+                                      aCount, &read);
+  }
+  if (mStatus == AlternativeDataStreamListener::FALLBACK) {
+    MOZ_ASSERT(mFetchDriver);
+    return mFetchDriver->OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AlternativeDataStreamListener::OnStopRequest(nsIRequest* aRequest,
+                                             nsISupports* aContext,
+                                             nsresult aStatusCode)
+{
+  workers::AssertIsOnMainThread();
+
+  // Alternative data loading is going to finish, breaking the reference cycle
+  // here by taking the ownership to a loacl variable.
+  RefPtr<FetchDriver> fetchDriver = mFetchDriver.forget();
+
+  if (mStatus == AlternativeDataStreamListener::CANCELED) {
+    // do nothing
+    return NS_OK;
+  }
+
+  if (mStatus == AlternativeDataStreamListener::FALLBACK) {
+    MOZ_ASSERT(fetchDriver);
+    return fetchDriver->OnStopRequest(aRequest, aContext, aStatusCode);
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(mStatus == AlternativeDataStreamListener::LOADING);
+
+  MOZ_ASSERT(!mAlternativeDataType.IsEmpty() &&
+             mPipeAlternativeOutputStream &&
+             mPipeAlternativeInputStream);
+
+  mPipeAlternativeOutputStream->Close();
+  mPipeAlternativeOutputStream = nullptr;
+
+  // Cleanup the states for alternative data if needed.
+  if (NS_FAILED(aStatusCode)) {
+    mAlternativeDataCacheEntryId = 0;
+    mCacheInfoChannel = nullptr;
+    mPipeAlternativeInputStream = nullptr;
+  }
+  mStatus = AlternativeDataStreamListener::COMPLETED;
+  // alternative data loading finish, call FetchDriver::FinishOnStopRequest to
+  // continue the final step for the case FetchDriver::OnStopRequest is called
+  // earlier than AlternativeDataStreamListener::OnStopRequest
+  MOZ_ASSERT(fetchDriver);
+  return fetchDriver->FinishOnStopRequest(this);
+}
+
+NS_IMETHODIMP
+AlternativeDataStreamListener::CheckListenerChain()
+{
+  return NS_OK;
+}
+//-----------------------------------------------------------------------------
+// FetchDriver
+//-----------------------------------------------------------------------------
 
 NS_IMPL_ISUPPORTS(FetchDriver,
                   nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
@@ -131,7 +394,7 @@ FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
     Follow(aSignal);
   }
 
-  rv = HttpFetch();
+  rv = HttpFetch(mRequest->GetPreferredAlternativeDataType());
   if (NS_FAILED(rv)) {
     FailWithNetworkError(rv);
   }
@@ -144,12 +407,13 @@ FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
 // Functionality is often split between here, the CORS listener proxy and the
 // Necko HTTP implementation.
 nsresult
-FetchDriver::HttpFetch()
+FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Step 1. "Let response be null."
   mResponse = nullptr;
+  mOnStopRequestCalled = false;
   nsresult rv;
 
   nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
@@ -268,8 +532,6 @@ FetchDriver::HttpFetch()
                        ios);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mLoadGroup = nullptr;
 
   // Insert ourselves into the notification callbacks chain so we can set
   // headers on redirects.
@@ -414,7 +676,23 @@ FetchDriver::HttpFetch()
     }
   }
 
-  rv = chan->AsyncOpen2(this);
+  // if the preferred alternative data type in InternalRequest is not empty, set
+  // the data type on the created channel and also create a AlternativeDataStreamListener
+  // to be the stream listener of the channel.
+  if (!aPreferredAlternativeDataType.IsEmpty()) {
+    nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
+    if (cic) {
+      cic->PreferAlternativeDataType(aPreferredAlternativeDataType);
+      MOZ_ASSERT(!mAltDataListener);
+      mAltDataListener =
+        new AlternativeDataStreamListener(this, chan, aPreferredAlternativeDataType);
+      rv = chan->AsyncOpen2(mAltDataListener);
+    } else {
+      rv = chan->AsyncOpen2(this);
+    }
+  } else {
+    rv = chan->AsyncOpen2(this);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Step 4 onwards of "HTTP Fetch" is handled internally by Necko.
@@ -577,6 +855,44 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
                                   contentLenStr,
                                   result);
       MOZ_ASSERT(!result.Failed());
+    }
+  }
+
+  nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(aRequest);
+  if (cic && mAltDataListener) {
+    // Skip the case that mAltDataListener->Status() equals to FALLBACK, that means
+    // the opened channel for alternative data loading is reused for loading the
+    // main data.
+    if (mAltDataListener->Status() != AlternativeDataStreamListener::FALLBACK) {
+      // Verify the cache ID is the same with from alternative data cache.
+      // If the cache ID is different, droping the alternative data loading,
+      // otherwise setup the response's alternative body and cacheInfoChannel.
+      uint64_t cacheEntryId = 0;
+      if (NS_SUCCEEDED(cic->GetCacheEntryId(&cacheEntryId)) &&
+          cacheEntryId != mAltDataListener->GetAlternativeDataCacheEntryId()) {
+        mAltDataListener->Cancel();
+      } else {
+        // AlternativeDataStreamListener::OnStartRequest had already been called,
+        // the alternative data input stream and cacheInfo channel must be created.
+        nsCOMPtr<nsICacheInfoChannel> cacheInfo = mAltDataListener->GetCacheInfoChannel();
+        nsCOMPtr<nsIInputStream> altInputStream = mAltDataListener->GetAlternativeInputStream();
+        MOZ_ASSERT(altInputStream && cacheInfo);
+        response->SetAlternativeBody(altInputStream);
+        nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
+          new nsMainThreadPtrHolder<nsICacheInfoChannel>("nsICacheInfoChannel",
+                                                         cacheInfo,
+                                                         false));
+        response->SetCacheInfoChannel(handle);
+      }
+    } else if (!mAltDataListener->GetAlternativeDataType().IsEmpty()) {
+      // If the status is FALLBACK and the mAltDataListener::mAlternativeDataType
+      // is not empty, that means the data need to be saved into cache, setup the
+      // response's nsICacheInfoChannel for caching the data after loading.
+      nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
+        new nsMainThreadPtrHolder<nsICacheInfoChannel>("nsICacheInfoChannel",
+                                                       cic,
+                                                       false));
+      response->SetCacheInfoChannel(handle);
     }
   }
 
@@ -800,6 +1116,12 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
 {
   workers::AssertIsOnMainThread();
 
+  MOZ_DIAGNOSTIC_ASSERT(!mOnStopRequestCalled);
+  mOnStopRequestCalled = true;
+
+  // main data loading is going to finish, breaking the reference cycle.
+  RefPtr<AlternativeDataStreamListener> altDataListener = mAltDataListener.forget();
+
   // We need to check mObserver, which is nulled by FailWithNetworkError(),
   // because in the case of "error" redirect mode, aStatusCode may be NS_OK but
   // mResponse will definitely be null so we must not take the else branch.
@@ -807,6 +1129,9 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
     nsCOMPtr<nsIAsyncOutputStream> outputStream = do_QueryInterface(mPipeOutputStream);
     if (outputStream) {
       outputStream->CloseWithStatus(NS_BINDING_FAILED);
+    }
+    if (altDataListener) {
+      altDataListener->Cancel();
     }
 
     // We proceed as usual here, since we've already created a successful response
@@ -835,6 +1160,9 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
       nsresult rv = mSRIDataVerifier->Verify(mSRIMetadata, channel, sourceUri,
                                              reporter);
       if (NS_FAILED(rv)) {
+        if (altDataListener) {
+          altDataListener->Cancel();
+        }
         FailWithNetworkError(rv);
         // Cancel request.
         return rv;
@@ -844,6 +1172,28 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
     if (mPipeOutputStream) {
       mPipeOutputStream->Close();
     }
+  }
+
+  return FinishOnStopRequest(altDataListener);
+}
+
+nsresult
+FetchDriver::FinishOnStopRequest(AlternativeDataStreamListener* aAltDataListener)
+{
+  workers::AssertIsOnMainThread();
+  // OnStopRequest is not called from channel, that means the main data loading
+  // does not finish yet. Reaching here since alternative data loading finishes.
+  if (!mOnStopRequestCalled) {
+    return NS_OK;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(!mAltDataListener);
+  // Wait for alternative data loading finish if we needed it.
+  if (aAltDataListener &&
+      aAltDataListener->Status() == AlternativeDataStreamListener::LOADING) {
+    // For LOADING case, channel holds the reference of altDataListener, no need
+    // to restore it to mAltDataListener.
+    return NS_OK;
   }
 
   if (mObserver) {

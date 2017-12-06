@@ -17,6 +17,7 @@ namespace layers {
 class SyncObjectClient;
 class TextureForwarder;
 class LayersIPCActor;
+class ImageBridgeChild;
 
 /**
  * See ActiveResourceTracker below.
@@ -63,6 +64,12 @@ public:
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
   SyncObjectClient* GetSyncObject() { return mSyncObject; }
+
+  /// And by "thread-safe" here we merely mean "okay to hold strong references to
+  /// from multiple threads". Not all methods actually are thread-safe.
+  virtual bool IsThreadSafe() const { return true; }
+
+  virtual RefPtr<KnowsCompositor> GetForMedia() { return RefPtr<KnowsCompositor>(this); }
 
   int32_t GetMaxTextureSize() const
   {
@@ -132,7 +139,7 @@ public:
   /**
    * Helpers for finding other related interface. These are infallible.
    */
-  virtual TextureForwarder* GetTextureForwarder() = 0;
+   virtual TextureForwarder* GetTextureForwarder() = 0;
   virtual LayersIPCActor* GetLayersIPCActor() = 0;
   virtual ActiveResourceTracker* GetActiveResourceTracker()
   {
@@ -146,6 +153,40 @@ protected:
 
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
+};
+
+
+/// Some implementations of KnowsCompositor can be used off their IPDL thread
+/// like the ImageBridgeChild, and others just can't. Instead of passing them
+/// we create a proxy KnowsCompositor that has information about compositor
+/// backend but proxies allocations to the ImageBridge.
+/// This is kind of specific to the needs of media which wants to allocate
+/// textures, usually through the Image Bridge accessed by KnowsCompositor but
+/// also wants access to the compositor backend information that ImageBridge
+/// doesn't know about.
+///
+/// This is really a band aid to what turned into a class hierarchy horror show.
+/// Hopefully we can come back and simplify this some way.
+class KnowsCompositorMediaProxy: public KnowsCompositor
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorMediaProxy, override);
+
+  explicit KnowsCompositorMediaProxy(const TextureFactoryIdentifier& aIdentifier);
+
+  virtual TextureForwarder* GetTextureForwarder() override;
+
+
+  virtual LayersIPCActor* GetLayersIPCActor() override;
+
+  virtual ActiveResourceTracker* GetActiveResourceTracker() override;
+
+  virtual void SyncWithCompositor() override;
+
+protected:
+  virtual ~KnowsCompositorMediaProxy();
+
+  RefPtr<ImageBridgeChild> mThreadSafeAllocator;
 };
 
 } // namespace layers

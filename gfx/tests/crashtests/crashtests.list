@@ -126,6 +126,7 @@ load 783041-4.html
 load 798853.html # bug 868792
 load 805760-1.html
 skip-if(Android) load 815489.html # bug 1216304
+load 812826.html
 load 836225-1.html
 load 839745-1.html
 load 856784-1.html
@@ -135,10 +136,13 @@ load 893572-3.html
 load 893572-4.html
 load 895233.html
 pref(layers.force-active,true) load 914457-1.html
+load 934729.html
 load 944579.svg
 load 944579.html
 pref(security.fileuri.strict_origin_policy,false) load 950000.html
 load 951893.xhtml
+load 987013.html
+pref(layers.force-active,true) load 1008983.html
 load 1011218.html
 load 1034403-1.html
 load 1056516.html

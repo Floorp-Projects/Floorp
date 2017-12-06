@@ -123,7 +123,10 @@ private:
   void Set(VideoFrameRate aRate) { mRate = aRate; }
   void Set(layers::KnowsCompositor* aKnowsCompositor)
   {
-    mKnowsCompositor = aKnowsCompositor;
+    if (aKnowsCompositor) {
+      mKnowsCompositor = aKnowsCompositor;
+      MOZ_ASSERT(aKnowsCompositor->IsThreadSafe());
+    }
   }
   void Set(TrackInfo::TrackType aType)
   {

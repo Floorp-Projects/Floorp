@@ -22,8 +22,8 @@ EXPORTS.mozilla.dom += [
     'U2FTokenTransport.h',
     'WebAuthnCBORUtil.h',
     'WebAuthnManager.h',
+    'WebAuthnManagerBase.h',
     'WebAuthnTransactionChild.h',
-    'WebAuthnTransactionChildBase.h',
     'WebAuthnTransactionParent.h',
     'WebAuthnUtil.h',
 ]
@@ -41,7 +41,6 @@ UNIFIED_SOURCES += [
     'WebAuthnCBORUtil.cpp',
     'WebAuthnManager.cpp',
     'WebAuthnTransactionChild.cpp',
-    'WebAuthnTransactionChildBase.cpp',
     'WebAuthnTransactionParent.cpp',
     'WebAuthnUtil.cpp',
 ]

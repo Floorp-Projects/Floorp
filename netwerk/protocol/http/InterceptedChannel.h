@@ -182,6 +182,7 @@ public:
   NS_IMETHOD ResetInterception() override;
   NS_IMETHOD StartSynthesizedResponse(nsIInputStream* aBody,
                                       nsIInterceptedBodyCallback* aBodyCallback,
+                                      nsICacheInfoChannel* aChannel,
                                       const nsACString& aFinalURLSpec,
                                       bool aResponseRedirected) override;
   NS_IMETHOD FinishSynthesizedResponse() override;

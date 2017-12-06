@@ -5333,6 +5333,29 @@ WorkerPrivate::EnsureClientSource()
     mClientSource->Freeze();
   }
 
+  // Shortly after the client is reserved we will try loading the main script
+  // for the worker.  This may get intercepted by the ServiceWorkerManager
+  // which will then try to create a ClientHandle.  Its actually possible for
+  // the main thread to create this ClientHandle before our IPC message creating
+  // the ClientSource completes.  To avoid this race we synchronously ping our
+  // parent Client actor here.  This ensure the worker ClientSource is created
+  // in the parent before the main thread might try reaching it with a
+  // ClientHandle.
+  //
+  // An alternative solution would have been to handle the out-of-order operations
+  // on the parent side.  We could have created a small window where we allow
+  // ClientHandle objects to exist without a ClientSource.  We would then time
+  // out these handles if they stayed orphaned for too long.  This approach would
+  // be much more complex, but also avoid this extra bit of latency when starting
+  // workers.
+  //
+  // Note, we only have to do this for workers that can be controlled by a
+  // service worker.  So avoid the sync overhead here if we are starting a
+  // service worker or a chrome worker.
+  if (Type() != WorkerTypeService && !IsChromeWorker()) {
+    mClientSource->WorkerSyncPing(this);
+  }
+
   return true;
 }
 
@@ -5342,6 +5365,16 @@ WorkerPrivate::GetClientInfo() const
   AssertIsOnWorkerThread();
   MOZ_DIAGNOSTIC_ASSERT(mClientSource);
   return mClientSource->Info();
+}
+
+void
+WorkerPrivate::Control(const ServiceWorkerDescriptor& aServiceWorker)
+{
+  AssertIsOnWorkerThread();
+  MOZ_DIAGNOSTIC_ASSERT(mClientSource);
+  MOZ_DIAGNOSTIC_ASSERT(!IsChromeWorker());
+  MOZ_DIAGNOSTIC_ASSERT(Type() != WorkerTypeService);
+  mClientSource->SetController(aServiceWorker);
 }
 
 void

@@ -372,13 +372,6 @@
     </content>
   </binding>
 
-  <binding id="button-image" display="xul:button"
-           extends="chrome://global/content/bindings/button.xml#button">
-    <content>
-      <xul:image class="button-image-icon" xbl:inherits="src=image"/>
-    </content>
-  </binding>
-
   <binding id="button-repeat" display="xul:autorepeatbutton"
            extends="chrome://global/content/bindings/button.xml#button"/>
 

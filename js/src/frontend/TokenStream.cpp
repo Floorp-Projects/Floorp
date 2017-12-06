@@ -423,7 +423,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOpt
 TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
                          const CharT* base, size_t length, StrictModeGetter* smg)
   : TokenStreamAnyChars(cx, options, smg),
-    userbuf(cx, base, length, options.scriptSourceOffset),
+    userbuf(base, length, options.scriptSourceOffset),
     tokenbuf(cx)
 {
     // Nb: the following tables could be static, but initializing them here is

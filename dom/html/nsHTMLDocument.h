@@ -209,11 +209,7 @@ public:
              mozilla::ErrorResult& rv);
   void Writeln(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
                mozilla::ErrorResult& rv);
-  void GetDesignMode(nsAString& aDesignMode,
-                     nsIPrincipal& aSubjectPrincipal)
-  {
-    GetDesignMode(aDesignMode);
-  }
+  // XPCOM GetDesignMode is fine.
   void SetDesignMode(const nsAString& aDesignMode,
                      nsIPrincipal& aSubjectPrincipal,
                      mozilla::ErrorResult& rv);
