@@ -3,6 +3,8 @@ MAINTAINER Rail Aliiev <rail@mozilla.com>
 
 # Required software
 ENV DEBIAN_FRONTEND noninteractive
+# Ubuntu Vivid has been moved to the old-releases repo
+RUN sed -i -e 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
 # Chain apt-get commands with apt-get clean in a single docker RUN
 # to make sure that files are removed within a single docker layer
 RUN apt-get update -q && \
