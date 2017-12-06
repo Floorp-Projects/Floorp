@@ -20,8 +20,10 @@ class ErrorReporter
 {
   public:
     virtual const JS::ReadOnlyCompileOptions& options() const = 0;
-    virtual void lineNumAndColumnIndex(size_t offset, uint32_t* line, uint32_t* column) const = 0;
-    virtual size_t offset() const = 0;
+
+    virtual void lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const = 0;
+    virtual void currentLineAndColumn(uint32_t* line, uint32_t* column) const = 0;
+
     virtual bool hasTokenizationStarted() const = 0;
     virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) = 0;
     virtual const char* getFilename() const = 0;
