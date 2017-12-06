@@ -150,11 +150,6 @@ this.GeckoDriver = function(appId, server) {
   this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
   this.legacyactions = new legacyaction.Chain();
 
-  this.timer = null;
-  this.inactivityTimer = null;
-
-  this.testName = null;
-
   this.capabilities = new session.Capabilities();
 
   this.mm = globalMessageManager;
@@ -299,24 +294,6 @@ GeckoDriver.prototype.globalModalDialogHandler = function(subject, topic) {
 };
 
 /**
- * Switches to the global ChromeMessageBroadcaster, potentially replacing
- * a frame-specific ChromeMessageSender.  Has no effect if the global
- * ChromeMessageBroadcaster is already in use.  If this replaces a
- * frame-specific ChromeMessageSender, it removes the message listeners
- * from that sender, and then puts the corresponding frame script "to
- * sleep", which removes most of the message listeners from it as well.
- */
-GeckoDriver.prototype.switchToGlobalMessageManager = function() {
-  if (this.curBrowser &&
-      this.curBrowser.frameManager.currentRemoteFrame !== null) {
-    this.curBrowser.frameManager.removeMessageManagerListeners(this.mm);
-    this.sendAsync("sleepSession");
-    this.curBrowser.frameManager.currentRemoteFrame = null;
-  }
-  this.mm = globalMessageManager;
-};
-
-/**
  * Helper method to send async messages to the content listener.
  * Correct usage is to pass in the name of a function in listener.js,
  * a serialisable object, and optionally the current command's ID
@@ -433,7 +410,6 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
   this.mozBrowserClose = e => {
     if (e.target.id == this.oopFrameId) {
       win.removeEventListener("mozbrowserclose", this.mozBrowserClose, true);
-      this.switchToGlobalMessageManager();
       throw new NoSuchWindowError("The window closed during action: " + action);
     }
   };
@@ -815,11 +791,9 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     let win = this.getCurrentWindow();
     this.addBrowser(win);
     this.whenBrowserStarted(win, false);
-    this.mm.broadcastAsyncMessage("Marionette:restart", {});
   } else {
     throw new WebDriverError("Session already running");
   }
-  this.switchToGlobalMessageManager();
 
   await registerBrowsers;
   await browserListening;
@@ -1886,15 +1860,6 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     }
 
   } else if (this.context == Context.Content) {
-    if (!id && !byFrame &&
-        this.curBrowser.frameManager.currentRemoteFrame !== null) {
-      // We're currently using a ChromeMessageSender for a remote frame,
-      // so this request indicates we need to switch back to the top-level
-      // (parent) frame.  We'll first switch to the parent's (global)
-      // ChromeMessageBroadcaster, so we send the message to the right
-      // listener.
-      this.switchToGlobalMessageManager();
-    }
     cmd.commandID = cmd.id;
 
     let res = await this.listener.switchToFrame(cmd.parameters);
@@ -2829,10 +2794,6 @@ GeckoDriver.prototype.close = async function() {
     return [];
   }
 
-  if (this.mm != globalMessageManager) {
-    this.mm.removeDelayedFrameScript(FRAME_SCRIPT);
-  }
-
   await this.curBrowser.closeTab();
   return this.windowHandles.map(String);
 };
@@ -2868,10 +2829,6 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
   // reset frame to the top-most frame
   this.curFrame = null;
 
-  if (this.mm != globalMessageManager) {
-    this.mm.removeDelayedFrameScript(FRAME_SCRIPT);
-  }
-
   await this.curBrowser.closeWindow();
   return this.chromeWindowHandles.map(String);
 };
@@ -2903,8 +2860,6 @@ GeckoDriver.prototype.deleteSession = function() {
     this.curBrowser.frameManager.removeMessageManagerListeners(
         globalMessageManager);
   }
-
-  this.switchToGlobalMessageManager();
 
   // reset frame to the top-most frame
   this.curFrame = null;
