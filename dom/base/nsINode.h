@@ -2099,7 +2099,7 @@ protected:
     const ServoFunctor& aServoFunctor,
     const GeckoFunctor& aGeckoFunctor)
   {
-    if (IsStyledByServo()) {
+    if (false) {
       return aServoFunctor(ParseServoSelectorList(aSelectorString, aRv));
     }
     return aGeckoFunctor(ParseSelectorList(aSelectorString, aRv));
