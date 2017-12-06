@@ -79,18 +79,13 @@ function onClearStats() {
 
 var ControlSet = {
   render() {
-    let controls = document.createElement("div");
-    let control = document.createElement("div");
-    let message = document.createElement("div");
+    let controls = renderElement("div", null, {className: "controls"});
+    this.controlSection = renderElement("div", null, {className: "control"});
+    this.messageSection = renderElement("div", null, {className: "message"});
 
-    controls.className = "controls";
-    control.className = "control";
-    message.className = "message";
-    controls.appendChild(control);
-    controls.appendChild(message);
+    controls.appendChild(this.controlSection);
+    controls.appendChild(this.messageSection);
 
-    this.controlSection = control;
-    this.messageSection = message;
     return controls;
   },
 
@@ -303,12 +298,9 @@ var AboutWebRTC = {
     this._setData(data);
 
     if (data.error) {
-      let msg = document.createElement("h3");
-      msg.textContent = getString("cannot_retrieve_log");
-      parent.appendChild(msg);
-      msg = document.createElement("p");
-      msg.textContent = `${data.error.name}: ${data.error.message}`;
-      parent.appendChild(msg);
+      parent.appendChild(renderElement("h3", getString("cannot_retrieve_log")));
+      parent.appendChild(
+          renderElement("p", `${data.error.name}: ${data.error.message}`));
       return;
     }
 
@@ -339,20 +331,15 @@ var AboutWebRTC = {
   },
 
   renderPeerConnections() {
-    let connections = document.createElement("div");
-    connections.className = "stats";
+    let connections = renderElement("div", null, {className: "stats"});
 
-    let heading = document.createElement("span");
-    heading.className = "section-heading";
-    let elem = document.createElement("h3");
-    elem.textContent = getString("stats_heading");
-    heading.appendChild(elem);
+    let heading = renderElement("span", null, {className: "section-heading"});
+    heading.appendChild(renderElement("h3", getString("stats_heading")));
 
-    elem = document.createElement("button");
-    elem.textContent = getString("stats_clear");
-    elem.className = "no-print";
-    elem.onclick = this._onClearStats;
-    heading.appendChild(elem);
+    heading.appendChild(renderElement("button", getString("stats_clear"), {
+      className: "no-print",
+      onclick: this._onClearStats
+    }));
     connections.appendChild(heading);
 
     if (!this._reports || !this._reports.length) {
@@ -370,19 +357,14 @@ var AboutWebRTC = {
   },
 
   renderConnectionLog() {
-    let content = document.createElement("div");
-    content.className = "log";
+    let content = renderElement("div", null, {className: "log"});
 
-    let heading = document.createElement("span");
-    heading.className = "section-heading";
-    let elem = document.createElement("h3");
-    elem.textContent = getString("log_heading");
-    heading.appendChild(elem);
-    elem = document.createElement("button");
-    elem.textContent = getString("log_clear");
-    elem.className = "no-print";
-    elem.onclick = this._onClearLog;
-    heading.appendChild(elem);
+    let heading = renderElement("span", null, {className: "section-heading"});
+    heading.appendChild(renderElement("h3", getString("log_heading")));
+    heading.appendChild(renderElement("button", getString("log_clear"), {
+      className: "no-print",
+      onclick: this._onClearLog
+    }));
     content.appendChild(heading);
 
     if (!this._log || !this._log.length) {
@@ -395,9 +377,7 @@ var AboutWebRTC = {
     }).render();
 
     for (let line of this._log) {
-      elem = document.createElement("p");
-      elem.textContent = line;
-      div.appendChild(elem);
+      div.appendChild(renderElement("p", line));
     }
 
     content.appendChild(div);
@@ -411,8 +391,7 @@ function PeerConnection(report) {
 
 PeerConnection.prototype = {
   render() {
-    let pc = document.createElement("div");
-    pc.className = "peer-connection";
+    let pc = renderElement("div", null, {className: "peer-connection"});
     pc.appendChild(this.renderHeading());
 
     let div = new FoldableSection(pc).render();
@@ -437,16 +416,15 @@ PeerConnection.prototype = {
 
   renderDesc() {
     let info = document.createElement("div");
-    let label = document.createElement("span");
-    let body = document.createElement("span");
 
-    label.className = "info-label";
-    label.textContent = `${getString("peer_connection_id_label")}: `;
-    info.appendChild(label);
+    info.appendChild(
+        renderElement("span", `${getString("peer_connection_id_label")}: `), {
+          className: "info-label"
+        });
 
-    body.className = "info-body";
-    body.textContent = this._report.pcid;
-    info.appendChild(body);
+    info.appendChild(renderElement("span", this._report.pcid, {
+      className: "info-body"
+    }));
 
     return info;
   },
@@ -460,6 +438,13 @@ PeerConnection.prototype = {
   }
 };
 
+function renderElement(elemName, elemText, options = {}) {
+  let elem = document.createElement(elemName);
+  elem.textContent = elemText || "";
+  Object.assign(elem, options);
+  return elem;
+}
+
 function SDPStats(report) {
   this._report = report;
 }
@@ -467,33 +452,20 @@ function SDPStats(report) {
 SDPStats.prototype = {
   render() {
     let div = document.createElement("div");
-    let elem = document.createElement("h4");
+    div.appendChild(renderElement("h4", getString("sdp_heading")));
 
-    let localSdpHeading = getString("local_sdp_heading");
-    let remoteSdpHeading = getString("remote_sdp_heading");
     let offerLabel = `(${getString("offer")})`;
     let answerLabel = `(${getString("answer")})`;
+    let localSdpHeading =
+      `${getString("local_sdp_heading")} ${this._report.offerer ? offerLabel : answerLabel}`;
+    let remoteSdpHeading =
+      `${getString("remote_sdp_heading")} ${this._report.offerer ? answerLabel : offerLabel}`;
 
-    elem.textContent = getString("sdp_heading");
-    div.appendChild(elem);
+    div.appendChild(renderElement("h5", localSdpHeading));
+    div.appendChild(renderElement("pre", this._report.localSdp));
 
-    elem = document.createElement("h5");
-    elem.textContent =
-      `${localSdpHeading} ${this._report.offerer ? offerLabel : answerLabel}`;
-    div.appendChild(elem);
-
-    elem = document.createElement("pre");
-    elem.textContent = this._report.localSdp;
-    div.appendChild(elem);
-
-    elem = document.createElement("h5");
-    elem.textContent =
-      `${remoteSdpHeading} ${this._report.offerer ? answerLabel : offerLabel}`;
-    div.appendChild(elem);
-
-    elem = document.createElement("pre");
-    elem.textContent = this._report.remoteSdp;
-    div.appendChild(elem);
+    div.appendChild(renderElement("h5", remoteSdpHeading));
+    div.appendChild(renderElement("pre", this._report.remoteSdp));
 
     return div;
   }
@@ -507,10 +479,7 @@ function RTPStats(report) {
 RTPStats.prototype = {
   render() {
     let div = document.createElement("div");
-    let heading = document.createElement("h4");
-
-    heading.textContent = getString("rtp_stats_heading");
-    div.appendChild(heading);
+    div.appendChild(renderElement("h4", getString("rtp_stats_heading")));
 
     this.generateRTPStats();
 
@@ -556,9 +525,7 @@ RTPStats.prototype = {
       statsString += `${getString("jitter_buffer_delay_label")}: ${stats.mozJitterBufferDelay} ms`;
     }
 
-    let line = document.createElement("p");
-    line.textContent = statsString;
-    return line;
+    return renderElement("p", statsString);
   },
 
   renderCoderStats(stats) {
@@ -591,9 +558,7 @@ RTPStats.prototype = {
       statsString = label + statsString;
     }
 
-    let line = document.createElement("p");
-    line.textContent = statsString;
-    return line;
+    return renderElement("p", statsString);
   },
 
   renderTransportStats(stats, typeLabel) {
@@ -619,17 +584,12 @@ RTPStats.prototype = {
       }
     }
 
-    let line = document.createElement("p");
-    line.textContent = statsString;
-    return line;
+    return renderElement("p", statsString);
   },
 
   renderRTPStatSet(stats) {
     let div = document.createElement("div");
-    let heading = document.createElement("h5");
-
-    heading.textContent = stats.id;
-    div.appendChild(heading);
+    div.appendChild(renderElement("h5", stats.id));
 
     if (stats.MozAvSyncDelay || stats.mozJitterBufferDelay) {
       div.appendChild(this.renderAvStats(stats));
@@ -653,10 +613,7 @@ function ICEStats(report) {
 ICEStats.prototype = {
   render() {
     let div = document.createElement("div");
-    let heading = document.createElement("h4");
-
-    heading.textContent = getString("ice_stats_heading");
-    div.appendChild(heading);
+    div.appendChild(renderElement("h4", getString("ice_stats_heading")));
 
     div.appendChild(this.renderICECandidateTable());
     // add just a bit of vertical space between the restart/rollback
@@ -673,15 +630,13 @@ ICEStats.prototype = {
   },
 
   renderICECandidateTable() {
-    let caption = document.createElement("caption");
-    let captionSpan1 = document.createElement("span");
-    captionSpan1.textContent = `${getString("trickle_caption_msg")} `;
-    let captionSpan2 = document.createElement("span");
-    captionSpan2.textContent = getString("trickle_highlight_color_name");
-    captionSpan2.className = "trickled";
-    caption.appendChild(captionSpan1);
-    caption.appendChild(captionSpan2);
-    caption.className = "no-print";
+    let caption = renderElement("caption", null, {className: "no-print"});
+    caption.appendChild(
+        renderElement("span", `${getString("trickle_caption_msg")} `));
+    caption.appendChild(
+        renderElement("span", getString("trickle_highlight_color_name"), {
+          className: "trickled"
+        }));
 
     let stats = this.generateICEStats();
     // don't use |stat.x || ""| here because it hides 0 values
@@ -741,9 +696,8 @@ ICEStats.prototype = {
 
   renderRawICECandidateSection() {
     let section = document.createElement("div");
-    let heading = document.createElement("h4");
-    heading.textContent = getString("raw_candidates_heading");
-    section.appendChild(heading);
+    section.appendChild(
+        renderElement("h4", getString("raw_candidates_heading")));
 
     let div = new FoldableSection(section, {
       showMsg: getString("raw_cand_show_msg"),
@@ -782,16 +736,14 @@ ICEStats.prototype = {
 
   renderIceMetric(labelName, value) {
     let info = document.createElement("div");
-    let label = document.createElement("span");
-    let body = document.createElement("span");
 
-    label.className = "info-label";
-    label.textContent = `${getString(labelName)}: `;
-    info.appendChild(label);
+    info.appendChild(
+        renderElement("span", `${getString(labelName)}: `, {
+          className: "info-label"
+        }));
+    info.appendChild(
+        renderElement("span", value, {className: "info-body"}));
 
-    body.className = "info-body";
-    body.textContent = value;
-    info.appendChild(body);
     return info;
   },
 
@@ -869,8 +821,9 @@ ICEStats.prototype = {
 function FoldableSection(parentElement, options = {}) {
   this._foldableElement = document.createElement("div");
   if (parentElement) {
-    let sectionCtrl = document.createElement("div");
-    sectionCtrl.className = "section-ctrl no-print";
+    let sectionCtrl = renderElement("div", null, {
+      className: "section-ctrl no-print"
+    });
     let foldEffect = new FoldEffect(this._foldableElement, options);
     sectionCtrl.appendChild(foldEffect.render());
     parentElement.appendChild(sectionCtrl);
@@ -895,9 +848,7 @@ SimpleTable.prototype = {
     let elemType = (header ? "th" : "td");
 
     for (let elem of list) {
-      let cell = document.createElement(elemType);
-      cell.textContent = elem;
-      row.appendChild(cell);
+      row.appendChild(renderElement(elemType, elem));
     }
 
     return row;
@@ -936,9 +887,8 @@ FoldEffect.prototype = {
   render() {
     this._target.classList.add("fold-target");
 
-    let ctrl = document.createElement("div");
+    let ctrl = renderElement("div", null, {className: "fold-trigger"});
     this._trigger = ctrl;
-    ctrl.className = "fold-trigger";
     ctrl.addEventListener("click", this.onClick.bind(this));
     this.close();
 
