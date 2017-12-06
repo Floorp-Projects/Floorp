@@ -769,11 +769,11 @@ public:
    * must have been ended via EndTrack. The finish time of the stream is
    * when all tracks have ended.
    */
-  void FinishWithLockHeld();
-  void Finish()
+  void FinishPendingWithLockHeld();
+  void FinishPending()
   {
     MutexAutoLock lock(mMutex);
-    FinishWithLockHeld();
+    FinishPendingWithLockHeld();
   }
 
   // Overriding allows us to hold the mMutex lock while changing the track enable status
@@ -908,7 +908,7 @@ protected:
   nsTArray<TrackData> mPendingTracks;
   nsTArray<TrackBound<DirectMediaStreamTrackListener>> mDirectTrackListeners;
   bool mPullEnabled;
-  bool mUpdateFinished;
+  bool mFinishPending;
   bool mNeedsMixing;
 };
 
@@ -1165,15 +1165,16 @@ public:
                     uint16_t aOutputNumber = 0,
                     nsTArray<TrackID>* aBlockedTracks = nullptr);
   /**
-   * Force this stream into the finished state.
+   * Queue a message to force this stream into the finished state.
    */
-  void Finish();
+  void QueueFinish();
   /**
-   * Set the autofinish flag on this stream (defaults to false). When this flag
-   * is set, and all input streams are in the finished state (including if there
-   * are no input streams), this stream automatically enters the finished state.
+   * Queue a message to set the autofinish flag on this stream (defaults to
+   * false). When this flag is set, and all input streams are in the finished
+   * state (including if there are no input streams), this stream automatically
+   * enters the finished state.
    */
-  void SetAutofinish(bool aAutofinish);
+  void QueueSetAutofinish(bool aAutofinish);
 
   ProcessedMediaStream* AsProcessedStream() override { return this; }
 
