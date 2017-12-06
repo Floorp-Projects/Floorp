@@ -1816,6 +1816,28 @@ nsGlobalWindowInner::EnsureClientSource()
     if (controller.isSome()) {
       mClientSource->SetController(controller.ref());
     }
+
+    // We also have to handle the case where te initial about:blank is
+    // controlled due to inheritting the service worker from its parent,
+    // but the actual nsIChannel load is not covered by any service worker.
+    // In this case we want the final page to be uncontrolled.  There is
+    // an open spec issue about how exactly this should be handled, but for
+    // now we just force creation of a new ClientSource to clear the
+    // controller.
+    //
+    //  https://github.com/w3c/ServiceWorker/issues/1232
+    //
+    else if (mClientSource->GetController().isSome()) {
+      mClientSource.reset();
+      mClientSource =
+        ClientManager::CreateSource(ClientType::Window,
+                                    EventTargetFor(TaskCategory::Other),
+                                    mDoc->NodePrincipal());
+      if (NS_WARN_IF(!mClientSource)) {
+        return NS_ERROR_FAILURE;
+      }
+      newClientSource = true;
+    }
   }
 
   // Its possible that we got a client just after being frozen in
