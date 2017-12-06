@@ -209,7 +209,7 @@ SpeechSynthesis::Pause()
   }
 
   if (mCurrentTask && !mSpeechQueue.IsEmpty() &&
-      mSpeechQueue.ElementAt(0)->GetState() == SpeechSynthesisUtterance::STATE_SPEAKING) {
+      mSpeechQueue.ElementAt(0)->GetState() != SpeechSynthesisUtterance::STATE_ENDED) {
     mCurrentTask->Pause();
   } else {
     mHoldQueue = true;
@@ -223,11 +223,10 @@ SpeechSynthesis::Resume()
     return;
   }
 
-  mHoldQueue = false;
-
   if (mCurrentTask) {
     mCurrentTask->Resume();
   } else {
+    mHoldQueue = false;
     AdvanceQueue();
   }
 }
