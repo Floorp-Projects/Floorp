@@ -11,7 +11,8 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_balrog_server_scope,
-                                         get_balrog_channel_scopes)
+                                         get_balrog_channel_scopes,
+                                         get_phase)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -38,6 +39,13 @@ balrog_description_schema = Schema({
     # taskcluster/taskgraph/transforms/task.py for the schema details, and the
     # below transforms for defaults of various values.
     Optional('treeherder'): task_description_schema['treeherder'],
+
+    # Shipping product / phase
+    Optional('shipping-product'): task_description_schema['shipping-product'],
+    Optional('shipping-phase'): task_description_schema['shipping-phase'],
+
+    # Notifications
+    Optional('notifications'): task_description_schema['notifications'],
 })
 
 
@@ -93,6 +101,7 @@ def make_task_description(config, jobs):
 
         server_scope = get_balrog_server_scope(config)
         channel_scopes = get_balrog_channel_scopes(config)
+        phase = get_phase(config)
 
         task = {
             'label': label,
@@ -107,6 +116,9 @@ def make_task_description(config, jobs):
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
+            'shipping-phase': job.get('shipping-phase', phase),
+            'shipping-product': job.get('shipping-product'),
+            'notifications': job.get('notifications'),
         }
 
         yield task
