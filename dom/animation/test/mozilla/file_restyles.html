@@ -95,6 +95,7 @@ var isAndroid = !!navigator.userAgent.includes("Android");
 var isServo = isStyledByServo();
 var offscreenThrottlingEnabled =
   SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
+var hasMicroTaskCheckpointForAnimation;
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -107,6 +108,38 @@ function add_task_if_omta_enabled(test) {
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
 waitForAllPaints(() => {
+  // Drop this once we have the micro task checkpoint for animations
+  // (bug 1416966).
+  add_task(async function check_micro_task_checkpoint_for_animations() {
+    const div = addDiv(null);
+
+    async function checkMicroTaskCheckpoint() {
+      return new Promise(resolve => {
+        let didRequestAnimationFrame = false;
+
+        requestAnimationFrame(() => {
+          const animation = div.animate({ }, 100 * MS_PER_SEC);
+
+          requestAnimationFrame(() => {
+            didRequestAnimationFrame = true;
+          });
+
+          animation.ready.then(() => {
+            // If the animation.ready.then callback is called before the next
+            // requestAnimationFrame callback, that means that there is a
+            // micro task checkpoint between animation tick and
+            // requestAnimationFrame callbacks.
+            resolve(!didRequestAnimationFrame);
+          });
+        });
+      });
+    }
+
+    hasMicroTaskCheckpointForAnimation = await checkMicroTaskCheckpoint();
+
+    await ensureElementRemoval(div);
+  });
+
   add_task(async function restyling_for_main_thread_animations() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
