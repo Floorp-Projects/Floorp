@@ -137,7 +137,7 @@ gl::Error Context9::finish()
 
 gl::Error Context9::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
-    return mRenderer->genericDrawArrays(this, mode, first, count, 0);
+    return mRenderer->genericDrawArrays(this, mode, first, count, 1);
 }
 
 gl::Error Context9::drawArraysInstanced(GLenum mode,
@@ -154,7 +154,7 @@ gl::Error Context9::drawElements(GLenum mode,
                                  const GLvoid *indices,
                                  const gl::IndexRange &indexRange)
 {
-    return mRenderer->genericDrawElements(this, mode, count, type, indices, 0, indexRange);
+    return mRenderer->genericDrawElements(this, mode, count, type, indices, 1, indexRange);
 }
 
 gl::Error Context9::drawElementsInstanced(GLenum mode,
@@ -175,7 +175,7 @@ gl::Error Context9::drawRangeElements(GLenum mode,
                                       const GLvoid *indices,
                                       const gl::IndexRange &indexRange)
 {
-    return mRenderer->genericDrawElements(this, mode, count, type, indices, 0, indexRange);
+    return mRenderer->genericDrawElements(this, mode, count, type, indices, 1, indexRange);
 }
 
 GLenum Context9::getResetStatus()
