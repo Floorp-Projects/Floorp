@@ -56,7 +56,7 @@ public:
   virtual void GetLinkTarget(nsAString& aTarget) override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;
   virtual EventStates IntrinsicState() const override;
-  using Element::SetAttr;
+  using nsIContent::SetAttr;
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
                            nsAtom* aPrefix, const nsAString& aValue,
                            nsIPrincipal* aSubjectPrincipal,

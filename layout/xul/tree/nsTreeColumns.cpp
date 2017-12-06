@@ -273,7 +273,7 @@ nsTreeColumn::Invalidate()
   }
 
   // Cache our index.
-  nsTreeUtils::GetColumnIndex(mContent->AsElement(), &mIndex);
+  nsTreeUtils::GetColumnIndex(mContent, &mIndex);
 
   const nsStyleVisibility* vis = frame->StyleVisibility();
 
@@ -679,10 +679,7 @@ nsTreeColumns::RestoreNaturalOrder()
     nsCOMPtr<nsIContent> child = colsContent->GetChildAt(i);
     nsAutoString ordinal;
     ordinal.AppendInt(i);
-    if (child->IsElement()) {
-      child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, ordinal,
-                                  true);
-    }
+    child->SetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, ordinal, true);
   }
 
   nsTreeColumns::InvalidateColumns();

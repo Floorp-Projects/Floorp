@@ -704,14 +704,12 @@ Accessible::SetSelected(bool aSelect)
   Accessible* select = nsAccUtils::GetSelectableContainer(this, State());
   if (select) {
     if (select->State() & states::MULTISELECTABLE) {
-      if (mContent->IsElement() && ARIARoleMap()) {
+      if (ARIARoleMap()) {
         if (aSelect) {
-          mContent->AsElement()->SetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::aria_selected,
-                                         NS_LITERAL_STRING("true"), true);
+          mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected,
+                            NS_LITERAL_STRING("true"), true);
         } else {
-          mContent->AsElement()->UnsetAttr(kNameSpaceID_None,
-                                           nsGkAtoms::aria_selected, true);
+          mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::aria_selected, true);
         }
       }
       return;
@@ -1418,12 +1416,8 @@ Accessible::SetCurValue(double aValue)
   nsAutoString strValue;
   strValue.AppendFloat(aValue);
 
-  if (!mContent->IsElement())
-    return true;
-
   return NS_SUCCEEDED(
-    mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow,
-                                   strValue, true));
+    mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow, strValue, true));
 }
 
 role
@@ -2576,10 +2570,8 @@ Accessible::SetCurrentItem(Accessible* aItem)
   if (id) {
     nsAutoString idStr;
     id->ToString(idStr);
-    mContent->AsElement()->SetAttr(kNameSpaceID_None,
-                                   nsGkAtoms::aria_activedescendant,
-                                   idStr,
-                                   true);
+    mContent->SetAttr(kNameSpaceID_None,
+                      nsGkAtoms::aria_activedescendant, idStr, true);
   }
 }
 

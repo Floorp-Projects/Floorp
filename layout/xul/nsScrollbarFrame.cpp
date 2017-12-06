@@ -237,7 +237,7 @@ int32_t
 nsScrollbarFrame::MoveToNewPosition()
 {
   // get the scrollbar's content node
-  RefPtr<Element> content = GetContent()->AsElement();
+  nsCOMPtr<nsIContent> content = GetContent();
 
   // get the current pos
   int32_t curpos = nsSliderFrame::GetCurrentPosition(content);

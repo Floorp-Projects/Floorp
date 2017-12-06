@@ -364,14 +364,14 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         NS_ASSERTION(!mSimpleRuleMemberTest,
                      "CompileQuery called twice with the same template");
         if (!mSimpleRuleMemberTest)
-            rv = CompileSimpleQuery(query, content->AsElement(), &lastnode);
+            rv = CompileSimpleQuery(query, content, &lastnode);
         else
             rv = NS_ERROR_FAILURE;
     }
     else if (content->NodeInfo()->Equals(nsGkAtoms::rule, kNameSpaceID_XUL)) {
         // simplified syntax with at least one rule
         query->SetSimple();
-        rv = CompileSimpleQuery(query, content->AsElement(), &lastnode);
+        rv = CompileSimpleQuery(query, content, &lastnode);
     }
     else {
         rv = CompileExtendedQuery(query, content, &lastnode);
@@ -1481,7 +1481,7 @@ nsXULTemplateQueryProcessorRDF::AddDefaultSimpleRules(nsRDFQuery* aQuery,
 
 nsresult
 nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
-                                                   Element* aQueryElement,
+                                                   nsIContent* aQueryElement,
                                                    TestNode** aLastNode)
 {
     // Compile a "simple" (or old-school style) <template> query.

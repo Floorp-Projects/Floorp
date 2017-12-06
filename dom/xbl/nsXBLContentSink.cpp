@@ -535,8 +535,7 @@ nsXBLContentSink::OnOpenContainer(const char16_t **aAtts,
 nsresult
 nsXBLContentSink::ConstructBinding(uint32_t aLineNumber)
 {
-  // This is only called from HandleStartElement, so it'd better be an element.
-  RefPtr<Element> binding = GetCurrentContent()->AsElement();
+  nsCOMPtr<nsIContent> binding = GetCurrentContent();
   binding->GetAttr(kNameSpaceID_None, nsGkAtoms::id, mCurrentBindingID);
   NS_ConvertUTF16toUTF8 cid(mCurrentBindingID);
 
@@ -881,12 +880,13 @@ nsXBLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
 }
 
 nsresult
-nsXBLContentSink::AddAttributes(const char16_t** aAtts, Element* aElement)
+nsXBLContentSink::AddAttributes(const char16_t** aAtts,
+                                nsIContent* aContent)
 {
-  if (aElement->IsXULElement())
+  if (aContent->IsXULElement())
     return NS_OK; // Nothing to do, since the proto already has the attrs.
 
-  return nsXMLContentSink::AddAttributes(aAtts, aElement);
+  return nsXMLContentSink::AddAttributes(aAtts, aContent);
 }
 
 #ifdef MOZ_XUL

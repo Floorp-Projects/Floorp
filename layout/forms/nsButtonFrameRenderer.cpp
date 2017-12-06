@@ -60,14 +60,13 @@ nsButtonFrameRenderer::GetFrame()
 }
 
 void
-nsButtonFrameRenderer::SetDisabled(bool aDisabled, bool aNotify)
+nsButtonFrameRenderer::SetDisabled(bool aDisabled, bool notify)
 {
-  Element* element = mFrame->GetContent()->AsElement();
   if (aDisabled)
-    element->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
-                     aNotify);
+    mFrame->GetContent()->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
+                                  notify);
   else
-    element->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, aNotify);
+    mFrame->GetContent()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, notify);
 }
 
 bool

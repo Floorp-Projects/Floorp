@@ -14,11 +14,6 @@
 
 class nsAtom;
 class nsIContent;
-namespace mozilla {
-namespace dom {
-class Element;
-}
-}
 
 class nsTreeUtils
 {
@@ -38,10 +33,10 @@ class nsTreeUtils
     GetDescendantChild(nsIContent* aContainer, nsAtom* aTag);
 
     static nsresult
-    UpdateSortIndicators(mozilla::dom::Element* aColumn, const nsAString& aDirection);
+    UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirection);
 
     static nsresult
-    GetColumnIndex(mozilla::dom::Element* aColumn, int32_t* aResult);
+    GetColumnIndex(nsIContent* aColumn, int32_t* aResult);
 };
 
 #endif // nsTreeUtils_h__

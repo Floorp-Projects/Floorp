@@ -14,7 +14,6 @@
 
 #include "nsAtom.h"
 #include "nsIContent.h"
-#include "mozilla/dom/Element.h"
 
 class nsINode;
 
@@ -289,11 +288,10 @@ bool HasDefinedARIAHidden(nsIContent* aContent);
 class AttrIterator
 {
 public:
-  explicit AttrIterator(nsIContent* aContent)
-    : mElement(aContent->IsElement() ? aContent->AsElement() : nullptr)
-    , mAttrIdx(0)
+  explicit AttrIterator(nsIContent* aContent) :
+    mContent(aContent), mAttrIdx(0)
   {
-    mAttrCount = mElement ? mElement->GetAttrCount() : 0;
+    mAttrCount = mContent->GetAttrCount();
   }
 
   bool Next(nsAString& aAttrName, nsAString& aAttrValue);
@@ -303,7 +301,7 @@ private:
   AttrIterator(const AttrIterator&) = delete;
   AttrIterator& operator= (const AttrIterator&) = delete;
 
-  dom::Element* mElement;
+  nsIContent* mContent;
   uint32_t mAttrIdx;
   uint32_t mAttrCount;
 };

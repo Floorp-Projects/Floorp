@@ -10,14 +10,8 @@
 
 #include "nsQueryFrame.h"
 class nsPopupSetFrame;
-class nsIPresShell;
 class nsIContent;
-
-namespace mozilla {
-namespace dom {
-class Element;
-}
-}
+class nsIPresShell;
 
 class nsIRootBox
 {
@@ -27,8 +21,8 @@ public:
   virtual nsPopupSetFrame* GetPopupSetFrame() = 0;
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) = 0;
 
-  virtual mozilla::dom::Element* GetDefaultTooltip() = 0;
-  virtual void SetDefaultTooltip(mozilla::dom::Element* aTooltip) = 0;
+  virtual nsIContent* GetDefaultTooltip() = 0;
+  virtual void SetDefaultTooltip(nsIContent* aTooltip) = 0;
 
   virtual nsresult AddTooltipSupport(nsIContent* aNode) = 0;
   virtual nsresult RemoveTooltipSupport(nsIContent* aNode) = 0;

@@ -28,26 +28,26 @@
 NS_IMPL_ISUPPORTS(XULSortServiceImpl, nsIXULSortService)
 
 void
-XULSortServiceImpl::SetSortHints(Element* aElement, nsSortState* aSortState)
+XULSortServiceImpl::SetSortHints(nsIContent *aNode, nsSortState* aSortState)
 {
   // set sort and sortDirection attributes when is sort is done
-  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sort,
-                    aSortState->sort, true);
+  aNode->SetAttr(kNameSpaceID_None, nsGkAtoms::sort,
+                 aSortState->sort, true);
 
   nsAutoString direction;
   if (aSortState->direction == nsSortState_descending)
     direction.AssignLiteral("descending");
   else if (aSortState->direction == nsSortState_ascending)
     direction.AssignLiteral("ascending");
-  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                    direction, true);
+  aNode->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
+                 direction, true);
 
   // for trees, also set the sort info on the currently sorted column
-  if (aElement->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
+  if (aNode->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
     if (aSortState->sortKeys.Length() >= 1) {
       nsAutoString sortkey;
       aSortState->sortKeys[0]->ToString(sortkey);
-      SetSortColumnHints(aElement, sortkey, direction);
+      SetSortColumnHints(aNode, sortkey, direction);
     }
   }
 }
@@ -71,18 +71,17 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
       if (value.IsEmpty())
         child->GetAttr(kNameSpaceID_None, nsGkAtoms::resource, value);
       if (value == sortResource) {
-        child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
-                                    NS_LITERAL_STRING("true"), true);
-
-        child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                                    sortDirection, true);
+        child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
+                       NS_LITERAL_STRING("true"), true);
+        child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
+                       sortDirection, true);
         // Note: don't break out of loop; want to set/unset
         // attribs on ALL sort columns
       } else if (!value.IsEmpty()) {
-        child->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
-                                      true);
-        child->AsElement()->UnsetAttr(kNameSpaceID_None,
-                                      nsGkAtoms::sortDirection, true);
+        child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
+                         true);
+        child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
+                         true);
       }
     }
   }
@@ -110,7 +109,7 @@ XULSortServiceImpl::GetItemsToSort(nsIContent *aContainer,
 
   // if there is no template builder, just get the children. For trees,
   // get the treechildren element as use that as the parent
-  RefPtr<Element> treechildren;
+  nsCOMPtr<nsIContent> treechildren;
   if (aContainer->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
     nsXULContentUtils::FindChildByTag(aContainer,
                                       kNameSpaceID_XUL,
@@ -324,8 +323,8 @@ XULSortServiceImpl::InvertSortInfo(nsTArray<contentSortInfo>& aData,
 }
 
 nsresult
-XULSortServiceImpl::InitializeSortState(Element* aRootElement,
-                                        Element* aContainer,
+XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
+                                        nsIContent* aContainer,
                                         const nsAString& aSortKey,
                                         const nsAString& aSortHints,
                                         nsSortState* aSortState)
@@ -468,7 +467,7 @@ XULSortServiceImpl::Sort(nsIDOMNode* aNode,
                          const nsAString& aSortHints)
 {
   // get root content node
-  nsCOMPtr<Element> sortNode = do_QueryInterface(aNode);
+  nsCOMPtr<nsIContent> sortNode = do_QueryInterface(aNode);
   if (!sortNode)
     return NS_ERROR_FAILURE;
 

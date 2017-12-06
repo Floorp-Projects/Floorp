@@ -330,8 +330,7 @@ nsMathMLmactionFrame::MouseClick()
       nsAutoString value;
       value.AppendInt(selection);
       bool notify = false; // don't yet notify the document
-      mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_,
-                                     value, notify);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
       PresShell()->

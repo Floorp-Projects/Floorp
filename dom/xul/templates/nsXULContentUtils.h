@@ -23,12 +23,6 @@ class nsIRDFLiteral;
 class nsIRDFService;
 class nsICollation;
 
-namespace mozilla {
-namespace dom {
-class Element;
-}
-}
-
 // errors to pass to LogTemplateError
 #define ERROR_TEMPLATE_INVALID_QUERYPROCESSOR                           \
         "querytype attribute doesn't specify a valid query processor"
@@ -109,7 +103,7 @@ public:
     FindChildByTag(nsIContent *aElement,
                    int32_t aNameSpaceID,
                    nsAtom* aTag,
-                   mozilla::dom::Element** aResult);
+                   nsIContent **aResult);
 
     static nsresult
     FindChildByResource(nsIContent* aElement,

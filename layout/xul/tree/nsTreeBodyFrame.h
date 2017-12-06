@@ -183,9 +183,9 @@ public:
 
   struct ScrollParts {
     nsScrollbarFrame*    mVScrollbar;
-    RefPtr<Element>      mVScrollbarContent;
+    nsCOMPtr<nsIContent> mVScrollbarContent;
     nsScrollbarFrame*    mHScrollbar;
-    RefPtr<Element>      mHScrollbarContent;
+    nsCOMPtr<nsIContent> mHScrollbarContent;
     nsIFrame*            mColumnsFrame;
     nsIScrollableFrame*  mColumnsScrollFrame;
   };

@@ -924,14 +924,14 @@ nsObjectLoadingContent::BuildParametersArray()
     return NS_OK;
   }
 
-  nsCOMPtr<Element> element =
+  nsCOMPtr<nsIContent> content =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
-  for (uint32_t i = 0; i != element->GetAttrCount(); i += 1) {
+  for (uint32_t i = 0; i != content->GetAttrCount(); i += 1) {
     MozPluginParameter param;
-    const nsAttrName* attrName = element->GetAttrNameAt(i);
+    const nsAttrName* attrName = content->GetAttrNameAt(i);
     nsAtom* atom = attrName->LocalName();
-    element->GetAttr(attrName->NamespaceID(), atom, param.mValue);
+    content->GetAttr(attrName->NamespaceID(), atom, param.mValue);
     atom->ToString(param.mName);
     mCachedAttributes.AppendElement(param);
   }
@@ -958,10 +958,10 @@ nsObjectLoadingContent::BuildParametersArray()
   // Nav 4.x would simply replace the "data" with "src". Because some plugins correctly
   // look for "data", lets instead copy the "data" attribute and add another entry
   // to the bottom of the array if there isn't already a "src" specified.
-  if (element->IsHTMLElement(nsGkAtoms::object) &&
-      !element->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+  if (content->IsHTMLElement(nsGkAtoms::object) &&
+      !content->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
     MozPluginParameter param;
-    element->GetAttr(kNameSpaceID_None, nsGkAtoms::data, param.mValue);
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::data, param.mValue);
     if (!param.mValue.IsEmpty()) {
       param.mName = NS_LITERAL_STRING("SRC");
       mCachedAttributes.AppendElement(param);
