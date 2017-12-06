@@ -1134,7 +1134,6 @@ var SyntaxTreeVisitor = {
    *   type: "TryStatement";
    *   block: BlockStatement;
    *   handler: CatchClause | null;
-   *   guardedHandlers: [ CatchClause ];
    *   finalizer: BlockStatement | null;
    * }
    */
@@ -1155,9 +1154,6 @@ var SyntaxTreeVisitor = {
     this[node.block.type](node.block, node, callbacks);
     if (node.handler) {
       this[node.handler.type](node.handler, node, callbacks);
-    }
-    for (let guardedHandler of node.guardedHandlers) {
-      this[guardedHandler.type](guardedHandler, node, callbacks);
     }
     if (node.finalizer) {
       this[node.finalizer.type](node.finalizer, node, callbacks);
