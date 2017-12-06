@@ -69,6 +69,10 @@ HistoryEngine.prototype = {
     }
   },
 
+  shouldSyncURL(url) {
+    return !url.startsWith("file:");
+  },
+
   async pullNewChanges() {
     let modifiedGUIDs = Object.keys(this._tracker.changedIDs);
     if (!modifiedGUIDs.length) {
@@ -174,6 +178,9 @@ HistoryStore.prototype = {
 
     let urlsByGUID = {};
     for (let url of urls) {
+      if (!this.engine.shouldSyncURL(url)) {
+        continue;
+      }
       let guid = await this.GUIDForUri(url, true);
       urlsByGUID[guid] = url;
     }
@@ -294,7 +301,8 @@ HistoryStore.prototype = {
     }
     record.guid = record.id;
 
-    if (!this._canAddURI(record.uri)) {
+    if (!this._canAddURI(record.uri) ||
+        !this.engine.shouldSyncURL(record.uri.spec)) {
       this._log.trace("Ignoring record " + record.id + " with URI "
                       + record.uri.spec + ": can't add this URI.");
       return false;
@@ -458,7 +466,7 @@ HistoryTracker.prototype = {
     }
 
     this._log.trace("onVisit: " + uri.spec);
-    if (this.addChangedID(guid)) {
+    if (this.engine.shouldSyncURL(uri.spec) && this.addChangedID(guid)) {
       this.score += SCORE_INCREMENT_SMALL;
     }
   },
