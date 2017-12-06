@@ -305,6 +305,8 @@ private:
   // redirectEnd attributes. It is false if there were no redirects, or if
   // any of the responses didn't pass the timing-allow-check
   bool mReportCrossOriginRedirect;
+
+  bool mSecureConnection;
 };
 
 } // namespace dom
