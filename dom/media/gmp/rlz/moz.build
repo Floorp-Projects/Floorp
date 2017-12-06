@@ -11,6 +11,8 @@ FINAL_LIBRARY = 'xul'
 
 if CONFIG['OS_TARGET'] in ['WINNT', 'Darwin']:
     UNIFIED_SOURCES += [
+        'lib/crc8.cc',
+        'lib/machine_id.cc',
         'lib/string_utils.cc',
     ]
 
