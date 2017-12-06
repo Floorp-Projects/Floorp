@@ -52,40 +52,23 @@ assertStmt("switch (foo) { case 1: 1; break; case 2: 2; break; default: 3; case 
                         caseClause(lit(42), [ exprStmt(lit(42)) ]) ]));
 assertStmt("try { } catch (e) { }",
            tryStmt(blockStmt([]),
-                   [],
-		   catchClause(ident("e"), null, blockStmt([])),
+		   catchClause(ident("e"), blockStmt([])),
                    null));
 assertStmt("try { } catch (e) { } finally { }",
            tryStmt(blockStmt([]),
-                   [],
-		   catchClause(ident("e"), null, blockStmt([])),
+		   catchClause(ident("e"), blockStmt([])),
                    blockStmt([])));
 assertStmt("try { } finally { }",
            tryStmt(blockStmt([]),
-                   [],
 		   null,
-                   blockStmt([])));
-assertStmt("try { } catch (e if foo) { } catch (e if bar) { } finally { }",
-           tryStmt(blockStmt([]),
-                   [ catchClause(ident("e"), ident("foo"), blockStmt([])),
-                     catchClause(ident("e"), ident("bar"), blockStmt([])) ],
-		   null,
-                   blockStmt([])));
-assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } finally { }",
-           tryStmt(blockStmt([]),
-                   [ catchClause(ident("e"), ident("foo"), blockStmt([])),
-                     catchClause(ident("e"), ident("bar"), blockStmt([])) ],
-                   catchClause(ident("e"), null, blockStmt([])),
                    blockStmt([])));
 assertStmt("try { } catch { }",
            tryStmt(blockStmt([]),
-                   [],
-       catchClause(null, null, blockStmt([])),
+       catchClause(null, blockStmt([])),
                    null));
 assertStmt("try { } catch { } finally { }",
            tryStmt(blockStmt([]),
-                   [],
-       catchClause(null, null, blockStmt([])),
+       catchClause(null, blockStmt([])),
                    blockStmt([])));
 
 

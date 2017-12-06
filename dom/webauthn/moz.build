@@ -40,6 +40,7 @@ UNIFIED_SOURCES += [
     'U2FTokenManager.cpp',
     'WebAuthnCBORUtil.cpp',
     'WebAuthnManager.cpp',
+    'WebAuthnManagerBase.cpp',
     'WebAuthnTransactionChild.cpp',
     'WebAuthnTransactionParent.cpp',
     'WebAuthnUtil.cpp',

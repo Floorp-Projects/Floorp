@@ -26,13 +26,6 @@ SourceSurfaceSkia::SourceSurfaceSkia()
 
 SourceSurfaceSkia::~SourceSurfaceSkia()
 {
-  if (mSnapshotLock) {
-    MutexAutoLock lock{*mSnapshotLock};
-    if (mDrawTarget) {
-      mDrawTarget->SnapshotDestroyed();
-      mDrawTarget = nullptr;
-    }
-  }
 }
 
 IntSize
@@ -109,8 +102,7 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
 bool
 SourceSurfaceSkia::InitFromImage(const sk_sp<SkImage>& aImage,
                                  SurfaceFormat aFormat,
-                                 DrawTargetSkia* aOwner,
-                                 shared_ptr<Mutex> aSnapshotLock)
+                                 DrawTargetSkia* aOwner)
 {
   if (!aImage) {
     return false;
@@ -143,8 +135,6 @@ SourceSurfaceSkia::InitFromImage(const sk_sp<SkImage>& aImage,
   mImage = aImage;
 
   if (aOwner) {
-    MOZ_ASSERT(aSnapshotLock);
-    mSnapshotLock = move(aSnapshotLock);
     mDrawTarget = aOwner;
   }
 
@@ -194,10 +184,6 @@ SourceSurfaceSkia::Unmap()
 void
 SourceSurfaceSkia::DrawTargetWillChange()
 {
-  // In this case synchronisation on destroy should be guaranteed!
-  MOZ_ASSERT(mSnapshotLock);
-  mSnapshotLock->AssertCurrentThreadOwns();
-
   MutexAutoLock lock(mChangeMutex);
   if (mDrawTarget) {
     // Raster snapshots do not use Skia's internal copy-on-write mechanism,

@@ -28,7 +28,10 @@ evaluate("const globalConstant = 0; var earlyError = true;");
 
 try {
     evaluate("earlyError = false; class globalConstant { constructor() { } }");
-} catch (e if e instanceof SyntaxError) { }
+} catch (e) {
+    if (!(e instanceof SyntaxError))
+        throw e;
+}
 assertEq(earlyError, true);
 
 function strictEvalShadows() {

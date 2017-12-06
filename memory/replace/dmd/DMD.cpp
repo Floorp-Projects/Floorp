@@ -764,22 +764,7 @@ StackTrace::Get(Thread* aT)
     RtlCaptureContext(&context);
     void** fp = reinterpret_cast<void**>(context.Ebp);
 
-    // Offset 0x18 from the FS segment register gives a pointer to the thread
-    // information block for the current thread.
-#if defined(_MSC_VER)
-    NT_TIB* pTib;
-    __asm {
-      MOV EAX, FS:[18h]
-      MOV pTib, EAX
-    }
-#elif defined(__GNUC__)
-    NT_TIB* pTib;
-    asm ( "movl %%fs:0x18, %0\n"
-         : "=r" (pTib)
-        );
-#else
-#   error "unknown compiler"
-#endif
+    PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
     void* stackEnd = static_cast<void*>(pTib->StackBase);
     FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
                           &tmp, fp, stackEnd);

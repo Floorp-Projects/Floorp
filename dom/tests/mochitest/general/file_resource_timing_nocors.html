@@ -1,0 +1,191 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/SimpleTest/test.css"/>
+
+  <!--
+    This document has the origin http://mochi.test:8888.
+
+    The resource timing of any all sub-resources should be reported, except for
+    any sub-resources of any cross-origin resources that are loaded.
+
+    Note that the resource timing of the original cross-origin resource should
+    itself be reported.  The goal here is to not reveal which sub-resources are
+    loaded by any cross-origin resources (the fact that any given cross-origin
+    resource itself is loaded is known to the original origin).
+
+    In the comments below, the following annotations apply:
+
+    [r] - this resource should be reported by performance.getEntries()
+    [!] - this resource should be excluded from performance.getEntries()
+  -->
+
+
+  <!-- 1. [r] http://mochi.test:8888 , generateCss.sjs?A
+          [r]   http://mochi.test:8888 , generateCss.sjs?B
+  -->
+  <link rel="stylesheet" type="text/css" href="generateCss.sjs?A"/>
+
+
+  <!-- 2. [r] http://example.com , generateCss.sjs?C
+          [!]   http://example.com , generateCss.sjs?D
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?C"/>
+
+
+  <!-- 3. [r] http://example.com , generateCss.sjs?E
+          [!]   http://mochi.test:8888 , generateCss.sjs?F
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?E"/>
+
+
+  <!-- 4. [r] http://mochi.test:8888 , generateCss.sjs?G
+          [r]   http://mochi.test:8888 , generateCss.sjs?H
+          [r]     http://example.com , generateCss.sjs?I
+          [!]       http://example.com , generateCss.sjs?J
+          [r]   http://example.org , generateCss.sjs?K
+          [!]     http://example.org , generateCss.sjs?L
+          [!]       http://example.org , generateCss.sjs?M
+  -->
+  <link rel="stylesheet" type="text/css" href="generateCss.sjs?G"/>
+
+
+  <!-- 5. background-image: -moz-image-rect()
+          [r] http://example.net , generateCss.sjs?N
+          [!]   http://example.net , blue.png
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?N"/>
+
+
+  <!-- 6. background-image: url()
+       [r] http://example.net , generateCss.sjs?O
+       [!]   http://example.net , red.png
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?O"/>
+
+
+  <!-- 7. @font-face
+          [r] http://example.net , generateCss.sjs?P
+          [!]   http://example.net , Ahem.tff
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?P"/>
+
+
+  <!-- 8. cursor: url()
+       [r] http://example.net , generateCss.sjs?Q
+       [!]   http://example.net , over.png
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?Q"/>
+
+
+  <!-- 9. mask: url(res.svg#mask)
+       TODO: I don't think this is working properly. Must fix.
+       [r] http://example.net , generateCss.sjs?R
+       [!]   http://example.net , file_use_counter_svg_fill_pattern_data.svg
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?R"/>
+
+
+  <!-- TODO: add test that we _do_ include subresources if the cross-origin sheet was fetched via CORS -->
+
+
+  <script type="application/javascript">
+
+function ok(cond, message) {
+  window.opener.ok(cond, message)
+}
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+function isnot(received, notExpected, message) {
+  window.opener.isnot(received, notExpected, message);
+}
+
+var allResources = {
+  "http://mochi.test:8888/tests/SimpleTest/test.css" : "link",
+
+  // 1
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/generateCss.sjs?A" : "link",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/generateCss.sjs?B" : "css",
+
+  // 2
+  "http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?C" : "link",
+
+  // 3
+  "http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?E" : "link",
+
+  // 4
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/generateCss.sjs?G" : "link",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/generateCss.sjs?H" : "css",
+  "http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?I" : "css",
+  "http://example.org/tests/dom/tests/mochitest/general/generateCss.sjs?K" : "css",
+
+  // 5
+  "http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?N" : "link",
+
+  // 6
+  "http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?O" : "link",
+
+  // 7
+  "http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?P" : "link",
+
+  // 8
+  "http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?Q" : "link",
+
+  // 9
+  "http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?R" : "link",
+};
+
+window.onload = function() {
+  let entries = performance.getEntries();
+  // The entries.slice() to drop first 'document' item.
+  for (let entry of entries.slice(1)) {
+    //dump(entry.name + " || "+ entry.initiatorType+ "\n");
+    if (!(entry.name in allResources)) {
+      if (entry.name.substr(-4) == ".ttf") {
+        // TODO: fix hiding of font files
+        continue;
+      }
+      ok(false, "Did not expect timing for resource: " + entry.name);
+      continue;
+    }
+    let resType = allResources[entry.name];
+    is(entry.initiatorType, resType,
+       "Expected matching initiatorType for: " + entry.name);
+    delete allResources[entry.name];
+  }
+
+  for (let res in allResources) {
+    ok(false, "Expect timing for resource: " + res);
+  }
+
+  window.opener.finishTests();
+}
+
+</script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1180145"
+     title="Resource timing NO-CORS CSS">
+    Bug #1180145 -  Resource Timing NO-CORS CSS
+  </a>
+  <p id="display"></p>
+  <div id="content">
+  </div>
+
+  <div class="c1"> BLUE </div>
+  <div class="c2"> RED  </div>
+  <div class="c3"> Font </div>
+  <div class="c4"> CURSOR </div>
+  <div class="c5"> <img id="image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="> </div>
+  <div class="c6"> </div>
+</body>
+</html>

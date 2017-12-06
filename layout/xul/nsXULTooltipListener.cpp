@@ -477,7 +477,7 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
 #endif
 
 static void
-SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
+SetTitletipLabel(nsITreeBoxObject* aTreeBox, Element* aTooltip,
                  int32_t aRow, nsITreeColumn* aCol)
 {
   nsCOMPtr<nsITreeView> view;
@@ -497,7 +497,7 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
 void
 nsXULTooltipListener::LaunchTooltip()
 {
-  nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
+  nsCOMPtr<Element> currentTooltip = do_QueryReferent(mCurrentTooltip);
   if (!currentTooltip)
     return;
 
@@ -592,10 +592,9 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     // specifying tooltiptext means we will always use the default tooltip
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShell());
     NS_ENSURE_STATE(rootBox);
-    *aTooltip = rootBox->GetDefaultTooltip();
-    if (*aTooltip) {
-      NS_ADDREF(*aTooltip);
-      (*aTooltip)->SetAttr(kNameSpaceID_None, nsGkAtoms::label, tooltipText, true);
+    if (RefPtr<Element> tooltip = rootBox->GetDefaultTooltip()) {
+      tooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::label, tooltipText, true);
+      tooltip.forget(aTooltip);
     }
     return NS_OK;
   }

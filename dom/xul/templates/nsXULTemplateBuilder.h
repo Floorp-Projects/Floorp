@@ -159,7 +159,7 @@ public:
                             nsTemplateQuerySet* aQuerySet,
                             nsIRDFResource* aOldId,
                             nsIRDFResource* aNewId,
-                            nsIContent* aInsertionPoint);
+                            Element* aInsertionPoint);
 
     nsresult
     ComputeContainmentProperties();
@@ -193,7 +193,7 @@ public:
      * Find the <template> tag that applies for this builder
      */
     nsresult
-    GetTemplateRoot(nsIContent** aResult);
+    GetTemplateRoot(Element** aResult);
 
     /**
      * Compile the template's queries
@@ -218,7 +218,7 @@ public:
      * @param aCanUseTemplate true if template is valid
      */
     nsresult
-    CompileTemplate(nsIContent* aTemplate,
+    CompileTemplate(Element* aTemplate,
                     nsTemplateQuerySet* aQuerySet,
                     bool aIsQuerySet,
                     int32_t* aPriority,
@@ -234,7 +234,7 @@ public:
      * @param aQuerySet the queryset
      */
     nsresult
-    CompileExtendedQuery(nsIContent* aRuleElement,
+    CompileExtendedQuery(Element* aRuleElement,
                          nsIContent* aActionElement,
                          nsAtom* aMemberVariable,
                          nsTemplateQuerySet* aQuerySet);
@@ -260,7 +260,7 @@ public:
      * @param aCanUseTemplate true if the query is valid
      */
     nsresult
-    CompileSimpleQuery(nsIContent* aRuleElement,
+    CompileSimpleQuery(Element* aRuleElement,
                        nsTemplateQuerySet* aQuerySet,
                        bool* aCanUseTemplate);
 
@@ -304,7 +304,7 @@ public:
      * Add automatic bindings for simple rules
      */
     nsresult
-    AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* aElement);
+    AddSimpleRuleBindings(nsTemplateRule* aRule, Element* aElement);
 
     static void
     AddBindingsFor(nsXULTemplateBuilder* aSelf,
@@ -494,7 +494,7 @@ protected:
      */
     virtual bool
     GetInsertionLocations(nsIXULTemplateResult* aResult,
-                          nsCOMArray<nsIContent>** aLocations) = 0;
+                          nsCOMArray<Element>** aLocations) = 0;
 
     /**
      * Must be implemented by subclasses. Handle removing the generated
@@ -506,7 +506,7 @@ protected:
     ReplaceMatch(nsIXULTemplateResult* aOldResult,
                  nsTemplateMatch* aNewMatch,
                  nsTemplateRule* aNewMatchRule,
-                 void *aContext) = 0;
+                 Element* aContext) = 0;
 
     /**
      * Must be implemented by subclasses. Handle change in bound

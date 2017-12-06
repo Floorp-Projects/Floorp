@@ -64,8 +64,8 @@ public:
   nsXBLBinding* GetBaseBinding() const { return mNextBinding; }
   void SetBaseBinding(nsXBLBinding *aBinding);
 
-  nsIContent* GetBoundElement() { return mBoundElement; }
-  void SetBoundElement(nsIContent *aElement);
+  mozilla::dom::Element* GetBoundElement() { return mBoundElement; }
+  void SetBoundElement(mozilla::dom::Element* aElement);
 
   /*
    * Does a lookup for a method or attribute provided by one of the bindings'
@@ -173,7 +173,7 @@ protected:
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   RefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
 
-  nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
+  mozilla::dom::Element* mBoundElement; // [WEAK] We have a reference, but we don't own it.
 
   // The <xbl:children> elements that we found in our <xbl:content> when we
   // processed this binding. The default insertion point has no includes

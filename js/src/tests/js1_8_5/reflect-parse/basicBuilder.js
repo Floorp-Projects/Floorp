@@ -42,12 +42,8 @@ assertGlobalExpr("this", 14, { thisExpression: () => 14 });
 assertGlobalExpr("(function*() { yield 42 })", genFunExpr("es6", null, [], blockStmt([exprStmt(19)])), { yieldExpression: () => 19 });
 
 assertGlobalStmt("switch (x) { case y: }", switchStmt(ident("x"), [1]), { switchCase: () => 1 });
-assertGlobalStmt("try { } catch (e) { }", 2, { tryStatement: (b, g, u, f) => u, catchClause: () => 2 });
-assertGlobalStmt("try { } catch (e if e instanceof A) { } catch (e if e instanceof B) { }", [2, 2], { tryStatement: (b, g, u, f) => g, catchClause: () => 2 });
-assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), [], 2, null), { catchClause: () => 2 });
-assertGlobalStmt("try { } catch (e if e instanceof A) { } catch (e if e instanceof B) { }",
-                 tryStmt(blockStmt([]), [2, 2], null, null),
-                 { catchClause: () => 2 });
+assertGlobalStmt("try { } catch (e) { }", 2, { tryStatement: (b, h, f) => h, catchClause: () => 2 });
+assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), 2, null), { catchClause: () => 2 });
 
 assertGlobalExpr("({ x: y } = z)", aExpr("=", 1, ident("z")), { objectPattern: () => 1 });
 assertGlobalExpr("({ x: y } = z)", aExpr("=", objPatt([2]), ident("z")), { propertyPattern: () => 2 });

@@ -135,10 +135,6 @@ testThrow(`
 throw ...a) =>
 `, 6);
 
-testThrow(`
-try {} catch (x if ...a) =>
-`, 19);
-
 // class
 
 testThrow(`

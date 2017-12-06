@@ -70,8 +70,9 @@ function addValues_3(obj)
         sum +=1;
         print("In finally block of addValues_3() function: sum = " + sum);
       }
-      catch (e if e == 42)
-      {
+      catch (e) {
+        if (e != 42)
+          throw e;
         sum +=1;
         print('In finally catch block of addValues_3() function: sum = ' + sum + ', e = ' + e);
       }
@@ -132,15 +133,16 @@ function addValues_4(obj)
         sum += 1;
         print("In finally block of addValues_4() function: sum = " + sum);
       }
-      catch (e if e == 42)
-      {
-        sum += 1;
-        print("In 1st finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
-      }
-      catch (e if e == 43)
-      {
-        sum += 1;
-        print("In 2nd finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
+      catch (e) {
+        if (e == 42) {
+          sum += 1;
+          print("In 1st finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
+        } else if (e == 43) {
+          sum += 1;
+          print("In 2nd finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
+        } else {
+          throw e;
+        }
       }
       finally
       {

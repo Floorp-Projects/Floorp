@@ -8,6 +8,7 @@ var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "AboutReader" ];
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/ReaderMode.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -133,6 +134,8 @@ AboutReader.prototype = {
                           ".content p > a:only-child > img:only-child, " +
                           ".content .wp-caption img, " +
                           ".content figure img",
+
+  PLATFORM_HAS_CACHE: AppConstants.platform == "android",
 
   get _doc() {
     return this._docRef.get();
@@ -678,18 +681,21 @@ AboutReader.prototype = {
   },
 
   _getArticle(url) {
-    return new Promise((resolve, reject) => {
-      let listener = (message) => {
-        this._mm.removeMessageListener("Reader:ArticleData", listener);
-        if (message.data.newURL) {
-          reject({ newURL: message.data.newURL });
-          return;
-        }
-        resolve(message.data.article);
-      };
-      this._mm.addMessageListener("Reader:ArticleData", listener);
-      this._mm.sendAsyncMessage("Reader:ArticleGet", { url });
-    });
+    if (this.PLATFORM_HAS_CACHE) {
+      return new Promise((resolve, reject) => {
+        let listener = (message) => {
+          this._mm.removeMessageListener("Reader:ArticleData", listener);
+          if (message.data.newURL) {
+            reject({ newURL: message.data.newURL });
+            return;
+          }
+          resolve(message.data.article);
+        };
+        this._mm.addMessageListener("Reader:ArticleData", listener);
+        this._mm.sendAsyncMessage("Reader:ArticleGet", { url });
+      });
+    }
+    return ReaderMode.downloadAndParseDocument(url);
   },
 
   _requestFavicon() {

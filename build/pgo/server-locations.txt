@@ -292,3 +292,6 @@ https://mochitest.youtube.com:443
 # Hosts for stylo blocklist tests
 http://stylo-blocklist.com:80          privileged
 http://test.stylo-blocklist.com:80     privileged
+
+# Host for U2F localhost tests
+https://localhost:443
