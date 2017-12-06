@@ -15,12 +15,14 @@ happen on mozilla-beta and mozilla-release.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 import functools
+import json
 import os
 
 
 # constants {{{1
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 VERSION_PATH = os.path.join(GECKO, "browser", "config", "version_display.txt")
+APP_VERSION_PATH = os.path.join(GECKO, "browser", "config", "version.txt")
 
 """Map signing scope aliases to sets of projects.
 
@@ -87,12 +89,19 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
 Used for both `BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK` and `get_release_build_number`
 """
 BEETMOVER_CANDIDATES_TARGET_TASKS = set([
-    'candidates_fennec',
+    'promote_fennec',
+    'promote_firefox',
+    'promote_devedition'
 ])
-BEETMOVER_PUBLISH_TARGET_TASKS = set([
-    'publish_fennec',
+BEETMOVER_PUSH_TARGET_TASKS = set([
+    'push_fennec',
+    'ship_fennec',
+    'push_firefox',
+    'ship_firefox',
+    'push_devedition',
+    'ship_devedition',
 ])
-BEETMOVER_RELEASE_TARGET_TASKS = BEETMOVER_CANDIDATES_TARGET_TASKS | BEETMOVER_PUBLISH_TARGET_TASKS
+BEETMOVER_RELEASE_TARGET_TASKS = BEETMOVER_CANDIDATES_TARGET_TASKS | BEETMOVER_PUSH_TARGET_TASKS
 
 """Map beetmover tasks aliases to sets of target task methods.
 
@@ -112,7 +121,7 @@ BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
 ], [
     'all-candidates-tasks', BEETMOVER_CANDIDATES_TARGET_TASKS
 ], [
-    'all-publish-tasks', BEETMOVER_PUBLISH_TARGET_TASKS
+    'all-push-tasks', BEETMOVER_PUSH_TARGET_TASKS
 ]]
 
 """Map the beetmover scope aliases to the actual scopes.
@@ -121,7 +130,7 @@ BEETMOVER_BUCKET_SCOPES = {
     'all-candidates-tasks': {
         'all-release-branches': 'project:releng:beetmover:bucket:release',
     },
-    'all-publish-tasks': {
+    'all-push-tasks': {
         'all-release-branches': 'project:releng:beetmover:bucket:release',
     },
     'all-nightly-tasks': {
@@ -134,9 +143,18 @@ BEETMOVER_BUCKET_SCOPES = {
 """
 BEETMOVER_ACTION_SCOPES = {
     'all-candidates-tasks': 'project:releng:beetmover:action:push-to-candidates',
-    'all-publish-tasks': 'project:releng:beetmover:action:push-to-releases',
+    'all-push-tasks': 'project:releng:beetmover:action:push-to-releases',
     'all-nightly-tasks': 'project:releng:beetmover:action:push-to-nightly',
     'default': 'project:releng:beetmover:action:push-to-staging',
+}
+
+
+"""Map the beetmover tasks aliases to phases.
+"""
+PHASES = {
+    'all-candidates-tasks': 'promote',
+    'all-push-tasks': 'push',
+    'default': None,
 }
 
 """Map balrog scope aliases to sets of projects.
@@ -362,6 +380,12 @@ get_beetmover_action_scope = functools.partial(
     BEETMOVER_ACTION_SCOPES
 )
 
+get_phase = functools.partial(
+    get_scope_from_target_method,
+    BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
+    PHASES
+)
+
 get_balrog_server_scope = functools.partial(
     get_scope_from_project,
     BALROG_SCOPE_ALIAS_TO_PROJECT,
@@ -406,7 +430,7 @@ get_push_apk_rollout_percentage = functools.partial(
 
 
 # release_config {{{1
-def get_release_config(config, force=False):
+def get_release_config(config):
     """Get the build number and version for a release task.
 
     Currently only applies to beetmover tasks.
@@ -419,12 +443,37 @@ def get_release_config(config, force=False):
             update `task.payload`.
     """
     release_config = {}
-    if force or config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
-        release_config['next_version'] = str(config.params['next_version'])
-        release_config['build_number'] = int(config.params['build_number'])
-        with open(VERSION_PATH, "r") as fh:
-            version = fh.readline().rstrip()
-        release_config['version'] = version
+
+    partial_updates = os.environ.get("PARTIAL_UPDATES", "")
+    if partial_updates != "" and config.kind in ('release-bouncer-sub',
+                                                 'release-uptake-monitoring',
+                                                 'release-updates-builder',
+                                                 ):
+        partial_updates = json.loads(partial_updates)
+        release_config['partial_versions'] = ', '.join([
+            '{}build{}'.format(v, info['buildNumber'])
+            for v, info in partial_updates.items()
+        ])
+        if release_config['partial_versions'] == "{}":
+            del release_config['partial_versions']
+
+    uptake_monitoring_platforms = os.environ.get("UPTAKE_MONITORING_PLATFORMS", "[]")
+    if uptake_monitoring_platforms != "[]" and \
+            config.kind in ('release-uptake-monitoring',):
+        uptake_monitoring_platforms = json.loads(uptake_monitoring_platforms)
+        release_config['platforms'] = ', '.join(uptake_monitoring_platforms)
+        if release_config['platforms'] == "[]":
+            del release_config['platforms']
+
+    with open(VERSION_PATH, "r") as fh:
+        version = fh.readline().rstrip()
+    release_config['version'] = version
+    with open(APP_VERSION_PATH, "r") as fh:
+        appVersion = fh.readline().rstrip()
+    release_config['appVersion'] = appVersion
+
+    release_config['next_version'] = str(config.params['next_version'])
+    release_config['build_number'] = config.params['build_number']
     return release_config
 
 
