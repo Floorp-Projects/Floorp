@@ -20,6 +20,7 @@ import java.util.Locale;
 
 import org.mozilla.gecko.GeckoSession;
 import org.mozilla.gecko.GeckoSessionSettings;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.util.GeckoBundle;
 
@@ -28,6 +29,9 @@ public class GeckoViewActivity extends Activity {
     private static final String DEFAULT_URL = "https://mozilla.org";
     private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
     private static final String USE_REMOTE_DEBUGGER_EXTRA = "use_remote_debugger";
+    private static final String ACTION_SHUTDOWN =
+        "org.mozilla.geckoview_example.SHUTDOWN";
+    private boolean mKillProcessOnDestroy;
 
     /* package */ static final int REQUEST_FILE_PICKER = 1;
     private static final int REQUEST_PERMISSIONS = 2;
@@ -86,8 +90,25 @@ public class GeckoViewActivity extends Activity {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if (mKillProcessOnDestroy) {
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
+    }
+
+    @Override
     protected void onNewIntent(final Intent intent) {
         super.onNewIntent(intent);
+
+        if (ACTION_SHUTDOWN.equals(intent.getAction())) {
+            mKillProcessOnDestroy = true;
+            GeckoThread.forceQuit();
+            finish();
+            return;
+        }
+
         setIntent(intent);
 
         loadSettings(intent);

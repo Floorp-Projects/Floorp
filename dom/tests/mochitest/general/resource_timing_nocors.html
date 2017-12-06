@@ -1,0 +1,88 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/dom/tests/mochitest/general/linkA.css"/>
+  <link rel="stylesheet" type="text/css" href="http://example.com/tests/dom/tests/mochitest/general/linkB.css"/>
+  <link rel="stylesheet" type="text/css" href="http://example.net/tests/dom/tests/mochitest/general/linkC.css"/>
+
+<!--
+
+  Resources fetched by a cross-origin stylesheet loaded with a no-cors mode should not be reported.
+  Resources marked with a ^ should be reported in performance.getEntries()
+
+  (mochi.test:8888 | linkA.css)^ -> (mochi.test:8888 | cssA.css)^
+                                 -> (mochi.test:8888 | cssB.css)^ -> (mochi.test:8888 | cssC.css)^
+                                                                  -> (example.org     | cssC.css)^
+  (example.com     | linkB.css)^ -> (example.com     | cssA.css)
+                                 -> (mochi.test:8888 | cssA.css)
+                                 -> (test2.examp.org | cssB.css) -> (test2.examp.org | cssC.css)
+                                                                 -> (example.org     | cssC.css)
+                                 -> (example.net     | cssC.css)
+
+  (example.net     | linkC.css)^ -> (example.net | cssA.css)
+    [WITH Allow-* HEADERS]
+
+-->
+
+
+  <script type="application/javascript">
+
+function ok(cond, message) {
+  window.opener.ok(cond, message)
+}
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+function isnot(received, notExpected, message) {
+  window.opener.isnot(received, notExpected, message);
+}
+
+var allResources = {
+  "http://mochi.test:8888/tests/SimpleTest/test.css" : "link",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/linkA.css" : "link",
+  "http://example.com/tests/dom/tests/mochitest/general/linkB.css" : "link",
+  "http://example.net/tests/dom/tests/mochitest/general/linkC.css" : "link",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/cssA.css" : "css",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/cssB.css" : "css",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/cssC.css" : "css",
+  "http://example.org/tests/dom/tests/mochitest/general/cssC.css" : "css",
+};
+
+window.onload = function() {
+  let entries = performance.getEntries();
+  for (let entry of entries) {
+    let type = allResources[entry.name];
+    if (!type) {
+      ok(false, "Did not expect to find resource: "+entry.name);
+      continue;
+    }
+
+    is(entry.initiatorType, type, "Expected initiatorType does not match");
+  }
+
+  is(entries.length, Object.keys(allResources).length, "Found wrong number of resources");
+
+  window.opener.finishTests();
+}
+
+</script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1180145"
+     title="Resource timing NO-CORS CSS">
+    Bug #1180145 -  Resource Timing NO-CORS CSS
+  </a>
+  <p id="display"></p>
+  <div id="content">
+  </div>
+</body>
+</html>

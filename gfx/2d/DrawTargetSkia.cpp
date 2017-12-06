@@ -278,7 +278,7 @@ GetSkImageForSurface(SourceSurface* aSurface, const Rect* aBounds = nullptr, con
 
 DrawTargetSkia::DrawTargetSkia()
   : mSnapshot(nullptr)
-  , mSnapshotLock{make_shared<Mutex>("DrawTargetSkia::mSnapshotLock")}
+  , mSnapshotLock{"DrawTargetSkia::mSnapshotLock"}
 #ifdef MOZ_WIDGET_COCOA
   , mCG(nullptr)
   , mColorSpace(nullptr)
@@ -291,6 +291,12 @@ DrawTargetSkia::DrawTargetSkia()
 
 DrawTargetSkia::~DrawTargetSkia()
 {
+  if (mSnapshot) {
+    MutexAutoLock lock(mSnapshotLock);
+    // We're going to go away, hand our SkSurface to the SourceSurface.
+    mSnapshot->GiveSurface(mSurface);
+  }
+
 #ifdef MOZ_WIDGET_COCOA
   if (mCG) {
     CGContextRelease(mCG);
@@ -309,7 +315,7 @@ DrawTargetSkia::Snapshot()
 {
   // Without this lock, this could cause us to get out a snapshot and race with
   // Snapshot::~Snapshot() actually destroying itself.
-  MutexAutoLock lock(*mSnapshotLock);
+  MutexAutoLock lock(mSnapshotLock);
   RefPtr<SourceSurfaceSkia> snapshot = mSnapshot;
   if (mSurface && !snapshot) {
     snapshot = new SourceSurfaceSkia();
@@ -322,7 +328,7 @@ DrawTargetSkia::Snapshot()
     } else {
       image = mSurface->makeImageSnapshot();
     }
-    if (!snapshot->InitFromImage(image, mFormat, this, mSnapshotLock)) {
+    if (!snapshot->InitFromImage(image, mFormat, this)) {
       return nullptr;
     }
     mSnapshot = snapshot;
@@ -2226,8 +2232,17 @@ DrawTargetSkia::CreateFilter(FilterType aType)
 void
 DrawTargetSkia::MarkChanged()
 {
-  MutexAutoLock lock(*mSnapshotLock);
+  // I'm not entirely certain whether this lock is needed, as multiple threads
+  // should never modify the DrawTarget at the same time anyway, but this seems
+  // like the safest.
+  MutexAutoLock lock(mSnapshotLock);
   if (mSnapshot) {
+    if (mSnapshot->hasOneRef()) {
+      // No owners outside of this DrawTarget's own reference. Just dump it.
+      mSnapshot = nullptr;
+      return;
+    }
+
     mSnapshot->DrawTargetWillChange();
     mSnapshot = nullptr;
 
@@ -2236,12 +2251,6 @@ DrawTargetSkia::MarkChanged()
       mSurface->notifyContentWillChange(SkSurface::kRetain_ContentChangeMode);
     }
   }
-}
-
-void
-DrawTargetSkia::SnapshotDestroyed()
-{
-  mSnapshot = nullptr;
 }
 
 } // namespace gfx

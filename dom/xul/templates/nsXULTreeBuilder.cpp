@@ -280,7 +280,7 @@ nsXULTreeBuilder::GetRowProperties(int32_t aRow, nsAString& aProperties,
         return;
     }
 
-    nsCOMPtr<nsIContent> row;
+    nsCOMPtr<Element> row;
     GetTemplateActionRowFor(aRow, getter_AddRefs(row));
     if (row) {
         nsAutoString raw;
@@ -1046,7 +1046,7 @@ nsXULTreeBuilder::HasGeneratedContent(nsIRDFResource* aResource,
 
 bool
 nsXULTreeBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
-                                        nsCOMArray<nsIContent>** aLocations)
+                                        nsCOMArray<Element>** aLocations)
 {
     *aLocations = nullptr;
 
@@ -1089,7 +1089,7 @@ nsresult
 nsXULTreeBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
                                nsTemplateMatch* aNewMatch,
                                nsTemplateRule* aNewMatchRule,
-                               void *aLocation)
+                               Element*)
 {
     if (! mBoxObject)
         return NS_OK;
@@ -1250,7 +1250,7 @@ nsXULTreeBuilder::EnsureSortVariables()
 {
     // Grovel through <treecols> kids to find the <treecol>
     // with the sort attributes.
-    nsCOMPtr<nsIContent> treecols;
+    nsCOMPtr<Element> treecols;
 
     nsXULContentUtils::FindChildByTag(mRoot, kNameSpaceID_XUL,
                                       nsGkAtoms::treecols,
@@ -1344,7 +1344,7 @@ nsXULTreeBuilder::RebuildAll()
 }
 
 nsresult
-nsXULTreeBuilder::GetTemplateActionRowFor(int32_t aRow, nsIContent** aResult)
+nsXULTreeBuilder::GetTemplateActionRowFor(int32_t aRow, Element** aResult)
 {
     // Get the template in the DOM from which we're supposed to
     // generate text
@@ -1358,12 +1358,12 @@ nsXULTreeBuilder::GetTemplateActionRowFor(int32_t aRow, nsIContent** aResult)
         nsTemplateQuerySet* qs = mQuerySets[row.mMatch->QuerySetPriority()];
         nsTemplateRule* rule = qs->GetRuleAt(ruleindex);
         if (rule) {
-            nsCOMPtr<nsIContent> children;
+            nsCOMPtr<Element> children;
             nsXULContentUtils::FindChildByTag(rule->GetAction(), kNameSpaceID_XUL,
                                               nsGkAtoms::treechildren,
                                               getter_AddRefs(children));
             if (children) {
-                nsCOMPtr<nsIContent> item;
+                nsCOMPtr<Element> item;
                 nsXULContentUtils::FindChildByTag(children, kNameSpaceID_XUL,
                                                   nsGkAtoms::treeitem,
                                                   getter_AddRefs(item));
@@ -1383,7 +1383,7 @@ nsXULTreeBuilder::GetTemplateActionRowFor(int32_t aRow, nsIContent** aResult)
 nsIContent*
 nsXULTreeBuilder::GetTemplateActionCellFor(int32_t aRow, nsTreeColumn& aCol)
 {
-    nsCOMPtr<nsIContent> row;
+    RefPtr<Element> row;
     GetTemplateActionRowFor(aRow, getter_AddRefs(row));
     if (!row) {
         return nullptr;

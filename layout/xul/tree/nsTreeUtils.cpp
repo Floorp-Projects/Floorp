@@ -84,7 +84,7 @@ nsTreeUtils::GetDescendantChild(nsIContent* aContainer, nsAtom* aTag)
 }
 
 nsresult
-nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirection)
+nsTreeUtils::UpdateSortIndicators(Element* aColumn, const nsAString& aDirection)
 {
   aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, aDirection, true);
   aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive, NS_LITERAL_STRING("true"), true);
@@ -102,10 +102,10 @@ nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirecti
           childContent != aColumn &&
           childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {
-        childContent->UnsetAttr(kNameSpaceID_None,
-                                nsGkAtoms::sortDirection, true);
-        childContent->UnsetAttr(kNameSpaceID_None,
-                                nsGkAtoms::sortActive, true);
+        childContent->AsElement()->UnsetAttr(kNameSpaceID_None,
+                                             nsGkAtoms::sortDirection, true);
+        childContent->AsElement()->UnsetAttr(kNameSpaceID_None,
+                                             nsGkAtoms::sortActive, true);
       }
     }
   }
@@ -114,7 +114,7 @@ nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirecti
 }
 
 nsresult
-nsTreeUtils::GetColumnIndex(nsIContent* aColumn, int32_t* aResult)
+nsTreeUtils::GetColumnIndex(Element* aColumn, int32_t* aResult)
 {
   nsIContent* parentContent = aColumn->GetParent();
   if (parentContent &&
@@ -123,7 +123,7 @@ nsTreeUtils::GetColumnIndex(nsIContent* aColumn, int32_t* aResult)
     uint32_t i, numChildren = parentContent->GetChildCount();
     int32_t colIndex = 0;
     for (i = 0; i < numChildren; ++i) {
-      nsIContent *childContent = parentContent->GetChildAt(i);
+      nsIContent* childContent = parentContent->GetChildAt(i);
       if (childContent &&
           childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {

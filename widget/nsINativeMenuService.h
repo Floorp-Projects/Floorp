@@ -10,6 +10,11 @@
 
 class nsIWidget;
 class nsIContent;
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
 
 // {90DF88F9-F084-4EF3-829A-49496E636DED}
 #define NS_INATIVEMENUSERVICE_IID \
@@ -22,7 +27,7 @@ public:
   // Given a top-level window widget and a menu bar DOM node, sets up native
   // menus. Once created, native menus are controlled via the DOM, including
   // destruction.
-  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, nsIContent* aMenuBarNode)=0;
+  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, mozilla::dom::Element* aMenuBarNode)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINativeMenuService, NS_INATIVEMENUSERVICE_IID)

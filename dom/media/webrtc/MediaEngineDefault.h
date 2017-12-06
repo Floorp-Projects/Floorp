@@ -188,8 +188,9 @@ protected:
   TrackID mTrackID;
 
   TrackTicks mLastNotify; // Accessed in ::Start(), then on NotifyPull (from MSG thread)
+  uint32_t mFreq; // ditto
 
-  // Created on Allocate, then accessed from NotifyPull (MSG thread)
+  // Created on Start, then accessed from NotifyPull (MSG thread)
   nsAutoPtr<SineWaveGenerator> mSineGenerator;
 };
 

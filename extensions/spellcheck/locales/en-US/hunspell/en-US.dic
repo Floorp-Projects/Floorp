@@ -1,4 +1,4 @@
-52456
+52460
 0/nm
 0th/pt
 1/n1
@@ -15888,6 +15888,7 @@ ban/SM
 banal/Y
 banality/SM
 banana/SM
+banc/S
 band's
 band/ESGD
 bandage/DSMG
@@ -20903,7 +20904,7 @@ copycatted
 copycatting
 copyist/MS
 copyleft
-copyright/GSMD
+copyright/GSMDB
 copywriter/MS
 coquetry/SM
 coquette/DSMG
@@ -21703,7 +21704,7 @@ curability/M
 curacao
 curacy/SM
 curare/M
-curate/DSMGV
+curate/DSMGVN
 curative/MS
 curator/KMS
 curatorial
@@ -22832,6 +22833,7 @@ differential/SM
 differentiate/DSGN
 differentiated/U
 differentiation/M
+differentiator/S
 difficult/Y
 difficulty/SM
 diffidence/M
@@ -24168,7 +24170,7 @@ effuse/DSGNVX
 effusion/M
 effusive/YP
 effusiveness/M
-egad
+egad/S
 egalitarian/SM
 egalitarianism/M
 egg/GSMD
@@ -32383,6 +32385,7 @@ krone/RM
 kronor
 kronur
 krypton/M
+kryptonite
 króna/M
 krónur
 kt
@@ -51417,6 +51420,7 @@ webisode/MS
 weblog/MS
 webmaster/SM
 webmistress/MS
+webpage/SM
 website/SM
 wed/AS
 wedded/A

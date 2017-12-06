@@ -342,6 +342,10 @@ mochitest-webgl:
     description: "Mochitest webgl run"
     suite: mochitest/mochitest-gl
     treeherder-symbol: tc-M(gl)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
+            default: built-projects
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
