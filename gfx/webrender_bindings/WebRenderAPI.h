@@ -125,7 +125,7 @@ protected:
 
 class WebRenderAPI
 {
-  NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderAPI);
 
 public:
   /// This can be called on the compositor thread only.
