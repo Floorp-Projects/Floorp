@@ -1487,18 +1487,18 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   text-align: center;
 }
 
-.PanelUI-subView .panel-header > .subviewbutton-back {
+.panel-header > .subviewbutton-back {
   -moz-context-properties: fill;
   fill: var(--arrowpanel-color);
   list-style-image: url(chrome://browser/skin/arrow-left.svg);
   padding: 8px;
 }
 
-.panel-header > .subviewbutton-back:-moz-locale-dir(rtl) {
+.subviewbutton-back:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 
-.panel-header > .subviewbutton-back > .toolbarbutton-text {
+.subviewbutton-back > .toolbarbutton-text {
   /* !important to override .cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text
    * selector further down. */
   display: none !important;

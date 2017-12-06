@@ -73,12 +73,10 @@ panelmultiview {
 }
 
 panelview {
-  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelview");
   -moz-box-orient: vertical;
 }
 
-panel[hidden] panelmultiview,
-panel[hidden] panelview {
+panel[hidden] panelmultiview {
   -moz-binding: none;
 }
 
@@ -86,8 +84,8 @@ panelview:not([current]):not([in-transition]) {
   visibility: collapse;
 }
 
-panelview[mainview] > .panel-header,
-panelview:not([title]) > .panel-header {
+/* Hide the header when a subview is reused as a main view. */
+panelview[mainview] > .panel-header {
   display: none;
 }
 
