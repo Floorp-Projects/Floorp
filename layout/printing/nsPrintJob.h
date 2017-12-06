@@ -41,6 +41,9 @@ class nsPrintJob final : public nsIObserver
                        , public nsSupportsWeakReference
 {
 public:
+  static nsresult GetGlobalPrintSettings(nsIPrintSettings** aPrintSettings);
+  static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
+
   nsPrintJob() = default;
 
   // nsISupports interface...
@@ -63,7 +66,6 @@ public:
   NS_IMETHOD GetIsFramesetFrameSelected(bool *aIsFramesetFrameSelected);
   NS_IMETHOD GetPrintPreviewNumPages(int32_t *aPrintPreviewNumPages);
   NS_IMETHOD EnumerateDocumentNames(uint32_t* aCount, char16_t*** aResult);
-  static nsresult GetGlobalPrintSettings(nsIPrintSettings** aPrintSettings);
   NS_IMETHOD GetDoingPrint(bool *aDoingPrint);
   NS_IMETHOD GetDoingPrintPreview(bool *aDoingPrintPreview);
   NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings **aCurrentPrintSettings);
@@ -130,7 +132,6 @@ public:
   // If FinishPrintPreview() fails, caller may need to reset the state of the
   // object, for example by calling CleanupOnFailure().
   nsresult FinishPrintPreview();
-  static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
   void SetDocAndURLIntoProgress(const mozilla::UniquePtr<nsPrintObject>& aPO,
                                 nsIPrintProgressParams* aParams);
   void EllipseLongString(nsAString& aStr, const uint32_t aLen, bool aDoFront);
@@ -147,26 +148,17 @@ public:
   nsresult StartPagePrintTimer(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   bool IsWindowsInOurSubTree(nsPIDOMWindowOuter* aDOMWindow);
-  static bool IsParentAFrameSet(nsIDocShell * aParent);
   bool IsThereAnIFrameSelected(nsIDocShell* aDocShell,
                                nsPIDOMWindowOuter* aDOMWin,
                                bool& aIsParentFrameSet);
 
-  static nsPrintObject* FindPrintObjectByDOMWin(nsPrintObject* aParentObject,
-                                                nsPIDOMWindowOuter* aDOMWin);
-
   // get the currently infocus frame for the document viewer
   already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow();
 
-  static void GetDocumentTitleAndURL(nsIDocument* aDoc,
-                                     nsAString&   aTitle,
-                                     nsAString&   aURLStr);
   void GetDisplayTitleAndURL(const mozilla::UniquePtr<nsPrintObject>& aPO,
                              nsAString&       aTitle,
                              nsAString&       aURLStr,
                              eDocTitleDefault aDefType);
-
-  static bool HasFramesetChild(nsIContent* aContent);
 
   bool     CheckBeforeDestroy();
   nsresult Cancelled();
@@ -175,8 +167,6 @@ public:
 
   float GetPrintPreviewScale() { return mPrtPreview->mPrintObject->
                                         mPresContext->GetPrintPreviewScale(); }
-
-  static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
 
   // These calls also update the DocViewer
   void SetIsPrinting(bool aIsPrinting);
@@ -213,17 +203,6 @@ private:
                          nsIDOMDocument* aDoc);
 
   void FirePrintCompletionEvent();
-  static nsresult GetSeqFrameAndCountPagesInternal(const mozilla::UniquePtr<nsPrintObject>& aPO,
-                                                   nsIFrame*&      aSeqFrame,
-                                                   int32_t&        aCount);
-
-  static void MapContentForPO(const mozilla::UniquePtr<nsPrintObject>& aPO,
-                              nsIContent* aContent);
-
-  static void MapContentToWebShells(const mozilla::UniquePtr<nsPrintObject>& aRootPO,
-                                    const mozilla::UniquePtr<nsPrintObject>& aPO);
-
-  static void SetPrintAsIs(nsPrintObject* aPO, bool aAsIs = true);
 
   void DisconnectPagePrintTimer();
 
