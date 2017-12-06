@@ -542,7 +542,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // into EnsureElementHasGenericChild for non-elements, assuming the
             // node is already there.
             rv = NS_ELEMENT_WAS_THERE;
-            if (!tmplKid->IsElement()) {
+            if (tmplKid->IsElement()) {
               rv = EnsureElementHasGenericChild(aRealElement, nameSpaceID, tag, aNotify, getter_AddRefs(realKid));
               if (NS_FAILED(rv))
                   return rv;
@@ -670,12 +670,10 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // template to incrementally build content.
             mTemplateMap.Put(realKid, tmplKid);
 
-            if (tmplKid->IsElement()) {
-                rv = CopyAttributesToElement(tmplKid->AsElement(),
-                                             realKid, aChild,
-                                             false);
-                if (NS_FAILED(rv)) return rv;
-            }
+            rv = CopyAttributesToElement(tmplKid->AsElement(),
+                                         realKid, aChild,
+                                         false);
+            if (NS_FAILED(rv)) return rv;
 
             // Add any persistent attributes
             if (isGenerationElement) {
