@@ -2907,7 +2907,7 @@ TabParent::SetDocShellIsActive(bool isActive)
   // docshell is consider prerendered only if not active yet
   mIsPrerendered &= !isActive;
   mDocShellIsActive = isActive;
-  SetRenderLayers(isActive);
+  RenderLayers(isActive);
   Unused << SendSetDocShellIsActive(isActive);
 
   // update active accessible documents on windows
@@ -2949,7 +2949,7 @@ TabParent::GetIsPrerendered(bool* aIsPrerendered)
 }
 
 NS_IMETHODIMP
-TabParent::SetRenderLayers(bool aEnabled)
+TabParent::RenderLayers(bool aEnabled)
 {
   if (aEnabled == mRenderLayers) {
     if (aEnabled == mHasLayers && mPreserveLayers) {
@@ -2992,13 +2992,6 @@ TabParent::SetRenderLayers(bool aEnabled)
     cp->ForceTabPaint(this, mLayerTreeEpoch);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::GetRenderLayers(bool* aResult)
-{
-  *aResult = mRenderLayers;
   return NS_OK;
 }
 

@@ -4389,7 +4389,7 @@
                 }
 
                 if (tabParent) {
-                  browser.renderLayers = true;
+                  tabParent.renderLayers(true);
                 } else {
                   this.onLayersReady(browser);
                 }
@@ -4436,30 +4436,21 @@
               window.addEventListener("SwapDocShells", this, true);
               window.addEventListener("EndSwapDocShells", this, true);
 
-              let initialTab = this.requestedTab;
+              let tab = this.requestedTab;
+              let browser = tab.linkedBrowser;
+              let tabIsLoaded = browser.renderingLayers;
 
-              for (let tab of this.tabbrowser.tabs) {
-                if (tab == initialTab && this.minimizedOrFullyOccluded) {
-                  continue;
-                }
-
-                if (tab.linkedPanel) {
-                  let b = tab.linkedBrowser;
-                  let state;
-                  if (b.renderLayers && b.hasLayers) {
-                    state = this.STATE_LOADED;
-                  } else if (b.renderLayers && !b.hasLayers) {
-                    state = this.STATE_LOADING;
-                  } else if (!b.renderLayers && b.hasLayers) {
-                    state = this.STATE_UNLOADING;
-                  } else {
-                    state = this.STATE_UNLOADED;
-                  }
-
-                  this.setTabState(tab, state);
-                }
+              if (!this.minimizedOrFullyOccluded) {
+                this.log("Initial tab is loaded?: " + tabIsLoaded);
+                this.setTabState(tab, tabIsLoaded ? this.STATE_LOADED
+                                                  : this.STATE_LOADING);
               }
-              this.logState("Tab states initialized");
+              for (let ppBrowser of this.tabbrowser._printPreviewBrowsers) {
+                let ppTab = this.tabbrowser.getTabForBrowser(ppBrowser);
+                let state = ppBrowser.hasLayers ? this.STATE_LOADED
+                                                : this.STATE_LOADING;
+                this.setTabState(ppTab, state);
+              }
             },
 
             destroy() {
