@@ -40,9 +40,27 @@
 //   is only meant to run on Linux and Mac OSX for now, hardcoding /tmp is an
 //   option that should work for most standard environments.
 //
+//   max_malloc_fill_size - Tell ASan to initialize memory to a certain value
+//   when it is allocated. This option specifies the maximum allocation size
+//   for which ASan should still initialize the memory. The value we specify
+//   here is exactly 256MiB.
+//
+//   max_free_fill_size - Similar to max_malloc_fill_size, tell ASan to
+//   overwrite memory with a certain value when it is freed. Again, the value
+//   here specifies the maximum allocation size, larger allocations will
+//   skipped.
+//
+//   malloc_fill_byte / free_fill_byte - These values specify the byte values
+//   used to initialize/overwrite memory in conjunction with the previous
+//   options max_malloc_fill_size and max_free_fill_size. The values used here
+//   are 0xe4 and 0xe5 to match the kAllocPoison and kAllocJunk constants used
+//   by mozjemalloc.
+//
 extern "C" MOZ_ASAN_BLACKLIST
 const char* __asan_default_options() {
     return "allow_user_segv_handler=1:alloc_dealloc_mismatch=0:detect_leaks=0"
+           ":max_free_fill_size=268435456:max_malloc_fill_size=268435456"
+           ":malloc_fill_byte=228:free_fill_byte=229"
 #ifdef MOZ_ASAN_REPORTER
            ":log_path=/tmp/ff_asan_log"
 #endif

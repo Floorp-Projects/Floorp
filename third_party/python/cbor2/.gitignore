@@ -1,0 +1,13 @@
+.project
+.pydevproject
+.idea/
+.coverage
+.cache/
+.tox/
+.eggs/
+*.egg-info/
+*.pyc
+dist/
+docs/_build/
+build/
+virtualenv/

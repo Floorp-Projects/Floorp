@@ -38,6 +38,7 @@ skip-if(cocoaWidget&&isDebugBuild) load 639737-1.html
 load 648206-1.html
 load 705875.html
 load 720305-1.html
+load 721910.html
 load 723465.html
 load 732870.html
 load 751995.html

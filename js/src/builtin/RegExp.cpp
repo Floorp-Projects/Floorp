@@ -108,7 +108,7 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
 }
 
 static int32_t
-CreateRegExpSearchResult(JSContext* cx, const MatchPairs& matches)
+CreateRegExpSearchResult(const MatchPairs& matches)
 {
     /* Fit the start and limit of match into a int32_t. */
     uint32_t position = matches[0].start;
@@ -1078,7 +1078,7 @@ RegExpSearcherImpl(JSContext* cx, HandleObject regexp, HandleString string,
     }
 
     /* Steps 16-25 */
-    *result = CreateRegExpSearchResult(cx, matches);
+    *result = CreateRegExpSearchResult(matches);
     return true;
 }
 
@@ -1123,7 +1123,7 @@ js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
     // The MatchPairs will always be passed in, but RegExp execution was
     // successful only if the pairs have actually been filled in.
     if (maybeMatches && maybeMatches->pairsRaw()[0] >= 0) {
-        *result = CreateRegExpSearchResult(cx, *maybeMatches);
+        *result = CreateRegExpSearchResult(*maybeMatches);
         return true;
     }
     return RegExpSearcherImpl(cx, regexp, input, lastIndex,

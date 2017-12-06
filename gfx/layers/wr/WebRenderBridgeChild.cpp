@@ -629,5 +629,13 @@ WebRenderBridgeChild::GetShmemAllocator()
   return static_cast<CompositorBridgeChild*>(Manager());
 }
 
+
+RefPtr<KnowsCompositor>
+WebRenderBridgeChild::GetForMedia()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return MakeAndAddRef<KnowsCompositorMediaProxy>(GetTextureFactoryIdentifier());
+}
+
 } // namespace layers
 } // namespace mozilla

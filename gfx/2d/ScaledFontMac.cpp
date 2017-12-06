@@ -108,13 +108,15 @@ CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
 ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
                              Float aSize,
+                             bool aOwnsFont,
                              const Color &aFontSmoothingBackgroundColor,
                              bool aUseFontSmoothing,
-                             bool aOwnsFont)
+                             bool aApplySyntheticBold)
   : ScaledFontBase(aUnscaledFont, aSize)
   , mFont(aFont)
   , mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor)
   , mUseFontSmoothing(aUseFontSmoothing)
+  , mApplySyntheticBold(aApplySyntheticBold)
 {
   if (!sSymbolLookupDone) {
     CTFontDrawGlyphsPtr =
@@ -413,6 +415,9 @@ ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOpti
   if (mUseFontSmoothing) {
     options.flags |= wr::FontInstanceFlags::FONT_SMOOTHING;
   }
+  if (mApplySyntheticBold) {
+    options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
+  }
   options.bg_color = wr::ToColorU(mFontSmoothingBackgroundColor);
   *aOutOptions = Some(options);
   return true;
@@ -554,7 +559,7 @@ UnscaledFontMac::CreateScaledFont(Float aGlyphSize,
   }
 
   RefPtr<ScaledFontMac> scaledFont =
-    new ScaledFontMac(fontRef, this, aGlyphSize, Color(), true, fontRef != mFont);
+    new ScaledFontMac(fontRef, this, aGlyphSize, fontRef != mFont);
 
   if (!scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled Mac font.";

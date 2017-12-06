@@ -7,14 +7,19 @@
 #define _mozilla_dom_ClientSource_h
 
 #include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/ClientThing.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "mozilla/Variant.h"
 
 class nsIDocShell;
+class nsISerialEventTarget;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
 
+class ClientControlledArgs;
 class ClientManager;
 class ClientSourceChild;
 class ClientSourceConstructorArgs;
@@ -46,6 +51,7 @@ class ClientSource final : public ClientThing<ClientSourceChild>
           mozilla::dom::workers::WorkerPrivate*> mOwner;
 
   ClientInfo mClientInfo;
+  Maybe<ServiceWorkerDescriptor> mController;
 
   void
   Shutdown();
@@ -58,6 +64,12 @@ class ClientSource final : public ClientThing<ClientSourceChild>
 
   nsIDocShell*
   GetDocShell() const;
+
+  void
+  MaybeCreateInitialDocument();
+
+  nsresult
+  SnapshotWindowState(ClientState* aStateOut);
 
   // Private methods called by ClientManager
   ClientSource(ClientManager* aManager,
@@ -90,6 +102,40 @@ public:
 
   const ClientInfo&
   Info() const;
+
+  // Trigger a synchronous IPC ping to the parent process to confirm that
+  // the ClientSource actor has been created.  This should only be used
+  // by the WorkerPrivate startup code to deal with a ClientHandle::Control()
+  // call racing on the main thread.  Do not call this in other circumstances!
+  void
+  WorkerSyncPing(mozilla::dom::workers::WorkerPrivate* aWorkerPrivate);
+
+  // Synchronously mark the ClientSource as controlled by the given service
+  // worker.  This can happen as a result of a remote operation or directly
+  // by local code.  For example, if a client's initial network load is
+  // intercepted by a controlling service worker then this should be called
+  // immediately.
+  //
+  // Note, there is no way to clear the controlling service worker because
+  // the specification does not allow that operation.
+  void
+  SetController(const ServiceWorkerDescriptor& aServiceWorker);
+
+  // Mark the ClientSource as controlled using the remote operation arguments.
+  // This will in turn call SetController().
+  RefPtr<ClientOpPromise>
+  Control(const ClientControlledArgs& aArgs);
+
+  // Get the ClientSource's current controlling service worker, if one has
+  // been set.
+  const Maybe<ServiceWorkerDescriptor>&
+  GetController() const;
+
+  RefPtr<ClientOpPromise>
+  GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs);
+
+  nsresult
+  SnapshotState(ClientState* aStateOut);
 
   nsISerialEventTarget*
   EventTarget() const;

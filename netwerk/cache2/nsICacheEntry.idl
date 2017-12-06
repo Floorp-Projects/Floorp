@@ -194,9 +194,21 @@ interface nsICacheEntry : nsISupports
   void setValid();
 
   /**
+   * Explicitly tell the cache backend this consumer is no longer going to modify
+   * this cache entry data or metadata.  In case the consumer was responsible to
+   * either of writing the cache entry or revalidating it, calling this method
+   * reverts the state to initial (as never written) or as not-validated and
+   * immediately notifies the next consumer in line waiting for this entry.
+   * This is the way to prevent deadlocks when someone else than the responsible
+   * channel references the cache entry being in a non-written or revalidating
+   * state.
+   */
+  void dismiss();
+
+  /**
    * Returns the size in kilobytes used to store the cache entry on disk.
    */
-   readonly attribute uint32_t diskStorageSizeInKB;
+  readonly attribute uint32_t diskStorageSizeInKB;
 
   /**
    * Doom this entry and open a new, empty, entry for write.  Consumer has

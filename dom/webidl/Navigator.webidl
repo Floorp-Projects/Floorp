@@ -198,12 +198,6 @@ partial interface Navigator {
    */
   [Throws, ChromeOnly]
   void removeIdleObserver(MozIdleObserver aIdleObserver);
-
-  /**
-   * Make CPU instruction subset information available for UpdateUtils.
-   */
-  [ChromeOnly]
-  readonly attribute boolean cpuHasSSE2;
 };
 
 // nsIDOMNavigatorDesktopNotification

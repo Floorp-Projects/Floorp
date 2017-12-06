@@ -16,7 +16,6 @@ transforms:
 
 job-defaults:
     treeherder:
-        platform: linux64/opt
         kind: build
         tier: 1
     index:
@@ -66,12 +65,13 @@ job-defaults:
                 - linux64-rust
 
 jobs:
-    sm-package/opt:
+    sm-package-linux64/opt:
         description: "Spidermonkey source package and test"
         index:
-            job-name: sm-package-opt
+            job-name: sm-package-linux64-opt
         treeherder:
             symbol: SM-tc(pkg)
+            platform: linux64/opt
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
@@ -81,10 +81,10 @@ jobs:
             using: spidermonkey-package
             spidermonkey-variant: plain
 
-    sm-mozjs-sys/debug:
+    sm-mozjs-sys-linux64/debug:
         description: "Build js/src as the mozjs_sys Rust crate"
         index:
-            job-name: sm-mozjs-sys-debug
+            job-name: sm-mozjs-sys-linux64-debug
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(mozjs-crate)
@@ -98,13 +98,14 @@ jobs:
             spidermonkey-variant: plain
         run-on-projects: ['integration', 'release', 'try']
 
-    sm-rust-bindings/debug:
+    sm-rust-bindings-linux64/debug:
         description: "Build and test the Rust bindings for SpiderMonkey"
         index:
-            job-name: sm-rust-bindings-debug
+            job-name: sm-rust-bindings-linux64-debug
         treeherder:
             symbol: SM-tc(rust)
             tier: 2
+            platform: linux64/debug
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
@@ -115,10 +116,10 @@ jobs:
             spidermonkey-variant: plain
         run-on-projects: ['integration', 'release', 'try']
 
-    sm-plain/debug:
+    sm-plain-linux64/debug:
         description: "Spidermonkey Plain"
         index:
-            job-name: sm-plaindebug-debug
+            job-name: sm-plain-linux64-debug
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(p)
@@ -130,10 +131,10 @@ jobs:
         run:
             spidermonkey-variant: plaindebug
 
-    sm-plain-windows/debug:
+    sm-plain-win32/debug:
         description: "Spidermonkey Plain"
         index:
-            job-name: sm-win-plaindebug-debug
+            job-name: sm-plain-win32-debug
         treeherder:
             platform: windows2012-32/debug
             symbol: SM-tc(p)
@@ -145,12 +146,13 @@ jobs:
         run:
             spidermonkey-variant: plaindebug
 
-    sm-plain/opt:
+    sm-plain-linux64/opt:
         description: "Spidermonkey Plain"
         index:
-            job-name: sm-plain-opt
+            job-name: sm-plain-linux64-opt
         treeherder:
             symbol: SM-tc(p)
+            platform: linux64/opt
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
@@ -159,10 +161,10 @@ jobs:
         run:
             spidermonkey-variant: plain
 
-    sm-plain-windows/opt:
+    sm-plain-win32/opt:
         description: "Spidermonkey Plain"
         index:
-            job-name: sm-win-plain-opt
+            job-name: sm-plain-win32-opt
         treeherder:
             platform: windows2012-32/opt
             symbol: SM-tc(p)
@@ -174,10 +176,10 @@ jobs:
         run:
             spidermonkey-variant: plain
 
-    sm-arm-sim/debug:
+    sm-arm-sim-linux32/debug:
         description: "Spidermonkey ARM sim"
         index:
-            job-name: sm-arm-sim-debug
+            job-name: sm-arm-sim-linux32-debug
         treeherder:
             platform: linux32/debug
             symbol: SM-tc(arm)
@@ -189,10 +191,10 @@ jobs:
         run:
             spidermonkey-variant: arm-sim
 
-    sm-arm64-sim/debug:
+    sm-arm64-sim-linux64/debug:
         description: "Spidermonkey ARM64 sim"
         index:
-            job-name: sm-arm64-sim-debug
+            job-name: sm-arm64-sim-linux64-debug
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(arm64)
@@ -204,12 +206,13 @@ jobs:
         run:
             spidermonkey-variant: arm64-sim
 
-    sm-asan/opt:
+    sm-asan-linux64/opt:
         description: "Spidermonkey Address Sanitizer"
         index:
-            job-name: sm-asan-opt
+            job-name: sm-asan-linux64-opt
         treeherder:
             symbol: SM-tc(asan)
+            platform: linux64/opt
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
@@ -218,10 +221,10 @@ jobs:
         run:
             spidermonkey-variant: asan
 
-    sm-compacting/debug:
+    sm-compacting-linux64/debug:
         description: "Spidermonkey Compacting"
         index:
-            job-name: sm-compacting-debug
+            job-name: sm-compacting-linux64-debug
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(cgc)
@@ -233,10 +236,10 @@ jobs:
         run:
             spidermonkey-variant: compacting
 
-    sm-compacting-windows/debug:
+    sm-compacting-win32/debug:
         description: "Spidermonkey Compacting"
         index:
-            job-name: sm-win-compacting-debug
+            job-name: sm-compacting-win32-debug
         treeherder:
             platform: windows2012-32/debug
             symbol: SM-tc(cgc)
@@ -248,12 +251,13 @@ jobs:
         run:
             spidermonkey-variant: compacting
 
-    sm-msan/opt:
+    sm-msan-linux64/opt:
         description: "Spidermonkey Memory Sanitizer"
         index:
-            job-name: sm-msan-opt
+            job-name: sm-msan-linux64-opt
         treeherder:
             symbol: SM-tc(msan)
+            platform: linux64/opt
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
@@ -262,13 +266,14 @@ jobs:
         run:
             spidermonkey-variant: msan
 
-    sm-tsan/opt:
+    sm-tsan-linux64/opt:
         description: "Spidermonkey Thread Sanitizer"
         index:
-            job-name: sm-tsan-opt
+            job-name: sm-tsan-linux64-opt
         treeherder:
             symbol: SM-tc(tsan)
             tier: 3
+            platform: linux64/opt
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
@@ -277,10 +282,10 @@ jobs:
         run:
             spidermonkey-variant: tsan
 
-    sm-rootanalysis/debug:
+    sm-rootanalysis-linux64/debug:
         description: "Spidermonkey Root Analysis"
         index:
-            job-name: sm-rootanalysis-debug
+            job-name: sm-rootanalysis-linux64-debug
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(r)
@@ -292,10 +297,10 @@ jobs:
         run:
             spidermonkey-variant: rootanalysis
 
-    sm-nonunified/debug:
+    sm-nonunified-linux64/debug:
         description: "Spidermonkey Non-Unified Debug"
         index:
-            job-name: sm-nonunified-debug
+            job-name: sm-nonunified-linux64-debug
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(nu)
@@ -307,10 +312,10 @@ jobs:
         run:
             spidermonkey-variant: nonunified
 
-    sm-fuzzing/opt:
+    sm-fuzzing-linux64/opt:
         description: "Spidermonkey Fuzzing"
         index:
-            job-name: sm-fuzzing
+            job-name: sm-fuzzing-linux64
         treeherder:
             platform: linux64/opt
             symbol: SM-tc(f)

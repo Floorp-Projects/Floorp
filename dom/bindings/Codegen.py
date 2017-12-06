@@ -7293,9 +7293,6 @@ class CGCallGenerator(CGThing):
     A class to generate an actual call to a C++ object.  Assumes that the C++
     object is stored in a variable whose name is given by the |object| argument.
 
-    needsSubjectPrincipal is a boolean indicating whether the call should
-    receive the subject nsIPrincipal as argument.
-
     needsCallerType is a boolean indicating whether the call should receive
     a PrincipalType for the caller.
 
@@ -7306,8 +7303,7 @@ class CGCallGenerator(CGThing):
     declaring the result variable. If the caller doesn't care about the result
     value, resultVar can be omitted.
     """
-    def __init__(self, isFallible, needsSubjectPrincipal, needsCallerType,
-                 isChromeOnly,
+    def __init__(self, isFallible, needsCallerType, isChromeOnly,
                  arguments, argsPre, returnType, extendedAttributes, descriptor,
                  nativeMethodName, static, object="self", argsPost=[],
                  resultVar=None):
@@ -7369,6 +7365,7 @@ class CGCallGenerator(CGThing):
                 assert resultOutParam == "ptr"
                 args.append(CGGeneric("&" + resultVar))
 
+        needsSubjectPrincipal = "needsSubjectPrincipal" in extendedAttributes
         if needsSubjectPrincipal:
             args.append(CGGeneric("subjectPrincipal"))
 
@@ -7886,7 +7883,6 @@ class CGPerSignatureCall(CGThing):
         else:
             cgThings.append(CGCallGenerator(
                 self.isFallible(),
-                idlNode.getExtendedAttribute('NeedsSubjectPrincipal'),
                 needsCallerType(idlNode),
                 isChromeOnly(idlNode),
                 self.getArguments(), argsPre, returnType,
@@ -9437,7 +9433,8 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('JSJitSetterCallArgs', 'args')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args,
+                                        canRunScript=True)
 
     def definition_body(self):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
@@ -14700,7 +14697,7 @@ class CGNativeMember(ClassMethod):
             args.append(Argument("JS::MutableHandle<JSObject*>", "aRetVal"))
 
         # And the nsIPrincipal
-        if self.member.getExtendedAttribute('NeedsSubjectPrincipal'):
+        if 'needsSubjectPrincipal' in self.extendedAttrs:
             # Cheat and assume self.descriptorProvider is a descriptor
             if self.descriptorProvider.interface.isExposedInAnyWorker():
                 args.append(Argument("Maybe<nsIPrincipal*>", "aSubjectPrincipal"))

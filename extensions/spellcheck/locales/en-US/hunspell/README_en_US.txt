@@ -1,6 +1,6 @@
 en_US-mozilla Hunspell Dictionary
-Generated from SCOWL Version 2017.01.22
-Tue Jan 24 22:59:28 EST 2017
+Generated from SCOWL Version 2017.08.24
+Mon Dec  4 10:21:53 EST 2017
 
 http://wordlist.sourceforge.net
 
@@ -344,4 +344,4 @@ and Australian word list.  It is under the following copyright:
   OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   SUCH DAMAGE.
 
-Build Date: Tue Jan 24 22:59:28 EST 2017
+Build Date: Mon Dec  4 10:21:53 EST 2017

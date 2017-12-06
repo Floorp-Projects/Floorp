@@ -203,8 +203,10 @@ VRDisplayOpenVR::GetIsHmdPresent()
 }
 
 void
-VRDisplayOpenVR::PollEvents()
+VRDisplayOpenVR::Refresh()
 {
+  mIsHmdPresent = ::vr::VR_IsHmdPresent();
+
   ::vr::VREvent_t event;
   while (mVRSystem && mVRSystem->PollNextEvent(&event, sizeof(event))) {
     switch (event.eventType) {
@@ -245,8 +247,6 @@ VRDisplayOpenVR::PollEvents()
 VRHMDSensorState
 VRDisplayOpenVR::GetSensorState()
 {
-  PollEvents();
-
   const uint32_t posesSize = ::vr::k_unTrackedDeviceIndex_Hmd + 1;
   ::vr::TrackedDevicePose_t poses[posesSize];
   // Note: We *must* call WaitGetPoses in order for any rendering to happen at all.
@@ -423,17 +423,6 @@ VRDisplayOpenVR::SubmitFrame(MacIOSurface* aMacIOSurface,
 }
 
 #endif
-
-void
-VRDisplayOpenVR::NotifyVSync()
-{
-  // We check if HMD is available once per frame.
-  mIsHmdPresent = ::vr::VR_IsHmdPresent();
-  // Make sure we respond to OpenVR events even when not presenting
-  PollEvents();
-
-  VRDisplayHost::NotifyVSync();
-}
 
 VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplayID,
                                        uint32_t aNumButtons, uint32_t aNumTriggers,
@@ -635,48 +624,85 @@ VRSystemManagerOpenVR::Shutdown()
   mVRSystem = nullptr;
 }
 
-bool
-VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
+void
+VRSystemManagerOpenVR::NotifyVSync()
 {
-  if (!::vr::VR_IsHmdPresent() ||
-      (mOpenVRHMD && !mOpenVRHMD->GetIsHmdPresent())) {
-    // OpenVR runtime could be quit accidentally,
-    // and we make it re-initialize.
-    mOpenVRHMD = nullptr;
-    mVRSystem = nullptr;
-  } else if (mOpenVRHMD == nullptr) {
+  VRSystemManager::NotifyVSync();
+
+  // Avoid doing anything unless we have already
+  // successfully enumerated and loaded the OpenVR
+  // runtime.
+  if (mVRSystem == nullptr) {
+    return;
+  }
+
+  if (mOpenVRHMD) {
+    mOpenVRHMD->Refresh();
+    if (!mOpenVRHMD->GetIsHmdPresent()) {
+      // OpenVR runtime could be quit accidentally
+      // or a device could be disconnected.
+      // We free up resources and must re-initialize
+      // if a device is detected again later.
+      mOpenVRHMD = nullptr;
+      mVRSystem = nullptr;
+    }
+  }
+}
+
+void
+VRSystemManagerOpenVR::Enumerate()
+{
+  if (mOpenVRHMD == nullptr && ::vr::VR_IsHmdPresent()) {
     ::vr::HmdError err;
 
     ::vr::VR_Init(&err, ::vr::EVRApplicationType::VRApplication_Scene);
     if (err) {
-      return false;
+      return;
     }
 
     ::vr::IVRSystem *system = (::vr::IVRSystem *)::vr::VR_GetGenericInterface(::vr::IVRSystem_Version, &err);
     if (err || !system) {
       ::vr::VR_Shutdown();
-      return false;
+      return;
     }
     ::vr::IVRChaperone *chaperone = (::vr::IVRChaperone *)::vr::VR_GetGenericInterface(::vr::IVRChaperone_Version, &err);
     if (err || !chaperone) {
       ::vr::VR_Shutdown();
-      return false;
+      return;
     }
     ::vr::IVRCompositor *compositor = (::vr::IVRCompositor*)::vr::VR_GetGenericInterface(::vr::IVRCompositor_Version, &err);
     if (err || !compositor) {
       ::vr::VR_Shutdown();
-      return false;
+      return;
     }
 
     mVRSystem = system;
     mOpenVRHMD = new VRDisplayOpenVR(system, chaperone, compositor);
   }
+}
 
+bool
+VRSystemManagerOpenVR::ShouldInhibitEnumeration()
+{
+  if (VRSystemManager::ShouldInhibitEnumeration()) {
+    return true;
+  }
   if (mOpenVRHMD) {
-    aHMDResult.AppendElement(mOpenVRHMD);
+    // When we find an a VR device, don't
+    // allow any further enumeration as it
+    // may get picked up redundantly by other
+    // API's.
     return true;
   }
   return false;
+}
+
+void
+VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
+{
+  if (mOpenVRHMD) {
+    aHMDResult.AppendElement(mOpenVRHMD);
+  }
 }
 
 bool
