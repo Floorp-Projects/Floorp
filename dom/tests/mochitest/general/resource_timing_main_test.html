@@ -66,6 +66,13 @@ function isnot(received, notExpected, message) {
 var bufferFullCounter = 0;
 const expectedBufferFullEvents = 1;
 
+var allResources = {
+  "http://mochi.test:8888/tests/SimpleTest/test.css": "link",
+  "http://mochi.test:8888/tests/image/test/mochitest/blue.png" : "img",
+  "http://mochi.test:8888/tests/image/test/mochitest/red.png" : "object",
+  "http://mochi.test:8888/tests/image/test/mochitest/big.png" : "embed",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html" : "iframe"};
+
 window.onload = function() {
   ok(!!window.performance, "Performance object should exist");
   ok(!!window.performance.getEntries, "Performance.getEntries() should exist");
@@ -76,8 +83,7 @@ window.onload = function() {
     bufferFullCounter += 1;
   }
 
-  // Here, we should have 5 entries (1 css, 3 png, 1 html) since the image was loaded.
-  is(window.performance.getEntriesByType("resource").length, 5, "Performance.getEntriesByType() returned wrong number of entries.");
+  is(window.performance.getEntriesByType("resource").length, Object.keys(allResources).length, "Performance.getEntriesByType() returned wrong number of entries.");
 
   checkStringify(window.performance.getEntriesByType("resource")[0]);
 
@@ -106,11 +112,11 @@ window.onload = function() {
   checkEntries(window.performance.getEntriesByType("resource"));
 
   window.performance.setResourceTimingBufferSize(1);
-  is(window.performance.getEntriesByType("resource").length, 5, "No entries should be " +
+  is(window.performance.getEntriesByType("resource").length, Object.keys(allResources).length, "No entries should be " +
     "removed when setResourceTimingBufferSize is called.");
 
   window.performance.setResourceTimingBufferSize(4);
-  is(window.performance.getEntriesByType("resource").length, 5, "No entries should be " +
+  is(window.performance.getEntriesByType("resource").length, Object.keys(allResources).length, "No entries should be " +
     "removed when setResourceTimingBufferSize is called.");
 
   window.performance.setResourceTimingBufferSize(1);
@@ -183,13 +189,6 @@ function checkEntries(anEntryList) {
 
   // Check that the entries have the expected initiator type. We can't check
   // the order (the order might depend on the platform the tests are running).
-  allResources = {
-    "http://mochi.test:8888/tests/SimpleTest/test.css" : "link",
-    "http://mochi.test:8888/tests/image/test/mochitest/blue.png" : "img",
-    "http://mochi.test:8888/tests/image/test/mochitest/red.png" : "object",
-    "http://mochi.test:8888/tests/image/test/mochitest/big.png" : "embed",
-    "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html" : "iframe"};
-
   for (resourceName in allResources) {
     // Check that we have a resource with the specific name.
     namedEntries = window.performance.getEntriesByName(resourceName);

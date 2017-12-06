@@ -74,13 +74,6 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     delete codec;
   }
 
-  // The first one of a pair to be deleted shuts down media for both
-  if(mPtrVoEXmedia)
-  {
-    mPtrVoEXmedia->SetExternalRecordingStatus(false);
-    mPtrVoEXmedia->SetExternalPlayoutStatus(false);
-  }
-
   //Deal with the transport
   if(mPtrVoENetwork)
   {
@@ -357,8 +350,9 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
     return kMediaConduitSessionNotInited;
   }
 
-  // init the engine with our audio device layer
-  if(mPtrVoEBase->Init() == -1)
+  // Init the engine with a fake audio device (we're using cubeb for audio input
+  // and output anyways).
+  if(mPtrVoEBase->Init(mFakeAudioDevice.get()) == -1)
   {
     CSFLogError(LOGTAG, "%s VoiceEngine Base Not Initialized", __FUNCTION__);
     return kMediaConduitSessionNotInited;
@@ -423,21 +417,7 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
     return kMediaConduitTransportRegistrationFail;
   }
 
-  if(mPtrVoEXmedia->SetExternalRecordingStatus(true) == -1)
-  {
-    CSFLogError(LOGTAG, "%s SetExternalRecordingStatus Failed %d",__FUNCTION__,
-                mPtrVoEBase->LastError());
-    return kMediaConduitExternalPlayoutError;
-  }
-
-  if(mPtrVoEXmedia->SetExternalPlayoutStatus(true) == -1)
-  {
-    CSFLogError(LOGTAG, "%s SetExternalPlayoutStatus Failed %d ",__FUNCTION__,
-                mPtrVoEBase->LastError());
-    return kMediaConduitExternalRecordingError;
-  }
-
-  CSFLogDebug(LOGTAG ,  "%s AudioSessionConduit Initialization Done (%p)",__FUNCTION__, this);
+  CSFLogDebug(LOGTAG, "%s AudioSessionConduit Initialization Done (%p)",__FUNCTION__, this);
   return kMediaConduitNoError;
 }
 
@@ -717,7 +697,7 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
   }
 
   capture_delay = mCaptureDelay;
-  //Insert the samples
+  // Insert the samples
   mPtrVoEBase->audio_transport()->PushCaptureData(mChannel, audio_data,
                                                   sizeof(audio_data[0])*8, // bits
                                                   samplingFreqHz,
@@ -729,9 +709,9 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
 
 MediaConduitErrorCode
 WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
-                                   int32_t samplingFreqHz,
-                                   int32_t capture_delay,
-                                   int& lengthSamples)
+                                  int32_t samplingFreqHz,
+                                  int32_t capture_delay,
+                                  int& lengthSamples)
 {
 
   CSFLogDebug(LOGTAG,  "%s ", __FUNCTION__);
@@ -772,11 +752,9 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
 
   lengthSamples = 0;  //output paramter
 
-  if(mPtrVoEXmedia->ExternalPlayoutGetData( speechData,
-                                            samplingFreqHz,
-                                            capture_delay,
-                                            lengthSamples) == -1)
-  {
+  if (mPtrVoEXmedia->GetAudioFrame(mChannel,
+                                   samplingFreqHz,
+                                   &mAudioFrame) != 0) {
     int error = mPtrVoEBase->LastError();
     CSFLogError(LOGTAG,  "%s Getting audio data Failed %d", __FUNCTION__, error);
     if(error == VE_RUNTIME_PLAY_ERROR)
@@ -785,6 +763,11 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     }
     return kMediaConduitUnknownError;
   }
+
+  // XXX Annoying, have to copy to our buffers -- refactor?
+  lengthSamples = mAudioFrame.samples_per_channel_ * mAudioFrame.num_channels_;
+  PodCopy(speechData, mAudioFrame.data_,
+          lengthSamples);
 
   // Not #ifdef DEBUG or on a log module so we can use it for about:webrtc/etc
   mSamples += lengthSamples;
@@ -962,6 +945,13 @@ WebrtcAudioConduit::StartReceiving()
         return kMediaConduitSocketError;
       }
       return kMediaConduitUnknownError;
+    }
+
+    // we can't call GetAudioFrame() if we don't enable "external" mixing
+    if(mPtrVoEXmedia->SetExternalMixing(mChannel, true) == -1)
+    {
+      CSFLogError(LOGTAG, "%s SetExternalMixing Failed", __FUNCTION__);
+      return kMediaConduitPlayoutError;
     }
 
     if(mPtrVoEBase->StartPlayout(mChannel) == -1)

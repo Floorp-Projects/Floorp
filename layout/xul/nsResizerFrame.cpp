@@ -416,13 +416,14 @@ nsResizerFrame::ResizeContent(nsIContent* aContent, const Direction& aDirection,
     }
     // only set the property if the element could have changed in that direction
     if (aDirection.mHorizontal) {
-      aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::width, aSizeInfo.width, true);
+      aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::width,
+                                     aSizeInfo.width, true);
     }
     if (aDirection.mVertical) {
-      aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::height, aSizeInfo.height, true);
+      aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::height,
+                                     aSizeInfo.height, true);
     }
-  }
-  else {
+  } else {
     nsCOMPtr<nsStyledElement> inlineStyleContent =
       do_QueryInterface(aContent);
     if (inlineStyleContent) {

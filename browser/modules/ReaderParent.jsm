@@ -22,22 +22,6 @@ var ReaderParent = {
   // Listeners are added in nsBrowserGlue.js
   receiveMessage(message) {
     switch (message.name) {
-      case "Reader:ArticleGet":
-        this._getArticle(message.data.url, message.target).then((article) => {
-          // Make sure the target browser is still alive before trying to send data back.
-          if (message.target.messageManager) {
-            message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { article });
-          }
-        }, e => {
-          if (e && e.newURL) {
-            // Make sure the target browser is still alive before trying to send data back.
-            if (message.target.messageManager) {
-              message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { newURL: e.newURL });
-            }
-          }
-        });
-        break;
-
       case "Reader:FaviconRequest": {
         if (message.target.messageManager) {
           let faviconUrl = PlacesUtils.promiseFaviconLinkUrl(message.data.url);

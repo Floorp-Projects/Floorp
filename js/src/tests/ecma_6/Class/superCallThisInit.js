@@ -7,7 +7,10 @@ class testInitialize extends base {
         try {
             this;
             throw new Error();
-        } catch (e if e instanceof ReferenceError) { }
+        } catch (e) {
+            if (!(e instanceof ReferenceError))
+                throw e;
+        }
         super();
         assertEq(this.prop, 42);
     }

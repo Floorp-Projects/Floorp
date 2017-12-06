@@ -1055,9 +1055,38 @@ function DoAssertionCheck()
     SendAssertionCount(numAsserts);
 }
 
+function URIsEqualIgnoringHash(uri1, uri2)
+{
+    if (!uri2) {
+        return false;
+    }
+    let hashIndex1 = uri1.indexOf("#");
+    if (hashIndex1 > -1) {
+        uri1 = uri1.substr(0, hashIndex1);
+    }
+    let hashIndex2 = uri2.indexOf("#");
+    if (hashIndex2 > -1) {
+        uri2 = uri2.substr(0, hashIndex2);
+    }
+    return uri1 == uri2;
+}
+
 function LoadURI(uri)
 {
-    var flags = webNavigation().LOAD_FLAGS_NONE;
+    let flags = CI.nsIWebNavigation.LOAD_FLAGS_NONE;
+
+    if (URIsEqualIgnoringHash(uri, gCurrentURL)) {
+        // In this case the new URI would normally just cause an anchor scroll
+        // so we use LOAD_FLAGS_BYPASS_CACHE to force a reload so we'll get a
+        // 'load' event.  (The code that handles new URIs once they're ready is
+        // triggered by a 'load' event, so we'll time out if we don't get one).
+        //
+        // Note that we avoid using this flag in general since we don't want
+        // to unnecessarily reload and reprocess common font files, images,
+        // etc. for every test/reference (that may slow down reftest runs).
+        flags = CI.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+    }
+
     webNavigation().loadURI(uri, flags, null, null, null);
 }
 

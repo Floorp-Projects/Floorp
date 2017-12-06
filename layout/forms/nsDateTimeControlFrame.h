@@ -114,7 +114,7 @@ private:
 
   // Anonymous child which is bound via XBL to an element that wraps the input
   // area and reset button.
-  nsCOMPtr<nsIContent> mInputAreaContent;
+  RefPtr<mozilla::dom::Element> mInputAreaContent;
 };
 
 #endif // nsDateTimeControlFrame_h__

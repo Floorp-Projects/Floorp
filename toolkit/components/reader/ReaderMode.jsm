@@ -247,6 +247,9 @@ this.ReaderMode = {
    */
   async downloadAndParseDocument(url) {
     let doc = await this._downloadDocument(url);
+    if (!doc) {
+      return null;
+    }
     if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
@@ -256,6 +259,14 @@ this.ReaderMode = {
   },
 
   _downloadDocument(url) {
+    try {
+      if (!this._shouldCheckUri(Services.io.newURI(url))) {
+        return null;
+      }
+    } catch (ex) {
+      Cu.reportError(new Error(`Couldn't create URI from ${url} to download: ${ex}`));
+      return null;
+    }
     let histogram = Services.telemetry.getHistogramById("READER_MODE_DOWNLOAD_RESULT");
     return new Promise((resolve, reject) => {
       let xhr = new XMLHttpRequest();

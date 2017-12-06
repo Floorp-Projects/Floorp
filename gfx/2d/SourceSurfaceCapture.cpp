@@ -94,6 +94,7 @@ RefPtr<SourceSurface>
 SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
 {
   RefPtr<DrawTarget> dt;
+  uint8_t* data = nullptr;
   if (!mSurfaceAllocationSize) {
     if (aBackendType == mRefDT->GetBackendType()) {
       dt = mRefDT->CreateSimilarDrawTarget(mSize, mFormat);
@@ -101,7 +102,7 @@ SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
       dt = Factory::CreateDrawTarget(aBackendType, mSize, mFormat);
     }
   } else {
-    uint8_t* data = static_cast<uint8_t*>(calloc(1, mSurfaceAllocationSize));
+    data = static_cast<uint8_t*>(calloc(1, mSurfaceAllocationSize));
     if (!data) {
       return nullptr;
     }
@@ -113,9 +114,12 @@ SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
       free(data);
       return nullptr;
     }
-    dt->AddUserData(reinterpret_cast<UserDataKey*>(dt.get()), data, free);
   }
+
   if (!dt) {
+    // Make sure we haven't allocated and aren't leaking something, the code right
+    // anove here should have guaranteed that.
+    MOZ_ASSERT(!data);
     return nullptr;
   }
 
@@ -128,11 +132,19 @@ SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
     DrawingCommand* cmd = iter.Get();
     cmd->ExecuteOnDT(dt, nullptr);
   }
+
+  RefPtr<SourceSurface> surf;
   if (!mShouldResolveToLuminance) {
-    return dt->Snapshot();
+    surf = dt->Snapshot();
   } else {
-    return dt->IntoLuminanceSource(mLuminanceType, mOpacity);
+    surf = dt->IntoLuminanceSource(mLuminanceType, mOpacity);
   }
+
+  if (data) {
+    surf->AddUserData(reinterpret_cast<UserDataKey*>(dt.get()), data, free);
+  }
+
+  return surf.forget();
 }
 
 already_AddRefed<DataSourceSurface>

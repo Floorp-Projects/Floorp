@@ -57,6 +57,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
         'mips.h',
         'SSE.h',
         'WindowsDllBlocklist.h',
+        'WindowsDllServices.h',
     ]
 
     if CONFIG['CPU_ARCH'].startswith('x86'):

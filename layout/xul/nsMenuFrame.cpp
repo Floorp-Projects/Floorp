@@ -69,7 +69,7 @@ const int32_t kBlinkDelay = 67; // milliseconds
 class nsMenuActivateEvent : public Runnable
 {
 public:
-  nsMenuActivateEvent(nsIContent* aMenu,
+  nsMenuActivateEvent(Element* aMenu,
                       nsPresContext* aPresContext,
                       bool aIsActivate)
     : mozilla::Runnable("nsMenuActivateEvent")
@@ -109,7 +109,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIContent> mMenu;
+  RefPtr<Element> mMenu;
   RefPtr<nsPresContext> mPresContext;
   bool mIsActivate;
 };
@@ -337,7 +337,8 @@ nsMenuFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyD
 
   // if the menu content is just being hidden, it may be made visible again
   // later, so make sure to clear the highlighting.
-  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, false);
+  mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
+                                   false);
 
   // are we our menu parent's current menu item?
   nsMenuParent* menuParent = GetMenuParent();
@@ -553,8 +554,8 @@ nsMenuFrame::PopupOpened()
   gMenuJustOpenedOrClosed = true;
 
   AutoWeakFrame weakFrame(this);
-  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::open,
-                    NS_LITERAL_STRING("true"), true);
+  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open,
+                                 NS_LITERAL_STRING("true"), true);
   if (!weakFrame.IsAlive())
     return;
 
@@ -572,7 +573,7 @@ nsMenuFrame::PopupClosed(bool aDeselectMenu)
 {
   AutoWeakFrame weakFrame(this);
   nsContentUtils::AddScriptRunner(
-    new nsUnsetAttrRunnable(mContent, nsGkAtoms::open));
+    new nsUnsetAttrRunnable(mContent->AsElement(), nsGkAtoms::open));
   if (!weakFrame.IsAlive())
     return;
 
@@ -604,7 +605,7 @@ nsMenuFrame::PopupClosed(bool aDeselectMenu)
         }
 
         nsCOMPtr<nsIRunnable> event =
-          new nsMenuActivateEvent(current->GetContent(),
+          new nsMenuActivateEvent(current->GetContent()->AsElement(),
                                   PresContext(), true);
         mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                        event.forget());
@@ -655,7 +656,7 @@ nsMenuFrame::SelectMenu(bool aActivateFlag)
     }
 
     nsCOMPtr<nsIRunnable> event =
-      new nsMenuActivateEvent(mContent, PresContext(), aActivateFlag);
+      new nsMenuActivateEvent(mContent->AsElement(), PresContext(), aActivateFlag);
     mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                    event.forget());
   }
@@ -906,8 +907,9 @@ nsMenuFrame::Notify(nsITimer* aTimer)
         {
           // Turn the highlight back on and wait for a while before closing the menu.
           AutoWeakFrame weakFrame(this);
-          mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
-                            NS_LITERAL_STRING("true"), true);
+          mContent->AsElement()->SetAttr(kNameSpaceID_None,
+                                         nsGkAtoms::menuactive,
+                                         NS_LITERAL_STRING("true"), true);
           if (weakFrame.IsAlive()) {
             aTimer->InitWithCallback(mTimerMediator, kBlinkDelay, nsITimer::TYPE_ONE_SHOT);
           }
@@ -951,8 +953,8 @@ nsMenuFrame::UpdateMenuType()
     default:
       if (mType != eMenuType_Normal) {
         AutoWeakFrame weakFrame(this);
-        mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                            true);
+        mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
+                                         true);
         ENSURE_TRUE(weakFrame.IsAlive());
       }
       mType = eMenuType_Normal;
@@ -1015,8 +1017,8 @@ nsMenuFrame::UpdateMenuSpecialState()
       if (menu && menu->GetMenuType() == eMenuType_Radio &&
           menu->IsChecked() && menu->GetRadioGroupName() == mGroupName) {
         /* uncheck the old item */
-        sib->GetContent()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                     true);
+        sib->GetContent()->AsElement()->UnsetAttr(
+            kNameSpaceID_None, nsGkAtoms::checked, true);
         /* XXX in DEBUG, check to make sure that there aren't two checked items */
         return;
       }
@@ -1045,7 +1047,7 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
 
   // If anything below fails, just leave the accelerator text blank.
   AutoWeakFrame weakFrame(this);
-  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, aNotify);
+  mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, aNotify);
   ENSURE_TRUE(weakFrame.IsAlive());
 
   // See if we have a key node and use that instead.
@@ -1180,7 +1182,8 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
   accelText += accelString;
 
   mIgnoreAccelTextChange = true;
-  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accelText, aNotify);
+  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::acceltext,
+                                 accelText, aNotify);
   ENSURE_TRUE(weakFrame.IsAlive());
 
   mIgnoreAccelTextChange = false;
@@ -1231,7 +1234,7 @@ nsMenuFrame::StartBlinking(WidgetGUIEvent* aEvent, bool aFlipChecked)
 
   // Blink off.
   AutoWeakFrame weakFrame(this);
-  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, true);
+  mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, true);
   if (!weakFrame.IsAlive())
     return;
 
@@ -1283,8 +1286,8 @@ nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent, bool aFlipChecked)
   bool userinput = EventStateManager::IsHandlingUserInput();
 
   mDelayedMenuCommandEvent =
-    new nsXULMenuCommandEvent(mContent, isTrusted, shift, control, alt, meta,
-                              userinput, aFlipChecked);
+    new nsXULMenuCommandEvent(mContent->AsElement(), isTrusted, shift, control,
+                              alt, meta, userinput, aFlipChecked);
 }
 
 void

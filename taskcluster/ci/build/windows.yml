@@ -478,7 +478,7 @@ win64-ccov/debug:
     treeherder:
         platform: windows2012-64/ccov
         symbol: tc(B)
-        tier: 3
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200

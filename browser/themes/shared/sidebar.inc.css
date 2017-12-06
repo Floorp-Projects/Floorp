@@ -100,21 +100,42 @@
   display: none;
 }
 
-%ifndef XP_MACOSX
+#sidebarMenu-popup > .subviewbutton[checked="true"] {
+  list-style-image: none;
+  background: url(chrome://browser/skin/check.svg) no-repeat transparent;
+  background-size: 11px 11px;
+}
+
+%ifdef XP_MACOSX
+
+#sidebarMenu-popup > .subviewbutton[checked="true"] {
+  background-position: top 7px left 4px;
+}
+
+#sidebarMenu-popup > .subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
+  background-position: top 7px right 4px;
+}
+
+%else
+
+#sidebarMenu-popup > .subviewbutton[checked="true"] {
+  background-position: center left 7px;
+}
+
+#sidebarMenu-popup > .subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
+  background-position: center right 7px;
+}
+
 /* Allow room for the checkbox drawn as a background image at the start of the toolbarbutton */
-#sidebarMenu-popup .subviewbutton-iconic > .toolbarbutton-icon {
+#sidebarMenu-popup > .subviewbutton-iconic > .toolbarbutton-icon {
   margin-inline-start: 16px;
 }
 /* Align items without icons to the start of the icons: */
-#sidebarMenu-popup .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
+#sidebarMenu-popup > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
   padding-inline-start: 16px;
 }
+
 %endif
-
-
-#sidebar-box[sidebarcommand="viewWebPanelsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
-  list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.svg);
-}
 
 #sidebar-switcher-bookmarks > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewBookmarksSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {

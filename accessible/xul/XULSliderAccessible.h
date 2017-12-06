@@ -43,7 +43,7 @@ protected:
   /**
    * Return anonymous slider element.
    */
-  nsIContent* GetSliderElement() const;
+  dom::Element* GetSliderElement() const;
 
   nsresult GetSliderAttr(nsAtom *aName, nsAString& aValue) const;
   nsresult SetSliderAttr(nsAtom *aName, const nsAString& aValue);
@@ -52,7 +52,7 @@ protected:
   bool SetSliderAttr(nsAtom *aName, double aValue);
 
 private:
-  mutable nsCOMPtr<nsIContent> mSliderNode;
+  mutable RefPtr<dom::Element> mSliderElement;
 };
 
 
