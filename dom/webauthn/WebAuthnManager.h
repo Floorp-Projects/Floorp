@@ -8,10 +8,8 @@
 #define mozilla_dom_WebAuthnManager_h
 
 #include "mozilla/MozPromise.h"
-#include "mozilla/dom/Event.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/dom/WebAuthnManagerBase.h"
-#include "nsIDOMEventListener.h"
 
 /*
  * Content process manager for the WebAuthn protocol. Created on calls to the
@@ -52,14 +50,6 @@ public:
 
 namespace mozilla {
 namespace dom {
-
-struct Account;
-class ArrayBufferViewOrArrayBuffer;
-struct AssertionOptions;
-class OwningArrayBufferViewOrArrayBuffer;
-struct MakePublicKeyCredentialOptions;
-class Promise;
-class WebAuthnTransactionChild;
 
 class WebAuthnTransaction
 {
@@ -103,14 +93,14 @@ private:
 };
 
 class WebAuthnManager final : public WebAuthnManagerBase
-                            , public nsIDOMEventListener
                             , public AbortFollower
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
 
-  explicit WebAuthnManager(nsPIDOMWindowInner* aParent);
+  explicit WebAuthnManager(nsPIDOMWindowInner* aParent)
+    : WebAuthnManagerBase(aParent)
+  { }
 
   already_AddRefed<Promise>
   MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
@@ -138,34 +128,22 @@ public:
   RequestAborted(const uint64_t& aTransactionId,
                  const nsresult& aError) override;
 
-  void ActorDestroyed() override;
-
   // AbortFollower
 
   void Abort() override;
 
+protected:
+  // Cancels the current transaction (by sending a Cancel message to the
+  // parent) and rejects it by calling RejectTransaction().
+  void CancelTransaction(const nsresult& aError) override;
+
 private:
   virtual ~WebAuthnManager();
-
-  // Visibility event handling.
-  void ListenForVisibilityEvents();
-  void StopListeningForVisibilityEvents();
 
   // Clears all information we have about the current transaction.
   void ClearTransaction();
   // Rejects the current transaction and calls ClearTransaction().
   void RejectTransaction(const nsresult& aError);
-  // Cancels the current transaction (by sending a Cancel message to the
-  // parent) and rejects it by calling RejectTransaction().
-  void CancelTransaction(const nsresult& aError);
-
-  bool MaybeCreateBackgroundActor();
-
-  // The parent window.
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
-
-  // IPC Channel to the parent process.
-  RefPtr<WebAuthnTransactionChild> mChild;
 
   // The current transaction, if any.
   Maybe<WebAuthnTransaction> mTransaction;

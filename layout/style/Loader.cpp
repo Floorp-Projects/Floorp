@@ -167,6 +167,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mWasAlternate(aIsAlternate)
   , mUseSystemPrincipal(false)
   , mSheetAlreadyComplete(false)
+  , mIsCrossOriginNoCORS(false)
+  , mBlockResourceTiming(false)
   , mOwningElement(aOwningElement)
   , mObserver(aObserver)
   , mLoaderPrincipal(aLoaderPrincipal)
@@ -199,6 +201,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mWasAlternate(false)
   , mUseSystemPrincipal(false)
   , mSheetAlreadyComplete(false)
+  , mIsCrossOriginNoCORS(false)
+  , mBlockResourceTiming(false)
   , mOwningElement(nullptr)
   , mObserver(aObserver)
   , mLoaderPrincipal(aLoaderPrincipal)
@@ -241,6 +245,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mWasAlternate(false)
   , mUseSystemPrincipal(aUseSystemPrincipal)
   , mSheetAlreadyComplete(false)
+  , mIsCrossOriginNoCORS(false)
+  , mBlockResourceTiming(false)
   , mOwningElement(nullptr)
   , mObserver(aObserver)
   , mLoaderPrincipal(aLoaderPrincipal)
@@ -716,6 +722,14 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
   }
 
   mSheet->SetPrincipal(principal);
+
+  if (mLoaderPrincipal && mSheet->GetCORSMode() == CORS_NONE) {
+    bool subsumed;
+    result = mLoaderPrincipal->Subsumes(principal, &subsumed);
+    if (NS_FAILED(result) || !subsumed) {
+      mIsCrossOriginNoCORS = true;
+    }
+  }
 
   // If it's an HTTP channel, we want to make sure this is not an
   // error document we got.
@@ -1556,6 +1570,39 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
     if (timedChannel) {
       if (aLoadData->mParentData) {
         timedChannel->SetInitiatorType(NS_LITERAL_STRING("css"));
+
+        // This is a child sheet load.
+        //
+        // The resource timing of the sub-resources that a document loads
+        // should normally be reported to the document.  One exception is any
+        // sub-resources of any cross-origin resources that are loaded.  We
+        // don't mind reporting timing data for a direct child cross-origin
+        // resource since the resource that linked to it (and hence potentially
+        // anything in that parent origin) is aware that the cross-origin
+        // resources is to be loaded.  However, we do not want to report
+        // timings for any sub-resources that a cross-origin resource may load
+        // since that obviously leaks information about what the cross-origin
+        // resource loads, which is bad.
+        //
+        // In addition to checking whether we're an immediate child resource of
+        // a cross-origin resource (by checking if mIsCrossOriginNoCORS is set
+        // to true on our parent), we also check our parent to see whether it
+        // itself is a sub-resource of a cross-origin resource by checking
+        // mBlockResourceTiming.  If that is set then we too are such a
+        // sub-resource and so we set the flag on ourself too to propagate it
+        // on down.
+        //
+        if (aLoadData->mParentData->mIsCrossOriginNoCORS ||
+            aLoadData->mParentData->mBlockResourceTiming) {
+          // Set a flag so any other stylesheet triggered by this one will
+          // not be reported
+          aLoadData->mBlockResourceTiming = true;
+
+          // Mark the channel so PerformanceMainThread::AddEntry will not
+          // report the resource.
+          timedChannel->SetReportResourceTiming(false);
+        }
+
       } else {
         timedChannel->SetInitiatorType(NS_LITERAL_STRING("link"));
       }

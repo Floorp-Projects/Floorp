@@ -126,15 +126,15 @@ nsresult
 nsXULContentUtils::FindChildByTag(nsIContent* aElement,
                                   int32_t aNameSpaceID,
                                   nsAtom* aTag,
-                                  nsIContent** aResult)
+                                  Element** aResult)
 {
     for (nsIContent* child = aElement->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
 
-        if (child->NodeInfo()->Equals(aTag, aNameSpaceID)) {
-            NS_ADDREF(*aResult = child);
-
+        if (child->IsElement() &&
+            child->NodeInfo()->Equals(aTag, aNameSpaceID)) {
+            NS_ADDREF(*aResult = child->AsElement());
             return NS_OK;
         }
     }

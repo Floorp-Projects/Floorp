@@ -5,12 +5,12 @@
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "1 bit/pixel paletted image, in which black is the first color in the
 # palette."
-== pal1.bmp pal1.png
+fuzzy(1,926) == pal1.bmp pal1.png
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "1 bit/pixel paletted image, in which white is the first color in the
 # palette."
-== pal1wb.bmp pal1.png
+fuzzy(1,926) == pal1wb.bmp pal1.png
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "1 bit/pixel paletted image, with colors other than black and white."
@@ -20,22 +20,30 @@
 # "Paletted image with 12 palette colors, and 4 bits/pixel."
 == pal4.bmp pal4.png
 
+# BMP: bihsize=40, 127 x 64, bpp=4, compression=0, colors=12
+# "Paletted image with 12 grayscale palette colors, and 4 bits/pixel."
+== pal4gs.bmp pal4gs.png
+
 # BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=12
 # "4-bit image that uses RLE compression."
 == pal4rle.bmp pal4.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=252
 # "Our standard paletted image, with 252 palette colors, and 8 bits/pixel."
-fuzzy(1,899) == pal8.bmp pal8.png
+fuzzy(1,996) == pal8.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=0
 # "Every field that can be set to 0 is set to 0: pixels/meter=0; colors used=0
 # (meaning the default 256); size-of-image=0."
-fuzzy(1,899) == pal8-0.bmp pal8.png
+fuzzy(1,996) == pal8-0.bmp pal8.png
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=252
+# "An 8-bit image with a palette of 252 grayscale colors."
+== pal8gs.bmp pal8gs.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=252
 # "8-bit image that uses RLE compression."
-fuzzy(1,899) == pal8rle.bmp pal8.png
+fuzzy(1,996) == pal8rle.bmp pal8.png
 
 # BMP: bihsize=40, 126 x 63, bpp=8, compression=0, colors=252
 # BMP: bihsize=40, 125 x 62, bpp=8, compression=0, colors=252
@@ -43,40 +51,44 @@ fuzzy(1,899) == pal8rle.bmp pal8.png
 # "Images with different widths and heights. In BMP format, rows are padded to
 # a multiple of four bytes, so we test all four possibilities."
 fuzzy(1,889) == pal8w126.bmp pal8w126.png
-fuzzy(1,879) == pal8w125.bmp pal8w125.png
-fuzzy(1,869) == pal8w124.bmp pal8w124.png
+fuzzy(1,974) == pal8w125.bmp pal8w125.png
+fuzzy(1,870) == pal8w124.bmp pal8w124.png
 
 # BMP: bihsize=40, 127 x -64, bpp=8, compression=0, colors=252
 # "BMP images are normally stored from the bottom up, but there is a way to
 # store them from the top down."
-fuzzy(1,899) == pal8topdown.bmp pal8.png
+fuzzy(1,996) == pal8topdown.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 32, bpp=8, compression=0, colors=252
 # "An image with non-square pixels: the X pixels/meter is twice the Y
 # pixels/meter. Image editors can be expected to leave the image 'squashed';
 # image viewers should consider stretching it to its correct proportions."
 # [We leave it squashed, as does Chromium.]
-fuzzy(1,473) == pal8nonsquare.bmp pal8nonsquare-e.png
+fuzzy(1,1462) == pal8nonsquare.bmp pal8nonsquare-e.png
 
 # BMP: bihsize=12, 127 x 64, bpp=8, compression=0, colors=0
 # "An OS/2-style bitmap."
-fuzzy(1,899) == pal8os2.bmp pal8.png
+fuzzy(1,996) == pal8os2.bmp pal8.png
 
 # BMP: bihsize=108, 127 x 64, bpp=8, compression=0, colors=252
 # "A v4 bitmap. I’m not sure that the gamma and chromaticity values in this
 # file are sensible, because I can’t find any detailed documentation of them."
-fuzzy(1,899) == pal8v4.bmp pal8.png
+fuzzy(1,996) == pal8v4.bmp pal8.png
 
 # BMP: bihsize=124, 127 x 64, bpp=8, compression=0, colors=252
 # "A v5 bitmap. Version 5 has additional colorspace options over v4, so it is
 # easier to create, and ought to be more portable."
-fuzzy(1,899) == pal8v5.bmp pal8.png
+fuzzy(1,996) == pal8v5.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=0, colors=0
 # "A 16-bit image with the default color format: 5 bits each for red, green, and
 # blue, and 1 unused bit. The whitest colors should (I assume) be displayed as
 # pure white: (255,255,255), not (248,248,248)."
 fuzzy(1,1296) == rgb16.bmp rgb16.png
+
+# BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
+# "Same format as rgb16.bmp, but with a BITFIELDS segment."
+fuzzy(1,1296) == rgb16bfdef.bmp rgb16.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "A 16-bit image with a BITFIELDS segment indicating 5 red, 6 green, and 5 blue
@@ -103,6 +115,10 @@ fuzzy(1,1516) == rgb16.bmp rgb16.png
 # BITFIELDS segment). There are 8 bits per color channel, and 8 unused bits.
 # The unused bits are set to 0."
 == rgb32.bmp rgb24.png
+
+# BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
+# "Same format as rgb32.bmp, but with a BITFIELDS segment."
+== rgb32bfdef.bmp rgb24.png
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32-bit image with a BITFIELDS segment. As usual, there are 8 bits per color

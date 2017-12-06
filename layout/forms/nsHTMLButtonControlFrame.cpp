@@ -376,8 +376,8 @@ nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
 nsresult nsHTMLButtonControlFrame::SetFormProperty(nsAtom* aName, const nsAString& aValue)
 {
   if (nsGkAtoms::value == aName) {
-    return mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                             aValue, true);
+    return mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                          aValue, true);
   }
   return NS_OK;
 }

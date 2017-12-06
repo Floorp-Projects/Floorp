@@ -910,7 +910,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
             // sub-resources, or always allowed for sub-resources.
             // For more details look at the bug 647010.
             // BlockPrompt will set mCrossOrigin parameter as well.
-            if (BlockPrompt()) {
+            if (BlockPrompt(proxyAuth)) {
                 LOG(("nsHttpChannelAuthProvider::GetCredentialsForChallenge: "
                      "Prompt is blocked [this=%p pref=%d img-pref=%d]\n",
                       this, sAuthAllowPref, sImgCrossOriginAuthAllowPref));
@@ -962,7 +962,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
 }
 
 bool
-nsHttpChannelAuthProvider::BlockPrompt()
+nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth)
 {
     // Verify that it's ok to prompt for credentials here, per spec
     // http://xhr.spec.whatwg.org/#the-send%28%29-method
@@ -974,6 +974,11 @@ nsHttpChannelAuthProvider::BlockPrompt()
         LOG(("nsHttpChannelAuthProvider::BlockPrompt: Prompt is blocked "
              "[this=%p channel=%p]\n", this, mAuthChannel));
         return true;
+    }
+
+    if (proxyAuth) {
+      // Do not block auth-dialog if this is a proxy authentication.
+      return false;
     }
 
     nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);

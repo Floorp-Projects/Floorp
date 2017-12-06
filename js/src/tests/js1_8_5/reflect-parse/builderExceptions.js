@@ -3,7 +3,9 @@
 var thrown = false;
 try {
     Reflect.parse("42", { builder: { program: function() { throw "expected" } } });
-} catch (e if e === "expected") {
+} catch (e) {
+    if (e !== "expected")
+        throw e;
     thrown = true;
 }
 if (!thrown)

@@ -149,6 +149,18 @@ public:
   // async observer notification for an already-complete sheet.
   bool mSheetAlreadyComplete : 1;
 
+  // If true, the sheet is being loaded cross-origin without CORS permissions.
+  // This is completely normal and CORS isn't needed for such loads.  This
+  // flag is simply useful in determining whether to set mBlockResourceTiming
+  // for a child sheet.
+  bool mIsCrossOriginNoCORS : 1;
+
+  // If this flag is true, LoadSheet will call SetReportResourceTiming(false)
+  // on the timedChannel. This is to mark resources that are loaded by a
+  // cross-origin stylesheet with a no-cors policy.
+  // https://www.w3.org/TR/resource-timing/#processing-model
+  bool mBlockResourceTiming : 1;
+
   // This is the element that imported the sheet.  Needed to get the
   // charset set on it and to fire load/error events.
   nsCOMPtr<nsIStyleSheetLinkingElement> mOwningElement;

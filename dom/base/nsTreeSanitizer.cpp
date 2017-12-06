@@ -1401,10 +1401,12 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
       int32_t ns = nodeInfo->NamespaceID();
 
       if (MustPrune(ns, localName, elt)) {
-        RemoveAllAttributes(node);
+        RemoveAllAttributes(elt);
         nsIContent* descendant = node;
         while ((descendant = descendant->GetNextNode(node))) {
-          RemoveAllAttributes(descendant);
+          if (descendant->IsElement()) {
+            RemoveAllAttributes(descendant->AsElement());
+          }
         }
         nsIContent* next = node->GetNextNonChildNode(aRoot);
         node->RemoveFromParent();
@@ -1450,7 +1452,7 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
         continue;
       }
       if (MustFlatten(ns, localName)) {
-        RemoveAllAttributes(node);
+        RemoveAllAttributes(elt);
         nsCOMPtr<nsIContent> next = node->GetNextNode(aRoot);
         nsCOMPtr<nsIContent> parent = node->GetParent();
         nsCOMPtr<nsIContent> child; // Must keep the child alive during move
@@ -1505,7 +1507,7 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
 }
 
 void
-nsTreeSanitizer::RemoveAllAttributes(nsIContent* aElement)
+nsTreeSanitizer::RemoveAllAttributes(Element* aElement)
 {
   const nsAttrName* attrName;
   while ((attrName = aElement->GetAttrNameAt(0))) {

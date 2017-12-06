@@ -1,5 +1,19 @@
 <!DOCTYPE html>
-<style>
+<html class="reftest-wait">
+  <script>
+
+// We use MozReftestInvalidate here to wait until the font has loaded before
+// calling getBoundingClientRect.
+document.addEventListener('MozReftestInvalidate', () => {
+  let div = document.querySelector('div');
+  let span = document.querySelector('span');
+  div.style.height = span.getBoundingClientRect().height + 'px';
+  document.documentElement.removeAttribute("class");
+});
+
+  </script>
+  <style>
+
 @font-face {
   font-family: Ahem;
   src: url(../fonts/Ahem.ttf);
@@ -9,10 +23,7 @@ div {
   width: 1em;
   background: green;
 }
-</style>
+
+  </style>
 <div><span></span></div>
-<script>
-let $div = document.querySelector('div');
-let $span = document.querySelector('span');
-$div.style.height = $span.getBoundingClientRect().height + 'px';
-</script>
+

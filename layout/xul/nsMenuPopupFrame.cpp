@@ -184,7 +184,7 @@ nsMenuPopupFrame::Init(nsIContent*       aContent,
     nsIRootBox* rootBox =
       nsIRootBox::GetRootBox(PresContext()->GetPresShell());
     if (rootBox) {
-      rootBox->SetDefaultTooltip(aContent);
+      rootBox->SetDefaultTooltip(aContent->AsElement());
     }
   }
 
@@ -2347,7 +2347,7 @@ nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDes
   if (menu) {
     // clear the open attribute on the parent menu
     nsContentUtils::AddScriptRunner(
-      new nsUnsetAttrRunnable(menu->GetContent(), nsGkAtoms::open));
+      new nsUnsetAttrRunnable(menu->GetContent()->AsElement(), nsGkAtoms::open));
   }
 
   ClearPopupShownDispatcher();
@@ -2397,7 +2397,7 @@ nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs)
 
   SetPopupPosition(nullptr, true, false, true);
 
-  nsCOMPtr<nsIContent> popup = mContent;
+  RefPtr<Element> popup = mContent->AsElement();
   if (aUpdateAttrs && (popup->HasAttr(kNameSpaceID_None, nsGkAtoms::left) ||
                        popup->HasAttr(kNameSpaceID_None, nsGkAtoms::top)))
   {

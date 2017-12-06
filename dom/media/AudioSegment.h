@@ -187,7 +187,9 @@ struct AudioChunk {
     }
     return true;
   }
-  bool IsNull() const { return mBuffer == nullptr; }
+  bool IsNull() const {
+    return mBuffer == nullptr;
+  }
   void SetNull(StreamTime aDuration)
   {
     mBuffer = nullptr;
@@ -333,13 +335,15 @@ public:
   void ResampleChunks(SpeexResamplerState* aResampler,
                       uint32_t aInRate,
                       uint32_t aOutRate);
-
   void AppendFrames(already_AddRefed<ThreadSharedObject> aBuffer,
                     const nsTArray<const float*>& aChannelData,
                     int32_t aDuration, const PrincipalHandle& aPrincipalHandle)
   {
     AudioChunk* chunk = AppendChunk(aDuration);
     chunk->mBuffer = aBuffer;
+
+    MOZ_ASSERT(chunk->mBuffer || aChannelData.IsEmpty(), "Appending invalid data ?");
+
     for (uint32_t channel = 0; channel < aChannelData.Length(); ++channel) {
       chunk->mChannelData.AppendElement(aChannelData[channel]);
     }
@@ -355,6 +359,9 @@ public:
   {
     AudioChunk* chunk = AppendChunk(aDuration);
     chunk->mBuffer = aBuffer;
+
+    MOZ_ASSERT(chunk->mBuffer || aChannelData.IsEmpty(), "Appending invalid data ?");
+
     for (uint32_t channel = 0; channel < aChannelData.Length(); ++channel) {
       chunk->mChannelData.AppendElement(aChannelData[channel]);
     }
@@ -363,6 +370,7 @@ public:
     chunk->mTimeStamp = TimeStamp::Now();
 #endif
     chunk->mPrincipalHandle = aPrincipalHandle;
+
   }
   // Consumes aChunk, and returns a pointer to the persistent copy of aChunk
   // in the segment.
@@ -371,6 +379,9 @@ public:
     AudioChunk* chunk = AppendChunk(aChunk->mDuration);
     chunk->mBuffer = aChunk->mBuffer.forget();
     chunk->mChannelData.SwapElements(aChunk->mChannelData);
+
+    MOZ_ASSERT(chunk->mBuffer || aChunk->mChannelData.IsEmpty(), "Appending invalid data ?");
+
     chunk->mVolume = aChunk->mVolume;
     chunk->mBufferFormat = aChunk->mBufferFormat;
 #ifdef MOZILLA_INTERNAL_API
