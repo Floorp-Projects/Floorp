@@ -23,6 +23,7 @@ const FLAG_BOGUS_USER = 1 << 2;
 const FLAG_PREVIOUS_FAILED = 1 << 3;
 const CROSS_ORIGIN = 1 << 4;
 const FLAG_NO_REALM = 1 << 5;
+const FLAG_NON_ASCII_USER_PASSWORD = 1 << 6;
 
 const nsIAuthPrompt2 = Components.interfaces.nsIAuthPrompt2;
 const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
@@ -75,14 +76,19 @@ AuthPrompt1.prototype = {
     if (this.flags & FLAG_RETURN_FALSE)
       return false;
 
-    if (this.flags & FLAG_BOGUS_USER)
+    if (this.flags & FLAG_BOGUS_USER) {
       this.user = "foo\nbar";
+    } else if (this.flags & FLAG_NON_ASCII_USER_PASSWORD) {
+      this.user = "é";
+    }
 
     user.value = this.user;
     if (this.flags & FLAG_WRONG_PASSWORD) {
       pw.value = this.pass + ".wrong";
       // Now clear the flag to avoid an infinite loop
       this.flags &= ~FLAG_WRONG_PASSWORD;
+    } else if (this.flags & FLAG_NON_ASCII_USER_PASSWORD) {
+      pw.value = "é";
     } else {
       pw.value = this.pass;
     }
@@ -140,7 +146,7 @@ AuthPrompt2.prototype = {
     if (isNTLM)
       expectedFlags |= nsIAuthInformation.NEED_DOMAIN;
 
-    const kAllKnownFlags = 63; // Don't fail test for newly added flags
+    const kAllKnownFlags = 127; // Don't fail test for newly added flags
     do_check_eq(expectedFlags, authInfo.flags & kAllKnownFlags);
 
     var expectedScheme = isNTLM ? "ntlm" : isDigest ? "digest" : "basic";
@@ -157,8 +163,11 @@ AuthPrompt2.prototype = {
       return false;
     }
 
-    if (this.flags & FLAG_BOGUS_USER)
+    if (this.flags & FLAG_BOGUS_USER) {
       this.user = "foo\nbar";
+    } else if (this.flags & FLAG_NON_ASCII_USER_PASSWORD) {
+      this.user = "é";
+    }
 
     authInfo.username = this.user;
     if (this.flags & FLAG_WRONG_PASSWORD) {
@@ -166,6 +175,8 @@ AuthPrompt2.prototype = {
       this.flags |= FLAG_PREVIOUS_FAILED;
       // Now clear the flag to avoid an infinite loop
       this.flags &= ~FLAG_WRONG_PASSWORD;
+    } else if (this.flags & FLAG_NON_ASCII_USER_PASSWORD) {
+      authInfo.password = "é";
     } else {
       authInfo.password = this.pass;
       this.flags &= ~FLAG_PREVIOUS_FAILED;
@@ -305,7 +316,7 @@ function makeChan(url, loadingUrl) {
 var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
              test_prompt1CrossOrigin, test_prompt2CrossOrigin,
              test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
-             test_basicrealm, test_digest_noauth, test_digest,
+             test_basicrealm, test_nonascii, test_digest_noauth, test_digest,
              test_digest_bogus_user, test_short_digest, test_large_realm,
              test_large_domain];
 
@@ -319,6 +330,7 @@ function run_test() {
   httpserv.registerPathHandler("/auth", authHandler);
   httpserv.registerPathHandler("/auth/ntlm/simple", authNtlmSimple);
   httpserv.registerPathHandler("/auth/realm", authRealm);
+  httpserv.registerPathHandler("/auth/non_ascii", authNonascii);
   httpserv.registerPathHandler("/auth/digest", authDigest);
   httpserv.registerPathHandler("/auth/short_digest", authShortDigest);
   httpserv.registerPathHandler("/largeRealm", largeRealm);
@@ -438,6 +450,16 @@ function test_basicrealm() {
   do_test_pending();
 }
 
+function test_nonascii() {
+  var chan = makeChan(URL + "/auth/non_ascii", URL);
+
+  chan.notificationCallbacks = new Requestor(FLAG_NON_ASCII_USER_PASSWORD, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen2(listener);
+
+  do_test_pending();
+}
+
 function test_digest_noauth() {
   var chan = makeChan(URL + "/auth/digest", URL);
 
@@ -523,6 +545,32 @@ function authRealm(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
   response.setHeader("WWW-Authenticate", 'Basic realm="\\"f\\oo_bar"', false);
   var body = "success";
+
+  response.bodyOutputStream.write(body, body.length);
+}
+
+// /auth/nonAscii
+function authNonascii(metadata, response) {
+  // btoa("é:é"), but that function is not available here
+  var expectedHeader = "Basic w6k6w6k=";
+
+  var body;
+  if (metadata.hasHeader("Authorization") &&
+      metadata.getHeader("Authorization") == expectedHeader)
+  {
+    response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
+    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
+
+    body = "success";
+  }
+  else
+  {
+    // didn't know é:é, failure
+    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
+
+    body = "failed";
+  }
 
   response.bodyOutputStream.write(body, body.length);
 }
