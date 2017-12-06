@@ -1,6 +1,8 @@
+const Ci = Components.interfaces;
 const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const gMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
+const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
   let { require } =
@@ -28,6 +30,11 @@ const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 const SIMPLE_URL = webserver + "/tests/devtools/addon/content/pages/simple.html";
 const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
 const CUSTOM_URL = webserver + "/tests/devtools/addon/content/pages/custom/$TOOL.html";
+
+// Record allocation count in new subtests if DEBUG_DEVTOOLS_ALLOCATIONS is set to
+// "normal". Print allocation sites to stdout if DEBUG_DEVTOOLS_ALLOCATIONS is set to
+// "verbose".
+const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
 
 function getMostRecentBrowserWindow() {
   return Services.wm.getMostRecentWindow("navigator:browser");
@@ -231,6 +238,14 @@ Damp.prototype = {
    *         and we should record its duration.
    */
   runTest(label) {
+    if (DEBUG_ALLOCATIONS) {
+      if (!this.allocationTracker) {
+        this.allocationTracker = this.startAllocationTracker();
+      }
+      // Flush the current allocations before running the test
+      this.allocationTracker.flushAllocations();
+    }
+
     let startLabel = label + ".start";
     performance.mark(startLabel);
     let start = performance.now();
@@ -244,6 +259,15 @@ Damp.prototype = {
           name: label,
           value: duration
         });
+
+        if (DEBUG_ALLOCATIONS == "normal") {
+          this._results.push({
+            name: label + ".allocations",
+            value: this.allocationTracker.countAllocations()
+          });
+        } else if (DEBUG_ALLOCATIONS == "verbose") {
+          this.allocationTracker.logAllocationSites();
+        }
       }
     };
   },
@@ -944,6 +968,10 @@ async _consoleOpenWithCachedMessagesTest() {
   _onTestComplete: null,
 
   _doneInternal() {
+    if (this.allocationTracker) {
+      this.allocationTracker.stop();
+      this.allocationTracker = null;
+    }
     this._logLine("DAMP_RESULTS_JSON=" + JSON.stringify(this._results));
     this._reportAllResults();
     this._win.gBrowser.selectedTab = this._dampTab;
@@ -1005,6 +1033,11 @@ async _consoleOpenWithCachedMessagesTest() {
     });
   },
 
+  startAllocationTracker() {
+    const { allocationTracker } = require("devtools/shared/test-helpers/allocation-tracker");
+    return allocationTracker();
+  },
+
   startTest(doneCallback, config) {
     this._onTestComplete = function(results) {
       TalosParentProfiler.pause("DAMP - end");
@@ -1012,7 +1045,6 @@ async _consoleOpenWithCachedMessagesTest() {
     };
     this._config = config;
 
-    const Ci = Components.interfaces;
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
     this._win = wm.getMostRecentWindow("navigator:browser");
     this._dampTab = this._win.gBrowser.selectedTab;
@@ -1092,6 +1124,8 @@ async _consoleOpenWithCachedMessagesTest() {
     // related to Firefox startup or DAMP setup during the first test.
     garbageCollect().then(() => {
       this._doSequence(sequenceArray, this._doneInternal);
+    }).catch(e => {
+      dump("Exception while running DAMP tests: " + e + "\n" + e.stack + "\n");
     });
   }
 };
