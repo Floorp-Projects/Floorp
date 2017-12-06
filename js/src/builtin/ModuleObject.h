@@ -133,8 +133,8 @@ class IndirectBindingMap
 
     void trace(JSTracer* trc);
 
-    bool putNew(JSContext* cx, HandleId name,
-                HandleModuleEnvironmentObject environment, HandleId localName);
+    bool put(JSContext* cx, HandleId name,
+             HandleModuleEnvironmentObject environment, HandleId localName);
 
     size_t count() const {
         return map_.count();
@@ -254,7 +254,7 @@ class ModuleObject : public NativeObject
         EnvironmentSlot,
         NamespaceSlot,
         StatusSlot,
-        ErrorSlot,
+        EvaluationErrorSlot,
         HostDefinedSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
@@ -272,8 +272,8 @@ class ModuleObject : public NativeObject
                   "EnvironmentSlot must match self-hosting define");
     static_assert(StatusSlot == MODULE_OBJECT_STATUS_SLOT,
                   "StatusSlot must match self-hosting define");
-    static_assert(ErrorSlot == MODULE_OBJECT_ERROR_SLOT,
-                  "ErrorSlot must match self-hosting define");
+    static_assert(EvaluationErrorSlot == MODULE_OBJECT_EVALUATION_ERROR_SLOT,
+                  "EvaluationErrorSlot must match self-hosting define");
     static_assert(DFSIndexSlot == MODULE_OBJECT_DFS_INDEX_SLOT,
                   "DFSIndexSlot must match self-hosting define");
     static_assert(DFSAncestorIndexSlot == MODULE_OBJECT_DFS_ANCESTOR_INDEX_SLOT,
@@ -303,7 +303,8 @@ class ModuleObject : public NativeObject
     ModuleEnvironmentObject* environment() const;
     ModuleNamespaceObject* namespace_();
     ModuleStatus status() const;
-    Value error() const;
+    bool hadEvaluationError() const;
+    Value evaluationError() const;
     Value hostDefinedField() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
