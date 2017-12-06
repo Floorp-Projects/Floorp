@@ -104,6 +104,7 @@ UNIFIED_SOURCES += [
 ]
 
 DIRS += [
+    'rlz',
     'widevine-adapter',
 ]
 
