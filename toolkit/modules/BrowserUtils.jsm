@@ -492,8 +492,6 @@ this.BrowserUtils = {
     let selectionStr = selection.toString();
     let fullText;
 
-    let collapsed = selection.isCollapsed;
-
     let url;
     let linkText;
 
@@ -503,9 +501,12 @@ this.BrowserUtils = {
       if (ChromeUtils.getClassName(focusedElement) === "HTMLTextAreaElement" ||
           (focusedElement instanceof Ci.nsIDOMHTMLInputElement &&
            focusedElement.mozIsTextField(true))) {
-        selectionStr = focusedElement.editor.selection.toString();
+        selection = focusedElement.editor.selection;
+        selectionStr = selection.toString();
       }
     }
+
+    let collapsed = selection.isCollapsed;
 
     if (selectionStr) {
       // Have some text, let's figure out if it looks like a URL that isn't
