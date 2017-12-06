@@ -9,6 +9,7 @@
 #include "ClientManager.h"
 #include "ClientManagerChild.h"
 #include "ClientSourceChild.h"
+#include "ClientState.h"
 #include "ClientValidation.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -54,6 +55,37 @@ ClientSource::ExecutionReady(const ClientSourceExecutionReadyArgs& aArgs)
   });
 }
 
+nsresult
+ClientSource::SnapshotWindowState(ClientState* aStateOut)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsPIDOMWindowInner* window = GetInnerWindow();
+  if (!window || !window->IsCurrentInnerWindow() ||
+      !window->HasActiveDocument()) {
+    *aStateOut = ClientState(ClientWindowState(VisibilityState::Hidden,
+                                               TimeStamp(), false));
+    return NS_OK;
+  }
+
+  nsIDocument* doc = window->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ErrorResult rv;
+  bool focused = doc->HasFocus(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+    return rv.StealNSResult();
+  }
+
+  *aStateOut = ClientState(ClientWindowState(doc->VisibilityState(),
+                                             doc->LastFocusTime(), focused));
+
+  return NS_OK;
+}
+
 WorkerPrivate*
 ClientSource::GetWorkerPrivate() const
 {
@@ -72,6 +104,18 @@ ClientSource::GetDocShell() const
     return nullptr;
   }
   return mOwner.as<nsCOMPtr<nsIDocShell>>();
+}
+
+void
+ClientSource::MaybeCreateInitialDocument()
+{
+  nsIDocShell* docshell = GetDocShell();
+  if (docshell) {
+    // Force the create of the initial document if it does not exist yet.
+    Unused << docshell->GetDocument();
+
+    MOZ_DIAGNOSTIC_ASSERT(GetInnerWindow());
+  }
 }
 
 ClientSource::ClientSource(ClientManager* aManager,
@@ -297,6 +341,42 @@ const Maybe<ServiceWorkerDescriptor>&
 ClientSource::GetController() const
 {
   return mController;
+}
+
+RefPtr<ClientOpPromise>
+ClientSource::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
+{
+  RefPtr<ClientOpPromise> ref;
+
+  ClientState state;
+  nsresult rv = SnapshotState(&state);
+  if (NS_FAILED(rv)) {
+    ref = ClientOpPromise::CreateAndReject(rv, __func__);
+    return ref.forget();
+  }
+
+  ref = ClientOpPromise::CreateAndResolve(ClientInfoAndState(mClientInfo.ToIPC(),
+                                                             state.ToIPC()), __func__);
+  return ref.forget();
+}
+
+nsresult
+ClientSource::SnapshotState(ClientState* aStateOut)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+  MOZ_DIAGNOSTIC_ASSERT(aStateOut);
+
+  if (mClientInfo.Type() == ClientType::Window) {
+    MaybeCreateInitialDocument();
+    nsresult rv = SnapshotWindowState(aStateOut);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  *aStateOut = ClientState(ClientWorkerState());
+  return NS_OK;
 }
 
 nsISerialEventTarget*
