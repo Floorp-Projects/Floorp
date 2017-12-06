@@ -154,7 +154,7 @@ struct TokenStreamMatcher
 {
     template<class Parser>
     frontend::TokenStreamAnyChars& match(Parser* parser) {
-        return parser->tokenStream;
+        return parser->anyChars;
     }
 };
 

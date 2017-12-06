@@ -24,6 +24,7 @@
 #include "jsnum.h"
 
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/Parser.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
@@ -709,9 +710,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::seek(const Position& pos)
 template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::seek(const Position& pos,
-                                                 const TokenStreamSpecific& other)
+                                                 const TokenStreamAnyChars& other)
 {
-    if (!anyCharsAccess().srcCoords.fill(other.anyCharsAccess().srcCoords))
+    if (!anyCharsAccess().srcCoords.fill(other.srcCoords))
         return false;
 
     seek(pos);
@@ -2362,8 +2363,19 @@ TokenKindToString(TokenKind tt)
 #endif
 
 template class frontend::TokenStreamCharsBase<char16_t>;
+
 template class frontend::TokenStreamChars<char16_t, frontend::TokenStreamAnyCharsAccess>;
 template class frontend::TokenStreamSpecific<char16_t, frontend::TokenStreamAnyCharsAccess>;
+
+template class
+frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::FullParseHandler, char16_t>>>;
+template class
+frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::SyntaxParseHandler, char16_t>>>;
+
+template class
+frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::FullParseHandler, char16_t>>>;
+template class
+frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::SyntaxParseHandler, char16_t>>>;
 
 } // namespace frontend
 

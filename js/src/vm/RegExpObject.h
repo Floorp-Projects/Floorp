@@ -43,7 +43,7 @@ struct MatchPair;
 class MatchPairs;
 class RegExpStatics;
 
-namespace frontend { class TokenStream; }
+namespace frontend { class TokenStreamAnyChars; }
 
 extern RegExpObject*
 RegExpAlloc(JSContext* cx, NewObjectKind newKind, HandleObject proto = nullptr);
@@ -71,15 +71,23 @@ class RegExpObject : public NativeObject
     // allocate a bigger MatchResult.
     static const size_t MaxPairCount = 14;
 
+    template<typename CharT>
     static RegExpObject*
-    create(JSContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
-           const ReadOnlyCompileOptions* options, frontend::TokenStream* ts, LifoAlloc& alloc,
+    create(JSContext* cx, const CharT* chars, size_t length, RegExpFlag flags, LifoAlloc& alloc,
+           NewObjectKind newKind);
+
+    template<typename CharT>
+    static RegExpObject*
+    create(JSContext* cx, const CharT* chars, size_t length, RegExpFlag flags,
+           frontend::TokenStreamAnyChars& ts, LifoAlloc& alloc, NewObjectKind kind);
+
+    static RegExpObject*
+    create(JSContext* cx, HandleAtom atom, RegExpFlag flags, LifoAlloc& alloc,
            NewObjectKind newKind);
 
     static RegExpObject*
-    create(JSContext* cx, HandleAtom atom, RegExpFlag flags,
-           const ReadOnlyCompileOptions* options, frontend::TokenStream* ts, LifoAlloc& alloc,
-           NewObjectKind newKind);
+    create(JSContext* cx, HandleAtom atom, RegExpFlag flags, frontend::TokenStreamAnyChars& ts,
+           LifoAlloc& alloc, NewObjectKind newKind);
 
     /*
      * Compute the initial shape to associate with fresh RegExp objects,
