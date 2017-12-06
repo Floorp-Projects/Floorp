@@ -9,49 +9,88 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 job-defaults:
+   description: release bouncer submission job
+   worker-type: buildbot-bridge/buildbot-bridge
+   run-on-projects: []
    shipping-phase: promote
+   index:
+      type: release
+   run:
+      using: buildbot
+      release-promotion: true
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
 
 jobs:
    fennec:
       name: fennec_release_bouncer_sub
-      description: release bouncer submission job
-      worker-type: buildbot-bridge/buildbot-bridge
-      run-on-projects: []
       shipping-product: fennec
       run:
-         using: buildbot
          product: fennec
          buildername: release-{branch}-fennec_bncr_sub
-         release-promotion: true
       routes:
          - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
          - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.bouncer_submitter
       index:
-         type: release
          product: fennec
-         job-name: android-api-16-opt
-      notifications:
-         completed:
-            by-project:
-               maple:
-                  - "release-drivers-staging"
-               try:
-               #  - "{task[tags][createdForUser]}"
-               default:
-                  - "release-drivers"
-         failed:
-            by-project:
-               maple:
-                  - "release-drivers-staging"
-               try:
-               #  - "{task[tags][createdForUser]}"
-               default:
-                  - "release-drivers"
-         exception:
-            by-project:
-               maple:
-                  - "release-drivers-staging"
-               try:
-               #  - "{task[tags][createdForUser]}"
-               default:
-                  - "release-drivers"
+   firefox:
+      name: firefox_release_bouncer_sub
+      shipping-product: firefox
+      run:
+         product: firefox
+         buildername: release-{branch}_firefox_bncr_sub
+      routes:
+         - index.releases.v1.{branch}.latest.firefox.latest.bouncer_submitter
+         - index.releases.v1.{branch}.{revision}.firefox.{underscore_version}.build{build_number}.bouncer_submitter
+      index:
+         product: firefox
+   devedition:
+      name: devedition_release_bouncer_sub
+      shipping-product: devedition
+      run:
+         product: devedition
+         buildername: release-{branch}_devedition_bncr_sub
+      routes:
+         - index.releases.v1.{branch}.latest.devedition.latest.bouncer_submitter
+         - index.releases.v1.{branch}.{revision}.devedition.{underscore_version}.build{build_number}.bouncer_submitter
+      index:
+         product: devedition
