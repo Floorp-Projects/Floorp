@@ -31,7 +31,7 @@ async_test(function(t) {
     return animation.ready;
   })).then(t.step_func(function() {
     previousAnimVal = getMarginLeft(cs);
-    return waitForFrame();
+    return waitForNextFrame();
   })).then(t.step_func(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'margin-left does not increase after calling pause()');
