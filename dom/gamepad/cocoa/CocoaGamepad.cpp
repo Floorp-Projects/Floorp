@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/ArrayUtils.h"
+#include "nsITimer.h"
 #include "nsThreadUtils.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/hid/IOHIDBase.h>
@@ -23,6 +24,9 @@ namespace {
 using namespace mozilla;
 using namespace mozilla::dom;
 using std::vector;
+class DarwinGamepadService;
+
+DarwinGamepadService* gService = nullptr;
 
 struct Button {
   int id;
@@ -66,6 +70,9 @@ const unsigned kConsumerPage = 0x0C;
 const unsigned kHomeUsage = 0x223;
 const unsigned kBackUsage = 0x224;
 
+// We poll it periodically,
+// 50ms is arbitrarily chosen.
+const uint32_t kDarwinGamepadPollInterval = 50;
 
 class Gamepad {
  private:
@@ -196,14 +203,17 @@ void Gamepad::init(IOHIDDeviceRef device)
   }
 }
 
+// This service is created and destroyed in Background thread while
+// operates in a seperate thread(We call it Monitor thread here).
 class DarwinGamepadService {
  private:
   IOHIDManagerRef mManager;
   vector<Gamepad> mGamepads;
 
-  //Workaround to support running in background thread
-  CFRunLoopRef mMonitorRunLoop;
   nsCOMPtr<nsIThread> mMonitorThread;
+  nsCOMPtr<nsIThread> mBackgroundThread;
+  nsCOMPtr<nsITimer> mPollingTimer;
+  bool mIsRunning;
 
   static void DeviceAddedCallback(void* data, IOReturn result,
                                   void* sender, IOHIDDeviceRef device);
@@ -211,11 +221,13 @@ class DarwinGamepadService {
                                     void* sender, IOHIDDeviceRef device);
   static void InputValueChangedCallback(void* data, IOReturn result,
                                         void* sender, IOHIDValueRef newValue);
+  static void EventLoopOnceCallback(nsITimer* aTimer, void* aClosure);
 
   void DeviceAdded(IOHIDDeviceRef device);
   void DeviceRemoved(IOHIDDeviceRef device);
   void InputValueChanged(IOHIDValueRef value);
   void StartupInternal();
+  void RunEventLoopOnce();
 
  public:
   DarwinGamepadService();
@@ -223,6 +235,7 @@ class DarwinGamepadService {
   void Startup();
   void Shutdown();
   friend class DarwinGamepadServiceStartupRunnable;
+  friend class DarwinGamepadServiceShutdownRunnable;
 };
 
 class DarwinGamepadServiceStartupRunnable final : public Runnable
@@ -240,6 +253,34 @@ class DarwinGamepadServiceStartupRunnable final : public Runnable
   {
     MOZ_ASSERT(mService);
     mService->StartupInternal();
+    return NS_OK;
+  }
+};
+
+class DarwinGamepadServiceShutdownRunnable final : public Runnable
+{
+private:
+  ~DarwinGamepadServiceShutdownRunnable() {}
+public:
+  // This Runnable schedules shutdown of DarwinGamepadService
+  // in background thread.
+  explicit DarwinGamepadServiceShutdownRunnable()
+    : Runnable("DarwinGamepadServiceStartupRunnable") {}
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(gService);
+    MOZ_ASSERT(NS_GetCurrentThread() == gService->mBackgroundThread);
+
+    IOHIDManagerRef manager = (IOHIDManagerRef)gService->mManager;
+
+    if (manager) {
+      IOHIDManagerClose(manager, 0);
+      CFRelease(manager);
+      gService->mManager = nullptr;
+    }
+    gService->mMonitorThread->Shutdown();
+    delete gService;
+    gService = nullptr;
     return NS_OK;
   }
 };
@@ -432,6 +473,13 @@ DarwinGamepadService::InputValueChangedCallback(void* data,
   service->InputValueChanged(newValue);
 }
 
+void
+DarwinGamepadService::EventLoopOnceCallback(nsITimer* aTimer, void* aClosure)
+{
+  DarwinGamepadService* service = static_cast<DarwinGamepadService*>(aClosure);
+  service->RunEventLoopOnce();
+}
+
 static CFMutableDictionaryRef
 MatchingDictionary(UInt32 inUsagePage, UInt32 inUsage)
 {
@@ -463,12 +511,45 @@ MatchingDictionary(UInt32 inUsagePage, UInt32 inUsage)
   return dict;
 }
 
-DarwinGamepadService::DarwinGamepadService() : mManager(nullptr) {}
+DarwinGamepadService::DarwinGamepadService()
+  : mManager(nullptr), mIsRunning(false)
+{}
 
 DarwinGamepadService::~DarwinGamepadService()
 {
   if (mManager != nullptr)
     CFRelease(mManager);
+  mMonitorThread = nullptr;
+  mBackgroundThread = nullptr;
+  if (mPollingTimer) {
+    mPollingTimer->Cancel();
+    mPollingTimer = nullptr;
+  }
+}
+
+void
+DarwinGamepadService::RunEventLoopOnce()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mMonitorThread);
+  CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true);
+
+  // This timer must be created in monitor thread
+  if (!mPollingTimer) {
+    mPollingTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
+  mPollingTimer->Cancel();
+  if (mIsRunning) {
+    mPollingTimer->InitWithNamedFuncCallback(EventLoopOnceCallback,
+                                             this, kDarwinGamepadPollInterval,
+                                             nsITimer::TYPE_ONE_SHOT,
+                                             "EventLoopOnceCallback");
+  } else {
+    // We schedule a task shutdown and cleaning up resources to Background thread
+    // here to make sure no runloop is running to prevent potential
+    // race condition.
+    RefPtr<Runnable> shutdownTask =  new DarwinGamepadServiceShutdownRunnable();
+    mBackgroundThread->Dispatch(shutdownTask.forget(), NS_DISPATCH_NORMAL);
+  }
 }
 
 void
@@ -530,19 +611,13 @@ DarwinGamepadService::StartupInternal()
 
   mManager = manager;
 
-  // We held the handle of the CFRunLoop to make sure we
-  // can shut it down explicitly by CFRunLoopStop in another
-  // thread.
-  mMonitorRunLoop = CFRunLoopGetCurrent();
-
-  // CFRunLoopRun() is a blocking message loop when it's called in
-  // non-main thread so this thread cannot receive any other runnables
-  // and nsITimer timeout events after it's called.
-  CFRunLoopRun();
+  mIsRunning = true;
+  RunEventLoopOnce();
 }
 
 void DarwinGamepadService::Startup()
 {
+  mBackgroundThread = NS_GetCurrentThread();
   Unused << NS_NewNamedThread("Gamepad",
                               getter_AddRefs(mMonitorThread),
                               new DarwinGamepadServiceStartupRunnable(this));
@@ -550,14 +625,10 @@ void DarwinGamepadService::Startup()
 
 void DarwinGamepadService::Shutdown()
 {
-  IOHIDManagerRef manager = (IOHIDManagerRef)mManager;
-  CFRunLoopStop(mMonitorRunLoop);
-  if (manager) {
-    IOHIDManagerClose(manager, 0);
-    CFRelease(manager);
-    mManager = nullptr;
-  }
-  mMonitorThread->Shutdown();
+  // Flipping this flag will stop the eventloop in Monitor thread
+  // and dispatch a task destroying and cleaning up resources in
+  // Background thread
+  mIsRunning = false;
 }
 
 } // namespace
@@ -565,10 +636,9 @@ void DarwinGamepadService::Shutdown()
 namespace mozilla {
 namespace dom {
 
-DarwinGamepadService* gService = nullptr;
-
 void StartGamepadMonitoring()
 {
+  AssertIsOnBackgroundThread();
   if (gService) {
     return;
   }
@@ -579,13 +649,13 @@ void StartGamepadMonitoring()
 
 void StopGamepadMonitoring()
 {
+  AssertIsOnBackgroundThread();
   if (!gService) {
     return;
   }
 
+  // Calling Shutdown() will delete gService as well
   gService->Shutdown();
-  delete gService;
-  gService = nullptr;
 }
 
 } // namespace dom
