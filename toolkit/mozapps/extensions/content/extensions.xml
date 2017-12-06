@@ -218,26 +218,12 @@
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
                   oncommand="this.parentNode._handleChange('updateDate');"/>
-      <xul:button anonid="price-btn" class="sorter" hidden="true"
-                  label="&sort.price.label;"
-                  tooltiptext="&sort.price.tooltip;"
-                  oncommand="this.parentNode._handleChange('purchaseAmount');"/>
-      <xul:button anonid="relevance-btn" class="sorter" hidden="true"
-                  label="&sort.relevance.label;"
-                  tooltiptext="&sort.relevance.tooltip;"
-                  oncommand="this.parentNode._handleChange('relevancescore');"/>
     </content>
 
     <implementation>
       <constructor><![CDATA[
         if (!this.hasAttribute("sortby"))
           this.setAttribute("sortby", "name");
-
-        if (this.getAttribute("showrelevance") == "true")
-          this._btnRelevance.hidden = false;
-
-        if (this.getAttribute("showprice") == "true")
-          this._btnPrice.hidden = false;
 
         this._refreshState();
       ]]></constructor>
@@ -248,12 +234,6 @@
       </field>
       <field name="_btnDate">
         document.getAnonymousElementByAttribute(this, "anonid", "date-btn");
-      </field>
-      <field name="_btnPrice">
-        document.getAnonymousElementByAttribute(this, "anonid", "price-btn");
-      </field>
-      <field name="_btnRelevance">
-        document.getAnonymousElementByAttribute(this, "anonid", "relevance-btn");
       </field>
 
       <property name="sortBy">
@@ -281,28 +261,6 @@
         ]]></setter>
       </property>
 
-      <property name="showrelevance">
-        <getter><![CDATA[
-          return (this.getAttribute("showrelevance") == "true");
-        ]]></getter>
-        <setter><![CDATA[
-          val = !!val;
-          this.setAttribute("showrelevance", val);
-          this._btnRelevance.hidden = !val;
-        ]]></setter>
-      </property>
-
-      <property name="showprice">
-        <getter><![CDATA[
-          return (this.getAttribute("showprice") == "true");
-        ]]></getter>
-        <setter><![CDATA[
-          val = !!val;
-          this.setAttribute("showprice", val);
-          this._btnPrice.hidden = !val;
-        ]]></setter>
-      </property>
-
       <method name="setSort">
         <parameter name="aSort"/>
         <parameter name="aAscending"/>
@@ -327,7 +285,7 @@
       <method name="_handleChange">
         <parameter name="aSort"/>
         <body><![CDATA[
-          const ASCENDING_SORT_FIELDS = ["name", "purchaseAmount"];
+          const ASCENDING_SORT_FIELDS = ["name"];
 
           // Toggle ascending if sort by is not changing, otherwise
           // name sorting defaults to ascending, others to descending
@@ -357,22 +315,6 @@
           } else {
             this._btnDate.checkState = 0;
             this._btnDate.checked = false;
-          }
-
-          if (sortBy == "purchaseAmount") {
-            this._btnPrice.checkState = checkState;
-            this._btnPrice.checked = true;
-          } else {
-            this._btnPrice.checkState = 0;
-            this._btnPrice.checked = false;
-          }
-
-          if (sortBy == "relevancescore") {
-            this._btnRelevance.checkState = checkState;
-            this._btnRelevance.checked = true;
-          } else {
-            this._btnRelevance.checkState = 0;
-            this._btnRelevance.checked = false;
           }
 
           if (this.handler && "onSortChanged" in this.handler)
@@ -494,9 +436,7 @@
     <content>
       <xul:label anonid="message"/>
       <xul:progressmeter anonid="progress" class="download-progress"/>
-      <xul:button anonid="purchase-remote-btn" hidden="true"
-                  class="addon-control"
-                  oncommand="document.getBindingParent(this).purchaseRemote();"/>
+>
       <xul:button anonid="install-remote-btn" hidden="true"
                   class="addon-control install" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
@@ -523,10 +463,6 @@
       </field>
       <field name="_progress">
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
-      </field>
-      <field name="_purchaseRemote">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "purchase-remote-btn");
       </field>
       <field name="_installRemote">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -558,7 +494,6 @@
       <method name="refreshState">
         <body><![CDATA[
           var showInstallRemote = false;
-          var showPurchase = false;
 
           if (this.mInstall) {
 
@@ -595,17 +530,8 @@
                 break;
             }
 
-          } else if (this.mControl.mAddon.purchaseURL) {
-            this._progress.hidden = true;
-            showPurchase = true;
-            this._purchaseRemote.label =
-              gStrings.ext.formatStringFromName("addon.purchase.label",
-                [this.mControl.mAddon.purchaseDisplayAmount], 1);
-            this._purchaseRemote.tooltiptext =
-              gStrings.ext.GetStringFromName("addon.purchase.tooltip");
           }
 
-          this._purchaseRemote.hidden = !showPurchase;
           this._installRemote.hidden = !showInstallRemote;
 
           if ("refreshInfo" in this.mControl)
@@ -625,12 +551,6 @@
             this._message.value = msg;
           else
             this._progress.status = msg;
-        ]]></body>
-      </method>
-
-      <method name="purchaseRemote">
-        <body><![CDATA[
-          openURL(this.mControl.mAddon.purchaseURL);
         ]]></body>
       </method>
 

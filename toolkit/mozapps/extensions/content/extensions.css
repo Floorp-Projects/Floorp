@@ -84,11 +84,6 @@ row[unsupported="true"] {
   visibility: hidden;
 }
 
-#search-list[local="false"]  > .addon[remote="false"],
-#search-list[remote="false"] > .addon[remote="true"] {
-  visibility: collapse;
-}
-
 #detail-view {
   overflow: auto;
 }
@@ -112,7 +107,6 @@ row[unsupported="true"] {
 #detail-view[loading] .detail-view-container,
 #detail-view:not([loading]) .alert-container,
 .detail-row:not([value]),
-#search-list[remote="false"] #search-allresults-link,
 #legacy-list .addon .disabled-postfix {
   display: none;
 }
