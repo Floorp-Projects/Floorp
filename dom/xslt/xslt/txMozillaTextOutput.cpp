@@ -20,6 +20,7 @@
 #include "nsTextNode.h"
 #include "nsNameSpaceManager.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 txMozillaTextOutput::txMozillaTextOutput(nsITransformObserver* aObserver)
@@ -196,7 +197,7 @@ txMozillaTextOutput::createResultDocument(nsIDocument* aSourceDocument,
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-        nsCOMPtr<nsIContent> html, head, body;
+        RefPtr<Element> html, head, body;
         rv = createXHTMLElement(nsGkAtoms::html, getter_AddRefs(html));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -212,12 +213,17 @@ txMozillaTextOutput::createResultDocument(nsIDocument* aSourceDocument,
         rv = html->AppendChildTo(body, false);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = createXHTMLElement(nsGkAtoms::pre, getter_AddRefs(mTextParent));
-        NS_ENSURE_SUCCESS(rv, rv);
+        {
+          RefPtr<Element> textParent;
+          rv = createXHTMLElement(nsGkAtoms::pre, getter_AddRefs(textParent));
+          NS_ENSURE_SUCCESS(rv, rv);
+          mTextParent = textParent.forget();
+        }
 
-        rv = mTextParent->SetAttr(kNameSpaceID_None, nsGkAtoms::id,
-                                  NS_LITERAL_STRING("transformiixResult"),
-                                  false);
+        rv = mTextParent->AsElement()->SetAttr(kNameSpaceID_None,
+                                               nsGkAtoms::id,
+                                               NS_LITERAL_STRING("transformiixResult"),
+                                               false);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = body->AppendChildTo(mTextParent, false);
@@ -250,8 +256,7 @@ void txMozillaTextOutput::getOutputDocument(nsIDOMDocument** aDocument)
 }
 
 nsresult
-txMozillaTextOutput::createXHTMLElement(nsAtom* aName,
-                                        nsIContent** aResult)
+txMozillaTextOutput::createXHTMLElement(nsAtom* aName, Element** aResult)
 {
     nsCOMPtr<Element> element = mDocument->CreateHTMLElement(aName);
     element.forget(aResult);

@@ -46,7 +46,6 @@
 #include "HeapCopyOfStackArray.h"
 
 #if MOZ_WIDGET_ANDROID
-#include "TexturePoolOGL.h"
 #include "GeneratedJNIWrappers.h"
 #endif
 
@@ -674,7 +673,6 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mPixelsFilled = 0;
 
 #ifdef MOZ_WIDGET_ANDROID
-  TexturePoolOGL::Fill(gl());
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)mGLContext.get());
 #endif
 

@@ -97,4 +97,7 @@ interface nsITimedChannel : nsISupports {
   readonly attribute PRTime cacheReadEndTime;
   readonly attribute PRTime redirectStartTime;
   readonly attribute PRTime redirectEndTime;
+
+  // If this attribute is false, this resource MUST NOT be reported in resource timing.
+  [noscript] attribute boolean reportResourceTiming;
 };

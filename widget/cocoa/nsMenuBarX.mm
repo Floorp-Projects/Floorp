@@ -28,6 +28,8 @@
 #include "nsIStringBundle.h"
 #include "nsToolkitCompsCID.h"
 
+#include "mozilla/dom/Element.h"
+
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
 NSMenu* sApplicationMenu = nil;
@@ -44,7 +46,8 @@ static nsIContent* sQuitItemContent   = nullptr;
 
 NS_IMPL_ISUPPORTS(nsNativeMenuServiceX, nsINativeMenuService)
 
-NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIContent* aMenuBarNode)
+NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent,
+                                                        mozilla::dom::Element* aMenuBarElement)
 {
   NS_ASSERTION(NS_IsMainThread(), "Attempting to create native menu bar on wrong thread!");
 
@@ -52,7 +55,7 @@ NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIC
   if (!mb)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return mb->Create(aParent, aMenuBarNode);
+  return mb->Create(aParent, aMenuBarElement);
 }
 
 //
@@ -131,7 +134,7 @@ nsMenuBarX::~nsMenuBarX()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
+nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent)
 {
   if (!aParent)
     return NS_ERROR_INVALID_ARG;
@@ -142,7 +145,7 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
   if (mContent) {
     AquifyMenuBar();
 
-    nsresult rv = nsMenuGroupOwnerX::Create(mContent);
+    nsresult rv = nsMenuGroupOwnerX::Create(aContent);
     if (NS_FAILED(rv))
       return rv;
 
@@ -167,7 +170,7 @@ void nsMenuBarX::ConstructNativeMenus()
         menuContent->IsXULElement(nsGkAtoms::menu)) {
       nsMenuX* newMenu = new nsMenuX();
       if (newMenu) {
-        nsresult rv = newMenu->Create(this, this, menuContent);
+        nsresult rv = newMenu->Create(this, this, menuContent->AsElement());
         if (NS_SUCCEEDED(rv))
           InsertMenuAtIndex(newMenu, GetMenuCount());
         else
@@ -543,11 +546,11 @@ void nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsICont
 {
   nsCOMPtr<nsIDOMElement> menuItem;
   inDoc->GetElementById(inID, getter_AddRefs(menuItem));
-  nsCOMPtr<nsIContent> menuContent(do_QueryInterface(menuItem));
-  if (menuContent) {
-    menuContent->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, NS_LITERAL_STRING("true"), false);
+  nsCOMPtr<Element> menuElement(do_QueryInterface(menuItem));
+  if (menuElement) {
+    menuElement->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, NS_LITERAL_STRING("true"), false);
     if (outHiddenNode) {
-      *outHiddenNode = menuContent.get();
+      *outHiddenNode = menuElement.get();
       NS_IF_ADDREF(*outHiddenNode);
     }
   }

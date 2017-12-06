@@ -161,7 +161,7 @@ protected:
      * <treerow> in the rule's <action>.
      */
     nsresult
-    GetTemplateActionRowFor(int32_t aRow, nsIContent** aResult);
+    GetTemplateActionRowFor(int32_t aRow, mozilla::dom::Element** aResult);
 
     /**
      * Given a row and a column ID, use the row's match to figure out
@@ -248,7 +248,7 @@ protected:
      */
     bool
     GetInsertionLocations(nsIXULTemplateResult* aResult,
-                          nsCOMArray<nsIContent>** aLocations) override;
+                          nsCOMArray<Element>** aLocations) override;
 
     /**
      * Implement result replacement
@@ -257,7 +257,7 @@ protected:
     ReplaceMatch(nsIXULTemplateResult* aOldResult,
                  nsTemplateMatch* aNewMatch,
                  nsTemplateRule* aNewMatchRule,
-                 void* aContext) override;
+                 Element* aContext) override;
 
     /**
      * Implement match synchronization

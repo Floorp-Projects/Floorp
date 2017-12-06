@@ -22,7 +22,9 @@ var Match =
             try {
                 return this.match(act);
             }
-            catch (e if e instanceof MatchError) {
+            catch (e) {
+                if (!(e instanceof MatchError))
+                    throw e;
                 return false;
             }
         },
@@ -31,7 +33,9 @@ var Match =
             try {
                 return this.match(act);
             }
-            catch (e if e instanceof MatchError) {
+            catch (e) {
+                if (!(e instanceof MatchError))
+                    throw e;
                 throw new Error((message || "failed match") + ": " + e.message);
             }
         },

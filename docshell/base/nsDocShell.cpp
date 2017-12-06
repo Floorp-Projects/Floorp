@@ -10531,6 +10531,9 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     (aFlags & INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) != 0;
   mURIResultedInDocument = false;  // reset the clock...
 
+  // Note that there is code that relies on this check to stop us entering the
+  // `doShortCircuitedLoad` block below for certain load types.  (For example,
+  // reftest-content.js uses LOAD_FLAGS_BYPASS_CACHE for this purpose.)
   if (aLoadType == LOAD_NORMAL ||
       aLoadType == LOAD_STOP_CONTENT ||
       LOAD_TYPE_HAS_FLAGS(aLoadType, LOAD_FLAGS_REPLACE_HISTORY) ||

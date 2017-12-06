@@ -284,8 +284,8 @@ nsSplitterFrame::Init(nsIContent*       aContent,
     if (!aParent->IsXULHorizontal()) {
       if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
                                            nsGkAtoms::orient)) {
-        aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
-                          NS_LITERAL_STRING("vertical"), false);
+        aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
+                                       NS_LITERAL_STRING("vertical"), false);
         if (StyleContext()->IsGecko()) {
           // FIXME(emilio): Even if we did this in Servo, this just won't
           // work, and we'd need a specific "really re-resolve the style" API...
@@ -422,8 +422,11 @@ nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext,
     mDragging = false;
     State newState = GetState();
     // if the state is dragging then make it Open.
-    if (newState == Dragging)
-      mOuter->mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::state, EmptyString(), true);
+    if (newState == Dragging) {
+      mOuter->mContent->AsElement()->SetAttr(kNameSpaceID_None,
+                                             nsGkAtoms::state, EmptyString(),
+                                             true);
+    }
 
     mPressed = false;
 
@@ -513,7 +516,7 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
           //printf("Collapse right\n");
           if (supportsAfter)
           {
-            nsCOMPtr<nsIContent> outer = mOuter->mContent;
+            RefPtr<Element> outer = mOuter->mContent->AsElement();
             outer->SetAttr(kNameSpaceID_None, nsGkAtoms::substate,
                            NS_LITERAL_STRING("after"),
                            true);
@@ -527,7 +530,7 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
           //printf("Collapse left\n");
           if (supportsBefore)
           {
-            nsCOMPtr<nsIContent> outer = mOuter->mContent;
+            RefPtr<Element> outer = mOuter->mContent->AsElement();
             outer->SetAttr(kNameSpaceID_None, nsGkAtoms::substate,
                            NS_LITERAL_STRING("before"),
                            true);
@@ -540,8 +543,12 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
     } else {
       // if we are not in a collapsed position and we are not dragging make sure
       // we are dragging.
-      if (currentState != Dragging)
-        mOuter->mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::state, NS_LITERAL_STRING("dragging"), true);
+      if (currentState != Dragging) {
+        mOuter->mContent->AsElement()->SetAttr(kNameSpaceID_None,
+                                               nsGkAtoms::state,
+                                               NS_LITERAL_STRING("dragging"),
+                                               true);
+      }
       AdjustChildren(aPresContext);
     }
 
@@ -693,10 +700,11 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
         // We need to check for hidden attribute too, since treecols with
         // the hidden="true" attribute are not really hidden, just collapsed
-        if (!content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::fixed,
-                                  nsGkAtoms::_true, eCaseMatters) &&
-            !content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
-                                  nsGkAtoms::_true, eCaseMatters)) {
+        if (!content->IsElement() ||
+            (!content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::fixed,
+                                   nsGkAtoms::_true, eCaseMatters) &&
+             !content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                                   nsGkAtoms::_true, eCaseMatters))) {
             if (count < childIndex && (resizeBefore != Flex || flex > 0)) {
                 mChildInfosBefore[mChildInfosBeforeCount].childElem = content;
                 mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
@@ -780,8 +788,8 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   nsCOMPtr<nsIDOMEventListener> kungfuDeathGrip(this);
-  mOuter->mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::state,
-                            NS_LITERAL_STRING("dragging"), true);
+  mOuter->mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::state,
+                                         NS_LITERAL_STRING("dragging"), true);
 
   RemoveListener();
   mDragging = true;
@@ -857,21 +865,21 @@ nsSplitterFrameInner::UpdateState()
 
     if (splitterSibling) {
       nsCOMPtr<nsIContent> sibling = splitterSibling->GetContent();
-      if (sibling) {
+      if (sibling && sibling->IsElement()) {
         if (mState == CollapsedBefore || mState == CollapsedAfter) {
           // CollapsedBefore -> Open
           // CollapsedBefore -> Dragging
           // CollapsedAfter -> Open
           // CollapsedAfter -> Dragging
           nsContentUtils::AddScriptRunner(
-            new nsUnsetAttrRunnable(sibling, nsGkAtoms::collapsed));
+            new nsUnsetAttrRunnable(sibling->AsElement(), nsGkAtoms::collapsed));
         } else if ((mState == Open || mState == Dragging)
                    && (newState == CollapsedBefore ||
                        newState == CollapsedAfter)) {
           // Open -> CollapsedBefore / CollapsedAfter
           // Dragging -> CollapsedBefore / CollapsedAfter
           nsContentUtils::AddScriptRunner(
-            new nsSetAttrRunnable(sibling, nsGkAtoms::collapsed,
+            new nsSetAttrRunnable(sibling->AsElement(), nsGkAtoms::collapsed,
                                   NS_LITERAL_STRING("true")));
         }
       }
@@ -974,16 +982,20 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChil
   }
 
   nsIContent* content = aChildBox->GetContent();
+  if (!content->IsElement()) {
+    return;
+  }
 
   // set its preferred size.
   nsAutoString prefValue;
   prefValue.AppendInt(pref/aOnePixel);
   if (content->AttrValueIs(kNameSpaceID_None, attribute,
-                           prefValue, eCaseMatters))
+                           prefValue, eCaseMatters)) {
      return;
+  }
 
   AutoWeakFrame weakBox(aChildBox);
-  content->SetAttr(kNameSpaceID_None, attribute, prefValue, true);
+  content->AsElement()->SetAttr(kNameSpaceID_None, attribute, prefValue, true);
   ENSURE_TRUE(weakBox.IsAlive());
   aState.PresShell()->FrameNeedsReflow(aChildBox, nsIPresShell::eStyleChange,
                                        NS_FRAME_IS_DIRTY);

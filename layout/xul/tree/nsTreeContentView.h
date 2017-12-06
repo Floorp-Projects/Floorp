@@ -172,7 +172,7 @@ class nsTreeContentView final : public nsINativeTreeView,
     void UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aCount);
 
     // Content helpers.
-    nsIContent* GetCell(nsIContent* aContainer, nsTreeColumn& aCol);
+    mozilla::dom::Element* GetCell(nsIContent* aContainer, nsTreeColumn& aCol);
 
   private:
     bool IsValidRowIndex(int32_t aRowIndex);

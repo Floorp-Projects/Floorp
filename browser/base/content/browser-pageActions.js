@@ -951,7 +951,7 @@ BrowserPageActions.sendToDevice = {
   },
 
   onSubviewPlaced(panelViewNode) {
-    let bodyNode = panelViewNode.firstChild;
+    let bodyNode = panelViewNode.querySelector(".panel-subview-body");
     for (let node of bodyNode.childNodes) {
       BrowserPageActions.takeNodeAttributeFromPanel(node, "title");
       BrowserPageActions.takeNodeAttributeFromPanel(node, "shortcut");
@@ -970,7 +970,7 @@ BrowserPageActions.sendToDevice = {
     let url = browser.currentURI.spec;
     let title = browser.contentTitle;
 
-    let bodyNode = panelViewNode.firstChild;
+    let bodyNode = panelViewNode.querySelector(".panel-subview-body");
     let panelNode = panelViewNode.closest("panel");
 
     // This is on top because it also clears the device list between state

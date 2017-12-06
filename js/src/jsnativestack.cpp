@@ -31,32 +31,8 @@
 void*
 js::GetNativeStackBaseImpl()
 {
-# if defined(_M_IX86) && defined(_MSC_VER)
-    /*
-     * offset 0x18 from the FS segment register gives a pointer to
-     * the thread information block for the current thread
-     */
-    NT_TIB* pTib;
-    __asm {
-        MOV EAX, FS:[18h]
-        MOV pTib, EAX
-    }
-    return static_cast<void*>(pTib->StackBase);
-
-# elif defined(_M_X64)
-    PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
-    return reinterpret_cast<void*>(pTib->StackBase);
-
-# elif defined(_M_ARM)
     PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
     return static_cast<void*>(pTib->StackBase);
-
-# elif defined(_WIN32) && defined(__GNUC__)
-    NT_TIB* pTib;
-    asm ("movl %%fs:0x18, %0\n" : "=r" (pTib));
-    return static_cast<void*>(pTib->StackBase);
-
-# endif
 }
 
 #elif defined(SOLARIS)
