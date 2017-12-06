@@ -18,8 +18,8 @@ test-pattern: # Configure exclusions for test sources
     - 'StringLiteralDuplication'
 
 build:
-  warningThreshold: 5
-  failThreshold: 10
+  warningThreshold: 0
+  failThreshold: 0
   weights:
     complexity: 2
     formatting: 1
