@@ -13,6 +13,7 @@
 
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
+#include FT_ADVANCES_H
 
 #ifndef FT_FACE_FLAG_COLOR
 #define FT_FACE_FLAG_COLOR ( 1L << 14 )
@@ -23,9 +24,11 @@ using namespace mozilla::gfx;
 gfxFT2FontBase::gfxFT2FontBase(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
                                cairo_scaled_font_t *aScaledFont,
                                gfxFontEntry *aFontEntry,
-                               const gfxFontStyle *aFontStyle)
+                               const gfxFontStyle *aFontStyle,
+                               bool aEmbolden)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault, aScaledFont)
     , mSpaceGlyph(0)
+    , mEmbolden(aEmbolden)
 {
     cairo_scaled_font_reference(mScaledFont);
 
@@ -471,10 +474,40 @@ gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
 int32_t
 gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
 {
-    cairo_text_extents_t extents;
-    GetGlyphExtents(aGID, &extents);
-    // convert to 16.16 fixed point
-    return NS_lround(0x10000 * extents.x_advance);
+    if (!mGlyphWidths) {
+        mGlyphWidths =
+            mozilla::MakeUnique<nsDataHashtable<nsUint32HashKey,int32_t>>(128);
+    }
+
+    int32_t width;
+    if (mGlyphWidths->Get(aGID, &width)) {
+        return width;
+    }
+
+    gfxFT2LockedFace face(this);
+    int32_t flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
+                    ? FT_LOAD_DEFAULT
+                    : FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
+    FT_Fixed advance = 0;
+    mozilla::DebugOnly<FT_Error> ftError =
+        FT_Get_Advance(face.get(), aGID, flags, &advance);
+    MOZ_ASSERT(!ftError);
+
+    // If freetype emboldening is being used, and it's not a zero-width glyph,
+    // adjust the advance to account for the increased width.
+    if (mEmbolden && advance > 0) {
+        // This is the embolden "strength" used by FT_GlyphSlot_Embolden,
+        // converted from 26.6 to 16.16
+        FT_Fixed strength = 1024 *
+            FT_MulFix(face.get()->units_per_EM,
+                      face.get()->size->metrics.y_scale) / 24;
+        advance += strength;
+    }
+
+    width = advance;
+    mGlyphWidths->Put(aGID, width);
+
+    return width;
 }
 
 bool
