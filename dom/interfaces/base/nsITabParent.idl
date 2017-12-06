@@ -33,12 +33,6 @@ interface nsITabParent : nsISupports
   void renderLayers(in bool aEnabled);
 
   /**
-   * True if layers are being rendered and the compositor has reported
-   * receiving them.
-   */
-  readonly attribute boolean hasLayers;
-
-  /**
    * Whether this tabParent is in prerender mode.
    */
   [infallible] readonly attribute boolean isPrerendered;
