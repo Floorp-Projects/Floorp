@@ -3062,21 +3062,15 @@ TabChild::MakeHidden()
     ClearCachedResources();
   }
 
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (docShell) {
-    // Hide all plugins in this tab. We don't use TabChildBase::GetPresShell()
-    // here because that would create a content viewer if one doesn't exist yet.
-    // Creating a content viewer can cause JS to run, which we want to avoid.
-    // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
-    if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
-      if (nsPresContext* presContext = presShell->GetPresContext()) {
-        nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-        nsIFrame* rootFrame = presShell->FrameConstructor()->GetRootFrame();
-        rootPresContext->ComputePluginGeometryUpdates(rootFrame, nullptr, nullptr);
-        rootPresContext->ApplyPluginGeometryUpdates();
-      }
-      presShell->SetIsActive(false);
+  // Hide all plugins in this tab.
+  if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
+    if (nsPresContext* presContext = shell->GetPresContext()) {
+      nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
+      nsIFrame* rootFrame = shell->FrameConstructor()->GetRootFrame();
+      rootPresContext->ComputePluginGeometryUpdates(rootFrame, nullptr, nullptr);
+      rootPresContext->ApplyPluginGeometryUpdates();
     }
+    shell->SetIsActive(false);
   }
 
   if (mPuppetWidget) {
