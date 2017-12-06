@@ -15,8 +15,8 @@ const { HEADERS, REQUESTS_WATERFALL } = require("../constants");
 const { getWaterfallScale } = require("../selectors/index");
 const { getFormattedTime } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
-const WaterfallBackground = require("../waterfall-background");
-const RequestListHeaderContextMenu = require("../request-list-header-context-menu");
+const RequestListHeaderContextMenu = require("../widgets/RequestListHeaderContextMenu");
+const WaterfallBackground = require("../widgets/WaterfallBackground");
 
 const { div, button } = dom;
 
@@ -76,7 +76,7 @@ class RequestListHeader extends Component {
 
   onContextMenu(evt) {
     evt.preventDefault();
-    this.contextMenu.open(evt);
+    this.contextMenu.open(evt, this.props.columns);
   }
 
   drawBackground() {
