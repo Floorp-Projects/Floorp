@@ -4,7 +4,7 @@ config = {
     # mozconfig file to use, it depends on branch and platform names
     "platform": "macosx64",
     "stage_product": "firefox",
-    "mozconfig": "%(branch)s/browser/config/mozconfigs/macosx64/l10n-mozconfig-devedition",
+    "mozconfig": "src/browser/config/mozconfigs/macosx64/l10n-mozconfig-devedition",
     "bootstrap_env": {
         "SHELL": '/bin/bash',
         "MOZ_OBJDIR": "obj-firefox",
@@ -32,7 +32,7 @@ config = {
     # l10n
     "ignore_locales": ["en-US", "ja"],
     "l10n_dir": "l10n",
-    "locales_file": "%(branch)s/browser/locales/all-locales",
+    "locales_file": "src/browser/locales/all-locales",
     "locales_dir": "browser/locales",
     "hg_l10n_tag": "default",
 
