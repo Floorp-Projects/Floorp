@@ -28,3 +28,9 @@ jobs:
     symbol: I(idx)
   funsize-update-generator:
     symbol: I(pg)
+  funsize-balrog-submitter:
+    symbol: I(fbs)
+  beet-mover:
+    symbol: I(bm)
+  update-verify:
+    symbol: I(uv)
