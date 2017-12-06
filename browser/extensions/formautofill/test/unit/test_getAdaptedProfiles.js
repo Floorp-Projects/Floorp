@@ -18,6 +18,14 @@ const DEFAULT_ADDRESS_RECORD = {
   "tel-national": "9876543210",
 };
 
+const ADDRESS_RECORD_2 = {
+  "guid": "address2",
+  "given-name": "John",
+  "additional-name": "Middle",
+  "family-name": "Doe",
+  "postal-code": "940012345",
+};
+
 const DEFAULT_CREDITCARD_RECORD = {
   "guid": "123",
   "cc-exp-month": 1,
@@ -450,7 +458,7 @@ const TESTCASES = [
     }],
   },
   {
-    description: "Checking maxlength first when a field is with maxlength.",
+    description: "Checking maxlength of tel field first when a field is with maxlength.",
     document: `<form>
                <input id="tel" autocomplete="tel" maxlength="10">
                <input id="line1" autocomplete="address-line1">
@@ -468,6 +476,38 @@ const TESTCASES = [
       "country": "US",
       "tel": "9876543210",
       "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Address form with maxlength restriction",
+    document: `<form>
+               <input autocomplete="given-name" maxlength="1">
+               <input autocomplete="additional-name" maxlength="1">
+               <input autocomplete="family-name" maxlength="1">
+               <input autocomplete="postal-code" maxlength="5">
+               </form>`,
+    profileData: [Object.assign({}, ADDRESS_RECORD_2)],
+    expectedResult: [{
+      "guid": "address2",
+      "given-name": "J",
+      "additional-name": "M",
+      "family-name": "D",
+      "postal-code": "94001",
+    }],
+  },
+  {
+    description: "Address form with the special cases of the maxlength restriction",
+    document: `<form>
+               <input autocomplete="given-name" maxlength="-1">
+               <input autocomplete="additional-name" maxlength="0">
+               <input autocomplete="family-name" maxlength="1">
+               </form>`,
+    profileData: [Object.assign({}, ADDRESS_RECORD_2)],
+    expectedResult: [{
+      "guid": "address2",
+      "given-name": "John",
+      "family-name": "D",
+      "postal-code": "940012345",
     }],
   },
   {
