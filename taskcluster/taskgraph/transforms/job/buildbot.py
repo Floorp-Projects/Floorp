@@ -41,9 +41,12 @@ def bb_release_worker(config, worker, run):
         'release_promotion': True,
         'repo_path': repo_path,
         'revision': revision,
-        'script_repo_revision': revision,
     })
     worker['properties'].update(release_props)
+    # Setting script_repo_revision to the gecko revision doesn't work for
+    # jobs that clone build/tools or other repos instead of gecko.
+    if 'script_repo_revision' not in worker['properties']:
+        worker['properties']['script_repo_revision'] = revision
 
 
 def bb_ci_worker(config, worker):

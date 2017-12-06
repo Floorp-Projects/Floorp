@@ -244,6 +244,26 @@ release-bouncer-aliases
 ------------------------------
 Update Bouncers (download.mozilla.org) "latest" aliases.
 
+release-final-verify
+---------------------
+Verifies the contents and package of release update MARs.
+
+release-secondary-final-verify
+---------------------
+Verifies the contents and package of release update MARs.
+
+release-update-verify
+---------------------
+Verifies the contents and package of release update MARs.
+
+release-buildbot-update-verify
+---------------------
+Verifies the contents and package of release update MARs.
+
+release-updates-builder
+-----------------------
+Top level Balrog blob submission & patcher/update verify config updates.
+
 release-uptake-monitoring
 -------------------------
 Run uptake monitoring for releases.

@@ -1,0 +1,291 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+   - post-balrog-dummy
+   - post-beetmover-dummy
+   - release-updates-builder
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.buildbot_update_verify:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   name: update-verify
+   run-on-projects: []  # to make sure this never runs in CI
+   shipping-phase: promote
+   worker-type: buildbot-bridge/buildbot-bridge
+   run:
+      using: buildbot
+      release-promotion: true
+   worker:
+      properties:
+         NO_BBCONFIG: "1"
+   extra:
+      chunks: 12
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+jobs:
+   firefox-win64:
+      description: win64 update verify
+      shipping-product: firefox
+      attributes:
+         build_platform: win64
+      run:
+         product: firefox
+      worker:
+         properties:
+            platform: win64
+            CHANNEL:
+               by-project:
+                  jamun: "beta-localtest"
+                  maple: "beta-localtest"
+                  mozilla-beta: "beta-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "beta-firefox-win64.cfg"
+                  maple: "beta-firefox-win64.cfg"
+                  mozilla-beta: "beta-firefox-win64.cfg"
+                  mozilla-release: "release-firefox-win64.cfg"
+                  mozilla-esr52: "esr-firefox-win64.cfg"
+                  default: "none"
+
+   firefox-win32:
+      description: win32 update verify
+      shipping-product: firefox
+      attributes:
+         build_platform: win32
+      run:
+         product: firefox
+      worker:
+         properties:
+            platform: win32
+            CHANNEL:
+               by-project:
+                  jamun: "beta-localtest"
+                  maple: "beta-localtest"
+                  mozilla-beta: "beta-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "beta-firefox-win32.cfg"
+                  maple: "beta-firefox-win32.cfg"
+                  mozilla-beta: "beta-firefox-win32.cfg"
+                  mozilla-release: "release-firefox-win32.cfg"
+                  mozilla-esr52: "esr-firefox-win32.cfg"
+                  default: "none"
+
+   firefox-macosx64:
+      description: macosx64 update verify
+      shipping-product: firefox
+      attributes:
+         build_platform: macosx64
+      run:
+         product: firefox
+      worker:
+         properties:
+            platform: macosx64
+            CHANNEL:
+               by-project:
+                  jamun: "beta-localtest"
+                  maple: "beta-localtest"
+                  mozilla-beta: "beta-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "beta-firefox-macosx64.cfg"
+                  maple: "beta-firefox-macosx64.cfg"
+                  mozilla-beta: "beta-firefox-macosx64.cfg"
+                  mozilla-release: "release-firefox-macosx64.cfg"
+                  mozilla-esr52: "esr-firefox-macosx64.cfg"
+                  default: "none"
+
+   firefox-secondary-win64:
+      description: win64 secondary channel update verify
+      shipping-product: firefox
+      attributes:
+         build_platform: win64
+      run:
+         product: firefox
+      worker:
+         properties:
+            platform: win64
+            CHANNEL:
+               by-project:
+                  mozilla-release: "beta-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  mozilla-release: "beta-firefox-win64.cfg"
+                  default: "none"
+
+   firefox-secondary-win32:
+      description: win32 secondary channel update verify
+      shipping-product: firefox
+      attributes:
+         build_platform: win32
+      run:
+         product: firefox
+      worker:
+         properties:
+            platform: win32
+            CHANNEL:
+               by-project:
+                  mozilla-release: "beta-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  mozilla-release: "beta-firefox-win32.cfg"
+                  default: "none"
+
+   firefox-secondary-macosx64:
+      description: macosx64 secondary channel update verify
+      shipping-product: firefox
+      attributes:
+         build_platform: macosx64
+      run:
+         product: firefox
+      worker:
+         properties:
+            platform: macosx64
+            CHANNEL:
+               by-project:
+                  mozilla-release: "beta-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  mozilla-release: "beta-firefox-macosx64.cfg"
+                  default: "none"
+
+   devedition-win64:
+      description: win64 update verify
+      shipping-product: devedition
+      attributes:
+         build_platform: win64-devedition
+      run:
+         product: devedition
+      worker:
+         properties:
+            platform: win64
+            CHANNEL:
+               by-project:
+                  jamun: "aurora-localtest"
+                  maple: "aurora-localtest"
+                  mozilla-aurora: "aurora-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "aurora-devedition-win64.cfg"
+                  maple: "aurora-devedition-win64.cfg"
+                  mozilla-aurora: "aurora-devedition-win64.cfg"
+                  mozilla-release: "release-devedition-win64.cfg"
+                  mozilla-esr52: "esr-devedition-win64.cfg"
+                  default: "none"
+
+   devedition-win32:
+      description: win32 update verify
+      shipping-product: devedition
+      attributes:
+         build_platform: win32-devedition
+      run:
+         product: devedition
+      worker:
+         properties:
+            platform: win32
+            CHANNEL:
+               by-project:
+                  jamun: "aurora-localtest"
+                  maple: "aurora-localtest"
+                  mozilla-aurora: "aurora-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "aurora-devedition-win32.cfg"
+                  maple: "aurora-devedition-win32.cfg"
+                  mozilla-aurora: "aurora-devedition-win32.cfg"
+                  mozilla-release: "release-devedition-win32.cfg"
+                  mozilla-esr52: "esr-devedition-win32.cfg"
+                  default: "none"
+
+   devedition-macosx64:
+      description: macosx64 update verify
+      shipping-product: devedition
+      attributes:
+         build_platform: macosx64-devedition
+      run:
+         product: devedition
+      worker:
+         properties:
+            platform: macosx64
+            CHANNEL:
+               by-project:
+                  jamun: "aurora-localtest"
+                  maple: "aurora-localtest"
+                  mozilla-aurora: "aurora-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "aurora-devedition-macosx64.cfg"
+                  maple: "aurora-devedition-macosx64.cfg"
+                  mozilla-aurora: "aurora-devedition-macosx64.cfg"
+                  mozilla-release: "release-devedition-macosx64.cfg"
+                  mozilla-esr52: "esr-devedition-macosx64.cfg"
+                  default: "none"
