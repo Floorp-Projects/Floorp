@@ -46,18 +46,6 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute nsIPrintSettings currentPrintSettings;
 
   /**
-   * Returns a pointer to the current child DOMWindow
-   * that is being print previewed. (FrameSet Frames)
-   *
-   * Returns null if parent document is not a frameset or the entire FrameSet 
-   * document is being print previewed
-   *
-   * This enables any consumers of the interface to have access
-   * to the "current" child DOMWindow at later points in the execution
-   */
-  readonly attribute mozIDOMWindowProxy currentChildDOMWindow;
-
-  /**
    * Returns whether it is in Print mode
    */
   readonly attribute boolean doingPrint;
