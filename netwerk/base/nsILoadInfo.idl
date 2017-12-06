@@ -941,6 +941,14 @@ interface nsILoadInfo : nsISupports
   void SetController(in const_ServiceWorkerDescriptorRef aServiceWorker);
 
   /**
+   * Clear the service worker controller for this channel.  This should only
+   * be used for window navigation redirects.  By default we want to keep
+   * the controller in all other cases.
+   */
+  [noscript, nostdcall, notxpcom]
+  void ClearController();
+
+  /**
    * Get the service worker controlling this network request, if one has
    * been set.
    */
