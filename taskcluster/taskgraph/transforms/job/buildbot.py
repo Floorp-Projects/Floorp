@@ -34,7 +34,7 @@ buildbot_run_schema = Schema({
 
 def bb_release_worker(config, worker, run):
     # props
-    release_props = get_release_config(config, force=True)
+    release_props = get_release_config(config)
     repo_path = urlparse(config.params['head_repository']).path.lstrip('/')
     revision = config.params['head_rev']
     release_props.update({
