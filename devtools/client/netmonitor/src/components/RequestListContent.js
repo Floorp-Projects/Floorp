@@ -9,23 +9,30 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const {
+  setImageTooltip,
+  getImageDimensions,
+} = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const Actions = require("../actions/index");
-const { setTooltipImageContent } = require("../request-list-tooltip");
+const { formDataURI } = require("../utils/request-utils");
 const {
   getDisplayedRequests,
   getSelectedRequest,
+  getSortedRequests,
   getWaterfallScale,
 } = require("../selectors/index");
 
 // Components
 const RequestListHeader = createFactory(require("./RequestListHeader"));
 const RequestListItem = createFactory(require("./RequestListItem"));
-const RequestListContextMenu = require("../request-list-context-menu");
+const RequestListContextMenu = require("../widgets/RequestListContextMenu");
 
 const { div } = dom;
 
 // Tooltip show / hide delay in ms
 const REQUESTS_TOOLTIP_TOGGLE_DELAY = 500;
+// Tooltip image maximum dimension in px
+const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400;
 // Gecko's scrollTop is int32_t, so the maximum value is 2^31 - 1 = 2147483647
 const MAX_SCROLL_HEIGHT = 2147483647;
 
@@ -49,6 +56,8 @@ class RequestListContent extends Component {
       openStatistics: PropTypes.func.isRequired,
       scale: PropTypes.number,
       selectedRequest: PropTypes.object,
+      sortedRequests: PropTypes.array.isRequired,
+      requestFilterTypes: PropTypes.string.isRequired,
     };
   }
 
@@ -129,7 +138,7 @@ class RequestListContent extends Component {
    *        The current tooltip instance.
    * @return {Promise}
    */
-  onHover(target, tooltip) {
+  async onHover(target, tooltip) {
     let itemEl = target.closest(".request-list-item");
     if (!itemEl) {
       return false;
@@ -143,12 +152,25 @@ class RequestListContent extends Component {
       return false;
     }
 
-    let { connector } = this.props;
-    if (target.closest(".requests-list-file")) {
-      return setTooltipImageContent(connector, tooltip, itemEl, requestItem);
+    if (!target.closest(".requests-list-file")) {
+      return false;
     }
 
-    return false;
+    let { mimeType } = requestItem;
+    if (!mimeType || !mimeType.includes("image/")) {
+      return false;
+    }
+
+    let responseContent = await this.props.connector
+      .requestData(requestItem.id, "responseContent");
+    let { encoding, text } = responseContent.content;
+    let src = formDataURI(mimeType, encoding, text);
+    let maxDim = REQUESTS_TOOLTIP_IMAGE_MAX_DIM;
+    let { naturalWidth, naturalHeight } = await getImageDimensions(tooltip.doc, src);
+    let options = { maxDim, naturalWidth, naturalHeight };
+    setImageTooltip(tooltip, tooltip.doc, src, options);
+
+    return itemEl.querySelector(".requests-list-file");
   }
 
   /**
@@ -198,7 +220,8 @@ class RequestListContent extends Component {
 
   onContextMenu(evt) {
     evt.preventDefault();
-    this.contextMenu.open(evt);
+    let { selectedRequest, sortedRequests } = this.props;
+    this.contextMenu.open(evt, selectedRequest, sortedRequests);
   }
 
   /**
@@ -264,6 +287,8 @@ module.exports = connect(
     firstRequestStartedMillis: state.requests.firstStartedMillis,
     selectedRequest: getSelectedRequest(state),
     scale: getWaterfallScale(state),
+    sortedRequests: getSortedRequests(state),
+    requestFilterTypes: state.filters.requestFilterTypes,
   }),
   (dispatch, props) => ({
     cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
