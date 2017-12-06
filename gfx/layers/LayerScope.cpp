@@ -14,6 +14,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 
+#include "TexturePoolOGL.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerManagerComposite.h"
