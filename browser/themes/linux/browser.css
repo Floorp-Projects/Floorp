@@ -717,7 +717,7 @@ html|span.ac-emphasize-text-url {
   :root[tabsintitlebar] > #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
-  :root[tabsintitlebar] > #titlebar-content:-moz-lwtheme {
+  :root[tabsintitlebar] #titlebar-content:-moz-lwtheme {
     visibility: visible;
   }
 
