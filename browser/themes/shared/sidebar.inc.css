@@ -111,11 +111,6 @@
 }
 %endif
 
-
-#sidebar-box[sidebarcommand="viewWebPanelsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
-  list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.svg);
-}
-
 #sidebar-switcher-bookmarks > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewBookmarksSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/bookmark.svg);
