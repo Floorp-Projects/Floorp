@@ -7,19 +7,16 @@
 #include "MediaFormatReader.h"
 
 #include "AutoTaskQueue.h"
-#include "Layers.h"
 #include "MediaData.h"
-#include "MediaDecoderOwner.h"
 #include "MediaInfo.h"
-#include "MediaResource.h"
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
@@ -30,10 +27,6 @@
 #include <queue>
 
 using namespace mozilla::media;
-
-using mozilla::layers::Image;
-using mozilla::layers::LayerManager;
-using mozilla::layers::LayersBackend;
 
 static mozilla::LazyLogModule sFormatDecoderLog("MediaFormatReader");
 mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");

@@ -1480,7 +1480,10 @@ AccessibleWrap::GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct)
   // accessible is part of the chrome process and is part of the xul browser
   // window and the child id points in the content documents. Thus we need to
   // make sure that it is never called on proxies.
-  if (XRE_IsParentProcess() && !IsProxy() && !sIDGen.IsChromeID(varChild.lVal)) {
+  // Bug 1422674: We must only handle remote ids here (< 0), not child indices.
+  // Child indices (> 0) are handled below for both local and remote children.
+  if (XRE_IsParentProcess() && !IsProxy() &&
+      varChild.lVal < 0 && !sIDGen.IsChromeID(varChild.lVal)) {
     if (!IsRoot()) {
       // Bug 1422201: accChild with a remote id is only valid on the root accessible.
       // Otherwise, we might return remote accessibles which aren't descendants

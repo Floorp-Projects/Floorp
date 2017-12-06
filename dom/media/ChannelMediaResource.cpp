@@ -621,7 +621,12 @@ nsresult ChannelMediaResource::ReadAt(int64_t aOffset,
                                       uint32_t* aBytes)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-  return mCacheStream.ReadAt(aOffset, aBuffer, aCount, aBytes);
+
+  nsresult rv = mCacheStream.ReadAt(aOffset, aBuffer, aCount, aBytes);
+  if (NS_SUCCEEDED(rv)) {
+    DispatchBytesConsumed(*aBytes, aOffset);
+  }
+  return rv;
 }
 
 void

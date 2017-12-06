@@ -48,9 +48,6 @@ DisableStlWrapping()
 
 DEFINES['IMPL_MFBT'] = True
 
-if CONFIG['_MSC_VER']:
-    DIRS += ['staticruntime']
-
 LOCAL_INCLUDES += [
     '!/xpcom',
     '/memory/build',

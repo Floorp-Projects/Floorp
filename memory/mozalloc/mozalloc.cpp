@@ -7,13 +7,7 @@
 
 #include <stddef.h>             // for size_t
 
-// Building with USE_STATIC_LIBS = True sets -MT instead of -MD. -MT sets _MT,
-// while -MD sets _MT and _DLL.
-#if defined(_MT) && !defined(_DLL)
-#define MOZ_STATIC_RUNTIME
-#endif
-
-#if defined(MOZ_MEMORY) && !defined(MOZ_STATIC_RUNTIME)
+#if defined(MOZ_MEMORY)
 // mozalloc.cpp is part of the same library as mozmemory, thus MOZ_MEMORY_IMPL
 // is needed.
 #define MOZ_MEMORY_IMPL
@@ -40,20 +34,18 @@ MOZ_MEMORY_API char *strndup_impl(const char *, size_t);
 // we need not to use the suffixes.
 
 #if defined(MALLOC_H)
-#  include MALLOC_H             // for memalign, valloc, malloc_size, malloc_us
+#  include MALLOC_H             // for memalign, malloc_size, malloc_us
 #endif // if defined(MALLOC_H)
 #include <stdlib.h>             // for malloc, free
 #if defined(XP_UNIX)
-#  include <unistd.h>           // for valloc on *BSD
+#  include <unistd.h>
 #endif //if defined(XP_UNIX)
 
 #define malloc_impl malloc
-#define posix_memalign_impl posix_memalign
 #define calloc_impl calloc
 #define realloc_impl realloc
 #define free_impl free
 #define memalign_impl memalign
-#define valloc_impl valloc
 #define malloc_usable_size_impl malloc_usable_size
 #define strdup_impl strdup
 #define strndup_impl strndup
@@ -135,21 +127,12 @@ moz_xstrndup(const char* str, size_t strsize)
 }
 #endif  // if defined(HAVE_STRNDUP)
 
-#if defined(HAVE_POSIX_MEMALIGN)
-int
-moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
-{
-    int err = posix_memalign_impl(ptr, alignment, size);
-    if (UNLIKELY(err && ENOMEM == err)) {
-        mozalloc_handle_oom(size);
-        return moz_xposix_memalign(ptr, alignment, size);
-    }
-    // else: (0 == err) or (EINVAL == err)
-    return err;
-}
-#endif // if defined(HAVE_POSIX_MEMALIGN)
+#ifndef HAVE_MEMALIGN
+// We always have a definition of memalign, but system headers don't
+// necessarily come with a declaration.
+extern "C" void* memalign(size_t, size_t);
+#endif
 
-#if defined(HAVE_MEMALIGN)
 void*
 moz_xmemalign(size_t boundary, size_t size)
 {
@@ -161,22 +144,7 @@ moz_xmemalign(size_t boundary, size_t size)
     // non-NULL ptr or errno == EINVAL
     return ptr;
 }
-#endif // if defined(HAVE_MEMALIGN)
 
-#if defined(HAVE_VALLOC)
-void*
-moz_xvalloc(size_t size)
-{
-    void* ptr = valloc_impl(size);
-    if (UNLIKELY(!ptr)) {
-        mozalloc_handle_oom(size);
-        return moz_xvalloc(size);
-    }
-    return ptr;
-}
-#endif // if defined(HAVE_VALLOC)
-
-#ifndef MOZ_STATIC_RUNTIME
 size_t
 moz_malloc_usable_size(void *ptr)
 {
@@ -220,4 +188,3 @@ moz_malloc_enclosing_size_of(const void *ptr)
     return 0;
 #endif
 }
-#endif
