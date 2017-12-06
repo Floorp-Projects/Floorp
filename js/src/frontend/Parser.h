@@ -25,6 +25,7 @@
 #include "frontend/ParseContext.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
+#include "frontend/TokenStream.h"
 
 namespace js {
 
@@ -41,9 +42,8 @@ class SourceParseContext: public ParseContext
 public:
     template<typename ParseHandler, typename CharT>
     SourceParseContext(Parser<ParseHandler, CharT>* prs, SharedContext* sc, Directives* newDirectives)
-        : ParseContext(prs->context, prs->pc, sc, prs->tokenStream,
-            prs->usedNames, newDirectives, mozilla::IsSame<ParseHandler,
-            FullParseHandler>::value)
+      : ParseContext(prs->context, prs->pc, sc, prs->anyChars, prs->usedNames, newDirectives,
+                     mozilla::IsSame<ParseHandler, FullParseHandler>::value)
     { }
 };
 
@@ -126,7 +126,7 @@ class ParserBase : public StrictModeGetter
 
     LifoAlloc& alloc;
 
-    TokenStream tokenStream;
+    TokenStreamAnyChars anyChars;
     LifoAlloc::Mark tempPoolMark;
 
     /* list of parsed objects for GC tracing */
@@ -167,8 +167,8 @@ class ParserBase : public StrictModeGetter
                UsedNameTracker& usedNames);
     ~ParserBase();
 
-    const char* getFilename() const { return tokenStream.getFilename(); }
-    TokenPos pos() const { return tokenStream.currentToken().pos; }
+    const char* getFilename() const { return anyChars.getFilename(); }
+    TokenPos pos() const { return anyChars.currentToken().pos; }
 
     // Determine whether |yield| is a valid name in the current context.
     bool yieldExpressionsSupported() const {
@@ -177,12 +177,12 @@ class ParserBase : public StrictModeGetter
 
     virtual bool strictMode() { return pc->sc()->strict(); }
     bool setLocalStrictMode(bool strict) {
-        MOZ_ASSERT(tokenStream.debugHasNoLookahead());
+        MOZ_ASSERT(anyChars.debugHasNoLookahead());
         return pc->sc()->setLocalStrictMode(strict);
     }
 
     const ReadOnlyCompileOptions& options() const {
-        return tokenStream.options();
+        return anyChars.options();
     }
 
     bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
@@ -265,9 +265,24 @@ ParseContext::VarScope::VarScope(ParserBase* parser)
 
 enum class ExpressionClosure { Allowed, Forbidden };
 
-template <class ParseHandler, typename CharT>
-class Parser final : public ParserBase, private JS::AutoGCRooter
+template<class Parser>
+class ParserAnyCharsAccess
 {
+  public:
+    using TokenStreamSpecific = typename Parser::TokenStream;
+    using TokenStreamChars = typename TokenStreamSpecific::CharsBase;
+
+    static inline TokenStreamAnyChars& anyChars(TokenStreamChars* ts);
+    static inline const TokenStreamAnyChars& anyChars(const TokenStreamChars* ts);
+};
+
+template <class ParseHandler, typename CharT>
+class Parser final
+  : public ParserBase,
+    private JS::AutoGCRooter
+{
+    using Modifier = TokenStreamShared::Modifier;
+
   private:
     using Node = typename ParseHandler::Node;
 
@@ -412,6 +427,9 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     SyntaxParser* syntaxParser_;
 
   public:
+    using TokenStream = TokenStreamSpecific<CharT, ParserAnyCharsAccess<Parser>>;
+    TokenStream tokenStream;
+
     /* State specific to the kind of parse being performed. */
     ParseHandler handler;
 
@@ -583,14 +601,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
      * object, pointed to by this->pc.
      *
      * Each returns a parse node tree or null on error.
-     *
-     * Parsers whose name has a '1' suffix leave the TokenStream state
-     * pointing to the token one past the end of the parsed fragment.  For a
-     * number of the parsers this is convenient and avoids a lot of
-     * unnecessary ungetting and regetting of tokens.
-     *
-     * Some parsers have two versions:  an always-inlined version (with an 'i'
-     * suffix) and a never-inlined version (with an 'n' suffix).
      */
     Node functionStmt(uint32_t toStringStart,
                       YieldHandling yieldHandling, DefaultHandling defaultHandling,
@@ -924,6 +934,60 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     bool asmJS(Node list);
 };
+
+template<class Parser>
+/* static */ inline TokenStreamAnyChars&
+ParserAnyCharsAccess<Parser>::anyChars(TokenStreamChars* ts)
+{
+    // The structure we're walking through looks like this:
+    //
+    //   struct ParserBase
+    //   {
+    //       ...;
+    //       TokenStreamAnyChars anyChars;
+    //       ...;
+    //   };
+    //   struct Parser : ParserBase
+    //   {
+    //       ...;
+    //       TokenStreamSpecific tokenStream;
+    //       ...;
+    //   };
+    //
+    // We're passed a TokenStreamChars* corresponding to a base class of
+    // Parser::tokenStream.  We cast that pointer to a TokenStreamSpecific*,
+    // then translate that to the enclosing Parser*, then return the |anyChars|
+    // member within.
+
+    auto* tss = static_cast<TokenStreamSpecific*>(ts);
+
+    auto tssAddr = reinterpret_cast<uintptr_t>(tss);
+
+    using ActualTokenStreamType = decltype(static_cast<Parser*>(nullptr)->tokenStream);
+    static_assert(mozilla::IsSame<ActualTokenStreamType, TokenStreamSpecific>::value,
+                                  "Parser::tokenStream must have type TokenStreamSpecific");
+
+    uintptr_t parserAddr = tssAddr - offsetof(Parser, tokenStream);
+
+    return reinterpret_cast<Parser*>(parserAddr)->anyChars;
+}
+
+template<class Parser>
+/* static */ inline const TokenStreamAnyChars&
+ParserAnyCharsAccess<Parser>::anyChars(const typename Parser::TokenStream::CharsBase* ts)
+{
+    const auto* tss = static_cast<const TokenStreamSpecific*>(ts);
+
+    auto tssAddr = reinterpret_cast<uintptr_t>(tss);
+
+    using ActualTokenStreamType = decltype(static_cast<Parser*>(nullptr)->tokenStream);
+    static_assert(mozilla::IsSame<ActualTokenStreamType, TokenStreamSpecific>::value,
+                                  "Parser::tokenStream must have type TokenStreamSpecific");
+
+    uintptr_t parserAddr = tssAddr - offsetof(Parser, tokenStream);
+
+    return reinterpret_cast<const Parser*>(parserAddr)->anyChars;
+}
 
 template <class Parser>
 class MOZ_STACK_CLASS AutoAwaitIsKeyword

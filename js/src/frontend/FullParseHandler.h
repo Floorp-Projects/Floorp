@@ -16,6 +16,9 @@
 #include "frontend/SharedContext.h"
 
 namespace js {
+
+class RegExpObject;
+
 namespace frontend {
 
 // Parse handler used when generating a full parse tree for all code which the
