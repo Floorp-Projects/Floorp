@@ -92,7 +92,7 @@ def make_task_description(config, jobs):
             'target.complete.mar'
         )
         for build in sorted(builds):
-            extra['funsize']['partials'].append({
+            partial_info = {
                 'locale': build_locale,
                 'from_mar': builds[build]['mar_url'],
                 'to_mar': {'task-reference': artifact_path},
@@ -100,11 +100,29 @@ def make_task_description(config, jobs):
                 'branch': config.params['project'],
                 'update_number': update_number,
                 'dest_mar': build,
-            })
+            }
+            if 'product' in builds[build]:
+                partial_info['product'] = builds[build]['product']
+            if 'previousVersion' in builds[build]:
+                partial_info['previousVersion'] = builds[build]['previousVersion']
+            if 'previousBuildNumber' in builds[build]:
+                partial_info['previousBuildNumber'] = builds[build]['previousBuildNumber']
+            extra['funsize']['partials'].append(partial_info)
             update_number += 1
 
         cot = extra.setdefault('chainOfTrust', {})
         cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
+
+        mar_channel_id = None
+        if config.params['project'] == 'mozilla-beta':
+            if 'devedition' in label:
+                mar_channel_id = 'firefox-mozilla-aurora'
+            else:
+                mar_channel_id = 'firefox-mozilla-beta'
+        elif config.params['project'] == 'mozilla-release':
+            mar_channel_id = 'firefox-mozilla-release'
+        elif 'esr' in config.params['project']:
+            mar_channel_id = 'firefox-mozilla-esr'
 
         worker = {
             'artifacts': _generate_task_output_files(builds.keys(), locale),
@@ -120,6 +138,8 @@ def make_task_description(config, jobs):
                 'DATADOG_API_SECRET': 'project/releng/gecko/build/level-3/datadog-api-key'
             }
         }
+        if mar_channel_id:
+            worker['env']['ACCEPTED_MAR_CHANNEL_IDS'] = mar_channel_id
 
         level = config.params['level']
 
