@@ -2,18 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'actions',
-    'components',
-    'connector',
-    'har',
-    'middleware',
-    'reducers',
-    'selectors',
-    'utils',
-    'widgets',
-]
-
 DevToolsModules(
-    'constants.js',
+    'RequestListContextMenu.js',
+    'RequestListHeaderContextMenu.js',
+    'WaterfallBackground.js',
 )

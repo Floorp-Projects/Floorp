@@ -4,9 +4,9 @@
 
 "use strict";
 
-const { REQUESTS_WATERFALL } = require("./constants");
 const { getColor } = require("devtools/client/shared/theme");
 const { colorUtils } = require("devtools/shared/css/color");
+const { REQUESTS_WATERFALL } = require("../constants");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const STATE_KEYS = [
@@ -19,27 +19,27 @@ const STATE_KEYS = [
 /**
  * Creates the background displayed on each waterfall view in this container.
  */
-function WaterfallBackground() {
-  this.canvas = document.createElementNS(HTML_NS, "canvas");
-  this.ctx = this.canvas.getContext("2d");
-  this.prevState = {};
-}
-
-/**
- * Changes the element being used as the CSS background for a background
- * with a given background element ID.
- *
- * The funtion wrap the Firefox only API. Waterfall Will not draw the
- * vertical line when running on non-firefox browser.
- * Could be fixed by Bug 1308695
- */
-function setImageElement(imageElementId, imageElement) {
-  if (document.mozSetImageElement) {
-    document.mozSetImageElement(imageElementId, imageElement);
+class WaterfallBackground {
+  constructor() {
+    this.canvas = document.createElementNS(HTML_NS, "canvas");
+    this.ctx = this.canvas.getContext("2d");
+    this.prevState = {};
   }
-}
 
-WaterfallBackground.prototype = {
+  /**
+   * Changes the element being used as the CSS background for a background
+   * with a given background element ID.
+   *
+   * The funtion wrap the Firefox only API. Waterfall Will not draw the
+   * vertical line when running on non-firefox browser.
+   * Could be fixed by Bug 1308695
+   */
+  setImageElement(imageElementId, imageElement) {
+    if (document.mozSetImageElement) {
+      document.mozSetImageElement(imageElementId, imageElement);
+    }
+  }
+
   draw(state) {
     // Do a shallow compare of the previous and the new state
     const shouldUpdate = STATE_KEYS.some(key => this.prevState[key] !== state[key]);
@@ -50,7 +50,7 @@ WaterfallBackground.prototype = {
     this.prevState = state;
 
     if (state.waterfallWidth === null || state.scale === null) {
-      setImageElement("waterfall-background", null);
+      this.setImageElement("waterfall-background", null);
       return;
     }
 
@@ -83,7 +83,8 @@ WaterfallBackground.prototype = {
       optimalTickIntervalFound = true;
     }
 
-    const isRTL = isDocumentRTL(document);
+    const isRTL = document.defaultView
+      .getComputedStyle(document.documentElement).direction === "rtl";
     const [r, g, b] = REQUESTS_WATERFALL.BACKGROUND_TICKS_COLOR_RGB;
     let alphaComponent = REQUESTS_WATERFALL.BACKGROUND_TICKS_OPACITY_MIN;
 
@@ -113,17 +114,17 @@ WaterfallBackground.prototype = {
 
     let { DOMCONTENTLOADED_TICKS_COLOR, LOAD_TICKS_COLOR } = REQUESTS_WATERFALL;
     drawTimestamp(state.timingMarkers.firstDocumentDOMContentLoadedTimestamp,
-                  this.getThemeColorAsRgba(DOMCONTENTLOADED_TICKS_COLOR, state.theme));
+      this.getThemeColorAsRgba(DOMCONTENTLOADED_TICKS_COLOR, state.theme));
 
     drawTimestamp(state.timingMarkers.firstDocumentLoadTimestamp,
-                  this.getThemeColorAsRgba(LOAD_TICKS_COLOR, state.theme));
+      this.getThemeColorAsRgba(LOAD_TICKS_COLOR, state.theme));
 
     // Flush the image data and cache the waterfall background.
     pixelArray.set(view8bit);
     this.ctx.putImageData(imageData, 0, 0);
 
-    setImageElement("waterfall-background", this.canvas);
-  },
+    this.setImageElement("waterfall-background", this.canvas);
+  }
 
   /**
    * Retrieve a color defined for the provided theme as a rgba array. The alpha channel is
@@ -140,19 +141,11 @@ WaterfallBackground.prototype = {
     let color = new colorUtils.CssColor(colorStr);
     let { r, g, b } = color.getRGBATuple();
     return [r, g, b, REQUESTS_WATERFALL.TICKS_COLOR_OPACITY];
-  },
+  }
 
   destroy() {
-    setImageElement("waterfall-background", null);
+    this.setImageElement("waterfall-background", null);
   }
-};
-
-/**
- * Returns true if this is document is in RTL mode.
- * @return boolean
- */
-function isDocumentRTL(doc) {
-  return doc.defaultView.getComputedStyle(doc.documentElement).direction === "rtl";
 }
 
 module.exports = WaterfallBackground;

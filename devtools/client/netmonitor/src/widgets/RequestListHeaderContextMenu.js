@@ -4,9 +4,9 @@
 
 "use strict";
 
-const { HEADERS } = require("./constants");
-const { L10N } = require("./utils/l10n");
 const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
+const { HEADERS } = require("../constants");
+const { L10N } = require("../utils/l10n");
 
 const stringMap = HEADERS
   .filter((header) => header.hasOwnProperty("label"))
@@ -21,37 +21,21 @@ const nonLocalizedHeaders = HEADERS
   .map((header) => header.name);
 
 class RequestListHeaderContextMenu {
-  constructor({ toggleColumn, resetColumns }) {
-    this.toggleColumn = toggleColumn;
-    this.resetColumns = resetColumns;
-  }
-
-  get columns() {
-    // FIXME: Bug 1362059 - Implement RequestListHeaderContextMenu React component
-    // Remove window.store
-    return window.store.getState().ui.columns;
-  }
-
-  get visibleColumns() {
-    let visible = [];
-    for (let column in this.columns) {
-      if (this.columns[column]) {
-        visible.push(column);
-      }
-    }
-    return visible;
+  constructor(props) {
+    this.props = props;
   }
 
   /**
    * Handle the context menu opening.
    */
-  open(event = {}) {
+  open(event = {}, columns) {
     let menu = [];
     let subMenu = { timings: [], responseHeaders: [] };
-    let onlyOneColumn = this.visibleColumns.length === 1;
+    let visibleColumns = Object.entries(columns).filter(([column, shown]) => shown);
+    let onlyOneColumn = visibleColumns.length === 1;
 
-    for (let column in this.columns) {
-      let shown = this.columns[column];
+    for (let column in columns) {
+      let shown = columns[column];
       let label = nonLocalizedHeaders.includes(column)
           ? stringMap[column] || column
           : L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`);
@@ -60,7 +44,7 @@ class RequestListHeaderContextMenu {
         label,
         type: "checkbox",
         checked: shown,
-        click: () => this.toggleColumn(column),
+        click: () => this.props.toggleColumn(column),
         // We don't want to allow hiding the last visible column
         disabled: onlyOneColumn && shown,
       };
@@ -83,7 +67,7 @@ class RequestListHeaderContextMenu {
     menu.push({
       id: "request-list-header-reset-columns",
       label: L10N.getStr("netmonitor.toolbar.resetColumns"),
-      click: () => this.resetColumns(),
+      click: () => this.props.resetColumns(),
     });
 
     return showMenu(event, menu);

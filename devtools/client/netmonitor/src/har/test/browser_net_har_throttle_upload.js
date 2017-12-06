@@ -19,7 +19,7 @@ function* throttleUploadTest(actuallyThrottle) {
   let { connector, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let RequestListContextMenu = windowRequire(
-    "devtools/client/netmonitor/src/request-list-context-menu");
+    "devtools/client/netmonitor/src/widgets/RequestListContextMenu");
   let { getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index");
 

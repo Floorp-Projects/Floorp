@@ -10,36 +10,26 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const { saveAs } = require("devtools/client/shared/file-saver");
 const { copyString } = require("devtools/shared/platform/clipboard");
 const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
-const { HarExporter } = require("./har/har-exporter");
 const { openRequestInTab } = require("devtools/client/netmonitor/src/utils/firefox/open-request-in-tab");
-const {
-  getSelectedRequest,
-  getSortedRequests,
-} = require("./selectors/index");
-const { L10N } = require("./utils/l10n");
+const { HarExporter } = require("../har/har-exporter");
+const { L10N } = require("../utils/l10n");
 const {
   formDataURI,
   getUrlQuery,
   getUrlBaseName,
   parseQueryString,
-} = require("./utils/request-utils");
+} = require("../utils/request-utils");
 
 class RequestListContextMenu {
   constructor(props) {
     this.props = props;
   }
 
-  open(event) {
-    // FIXME: Bug 1336382 - Implement RequestListContextMenu React component
-    // Remove window.store.getState()
-    let selectedRequest = getSelectedRequest(window.store.getState());
-    let sortedRequests = getSortedRequests(window.store.getState());
-
-    let menu = [];
-    let copySubmenu = [];
+  open(event, selectedRequest, sortedRequests) {
     let {
       id,
       isCustom,
+      formDataSections,
       method,
       mimeType,
       httpVersion,
@@ -49,11 +39,13 @@ class RequestListContextMenu {
       responseHeaders,
       responseContentAvailable,
       url,
-    } = selectedRequest || {};
+    } = selectedRequest;
     let {
       cloneSelectedRequest,
       openStatistics,
     } = this.props;
+    let menu = [];
+    let copySubmenu = [];
 
     copySubmenu.push({
       id: "request-list-context-copy-url",
@@ -76,7 +68,7 @@ class RequestListContextMenu {
       label: L10N.getStr("netmonitor.context.copyPostData"),
       accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
       visible: !!(selectedRequest && (requestPostDataAvailable || requestPostData)),
-      click: () => this.copyPostData(id),
+      click: () => this.copyPostData(id, formDataSections),
     });
 
     copySubmenu.push({
@@ -258,10 +250,7 @@ class RequestListContextMenu {
    * Copy the request form data parameters (or raw payload) from
    * the currently selected item.
    */
-  async copyPostData(id) {
-    // FIXME: Bug 1336382 - Implement RequestListContextMenu React component
-    // Remove window.store.getState()
-    let { formDataSections } = getSelectedRequest(window.store.getState());
+  async copyPostData(id, formDataSections) {
     let params = [];
     // Try to extract any form data parameters.
     formDataSections.forEach(section => {
