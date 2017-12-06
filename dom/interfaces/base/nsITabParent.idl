@@ -17,11 +17,11 @@ interface nsITabParent : nsISupports
   readonly attribute boolean useAsyncPanZoom;
 
   /**
-   * Manages the docshell active state of the remote browser. Setting the
-   * docShell to be active will also cause it to render layers and upload
-   * them to the compositor. Setting the docShell as not active will clear
-   * those layers.
-   */
+    * Manages the docshell active state of the remote browser. Setting the
+    * docShell to be active will also cause it to render layers and upload
+    * them to the compositor. Setting the docShell as not active will clear
+    * those layers.
+    */
   attribute boolean docShellIsActive;
 
   /**
@@ -38,12 +38,12 @@ interface nsITabParent : nsISupports
   [infallible] readonly attribute boolean isPrerendered;
 
   /**
-   * As an optimisation, setting the docshell's active state to
-   * inactive also triggers a layer invalidation to free up some
-   * potentially unhelpful memory usage. Calling preserveLayers
-   * will cause the layers to be preserved even for inactive
-   * docshells.
-   */
+    * As an optimisation, setting the docshell's active state to
+    * inactive also triggers a layer invalidation to free up some
+    * potentially unhelpful memory usage. Calling preserveLayers
+    * will cause the layers to be preserved even for inactive
+    * docshells.
+    */
   void preserveLayers(in boolean aPreserveLayers);
 
   /**
