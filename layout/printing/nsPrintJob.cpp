@@ -230,7 +230,6 @@ nsPrintJob::Destroy()
 
 #ifdef NS_PRINT_PREVIEW
   mPrtPreview = nullptr;
-  mOldPrtPreview = nullptr;
 #endif
   mDocViewerPrint = nullptr;
 }
@@ -418,10 +417,6 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
     // then that means the progress dialog is already being shown.
     nsCOMPtr<nsIPrintingPromptService> pps(do_QueryInterface(aWebProgressListener));
     mProgressDialogIsShown = pps != nullptr;
-
-    if (mIsDoingPrintPreview) {
-      mOldPrtPreview = Move(mPrtPreview);
-    }
   } else {
     mProgressDialogIsShown = false;
   }
@@ -3456,10 +3451,6 @@ nsPrintJob::FinishPrintPreview()
 
   // At this point we are done preparing everything
   // before it is to be created
-
-  if (mIsDoingPrintPreview && mOldPrtPreview) {
-    mOldPrtPreview = nullptr;
-  }
 
   printData->OnEndPrinting();
   // XXX If mPrt becomes nullptr or different instance here, what should we
