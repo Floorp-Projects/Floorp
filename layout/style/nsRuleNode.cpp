@@ -6143,10 +6143,17 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
   }
 
-  SetValue(*aRuleData->ValueForOverflowClipBox(), display->mOverflowClipBox,
+  SetValue(*aRuleData->ValueForOverflowClipBoxBlock(),
+           display->mOverflowClipBoxBlock,
            conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
-           parentDisplay->mOverflowClipBox,
+           parentDisplay->mOverflowClipBoxBlock,
+           NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX);
+  SetValue(*aRuleData->ValueForOverflowClipBoxInline(),
+           display->mOverflowClipBoxInline,
+           conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parentDisplay->mOverflowClipBoxInline,
            NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX);
 
   SetValue(*aRuleData->ValueForResize(), display->mResize, conditions,

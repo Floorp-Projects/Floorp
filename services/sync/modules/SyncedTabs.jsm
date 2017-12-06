@@ -247,6 +247,11 @@ this.SyncedTabs = {
     return this._internal.hasSyncedThisSession;
   },
 
+  // Returns true if Sync is in a "need to reauthenticate" state.
+  get loginFailed() {
+    return this._internal.loginFailed;
+  },
+
   // Return a promise that resolves with an array of client records, each with
   // a .tabs array. Note that part of the contract for this module is that the
   // returned objects are not shared between invocations, so callers are free

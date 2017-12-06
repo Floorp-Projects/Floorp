@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
-def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
+def GeckoBinary(linkage='dependent', mozglue=None):
     '''Template for Gecko-related binaries.
 
     This template is meant to be used in other templates.
@@ -17,28 +17,11 @@ def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
     uses the standalone XPCOM glue to load libxul. None means no XPCOM glue
     or libxul linkage at all.
 
-    `msvcrt` indicates which Microsoft Visual Studio CRT, for Windows build,
-    ought to be linked: 'static' or 'dynamic'.
-
     `mozglue` indicates whether to link against the mozglue library, and if
     so, what linkage to apply. Valid values are None (mozglue not linked),
     'program' (mozglue linked to an executable program), or 'library' (mozglue
     linked to a shared library).
     '''
-    if msvcrt == 'dynamic' or CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['MOZ_ASAN']:
-        xpcomglue = 'xpcomglue'
-    elif msvcrt == 'static':
-        USE_STATIC_LIBS = True
-        xpcomglue = 'xpcomglue_staticruntime'
-        if not CONFIG['GNU_CC']:
-            mozglue = None
-            if linkage == 'dependent':
-                USE_LIBS += [
-                    'mozalloc_staticruntime',
-                ]
-    else:
-        error('msvcrt must be "dynamic" or "static"')
-
     if linkage == 'dependent':
         USE_LIBS += [
             'nspr',
@@ -48,7 +31,7 @@ def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
         DEFINES['XPCOM_GLUE'] = True
 
         USE_LIBS += [
-            xpcomglue,
+            'xpcomglue',
         ]
     elif linkage != None:
         error('`linkage` must be "dependent", "standalone" or None')

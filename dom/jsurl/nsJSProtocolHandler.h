@@ -110,7 +110,7 @@ public:
         , public BaseURIMutator<nsJSURI>
     {
         NS_DECL_ISUPPORTS
-        NS_FORWARD_SAFE_NSIURISETTERS(mURI)
+        NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
         NS_DEFINE_NSIMUTATOR_COMMON
 
         explicit Mutator() { }

@@ -657,6 +657,7 @@ this.FormAutofillUtils = {
    *         {
    *           {string} addressLevel1Label
    *           {string} postalCodeLabel
+   *           {object} fieldsOrder
    *         }
    */
   getFormFormat(country) {
@@ -664,6 +665,7 @@ this.FormAutofillUtils = {
     return {
       "addressLevel1Label": dataset.state_name_type || "province",
       "postalCodeLabel": dataset.zip_name_type || "postalCode",
+      "fieldsOrder": this.parseAddressFormat(dataset.fmt || "%N%n%O%n%A%n%C, %S %Z"),
     };
   },
 

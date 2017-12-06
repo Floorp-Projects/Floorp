@@ -24,14 +24,14 @@ async_test(function(t) {
                 'Initial value of margin-left is zero');
   var previousAnimVal = getMarginLeft(cs);
 
-  animation.ready.then(waitForFrame).then(t.step_func(function() {
-    assert_true(getMarginLeft(cs) > previousAnimVal,
-                'margin-left is initially increasing');
+  animation.ready.then(waitForNextFrame).then(t.step_func(function() {
+    assert_greater_than(getMarginLeft(cs), previousAnimVal,
+                        'margin-left is initially increasing');
     animation.pause();
     return animation.ready;
   })).then(t.step_func(function() {
     previousAnimVal = getMarginLeft(cs);
-    return waitForFrame();
+    return waitForNextFrame();
   })).then(t.step_func(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'margin-left does not increase after calling pause()');
@@ -39,8 +39,8 @@ async_test(function(t) {
     animation.play();
     return animation.ready.then(waitForFrame);
   })).then(t.step_func(function() {
-    assert_true(getMarginLeft(cs) > previousAnimVal,
-                'margin-left increases after calling play()');
+    assert_greater_than(getMarginLeft(cs), previousAnimVal,
+                        'margin-left increases after calling play()');
     t.done();
   }));
 }, 'pause() and play() a transition');

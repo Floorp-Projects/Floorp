@@ -9,9 +9,7 @@
 #include <stdlib.h>
 
 #ifndef HAVE_MEMALIGN
-namespace {
-
-inline void*
+MOZ_MEMORY_API void*
 memalign(size_t aAlignment, size_t aSize)
 {
 #ifdef XP_WIN
@@ -23,7 +21,6 @@ memalign(size_t aAlignment, size_t aSize)
   }
   return ret;
 #endif
-}
 }
 #endif
 

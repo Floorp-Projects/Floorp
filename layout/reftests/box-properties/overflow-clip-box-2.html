@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1422839</title>
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px/1 monospace; line-height:1; padding:0; margin:0;
+}
+
+div {
+  width: 0;
+  height: 0;
+  padding: 50px;
+  white-space: pre;
+  overflow: hidden;
+  background-color: lime;
+  background-clip: content-box;
+  border: 1px solid;
+  direction: rtl;
+}
+
+.float { float: left; }
+.w > div { width: 20px; }
+.h > div { height: 20px; }
+
+c {
+  display: block;
+  width: 100px;
+  height: 40px;
+  border: 1px solid black;
+  margin-top: -10px;
+}
+  </style>
+</head>
+<body>
+
+<span class="float">
+<div style="overflow-clip-box: padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box"><c></c></div>
+<div style="overflow-clip-box: padding-box content-box"><c></c></div>
+<div style="overflow-clip-box: content-box padding-box"><c></c></div>
+<div style="overflow-clip-box: padding-box padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box content-box"><c></c></div>
+</span>
+
+<span class="float h">
+<div style="overflow-clip-box: padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box"><c></c></div>
+<div style="overflow-clip-box: padding-box content-box"><c></c></div>
+<div style="overflow-clip-box: content-box padding-box"><c></c></div>
+<div style="overflow-clip-box: padding-box padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box content-box"><c></c></div>
+</span>
+
+<span class="float w">
+<div style="overflow-clip-box: padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box"><c></c></div>
+<div style="overflow-clip-box: padding-box content-box"><c></c></div>
+<div style="overflow-clip-box: content-box padding-box"><c></c></div>
+<div style="overflow-clip-box: padding-box padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box content-box"><c></c></div>
+</span>
+
+<span class="float w h">
+<div style="overflow-clip-box: padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box"><c></c></div>
+<div style="overflow-clip-box: padding-box content-box"><c></c></div>
+<div style="overflow-clip-box: content-box padding-box"><c></c></div>
+<div style="overflow-clip-box: padding-box padding-box"><c></c></div>
+<div style="overflow-clip-box: content-box content-box"><c></c></div>
+</span>
+
+</body>
+</html>

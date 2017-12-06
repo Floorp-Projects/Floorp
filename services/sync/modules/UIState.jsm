@@ -144,7 +144,17 @@ const UIStateInternal = {
   async _populateWithUserData(state, userData) {
     let status;
     if (!userData) {
-      status = STATUS_NOT_CONFIGURED;
+      // If Sync thinks it is configured but there's no FxA user, then we
+      // want to enter the "login failed" state so the user can get
+      // reconfigured.
+      let syncUserName = Services.prefs.getStringPref("services.sync.username", "");
+      if (syncUserName) {
+        state.email = syncUserName;
+        status = STATUS_LOGIN_FAILED;
+      } else {
+        // everyone agrees nothing is configured.
+        status = STATUS_NOT_CONFIGURED;
+      }
     } else {
       let loginFailed = await this._loginFailed();
       if (loginFailed) {

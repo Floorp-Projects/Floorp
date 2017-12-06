@@ -57,7 +57,7 @@ def check(params, file_patterns):
 
     changed_files = get_changed_files(repository, revision)
 
-    if 'comm_repository' in params:
+    if 'comm_head_repository' in params:
         repository = params.get('comm_head_repository')
         revision = params.get('comm_head_rev')
         if not revision:

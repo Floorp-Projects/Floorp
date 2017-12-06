@@ -212,6 +212,7 @@ UNIFIED_SOURCES += [
     'nsInputStreamChannel.cpp',
     'nsInputStreamPump.cpp',
     'nsIOService.cpp',
+    'nsIURIMutatorUtils.cpp',
     'nsLoadGroup.cpp',
     'nsMediaFragmentURIParser.cpp',
     'nsMIMEInputStream.cpp',

@@ -40,8 +40,15 @@ this.pageAction = class extends ExtensionAPI {
 
     this.tabManager = extension.tabManager;
 
+    // If <all_urls> is present, the default is to show the page action.
+    let show = options.show_matches && options.show_matches.includes("<all_urls>");
+    let showMatches = new MatchPatternSet(options.show_matches || []);
+    let hideMatches = new MatchPatternSet(options.hide_matches || []);
+
     this.defaults = {
-      show: false,
+      show,
+      showMatches,
+      hideMatches,
       title: options.default_title || extension.name,
       popup: options.default_popup || "",
     };
@@ -70,7 +77,7 @@ this.pageAction = class extends ExtensionAPI {
         title: this.defaults.title,
         iconURL: this.getIconData(this.defaults.icon),
         pinnedToUrlbar: true,
-        disabled: true,
+        disabled: !this.defaults.show,
         onCommand: (event, buttonNode) => {
           this.handleClick(event.target.ownerGlobal);
         },
@@ -226,6 +233,12 @@ this.pageAction = class extends ExtensionAPI {
     if (fromBrowse) {
       this.tabContext.clear(tab);
     }
+
+    // Set show via pattern matching.
+    let context = this.tabContext.get(tab);
+    let uri = tab.linkedBrowser.currentURI;
+    context.show = (context.show || context.showMatches.matches(uri)) && !context.hideMatches.matches(uri);
+
     this.updateButton(tab.ownerGlobal);
   }
 
