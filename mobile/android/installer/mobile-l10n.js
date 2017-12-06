@@ -3,4 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Inherit locale from the OS, used for multi-locale builds
-pref("intl.locale.matchOS", true);
+pref("intl.locale.requested", "");

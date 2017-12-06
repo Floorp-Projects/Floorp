@@ -441,10 +441,19 @@ var gXPInstallObserver = {
       });
 
       let secondaryActions = null;
+      let numAddons = installInfo.installs.length;
 
       if (needsRestart) {
         notificationID = "addon-install-restart";
-        messageString = gNavigatorBundle.getString("addonsInstalledNeedsRestart");
+        if (numAddons == 1) {
+          messageString = gNavigatorBundle.getFormattedString("addonInstalledNeedsRestart",
+                                                              [installInfo.installs[0].name, brandShortName]);
+        } else {
+          messageString = gNavigatorBundle.getString("addonsGenericInstalledNeedsRestart");
+          messageString = PluralForm.get(numAddons, messageString);
+          messageString = messageString.replace("#1", numAddons);
+          messageString = messageString.replace("#2", brandShortName);
+        }
         action = {
           label: gNavigatorBundle.getString("addonInstallRestartButton"),
           accessKey: gNavigatorBundle.getString("addonInstallRestartButton.accesskey"),
@@ -458,14 +467,16 @@ var gXPInstallObserver = {
           callback: () => {},
         }];
       } else {
-        messageString = gNavigatorBundle.getString("addonsInstalled");
+        if (numAddons == 1) {
+          messageString = gNavigatorBundle.getFormattedString("addonInstalled",
+                                                              [installInfo.installs[0].name]);
+        } else {
+          messageString = gNavigatorBundle.getString("addonsGenericInstalled");
+          messageString = PluralForm.get(numAddons, messageString);
+          messageString = messageString.replace("#1", numAddons);
+        }
         action = null;
       }
-
-      messageString = PluralForm.get(installInfo.installs.length, messageString);
-      messageString = messageString.replace("#1", installInfo.installs[0].name);
-      messageString = messageString.replace("#2", installInfo.installs.length);
-      messageString = messageString.replace("#3", brandShortName);
 
       // Remove notification on dismissal, since it's possible to cancel the
       // install through the addons manager UI, making the "restart" prompt

@@ -11,18 +11,15 @@ import sys
 from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
+from mozterm import Terminal
 
 from .. import preset as pset
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks
 from ..vcs import VCSHelper
 
-try:
-    import blessings
-    terminal = blessings.Terminal()
-except ImportError:
-    from mozlint.formatters.stylish import NullTerminal
-    terminal = NullTerminal()
+terminal = Terminal()
+
 
 FZF_NOT_FOUND = """
 Could not find the `fzf` binary.

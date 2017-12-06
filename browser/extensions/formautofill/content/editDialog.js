@@ -120,6 +120,10 @@ class EditDialog {
         this.handleKeyPress(event);
         break;
       }
+      case "change": {
+        this.handleChange(event);
+        break;
+      }
     }
   }
 
@@ -180,6 +184,15 @@ class EditDialog {
     this._elements.controlsContainer.removeEventListener("click", this);
     document.removeEventListener("input", this);
   }
+
+  // An interface to be inherited.
+  localizeDocument() {}
+
+  // An interface to be inherited.
+  handleSubmit(event) {}
+
+  // An interface to be inherited.
+  handleChange(event) {}
 }
 
 class EditAddress extends EditDialog {
@@ -194,11 +207,42 @@ class EditAddress extends EditDialog {
    * @param  {string} country
    */
   formatForm(country) {
-    // TODO: Use fmt to show/hide and order fields (Bug 1383687)
-    const {addressLevel1Label, postalCodeLabel} = FormAutofillUtils.getFormFormat(country);
+    const {addressLevel1Label, postalCodeLabel, fieldsOrder} = FormAutofillUtils.getFormFormat(country);
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
     FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
+    this.arrangeFields(fieldsOrder);
+  }
+
+  arrangeFields(fieldsOrder) {
+    let fields = [
+      "name",
+      "organization",
+      "street-address",
+      "address-level2",
+      "address-level1",
+      "postal-code",
+    ];
+    let inputs = [];
+    for (let i = 0; i < fieldsOrder.length; i++) {
+      let {fieldId, newLine} = fieldsOrder[i];
+      let container = document.getElementById(`${fieldId}-container`);
+      inputs.push(...container.querySelectorAll("input, textarea, select"));
+      container.style.display = "flex";
+      container.style.order = i;
+      container.style.pageBreakAfter = newLine ? "always" : "auto";
+      // Remove the field from the list of fields
+      fields.splice(fields.indexOf(fieldId), 1);
+    }
+    for (let i = 0; i < inputs.length; i++) {
+      // Assign tabIndex starting from 1
+      inputs[i].tabIndex = i + 1;
+    }
+    // Hide the remaining fields
+    for (let field of fields) {
+      let container = document.getElementById(`${field}-container`);
+      container.style.display = "none";
+    }
   }
 
   localizeDocument() {
@@ -219,6 +263,20 @@ class EditAddress extends EditDialog {
   async handleSubmit() {
     await this.saveRecord(this.buildFormObject(), this._record ? this._record.guid : null);
     window.close();
+  }
+
+  handleChange(event) {
+    this.formatForm(event.target.value);
+  }
+
+  attachEventListeners() {
+    this._elements.country.addEventListener("change", this);
+    super.attachEventListeners();
+  }
+
+  detachEventListeners() {
+    this._elements.country.removeEventListener("change", this);
+    super.detachEventListeners();
   }
 }
 

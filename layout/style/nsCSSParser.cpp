@@ -937,6 +937,7 @@ protected:
   bool ParseObjectPosition();
   bool ParseOutline();
   bool ParseOverflow();
+  bool ParseOverflowClipBox();
   bool ParsePadding();
   bool ParseQuotes();
   bool ParseTextAlign(nsCSSValue& aValue,
@@ -9121,7 +9122,7 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSPropertyID aPropID)
   nsAString* ident = NextIdent();
   if (ident) {
     if (ident->LowerCaseEqualsLiteral("subgrid")) {
-      if (!nsLayoutUtils::IsGridTemplateSubgridValueEnabled()) {
+      if (!StylePrefs::sGridTemplateSubgridValueEnabled) {
         REPORT_UNEXPECTED(PESubgridNotSupported);
         return false;
       }
@@ -9309,7 +9310,7 @@ CSSParserImpl::ParseGridTemplate(bool aForGridShorthand)
   nsAString* ident = NextIdent();
   if (ident) {
     if (ident->LowerCaseEqualsLiteral("subgrid")) {
-      if (!nsLayoutUtils::IsGridTemplateSubgridValueEnabled()) {
+      if (!StylePrefs::sGridTemplateSubgridValueEnabled) {
         REPORT_UNEXPECTED(PESubgridNotSupported);
         return false;
       }
@@ -11774,6 +11775,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
     return ParseOutline();
   case eCSSProperty_overflow:
     return ParseOverflow();
+  case eCSSProperty_overflow_clip_box:
+    return ParseOverflowClipBox();
   case eCSSProperty_padding:
     return ParsePadding();
   case eCSSProperty_quotes:
@@ -15341,6 +15344,31 @@ CSSParserImpl::ParseOverflow()
     }
   AppendValue(eCSSProperty_overflow_x, overflowX);
   AppendValue(eCSSProperty_overflow_y, overflowY);
+  return true;
+}
+
+bool
+CSSParserImpl::ParseOverflowClipBox()
+{
+  nsCSSValue first;
+  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_overflow_clip_box_block, first);
+    AppendValue(eCSSProperty_overflow_clip_box_inline, first);
+    return true;
+  }
+  const auto& kTable = nsCSSProps::kOverflowClipBoxKTable;
+  auto result = ParseVariant(first, VARIANT_KEYWORD, kTable);
+  if (result != CSSParseResult::Ok) {
+    return false;
+  }
+  nsCSSValue second;
+  result = ParseVariant(second, VARIANT_KEYWORD, kTable);
+  if (result == CSSParseResult::Error) {
+    return false;
+  }
+  AppendValue(eCSSProperty_overflow_clip_box_block, first);
+  AppendValue(eCSSProperty_overflow_clip_box_inline,
+              result == CSSParseResult::NotFound ? first : second);
   return true;
 }
 

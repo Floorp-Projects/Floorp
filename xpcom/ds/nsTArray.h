@@ -203,9 +203,6 @@ struct nsTArrayFallibleAllocator : nsTArrayFallibleAllocatorBase
   static void SizeTooBig(size_t) {}
 };
 
-#if defined(MOZALLOC_HAVE_XMALLOC)
-#include "mozilla/mozalloc_abort.h"
-
 struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
 {
   static void* Malloc(size_t aSize) { return moz_xmalloc(aSize); }
@@ -217,35 +214,6 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
   static void Free(void* aPtr) { free(aPtr); }
   static void SizeTooBig(size_t aSize) { NS_ABORT_OOM(aSize); }
 };
-
-#else
-#include <stdlib.h>
-
-struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
-{
-  static void* Malloc(size_t aSize)
-  {
-    void* ptr = malloc(aSize);
-    if (MOZ_UNLIKELY(!ptr)) {
-      NS_ABORT_OOM(aSize);
-    }
-    return ptr;
-  }
-
-  static void* Realloc(void* aPtr, size_t aSize)
-  {
-    void* newptr = realloc(aPtr, aSize);
-    if (MOZ_UNLIKELY(!newptr && aSize)) {
-      NS_ABORT_OOM(aSize);
-    }
-    return newptr;
-  }
-
-  static void Free(void* aPtr) { free(aPtr); }
-  static void SizeTooBig(size_t aSize) { NS_ABORT_OOM(aSize); }
-};
-
-#endif
 
 // nsTArray_base stores elements into the space allocated beyond
 // sizeof(*this).  This is done to minimize the size of the nsTArray
