@@ -257,10 +257,7 @@ private:
   // could conceivably destroy this nsPrintJob owner object and all its
   // member-data.
   RefPtr<nsPrintData> mPrt;
-
-  // Print Preview
   RefPtr<nsPrintData> mPrtPreview;
-  RefPtr<nsPrintData> mOldPrtPreview;
 
   nsPagePrintTimer* mPagePrintTimer = nullptr;
 
