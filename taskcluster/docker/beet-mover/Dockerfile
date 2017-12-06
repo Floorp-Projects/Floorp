@@ -1,5 +1,7 @@
 FROM ubuntu:vivid
 
+# Ubuntu Vivid has been moved to the old-releases repo
+RUN sed -i -e 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
 RUN apt-get -q update \
     && apt-get install --yes -q \
     mercurial \
