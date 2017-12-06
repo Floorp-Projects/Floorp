@@ -94,7 +94,7 @@ gl::Error VertexDeclarationCache::applyDeclaration(
 
         // The validation layer checks that there is at least one active attribute with a zero divisor as per
         // the GL_ANGLE_instanced_arrays spec.
-        ASSERT(indexedAttribute != invalidAttribIndex);
+        ASSERT(indexedAttribute != invalidAttribIndex || !attributes.size());
     }
 
     D3DCAPS9 caps;
