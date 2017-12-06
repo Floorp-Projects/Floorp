@@ -26,11 +26,13 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), SettingsFragment.Action
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val fragment = SettingsFragment.newInstance(intent.extras, SettingsFragment.SettingsScreen.MAIN)
+        if (savedInstanceState == null) {
+            val fragment = SettingsFragment.newInstance(intent.extras, SettingsFragment.SettingsScreen.MAIN)
 
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .commit()
+            fragmentManager.beginTransaction()
+                    .add(R.id.container, fragment)
+                    .commit()
+        }
 
         // Ensure all locale specific Strings are initialised on first run, we don't set the title
         // anywhere before now (the title can only be set via AndroidManifest, and ensuring
