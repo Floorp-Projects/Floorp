@@ -17,20 +17,9 @@ interface nsITabParent : nsISupports
   readonly attribute boolean useAsyncPanZoom;
 
   /**
-    * Manages the docshell active state of the remote browser. Setting the
-    * docShell to be active will also cause it to render layers and upload
-    * them to the compositor. Setting the docShell as not active will clear
-    * those layers.
+    * Manages the docshell active state of the remote browser.
     */
   attribute boolean docShellIsActive;
-
-  /**
-   * When aEnabled is set to true, this tells the child to paint and
-   * upload layers to the compositor. When aEnabled is set to false,
-   * previous layers are cleared from the compositor, but only if
-   * preserveLayers is also set to false.
-   */
-  void renderLayers(in bool aEnabled);
 
   /**
    * Whether this tabParent is in prerender mode.
