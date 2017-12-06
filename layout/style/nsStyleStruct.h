@@ -2590,6 +2590,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   uint8_t mTransformStyle;
   StyleGeometryBox mTransformBox; // [reset] see nsStyleConsts.h
   RefPtr<nsCSSValueSharedList> mSpecifiedTransform; // [reset]
+  RefPtr<nsCSSValueSharedList> mSpecifiedRotate; // [reset]
+  RefPtr<nsCSSValueSharedList> mSpecifiedTranslate; // [reset]
+  RefPtr<nsCSSValueSharedList> mSpecifiedScale; // [reset]
   nsStyleCoord mTransformOrigin[3]; // [reset] percent, coord, calc, 3rd param is coord, calc only
   nsStyleCoord mChildPerspective; // [reset] none, coord
   nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc
@@ -2787,7 +2790,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   /* Returns whether the element has the -moz-transform property
    * or a related property. */
   bool HasTransformStyle() const {
-    return mSpecifiedTransform ||
+    return mSpecifiedTransform || mSpecifiedRotate || mSpecifiedTranslate ||
+           mSpecifiedScale ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM);
   }
