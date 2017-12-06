@@ -259,6 +259,7 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResource);
   MOZ_ASSERT(aStreamListener);
+  AbstractThread::AutoEnter context(AbstractMainThread());
 
   mResource =
     BaseMediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
@@ -278,6 +279,8 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
   SetStateMachine(CreateStateMachine());
   NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
 
+  GetStateMachine()->DispatchIsLiveStream(mResource->IsLiveStream());
+
   return InitializeStateMachine();
 }
 
@@ -286,6 +289,7 @@ ChannelMediaDecoder::Load(BaseMediaResource* aOriginal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResource);
+  AbstractThread::AutoEnter context(AbstractMainThread());
 
   mResource = aOriginal->CloneData(mResourceCallback);
   if (!mResource) {
@@ -301,6 +305,8 @@ ChannelMediaDecoder::Load(BaseMediaResource* aOriginal)
   SetStateMachine(CreateStateMachine());
   NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
 
+  GetStateMachine()->DispatchIsLiveStream(mResource->IsLiveStream());
+
   return InitializeStateMachine();
 }
 
@@ -312,6 +318,11 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   AbstractThread::AutoEnter context(AbstractMainThread());
 
   LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
+
+  if (NS_SUCCEEDED(aStatus)) {
+    // Download ends successfully. This is a stream with a finite length.
+    GetStateMachine()->DispatchIsLiveStream(false);
+  }
 
   MediaDecoderOwner* owner = GetOwner();
   if (NS_SUCCEEDED(aStatus) || aStatus == NS_BASE_STREAM_CLOSED) {
