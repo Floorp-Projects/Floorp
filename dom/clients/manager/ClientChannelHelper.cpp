@@ -101,16 +101,6 @@ class ClientChannelHelper final : public nsIInterfaceRequestor
           newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
         }
       }
-
-      // Make sure we keep the service worker controller on same-origin
-      // internal redirects.
-      if (oldLoadInfo != newLoadInfo &&
-          aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
-        const Maybe<ServiceWorkerDescriptor>& controller = oldLoadInfo->GetController();
-        if (controller.isSome()) {
-          newLoadInfo->SetController(controller.ref());
-        }
-      }
     }
 
     // If it's a cross-origin redirect then we discard the old reserved client
@@ -132,6 +122,20 @@ class ClientChannelHelper final : public nsIInterfaceRequestor
                                                    mEventTarget, principal);
 
       newLoadInfo->GiveReservedClientSource(Move(reservedClient));
+    }
+
+    // Normally we keep the controller across channel redirects, but we must
+    // clear it when a non-subresource load redirects.  Only do this for real
+    // redirects, however.
+    //
+    // There is an open spec question about what to do in this case for
+    // worker script redirects.  For now we clear the controller as that
+    // seems most sane. See:
+    //
+    //  https://github.com/w3c/ServiceWorker/issues/1239
+    //
+    if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
+      newLoadInfo->ClearController();
     }
 
     nsCOMPtr<nsIChannelEventSink> outerSink = do_GetInterface(mOuter);
