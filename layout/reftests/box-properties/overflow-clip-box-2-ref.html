@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Testcase for bug 1422839</title>
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px/1 monospace; line-height:1; padding:0; margin:0;
+}
+
+div {
+  width: 0;
+  height: 0;
+  white-space: pre;
+  overflow: hidden;
+  border: 1px solid;
+  width: 100px;
+  height: 100px;
+  direction: rtl;
+}
+.h > div { height: 120px; }
+.w > div { width: 120px; }
+
+c {
+  display: block;
+  width: 100px;
+  height: 40px;
+  border: 1px solid black;
+  margin-top: -10px;
+}
+
+.float { float: left; }
+
+x {
+  display: block;
+  overflow: hidden;
+  padding-right: 50px;
+  padding-top: 50px;
+  width: 50px;
+  height: 50px;
+}
+
+.w x { width: 20px; }
+.h x { height: 20px; }
+.w.h x {
+  background-color: lime;
+  background-clip: content-box;
+  overflow: visible;
+}
+y {
+  display: block;
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+}
+
+  </style>
+</head>
+<body>
+
+<span class="float">
+<div><x><c></c></x></div>
+<div></div>
+<div></div>
+<div></div>
+<div><x><c></c></x></div>
+<div></div>
+</span>
+
+<span class="float h">
+<div><x style="height:70px"><c></c></x></div>
+<div></div>
+<div></div>
+<div><x style="height:20px"><c style="margin:0; border-top-width:0"></c></x></div>
+<div><x style="height:70px"><c></c></x></div>
+<div></div>
+</span>
+
+<span class="float w">
+<div><x style="width:70px"><c></c></x></div>
+<div></div>
+<div><x><c></c></x></div>
+<div></div>
+<div><x style="width:70px"><c></c></x></div>
+<div></div>
+</span>
+
+<span class="float w h">
+<div><x><y style="height:70px; width:70px; margin-top:-10px"><c style="margin-top:0px"></c></y></x></div>
+<div><x><y><c></c></y></x></div>
+<div><x><y style="height:70px; margin-top:-10px"><c style="margin-top:0px"></c></y></x></div>
+<div><x><y style="width:70px"><c></c></y></x></div>
+<div><x><y style="height:70px; width:70px; margin-top:-10px"><c style="margin-top:0px"></c></y></x></div>
+<div><x><y><c></c></y></x></div>
+</span>
+
+</body>
+</html>

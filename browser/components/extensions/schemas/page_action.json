@@ -31,6 +31,18 @@
               "browser_style": {
                 "type": "boolean",
                 "optional": true
+              },
+              "show_matches": {
+                "type": "array",
+                "optional": true,
+                "minItems": 1,
+                "items": { "$ref": "MatchPattern" }
+              },
+              "hide_matches": {
+                "type": "array",
+                "optional": true,
+                "minItems": 1,
+                "items": { "$ref": "MatchPattern" }
               }
             },
             "optional": true

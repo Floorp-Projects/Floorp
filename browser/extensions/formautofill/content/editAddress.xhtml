@@ -13,38 +13,42 @@
 </head>
 <body>
   <form id="form" autocomplete="off">
-    <label id="given-name-container">
-      <span data-localization="givenName"/>
-      <input id="given-name" type="text"/>
-    </label>
-    <label id="additional-name-container">
-      <span data-localization="additionalName"/>
-      <input id="additional-name" type="text"/>
-    </label>
-    <label id="family-name-container">
-      <span data-localization="familyName"/>
-      <input id="family-name" type="text"/>
-    </label>
-    <label id="organization-container">
-      <span data-localization="organization2"/>
-      <input id="organization" type="text"/>
-    </label>
-    <label id="street-address-container">
-      <span data-localization="streetAddress"/>
-      <textarea id="street-address" rows="3"/>
-    </label>
-    <label id="address-level2-container">
-      <span data-localization="city"/>
-      <input id="address-level2" type="text"/>
-    </label>
-    <label id="address-level1-container">
-      <span/>
-      <input id="address-level1" type="text"/>
-    </label>
-    <label id="postal-code-container">
-      <span/>
-      <input id="postal-code" type="text"/>
-    </label>
+    <div>
+      <div id="name-container">
+        <label id="given-name-container">
+          <span data-localization="givenName"/>
+          <input id="given-name" type="text"/>
+        </label>
+        <label id="additional-name-container">
+          <span data-localization="additionalName"/>
+          <input id="additional-name" type="text"/>
+        </label>
+        <label id="family-name-container">
+          <span data-localization="familyName"/>
+          <input id="family-name" type="text"/>
+        </label>
+      </div>
+      <label id="organization-container">
+        <span data-localization="organization2"/>
+        <input id="organization" type="text"/>
+      </label>
+      <label id="street-address-container">
+        <span data-localization="streetAddress"/>
+        <textarea id="street-address" rows="3"/>
+      </label>
+      <label id="address-level2-container">
+        <span data-localization="city"/>
+        <input id="address-level2" type="text"/>
+      </label>
+      <label id="address-level1-container">
+        <span/>
+        <input id="address-level1" type="text"/>
+      </label>
+      <label id="postal-code-container">
+        <span/>
+        <input id="postal-code" type="text"/>
+      </label>
+    </div>
     <label id="country-container">
       <span data-localization="country"/>
       <select id="country">

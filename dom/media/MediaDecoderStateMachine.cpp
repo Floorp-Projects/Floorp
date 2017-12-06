@@ -13,36 +13,24 @@
 #include <algorithm>
 #include <stdint.h>
 
-#include "gfx2DGlue.h"
-
 #include "mediasink/AudioSink.h"
 #include "mediasink/AudioSinkWrapper.h"
 #include "mediasink/DecodedStream.h"
 #include "mediasink/OutputStreamManager.h"
 #include "mediasink/VideoSink.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Logging.h"
-#include "mozilla/mozalloc.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Tuple.h"
-
-#include "nsComponentManagerUtils.h"
-#include "nsContentUtils.h"
-#include "nsIEventTarget.h"
 #include "nsIMemoryReporter.h"
-#include "nsITimer.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
-#include "nsDeque.h"
-#include "prenv.h"
-
-#include "AudioSegment.h"
-#include "DOMMediaStream.h"
 #include "ImageContainer.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderStateMachine.h"
@@ -51,14 +39,10 @@
 #include "MediaTimer.h"
 #include "ReaderProxy.h"
 #include "TimeUnits.h"
-#include "VideoSegment.h"
 #include "VideoUtils.h"
-#include "gfxPrefs.h"
 
 namespace mozilla {
 
-using namespace mozilla::dom;
-using namespace mozilla::layers;
 using namespace mozilla::media;
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractThreadDispatchInstead

@@ -2436,14 +2436,34 @@ ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
   nsRect clipRect;
   bool haveRadii = false;
   nscoord radii[8];
-  if (aFrame->StyleDisplay()->mOverflowClipBox ==
-        NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX) {
+  auto* disp = aFrame->StyleDisplay();
+  if (disp->mOverflowClipBoxBlock == NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX &&
+      disp->mOverflowClipBoxInline == NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX) {
     clipRect = aFrame->GetPaddingRectRelativeToSelf() +
       aBuilder->ToReferenceFrame(aFrame);
     haveRadii = aFrame->GetPaddingBoxBorderRadii(radii);
   } else {
-    clipRect = aFrame->GetContentRectRelativeToSelf() +
-      aBuilder->ToReferenceFrame(aFrame);
+    // Only deflate the padding if we clip to the content-box in that axis.
+    auto wm = aFrame->GetWritingMode();
+    bool cbH = (wm.IsVertical() ? disp->mOverflowClipBoxBlock
+                                : disp->mOverflowClipBoxInline) ==
+               NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+    bool cbV = (wm.IsVertical() ? disp->mOverflowClipBoxInline
+                                : disp->mOverflowClipBoxBlock) ==
+               NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX;
+    nsMargin bp = aFrame->GetUsedPadding();
+    if (!cbH) {
+      bp.left = bp.right = nscoord(0);
+    }
+    if (!cbV) {
+      bp.top = bp.bottom = nscoord(0);
+    }
+
+    bp += aFrame->GetUsedBorder();
+    bp.ApplySkipSides(aFrame->GetSkipSides());
+    nsRect rect(nsPoint(0, 0), aFrame->GetSize());
+    rect.Deflate(bp);
+    clipRect = rect + aBuilder->ToReferenceFrame(aFrame);
     // XXX border-radius
   }
   aClipState.ClipContainingBlockDescendantsExtra(clipRect, haveRadii ? radii : nullptr);

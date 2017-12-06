@@ -81,6 +81,20 @@ var publicProperties = [
   "whenVerified",
 ];
 
+// A poor-man's "registry" of promise-returning functions to call before we
+// send observer notifications. Primarily used so parts of Firefox which are
+// yet to load for performance reasons can be force-loaded and thus not miss
+// the notification.
+const OBSERVER_PRELOADS = [
+  // Sync
+  () => {
+    let scope = {};
+    Cu.import("resource://services-sync/main.js", scope);
+    return scope.Weave.Service.promiseInitialized;
+  },
+
+];
+
 // An AccountState object holds all state related to one specific account.
 // Only one AccountState is ever "current" in the FxAccountsInternal object -
 // whenever a user logs out or logs in, the current AccountState is discarded,
@@ -583,7 +597,7 @@ FxAccountsInternal.prototype = {
         return this.updateDeviceRegistration();
       }).then(() => {
         Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
-        this.notifyObservers(ONLOGIN_NOTIFICATION);
+        return this.notifyObservers(ONLOGIN_NOTIFICATION);
       }).then(() => {
         return currentAccountState.resolve();
       });
@@ -812,7 +826,7 @@ FxAccountsInternal.prototype = {
         }).then(() => {
           FxAccountsConfig.resetConfigURLs();
           // just for testing - notifications are cheap when no observers.
-          this.notifyObservers("testhelper-fxa-signout-complete");
+          return this.notifyObservers("testhelper-fxa-signout-complete");
         });
       } else {
         // We want to do this either way -- but if we're signing out remotely we
@@ -820,7 +834,7 @@ FxAccountsInternal.prototype = {
         FxAccountsConfig.resetConfigURLs();
       }
     }).then(() => {
-      this.notifyObservers(ONLOGOUT_NOTIFICATION);
+      return this.notifyObservers(ONLOGOUT_NOTIFICATION);
     });
   },
 
@@ -990,7 +1004,7 @@ FxAccountsInternal.prototype = {
     // We are now ready for business. This should only be invoked once
     // per setSignedInUser(), regardless of whether we've rebooted since
     // setSignedInUser() was called.
-    this.notifyObservers(ONVERIFIED_NOTIFICATION);
+    await this.notifyObservers(ONVERIFIED_NOTIFICATION);
     data = await currentState.getUserAccountData();
     return currentState.resolve(data);
   },
@@ -1180,7 +1194,12 @@ FxAccountsInternal.prototype = {
     );
   },
 
-  notifyObservers(topic, data) {
+  async notifyObservers(topic, data) {
+    for (let f of OBSERVER_PRELOADS) {
+      try {
+        await f();
+      } catch (O_o) {}
+    }
     log.debug("Notifying observers of " + topic);
     Services.obs.notifyObservers(null, topic, data);
   },
@@ -1277,7 +1296,7 @@ FxAccountsInternal.prototype = {
         delete currentState.whenVerifiedDeferred;
       }
       // Tell FxAccountsManager to clear its cache
-      this.notifyObservers(ON_FXA_UPDATE_NOTIFICATION, ONVERIFIED_NOTIFICATION);
+      await this.notifyObservers(ON_FXA_UPDATE_NOTIFICATION, ONVERIFIED_NOTIFICATION);
       // Record how we determined the account was verified
       Services.telemetry.scalarSet("services.sync.fxa_verification_method",
                                    why == "push" ? "push" : "poll");
@@ -1622,7 +1641,7 @@ FxAccountsInternal.prototype = {
       this.signOut(true);
     }
     const data = JSON.stringify({ isLocalDevice });
-    Services.obs.notifyObservers(null, ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
+    await this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
     return null;
   },
 
@@ -1640,8 +1659,7 @@ FxAccountsInternal.prototype = {
     }
     if (uid == localUid) {
       const data = JSON.stringify({ isLocalDevice: true });
-      Services.obs.notifyObservers(null, ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
-      this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
+      await this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
       return this.signOut(true);
     }
     log.info(
