@@ -160,6 +160,23 @@ EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
     return ErrorCode::BAD_REQUEST;
   }
 
+  nsAutoCString appIdHost;
+  if (NS_FAILED(appIdUri->GetAsciiHost(appIdHost))) {
+    return ErrorCode::BAD_REQUEST;
+  }
+
+  // Allow localhost.
+  if (appIdHost.EqualsLiteral("localhost")) {
+    nsAutoCString facetHost;
+    if (NS_FAILED(facetUri->GetAsciiHost(facetHost))) {
+      return ErrorCode::BAD_REQUEST;
+    }
+
+    if (facetHost.EqualsLiteral("localhost")) {
+      return ErrorCode::OK;
+    }
+  }
+
   // Run the HTML5 algorithm to relax the same-origin policy, copied from W3C
   // Web Authentication. See Bug 1244959 comment #8 for context on why we are
   // doing this instead of implementing the external-fetch FacetID logic.
@@ -182,10 +199,6 @@ EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
 
   nsAutoCString lowestFacetHost;
   if (NS_FAILED(tldService->GetBaseDomain(facetUri, 0, lowestFacetHost))) {
-    return ErrorCode::BAD_REQUEST;
-  }
-  nsAutoCString appIdHost;
-  if (NS_FAILED(appIdUri->GetAsciiHost(appIdHost))) {
     return ErrorCode::BAD_REQUEST;
   }
 

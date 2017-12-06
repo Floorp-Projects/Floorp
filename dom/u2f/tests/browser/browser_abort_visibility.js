@@ -6,22 +6,6 @@
 
 const TEST_URL = "https://example.com/browser/dom/u2f/tests/browser/tab_u2f_result.html";
 
-function bytesToBase64(u8a){
-  let CHUNK_SZ = 0x8000;
-  let c = [];
-  for (let i = 0; i < u8a.length; i += CHUNK_SZ) {
-    c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
-  }
-  return window.btoa(c.join(""));
-}
-
-function bytesToBase64UrlSafe(buf) {
-  return bytesToBase64(buf)
-                 .replace(/\+/g, "-")
-                 .replace(/\//g, "_")
-                 .replace(/=/g, "");
-}
-
 async function assertStatus(tab, expected) {
   let actual = await ContentTask.spawn(tab.linkedBrowser, null, async function () {
     return content.document.getElementById("status").value;
