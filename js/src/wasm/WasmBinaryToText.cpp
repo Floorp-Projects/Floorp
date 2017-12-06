@@ -1748,7 +1748,7 @@ RenderExport(WasmRenderContext& c, AstExport& export_,
         break;
       }
       case DefinitionKind::Global: {
-        if (!c.buffer.append("global"))
+        if (!c.buffer.append("global "))
             return false;
         if (!RenderRef(c, export_.ref()))
             return false;
