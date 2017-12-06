@@ -25,7 +25,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsFakeSynthServices() = default;
+  nsFakeSynthServices();
 
   static nsFakeSynthServices* GetInstance();
 
@@ -35,11 +35,13 @@ public:
 
 private:
 
-  virtual ~nsFakeSynthServices() = default;
+  virtual ~nsFakeSynthServices();
 
   void Init();
 
-  nsCOMPtr<nsISpeechService> mSynthService;
+  nsCOMPtr<nsISpeechService> mDirectService;
+
+  nsCOMPtr<nsISpeechService> mIndirectService;
 
   static StaticRefPtr<nsFakeSynthServices> sSingleton;
 };

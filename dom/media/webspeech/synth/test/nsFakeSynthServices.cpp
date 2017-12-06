@@ -44,17 +44,20 @@ struct VoiceDetails
   uint32_t flags;
 };
 
-static const VoiceDetails sVoices[] = {
-  {"urn:moz-tts:fake:bob", "Bob Marley", "en-JM", true, 0},
-  {"urn:moz-tts:fake:amy", "Amy Winehouse", "en-GB", false, 0},
-  {"urn:moz-tts:fake:lenny", "Leonard Cohen", "en-CA", false, 0},
-  {"urn:moz-tts:fake:celine", "Celine Dion", "fr-CA", false, 0},
-  {"urn:moz-tts:fake:julie", "Julieta Venegas", "es-MX", false, },
-  {"urn:moz-tts:fake:zanetta", "Zanetta Farussi", "it-IT", false, 0},
-  {"urn:moz-tts:fake:margherita", "Margherita Durastanti", "it-IT-noevents-noend", false, eSuppressEvents | eSuppressEnd},
-  {"urn:moz-tts:fake:teresa", "Teresa Cornelys", "it-IT-noend", false, eSuppressEnd},
-  {"urn:moz-tts:fake:cecilia", "Cecilia Bartoli", "it-IT-failatstart", false, eFailAtStart},
-  {"urn:moz-tts:fake:gottardo", "Gottardo Aldighieri", "it-IT-fail", false, eFail},
+static const VoiceDetails sDirectVoices[] = {
+  {"urn:moz-tts:fake-direct:bob", "Bob Marley", "en-JM", true, 0},
+  {"urn:moz-tts:fake-direct:amy", "Amy Winehouse", "en-GB", false, 0},
+  {"urn:moz-tts:fake-direct:lenny", "Leonard Cohen", "en-CA", false, 0},
+  {"urn:moz-tts:fake-direct:celine", "Celine Dion", "fr-CA", false, 0},
+  {"urn:moz-tts:fake-direct:julie", "Julieta Venegas", "es-MX", false, },
+};
+
+static const VoiceDetails sIndirectVoices[] = {
+  {"urn:moz-tts:fake-indirect:zanetta", "Zanetta Farussi", "it-IT", false, 0},
+  {"urn:moz-tts:fake-indirect:margherita", "Margherita Durastanti", "it-IT-noevents-noend", false, eSuppressEvents | eSuppressEnd},
+  {"urn:moz-tts:fake-indirect:teresa", "Teresa Cornelys", "it-IT-noend", false, eSuppressEnd},
+  {"urn:moz-tts:fake-indirect:cecilia", "Cecilia Bartoli", "it-IT-failatstart", false, eFailAtStart},
+  {"urn:moz-tts:fake-indirect:gottardo", "Gottardo Aldighieri", "it-IT-fail", false, eFail},
 };
 
 // FakeSynthCallback
@@ -113,25 +116,90 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FakeSynthCallback)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FakeSynthCallback)
 
-// FakeSpeechSynth
+// FakeDirectAudioSynth
 
-class FakeSpeechSynth : public nsISpeechService
+class FakeDirectAudioSynth : public nsISpeechService
 {
 
 public:
-  FakeSpeechSynth() {}
+  FakeDirectAudioSynth() { }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISPEECHSERVICE
 
 private:
-  virtual ~FakeSpeechSynth() { }
+  virtual ~FakeDirectAudioSynth() { }
 };
 
-NS_IMPL_ISUPPORTS(FakeSpeechSynth, nsISpeechService)
+NS_IMPL_ISUPPORTS(FakeDirectAudioSynth, nsISpeechService)
 
 NS_IMETHODIMP
-FakeSpeechSynth::Speak(const nsAString& aText, const nsAString& aUri,
+FakeDirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
+                            float aVolume, float aRate, float aPitch,
+                            nsISpeechTask* aTask)
+{
+  class Runnable final : public mozilla::Runnable
+  {
+  public:
+    Runnable(nsISpeechTask* aTask, const nsAString& aText)
+      : mozilla::Runnable("Runnable")
+      , mTask(aTask)
+      , mText(aText)
+    {
+    }
+
+    NS_IMETHOD Run() override
+    {
+      RefPtr<FakeSynthCallback> cb = new FakeSynthCallback(nullptr);
+      mTask->Setup(cb, CHANNELS, SAMPLERATE, 2);
+
+      // Just an arbitrary multiplier. Pretend that each character is
+      // synthesized to 40 frames.
+      uint32_t frames_length = 40 * mText.Length();
+      auto frames = MakeUnique<int16_t[]>(frames_length);
+      mTask->SendAudioNative(frames.get(), frames_length);
+
+      mTask->SendAudioNative(nullptr, 0);
+
+      return NS_OK;
+    }
+
+  private:
+    nsCOMPtr<nsISpeechTask> mTask;
+    nsString mText;
+  };
+
+  nsCOMPtr<nsIRunnable> runnable = new Runnable(aTask, aText);
+  NS_DispatchToMainThread(runnable);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FakeDirectAudioSynth::GetServiceType(SpeechServiceType* aServiceType)
+{
+  *aServiceType = nsISpeechService::SERVICETYPE_DIRECT_AUDIO;
+  return NS_OK;
+}
+
+// FakeDirectAudioSynth
+
+class FakeIndirectAudioSynth : public nsISpeechService
+{
+
+public:
+  FakeIndirectAudioSynth() {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISPEECHSERVICE
+
+private:
+  virtual ~FakeIndirectAudioSynth() { }
+};
+
+NS_IMPL_ISUPPORTS(FakeIndirectAudioSynth, nsISpeechService)
+
+NS_IMETHODIMP
+FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
                               float aVolume, float aRate, float aPitch,
                               nsISpeechTask* aTask)
 {
@@ -200,10 +268,9 @@ FakeSpeechSynth::Speak(const nsAString& aText, const nsAString& aUri,
   };
 
   uint32_t flags = 0;
-  for (VoiceDetails voice : sVoices) {
-    if (aUri.EqualsASCII(voice.uri)) {
-      flags = voice.flags;
-      break;
+  for (uint32_t i = 0; i < ArrayLength(sIndirectVoices); i++) {
+    if (aUri.EqualsASCII(sIndirectVoices[i].uri)) {
+      flags = sIndirectVoices[i].flags;
     }
   }
 
@@ -214,7 +281,7 @@ FakeSpeechSynth::Speak(const nsAString& aText, const nsAString& aUri,
   RefPtr<FakeSynthCallback> cb = new FakeSynthCallback(
     (flags & eSuppressEvents) ? nullptr : aTask);
 
-  aTask->Setup(cb);
+  aTask->Setup(cb, 0, 0, 0);
 
   nsCOMPtr<nsIRunnable> runnable = new DispatchStart(aTask);
   NS_DispatchToMainThread(runnable);
@@ -230,6 +297,13 @@ FakeSpeechSynth::Speak(const nsAString& aText, const nsAString& aUri,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FakeIndirectAudioSynth::GetServiceType(SpeechServiceType* aServiceType)
+{
+  *aServiceType = nsISpeechService::SERVICETYPE_INDIRECT_AUDIO;
+  return NS_OK;
+}
+
 // nsFakeSynthService
 
 NS_INTERFACE_MAP_BEGIN(nsFakeSynthServices)
@@ -239,6 +313,14 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsFakeSynthServices)
 NS_IMPL_RELEASE(nsFakeSynthServices)
+
+nsFakeSynthServices::nsFakeSynthServices()
+{
+}
+
+nsFakeSynthServices::~nsFakeSynthServices()
+{
+}
 
 static void
 AddVoices(nsISpeechService* aService, const VoiceDetails* aVoices, uint32_t aLength)
@@ -262,8 +344,11 @@ AddVoices(nsISpeechService* aService, const VoiceDetails* aVoices, uint32_t aLen
 void
 nsFakeSynthServices::Init()
 {
-  mSynthService = new FakeSpeechSynth();
-  AddVoices(mSynthService, sVoices, ArrayLength(sVoices));
+  mDirectService = new FakeDirectAudioSynth();
+  AddVoices(mDirectService, sDirectVoices, ArrayLength(sDirectVoices));
+
+  mIndirectService = new FakeIndirectAudioSynth();
+  AddVoices(mIndirectService, sIndirectVoices, ArrayLength(sIndirectVoices));
 }
 
 // nsIObserver
