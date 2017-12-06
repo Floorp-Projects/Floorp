@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: simple form address autofill
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+let MOCK_STORAGE = [{
+  organization: "Mozilla Vancouver",
+  "street-address": "163 W Hastings St.\n#209\n3-line",
+  tel: "+17787851540",
+  country: "CA",
+  "address-level1": "BC",
+}, {
+  organization: "Mozilla Toronto",
+  "street-address": "366 Adelaide St.\nW Suite 500\n3-line",
+  tel: "+14168483114",
+  country: "CA",
+  "address-level1": "ON",
+}, {
+  organization: "Prince of Wales Northern Heritage",
+  "street-address": "4750 48 St.\nYellowknife\n3-line",
+  tel: "+18677679347",
+  country: "CA",
+  "address-level1": "Northwest Territories",
+}, {
+  organization: "ExpoCité",
+  "street-address": "250 Boulevard Wilfrid-Hamel\nVille de Québec\n3-line",
+  tel: "+14186917110",
+  country: "CA",
+  "address-level1": "Québec",
+}];
+
+function checkElementFilled(element, expectedvalue) {
+  return [
+    new Promise(resolve => {
+      element.addEventListener("input", function onInput() {
+        ok(true, "Checking " + element.name + " field fires input event");
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
+      element.addEventListener("change", function onChange() {
+        ok(true, "Checking " + element.name + " field fires change event");
+        is(element.value, expectedvalue, "Checking " + element.name + " field");
+        resolve();
+      }, {once: true});
+    }),
+  ];
+}
+
+function checkAutoCompleteInputFilled(element, expectedvalue) {
+  return new Promise(resolve => {
+    element.addEventListener("DOMAutoComplete", function onChange() {
+      is(element.value, expectedvalue, "Checking " + element.name + " field");
+      resolve();
+    }, {once: true});
+  });
+}
+
+function checkFormFilled(selector, address) {
+  info("expecting form filled");
+  let promises = [];
+  let form = document.querySelector(selector);
+  for (let prop in address) {
+    let element = form.querySelector(`[name=${prop}]`);
+    if (document.activeElement == element) {
+      promises.push(checkAutoCompleteInputFilled(element, address[prop]));
+    } else {
+      let converted = address[prop];
+      if (prop == "street-address") {
+        converted = FormAutofillUtils.toOneLineAddress(converted);
+      }
+      promises.push(...checkElementFilled(element, converted));
+    }
+  }
+  doKey("return");
+  return Promise.all(promises);
+}
+
+async function setupAddressStorage() {
+  for (let address of MOCK_STORAGE) {
+    await addAddress(address);
+  }
+}
+
+initPopupListener();
+
+// Autofill the address with address level 1 code.
+add_task(async function autofill_with_level1_code() {
+  await setupAddressStorage();
+
+  await setInput("#organization-en", "Mozilla Toronto");
+  doKey("down");
+  await expectPopup();
+
+  doKey("down");
+  // Replace address level 1 code with full name in English for test result
+  let result = Object.assign({}, MOCK_STORAGE[1], {"address-level1": "Ontario"});
+  await checkFormFilled("#form-en", result);
+
+  await setInput("#organization-fr", "Mozilla Vancouver");
+  doKey("down");
+  await expectPopup();
+
+  doKey("down");
+  // Replace address level 1 code with full name in French for test result
+  result = Object.assign({}, MOCK_STORAGE[0], {"address-level1": "Colombie-Britannique"});
+  await checkFormFilled("#form-fr", result);
+  document.querySelector("#form-en").reset();
+  document.querySelector("#form-fr").reset();
+});
+
+// Autofill the address with address level 1 full name.
+add_task(async function autofill_with_level1_full_name() {
+  await setInput("#organization-en", "ExpoCité");
+  doKey("down");
+  await expectPopup();
+
+  doKey("down");
+  // Replace address level 1 code with full name in French for test result
+  let result = Object.assign({}, MOCK_STORAGE[3], {"address-level1": "Quebec"});
+  await checkFormFilled("#form-en", result);
+
+  await setInput("#organization-fr", "Prince of Wales Northern Heritage");
+  doKey("down");
+  await expectPopup();
+
+  doKey("down");
+  // Replace address level 1 code with full name in English for test result
+  result = Object.assign({}, MOCK_STORAGE[2], {"address-level1": "Territoires du Nord-Ouest"});
+  await checkFormFilled("#form-fr", result);
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form-en">
+    <p>This is a basic CA form with en address level 1 select.</p>
+    <p><label>organization: <input id="organization-en" name="organization" autocomplete="organization" type="text"></label></p>
+    <p><label>streetAddress: <input id="street-address-en" name="street-address" autocomplete="street-address" type="text"></label></p>
+    <p><label>address-line1: <input id="address-line1-en" name="address-line1" autocomplete="address-line1" type="text"></label></p>
+    <p><label>tel: <input id="tel-en" name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>email: <input id="email-en" name="email" autocomplete="email" type="text"></label></p>
+    <p><label>country: <select id="country-en" name="country" autocomplete="country">
+      <option/>
+      <option value="US">United States</option>
+      <option value="CA">Canada</option>
+    </select></label></p>
+    <p><label>states: <select id="address-level1-en" name="address-level1" autocomplete="address-level1">
+      <option/>
+      <option value="British Columbia">British Columbia</option>
+      <option value="Ontario">Ontario</option>
+      <option value="Northwest Territories">Northwest Territories</option>
+      <option value="Quebec">Quebec</option>
+    </select></label></p>
+  </form>
+
+  <form id="form-fr">
+    <p>This is a basic CA form with fr address level 1 select.</p>
+    <p><label>organization: <input id="organization-fr" name="organization" autocomplete="organization" type="text"></label></p>
+    <p><label>streetAddress: <input id="street-address-fr" name="street-address" autocomplete="street-address" type="text"></label></p>
+    <p><label>address-line1: <input id="address-line1-fr" name="address-line1" autocomplete="address-line1" type="text"></label></p>
+    <p><label>tel: <input id="tel-fr" name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>email: <input id="email-fr" name="email" autocomplete="email" type="text"></label></p>
+    <p><label>country: <select id="country-fr" name="country" autocomplete="country">
+      <option/>
+      <option value="US">United States</option>
+      <option value="CA">Canada</option>
+    </select></label></p>
+    <p><label>states: <select id="address-level1-fr" name="address-level1" autocomplete="address-level1">
+      <option/>
+      <option value="Colombie-Britannique">Colombie-Britannique</option>
+      <option value="Ontario">Ontario</option>
+      <option value="Territoires du Nord-Ouest">Territoires du Nord-Ouest</option>
+      <option value="Québec">Québec</option>
+    </select></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

@@ -67,13 +67,13 @@ list_files files
 popd
 
 # Add the type of update to the beginning of the update manifests.
-> $updatemanifestv2
-> $updatemanifestv3
+> "$updatemanifestv2"
+> "$updatemanifestv3"
 notice ""
 notice "Adding type instruction to update manifests"
 notice "       type complete"
-echo "type \"complete\"" >> $updatemanifestv2
-echo "type \"complete\"" >> $updatemanifestv3
+echo "type \"complete\"" >> "$updatemanifestv2"
+echo "type \"complete\"" >> "$updatemanifestv3"
 
 notice ""
 notice "Adding file add instructions to update manifests"

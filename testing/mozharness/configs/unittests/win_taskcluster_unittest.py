@@ -274,6 +274,16 @@ config = {
             'enabled': ADJUST_MOUSE_AND_SCREEN
         },
         {
+            'name': 'disable windows security and maintenance notifications',
+            'cmd': [
+                'powershell', '-command',
+                '"&{$p=\'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\Windows.SystemToast.SecurityAndMaintenance\';if(!(Test-Path -Path $p)){&New-Item -Path $p -Force}&Set-ItemProperty -Path $p -Name Enabled -Value 0}"'
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': (platform.release() == 10)
+        },
+        {
             'name': 'set windows VisualFX',
             'cmd': [
                 'powershell', '-command',
