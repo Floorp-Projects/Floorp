@@ -61,13 +61,6 @@
   max-width: 600px;
 }
 
-/* Tooltip: CSS variables tooltip */
-
-.devtools-tooltip-css-variable {
-  color: var(--theme-body-color);
-  padding: 2px;
-}
-
 /* Tooltip: Simple Text */
 
 .devtools-tooltip-simple-text {
