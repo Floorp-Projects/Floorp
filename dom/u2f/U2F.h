@@ -18,14 +18,10 @@
 #include "nsProxyRelease.h"
 #include "nsWrapperCache.h"
 #include "U2FAuthenticator.h"
-#include "nsIDOMEventListener.h"
-
-class nsISerialEventTarget;
 
 namespace mozilla {
 namespace dom {
 
-class WebAuthnTransactionChild;
 class U2FRegisterCallback;
 class U2FSignCallback;
 
@@ -59,17 +55,16 @@ private:
   }
 };
 
-class U2F final : public nsIDOMEventListener
-                , public WebAuthnManagerBase
+class U2F final : public WebAuthnManagerBase
                 , public nsWrapperCache
 {
 public:
-  NS_DECL_NSIDOMEVENTLISTENER
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(U2F)
 
-  explicit U2F(nsPIDOMWindowInner* aParent);
+  explicit U2F(nsPIDOMWindowInner* aParent)
+    : WebAuthnManagerBase(aParent)
+  { }
 
   nsPIDOMWindowInner*
   GetParentObject() const
@@ -114,34 +109,24 @@ public:
   RequestAborted(const uint64_t& aTransactionId,
                  const nsresult& aError) override;
 
-  void ActorDestroyed() override;
+protected:
+  // Cancels the current transaction (by sending a Cancel message to the
+  // parent) and rejects it by calling RejectTransaction().
+  void CancelTransaction(const nsresult& aError) override;
 
 private:
   ~U2F();
-
-  // Visibility event handling.
-  void ListenForVisibilityEvents();
-  void StopListeningForVisibilityEvents();
 
   // Clears all information we have about the current transaction.
   void ClearTransaction();
   // Rejects the current transaction and calls ClearTransaction().
   void RejectTransaction(const nsresult& aError);
-  // Cancels the current transaction (by sending a Cancel message to the
-  // parent) and rejects it by calling RejectTransaction().
-  void CancelTransaction(const nsresult& aError);
-
-  bool MaybeCreateBackgroundActor();
 
   nsString mOrigin;
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
 
   // U2F API callbacks.
   Maybe<nsMainThreadPtrHandle<U2FRegisterCallback>> mRegisterCallback;
   Maybe<nsMainThreadPtrHandle<U2FSignCallback>> mSignCallback;
-
-  // IPC Channel to the parent process.
-  RefPtr<WebAuthnTransactionChild> mChild;
 
   // The current transaction, if any.
   Maybe<U2FTransaction> mTransaction;

@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_WebAuthnManagerBase_h
 #define mozilla_dom_WebAuthnManagerBase_h
 
+#include "nsIDOMEventListener.h"
+
 /*
  * A base class used by WebAuthn and U2F implementations, providing shared
  * functionality and requiring an interface used by the IPC child actors.
@@ -15,9 +17,15 @@
 namespace mozilla {
 namespace dom {
 
-class WebAuthnManagerBase
+class WebAuthnTransactionChild;
+
+class WebAuthnManagerBase : public nsIDOMEventListener
 {
 public:
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  explicit WebAuthnManagerBase(nsPIDOMWindowInner* aParent);
+
   virtual void
   FinishMakeCredential(const uint64_t& aTransactionId,
                        nsTArray<uint8_t>& aRegBuffer) = 0;
@@ -31,7 +39,25 @@ public:
   RequestAborted(const uint64_t& aTransactionId,
                  const nsresult& aError) = 0;
 
-  virtual void ActorDestroyed() = 0;
+  void ActorDestroyed();
+
+protected:
+  ~WebAuthnManagerBase();
+
+  // Needed by HandleEvent() to cancel transactions.
+  virtual void CancelTransaction(const nsresult& aError) = 0;
+
+  // Visibility event handling.
+  void ListenForVisibilityEvents();
+  void StopListeningForVisibilityEvents();
+
+  bool MaybeCreateBackgroundActor();
+
+  // The parent window.
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
+
+  // IPC Channel to the parent process.
+  RefPtr<WebAuthnTransactionChild> mChild;
 };
 
 }
