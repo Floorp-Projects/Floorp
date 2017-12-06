@@ -279,9 +279,7 @@ class MachCommands(MachCommandBase):
              parser=setup_argument_parser)
     def run_mochitest_general(self, flavor=None, test_objects=None, resolve_tests=True, **kwargs):
         from mochitest_options import ALL_FLAVORS
-        from mozlog.commandline import log_formatters
-        from mozlog.handlers import StreamHandler, LogLevelFilter
-        from mozlog.structuredlog import StructuredLogger
+        from mozlog.commandline import setup_logging
 
         buildapp = None
         for app in SUPPORTED_APPS:
@@ -302,12 +300,11 @@ class MachCommands(MachCommandBase):
 
         if not kwargs.get('log'):
             # Create shared logger
-            formatter = log_formatters[self._mach_context.settings['test']['format']][0]()
-            formatter.summary_on_shutdown = True
-
-            level = self._mach_context.settings['test']['level']
-            kwargs['log'] = StructuredLogger('mach-mochitest')
-            kwargs['log'].add_handler(StreamHandler(sys.stdout, LogLevelFilter(formatter, level)))
+            default_format = self._mach_context.settings['test']['format']
+            default_level = self._mach_context.settings['test']['level']
+            kwargs['log'] = setup_logging('mach-mochitest', kwargs, {default_format: sys.stdout},
+                                          {'level': default_level})
+            kwargs['log'].handlers[0].formatter.inner.summary_on_shutdown = True
 
         from mozbuild.controller.building import BuildDriver
         self._ensure_state_subdir_exists('.')
