@@ -24,7 +24,7 @@ async_test(function(t) {
                 'Initial value of margin-left is zero');
   var previousAnimVal = getMarginLeft(cs);
 
-  animation.ready.then(waitForFrame).then(t.step_func(function() {
+  animation.ready.then(waitForNextFrame).then(t.step_func(function() {
     assert_greater_than(getMarginLeft(cs), previousAnimVal,
                         'margin-left is initially increasing');
     animation.pause();
