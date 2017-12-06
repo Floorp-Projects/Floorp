@@ -82,7 +82,7 @@ private:
     nsresult endHTMLElement(nsIContent* aElement);
     void processHTTPEquiv(nsAtom* aHeader, const nsString& aValue);
     nsresult createHTMLElement(nsAtom* aName,
-                               mozilla::dom::Element** aResult);
+                               nsIContent** aResult);
 
     nsresult attributeInternal(nsAtom* aPrefix, nsAtom* aLocalName,
                                int32_t aNsID, const nsString& aValue);

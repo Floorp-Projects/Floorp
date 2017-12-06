@@ -18,7 +18,6 @@ interface nsIDOMDataTransfer;
 class nsAtom;
 %}
 [ptr] native nsAtomPtr(nsAtom);
-[ptr] native Element (mozilla::dom::Element);
 
 /**
  * A template builder, given an input source of data, a template, and a
@@ -294,7 +293,7 @@ interface nsIXULTemplateBuilder : nsISupports
      * generated even if it is closed. If false, the element will only
      * generate its contents if it is open. This behaviour is used with menus.
      */
-    [noscript] void createContents(in Element aElement,
+    [noscript] void createContents(in nsIContent aElement,
                                    in boolean aForceCreation);
 
     /**

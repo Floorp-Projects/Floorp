@@ -69,6 +69,33 @@ public:
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  // nsIContent
+  using nsIContent::SetAttr;
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                           nsAtom* aPrefix, const nsAString& aValue,
+                           nsIPrincipal* aSubjectPrincipal,
+                           bool aNotify) override
+  {
+    return NS_OK;
+  }
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aAttribute,
+                             bool aNotify) override
+  {
+    return NS_OK;
+  }
+  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override
+  {
+    return nullptr;
+  }
+  virtual BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const override
+  {
+    return BorrowedAttrInfo(nullptr, nullptr);
+  }
+  virtual uint32_t GetAttrCount() const override
+  {
+    return 0;
+  }
+
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }

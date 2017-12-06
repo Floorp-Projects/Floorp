@@ -263,7 +263,8 @@ nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
       // bounds check it.
 
       nsIFrame* scrollbarBox = GetScrollbar();
-      nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
+      nsCOMPtr<nsIContent> scrollbar;
+      scrollbar = GetContentOfBox(scrollbarBox);
       int32_t current = GetCurrentPosition(scrollbar);
       int32_t min = GetMinPosition(scrollbar);
       int32_t max = GetMaxPosition(scrollbar);
@@ -303,7 +304,7 @@ nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
         // 'this' might be destroyed here
 
         nsContentUtils::AddScriptRunner(
-          new nsSetAttrRunnable(scrollbar->AsElement(), nsGkAtoms::curpos, current));
+          new nsSetAttrRunnable(scrollbar, nsGkAtoms::curpos, current));
       }
   }
 
@@ -504,7 +505,8 @@ nsSliderFrame::DoXULLayout(nsBoxLayoutState& aState)
 
   // get the scrollbar
   nsIFrame* scrollbarBox = GetScrollbar();
-  nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
+  nsCOMPtr<nsIContent> scrollbar;
+  scrollbar = GetContentOfBox(scrollbarBox);
 
   // get the thumb's pref size
   nsSize thumbSize = thumbBox->GetXULPrefSize(aState);
@@ -700,7 +702,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     DragThumb(true);
 
 #ifdef MOZ_WIDGET_GTK
-    RefPtr<Element> thumb = thumbFrame->GetContent()->AsElement();
+    nsCOMPtr<nsIContent> thumb = thumbFrame->GetContent();
     thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), true);
 #endif
 
@@ -814,7 +816,8 @@ void
 nsSliderFrame::CurrentPositionChanged()
 {
   nsIFrame* scrollbarBox = GetScrollbar();
-  nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
+  nsCOMPtr<nsIContent> scrollbar;
+  scrollbar = GetContentOfBox(scrollbarBox);
 
   // get the current position
   int32_t curPos = GetCurrentPosition(scrollbar);
@@ -887,7 +890,7 @@ nsSliderFrame::CurrentPositionChanged()
   }
 }
 
-static void UpdateAttribute(Element* aScrollbar, nscoord aNewPos, bool aNotify, bool aIsSmooth) {
+static void UpdateAttribute(nsIContent* aScrollbar, nscoord aNewPos, bool aNotify, bool aIsSmooth) {
   nsAutoString str;
   str.AppendInt(aNewPos);
 
@@ -973,14 +976,14 @@ nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t aNewPo
       if (!weakFrame.IsAlive()) {
         return;
       }
-      UpdateAttribute(scrollbar->AsElement(), aNewPos, /* aNotify */false, aIsSmooth);
+      UpdateAttribute(scrollbar, aNewPos, /* aNotify */false, aIsSmooth);
       CurrentPositionChanged();
       mUserChanged = false;
       return;
     }
   }
 
-  UpdateAttribute(scrollbar->AsElement(), aNewPos, true, aIsSmooth);
+  UpdateAttribute(scrollbar, aNewPos, true, aIsSmooth);
   if (!weakFrame.IsAlive()) {
     return;
   }
@@ -1218,7 +1221,7 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
   }
 
 #ifdef MOZ_WIDGET_GTK
-  RefPtr<Element> thumb = thumbFrame->GetContent()->AsElement();
+  nsCOMPtr<nsIContent> thumb = thumbFrame->GetContent();
   thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), true);
 #endif
 
@@ -1256,7 +1259,7 @@ nsSliderFrame::StopDrag()
 #ifdef MOZ_WIDGET_GTK
   nsIFrame* thumbFrame = mFrames.FirstChild();
   if (thumbFrame) {
-    RefPtr<Element> thumb = thumbFrame->GetContent()->AsElement();
+    nsCOMPtr<nsIContent> thumb = thumbFrame->GetContent();
     thumb->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   }
 #endif

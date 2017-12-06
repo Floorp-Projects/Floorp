@@ -92,7 +92,8 @@ protected:
                            nsIContent** aResult, bool* aAppendContent,
                            mozilla::dom::FromParser aFromParser) override;
 
-    nsresult AddAttributes(const char16_t** aAtts, Element* aElement) override;
+    nsresult AddAttributes(const char16_t** aAtts,
+                           nsIContent* aContent) override;
 
 #ifdef MOZ_XUL
     nsresult AddAttributesToXULPrototype(const char16_t **aAtts,

@@ -96,7 +96,7 @@ public:
    * Set sort and sortDirection attributes when a sort is done.
    */
   void
-  SetSortHints(mozilla::dom::Element* aElement, nsSortState* aSortState);
+  SetSortHints(nsIContent *aNode, nsSortState* aSortState);
 
   /**
    * Set sortActive and sortDirection attributes on a tree column when a sort
@@ -156,8 +156,8 @@ public:
    * @param aSortState structure filled in with sort data
    */
   static nsresult
-  InitializeSortState(mozilla::dom::Element* aRootElement,
-                      mozilla::dom::Element* aContainer,
+  InitializeSortState(nsIContent* aRootElement,
+                      nsIContent* aContainer,
                       const nsAString& aSortKey,
                       const nsAString& aSortDirection,
                       nsSortState* aSortState);

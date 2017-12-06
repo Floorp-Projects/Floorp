@@ -1263,8 +1263,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       GenerateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes.get(),
                      newColAttr);
       // Setting the attr will trigger a reflow
-      mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::cols,
-                                     newColAttr, true);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::cols, newColAttr, true);
     }
   } else {
     change = aPresContext->DevPixelsToAppUnits(
@@ -1288,8 +1287,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       GenerateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes.get(),
                      newRowAttr);
       // Setting the attr will trigger a reflow
-      mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::rows,
-                                     newRowAttr, true);
+      mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::rows, newRowAttr, true);
     }
   }
 

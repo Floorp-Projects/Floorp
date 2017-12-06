@@ -712,20 +712,20 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
 }
 
 uint32_t
-nsXMLContentSerializer::ScanNamespaceDeclarations(Element* aElement,
-                                                  Element* aOriginalElement,
+nsXMLContentSerializer::ScanNamespaceDeclarations(nsIContent* aContent,
+                                                  nsIContent *aOriginalElement,
                                                   const nsAString& aTagNamespaceURI)
 {
   uint32_t index, count;
   nsAutoString uriStr, valueStr;
 
-  count = aElement->GetAttrCount();
+  count = aContent->GetAttrCount();
 
   // First scan for namespace declarations, pushing each on the stack
   uint32_t skipAttr = count;
   for (index = 0; index < count; index++) {
 
-    const BorrowedAttrInfo info = aElement->GetAttrInfoAt(index);
+    const BorrowedAttrInfo info = aContent->GetAttrInfoAt(index);
     const nsAttrName* name = info.mName;
 
     int32_t namespaceID = name->NamespaceID();
@@ -799,8 +799,8 @@ nsXMLContentSerializer::IsJavaScript(nsIContent * aContent, nsAtom* aAttrNameAto
 
 
 bool
-nsXMLContentSerializer::SerializeAttributes(Element* aElement,
-                                            Element* aOriginalElement,
+nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
+                                            nsIContent *aOriginalElement,
                                             nsAString& aTagPrefix,
                                             const nsAString& aTagNamespaceURI,
                                             nsAtom* aTagName,
@@ -828,7 +828,7 @@ nsXMLContentSerializer::SerializeAttributes(Element* aElement,
     PushNameSpaceDecl(aTagPrefix, aTagNamespaceURI, aOriginalElement);
   }
 
-  count = aElement->GetAttrCount();
+  count = aContent->GetAttrCount();
 
   // Now serialize each of the attributes
   // XXX Unfortunately we need a namespace manager to get
@@ -838,7 +838,7 @@ nsXMLContentSerializer::SerializeAttributes(Element* aElement,
         continue;
     }
 
-    const nsAttrName* name = aElement->GetAttrNameAt(index);
+    const nsAttrName* name = aContent->GetAttrNameAt(index);
     int32_t namespaceID = name->NamespaceID();
     nsAtom* attrName = name->LocalName();
     nsAtom* attrPrefix = name->GetPrefix();
@@ -863,10 +863,10 @@ nsXMLContentSerializer::SerializeAttributes(Element* aElement,
       addNSAttr = ConfirmPrefix(prefixStr, uriStr, aOriginalElement, true);
     }
 
-    aElement->GetAttr(namespaceID, attrName, valueStr);
+    aContent->GetAttr(namespaceID, attrName, valueStr);
 
     nsDependentAtomString nameStr(attrName);
-    bool isJS = IsJavaScript(aElement, attrName, namespaceID, valueStr);
+    bool isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
 
     NS_ENSURE_TRUE(SerializeAttr(prefixStr, nameStr, valueStr, aStr, !isJS), false);
 
@@ -888,13 +888,15 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
 {
   NS_ENSURE_ARG(aElement);
 
+  nsIContent* content = aElement;
+
   bool forceFormat = false;
   nsresult rv = NS_OK;
-  if (!CheckElementStart(aElement, forceFormat, aStr, rv)) {
+  if (!CheckElementStart(content, forceFormat, aStr, rv)) {
     // When we go to AppendElementEnd for this element, we're going to
     // MaybeLeaveFromPreContent().  So make sure to MaybeEnterInPreContent()
     // now, so our PreLevel() doesn't get confused.
-    MaybeEnterInPreContent(aElement);
+    MaybeEnterInPreContent(content);
     return rv;
   }
 
@@ -905,12 +907,11 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   aElement->NodeInfo()->GetName(tagLocalName);
   aElement->NodeInfo()->GetNamespaceURI(tagNamespaceURI);
 
-  uint32_t skipAttr =
-    ScanNamespaceDeclarations(aElement, aOriginalElement, tagNamespaceURI);
+  uint32_t skipAttr = ScanNamespaceDeclarations(content,
+                          aOriginalElement, tagNamespaceURI);
 
-  nsAtom *name = aElement->NodeInfo()->NameAtom();
-  bool lineBreakBeforeOpen =
-    LineBreakBeforeOpen(aElement->GetNameSpaceID(), name);
+  nsAtom *name = content->NodeInfo()->NameAtom();
+  bool lineBreakBeforeOpen = LineBreakBeforeOpen(content->GetNameSpaceID(), name);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     if (mColPos && lineBreakBeforeOpen) {
@@ -951,26 +952,25 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   }
   NS_ENSURE_TRUE(AppendToString(tagLocalName, aStr), NS_ERROR_OUT_OF_MEMORY);
 
-  MaybeEnterInPreContent(aElement);
+  MaybeEnterInPreContent(content);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     NS_ENSURE_TRUE(IncrIndentation(name), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(SerializeAttributes(aElement, aOriginalElement, tagPrefix,
-                                     tagNamespaceURI, name, aStr, skipAttr,
-                                     addNSAttr),
+  NS_ENSURE_TRUE(SerializeAttributes(content, aOriginalElement, tagPrefix, tagNamespaceURI,
+                                     name, aStr, skipAttr, addNSAttr),
                  NS_ERROR_OUT_OF_MEMORY);
 
   NS_ENSURE_TRUE(AppendEndOfElementStart(aElement, aOriginalElement, aStr),
                  NS_ERROR_OUT_OF_MEMORY);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()
-    && LineBreakAfterOpen(aElement->GetNameSpaceID(), name)) {
+    && LineBreakAfterOpen(content->GetNameSpaceID(), name)) {
     NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(AfterElementStart(aElement, aOriginalElement, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AfterElementStart(content, aOriginalElement, aStr), NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
@@ -1145,8 +1145,8 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
 }
 
 bool
-nsXMLContentSerializer::CheckElementStart(Element*,
-                                          bool& aForceFormat,
+nsXMLContentSerializer::CheckElementStart(nsIContent * aContent,
+                                          bool & aForceFormat,
                                           nsAString& aStr,
                                           nsresult& aResult)
 {

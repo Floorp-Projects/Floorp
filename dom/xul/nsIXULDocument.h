@@ -13,12 +13,6 @@
 class nsIXULTemplateBuilder;
 class nsIContent;
 
-namespace mozilla {
-namespace dom {
-class Element;
-}
-}
-
 
 // 81ba4be5-6cc5-478a-9b08-b3e7ed524455
 #define NS_IXULDOCUMENT_IID \
@@ -40,8 +34,7 @@ public:
    * or 'ref' is aID. The nsCOMArray will be truncated and filled in with
    * nsIContent pointers.
    */
-  virtual void GetElementsForID(const nsAString& aID,
-                                nsCOMArray<mozilla::dom::Element>& aElements) = 0;
+  virtual void GetElementsForID(const nsAString& aID, nsCOMArray<nsIContent>& aElements) = 0;
 
   /**
    * Notify the XUL document that a subtree has been added

@@ -1386,7 +1386,7 @@ bool
 AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
 {
   while (mAttrIdx < mAttrCount) {
-    const nsAttrName* attr = mElement->GetAttrNameAt(mAttrIdx);
+    const nsAttrName* attr = mContent->GetAttrNameAt(mAttrIdx);
     mAttrIdx++;
     if (attr->NamespaceEquals(kNameSpaceID_None)) {
       nsAtom* attrAtom = attr->Atom();
@@ -1399,17 +1399,17 @@ AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
         continue; // No need to handle exposing as obj attribute here
 
       if ((attrFlags & ATTR_VALTOKEN) &&
-           !nsAccUtils::HasDefinedARIAToken(mElement, attrAtom))
+           !nsAccUtils::HasDefinedARIAToken(mContent, attrAtom))
         continue; // only expose token based attributes if they are defined
 
       if ((attrFlags & ATTR_BYPASSOBJ_IF_FALSE) &&
-          mElement->AttrValueIs(kNameSpaceID_None, attrAtom,
+          mContent->AttrValueIs(kNameSpaceID_None, attrAtom,
                                 nsGkAtoms::_false, eCaseMatters)) {
         continue; // only expose token based attribute if value is not 'false'.
       }
 
       nsAutoString value;
-      if (mElement->GetAttr(kNameSpaceID_None, attrAtom, value)) {
+      if (mContent->GetAttr(kNameSpaceID_None, attrAtom, value)) {
         aAttrName.Assign(Substring(attrStr, 5));
         aAttrValue.Assign(value);
         return true;

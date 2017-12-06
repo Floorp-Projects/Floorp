@@ -102,7 +102,7 @@ protected:
 
   void HandleEventForScrollbar(const nsAString& aType,
                                nsIContent* aTarget,
-                               dom::Element* aScrollbar,
+                               nsIContent* aScrollbar,
                                bool* aStoredHoverState);
 
   void SetIsActive(bool aNewActive);
@@ -125,12 +125,12 @@ protected:
   void UnregisterFromRefreshDriver();
 
   bool UpdateOpacity(TimeStamp aTime); // returns false if 'this' was destroyed
-  void HoveredScrollbar(dom::Element* aScrollbar);
+  void HoveredScrollbar(nsIContent* aScrollbar);
 
   nsRefreshDriver* GetRefreshDriver();
-  dom::Element* GetScrollbarContent(bool aVertical);
-  dom::Element* GetHorizontalScrollbar() { return GetScrollbarContent(false); }
-  dom::Element* GetVerticalScrollbar() { return GetScrollbarContent(true); }
+  nsIContent* GetScrollbarContent(bool aVertical);
+  nsIContent* GetHorizontalScrollbar() { return GetScrollbarContent(false); }
+  nsIContent* GetVerticalScrollbar() { return GetScrollbarContent(true); }
 
   const TimeDuration FadeDuration() {
     return TimeDuration::FromMilliseconds(mScrollbarFadeDuration);

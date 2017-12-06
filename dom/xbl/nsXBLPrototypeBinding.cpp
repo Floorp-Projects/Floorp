@@ -62,8 +62,8 @@ using namespace mozilla::dom;
 class nsXBLAttributeEntry {
 public:
   nsXBLAttributeEntry(nsAtom* aSrcAtom, nsAtom* aDstAtom,
-                      int32_t aDstNameSpace, Element* aElement)
-    : mElement(aElement),
+                      int32_t aDstNameSpace, nsIContent* aContent)
+    : mElement(aContent),
       mSrcAttribute(aSrcAtom),
       mDstAttribute(aDstAtom),
       mDstNameSpace(aDstNameSpace),
@@ -77,13 +77,13 @@ public:
   nsAtom* GetDstAttribute() { return mDstAttribute; }
   int32_t GetDstNameSpace() { return mDstNameSpace; }
 
-  Element* GetElement() { return mElement; }
+  nsIContent* GetElement() { return mElement; }
 
   nsXBLAttributeEntry* GetNext() { return mNext; }
   void SetNext(nsXBLAttributeEntry* aEntry) { mNext = aEntry; }
 
 protected:
-  Element* mElement;
+  nsIContent* mElement;
 
   RefPtr<nsAtom> mSrcAttribute;
   RefPtr<nsAtom> mDstAttribute;
@@ -113,7 +113,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
 nsresult
 nsXBLPrototypeBinding::Init(const nsACString& aID,
                             nsXBLDocumentInfo* aInfo,
-                            Element* aElement,
+                            nsIContent* aElement,
                             bool aFirstBinding)
 {
   nsresult rv = aInfo->DocumentURI()->Clone(getter_AddRefs(mBindingURI));
@@ -180,7 +180,8 @@ nsXBLPrototypeBinding::Trace(const TraceCallbacks& aCallbacks, void *aClosure) c
 void
 nsXBLPrototypeBinding::Initialize()
 {
-  if (Element* content = GetImmediateChild(nsGkAtoms::content)) {
+  nsIContent* content = GetImmediateChild(nsGkAtoms::content);
+  if (content) {
     ConstructAttributeTable(content);
   }
 }
@@ -206,7 +207,7 @@ nsXBLPrototypeBinding::SetBasePrototype(nsXBLPrototypeBinding* aBinding)
 }
 
 void
-nsXBLPrototypeBinding::SetBindingElement(Element* aElement)
+nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
 {
   mBinding = aElement;
   if (mBinding->AttrValueIs(kNameSpaceID_None, nsGkAtoms::inheritstyle,
@@ -322,7 +323,7 @@ void
 nsXBLPrototypeBinding::AttributeChanged(nsAtom* aAttribute,
                                         int32_t aNameSpaceID,
                                         bool aRemoveFlag,
-                                        Element* aChangedElement,
+                                        nsIContent* aChangedElement,
                                         nsIContent* aAnonymousContent,
                                         bool aNotify)
 {
@@ -338,12 +339,13 @@ nsXBLPrototypeBinding::AttributeChanged(nsAtom* aAttribute,
     return;
 
   // Iterate over the elements in the array.
-  RefPtr<Element> content = GetImmediateChild(nsGkAtoms::content);
+  nsCOMPtr<nsIContent> content = GetImmediateChild(nsGkAtoms::content);
   while (xblAttr) {
-    Element* element = xblAttr->GetElement();
+    nsIContent* element = xblAttr->GetElement();
 
-    RefPtr<Element> realElement =
-      LocateInstance(aChangedElement, content, aAnonymousContent, element);
+    nsCOMPtr<nsIContent> realElement = LocateInstance(aChangedElement, content,
+                                                      aAnonymousContent,
+                                                      element);
 
     if (realElement) {
       // Hold a strong reference here so that the atom doesn't go away during
@@ -434,14 +436,14 @@ nsXBLPrototypeBinding::ImplementsInterface(REFNSIID aIID) const
 
 // Internal helpers ///////////////////////////////////////////////////////////////////////
 
-Element*
+nsIContent*
 nsXBLPrototypeBinding::GetImmediateChild(nsAtom* aTag)
 {
   for (nsIContent* child = mBinding->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(aTag, kNameSpaceID_XBL)) {
-      return child->AsElement();
+      return child;
     }
   }
 
@@ -459,18 +461,18 @@ nsXBLPrototypeBinding::InitClass(const nsString& aClassName,
                                      aClassName, this, aClassObject, aNew);
 }
 
-Element*
-nsXBLPrototypeBinding::LocateInstance(Element* aBoundElement,
+nsIContent*
+nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
                                       nsIContent* aTemplRoot,
                                       nsIContent* aCopyRoot,
-                                      Element* aTemplChild)
+                                      nsIContent* aTemplChild)
 {
   // XXX We will get in trouble if the binding instantiation deviates from the template
   // in the prototype.
   if (aTemplChild == aTemplRoot || !aTemplChild)
     return nullptr;
 
-  Element* templParent = aTemplChild->GetParentElement();
+  nsIContent* templParent = aTemplChild->GetParent();
 
   // We may be disconnected from our parent during cycle collection.
   if (!templParent)
@@ -483,17 +485,11 @@ nsXBLPrototypeBinding::LocateInstance(Element* aBoundElement,
   if (!copyParent)
     return nullptr;
 
-  nsIContent* child = copyParent->GetChildAt(templParent->IndexOf(aTemplChild));
-  if (child && child->IsElement()) {
-    return child->AsElement();
-  }
-  return nullptr;
+  return copyParent->GetChildAt(templParent->IndexOf(aTemplChild));
 }
 
 void
-nsXBLPrototypeBinding::SetInitialAttributes(
-    Element* aBoundElement,
-    nsIContent* aAnonymousContent)
+nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent)
 {
   if (!mAttributeTable) {
     return;
@@ -532,9 +528,9 @@ nsXBLPrototypeBinding::SetInitialAttributes(
           while (curr) {
             nsAtom* dst = curr->GetDstAttribute();
             int32_t dstNs = curr->GetDstNameSpace();
-            Element* element = curr->GetElement();
+            nsIContent* element = curr->GetElement();
 
-            Element* realElement =
+            nsIContent* realElement =
               LocateInstance(aBoundElement, content,
                              aAnonymousContent, element);
 
@@ -599,7 +595,7 @@ nsXBLPrototypeBinding::EnsureAttributeTable()
 void
 nsXBLPrototypeBinding::AddToAttributeTable(int32_t aSourceNamespaceID, nsAtom* aSourceTag,
                                            int32_t aDestNamespaceID, nsAtom* aDestTag,
-                                           Element* aElement)
+                                           nsIContent* aContent)
 {
     InnerAttributeTable* attributesNS = mAttributeTable->Get(aSourceNamespaceID);
     if (!attributesNS) {
@@ -608,7 +604,7 @@ nsXBLPrototypeBinding::AddToAttributeTable(int32_t aSourceNamespaceID, nsAtom* a
     }
 
     nsXBLAttributeEntry* xblAttr =
-      new nsXBLAttributeEntry(aSourceTag, aDestTag, aDestNamespaceID, aElement);
+      new nsXBLAttributeEntry(aSourceTag, aDestTag, aDestNamespaceID, aContent);
 
     nsXBLAttributeEntry* entry = attributesNS->Get(aSourceTag);
     if (!entry) {
@@ -621,7 +617,7 @@ nsXBLPrototypeBinding::AddToAttributeTable(int32_t aSourceNamespaceID, nsAtom* a
 }
 
 void
-nsXBLPrototypeBinding::ConstructAttributeTable(Element* aElement)
+nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 {
   // Don't add entries for <children> elements, since those will get
   // removed from the DOM when we construct the insertion point table.
@@ -696,9 +692,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(Element* aElement)
   for (nsIContent* child = aElement->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsElement()) {
-      ConstructAttributeTable(child->AsElement());
-    }
+    ConstructAttributeTable(child);
   }
 }
 
@@ -1201,11 +1195,12 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   if (namespaceID == XBLBinding_Serialize_NoContent)
     return NS_OK;
 
+  nsCOMPtr<nsIContent> content;
+
   // If this is a text type, just read the string and return.
   if (namespaceID == XBLBinding_Serialize_TextNode ||
       namespaceID == XBLBinding_Serialize_CDATANode ||
       namespaceID == XBLBinding_Serialize_CommentNode) {
-    nsCOMPtr<nsIContent> content;
     switch (namespaceID) {
       case XBLBinding_Serialize_TextNode:
         content = new nsTextNode(aNim);
@@ -1249,7 +1244,6 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   rv = aStream->Read32(&attrCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<Element> element;
   // Create XUL prototype elements, or regular elements for other namespaces.
   // This needs to match the code in nsXBLContentSink::CreateElement.
 #ifdef MOZ_XUL
@@ -1299,12 +1293,17 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    nsCOMPtr<Element> result;
     nsresult rv =
-      nsXULElement::Create(prototype, aDocument, false, false, getter_AddRefs(element));
+      nsXULElement::Create(prototype, aDocument, false, false, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
-  } else {
+    content = result;
+  }
+  else {
 #endif
+    nsCOMPtr<Element> element;
     NS_NewElement(getter_AddRefs(element), nodeInfo.forget(), NOT_FROM_PARSER);
+    content = element;
 
     for (uint32_t i = 0; i < attrCount; i++) {
       rv = ReadNamespace(aStream, namespaceID);
@@ -1323,7 +1322,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
         prefixAtom = NS_Atomize(prefix);
 
       RefPtr<nsAtom> nameAtom = NS_Atomize(name);
-      element->SetAttr(namespaceID, nameAtom, prefixAtom, val, false);
+      content->SetAttr(namespaceID, nameAtom, prefixAtom, val, false);
     }
 
 #ifdef MOZ_XUL
@@ -1349,7 +1348,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
     RefPtr<nsAtom> destAtom = NS_Atomize(destAttribute);
 
     EnsureAttributeTable();
-    AddToAttributeTable(srcNamespaceID, srcAtom, destNamespaceID, destAtom, element);
+    AddToAttributeTable(srcNamespaceID, srcAtom, destNamespaceID, destAtom, content);
 
     rv = ReadNamespace(aStream, srcNamespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1366,11 +1365,11 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
 
     // Child may be null if this was a comment for example and can just be ignored.
     if (child) {
-      element->AppendChildTo(child, false);
+      content->AppendChildTo(child, false);
     }
   }
 
-  element.forget(aContent);
+  content.swap(*aContent);
   return NS_OK;
 }
 
@@ -1406,22 +1405,21 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
   }
 
   // Otherwise, this is an element.
-  Element* element = aNode->AsElement();
 
   // Write the namespace id followed by the tag name
-  rv = WriteNamespace(aStream, element->GetNameSpaceID());
+  rv = WriteNamespace(aStream, aNode->GetNameSpaceID());
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString prefixStr;
-  element->NodeInfo()->GetPrefix(prefixStr);
+  aNode->NodeInfo()->GetPrefix(prefixStr);
   rv = aStream->WriteWStringZ(prefixStr.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aStream->WriteWStringZ(nsDependentAtomString(element->NodeInfo()->NameAtom()).get());
+  rv = aStream->WriteWStringZ(nsDependentAtomString(aNode->NodeInfo()->NameAtom()).get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Write attributes
-  uint32_t count = element->GetAttrCount();
+  uint32_t count = aNode->GetAttrCount();
   rv = aStream->Write32(count);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1430,7 +1428,7 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
     // Write out the namespace id, the namespace prefix, the local tag name,
     // and the value, in that order.
 
-    const BorrowedAttrInfo attrInfo = element->GetAttrInfoAt(i);
+    const BorrowedAttrInfo attrInfo = aNode->GetAttrInfoAt(i);
     const nsAttrName* name = attrInfo.mName;
 
     // XXXndeakin don't write out xbl:inherits?
@@ -1464,7 +1462,7 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
         nsXBLAttributeEntry* entry = iter2.UserData();
 
         do {
-          if (entry->GetElement() == element) {
+          if (entry->GetElement() == aNode) {
             WriteNamespace(aStream, srcNamespace);
             aStream->WriteWStringZ(
               nsDependentAtomString(entry->GetSrcAttribute()).get());
@@ -1482,12 +1480,12 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally, write out the child nodes.
-  count = element->GetChildCount();
+  count = aNode->GetChildCount();
   rv = aStream->Write32(count);
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (i = 0; i < count; i++) {
-    rv = WriteContentNode(aStream, element->GetChildAt(i));
+    rv = WriteContentNode(aStream, aNode->GetChildAt(i));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -88,7 +88,7 @@ public:
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilters) override;
 
-  mozilla::dom::Element* GetPosterImage() { return mPosterImage; }
+  nsIContent* GetPosterImage() { return mPosterImage; }
 
   // Returns true if we should display the poster. Note that once we show
   // a video frame, the poster will never be displayed again.
@@ -129,10 +129,10 @@ protected:
   virtual ~nsVideoFrame();
 
   // Anonymous child which is bound via XBL to the video controls.
-  RefPtr<mozilla::dom::Element> mVideoControls;
+  nsCOMPtr<nsIContent> mVideoControls;
 
   // Anonymous child which is the image element of the poster frame.
-  RefPtr<mozilla::dom::Element> mPosterImage;
+  nsCOMPtr<nsIContent> mPosterImage;
 
   // Anonymous child which is the text track caption display div.
   nsCOMPtr<nsIContent> mCaptionDiv;

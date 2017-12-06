@@ -114,22 +114,20 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
   if (aContent->GetPrimaryFrame()->IsFocusable())
     return true;
 
-  if (aContent->IsElement()) {
-    uint32_t attrCount = aContent->AsElement()->GetAttrCount();
-    for (uint32_t attrIdx = 0; attrIdx < attrCount; attrIdx++) {
-      const nsAttrName* attr = aContent->AsElement()->GetAttrNameAt(attrIdx);
-      if (attr->NamespaceEquals(kNameSpaceID_None)) {
-        nsAtom* attrAtom = attr->Atom();
-        nsDependentAtomString attrStr(attrAtom);
-        if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
-          continue; // not ARIA
+  uint32_t attrCount = aContent->GetAttrCount();
+  for (uint32_t attrIdx = 0; attrIdx < attrCount; attrIdx++) {
+    const nsAttrName* attr = aContent->GetAttrNameAt(attrIdx);
+    if (attr->NamespaceEquals(kNameSpaceID_None)) {
+      nsAtom* attrAtom = attr->Atom();
+      nsDependentAtomString attrStr(attrAtom);
+      if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
+        continue; // not ARIA
 
-        // A global state or a property and in case of token defined.
-        uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
-        if ((attrFlags & ATTR_GLOBAL) && (!(attrFlags & ATTR_VALTOKEN) ||
-             nsAccUtils::HasDefinedARIAToken(aContent, attrAtom))) {
-          return true;
-        }
+      // A global state or a property and in case of token defined.
+      uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
+      if ((attrFlags & ATTR_GLOBAL) && (!(attrFlags & ATTR_VALTOKEN) ||
+           nsAccUtils::HasDefinedARIAToken(aContent, attrAtom))) {
+        return true;
       }
     }
   }

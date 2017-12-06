@@ -3254,14 +3254,14 @@ void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
 class nsSetAttrRunnable : public mozilla::Runnable
 {
 public:
-  nsSetAttrRunnable(mozilla::dom::Element* aElement, nsAtom* aAttrName,
+  nsSetAttrRunnable(nsIContent* aContent, nsAtom* aAttrName,
                     const nsAString& aValue);
-  nsSetAttrRunnable(mozilla::dom::Element* aElement, nsAtom* aAttrName,
+  nsSetAttrRunnable(nsIContent* aContent, nsAtom* aAttrName,
                     int32_t aValue);
 
   NS_DECL_NSIRUNNABLE
 
-  RefPtr<Element> mElement;
+  nsCOMPtr<nsIContent> mContent;
   RefPtr<nsAtom> mAttrName;
   nsAutoString mValue;
 };
@@ -3269,11 +3269,11 @@ public:
 class nsUnsetAttrRunnable : public mozilla::Runnable
 {
 public:
-  nsUnsetAttrRunnable(mozilla::dom::Element* aElement, nsAtom* aAttrName);
+  nsUnsetAttrRunnable(nsIContent* aContent, nsAtom* aAttrName);
 
   NS_DECL_NSIRUNNABLE
 
-  RefPtr<Element> mElement;
+  nsCOMPtr<nsIContent> mContent;
   RefPtr<nsAtom> mAttrName;
 };
 

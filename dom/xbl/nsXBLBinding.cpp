@@ -262,7 +262,7 @@ nsXBLBinding::UnbindAnonymousContent(nsIDocument* aDocument,
 }
 
 void
-nsXBLBinding::SetBoundElement(Element* aElement)
+nsXBLBinding::SetBoundElement(nsIContent* aElement)
 {
   mBoundElement = aElement;
   if (mNextBinding)
@@ -301,7 +301,7 @@ nsXBLBinding::GenerateAnonymousContent()
                "Someone forgot a script blocker");
 
   // Fetch the content element for this binding.
-  Element* content =
+  nsIContent* content =
     mPrototypeBinding->GetImmediateChild(nsGkAtoms::content);
 
   if (!content) {
@@ -417,12 +417,8 @@ nsXBLBinding::GenerateAnonymousContent()
     }
 
     // Conserve space by wiping the attributes off the clone.
-    //
-    // FIXME(emilio): It'd be nice to make `mContent` a `RefPtr<Element>`, but
-    // as of right now it can also be a ShadowRoot (we don't enter in this
-    // codepath though). Move Shadow DOM outside XBL and then fix that.
     if (mContent)
-      mContent->AsElement()->UnsetAttr(namespaceID, name, false);
+      mContent->UnsetAttr(namespaceID, name, false);
   }
 }
 
