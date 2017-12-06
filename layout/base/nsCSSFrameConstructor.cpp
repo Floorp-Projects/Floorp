@@ -5126,9 +5126,7 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
                                            nsIFrame*                aNewFrame,
                                            bool                     aAllowCounters)
 {
-  NS_PRECONDITION(mUpdateCount != 0,
-                  "Should be in an update while creating frames");
-
+  MOZ_ASSERT(mUpdateCount != 0, "Should be in an update while creating frames");
   MOZ_ASSERT(aNewFrame, "Null frame cannot be initialized");
 
   // Initialize the frame
@@ -7470,8 +7468,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
              !RestyleManager()->IsInStyleRefresh());
 
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
-  NS_PRECONDITION(mUpdateCount != 0,
-                  "Should be in an update while creating frames");
+  MOZ_ASSERT(mUpdateCount != 0, "Should be in an update while creating frames");
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
@@ -7874,8 +7871,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
              !RestyleManager()->IsInStyleRefresh());
 
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
-  NS_PRECONDITION(mUpdateCount != 0,
-                  "Should be in an update while creating frames");
+  MOZ_ASSERT(mUpdateCount != 0, "Should be in an update while creating frames");
 
   NS_PRECONDITION(aStartChild, "must always pass a child");
 
