@@ -773,8 +773,7 @@ ChannelMediaResource::RecreateChannel()
 void
 ChannelMediaResource::CacheClientNotifyDataReceived()
 {
-  SystemGroup::Dispatch(
-    TaskCategory::Other,
+  mCallback->AbstractMainThread()->Dispatch(
     NewRunnableMethod("MediaResourceCallback::NotifyDataArrived",
                       mCallback.get(),
                       &MediaResourceCallback::NotifyDataArrived));
