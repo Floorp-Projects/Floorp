@@ -7,7 +7,6 @@
 # This script uploads a symbol zip file passed on the commandline
 # to the Tecken symbol upload API at https://symbols.mozilla.org/ .
 #
-# Using this script requires you to have generated an authentication
 # token in the Tecken web interface. You must store the token in a Taskcluster
 # secret as the JSON blob `{"token": "<token>"}` and set the `SYMBOL_SECRET`
 # environment variable to the name of the Taskcluster secret.
@@ -17,10 +16,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
-import redo
-import requests
 import sys
-
+from mozbuild.base import MozbuildObject
 log = logging.getLogger('upload-symbols')
 log.setLevel(logging.INFO)
 
@@ -43,6 +40,12 @@ def print_error(r):
         ))
 
 def main():
+    config = MozbuildObject.from_environment()
+    config._activate_virtualenv()
+
+    import redo
+    import requests
+
     logging.basicConfig()
     parser = argparse.ArgumentParser(
         description='Upload symbols in ZIP using token from Taskcluster secrets service.')
