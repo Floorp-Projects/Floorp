@@ -767,7 +767,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "5713bbc4076f"
+        "revision": "35f3394c9a1b"
     }, 
     "kab": {
         "platforms": [
@@ -932,7 +932,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "2e7f02a899ba"
+        "revision": "51d9b1927224"
     }, 
     "mr": {
         "platforms": [
