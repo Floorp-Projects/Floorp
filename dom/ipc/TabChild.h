@@ -581,6 +581,8 @@ public:
   void MakeHidden();
   bool IsVisible();
 
+  void OnDocShellActivated(bool aIsActive);
+
   nsIContentChild* Manager() const { return mManager; }
 
   static inline TabChild*
@@ -776,20 +778,20 @@ public:
                                   const ScrollableLayerGuid& aGuid,
                                   const uint64_t& aInputBlockId);
 
-  static bool HasVisibleTabs()
+  static bool HasActiveTabs()
   {
-    return sVisibleTabs && !sVisibleTabs->IsEmpty();
+    return sActiveTabs && !sActiveTabs->IsEmpty();
   }
 
-  // Returns the set of TabChilds that are currently rendering layers. There
-  // can be multiple TabChilds in this state if Firefox has multiple windows
-  // open or is warming tabs up. There can also be zero TabChilds in this
-  // state. Note that this function should only be called if HasVisibleTabs()
-  // returns true.
-  static const nsTHashtable<nsPtrHashKey<TabChild>>& GetVisibleTabs()
+  // Returns the set of TabChilds that are currently in the foreground. There
+  // can be multiple foreground TabChilds if Firefox has multiple windows
+  // open. There can also be zero foreground TabChilds if the foreground tab is
+  // in a different content process. Note that this function should only be
+  // called if HasActiveTabs() returns true.
+  static const nsTHashtable<nsPtrHashKey<TabChild>>& GetActiveTabs()
   {
-    MOZ_ASSERT(HasVisibleTabs());
-    return *sVisibleTabs;
+    MOZ_ASSERT(HasActiveTabs());
+    return *sActiveTabs;
   }
 
 protected:
@@ -989,11 +991,11 @@ private:
 
   WindowsHandle mWidgetNativeData;
 
-  // This state is used to keep track of the current visible tabs (the ones rendering
-  // layers). There may be more than one if there are multiple browser windows open, or
-  // tabs are being warmed up. There may be none if this process does not host any
-  // visible or warming tabs.
-  static nsTHashtable<nsPtrHashKey<TabChild>>* sVisibleTabs;
+  // This state is used to keep track of the current active tabs (the ones in
+  // the foreground). There may be more than one if there are multiple browser
+  // windows open. There may be none if this process does not host any
+  // foreground tabs.
+  static nsTHashtable<nsPtrHashKey<TabChild>>* sActiveTabs;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
