@@ -24,7 +24,6 @@ ReplaceMalloc('dmd')
 
 DEFINES['MOZ_NO_MOZALLOC'] = True
 DEFINES['IMPL_MFBT'] = True
-DEFINES['XPCOM_GLUE'] = True
 
 if CONFIG['MOZ_OPTIMIZE']:
     DEFINES['MOZ_OPTIMIZE'] = True
