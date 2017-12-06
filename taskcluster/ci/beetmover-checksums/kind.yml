@@ -17,7 +17,6 @@ only-for-attributes:
 
 job-template:
    shipping-phase: promote
-   shipping-product: firefox
    notifications:
       completed:
          subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
