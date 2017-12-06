@@ -97,7 +97,7 @@ public:
   }
 
   // Returns true if the resource is a live stream.
-  bool IsLiveStream() { return GetLength() == -1; }
+  virtual bool IsLiveStream() const { return false; }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
