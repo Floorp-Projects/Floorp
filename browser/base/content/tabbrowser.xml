@@ -4438,7 +4438,8 @@
 
               let tab = this.requestedTab;
               let browser = tab.linkedBrowser;
-              let tabIsLoaded = browser.renderingLayers;
+              let tabIsLoaded = !browser.isRemoteBrowser ||
+                                browser.frameLoader.tabParent.hasPresented;
 
               if (!this.minimizedOrFullyOccluded) {
                 this.log("Initial tab is loaded?: " + tabIsLoaded);
@@ -4860,13 +4861,6 @@
             // Fires when the layers become available for a tab.
             onLayersReady(browser) {
               let tab = this.tabbrowser.getTabForBrowser(browser);
-              if (!tab) {
-                // We probably got a layer update from a tab that got before
-                // the switcher was created, or for browser that's not being
-                // tracked by the async tab switcher (like the preloaded about:newtab).
-                return;
-              }
-
               this.logState(`onLayersReady(${tab._tPos}, ${browser.isRemoteBrowser})`);
 
               this.assert(this.getTabState(tab) == this.STATE_LOADING ||
