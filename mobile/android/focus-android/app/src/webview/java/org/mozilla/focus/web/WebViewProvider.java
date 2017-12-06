@@ -14,6 +14,7 @@ import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
@@ -48,6 +49,9 @@ public class WebViewProvider {
      * This function must be called before WebView.loadUrl to avoid erasing current session data.
      */
     public static void performNewBrowserSessionCleanup() {
+        // If the app is closed in certain ways, WebView.cleanup will not get called and we don't clear cookies.
+        CookieManager.getInstance().removeAllCookies(null);
+
         // We run this on the main thread to guarantee it occurs before loadUrl so we don't erase current session data.
         final StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
 
