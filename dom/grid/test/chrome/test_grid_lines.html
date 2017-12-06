@@ -47,8 +47,9 @@ function runTests() {
       // test column line width
       is(grid.cols.lines[1].breadth, 10, "Grid column line 2 width is as expected.");
 
-      // test column line number
-      is(grid.cols.lines[3].number, 4, "Grid column line 4 number is as expected.");
+      // test column line numbers, positive and negative
+      is(grid.cols.lines[3].number, 4, "Grid column line 4 positive number is as expected.");
+      is(grid.cols.lines[3].negativeNumber, -2, "Grid column line 4 negative number is as expected.");
 
       // test column line names
       is(grid.cols.lines[0].names.length, 0, "Grid column line 1 has no names.");

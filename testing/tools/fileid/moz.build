@@ -4,7 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoProgram('fileid', linkage=None, msvcrt='static')
+if CONFIG['OS_ARCH'] == 'WINNT':
+    Program('fileid')
+    USE_STATIC_LIBS = True
+    SOURCES += ['win_fileid.cpp']
+    OS_LIBS += ['dbghelp']
+    NO_PGO = True
+else:
+    # Technically, it's not a GeckoProgram (thus linkage=None), but it needs
+    # mozglue because of the breakpad code it uses being compiled for gecko
+    # and requiring infallible malloc.
+    GeckoProgram('fileid', linkage=None)
 
 if CONFIG['OS_ARCH'] == 'Linux':
     USE_LIBS += [
@@ -28,7 +38,3 @@ if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':
         '/toolkit/crashreporter/google-breakpad/src',
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    SOURCES += ['win_fileid.cpp']
-    OS_LIBS += ['dbghelp']
-    NO_PGO = True

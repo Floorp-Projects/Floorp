@@ -33,8 +33,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
-#define MOZALLOC_HAVE_XMALLOC
-
 #if defined(MOZ_ALWAYS_INLINE_EVEN_DEBUG)
 #  define MOZALLOC_INLINE MOZ_ALWAYS_INLINE_EVEN_DEBUG
 #elif defined(HAVE_FORCEINLINE)
@@ -99,24 +97,8 @@ MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
     MOZ_ALLOCATOR;
 #endif /* if defined(HAVE_STRNDUP) */
 
-
-#if defined(HAVE_POSIX_MEMALIGN)
-MFBT_API MOZ_MUST_USE
-int moz_xposix_memalign(void **ptr, size_t alignment, size_t size);
-#endif /* if defined(HAVE_POSIX_MEMALIGN) */
-
-
-#if defined(HAVE_MEMALIGN)
 MFBT_API void* moz_xmemalign(size_t boundary, size_t size)
     MOZ_ALLOCATOR;
-#endif /* if defined(HAVE_MEMALIGN) */
-
-
-#if defined(HAVE_VALLOC)
-MFBT_API void* moz_xvalloc(size_t size)
-    MOZ_ALLOCATOR;
-#endif /* if defined(HAVE_VALLOC) */
-
 
 MOZ_END_EXTERN_C
 

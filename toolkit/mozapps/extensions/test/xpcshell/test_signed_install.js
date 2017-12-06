@@ -10,6 +10,7 @@ const ADDONS = {
     badid: "signed_bootstrap_badid_2.xpi",
     preliminary: "preliminary_bootstrap_2.xpi",
     signed: "signed_bootstrap_2.xpi",
+    sha256Signed: "signed_bootstrap_sha256_1.xpi",
     privileged: "privileged_bootstrap_2.xpi",
   },
 };
@@ -217,6 +218,12 @@ add_task(async function() {
 // Try to install a signed add-on
 add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.signed);
+  await test_install_working(file, AddonManager.SIGNEDSTATE_SIGNED);
+});
+
+// Try to install an add-on signed with SHA-256
+add_task(async function() {
+  let file = do_get_file(DATA + ADDONS.bootstrap.sha256Signed);
   await test_install_working(file, AddonManager.SIGNEDSTATE_SIGNED);
 });
 

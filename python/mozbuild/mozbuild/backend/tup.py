@@ -511,8 +511,8 @@ class TupOnly(CommonBackend, PartialBackend):
             outputs=[output],
         )
 
-    def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources,
-                             unified_ipdl_cppsrcs_mapping):
+    def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources, sorted_nonstatic_ipdl_sources,
+                             sorted_static_ipdl_sources, unified_ipdl_cppsrcs_mapping):
         # Preferably we wouldn't have to import ipdl, but we need to parse the
         # ast in order to determine the namespaces since they are used in the
         # header output paths.

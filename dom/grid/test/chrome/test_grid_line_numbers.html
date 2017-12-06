@@ -18,12 +18,12 @@ body {
   color: #fff;
 }
 .repeatColumns {
-  width: 600px;
+  width: 400px;
   grid-auto-columns: 50px;
   grid-template-columns: repeat(auto-fit, 100px);
 }
 .repeatRows {
-  height: 600px;
+  height: 400px;
   grid-auto-rows: 50px;
   grid-template-rows: repeat(auto-fit, 100px);
 }
@@ -38,6 +38,7 @@ function testLines(elementName, lines, expectedValues) {
   is(lines.count, expectedValues.count, elementName + " has expected number of lines.");
   for (let i = 0; i < lines.length; i++) {
     is(lines[i].number, expectedValues[i].number, elementName + " line index " + i + " has expected number.");
+    is(lines[i].negativeNumber, expectedValues[i].negativeNumber, elementName + " line index " + i + " has expected negativeNumber.");
   }
 }
 
@@ -49,32 +50,53 @@ function runTests() {
   grid = document.getElementById("gridWithColumns").getGridFragments()[0];
   lines = grid.cols.lines;
   expectedValues = [
-    { "number": 0 },
-    { "number": 0 },
-    { "number": 1 },
-    { "number": 2 },
-    { "number": 3 },
-    { "number": 4 },
-    { "number": 5 },
-    { "number": 6 },
-    { "number": 7 },
-    { "number": 8 },
+    { "number": 0,
+      "negativeNumber": -9 },
+    { "number": 0,
+      "negativeNumber": -8 },
+    { "number": 0,
+      "negativeNumber": -7 },
+    { "number": 0,
+      "negativeNumber": -6 },
+    { "number": 1,
+      "negativeNumber": -5 },
+    { "number": 2,
+      "negativeNumber": -4 },
+    { "number": 3,
+      "negativeNumber": -3 },
+    { "number": 4,
+      "negativeNumber": -2 },
+    { "number": 5,
+      "negativeNumber": -1 },
+    { "number": 6,
+      "negativeNumber": 0 },
   ];
   testLines("gridWithColumns", lines, expectedValues);
+
 
   grid = document.getElementById("gridWithRows").getGridFragments()[0];
   lines = grid.rows.lines;
   expectedValues = [
-    { "number": 0 },
-    { "number": 0 },
-    { "number": 1 },
-    { "number": 2 },
-    { "number": 3 },
-    { "number": 4 },
-    { "number": 5 },
-    { "number": 6 },
-    { "number": 7 },
-    { "number": 8 },
+    { "number": 0,
+      "negativeNumber": -9 },
+    { "number": 0,
+      "negativeNumber": -8 },
+    { "number": 0,
+      "negativeNumber": -7 },
+    { "number": 0,
+      "negativeNumber": -6 },
+    { "number": 1,
+      "negativeNumber": -5 },
+    { "number": 2,
+      "negativeNumber": -4 },
+    { "number": 3,
+      "negativeNumber": -3 },
+    { "number": 4,
+      "negativeNumber": -2 },
+    { "number": 5,
+      "negativeNumber": -1 },
+    { "number": 6,
+      "negativeNumber": 0 },
   ];
   testLines("gridWithRows", lines, expectedValues);
 
@@ -86,15 +108,14 @@ function runTests() {
 
 <div id="gridWithColumns" class="wrapper repeatColumns">
 <div style="grid-column: -9">A</div>
-<div style="grid-column: 4">B</div>
-<div style="grid-column: 7">C</div>
+<div style="grid-column: 2">B</div>
+<div style="grid-column: 5">C</div>
 </div>
 
 <div id="gridWithRows" class="wrapper repeatRows">
-<div style="grid-row: span 3 / 2">A</div>
-<div style="grid-row: 4">B</div>
-<div style="grid-row: 5">C</div>
-<div style="grid-row: span 2 / 8">D</div>
+<div style="grid-row: span 4 / 1">A</div>
+<div style="grid-row: 3">B</div>
+<div style="grid-row: 4 / span 2">C</div>
 </div>
 
 </body>

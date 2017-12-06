@@ -8,13 +8,7 @@
 #include "mozilla/Types.h"
 #include <windows.h>
 
-// Building with USE_STATIC_LIBS = True sets -MT instead of -MD. -MT sets _MT,
-// while -MD sets _MT and _DLL.
-#if defined(_MT) && !defined(_DLL)
-#define MOZ_STATIC_RUNTIME
-#endif
-
-#if defined(MOZ_MEMORY) && !defined(MOZ_STATIC_RUNTIME)
+#if defined(MOZ_MEMORY)
 // mozalloc.cpp is part of the same library as mozmemory, thus MOZ_MEMORY_IMPL
 // is needed.
 #define MOZ_MEMORY_IMPL
