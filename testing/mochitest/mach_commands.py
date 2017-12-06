@@ -68,13 +68,6 @@ test path(s):
 Please check spelling and make sure the named tests exist.
 '''.lstrip()
 
-NOW_RUNNING = '''
-######
-### Now running mochitest-{}.
-######
-'''
-
-
 SUPPORTED_APPS = ['firefox', 'android']
 
 parser = None
@@ -409,10 +402,6 @@ class MachCommands(MachCommandBase):
         overall = None
         for (flavor, subsuite), tests in sorted(suites.items()):
             fobj = ALL_FLAVORS[flavor]
-            msg = fobj['aliases'][0]
-            if subsuite:
-                msg = '{} with subsuite {}'.format(msg, subsuite)
-            print(NOW_RUNNING.format(msg))
 
             harness_args = kwargs.copy()
             harness_args['subsuite'] = subsuite
