@@ -5,6 +5,7 @@
 path:browser/locales/l10n-changesets.json
 path:mobile/locales/l10n-changesets.json
 path:browser/config/version_display.txt
+path:browser/config/version.txt
 
 # Lots of random files in here are read. Just pull in the whole thing.
 path:build/
