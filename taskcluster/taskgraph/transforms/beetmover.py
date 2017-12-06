@@ -146,6 +146,12 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
         "host/bin/mar",
         "host/bin/mbsdiff",
     ],
+    'linux64-source': [
+    ],
+    'linux64-devedition-source': [
+    ],
+    'linux64-fennec-source': [
+    ],
     'android-x86-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'android-aarch64-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'android-api-16-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
@@ -207,6 +213,18 @@ UPSTREAM_ARTIFACT_SIGNED_PATHS = {
     'linux-devedition-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
         "target.tar.bz2",
         "target.tar.bz2.asc",
+    ],
+    'linux64-source': [
+        "SOURCE",
+        "SOURCE.asc",
+    ],
+    'linux64-devedition-source': [
+        "SOURCE",
+        "SOURCE.asc",
+    ],
+    'linux64-fennec-source': [
+        "SOURCE",
+        "SOURCE.asc",
     ],
     'android-x86-nightly': ["en-US/target.apk"],
     'android-aarch64-nightly': ["en-US/target.apk"],
