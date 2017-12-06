@@ -2227,7 +2227,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             return true;
         }
 
-        if (stub->state().mode() == ICState::Mode::Megamorphic) {
+        if (stub->scriptedStubCount() >= ICCall_Fallback::MAX_SCRIPTED_STUBS) {
             // Create a Call_AnyScripted stub.
             JitSpew(JitSpew_BaselineIC, "  Generating Call_AnyScripted stub (cons=%s, spread=%s)",
                     constructing ? "yes" : "no", isSpread ? "yes" : "no");
@@ -2335,9 +2335,9 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                 return true;
         }
 
-        if (stub->state().mode() == ICState::Mode::Megamorphic) {
+        if (stub->nativeStubCount() >= ICCall_Fallback::MAX_NATIVE_STUBS) {
             JitSpew(JitSpew_BaselineIC,
-                    "  Megamorphic Call_Native stubs. TODO: add Call_AnyNative!");
+                    "  Too many Call_Native stubs. TODO: add Call_AnyNative!");
             return true;
         }
 
@@ -2518,16 +2518,18 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
                     SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
             }
         }
+        if (!handled)
+            stub->state().trackNotAttached();
+    }
 
-        // Try attaching a regular call stub, but only if the CacheIR attempt didn't add
-        // any stubs.
-        if (!handled) {
-            bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, pc);
-            if (!TryAttachCallStub(cx, stub, script, pc, op, argc, vp, constructing, false,
-                                   createSingleton, &handled))
-            {
-                return false;
-            }
+    // Try attaching a regular call stub, but only if the CacheIR attempt didn't add
+    // any stubs.
+    if (!handled) {
+        bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, pc);
+        if (!TryAttachCallStub(cx, stub, script, pc, op, argc, vp, constructing, false,
+                               createSingleton, &handled))
+        {
+            return false;
         }
     }
 
@@ -2571,12 +2573,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     if (!stub->addMonitorStubForValue(cx, frame, types, res))
         return false;
 
-    // Try to transition again in case we called this IC recursively.
-    if (stub->state().maybeTransition())
-        stub->discardStubs(cx);
-    canAttachStub = stub->state().canAttachStub();
-
-    if (!handled && canAttachStub) {
+    if (!handled) {
         // If 'callee' is a potential Call_ConstStringSplit, try to attach an
         // optimized ConstStringSplit stub. Note that vp[0] now holds the return value
         // instead of the callee, so we pass the callee as well.
@@ -2584,11 +2581,8 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
             return false;
     }
 
-    if (!handled) {
+    if (!handled)
         stub->noteUnoptimizableCall();
-        if (canAttachStub)
-            stub->state().trackNotAttached();
-    }
     return true;
 }
 
