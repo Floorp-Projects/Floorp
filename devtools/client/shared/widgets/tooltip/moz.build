@@ -16,5 +16,4 @@ DevToolsModules(
     'Tooltip.js',
     'TooltipToggle.js',
     'VariableContentHelper.js',
-    'VariableTooltipHelper.js'
 )
