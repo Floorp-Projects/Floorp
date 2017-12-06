@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 #include "nsIContentPolicy.idl"
 
+interface nsICacheInfoChannel;
 interface nsIChannel;
 interface nsIConsoleReportCollector;
 interface nsIInputStream;
@@ -75,6 +76,9 @@ interface nsIInterceptedChannel : nsISupports
      *   when the body is complete.  For a nullptr body this may be
      *   synchronously on the current thread.  Otherwise it will be invoked
      *   asynchronously on the current thread.
+     * - A cacheInfoChannel may be optionally passed. If the body stream is
+     *   from alternative data cache, this cacheInfoChannel provides needed
+     *   cache information.
      * - The caller may optionally pass a spec for a URL that this response
      *   originates from; an empty string will cause the original
      *   intercepted request's URL to be used instead.
@@ -85,6 +89,7 @@ interface nsIInterceptedChannel : nsISupports
      */
     void startSynthesizedResponse(in nsIInputStream body,
                                   in nsIInterceptedBodyCallback callback,
+                                  in nsICacheInfoChannel channel,
                                   in ACString finalURLSpec,
                                   in bool responseRedirected);
 

@@ -9,13 +9,26 @@
 namespace mozilla {
 namespace dom {
 
+WebAuthnTransactionChild::WebAuthnTransactionChild(WebAuthnManagerBase* aManager)
+  : mManager(aManager)
+{
+  MOZ_ASSERT(aManager);
+
+  // Retain a reference so the task object isn't deleted without IPDL's
+  // knowledge. The reference will be released by
+  // mozilla::ipc::BackgroundChildImpl::DeallocPWebAuthnTransactionChild.
+  NS_ADDREF_THIS();
+}
+
 mozilla::ipc::IPCResult
 WebAuthnTransactionChild::RecvConfirmRegister(const uint64_t& aTransactionId,
                                               nsTArray<uint8_t>&& aRegBuffer)
 {
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
-  MOZ_ASSERT(mgr);
-  mgr->FinishMakeCredential(aTransactionId, aRegBuffer);
+  if (NS_WARN_IF(!mManager)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  mManager->FinishMakeCredential(aTransactionId, aRegBuffer);
   return IPC_OK();
 }
 
@@ -24,9 +37,11 @@ WebAuthnTransactionChild::RecvConfirmSign(const uint64_t& aTransactionId,
                                           nsTArray<uint8_t>&& aCredentialId,
                                           nsTArray<uint8_t>&& aBuffer)
 {
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
-  MOZ_ASSERT(mgr);
-  mgr->FinishGetAssertion(aTransactionId, aCredentialId, aBuffer);
+  if (NS_WARN_IF(!mManager)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  mManager->FinishGetAssertion(aTransactionId, aCredentialId, aBuffer);
   return IPC_OK();
 }
 
@@ -34,20 +49,35 @@ mozilla::ipc::IPCResult
 WebAuthnTransactionChild::RecvAbort(const uint64_t& aTransactionId,
                                     const nsresult& aError)
 {
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
-  MOZ_ASSERT(mgr);
-  mgr->RequestAborted(aTransactionId, aError);
+  if (NS_WARN_IF(!mManager)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  mManager->RequestAborted(aTransactionId, aError);
   return IPC_OK();
 }
 
 void
 WebAuthnTransactionChild::ActorDestroy(ActorDestroyReason why)
 {
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
-  // This could happen after the WebAuthnManager has been shut down.
-  if (mgr) {
-    mgr->ActorDestroyed();
+  // Called by either a __delete__ message from the parent, or when the
+  // channel disconnects. Clear out the child actor reference to be sure.
+  if (mManager) {
+    mManager->ActorDestroyed();
+    mManager = nullptr;
   }
+}
+
+void
+WebAuthnTransactionChild::Disconnect()
+{
+  mManager = nullptr;
+
+  // The WebAuthnManager released us, but we're going to be held alive by the
+  // IPC layer. The parent will explicitly destroy us via Send__delete__(),
+  // after receiving the DestroyMe message.
+
+  SendDestroyMe();
 }
 
 }

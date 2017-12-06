@@ -85,6 +85,13 @@ interface nsICacheInfoChannel : nsISupports
   void preferAlternativeDataType(in ACString type);
 
   /**
+   * Get the preferred alternative data type set by preferAlternativeDataType().
+   * This attribute stands for the desired data type instead of the type of the
+   * information retrieved from the network stack.
+   */
+  readonly attribute ACString preferredAlternativeDataType;
+
+  /**
    * Holds the type of the alternative data representation that the channel
    * is returning.
    * Is empty string if no alternative data representation was requested, or

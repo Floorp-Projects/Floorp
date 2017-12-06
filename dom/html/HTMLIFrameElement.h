@@ -46,7 +46,7 @@ public:
   uint32_t GetSandboxFlags();
 
   // Web IDL binding methods
-  void GetSrc(nsString& aSrc, nsIPrincipal&) const
+  void GetSrc(nsString& aSrc) const
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }

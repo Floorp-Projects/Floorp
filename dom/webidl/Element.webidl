@@ -221,7 +221,7 @@ partial interface Element {
 
 // http://domparsing.spec.whatwg.org/#extensions-to-the-element-interface
 partial interface Element {
-  [CEReactions, NeedsSubjectPrincipal, Pure,SetterThrows,TreatNullAs=EmptyString]
+  [CEReactions, SetterNeedsSubjectPrincipal, Pure, SetterThrows, TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
   [CEReactions, Pure,SetterThrows,TreatNullAs=EmptyString]
   attribute DOMString outerHTML;
