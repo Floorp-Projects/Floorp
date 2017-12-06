@@ -33,6 +33,10 @@ DIRS += [
     'worker',
 ]
 
+# Only ship test helpers in local builds
+if not CONFIG['MOZILLA_OFFICIAL']:
+    DIRS += ['test-helpers']
+
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
