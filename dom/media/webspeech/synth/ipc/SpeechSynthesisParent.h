@@ -82,22 +82,22 @@ public:
   SpeechTaskParent(float aVolume, const nsAString& aUtterance, bool aIsChrome)
     : nsSpeechTask(aVolume, aUtterance, aIsChrome) {}
 
-  nsresult DispatchStartImpl(const nsAString& aUri) override;
+  nsresult DispatchStartImpl(const nsAString& aUri);
 
-  nsresult DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex) override;
+  nsresult DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  nsresult DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex) override;
+  nsresult DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  nsresult DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex) override;
+  nsresult DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex) override;
+  nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex);
 
   nsresult DispatchBoundaryImpl(const nsAString& aName,
                                 float aElapsedTime, uint32_t aCharIndex,
-                                uint32_t aCharLength, uint8_t argc) override;
+                                uint32_t aCharLength, uint8_t argc);
 
   nsresult DispatchMarkImpl(const nsAString& aName,
-                            float aElapsedTime, uint32_t aCharIndex) override;
+                            float aElapsedTime, uint32_t aCharIndex);
 
 private:
   SpeechSynthesisRequestParent* mActor;

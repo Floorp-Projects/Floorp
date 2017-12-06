@@ -85,7 +85,13 @@ public:
 
   explicit SpeechTaskChild(SpeechSynthesisUtterance* aUtterance, bool aIsChrome);
 
-  NS_IMETHOD Setup(nsISpeechTaskCallback* aCallback) override;
+  NS_IMETHOD Setup(nsISpeechTaskCallback* aCallback,
+                   uint32_t aChannels, uint32_t aRate, uint8_t argc) override;
+
+  NS_IMETHOD SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLandmarks,
+                       JSContext* aCx) override;
+
+  NS_IMETHOD SendAudioNative(int16_t* aData, uint32_t aDataLen) override;
 
   void Pause() override;
 
