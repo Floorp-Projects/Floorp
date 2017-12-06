@@ -128,6 +128,7 @@ class OutputHandler(object):
     def __init__(self, log, utilityPath, symbolsPath=None):
         self.stack_fixer_function = get_stack_fixer_function(utilityPath, symbolsPath)
         self.log = log
+        self.proc_name = None
 
     def __call__(self, line):
         # need to return processed messages to appease remoteautomation.py
@@ -151,4 +152,5 @@ class OutputHandler(object):
     def verbatim(self, line):
         if self.stack_fixer_function:
             line = self.stack_fixer_function(line)
-        self.log.process_output(threading.current_thread().name, line)
+        name = self.proc_name or threading.current_thread().name
+        self.log.process_output(name, line)
