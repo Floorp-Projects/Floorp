@@ -97,6 +97,13 @@ public:
   const ClientInfo&
   Info() const;
 
+  // Trigger a synchronous IPC ping to the parent process to confirm that
+  // the ClientSource actor has been created.  This should only be used
+  // by the WorkerPrivate startup code to deal with a ClientHandle::Control()
+  // call racing on the main thread.  Do not call this in other circumstances!
+  void
+  WorkerSyncPing(mozilla::dom::workers::WorkerPrivate* aWorkerPrivate);
+
   // Synchronously mark the ClientSource as controlled by the given service
   // worker.  This can happen as a result of a remote operation or directly
   // by local code.  For example, if a client's initial network load is

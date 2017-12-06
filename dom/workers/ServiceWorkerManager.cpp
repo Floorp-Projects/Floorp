@@ -37,6 +37,8 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ClientHandle.h"
+#include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
@@ -2324,7 +2326,7 @@ ServiceWorkerManager::MaybeCheckNavigationUpdate(nsIDocument* aDoc)
   }
 }
 
-void
+RefPtr<GenericPromise>
 ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
                                                 nsIDocument* aDoc,
                                                 const nsAString& aDocumentId)
@@ -2337,12 +2339,34 @@ ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* a
   MOZ_DIAGNOSTIC_ASSERT(storageAllowed == nsContentUtils::StorageAccess::eAllow);
 #endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
+  RefPtr<GenericPromise> ref = GenericPromise::CreateAndResolve(true, __func__);
+
   aRegistration->StartControllingADocument();
   mControlledDocuments.Put(aDoc, aRegistration);
   if (!aDocumentId.IsEmpty()) {
     aDoc->SetId(aDocumentId);
   }
+
+  // Mark the document's ClientSource as controlled using the ClientHandle
+  // interface.  While we could get at the ClientSource directly from the
+  // document here, our goal is to move ServiceWorkerManager to a separate
+  // process.  Using the ClientHandle supports this remote operation.
+  ServiceWorkerInfo* activeWorker = aRegistration->GetActive();
+  nsPIDOMWindowInner* innerWindow = aDoc->GetInnerWindow();
+  if (activeWorker && innerWindow) {
+    Maybe<ClientInfo> clientInfo = innerWindow->GetClientInfo();
+    if (clientInfo.isSome()) {
+      RefPtr<ClientHandle> clientHandle =
+        ClientManager::CreateHandle(clientInfo.ref(),
+                                    SystemGroup::EventTargetFor(TaskCategory::Other));
+      if (clientHandle) {
+        ref = Move(clientHandle->Control(activeWorker->Descriptor()));
+      }
+    }
+  }
+
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
+  return Move(ref);
 }
 
 void
@@ -2651,6 +2675,48 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
     if (!serviceWorker) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
+    }
+
+    // If there is a reserved client it should be marked as controlled before
+    // the FetchEvent is dispatched.
+    nsCOMPtr<nsILoadInfo> loadInfo = internalChannel->GetLoadInfo();
+    if (loadInfo) {
+      Maybe<ClientInfo> clientInfo = loadInfo->GetReservedClientInfo();
+
+      // Also override the initial about:blank controller since the real
+      // network load may be intercepted by a different service worker.  If
+      // the intial about:blank has a controller here its simply been
+      // inherited from its parent.
+      if (clientInfo.isNothing()) {
+        clientInfo = loadInfo->GetInitialClientInfo();
+
+        // TODO: We need to handle the case where the initial about:blank is
+        //       controlled, but the final document load is not.  Right now
+        //       the spec does not really say what to do.  There currently
+        //       is no way for the controller to be cleared from a client in
+        //       the spec or our implementation.  We may want to force a
+        //       new inner window to be created instead of reusing the
+        //       initial about:blank global.  See bug 1419620 and the spec
+        //       issue here: https://github.com/w3c/ServiceWorker/issues/1232
+      }
+
+      if (clientInfo.isSome()) {
+        // First, attempt to mark the reserved client controlled directly.  This
+        // will update the controlled status in the ClientManagerService in the
+        // parent.  It will also eventually propagate back to the ClientSource.
+        RefPtr<ClientHandle> clientHandle =
+          ClientManager::CreateHandle(clientInfo.ref(),
+                                      SystemGroup::EventTargetFor(TaskCategory::Other));
+        if (clientHandle) {
+          clientHandle->Control(serviceWorker->Descriptor());
+        }
+      }
+
+      // But we also note the reserved state on the LoadInfo.  This allows the
+      // ClientSource to be updated immediately after the nsIChannel starts.
+      // This is necessary to have the correct controller in place for immediate
+      // follow-on requests.
+      loadInfo->SetController(serviceWorker->Descriptor());
     }
 
     AddNavigationInterception(serviceWorker->Scope(), aChannel);

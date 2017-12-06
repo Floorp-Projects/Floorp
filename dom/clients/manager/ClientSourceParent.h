@@ -31,6 +31,9 @@ class ClientSourceParent final : public PClientSourceParent
 
   // PClientSourceParent
   mozilla::ipc::IPCResult
+  RecvWorkerSyncPing() override;
+
+  mozilla::ipc::IPCResult
   RecvTeardown() override;
 
   mozilla::ipc::IPCResult

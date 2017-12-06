@@ -20,6 +20,7 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::ipc::BackgroundParent;
 using mozilla::ipc::IPCResult;
 using mozilla::ipc::PrincipalInfo;
@@ -80,6 +81,15 @@ ClientSourceParent::KillInvalidChild()
   // we start the actor destruction immediately above.
   nsCOMPtr<nsIRunnable> r = new KillContentParentRunnable(Move(process));
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+}
+
+mozilla::ipc::IPCResult
+ClientSourceParent::RecvWorkerSyncPing()
+{
+  AssertIsOnBackgroundThread();
+  // Do nothing here.  This is purely a sync message allowing the child to
+  // confirm that the actor has been created on the parent process.
+  return IPC_OK();
 }
 
 IPCResult
