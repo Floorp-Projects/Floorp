@@ -41,6 +41,8 @@ class nsPrintJob final : public nsIObserver
                        , public nsSupportsWeakReference
 {
 public:
+  nsPrintJob() = default;
+
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
@@ -73,8 +75,6 @@ public:
     eDocTitleDefBlank,
     eDocTitleDefURLDoc
   };
-
-  nsPrintJob();
 
   void Destroy();
   void DestroyPrintingData();
@@ -189,10 +189,6 @@ public:
   {
     return mIsDoingPrintPreview;
   }
-  void SetIsCreatingPrintPreview(bool aIsCreatingPrintPreview)
-  {
-    mIsCreatingPrintPreview = aIsCreatingPrintPreview;
-  }
   bool GetIsCreatingPrintPreview()
   {
     return mIsCreatingPrintPreview;
@@ -249,14 +245,11 @@ private:
   void PageDone(nsresult aResult);
 
 
-  bool mIsCreatingPrintPreview;
-  bool mIsDoingPrinting;
-  bool mIsDoingPrintPreview;
-  bool mProgressDialogIsShown;
-
+  nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
-  nsWeakPtr               mContainer;
-  float                   mScreenDPI;
+
+  nsWeakPtr mContainer;
+  WeakFrame mPageSeqFrame;
 
   // We are the primary owner of our nsPrintData member vars.  These vars
   // are refcounted so that functions (e.g. nsPrintData methods) can create
@@ -265,19 +258,22 @@ private:
   // member-data.
   RefPtr<nsPrintData> mPrt;
 
-  nsPagePrintTimer*       mPagePrintTimer;
-  WeakFrame               mPageSeqFrame;
-
   // Print Preview
   RefPtr<nsPrintData> mPrtPreview;
   RefPtr<nsPrintData> mOldPrtPreview;
 
-  nsCOMPtr<nsIDocument>   mDocument;
+  nsPagePrintTimer* mPagePrintTimer = nullptr;
 
-  int32_t mLoadCounter;
-  bool mDidLoadDataForPrinting;
-  bool mIsDestroying;
-  bool mDisallowSelectionPrint;
+  float mScreenDPI = 115.0f;
+  int32_t mLoadCounter = 0;
+
+  bool mIsCreatingPrintPreview = false;
+  bool mIsDoingPrinting = false;
+  bool mIsDoingPrintPreview = false;
+  bool mProgressDialogIsShown = false;
+  bool mDidLoadDataForPrinting = false;
+  bool mIsDestroying = false;
+  bool mDisallowSelectionPrint = false;
 };
 
 #endif // nsPrintJob_h
