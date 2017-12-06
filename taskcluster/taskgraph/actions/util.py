@@ -48,15 +48,15 @@ def find_hg_revision_pushlog_id(parameters, revision):
 
 
 def find_existing_tasks_from_previous_kinds(full_task_graph, previous_graph_ids,
-                                            previous_graph_kinds):
-    """Given a list of previous decision/action taskIds and kinds to replace
+                                            rebuild_kinds):
+    """Given a list of previous decision/action taskIds and kinds to ignore
     from the previous graphs, return a dictionary of labels-to-taskids to use
     as ``existing_tasks`` in the optimization step."""
     existing_tasks = {}
     for previous_graph_id in previous_graph_ids:
         label_to_taskid = get_artifact(previous_graph_id, "public/label-to-taskid.json")
         kind_labels = set(t.label for t in full_task_graph.tasks.itervalues()
-                          if t.attributes['kind'] in previous_graph_kinds)
+                          if t.attributes['kind'] not in rebuild_kinds)
         for label in set(label_to_taskid.keys()).intersection(kind_labels):
             existing_tasks[label] = label_to_taskid[label]
     return existing_tasks
