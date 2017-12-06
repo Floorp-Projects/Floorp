@@ -54,6 +54,7 @@ static MOZ_ALWAYS_INLINE bool MOZ_AssertAssignmentTest(bool exprResult) {
 #else
 
 #define MOZ_CHECK_ASSERT_ASSIGNMENT(expr) (!!(expr))
+#define MOZ_KnownLive(expr) (expr)
 
 #endif /* MOZ_CLANG_PLUGIN */
 #endif /* StaticAnalysisFunctions_h */

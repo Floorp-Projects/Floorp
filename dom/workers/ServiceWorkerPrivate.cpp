@@ -9,6 +9,7 @@
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerWindowClient.h"
 #include "nsContentUtils.h"
+#include "nsICacheInfoChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINamed.h"
@@ -1607,6 +1608,18 @@ private:
     internalReq->SetBody(mUploadStream, -1);
     // For Telemetry, note that this Request object was created by a Fetch event.
     internalReq->SetCreatedByFetchEvent();
+
+    nsCOMPtr<nsIChannel> channel;
+    nsresult rv = mInterceptedChannel->GetChannel(getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(rv, false);
+
+    nsAutoCString alternativeDataType;
+    nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(channel);
+    if (cic &&
+        NS_SUCCEEDED(cic->GetPreferredAlternativeDataType(alternativeDataType)) &&
+        !alternativeDataType.IsEmpty()) {
+      internalReq->SetPreferredAlternativeDataType(alternativeDataType);
+    }
 
     nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(globalObj.GetAsSupports());
     if (NS_WARN_IF(!global)) {

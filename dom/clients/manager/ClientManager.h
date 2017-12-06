@@ -18,6 +18,7 @@ class PrincipalInfo;
 } // namespace ipc
 namespace dom {
 
+class ClientGetInfoAndStateArgs;
 class ClientHandle;
 class ClientInfo;
 class ClientManagerChild;
@@ -37,6 +38,7 @@ class WorkerPrivate;
 class ClientManager final : public ClientThing<ClientManagerChild>
 {
   friend class ClientManagerChild;
+  friend class ClientSource;
 
   ClientManager();
   ~ClientManager();
@@ -91,6 +93,10 @@ public:
   static already_AddRefed<ClientHandle>
   CreateHandle(const ClientInfo& aClientInfo,
                nsISerialEventTarget* aSerialEventTarget);
+
+  static RefPtr<ClientOpPromise>
+  GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs,
+                  nsISerialEventTarget* aSerialEventTarget);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManager)
 };

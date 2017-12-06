@@ -177,7 +177,10 @@ protected:
 
    nsCOMPtr<nsITabParent> mPrimaryTabParent;
 private:
-   nsresult GetPrimaryTabParentSize(int32_t* aWidth, int32_t* aHeight);
+   // GetPrimaryTabParentSize is called from xpidl methods and we don't have a
+   // good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
+   // refcounted args other than "this", and the "this" uses seem ok.
+   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult GetPrimaryTabParentSize(int32_t* aWidth, int32_t* aHeight);
    nsresult GetPrimaryContentShellSize(int32_t* aWidth, int32_t* aHeight);
    nsresult SetPrimaryTabParentSize(int32_t aWidth, int32_t aHeight);
 };

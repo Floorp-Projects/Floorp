@@ -26,8 +26,9 @@ class ScaledFontMac : public ScaledFontBase
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac, override)
   ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+                bool aOwnsFont = false,
                 const Color &aFontSmoothingBackgroundColor = Color(),
-                bool aUseFontSmoothing = true, bool aOwnsFont = false);
+                bool aUseFontSmoothing = true, bool aApplySyntheticBold = false);
   ~ScaledFontMac();
 
   FontType GetType() const override { return FontType::MAC; }
@@ -56,6 +57,7 @@ private:
   CTFontRef mCTFont; // only created if CTFontDrawGlyphs is available, otherwise null
   Color mFontSmoothingBackgroundColor;
   bool mUseFontSmoothing;
+  bool mApplySyntheticBold;
 
   typedef void (CTFontDrawGlyphsFuncT)(CTFontRef,
                                        const CGGlyph[], const CGPoint[],

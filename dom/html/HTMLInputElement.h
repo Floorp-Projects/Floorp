@@ -568,7 +568,7 @@ public:
     SetHTMLAttr(nsGkAtoms::formtarget, aValue, aRv);
   }
 
-  uint32_t Height();
+  MOZ_CAN_RUN_SCRIPT uint32_t Height();
 
   void SetHeight(uint32_t aValue, ErrorResult& aRv)
   {
@@ -714,7 +714,7 @@ public:
     SetUnsignedIntAttr(nsGkAtoms::size, aValue, DEFAULT_COLS, aRv);
   }
 
-  void GetSrc(nsAString& aValue, nsIPrincipal&)
+  void GetSrc(nsAString& aValue)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aValue);
   }

@@ -7,6 +7,7 @@
 #define _mozilla_dom_ClientManagerOpParent_h
 
 #include "mozilla/dom/PClientManagerOpParent.h"
+#include "ClientOpPromise.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,6 +17,11 @@ class ClientManagerService;
 class ClientManagerOpParent final : public PClientManagerOpParent
 {
   RefPtr<ClientManagerService> mService;
+  MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
+
+  template <typename Method, typename... Args>
+  void
+  DoServiceOp(Method aMethod, Args&&... aArgs);
 
   // PClientManagerOpParent interface
   void
