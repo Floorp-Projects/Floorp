@@ -221,8 +221,9 @@ bool GetMACAddressFromIterator(io_iterator_t primary_interface_iterator,
 
   bzero(buffer, buffer_size);
   base::mac::ScopedIOObject<io_object_t> primary_interface;
-  while (primary_interface.reset(IOIteratorNext(primary_interface_iterator)),
-         primary_interface) {
+  for (primary_interface.reset(IOIteratorNext(primary_interface_iterator));
+       primary_interface;
+       primary_interface.reset(IOIteratorNext(primary_interface_iterator))) {
     io_object_t primary_interface_parent;
     kern_return_t kern_result = IORegistryEntryGetParentEntry(
         primary_interface, kIOServicePlane, &primary_interface_parent);
