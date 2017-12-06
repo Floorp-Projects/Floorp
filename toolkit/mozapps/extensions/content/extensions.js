@@ -2050,7 +2050,11 @@ var gHeader = {
       if (query.length == 0)
         return;
 
-      gViewController.loadView("addons://search/" + encodeURIComponent(query));
+      let url = AddonRepository.getSearchURL(query);
+
+      let browser = getBrowserElement();
+      let chromewin = browser.ownerGlobal;
+      chromewin.openLinkIn(url, "tab", {fromChrome: true});
     });
   },
 
