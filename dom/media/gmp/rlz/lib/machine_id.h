@@ -23,7 +23,7 @@ bool GetMachineId(std::string* machine_id);
 bool GetRawMachineId(std::vector<uint8_t>* data, int* more_data);
 
 namespace testing {
-bool GetMachineIdImpl(const base::string16& sid_string,
+bool GetMachineIdImpl(const std::vector<uint8_t>& sid_bytes,
                       int volume_id,
                       std::string* machine_id);
 }  // namespace testing
