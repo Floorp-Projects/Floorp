@@ -631,7 +631,7 @@ NS_IMPL_ISUPPORTS_INHERITED(
 class NotifyManyVisitsObservers : public Runnable
 {
 public:
-  explicit NotifyManyVisitsObservers(VisitData aPlace)
+  explicit NotifyManyVisitsObservers(const VisitData& aPlace)
     : Runnable("places::NotifyManyVisitsObservers")
     , mPlace(aPlace)
     , mHistory(History::GetService())
@@ -649,7 +649,7 @@ public:
                        nsCOMPtr<nsIObserverService>& aObsService,
                        PRTime aNow,
                        nsTArray<URIParams>& aNotifyVisitedURIs,
-                       VisitData aPlace) {
+                       const VisitData& aPlace) {
     nsCOMPtr<nsIURI> uri;
     MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aPlace.spec));
     if (!uri) {
