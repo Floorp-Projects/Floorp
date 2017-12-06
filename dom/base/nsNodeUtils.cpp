@@ -53,6 +53,7 @@ using mozilla::AutoJSContext;
   nsINode* node = content_;                                       \
   NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");        \
   doc->BindingManager()->func_ params_;                           \
+  nsINode* last;                                                  \
   do {                                                            \
     nsINode::nsSlots* slots = node->GetExistingSlots();           \
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
@@ -60,13 +61,18 @@ using mozilla::AutoJSContext;
         slots->mMutationObservers, nsIMutationObserver, 1,        \
         func_, params_);                                          \
     }                                                             \
-    ShadowRoot* shadow = ShadowRoot::FromNode(node);              \
-    if (shadow) {                                                 \
+    last = node;                                                  \
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {        \
       node = shadow->GetHost();                                   \
     } else {                                                      \
       node = node->GetParentNode();                               \
     }                                                             \
   } while (node);                                                 \
+  if (last == doc) {                                              \
+    if (nsIPresShell* shell = doc->GetObservingShell()) {         \
+      shell->func_ params_;                                       \
+    }                                                             \
+  }                                                               \
   if (needsEnterLeave) {                                          \
     nsDOMMutationObserver::LeaveMutationHandling();               \
   }                                                               \
