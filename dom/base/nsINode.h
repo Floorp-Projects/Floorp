@@ -1341,12 +1341,6 @@ public:
   virtual bool IsHTMLContentElement() const { return false; }
 
   void GetTextContent(nsAString& aTextContent,
-                      nsIPrincipal& aSubjectPrincipal,
-                      mozilla::OOMReporter& aError)
-  {
-    GetTextContentInternal(aTextContent, aError);
-  }
-  void GetTextContent(nsAString& aTextContent,
                       mozilla::OOMReporter& aError)
   {
     GetTextContentInternal(aTextContent, aError);

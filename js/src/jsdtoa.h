@@ -36,12 +36,9 @@ DestroyDtoaState(DtoaState* state);
  * unparseable character in s00, and zero is returned.
  *
  * On overflow, this function returns infinity and does not indicate an error.
- *
- * *err is set to zero on success; it's set to JS_DTOA_ENOMEM on memory failure.
  */
-#define JS_DTOA_ENOMEM 2
 double
-js_strtod_harder(DtoaState* state, const char* s00, char** se, int* err);
+js_strtod_harder(DtoaState* state, const char* s00, char** se);
 
 /*
  * Modes for converting floating-point numbers to strings.

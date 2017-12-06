@@ -1430,7 +1430,7 @@ static const VMFunction ThrowUninitializedThisInfo =
     FunctionInfo<ThrowUninitializedThisFn>(BaselineThrowUninitializedThis,
                                            "BaselineThrowUninitializedThis");
 
-typedef bool (*ThrowInitializedThisFn)(JSContext*, BaselineFrame* frame);
+typedef bool (*ThrowInitializedThisFn)(JSContext*);
 static const VMFunction ThrowInitializedThisInfo =
     FunctionInfo<ThrowInitializedThisFn>(BaselineThrowInitializedThis,
                                          "BaselineThrowInitializedThis");
@@ -1464,13 +1464,13 @@ BaselineCompiler::emitCheckThis(ValueOperand val, bool reinit)
 
     prepareVMCall();
 
-    masm.loadBaselineFramePtr(BaselineFrameReg, val.scratchReg());
-    pushArg(val.scratchReg());
-
     if (reinit) {
         if (!callVM(ThrowInitializedThisInfo))
             return false;
     } else {
+        masm.loadBaselineFramePtr(BaselineFrameReg, val.scratchReg());
+        pushArg(val.scratchReg());
+
         if (!callVM(ThrowUninitializedThisInfo))
             return false;
     }
@@ -4013,7 +4013,7 @@ BaselineCompiler::emit_JSOP_RETRVAL()
     return emitReturn();
 }
 
-typedef bool (*ToIdFn)(JSContext*, HandleScript, jsbytecode*, HandleValue, MutableHandleValue);
+typedef bool (*ToIdFn)(JSContext*, HandleValue, MutableHandleValue);
 static const VMFunction ToIdInfo = FunctionInfo<ToIdFn>(js::ToIdOperation, "ToIdOperation");
 
 bool
@@ -4032,8 +4032,6 @@ BaselineCompiler::emit_JSOP_TOID()
     prepareVMCall();
 
     pushArg(R0);
-    pushArg(ImmPtr(pc));
-    pushArg(ImmGCPtr(script));
 
     if (!callVM(ToIdInfo))
         return false;

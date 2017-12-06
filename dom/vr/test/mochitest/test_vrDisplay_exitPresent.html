@@ -6,6 +6,7 @@
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="VRSimulationDriver.js"></script>
     <script src="runVRTest.js"></script>
   </head>
   <body>
@@ -17,23 +18,29 @@
         });
       }
       var initVRPresentation = function(content) {
-            return content.navigator.getVRDisplays().then((displays) => {
+        return VRSimulationDriver.AttachWebVRDisplay().then(() => {
+          return content.navigator.getVRDisplays().then((displays) => {
             content.vrDisplay = displays[0];
             content.canvas = content.document.createElement("canvas");
             content.canvas.id = "vrCanvas";
             return content.vrDisplay.requestPresent([{source:content.canvas}]);
           });
+        });
       }
       function startTest() {
         var ifr1 = document.getElementById("iframe1");
         var ifr2 = document.getElementById("iframe2");
         var frame1 = ifr1.contentWindow;
         var frame2 = ifr2.contentWindow;
-        initVRPresentation(frame1).then(() => {
-          promise_test((test) => {
-            return promise_rejects(test, null, testExitPresentOnOtherIframe(frame2));
-          }, "We cannot exist VR presentation established by another content, this promise is expected to be rejected.")
-        });
+        promise_test((test) => {
+          return VRSimulationDriver.AttachWebVRDisplay().then(() => {
+            return initVRPresentation(frame1).then(() => {
+              promise_test((test) => {
+                return promise_rejects(test, null, testExitPresentOnOtherIframe(frame2));
+              }, "We cannot exit VR presentation established by another content, this promise is expected to be rejected.")
+            });
+          });
+        }, "Finish running WebVR exitPresent test.");
       }
       runVRTest(startTest);
     </script>

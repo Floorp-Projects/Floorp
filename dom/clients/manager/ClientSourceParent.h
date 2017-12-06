@@ -7,7 +7,9 @@
 #define _mozilla_dom_ClientSourceParent_h
 
 #include "ClientInfo.h"
+#include "ClientOpPromise.h"
 #include "mozilla/dom/PClientSourceParent.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 
 namespace mozilla {
 namespace dom {
@@ -18,6 +20,7 @@ class ClientManagerService;
 class ClientSourceParent final : public PClientSourceParent
 {
   ClientInfo mClientInfo;
+  Maybe<ServiceWorkerDescriptor> mController;
   RefPtr<ClientManagerService> mService;
   nsTArray<ClientHandleParent*> mHandleList;
   bool mExecutionReady;
@@ -27,6 +30,9 @@ class ClientSourceParent final : public PClientSourceParent
   KillInvalidChild();
 
   // PClientSourceParent
+  mozilla::ipc::IPCResult
+  RecvWorkerSyncPing() override;
+
   mozilla::ipc::IPCResult
   RecvTeardown() override;
 
@@ -61,11 +67,17 @@ public:
   bool
   IsFrozen() const;
 
+  bool
+  ExecutionReady() const;
+
   void
   AttachHandle(ClientHandleParent* aClientSource);
 
   void
   DetachHandle(ClientHandleParent* aClientSource);
+
+  RefPtr<ClientOpPromise>
+  StartOp(const ClientOpConstructorArgs& aArgs);
 };
 
 } // namespace dom

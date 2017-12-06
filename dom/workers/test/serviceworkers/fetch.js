@@ -17,6 +17,8 @@ addEventListener('fetch', function(event) {
     event.respondWith(fetch('hello.html', { integrity: 'abc' }));
   } else if (event.request.url.includes('fake.html')) {
     event.respondWith(fetch('hello.html'));
+  } else if (event.request.url.includes("file_js_cache")) {
+    event.respondWith(fetch(event.request));
   } else if (event.request.url.includes('redirect')) {
     let param = get_query_params(event.request.url);
     let url = param['url'];

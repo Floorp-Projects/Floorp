@@ -185,6 +185,48 @@ KnowsCompositor::KnowsCompositor()
 KnowsCompositor::~KnowsCompositor()
 {}
 
+KnowsCompositorMediaProxy::KnowsCompositorMediaProxy(const TextureFactoryIdentifier& aIdentifier)
+{
+  mTextureFactoryIdentifier = aIdentifier;
+  // overwrite mSerial's value set by the parent class because we use the same serial
+  // as the KnowsCompositor we are proxying.
+  mThreadSafeAllocator = ImageBridgeChild::GetSingleton();
+  mSyncObject = mThreadSafeAllocator->GetSyncObject();
+}
+
+KnowsCompositorMediaProxy::~KnowsCompositorMediaProxy()
+{}
+
+TextureForwarder*
+KnowsCompositorMediaProxy::GetTextureForwarder()
+{
+  return mThreadSafeAllocator->GetTextureForwarder();
+}
+
+LayersIPCActor*
+KnowsCompositorMediaProxy::GetLayersIPCActor()
+{
+  return mThreadSafeAllocator->GetLayersIPCActor();
+}
+
+ActiveResourceTracker*
+KnowsCompositorMediaProxy::GetActiveResourceTracker()
+{
+  return mThreadSafeAllocator->GetActiveResourceTracker();
+}
+
+void
+KnowsCompositorMediaProxy::SyncWithCompositor()
+{
+  mThreadSafeAllocator->SyncWithCompositor();
+}
+
+RefPtr<KnowsCompositor>
+ShadowLayerForwarder::GetForMedia()
+{
+  return MakeAndAddRef<KnowsCompositorMediaProxy>(GetTextureFactoryIdentifier());
+}
+
 ShadowLayerForwarder::ShadowLayerForwarder(ClientLayerManager* aClientLayerManager)
  : mClientLayerManager(aClientLayerManager)
  , mMessageLoop(MessageLoop::current())

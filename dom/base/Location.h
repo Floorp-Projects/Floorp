@@ -69,7 +69,6 @@ public:
   }
 
   void SetHref(const nsAString& aHref,
-               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError);
 
   void GetOrigin(nsAString& aOrigin,

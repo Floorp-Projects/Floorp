@@ -20,7 +20,7 @@ interface Location {
   [Throws, NeedsSubjectPrincipal]
   stringifier;
 
-  [Throws, CrossOriginWritable, NeedsSubjectPrincipal]
+  [Throws, CrossOriginWritable, GetterNeedsSubjectPrincipal]
            attribute USVString href;
   [Throws, NeedsSubjectPrincipal]
   readonly attribute USVString origin;

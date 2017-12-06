@@ -445,7 +445,7 @@ InterpreterStack::pushInvokeFrame(JSContext* cx, const CallArgs& args, MaybeCons
         return nullptr;
 
     fp->mark_ = mark;
-    fp->initCallFrame(cx, nullptr, nullptr, nullptr, *fun, script, argv, args.length(),
+    fp->initCallFrame(nullptr, nullptr, nullptr, *fun, script, argv, args.length(),
                       constructing);
     return fp;
 }

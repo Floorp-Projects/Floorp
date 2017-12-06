@@ -56,7 +56,7 @@ InterpreterFrame::extensibleLexicalEnvironment() const
 }
 
 inline void
-InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecode* prevpc,
+InterpreterFrame::initCallFrame(InterpreterFrame* prev, jsbytecode* prevpc,
                                 Value* prevsp, JSFunction& callee, JSScript* script, Value* argv,
                                 uint32_t nactual, MaybeConstruct constructing)
 {
@@ -310,7 +310,7 @@ InterpreterStack::pushInlineFrame(JSContext* cx, InterpreterRegs& regs, const Ca
     fp->mark_ = mark;
 
     /* Initialize frame, locals, regs. */
-    fp->initCallFrame(cx, prev, prevpc, prevsp, *callee, script, argv, args.length(),
+    fp->initCallFrame(prev, prevpc, prevsp, *callee, script, argv, args.length(),
                       constructing);
 
     regs.prepareToRun(*fp, script);
@@ -352,7 +352,7 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
 
     InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(argv + nformal + constructing);
     fp->mark_ = mark;
-    fp->initCallFrame(cx, prev, prevpc, prevsp, *callee, script, argv, 0, constructing);
+    fp->initCallFrame(prev, prevpc, prevsp, *callee, script, argv, 0, constructing);
     fp->resumeGeneratorFrame(envChain);
 
     regs.prepareToRun(*fp, script);
