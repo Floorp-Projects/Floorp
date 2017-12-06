@@ -278,23 +278,23 @@
                      key="viewBookmarksSidebarKb"
                      observes="viewBookmarksSidebar"
                      oncommand="SidebarUI.show('viewBookmarksSidebar');">
-         <observes element="viewBookmarksSidebar" attribute="checked"/>
-       </toolbarbutton>
+        <observes element="viewBookmarksSidebar" attribute="checked"/>
+      </toolbarbutton>
       <toolbarbutton id="sidebar-switcher-history"
                      label="&historyButton.label;"
                      class="subviewbutton subviewbutton-iconic"
                      key="key_gotoHistory"
                      observes="viewHistorySidebar"
                      oncommand="SidebarUI.show('viewHistorySidebar');">
-         <observes element="viewHistorySidebar" attribute="checked"/>
-       </toolbarbutton>
+        <observes element="viewHistorySidebar" attribute="checked"/>
+      </toolbarbutton>
       <toolbarbutton id="sidebar-switcher-tabs"
                      label="&syncedTabs.sidebar.label;"
                      class="subviewbutton subviewbutton-iconic"
                      observes="viewTabsSidebar"
                      oncommand="SidebarUI.show('viewTabsSidebar');">
-         <observes element="viewTabsSidebar" attribute="checked"/>
-       </toolbarbutton>
+        <observes element="viewTabsSidebar" attribute="checked"/>
+      </toolbarbutton>
       <toolbarseparator/>
       <vbox id="sidebar-extensions"></vbox>
       <toolbarseparator/>
