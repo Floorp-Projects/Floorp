@@ -1,0 +1,92 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.reverse_chunk_deps:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - beetmover-checksums
+   - beetmover-repackage
+
+jobs:
+   firefox-ship:
+      name: post-beetmover-dummy
+      description: Dummy task to deal with max_dependencies
+      run-on-projects: []
+      shipping-phase: ship
+      shipping-product: firefox
+      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: "ubuntu:16.10"
+         max-run-time: 600
+         command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"
+
+   firefox-promote:
+      name: post-beetmover-dummy
+      description: Dummy task to deal with max_dependencies
+      run-on-projects: []
+      shipping-phase: promote
+      shipping-product: firefox
+      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: "ubuntu:16.10"
+         max-run-time: 600
+         command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"
+      treeherder:
+         symbol: Rel(BMD)
+         platform: linux/opt
+         kind: test
+         tier: 1
+
+   devedition-ship:
+      name: post-beetmover-dummy
+      description: Dummy task to deal with max_dependencies
+      run-on-projects: []
+      shipping-phase: ship
+      shipping-product: devedition
+      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: "ubuntu:16.10"
+         max-run-time: 600
+         command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"
+
+   devedition-promote:
+      name: post-beetmover-dummy
+      description: Dummy task to deal with max_dependencies
+      run-on-projects: []
+      shipping-phase: promote
+      shipping-product: devedition
+      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: "ubuntu:16.10"
+         max-run-time: 600
+         command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"
+      treeherder:
+         symbol: Rel(BMD)
+         platform: linux-devedition/opt
+         kind: test
+         tier: 1
