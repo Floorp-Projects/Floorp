@@ -1,19 +1,21 @@
+import os
+
 config = {
-    'default_actions': [
-        'clobber',
-        'clone-tools',
-        'checkout-sources',
-        'setup-mock',
-        'package-source',
-        'generate-source-signing-manifest',
-    ],
-    'stage_platform': 'source',  # Not used, but required by the script
-    'buildbot_json_path': 'buildprops.json',
-    'app_ini_path': 'FAKE',  # Not used, but required by the script
-    'env': {
-        'MOZ_OBJDIR': '%(abs_obj_dir)s',
-        'TINDERBOX_OUTPUT': '1',
-        'LC_ALL': 'C',
-    },
-    'mozconfig_variant': 'source',
+    "tmpl": """The binaries in this directory are made available to you under the Mozilla Public License v.2
+(MPL 2):
+http://www.mozilla.org/MPL/2.0/
+
+The source code used to build these binaries is specified by the following unique URL:
+{repo}/rev/{revision}
+
+    zip: {repo}/archive/{revision}.zip
+    tar.gz: {repo}/archive/{revision}.tar.gz
+    tar.bz2: {repo}/archive/{revision}.tar.bz2
+
+Instructions for downloading and building this source code can be found here:
+https://developer.mozilla.org/en/Mozilla_Source_Code_%28Mercurial%29
+""",
+    "out_path": "artifacts/SOURCE",
+    "repo": os.environ["GECKO_HEAD_REPOSITORY"],
+    "revision": os.environ["GECKO_HEAD_REV"],
 }

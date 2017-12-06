@@ -12,6 +12,9 @@ LABELS_WHICH_SHOULD_SIGN_CI_BUILDS = (
     'build-win32/debug', 'build-win32/opt', 'build-win32/pgo',
     'build-win64/debug', 'build-win64/opt', 'build-win64/pgo',
     'build-win32-devedition/opt', 'build-win64-devedition/opt',
+    'release-source-linux64-source/opt',
+    'release-source-linux64-fennec-source/opt',
+    'release-source-linux64-devedition-source/opt',
 )
 
 
