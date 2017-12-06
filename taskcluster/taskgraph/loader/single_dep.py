@@ -54,4 +54,11 @@ def loader(kind, path, config, params, loaded_tasks):
         if job_template:
             job.update(copy.deepcopy(job_template))
 
+        # copy shipping_product from upstream
+        product = task.attributes.get(
+            'shipping_product', task.task.get('shipping-product')
+        )
+        if product:
+            job.setdefault('shipping-product', product)
+
         yield job

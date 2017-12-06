@@ -26,7 +26,9 @@ RELEASE_PROMOTION_PROJECTS = {
     'try',
 } | RELEASE_PROJECTS
 
-_OPTIONAL_ATTRIBUTES = ('nightly', 'signed', 'l10n_chunk')
+_OPTIONAL_ATTRIBUTES = (
+    'nightly', 'signed', 'l10n_chunk', 'shipping_product', 'shipping_phase'
+)
 
 
 def attrmatch(attributes, **kwargs):
