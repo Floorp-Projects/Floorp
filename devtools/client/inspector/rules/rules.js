@@ -25,7 +25,6 @@ const {
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_LOCATION_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE,
-  VIEW_NODE_VARIABLE_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
@@ -338,19 +337,6 @@ CssRuleView.prototype = {
         textProperty: prop,
         toggleActive: getShapeToggleActive(node),
         point: getShapePoint(node)
-      };
-    } else if ((classes.contains("ruleview-variable") ||
-                classes.contains("ruleview-unmatched-variable")) && prop) {
-      type = VIEW_NODE_VARIABLE_TYPE;
-      value = {
-        property: getPropertyNameAndValue(node).name,
-        value: node.textContent,
-        enabled: prop.enabled,
-        overridden: prop.overridden,
-        pseudoElement: prop.rule.pseudoElement,
-        sheetHref: prop.rule.domRule.href,
-        textProperty: prop,
-        variable: node.dataset.variable
       };
     } else if (classes.contains("theme-link") &&
                !classes.contains("ruleview-rule-source") && prop) {

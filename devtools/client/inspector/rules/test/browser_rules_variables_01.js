@@ -17,25 +17,19 @@ add_task(function* () {
   "and double variable. Formats tested: var(x, constant), var(x, var(y))");
 
   let unsetColor = getRuleViewProperty(view, "div", "color").valueSpan
-    .querySelector(".ruleview-unmatched-variable");
+    .querySelector(".ruleview-variable-unmatched");
   let setColor = unsetColor.previousElementSibling;
   is(unsetColor.textContent, " red", "red is unmatched in color");
   is(setColor.textContent, "--color", "--color is not set correctly");
-  is(setColor.dataset.variable, "--color = chartreuse",
-                                "--color's dataset.variable is not set correctly");
-  let previewTooltip = yield assertShowPreviewTooltip(view, setColor);
-  yield assertTooltipHiddenOnMouseOut(previewTooltip, setColor);
+  is(setColor.title, "--color = chartreuse", "--color's title is not set correctly");
 
   let unsetVar = getRuleViewProperty(view, "div", "background-color").valueSpan
-    .querySelector(".ruleview-unmatched-variable");
+    .querySelector(".ruleview-variable-unmatched");
   let setVar = unsetVar.nextElementSibling;
   let setVarName = setVar.firstElementChild.firstElementChild;
   is(unsetVar.textContent, "--not-set",
      "--not-set is unmatched in background-color");
   is(setVar.textContent, " var(--bg)", "var(--bg) parsed incorrectly");
   is(setVarName.textContent, "--bg", "--bg is not set correctly");
-  is(setVarName.dataset.variable, "--bg = seagreen",
-                                  "--bg's dataset.variable is not set correctly");
-  previewTooltip = yield assertShowPreviewTooltip(view, setVarName);
-  yield assertTooltipHiddenOnMouseOut(previewTooltip, setVarName);
+  is(setVarName.title, "--bg = seagreen", "--bg's title is not set correctly");
 });
