@@ -383,7 +383,7 @@ void nsMenuX::MenuClosed()
       mConstructed = false;
 
     if (mContent->IsElement()) {
-      mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
+      mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
     }
 
     nsEventStatus status = nsEventStatus_eIgnore;
