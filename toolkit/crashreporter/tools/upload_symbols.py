@@ -25,7 +25,7 @@ except ImportError:
     # Allow standalone use of this script, for use in TaskCluster
     from os import environ as substs
 
-url = 'https://crash-stats.mozilla.com/symbols/upload'
+url = 'https://symbols.mozilla.org/upload/'
 # Allow overwriting of the upload url with an environmental variable
 if 'SOCORRO_SYMBOL_UPLOAD_URL' in os.environ:
     url = os.environ['SOCORRO_SYMBOL_UPLOAD_URL']
