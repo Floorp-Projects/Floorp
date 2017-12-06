@@ -434,6 +434,9 @@ nsSpeechTask::DispatchEnd(float aElapsedTime, uint32_t aCharIndex)
 nsresult
 nsSpeechTask::DispatchEndInner(float aElapsedTime, uint32_t aCharIndex)
 {
+  // After we end, no callback functions should go through.
+  mCallback = nullptr;
+
   if (!mPreCanceled) {
     nsSynthVoiceRegistry::GetInstance()->SpeakNext();
   }

@@ -59,7 +59,8 @@ function testFunc(done_cb) {
       var test_data = [];
       var voices = speechSynthesis.getVoices();
       for (var voice of voices) {
-        if (voice.voiceURI.indexOf('urn:moz-tts:fake-direct') < 0) {
+        if (voice.lang.split("-").length > 2) {
+          // Skip voices that don't automatically end with success
           continue;
         }
         test_data.push([{text: "Hello world", args: { voice: voice} },

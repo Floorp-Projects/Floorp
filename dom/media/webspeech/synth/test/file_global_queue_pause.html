@@ -59,8 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1188099
       win2.speechSynthesis.pause();
 
       testSynthState(win1, { speaking: true, pending: false, paused: false});
-      // 1188099: currently, paused state is not gaurenteed to be immediate.
-      testSynthState(win2, { speaking: true, pending: true });
+      testSynthState(win2, { speaking: true, pending: true, paused: true });
 
       // We now make the utterance end.
       SpecialPowers.wrap(win1.speechSynthesis).forceEnd();
