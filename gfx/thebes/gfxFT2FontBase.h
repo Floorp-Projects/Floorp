@@ -11,13 +11,16 @@
 #include "gfxFont.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/UnscaledFontFreeType.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 
 class gfxFT2FontBase : public gfxFont {
 public:
     gfxFT2FontBase(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
                    cairo_scaled_font_t *aScaledFont,
                    gfxFontEntry *aFontEntry,
-                   const gfxFontStyle *aFontStyle);
+                   const gfxFontStyle *aFontStyle,
+                   bool aEmbolden);
     virtual ~gfxFT2FontBase();
 
     uint32_t GetGlyph(uint32_t aCharCode);
@@ -44,6 +47,9 @@ protected:
 
     uint32_t mSpaceGlyph;
     Metrics mMetrics;
+    bool    mEmbolden;
+
+    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,int32_t>> mGlyphWidths;
 };
 
 #endif /* GFX_FT2FONTBASE_H */
