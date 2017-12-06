@@ -68,14 +68,10 @@ function ModuleGetExportedNames(exportStarSet = [])
 
 function ModuleSetStatus(module, newStatus)
 {
-    assert(newStatus >= MODULE_STATUS_UNINSTANTIATED &&
-           newStatus <= MODULE_STATUS_EVALUATED_ERROR,
+    assert(newStatus >= MODULE_STATUS_ERRORED && newStatus <= MODULE_STATUS_EVALUATED,
            "Bad new module status in ModuleSetStatus");
-
-    assert((module.status <= MODULE_STATUS_INSTANTIATING &&
-            newStatus === MODULE_STATUS_UNINSTANTIATED) ||
-           newStatus > module.status,
-           "New module status inconsistent with current status");
+    if (newStatus !== MODULE_STATUS_ERRORED)
+        assert(newStatus > module.status, "New module status inconsistent with current status");
 
     UnsafeSetReservedSlot(module, MODULE_OBJECT_STATUS_SLOT, newStatus);
 }
@@ -85,15 +81,20 @@ function ModuleSetStatus(module, newStatus)
 // Returns an object describing the location of the resolved export or
 // indicating a failure.
 //
-// On success this returns a resolved binding record: { module, bindingName }
+// On success this returns: { resolved: true, module, bindingName }
 //
-// There are two failure cases:
+// There are three failure cases:
 //
-//  - If no definition was found or the request is found to be circular, *null*
-//    is returned.
+//  - The resolution failure can be blamed on a particular module.
+//    Returns: { resolved: false, module, ambiguous: false }
 //
-//  - If the request is found to be ambiguous, the string `"ambiguous"` is
-//    returned.
+//  - No culprit can be determined and the resolution failure was due to star
+//    export ambiguity.
+//    Returns: { resolved: false, module: null, ambiguous: true }
+//
+//  - No culprit can be determined and the resolution failure was not due to
+//    star export ambiguity.
+//    Returns: { resolved: false, module: null, ambiguous: false }
 //
 function ModuleResolveExport(exportName, resolveSet = [])
 {
@@ -106,47 +107,53 @@ function ModuleResolveExport(exportName, resolveSet = [])
     let module = this;
 
     // Step 2
+    assert(module.status !== MODULE_STATUS_ERRORED, "Bad module state in ResolveExport");
+
+    // Step 3
     for (let i = 0; i < resolveSet.length; i++) {
         let r = resolveSet[i];
         if (r.module === module && r.exportName === exportName) {
             // This is a circular import request.
-            return null;
+            return {resolved: false, module: null, ambiguous: false};
         }
     }
 
-    // Step 3
+    // Step 4
     _DefineDataProperty(resolveSet, resolveSet.length, {module, exportName});
 
-    // Step 4
+    // Step 5
     let localExportEntries = module.localExportEntries;
     for (let i = 0; i < localExportEntries.length; i++) {
         let e = localExportEntries[i];
         if (exportName === e.exportName)
-            return {module, bindingName: e.localName};
+            return {resolved: true, module, bindingName: e.localName};
     }
 
-    // Step 5
+    // Step 6
     let indirectExportEntries = module.indirectExportEntries;
     for (let i = 0; i < indirectExportEntries.length; i++) {
         let e = indirectExportEntries[i];
         if (exportName === e.exportName) {
             let importedModule = CallModuleResolveHook(module, e.moduleRequest,
                                                        MODULE_STATUS_UNINSTANTIATED);
-            return callFunction(importedModule.resolveExport, importedModule, e.importName,
-                                resolveSet);
+            let resolution = callFunction(importedModule.resolveExport, importedModule, e.importName,
+                                          resolveSet);
+            if (!resolution.resolved && !resolution.module)
+                resolution.module = module;
+            return resolution;
         }
     }
 
-    // Step 6
+    // Step 7
     if (exportName === "default") {
         // A default export cannot be provided by an export *.
-        return null;
+        return {resolved: false, module: null, ambiguous: false};
     }
 
-    // Step 7
+    // Step 8
     let starResolution = null;
 
-    // Step 8
+    // Step 9
     let starExportEntries = module.starExportEntries;
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
@@ -154,30 +161,26 @@ function ModuleResolveExport(exportName, resolveSet = [])
                                                    MODULE_STATUS_UNINSTANTIATED);
         let resolution = callFunction(importedModule.resolveExport, importedModule, exportName,
                                       resolveSet);
-        if (resolution === "ambiguous")
+        if (!resolution.resolved && (resolution.module || resolution.ambiguous))
             return resolution;
-        if (resolution !== null) {
+        if (resolution.resolved) {
             if (starResolution === null) {
                 starResolution = resolution;
             } else {
                 if (resolution.module !== starResolution.module ||
                     resolution.bindingName !== starResolution.bindingName)
                 {
-                    return "ambiguous";
+                    return {resolved: false, module: null, ambiguous: true};
                 }
             }
         }
     }
 
-    // Step 9
-    return starResolution;
-}
+    // Step 10
+    if (starResolution !== null)
+        return starResolution;
 
-function IsResolvedBinding(resolution)
-{
-    assert(resolution === "ambiguous" || typeof resolution === "object",
-           "Bad module resolution result");
-    return typeof resolution === "object" && resolution !== null;
+    return {resolved: false, module: null, ambiguous: false};
 }
 
 // 15.2.1.18 GetModuleNamespace(module)
@@ -186,12 +189,12 @@ function GetModuleNamespace(module)
     // Step 1
     assert(IsModule(module), "GetModuleNamespace called with non-module");
 
-    // Steps 2-3
+    // Step 2
     assert(module.status !== MODULE_STATUS_UNINSTANTIATED &&
-           module.status !== MODULE_STATUS_EVALUATED_ERROR,
+           module.status !== MODULE_STATUS_ERRORED,
            "Bad module state in GetModuleNamespace");
 
-    // Step 4
+    // Step 3
     let namespace = module.namespace;
 
     // Step 3
@@ -201,7 +204,7 @@ function GetModuleNamespace(module)
         for (let i = 0; i < exportedNames.length; i++) {
             let name = exportedNames[i];
             let resolution = callFunction(module.resolveExport, module, name);
-            if (IsResolvedBinding(resolution))
+            if (resolution.resolved)
                 _DefineDataProperty(unambiguousNames, unambiguousNames.length, name);
         }
         namespace = ModuleNamespaceCreate(module, unambiguousNames);
@@ -223,7 +226,7 @@ function ModuleNamespaceCreate(module, exports)
     for (let i = 0; i < exports.length; i++) {
         let name = exports[i];
         let binding = callFunction(module.resolveExport, module, name);
-        assert(IsResolvedBinding(binding), "Failed to resolve binding");
+        assert(binding.resolved, "Failed to resolve binding");
         AddModuleNamespaceBinding(ns, name, binding.module, binding.bindingName);
     }
 
@@ -234,6 +237,11 @@ function GetModuleEnvironment(module)
 {
     assert(IsModule(module), "Non-module passed to GetModuleEnvironment");
 
+    // Check for a previous failed attempt to instantiate this module. This can
+    // only happen due to a bug in the module loader.
+    if (module.status === MODULE_STATUS_ERRORED)
+        ThrowInternalError(JSMSG_MODULE_INSTANTIATE_FAILED, module.status);
+
     assert(module.status >= MODULE_STATUS_INSTANTIATING,
            "Attempt to access module environement before instantation");
 
@@ -242,6 +250,19 @@ function GetModuleEnvironment(module)
            "Module environment slot contains unexpected value");
 
     return env;
+}
+
+function RecordModuleError(module, error)
+{
+    // Set the module's status to 'errored' to indicate a failed module
+    // instantiation and record the exception. The environment slot is also
+    // reset to 'undefined'.
+
+    assert(IsObject(module) && IsModule(module), "Non-module passed to RecordModuleError");
+
+    ModuleSetStatus(module, MODULE_STATUS_ERRORED);
+    UnsafeSetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT, error);
+    UnsafeSetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT, undefined);
 }
 
 function CountArrayValues(array, value)
@@ -261,16 +282,6 @@ function ArrayContains(array, value)
             return true;
     }
     return false;
-}
-
-function HandleModuleInstantiationFailure(module)
-{
-    // Reset the module to the "uninstantiated" state. Don't reset the
-    // environment slot as the environment object will be required by any
-    // possible future instantiation attempt.
-    ModuleSetStatus(module, MODULE_STATUS_UNINSTANTIATED);
-    UnsafeSetReservedSlot(module, MODULE_OBJECT_DFS_INDEX_SLOT, undefined);
-    UnsafeSetReservedSlot(module, MODULE_OBJECT_DFS_ANCESTOR_INDEX_SLOT, undefined);
 }
 
 // 15.2.1.16.4 ModuleInstantiate()
@@ -294,29 +305,37 @@ function ModuleInstantiate()
 
     // Steps 4-5
     try {
-        InnerModuleInstantiation(module, stack, 0);
+        InnerModuleDeclarationInstantiation(module, stack, 0);
     } catch (error) {
         for (let i = 0; i < stack.length; i++) {
             let m = stack[i];
-            assert(m.status === MODULE_STATUS_INSTANTIATING,
-                   "Expected instantiating status during failed instantiation");
-            HandleModuleInstantiationFailure(m);
+
+            assert(m.status === MODULE_STATUS_INSTANTIATING ||
+                   m.status === MODULE_STATUS_ERRORED,
+                   "Bad module status after failed instantiation");
+
+            RecordModuleError(m, error);
         }
 
-        // Handle OOM when appending to the stack or over-recursion errors.
-        if (stack.length === 0)
-            HandleModuleInstantiationFailure(module);
+        if (stack.length === 0 &&
+            typeof(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT)) === "undefined")
+        {
+            // This can happen due to OOM when appending to the stack or
+            // over-recursion errors.
+            RecordModuleError(module, error);
+        }
 
-        assert(module.status === MODULE_STATUS_UNINSTANTIATED,
-               "Expected uninstantiated status after failed instantiation");
+        assert(module.status === MODULE_STATUS_ERRORED,
+               "Bad module status after failed instantiation");
+        assert(SameValue(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT), error),
+               "Module has different error set after failed instantiation");
 
         throw error;
     }
 
     // Step 6
-    assert(module.status === MODULE_STATUS_INSTANTIATED ||
-           module.status === MODULE_STATUS_EVALUATED ||
-           module.status === MODULE_STATUS_EVALUATED_ERROR,
+    assert(module.status == MODULE_STATUS_INSTANTIATED ||
+           module.status == MODULE_STATUS_EVALUATED,
            "Bad module status after successful instantiation");
 
     // Step 7
@@ -328,8 +347,8 @@ function ModuleInstantiate()
 }
 _SetCanonicalName(ModuleInstantiate, "ModuleInstantiate");
 
-// 15.2.1.16.4.1 InnerModuleInstantiation(module, stack, index)
-function InnerModuleInstantiation(module, stack, index)
+// 15.2.1.16.4.1 InnerModuleDeclarationInstantiation(module, stack, index)
+function InnerModuleDeclarationInstantiation(module, stack, index)
 {
     // Step 1
     // TODO: Support module records other than source text module records.
@@ -337,40 +356,42 @@ function InnerModuleInstantiation(module, stack, index)
     // Step 2
     if (module.status === MODULE_STATUS_INSTANTIATING ||
         module.status === MODULE_STATUS_INSTANTIATED ||
-        module.status === MODULE_STATUS_EVALUATED ||
-        module.status === MODULE_STATUS_EVALUATED_ERROR)
+        module.status === MODULE_STATUS_EVALUATED)
     {
         return index;
     }
 
     // Step 3
+    if (module.status === MODULE_STATUS_ERRORED)
+        throw module.error;
+
+    // Step 4
     assert(module.status === MODULE_STATUS_UNINSTANTIATED,
           "Bad module status in ModuleDeclarationInstantiation");
 
-    // Steps 4
+    // Steps 5
     ModuleSetStatus(module, MODULE_STATUS_INSTANTIATING);
 
-    // Step 5-7
+    // Step 6-8
     UnsafeSetReservedSlot(module, MODULE_OBJECT_DFS_INDEX_SLOT, index);
     UnsafeSetReservedSlot(module, MODULE_OBJECT_DFS_ANCESTOR_INDEX_SLOT, index);
     index++;
 
-    // Step 8
+    // Step 9
     _DefineDataProperty(stack, stack.length, module);
 
-    // Step 9
+    // Step 10
     let requestedModules = module.requestedModules;
     for (let i = 0; i < requestedModules.length; i++) {
         let required = requestedModules[i].moduleSpecifier;
-        let requiredModule = CallModuleResolveHook(module, required, MODULE_STATUS_UNINSTANTIATED);
+        let requiredModule = CallModuleResolveHook(module, required, MODULE_STATUS_ERRORED);
 
-        index = InnerModuleInstantiation(requiredModule, stack, index);
+        index = InnerModuleDeclarationInstantiation(requiredModule, stack, index);
 
         assert(requiredModule.status === MODULE_STATUS_INSTANTIATING ||
                requiredModule.status === MODULE_STATUS_INSTANTIATED ||
-               requiredModule.status === MODULE_STATUS_EVALUATED ||
-               requiredModule.status === MODULE_STATUS_EVALUATED_ERROR,
-               "Bad required module status after InnerModuleInstantiation");
+               requiredModule.status === MODULE_STATUS_EVALUATED,
+               "Bad required module status after InnerModuleDeclarationInstantiation");
 
         assert((requiredModule.status === MODULE_STATUS_INSTANTIATING) ===
                ArrayContains(stack, requiredModule),
@@ -386,16 +407,16 @@ function InnerModuleInstantiation(module, stack, index)
         }
     }
 
-    // Step 10
+    // Step 11
     ModuleDeclarationEnvironmentSetup(module);
 
-    // Steps 11-12
+    // Steps 12-13
     assert(CountArrayValues(stack, module) === 1,
            "Current module should appear exactly once in the stack");
     assert(module.dfsAncestorIndex <= module.dfsIndex,
            "Bad DFS ancestor index");
 
-    // Step 13
+    // Step 14
     if (module.dfsAncestorIndex === module.dfsIndex) {
         let requiredModule;
         do {
@@ -416,9 +437,11 @@ function ModuleDeclarationEnvironmentSetup(module)
     for (let i = 0; i < indirectExportEntries.length; i++) {
         let e = indirectExportEntries[i];
         let resolution = callFunction(module.resolveExport, module, e.exportName);
-        if (!IsResolvedBinding(resolution)) {
-            ThrowResolutionError(module, resolution, "indirectExport", e.exportName,
-                                 e.lineNumber, e.columnNumber);
+        assert(resolution.resolved || resolution.module,
+               "Unexpected failure to resolve export in ModuleDeclarationEnvironmentSetup");
+        if (!resolution.resolved) {
+            return ResolutionError(resolution, "indirectExport", e.exportName,
+                                   e.lineNumber, e.columnNumber);
         }
     }
 
@@ -438,9 +461,12 @@ function ModuleDeclarationEnvironmentSetup(module)
         } else {
             let resolution = callFunction(importedModule.resolveExport, importedModule,
                                           imp.importName);
-            if (!IsResolvedBinding(resolution)) {
-                ThrowResolutionError(module, resolution, "import", imp.importName,
-                                     imp.lineNumber, imp.columnNumber);
+            if (!resolution.resolved && !resolution.module)
+                resolution.module = module;
+
+            if (!resolution.resolved) {
+                return ResolutionError(resolution, "import", imp.importName,
+                                       imp.lineNumber, imp.columnNumber);
             }
 
             CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
@@ -450,56 +476,36 @@ function ModuleDeclarationEnvironmentSetup(module)
     InstantiateModuleFunctionDeclarations(module);
 }
 
-function ThrowResolutionError(module, resolution, kind, name, line, column)
+// 15.2.1.16.4.3 ResolutionError(module)
+function ResolutionError(resolution, kind, name, line, column)
 {
-    assert(module.status === MODULE_STATUS_INSTANTIATING,
-           "Unexpected module status in ThrowResolutionError");
+    let module = resolution.module;
+    assert(module !== null,
+           "Null module passed to ResolutionError");
+
+    assert(module.status === MODULE_STATUS_UNINSTANTIATED ||
+           module.status === MODULE_STATUS_INSTANTIATING,
+           "Unexpected module status in ResolutionError");
 
     assert(kind === "import" || kind === "indirectExport",
-           "Unexpected kind in ThrowResolutionError");
+           "Unexpected kind in ResolutionError");
 
     assert(line > 0,
            "Line number should be present for all imports and indirect exports");
 
-    let ambiguous = resolution === "ambiguous";
-
     let errorNumber;
-    if (kind === "import")
-        errorNumber = ambiguous ? JSMSG_AMBIGUOUS_IMPORT : JSMSG_MISSING_IMPORT;
-    else
-        errorNumber = ambiguous ? JSMSG_AMBIGUOUS_INDIRECT_EXPORT : JSMSG_MISSING_INDIRECT_EXPORT;
+    if (kind === "import") {
+        errorNumber = resolution.ambiguous ? JSMSG_AMBIGUOUS_IMPORT
+                                           : JSMSG_MISSING_IMPORT;
+    } else {
+        errorNumber = resolution.ambiguous ? JSMSG_AMBIGUOUS_INDIRECT_EXPORT
+                                           : JSMSG_MISSING_INDIRECT_EXPORT;
+    }
 
     let message = GetErrorMessage(errorNumber) + ": " + name;
     let error = CreateModuleSyntaxError(module, line, column, message);
+    RecordModuleError(module, error);
     throw error;
-}
-
-function GetModuleEvaluationError(module)
-{
-    assert(IsObject(module) && IsModule(module),
-           "Non-module passed to GetModuleEvaluationError");
-    assert(module.status === MODULE_STATUS_EVALUATED_ERROR,
-           "Bad module status in GetModuleEvaluationError");
-    return UnsafeGetReservedSlot(module, MODULE_OBJECT_EVALUATION_ERROR_SLOT);
-}
-
-function RecordModuleEvaluationError(module, error)
-{
-    // Set the module's EvaluationError slot to indicate a failed module
-    // evaluation.
-
-    assert(IsObject(module) && IsModule(module),
-           "Non-module passed to RecordModuleEvaluationError");
-
-    if (module.status === MODULE_STATUS_EVALUATED_ERROR) {
-        // It would be nice to assert that |error| is the same as the one we
-        // previously recorded, but that's not always true in the case of out of
-        // memory and over-recursion errors.
-        return;
-    }
-
-    ModuleSetStatus(module, MODULE_STATUS_EVALUATED_ERROR);
-    UnsafeSetReservedSlot(module, MODULE_OBJECT_EVALUATION_ERROR_SLOT, error);
 }
 
 // 15.2.1.16.5 ModuleEvaluate()
@@ -512,9 +518,9 @@ function ModuleEvaluate()
     let module = this;
 
     // Step 2
-    if (module.status !== MODULE_STATUS_INSTANTIATED &&
-        module.status !== MODULE_STATUS_EVALUATED &&
-        module.status !== MODULE_STATUS_EVALUATED_ERROR)
+    if (module.status !== MODULE_STATUS_ERRORED &&
+        module.status !== MODULE_STATUS_INSTANTIATED &&
+        module.status !== MODULE_STATUS_EVALUATED)
     {
         ThrowInternalError(JSMSG_BAD_MODULE_STATUS);
     }
@@ -528,22 +534,30 @@ function ModuleEvaluate()
     } catch (error) {
         for (let i = 0; i < stack.length; i++) {
             let m = stack[i];
+
             assert(m.status === MODULE_STATUS_EVALUATING,
                    "Bad module status after failed evaluation");
-            RecordModuleEvaluationError(m, error);
+
+            RecordModuleError(m, error);
         }
 
-        // Handle OOM when appending to the stack or over-recursion errors.
-        if (stack.length === 0)
-            RecordModuleEvaluationError(module, error);
+        if (stack.length === 0 &&
+            typeof(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT)) === "undefined")
+        {
+            // This can happen due to OOM when appending to the stack or
+            // over-recursion errors.
+            RecordModuleError(module, error);
+        }
 
-        assert(module.status === MODULE_STATUS_EVALUATED_ERROR,
+        assert(module.status === MODULE_STATUS_ERRORED,
                "Bad module status after failed evaluation");
+        assert(SameValue(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT), error),
+               "Module has different error set after failed evaluation");
 
         throw error;
     }
 
-    assert(module.status === MODULE_STATUS_EVALUATED,
+    assert(module.status == MODULE_STATUS_EVALUATED,
            "Bad module status after successful evaluation");
     assert(stack.length === 0,
            "Stack should be empty after successful evaluation");
@@ -559,19 +573,19 @@ function InnerModuleEvaluation(module, stack, index)
     // TODO: Support module records other than source text module records.
 
     // Step 2
-    if (module.status === MODULE_STATUS_EVALUATED_ERROR)
-        throw GetModuleEvaluationError(module);
-
-    if (module.status === MODULE_STATUS_EVALUATED)
+    if (module.status === MODULE_STATUS_EVALUATING ||
+        module.status === MODULE_STATUS_EVALUATED)
+    {
         return index;
+    }
 
     // Step 3
-    if (module.status === MODULE_STATUS_EVALUATING)
-        return index;
+    if (module.status === MODULE_STATUS_ERRORED)
+        throw module.error;
 
     // Step 4
     assert(module.status === MODULE_STATUS_INSTANTIATED,
-          "Bad module status in InnerModuleEvaluation");
+          "Bad module status in ModuleEvaluation");
 
     // Step 5
     ModuleSetStatus(module, MODULE_STATUS_EVALUATING);
@@ -593,8 +607,8 @@ function InnerModuleEvaluation(module, stack, index)
 
         index = InnerModuleEvaluation(requiredModule, stack, index);
 
-        assert(requiredModule.status === MODULE_STATUS_EVALUATING ||
-               requiredModule.status === MODULE_STATUS_EVALUATED,
+        assert(requiredModule.status == MODULE_STATUS_EVALUATING ||
+               requiredModule.status == MODULE_STATUS_EVALUATED,
               "Bad module status after InnerModuleEvaluation");
 
         assert((requiredModule.status === MODULE_STATUS_EVALUATING) ===

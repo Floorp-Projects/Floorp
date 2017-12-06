@@ -22,8 +22,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ModuleScript)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBaseURL)
   tmp->UnlinkModuleRecord();
-  tmp->mParseError.setUndefined();
-  tmp->mErrorToRethrow.setUndefined();
+  tmp->mError.setUndefined();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ModuleScript)
@@ -32,8 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ModuleScript)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mModuleRecord)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mParseError)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mErrorToRethrow)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mError)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleScript)
@@ -46,8 +44,7 @@ ModuleScript::ModuleScript(ScriptLoader* aLoader, nsIURI* aBaseURL)
   MOZ_ASSERT(mLoader);
   MOZ_ASSERT(mBaseURL);
   MOZ_ASSERT(!mModuleRecord);
-  MOZ_ASSERT(!HasParseError());
-  MOZ_ASSERT(!HasErrorToRethrow());
+  MOZ_ASSERT(mError.isUndefined());
 }
 
 void
@@ -73,8 +70,7 @@ void
 ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord)
 {
   MOZ_ASSERT(!mModuleRecord);
-  MOZ_ASSERT(!HasParseError());
-  MOZ_ASSERT(!HasErrorToRethrow());
+  MOZ_ASSERT(mError.isUndefined());
 
   mModuleRecord = aModuleRecord;
 
@@ -85,24 +81,37 @@ ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord)
 }
 
 void
-ModuleScript::SetParseError(const JS::Value& aError)
+ModuleScript::SetPreInstantiationError(const JS::Value& aError)
 {
   MOZ_ASSERT(!aError.isUndefined());
-  MOZ_ASSERT(!HasParseError());
-  MOZ_ASSERT(!HasErrorToRethrow());
 
   UnlinkModuleRecord();
-  mParseError = aError;
+  mError = aError;
+
   HoldJSObjects(this);
 }
 
-void
-ModuleScript::SetErrorToRethrow(const JS::Value& aError)
+bool
+ModuleScript::IsErrored() const
 {
-  MOZ_ASSERT(!aError.isUndefined());
-  MOZ_ASSERT(!HasErrorToRethrow());
+  if (!mModuleRecord) {
+    MOZ_ASSERT(!mError.isUndefined());
+    return true;
+  }
 
-  mErrorToRethrow = aError;
+  return JS::IsModuleErrored(mModuleRecord);
+}
+
+JS::Value
+ModuleScript::Error() const
+{
+  MOZ_ASSERT(IsErrored());
+
+  if (!mModuleRecord) {
+    return mError;
+  }
+
+  return JS::GetModuleError(mModuleRecord);
 }
 
 } // dom namespace
