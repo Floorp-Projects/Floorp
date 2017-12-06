@@ -306,8 +306,8 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
 @_target_task('promote_firefox')
 def target_tasks_promote_firefox(full_task_graph, parameters, graph_config):
     """Select the superset of tasks required to promote a beta or release build
-    of firefox. This should include all non-android mozilla_beta tasks, plus
-    l10n, beetmover, balrog, etc."""
+    of firefox. This should include all non-android mozilla_{beta,release} tasks,
+    plus l10n, beetmover, balrog, etc."""
 
     beta_release_tasks = [l for l, t in full_task_graph.tasks.iteritems() if
                           filter_beta_release_tasks(t, parameters,
@@ -403,8 +403,8 @@ def target_tasks_ship_firefox(full_task_graph, parameters, graph_config):
 @_target_task('promote_devedition')
 def target_tasks_promote_devedition(full_task_graph, parameters, graph_config):
     """Select the superset of tasks required to promote a beta or release build
-    of devedition. This should include all non-android mozilla_beta tasks, plus
-    l10n, beetmover, balrog, etc."""
+    of devedition. This should include all non-android mozilla_{beta,release}
+    tasks, plus l10n, beetmover, balrog, etc."""
 
     beta_release_tasks = [l for l, t in full_task_graph.tasks.iteritems() if
                           filter_beta_release_tasks(t, parameters,
