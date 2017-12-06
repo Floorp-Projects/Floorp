@@ -42,8 +42,6 @@ namespace {
 static mozilla::LazyLogModule gWebAuthnManagerLog("webauthnmanager");
 }
 
-NS_NAMED_LITERAL_STRING(kVisibilityChange, "visibilitychange");
-
 NS_IMPL_ISUPPORTS(WebAuthnManager, nsIDOMEventListener);
 
 /***********************************************************************
@@ -145,43 +143,9 @@ RelaxSameOrigin(nsPIDOMWindowInner* aParent,
   return NS_OK;
 }
 
-void
-WebAuthnManager::ListenForVisibilityEvents()
-{
-  nsCOMPtr<nsIDocument> doc = mParent->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return;
-  }
-
-  nsresult rv = doc->AddSystemEventListener(kVisibilityChange, this,
-                                            /* use capture */ true,
-                                            /* wants untrusted */ false);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-}
-
-void
-WebAuthnManager::StopListeningForVisibilityEvents()
-{
-  nsCOMPtr<nsIDocument> doc = mParent->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return;
-  }
-
-  nsresult rv = doc->RemoveSystemEventListener(kVisibilityChange, this,
-                                               /* use capture */ true);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-}
-
 /***********************************************************************
  * WebAuthnManager Implementation
  **********************************************************************/
-
-WebAuthnManager::WebAuthnManager(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aParent);
-}
 
 void
 WebAuthnManager::ClearTransaction()
@@ -227,34 +191,6 @@ WebAuthnManager::~WebAuthnManager()
     mChild.swap(c);
     c->Disconnect();
   }
-}
-
-bool
-WebAuthnManager::MaybeCreateBackgroundActor()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mChild) {
-    return true;
-  }
-
-  PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
-  if (NS_WARN_IF(!actor)) {
-    return false;
-  }
-
-  RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild(this));
-  PWebAuthnTransactionChild* constructedMgr =
-    actor->SendPWebAuthnTransactionConstructor(mgr);
-
-  if (NS_WARN_IF(!constructedMgr)) {
-    return false;
-  }
-
-  MOZ_ASSERT(constructedMgr == mgr);
-  mChild = mgr.forget();
-
-  return true;
 }
 
 already_AddRefed<Promise>
@@ -888,45 +824,10 @@ WebAuthnManager::RequestAborted(const uint64_t& aTransactionId,
   }
 }
 
-NS_IMETHODIMP
-WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aEvent);
-
-  nsAutoString type;
-  aEvent->GetType(type);
-  if (!type.Equals(kVisibilityChange)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (doc->Hidden()) {
-    MOZ_LOG(gWebAuthnManagerLog, LogLevel::Debug,
-            ("Visibility change: WebAuthn window is hidden, cancelling job."));
-
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
-  return NS_OK;
-}
-
 void
 WebAuthnManager::Abort()
 {
   CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
-}
-
-void
-WebAuthnManager::ActorDestroyed()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mChild = nullptr;
 }
 
 }
