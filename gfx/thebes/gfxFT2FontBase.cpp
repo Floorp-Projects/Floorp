@@ -10,10 +10,12 @@
 #include "gfxFontConstants.h"
 #include "gfxFontUtils.h"
 #include <algorithm>
+#include <dlfcn.h>
 
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
 #include FT_ADVANCES_H
+#include FT_MULTIPLE_MASTERS_H
 
 #ifndef FT_FACE_FLAG_COLOR
 #define FT_FACE_FLAG_COLOR ( 1L << 14 )
@@ -203,6 +205,37 @@ gfxFT2FontBase::InitMetrics()
 
         SanitizeMetrics(&mMetrics, false);
         return;
+    }
+
+    // For variation fonts, figure out the variation coordinates to be applied
+    // for each axis, in freetype's order (which may not match the order of
+    // axes in mStyle.variationSettings, so we need to search by axis tag).
+    if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+        typedef FT_UInt (*GetVarFunc)(FT_Face, FT_MM_Var**);
+        typedef FT_UInt (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
+        static GetVarFunc getVar =
+            (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
+        static SetCoordsFunc setCoords =
+            (SetCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
+        FT_MM_Var* ftVar;
+        if (getVar && setCoords && FT_Err_Ok == (*getVar)(face, &ftVar)) {
+            for (unsigned i = 0; i < ftVar->num_axis; ++i) {
+                mCoords.AppendElement(ftVar->axis[i].def);
+                for (const auto& v : mStyle.variationSettings) {
+                    if (ftVar->axis[i].tag == v.mTag) {
+                        FT_Fixed val = v.mValue * 0x10000;
+                        val = std::min(val, ftVar->axis[i].maximum);
+                        val = std::max(val, ftVar->axis[i].minimum);
+                        mCoords[i] = val;
+                        break;
+                    }
+                }
+            }
+            free(ftVar);
+            if (!mCoords.IsEmpty()) {
+                (*setCoords)(face, mCoords.Length(), mCoords.Elements());
+            }
+        }
     }
 
     const FT_Size_Metrics& ftMetrics = face->size->metrics;

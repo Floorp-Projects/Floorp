@@ -49,6 +49,13 @@ protected:
     Metrics mMetrics;
     bool    mEmbolden;
 
+    // For variation/multiple-master fonts, this will be an array of the values
+    // for each axis, as specified by mStyle.variationSettings (or the font's
+    // default for axes not present in variationSettings). Values here are in
+    // freetype's 16.16 fixed-point format, and clamped to the valid min/max
+    // range reported by the face.
+    nsTArray<FT_Fixed> mCoords;
+
     mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,int32_t>> mGlyphWidths;
 };
 
