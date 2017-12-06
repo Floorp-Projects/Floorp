@@ -4267,12 +4267,6 @@ extern JS_PUBLIC_API(void)
 GetRequestedModuleSourcePos(JSContext* cx, JS::HandleValue requestedModuleObject,
                             uint32_t* lineNumber, uint32_t* columnNumber);
 
-extern JS_PUBLIC_API(bool)
-IsModuleErrored(JSObject* moduleRecord);
-
-extern JS_PUBLIC_API(JS::Value)
-GetModuleError(JSObject* moduleRecord);
-
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
