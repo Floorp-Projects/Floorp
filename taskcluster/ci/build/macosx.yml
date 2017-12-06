@@ -98,6 +98,8 @@ macosx64-devedition-nightly/opt:
     description: "MacOS X Dev Edition x64 Nightly"
     attributes:
         nightly: true
+    shipping-phase: build
+    shipping-product: devedition
     index:
         product: devedition
         job-name: macosx64-opt
@@ -206,6 +208,8 @@ macosx64-nightly/opt:
     description: "MacOS X x64 Cross-compile Nightly"
     attributes:
         nightly: true
+    shipping-phase: build
+    shipping-product: firefox
     index:
         product: firefox
         job-name: macosx64-opt
