@@ -49,6 +49,9 @@ packaging_description_schema = Schema({
     # passed through directly to the job description
     Optional('extra'): task_description_schema['extra'],
 
+    # Shipping product and phase
+    Optional('shipping-product'): task_description_schema['shipping-product'],
+    Optional('shipping-phase'): task_description_schema['shipping-phase'],
 })
 
 
