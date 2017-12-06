@@ -5889,7 +5889,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       nsAutoPtr<PendingBinding> newPendingBinding(new PendingBinding());
 
       nsresult rv = xblService->LoadBindings(
-        aContent->AsElement(), display->mBinding->GetURI(),
+        aContent, display->mBinding->GetURI(),
         display->mBinding->mExtraData->GetPrincipal(),
         getter_AddRefs(newPendingBinding->mBinding), &resolveStyle);
       if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)

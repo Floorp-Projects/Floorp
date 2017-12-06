@@ -13,8 +13,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
 
-namespace mozilla {
-namespace a11y {
+using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULSliderAccessible
@@ -41,7 +40,7 @@ XULSliderAccessible::NativeInteractiveState() const
   if (NativelyUnavailable())
     return states::UNAVAILABLE;
 
-  dom::Element* sliderElm = GetSliderElement();
+  nsIContent* sliderElm = GetSliderElement();
   if (sliderElm) {
     nsIFrame* frame = sliderElm->GetPrimaryFrame();
     if (frame && frame->IsFocusable())
@@ -84,7 +83,7 @@ XULSliderAccessible::DoAction(uint8_t aIndex)
   if (aIndex != 0)
     return false;
 
-  dom::Element* sliderElm = GetSliderElement();
+  nsIContent* sliderElm = GetSliderElement();
   if (sliderElm)
     DoCommand(sliderElm);
 
@@ -130,17 +129,17 @@ XULSliderAccessible::SetCurValue(double aValue)
 
 // Utils
 
-dom::Element*
+nsIContent*
 XULSliderAccessible::GetSliderElement() const
 {
-  if (!mSliderElement) {
+  if (!mSliderNode) {
     // XXX: we depend on anonymous content.
-    mSliderElement = mContent->OwnerDoc()->
+    mSliderNode = mContent->OwnerDoc()->
       GetAnonymousElementByAttribute(mContent, nsGkAtoms::anonid,
                                      NS_LITERAL_STRING("slider"));
   }
 
-  return mSliderElement;
+  return mSliderNode;
 }
 
 nsresult
@@ -164,7 +163,8 @@ XULSliderAccessible::SetSliderAttr(nsAtom* aName, const nsAString& aValue)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  if (dom::Element* sliderElm = GetSliderElement())
+  nsIContent* sliderElm = GetSliderElement();
+  if (sliderElm)
     sliderElm->SetAttr(kNameSpaceID_None, aName, aValue, true);
 
   return NS_OK;
@@ -212,5 +212,3 @@ XULThumbAccessible::NativeRole()
   return roles::INDICATOR;
 }
 
-}
-}

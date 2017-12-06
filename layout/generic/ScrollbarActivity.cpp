@@ -16,7 +16,6 @@
 #include "nsQueryFrame.h"
 #include "nsComponentManagerUtils.h"
 #include "nsStyledElement.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 
@@ -160,7 +159,7 @@ ScrollbarActivity::IsStillFading(TimeStamp aTime)
 void
 ScrollbarActivity::HandleEventForScrollbar(const nsAString& aType,
                                            nsIContent* aTarget,
-                                           Element* aScrollbar,
+                                           nsIContent* aScrollbar,
                                            bool* aStoredHoverState)
 {
   if (!aTarget || !aScrollbar ||
@@ -324,14 +323,14 @@ ScrollbarActivity::UnregisterFromRefreshDriver()
 }
 
 static void
-SetBooleanAttribute(Element* aElement, nsAtom* aAttribute, bool aValue)
+SetBooleanAttribute(nsIContent* aContent, nsAtom* aAttribute, bool aValue)
 {
-  if (aElement) {
+  if (aContent) {
     if (aValue) {
-      aElement->SetAttr(kNameSpaceID_None, aAttribute,
+      aContent->SetAttr(kNameSpaceID_None, aAttribute,
                         NS_LITERAL_STRING("true"), true);
     } else {
-      aElement->UnsetAttr(kNameSpaceID_None, aAttribute, true);
+      aContent->UnsetAttr(kNameSpaceID_None, aAttribute, true);
     }
   }
 }
@@ -446,7 +445,7 @@ ScrollbarActivity::CancelFadeBeginTimer()
 }
 
 void
-ScrollbarActivity::HoveredScrollbar(Element* aScrollbar)
+ScrollbarActivity::HoveredScrollbar(nsIContent* aScrollbar)
 {
   SetBooleanAttribute(GetHorizontalScrollbar(), nsGkAtoms::hover, false);
   SetBooleanAttribute(GetVerticalScrollbar(), nsGkAtoms::hover, false);
@@ -460,11 +459,11 @@ ScrollbarActivity::GetRefreshDriver()
   return scrollableFrame->PresContext()->RefreshDriver();
 }
 
-Element*
+nsIContent*
 ScrollbarActivity::GetScrollbarContent(bool aVertical)
 {
   nsIFrame* box = mScrollableFrame->GetScrollbarBox(aVertical);
-  return box ? box->GetContent()->AsElement() : nullptr;
+  return box ? box->GetContent() : nullptr;
 }
 
 } // namespace layout

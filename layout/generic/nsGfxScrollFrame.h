@@ -170,20 +170,18 @@ public:
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void FinishReflowForScrollbar(mozilla::dom::Element* aElement,
-                                nscoord aMinXY, nscoord aMaxXY,
-                                nscoord aCurPosXY, nscoord aPageIncrement,
+  void FinishReflowForScrollbar(nsIContent* aContent, nscoord aMinXY,
+                                nscoord aMaxXY, nscoord aCurPosXY,
+                                nscoord aPageIncrement,
                                 nscoord aIncrement);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void SetScrollbarEnabled(mozilla::dom::Element* aElement, nscoord aMaxPos);
+  void SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void SetCoordAttribute(mozilla::dom::Element* aElement,
-                         nsAtom* aAtom,
-                         nscoord aSize);
+  void SetCoordAttribute(nsIContent* aContent, nsAtom* aAtom, nscoord aSize);
 
   nscoord GetCoordAttribute(nsIFrame* aFrame, nsAtom* aAtom, nscoord aDefaultValue,
                             nscoord* aRangeStart, nscoord* aRangeLength);
@@ -502,10 +500,10 @@ public:
   bool IsRootScrollFrameOfDocument() const { return mIsRoot; }
 
   // owning references to the nsIAnonymousContentCreator-built content
-  nsCOMPtr<mozilla::dom::Element> mHScrollbarContent;
-  nsCOMPtr<mozilla::dom::Element> mVScrollbarContent;
-  nsCOMPtr<mozilla::dom::Element> mScrollCornerContent;
-  nsCOMPtr<mozilla::dom::Element> mResizerContent;
+  nsCOMPtr<nsIContent> mHScrollbarContent;
+  nsCOMPtr<nsIContent> mVScrollbarContent;
+  nsCOMPtr<nsIContent> mScrollCornerContent;
+  nsCOMPtr<nsIContent> mResizerContent;
 
   RefPtr<ScrollEvent> mScrollEvent;
   RefPtr<ScrollEndEvent> mScrollEndEvent;

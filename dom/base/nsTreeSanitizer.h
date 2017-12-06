@@ -146,8 +146,8 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      * @return true if the attribute was removed and false otherwise
      */
     bool SanitizeURL(mozilla::dom::Element* aElement,
-                     int32_t aNamespace,
-                     nsAtom* aLocalName);
+                       int32_t aNamespace,
+                       nsAtom* aLocalName);
 
     /**
      * Checks a style rule for the presence of the 'binding' CSS property and
@@ -178,7 +178,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
     /**
      * Removes all attributes from an element node.
      */
-    void RemoveAllAttributes(mozilla::dom::Element* aElement);
+    void RemoveAllAttributes(nsIContent* aElement);
 
     /**
      * The whitelist of HTML elements.

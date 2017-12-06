@@ -48,10 +48,10 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
  protected:
 
 
-  virtual bool CheckElementStart(mozilla::dom::Element* aElement,
-                                 bool& aForceFormat,
-                                 nsAString& aStr,
-                                 nsresult& aResult) override;
+  virtual bool CheckElementStart(nsIContent * aContent,
+                          bool & aForceFormat,
+                          nsAString& aStr,
+                          nsresult& aResult) override;
 
   MOZ_MUST_USE
   virtual bool AfterElementStart(nsIContent* aContent,
@@ -77,14 +77,14 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual void MaybeLeaveFromPreContent(nsIContent* aNode) override;
 
   MOZ_MUST_USE
-  virtual bool SerializeAttributes(mozilla::dom::Element* aContent,
-                                   mozilla::dom::Element* aOriginalElement,
-                                   nsAString& aTagPrefix,
-                                   const nsAString& aTagNamespaceURI,
-                                   nsAtom* aTagName,
-                                   nsAString& aStr,
-                                   uint32_t aSkipAttr,
-                                   bool aAddNSAttr) override;
+  virtual bool SerializeAttributes(nsIContent* aContent,
+                           nsIContent *aOriginalElement,
+                           nsAString& aTagPrefix,
+                           const nsAString& aTagNamespaceURI,
+                           nsAtom* aTagName,
+                           nsAString& aStr,
+                           uint32_t aSkipAttr,
+                           bool aAddNSAttr) override;
 
   bool IsFirstChildOfOL(nsIContent* aElement);
 

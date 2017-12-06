@@ -118,9 +118,9 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   static nsIContent::AttrValuesArray strings[] = { &nsGkAtoms::increment,
                                                    &nsGkAtoms::decrement,
                                                    nullptr };
-  int32_t index = mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                         nsGkAtoms::type,
-                                                         strings, eCaseMatters);
+  int32_t index = mContent->FindAttrValueIn(kNameSpaceID_None,
+                                            nsGkAtoms::type,
+                                            strings, eCaseMatters);
   int32_t direction;
   if (index == 0)
     direction = 1;
@@ -132,8 +132,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   bool repeat = pressedButtonAction != 2;
   // set this attribute so we can style it later
   AutoWeakFrame weakFrame(this);
-  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                                 NS_LITERAL_STRING("true"), true);
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), true);
 
   nsIPresShell::SetCapturingContent(mContent, CAPTURE_IGNOREALLOWED);
 
@@ -196,7 +195,7 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
 {
   nsIPresShell::SetCapturingContent(nullptr, 0);
   // we're not active anymore
-  mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
+  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   StopRepeat();
   nsIFrame* scrollbar;
   GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);

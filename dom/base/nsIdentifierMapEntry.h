@@ -152,7 +152,7 @@ public:
   /**
    * Append all the elements with this id to aElements
    */
-  void AppendAllIdContent(nsCOMArray<Element>* aElements);
+  void AppendAllIdContent(nsCOMArray<nsIContent>* aElements);
   /**
    * This can fire ID change callbacks.
    * @return true if the content could be added, false if we failed due
