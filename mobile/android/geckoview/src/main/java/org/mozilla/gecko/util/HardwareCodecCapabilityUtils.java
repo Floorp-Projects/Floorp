@@ -50,6 +50,7 @@ public final class HardwareCodecCapabilityUtils {
     "SGH-I337",         // S4
     "SPH-L720",         // S4 (Sprint)
     "SAMSUNG-SGH-I337", // S4
+    "GT-I9195",         // S4 Mini
     "300E5EV/300E4EV/270E5EV/270E4EV/2470EV/2470EE",
     "LG-D605"           // LG Optimus L9 II
   };
