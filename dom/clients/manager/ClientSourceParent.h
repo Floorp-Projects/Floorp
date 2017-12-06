@@ -67,6 +67,9 @@ public:
   bool
   IsFrozen() const;
 
+  bool
+  ExecutionReady() const;
+
   void
   AttachHandle(ClientHandleParent* aClientSource);
 
