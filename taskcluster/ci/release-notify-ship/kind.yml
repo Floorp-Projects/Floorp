@@ -9,14 +9,16 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - beetmover-checksums
-   - release-bouncer-sub
+   - push-apk
+   - release-bouncer-aliases
+   - release-version-bump
+   - release-mark-as-shipped
 
 job-defaults:
-   name: notify-release-drivers-promote
-   description: Sends email to release-drivers telling release was promoted.
+   name: notify-release-drivers-ship
+   description: Sends email to release-drivers telling release was shipped.
    run-on-projects: []
-   shipping-phase: promote
+   shipping-phase: ship
    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
    worker:
       implementation: docker-worker
@@ -29,8 +31,8 @@ job-defaults:
          - echo "Dummy task"
    notifications:
       completed:
-         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
-         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
+         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
+         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
          plugins: ["ses"]
          emails:
             by-project:
@@ -46,9 +48,9 @@ job-defaults:
       type: release
       channel:
          by-project:
-            mozilla-beta: beta-candidates
-            mozilla-release: release-candidates
-            maple: maple-candidates
+            mozilla-beta: beta
+            mozilla-release: release
+            maple: maple
             default: unknown
 
 jobs:
