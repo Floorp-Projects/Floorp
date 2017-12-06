@@ -2467,7 +2467,6 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
 
   gfxSkipChars skipChars;
 
-  AutoTArray<int32_t,50> textBreakPoints;
   TextRunUserData dummyData;
   TextRunMappedFlow dummyMappedFlow;
   TextRunMappedFlow* userMappedFlows;
@@ -2487,9 +2486,6 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
     userMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
     userDataToDestroy = userData;
   }
-
-  uint32_t nextBreakIndex = 0;
-  nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
 
   const nsStyleText* textStyle = nullptr;
   for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
@@ -2512,12 +2508,6 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
     newFlow->mDOMOffsetToBeforeTransformOffset = skipChars.GetOriginalCharCount() -
       mappedFlow->mStartFrame->GetContentOffset();
     newFlow->mContentLength = contentLength;
-
-    while (nextBreakBeforeFrame && nextBreakBeforeFrame->GetContent() == content) {
-      textBreakPoints.AppendElement(
-          nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset);
-      nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
-    }
 
     nsTextFrameUtils::Flags analysisFlags;
     if (frag->Is2b()) {
