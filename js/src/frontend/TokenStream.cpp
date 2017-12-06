@@ -743,16 +743,16 @@ TokenStreamAnyChars::hasTokenizationStarted() const
 }
 
 void
-TokenStreamAnyChars::lineNumAndColumnIndex(size_t offset, uint32_t* line, uint32_t* column) const
+TokenStreamAnyChars::lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const
 {
     srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
-size_t
-TokenStreamAnyChars::offset() const
+void
+TokenStreamAnyChars::currentLineAndColumn(uint32_t* line, uint32_t* column) const
 {
-    // Default implementation. Overridden by `TokenStream`.
-    return 0;
+    uint32_t offset = currentToken().pos.begin;
+    srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
 bool
@@ -826,12 +826,6 @@ TokenStream::computeLineOfContext(ErrorMetadata* err, uint32_t offset)
     return true;
 }
 
-
-size_t
-TokenStream::offset() const
-{
-    return userbuf.offset();
-}
 
 bool
 TokenStream::reportStrictModeError(unsigned errorNumber, ...)
