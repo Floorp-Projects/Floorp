@@ -25,8 +25,8 @@ async_test(function(t) {
   var previousAnimVal = getMarginLeft(cs);
 
   animation.ready.then(waitForFrame).then(t.step_func(function() {
-    assert_true(getMarginLeft(cs) > previousAnimVal,
-                'margin-left is initially increasing');
+    assert_greater_than(getMarginLeft(cs), previousAnimVal,
+                        'margin-left is initially increasing');
     animation.pause();
     return animation.ready;
   })).then(t.step_func(function() {
@@ -39,8 +39,8 @@ async_test(function(t) {
     animation.play();
     return animation.ready.then(waitForFrame);
   })).then(t.step_func(function() {
-    assert_true(getMarginLeft(cs) > previousAnimVal,
-                'margin-left increases after calling play()');
+    assert_greater_than(getMarginLeft(cs), previousAnimVal,
+                        'margin-left increases after calling play()');
     t.done();
   }));
 }, 'pause() and play() a transition');
