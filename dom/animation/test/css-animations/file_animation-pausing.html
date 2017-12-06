@@ -24,7 +24,7 @@ promise_test(function(t) {
                 'Initial value of margin-left is zero');
   animation.play();
 
-  return animation.ready.then(waitForFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(function() {
     assert_greater_than(getMarginLeft(cs), 0,
                         'Playing value of margin-left is greater than zero');
   });
@@ -41,7 +41,7 @@ promise_test(function(t) {
   animation.pause();
   div.style.animationPlayState = 'running';
 
-  return animation.ready.then(waitForFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     assert_equals(getMarginLeft(cs), 0,
@@ -62,7 +62,7 @@ promise_test(function(t) {
   return animation.ready.then(function() {
     div.style.animationPlayState = 'running';
     cs.animationPlayState; // Trigger style resolution
-    return waitForFrame();
+    return waitForNextFrame();
   }).then(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
@@ -95,7 +95,7 @@ promise_test(function(t) {
   animation.play();
   var previousAnimVal = getMarginLeft(cs);
 
-  return animation.ready.then(waitForFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(function() {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
     assert_greater_than(getMarginLeft(cs), previousAnimVal,
@@ -125,7 +125,7 @@ promise_test(function(t) {
   animation.pause();
   var previousAnimVal = getMarginLeft(cs);
 
-  return animation.ready.then(waitForFrame).then(function() {
+  return animation.ready.then(waitForNextFrame).then(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     assert_equals(getMarginLeft(cs), previousAnimVal,
