@@ -174,7 +174,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mLayerTreeEpoch(0)
   , mPreserveLayers(false)
   , mRenderLayers(false)
-  , mHasLayers(false)
   , mHasPresented(false)
   , mHasBeforeUnload(false)
   , mIsMouseEnterIntoWidgetEventSuppressed(false)
@@ -2952,22 +2951,6 @@ NS_IMETHODIMP
 TabParent::RenderLayers(bool aEnabled)
 {
   if (aEnabled == mRenderLayers) {
-    if (aEnabled == mHasLayers && mPreserveLayers) {
-      // RenderLayers might be called when we've been preserving layers,
-      // and already had layers uploaded. In that case, the MozLayerTreeReady
-      // event will not naturally arrive, which can confuse the front-end
-      // layer. So we fire the event here.
-      RefPtr<TabParent> self = this;
-      bool epoch = mLayerTreeEpoch;
-      bool enabled = aEnabled;
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "dom::TabParent::RenderLayers",
-        [self, epoch, enabled] () {
-          MOZ_ASSERT(NS_IsMainThread());
-          self->LayerTreeUpdate(epoch, enabled);
-        }));
-    }
-
     return NS_OK;
   }
 
@@ -3082,6 +3065,35 @@ TabParent::GetHasBeforeUnload(bool* aResult)
   return NS_OK;
 }
 
+class LayerTreeUpdateRunnable final
+  : public mozilla::Runnable
+{
+  uint64_t mLayersId;
+  uint64_t mEpoch;
+  bool mActive;
+
+public:
+  explicit LayerTreeUpdateRunnable(uint64_t aLayersId,
+                                   uint64_t aEpoch,
+                                   bool aActive)
+    : Runnable("dom::LayerTreeUpdateRunnable")
+    , mLayersId(aLayersId)
+    , mEpoch(aEpoch)
+    , mActive(aActive)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+private:
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (RefPtr<TabParent> tabParent = TabParent::GetTabParentFromLayersId(mLayersId)) {
+      tabParent->LayerTreeUpdate(mEpoch, mActive);
+    }
+    return NS_OK;
+  }
+};
+
 void
 TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
 {
@@ -3097,8 +3109,6 @@ TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
     NS_WARNING("Could not locate target for layer tree message.");
     return;
   }
-
-  mHasLayers = aActive;
 
   RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
   if (aActive) {
