@@ -59,22 +59,16 @@ MOZ_MEMORY_API char *strndup_impl(const char *, size_t);
 #include <sys/types.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/Likely.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/mozalloc_oom.h"  // for mozalloc_handle_oom
-
-#ifdef __GNUC__
-#define LIKELY(x)    (__builtin_expect(!!(x), 1))
-#define UNLIKELY(x)  (__builtin_expect(!!(x), 0))
-#else
-#define LIKELY(x)    (x)
-#define UNLIKELY(x)  (x)
-#endif
 
 void*
 moz_xmalloc(size_t size)
 {
     void* ptr = malloc_impl(size);
-    if (UNLIKELY(!ptr && size)) {
+    if (MOZ_UNLIKELY(!ptr && size)) {
         mozalloc_handle_oom(size);
         return moz_xmalloc(size);
     }
@@ -85,8 +79,9 @@ void*
 moz_xcalloc(size_t nmemb, size_t size)
 {
     void* ptr = calloc_impl(nmemb, size);
-    if (UNLIKELY(!ptr && nmemb && size)) {
-        mozalloc_handle_oom(size);
+    if (MOZ_UNLIKELY(!ptr && nmemb && size)) {
+        mozilla::CheckedInt<size_t> totalSize = mozilla::CheckedInt<size_t>(nmemb) * size;
+        mozalloc_handle_oom(totalSize.isValid() ? totalSize.value() : SIZE_MAX);
         return moz_xcalloc(nmemb, size);
     }
     return ptr;
@@ -96,7 +91,7 @@ void*
 moz_xrealloc(void* ptr, size_t size)
 {
     void* newptr = realloc_impl(ptr, size);
-    if (UNLIKELY(!newptr && size)) {
+    if (MOZ_UNLIKELY(!newptr && size)) {
         mozalloc_handle_oom(size);
         return moz_xrealloc(ptr, size);
     }
@@ -107,7 +102,7 @@ char*
 moz_xstrdup(const char* str)
 {
     char* dup = strdup_impl(str);
-    if (UNLIKELY(!dup)) {
+    if (MOZ_UNLIKELY(!dup)) {
         mozalloc_handle_oom(0);
         return moz_xstrdup(str);
     }
@@ -119,7 +114,7 @@ char*
 moz_xstrndup(const char* str, size_t strsize)
 {
     char* dup = strndup_impl(str, strsize);
-    if (UNLIKELY(!dup)) {
+    if (MOZ_UNLIKELY(!dup)) {
         mozalloc_handle_oom(strsize);
         return moz_xstrndup(str, strsize);
     }
@@ -137,7 +132,7 @@ void*
 moz_xmemalign(size_t boundary, size_t size)
 {
     void* ptr = memalign_impl(boundary, size);
-    if (UNLIKELY(!ptr && EINVAL != errno)) {
+    if (MOZ_UNLIKELY(!ptr && EINVAL != errno)) {
         mozalloc_handle_oom(size);
         return moz_xmemalign(boundary, size);
     }
