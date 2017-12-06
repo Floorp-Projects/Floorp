@@ -1494,7 +1494,7 @@ public:
       // so they can clean up any gfx resources.
       if (SourceMediaStream* source = stream->AsSourceStream()) {
         // Finishing a SourceStream prevents new data from being appended.
-        source->Finish();
+        source->FinishPending();
       }
       stream->GetStreamTracks().Clear();
       stream->RemoveAllListenersImpl();
@@ -2656,7 +2656,7 @@ SourceMediaStream::SourceMediaStream()
   , mMutex("mozilla::media::SourceMediaStream")
   , mUpdateKnownTracksTime(0)
   , mPullEnabled(false)
-  , mUpdateFinished(false)
+  , mFinishPending(false)
   , mNeedsMixing(false)
 {
 }
@@ -2748,7 +2748,7 @@ SourceMediaStream::ExtractPendingInput(StreamTime aDesiredUpToTime,
     }
   }
 
-  bool finished = mUpdateFinished;
+  bool finished = mFinishPending;
   bool shouldNotifyTrackCreated = false;
 
   for (int32_t i = mUpdateTracks.Length() - 1; i >= 0; --i) {
@@ -3162,10 +3162,10 @@ SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
 }
 
 void
-SourceMediaStream::FinishWithLockHeld()
+SourceMediaStream::FinishPendingWithLockHeld()
 {
   mMutex.AssertCurrentThreadOwns();
-  mUpdateFinished = true;
+  mFinishPending = true;
   if (auto graph = GraphImpl()) {
     graph->EnsureNextIteration();
   }
@@ -3211,7 +3211,7 @@ SourceMediaStream::EndAllTrackAndFinish()
     data->mCommands |= TrackEventCommand::TRACK_EVENT_ENDED;
   }
   mPendingTracks.Clear();
-  FinishWithLockHeld();
+  FinishPendingWithLockHeld();
   // we will call NotifyEvent() to let GetUserMedia know
 }
 
@@ -3479,7 +3479,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
 }
 
 void
-ProcessedMediaStream::Finish()
+ProcessedMediaStream::QueueFinish()
 {
   class Message : public ControlMessage {
   public:
@@ -3494,7 +3494,7 @@ ProcessedMediaStream::Finish()
 }
 
 void
-ProcessedMediaStream::SetAutofinish(bool aAutofinish)
+ProcessedMediaStream::QueueSetAutofinish(bool aAutofinish)
 {
   class Message : public ControlMessage {
   public:
