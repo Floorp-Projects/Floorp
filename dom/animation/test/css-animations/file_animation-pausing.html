@@ -72,7 +72,7 @@ promise_test(function(t) {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
     previousAnimVal = getMarginLeft(cs);
-    return waitForFrame();
+    return waitForNextFrame();
   }).then(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'Animated value of margin-left does not change when'
