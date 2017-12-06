@@ -210,23 +210,6 @@ protected:
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener,
                   nsISupportsWeakReference, nsIObserver)
 
-//---------------------------------------------------
-//-- nsPrintJob Class Impl
-//---------------------------------------------------
-nsPrintJob::nsPrintJob()
-  : mIsCreatingPrintPreview(false)
-  , mIsDoingPrinting(false)
-  , mIsDoingPrintPreview(false)
-  , mProgressDialogIsShown(false)
-  , mScreenDPI(115.0f)
-  , mPagePrintTimer(nullptr)
-  , mLoadCounter(0)
-  , mDidLoadDataForPrinting(false)
-  , mIsDestroying(false)
-  , mDisallowSelectionPrint(false)
-{
-}
-
 //-------------------------------------------------------
 nsPrintJob::~nsPrintJob()
 {
@@ -406,7 +389,7 @@ nsPrintJob::CommonPrint(bool                    aIsPrintPreview,
                               aWebProgressListener, aDoc);
   if (NS_FAILED(rv)) {
     if (aIsPrintPreview) {
-      SetIsCreatingPrintPreview(false);
+      mIsCreatingPrintPreview = false;
       SetIsPrintPreview(false);
     } else {
       SetIsPrinting(false);
@@ -463,7 +446,7 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
 
   if (aIsPrintPreview) {
-    SetIsCreatingPrintPreview(true);
+    mIsCreatingPrintPreview = true;
     SetIsPrintPreview(true);
     nsCOMPtr<nsIContentViewer> viewer =
       do_QueryInterface(mDocViewerPrint);
@@ -548,7 +531,7 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
   // cause our print/print-preview operation to finish. In this case, we
   // should immediately return an error code so that the root caller knows
   // it shouldn't continue to do anything with this instance.
-  if (mIsDestroying || (aIsPrintPreview && !GetIsCreatingPrintPreview())) {
+  if (mIsDestroying || (aIsPrintPreview && !mIsCreatingPrintPreview)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1544,7 +1527,7 @@ nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting)
     SetIsPrinting(false);
   } else {
     SetIsPrintPreview(false);
-    SetIsCreatingPrintPreview(false);
+    mIsCreatingPrintPreview = false;
   }
 
   /* cleanup done, let's fire-up an error dialog to notify the user
@@ -3450,11 +3433,11 @@ nsPrintJob::FinishPrintPreview()
   // Note that this method may be called while the instance is being
   // initialized.  Some methods which initialize the instance (e.g.,
   // DoCommonPrint) may need to stop initializing and return error if
-  // this is called.  Therefore it's important to set IsCreatingPrintPreview
-  // state to false here.  If you need to remove this call of
-  // SetIsCreatingPrintPreview here, you need to keep them being able to
-  // check whether the owner stopped using this instance.
-  SetIsCreatingPrintPreview(false);
+  // this is called.  Therefore it's important to set mIsCreatingPrintPreview
+  // state to false here.  If you need to stop setting that here, you need to
+  // keep them being able to check whether the owner stopped using this
+  // instance.
+  mIsCreatingPrintPreview = false;
 
   // mPrt may be cleared during a call of nsPrintData::OnEndPrinting()
   // because that method invokes some arbitrary listeners.
