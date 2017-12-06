@@ -83,15 +83,15 @@ make_add_instruction() {
     # before performing this add instruction.
     testdir=$(echo "$f" | sed 's/\(.*distribution\/extensions\/[^\/]*\)\/.*/\1/')
     notice "     add-if \"$testdir\" \"$f\""
-    echo "add-if \"$testdir\" \"$f\"" >> $filev2
+    echo "add-if \"$testdir\" \"$f\"" >> "$filev2"
     if [ ! $filev3 = "" ]; then
-      echo "add-if \"$testdir\" \"$f\"" >> $filev3
+      echo "add-if \"$testdir\" \"$f\"" >> "$filev3"
     fi
   else
     notice "        add \"$f\"$forced"
-    echo "add \"$f\"" >> $filev2
+    echo "add \"$f\"" >> "$filev2"
     if [ ! $filev3 = "" ]; then
-      echo "add \"$f\"" >> $filev3
+      echo "add \"$f\"" >> "$filev3"
     fi
   fi
 }
@@ -138,12 +138,12 @@ make_patch_instruction() {
     # before performing this add instruction.
     testdir=$(echo "$f" | sed 's/\(.*distribution\/extensions\/[^\/]*\)\/.*/\1/')
     notice "   patch-if \"$testdir\" \"$f.patch\" \"$f\""
-    echo "patch-if \"$testdir\" \"$f.patch\" \"$f\"" >> $filev2
-    echo "patch-if \"$testdir\" \"$f.patch\" \"$f\"" >> $filev3
+    echo "patch-if \"$testdir\" \"$f.patch\" \"$f\"" >> "$filev2"
+    echo "patch-if \"$testdir\" \"$f.patch\" \"$f\"" >> "$filev3"
   else
     notice "      patch \"$f.patch\" \"$f\""
-    echo "patch \"$f.patch\" \"$f\"" >> $filev2
-    echo "patch \"$f.patch\" \"$f\"" >> $filev3
+    echo "patch \"$f.patch\" \"$f\"" >> "$filev2"
+    echo "patch \"$f.patch\" \"$f\"" >> "$filev3"
   fi
 }
 
@@ -172,18 +172,18 @@ append_remove_instructions() {
         if [ ! $(echo "$f" | grep -c '^#') = 1 ]; then
           if [ $(echo "$f" | grep -c '\/$') = 1 ]; then
             notice "      rmdir \"$f\""
-            echo "rmdir \"$f\"" >> $filev2
-            echo "rmdir \"$f\"" >> $filev3
+            echo "rmdir \"$f\"" >> "$filev2"
+            echo "rmdir \"$f\"" >> "$filev3"
           elif [ $(echo "$f" | grep -c '\/\*$') = 1 ]; then
             # Remove the *
             f=$(echo "$f" | sed -e 's:\*$::')
             notice "    rmrfdir \"$f\""
-            echo "rmrfdir \"$f\"" >> $filev2
-            echo "rmrfdir \"$f\"" >> $filev3
+            echo "rmrfdir \"$f\"" >> "$filev2"
+            echo "rmrfdir \"$f\"" >> "$filev3"
           else
             notice "     remove \"$f\""
-            echo "remove \"$f\"" >> $filev2
-            echo "remove \"$f\"" >> $filev3
+            echo "remove \"$f\"" >> "$filev2"
+            echo "remove \"$f\"" >> "$filev3"
           fi
         fi
       fi
