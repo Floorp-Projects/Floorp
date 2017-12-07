@@ -444,7 +444,7 @@ ScriptLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest)
     return rv;
   }
 
-  if (!aRequest->mModuleScript->IsErrored()) {
+  if (!aRequest->mModuleScript->HasParseError()) {
     StartFetchingModuleDependencies(aRequest);
   }
 
@@ -518,7 +518,7 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
         return NS_ERROR_FAILURE;
       }
 
-      moduleScript->SetPreInstantiationError(error);
+      moduleScript->SetParseError(error);
       aRequest->ModuleErrored();
       return NS_OK;
     }
@@ -530,8 +530,6 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
     nsCOMArray<nsIURI> urls;
     rv = ResolveRequestedModules(aRequest, urls);
     if (NS_FAILED(rv)) {
-      // ResolveRequestedModules sets pre-instanitation error on failure.
-      MOZ_ASSERT(moduleScript->IsErrored());
       aRequest->ModuleErrored();
       return NS_OK;
     }
@@ -574,7 +572,7 @@ HandleResolveFailure(JSContext* aCx, ModuleScript* aScript,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  aScript->SetPreInstantiationError(error);
+  aScript->SetParseError(error);
   return NS_OK;
 }
 
@@ -675,7 +673,6 @@ ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>& aUrls)
     }
 
     // Let url be the result of resolving a module specifier given module script and requested.
-    ModuleScript* ms = aRequest->mModuleScript;
     nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(ms, specifier);
     if (!uri) {
       uint32_t lineNumber = 0;
@@ -702,7 +699,7 @@ void
 ScriptLoader::StartFetchingModuleDependencies(ModuleLoadRequest* aRequest)
 {
   MOZ_ASSERT(aRequest->mModuleScript);
-  MOZ_ASSERT(!aRequest->mModuleScript->IsErrored());
+  MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
   MOZ_ASSERT(!aRequest->IsReadyToRun());
 
   LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
@@ -814,7 +811,7 @@ HostResolveImportedModule(JSContext* aCx, unsigned argc, JS::Value* vp)
   ModuleScript* ms = script->Loader()->GetFetchedModule(uri);
   MOZ_ASSERT(ms, "Resolved module not found in module map");
 
-  MOZ_ASSERT(!ms->IsErrored());
+  MOZ_ASSERT(!ms->HasParseError());
 
   *vp = JS::ObjectValue(*ms->ModuleRecord());
   return true;
@@ -844,22 +841,20 @@ ScriptLoader::CheckModuleDependenciesLoaded(ModuleLoadRequest* aRequest)
   LOG(("ScriptLoadRequest (%p): Check dependencies loaded", aRequest));
 
   RefPtr<ModuleScript> moduleScript = aRequest->mModuleScript;
-  if (moduleScript && !moduleScript->IsErrored()) {
-    for (auto childRequest : aRequest->mImports) {
-      ModuleScript* childScript = childRequest->mModuleScript;
-      if (!childScript) {
-        aRequest->mModuleScript = nullptr;
-        LOG(("ScriptLoadRequest (%p):   %p failed (load error)", aRequest, childScript));
-        return;
-      } else if (childScript->IsErrored()) {
-        moduleScript->SetPreInstantiationError(childScript->Error());
-        LOG(("ScriptLoadRequest (%p):   %p failed (error)", aRequest, childScript));
-        return;
-      }
+  if (!moduleScript || moduleScript->HasParseError()) {
+    return;
+  }
+
+  for (auto childRequest : aRequest->mImports) {
+    ModuleScript* childScript = childRequest->mModuleScript;
+    if (!childScript) {
+      aRequest->mModuleScript = nullptr;
+      LOG(("ScriptLoadRequest (%p):   %p failed (load error)", aRequest, childRequest.get()));
+      return;
     }
   }
 
-  LOG(("ScriptLoadRequest (%p):   all ok", aRequest));
+ LOG(("ScriptLoadRequest (%p):   all ok", aRequest));
 }
 
 void
@@ -867,7 +862,7 @@ ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest)
 {
   if (aRequest->IsTopLevel()) {
     ModuleScript* moduleScript = aRequest->mModuleScript;
-    if (moduleScript && !moduleScript->IsErrored()) {
+    if (moduleScript && !moduleScript->HasErrorToRethrow()) {
       if (!InstantiateModuleTree(aRequest)) {
         aRequest->mModuleScript = nullptr;
       }
@@ -879,6 +874,28 @@ ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest)
   if (aRequest->mWasCompiledOMT) {
     mDocument->UnblockOnload(false);
   }
+}
+
+JS::Value
+ScriptLoader::FindFirstParseError(ModuleLoadRequest* aRequest)
+{
+  MOZ_ASSERT(aRequest);
+
+  ModuleScript* moduleScript = aRequest->mModuleScript;
+  MOZ_ASSERT(moduleScript);
+
+  if (moduleScript->HasParseError()) {
+    return moduleScript->ParseError();
+  }
+
+  for (ModuleLoadRequest* childRequest : aRequest->mImports) {
+    JS::Value error = FindFirstParseError(childRequest);
+    if (!error.isUndefined()) {
+      return error;
+    }
+  }
+
+  return JS::UndefinedValue();
 }
 
 bool
@@ -893,6 +910,14 @@ ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
 
   ModuleScript* moduleScript = aRequest->mModuleScript;
   MOZ_ASSERT(moduleScript);
+
+  JS::Value parseError = FindFirstParseError(aRequest);
+  if (!parseError.isUndefined()) {
+    LOG(("ScriptLoadRequest (%p):   found parse error", aRequest));
+    moduleScript->SetErrorToRethrow(parseError);
+    return true;
+  }
+
   MOZ_ASSERT(moduleScript->ModuleRecord());
 
   nsAutoMicroTask mt;
@@ -915,7 +940,7 @@ ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
       return false;
     }
     MOZ_ASSERT(!exception.isUndefined());
-    // Ignore the exception. It will be recorded in the module record.
+    moduleScript->SetErrorToRethrow(exception);
   }
 
   return true;
@@ -1582,7 +1607,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     } else {
       AddDeferRequest(request);
     }
-    if (!modReq->mModuleScript->IsErrored()) {
+    if (!modReq->mModuleScript->HasParseError()) {
       StartFetchingModuleDependencies(modReq);
     }
     return false;
@@ -2210,9 +2235,9 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
       MOZ_ASSERT(!request->mOffThreadToken);
 
       ModuleScript* moduleScript = request->mModuleScript;
-      if (moduleScript->IsErrored()) {
-        LOG(("ScriptLoadRequest (%p):   module is errored", aRequest));
-        JS::Rooted<JS::Value> error(cx, moduleScript->Error());
+      if (moduleScript->HasErrorToRethrow()) {
+        LOG(("ScriptLoadRequest (%p):   module has error to rethrow", aRequest));
+        JS::Rooted<JS::Value> error(cx, moduleScript->ErrorToRethrow());
         JS_SetPendingException(cx, error);
         return NS_OK; // An error is reported by AutoEntryScript.
       }

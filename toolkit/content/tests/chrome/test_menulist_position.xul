@@ -50,6 +50,19 @@ function popupShown()
     ok(isWithinHalfPixel(menulistlabel.getBoundingClientRect().top,
                          mitemlabel.getBoundingClientRect().top),
        "Labels vertically aligned for index " + index);
+
+    // Store the current value and reset it afterwards.
+    let current = menulist.selectedIndex;
+
+    // Cycle through the items to ensure that the popup doesn't move when the selection changes.
+    for (let i = 0; i < menulist.itemCount; i++) {
+      menulist.selectedIndex = i;
+
+      let newpopuprect = menulist.menupopup.getBoundingClientRect();
+      is(newpopuprect.x, popuprect.x, "Popup remained horizontally for index " + i + " starting at " + current);
+      is(newpopuprect.y, popuprect.y, "Popup remained vertically for index " + i + " starting at " + current);
+    }
+    menulist.selectedIndex = current;
   }
   else {
     let marginTop = parseFloat(getComputedStyle(menulist.menupopup).marginTop);
@@ -73,14 +86,16 @@ function popupHidden()
 ]]>
 </script>
 
-<hbox align="center" pack="center" style="margin-top: 100px;">
+<hbox align="center" pack="center" style="margin-top: 140px;">
   <menulist id="menulist" onpopupshown="popupShown();" onpopuphidden="popupHidden();">
-    <menupopup>
+    <menupopup style="max-height: 90px;">
       <menuitem label="One"/>
       <menuitem label="Two"/>
       <menuitem label="Three"/>
       <menuitem label="Four"/>
       <menuitem label="Five"/>
+      <menuitem label="Six"/>
+      <menuitem label="Seven"/>
     </menupopup>
   </menulist>
 </hbox>

@@ -7,9 +7,9 @@
 #include "HttpLog.h"
 
 #include "nsHttpBasicAuth.h"
-#include "plbase64.h"
 #include "plstr.h"
 #include "nsString.h"
+#include "mozilla/Base64.h"
 
 namespace mozilla {
 namespace net {
@@ -87,21 +87,21 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
     bool isBasicAuth = !PL_strncasecmp(challenge, "basic", 5);
     NS_ENSURE_TRUE(isBasicAuth, NS_ERROR_UNEXPECTED);
 
-    // we work with ASCII around here
+    // we work with UTF-8 around here
     nsAutoCString userpass;
-    LossyCopyUTF16toASCII(user, userpass);
+    CopyUTF16toUTF8(user, userpass);
     userpass.Append(':'); // always send a ':' (see bug 129565)
-    if (password)
-        LossyAppendUTF16toASCII(password, userpass);
+    if (password) {
+        AppendUTF16toUTF8(password, userpass);
+    }
 
-    // plbase64.h provides this worst-case output buffer size calculation.
-    // use calloc, since PL_Base64Encode does not null terminate.
-    *creds = (char *) calloc(6 + ((userpass.Length() + 2)/3)*4 + 1, 1);
-    if (!*creds)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsAutoCString authString;
+    nsresult rv = Base64Encode(userpass, authString);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    memcpy(*creds, "Basic ", 6);
-    PL_Base64Encode(userpass.get(), userpass.Length(), *creds + 6);
+    authString.InsertLiteral("Basic ", 0);
+
+    *creds = ToNewCString(authString);
     return NS_OK;
 }
 
