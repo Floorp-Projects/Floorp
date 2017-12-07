@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,11 +15,9 @@ import android.view.View;
 import android.widget.EditText;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.search.ManualAddSearchEnginePreference;
 import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.UrlUtils;
-
-import java.util.Collections;
 
 public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
     @Override
@@ -50,17 +47,14 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 final String engineName = ((EditText) rootView.findViewById(R.id.edit_engine_name)).getText().toString();
                 final String searchQuery = ((EditText) rootView.findViewById(R.id.edit_search_string)).getText().toString();
 
-                final SharedPreferences sharedPreferences = getSearchEngineSharedPreferences();
-                boolean isSuccess = false;
-                if (TextUtils.isEmpty(engineName)) {
-                    Snackbar.make(rootView, R.string.search_add_error_empty_name, Snackbar.LENGTH_SHORT).show();
-                } else if (TextUtils.isEmpty(searchQuery)) {
-                    Snackbar.make(rootView, R.string.search_add_error_empty_search, Snackbar.LENGTH_SHORT).show();
-                } else if (!validateSearchFields(engineName, searchQuery, sharedPreferences)) {
-                    Snackbar.make(rootView, R.string.search_add_error_format, Snackbar.LENGTH_SHORT).show();
-                } else {
+                final ManualAddSearchEnginePreference pref = (ManualAddSearchEnginePreference) findPreference(getString(R.string.pref_key_manual_add_search_engine));
+                final boolean engineValid = pref.validateEngineNameAndShowError(engineName);
+                final boolean searchValid = pref.validateSearchQueryAndShowError(searchQuery);
+
+                final boolean isSuccess = engineValid && searchValid;
+                if (isSuccess) {
+                    final SharedPreferences sharedPreferences = getSearchEngineSharedPreferences();
                     SearchEngineManager.addSearchEngine(sharedPreferences, getActivity(), engineName, searchQuery);
-                    isSuccess = true;
                     Snackbar.make(rootView, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show();
                     getFragmentManager().popBackStack();
                 }
@@ -69,14 +63,5 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private static boolean validateSearchFields(String engineName, String searchString, SharedPreferences sharedPreferences) {
-        if (sharedPreferences.getStringSet(SearchEngineManager.PREF_KEY_CUSTOM_SEARCH_ENGINES,
-                Collections.<String>emptySet()).contains(engineName)) {
-            return false;
-        }
-
-        return UrlUtils.isValidSearchQueryUrl(searchString);
     }
 }

@@ -81,7 +81,7 @@
         <activity android:name=".activity.SettingsActivity"
             android:theme="@style/SettingsTheme"
             android:configChanges="locale"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustPan"/>
 
         <activity android:name=".activity.InfoActivity"
                   android:theme="@style/InfoTheme"/>

@@ -14,6 +14,7 @@
     android:importantForAutofill="noExcludeDescendants">
 
     <android.support.design.widget.TextInputLayout
+        android:id="@+id/edit_engine_name_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <android.support.design.widget.TextInputEditText
@@ -21,10 +22,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/search_add_manually_name_hint"
-            android:inputType="text" />
+            android:inputType="text">
+            <requestFocus/>
+        </android.support.design.widget.TextInputEditText>
     </android.support.design.widget.TextInputLayout>
 
     <android.support.design.widget.TextInputLayout
+        android:id="@+id/edit_search_string_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <android.support.design.widget.TextInputEditText
