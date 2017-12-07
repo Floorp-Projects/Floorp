@@ -44,7 +44,6 @@ public:
   already_AddRefed<ContainerLayer> CreateContainerLayer() override;
   already_AddRefed<ImageLayer> CreateImageLayer() override;
   already_AddRefed<ColorLayer> CreateColorLayer() override;
-  already_AddRefed<TextLayer> CreateTextLayer() override;
   already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
   already_AddRefed<RefLayer> CreateRefLayer() override;
   already_AddRefed<BorderLayer> CreateBorderLayer() override;
