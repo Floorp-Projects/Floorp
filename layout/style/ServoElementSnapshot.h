@@ -9,7 +9,6 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/TypedEnumBits.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/Element.h"
 #include "nsAttrName.h"
@@ -217,7 +216,7 @@ ServoElementSnapshot::AddAttrs(mozilla::dom::Element* aElement,
 
   uint32_t attrCount = aElement->GetAttrCount();
   mAttrs.SetCapacity(attrCount);
-  for (uint32_t i : IntegerRange(attrCount)) {
+  for (uint32_t i = 0; i < attrCount; ++i) {
     const BorrowedAttrInfo info = aElement->GetAttrInfoAt(i);
     MOZ_ASSERT(info);
     mAttrs.AppendElement(ServoAttrSnapshot { *info.mName, *info.mValue });
