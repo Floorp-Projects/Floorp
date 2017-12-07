@@ -297,6 +297,20 @@ public:
   }
 
   /**
+   * SetToEndOf() sets this to the end of aContainer.  Then, mChild is always
+   * nullptr but marked as initialized and mOffset is always set.
+   */
+  void
+  SetToEndOf(const nsINode* aContainer)
+  {
+    MOZ_ASSERT(aContainer);
+    mParent = const_cast<nsINode*>(aContainer);
+    mChild = nullptr;
+    mOffset = mozilla::Some(mParent->Length());
+    mIsChildInitialized = true;
+  }
+
+  /**
    * Clear() makes the instance not point anywhere.
    */
   void
@@ -708,7 +722,7 @@ public:
     } else {
       // If the point referred after the last child, let's keep referring
       // after current last node of the old container.
-      mPoint.Set(mPoint.Container(), mPoint.Container()->Length());
+      mPoint.SetToEndOf(mPoint.Container());
     }
   }
 
