@@ -1306,8 +1306,10 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
     return NS_OK;
   }
 
+  // We need an owning handle when calling nsIX509Cert::GetCert().
+  UniqueCERTCertificate nssRootCert(rootCert->GetCert());
   // If the root is not one of the Symantec roots, exit false
-  if (!CertDNIsInList(rootCert->GetCert(), RootSymantecDNs)) {
+  if (!CertDNIsInList(nssRootCert.get(), RootSymantecDNs)) {
     aResult = false;
     return NS_OK;
   }
@@ -1319,7 +1321,9 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
   intCertList->ForEachCertificateInChain(
     [&foundInWhitelist] (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
                          /* out */ bool& aContinue) {
-      if (CertDNIsInList(aCert->GetCert(), RootAppleAndGoogleDNs)) {
+      // We need an owning handle when calling nsIX509Cert::GetCert().
+      UniqueCERTCertificate nssCert(aCert->GetCert());
+      if (CertDNIsInList(nssCert.get(), RootAppleAndGoogleDNs)) {
         foundInWhitelist = true;
         aContinue = false;
       }
