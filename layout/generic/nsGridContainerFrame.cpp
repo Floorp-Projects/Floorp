@@ -606,6 +606,8 @@ struct nsGridContainerFrame::GridItemInfo
 
   // Return true if we should apply Automatic Minimum Size to this item.
   // https://drafts.csswg.org/css-grid/#min-size-auto
+  // @note the caller should also check that the item spans at least one track
+  // that has a min track sizing function that is 'auto' before applying it.
   bool ShouldApplyAutoMinSize(WritingMode aContainerWM,
                               LogicalAxis aContainerAxis,
                               nscoord aPercentageBasis) const
@@ -3774,6 +3776,13 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   CachedIntrinsicSizes cache;
   TrackSize& sz = mSizes[aRange.mStart];
   WritingMode wm = aState.mWM;
+
+  // Check if we need to apply "Automatic Minimum Size" and cache it.
+  if ((sz.mState & TrackSize::eAutoMinSizing) &&
+      aGridItem.ShouldApplyAutoMinSize(wm, mAxis, aPercentageBasis)) {
+    aGridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
+  }
+
   // Calculate data for "Automatic Minimum Size" clamping, if needed.
   bool needed = ((sz.mState & TrackSize::eIntrinsicMinSizing) ||
                  aConstraint == SizingConstraint::eNoConstraint) &&
@@ -4180,14 +4189,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
     auto& gridItem = aGridItems[iter.ItemIndex()];
-
-    // Check if we need to apply "Automatic Minimum Size" and cache it.
     MOZ_ASSERT(!(gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize),
                "Why is eApplyAutoMinSize set already?");
-    if (gridItem.ShouldApplyAutoMinSize(wm, mAxis, aPercentageBasis)) {
-      gridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
-    }
-
     const GridArea& area = gridItem.mArea;
     const LineRange& lineRange = area.*aRange;
     uint32_t span = lineRange.Extent();
@@ -4199,6 +4202,13 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       }
     } else {
       TrackSize::StateBits state = StateBitsForRange(lineRange);
+
+      // Check if we need to apply "Automatic Minimum Size" and cache it.
+      if ((state & TrackSize::eAutoMinSizing) &&
+          gridItem.ShouldApplyAutoMinSize(wm, mAxis, aPercentageBasis)) {
+        gridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
+      }
+
       if ((state & (TrackSize::eIntrinsicMinSizing |
                     TrackSize::eIntrinsicMaxSizing)) &&
           !(state & TrackSize::eFlexMaxSizing)) {
