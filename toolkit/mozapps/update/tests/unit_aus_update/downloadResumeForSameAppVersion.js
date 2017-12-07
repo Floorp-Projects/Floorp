@@ -5,7 +5,6 @@
 
 function run_test() {
   setupTestCommon();
-  start_httpserver();
 
   debugDump("testing resuming an update download in progress for the same " +
             "version of the application on startup (Bug 485624)");
@@ -36,5 +35,5 @@ function run_test() {
  * Called after the call to waitForUpdateXMLFiles finishes.
  */
 function waitForUpdateXMLFilesFinished() {
-  stop_httpserver(doTestFinish);
+  do_execute_soon(doTestFinish);
 }
