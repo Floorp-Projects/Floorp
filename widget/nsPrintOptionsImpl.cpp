@@ -619,6 +619,14 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
 
   if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
     if (GETSTRPREF(kPrintToFileName, str)) {
+      if (StringEndsWith(str, NS_LITERAL_STRING(".ps"))) {
+        // We only support PDF since bug 1425188 landed.  Users may still have
+        // prefs with .ps filenames if they last saved a file as Postscript
+        // though, so we fix that up here.  (The pref values will be
+        // overwritten the next time they save to file as a PDF.)
+        str.Truncate(str.Length() - 2);
+        str.AppendLiteral("pdf");
+      }
       aPS->SetToFileName(str);
       DUMP_STR(kReadStr, kPrintToFileName, str.get());
     }
