@@ -441,7 +441,7 @@ function testParseVariable(doc, parser) {
       variables: {"--seen": "chartreuse" },
       expected: "<span>var(<span class=\"unmatched-class\" " +
         "data-variable=\"--not-seen is not set\">--not-seen</span>,<span> <span>var" +
-        "(<span data-variable=\"--seen = chartreuse\">--seen</span>)</span></span>)" + 
+        "(<span data-variable=\"--seen = chartreuse\">--seen</span>)</span></span>)" +
         "</span>"
     },
   ];
