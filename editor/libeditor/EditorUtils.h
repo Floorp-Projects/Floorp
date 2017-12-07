@@ -176,7 +176,7 @@ public:
   nsIContent* GetRightNode() const
   {
     if (mGivenSplitPoint.IsSet()) {
-      return mGivenSplitPoint.GetChildAtOffset();
+      return mGivenSplitPoint.GetChild();
     }
     return mPreviousNode && !mNextNode ? mPreviousNode : mNextNode;
   }
@@ -188,7 +188,7 @@ public:
   {
     if (mGivenSplitPoint.IsSet()) {
       return mGivenSplitPoint.IsEndOfContainer() ?
-               mGivenSplitPoint.GetChildAtOffset() : nullptr;
+               mGivenSplitPoint.GetChild() : nullptr;
     }
     return mPreviousNode;
   }
@@ -200,7 +200,7 @@ public:
   {
     if (mGivenSplitPoint.IsSet()) {
       return !mGivenSplitPoint.IsEndOfContainer() ?
-                mGivenSplitPoint.GetChildAtOffset() : nullptr;
+                mGivenSplitPoint.GetChild() : nullptr;
     }
     return mNextNode;
   }

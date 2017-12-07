@@ -423,7 +423,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
     MOZ_ASSERT(pointToInsert.GetContainer()->
                                GetChildAt(pointToInsert.Offset()) ==
-                 pointToInsert.GetChildAtOffset());
+                 pointToInsert.GetChild());
 
     // Loop over the node list and paste the nodes:
     nsCOMPtr<nsINode> parentBlock =

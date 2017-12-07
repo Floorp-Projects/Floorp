@@ -398,7 +398,7 @@ public:
 
   /**
    * MoveAllChildren() moves all children of aContainer to before
-   * aPointToInsert.GetChildAtOffset().
+   * aPointToInsert.GetChild().
    * See explanation of MoveChildren() for the detail of the behavior.
    *
    * @param aContainer          The container node whose all children should
@@ -414,7 +414,7 @@ public:
 
   /**
    * MovePreviousSiblings() moves all siblings before aChild (i.e., aChild
-   * won't be moved) to before aPointToInsert.GetChildAtOffset().
+   * won't be moved) to before aPointToInsert.GetChild().
    * See explanation of MoveChildren() for the detail of the behavior.
    *
    * @param aChild              The node which is next sibling of the last
@@ -430,7 +430,7 @@ public:
 
   /**
    * MoveChildren() moves all children between aFirstChild and aLastChild to
-   * before aPointToInsert.GetChildAtOffset().
+   * before aPointToInsert.GetChild().
    * If some children are moved to different container while this method
    * moves other children, they are just ignored.
    * If the child node referred by aPointToInsert is moved to different
@@ -974,7 +974,7 @@ public:
    *   // Do something...
    *   DebugOnly<bool> advanced = point.Advanced();
    *   MOZ_ASSERT(advanced);
-   *   point.Set(point.GetChildAtOffset());
+   *   point.Set(point.GetChild());
    * }
    *
    * On the other hand, the methods taking nsINode behavior must be what

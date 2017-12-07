@@ -146,7 +146,7 @@ SplitNodeTransaction::RedoTransaction()
     nsCOMPtr<nsIContent> nextSibling;
     for (uint32_t i = 0; i < mStartOfRightNode.Offset(); i++) {
       // XXX This must be bad behavior.  Perhaps, we should work with
-      //     mStartOfRightNode::GetChildAtOffset().  Even if some children
+      //     mStartOfRightNode::GetChild().  Even if some children
       //     before the right node have been inserted or removed, we should
       //     move all children before the right node because user must focus
       //     on the right node, so, it must be the expected behavior.

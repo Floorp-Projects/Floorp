@@ -32,7 +32,7 @@ InsertNodeTransaction::InsertNodeTransaction(
 {
   MOZ_ASSERT(mPointToInsert.IsSetAndValid());
   // Ensure mPointToInsert stores child at offset.
-  Unused << mPointToInsert.GetChildAtOffset();
+  Unused << mPointToInsert.GetChild();
 }
 
 InsertNodeTransaction::~InsertNodeTransaction()
@@ -61,8 +61,8 @@ InsertNodeTransaction::DoTransaction()
   if (!mPointToInsert.IsSetAndValid()) {
     // It seems that DOM tree has been changed after first DoTransaction()
     // and current RedoTranaction() call.
-    if (mPointToInsert.GetChildAtOffset()) {
-      EditorDOMPoint newPointToInsert(mPointToInsert.GetChildAtOffset());
+    if (mPointToInsert.GetChild()) {
+      EditorDOMPoint newPointToInsert(mPointToInsert.GetChild());
       if (!newPointToInsert.IsSet()) {
         // The insertion point has been removed from the DOM tree.
         // In this case, we should append the node to the container instead.
@@ -84,7 +84,7 @@ InsertNodeTransaction::DoTransaction()
 
   ErrorResult error;
   mPointToInsert.GetContainer()->InsertBefore(*mContentToInsert,
-                                              mPointToInsert.GetChildAtOffset(),
+                                              mPointToInsert.GetChild(),
                                               error);
   error.WouldReportJSException();
   if (NS_WARN_IF(error.Failed())) {

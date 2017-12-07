@@ -115,15 +115,15 @@ CreateElementTransaction::InsertNewNode(ErrorResult& aError)
     }
     mPointToInsert.GetContainer()->
                      InsertBefore(*mNewNode,
-                                  mPointToInsert.GetChildAtOffset(),
+                                  mPointToInsert.GetChild(),
                                   aError);
     NS_WARNING_ASSERTION(!aError.Failed(), "Failed to insert the new node");
     return;
   }
 
-  if (NS_WARN_IF(mPointToInsert.GetChildAtOffset() &&
+  if (NS_WARN_IF(mPointToInsert.GetChild() &&
                  mPointToInsert.GetContainer() !=
-                   mPointToInsert.GetChildAtOffset()->GetParentNode())) {
+                   mPointToInsert.GetChild()->GetParentNode())) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
