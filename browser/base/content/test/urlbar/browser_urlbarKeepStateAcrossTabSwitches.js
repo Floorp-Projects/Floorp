@@ -10,6 +10,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
   // NB: CPOW usage because new tab pages can be preloaded, in which case no
   // load events fire.
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   await BrowserTestUtils.waitForCondition(() => browser.contentDocumentAsCPOW && !browser.contentDocumentAsCPOW.hidden);
   let errorPageLoaded = BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   gURLBar.value = input;
@@ -34,6 +35,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
   // NB: CPOW usage because new tab pages can be preloaded, in which case no
   // load events fire.
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   await BrowserTestUtils.waitForCondition(() => browser.contentDocumentAsCPOW && !browser.contentDocumentAsCPOW.hidden);
   let errorPageLoaded = BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   gURLBar.value = input;
