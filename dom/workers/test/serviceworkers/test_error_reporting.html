@@ -5,6 +5,7 @@
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="error_reporting_helpers.js"></script>
+  <script src="utils.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 </head>
@@ -70,7 +71,186 @@ add_task(async function register_bad_mime_type() {
 
   await wait_for_expected_message(expectedMessage);
 });
-</script>
 
+async function notAllowStorageAccess() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.lifetimePolicy",
+     SpecialPowers.Ci.nsICookieService.ACCEPT_SESSION],
+  ]});
+}
+
+async function allowStorageAccess() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.lifetimePolicy",
+     SpecialPowers.Ci.nsICookieService.ACCEPT_NORMALLY],
+  ]});
+}
+
+/**
+ * Ensure an error is logged when the storage is not allowed and the content
+ * script is trying to register a service worker.
+ */
+add_task(async function register_storage_error() {
+  let expectedMessage = expect_console_message(
+    "ServiceWorkerRegisterStorageError",
+    [make_absolute_url("storage_not_allow/")]);
+
+  await notAllowStorageAccess();
+
+  // consume the expected rejection so it doesn't get thrown at us.
+  await navigator.serviceWorker.register("sw_storage_not_allow.js",
+                                         { scope: "storage_not_allow/" })
+    .then(
+      () => { ok(false, "should have rejected"); },
+      (e) => { ok(e.name === "SecurityError",
+                  "storage access failed as expected."); });
+
+  await wait_for_expected_message(expectedMessage);
+
+  await allowStorageAccess();
+});
+
+/**
+ * Ensure an error is logged when the storage is not allowed and the content
+ * script is trying to get the service worker registration.
+ */
+add_task(async function get_registration_storage_error() {
+  let expectedMessage =
+    expect_console_message("ServiceWorkerGetRegistrationStorageError", []);
+
+  await notAllowStorageAccess();
+
+  // consume the expected rejection so it doesn't get thrown at us.
+  await navigator.serviceWorker.getRegistration()
+    .then(
+      () => { ok(false, "should have rejected"); },
+      (e) => { ok(e.name === "SecurityError",
+                  "storage access failed as expected."); });
+
+  await wait_for_expected_message(expectedMessage);
+
+  await allowStorageAccess();
+});
+
+/**
+ * Ensure an error is logged when the storage is not allowed and the content
+ * script is trying to get the service worker registrations.
+ */
+add_task(async function get_registrations_storage_error() {
+  let expectedMessage =
+    expect_console_message("ServiceWorkerGetRegistrationStorageError", []);
+
+  await notAllowStorageAccess();
+
+  // consume the expected rejection so it doesn't get thrown at us.
+  await navigator.serviceWorker.getRegistrations()
+    .then(
+      () => { ok(false, "should have rejected"); },
+      (e) => { ok(e.name === "SecurityError",
+                  "storage access failed as expected."); });
+
+  await wait_for_expected_message(expectedMessage);
+
+  await allowStorageAccess();
+});
+
+/**
+ * Ensure an error is logged when the storage is not allowed and the content
+ * script is trying to post a message to the service worker.
+ */
+add_task(async function postMessage_storage_error() {
+  let expectedMessage = expect_console_message(
+    "ServiceWorkerPostMessageStorageError",
+    [make_absolute_url("storage_not_allow/")]);
+
+  let registration;
+  // consume the expected rejection so it doesn't get thrown at us.
+  await navigator.serviceWorker.register("sw_storage_not_allow.js",
+                                         { scope: "storage_not_allow/" })
+    .then(reg => { registration = reg; })
+    .then(() => notAllowStorageAccess())
+    .then(() => registration.installing ||
+                registration.waiting ||
+                registration.active)
+    .then(worker =>  worker.postMessage('ha'))
+    .then(
+      () => { ok(false, "should have rejected"); },
+      (e) => { ok(e.name === "SecurityError",
+                  "storage access failed as expected."); });
+
+  await wait_for_expected_message(expectedMessage);
+
+  await registration.unregister();
+  await allowStorageAccess();
+});
+
+/**
+ * Ensure an error is logged when the storage is not allowed and the service
+ * worker is trying to get its client.
+ */
+add_task(async function get_client_storage_error() {
+  let expectedMessage =
+    expect_console_message("ServiceWorkerGetClientStorageError", []);
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    // Make the test pass the IsOriginPotentiallyTrustworthy.
+    ["dom.securecontext.whitelist", "mochi.test"]
+  ]});
+
+  let registration, sw;
+  // consume the expected rejection so it doesn't get thrown at us.
+  await navigator.serviceWorker.register("sw_storage_not_allow.js",
+                                         { scope: "test_error_reporting.html" })
+    .then(reg => { registration = reg; })
+    .then(() => registration.installing ||
+                registration.waiting ||
+                registration.active)
+    .then(worker => { sw = worker; })
+    .then(() => waitForState(sw, 'activated'))
+    .then(() => sw.postMessage('claim'))
+    .then(() => waitForControlled(window))
+    // Get the client's ID in the stage 1
+    .then(() => fetch("getClient-stage1"))
+    .then(() => notAllowStorageAccess())
+    // Trigger the clients.get() in the stage 2
+    .then(() => fetch("getClient-stage2"))
+    .catch(e => ok(false, "fail due to:" + e));
+
+  await wait_for_expected_message(expectedMessage);
+
+  await registration.unregister();
+  await allowStorageAccess();
+});
+
+/**
+ * Ensure an error is logged when the storage is not allowed and the service
+ * worker is trying to get its clients.
+ */
+add_task(async function get_clients_storage_error() {
+  let expectedMessage =
+    expect_console_message("ServiceWorkerGetClientStorageError", []);
+
+  let registration, sw;
+  // consume the expected rejection so it doesn't get thrown at us.
+  await navigator.serviceWorker.register("sw_storage_not_allow.js",
+                                         { scope: "test_error_reporting.html" })
+    .then(reg => { registration = reg; })
+    .then(() => registration.installing ||
+                registration.waiting ||
+                registration.active)
+    .then(worker => { sw = worker; })
+    .then(() => waitForState(sw, 'activated'))
+    .then(() => sw.postMessage('claim'))
+    .then(() => waitForControlled(window))
+    .then(() => notAllowStorageAccess())
+    .then(() => fetch("getClients"))
+    .catch(e => ok(false, "fail due to:" + e));
+
+  await wait_for_expected_message(expectedMessage);
+
+  await registration.unregister();
+  await allowStorageAccess();
+});
+</script>
 </body>
 </html>
