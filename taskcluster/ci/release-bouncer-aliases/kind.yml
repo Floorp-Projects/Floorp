@@ -33,7 +33,7 @@ jobs:
                by-project:
                   mozilla-beta: https://bounceradmin.mozilla.com/api
                   mozilla-release: https://bounceradmin.mozilla.com/api
-                  maple: https://admin-bouncer-releng.stage.mozaws.net/api
+                  maple: https://admin-bouncer-releng.stage.mozaws.net/api/
                   default: http://localhost/api
       routes:
          - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
