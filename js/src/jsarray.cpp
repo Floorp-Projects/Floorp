@@ -1078,11 +1078,15 @@ IsArraySpecies(JSContext* cx, HandleObject origArray)
 #endif
             return true;
         }
-    } else {
-        // 9.4.2.3 Step 4. Non-array objects always use the default constructor.
-        if (!origArray->is<ArrayObject>())
-            return true;
+        return false;
     }
+
+    // 9.4.2.3 Step 4. Non-array objects always use the default constructor.
+    if (!origArray->is<ArrayObject>())
+        return true;
+
+    if (cx->compartment()->arraySpeciesLookup.tryOptimizeArray(cx, &origArray->as<ArrayObject>()))
+        return true;
 
     Value ctor;
     if (!GetPropertyPure(cx, origArray, NameToId(cx->names().constructor), &ctor))
@@ -4081,3 +4085,151 @@ js::ArrayInfo(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 #endif
+
+void
+js::ArraySpeciesLookup::initialize(JSContext* cx)
+{
+    MOZ_ASSERT(state_ == State::Uninitialized);
+
+    // Get the canonical Array.prototype.
+    NativeObject* arrayProto = cx->global()->maybeGetArrayPrototype();
+
+    // Leave the cache uninitialized if the Array class itself is not yet
+    // initialized.
+    if (!arrayProto)
+        return;
+
+    // Get the canonical Array constructor.
+    const Value& arrayCtorValue = cx->global()->getConstructor(JSProto_Array);
+    MOZ_ASSERT(arrayCtorValue.isObject(),
+               "The Array constructor is initialized iff Array.prototype is initialized");
+    JSFunction* arrayCtor = &arrayCtorValue.toObject().as<JSFunction>();
+
+    // Shortcut returns below means Array[@@species] will never be
+    // optimizable, set to disabled now, and clear it later when we succeed.
+    state_ = State::Disabled;
+
+    // Look up Array.prototype[@@iterator] and ensure it's a data property.
+    Shape* ctorShape = arrayProto->lookup(cx, NameToId(cx->names().constructor));
+    if (!ctorShape || !ctorShape->isDataProperty())
+        return;
+
+    // Get the referred value, and ensure it holds the canonical Array
+    // constructor.
+    JSFunction* ctorFun;
+    if (!IsFunctionObject(arrayProto->getSlot(ctorShape->slot()), &ctorFun))
+        return;
+    if (ctorFun != arrayCtor)
+        return;
+
+    // Look up the '@@species' value on Array
+    Shape* speciesShape = arrayCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+    if (!speciesShape || !speciesShape->hasGetterValue())
+        return;
+
+    // Get the referred value, ensure it holds the canonical Array[@@species]
+    // function.
+    JSFunction* speciesFun;
+    if (!IsFunctionObject(speciesShape->getterValue(), &speciesFun))
+        return;
+    if (!IsSelfHostedFunctionWithName(speciesFun, cx->names().ArraySpecies))
+        return;
+
+    // Store raw pointers below. This is okay to do here, because all objects
+    // are in the tenured heap.
+    MOZ_ASSERT(!IsInsideNursery(arrayProto));
+    MOZ_ASSERT(!IsInsideNursery(arrayCtor));
+    MOZ_ASSERT(!IsInsideNursery(arrayCtor->lastProperty()));
+    MOZ_ASSERT(!IsInsideNursery(speciesShape));
+    MOZ_ASSERT(!IsInsideNursery(speciesFun));
+    MOZ_ASSERT(!IsInsideNursery(arrayProto->lastProperty()));
+
+    state_ = State::Initialized;
+    arrayProto_ = arrayProto;
+    arrayConstructor_ = arrayCtor;
+    arrayConstructorShape_ = arrayCtor->lastProperty();
+#ifdef DEBUG
+    arraySpeciesShape_ = speciesShape;
+    canonicalSpeciesFunc_ = speciesFun;
+#endif
+    arrayProtoShape_ = arrayProto->lastProperty();
+    arrayProtoConstructorSlot_ = ctorShape->slot();
+}
+
+void
+js::ArraySpeciesLookup::reset()
+{
+    state_ = State::Uninitialized;
+    arrayProto_ = nullptr;
+    arrayConstructor_ = nullptr;
+    arrayConstructorShape_ = nullptr;
+#ifdef DEBUG
+    arraySpeciesShape_ = nullptr;
+    canonicalSpeciesFunc_ = nullptr;
+#endif
+    arrayProtoShape_ = nullptr;
+    arrayProtoConstructorSlot_ = -1;
+}
+
+bool
+js::ArraySpeciesLookup::isArrayStateStillSane()
+{
+    MOZ_ASSERT(state_ == State::Initialized);
+
+    // Ensure that Array.prototype still has the expected shape.
+    if (arrayProto_->lastProperty() != arrayProtoShape_)
+        return false;
+
+    // Ensure that Array.prototype.constructor contains the canonical Array
+    // constructor function.
+    if (arrayProto_->getSlot(arrayProtoConstructorSlot_) != ObjectValue(*arrayConstructor_))
+        return false;
+
+    // Ensure that Array still has the expected shape.
+    if (arrayConstructor_->lastProperty() != arrayConstructorShape_)
+        return false;
+
+    // Ensure the species getter contains the canonical @@species function.
+    // Note: This is currently guaranteed to be always true, because modifying
+    // the getter property implies a new shape is generated. If this ever
+    // changes, convert this assertion into an if-statement.
+    MOZ_ASSERT(arraySpeciesShape_->getterObject() == canonicalSpeciesFunc_);
+
+    return true;
+}
+
+bool
+js::ArraySpeciesLookup::tryOptimizeArray(JSContext* cx, ArrayObject* array)
+{
+    if (state_ == State::Uninitialized) {
+        // If the cache is not initialized, initialize it.
+        initialize(cx);
+    } else if (state_ == State::Initialized && !isArrayStateStillSane()) {
+        // Otherwise, if the array state is no longer sane, reinitialize.
+        reset();
+        initialize(cx);
+    }
+
+    // If the cache is disabled or still uninitialized, don't bother trying to
+    // optimize.
+    if (state_ != State::Initialized)
+        return false;
+
+    // By the time we get here, we should have a sane array state.
+    MOZ_ASSERT(isArrayStateStillSane());
+
+    // Ensure |array|'s prototype is the actual Array.prototype.
+    if (array->staticPrototype() != arrayProto_)
+        return false;
+
+    // Ensure |array| doesn't define any own properties besides its
+    // non-deletable "length" property. This serves as a quick check to make
+    // sure |array| doesn't define an own "constructor" property which may
+    // shadow Array.prototype.constructor.
+    Shape* shape = array->shape();
+    if (shape->previous() && !shape->previous()->isEmptyShape())
+        return false;
+
+    MOZ_ASSERT(JSID_IS_ATOM(shape->propidRaw(), cx->names().length));
+    return true;
+}

@@ -963,3 +963,49 @@ class displaylist_mutate(PageloaderTest):
                    'docshell.event_starvation_delay_hint': 1,
                    'dom.send_after_paint_to_content': False}
     unit = 'ms'
+
+
+@register_test()
+class rasterflood_svg(PageloaderTest):
+    """
+    Test modifying single items in a large display list. Measure transaction speed
+    to the compositor.
+    """
+    tpmanifest = '${talos}/tests/gfx/rasterflood_svg.manifest'
+    tpcycles = 1
+    tppagecycles = 10
+    tploadnocache = True
+    tpmozafterpaint = False
+    tpchrome = False
+    gecko_profile_interval = 2
+    gecko_profile_entries = 2000000
+    win_counters = w7_counters = linux_counters = mac_counters = None
+    filters = filter.ignore_first.prepare(1) + filter.median.prepare()
+    """ASAP mode"""
+    preferences = {'layout.frame_rate': 0,
+                   'docshell.event_starvation_delay_hint': 1,
+                   'dom.send_after_paint_to_content': False}
+    unit = 'ms'
+
+
+@register_test()
+class rasterflood_gradient(PageloaderTest):
+    """
+    Test expensive rasterization while the main thread is busy.
+    """
+    tpmanifest = '${talos}/tests/gfx/rasterflood_gradient.manifest'
+    tpcycles = 1
+    tppagecycles = 10
+    tploadnocache = True
+    tpmozafterpaint = False
+    tpchrome = False
+    gecko_profile_interval = 2
+    gecko_profile_entries = 2000000
+    win_counters = w7_counters = linux_counters = mac_counters = None
+    filters = filter.ignore_first.prepare(1) + filter.median.prepare()
+    """ASAP mode"""
+    preferences = {'layout.frame_rate': 0,
+                   'docshell.event_starvation_delay_hint': 1,
+                   'dom.send_after_paint_to_content': False}
+    lower_is_better = False
+    unit = 'score'
