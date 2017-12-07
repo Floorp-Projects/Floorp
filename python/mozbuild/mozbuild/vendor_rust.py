@@ -39,8 +39,9 @@ class VendorRust(MozbuildObject):
 
     def check_cargo_vendor_version(self, cargo):
         '''
-        Ensure that cargo-vendor is new enough. cargo-vendor 0.1.12 and newer
-        strips out .cargo-ok, .orig and .rej files which we want.
+        Ensure that cargo-vendor is new enough. cargo-vendor 0.1.13 and newer
+        strips out .cargo-ok, .orig and .rej files, and deals with [patch]
+        replacements in Cargo.toml files which we want.
         '''
         for l in subprocess.check_output([cargo, 'install', '--list']).splitlines():
             # The line looks like one of the following:
@@ -50,7 +51,7 @@ class VendorRust(MozbuildObject):
             m = re.match('cargo-vendor v((\d+\.)*\d+)', l)
             if m:
                 version = m.group(1)
-                return LooseVersion(version) >= b'0.1.12'
+                return LooseVersion(version) >= b'0.1.13'
         return False
 
     def check_modified_files(self):
