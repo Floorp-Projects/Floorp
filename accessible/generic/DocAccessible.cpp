@@ -875,7 +875,7 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     return;
   }
 
-  nsIContent* elm = aAccessible->GetContent();
+  dom::Element* elm = aAccessible->GetContent()->AsElement();
   if (aAttribute == nsGkAtoms::aria_labelledby &&
       !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, aAccessible);
@@ -996,7 +996,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsAtom* aAttribute)
     FireDelayedEvent(event);
   }
 
-  nsIContent* elm = aAccessible->GetContent();
+  dom::Element* elm = aAccessible->GetContent()->AsElement();
 
   // Update aria-hidden flag for the whole subtree iff aria-hidden is changed
   // on the root, i.e. ignore any affiliated aria-hidden changes in the subtree
@@ -1072,9 +1072,11 @@ void
 DocAccessible::ARIAActiveDescendantChanged(Accessible* aAccessible)
 {
   nsIContent* elm = aAccessible->GetContent();
-  if (elm && aAccessible->IsActiveWidget()) {
+  if (elm && elm->IsElement() && aAccessible->IsActiveWidget()) {
     nsAutoString id;
-    if (elm->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant, id)) {
+    if (elm->AsElement()->GetAttr(kNameSpaceID_None,
+                                  nsGkAtoms::aria_activedescendant,
+                                  id)) {
       dom::Element* activeDescendantElm = elm->OwnerDoc()->GetElementById(id);
       if (activeDescendantElm) {
         Accessible* activeDescendant = GetAccessible(activeDescendantElm);
@@ -1311,8 +1313,9 @@ DocAccessible::BindToDocument(Accessible* aAccessible,
   if (aAccessible->HasOwnContent()) {
     AddDependentIDsFor(aAccessible);
 
-    nsIContent* el = aAccessible->GetContent();
-    if (el->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_owns)) {
+    nsIContent* content = aAccessible->GetContent();
+    if (content->IsElement() &&
+        content->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_owns)) {
       mNotificationController->ScheduleRelocation(aAccessible);
     }
   }

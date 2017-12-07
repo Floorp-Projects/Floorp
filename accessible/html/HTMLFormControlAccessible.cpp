@@ -131,9 +131,9 @@ HTMLRadioButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
   mContent->NodeInfo()->GetName(tagName);
 
   nsAutoString type;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
   nsAutoString name;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
 
   RefPtr<nsContentList> inputElms;
 
@@ -153,10 +153,11 @@ HTMLRadioButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
 
   for (uint32_t index = 0; index < inputCount; index++) {
     nsIContent* inputElm = inputElms->Item(index, false);
-    if (inputElm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                              type, eCaseMatters) &&
-        inputElm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                              name, eCaseMatters) && mDoc->HasAccessible(inputElm)) {
+    if (inputElm->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                           type, eCaseMatters) &&
+        inputElm->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                           name, eCaseMatters) &&
+        mDoc->HasAccessible(inputElm)) {
         count++;
       if (inputElm == mContent)
         indexOf = count;
@@ -252,12 +253,12 @@ HTMLButtonAccessible::NativeName(nsString& aName)
 
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty() || !mContent->IsHTMLElement(nsGkAtoms::input) ||
-      !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                             nsGkAtoms::image, eCaseMatters))
+      !mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                          nsGkAtoms::image, eCaseMatters))
     return nameFlag;
 
-  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName))
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
+  if (!mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName))
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
 
   aName.CompressWhitespace();
   return eNameOK;
@@ -290,8 +291,8 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLTextFieldAccessible,
 role
 HTMLTextFieldAccessible::NativeRole()
 {
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::password, eIgnoreCase)) {
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                         nsGkAtoms::password, eIgnoreCase)) {
     return roles::PASSWORD_TEXT;
   }
 
@@ -307,7 +308,7 @@ HTMLTextFieldAccessible::NativeAttributes()
   // Expose type for text input elements as it gives some useful context,
   // especially for mobile.
   nsAutoString type;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType, type);
     if (!ARIARoleMap() && type.EqualsLiteral("search")) {
       nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
@@ -334,7 +335,7 @@ HTMLTextFieldAccessible::NativeName(nsString& aName)
     return eNameOK;
 
   // text inputs and textareas might have useful placeholder text
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, aName);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, aName);
   return eNameOK;
 }
 
@@ -382,12 +383,12 @@ HTMLTextFieldAccessible::NativeState()
   state |= states::EDITABLE;
 
   // can be focusable, focused, protected. readonly, unavailable, selected
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::password, eIgnoreCase)) {
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                         nsGkAtoms::password, eIgnoreCase)) {
     state |= states::PROTECTED;
   }
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly)) {
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly)) {
     state |= states::READONLY;
   }
 
@@ -408,7 +409,7 @@ HTMLTextFieldAccessible::NativeState()
   }
 
   // Expose autocomplete state if it has associated autocomplete list.
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::list))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::list))
     return state | states::SUPPORTS_AUTOCOMPLETION | states::HASPOPUP;
 
   // Ordinal XUL textboxes don't support autocomplete.
@@ -419,17 +420,17 @@ HTMLTextFieldAccessible::NativeState()
     // we're talking here is based on what the user types, where a popup of
     // possible choices comes up.
     nsAutoString autocomplete;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete,
-                      autocomplete);
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete,
+                                   autocomplete);
 
     if (!autocomplete.LowerCaseEqualsLiteral("off")) {
-      nsIContent* formContent = input->GetFormElement();
-      if (formContent) {
-        formContent->GetAttr(kNameSpaceID_None,
+      Element* formElement = input->GetFormElement();
+      if (formElement) {
+        formElement->GetAttr(kNameSpaceID_None,
                              nsGkAtoms::autocomplete, autocomplete);
       }
 
-      if (!formContent || !autocomplete.LowerCaseEqualsLiteral("off"))
+      if (!formElement || !autocomplete.LowerCaseEqualsLiteral("off"))
         state |= states::SUPPORTS_AUTOCOMPLETION;
     }
   }

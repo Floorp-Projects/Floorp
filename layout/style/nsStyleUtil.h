@@ -204,7 +204,7 @@ public:
    *  @return
    *      Does CSP allow application of the specified inline style?
    */
-  static bool CSPAllowsInlineStyle(nsIContent* aContent,
+  static bool CSPAllowsInlineStyle(mozilla::dom::Element* aContent,
                                    nsIPrincipal* aPrincipal,
                                    nsIPrincipal* aTriggeringPrincipal,
                                    nsIURI* aSourceURI,

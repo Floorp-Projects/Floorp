@@ -2723,10 +2723,10 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
     }
   }
 
-  nsIContent* rootContent = doc->GetRootElement();
+  Element* rootContent = doc->GetRootElement();
   NS_ENSURE_TRUE(rootContent, NS_OK);
 
-  nsIPresShell *presShell = doc->GetShell();
+  nsIPresShell* presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
 
   if (aType == MOVEFOCUS_FIRST) {
@@ -2784,7 +2784,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
     if (popupFrame && !forDocumentNavigation) {
       // Don't navigate outside of a popup, so pretend that the
       // root content is the popup itself
-      rootContent = popupFrame->GetContent();
+      rootContent = popupFrame->GetContent()->AsElement();
       NS_ASSERTION(rootContent, "Popup frame doesn't have a content node");
     }
     else if (!forward) {
@@ -2822,7 +2822,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
       // When navigating by documents, we start at the popup but can navigate
       // outside of it to look for other panels and documents.
       if (!forDocumentNavigation) {
-        rootContent = startContent;
+        rootContent = startContent->AsElement();
       }
 
       doc = startContent ? startContent->GetComposedDoc() : nullptr;
@@ -3007,7 +3007,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
         popupFrame = nsLayoutUtils::GetClosestFrameOfType(
           frame, LayoutFrameType::MenuPopup);
         if (popupFrame) {
-          rootContent = popupFrame->GetContent();
+          rootContent = popupFrame->GetContent()->AsElement();
           NS_ASSERTION(rootContent, "Popup frame doesn't have a content node");
         }
       }
@@ -3040,7 +3040,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
         // Chrome documents however cannot be focused directly, so instead we
         // focus the first focusable element within the window.
         // For example, the urlbar.
-        nsIContent* root = GetRootForFocus(piWindow, doc, true, true);
+        Element* root = GetRootForFocus(piWindow, doc, true, true);
         return FocusFirst(root, aNextContent);
       }
 
@@ -3205,12 +3205,12 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
         NS_ASSERTION(currentContent, "IsFocusable set a tabindex for a frame with no content");
         if (!aForDocumentNavigation &&
             currentContent->IsHTMLElement(nsGkAtoms::img) &&
-            currentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::usemap)) {
+            currentContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::usemap)) {
           // This is an image with a map. Image map areas are not traversed by
           // nsIFrameTraversal so look for the next or previous area element.
           nsIContent *areaContent =
             GetNextTabbableMapArea(aForward, aCurrentTabIndex,
-                                   currentContent, iterStartContent);
+                                   currentContent->AsElement(), iterStartContent);
           if (areaContent) {
             NS_ADDREF(*aResultContent = areaContent);
             return NS_OK;
@@ -3237,7 +3237,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
           // Next, for document navigation, check if this a non-remote child document.
           bool checkSubDocument = true;
           if (aForDocumentNavigation) {
-            nsIContent* docRoot = GetRootForChildDocument(currentContent);
+            Element* docRoot = GetRootForChildDocument(currentContent);
             if (docRoot) {
               // If GetRootForChildDocument returned something then call
               // FocusFirst to find the root or first element to focus within
@@ -3339,7 +3339,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
         nsCOMPtr<nsPIDOMWindowOuter> window = GetCurrentWindow(aRootContent);
         NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-        nsCOMPtr<nsIContent> docRoot =
+        RefPtr<Element> docRoot =
           GetRootForFocus(window, aRootContent->GetComposedDoc(), false, true);
         FocusFirst(docRoot, aResultContent);
       }
@@ -3357,7 +3357,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
 nsIContent*
 nsFocusManager::GetNextTabbableMapArea(bool aForward,
                                        int32_t aCurrentTabIndex,
-                                       nsIContent* aImageContent,
+                                       Element* aImageContent,
                                        nsIContent* aStartContent)
 {
   nsAutoString useMap;
@@ -3412,7 +3412,9 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
       }
 
       nsAutoString tabIndexStr;
-      child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
+      if (child->IsElement()) {
+        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
+      }
       nsresult ec;
       int32_t val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec) && val > aCurrentTabIndex && val != tabIndex) {
@@ -3432,7 +3434,9 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
       }
 
       nsAutoString tabIndexStr;
-      child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
+      if (child->IsElement()) {
+        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
+      }
       nsresult ec;
       int32_t val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec)) {
@@ -3448,13 +3452,13 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
 }
 
 nsresult
-nsFocusManager::FocusFirst(nsIContent* aRootContent, nsIContent** aNextContent)
+nsFocusManager::FocusFirst(Element* aRootElement, nsIContent** aNextContent)
 {
-  if (!aRootContent) {
+  if (!aRootElement) {
     return NS_OK;
   }
 
-  nsIDocument* doc = aRootContent->GetComposedDoc();
+  nsIDocument* doc = aRootElement->GetComposedDoc();
   if (doc) {
     if (doc->IsXULDocument()) {
       // If the redirectdocumentfocus attribute is set, redirect the focus to a
@@ -3462,7 +3466,7 @@ nsFocusManager::FocusFirst(nsIContent* aRootContent, nsIContent** aNextContent)
       // urlbar during document navigation.
       nsAutoString retarget;
 
-      if (aRootContent->GetAttr(kNameSpaceID_None,
+      if (aRootElement->GetAttr(kNameSpaceID_None,
                                nsGkAtoms::retargetdocumentfocus, retarget)) {
         nsCOMPtr<Element> element = doc->GetElementById(retarget);
         nsCOMPtr<nsIContent> retargetElement =
@@ -3481,19 +3485,19 @@ nsFocusManager::FocusFirst(nsIContent* aRootContent, nsIContent** aNextContent)
       // always go forward and not back here.
       nsIPresShell* presShell = doc->GetShell();
       if (presShell) {
-        return GetNextTabbableContent(presShell, aRootContent,
-                                      nullptr, aRootContent,
+        return GetNextTabbableContent(presShell, aRootElement,
+                                      nullptr, aRootElement,
                                       true, 1, false, false,
                                       aNextContent);
       }
     }
   }
 
-  NS_ADDREF(*aNextContent = aRootContent);
+  NS_ADDREF(*aNextContent = aRootElement);
   return NS_OK;
 }
 
-nsIContent*
+Element*
 nsFocusManager::GetRootForFocus(nsPIDOMWindowOuter* aWindow,
                                 nsIDocument* aDocument,
                                 bool aForDocumentNavigation,
@@ -3511,7 +3515,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindowOuter* aWindow,
 
   // If the body is contenteditable, use the editor's root element rather than
   // the actual root element.
-  nsCOMPtr<nsIContent> rootElement =
+  RefPtr<Element> rootElement =
     nsLayoutUtils::GetEditableRootContentByContentEditable(aDocument);
   if (!rootElement || !rootElement->GetPrimaryFrame()) {
     rootElement = aDocument->GetRootElement();
@@ -3527,7 +3531,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindowOuter* aWindow,
   // Finally, check if this is a frameset
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
   if (htmlDoc) {
-    nsIContent* htmlChild = aDocument->GetHtmlChildElement(nsGkAtoms::frameset);
+    Element* htmlChild = aDocument->GetHtmlChildElement(nsGkAtoms::frameset);
     if (htmlChild) {
       // In document navigation mode, return the frameset so that navigation
       // descends into the child frames.
@@ -3538,7 +3542,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindowOuter* aWindow,
   return rootElement;
 }
 
-nsIContent*
+Element*
 nsFocusManager::GetRootForChildDocument(nsIContent* aContent)
 {
   // Check for elements that represent child documents, that is, browsers,
