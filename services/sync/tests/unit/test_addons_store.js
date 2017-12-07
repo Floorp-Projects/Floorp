@@ -95,9 +95,9 @@ function createAndStartHTTPServer(port) {
 // is the same as the addon itself. If it's not, then the reconciler missed a
 // change, and is likely to re-upload the addon next sync because of the change
 // it missed.
-function checkReconcilerUpToDate(addon) {
+async function checkReconcilerUpToDate(addon) {
   let stateBefore = Object.assign({}, store.reconciler.addons[addon.id]);
-  store.reconciler.rectifyStateFromAddon(addon);
+  await store.reconciler.rectifyStateFromAddon(addon);
   let stateAfter = store.reconciler.addons[addon.id];
   deepEqual(stateBefore, stateAfter);
 }
@@ -143,7 +143,7 @@ add_task(async function test_apply_enabled() {
   Assert.equal(0, failed.length);
   addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enable record works as expected.");
@@ -152,7 +152,7 @@ add_task(async function test_apply_enabled() {
   Assert.equal(0, failed.length);
   addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enabled state updates don't apply if the ignore pref is set.");
@@ -185,7 +185,7 @@ add_task(async function test_apply_enabled_appDisabled() {
   Assert.equal(0, failed.length);
   addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enable record works as expected.");
@@ -194,7 +194,7 @@ add_task(async function test_apply_enabled_appDisabled() {
   Assert.equal(0, failed.length);
   addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
   await uninstallAddon(addon);
