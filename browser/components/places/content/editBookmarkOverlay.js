@@ -60,8 +60,7 @@ var gEditItemOverlay = {
         let folderId = PlacesUtils.getConcreteItemId(parent);
         isParentReadOnly = folderId == PlacesUtils.placesRootId ||
                            (!("get" in Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId")) &&
-                            (folderId == PlacesUIUtils.leftPaneFolderId ||
-                             folderId == PlacesUIUtils.allBookmarksFolderId));
+                            (folderId == PlacesUIUtils.leftPaneFolderId));
       }
       parentId = parent.itemId;
       parentGuid = parent.bookmarkGuid;
@@ -704,13 +703,13 @@ var gEditItemOverlay = {
       // the editable mode set on this tree, together with its collapsed state
       // breaks the view.
       const FOLDER_TREE_PLACE_URI =
-        "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
-        PlacesUIUtils.allBookmarksFolderId;
+        "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&type=" +
+        Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY;
       this._folderTree.place = FOLDER_TREE_PLACE_URI;
 
       this._element("chooseFolderSeparator").hidden =
         this._element("chooseFolderMenuItem").hidden = true;
-      this._folderTree.selectItems([this._paneInfo.parentId]);
+      this._folderTree.selectItems([this._paneInfo.parentGuid]);
       this._folderTree.focus();
     }
   },
@@ -929,7 +928,7 @@ var gEditItemOverlay = {
     let ip = this._folderTree.insertionPoint;
 
     // default to the bookmarks menu folder
-    if (!ip || ip.itemId == PlacesUIUtils.allBookmarksFolderId) {
+    if (!ip) {
       ip = new InsertionPoint({
         parentId: PlacesUtils.bookmarksMenuFolderId,
         parentGuid: PlacesUtils.bookmarks.menuGuid
