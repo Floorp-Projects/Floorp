@@ -341,7 +341,13 @@ class FirefoxDataProvider {
         });
         break;
       case "eventTimings":
-        this.pushRequestToQueue(actor, { totalTime: networkInfo.totalTime });
+        // Total time doesn't have to be always set e.g. net provider enhancer
+        // in Console panel is using this method to fetch data when network log
+        // is expanded. So, make sure to not push undefined into the payload queue
+        // (it could overwrite an existing value).
+        if (typeof networkInfo.totalTime != "undefined") {
+          this.pushRequestToQueue(actor, { totalTime: networkInfo.totalTime });
+        }
         await this._requestData(actor, updateType);
         break;
     }
