@@ -5893,7 +5893,6 @@ pref("layers.advanced.image-layers", 2);
 pref("layers.advanced.outline-layers", 2);
 pref("layers.advanced.solid-color", false);
 pref("layers.advanced.table", false);
-pref("layers.advanced.text-layers", 2);
 
 // Enable lowercased response header name
 pref("dom.xhr.lowercase_header.enabled", false);

@@ -79,7 +79,6 @@ message LayersPacket {
       CanvasLayer = 4;
       ImageLayer = 5;
       ColorLayer = 6;
-      TextLayer = 7;
       RefLayer = 8;
       ReadbackLayer = 9;
       DisplayItemLayer = 10;
