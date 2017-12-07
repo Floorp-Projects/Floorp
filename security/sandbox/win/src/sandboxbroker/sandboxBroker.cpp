@@ -131,10 +131,12 @@ CacheDirAndAutoClear(nsIProperties* aDirSvc, const char* aDirKey,
 
 /* static */
 void
-SandboxBroker::CacheRulesDirectories()
+SandboxBroker::GeckoDependentInitialize()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Cache directory paths for use in policy rules, because the directory
+  // service must be called on the main thread.
   nsresult rv;
   nsCOMPtr<nsIProperties> dirSvc =
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -153,6 +155,11 @@ SandboxBroker::CacheRulesDirectories()
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
   CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DIR, &sUserExtensionsDir);
 #endif
+
+  // Create sLaunchErrors up front because ClearOnShutdown must be called on the
+  // main thread.
+  sLaunchErrors = MakeUnique<nsTHashtable<nsCStringHashKey>>();
+  ClearOnShutdown(&sLaunchErrors);
 }
 
 SandboxBroker::SandboxBroker()
@@ -265,11 +272,6 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
     key.AppendASCII(XRE_ChildProcessTypeToString(aProcessType));
     key.AppendLiteral("/0x");
     key.AppendInt(static_cast<uint32_t>(last_error), 16);
-
-    if (!sLaunchErrors) {
-      sLaunchErrors = MakeUnique<nsTHashtable<nsCStringHashKey>>();
-      ClearOnShutdown(&sLaunchErrors);
-    }
 
     // Only accumulate for each combination once per session.
     if (!sLaunchErrors->Contains(key)) {
