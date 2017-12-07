@@ -112,9 +112,9 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-item-auto-min-size-clamp-001.html grid-item-auto-min-size-clamp-001-ref.html
 == grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
 == grid-item-auto-min-size-clamp-003.html grid-item-auto-min-size-clamp-003-ref.html
-== grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html
+# == grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html # bug 1421976
 == grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html
-== grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html
+# == grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html # bug 1421976
 == grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
 == grid-item-overflow-stretch-001.html grid-item-overflow-stretch-001-ref.html
 == grid-item-overflow-stretch-002.html grid-item-overflow-stretch-002-ref.html

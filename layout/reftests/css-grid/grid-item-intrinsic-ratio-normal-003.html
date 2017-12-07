@@ -14,10 +14,10 @@
 .grid {
   display: inline-grid;
   border: 3px solid grey;
-  grid: 32px / 4px;
+  grid: minmax(auto, 32px) / minmax(auto, 4px);
   margin-right:20px;
 }
-.r { grid: 4px / 32px; }
+.r { grid: minmax(auto, 4px) / minmax(auto, 32px); }
 
 button {
   border: 1px solid;
