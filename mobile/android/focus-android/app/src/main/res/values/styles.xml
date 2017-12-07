@@ -33,6 +33,28 @@
 
     <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="colorAccent">@color/colorAccentSettings</item>
+        <item name="actionButtonStyle">@style/SettingsActionButtonStyle</item>
+    </style>
+
+    <style name="SettingsActionButtonStyle" parent="@style/Widget.AppCompat.ActionButton">
+        <!-- We want 16dp of padding between (i) and "SAVE" on the "Add search engine" Toolbar.
+             Unfortunately, this Toolbar is shared across all of settings. Solutions:
+             1) (Current solution) Change the toolbar styles for all of settings
+             2) Dynamically change the styles for the Toolbar, in code, for this one Settings screen
+             3) Provide a unique toolbar for this one Settings screen
+
+             I opted for 1) because it's simple (we're pressed for time!) and no other screens have more
+             than one action button and are affected. This isn't very future proof, however.
+
+             We set paddingEnd=12dp to preserve the existing padding of the right-most action menu item to
+             the edge of the device (12dp) and set paddingStart=4dp to complete the 16dp between views.
+             We then set minWidth=0dp to avoid it's calculations affecting visible padding.
+
+             One concern I have is that paddingStart=4dp will cause the title to get too close to the
+             action menu items, but testing with German, that doesn't seem to be the case. -->
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">12dp</item>
     </style>
 
     <style name="InfoTheme" parent="SettingsTheme">
