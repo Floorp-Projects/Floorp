@@ -45,7 +45,7 @@ def process_define_file(output, input):
                 cmd = m.group('cmd')
                 name = m.group('name')
                 value = m.group('value')
-                if name and cmd != 'endif':
+                if name:
                     if name == 'ALLDEFINES':
                         if cmd == 'define':
                             raise Exception(
@@ -56,20 +56,21 @@ def process_define_file(output, input):
                             for name, val in config.defines['ALLDEFINES'].iteritems()))
                         l = l[:m.start('cmd') - 1] \
                             + defines + l[m.end('name'):]
-                    elif name in config.defines:
-                        if cmd == 'define' and value:
+                    elif cmd == 'define':
+                        if value and name in config.defines:
                             l = l[:m.start('value')] \
                                 + str(config.defines[name]) \
                                 + l[m.end('value'):]
-                        elif cmd == 'undef':
+                    elif cmd == 'undef':
+                        if name in config.defines:
                             l = l[:m.start('cmd')] \
                                 + 'define' \
                                 + l[m.end('cmd'):m.end('name')] \
                                 + ' ' \
                                 + str(config.defines[name]) \
                                 + l[m.end('name'):]
-                    elif cmd == 'undef':
-                       l = '/* ' + l[:m.end('name')] + ' */' + l[m.end('name'):]
+                        else:
+                            l = '/* ' + l[:m.end('name')] + ' */' + l[m.end('name'):]
 
             output.write(l)
 
