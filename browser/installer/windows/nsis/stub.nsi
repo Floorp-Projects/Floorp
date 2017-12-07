@@ -320,14 +320,8 @@ Function .onInit
     Quit
   ${EndIf}
 
-  ; Check if we meet the RAM requirement for the 64-bit build.
-  System::Call "*(i 64, i, l 0, l, l, l, l, l, l)p.r0"
-  System::Call "Kernel32::GlobalMemoryStatusEx(p r0)"
-  System::Call "*$0(i, i, l.r1, l, l, l, l, l, l)"
-  System::Free $0
-
-  ${If} ${RunningX64}
-  ${AndIf} $1 L> ${RAM_NEEDED_FOR_64BIT}
+  Call ShouldInstall64Bit
+  ${If} $0 == 1
     StrCpy $DroplistArch "$(VERSION_64BIT)"
     StrCpy $INSTDIR "${DefaultInstDir64bit}"
   ${Else}
@@ -1869,6 +1863,40 @@ Function GetLatestReleasedVersion
   Pop $1
 
   end:
+FunctionEnd
+
+; Returns 1 in $0 if we should install the 64-bit build, or 0 if not.
+; The requirements for selecting the 64-bit build to install are:
+; 1) Running a 64-bit OS (we've already checked the OS version).
+; 2) An amount of RAM strictly greater than RAM_NEEDED_FOR_64BIT
+; 3) No third-party products installed that cause issues with the 64-bit build.
+;    Currently this includes Lenovo OneKey Theater and Lenovo Energy Management.
+Function ShouldInstall64Bit
+  StrCpy $0 0
+
+  ${IfNot} ${RunningX64}
+    Return
+  ${EndIf}
+
+  System::Call "*(i 64, i, l 0, l, l, l, l, l, l)p.r1"
+  System::Call "Kernel32::GlobalMemoryStatusEx(p r1)"
+  System::Call "*$1(i, i, l.r2, l, l, l, l, l, l)"
+  System::Free $1
+  ${If} $2 L<= ${RAM_NEEDED_FOR_64BIT}
+    Return
+  ${EndIf}
+
+  ; Lenovo OneKey Theater can theoretically be in a directory other than this
+  ; one, because some installer versions let you change it, but it's unlikely.
+  ${If} ${FileExists} "C:\Program Files (x86)\Lenovo\Onekey Theater\windowsapihookdll64.dll"
+    Return
+  ${EndIf}
+
+  ${If} ${FileExists} "C:\Program Files (x86)\Lenovo\Energy Management\Energy Management.exe"
+    Return
+  ${EndIf}
+
+  StrCpy $0 1
 FunctionEnd
 
 Section
