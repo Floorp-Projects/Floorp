@@ -782,9 +782,9 @@ TextEditRules::WillInsertText(EditAction aAction,
         !outString->IsEmpty() && outString->Last() == nsCRT::LF;
       aSelection->SetInterlinePosition(endsWithLF);
 
-      MOZ_ASSERT(!pointAfterStringInserted.GetChildAtOffset(),
+      MOZ_ASSERT(!pointAfterStringInserted.GetChild(),
         "After inserting text into a text node, pointAfterStringInserted."
-        "GetChildAtOffset() should be nullptr");
+        "GetChild() should be nullptr");
       IgnoredErrorResult error;
       aSelection->Collapse(pointAfterStringInserted, error);
       if (error.Failed()) {

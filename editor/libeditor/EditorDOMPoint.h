@@ -39,9 +39,9 @@ class EditorDOMPointBase;
  * starts to refer the child node or offset in the container.  In this case,
  * the other information hasn't been initialized due to performance reason.
  * When you retrieve the other information with calling Offset() or
- * GetChildAtOffset(), the other information is computed with the current
- * DOM tree.  Therefore, e.g., in the following case, the other information
- * may be different:
+ * GetChild(), the other information is computed with the current DOM tree.
+ * Therefore, e.g., in the following case, the other information may be
+ * different:
  *
  * EditorDOMPoint pointA(container1, childNode1);
  * EditorDOMPoint pointB(container1, childNode1);
@@ -53,11 +53,10 @@ class EditorDOMPointBase;
  *
  * EditorDOMPoint pointA(container1, 5);
  * EditorDOMPoint pointB(container1, 5);
- * Unused << pointA.GetChildAtOffset(); // The child is computed now.
+ * Unused << pointA.GetChild(); // The child is computed now.
  * container1->RemoveChild(childNode1->GetFirstChild());
- * Unused << pointB.GetChildAtOffset(); // Now, pointB.GetChildAtOffset() equals
- *                                      // pointA.GetChildAtOffset()->
- *                                      //          GetPreviousSibling().
+ * Unused << pointB.GetChild(); // Now, pointB.GetChild() equals
+ *                              // pointA.GetChild()->GetPreviousSibling().
  *
  * So, when you initialize an instance only with one information, you need to
  * be careful when you access the other information after changing the DOM tree.
@@ -255,8 +254,13 @@ public:
     return mParent && mParent->IsAnyOfHTMLElements(aFirst, aArgs...);
   }
 
+  /**
+   * GetChild() returns a child node which is pointed by the instance.
+   * If mChild hasn't been initialized yet, this computes the child node
+   * from mParent and mOffset with *current* DOM tree.
+   */
   nsIContent*
-  GetChildAtOffset() const
+  GetChild() const
   {
     if (!mParent || !mParent->IsContainerNode()) {
       return nullptr;
@@ -270,12 +274,14 @@ public:
   }
 
   /**
-   * GetNextSiblingOfChildOffset() returns next sibling of a child at offset.
+   * GetNextSiblingOfChild() returns next sibling of the child node.
    * If this refers after the last child or the container cannot have children,
    * this returns nullptr with warning.
+   * If mChild hasn't been initialized yet, this computes the child node
+   * from mParent and mOffset with *current* DOM tree.
    */
   nsIContent*
-  GetNextSiblingOfChildAtOffset() const
+  GetNextSiblingOfChild() const
   {
     if (NS_WARN_IF(!mParent) || NS_WARN_IF(!mParent->IsContainerNode())) {
       return nullptr;
@@ -295,12 +301,14 @@ public:
   }
 
   /**
-   * GetPreviousSiblingOfChildAtOffset() returns previous sibling of a child
+   * GetPreviousSiblingOfChild() returns previous sibling of a child
    * at offset.  If this refers the first child or the container cannot have
    * children, this returns nullptr with warning.
+   * If mChild hasn't been initialized yet, this computes the child node
+   * from mParent and mOffset with *current* DOM tree.
    */
   nsIContent*
-  GetPreviousSiblingOfChildAtOffset() const
+  GetPreviousSiblingOfChild() const
   {
     if (NS_WARN_IF(!mParent) || NS_WARN_IF(!mParent->IsContainerNode())) {
       return nullptr;
@@ -785,7 +793,7 @@ public:
   {
     MOZ_ASSERT(aPoint.IsSetAndValid());
     MOZ_ASSERT(mPoint.CanContainerHaveChildren());
-    mChild = mPoint.GetChildAtOffset();
+    mChild = mPoint.GetChild();
   }
 
   ~AutoEditorDOMPointOffsetInvalidator()

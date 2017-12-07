@@ -1096,7 +1096,7 @@ WSRunObject::GetPreviousWSNode(const EditorDOMPoint& aPoint,
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> priorNode = aPoint.GetPreviousSiblingOfChildAtOffset();
+  nsCOMPtr<nsIContent> priorNode = aPoint.GetPreviousSiblingOfChild();
   if (NS_WARN_IF(!priorNode)) {
     return nullptr;
   }
@@ -1175,7 +1175,7 @@ WSRunObject::GetNextWSNode(const EditorDOMPoint& aPoint,
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> nextNode = aPoint.GetChildAtOffset();
+  nsCOMPtr<nsIContent> nextNode = aPoint.GetChild();
   if (!nextNode) {
     if (aPoint.GetContainer() == aBlockParent) {
       // We are at end of the block.
