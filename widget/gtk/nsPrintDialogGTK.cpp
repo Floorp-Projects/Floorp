@@ -171,7 +171,6 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter *aParent,
                       | GTK_PRINT_CAPABILITY_REVERSE
                       | GTK_PRINT_CAPABILITY_SCALE
                       | GTK_PRINT_CAPABILITY_GENERATE_PDF
-                      | GTK_PRINT_CAPABILITY_GENERATE_PS
                     )
                   );
 

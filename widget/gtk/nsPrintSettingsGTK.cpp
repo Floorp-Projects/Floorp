@@ -215,16 +215,7 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t *aOutputFormat)
   }
 
   if (format == nsIPrintSettings::kOutputFormatNative) {
-    const gchar* fmtGTK =
-      gtk_print_settings_get(mPrintSettings,
-                             GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT);
-    if (fmtGTK) {
-      if (nsDependentCString(fmtGTK).EqualsIgnoreCase("pdf")) {
-        format = nsIPrintSettings::kOutputFormatPDF;
-      } else {
-        format = nsIPrintSettings::kOutputFormatPS;
-      }
-    } else if (GTK_IS_PRINTER(mGTKPrinter)) {
+    if (GTK_IS_PRINTER(mGTKPrinter)) {
       // Prior to gtk 2.24, gtk_printer_accepts_pdf() and
       // gtk_printer_accepts_ps() always returned true regardless of the
       // printer's capability.
@@ -439,11 +430,7 @@ nsPrintSettingsGTK::SetToFileName(const nsAString& aToFileName)
     return NS_OK;
   }
 
-  if (StringEndsWith(aToFileName, NS_LITERAL_STRING(".ps"))) {
-    gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "ps");
-  } else {
-    gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "pdf");
-  }
+  gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "pdf");
 
   nsCOMPtr<nsIFile> file;
   nsresult rv = NS_NewLocalFile(aToFileName, true, getter_AddRefs(file));
