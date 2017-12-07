@@ -8,6 +8,8 @@ backends = {
     'CppEclipse': 'mozbuild.backend.cpp_eclipse',
     'FasterMake': 'mozbuild.backend.fastermake',
     'FasterMake+RecursiveMake': None,
+    'GnConfigGen': 'mozbuild.gn_processor',
+    'GnMozbuildWriter': 'mozbuild.gn_processor',
     'RecursiveMake': 'mozbuild.backend.recursivemake',
     'TestManifest': 'mozbuild.backend.test_manifest',
     'Tup': 'mozbuild.backend.tup',

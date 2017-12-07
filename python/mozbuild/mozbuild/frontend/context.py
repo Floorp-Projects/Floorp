@@ -2042,6 +2042,24 @@ VARIABLES = {
             (...)
         """),
 
+    'GN_DIRS': (StrictOrderingOnAppendListWithFlagsFactory({
+            'variables': dict,
+            'sandbox_vars': dict,
+            'non_unified_sources': StrictOrderingOnAppendList,
+            'mozilla_flags': list,
+        }), list,
+        """List of dirs containing gn files describing targets to build. Attributes:
+            - variables, a dictionary containing variables and values to pass
+              to `gn gen`.
+            - sandbox_vars, a dictionary containing variables and values to
+              pass to the mozbuild processor on top of those derived from gn.
+            - non_unified_sources, a list containing sources files, relative to
+              the current moz.build, that should be excluded from source file
+              unification.
+            - mozilla_flags, a set of flags that if present in the gn config
+              will be mirrored to the resulting mozbuild configuration.
+        """),
+
     'SPHINX_TREES': (dict, dict,
         """Describes what the Sphinx documentation tree will look like.
 
