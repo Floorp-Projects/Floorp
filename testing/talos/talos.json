@@ -47,7 +47,7 @@
             "talos_options": ["--disable-stylo"]
         },
         "g4-e10s": {
-            "tests": ["basic_compositor_video", "glvideo", "displaylist_mutate"]
+            "tests": ["basic_compositor_video", "glvideo", "displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
         },
         "g4-stylo-disabled-e10s": {
             "tests": ["basic_compositor_video", "glvideo"],

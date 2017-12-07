@@ -60,6 +60,17 @@ bool is_glcontext_egl(void* glcontext_ptr)
   return glcontext->GetContextType() == mozilla::gl::GLContextType::EGL;
 }
 
+bool is_glcontext_angle(void* glcontext_ptr)
+{
+  MOZ_ASSERT(glcontext_ptr);
+
+  mozilla::gl::GLContext* glcontext = reinterpret_cast<mozilla::gl::GLContext*>(glcontext_ptr);
+  if (!glcontext) {
+    return false;
+  }
+  return glcontext->IsANGLE();
+}
+
 bool gfx_use_wrench()
 {
   return gfxEnv::EnableWebRenderRecording();
