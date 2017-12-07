@@ -40,7 +40,7 @@ if CONFIG['_MSC_VER']:
         '-wd4804', # '>' : unsafe use of type 'bool' in operation
         '-wd4099', # mismatched class/struct tags
     ]
-elif CONFIG['GNU_CXX']:
+elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-Wno-comment',
         '-Wno-sign-compare',

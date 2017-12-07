@@ -199,7 +199,7 @@ SOURCES += [
 if CONFIG['CLANG_CXX']:
     SOURCES['Factory.cpp'].flags += ['-Wno-implicit-fallthrough']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

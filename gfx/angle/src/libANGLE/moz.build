@@ -340,7 +340,7 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
 
 CXXFLAGS += CONFIG['SSE2_FLAGS']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-attributes',
         '-Wno-shadow',

@@ -95,7 +95,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     # Suppress gcc warning about a comparison being always false due to the
     # range of the data type
     SOURCES['Key.cpp'].flags += ['-Wno-error=type-limits']

@@ -52,5 +52,5 @@ LOCAL_INCLUDES += [
 
 DEFINES['DEBUG_TABLE_STRATEGY_off'] = True
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

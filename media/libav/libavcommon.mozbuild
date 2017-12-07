@@ -28,7 +28,7 @@ else:
 LOCAL_INCLUDES += ['/media/libav']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-pointer-sign',

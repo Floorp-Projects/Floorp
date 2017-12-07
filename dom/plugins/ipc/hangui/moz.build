@@ -17,7 +17,7 @@ DEFINES['_HAS_EXCEPTIONS'] = 0
 
 DisableStlWrapping()
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     WIN32_EXE_LDFLAGS += ['-municode']
 
 RCINCLUDE = 'HangUIDlg.rc'

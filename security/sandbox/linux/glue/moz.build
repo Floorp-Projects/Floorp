@@ -25,5 +25,5 @@ USE_LIBS += [
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

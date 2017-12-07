@@ -20,7 +20,7 @@ if CONFIG['_MSC_VER']:
     CFLAGS += [
         '-wd4312', # conversion to greater size
     ]
-elif CONFIG['GNU_CXX']:
+elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-unused-local-typedefs',
         '-Wno-shadow',

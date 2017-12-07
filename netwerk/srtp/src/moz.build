@@ -70,5 +70,5 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 else:
     DEFINES['HAVE_NETINET_IN_H'] = 1
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-std=gnu99']

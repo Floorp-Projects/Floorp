@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['TARGET_CPU'] == 'x86_64':
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         SOURCES += [
             'xptcinvoke_x86_64.cpp',
             'xptcstubs_x86_64_gnu.cpp',
@@ -23,7 +23,7 @@ if CONFIG['TARGET_CPU'] == 'x86_64':
             'xptcstubs_asm_x86_64.asm'
         ]
 else:
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         SOURCES += [
             'xptcinvoke_x86_gnu.cpp',
             'xptcstubs.cpp',

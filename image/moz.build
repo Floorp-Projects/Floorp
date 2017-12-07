@@ -113,7 +113,7 @@ CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['FUZZING']:

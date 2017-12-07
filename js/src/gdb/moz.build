@@ -41,7 +41,7 @@ if CONFIG['ENABLE_INTL_API'] and CONFIG['MOZ_ICU_DATA_ARCHIVE']:
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow', '-fno-strict-aliasing']
 
 # This is intended as a temporary workaround to enable VS2015.

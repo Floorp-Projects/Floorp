@@ -125,7 +125,7 @@ if CONFIG['_MSC_VER']:
         '-wd4946', # reinterpret_cast used between related types
     ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wextra',
         '-Wunreachable-code',

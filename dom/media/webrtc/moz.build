@@ -70,7 +70,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about important MOZ_EXPORT attributes for
 #    android API types
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
     CXXFLAGS += [
         '-Wno-error=attributes',
         '-Wno-error=shadow',

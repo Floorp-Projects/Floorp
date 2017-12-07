@@ -47,7 +47,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES['resample_neon.c'].flags += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-Wno-sign-compare']
 
 if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:

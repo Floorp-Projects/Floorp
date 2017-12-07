@@ -117,7 +117,7 @@ if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
                 SOURCES[f].flags += ['-arch:AVX2']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
     CFLAGS += [
         '-Wno-sign-compare',
         '-Wno-unused-function', # so many of these warnings; just ignore them

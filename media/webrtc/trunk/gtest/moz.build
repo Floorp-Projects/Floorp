@@ -556,7 +556,7 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
         '../webrtc/voice_engine/voice_engine_fixture.cc',
     ]
 
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         CXXFLAGS += [
             '-Wno-inconsistent-missing-override',
             '-Wno-overloaded-virtual',
