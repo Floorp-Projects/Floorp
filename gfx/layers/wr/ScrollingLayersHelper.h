@@ -10,6 +10,8 @@
 #include <unordered_map>
 
 #include "mozilla/Attributes.h"
+#include "mozilla/webrender/WebRenderAPI.h"
+#include "FrameMetrics.h"
 
 class nsDisplayItem;
 

@@ -84,7 +84,6 @@ public:
   already_AddRefed<ContainerLayer> CreateContainerLayer() override { return nullptr; }
   already_AddRefed<ImageLayer> CreateImageLayer() override { return nullptr; }
   already_AddRefed<ColorLayer> CreateColorLayer() override { return nullptr; }
-  already_AddRefed<TextLayer> CreateTextLayer() override { return nullptr; }
   already_AddRefed<BorderLayer> CreateBorderLayer() override { return nullptr; }
   already_AddRefed<CanvasLayer> CreateCanvasLayer() override { return nullptr; }
 
