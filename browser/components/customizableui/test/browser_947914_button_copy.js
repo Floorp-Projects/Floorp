@@ -34,30 +34,14 @@ add_task(async function() {
 
     ok(!copyButton.hasAttribute("disabled"), "Copy button is enabled when selecting");
 
-    copyButton.click();
+    await SimpleTest.promiseClipboardChange(testText, () => {
+      copyButton.click();
+    });
+
     is(gURLBar.value, testText, "Selected text is unaltered when clicking copy");
-
-    // check that the text was added to the clipboard
-    let clipboard = Services.clipboard;
-    let transferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
-    globalClipboard = clipboard.kGlobalClipboard;
-
-    transferable.init(null);
-    transferable.addDataFlavor("text/unicode");
-    clipboard.getData(transferable, globalClipboard);
-    let str = {}, strLength = {};
-    transferable.getTransferData("text/unicode", str, strLength);
-    let clipboardValue = "";
-
-    if (str.value) {
-      str.value.QueryInterface(Ci.nsISupportsString);
-      clipboardValue = str.value.data;
-    }
-    is(clipboardValue, testText, "Data was copied to the clipboard.");
   });
 });
 
 registerCleanupFunction(function cleanup() {
   CustomizableUI.reset();
-  Services.clipboard.emptyClipboard(globalClipboard);
 });

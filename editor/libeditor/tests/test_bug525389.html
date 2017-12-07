@@ -4,6 +4,7 @@
 <style src="/tests/SimpleTest/test.css" type="text/css"></style>
 <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
 
 <script class="testbody" type="application/javascript">
 
@@ -19,7 +20,7 @@ function getLoadContext() {
                .QueryInterface(Ci.nsILoadContext);
 }
 
-function runTest() {
+async function runTest() {
   var pasteCount = 0;
   var pasteFunc = function (event) { pasteCount++; };
 
@@ -114,7 +115,7 @@ function runTest() {
     return trans;
   }
 
-  function copyToClipBoard(s,asHTML,target_id) {
+  async function copyToClipBoard(s,asHTML,target_id) {
     var e = document.getElementById('i2');
     var doc = e.contentDocument;
     if (asHTML) {
@@ -134,11 +135,14 @@ function runTest() {
       range.selectNode(doc.getElementById(target_id));
       selection.addRange(range);
     }
-    SpecialPowers.wrap(doc).execCommand("copy", false, null);
+
+    await SimpleTest.promiseClipboardChange(() => true,
+      () => { SpecialPowers.wrap(doc).execCommand("copy", false, null); });
+
     return e;
   }
 
-  copyToClipBoard('<span>Hello</span><span>Kitty</span>', true);
+  await copyToClipBoard('<span>Hello</span><span>Kitty</span>', true);
   var trans = getTransferableFromClipboard(true);
   pasteInto(trans, '');
   verifyContent('<span>Hello</span><span>Kitty</span>');
@@ -150,7 +154,7 @@ function runTest() {
   //pasteInto(trans, '');
   //verifyContent('<span>Hello</span><span>Kitty</span>');
 
-  copyToClipBoard("<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span>", true);
+  await copyToClipBoard("<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span>", true);
   trans = getTransferableFromClipboard(true);
   pasteInto(trans, '<ol><li id="paste_here">X</li></ol>',"paste_here");
   verifyContent('<ol><li id="paste_here">X<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span></li></ol>');
@@ -159,11 +163,11 @@ function runTest() {
 // The following test doesn't do what I expected, because the special handling
 // of IsList nodes in nsHTMLEditor::InsertHTMLWithContext simply removes
 // non-list/item children.  See bug 481177.
-//  copyToClipBoard("<ol><li>Hello Kitty</li><span>Hello</span></ol>", true);
+//  await copyToClipBoard("<ol><li>Hello Kitty</li><span>Hello</span></ol>", true);
 //  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
 //  verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li><span>Hello</span></ol>');
 
-  copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
+  await copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
   trans = getTransferableFromClipboard(true);
   pasteInto(trans, '<pre id="paste_here">Hello </pre>',"paste_here");
   verifyContent('<pre id="paste_here">Hello Kitty<span>Hello</span></pre>');
@@ -171,17 +175,20 @@ function runTest() {
 
   // test that we can preventDefault pastes
   pasteFunc = function (event) { event.preventDefault(); return false; };
-  copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
+  await copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
   trans = getTransferableFromClipboard(true);
   pasteInto(trans, '<pre id="paste_here">Hello </pre>',"paste_here");
   verifyContent('<pre id="paste_here">Hello </pre>');
   is(pasteCount, 0, "paste event was triggered");
-
-  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(runTest);
+addLoadEvent(() => {
+  add_task(async function test_copy() {
+    await runTest();
+  });
+});
+
 </script>
 </head>
 <body>
