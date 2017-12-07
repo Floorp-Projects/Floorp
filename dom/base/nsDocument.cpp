@@ -6630,21 +6630,25 @@ nsIDocument::GetBindingParent(nsINode& aNode)
 }
 
 static Element*
-GetElementByAttribute(nsIContent* aContent, nsAtom* aAttrName,
+GetElementByAttribute(Element* aElement, nsAtom* aAttrName,
                       const nsAString& aAttrValue, bool aUniversalMatch)
 {
-  if (aUniversalMatch ? aContent->HasAttr(kNameSpaceID_None, aAttrName) :
-                        aContent->AttrValueIs(kNameSpaceID_None, aAttrName,
+  if (aUniversalMatch ? aElement->HasAttr(kNameSpaceID_None, aAttrName) :
+                        aElement->AttrValueIs(kNameSpaceID_None, aAttrName,
                                               aAttrValue, eCaseMatters)) {
-    return aContent->AsElement();
+    return aElement;
   }
 
-  for (nsIContent* child = aContent->GetFirstChild();
+  for (nsIContent* child = aElement->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
+    if (!child->IsElement()) {
+      continue;
+    }
 
     Element* matchedElement =
-      GetElementByAttribute(child, aAttrName, aAttrValue, aUniversalMatch);
+      GetElementByAttribute(child->AsElement(), aAttrName, aAttrValue,
+                            aUniversalMatch);
     if (matchedElement)
       return matchedElement;
   }
@@ -6668,8 +6672,13 @@ nsDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
 
   for (uint32_t i = 0; i < length; ++i) {
     nsIContent* current = nodeList->Item(i);
+    if (!current->IsElement()) {
+      continue;
+    }
+
     Element* matchedElm =
-      GetElementByAttribute(current, aAttrName, aAttrValue, universalMatch);
+      GetElementByAttribute(current->AsElement(), aAttrName, aAttrValue,
+                            universalMatch);
     if (matchedElm)
       return matchedElm;
   }
@@ -10342,10 +10351,10 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
   nsString name;
   for (i = 0; i < n; ++i) {
     nsIContent* map = mImageMaps->Item(i);
-    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
-                         eCaseMatters) ||
-        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
-                         eCaseMatters)) {
+    if (map->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
+                                      eCaseMatters) ||
+        map->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
+                                      eCaseMatters)) {
       return map->AsElement();
     }
   }

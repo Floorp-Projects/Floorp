@@ -1293,17 +1293,17 @@ IMEStateManager::SetIMEState(const IMEState& aState,
       // that gets focus whenever anyone tries to focus the number control. We
       // need to check if aContent is one of those anonymous text controls and,
       // if so, use the number control instead:
-      nsIContent* content = aContent;
+      Element* element = aContent->AsElement();
       HTMLInputElement* inputElement =
         HTMLInputElement::FromContentOrNull(aContent);
       if (inputElement) {
         HTMLInputElement* ownerNumberControl =
           inputElement->GetOwnerNumberControl();
         if (ownerNumberControl) {
-          content = ownerNumberControl; // an <input type=number>
+          element = ownerNumberControl; // an <input type=number>
         }
       }
-      content->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
+      element->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
                        context.mHTMLInputType);
     } else {
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
@@ -1311,8 +1311,8 @@ IMEStateManager::SetIMEState(const IMEState& aState,
 
     if (sInputModeSupported ||
         nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
-      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
-                        context.mHTMLInputInputmode);
+      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
+                                     context.mHTMLInputInputmode);
       if (context.mHTMLInputInputmode.EqualsLiteral("mozAwesomebar") &&
           !nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
         // mozAwesomebar should be allowed only in chrome
@@ -1320,8 +1320,9 @@ IMEStateManager::SetIMEState(const IMEState& aState,
       }
     }
 
-    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
-                      context.mActionHint);
+    aContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                   nsGkAtoms::moz_action_hint,
+                                   context.mActionHint);
 
     // Get the input content corresponding to the focused node,
     // which may be an anonymous child of the input content.

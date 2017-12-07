@@ -503,7 +503,9 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         // We identify the resource element by presence of a
         // "uri='rdf:*'" attribute. (We also support the older
         // "uri='...'" syntax.)
-        if (tmplKid->HasAttr(kNameSpaceID_None, nsGkAtoms::uri) && aMatch->IsActive()) {
+        if (tmplKid->IsElement() &&
+            tmplKid->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::uri) &&
+            aMatch->IsActive()) {
             isGenerationElement = true;
             isUnique = false;
         }
@@ -610,7 +612,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // SynchronizeUsingTemplate contains code used to update textnodes,
             // so make sure to modify both when changing this
             nsAutoString attrValue;
-            tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
+            tmplKid->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                          attrValue);
             if (!attrValue.IsEmpty()) {
                 nsAutoString value;
                 rv = SubstituteText(aChild, attrValue, value);
@@ -885,7 +888,8 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
         if (tmplKid->NodeInfo()->Equals(nsGkAtoms::textnode,
                                         kNameSpaceID_XUL)) {
             nsAutoString attrValue;
-            tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
+            tmplKid->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                          attrValue);
             if (!attrValue.IsEmpty()) {
                 nsAutoString value;
                 rv = SubstituteText(aResult, attrValue, value);
@@ -1257,8 +1261,8 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
                                      nsGkAtoms::toolbarbutton,
                                      nsGkAtoms::button,
                                      nsGkAtoms::treeitem))
-        return aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
-                                     nsGkAtoms::_true, eCaseMatters);
+        return aElement->AsElement()->AttrValueIs(
+            kNameSpaceID_None, nsGkAtoms::open, nsGkAtoms::_true, eCaseMatters);
     return true;
 }
 

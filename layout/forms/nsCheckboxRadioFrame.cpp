@@ -161,7 +161,7 @@ nsCheckboxRadioFrame::RegUnRegAccessKey(nsIFrame* aFrame, bool aDoReg)
 
   nsAutoString accessKey;
 
-  nsIContent* content = aFrame->GetContent();
+  Element* content = aFrame->GetContent()->AsElement();
   content->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
   if (!accessKey.IsEmpty()) {
     EventStateManager* stateManager = presContext->EventStateManager();

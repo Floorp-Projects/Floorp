@@ -489,7 +489,7 @@ protected:
    */
   nsIContent* GetNextTabbableMapArea(bool aForward,
                                      int32_t aCurrentTabIndex,
-                                     nsIContent* aImageContent,
+                                     mozilla::dom::Element* aImageContent,
                                      nsIContent* aStartContent);
 
   /**
@@ -506,7 +506,7 @@ protected:
    * aRootContent. For content documents, this will be aRootContent itself, but
    * for chrome documents, this will locate the next focusable content.
    */
-  nsresult FocusFirst(nsIContent* aRootContent, nsIContent** aNextContent);
+  nsresult FocusFirst(mozilla::dom::Element* aRootContent, nsIContent** aNextContent);
 
   /**
    * Retrieves and returns the root node from aDocument to be focused. Will
@@ -517,16 +517,16 @@ protected:
    * - if aCheckVisibility is true and the aWindow is not visible.
    * - if aDocument is a frameset document.
    */
-  nsIContent* GetRootForFocus(nsPIDOMWindowOuter* aWindow,
-                              nsIDocument* aDocument,
-                              bool aForDocumentNavigation,
-                              bool aCheckVisibility);
+  mozilla::dom::Element* GetRootForFocus(nsPIDOMWindowOuter* aWindow,
+                                         nsIDocument* aDocument,
+                                         bool aForDocumentNavigation,
+                                         bool aCheckVisibility);
 
   /**
    * Retrieves and returns the root node as with GetRootForFocus but only if
    * aContent is a frame with a valid child document.
    */
-  nsIContent* GetRootForChildDocument(nsIContent* aContent);
+  mozilla::dom::Element* GetRootForChildDocument(nsIContent* aContent);
 
   /**
    * Retreives a focusable element within the current selection of aWindow.

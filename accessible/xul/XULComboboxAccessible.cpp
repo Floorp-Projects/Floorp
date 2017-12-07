@@ -26,8 +26,8 @@ XULComboboxAccessible::
   XULComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::autocomplete, eIgnoreCase))
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                         nsGkAtoms::autocomplete, eIgnoreCase))
     mGenericTypes |= eAutoComplete;
   else
     mGenericTypes |= eCombobox;
@@ -36,8 +36,9 @@ XULComboboxAccessible::
   // widgets use XULComboboxAccessible. We need to walk the anonymous children
   // for these so that the entry field is a child. Otherwise no XBL children.
   if (!mContent->NodeInfo()->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL) &&
-      !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
-                             nsGkAtoms::_true, eIgnoreCase)) {
+      !mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                          nsGkAtoms::editable, nsGkAtoms::_true,
+                                          eIgnoreCase)) {
     mStateFlags |= eNoXBLKids;
   }
 }
@@ -155,8 +156,8 @@ bool
 XULComboboxAccessible::IsActiveWidget() const
 {
   if (IsAutoComplete() ||
-     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
-                           nsGkAtoms::_true, eIgnoreCase)) {
+     mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
+                                        nsGkAtoms::_true, eIgnoreCase)) {
     int32_t childCount = mChildren.Length();
     for (int32_t idx = 0; idx < childCount; idx++) {
       Accessible* child = mChildren[idx];

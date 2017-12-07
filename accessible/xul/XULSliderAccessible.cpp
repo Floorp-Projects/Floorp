@@ -54,8 +54,8 @@ XULSliderAccessible::NativeInteractiveState() const
 bool
 XULSliderAccessible::NativelyUnavailable() const
 {
-  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                               nsGkAtoms::_true, eCaseMatters);
+  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                            nsGkAtoms::_true, eCaseMatters);
 }
 
 void
@@ -151,7 +151,7 @@ XULSliderAccessible::GetSliderAttr(nsAtom* aName, nsAString& aValue) const
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsIContent* sliderElm = GetSliderElement();
+  Element* sliderElm = GetSliderElement();
   if (sliderElm)
     sliderElm->GetAttr(kNameSpaceID_None, aName, aValue);
 

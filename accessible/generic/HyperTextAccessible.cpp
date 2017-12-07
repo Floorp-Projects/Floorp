@@ -269,12 +269,11 @@ HyperTextAccessible::DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
   Accessible* descendant = nullptr;
   if (findNode) {
     nsCOMPtr<nsIContent> findContent(do_QueryInterface(findNode));
-    if (findContent && findContent->IsHTMLElement() &&
-        findContent->NodeInfo()->Equals(nsGkAtoms::br) &&
-        findContent->AttrValueIs(kNameSpaceID_None,
-                                 nsGkAtoms::mozeditorbogusnode,
-                                 nsGkAtoms::_true,
-                                 eIgnoreCase)) {
+    if (findContent && findContent->IsHTMLElement(nsGkAtoms::br) &&
+        findContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                              nsGkAtoms::mozeditorbogusnode,
+                                              nsGkAtoms::_true,
+                                              eIgnoreCase)) {
       // This <br> is the hacky "bogus node" used when there is no text in a control
       return 0;
     }
@@ -1852,7 +1851,8 @@ HyperTextAccessible::NativeName(nsString& aName)
   // Check @alt attribute for invalid img elements.
   bool hasImgAlt = false;
   if (mContent->IsHTMLElement(nsGkAtoms::img)) {
-    hasImgAlt = mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
+    hasImgAlt =
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
     if (!aName.IsEmpty())
       return eNameOK;
   }
@@ -1865,7 +1865,7 @@ HyperTextAccessible::NativeName(nsString& aName)
   // a valid name from markup. Otherwise their name isn't picked up by recursive
   // name computation algorithm. See NS_OK_NAME_FROM_TOOLTIP.
   if (IsAbbreviation() &&
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName))
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName))
     aName.CompressWhitespace();
 
   return hasImgAlt ? eNoNameOnPurpose : eNameOK;

@@ -122,14 +122,14 @@ HTMLTableCellAccessible::NativeAttributes()
     }
   }
   if (abbrText.IsEmpty())
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr, abbrText);
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr, abbrText);
 
   if (!abbrText.IsEmpty())
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::abbr, abbrText);
 
   // axis attribute
   nsAutoString axisText;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
   if (!axisText.IsEmpty())
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::axis, axisText);
 
@@ -312,12 +312,12 @@ role
 HTMLTableHeaderCellAccessible::NativeRole()
 {
   // Check value of @scope attribute.
-  static nsIContent::AttrValuesArray scopeValues[] =
+  static Element::AttrValuesArray scopeValues[] =
     { &nsGkAtoms::col, &nsGkAtoms::colgroup,
       &nsGkAtoms::row, &nsGkAtoms::rowgroup, nullptr };
   int32_t valueIdx =
-    mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::scope,
-                              scopeValues, eCaseMatters);
+    mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::scope,
+                                           scopeValues, eCaseMatters);
 
   switch (valueIdx) {
     case 0:
@@ -437,7 +437,7 @@ HTMLTableAccessible::NativeName(nsString& aName)
   }
 
   // If no caption then use summary as a name.
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, aName);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, aName);
   return eNameOK;
 }
 
@@ -863,8 +863,8 @@ HTMLTableAccessible::Description(nsString& aDescription)
                                                    &captionText);
 
       if (!captionText.IsEmpty()) { // summary isn't used as a name.
-        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::summary,
-                          aDescription);
+        mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::summary,
+                                       aDescription);
       }
     }
   }
@@ -946,7 +946,7 @@ HTMLTableAccessible::IsProbablyLayoutTable()
   if (Role() != roles::TABLE)
     RETURN_LAYOUT_ANSWER(false, "Has role attribute");
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
     // Role attribute is present, but overridden roles have already been dealt with.
     // Only landmarks and other roles that don't override the role from native
     // markup are left to deal with here.
@@ -957,14 +957,14 @@ HTMLTableAccessible::IsProbablyLayoutTable()
     "table should not be built by CSS display:table style");
 
   // Check if datatable attribute has "0" value.
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::datatable,
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::datatable,
                             NS_LITERAL_STRING("0"), eCaseMatters)) {
     RETURN_LAYOUT_ANSWER(true, "Has datatable = 0 attribute, it's for layout");
   }
 
   // Check for legitimate data table attributes.
   nsAutoString summary;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, summary) &&
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, summary) &&
       !summary.IsEmpty())
     RETURN_LAYOUT_ANSWER(false, "Has summary -- legitimate table structures");
 
@@ -999,9 +999,9 @@ HTMLTableAccessible::IsProbablyLayoutTable()
                                      "Has th -- legitimate table structures");
               }
 
-              if (cellElm->HasAttr(kNameSpaceID_None, nsGkAtoms::headers) ||
-                  cellElm->HasAttr(kNameSpaceID_None, nsGkAtoms::scope) ||
-                  cellElm->HasAttr(kNameSpaceID_None, nsGkAtoms::abbr)) {
+              if (cellElm->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::headers) ||
+                  cellElm->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::scope) ||
+                  cellElm->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::abbr)) {
                 RETURN_LAYOUT_ANSWER(false,
                                      "Has headers, scope, or abbr attribute -- legitimate table structures");
               }

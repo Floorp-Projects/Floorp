@@ -127,7 +127,7 @@ SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument, nsIContent* aMustMatch)
   for (nsIContent* child = aDocument->GetFirstChild(); child;
        child = child->GetNextNode()) {
     if (child->IsHTMLElement(nsGkAtoms::base) &&
-        child->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+        child->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
       if (aMustMatch && child != aMustMatch) {
         return;
       }
@@ -135,7 +135,7 @@ SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument, nsIContent* aMustMatch)
       // Resolve the <base> element's href relative to our document's
       // fallback base URI.
       nsAutoString href;
-      child->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+      child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
       nsCOMPtr<nsIURI> newBaseURI;
       nsContentUtils::NewURIWithDocumentCharset(
@@ -180,13 +180,13 @@ SetBaseTargetUsingFirstBaseWithTarget(nsIDocument* aDocument,
   for (nsIContent* child = aDocument->GetFirstChild(); child;
        child = child->GetNextNode()) {
     if (child->IsHTMLElement(nsGkAtoms::base) &&
-        child->HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
+        child->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
       if (aMustMatch && child != aMustMatch) {
         return;
       }
 
       nsString target;
-      child->GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
+      child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
       aDocument->SetBaseTarget(target);
       return;
     }

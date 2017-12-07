@@ -972,19 +972,20 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
         nsIPresShell *shell = doc->GetShell();
 
         if (shell) {
-            nsIContent *content = this;
+            Element* element = this;
 
             // find out what type of content node this is
             if (mNodeInfo->Equals(nsGkAtoms::label)) {
                 // For anonymous labels the unregistering must
                 // occur on the binding parent control.
                 // XXXldb: And what if the binding parent is null?
-                content = GetBindingParent();
+                nsIContent* bindingParent = GetBindingParent();
+                element = bindingParent ? bindingParent->AsElement() : nullptr;
             }
 
-            if (content) {
+            if (element) {
                 shell->GetPresContext()->EventStateManager()->
-                    UnregisterAccessKey(content, aOldValue.First());
+                    UnregisterAccessKey(element, aOldValue.First());
             }
         }
     }

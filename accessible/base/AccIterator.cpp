@@ -85,7 +85,8 @@ RelatedAccIterator::
     nsGkAtoms::anonid : nsGkAtoms::id;
 
   nsAutoString id;
-  if (aDependentContent->GetAttr(kNameSpaceID_None, IDAttr, id))
+  if (aDependentContent->IsElement() &&
+      aDependentContent->AsElement()->GetAttr(kNameSpaceID_None, IDAttr, id))
     mProviders = mDocument->mDependentIDsHash.Get(id);
 }
 
@@ -165,7 +166,7 @@ HTMLLabelIterator::Next()
   while (walkUp && !walkUp->IsDoc()) {
     nsIContent* walkUpEl = walkUp->GetContent();
     if (IsLabel(walkUp) &&
-        !walkUpEl->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
+        !walkUpEl->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
       mLabelFilter = eSkipAncestorLabel; // prevent infinite loop
       return walkUp;
     }
@@ -257,8 +258,8 @@ IDRefsIterator::
                  nsAtom* aIDRefsAttr) :
   mContent(aContent), mDoc(aDoc), mCurrIdx(0)
 {
-  if (mContent->IsInUncomposedDoc())
-    mContent->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs);
+  if (mContent->IsInUncomposedDoc() && mContent->IsElement())
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs);
 }
 
 const nsDependentSubstring

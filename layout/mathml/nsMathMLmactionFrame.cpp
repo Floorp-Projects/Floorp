@@ -43,7 +43,10 @@ GetActionType(nsIContent* aContent)
   nsAutoString value;
 
   if (aContent) {
-    if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value))
+    if (!aContent->IsElement() ||
+        !aContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                        nsGkAtoms::actiontype_,
+                                        value))
       return NS_MATHML_ACTION_TYPE_NONE;
   }
 
@@ -131,7 +134,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
     return mSelectedFrame;
   }
 
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value);
   if (!value.IsEmpty()) {
     nsresult errorCode;
     selection = value.ToInteger(&errorCode);
