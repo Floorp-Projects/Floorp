@@ -47,8 +47,9 @@ nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 {
   // override, since we don't want children to get events
   if (aBuilder->IsForEventDelivery()) {
-    if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowevents,
-                               nsGkAtoms::_true, eCaseMatters))
+    if (!mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::allowevents,
+                                            nsGkAtoms::_true, eCaseMatters))
       return;
   }
   nsBoxFrame::BuildDisplayListForChildren(aBuilder, aLists);

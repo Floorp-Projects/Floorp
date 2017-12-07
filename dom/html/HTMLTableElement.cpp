@@ -247,10 +247,10 @@ TableRowsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
   NS_ENSURE_TRUE(nameAtom, nullptr);
 
   for (auto& node : mRows) {
-    if (node->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                          nameAtom, eCaseMatters) ||
-        node->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
-                          nameAtom, eCaseMatters)) {
+    if (node->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                       nameAtom, eCaseMatters) ||
+        node->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+                                       nameAtom, eCaseMatters)) {
       aFound = true;
       return node->AsElement();
     }

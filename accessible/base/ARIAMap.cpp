@@ -1375,8 +1375,10 @@ aria::HasDefinedARIAHidden(nsIContent* aContent)
 {
   return aContent &&
     nsAccUtils::HasDefinedARIAToken(aContent, nsGkAtoms::aria_hidden) &&
-    !aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_hidden,
-                           nsGkAtoms::_false, eCaseMatters);
+    !aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                        nsGkAtoms::aria_hidden,
+                                        nsGkAtoms::_false,
+                                        eCaseMatters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

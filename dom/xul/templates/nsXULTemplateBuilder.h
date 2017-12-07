@@ -271,7 +271,7 @@ public:
      * @param aConditions <conditions> element
      */
     nsresult
-    CompileConditions(nsTemplateRule* aRule, nsIContent* aConditions);
+    CompileConditions(nsTemplateRule* aRule, Element* aConditions);
 
     /**
      * Compile a <where> tag in a condition. The caller should set
@@ -285,7 +285,7 @@ public:
      */
     nsresult
     CompileWhereCondition(nsTemplateRule* aRule,
-                          nsIContent* aCondition,
+                          Element* aCondition,
                           nsTemplateCondition** aCurrentCondition);
 
     /**
@@ -298,7 +298,7 @@ public:
      * Compile a single binding for an extended template syntax rule.
      */
     nsresult
-    CompileBinding(nsTemplateRule* aRule, nsIContent* aBinding);
+    CompileBinding(nsTemplateRule* aRule, Element* aBinding);
 
     /**
      * Add automatic bindings for simple rules
