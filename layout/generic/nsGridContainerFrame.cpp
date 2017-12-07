@@ -667,6 +667,12 @@ nsGridContainerFrame::GridItemInfo::Dump() const
     if (state & ItemState::eIsFlexing) {
       printf("flexing ");
     }
+    if (state & ItemState::eApplyAutoMinSize) {
+      printf("auto-min-size ");
+    }
+    if (state & ItemState::eClampMarginBoxMinSize) {
+      printf("clamp ");
+    }
     if (state & ItemState::eFirstBaseline) {
       printf("first baseline %s-alignment ",
              (state & ItemState::eSelfBaseline) ? "self" : "content");
@@ -4189,8 +4195,10 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
     auto& gridItem = aGridItems[iter.ItemIndex()];
-    MOZ_ASSERT(!(gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize),
-               "Why is eApplyAutoMinSize set already?");
+    MOZ_ASSERT(!(gridItem.mState[mAxis] &
+                 (ItemState::eApplyAutoMinSize | ItemState::eIsFlexing |
+                  ItemState::eClampMarginBoxMinSize)),
+               "Why are any of these bits set already?");
     const GridArea& area = gridItem.mArea;
     const LineRange& lineRange = area.*aRange;
     uint32_t span = lineRange.Extent();
