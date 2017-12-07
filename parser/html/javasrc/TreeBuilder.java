@@ -6307,6 +6307,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getFormPointer()
      */
+    @Override
     public T getFormPointer() {
         return formPointer;
     }
@@ -6316,6 +6317,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the headPointer
      */
+    @Override
     public T getHeadPointer() {
         return headPointer;
     }
@@ -6325,6 +6327,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the deepTreeSurrogateParent
      */
+    @Override
     public T getDeepTreeSurrogateParent() {
         return deepTreeSurrogateParent;
     }
@@ -6332,6 +6335,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getListOfActiveFormattingElements()
      */
+    @Override
     public StackNode<T>[] getListOfActiveFormattingElements() {
         return listOfActiveFormattingElements;
     }
@@ -6339,6 +6343,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getStack()
      */
+    @Override
     public StackNode<T>[] getStack() {
         return stack;
     }
@@ -6346,6 +6351,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStack()
      */
+    @Override
     public int[] getTemplateModeStack() {
         return templateModeStack;
     }
@@ -6355,6 +6361,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the mode
      */
+    @Override
     public int getMode() {
         return mode;
     }
@@ -6364,6 +6371,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the originalMode
      */
+    @Override
     public int getOriginalMode() {
         return originalMode;
     }
@@ -6373,6 +6381,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the framesetOk
      */
+    @Override
     public boolean isFramesetOk() {
         return framesetOk;
     }
@@ -6382,6 +6391,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the needToDropLF
      */
+    @Override
     public boolean isNeedToDropLF() {
         return needToDropLF;
     }
@@ -6391,6 +6401,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the quirks
      */
+    @Override
     public boolean isQuirks() {
         return quirks;
     }
@@ -6398,6 +6409,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getListOfActiveFormattingElementsLength()
      */
+    @Override
     public int getListOfActiveFormattingElementsLength() {
         return listPtr + 1;
     }
@@ -6405,6 +6417,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getStackLength()
      */
+    @Override
     public int getStackLength() {
         return currentPtr + 1;
     }
@@ -6412,6 +6425,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStackLength()
      */
+    @Override
     public int getTemplateModeStackLength() {
         return templateModePtr + 1;
     }
