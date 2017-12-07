@@ -279,12 +279,6 @@ public:
    * mProcessedTime to mStateComputedTime.
    */
   void Process();
-  /**
-   * Extract any state updates pending in aStream, and apply them.
-   */
-  void ExtractPendingInput(SourceMediaStream* aStream,
-                           GraphTime aDesiredUpToTime,
-                           bool* aEnsureNextIteration);
 
   /**
    * For use during ProcessedMediaStream::ProcessInput() or
@@ -394,7 +388,6 @@ public:
   void CloseAudioInputImpl(AudioDataListener *aListener);
   virtual void CloseAudioInput(AudioDataListener *aListener) override;
 
-  void FinishStream(MediaStream* aStream);
   /**
    * Compute how much stream data we would like to buffer for aStream.
    */
