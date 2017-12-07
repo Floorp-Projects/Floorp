@@ -1,9 +1,7 @@
 . "$topsrcdir/build/mozconfig.win-common"
 MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/browser/config/mozconfigs/common"
-
-ac_add_options --target=x86_64-pc-mingw32
-ac_add_options --host=x86_64-pc-mingw32
+. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 
 . "$topsrcdir/build/mozconfig.stylo"
 

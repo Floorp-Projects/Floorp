@@ -3,9 +3,7 @@ MOZ_AUTOMATION_PACKAGE_TEST=0
 
 . "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/common"
-
-ac_add_options --target=x86_64-pc-mingw32
-ac_add_options --host=x86_64-pc-mingw32
+. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 
 ac_add_options --enable-optimize
 ac_add_options --enable-debug
