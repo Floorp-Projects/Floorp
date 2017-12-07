@@ -143,10 +143,7 @@ public:
   {
     return mRefDT->CreateGradientStops(aStops, aNumStops, aExtendMode);
   }
-  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override
-  {
-    return mRefDT->CreateFilter(aType);
-  }
+  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
 
   void ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform);
 
