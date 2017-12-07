@@ -19,7 +19,7 @@ no-static-ideograph-encoder-tables = ["gkrust-shared/no-static-ideograph-encoder
 gkrust-shared = { path = "shared" }
 
 [dev-dependencies]
-stylo_tests = { path = "../../../servo/tests/unit/stylo/" }
+stylo_tests = { path = "../../../servo/ports/geckolib/tests/" }
 
 [lib]
 path = "lib.rs"
