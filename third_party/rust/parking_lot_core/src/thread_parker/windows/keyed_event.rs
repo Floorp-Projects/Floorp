@@ -22,23 +22,26 @@ const STATE_TIMED_OUT: usize = 2;
 #[allow(non_snake_case)]
 pub struct KeyedEvent {
     handle: winapi::HANDLE,
-    NtReleaseKeyedEvent: extern "system" fn(EventHandle: winapi::HANDLE,
-                                            Key: winapi::PVOID,
-                                            Alertable: winapi::BOOLEAN,
-                                            Timeout: winapi::PLARGE_INTEGER)
-                                            -> winapi::NTSTATUS,
-    NtWaitForKeyedEvent: extern "system" fn(EventHandle: winapi::HANDLE,
-                                            Key: winapi::PVOID,
-                                            Alertable: winapi::BOOLEAN,
-                                            Timeout: winapi::PLARGE_INTEGER)
-                                            -> winapi::NTSTATUS,
+    NtReleaseKeyedEvent: extern "system" fn(
+        EventHandle: winapi::HANDLE,
+        Key: winapi::PVOID,
+        Alertable: winapi::BOOLEAN,
+        Timeout: winapi::PLARGE_INTEGER,
+    ) -> winapi::NTSTATUS,
+    NtWaitForKeyedEvent: extern "system" fn(
+        EventHandle: winapi::HANDLE,
+        Key: winapi::PVOID,
+        Alertable: winapi::BOOLEAN,
+        Timeout: winapi::PLARGE_INTEGER,
+    ) -> winapi::NTSTATUS,
 }
 
 impl KeyedEvent {
-    unsafe fn wait_for(&self,
-                       key: winapi::PVOID,
-                       timeout: winapi::PLARGE_INTEGER)
-                       -> winapi::NTSTATUS {
+    unsafe fn wait_for(
+        &self,
+        key: winapi::PVOID,
+        timeout: winapi::PLARGE_INTEGER,
+    ) -> winapi::NTSTATUS {
         (self.NtWaitForKeyedEvent)(self.handle, key, 0, timeout)
     }
 
@@ -69,17 +72,19 @@ impl KeyedEvent {
             return None;
         }
 
-        let NtCreateKeyedEvent: extern "system" fn(KeyedEventHandle: winapi::PHANDLE,
-                                                   DesiredAccess: winapi::ACCESS_MASK,
-                                                   ObjectAttributes: winapi::PVOID,
-                                                   Flags: winapi::ULONG)
-                                                   -> winapi::NTSTATUS =
-            mem::transmute(NtCreateKeyedEvent);
+        let NtCreateKeyedEvent: extern "system" fn(
+            KeyedEventHandle: winapi::PHANDLE,
+            DesiredAccess: winapi::ACCESS_MASK,
+            ObjectAttributes: winapi::PVOID,
+            Flags: winapi::ULONG,
+        ) -> winapi::NTSTATUS = mem::transmute(NtCreateKeyedEvent);
         let mut handle = mem::uninitialized();
-        let status = NtCreateKeyedEvent(&mut handle,
-                                        winapi::GENERIC_READ | winapi::GENERIC_WRITE,
-                                        ptr::null_mut(),
-                                        0);
+        let status = NtCreateKeyedEvent(
+            &mut handle,
+            winapi::GENERIC_READ | winapi::GENERIC_WRITE,
+            ptr::null_mut(),
+            0,
+        );
         if status != winapi::STATUS_SUCCESS {
             return None;
         }
@@ -122,7 +127,9 @@ impl KeyedEvent {
         let diff = timeout - now;
         let nt_timeout = (diff.as_secs() as winapi::LARGE_INTEGER)
             .checked_mul(-10000000)
-            .and_then(|x| x.checked_sub((diff.subsec_nanos() as winapi::LARGE_INTEGER + 99) / 100));
+            .and_then(|x| {
+                x.checked_sub((diff.subsec_nanos() as winapi::LARGE_INTEGER + 99) / 100)
+            });
         let mut nt_timeout = match nt_timeout {
             Some(x) => x,
             None => {

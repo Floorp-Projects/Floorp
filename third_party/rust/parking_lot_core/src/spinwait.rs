@@ -12,7 +12,7 @@ use libc;
 #[cfg(not(any(windows, unix)))]
 use std::thread;
 #[cfg(not(feature = "nightly"))]
-use std::sync::atomic::{Ordering, fence};
+use std::sync::atomic::{fence, Ordering};
 
 // Yields the rest of the current timeslice to the OS
 #[cfg(windows)]
@@ -58,9 +58,8 @@ fn cpu_relax(iterations: u32) {
         }
     }
 }
-#[cfg(all(feature = "nightly", not(any(target_arch = "x86",
-                                       target_arch = "x86_64",
-                                       target_arch = "aarch64"))))]
+#[cfg(all(feature = "nightly",
+          not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64"))))]
 #[inline]
 fn cpu_relax(iterations: u32) {
     for _ in 0..iterations {
