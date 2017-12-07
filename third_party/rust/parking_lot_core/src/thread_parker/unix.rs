@@ -124,7 +124,9 @@ impl ThreadParker {
         let r = libc::pthread_mutex_lock(self.mutex.get());
         debug_assert_eq!(r, 0);
 
-        UnparkHandle { thread_parker: self }
+        UnparkHandle {
+            thread_parker: self,
+        }
     }
 }
 
