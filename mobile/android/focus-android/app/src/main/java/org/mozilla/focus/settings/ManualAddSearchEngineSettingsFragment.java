@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.settings;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,13 +14,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.UrlUtils;
-import org.mozilla.focus.utils.ViewUtils;
 
 import java.util.Collections;
 
@@ -75,7 +76,12 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
     @Override
     public void onPause() {
         super.onPause();
-        ViewUtils.hideKeyboard(getActivity().getCurrentFocus());
+        View view = getActivity().getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getActivity()
+                    .getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     private static boolean validateSearchFields(String engineName, String searchString, SharedPreferences sharedPreferences) {
