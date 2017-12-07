@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_var.h 243186 2012-11-17 20:04:04Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_var.h 317457 2017-04-26 19:26:40Z tuexen $");
 #endif
 
 #ifndef _NETINET6_SCTP6_VAR_H_
@@ -81,8 +83,7 @@ extern void in6_sin_2_v4mapsin6(struct sockaddr_in *, struct sockaddr_in6 *);
 extern void in6_sin6_2_sin(struct sockaddr_in *, struct sockaddr_in6 *);
 extern void in6_sin6_2_sin_in_sock(struct sockaddr *);
 #endif
-extern void sctp6_notify(struct sctp_inpcb *, struct icmp6_hdr *,
-                         struct sctphdr *, struct sockaddr *,
-                         struct sctp_tcb *, struct sctp_nets *);
+void sctp6_notify(struct sctp_inpcb *, struct sctp_tcb *, struct sctp_nets *,
+                  uint8_t, uint8_t, uint32_t);
 #endif
 #endif
