@@ -13,8 +13,11 @@ form > div {
   margin: 0 0 0.5em !important;
 }
 
+input {
+  flex: 1 0 auto;
+}
+
 select {
-  flex: 0 0 5em;
   margin: 0;
   margin-inline-end: 0.7em;
 }
