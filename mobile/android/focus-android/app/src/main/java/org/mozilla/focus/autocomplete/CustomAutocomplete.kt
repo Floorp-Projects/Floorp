@@ -6,9 +6,7 @@ package org.mozilla.focus.autocomplete
 
 import android.content.Context
 import android.content.SharedPreferences
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
-@SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD") // That's just how Kotlin singletons work...
 object CustomAutocomplete {
     private const val PREFERENCE_NAME = "custom_autocomplete"
     private const val KEY_DOMAINS = "custom_domains"

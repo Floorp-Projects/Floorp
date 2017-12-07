@@ -5,7 +5,6 @@
 package org.mozilla.focus.ext
 
 import android.content.res.AssetManager
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.json.JSONObject
 
 // Extension functions for the AssetManager class

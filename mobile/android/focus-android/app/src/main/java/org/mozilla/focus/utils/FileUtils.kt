@@ -6,8 +6,6 @@
 package org.mozilla.focus.utils
 
 import android.content.Context
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-
 import java.io.File
 
 // WebView directory and contents.
