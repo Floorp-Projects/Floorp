@@ -1151,7 +1151,8 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
   // Grab pending stream input and compute blocking time
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
-      is->ExtractPendingInput(aEndBlockingDecisions, &ensureNextIteration);
+      is->PullNewData(aEndBlockingDecisions, &ensureNextIteration);
+      is->ExtractPendingInput();
     }
 
     if (stream->mFinished) {
@@ -2694,8 +2695,8 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
 }
 
 void
-SourceMediaStream::ExtractPendingInput(StreamTime aDesiredUpToTime,
-                                       bool* aEnsureNextIteration)
+SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime,
+                               bool* aEnsureNextIteration)
 {
   MutexAutoLock lock(mMutex);
   if (mPullEnabled && !mFinished && !mListeners.IsEmpty()) {
@@ -2730,6 +2731,12 @@ SourceMediaStream::ExtractPendingInput(StreamTime aDesiredUpToTime,
       }
     }
   }
+}
+
+void
+SourceMediaStream::ExtractPendingInput()
+{
+  MutexAutoLock lock(mMutex);
 
   bool finished = mFinishPending;
   bool shouldNotifyTrackCreated = false;
