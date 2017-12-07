@@ -555,15 +555,11 @@ static nsContainerFrame* GetIBSplitPrevSibling(nsIFrame* aFrame)
 }
 
 static nsContainerFrame*
-GetLastIBSplitSibling(nsIFrame* aFrame, bool aReturnEmptyTrailingInline)
+GetLastIBSplitSibling(nsIFrame* aFrame)
 {
-  for (nsIFrame *frame = aFrame, *next; ; frame = next) {
+  for (nsIFrame* frame = aFrame, *next; ; frame = next) {
     next = GetIBSplitSibling(frame);
-    if (!next ||
-        (!aReturnEmptyTrailingInline && !next->PrincipalChildList().FirstChild() &&
-         !GetIBSplitSibling(next))) {
-      NS_ASSERTION(!next || !frame->IsInlineOutside(),
-                   "Should have a block here!");
+    if (!next) {
       return static_cast<nsContainerFrame*>(frame);
     }
   }
@@ -6492,6 +6488,34 @@ FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
 }
 
 /**
+ * Finds the right parent frame to append content to aParentFrame.
+ *
+ * Cannot return or receive null.
+ */
+static nsContainerFrame*
+ContinuationToAppendTo(nsContainerFrame* aParentFrame)
+{
+  MOZ_ASSERT(aParentFrame);
+
+  if (IsFramePartOfIBSplit(aParentFrame)) {
+    // If the frame we are manipulating is a ib-split frame (that is, one that's
+    // been created as a result of a block-in-inline situation) then we need to
+    // append to the last ib-split sibling, not to the frame itself.
+    //
+    // Always make sure to look at the last continuation of the frame for the
+    // {ib} case, even if that continuation is empty.
+    //
+    // We don't do this for the non-ib-split-frame case, since in the other
+    // cases appending to the last nonempty continuation is fine and in fact not
+    // doing that can confuse code that doesn't know to pull kids from
+    // continuations other than its next one.
+    return static_cast<nsContainerFrame*>(GetLastIBSplitSibling(aParentFrame)->LastContinuation());
+  }
+
+  return nsLayoutUtils::LastContinuationWithChild(aParentFrame);
+}
+
+/**
  * This function will get the next sibling for a frame insert operation given
  * the parent and previous sibling.  aPrevSibling may be null.
  */
@@ -6784,7 +6808,7 @@ nsCSSFrameConstructor::AdjustSiblingFrame(
     // The frame may be a ib-split frame (a split inline frame that contains a
     // block).  Get the last part of that split.
     if (IsFramePartOfIBSplit(aSibling)) {
-      aSibling = GetLastIBSplitSibling(aSibling, true);
+      aSibling = GetLastIBSplitSibling(aSibling);
     }
 
     // The frame may have a continuation. If so, we want the last
@@ -6926,18 +6950,10 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
     } else {
       // No previous or next sibling, so treat this like an appended frame.
       *aIsAppend = true;
-      if (IsFramePartOfIBSplit(aInsertion->mParentFrame)) {
-        // Since we're appending, we'll walk to the last anonymous frame
-        // that was created for the broken inline frame. We can walk to the
-        // trailing inline, since we know this is a real append, and not an
-        // insert (that would've been handled by `FindNextSibling`).
-        aInsertion->mParentFrame =
-          GetLastIBSplitSibling(aInsertion->mParentFrame, true);
-      }
-      // Get continuation that parents the last child.
       aInsertion->mParentFrame =
-        nsLayoutUtils::LastContinuationWithChild(aInsertion->mParentFrame);
-      // Deal with fieldsets
+        ::ContinuationToAppendTo(aInsertion->mParentFrame);
+
+      // Deal with fieldsets.
       aInsertion->mParentFrame =
         ::GetAdjustedParentFrame(aInsertion->mParentFrame, aChild);
       prevSibling = ::FindAppendPrevSibling(aInsertion->mParentFrame, nullptr);
@@ -7528,28 +7544,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     return;
   }
 
-  // If the frame we are manipulating is a ib-split frame (that is, one
-  // that's been created as a result of a block-in-inline situation) then we
-  // need to append to the last ib-split sibling, not to the frame itself.
-  const bool parentIBSplit = IsFramePartOfIBSplit(parentFrame);
-  if (parentIBSplit) {
 #ifdef DEBUG
-    if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::ContentAppended: parentFrame=");
-      nsFrame::ListTag(stdout, parentFrame);
-      printf(" is ib-split\n");
-    }
-#endif
-
-    // Since we're appending, we'll walk to the last anonymous frame
-    // that was created for the broken inline frame.  But don't walk
-    // to the trailing inline if it's empty; stop at the block.
-    parentFrame = GetLastIBSplitSibling(parentFrame, false);
+  if (gNoisyContentUpdates && IsFramePartOfIBSplit(parentFrame)) {
+    printf("nsCSSFrameConstructor::ContentAppended: parentFrame=");
+    nsFrame::ListTag(stdout, parentFrame);
+    printf(" is ib-split\n");
   }
-
-  // Get continuation that parents the last child.  This MUST be done
-  // before the AdjustAppendParentForAfterContent call.
-  parentFrame = nsLayoutUtils::LastContinuationWithChild(parentFrame);
+#endif
 
   // We should never get here with fieldsets or details, since they have
   // multiple insertion points.
@@ -7565,28 +7566,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     iter.Seek(insertion.mContainer->GetLastChild());
     StyleDisplay unused = UNSET_DISPLAY;
     nextSibling = FindNextSibling(iter, unused);
-  }
-
-  if (nextSibling) {
-    parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
-  } else if (parentIBSplit) {
-    // We might be in a situation where the last part of the {ib} split was
-    // empty.  Since we have no ::after pseudo-element, we do in fact want to be
-    // appending to that last part, so advance to it if needed.  Note that here
-    // aParentFrame is the result of a GetLastIBSplitSibling call, so must be
-    // either the last or next to last ib-split sibling.
-    if (nsContainerFrame* trailingInline = GetIBSplitSibling(parentFrame)) {
-      parentFrame = trailingInline;
+    if (nextSibling) {
+      parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
     }
-
-    // Always make sure to look at the last continuation of the frame
-    // for the {ib} case, even if that continuation is empty.  We
-    // don't do this for the non-ib-split-frame case, since in the
-    // other cases appending to the last nonempty continuation is fine
-    // and in fact not doing that can confuse code that doesn't know
-    // to pull kids from continuations other than its next one.
+  } else {
     parentFrame =
-      static_cast<nsContainerFrame*>(parentFrame->LastContinuation());
+      ::ContinuationToAppendTo(parentFrame);
   }
 
   nsContainerFrame* containingBlock = GetFloatContainingBlock(parentFrame);
@@ -7685,7 +7670,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   // where frames can be moved around, determine if the list is for the
   // start or end of the block.
   if (nsLayoutUtils::GetAsBlock(parentFrame) && !haveFirstLetterStyle &&
-      !haveFirstLineStyle && !parentIBSplit) {
+      !haveFirstLineStyle && !IsFramePartOfIBSplit(parentFrame)) {
     items.SetLineBoundaryAtStart(!prevSibling ||
                                  !prevSibling->IsInlineOutside() ||
                                  prevSibling->IsBrFrame());
