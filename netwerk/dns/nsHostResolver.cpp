@@ -1473,7 +1473,7 @@ nsHostResolver::ThreadFunc(void *arg)
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
 #endif
-    nsHostResolver *resolver = (nsHostResolver *)arg;
+    RefPtr<nsHostResolver> resolver = dont_AddRef((nsHostResolver *)arg);
     nsHostRecord *rec  = nullptr;
     AddrInfo *ai = nullptr;
 
@@ -1537,7 +1537,7 @@ nsHostResolver::ThreadFunc(void *arg)
         }
     }
     resolver->mThreadCount--;
-    NS_RELEASE(resolver);
+    resolver = nullptr;
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
 }
 
