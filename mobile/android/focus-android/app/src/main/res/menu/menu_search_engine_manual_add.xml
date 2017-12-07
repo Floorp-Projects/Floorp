@@ -5,6 +5,11 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/learn_more"
+          android:icon="@drawable/ic_menu_info"
+          android:title="@string/preference_autocomplete_learn_more"
+          app:showAsAction="always"/>
+
     <item android:id="@+id/menu_save_search_engine"
         android:title="@string/search_add_manually_save"
         app:showAsAction="always"/>
