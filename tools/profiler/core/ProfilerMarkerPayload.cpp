@@ -157,3 +157,11 @@ GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
     aWriter.NullProperty("nursery");
   }
 }
+
+void
+HangMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                 const TimeStamp& aProcessStartTime,
+                                 UniqueStacks& aUniqueStacks)
+{
+  StreamCommonProps("BHR-detected hang", aWriter, aProcessStartTime, aUniqueStacks);
+}
