@@ -16,11 +16,12 @@ use kernel32;
 
 #[allow(non_snake_case)]
 pub struct WaitAddress {
-    WaitOnAddress: extern "system" fn(Address: winapi::PVOID,
-                                      CompareAddress: winapi::PVOID,
-                                      AddressSize: winapi::SIZE_T,
-                                      dwMilliseconds: winapi::DWORD)
-                                      -> winapi::BOOL,
+    WaitOnAddress: extern "system" fn(
+        Address: winapi::PVOID,
+        CompareAddress: winapi::PVOID,
+        AddressSize: winapi::SIZE_T,
+        dwMilliseconds: winapi::DWORD,
+    ) -> winapi::BOOL,
     WakeByAddressSingle: extern "system" fn(Address: winapi::PVOID),
 }
 
@@ -29,20 +30,21 @@ impl WaitAddress {
     pub unsafe fn create() -> Option<WaitAddress> {
         // MSDN claims that that WaitOnAddress and WakeByAddressSingle are
         // located in kernel32.dll, but they are lying...
-        let synch_dll = kernel32::GetModuleHandleA(b"api-ms-win-core-synch-l1-2-0.dll\0"
-            .as_ptr() as winapi::LPCSTR);
+        let synch_dll = kernel32::GetModuleHandleA(b"api-ms-win-core-synch-l1-2-0.dll\0".as_ptr()
+            as winapi::LPCSTR);
         if synch_dll.is_null() {
             return None;
         }
 
-        let WaitOnAddress = kernel32::GetProcAddress(synch_dll,
-                                                     b"WaitOnAddress\0".as_ptr() as winapi::LPCSTR);
+        let WaitOnAddress =
+            kernel32::GetProcAddress(synch_dll, b"WaitOnAddress\0".as_ptr() as winapi::LPCSTR);
         if WaitOnAddress.is_null() {
             return None;
         }
-        let WakeByAddressSingle = kernel32::GetProcAddress(synch_dll,
-                                                           b"WakeByAddressSingle\0".as_ptr() as
-                                                           winapi::LPCSTR);
+        let WakeByAddressSingle = kernel32::GetProcAddress(
+            synch_dll,
+            b"WakeByAddressSingle\0".as_ptr() as winapi::LPCSTR,
+        );
         if WakeByAddressSingle.is_null() {
             return None;
         }
@@ -63,10 +65,12 @@ impl WaitAddress {
     pub unsafe fn park(&'static self, key: &AtomicUsize) {
         while key.load(Ordering::Acquire) != 0 {
             let cmp = 1usize;
-            let r = (self.WaitOnAddress)(key as *const _ as winapi::PVOID,
-                                         &cmp as *const _ as winapi::PVOID,
-                                         mem::size_of::<usize>() as winapi::SIZE_T,
-                                         winapi::INFINITE);
+            let r = (self.WaitOnAddress)(
+                key as *const _ as winapi::PVOID,
+                &cmp as *const _ as winapi::PVOID,
+                mem::size_of::<usize>() as winapi::SIZE_T,
+                winapi::INFINITE,
+            );
             debug_assert!(r == winapi::TRUE);
         }
     }
@@ -80,18 +84,24 @@ impl WaitAddress {
             let diff = timeout - now;
             let timeout = diff.as_secs()
                 .checked_mul(1000)
-                .and_then(|x| x.checked_add((diff.subsec_nanos() as u64 + 999999) / 1000000))
-                .map(|ms| if ms > <winapi::DWORD>::max_value() as u64 {
-                    winapi::INFINITE
-                } else {
-                    ms as winapi::DWORD
+                .and_then(|x| {
+                    x.checked_add((diff.subsec_nanos() as u64 + 999999) / 1000000)
+                })
+                .map(|ms| {
+                    if ms > <winapi::DWORD>::max_value() as u64 {
+                        winapi::INFINITE
+                    } else {
+                        ms as winapi::DWORD
+                    }
                 })
                 .unwrap_or(winapi::INFINITE);
             let cmp = 1usize;
-            let r = (self.WaitOnAddress)(key as *const _ as winapi::PVOID,
-                                         &cmp as *const _ as winapi::PVOID,
-                                         mem::size_of::<usize>() as winapi::SIZE_T,
-                                         timeout);
+            let r = (self.WaitOnAddress)(
+                key as *const _ as winapi::PVOID,
+                &cmp as *const _ as winapi::PVOID,
+                mem::size_of::<usize>() as winapi::SIZE_T,
+                timeout,
+            );
             if r == winapi::FALSE {
                 debug_assert_eq!(kernel32::GetLastError(), winapi::ERROR_TIMEOUT);
             }
