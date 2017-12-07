@@ -29,7 +29,7 @@ function getLoadContext() {
                                    .QueryInterface(Ci.nsILoadContext);
 }
 
-function testCopyPaste (isXHTML) {
+async function testCopyPaste (isXHTML) {
   var suppressUnicodeCheckIfHidden = !!isXHTML;
   var suppressHTMLCheck = !!isXHTML;
 
@@ -45,8 +45,9 @@ function testCopyPaste (isXHTML) {
 
   var textarea = SpecialPowers.wrap(document.getElementById('input'));
 
-  function copySelectionToClipboard(suppressUnicodeCheck) {
-    documentViewer.copySelection();
+  async function copySelectionToClipboard(suppressUnicodeCheck) {
+    await SimpleTest.promiseClipboardChange(() => true,
+                                            () => { documentViewer.copySelection(); });
     if (!suppressUnicodeCheck)
       ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), "check text/unicode");
     if (!suppressHTMLCheck)
@@ -54,16 +55,15 @@ function testCopyPaste (isXHTML) {
   }
   function clear(node, suppressUnicodeCheck) {
     textarea.blur();
-    clipboard.emptyClipboard(1);
     var sel = window.getSelection();
     sel.removeAllRanges();
   }
-  function copyToClipboard(node, suppressUnicodeCheck) {
+  async function copyToClipboard(node, suppressUnicodeCheck) {
     clear();
     var r = document.createRange();
     r.selectNode(node);
     window.getSelection().addRange(r);
-    copySelectionToClipboard(suppressUnicodeCheck);
+    await copySelectionToClipboard(suppressUnicodeCheck);
   }
   function addRange(startNode,startIndex,endNode,endIndex) {
     var sel = window.getSelection();
@@ -72,15 +72,15 @@ function testCopyPaste (isXHTML) {
     r.setEnd(endNode,endIndex)
     sel.addRange(r);
   }
-  function copyRangeToClipboard(startNode,startIndex,endNode,endIndex,suppressUnicodeCheck) {
+  async function copyRangeToClipboard(startNode,startIndex,endNode,endIndex,suppressUnicodeCheck) {
     clear();
     addRange(startNode,startIndex,endNode,endIndex);
-    copySelectionToClipboard(suppressUnicodeCheck);
+    await copySelectionToClipboard(suppressUnicodeCheck);
   }
-  function copyChildrenToClipboard(id) {
+  async function copyChildrenToClipboard(id) {
     clear();
     window.getSelection().selectAllChildren(document.getElementById(id));
-    copySelectionToClipboard();
+    await copySelectionToClipboard();
   }
   function getClipboardData(mime) {
     var transferable = SpecialPowers.Cc['@mozilla.org/widget/transferable;1']
@@ -132,15 +132,8 @@ function testCopyPaste (isXHTML) {
     var value = document.getElementById(id).innerHTML;
     is(value, expected, id + ".innerHTML");
   }
-  function testEmptyChildren(id) {
-    copyChildrenToClipboard(id);
-    testSelectionToString("");
-    testClipboardValue("text/unicode", null);
-    testClipboardValue("text/html", null);
-    testPasteText("");
-  }
 
-  copyChildrenToClipboard("draggable");
+  await copyChildrenToClipboard("draggable");
   testSelectionToString("This is a draggable bit of text.");
   testClipboardValue("text/unicode",
                      "This is a draggable bit of text.");
@@ -148,25 +141,25 @@ function testCopyPaste (isXHTML) {
                      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em> bit of text.</div>");
   testPasteText("This is a draggable bit of text.");
 
-  copyChildrenToClipboard("alist");
+  await copyChildrenToClipboard("alist");
   testSelectionToString(" bla\n\n    foo\n    bar\n\n");
   testClipboardValue("text/unicode", " bla\n\n    foo\n    bar\n\n");
   testHtmlClipboardValue("text/html", "<div id=\"alist\">\n    bla\n    <ul>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
   testPasteText(" bla\n\n    foo\n    bar\n\n");
 
-  copyChildrenToClipboard("blist");
+  await copyChildrenToClipboard("blist");
   testSelectionToString(" mozilla\n\n    foo\n    bar\n\n");
   testClipboardValue("text/unicode", " mozilla\n\n    foo\n    bar\n\n");
   testHtmlClipboardValue("text/html", "<div id=\"blist\">\n    mozilla\n    <ol>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ol>\n  </div>");
   testPasteText(" mozilla\n\n    foo\n    bar\n\n");
 
-  copyChildrenToClipboard("clist");
+  await copyChildrenToClipboard("clist");
   testSelectionToString(" mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
   testClipboardValue("text/unicode", " mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
   testHtmlClipboardValue("text/html", "<div id=\"clist\">\n    mzla\n    <ul>\n      <li>foo<ul>\n        <li>bazzinga!</li>\n      </ul></li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
   testPasteText(" mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
 
-  copyChildrenToClipboard("div4");
+  await copyChildrenToClipboard("div4");
   testSelectionToString(" Tt t t ");
   testClipboardValue("text/unicode", " Tt t t ");
   if (isXHTML) {
@@ -179,7 +172,7 @@ function testCopyPaste (isXHTML) {
   }
   testPasteText(" Tt t t ");
 
-  copyChildrenToClipboard("div5");
+  await copyChildrenToClipboard("div5");
   testSelectionToString(" T     ");
   testClipboardValue("text/unicode", " T     ");
   if (isXHTML) {
@@ -192,7 +185,7 @@ function testCopyPaste (isXHTML) {
   }
   testPasteText(" T     ");
 
-  copyRangeToClipboard($("div6").childNodes[0],0, $("div6").childNodes[1],1,suppressUnicodeCheckIfHidden);
+  await copyRangeToClipboard($("div6").childNodes[0],0, $("div6").childNodes[1],1,suppressUnicodeCheckIfHidden);
   testSelectionToString("");
 // START Disabled due to bug 564688
 if (false) {
@@ -202,7 +195,7 @@ if (false) {
 // END Disabled due to bug 564688
   testInnerHTML("div6", "div6");
 
-  copyRangeToClipboard($("div7").childNodes[0],0, $("div7").childNodes[0],4,suppressUnicodeCheckIfHidden);
+  await copyRangeToClipboard($("div7").childNodes[0],0, $("div7").childNodes[0],4,suppressUnicodeCheckIfHidden);
   testSelectionToString("");
 // START Disabled due to bug 564688
 if (false) {
@@ -212,7 +205,7 @@ if (false) {
 // END Disabled due to bug 564688
   testInnerHTML("div7", "div7");
 
-  copyRangeToClipboard($("div8").childNodes[0],0, $("div8").childNodes[0],4,suppressUnicodeCheckIfHidden);
+  await copyRangeToClipboard($("div8").childNodes[0],0, $("div8").childNodes[0],4,suppressUnicodeCheckIfHidden);
   testSelectionToString("");
 // START Disabled due to bug 564688
 if (false) {
@@ -222,23 +215,23 @@ if (false) {
 // END Disabled due to bug 564688
   testInnerHTML("div8", "div8");
 
-  copyRangeToClipboard($("div9").childNodes[0],0, $("div9").childNodes[0],4,suppressUnicodeCheckIfHidden);
+  await copyRangeToClipboard($("div9").childNodes[0],0, $("div9").childNodes[0],4,suppressUnicodeCheckIfHidden);
   testSelectionToString("div9");
   testClipboardValue("text/unicode", "div9");
   testHtmlClipboardValue("text/html", "div9");
   testInnerHTML("div9", "div9");
 
-  copyToClipboard($("div10"), suppressUnicodeCheckIfHidden);
+  await copyToClipboard($("div10"), suppressUnicodeCheckIfHidden);
   testSelectionToString("");
   testInnerHTML("div10", "div10");
 
-  copyToClipboard($("div10").firstChild, suppressUnicodeCheckIfHidden);
+  await copyToClipboard($("div10").firstChild, suppressUnicodeCheckIfHidden);
   testSelectionToString("");
 
-  copyRangeToClipboard($("div10").childNodes[0],0, $("div10").childNodes[0],1,suppressUnicodeCheckIfHidden);
+  await copyRangeToClipboard($("div10").childNodes[0],0, $("div10").childNodes[0],1,suppressUnicodeCheckIfHidden);
   testSelectionToString("");
 
-  copyRangeToClipboard($("div10").childNodes[1],0, $("div10").childNodes[1],1,suppressUnicodeCheckIfHidden);
+  await copyRangeToClipboard($("div10").childNodes[1],0, $("div10").childNodes[1],1,suppressUnicodeCheckIfHidden);
   testSelectionToString("");
 
   if (!isXHTML) {
@@ -257,7 +250,7 @@ if (false) {
     r.setStart(ul, 1);  // before the space inside the UL
     r.setEnd(parent, 2);  // after the UL
     sel.addRange(r);
-    copySelectionToClipboard(true);
+    await copySelectionToClipboard(true);
     testPasteHTML('contentEditable1', 'Copy1then Paste');
 
     // with text end node
@@ -274,7 +267,7 @@ if (false) {
     r.setStart(parent.childNodes[1], 0);  // the start of "Copy..."
     r.setEnd(parent, 2);
     sel.addRange(r);
-    copySelectionToClipboard(true);
+    await copySelectionToClipboard(true);
     testPasteHTML('contentEditable2', 'Copy2then Paste');
 
     // with text end node and non-empty start
@@ -291,7 +284,7 @@ if (false) {
     r.setStart(parent.childNodes[1], 0);  // the start of "Copy..."
     r.setEnd(parent, 2);
     sel.addRange(r);
-    copySelectionToClipboard(true);
+    await copySelectionToClipboard(true);
     testPasteHTML('contentEditable3', '<ul id="ul3"><li>\n<br></li></ul>Copy3then Paste');
 
     // with elements of different depth
@@ -308,7 +301,7 @@ if (false) {
     r.setStart(div1.childNodes[1], 0);  // the start of "after"
     r.setEnd(parent, 1);
     sel.addRange(r);
-    copySelectionToClipboard(true);
+    await copySelectionToClipboard(true);
     testPasteHTML('contentEditable4', '<div id="div1s"><div id="div1se1">before</div></div><div id="div1s">after</div>');
 
     // with elements of different depth, and a text node at the end
@@ -325,7 +318,7 @@ if (false) {
     r.setStart(div1.childNodes[1], 0);  // the start of "after"
     r.setEnd(parent, 1);
     sel.addRange(r);
-    copySelectionToClipboard(true);
+    await copySelectionToClipboard(true);
     testPasteHTML('contentEditable5', '<div id="div2s"><div id="div2se1">before</div></div><div id="div2s">after</div>');
 
     // crash test for bug 1127835
@@ -347,7 +340,7 @@ if (false) {
     r.setStart(e2, 1);
     r.setEnd(t3, 0);
     sel.addRange(r);
-    copySelectionToClipboard(true);
+    await copySelectionToClipboard(true);
     testPasteHTML('contentEditable6', '<span id="1127835crash1"></span><div id="1127835crash2"><div>\n</div></div><br>');
   }
 
@@ -356,8 +349,8 @@ if (false) {
   var val = "1\n 2\n  3";
   textarea.value=val;
   textarea.select();
-  textarea.editor.copy();
-  
+  await SimpleTest.promiseClipboardChange(() => true,
+                                          () => { textarea.editor.copy(); });
   textarea.value="";
   textarea.editor.paste(1);
   is(textarea.value, val);
@@ -365,7 +358,7 @@ if (false) {
 
   // ============ NOSCRIPT should not be copied
 
-  copyChildrenToClipboard("div13");
+  await copyChildrenToClipboard("div13");
   testSelectionToString("__");
   testClipboardValue("text/unicode", "__");
   testHtmlClipboardValue("text/html", "<div id=\"div13\">__</div>");
@@ -373,13 +366,13 @@ if (false) {
 
   // ============ converting cell boundaries to tabs in tables
 
-  copyToClipboard($("tr1"));
+  await copyToClipboard($("tr1"));
   testClipboardValue("text/unicode", "foo\tbar");
 
   if (!isXHTML) {
     // ============ spanning multiple rows
 
-    copyRangeToClipboard($("tr2"),0,$("tr3"),0);
+    await copyRangeToClipboard($("tr2"),0,$("tr3"),0);
     testClipboardValue("text/unicode", "1\t2\n3\t4\n");
     testHtmlClipboardValue("text/html", '<table><tbody><tr id="tr2"><tr id="tr2"><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr><tr id="tr3"></tr></tr></tbody></table>');
 
@@ -388,25 +381,27 @@ if (false) {
     clear();
     addRange($("tr2"),0,$("tr2"),2);
     addRange($("tr3"),0,$("tr3"),2);
-    copySelectionToClipboard();
+    await copySelectionToClipboard();
     testClipboardValue("text/unicode", "1\t2\n5\t6");
     testHtmlClipboardValue("text/html", '<table><tbody><tr id="tr2"><td>1</td><td>2</td></tr><tr id="tr3"><td>5</td><td>6</td></tr></tbody></table>');
   }
 
   // ============ manipulating Selection in oncopy
 
-  copyRangeToClipboard($("div11").childNodes[0],0, $("div11").childNodes[1],2);
+  await copyRangeToClipboard($("div11").childNodes[0],0, $("div11").childNodes[1],2);
   testClipboardValue("text/unicode", "Xdiv11");
   testHtmlClipboardValue("text/html", "<div><p>X<span>div</span>11</p></div>");
-  setTimeout(function(){testSelectionToString("div11")},0);
 
-  setTimeout(function(){
-    copyRangeToClipboard($("div12").childNodes[0],0, $("div12").childNodes[1],2);
-    testClipboardValue("text/unicode", "Xdiv12");
-    testHtmlClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");
-    setTimeout(function(){ 
-      testSelectionToString("div12"); 
-      setTimeout(SimpleTest.finish,0);
-    },0);
-  },0);
+  await new Promise(resolve => { setTimeout(resolve, 0); });
+  testSelectionToString("div11");
+
+  await new Promise(resolve => { setTimeout(resolve, 0); });
+  await copyRangeToClipboard($("div12").childNodes[0],0, $("div12").childNodes[1],2);
+
+  testClipboardValue("text/unicode", "Xdiv12");
+  testHtmlClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");
+  await new Promise(resolve => { setTimeout(resolve, 0); });
+  testSelectionToString("div12"); 
+
+  await new Promise(resolve => { setTimeout(resolve, 0); });
 }

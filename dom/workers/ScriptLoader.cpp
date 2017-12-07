@@ -1083,6 +1083,20 @@ private:
       principal = parentWorker->GetPrincipal();
     }
 
+#ifdef DEBUG
+    if (IsMainWorkerScript()) {
+      nsCOMPtr<nsIPrincipal> loadingPrincipal =
+        mWorkerPrivate->GetLoadingPrincipal();
+      // if we are not in a ServiceWorker, and the principal is not null, then the
+      // loading principal must subsume the worker principal if it is not a
+      // nullPrincipal (sandbox).
+      MOZ_ASSERT(!loadingPrincipal ||
+                 loadingPrincipal->GetIsNullPrincipal() ||
+                 principal->GetIsNullPrincipal() ||
+                 loadingPrincipal->Subsumes(principal));
+    }
+#endif
+
     // We don't mute the main worker script becase we've already done
     // same-origin checks on them so we should be able to see their errors.
     // Note that for data: url, where we allow it through the same-origin check
@@ -1185,7 +1199,7 @@ private:
       // Store the channel info if needed.
       mWorkerPrivate->InitChannelInfo(channel);
 
-      // Our final channel principal should match the original principal
+      // Our final channel principal should match the loading principal
       // in terms of the origin.
       MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->FinalChannelPrincipalIsValid(channel));
 
@@ -1838,8 +1852,10 @@ public:
     // before doing anything else.  Normally we do this in the WorkerPrivate
     // Constructor, but we can't do so off the main thread when creating
     // a nested worker.  So do it here instead.
-    mLoadInfo.mPrincipal = mWorkerPrivate->GetPrincipal();
-    MOZ_ASSERT(mLoadInfo.mPrincipal);
+    mLoadInfo.mLoadingPrincipal = mWorkerPrivate->GetPrincipal();
+    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mLoadingPrincipal);
+
+    mLoadInfo.mPrincipal = mLoadInfo.mLoadingPrincipal;
 
     // Figure out our base URI.
     nsCOMPtr<nsIURI> baseURI = mWorkerPrivate->GetBaseURI();
@@ -1852,7 +1868,7 @@ public:
 
     nsCOMPtr<nsIChannel> channel;
     mResult =
-      scriptloader::ChannelFromScriptURLMainThread(mLoadInfo.mPrincipal,
+      scriptloader::ChannelFromScriptURLMainThread(mLoadInfo.mLoadingPrincipal,
                                                    baseURI, parentDoc,
                                                    mLoadInfo.mLoadGroup,
                                                    mScriptURL,

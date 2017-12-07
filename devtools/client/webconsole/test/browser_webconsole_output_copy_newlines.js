@@ -10,7 +10,6 @@
 
 add_task(function* () {
   const TEST_URI = "data:text/html;charset=utf8,<p>hello world, bug 916997";
-  let clipboardValue = "";
 
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
@@ -47,26 +46,21 @@ add_task(function* () {
   let selection = hud.iframeWindow.getSelection() + "";
   info("selection '" + selection + "'");
 
-  waitForClipboard((str) => {
-    clipboardValue = str;
-    return str.indexOf("bug916997a") > -1 && str.indexOf("bug916997b") > -1;
-  },
+  let clipboardValue = yield SimpleTest.promiseClipboardChange(str => {
+      return str.indexOf("bug916997a") > -1 && str.indexOf("bug916997b") > -1;
+    },
     () => {
       goDoCommand("cmd_copy");
-    },
-    () => {
-      info("clipboard value '" + clipboardValue + "'");
-      let lines = clipboardValue.trim().split("\n");
-      is(hud.outputNode.children.length, 2, "number of messages");
-      is(lines.length, hud.outputNode.children.length, "number of lines");
-      isnot(lines[0].indexOf("bug916997a"), -1,
-            "first message text includes 'bug916997a'");
-      isnot(lines[1].indexOf("bug916997b"), -1,
-            "second message text includes 'bug916997b'");
-      is(lines[0].indexOf("bug916997b"), -1,
-         "first message text does not include 'bug916997b'");
-    },
-    () => {
-      info("last clipboard value: '" + clipboardValue + "'");
-    });
+    }
+  );
+
+  let lines = clipboardValue.trim().split("\n");
+  is(hud.outputNode.children.length, 2, "number of messages");
+  is(lines.length, hud.outputNode.children.length, "number of lines");
+  isnot(lines[0].indexOf("bug916997a"), -1,
+        "first message text includes 'bug916997a'");
+  isnot(lines[1].indexOf("bug916997b"), -1,
+        "second message text includes 'bug916997b'");
+  is(lines[0].indexOf("bug916997b"), -1,
+     "first message text does not include 'bug916997b'");
 });

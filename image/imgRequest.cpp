@@ -33,6 +33,7 @@
 #include "nsContentUtils.h"
 
 #include "plstr.h" // PL_strcasestr(...)
+#include "prtime.h" // for PR_Now
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "imgIRequest.h"
@@ -637,17 +638,21 @@ imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
 {
   /* get the expires info */
   if (aCacheEntry) {
-    nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aRequest));
-    if (cacheChannel) {
+    // Expiration time defaults to 0. We set the expiration time on our
+    // entry if it hasn't been set yet.
+    if (aCacheEntry->GetExpiryTime() == 0) {
       uint32_t expiration = 0;
-      /* get the expiration time from the caching channel's token */
-      if (NS_SUCCEEDED(cacheChannel->GetCacheTokenExpirationTime(&expiration))) {
-        // Expiration time defaults to 0. We set the expiration time on our
-        // entry if it hasn't been set yet.
-        if (aCacheEntry->GetExpiryTime() == 0) {
-          aCacheEntry->SetExpiryTime(expiration);
-        }
+      nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aRequest));
+      if (cacheChannel) {
+        /* get the expiration time from the caching channel's token */
+        cacheChannel->GetCacheTokenExpirationTime(&expiration);
       }
+      if (expiration == 0) {
+        // If the channel doesn't support caching, then ensure this expires the
+        // next time it is used.
+        expiration = imgCacheEntry::SecondsFromPRTime(PR_Now()) - 1;
+      }
+      aCacheEntry->SetExpiryTime(expiration);
     }
 
     // Determine whether the cache entry must be revalidated when we try to use

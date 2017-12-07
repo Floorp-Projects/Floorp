@@ -167,6 +167,7 @@ UNIFIED_SOURCES += [
     'DrawTargetRecording.cpp',
     'DrawTargetTiled.cpp',
     'DrawTargetWrapAndRecord.cpp',
+    'FilterNodeCapture.cpp',
     'FilterNodeSoftware.cpp',
     'FilterProcessing.cpp',
     'FilterProcessingScalar.cpp',
