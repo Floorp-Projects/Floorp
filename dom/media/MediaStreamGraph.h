@@ -505,7 +505,7 @@ public:
   GraphTime StreamTimeToGraphTime(StreamTime aTime) const;
 
   bool IsFinishedOnGraphThread() const { return mFinished; }
-  void FinishOnGraphThread();
+  virtual void FinishOnGraphThread();
 
   bool HasCurrentData() const { return mHasCurrentData; }
 
@@ -626,6 +626,7 @@ protected:
   /**
    * When true, this means the stream will be finished once all
    * buffered data has been consumed.
+   * Only accessed on the graph thread
    */
   bool mFinished;
   /**
@@ -699,9 +700,8 @@ public:
 
   /**
    * Extract any state updates pending in the stream, and apply them.
-   * Returns true if the stream is now finished.
    */
-  bool ExtractPendingInput(StreamTime aDesiredUpToTime,
+  void ExtractPendingInput(StreamTime aDesiredUpToTime,
                            bool* aEnsureNextIteration);
 
   /**
@@ -764,6 +764,7 @@ public:
    * aKnownTime must be >= its value at the last call to AdvanceKnownTracksTime.
    */
   void AdvanceKnownTracksTime(StreamTime aKnownTime);
+  void AdvanceKnownTracksTimeWithLockHeld(StreamTime aKnownTime);
   /**
    * Indicate that this stream should enter the "finished" state. All tracks
    * must have been ended via EndTrack. The finish time of the stream is
