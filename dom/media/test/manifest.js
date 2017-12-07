@@ -459,40 +459,28 @@ var gOggTrackInfoResults = {
   }
 };
 
-// Returns a promise that resolves to a function that converts
-// relative paths to absolute, to test loading files from file: URIs.
+// Converts a path/filename to a file:// URI which we can load from disk.
 // Optionally checks whether the file actually exists on disk at the location
 // we've specified.
-function makeAbsolutePathConverter() {
-  const url = SimpleTest.getTestFileURL('chromeHelper.js');
-  const script = SpecialPowers.loadChromeScript(url);
-  return new Promise((resolve, reject) => {
-    script.addMessageListener('media-test:cwd', cwd => {
-      if (!cwd) {
-	ok(false, "Failed to find path to test files");
-      }
+function fileUriToSrc(path, mustExist) {
+  // android mochitest doesn't support file://
+  if (manifestNavigator().appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G")
+    return path;
 
-      resolve((path, mustExist) => {
-	// android mochitest doesn't support file://
-	if (manifestNavigator().appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G")
-	  return path;
-
-	const { Ci, Cc } = SpecialPowers;
-	var f = Cc["@mozilla.org/file/local;1"]
-            .createInstance(Ci.nsIFile);
-	f.initWithPath(cwd);
-	var split = path.split("/");
-	for(var i = 0; i < split.length; ++i) {
-	  f.append(split[i]);
-	}
-	if (mustExist && !f.exists()) {
-	  ok(false, "We expected '" + path + "' to exist, but it doesn't!");
-	}
-	return f.path;
-      });
-    });
-    script.sendAsyncMessage('media-test:getcwd');
-  });
+  const Ci = SpecialPowers.Ci;
+  const Cc = SpecialPowers.Cc;
+  const Cr = SpecialPowers.Cr;
+  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+               getService(Ci.nsIProperties);
+  var f = dirSvc.get("CurWorkD", Ci.nsIFile);
+  var split = path.split("/");
+  for(var i = 0; i < split.length; ++i) {
+    f.append(split[i]);
+  }
+  if (mustExist && !f.exists()) {
+    ok(false, "We expected '" + path + "' to exist, but it doesn't!");
+  }
+  return f.path;
 }
 
 // Returns true if two TimeRanges are equal, false otherwise
@@ -511,50 +499,48 @@ function range_equals(r1, r2) {
 // These are URIs to files that we use to check that we don't leak any state
 // or other information such that script can determine stuff about a user's
 // environment. Used by test_info_leak.
-function makeInfoLeakTests() {
-  return makeAbsolutePathConverter().then(fileUriToSrc => [
-    {
-      type: 'video/ogg',
-      src: fileUriToSrc("tests/dom/media/test/320x240.ogv", true),
-    },{
-      type: 'video/ogg',
-      src: fileUriToSrc("tests/dom/media/test/404.ogv", false),
-    }, {
-      type: 'audio/x-wav',
-      src: fileUriToSrc("tests/dom/media/test/r11025_s16_c1.wav", true),
-    }, {
-      type: 'audio/x-wav',
-      src: fileUriToSrc("tests/dom/media/test/404.wav", false),
-    }, {
-      type: 'audio/ogg',
-      src: fileUriToSrc("tests/dom/media/test/bug461281.ogg", true),
-    }, {
-      type: 'audio/ogg',
-      src: fileUriToSrc("tests/dom/media/test/404.ogg", false),
-    }, {
-      type: 'video/webm',
-      src: fileUriToSrc("tests/dom/media/test/seek.webm", true),
-    }, {
-      type: 'video/webm',
-      src: fileUriToSrc("tests/dom/media/test/404.webm", false),
-    }, {
-      type: 'video/ogg',
-      src: 'http://localhost/404.ogv',
-    }, {
-      type: 'audio/x-wav',
-      src: 'http://localhost/404.wav',
-    }, {
-      type: 'video/webm',
-      src: 'http://localhost/404.webm',
-    }, {
-      type: 'video/ogg',
-      src: 'http://example.com/tests/dom/media/test/test_info_leak.html'
-    }, {
-      type: 'audio/ogg',
-      src: 'http://example.com/tests/dom/media/test/test_info_leak.html'
-    }
-  ]);
-}
+var gInfoLeakTests = [
+  {
+    type: 'video/ogg',
+    src: fileUriToSrc("tests/dom/media/test/320x240.ogv", true),
+  },{
+    type: 'video/ogg',
+    src: fileUriToSrc("tests/dom/media/test/404.ogv", false),
+  }, {
+    type: 'audio/x-wav',
+    src: fileUriToSrc("tests/dom/media/test/r11025_s16_c1.wav", true),
+  }, {
+    type: 'audio/x-wav',
+    src: fileUriToSrc("tests/dom/media/test/404.wav", false),
+  }, {
+    type: 'audio/ogg',
+    src: fileUriToSrc("tests/dom/media/test/bug461281.ogg", true),
+  }, {
+    type: 'audio/ogg',
+    src: fileUriToSrc("tests/dom/media/test/404.ogg", false),
+  }, {
+    type: 'video/webm',
+    src: fileUriToSrc("tests/dom/media/test/seek.webm", true),
+  }, {
+    type: 'video/webm',
+    src: fileUriToSrc("tests/dom/media/test/404.webm", false),
+  }, {
+    type: 'video/ogg',
+    src: 'http://localhost/404.ogv',
+  }, {
+    type: 'audio/x-wav',
+    src: 'http://localhost/404.wav',
+  }, {
+    type: 'video/webm',
+    src: 'http://localhost/404.webm',
+  }, {
+    type: 'video/ogg',
+    src: 'http://example.com/tests/dom/media/test/test_info_leak.html'
+  }, {
+    type: 'audio/ogg',
+    src: 'http://example.com/tests/dom/media/test/test_info_leak.html'
+  }
+];
 
 // These are files that must fire an error during load or playback, and do not
 // cause a crash. Used by test_playback_errors, which expects one error event
