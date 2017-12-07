@@ -1752,8 +1752,12 @@ audiounit_create_aggregate_device(cubeb_stream * stm)
     return  CUBEB_ERROR;
   }
 
-  if (input_nominal_rate != output_nominal_rate) {
-    Float64 rate = std::min(input_nominal_rate, output_nominal_rate);
+  /* Do not attempt to change the nominal rate if it's the same with the nominal rate of
+   * output device because it's the master device and rate will set to that anyway. */
+  uint32_t min_rate = std::min(input_nominal_rate, output_nominal_rate);
+  if (input_nominal_rate != output_nominal_rate && min_rate != output_nominal_rate) {
+    LOG("Update aggregate device rate to %u", min_rate);
+    Float64 rate = min_rate;
     AudioObjectPropertyAddress addr = {kAudioDevicePropertyNominalSampleRate,
                                        kAudioObjectPropertyScopeGlobal,
                                        kAudioObjectPropertyElementMaster};
@@ -1765,8 +1769,7 @@ audiounit_create_aggregate_device(cubeb_stream * stm)
                                              sizeof(Float64),
                                              &rate);
     if (rv != noErr) {
-      LOG("AudioObjectSetPropertyData/kAudioDevicePropertyNominalSampleRate, rv=%d", rv);
-      return CUBEB_ERROR;
+      LOG("Non fatal error, AudioObjectSetPropertyData/kAudioDevicePropertyNominalSampleRate, rv=%d", rv);
     }
   }
 
