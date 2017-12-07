@@ -10,7 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StartupTimeline.h"
 #include "nsTArray.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsXULAppAPI.h"
 
 #include "mozilla/TelemetryHistogramEnums.h"

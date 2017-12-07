@@ -18,7 +18,7 @@
 #include "nsRect.h"                     // for mozilla::gfx::IntRect, nsRect
 #include "nsMargin.h"                   // for nsIntMargin
 #include "nsRegionFwd.h"                // for nsIntRegion
-#include "nsStringGlue.h"               // for nsCString
+#include "nsString.h"                   // for nsCString
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 #include "mozilla/ArrayView.h"          // for ArrayView
 #include "mozilla/Move.h"               // for mozilla::Move
