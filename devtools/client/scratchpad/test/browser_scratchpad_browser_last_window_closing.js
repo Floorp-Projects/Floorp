@@ -14,11 +14,11 @@ function test()
   CloseObserver.init();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html;charset=utf8,<p>test browser last window closing</p>");
+  content.location = "data:text/html;charset=utf8,<p>test browser last window closing</p>";
 }
 
 

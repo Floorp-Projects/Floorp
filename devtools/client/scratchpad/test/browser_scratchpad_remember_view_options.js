@@ -13,12 +13,12 @@ function test()
   // preference value with the expected value.
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,<title>Bug 1140839</title>" +
-                   "<p>test Scratchpad should remember View options");
+  content.location = "data:text/html,<title>Bug 1140839</title>" +
+    "<p>test Scratchpad should remember View options";
 }
 
 function runTests()

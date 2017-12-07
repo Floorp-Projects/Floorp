@@ -26,7 +26,7 @@ add_task(function* () {
   let menu = hud.iframeWindow.document.getElementById("output-contextmenu");
 
   hud.jsterm.clearOutput();
-  gBrowser.contentWindowAsCPOW.console.log("bug 638949");
+  content.console.log("bug 638949");
 
   // Test that the "Copy Link Location" command is disabled for non-network
   // messages.
@@ -54,7 +54,7 @@ add_task(function* () {
 
   hud.jsterm.clearOutput();
   // Reloading will produce network logging
-  gBrowser.reload();
+  content.location.reload();
 
   // Test that the "Copy Link Location" command is enabled and works
   // as expected for any network-related message.

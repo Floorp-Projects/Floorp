@@ -21,13 +21,13 @@ function test() {
     executeSoon(() => {
       hud.jsterm.clearOutput();
       info("wait for reload");
-      gBrowser.reload();
+      content.location.reload();
     });
 
     yield hud.target.once("navigate");
     info("target navigated");
 
-    let button = gBrowser.contentDocumentAsCPOW.querySelector("button");
+    let button = content.document.querySelector("button");
     ok(button, "button found");
 
     // On e10s, the exception is triggered in child process
@@ -36,7 +36,7 @@ function test() {
       expectUncaughtException();
     }
 
-    EventUtils.sendMouseEvent({type: "click"}, button, gBrowser.contentWindowAsCPOW);
+    EventUtils.sendMouseEvent({type: "click"}, button, content);
 
     yield waitForMessages({
       webconsole: hud,

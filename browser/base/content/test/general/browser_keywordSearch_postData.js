@@ -68,7 +68,7 @@ function doTest() {
 
   waitForLoad(function() {
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    let loadedText = gBrowser.contentDocumentAsCPOW.body.textContent;
+    let loadedText = gBrowser.contentDocument.body.textContent;
     ok(loadedText, "search page loaded");
     let needle = "searchterms=" + gCurrTest.expectText;
     is(loadedText, needle, "The query POST data should be returned in the response");
@@ -84,11 +84,12 @@ function doTest() {
 
 function waitForLoad(cb) {
   let browser = gBrowser.selectedBrowser;
-  function wantLoad(url) {
-    return url != "about:blank";
-  }
-  BrowserTestUtils.browserLoaded(browser, false, wantLoad).then(() => {
+  browser.addEventListener("load", function listener() {
+    if (browser.currentURI.spec == "about:blank")
+      return;
     info("Page loaded: " + browser.currentURI.spec);
+    browser.removeEventListener("load", listener, true);
+
     cb();
   }, true);
 }

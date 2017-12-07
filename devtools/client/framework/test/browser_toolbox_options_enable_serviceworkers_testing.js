@@ -83,10 +83,15 @@ function toggleServiceWorkersTestingCheckbox() {
 }
 
 function reload() {
-  let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  let deferred = defer();
+
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
+    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
+    deferred.resolve();
+  }, true);
 
   executeInContent("devtools:test:reload", {}, {}, false);
-  return promise;
+  return deferred.promise;
 }
 
 function testRegisterSuccesses(data) {

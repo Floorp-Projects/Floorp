@@ -4301,10 +4301,10 @@
 
             // Auxilliary state variables:
 
-            visibleTab: this.selectedTab,      // Tab that's on screen.
-            spinnerTab: null,                  // Tab showing a spinner.
-            blankTab: null,                    // Tab showing blank.
-            lastPrimaryTab: this.selectedTab,  // Tab with primary="true"
+            visibleTab: this.selectedTab,   // Tab that's on screen.
+            spinnerTab: null,               // Tab showing a spinner.
+            blankTab: null,                 // Tab showing blank.
+            originalTab: this.selectedTab,  // Tab that we started on.
 
             tabbrowser: this,  // Reference to gBrowser.
             loadTimer: null,   // TAB_SWITCH_TIMEOUT nsITimer instance.
@@ -4485,6 +4485,17 @@
 
               this.destroy();
 
+              let toBrowser = this.requestedTab.linkedBrowser;
+              toBrowser.setAttribute("primary", "true");
+
+              let fromBrowser = this.originalTab.linkedBrowser;
+              // It's possible that the tab we're switching from closed
+              // before we were able to finalize, in which case, fromBrowser
+              // doesn't exist.
+              if (fromBrowser) {
+                fromBrowser.removeAttribute("primary");
+              }
+
               document.commandDispatcher.unlock();
 
               let event = new CustomEvent("TabSwitchDone", {
@@ -4661,9 +4672,6 @@
 
               if (this.lastVisibleTab && !this.lastVisibleTab.linkedBrowser) {
                 this.lastVisibleTab = null;
-              }
-              if (this.lastPrimaryTab && !this.lastPrimaryTab.linkedBrowser) {
-                this.lastPrimaryTab = null;
               }
               if (this.blankTab && !this.blankTab.linkedBrowser) {
                 this.blankTab = null;
@@ -5042,12 +5050,6 @@
               this.startTabSwitch();
 
               this.requestedTab = tab;
-
-              tab.linkedBrowser.setAttribute("primary", "true");
-              if (this.lastPrimaryTab && this.lastPrimaryTab != tab) {
-                this.lastPrimaryTab.linkedBrowser.removeAttribute("primary");
-              }
-              this.lastPrimaryTab = tab;
 
               this.suppressDisplayPortAndQueueUnload(this.requestedTab, this.UNLOAD_DELAY);
               this._requestingTab = false;

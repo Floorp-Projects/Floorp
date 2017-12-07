@@ -159,10 +159,8 @@
                 onget="return this._contentRequestContextID"
                 readonly="true"/>
 
-      <field name="_contentDocument">null</field>
-
       <property name="contentDocumentAsCPOW"
-                onget="return this._contentDocument"
+                onget="return this.contentWindowAsCPOW ? this.contentWindowAsCPOW.document : null"
                 readonly="true"/>
 
       <field name="_imageDocument">null</field>

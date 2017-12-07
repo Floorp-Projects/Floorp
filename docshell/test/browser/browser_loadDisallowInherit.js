@@ -19,9 +19,12 @@ function startTest() {
   let browser = gBrowser.getBrowserForTab(tab);
 
   function loadURL(url, flags, func) {
-    BrowserTestUtils.browserLoaded(browser, false, url).then(() => {
+    browser.addEventListener("load", function loadListener(e) {
+      if (browser.currentURI.spec != url)
+        return;
+      browser.removeEventListener(e.type, loadListener, true);
       func();
-    });
+    }, true);
     browser.loadURIWithFlags(url, flags, null, null, null);
   }
 

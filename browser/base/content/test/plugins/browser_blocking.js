@@ -70,7 +70,7 @@ add_task(async function() {
       "Test 18a, Plugin should have an update link");
   });
 
-  let promise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen", true);
+  let promise = waitForEvent(gBrowser.tabContainer, "TabOpen", null, true);
 
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let doc = content.document;
@@ -86,7 +86,7 @@ add_task(async function() {
   });
   await promise;
 
-  promise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabClose", true);
+  promise = waitForEvent(gBrowser.tabContainer, "TabClose", null, true);
   gBrowser.removeCurrentTab();
   await promise;
 });

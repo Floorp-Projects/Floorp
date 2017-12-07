@@ -80,8 +80,14 @@ add_task(async function init_navigate() {
   let port = await waitForPort(TEST_URL);
   is(port.browser, gBrowser.selectedBrowser, "Port is for the correct browser");
 
-  let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.loadURI("about:blank");
+  let loaded = new Promise(resolve => {
+    function listener() {
+      gBrowser.selectedBrowser.removeEventListener("load", listener, true);
+      resolve();
+    }
+    gBrowser.selectedBrowser.addEventListener("load", listener, true);
+    gBrowser.loadURI("about:blank");
+  });
 
   await waitForMessage(port, "RemotePage:Unload");
 

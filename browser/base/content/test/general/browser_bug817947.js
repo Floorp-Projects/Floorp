@@ -47,8 +47,8 @@ function preparePendingTab(aCallback) {
   });
 }
 
-function whenLoaded(aBrowser, aCallback) {
-  BrowserTestUtils.browserLoaded(aBrowser).then(() => {
+function whenLoaded(aElement, aCallback) {
+  aElement.addEventListener("load", function() {
     executeSoon(aCallback);
-  });
+  }, {capture: true, once: true});
 }
