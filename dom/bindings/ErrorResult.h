@@ -30,7 +30,7 @@
 #include "js/GCAnnotations.h"
 #include "js/Value.h"
 #include "nscore.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
 #include "nsTArray.h"

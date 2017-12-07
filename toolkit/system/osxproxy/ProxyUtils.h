@@ -6,7 +6,7 @@
 #ifndef mozilla_toolkit_system_osxproxy_ProxyUtils_h
 #define mozilla_toolkit_system_osxproxy_ProxyUtils_h
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace toolkit {

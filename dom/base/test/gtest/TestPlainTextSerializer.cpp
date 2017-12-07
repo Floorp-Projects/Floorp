@@ -7,7 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "nsServiceManagerUtils.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsIDocumentEncoder.h"
 #include "nsCRT.h"
 #include "nsIParserUtils.h"

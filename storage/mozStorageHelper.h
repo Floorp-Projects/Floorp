@@ -7,7 +7,7 @@
 #define MOZSTORAGEHELPER_H
 
 #include "nsAutoPtr.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozilla/DebugOnly.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"

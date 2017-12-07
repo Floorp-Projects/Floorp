@@ -17,7 +17,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {

@@ -13,7 +13,7 @@
 
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"

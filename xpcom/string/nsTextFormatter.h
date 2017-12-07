@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "nscore.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozilla/Span.h"
 #include "mozilla/TypeTraits.h"
 

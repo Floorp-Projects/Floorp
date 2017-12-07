@@ -9,7 +9,7 @@
 
 #include "jswrapper.h"
 #include "js/Id.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 class nsIPrincipal;
 

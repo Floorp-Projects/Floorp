@@ -8,7 +8,7 @@
 #define nsStringStream_h__
 
 #include "nsIStringStream.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsMemory.h"
 
 /**
