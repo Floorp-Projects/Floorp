@@ -5218,14 +5218,21 @@ pref("dom.vr.oculus.enabled", false);
 // interface through the Oculus HUD without waiting this duration)
 // If this value is too low, the Oculus Home interface may be visible
 // momentarily during VR link navigation.
-pref("dom.vr.oculus.present.timeout", 10000);
+pref("dom.vr.oculus.present.timeout", 500);
 // Minimum number of milliseconds that the browser will wait before
 // reloading the Oculus OVR library after seeing a "ShouldQuit" flag set.
 // Oculus requests that we shut down and unload the OVR library, by setting
 // a "ShouldQuit" flag.  To ensure that we don't interfere with
 // Oculus software auto-updates, we will not attempt to re-load the
 // OVR library until this timeout has elapsed.
-pref("dom.vr.oculus.quit.timeout", 30000);
+pref("dom.vr.oculus.quit.timeout", 10000);
+// When enabled, Oculus sessions may be created with the ovrInit_Invisible
+// flag if a page is using tracking but not presenting.  When a page
+// begins presenting VR frames, the session will be re-initialized without
+// the flag.  This eliminates the "Firefox not responding" warnings in
+// the headset, but might not be compatible with all versions of the Oculus
+// runtime.
+pref("dom.vr.oculus.invisible.enabled", true);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
 // OpenVR device
