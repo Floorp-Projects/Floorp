@@ -30,6 +30,7 @@
 
 #include "builtin/IntlTimeZoneData.h"
 #include "ds/Sort.h"
+#include "js/Date.h"
 #if ENABLE_INTL_API
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
@@ -66,6 +67,9 @@ using mozilla::IsNegativeZero;
 using mozilla::PodCopy;
 using mozilla::Range;
 using mozilla::RangedPtr;
+
+using JS::ClippedTime;
+using JS::TimeClip;
 
 /*
  * Pervasive note: ICU functions taking a UErrorCode in/out parameter always
@@ -3341,15 +3345,12 @@ NewUDateFormat(JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat)
 }
 
 static bool
-intl_FormatDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue result)
+intl_FormatDateTime(JSContext* cx, UDateFormat* df, ClippedTime x, MutableHandleValue result)
 {
-    if (!IsFinite(x)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DATE_NOT_FINITE);
-        return false;
-    }
+    MOZ_ASSERT(x.isValid());
 
     JSString* str = Call(cx, [df, x](UChar* chars, int32_t size, UErrorCode* status) {
-        return udat_format(df, x, chars, size, nullptr, status);
+        return udat_format(df, x.toDouble(), chars, size, nullptr, status);
     });
     if (!str)
         return false;
@@ -3445,12 +3446,10 @@ GetFieldTypeForFormatField(UDateFormatField fieldName)
 }
 
 static bool
-intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue result)
+intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, ClippedTime x,
+                           MutableHandleValue result)
 {
-    if (!IsFinite(x)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DATE_NOT_FINITE);
-        return false;
-    }
+    MOZ_ASSERT(x.isValid());
 
     UErrorCode status = U_ZERO_ERROR;
     UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
@@ -3462,7 +3461,7 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
 
     RootedString overallResult(cx);
     overallResult = Call(cx, [df, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
-        return udat_formatForFields(df, x, chars, size, fpositer, status);
+        return udat_formatForFields(df, x.toDouble(), chars, size, fpositer, status);
     });
     if (!overallResult)
         return false;
@@ -3561,6 +3560,12 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
     Rooted<DateTimeFormatObject*> dateTimeFormat(cx);
     dateTimeFormat = &args[0].toObject().as<DateTimeFormatObject>();
 
+    ClippedTime x = TimeClip(args[1].toNumber());
+    if (!x.isValid()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DATE_NOT_FINITE);
+        return false;
+    }
+
     // Obtain a cached UDateFormat object.
     void* priv =
         dateTimeFormat->getReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT).toPrivate();
@@ -3574,8 +3579,8 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
 
     // Use the UDateFormat to actually format the time stamp.
     return args[2].toBoolean()
-           ? intl_FormatToPartsDateTime(cx, df, args[1].toNumber(), args.rval())
-           : intl_FormatDateTime(cx, df, args[1].toNumber(), args.rval());
+           ? intl_FormatToPartsDateTime(cx, df, x, args.rval())
+           : intl_FormatDateTime(cx, df, x, args.rval());
 }
 
 
