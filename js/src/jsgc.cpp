@@ -2941,8 +2941,7 @@ ArenaLists::ArenaLists(JSRuntime* rt, ZoneGroup* group)
     gcAccessorShapeArenasToUpdate(group, nullptr),
     gcScriptArenasToUpdate(group, nullptr),
     gcObjectGroupArenasToUpdate(group, nullptr),
-    savedObjectArenas_(group),
-    savedEmptyObjectArenas(group, nullptr)
+    savedEmptyArenas(group, nullptr)
 {
     for (auto i : AllAllocKinds())
         freeLists(i) = &placeholder;
@@ -2976,9 +2975,7 @@ ArenaLists::~ArenaLists()
     }
     ReleaseArenaList(runtime_, incrementalSweptArenas.ref().head(), lock);
 
-    for (auto i : ObjectAllocKinds())
-        ReleaseArenaList(runtime_, savedObjectArenas(i).head(), lock);
-    ReleaseArenaList(runtime_, savedEmptyObjectArenas, lock);
+    ReleaseArenaList(runtime_, savedEmptyArenas, lock);
 }
 
 void
@@ -3073,28 +3070,11 @@ ArenaLists::backgroundFinalize(FreeOp* fop, Arena* listHead, Arena** empty)
 }
 
 void
-ArenaLists::mergeForegroundSweptObjectArenas()
+ArenaLists::releaseForegroundSweptEmptyArenas()
 {
     AutoLockGC lock(runtime_);
-    ReleaseArenaList(runtime_, savedEmptyObjectArenas, lock);
-    savedEmptyObjectArenas = nullptr;
-
-    mergeSweptArenas(AllocKind::OBJECT0);
-    mergeSweptArenas(AllocKind::OBJECT2);
-    mergeSweptArenas(AllocKind::OBJECT4);
-    mergeSweptArenas(AllocKind::OBJECT8);
-    mergeSweptArenas(AllocKind::OBJECT12);
-    mergeSweptArenas(AllocKind::OBJECT16);
-}
-
-inline void
-ArenaLists::mergeSweptArenas(AllocKind thingKind)
-{
-    ArenaList* al = &arenaLists(thingKind);
-    ArenaList* saved = &savedObjectArenas(thingKind);
-
-    *al = saved->insertListWithCursorAtEnd(*al);
-    saved->clear();
+    ReleaseArenaList(runtime_, savedEmptyArenas, lock);
+    savedEmptyArenas = nullptr;
 }
 
 void
@@ -3834,27 +3814,33 @@ FOR_EACH_ALLOCKIND(MAKE_CASE)
 bool
 ArenaLists::checkEmptyArenaList(AllocKind kind)
 {
-    size_t num_live = 0;
+    bool isEmpty = true;
 #ifdef DEBUG
+    size_t numLive = 0;
     if (!arenaLists(kind).isEmpty()) {
-        size_t max_cells = 20;
+        isEmpty = false;
+        size_t maxCells = 20;
         char *env = getenv("JS_GC_MAX_LIVE_CELLS");
         if (env && *env)
-            max_cells = atol(env);
+            maxCells = atol(env);
         for (Arena* current = arenaLists(kind).head(); current; current = current->next) {
             for (ArenaCellIterUnderGC i(current); !i.done(); i.next()) {
                 TenuredCell* t = i.getCell();
                 MOZ_ASSERT(t->isMarkedAny(), "unmarked cells should have been finalized");
-                if (++num_live <= max_cells) {
+                if (++numLive <= maxCells) {
                     fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
                             t, AllocKindToAscii(kind));
                 }
             }
         }
-        fprintf(stderr, "ERROR: GC found %zu live Cells at shutdown\n", num_live);
+        if (numLive > 0) {
+          fprintf(stderr, "ERROR: GC found %zu live Cells at shutdown\n", numLive);
+        } else {
+          fprintf(stderr, "ERROR: GC found empty Arenas at shutdown\n");
+        }
     }
 #endif // DEBUG
-    return num_live == 0;
+    return isEmpty;
 }
 
 class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask
@@ -5722,12 +5708,13 @@ bool
 ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind, SliceBudget& sliceBudget,
                                SortedArenaList& sweepList)
 {
-    MOZ_ASSERT_IF(IsObjectAllocKind(thingKind), savedObjectArenas(thingKind).isEmpty());
-
     if (!arenaListsToSweep(thingKind) && incrementalSweptArenas.ref().isEmpty())
         return true;
 
+    // Empty object arenas are not released until all foreground GC things have
+    // been swept.
     KeepArenasEnum keepArenas = IsObjectAllocKind(thingKind) ? KEEP_ARENAS : RELEASE_ARENAS;
+
     if (!FinalizeArenas(fop, &arenaListsToSweep(thingKind), sweepList,
                         thingKind, sliceBudget, keepArenas))
     {
@@ -5739,16 +5726,11 @@ ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind, SliceBudget& sl
     // Clear any previous incremental sweep state we may have saved.
     incrementalSweptArenas.ref().clear();
 
-    if (IsObjectAllocKind(thingKind)) {
-        // Delay releasing of object arenas until types have been swept.
-        sweepList.extractEmpty(&savedEmptyObjectArenas.ref());
-        savedObjectArenas(thingKind) = sweepList.toArenaList();
-    } else {
-        // Join |arenaLists[thingKind]| and |sweepList| into a single list.
-        ArenaList finalized = sweepList.toArenaList();
-        arenaLists(thingKind) =
-            finalized.insertListWithCursorAtEnd(arenaLists(thingKind));
-    }
+    if (IsObjectAllocKind(thingKind))
+      sweepList.extractEmpty(&savedEmptyArenas.ref());
+
+    ArenaList finalized = sweepList.toArenaList();
+    arenaLists(thingKind) = finalized.insertListWithCursorAtEnd(arenaLists(thingKind));
 
     return true;
 }
@@ -5832,14 +5814,13 @@ GCRuntime::sweepTypeInformation(FreeOp* fop, SliceBudget& budget, Zone* zone)
 }
 
 IncrementalProgress
-GCRuntime::mergeSweptObjectArenas(FreeOp* fop, SliceBudget& budget,
-                                  Zone* zone)
+GCRuntime::releaseSweptEmptyArenas(FreeOp* fop, SliceBudget& budget, Zone* zone)
 {
     // Foreground finalized objects have already been finalized, and now their
     // arenas can be reclaimed by freeing empty ones and making non-empty ones
     // available for allocation.
 
-    zone->arenas.mergeForegroundSweptObjectArenas();
+    zone->arenas.releaseForegroundSweptEmptyArenas();
     return Finished;
 }
 
@@ -6382,17 +6363,14 @@ GCRuntime::initSweepActions()
                 Call(&GCRuntime::sweepAtomsTable),
                 Call(&GCRuntime::sweepWeakCaches),
                 ForEachZoneInSweepGroup(rt,
-                    ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
-                        Call(&GCRuntime::finalizeAllocKind))),
-                ForEachZoneInSweepGroup(rt,
                     Sequence(
                         Call(&GCRuntime::sweepTypeInformation),
-                        Call(&GCRuntime::mergeSweptObjectArenas))),
-                ForEachZoneInSweepGroup(rt,
-                    ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
-                        Call(&GCRuntime::finalizeAllocKind))),
-                ForEachZoneInSweepGroup(rt,
-                    Call(&GCRuntime::sweepShapeTree)),
+                        ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
+                                         Call(&GCRuntime::finalizeAllocKind)),
+                        ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
+                                         Call(&GCRuntime::finalizeAllocKind)),
+                        Call(&GCRuntime::sweepShapeTree),
+                        Call(&GCRuntime::releaseSweptEmptyArenas))),
                 Call(&GCRuntime::endSweepingSweepGroup)));
 
     return sweepActions != nullptr;
