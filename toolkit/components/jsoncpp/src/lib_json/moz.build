@@ -42,12 +42,12 @@ elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         '-Wno-shadow',
     ]
 
-if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [
         '-Wno-c++11-narrowing',
     ]
 
-if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl' or CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CXXFLAGS += [
         '-Wno-implicit-fallthrough',
     ]

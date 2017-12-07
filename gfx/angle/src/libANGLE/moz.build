@@ -359,7 +359,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             '-Wno-shadow-local',
         ]
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
+if CONFIG['CC_TYPE'] == 'msvc':
     CXXFLAGS += [
         '-wd4018', # '>' : signed/unsigned mismatch
         '-wd4530', # C++ exception handler used, without /EHsc

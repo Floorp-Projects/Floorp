@@ -51,7 +51,7 @@ SOURCES += [
     'src/vrpathregistry_public.cpp',
 ]
 
-if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     # Harmless warnings in 3rd party code
     CXXFLAGS += [
         '-Wno-error=parentheses',
