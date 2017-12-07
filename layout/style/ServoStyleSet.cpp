@@ -1036,6 +1036,10 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
 void
 ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 {
+  if (MOZ_UNLIKELY(!mRawSet)) {
+    return;
+  }
+
   SetStylistStyleSheetsDirty();
   Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(),
                                         mAuthorStyleDisabled,
