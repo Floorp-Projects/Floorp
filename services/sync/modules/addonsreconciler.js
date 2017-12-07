@@ -329,7 +329,7 @@ AddonsReconciler.prototype = {
 
     for (let addon of addons) {
       ids[addon.id] = true;
-      this.rectifyStateFromAddon(addon);
+      await this.rectifyStateFromAddon(addon);
     }
 
     // Look for locally-defined add-ons that no longer exist and update their
@@ -365,7 +365,7 @@ AddonsReconciler.prototype = {
         addon.installed = false;
         this._log.debug("Adding change because add-on not present in " +
                         "Add-on Manager: " + id);
-        this._addChange(new Date(), CHANGE_UNINSTALLED, addon);
+        await this._addChange(new Date(), CHANGE_UNINSTALLED, addon);
       }
     }
 
@@ -387,7 +387,7 @@ AddonsReconciler.prototype = {
    * @param addon
    *        Addon instance being updated.
    */
-  rectifyStateFromAddon(addon) {
+  async rectifyStateFromAddon(addon) {
     this._log.debug(`Rectifying state for addon ${addon.name} (version=${addon.version}, id=${addon.id})`);
 
     let id = addon.id;
@@ -410,7 +410,7 @@ AddonsReconciler.prototype = {
       this._addons[id] = record;
       this._log.debug("Adding change because add-on not present locally: " +
                       id);
-      this._addChange(now, CHANGE_INSTALLED, record);
+      await this._addChange(now, CHANGE_INSTALLED, record);
       return;
     }
 
@@ -431,7 +431,7 @@ AddonsReconciler.prototype = {
       record.modified = now;
       let change = enabled ? CHANGE_ENABLED : CHANGE_DISABLED;
       this._log.debug("Adding change because enabled state changed: " + id);
-      this._addChange(new Date(), change, record);
+      await this._addChange(new Date(), change, record);
     }
 
     if (record.guid != guid) {
@@ -452,15 +452,15 @@ AddonsReconciler.prototype = {
    * @param state
    *        The new state of the add-on. From this.addons.
    */
-  _addChange: function _addChange(date, change, state) {
+  async _addChange(date, change, state) {
     this._log.info("Change recorded for " + state.id);
     this._changes.push([date, change, state.id]);
 
     for (let listener of this._listeners) {
       try {
-        listener.changeListener(date, change, state);
+        await listener.changeListener(date, change, state);
       } catch (ex) {
-        this._log.warn("Exception calling change listener", ex);
+        this._log.error("Exception calling change listener", ex);
       }
     }
   },
@@ -532,7 +532,7 @@ AddonsReconciler.prototype = {
   /**
    * Handler that is invoked as part of the AddonManager listeners.
    */
-  _handleListener(action, addon, requiresRestart) {
+  async _handleListener(action, addon, requiresRestart) {
     // Since this is called as an observer, we explicitly trap errors and
     // log them to ourselves so we don't see errors reported elsewhere.
     try {
@@ -556,7 +556,7 @@ AddonsReconciler.prototype = {
         case "onInstalled":
         case "onInstallEnded":
         case "onOperationCancelled":
-          this.rectifyStateFromAddon(addon);
+          await this.rectifyStateFromAddon(addon);
           break;
 
         case "onUninstalling":
@@ -570,13 +570,13 @@ AddonsReconciler.prototype = {
             record.modified = now;
             this._log.debug("Adding change because of uninstall listener: " +
                             id);
-            this._addChange(now, CHANGE_UNINSTALLED, record);
+            await this._addChange(now, CHANGE_UNINSTALLED, record);
           }
       }
 
       // See note for _shouldPersist.
       if (this._shouldPersist) {
-        Async.promiseSpinningly(this.saveState());
+        await this.saveState();
       }
     } catch (ex) {
       this._log.warn("Exception", ex);
@@ -585,35 +585,35 @@ AddonsReconciler.prototype = {
 
   // AddonListeners
   onEnabling: function onEnabling(addon, requiresRestart) {
-    this._handleListener("onEnabling", addon, requiresRestart);
+    Async.promiseSpinningly(this._handleListener("onEnabling", addon, requiresRestart));
   },
   onEnabled: function onEnabled(addon) {
-    this._handleListener("onEnabled", addon);
+    Async.promiseSpinningly(this._handleListener("onEnabled", addon));
   },
   onDisabling: function onDisabling(addon, requiresRestart) {
-    this._handleListener("onDisabling", addon, requiresRestart);
+    Async.promiseSpinningly(this._handleListener("onDisabling", addon, requiresRestart));
   },
   onDisabled: function onDisabled(addon) {
-    this._handleListener("onDisabled", addon);
+    Async.promiseSpinningly(this._handleListener("onDisabled", addon));
   },
   onInstalling: function onInstalling(addon, requiresRestart) {
-    this._handleListener("onInstalling", addon, requiresRestart);
+    Async.promiseSpinningly(this._handleListener("onInstalling", addon, requiresRestart));
   },
   onInstalled: function onInstalled(addon) {
-    this._handleListener("onInstalled", addon);
+    Async.promiseSpinningly(this._handleListener("onInstalled", addon));
   },
   onUninstalling: function onUninstalling(addon, requiresRestart) {
-    this._handleListener("onUninstalling", addon, requiresRestart);
+    Async.promiseSpinningly(this._handleListener("onUninstalling", addon, requiresRestart));
   },
   onUninstalled: function onUninstalled(addon) {
-    this._handleListener("onUninstalled", addon);
+    Async.promiseSpinningly(this._handleListener("onUninstalled", addon));
   },
   onOperationCancelled: function onOperationCancelled(addon) {
-    this._handleListener("onOperationCancelled", addon);
+    Async.promiseSpinningly(this._handleListener("onOperationCancelled", addon));
   },
 
   // InstallListeners
   onInstallEnded: function onInstallEnded(install, addon) {
-    this._handleListener("onInstallEnded", addon);
+    Async.promiseSpinningly(this._handleListener("onInstallEnded", addon));
   }
 };
