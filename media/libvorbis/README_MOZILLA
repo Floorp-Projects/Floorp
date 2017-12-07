@@ -3,7 +3,7 @@ git repository using the update.sh script. The only changes
 made were those applied by update.sh and the addition/update of
 Makefile.in and moz.build files for the Mozilla build system.
 
-The upstream version used was vorbis v1.3.5-48-ge5b1378
+The upstream version used was vorbis v1.3.5-49-c784057
 from https://git.xiph.org/vorbis.git
 
 Some files are renamed during the copy to prevent clashes with object

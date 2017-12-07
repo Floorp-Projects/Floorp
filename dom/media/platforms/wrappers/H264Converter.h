@@ -14,6 +14,8 @@ namespace mozilla {
 
 class DecoderDoctorDiagnostics;
 
+DDLoggedTypeDeclNameAndBase(H264Converter, MediaDataDecoder);
+
 // H264Converter is a MediaDataDecoder wrapper used to ensure that
 // only AVCC or AnnexB is fed to the underlying MediaDataDecoder.
 // The H264Converter allows playback of content where the SPS NAL may not be
@@ -21,7 +23,9 @@ class DecoderDoctorDiagnostics;
 // H264Converter will monitor the input data, and will delay creation of the
 // MediaDataDecoder until a SPS and PPS NALs have been extracted.
 
-class H264Converter : public MediaDataDecoder
+class H264Converter
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<H264Converter>
 {
 public:
 

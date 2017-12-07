@@ -13,7 +13,11 @@
 
 namespace mozilla {
 
-class TheoraDecoder : public MediaDataDecoder
+DDLoggedTypeDeclNameAndBase(TheoraDecoder, MediaDataDecoder);
+
+class TheoraDecoder
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<TheoraDecoder>
 {
 public:
   explicit TheoraDecoder(const CreateDecoderParams& aParams);

@@ -306,7 +306,8 @@ add_task(async function test_fetchURLInfoForGuid() {
   // Add some visits of the following URLs. specifying the title.
   let visits = [{ uri: "https://www.mozilla.org/en-US/", title: "mozilla" },
                 { uri: "http://getfirefox.com/", title: "firefox" },
-                { uri: "http://getthunderbird.com/", title: "thunderbird" }];
+                { uri: "http://getthunderbird.com/", title: "thunderbird" },
+                { uri: "http://quantum.mozilla.com/", title: null}];
   for (let visit of visits) {
     await PlacesTestUtils.addVisits(visit);
   }
@@ -318,7 +319,7 @@ add_task(async function test_fetchURLInfoForGuid() {
     // Compare the info returned by fetchURLInfoForGuid,
     // URL and title should match while frecency must be different than -1.
     equal(info.url, visit.uri, "The url provided should be the same as the url retrieved.");
-    equal(info.title, visit.title, "The title provided should be the same as the title retrieved.");
+    equal(info.title, visit.title || "", "The title provided should be the same as the title retrieved.");
     notEqual(info.frecency, -1, "The frecency of the visit should be different than -1.");
   }
 

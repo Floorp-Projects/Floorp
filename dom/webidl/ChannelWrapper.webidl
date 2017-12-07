@@ -330,17 +330,25 @@ interface ChannelWrapper : EventTarget {
   /**
    * Sets the given request header to the given value, overwriting any
    * previous value. Setting a header to a null string has the effect of
-   * removing it.
+   * removing it.  If merge is true, then the passed value will be merged
+   * to any existing value that exists for the header. Otherwise, any prior
+   * value for the header will be overwritten. Merge is ignored for headers
+   * that cannot be merged.
    *
    * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
    */
   [Throws]
-  void setRequestHeader(ByteString header, ByteString value);
+  void setRequestHeader(ByteString header,
+                        ByteString value,
+                        optional boolean merge = false);
 
   /**
    * Sets the given response header to the given value, overwriting any
    * previous value. Setting a header to a null string has the effect of
-   * removing it.
+   * removing it.  If merge is true, then the passed value will be merged
+   * to any existing value that exists for the header (e.g. handling multiple
+   * Set-Cookie headers).  Otherwise, any prior value for the header will be
+   * overwritten. Merge is ignored for headers that cannot be merged.
    *
    * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
    *
@@ -348,7 +356,9 @@ interface ChannelWrapper : EventTarget {
    * getResponseHeaders() for details.
    */
   [Throws]
-  void setResponseHeader(ByteString header, ByteString value);
+  void setResponseHeader(ByteString header,
+                         ByteString value,
+                         optional boolean merge = false);
 };
 
 /**

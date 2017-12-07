@@ -9,10 +9,13 @@
 #include "nsTArray.h"
 #include "mozilla/Atomics.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
-class MockMediaResource : public MediaResource
+DDLoggedTypeDeclNameAndBase(MockMediaResource, MediaResource);
+
+class MockMediaResource
+  : public MediaResource
+  , public DecoderDoctorLifeLogger<MockMediaResource>
 {
 public:
   explicit MockMediaResource(const char* aFileName);

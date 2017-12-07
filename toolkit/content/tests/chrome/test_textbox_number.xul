@@ -11,7 +11,7 @@
 
 <hbox>
   <textbox id="n1" type="number" size="4"/>
-  <textbox id="n2" type="number" value="10" min="5" max="15" wraparound="true"/>
+  <textbox id="n2" type="number" value="10" min="5" max="15"/>
 </hbox>
 <hbox>
   <textbox id="n3" type="number" size="4" value="25" min="1" max="12" increment="3"/>
@@ -62,11 +62,9 @@ function doTests() {
   isnot(n1.decimalSymbol, "", "n1.decimalSymbol is set to something");
   n1.decimalSymbol = ".";
   SimpleTest.is(n1.decimalSymbol, ".", "n1.decimalSymbol set to '.'");
-  SimpleTest.is(n1.wrapAround, false, "wrapAround defaults to false");
   SimpleTest.is(n1.increment, 1, "increment defaults to 1");
   SimpleTest.is(n1.decimalPlaces, 0, "decimalPlaces defaults to 0");
 
-  SimpleTest.is(n2.wrapAround, true, "wrapAround when set to true");
   SimpleTest.is(n3.increment, 3, "increment when set to 1");
   SimpleTest.is(n7.decimalPlaces, 2, "decimalPlaces when set to 2");
 
@@ -142,20 +140,6 @@ function doTests() {
   SimpleTest.is(n7.increment, 4.3, "increment changed");
   testIncreaseDecrease(n7, "integer with increment", 4.3, 2, 2.7, 10.1);
 
-  n2.value = n2.min;
-  n2.decrease();
-  testVals(n2, "integer wraparound decrease method", n2.max);
-  n2.increase();
-  testVals(n2, "integer wraparound decrease method", n2.min);
-
-  n7.wrapAround = true;
-  SimpleTest.is(n7.wrapAround, true, "change wrapAround");
-  n7.value = n7.min + 0.01;
-  n7.decrease();
-  testVals(n7, "decimal wraparound decrease method", n7.max, n7.max.toFixed(2));
-  n7.increase();
-  testVals(n7, "decimal wraparound decrease method", n7.min, n7.min.toFixed(2));
-
   n1.value = 22;
   n1.decimalPlaces = 3;
   testVals(n1, "set decimalPlaces 3", 22, "22.000");
@@ -207,21 +191,6 @@ function doTests() {
   testVals(n1, "key down at min", 5);
   synthesizeMouse(sb, 2, sbbottom, {});
   testVals(n1, "spinbuttons down at min", 5);
-
-  n1.wrapAround = true;
-  n1.value = 15;
-  synthesizeKey("VK_UP", {});
-  testVals(n1, "key up wraparound at max", 5);
-  n1.value = 5;
-  synthesizeKey("VK_DOWN", {});
-  testVals(n1, "key down wraparound at min", 15);
-
-  n1.value = 15;
-  synthesizeMouse(sb, 2, 2, {});
-  testVals(n1, "spinbuttons up wraparound at max", 5);
-  n1.value = 5;
-  synthesizeMouse(sb, 2, sbbottom, {});
-  testVals(n1, "spinbuttons down wraparound at min", 15);
 
   // check read only state
   n1.readOnly = true;

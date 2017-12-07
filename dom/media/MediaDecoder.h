@@ -81,7 +81,9 @@ struct MOZ_STACK_CLASS MediaDecoderInit
   }
 };
 
-class MediaDecoder
+DDLoggedTypeDeclName(MediaDecoder);
+
+class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder>
 {
 public:
   typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */,

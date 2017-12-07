@@ -1501,7 +1501,7 @@ toolbar#nav-bar {
             self.tests_by_manifest[manifest_relpath].append(tp)
             self.prefs_by_manifest[manifest_relpath].add(test.get('prefs'))
 
-            if 'prefs' in test and not options.runByManifest:
+            if 'prefs' in test and not options.runByManifest and 'disabled' not in test:
                 self.log.error("parsing {}: runByManifest mode must be enabled to "
                                "set the `prefs` key".format(manifest_relpath))
                 sys.exit(1)

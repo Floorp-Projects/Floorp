@@ -70,9 +70,11 @@ this.Downloads = {
    *            url: String containing the URI for the download source.
    *            isPrivate: Indicates whether the download originated from a
    *                       private window.  If omitted, the download is public.
-   *            referrer: String containing the referrer URI of the download
-   *                      source.  Can be omitted or null if no referrer should
-   *                      be sent or the download source is not HTTP.
+   *            referrer: String containing the referrer URI of the download source.
+   *                      This is the value that will be sent on the network,
+   *                      meaning that any referrer policy should be computed in
+   *                      advance.  Can be omitted or null if no referrer should be
+   *                      sent or the download source is not HTTP.
    *          },
    *          target: String containing the path of the target file.
    *                  Alternatively, may be an nsIFile, a DownloadTarget object,

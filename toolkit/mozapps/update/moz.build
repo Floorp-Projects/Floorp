@@ -7,7 +7,6 @@
 XPIDL_MODULE = 'update'
 
 DIRS += [
-    'common',
     'updater',
 ]
 

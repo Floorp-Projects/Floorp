@@ -62,10 +62,8 @@
 #pragma warning( pop )
 
 #ifdef MOZ_INCLUDE_MOZALLOC_H_FROM_${HEADER}
-// See if we're in code that can use mozalloc.  NB: this duplicates
-// code in nscore.h because nscore.h pulls in prtypes.h, and chromium
-// can't build with that being included before base/basictypes.h.
-#  if !defined(XPCOM_GLUE) && !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
+// See if we're in code that can use mozalloc.
+#  if !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
 #    include "mozilla/mozalloc.h"
 #  else
 #    error "STL code can only be used with infallible ::operator new()"

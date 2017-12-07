@@ -115,7 +115,21 @@ const TEST_CASES = {
         { x: 100000, y: 0 },
       ]
     ]
-  }
+  },
+  "narrow-keyframes": {
+    expectedKeyframeEasingGraphs: [
+      [
+        { x: 0, y: 0 },
+        { x: 10000, y: 0.1 },
+        { x: 11000, y: 0.1 },
+        { x: 11500, y: 0.1 },
+        { x: 12999, y: 0.1 },
+        { x: 13000, y: 0.13 },
+        { x: 13500, y: 0.135 },
+        { x: 14000, y: 0.14 },
+      ]
+    ]
+  },
 };
 
 add_task(function* () {

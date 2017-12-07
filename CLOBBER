@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1419362 - a11y IDL changes not correctly handled by build system
+Bug 1416465 - Old track files may cause problems if they have wildcards.

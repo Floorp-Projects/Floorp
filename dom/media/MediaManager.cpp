@@ -1721,8 +1721,6 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       MediaManager* manager = MediaManager::GetIfExists();
       MOZ_RELEASE_ASSERT(manager); // Must exist while media thread is alive
       realBackend = manager->GetBackend(aWindowId);
-      // We need to listen to this event even JS didn't listen to it.
-      realBackend->AddDeviceChangeCallback(manager);
     }
 
     auto result = MakeUnique<SourceSet>();
@@ -2025,6 +2023,9 @@ int MediaManager::AddDeviceChangeCallback(DeviceChangeCallback* aCallback)
   MediaManager::PostTask(NewTaskFrom([fakeDeviceChangeEventOn]() {
     MediaManager* manager = MediaManager::GetIfExists();
     MOZ_RELEASE_ASSERT(manager); // Must exist while media thread is alive
+    // this is needed in case persistent permission is given but no gUM()
+    // or enumeration() has created the real backend yet
+    manager->GetBackend(0);
     if (fakeDeviceChangeEventOn)
       manager->GetBackend(0)->SetFakeDeviceChangeEvents();
   }));
@@ -2916,6 +2917,7 @@ MediaManager::GetBackend(uint64_t aWindowId)
 #else
     mBackend = new MediaEngineDefault();
 #endif
+    mBackend->AddDeviceChangeCallback(this);
   }
   return mBackend;
 }

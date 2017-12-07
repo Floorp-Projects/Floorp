@@ -30,8 +30,28 @@ extern mozilla::LogModule* GetMediaSourceSamplesLog();
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-#define MSE_DEBUG(name, arg, ...) MOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
-#define MSE_DEBUGV(name, arg, ...) MOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Verbose, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...)                                                    \
+  DDMOZ_LOG(GetMediaSourceSamplesLog(),                                        \
+            mozilla::LogLevel::Debug,                                          \
+            "(%s)::%s: " arg,                                                  \
+            mType.OriginalString().Data(),                                     \
+            __func__,                                                          \
+            ##__VA_ARGS__)
+#define MSE_DEBUGV(arg, ...)                                                   \
+  DDMOZ_LOG(GetMediaSourceSamplesLog(),                                        \
+            mozilla::LogLevel::Verbose,                                        \
+            "(%s)::%s: " arg,                                                  \
+            mType.OriginalString().Data(),                                     \
+            __func__,                                                          \
+            ##__VA_ARGS__)
+#define MSE_DEBUGVEX(_this, arg, ...)                                          \
+  DDMOZ_LOGEX(_this,                                                           \
+              GetMediaSourceSamplesLog(),                                      \
+              mozilla::LogLevel::Verbose,                                      \
+              "(%s)::%s: " arg,                                                \
+              mType.OriginalString().Data(),                                   \
+              __func__,                                                        \
+              ##__VA_ARGS__)
 
 namespace mozilla {
 
@@ -48,7 +68,7 @@ ContainerParser::~ContainerParser() = default;
 MediaResult
 ContainerParser::IsInitSegmentPresent(MediaByteBuffer* aData)
 {
-  MSE_DEBUG(ContainerParser, "aLength=%zu [%x%x%x%x]",
+  MSE_DEBUG("aLength=%zu [%x%x%x%x]",
             aData->Length(),
             aData->Length() > 0 ? (*aData)[0] : 0,
             aData->Length() > 1 ? (*aData)[1] : 0,
@@ -60,7 +80,7 @@ ContainerParser::IsInitSegmentPresent(MediaByteBuffer* aData)
 MediaResult
 ContainerParser::IsMediaSegmentPresent(MediaByteBuffer* aData)
 {
-  MSE_DEBUG(ContainerParser, "aLength=%zu [%x%x%x%x]",
+  MSE_DEBUG("aLength=%zu [%x%x%x%x]",
             aData->Length(),
             aData->Length() > 0 ? (*aData)[0] : 0,
             aData->Length() > 1 ? (*aData)[1] : 0,
@@ -119,7 +139,11 @@ ContainerParser::MediaSegmentRange()
   return mCompleteMediaSegmentRange;
 }
 
-class WebMContainerParser : public ContainerParser
+DDLoggedTypeDeclNameAndBase(WebMContainerParser, ContainerParser);
+
+class WebMContainerParser
+  : public ContainerParser
+  , public DecoderDoctorLifeLogger<WebMContainerParser>
 {
 public:
   explicit WebMContainerParser(const MediaContainerType& aType)
@@ -183,8 +207,7 @@ public:
       mCompleteMediaSegmentRange =
         MediaByteRange(mLastMapping.ref().mSyncOffset, mOffset) + mGlobalOffset;
       mLastMapping.reset();
-      MSE_DEBUG(WebMContainerParser,
-                "New cluster found at start, ending previous one");
+      MSE_DEBUG("New cluster found at start, ending previous one");
       return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -194,6 +217,7 @@ public:
       mOverlappedMapping.Clear();
       mInitData = new MediaByteBuffer();
       mResource = new SourceBufferResource();
+      DDLINKCHILD("resource", mResource.get());
       mCompleteInitSegmentRange = MediaByteRange();
       mCompleteMediaHeaderRange = MediaByteRange();
       mCompleteMediaSegmentRange = MediaByteRange();
@@ -225,11 +249,10 @@ public:
           MediaByteRange(0, mParser.mInitEndOffset) + mGlobalOffset;
         char* buffer = reinterpret_cast<char*>(mInitData->Elements());
         mResource->ReadFromCache(buffer, 0, mParser.mInitEndOffset);
-        MSE_DEBUG(WebMContainerParser, "Stashed init of %" PRId64 " bytes.",
-                  mParser.mInitEndOffset);
+        MSE_DEBUG("Stashed init of %" PRId64 " bytes.", mParser.mInitEndOffset);
         mResource = nullptr;
       } else {
-        MSE_DEBUG(WebMContainerParser, "Incomplete init found.");
+        MSE_DEBUG("Incomplete init found.");
       }
       mHasInitData = true;
     }
@@ -252,7 +275,7 @@ public:
 
     int32_t completeIdx = endIdx;
     while (completeIdx >= 0 && mOffset < mapping[completeIdx].mEndOffset) {
-      MSE_DEBUG(WebMContainerParser, "block is incomplete, missing: %" PRId64,
+      MSE_DEBUG("block is incomplete, missing: %" PRId64,
                 mapping[completeIdx].mEndOffset - mOffset);
       completeIdx -= 1;
     }
@@ -312,8 +335,7 @@ public:
     aStart = mapping[0].mTimecode / NS_PER_USEC;
     aEnd = (mapping[completeIdx].mTimecode + frameDuration) / NS_PER_USEC;
 
-    MSE_DEBUG(WebMContainerParser,
-              "[%" PRId64 ", %" PRId64 "] [fso=%" PRId64 ", leo=%" PRId64
+    MSE_DEBUG("[%" PRId64 ", %" PRId64 "] [fso=%" PRId64 ", leo=%" PRId64
               ", l=%zu processedIdx=%u fs=%" PRId64 "]",
               aStart,
               aEnd,
@@ -341,7 +363,11 @@ private:
 
 #ifdef MOZ_FMP4
 
-class MP4Stream : public ByteStream
+DDLoggedTypeDeclNameAndBase(MP4Stream, ByteStream);
+
+class MP4Stream
+  : public ByteStream
+  , public DecoderDoctorLifeLogger<MP4Stream>
 {
 public:
   explicit MP4Stream(SourceBufferResource* aResource);
@@ -365,6 +391,7 @@ MP4Stream::MP4Stream(SourceBufferResource* aResource)
 {
   MOZ_COUNT_CTOR(MP4Stream);
   MOZ_ASSERT(aResource);
+  DDLINKCHILD("resource", aResource);
 }
 
 MP4Stream::~MP4Stream()
@@ -406,7 +433,11 @@ MP4Stream::Length(int64_t* aSize)
   return true;
 }
 
-class MP4ContainerParser : public ContainerParser
+DDLoggedTypeDeclNameAndBase(MP4ContainerParser, ContainerParser);
+
+class MP4ContainerParser
+  : public ContainerParser
+  , public DecoderDoctorLifeLogger<MP4ContainerParser>
 {
 public:
   explicit MP4ContainerParser(const MediaContainerType& aType)
@@ -423,7 +454,7 @@ public:
     if (aData->Length() < 8) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    AtomParser parser(mType, aData, AtomParser::StopAt::eInitSegment);
+    AtomParser parser(*this, aData, AtomParser::StopAt::eInitSegment);
     if (!parser.IsValid()) {
       return MediaResult(
         NS_ERROR_FAILURE,
@@ -437,7 +468,7 @@ public:
     if (aData->Length() < 8) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    AtomParser parser(mType, aData, AtomParser::StopAt::eMediaSegment);
+    AtomParser parser(*this, aData, AtomParser::StopAt::eMediaSegment);
     if (!parser.IsValid()) {
       return MediaResult(
         NS_ERROR_FAILURE,
@@ -457,16 +488,19 @@ private:
       eEnd
     };
 
-    AtomParser(const MediaContainerType& aType, const MediaByteBuffer* aData,
+    AtomParser(const MP4ContainerParser& aParser,
+               const MediaByteBuffer* aData,
                StopAt aStop = StopAt::eEnd)
     {
-      mValid = Init(aType, aData, aStop).isOk();
+      mValid = Init(aParser, aData, aStop).isOk();
     }
 
-    Result<Ok, nsresult> Init(const MediaContainerType& aType, const MediaByteBuffer* aData,
-               StopAt aStop)
+    Result<Ok, nsresult> Init(const MP4ContainerParser& aParser,
+                              const MediaByteBuffer* aData,
+                              StopAt aStop)
     {
-      const MediaContainerType mType(aType); // for logging macro.
+      const MediaContainerType mType(
+        aParser.ContainerType()); // for logging macro.
       BufferReader reader(aData);
       AtomType initAtom("moov");
       AtomType mediaAtom("moof");
@@ -490,9 +524,13 @@ private:
         const uint8_t* typec = reader.Peek(4);
         MOZ_TRY_VAR(tmp, reader.ReadU32());
         AtomType type(tmp);
-        MSE_DEBUGV(AtomParser ,"Checking atom:'%c%c%c%c' @ %u",
-                   typec[0], typec[1], typec[2], typec[3],
-                   (uint32_t)reader.Offset() - 8);
+        MSE_DEBUGVEX(&aParser,
+                     "Checking atom:'%c%c%c%c' @ %u",
+                     typec[0],
+                     typec[1],
+                     typec[2],
+                     typec[3],
+                     (uint32_t)reader.Offset() - 8);
         if (std::find(std::begin(validBoxes), std::end(validBoxes), type)
             == std::end(validBoxes)) {
           // No valid box found, no point continuing.
@@ -575,12 +613,14 @@ public:
     bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
     if (initSegment) {
       mResource = new SourceBufferResource();
+      DDLINKCHILD("resource", mResource.get());
       mStream = new MP4Stream(mResource);
       // We use a timestampOffset of 0 for ContainerParser, and require
       // consumers of ParseStartAndEndTimestamps to add their timestamp offset
       // manually. This allows the ContainerParser to be shared across different
       // timestampOffsets.
       mParser = new MoofParser(mStream, 0, /* aIsAudio = */ false);
+      DDLINKCHILD("parser", mParser.get());
       mInitData = new MediaByteBuffer();
       mCompleteInitSegmentRange = MediaByteRange();
       mCompleteMediaHeaderRange = MediaByteRange();
@@ -607,10 +647,9 @@ public:
         }
         char* buffer = reinterpret_cast<char*>(mInitData->Elements());
         mResource->ReadFromCache(buffer, range.mStart, range.Length());
-        MSE_DEBUG(MP4ContainerParser ,"Stashed init of %" PRIu64 " bytes.",
-                  range.Length());
+        MSE_DEBUG("Stashed init of %" PRIu64 " bytes.", range.Length());
       } else {
-        MSE_DEBUG(MP4ContainerParser, "Incomplete init found.");
+        MSE_DEBUG("Incomplete init found.");
       }
       mHasInitData = true;
     }
@@ -638,8 +677,7 @@ public:
     }
     aStart = compositionRange.start;
     aEnd = compositionRange.end;
-    MSE_DEBUG(MP4ContainerParser, "[%" PRId64 ", %" PRId64 "]",
-              aStart, aEnd);
+    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart, aEnd);
     return NS_OK;
   }
 
@@ -657,7 +695,11 @@ private:
 #endif // MOZ_FMP4
 
 #ifdef MOZ_FMP4
-class ADTSContainerParser : public ContainerParser
+DDLoggedTypeDeclNameAndBase(ADTSContainerParser, ContainerParser);
+
+class ADTSContainerParser
+  : public ContainerParser
+  , public DecoderDoctorLifeLogger<ADTSContainerParser>
 {
 public:
   explicit ADTSContainerParser(const MediaContainerType& aType)
@@ -683,23 +725,23 @@ public:
 
     // ADTS initialization segments are just the packet header.
     if (aData->Length() < 7) {
-      MSE_DEBUG(ADTSContainerParser, "buffer too short for header.");
+      MSE_DEBUG("buffer too short for header.");
       return false;
     }
     // Check 0xfffx sync word plus layer 0.
     if (((*aData)[0] != 0xff) || (((*aData)[1] & 0xf6) != 0xf0)) {
-      MSE_DEBUG(ADTSContainerParser, "no syncword.");
+      MSE_DEBUG("no syncword.");
       return false;
     }
     bool have_crc = !((*aData)[1] & 0x01);
     if (have_crc && aData->Length() < 9) {
-      MSE_DEBUG(ADTSContainerParser, "buffer too short for header with crc.");
+      MSE_DEBUG("buffer too short for header with crc.");
       return false;
     }
     uint8_t frequency_index = ((*aData)[2] & 0x3c) >> 2;
     MOZ_ASSERT(frequency_index < 16);
     if (frequency_index == 15) {
-      MSE_DEBUG(ADTSContainerParser, "explicit frequency disallowed.");
+      MSE_DEBUG("explicit frequency disallowed.");
       return false;
     }
     size_t header_length = have_crc ? 9 : 7;
@@ -728,9 +770,10 @@ public:
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    MSE_DEBUGV(ADTSContainerParser, "%llu byte frame %d aac frames%s",
-        (unsigned long long)header.frame_length, (int)header.aac_frames,
-        header.have_crc ? " crc" : "");
+    MSE_DEBUGV("%llu byte frame %d aac frames%s",
+               (unsigned long long)header.frame_length,
+               (int)header.aac_frames,
+               header.have_crc ? " crc" : "");
 
     return NS_OK;
   }
@@ -779,10 +822,10 @@ public:
 
     // Check that we have enough data for the frame body.
     if (aData->Length() < header.frame_length) {
-      MSE_DEBUGV(ADTSContainerParser, "Not enough data for %llu byte frame"
-          " in %llu byte buffer.",
-          (unsigned long long)header.frame_length,
-          (unsigned long long)(aData->Length()));
+      MSE_DEBUGV("Not enough data for %llu byte frame"
+                 " in %llu byte buffer.",
+                 (unsigned long long)header.frame_length,
+                 (unsigned long long)(aData->Length()));
       return NS_ERROR_NOT_AVAILABLE;
     }
     mCompleteMediaSegmentRange = MediaByteRange(header.header_length,
@@ -792,8 +835,7 @@ public:
     // media segment.
     mCompleteMediaHeaderRange = mCompleteMediaSegmentRange;
 
-    MSE_DEBUG(ADTSContainerParser, "[%" PRId64 ", %" PRId64 "]",
-              aStart, aEnd);
+    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart, aEnd);
     // We don't update timestamps, regardless.
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -830,5 +872,6 @@ ContainerParser::CreateForMIMEType(const MediaContainerType& aType)
 
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
+#undef MSE_DEBUGVEX
 
 } // namespace mozilla
