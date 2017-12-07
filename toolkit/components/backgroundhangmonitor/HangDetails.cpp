@@ -5,6 +5,9 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/GfxMessageUtils.h" // For ParamTraits<GeckoProcessType>
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
 
 namespace mozilla {
 
@@ -269,6 +272,16 @@ nsHangDetails::Submit()
       NS_WARNING("Unsupported BHR process type - discarding hang.");
       break;
     }
+#ifdef MOZ_GECKO_PROFILER
+    if (profiler_is_active()) {
+      TimeStamp endTime = hangDetails->mDetails.mEndTime;
+      TimeStamp startTime = endTime -
+                            TimeDuration::FromMilliseconds(hangDetails->mDetails.mDuration);
+      profiler_add_marker(
+        "BHR-detected hang",
+        MakeUnique<HangMarkerPayload>(startTime, endTime));
+    }
+#endif
   });
 
   nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
