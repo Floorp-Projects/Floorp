@@ -27,10 +27,10 @@ public:
   static void Initialize(sandbox::BrokerServices* aBrokerServices);
 
   /**
-   * Cache directory paths for use in policy rules. Must be called on main
-   * thread.
+   * Do initialization that depends on parts of the Gecko machinery having been
+   * created first.
    */
-  static void CacheRulesDirectories();
+  static void GeckoDependentInitialize();
 
   bool LaunchApp(const wchar_t *aPath,
                  const wchar_t *aArguments,
