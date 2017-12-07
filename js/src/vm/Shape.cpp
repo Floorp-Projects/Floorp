@@ -794,7 +794,7 @@ js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
     for (unsigned i = 0; i < ids.length(); i++) {
         id = ids[i];
 
-        Rooted<UnownedBaseShape*> nbase(cx, GetBaseShapeForNewShape(cx, newShape, id));
+        UnownedBaseShape* nbase = GetBaseShapeForNewShape(cx, newShape, id);
         if (!nbase)
             return nullptr;
 
@@ -949,11 +949,6 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
     } else {
         // Updating the last property in a non-dictionary-mode object. Find an
         // alternate shared child of the last property's previous shape.
-        StackBaseShape base(obj->lastProperty()->base());
-
-        UnownedBaseShape* nbase = BaseShape::getUnowned(cx, base);
-        if (!nbase)
-            return nullptr;
 
         MOZ_ASSERT(shape == obj->lastProperty());
 
@@ -1053,11 +1048,6 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
     } else {
         // Updating the last property in a non-dictionary-mode object. Find an
         // alternate shared child of the last property's previous shape.
-        StackBaseShape base(obj->lastProperty()->base());
-
-        UnownedBaseShape* nbase = BaseShape::getUnowned(cx, base);
-        if (!nbase)
-            return nullptr;
 
         MOZ_ASSERT(shape == obj->lastProperty());
 
