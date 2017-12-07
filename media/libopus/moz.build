@@ -45,7 +45,7 @@ if CONFIG['OS_ARCH'] in ('Linux', 'Darwin', 'DragonFly', 'FreeBSD',
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['inline'] = '__inline'
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         DEFINES['HAVE_LRINTF'] = True
 
 if CONFIG['OS_ARCH'] == 'AIX':
@@ -130,6 +130,6 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     ASFLAGS += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     if CONFIG['CLANG_CXX']:
         CFLAGS += ['-Wno-#pragma-messages']

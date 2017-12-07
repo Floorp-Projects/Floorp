@@ -564,7 +564,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
     # Suppress warnings in third-party code.
     CXXFLAGS += [

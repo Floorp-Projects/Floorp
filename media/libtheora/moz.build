@@ -22,7 +22,7 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['THEORA_DISABLE_ENCODE'] = True
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
     CFLAGS += ['-Wno-type-limits']
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
     CFLAGS += ['-Wno-tautological-compare']

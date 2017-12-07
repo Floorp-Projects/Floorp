@@ -19,7 +19,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'win32-screenshot.cpp',
     ]
     USE_STATIC_LIBS = True
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         WIN32_EXE_LDFLAGS += ['-municode']
     OS_LIBS += [
         'gdiplus',

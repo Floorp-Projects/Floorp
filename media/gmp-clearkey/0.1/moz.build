@@ -58,7 +58,7 @@ DEFINES['MOZ_NO_MOZALLOC'] = True
 USE_LIBS += ['psshparser']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-Wno-missing-braces',
         '-Wno-pointer-to-int-cast',

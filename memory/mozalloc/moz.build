@@ -12,7 +12,7 @@ EXPORTS.mozilla += [
 ]
 
 if CONFIG['WRAP_STL_INCLUDES']:
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         EXPORTS.mozilla += ['throw_gcc.h']
     elif CONFIG['_MSC_VER']:
         DEFINES['_HAS_EXCEPTIONS'] = 0

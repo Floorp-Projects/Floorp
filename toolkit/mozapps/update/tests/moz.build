@@ -56,7 +56,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
     USE_STATIC_LIBS = True
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         WIN32_EXE_LDFLAGS += ['-municode']
 
 TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.mozapps.update.tests.browser += [

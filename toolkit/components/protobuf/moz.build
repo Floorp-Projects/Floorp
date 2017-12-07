@@ -121,7 +121,7 @@ DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-ignored-qualifiers',
         '-Wno-maybe-uninitialized',

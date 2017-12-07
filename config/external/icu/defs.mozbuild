@@ -27,7 +27,7 @@ if CONFIG['MOZ_DEBUG']:
     DEFINES['U_DEBUG'] = 1
 
 # ICU requires RTTI
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-frtti']
 elif CONFIG['OS_TARGET'] == 'WINNT':
     CXXFLAGS += ['-GR']
