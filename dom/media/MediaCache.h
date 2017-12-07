@@ -289,6 +289,9 @@ public:
   // Main thread only.
   void NotifyClientSuspended(bool aSuspended);
 
+  // Notifies the stream to resume download at the current offset.
+  void NotifyResume();
+
   // These methods can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
   // while the stream is pinned.
