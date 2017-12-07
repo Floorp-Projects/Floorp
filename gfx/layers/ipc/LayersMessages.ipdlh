@@ -71,7 +71,6 @@ struct OpCreatePaintedLayer    { LayerHandle layer; };
 struct OpCreateContainerLayer  { LayerHandle layer; };
 struct OpCreateImageLayer      { LayerHandle layer; };
 struct OpCreateColorLayer      { LayerHandle layer; };
-struct OpCreateTextLayer       { LayerHandle layer; };
 struct OpCreateBorderLayer       { LayerHandle layer; };
 struct OpCreateCanvasLayer     { LayerHandle layer; };
 struct OpCreateRefLayer        { LayerHandle layer; };
@@ -295,9 +294,6 @@ struct GlyphArray
   Glyph[] glyphs;
 };
 
-// XXX - Bas - Hack warning! This is using a raw pointer to a ScaledFont*
-// and won't work with e10s.
-struct TextLayerAttributes      { IntRect bounds; GlyphArray[] glyphs; uintptr_t scaledFont; };
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
 struct CanvasLayerAttributes    { SamplingFilter samplingFilter; IntRect bounds; };
 struct RefLayerAttributes {
@@ -318,7 +314,6 @@ union SpecificLayerAttributes {
   ContainerLayerAttributes;
   ColorLayerAttributes;
   CanvasLayerAttributes;
-  TextLayerAttributes;
   RefLayerAttributes;
   ImageLayerAttributes;
   BorderLayerAttributes;
@@ -497,7 +492,6 @@ union Edit {
   OpCreateContainerLayer;
   OpCreateImageLayer;
   OpCreateColorLayer;
-  OpCreateTextLayer;
   OpCreateBorderLayer;
   OpCreateCanvasLayer;
   OpCreateRefLayer;
