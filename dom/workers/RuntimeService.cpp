@@ -2483,7 +2483,7 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
     nsresult rv = aLoadInfo->mResolvedScriptURI->GetSpec(scriptSpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MOZ_ASSERT(aLoadInfo->mPrincipal);
+    MOZ_DIAGNOSTIC_ASSERT(aLoadInfo->mPrincipal && aLoadInfo->mLoadingPrincipal);
 
     WorkerDomainInfo* domainInfo;
     if (mDomainMap.Get(aLoadInfo->mDomain, &domainInfo)) {
@@ -2491,9 +2491,9 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
         if (data->mScriptSpec == scriptSpec &&
             data->mName == aName &&
             // We want to be sure that the window's principal subsumes the
-            // SharedWorker's principal and vice versa.
-            aLoadInfo->mPrincipal->Subsumes(data->mWorkerPrivate->GetPrincipal()) &&
-            data->mWorkerPrivate->GetPrincipal()->Subsumes(aLoadInfo->mPrincipal)) {
+            // SharedWorker's loading principal and vice versa.
+            aLoadInfo->mLoadingPrincipal->Subsumes(data->mWorkerPrivate->GetLoadingPrincipal()) &&
+            data->mWorkerPrivate->GetLoadingPrincipal()->Subsumes(aLoadInfo->mLoadingPrincipal)) {
           workerPrivate = data->mWorkerPrivate;
           break;
         }
