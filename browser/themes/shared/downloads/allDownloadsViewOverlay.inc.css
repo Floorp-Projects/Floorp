@@ -80,10 +80,6 @@
   padding: 0 18px;
 }
 
-.downloadButton:-moz-focusring {
-  -moz-outline-radius: 50%;
-}
-
 .downloadButton > .button-box {
   -moz-appearance: none;
   padding: 2px !important;
@@ -104,6 +100,7 @@
 .downloadButton:hover > .button-box {
   background-color: graytext;
   color: -moz-field;
+  border-radius: 50%;
 }
 
 .downloadButton:hover:active > .button-box {
