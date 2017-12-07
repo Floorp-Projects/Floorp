@@ -556,7 +556,12 @@ endif
 # List of build flags used by auto-generated JNI bindings (through the
 # @BuildFlag annotation in Java). For example, add a "MOZ_FOO \" line to this
 # list to support @BuildFlag(MOZ_FOO).
+#
+# Be sure that the given BUILD_FLAG is exposed to the generated JNI
+# wrapper compilation environment!  This might mean adding a local
+# DEFINE in /widget/android and/or /widget/android/fennec.
 BINDING_BUILD_FLAGS = \
+  MOZ_NATIVE_DEVICES \
   $(NULL)
 
 # Preprocess a JNI binding file using the build flags defined above.
