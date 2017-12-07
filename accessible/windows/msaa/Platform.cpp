@@ -24,6 +24,10 @@
 #include "nsDirectoryServiceUtils.h"
 #include "ProxyWrappers.h"
 
+#if defined(MOZ_TELEMETRY_REPORTING)
+#include "mozilla/Telemetry.h"
+#endif // defined(MOZ_TELEMETRY_REPORTING)
+
 using namespace mozilla;
 using namespace mozilla::a11y;
 using namespace mozilla::mscom;
@@ -32,7 +36,7 @@ static StaticAutoPtr<RegisteredProxy> gRegCustomProxy;
 static StaticAutoPtr<RegisteredProxy> gRegProxy;
 static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
 static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
-static nsString* gInstantiator = nullptr;
+static StaticRefPtr<nsIFile> gInstantiator;
 
 void
 a11y::PlatformInit()
@@ -68,7 +72,6 @@ a11y::PlatformShutdown()
   gRegMiscTlb = nullptr;
 
   if (gInstantiator) {
-    delete gInstantiator;
     gInstantiator = nullptr;
   }
 }
@@ -239,23 +242,164 @@ a11y::IsHandlerRegistered()
   return NS_SUCCEEDED(rv) && equal;
 }
 
-void
-a11y::SetInstantiator(const nsAString& aInstantiator)
+static bool
+GetInstantiatorExecutable(const DWORD aPid, nsIFile** aOutClientExe)
 {
-  if (!gInstantiator) {
-    gInstantiator = new nsString();
+  nsAutoHandle callingProcess(::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
+                                            FALSE, aPid));
+  if (!callingProcess) {
+    return false;
   }
 
-  gInstantiator->Assign(aInstantiator);
+  DWORD bufLen = MAX_PATH;
+  UniquePtr<wchar_t[]> buf;
+
+  while (true) {
+    buf = MakeUnique<wchar_t[]>(bufLen);
+    if (::QueryFullProcessImageName(callingProcess, 0, buf.get(), &bufLen)) {
+      break;
+    }
+
+    DWORD lastError = ::GetLastError();
+    MOZ_ASSERT(lastError == ERROR_INSUFFICIENT_BUFFER);
+    if (lastError != ERROR_INSUFFICIENT_BUFFER) {
+      return false;
+    }
+
+    bufLen *= 2;
+  }
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_NewLocalFile(nsDependentString(buf.get(), bufLen), false,
+                                getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  file.forget(aOutClientExe);
+  return NS_SUCCEEDED(rv);
+}
+
+/**
+ * Appends version information in the format "|a.b.c.d".
+ * If there is no version information, we append nothing.
+ */
+static void
+AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsAutoString fullPath;
+  nsresult rv = aClientExe->GetPath(fullPath);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  DWORD verInfoSize = ::GetFileVersionInfoSize(fullPath.get(), nullptr);
+  if (!verInfoSize) {
+    return;
+  }
+
+  auto verInfoBuf = MakeUnique<BYTE[]>(verInfoSize);
+
+  if (!::GetFileVersionInfo(fullPath.get(), 0, verInfoSize, verInfoBuf.get())) {
+    return;
+  }
+
+  VS_FIXEDFILEINFO* fixedInfo = nullptr;
+  UINT fixedInfoLen = 0;
+
+  if (!::VerQueryValue(verInfoBuf.get(), L"\\", (LPVOID*) &fixedInfo,
+                       &fixedInfoLen)) {
+    return;
+  }
+
+  uint32_t major = HIWORD(fixedInfo->dwFileVersionMS);
+  uint32_t minor = LOWORD(fixedInfo->dwFileVersionMS);
+  uint32_t patch = HIWORD(fixedInfo->dwFileVersionLS);
+  uint32_t build = LOWORD(fixedInfo->dwFileVersionLS);
+
+  aStrToAppend.AppendLiteral(u"|");
+
+  NS_NAMED_LITERAL_STRING(dot, ".");
+
+  aStrToAppend.AppendInt(major);
+  aStrToAppend.Append(dot);
+  aStrToAppend.AppendInt(minor);
+  aStrToAppend.Append(dot);
+  aStrToAppend.AppendInt(patch);
+  aStrToAppend.Append(dot);
+  aStrToAppend.AppendInt(build);
+}
+
+static void
+AccumulateInstantiatorTelemetry(nsIFile* aClientExe, const nsAString& aValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!aValue.IsEmpty()) {
+#if defined(MOZ_TELEMETRY_REPORTING)
+    Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS,
+                         aValue);
+#endif // defined(MOZ_TELEMETRY_REPORTING)
+    CrashReporter::
+      AnnotateCrashReport(NS_LITERAL_CSTRING("AccessibilityClient"),
+                          NS_ConvertUTF16toUTF8(aValue));
+  }
+}
+
+static void
+GatherInstantiatorTelemetry(nsIFile* aClientExe)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsString value;
+  nsresult rv = aClientExe->GetLeafName(value);
+  if (NS_SUCCEEDED(rv)) {
+    AppendVersionInfo(aClientExe, value);
+  }
+
+  nsCOMPtr<nsIFile> ref(aClientExe);
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableFunction("a11y::AccumulateInstantiatorTelemetry",
+                           [ref, value]() -> void {
+                             AccumulateInstantiatorTelemetry(ref, value);
+                           }));
+
+  // Now that we've (possibly) obtained version info, send the resulting
+  // string back to the main thread to accumulate in telemetry.
+  NS_DispatchToMainThread(runnable);
+}
+
+void
+a11y::SetInstantiator(const uint32_t aPid)
+{
+  nsCOMPtr<nsIFile> clientExe;
+  if (!GetInstantiatorExecutable(aPid, getter_AddRefs(clientExe))) {
+#if defined(MOZ_TELEMETRY_REPORTING)
+    AccumulateInstantiatorTelemetry(nullptr, NS_LITERAL_STRING("(Failed to retrieve client image name)"));
+#endif // defined(MOZ_TELEMETRY_REPORTING)
+    return;
+  }
+
+  gInstantiator = clientExe;
+
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableFunction("a11y::GatherInstantiatorTelemetry",
+                           [clientExe]() -> void {
+                             GatherInstantiatorTelemetry(clientExe);
+                           }));
+
+  nsCOMPtr<nsIThread> telemetryThread;
+  NS_NewThread(getter_AddRefs(telemetryThread), runnable);
 }
 
 bool
-a11y::GetInstantiator(nsAString& aInstantiator)
+a11y::GetInstantiator(nsIFile** aOutInstantiator)
 {
   if (!gInstantiator) {
     return false;
   }
 
-  aInstantiator.Assign(*gInstantiator);
-  return true;
+  return NS_SUCCEEDED(gInstantiator->Clone(aOutInstantiator));
 }

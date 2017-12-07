@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'ApplicationAccessibleWrap.cpp',
     'ARIAGridAccessibleWrap.cpp',
     'Compatibility.cpp',
+    'CompatibilityUIA.cpp',
     'DocAccessibleWrap.cpp',
     'EnumVariant.cpp',
     'GeckoCustom.cpp',
