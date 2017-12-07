@@ -9,17 +9,7 @@
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1314206">
   <style type="text/css">
 body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
-* { font:16px/1 monospace; }
 
-.grid2 {
-  display: grid;
-  float: left;
-  grid: auto-flow auto / 10px 30px 10px 30px 10px 30px 10px 30px auto auto auto auto;
-  grid-gap: 5px;
-  margin-bottom:20px;
-  margin-right:20px;
-  border:1px solid;
-}
 .grid {
   display: block;
   float: left;
@@ -32,9 +22,7 @@ button {
   border: 1px solid;
   padding: 0;
   margin: 0;
-  vertical-align: top;
-  box-sizing: border-box;
-  min-width: 0;
+  vertical-align:top;
 }
 button:nth-child(1n) { background: blue; }
 button:nth-child(2n) { background: grey; }
@@ -56,13 +44,8 @@ a30 {
   display: inline-block;
   height: 0;
   width: 30px;
-  direction: rtl;
-}
-a10 {
-  display: inline-block;
-  height: 0;
-  width: 10px;
-  direction: rtl;
+  margin-left: 5px;
+  text-align: right;
 }
 .rel > button {
   position:absolute;
@@ -72,35 +55,35 @@ a10 {
 <body>
 
 <div class="grid sz">
-<button>&nbsp;&nbsp;</button><button style="margin-left:-5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:15px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:-5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:15px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button></div>
+<button>AB</button><button style="margin-left:-5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:15px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:-5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:15px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button></div>
 
 <div class="grid sz t2">
-<button>&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:25px">&nbsp;&nbsp;</button><button style="margin-left:25px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:25px">&nbsp;&nbsp;</button><button style="margin-left:25px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button></div>
+<button>AB</button><button style="margin-left:5px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button></div>
 
-<div class="grid2" style="width:215px">
-<button style="width:10px">&nbsp;&nbsp;</button><button style="width:30px">&nbsp;&nbsp;</button><a10><button style="background:tan">&nbsp;&nbsp;</button></a10><a30><button style="background:silver">&nbsp;&nbsp;</button></a30><button style="width:10px">&nbsp;&nbsp;</button><button style="width:30px">&nbsp;&nbsp;</button><a10><button>&nbsp;&nbsp;</button></a10><a30><button style="background:silver;">&nbsp;&nbsp;</button></a30></div>
+<div class="grid" style="width:215px">
+<button style="width:10px">AB</button><button style="width:30px;margin-left:5px">AB</button><button style="width:10px;margin-left:5px">AB</button><a30><button style="background:silver">AB</button></a30><button style="width:10px;margin-left:5px">AB</button><button style="width:30px;margin-left:5px">AB</button><button style="width:10px;margin-left:5px">AB</button><a30><button style="background:silver;">AB</button></a30></div>
 
 <div class="grid">
-<button>&nbsp;&nbsp;</button><button>&nbsp;&nbsp;</button><br><button style="background:tan">&nbsp;&nbsp;</button><button style="background:silver">&nbsp;&nbsp;</button></div>
+<button>AB</button><button>AB</button><br><button style="background:tan">AB</button><button style="background:silver">AB</button></div>
 
 <div class="grid rel" style="width:100px; height:100px; position:relative">
-<button style="top:0;width:50px;height:50px">&nbsp;&nbsp;</button><button style="top:0;right:0;height:50px">&nbsp;&nbsp;</button><button style="bottom:0;width:50px;">&nbsp;&nbsp;</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
+<button style="top:0;width:50px;height:50px">AB</button><button style="top:0;right:0;height:50px">&nbsp;&nbsp;</button><button style="bottom:0;width:50px;">AB</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
 
 <div class="grid rel" style="height:40px; position:relative">
-<button style="left:0;top:0;height:20px">&nbsp;&nbsp;</button><button style="top:0;right:0;height:20px">&nbsp;&nbsp;</button><button style="left:0;bottom:0;">&nbsp;&nbsp;</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button><button style="position:static;visibility:hidden">&nbsp;&nbsp;</button><button style="position:static;visibility:hidden">&nbsp;&nbsp;</button>
+<button style="left:0;top:0;height:20px">AB</button><button style="top:0;right:0;height:20px">AB</button><button style="left:0;bottom:0;">AB</button><button style="bottom:0;right:0">AB</button><button style="position:static;visibility:hidden">AB</button><button style="position:static;visibility:hidden">AB</button>
 </div>
 
 <div class="grid sz t2 mw">
-<button>&nbsp;&nbsp;</button><button>&nbsp;&nbsp;</button><button style="margin-left:15px">&nbsp;&nbsp;</button><button style="margin-left:20px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button>&nbsp;&nbsp;</button><button style="margin-left:15px">&nbsp;&nbsp;</button><button style="margin-left:20px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button></div>
+<button>AB</button><button>AB</button><button style="margin-left:15px">AB</button><button style="margin-left:20px">AB</button><button style="margin-left:5px">AB</button><button>AB</button><button style="margin-left:15px">AB</button><button style="margin-left:20px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button></div>
 
 <div class="grid mw40" style="width:215px">
-<button>&nbsp;&nbsp;</button><button style="margin-left:-25px">&nbsp;&nbsp;</button><button style="margin-left:-35px">&nbsp;&nbsp;</button><button style="margin-left:-5px">&nbsp;&nbsp;</button><button style="margin-left:5px">&nbsp;&nbsp;</button><button style="margin-left:-25px">&nbsp;&nbsp;</button><button style="margin-left:-35px">&nbsp;&nbsp;</button><button style="margin-left:-5px">&nbsp;&nbsp;</button></div>
+<button>AB</button><button style="margin-left:-25px">AB</button><button style="margin-left:-35px">AB</button><button style="margin-left:-5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:-25px">AB</button><button style="margin-left:-35px">AB</button><button style="margin-left:-5px">AB</button></div>
 
 <div class="grid rel" style="width:100px; height:100px; position:relative">
-<button style="top:0;width:40px;height:40px">&nbsp;&nbsp;</button><button style="top:0;right:0;height:40px">&nbsp;&nbsp;</button><button style="bottom:0;width:40px;">&nbsp;&nbsp;</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
+<button style="top:0;width:40px;height:40px">AB</button><button style="top:0;right:0;height:40px">&nbsp;&nbsp;</button><button style="bottom:0;width:40px;">AB</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
 
 <div class="grid rel" style="width:100px; height:100px; position:relative">
-<button style="top:0;width:40px;height:40px">&nbsp;&nbsp;</button><button style="top:0;right:0;height:40px">&nbsp;&nbsp;</button><button style="bottom:0;width:40px;">&nbsp;&nbsp;</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
+<button style="top:0;width:40px;height:40px">AB</button><button style="top:0;right:0;height:40px">&nbsp;&nbsp;</button><button style="bottom:0;width:40px;">AB</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
 
 </body>
 </html>
