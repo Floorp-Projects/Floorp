@@ -16,7 +16,7 @@
       <stylesheet src="chrome://global/skin/popup.css"/>
     </resources>
 
-    <implementation implements="nsIDOMXULPopupElement">
+    <implementation>
       <property name="label" onget="return this.getAttribute('label');"
                              onset="this.setAttribute('label', val); return val;"/>
       <property name="position" onget="return this.getAttribute('position');"
@@ -291,7 +291,7 @@
 
   <binding id="panel" role="xul:panel"
            extends="chrome://global/content/bindings/popup.xml#popup-base">
-    <implementation implements="nsIDOMXULPopupElement">
+    <implementation>
       <field name="_prevFocus">0</field>
       <field name="_dragBindingAlive">true</field>
       <constructor>

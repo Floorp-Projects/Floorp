@@ -18,7 +18,6 @@
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMXULPopupElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIMutableArray.h"
 #include "nsIPersistentProperties2.h"
@@ -157,9 +156,7 @@ XULListboxAccessible::NativeRole()
 {
   // A richlistbox is used with the new autocomplete URL bar, and has a parent
   // popup <panel>.
-  nsCOMPtr<nsIDOMXULPopupElement> xulPopup =
-    do_QueryInterface(mContent->GetParent());
-  if (xulPopup)
+  if (mContent->GetParent()->IsXULElement(nsGkAtoms::panel))
     return roles::COMBOBOX_LIST;
 
   return IsMulticolumn() ? roles::TABLE : roles::LISTBOX;
