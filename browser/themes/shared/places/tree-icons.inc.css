@@ -37,29 +37,29 @@ treechildren::-moz-tree-image(title, separator) {
   margin: 0;
 }
 
-treechildren::-moz-tree-image(container, OrganizerQuery_AllBookmarks) {
-  list-style-image: url("chrome://browser/skin/places/allBookmarks.png");
-}
-
 treechildren::-moz-tree-image(container, livemark) {
   list-style-image: url("chrome://browser/skin/places/folder-live.svg");
 }
 
-treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksToolbar) {
+treechildren::-moz-tree-image(container, queryFolder_toolbar_____) {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
 }
 
-treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksMenu) {
+treechildren::-moz-tree-image(container, queryFolder_menu________) {
   list-style-image: url("chrome://browser/skin/places/bookmarksMenu.svg");
 }
 
-treechildren::-moz-tree-image(container, OrganizerQuery_UnfiledBookmarks) {
+treechildren::-moz-tree-image(container, queryFolder_unfiled_____) {
   list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg");
 }
 
 /* query-nodes should be styled even if they're not expandable */
 treechildren::-moz-tree-image(query) {
   list-style-image: url("chrome://browser/skin/places/folder-smart.svg");
+}
+
+treechildren::-moz-tree-image(query, OrganizerQuery_AllBookmarks) {
+  list-style-image: url("chrome://browser/skin/places/allBookmarks.png");
 }
 
 treechildren::-moz-tree-image(query, OrganizerQuery_Downloads) {
