@@ -278,8 +278,8 @@ class UrlInputFragment :
 
                 WhatsNew.userViewedWhatsNew(it)
 
-                SessionManager.getInstance()
-                        .createSession(Source.MENU, SupportUtils.getWhatsNewUrl(context))
+                SessionManager.getInstance().createSession(Source.MENU,
+                        SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW))
             }
 
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()

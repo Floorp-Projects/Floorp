@@ -17,7 +17,7 @@ class AutocompleteDefaultDomainsPreference(
         context: Context?,
         attrs: AttributeSet?
 ) : LearnMoreSwitchPreference(context, attrs) {
-    override fun getLearnMoreUrl() = SupportUtils.getAutocompleteUrl(context)
+    override fun getLearnMoreUrl() = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.AUTOCOMPLETE)
 
     override fun getDescription(): String? =
             context.getString(R.string.preference_autocomplete_preinstalled_summary,

@@ -8,6 +8,7 @@ package org.mozilla.focus.utils;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import android.support.annotation.VisibleForTesting;
 import org.mozilla.focus.locale.Locales;
 
 import java.io.UnsupportedEncodingException;
@@ -18,12 +19,20 @@ public class SupportUtils {
     public static final String HELP_URL = "https://support.mozilla.org/kb/what-firefox-focus-android";
     public static final String DEFAULT_BROWSER_URL = "https://support.mozilla.org/kb/set-firefox-focus-default-browser-android";
 
-    public static String getWhatsNewUrl(Context context) {
-        return getSumoURLForTopic(context, "whats-new-focus-android-4");
+    public enum SumoTopic {
+        AUTOCOMPLETE("autofill-domain-android"),
+        WHATS_NEW("whats-new-focus-android-4");
+
+        private final String topicStr;
+
+        SumoTopic(final String topicStr) {
+            this.topicStr = topicStr;
+        }
     }
 
-    public static String getAutocompleteUrl(Context context) {
-        return getSumoURLForTopic(context, "autofill-domain-android");
+    // The two methods are temporary to simplify the changes and review.
+    public static String getSumoURLForTopic(final Context context, final SumoTopic topic) {
+        return getSumoURLForTopic(context, topic.topicStr);
     }
 
     public static String getSumoURLForTopic(final Context context, final String topic) {
