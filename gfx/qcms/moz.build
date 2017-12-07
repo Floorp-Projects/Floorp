@@ -19,7 +19,7 @@ SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-Wno-missing-field-initializers']
 
 use_sse1 = False

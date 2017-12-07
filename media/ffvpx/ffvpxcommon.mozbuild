@@ -50,7 +50,7 @@ LOCAL_INCLUDES += ['/media/ffvpx']
 AllowCompilerWarnings()
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-pointer-sign',

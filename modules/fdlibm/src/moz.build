@@ -10,7 +10,7 @@ EXPORTS += [
 
 FINAL_LIBRARY = 'js'
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-parentheses',
         '-Wno-sign-compare',

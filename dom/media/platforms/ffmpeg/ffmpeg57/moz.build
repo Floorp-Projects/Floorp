@@ -15,7 +15,7 @@ LOCAL_INCLUDES += [
     'include',
 ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
   CXXFLAGS += [ '-Wno-deprecated-declarations' ]
 if CONFIG['CLANG_CXX']:
   CXXFLAGS += [

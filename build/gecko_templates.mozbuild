@@ -41,7 +41,7 @@ def GeckoBinary(linkage='dependent', mozglue=None):
         if mozglue == 'program':
             USE_LIBS += ['mozglue']
             DEFINES['MOZ_HAS_MOZGLUE'] = True
-            if CONFIG['MOZ_GLUE_IN_PROGRAM'] and CONFIG['GNU_CC']:
+            if CONFIG['MOZ_GLUE_IN_PROGRAM'] and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
                 LDFLAGS += ['-rdynamic']
         elif mozglue == 'library':
             LIBRARY_DEFINES['MOZ_HAS_MOZGLUE'] = True

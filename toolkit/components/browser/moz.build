@@ -42,7 +42,7 @@ LOCAL_INCLUDES += [
     '/layout/style',
 ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 EXPORTS += [

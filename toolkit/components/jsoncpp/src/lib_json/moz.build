@@ -36,7 +36,7 @@ if CONFIG['_MSC_VER']:
     CXXFLAGS += [
         '-wd4005', # macro redefinition
     ]
-elif CONFIG['GNU_CXX']:
+elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-unused-local-typedefs',
         '-Wno-shadow',
@@ -47,7 +47,7 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-c++11-narrowing',
     ]
 
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL'] or CONFIG['GNU_CXX']:
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL'] or CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-implicit-fallthrough',
     ]

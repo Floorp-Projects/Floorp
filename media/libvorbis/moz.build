@@ -54,5 +54,5 @@ AllowCompilerWarnings()
 FINAL_LIBRARY = 'gkmedias'
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-Wno-uninitialized']

@@ -50,7 +50,7 @@ shellmoduleloader.inputs = [
     'ModuleLoader.js',
 ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow', '-Werror=format']
 
 # This is intended as a temporary workaround to enable VS2015.

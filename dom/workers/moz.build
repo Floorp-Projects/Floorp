@@ -140,5 +140,5 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 TEST_DIRS += ['test/gtest']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
