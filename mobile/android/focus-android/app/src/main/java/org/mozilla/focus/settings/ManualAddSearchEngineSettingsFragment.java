@@ -53,6 +53,8 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 final String title = ((AppCompatActivity) getActivity()).getSupportActionBar().getTitle().toString();
                 final Intent intent = InfoActivity.getIntentFor(context, url, title);
                 context.startActivity(intent);
+
+                TelemetryWrapper.addSearchEngineLearnMoreEvent();
                 return true;
 
             case R.id.menu_save_search_engine:

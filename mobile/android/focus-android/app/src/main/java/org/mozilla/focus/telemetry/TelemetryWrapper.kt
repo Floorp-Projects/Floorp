@@ -98,6 +98,7 @@ object TelemetryWrapper {
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
         val AUTOFILL = "autofill"
         val SEARCH_ENGINE_SETTING = "search_engine_setting"
+        val ADD_SEARCH_ENGINE_LEARN_MORE = "search_engine_learn_more"
         val CUSTOM_SEARCH_ENGINE = "custom_search_engine"
         val REMOVE_SEARCH_ENGINES = "remove_search_engines"
     }
@@ -647,5 +648,10 @@ object TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.REMOVE, Object.REMOVE_SEARCH_ENGINES)
                 .extra(Extra.SELECTED, selected.toString())
                 .queue()
+    }
+
+    @JvmStatic
+    fun addSearchEngineLearnMoreEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ADD_SEARCH_ENGINE_LEARN_MORE).queue()
     }
 }
