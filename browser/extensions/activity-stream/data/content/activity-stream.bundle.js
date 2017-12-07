@@ -796,7 +796,7 @@ class TopSite extends React.PureComponent {
     }));
   }
   onLinkClick(ev) {
-    if (this.props.editMode) {
+    if (this.props.onEdit) {
       // Ignore clicks if we are in the edit modal.
       ev.preventDefault();
       return;
@@ -851,7 +851,7 @@ class TopSite extends React.PureComponent {
     return React.createElement(
       TopSiteLink,
       _extends({}, props, { onClick: this.onLinkClick, className: isContextMenuOpen ? "active" : "", title: title }),
-      !props.editMode && React.createElement(
+      !props.onEdit && React.createElement(
         "div",
         null,
         React.createElement(
@@ -872,7 +872,7 @@ class TopSite extends React.PureComponent {
           source: TOP_SITES_SOURCE,
           visible: isContextMenuOpen })
       ),
-      props.editMode && React.createElement(
+      props.onEdit && React.createElement(
         "div",
         { className: "edit-menu" },
         React.createElement("button", {
@@ -891,17 +891,34 @@ class TopSite extends React.PureComponent {
     );
   }
 }
-TopSite.defaultProps = {
-  editMode: false,
-  link: {},
-  onEdit() {}
-};
+TopSite.defaultProps = { link: {} };
 
 const TopSitePlaceholder = () => React.createElement(TopSiteLink, { className: "placeholder" });
+
+const TopSiteList = props => {
+  const topSites = props.TopSites.rows.slice(0, props.TopSitesCount);
+  const topSitesUI = [];
+  for (let i = 0, l = props.TopSitesCount; i < l; i++) {
+    const link = topSites[i];
+    topSitesUI.push(!link ? React.createElement(TopSitePlaceholder, { key: i }) : React.createElement(TopSite, {
+      key: link.guid || link.url,
+      dispatch: props.dispatch,
+      link: link,
+      index: i,
+      intl: props.intl,
+      onEdit: props.onEdit }));
+  }
+  return React.createElement(
+    "ul",
+    { className: "top-sites-list" },
+    topSitesUI
+  );
+};
 
 module.exports.TopSite = TopSite;
 module.exports.TopSiteLink = TopSiteLink;
 module.exports.TopSitePlaceholder = TopSitePlaceholder;
+module.exports.TopSiteList = TopSiteList;
 
 /***/ }),
 /* 8 */
@@ -1627,11 +1644,6 @@ class Base extends React.PureComponent {
       this.props.dispatch(ac.SendToMain({ type: at.NEW_TAB_STATE_REQUEST }));
       this.props.dispatch(ac.SendToMain({ type: at.PAGE_PRERENDERED }));
     }
-
-    // Also wait for the preloaded page to show, so the tab's favicon updates
-    addEventListener("visibilitychange", () => {
-      document.getElementById("favicon").href += "#";
-    }, { once: true });
   }
 
   componentWillUpdate({ App }) {
@@ -1699,7 +1711,7 @@ const { connect } = __webpack_require__(3);
 const { FormattedMessage } = __webpack_require__(2);
 
 const TopSitesEdit = __webpack_require__(16);
-const { TopSite, TopSitePlaceholder } = __webpack_require__(7);
+const { TopSiteList } = __webpack_require__(7);
 const CollapsibleSection = __webpack_require__(9);
 const ComponentPerfTimer = __webpack_require__(10);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
@@ -1766,9 +1778,6 @@ class TopSites extends React.PureComponent {
 
   render() {
     const props = this.props;
-    const topSites = this._getTopSites();
-
-    const placeholderCount = props.TopSitesCount - topSites.length;
     const infoOption = {
       header: { id: "settings_pane_topsites_header" },
       body: { id: "settings_pane_topsites_body" }
@@ -1779,17 +1788,7 @@ class TopSites extends React.PureComponent {
       React.createElement(
         CollapsibleSection,
         { className: "top-sites", icon: "topsites", title: React.createElement(FormattedMessage, { id: "header_top_sites" }), infoOption: infoOption, prefName: "collapseTopSites", Prefs: props.Prefs, dispatch: props.dispatch },
-        React.createElement(
-          "ul",
-          { className: "top-sites-list" },
-          topSites.map((link, index) => link && React.createElement(TopSite, {
-            key: link.guid || link.url,
-            dispatch: props.dispatch,
-            link: link,
-            index: index,
-            intl: props.intl })),
-          placeholderCount > 0 && [...Array(placeholderCount)].map((_, i) => React.createElement(TopSitePlaceholder, { key: i }))
-        ),
+        React.createElement(TopSiteList, { TopSites: props.TopSites, TopSitesCount: props.TopSitesCount, dispatch: props.dispatch, intl: props.intl }),
         React.createElement(TopSitesEdit, props)
       )
     );
@@ -1808,7 +1807,7 @@ const { FormattedMessage, injectIntl } = __webpack_require__(2);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
 const TopSiteForm = __webpack_require__(17);
-const { TopSite, TopSitePlaceholder } = __webpack_require__(7);
+const { TopSiteList } = __webpack_require__(7);
 
 const { TOP_SITES_DEFAULT_LENGTH, TOP_SITES_SHOWMORE_LENGTH } = __webpack_require__(6);
 const { TOP_SITES_SOURCE } = __webpack_require__(5);
@@ -1875,8 +1874,6 @@ class TopSitesEdit extends React.PureComponent {
     }));
   }
   render() {
-    const realTopSites = this.props.TopSites.rows.slice(0, this.props.TopSitesCount);
-    const placeholderCount = this.props.TopSitesCount - realTopSites.length;
     const showEditForm = this.props.TopSites.editForm && this.props.TopSites.editForm.visible || this.state.showEditModal && this.state.showEditForm;
     let editIndex = this.state.editIndex;
     if (showEditForm && this.props.TopSites.editForm.visible) {
@@ -1918,19 +1915,7 @@ class TopSitesEdit extends React.PureComponent {
                 React.createElement(FormattedMessage, { id: "header_top_sites" })
               )
             ),
-            React.createElement(
-              "ul",
-              { className: "top-sites-list" },
-              realTopSites.map((link, index) => link && React.createElement(TopSite, {
-                key: link.guid || link.url,
-                dispatch: this.props.dispatch,
-                link: link,
-                index: index,
-                intl: this.props.intl,
-                onEdit: this.onEdit,
-                editMode: true })),
-              placeholderCount > 0 && [...Array(placeholderCount)].map((_, i) => React.createElement(TopSitePlaceholder, { key: i }))
-            )
+            React.createElement(TopSiteList, { TopSites: this.props.TopSites, TopSitesCount: this.props.TopSitesCount, onEdit: this.onEdit, dispatch: this.props.dispatch, intl: this.props.intl })
           ),
           React.createElement(
             "section",
