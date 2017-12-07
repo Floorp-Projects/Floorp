@@ -1252,17 +1252,17 @@ mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
     nsIContent *parent = content->GetParent();
     while (parent) {
       if (parent->IsHTMLElement(nsGkAtoms::blockquote) &&
-          parent->AttrValueIs(kNameSpaceID_None,
-                              nsGkAtoms::type,
-                              nsGkAtoms::cite,
-                              eIgnoreCase)) {
+          parent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::type,
+                                           nsGkAtoms::cite,
+                                           eIgnoreCase)) {
         return false;
       }
       if (parent->IsHTMLElement(nsGkAtoms::pre) &&
-          parent->AttrValueIs(kNameSpaceID_None,
-                              nsGkAtoms::_class,
-                              nsGkAtoms::mozsignature,
-                              eIgnoreCase)) {
+          parent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::_class,
+                                           nsGkAtoms::mozsignature,
+                                           eIgnoreCase)) {
         return false;
       }
 

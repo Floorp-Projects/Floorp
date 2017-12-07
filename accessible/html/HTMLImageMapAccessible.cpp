@@ -155,7 +155,7 @@ HTMLAreaAccessible::NativeName(nsString& aName)
   if (!aName.IsEmpty())
     return nameFlag;
 
-  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName))
+  if (!mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName))
     Value(aName);
 
   return eNameOK;
@@ -167,7 +167,8 @@ HTMLAreaAccessible::Description(nsString& aDescription)
   aDescription.Truncate();
 
   // Still to do - follow IE's standard here
-  RefPtr<HTMLAreaElement> area = HTMLAreaElement::FromContentOrNull(mContent);
+  RefPtr<dom::HTMLAreaElement> area =
+    dom::HTMLAreaElement::FromContentOrNull(mContent);
   if (area)
     area->GetShape(aDescription);
 }

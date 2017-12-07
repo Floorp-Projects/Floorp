@@ -127,6 +127,9 @@ public:
   nscoord mSplitterPos;
   bool mDragging;
 
+  const Element* SplitterElement() const {
+    return mOuter->GetContent()->AsElement();
+  }
 };
 
 NS_IMPL_ISUPPORTS(nsSplitterFrameInner, nsIDOMEventListener)
@@ -134,11 +137,11 @@ NS_IMPL_ISUPPORTS(nsSplitterFrameInner, nsIDOMEventListener)
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
 {
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::farthest, &nsGkAtoms::flex, nullptr};
-  switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::resizebefore,
-                                                strings, eCaseMatters)) {
+  switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
+                                             nsGkAtoms::resizebefore,
+                                             strings, eCaseMatters)) {
     case 0: return Farthest;
     case 1: return Flex;
   }
@@ -152,11 +155,11 @@ nsSplitterFrameInner::~nsSplitterFrameInner()
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeAfter()
 {
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::farthest, &nsGkAtoms::flex, &nsGkAtoms::grow, nullptr};
-  switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::resizeafter,
-                                                strings, eCaseMatters)) {
+  switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
+                                             nsGkAtoms::resizeafter,
+                                             strings, eCaseMatters)) {
     case 0: return Farthest;
     case 1: return Flex;
     case 2: return Grow;
@@ -167,19 +170,19 @@ nsSplitterFrameInner::GetResizeAfter()
 nsSplitterFrameInner::State
 nsSplitterFrameInner::GetState()
 {
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::dragging, &nsGkAtoms::collapsed, nullptr};
-  static nsIContent::AttrValuesArray strings_substate[] =
+  static Element::AttrValuesArray strings_substate[] =
     {&nsGkAtoms::before, &nsGkAtoms::after, nullptr};
-  switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::state,
-                                                strings, eCaseMatters)) {
+  switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
+                                             nsGkAtoms::state,
+                                             strings, eCaseMatters)) {
     case 0: return Dragging;
     case 1:
-      switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                    nsGkAtoms::substate,
-                                                    strings_substate,
-                                                    eCaseMatters)) {
+      switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
+                                                 nsGkAtoms::substate,
+                                                 strings_substate,
+                                                 eCaseMatters)) {
         case 0: return CollapsedBefore;
         case 1: return CollapsedAfter;
         default:
@@ -626,9 +629,8 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (button != 0)
      return NS_OK;
 
-  if (mOuter->GetContent()->
-        AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                    nsGkAtoms::_true, eCaseMatters))
+  if (SplitterElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                     nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
   mParentBox = nsBox::GetParentXULBox(mOuter);
@@ -701,10 +703,14 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         // We need to check for hidden attribute too, since treecols with
         // the hidden="true" attribute are not really hidden, just collapsed
         if (!content->IsElement() ||
-            (!content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::fixed,
-                                   nsGkAtoms::_true, eCaseMatters) &&
-             !content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
-                                   nsGkAtoms::_true, eCaseMatters))) {
+            (!content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                nsGkAtoms::fixed,
+                                                nsGkAtoms::_true,
+                                                eCaseMatters) &&
+             !content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                nsGkAtoms::hidden,
+                                                nsGkAtoms::_true,
+                                                eCaseMatters))) {
             if (count < childIndex && (resizeBefore != Flex || flex > 0)) {
                 mChildInfosBefore[mChildInfosBeforeCount].childElem = content;
                 mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
@@ -814,12 +820,12 @@ nsSplitterFrameInner::SupportsCollapseDirection
   nsSplitterFrameInner::CollapseDirection aDirection
 )
 {
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::before, &nsGkAtoms::after, &nsGkAtoms::both, nullptr};
 
-  switch (mOuter->mContent->FindAttrValueIn(kNameSpaceID_None,
-                                            nsGkAtoms::collapse,
-                                            strings, eCaseMatters)) {
+  switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
+                                             nsGkAtoms::collapse,
+                                             strings, eCaseMatters)) {
     case 0:
       return (aDirection == Before);
     case 1:
@@ -989,8 +995,8 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChil
   // set its preferred size.
   nsAutoString prefValue;
   prefValue.AppendInt(pref/aOnePixel);
-  if (content->AttrValueIs(kNameSpaceID_None, attribute,
-                           prefValue, eCaseMatters)) {
+  if (content->AsElement()->AttrValueIs(kNameSpaceID_None, attribute,
+                                        prefValue, eCaseMatters)) {
      return;
   }
 

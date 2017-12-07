@@ -28,7 +28,9 @@ XULMenuitemAccessibleWrap::Name(nsString& aName)
     return eNameOK;
 
   nsAutoString accel;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accel);
+  if (mContent->IsElement()) {
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accel);
+  }
   if (!accel.IsEmpty())
     aName += NS_LITERAL_STRING("\t") + accel;
 

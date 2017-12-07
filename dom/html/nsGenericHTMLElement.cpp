@@ -381,10 +381,11 @@ nsGenericHTMLElement::Spellcheck()
   nsIContent* node;
   for (node = this; node; node = node->GetParent()) {
     if (node->IsHTMLElement()) {
-      static nsIContent::AttrValuesArray strings[] =
+      static Element::AttrValuesArray strings[] =
         {&nsGkAtoms::_true, &nsGkAtoms::_false, nullptr};
-      switch (node->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::spellcheck,
-                                    strings, eCaseMatters)) {
+      switch (node->AsElement()->FindAttrValueIn(kNameSpaceID_None,
+                                                 nsGkAtoms::spellcheck, strings,
+                                                 eCaseMatters)) {
         case 0:                         // spellcheck = "true"
           return true;
         case 1:                         // spellcheck = "false"
@@ -2786,7 +2787,9 @@ MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
   for (nsIContent *child = aContent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (!child->HasAttr(kNameSpaceID_None, nsGkAtoms::contenteditable)) {
+    if (!child->IsElement() ||
+        !child->AsElement()->HasAttr(kNameSpaceID_None,
+                                     nsGkAtoms::contenteditable)) {
       MakeContentDescendantsEditable(child, aDocument);
     }
   }

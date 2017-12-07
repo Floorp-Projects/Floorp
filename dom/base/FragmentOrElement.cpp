@@ -471,9 +471,11 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
     }
 
     // Otherwise check for xml:base attribute
-    elem->GetAttr(kNameSpaceID_XML, nsGkAtoms::base, attr);
-    if (!attr.IsEmpty()) {
-      baseAttrs.AppendElement(attr);
+    if (elem->IsElement()) {
+      elem->AsElement()->GetAttr(kNameSpaceID_XML, nsGkAtoms::base, attr);
+      if (!attr.IsEmpty()) {
+        baseAttrs.AppendElement(attr);
+      }
     }
     elem = elem->GetParent();
   } while(elem);
@@ -1124,43 +1126,6 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     aVisitor.SetParentTarget(GetComposedDoc(), false);
   }
   return NS_OK;
-}
-
-bool
-nsIContent::GetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                    nsAString& aResult) const
-{
-  if (IsElement()) {
-    return AsElement()->GetAttr(aNameSpaceID, aName, aResult);
-  }
-  aResult.Truncate();
-  return false;
-}
-
-bool
-nsIContent::HasAttr(int32_t aNameSpaceID, nsAtom* aName) const
-{
-  return IsElement() && AsElement()->HasAttr(aNameSpaceID, aName);
-}
-
-bool
-nsIContent::AttrValueIs(int32_t aNameSpaceID,
-                        nsAtom* aName,
-                        const nsAString& aValue,
-                        nsCaseTreatment aCaseSensitive) const
-{
-  return IsElement() &&
-    AsElement()->AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
-}
-
-bool
-nsIContent::AttrValueIs(int32_t aNameSpaceID,
-                        nsAtom* aName,
-                        nsAtom* aValue,
-                        nsCaseTreatment aCaseSensitive) const
-{
-  return IsElement() &&
-    AsElement()->AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
 }
 
 bool
