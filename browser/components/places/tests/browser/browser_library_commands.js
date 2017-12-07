@@ -88,7 +88,7 @@ add_task(async function test_query_on_toolbar() {
      "We have correctly selected bookmarks toolbar node.");
 
   // Check that both cut and delete commands are disabled, cause this is a child
-  // of AllBookmarksFolderId.
+  // of the All Bookmarks special query.
   ok(PO._places.controller.isCommandEnabled("cmd_copy"),
      "Copy command is enabled");
   ok(!PO._places.controller.isCommandEnabled("cmd_cut"),

@@ -1828,7 +1828,8 @@ nsNavHistoryQueryResultNode::IsContainersQuery()
   return resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY ||
-         resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY;
+         resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY ||
+         resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY;
 }
 
 
@@ -1899,7 +1900,9 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
   uint16_t resultType = mOptions->ResultType();
 
   // Tags are always populated, otherwise they are removed.
-  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS ||
+      // AllBookmarks also always has children.
+      resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY) {
     *aHasChildren = true;
     return NS_OK;
   }

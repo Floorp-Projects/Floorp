@@ -60,25 +60,10 @@ function test() {
     var query = { name: queryName,
                   itemId,
                   correctTitle: PlacesUtils.bookmarks.getItemTitle(itemId) };
-    switch (queryName) {
-      case "BookmarksToolbar":
-        query.concreteId = PlacesUtils.toolbarFolderId;
-        query.concreteTitle = PlacesUtils.bookmarks.getItemTitle(query.concreteId);
-        break;
-      case "BookmarksMenu":
-        query.concreteId = PlacesUtils.bookmarksMenuFolderId;
-        query.concreteTitle = PlacesUtils.bookmarks.getItemTitle(query.concreteId);
-        break;
-      case "UnfiledBookmarks":
-        query.concreteId = PlacesUtils.unfiledBookmarksFolderId;
-        query.concreteTitle = PlacesUtils.bookmarks.getItemTitle(query.concreteId);
-        break;
-    }
+
     leftPaneQueries.push(query);
     // Rename to a bad title.
     PlacesUtils.bookmarks.setItemTitle(query.itemId, "badName");
-    if ("concreteId" in query)
-      PlacesUtils.bookmarks.setItemTitle(query.concreteId, "badName");
   }
 
   restoreLeftPaneGetters();
