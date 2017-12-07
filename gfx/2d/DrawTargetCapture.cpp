@@ -8,6 +8,7 @@
 #include "DrawCommand.h"
 #include "gfxPlatform.h"
 #include "SourceSurfaceCapture.h"
+#include "FilterNodeCapture.h"
 
 namespace mozilla {
 namespace gfx {
@@ -416,6 +417,16 @@ DrawTargetCaptureImpl::CreateSimilarRasterTarget(const IntSize& aSize, SurfaceFo
 {
   MOZ_ASSERT(!mRefDT->IsCaptureDT());
   return mRefDT->CreateSimilarDrawTarget(aSize, aFormat);
+}
+
+already_AddRefed<FilterNode>
+DrawTargetCaptureImpl::CreateFilter(FilterType aType)
+{
+  if (mRefDT->GetBackendType() == BackendType::DIRECT2D1_1) {
+    return MakeRefPtr<FilterNodeCapture>(aType).forget();
+  } else {
+    return mRefDT->CreateFilter(aType);
+  }
 }
 
 } // namespace gfx

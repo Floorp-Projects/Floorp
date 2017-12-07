@@ -36,8 +36,11 @@ SimpleTest.waitForFocus(function() {
   r.setEnd(div.firstChild, 9);
   sel.addRange(r);
 
-  SimpleTest.waitForClipboard(
-    function compare(value) {
+  SimpleTest.waitForClipboard(() => true,
+    function setup() {
+      synthesizeKey("C", {accelKey: true});
+    },
+    function onSuccess() {
       var theEdit = document.getElementById("editable");
       sel.collapse(theEdit.firstChild, 1);
 
@@ -45,12 +48,7 @@ SimpleTest.waitForFocus(function() {
       is(theEdit.innerHTML,
         "<span>AB<blockquote type=\"cite\">Copy this</blockquote></span>",
         "unexpected HTML for test");
-      return true;
-    },
-    function setup() {
-      synthesizeKey("C", {accelKey: true});
-    },
-    function onSuccess() {
+
       SimpleTest.finish();
     },
     function onFailure() {

@@ -43,7 +43,12 @@ add_task(function* () {
 
   function* testPasteOuterHTMLMenu() {
     info("Testing that 'Paste Outer HTML' menu item works.");
-    clipboard.copyString("this was pasted (outerHTML)");
+
+    yield SimpleTest.promiseClipboardChange("this was pasted (outerHTML)",
+      () => {
+        clipboard.copyString("this was pasted (outerHTML)");
+      });
+
     let outerHTMLSelector = "#paste-area h1";
 
     let nodeFront = yield getNodeFront(outerHTMLSelector, inspector);
@@ -68,7 +73,11 @@ add_task(function* () {
 
   function* testPasteInnerHTMLMenu() {
     info("Testing that 'Paste Inner HTML' menu item works.");
-    clipboard.copyString("this was pasted (innerHTML)");
+
+    yield SimpleTest.promiseClipboardChange("this was pasted (innerHTML)",
+      () => {
+        clipboard.copyString("this was pasted (innerHTML)");
+      });
     let innerHTMLSelector = "#paste-area .inner";
     let getInnerHTML = () => testActor.getProperty(innerHTMLSelector,
                                                    "innerHTML");
@@ -107,7 +116,11 @@ add_task(function* () {
         target: markupTagLine,
       });
       info(`Testing ${menuId} for ${clipboardData}`);
-      clipboard.copyString(clipboardData);
+
+      yield SimpleTest.promiseClipboardChange(clipboardData,
+        () => {
+          clipboard.copyString(clipboardData);
+        });
 
       let onMutation = inspector.once("markupmutation");
       allMenuItems.find(item => item.id === menuId).click();

@@ -613,19 +613,22 @@ protected:
       mAnchor(nullptr),
       mSizedToPopup(false)
     {}
-    void MarkPosted(nsIFrame* aAnchor, bool aSizedToPopup) {
+    void MarkPosted(nsIFrame* aAnchor, bool aSizedToPopup, bool aIsOpenChanged) {
       mPosted = true;
       mAnchor = aAnchor;
       mSizedToPopup = aSizedToPopup;
+      mIsOpenChanged = aIsOpenChanged;
     }
     void Clear() {
       mPosted = false;
       mAnchor = nullptr;
       mSizedToPopup = false;
+      mIsOpenChanged = false;
     }
     bool mPosted;
     nsIFrame* mAnchor;
     bool mSizedToPopup;
+    bool mIsOpenChanged;
   };
   ReflowCallbackData mReflowCallbackData;
 
@@ -649,6 +652,11 @@ protected:
   // the flip modes that were used when the popup was opened
   bool mHFlip;
   bool mVFlip;
+
+  // When POPUPPOSITION_SELECTION is used, this indicates the vertical offset that the
+  // original selected item was. This needs to be used in case the popup gets changed
+  // so that we can keep the popup at the same vertical offset.
+  nscoord mPositionedOffset;
 
   // How the popup is anchored.
   MenuPopupAnchorType mAnchorType;

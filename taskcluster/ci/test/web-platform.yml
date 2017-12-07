@@ -137,7 +137,10 @@ test-verify-wpt:
             # do not run on ccov; see also the enable_code_coverage transform
             linux64-ccov/.*: []
             default: built-projects
-    tier: 3
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: 2
     mozharness:
         extra-options:
             - --verify

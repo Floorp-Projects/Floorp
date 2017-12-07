@@ -254,35 +254,40 @@ nsAppShell::Init()
 {
   LSPAnnotate();
 
-  mLastNativeEventScheduled = TimeStamp::NowLoRes();
-
   mozilla::ipc::windows::InitUIThread();
 
   sTaskbarButtonCreatedMsg = ::RegisterWindowMessageW(kTaskbarButtonEventId);
   NS_ASSERTION(sTaskbarButtonCreatedMsg, "Could not register taskbar button creation message");
 
-  WNDCLASSW wc;
-  HINSTANCE module = GetModuleHandle(nullptr);
+  // The hidden message window is used for interrupting the processing of native
+  // events, so that we can process gecko events. Therefore, we only need it if
+  // we are processing native events.
+  if (XRE_UseNativeEventProcessing()) {
+    mLastNativeEventScheduled = TimeStamp::NowLoRes();
 
-  const wchar_t *const kWindowClass = L"nsAppShell:EventWindowClass";
-  if (!GetClassInfoW(module, kWindowClass, &wc)) {
-    wc.style         = 0;
-    wc.lpfnWndProc   = EventWindowProc;
-    wc.cbClsExtra    = 0;
-    wc.cbWndExtra    = 0;
-    wc.hInstance     = module;
-    wc.hIcon         = nullptr;
-    wc.hCursor       = nullptr;
-    wc.hbrBackground = (HBRUSH) nullptr;
-    wc.lpszMenuName  = (LPCWSTR) nullptr;
-    wc.lpszClassName = kWindowClass;
-    RegisterClassW(&wc);
+    WNDCLASSW wc;
+    HINSTANCE module = GetModuleHandle(nullptr);
+
+    const wchar_t *const kWindowClass = L"nsAppShell:EventWindowClass";
+    if (!GetClassInfoW(module, kWindowClass, &wc)) {
+      wc.style         = 0;
+      wc.lpfnWndProc   = EventWindowProc;
+      wc.cbClsExtra    = 0;
+      wc.cbWndExtra    = 0;
+      wc.hInstance     = module;
+      wc.hIcon         = nullptr;
+      wc.hCursor       = nullptr;
+      wc.hbrBackground = (HBRUSH) nullptr;
+      wc.lpszMenuName  = (LPCWSTR) nullptr;
+      wc.lpszClassName = kWindowClass;
+      RegisterClassW(&wc);
+    }
+
+    mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow",
+                              0, 0, 0, 10, 10, HWND_MESSAGE, nullptr, module,
+                              nullptr);
+    NS_ENSURE_STATE(mEventWnd);
   }
-
-  mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow",
-                            0, 0, 0, 10, 10, HWND_MESSAGE, nullptr, module,
-                            nullptr);
-  NS_ENSURE_STATE(mEventWnd);
 
   if (XRE_IsParentProcess()) {
     ScreenManager& screenManager = ScreenManager::GetSingleton();
@@ -383,6 +388,9 @@ nsAppShell::DoProcessMoreGeckoEvents()
 void
 nsAppShell::ScheduleNativeEventCallback()
 {
+  MOZ_ASSERT(mEventWnd,
+             "We should have created mEventWnd in Init, if this is called.");
+
   // Post a message to the hidden message window
   NS_ADDREF_THIS(); // will be released when the event is processed
   {

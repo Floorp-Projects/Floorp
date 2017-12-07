@@ -203,7 +203,14 @@ struct WorkerLoadInfo
   // All of these should be released in WorkerPrivateParent::ForgetMainThreadObjects.
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIURI> mResolvedScriptURI;
+
+  // This is the principal of the global (parent worker or a window) loading
+  // the worker. It can be null if we are executing a ServiceWorker, otherwise,
+  // except for data: URL, it must subsumes the worker principal.
+  // If we load a data: URL, mPrincipal will be a null principal.
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;

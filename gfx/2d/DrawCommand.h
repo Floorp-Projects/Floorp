@@ -14,6 +14,7 @@
 #include "Filters.h"
 #include <vector>
 #include "CaptureCommandList.h"
+#include "FilterNodeCapture.h"
 
 namespace mozilla {
 namespace gfx {
@@ -246,7 +247,11 @@ public:
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
-    aDT->DrawFilter(mFilter, mSourceRect, mDestPoint, mOptions);
+    RefPtr<FilterNode> filter = mFilter;
+    if (mFilter->GetBackendType() == FilterBackend::FILTER_BACKEND_CAPTURE) {
+      filter = static_cast<FilterNodeCapture*>(filter.get())->Validate(aDT);
+    }
+    aDT->DrawFilter(filter, mSourceRect, mDestPoint, mOptions);
   }
 
   static const bool AffectsSnapshot = true;
