@@ -1457,7 +1457,7 @@ public:
       // so they can clean up any gfx resources.
       if (SourceMediaStream* source = stream->AsSourceStream()) {
         // Finishing a SourceStream prevents new data from being appended.
-        source->FinishPending();
+        source->FinishOnGraphThread();
       }
       stream->GetStreamTracks().Clear();
       stream->RemoveAllListenersImpl();
