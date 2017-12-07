@@ -1,5 +1,5 @@
 {
-    "llvm_revision": "311608",
+    "llvm_revision": "317840",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
@@ -13,11 +13,6 @@
     "cxx": "cl.exe",
     "patches": [
       "msvc-host-x64.patch",
-      "loosen-msvc-detection.patch",
-      "r314201.patch",
-      "r315677.patch",
-      "r316048.patch",
-      "r317705.patch",
-      "r317709.patch"
+      "loosen-msvc-detection.patch"
     ]
 }
