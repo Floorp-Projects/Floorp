@@ -55,7 +55,6 @@ private:
   void SetNextPageFD(const mozilla::ipc::FileDescriptor& aFd);
 
   bool mPrintInitialized = false;
-  bool mDestroyed = false;
   nsresult mInitializationResult = NS_OK;
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
   RefPtr<nsPrintEngine> mPrintEngine;
