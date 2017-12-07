@@ -156,6 +156,7 @@ public:
                      double aDuration,
                      const VRManagerPromise& aPromise);
   void StopVibrateHaptic();
+  void ShutdownVibrateHapticThread();
 
 protected:
   virtual ~VRControllerOculus();
