@@ -22,10 +22,10 @@
 using namespace js;
 using namespace js::frontend;
 
-static_assert(MODULE_STATUS_ERRORED < MODULE_STATUS_UNINSTANTIATED &&
-              MODULE_STATUS_UNINSTANTIATED < MODULE_STATUS_INSTANTIATING &&
+static_assert(MODULE_STATUS_UNINSTANTIATED < MODULE_STATUS_INSTANTIATING &&
               MODULE_STATUS_INSTANTIATING < MODULE_STATUS_INSTANTIATED &&
-              MODULE_STATUS_INSTANTIATED < MODULE_STATUS_EVALUATED,
+              MODULE_STATUS_INSTANTIATED < MODULE_STATUS_EVALUATED &&
+              MODULE_STATUS_EVALUATED < MODULE_STATUS_EVALUATED_ERROR,
               "Module statuses are ordered incorrectly");
 
 template<typename T, Value ValueGetter(const T* obj)>
@@ -342,12 +342,12 @@ IndirectBindingMap::trace(JSTracer* trc)
 }
 
 bool
-IndirectBindingMap::putNew(JSContext* cx, HandleId name,
-                           HandleModuleEnvironmentObject environment, HandleId localName)
+IndirectBindingMap::put(JSContext* cx, HandleId name,
+                        HandleModuleEnvironmentObject environment, HandleId localName)
 {
     RootedShape shape(cx, environment->lookup(cx, localName));
     MOZ_ASSERT(shape);
-    if (!map_.putNew(name, Binding(environment, shape))) {
+    if (!map_.put(name, Binding(environment, shape))) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -428,7 +428,7 @@ ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
     RootedModuleEnvironmentObject environment(cx, &targetModule->initialEnvironment());
     RootedId exportedNameId(cx, AtomToId(exportedName));
     RootedId localNameId(cx, AtomToId(localName));
-    return bindings().putNew(cx, exportedNameId, environment, localNameId);
+    return bindings().put(cx, exportedNameId, environment, localNameId);
 }
 
 const char ModuleNamespaceObject::ProxyHandler::family = 0;
@@ -799,7 +799,7 @@ ModuleObject::initialEnvironment() const
 ModuleEnvironmentObject*
 ModuleObject::environment() const
 {
-    MOZ_ASSERT(status() != MODULE_STATUS_ERRORED);
+    MOZ_ASSERT(!hadEvaluationError());
 
     // According to the spec the environment record is created during
     // instantiation, but we create it earlier than that.
@@ -845,7 +845,7 @@ void
 ModuleObject::init(HandleScript script)
 {
     initReservedSlot(ScriptSlot, PrivateValue(script));
-    initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_ERRORED));
+    initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
 }
 
 void
@@ -961,7 +961,8 @@ ModuleObject::script() const
 static inline void
 AssertValidModuleStatus(ModuleStatus status)
 {
-    MOZ_ASSERT(status >= MODULE_STATUS_ERRORED && status <= MODULE_STATUS_EVALUATED);
+    MOZ_ASSERT(status >= MODULE_STATUS_UNINSTANTIATED &&
+               status <= MODULE_STATUS_EVALUATED_ERROR);
 }
 
 ModuleStatus
@@ -972,11 +973,17 @@ ModuleObject::status() const
     return status;
 }
 
-Value
-ModuleObject::error() const
+bool
+ModuleObject::hadEvaluationError() const
 {
-    MOZ_ASSERT(status() == MODULE_STATUS_ERRORED);
-    return getReservedSlot(ErrorSlot);
+    return status() == MODULE_STATUS_EVALUATED_ERROR;
+}
+
+Value
+ModuleObject::evaluationError() const
+{
+    MOZ_ASSERT(hadEvaluationError());
+    return getReservedSlot(EvaluationErrorSlot);
 }
 
 Value
@@ -1137,7 +1144,7 @@ ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self)
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusSlot)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, error, ErrorSlot)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluationError, EvaluationErrorSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ImportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries, LocalExportEntriesSlot)
@@ -1152,7 +1159,7 @@ GlobalObject::initModuleProto(JSContext* cx, Handle<GlobalObject*> global)
     static const JSPropertySpec protoAccessors[] = {
         JS_PSG("namespace", ModuleObject_namespace_Getter, 0),
         JS_PSG("status", ModuleObject_statusGetter, 0),
-        JS_PSG("error", ModuleObject_errorGetter, 0),
+        JS_PSG("evaluationError", ModuleObject_evaluationErrorGetter, 0),
         JS_PSG("requestedModules", ModuleObject_requestedModulesGetter, 0),
         JS_PSG("importEntries", ModuleObject_importEntriesGetter, 0),
         JS_PSG("localExportEntries", ModuleObject_localExportEntriesGetter, 0),
