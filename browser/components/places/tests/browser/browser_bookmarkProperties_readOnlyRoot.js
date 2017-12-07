@@ -29,10 +29,6 @@ add_task(async function() {
         namepicker.blur();
         bookmark = await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.unfiledGuid);
         Assert.equal(namepicker.value, bookmark.title, "Root title is correct");
-        // Check the shortcut's title.
-        info(tree.selectedNode.bookmarkGuid);
-        bookmark = await PlacesUtils.bookmarks.fetch(tree.selectedNode.bookmarkGuid);
-        Assert.equal(bookmark.title, "", "Shortcut title is null");
       }
     );
   });
