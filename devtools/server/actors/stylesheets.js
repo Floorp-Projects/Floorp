@@ -140,7 +140,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * Window of target
    */
   get window() {
-    return this._window || this.parentActor.window;
+    return this.parentActor.window;
   },
 
   /**
@@ -148,6 +148,14 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    */
   get document() {
     return this.window.document;
+  },
+
+  /**
+   * StyleSheet's window.
+   */
+  get ownerWindow() {
+    // eslint-disable-next-line mozilla/use-ownerGlobal
+    return this.ownerDocument.defaultView;
   },
 
   get ownerNode() {
@@ -202,18 +210,31 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     }
   },
 
-  initialize: function (styleSheet, parentActor, window) {
+  initialize: function (styleSheet, parentActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.rawSheet = styleSheet;
     this.parentActor = parentActor;
     this.conn = this.parentActor.conn;
 
-    this._window = window;
-
     // text and index are unknown until source load
     this.text = null;
     this._styleSheetIndex = -1;
+
+    // When the style is imported, `styleSheet.ownerNode` is null,
+    // so retrieve the topmost parent style sheet which has an ownerNode
+    let parentStyleSheet = styleSheet;
+    while (parentStyleSheet.parentStyleSheet) {
+      parentStyleSheet = parentStyleSheet.parentStyleSheet;
+    }
+    // When the style is injected via nsIDOMWindowUtils.loadSheet, even
+    // the parent style sheet has no owner, so default back to tab actor
+    // document
+    if (parentStyleSheet.ownerNode) {
+      this.ownerDocument = parentStyleSheet.ownerNode.ownerDocument;
+    } else {
+      this.ownerDocument = parentActor.window;
+    }
   },
 
   /**
@@ -417,8 +438,8 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     let excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
     if (!excludedProtocolsRe.test(this.href)) {
       // Stylesheets using other protocols should use the content principal.
-      options.window = this.window;
-      options.principal = this.document.nodePrincipal;
+      options.window = this.ownerWindow;
+      options.principal = this.ownerDocument.nodePrincipal;
     }
 
     let result;
