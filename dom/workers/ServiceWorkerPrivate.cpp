@@ -1894,7 +1894,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mEvalAllowed = true;
   info.mReportCSPViolations = false;
 
-  WorkerPrivate::OverrideLoadInfoLoadGroup(info);
+  WorkerPrivate::OverrideLoadInfoLoadGroup(info, info.mPrincipal);
 
   rv = info.SetPrincipalOnMainThread(info.mPrincipal, info.mLoadGroup);
   if (NS_WARN_IF(NS_FAILED(rv))) {
