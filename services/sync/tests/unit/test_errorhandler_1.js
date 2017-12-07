@@ -16,8 +16,7 @@ var fakeServer = new SyncServer();
 fakeServer.start();
 
 registerCleanupFunction(function() {
-  return new Promise(resolve => {
-    fakeServer.stop(resolve);
+  return promiseStopServer(fakeServer).finally(() => {
     Svc.Prefs.resetBranch("");
   });
 });
