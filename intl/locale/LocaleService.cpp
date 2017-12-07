@@ -81,14 +81,12 @@ ReadRequestedLocales(nsTArray<nsCString>& aRetVal)
     if (str.Length() > 0) {
       for (const nsACString& part : str.Split(',')) {
         nsAutoCString locale(part);
-        if (SanitizeForBCP47(locale, true)) {
-          // This is a hack required for us to handle the special Mozilla `ja-JP-mac`
-          // locales. We sanitize the input to normalize the case etc. but in result
-          // the `ja-JP-mac` will get turned into a BCP47 tag. Here we're turning it
-          // back into the form expected by Gecko resources.
-          if (locale.EqualsLiteral("ja-JP-x-lvariant-mac")) {
-            locale.Assign("ja-JP-mac");
+        if (locale.EqualsLiteral("ja-JP-mac")) {
+          // This is a hack required to handle the special Mozilla `ja-JP-mac` locale.
+          if (!aRetVal.Contains(locale)) {
+            aRetVal.AppendElement(locale);
           }
+        } else if (SanitizeForBCP47(locale, true)) {
           if (!aRetVal.Contains(locale)) {
             aRetVal.AppendElement(locale);
           }
@@ -837,7 +835,7 @@ LocaleService::Locale::Locale(const nsCString& aLocale, bool aRange)
         }
         break;
       case 3:
-        if (part.EqualsLiteral("*") || part.Length() == 3) {
+        if (part.EqualsLiteral("*") || (part.Length() >= 3 && part.Length() <= 8)) {
           mVariant.Assign(part);
         }
         break;
@@ -992,13 +990,10 @@ LocaleService::SetRequestedLocales(const char** aRequested,
 
   for (uint32_t i = 0; i < aRequestedCount; i++) {
     nsAutoCString locale(aRequested[i]);
-    if (!SanitizeForBCP47(locale, true)) {
+    if (!locale.EqualsLiteral("ja-JP-mac") &&
+        !SanitizeForBCP47(locale, true)) {
       NS_ERROR("Invalid language tag provided to SetRequestedLocales!");
       return NS_ERROR_INVALID_ARG;
-    }
-    if (locale.EqualsLiteral("ja-JP-x-lvariant-mac")) {
-      // This is a hack for our code to handle `ja-JP-mac` special case.
-      locale.Assign("ja-JP-mac");
     }
 
     if (i > 0) {
