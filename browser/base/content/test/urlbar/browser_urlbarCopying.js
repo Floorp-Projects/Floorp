@@ -260,45 +260,46 @@ function runTest(testCase, cb) {
 
 function testCopy(copyVal, targetValue, cb) {
   info("Expecting copy of: " + targetValue);
-  waitForClipboard(targetValue, function() {
-    gURLBar.focus();
-    if (copyVal) {
-      let offsets = [];
-      while (true) {
-        let startBracket = copyVal.indexOf("<");
-        let endBracket = copyVal.indexOf(">");
-        if (startBracket == -1 && endBracket == -1) {
-          break;
-        }
-        if (startBracket > endBracket || startBracket == -1) {
-          offsets = [];
-          break;
-        }
-        offsets.push([startBracket, endBracket - 1]);
-        copyVal = copyVal.replace("<", "").replace(">", "");
-      }
-      if (offsets.length == 0 ||
-          copyVal != gURLBar.textValue) {
-        ok(false, "invalid copyVal: " + copyVal);
-      }
-      gURLBar.selectionStart = offsets[0][0];
-      gURLBar.selectionEnd = offsets[0][1];
-      if (offsets.length > 1) {
-        let sel = gURLBar.editor.selection;
-        let r0 = sel.getRangeAt(0);
-        let node0 = r0.startContainer;
-        sel.removeAllRanges();
-        offsets.map(function(startEnd) {
-          let range = r0.cloneRange();
-          range.setStart(node0, startEnd[0]);
-          range.setEnd(node0, startEnd[1]);
-          sel.addRange(range);
-        });
-      }
-    } else {
-      gURLBar.select();
-    }
 
+  gURLBar.focus();
+  if (copyVal) {
+    let offsets = [];
+    while (true) {
+      let startBracket = copyVal.indexOf("<");
+      let endBracket = copyVal.indexOf(">");
+      if (startBracket == -1 && endBracket == -1) {
+        break;
+      }
+      if (startBracket > endBracket || startBracket == -1) {
+        offsets = [];
+        break;
+      }
+      offsets.push([startBracket, endBracket - 1]);
+      copyVal = copyVal.replace("<", "").replace(">", "");
+    }
+    if (offsets.length == 0 ||
+        copyVal != gURLBar.textValue) {
+      ok(false, "invalid copyVal: " + copyVal);
+    }
+    gURLBar.selectionStart = offsets[0][0];
+    gURLBar.selectionEnd = offsets[0][1];
+    if (offsets.length > 1) {
+      let sel = gURLBar.editor.selection;
+      let r0 = sel.getRangeAt(0);
+      let node0 = r0.startContainer;
+      sel.removeAllRanges();
+      offsets.map(function(startEnd) {
+        let range = r0.cloneRange();
+        range.setStart(node0, startEnd[0]);
+        range.setEnd(node0, startEnd[1]);
+        sel.addRange(range);
+      });
+    }
+  } else {
+    gURLBar.select();
+  }
+
+  waitForClipboard(targetValue, function() {
     goDoCommand("cmd_copy");
   }, cb, cb);
 }

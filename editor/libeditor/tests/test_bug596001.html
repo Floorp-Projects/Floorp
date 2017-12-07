@@ -44,8 +44,10 @@ function testTab(prefix, callback) {
   );
 }
 
+SimpleTest.waitForExplicitFinish();
 testTab("", function() {
   testTab("foo", function() {
+    SimpleTest.finish();
   });
 });
 

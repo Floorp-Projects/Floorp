@@ -1,0 +1,32 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1512580728 0
+#      Wed Dec 06 17:18:48 2017 +0000
+# Node ID e56684aa96bd963d4b94ed69b99a0359fa0479ae
+# Parent  785572419acc82b2cbdcd2e24ca59fdbf5d7255f
+Use STARTF_FORCEOFFFEEDBACK flag when starting Windows child processes to prevent app starting cursor. r=jimm
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/broker_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+@@ -346,16 +346,20 @@ ResultCode BrokerServicesBase::SpawnTarg
+ 
+   base::win::ScopedHandle job;
+   result = policy_base->MakeJobObject(&job);
+   if (SBOX_ALL_OK != result)
+     return result;
+ 
+   // Initialize the startup information from the policy.
+   base::win::StartupInformation startup_info;
++
++  // We don't want any child processes causing the IDC_APPSTARTING cursor.
++  startup_info.startup_info()->dwFlags |= STARTF_FORCEOFFFEEDBACK;
++
+   // The liftime of |mitigations|, |inherit_handle_list| and
+   // |child_process_creation| have to be at least as long as
+   // |startup_info| because |UpdateProcThreadAttribute| requires that
+   // its |lpValue| parameter persist until |DeleteProcThreadAttributeList| is
+   // called; StartupInformation's destructor makes such a call.
+   DWORD64 mitigations;
+   std::vector<HANDLE> inherited_handle_list;
+   DWORD child_process_creation = PROCESS_CREATION_CHILD_PROCESS_RESTRICTED;

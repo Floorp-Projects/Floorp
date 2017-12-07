@@ -926,8 +926,6 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     }
 };
 
-SimpleTest.waitForClipboard_polls = 0;
-
 /*
  * Polls the clipboard waiting for the expected value. A known value different than
  * the expected value is put on the clipboard first (and also polled for) so we
@@ -937,7 +935,7 @@ SimpleTest.waitForClipboard_polls = 0;
  *
  * @param aExpectedStringOrValidatorFn
  *        The string value that is expected to be on the clipboard or a
- *        validator function getting cripboard data and returning a bool.
+ *        validator function getting expected clipboard data and returning a bool.
  * @param aSetupFn
  *        A function responsible for setting the clipboard to the expected value,
  *        called after the known value setting succeeds.
@@ -956,19 +954,25 @@ SimpleTest.waitForClipboard_polls = 0;
  *        aExpectedStringOrValidatorFn must be null, as it won't be used.
  *        Defaults to false.
  */
-SimpleTest.__waitForClipboardMonotonicCounter = 0;
-SimpleTest.__defineGetter__("_waitForClipboardMonotonicCounter", function () {
-  return SimpleTest.__waitForClipboardMonotonicCounter++;
-});
 SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
                                        aSuccessFn, aFailureFn, aFlavor, aTimeout, aExpectFailure) {
-    var requestedFlavor = aFlavor || "text/unicode";
+    let promise = SimpleTest.promiseClipboardChange(aExpectedStringOrValidatorFn, aSetupFn,
+                                                    aFlavor, aTimeout, aExpectFailure);
+    promise.then(aSuccessFn).catch(aFailureFn);
+}
+
+/**
+ * Promise-oriented version of waitForClipboard.
+ */
+SimpleTest.promiseClipboardChange = async function(aExpectedStringOrValidatorFn, aSetupFn,
+                                                   aFlavor, aTimeout, aExpectFailure) {
+    let requestedFlavor = aFlavor || "text/unicode";
 
     // The known value we put on the clipboard before running aSetupFn
-    var initialVal = SimpleTest._waitForClipboardMonotonicCounter +
-                     "-waitForClipboard-known-value";
+    let initialVal = "waitForClipboard-known-value-" + Math.random();
+    let preExpectedVal = initialVal;
 
-    var inputValidatorFn;
+    let inputValidatorFn;
     if (aExpectFailure) {
         // If we expect failure, the aExpectedStringOrValidatorFn should be null
         if (aExpectedStringOrValidatorFn !== null) {
@@ -985,54 +989,43 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
             : aExpectedStringOrValidatorFn;
     }
 
-    var maxPolls = aTimeout ? aTimeout / 100 : 50;
+    let maxPolls = aTimeout ? aTimeout / 100 : 50;
 
-    // reset for the next use
-    function reset() {
-        SimpleTest.waitForClipboard_polls = 0;
-    }
+    async function putAndVerify(operationFn, validatorFn, flavor) {
+        operationFn();
 
-    var lastValue;
-    function wait(validatorFn, successFn, failureFn, flavor) {
-        if (SimpleTest.waitForClipboard_polls == 0) {
-          lastValue = undefined;
+        let data;
+        for (let i = 0; i < maxPolls; i++) {
+            data = SpecialPowers.getClipboardData(flavor);
+            if (validatorFn(data)) {
+                // Don't show the success message when waiting for preExpectedVal
+                if (preExpectedVal) {
+                    preExpectedVal = null;
+                } else {
+                    SimpleTest.ok(!aExpectFailure, "Clipboard has the given value: '" + data + "'");
+                }
+
+                return data;
+            }
+
+            // Wait 100ms and check again.
+            await new Promise(resolve => { SimpleTest._originalSetTimeout.apply(window, [resolve, 100]); });
         }
 
-        if (++SimpleTest.waitForClipboard_polls > maxPolls) {
-            // Log the failure.
-            SimpleTest.ok(aExpectFailure, "Timed out while polling clipboard for pasted data");
-            dump("Got this value: " + lastValue);
-            reset();
-            failureFn();
-            return;
-        }
-
-        var data = SpecialPowers.getClipboardData(flavor);
-
-        if (validatorFn(data)) {
-            // Don't show the success message when waiting for preExpectedVal
-            if (preExpectedVal)
-                preExpectedVal = null;
-            else
-                SimpleTest.ok(!aExpectFailure, "Clipboard has the given value");
-            reset();
-            successFn();
-        } else {
-            lastValue = data;
-            SimpleTest._originalSetTimeout.apply(window, [function() { return wait(validatorFn, successFn, failureFn, flavor); }, 100]);
+        SimpleTest.ok(aExpectFailure, "Timed out while polling clipboard for pasted data, got: " + data);
+        if (!aExpectFailure) {
+          throw "failed";
         }
     }
 
     // First we wait for a known value different from the expected one.
-    var preExpectedVal = initialVal;
-    SpecialPowers.clipboardCopyString(preExpectedVal);
-    wait(function(aData) { return aData  == preExpectedVal; },
-         function() {
-           // Call the original setup fn
-           aSetupFn();
-           wait(inputValidatorFn, aSuccessFn, aFailureFn, requestedFlavor);
-         }, aFailureFn, "text/unicode");
+    await putAndVerify(function() { SpecialPowers.clipboardCopyString(preExpectedVal); },
+                       function(aData) { return aData  == preExpectedVal; },
+                       "text/unicode");
+
+    return await putAndVerify(aSetupFn, inputValidatorFn, requestedFlavor);
 }
+
 
 /**
  * Wait for a condition for a while (actually up to 3s here).
@@ -1082,7 +1075,7 @@ SimpleTest.executeSoon = function(aFunc) {
         return SpecialPowers.executeSoon(aFunc, window);
     }
     setTimeout(aFunc, 0);
-    return null;		// Avoid warning.
+    return null;   // Avoid warning.
 };
 
 SimpleTest.registerCleanupFunction = function(aFunc) {
