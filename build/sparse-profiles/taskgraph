@@ -30,9 +30,6 @@ path:try_task_config.json
 glob:**/moz.build
 glob:**/*.mozbuild
 
-# Moz.configure files could trigger changes
-glob:**/*.configure
-
 # Tooltool manifests also need to be opened. Assume they
 # are all somewhere in "tooltool-manifests" directories.
 glob:**/tooltool-manifests/**
