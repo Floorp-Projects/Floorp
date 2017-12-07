@@ -189,8 +189,9 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOw
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [mNativeMenuItem setSubmenu:mNativeMenu];
 
-  SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                    nsGkAtoms::_true, eCaseMatters));
+  SetEnabled(!mContent->IsElement() ||
+             !mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                                 nsGkAtoms::_true, eCaseMatters));
 
   // We call MenuConstruct here because keyboard commands are dependent upon
   // native menu items being created. If we only call MenuConstruct when a menu
@@ -512,19 +513,21 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
     return;
 
   nsAutoString menuitemName;
-  inMenuItemContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuitemName);
+  if (inMenuItemContent->IsElement()) {
+    inMenuItemContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuitemName);
+  }
 
   // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
 
   EMenuItemType itemType = eRegularMenuItemType;
   if (inMenuItemContent->IsXULElement(nsGkAtoms::menuseparator)) {
     itemType = eSeparatorMenuItemType;
-  }
-  else {
-    static nsIContent::AttrValuesArray strings[] =
+  } else if (inMenuItemContent->IsElement()) {
+    static Element::AttrValuesArray strings[] =
   {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nullptr};
-    switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
-                                               strings, eCaseMatters)) {
+    switch (inMenuItemContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
+                                                            nsGkAtoms::type,
+                                                            strings, eCaseMatters)) {
       case 0: itemType = eCheckboxMenuItemType; break;
       case 1: itemType = eRadioMenuItemType; break;
     }
@@ -673,9 +676,9 @@ NSMenuItem* nsMenuX::NativeMenuItem()
 bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent)
 {
   bool retval = false;
-  if (aMenuContent) {
+  if (aMenuContent && aMenuContent->IsElement()) {
     nsAutoString id;
-    aMenuContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
+    aMenuContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
     if (id.Equals(NS_LITERAL_STRING("helpMenu")))
       retval = true;
   }
@@ -698,8 +701,8 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
   nsMenuObjectTypeX parentType = mParent->MenuObjectType();
 
   if (aAttribute == nsGkAtoms::disabled) {
-    SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                      nsGkAtoms::_true, eCaseMatters));
+    SetEnabled(!mContent->AsElement()->AttrValueIs(
+      kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters));
   }
   else if (aAttribute == nsGkAtoms::label) {
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, mLabel);

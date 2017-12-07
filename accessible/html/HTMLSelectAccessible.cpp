@@ -42,7 +42,7 @@ uint64_t
 HTMLSelectListAccessible::NativeState()
 {
   uint64_t state = AccessibleWrap::NativeState();
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
     state |= states::MULTISELECTABLE | states::EXTSELECTABLE;
 
   return state;
@@ -60,14 +60,14 @@ HTMLSelectListAccessible::NativeRole()
 bool
 HTMLSelectListAccessible::SelectAll()
 {
-  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+  return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
     AccessibleWrap::SelectAll() : false;
 }
 
 bool
 HTMLSelectListAccessible::UnselectAll()
 {
-  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+  return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
     AccessibleWrap::UnselectAll() : false;
 }
 
@@ -152,7 +152,7 @@ HTMLSelectOptionAccessible::NativeName(nsString& aName)
 {
   // CASE #1 -- great majority of the cases
   // find the label attribute - this is what the W3C says we should use
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
   if (!aName.IsEmpty())
     return eNameOK;
 

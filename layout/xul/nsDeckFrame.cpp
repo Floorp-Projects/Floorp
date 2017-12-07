@@ -128,8 +128,8 @@ nsDeckFrame::GetSelectedIndex()
 
   // get the index attribute
   nsAutoString value;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::selectedIndex, value))
-  {
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                     nsGkAtoms::selectedIndex, value)) {
     nsresult error;
 
     // convert it to an integer

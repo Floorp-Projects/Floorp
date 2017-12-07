@@ -160,7 +160,7 @@ nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
                                               nsISupports** aResult)
 {
     nsCOMPtr<nsIRDFCompositeDataSource> compDB;
-    nsCOMPtr<nsIContent> root = do_QueryInterface(aRootNode);
+    nsCOMPtr<Element> root = do_QueryInterface(aRootNode);
     nsresult rv;
 
     *aResult = nullptr;
@@ -1110,7 +1110,9 @@ nsXULTemplateQueryProcessorRDF::ComputeContainmentProperties(nsIDOMNode* aRootNo
     nsCOMPtr<nsIContent> content = do_QueryInterface(aRootNode);
 
     nsAutoString containment;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::containment, containment);
+    if (content->IsElement()) {
+      content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::containment, containment);
+    }
 
     uint32_t len = containment.Length();
     uint32_t offset = 0;
@@ -1184,7 +1186,7 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
             // check for <content tag='tag'/> which indicates that matches
             // should only be generated for items inside content with that tag
             nsAutoString tagstr;
-            condition->GetAttr(kNameSpaceID_None, nsGkAtoms::tag, tagstr);
+            condition->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tag, tagstr);
 
             RefPtr<nsAtom> tag;
             if (! tagstr.IsEmpty()) {
@@ -1228,11 +1230,10 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsAtom* aTag,
 {
     nsresult rv = NS_OK;
 
-    if (aTag == nsGkAtoms::triple) {
-        rv = CompileTripleCondition(aQuery, aCondition, aParentNode, aResult);
-    }
-    else if (aTag == nsGkAtoms::member) {
-        rv = CompileMemberCondition(aQuery, aCondition, aParentNode, aResult);
+    if (aCondition->IsElement() && aTag == nsGkAtoms::triple) {
+        rv = CompileTripleCondition(aQuery, aCondition->AsElement(), aParentNode, aResult);
+    } else if (aCondition->IsElement() && aTag == nsGkAtoms::member) {
+        rv = CompileMemberCondition(aQuery, aCondition->AsElement(), aParentNode, aResult);
     }
     else if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Info)) {
         nsAutoString tagstr;
@@ -1279,7 +1280,7 @@ nsXULTemplateQueryProcessorRDF::ParseLiteral(const nsString& aParseType,
 
 nsresult
 nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
-                                                       nsIContent* aCondition,
+                                                       Element* aCondition,
                                                        TestNode* aParentNode,
                                                        TestNode** aResult)
 {
@@ -1381,7 +1382,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
 
 nsresult
 nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
-                                                       nsIContent* aCondition,
+                                                       Element* aCondition,
                                                        TestNode* aParentNode,
                                                        TestNode** aResult)
 {
@@ -1526,7 +1527,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
             nsRDFConInstanceTestNode::Test iscontainer =
                 nsRDFConInstanceTestNode::eDontCare;
 
-            static nsIContent::AttrValuesArray strings[] =
+            static Element::AttrValuesArray strings[] =
               {&nsGkAtoms::_true, &nsGkAtoms::_false, nullptr};
             switch (aQueryElement->FindAttrValueIn(kNameSpaceID_None,
                                                    nsGkAtoms::iscontainer,

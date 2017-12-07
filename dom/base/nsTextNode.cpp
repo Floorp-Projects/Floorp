@@ -88,7 +88,7 @@ private:
   // while we're bound to the document tree, and it points to an ancestor
   // so the ancestor must be bound to the document tree the whole time
   // and can't be deleted.
-  nsIContent* mGrandparent;
+  Element* mGrandparent;
   // What attribute we're showing
   int32_t mNameSpaceID;
   RefPtr<nsAtom> mAttrName;
@@ -249,7 +249,7 @@ nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(!mGrandparent, "We were already bound!");
-  mGrandparent = aParent->GetParent();
+  mGrandparent = aParent->GetParent()->AsElement();
   mGrandparent->AddMutationObserver(this);
 
   // Note that there is no need to notify here, since we have no
