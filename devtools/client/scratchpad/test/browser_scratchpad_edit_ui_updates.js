@@ -13,11 +13,11 @@ function test()
   waitForExplicitFinish();
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,test Edit menu updates Scratchpad - bug 699130");
+  content.location = "data:text/html,test Edit menu updates Scratchpad - bug 699130";
 }
 
 function runTests()

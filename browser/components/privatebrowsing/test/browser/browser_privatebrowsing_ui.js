@@ -14,7 +14,7 @@ function test() {
   let cmd;
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
-    BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(function() {
+    aWindow.gBrowser.selectedBrowser.addEventListener("load", function() {
       ok(aWindow.gPrivateBrowsingUI, "The gPrivateBrowsingUI object exists");
 
       pbMenuItem = aWindow.document.getElementById("menu_newPrivateWindow");
@@ -30,7 +30,7 @@ function test() {
         aIsPrivateMode + ")");
 
       aCallback();
-    });
+    }, {capture: true, once: true});
 
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }

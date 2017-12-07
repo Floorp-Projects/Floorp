@@ -168,7 +168,7 @@ add_task(async function test_datepicker_clicked() {
   });
 
   // eslint-disable-next-line mozilla/no-cpows-in-tests
-  Assert.equal(gBrowser.contentDocumentAsCPOW.querySelector("input").value, firstDayOnCalendar);
+  Assert.equal(content.document.querySelector("input").value, firstDayOnCalendar);
 
   await helper.tearDown();
 });

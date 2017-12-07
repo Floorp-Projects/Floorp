@@ -66,7 +66,7 @@ function testWebDevLimits() {
 function testWebDevLimits2() {
   // Fill the log with Web Developer errors.
   for (let i = 0; i < 11; i++) {
-    gBrowser.contentWindowAsCPOW.console.log("test message " + i);
+    content.console.log("test message " + i);
   }
 
   return waitForMessages({
@@ -91,7 +91,7 @@ function testJsLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.exception", 10);
 
   hud.jsterm.clearOutput();
-  gBrowser.contentWindowAsCPOW.console.log("testing JS limits");
+  content.console.log("testing JS limits");
 
   // Find the sentinel entry.
   return waitForMessages({
@@ -106,9 +106,9 @@ function testJsLimits() {
 
 function testJsLimits2() {
   // Fill the log with JS errors.
-  let head = gBrowser.contentDocumentAsCPOW.getElementsByTagName("head")[0];
+  let head = content.document.getElementsByTagName("head")[0];
   for (let i = 0; i < 11; i++) {
-    let script = gBrowser.contentDocumentAsCPOW.createElement("script");
+    let script = content.document.createElement("script");
     script.text = "fubar" + i + ".bogus(6);";
 
     if (!Services.appinfo.browserTabsRemoteAutostart) {
@@ -141,7 +141,7 @@ function testNetLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.network", 10);
 
   hud.jsterm.clearOutput();
-  gBrowser.contentWindowAsCPOW.console.log("testing Net limits");
+  content.console.log("testing Net limits");
 
   // Find the sentinel entry.
   return waitForMessages({
@@ -159,9 +159,9 @@ function testNetLimits() {
 
 function loadImage() {
   if (gCounter < 11) {
-    let body = gBrowser.contentDocumentAsCPOW.getElementsByTagName("body")[0];
+    let body = content.document.getElementsByTagName("body")[0];
     gImage && gImage.removeEventListener("load", loadImage, true);
-    gImage = gBrowser.contentDocumentAsCPOW.createElement("img");
+    gImage = content.document.createElement("img");
     gImage.src = "test-image.png?_fubar=" + gCounter;
     body.insertBefore(gImage, body.firstChild);
     gImage.addEventListener("load", loadImage, true);
@@ -194,7 +194,7 @@ function testCssLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", 10);
 
   hud.jsterm.clearOutput();
-  gBrowser.contentWindowAsCPOW.console.log("testing CSS limits");
+  content.console.log("testing CSS limits");
 
   // Find the sentinel entry.
   return waitForMessages({
@@ -209,9 +209,9 @@ function testCssLimits() {
 
 function testCssLimits2() {
   // Fill the log with CSS errors.
-  let body = gBrowser.contentDocumentAsCPOW.getElementsByTagName("body")[0];
+  let body = content.document.getElementsByTagName("body")[0];
   for (let i = 0; i < 11; i++) {
-    let div = gBrowser.contentDocumentAsCPOW.createElement("div");
+    let div = content.document.createElement("div");
     div.setAttribute("style", "-moz-foobar" + i + ": 42;");
     body.insertBefore(div, body.firstChild);
   }

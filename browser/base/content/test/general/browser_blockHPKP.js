@@ -49,7 +49,9 @@ function test() {
 function loadPinningPage() {
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kPinningDomain + kURLPath + "valid").then(function() {
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => successfulPinningPageListener.handleEvent());
+    gBrowser.selectedBrowser.addEventListener("load",
+                                               successfulPinningPageListener,
+                                               true);
   });
 }
 
@@ -57,6 +59,7 @@ function loadPinningPage() {
 // fail to validate
 var successfulPinningPageListener = {
   handleEvent() {
+    gBrowser.selectedBrowser.removeEventListener("load", this, true);
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
       return BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
     }).then(errorPageLoaded);

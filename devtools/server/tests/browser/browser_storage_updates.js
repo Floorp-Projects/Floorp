@@ -299,7 +299,7 @@ function* finishTests(client) {
 add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "storage-updates.html");
   // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let doc = browser.contentDocumentAsCPOW;
+  let doc = browser.contentDocument;
 
   initDebuggerServer();
 

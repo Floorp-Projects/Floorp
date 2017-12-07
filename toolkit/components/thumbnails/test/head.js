@@ -96,8 +96,7 @@ function next(aValue) {
  */
 function addTab(aURI, aCallback) {
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, aURI);
-  let callback = aCallback ? aCallback : next;
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(callback);
+  whenLoaded(tab.linkedBrowser, aCallback);
 }
 
 /**
@@ -106,7 +105,7 @@ function addTab(aURI, aCallback) {
  */
 function navigateTo(aURI) {
   let browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.browserLoaded(browser).then(next);
+  whenLoaded(browser);
   browser.loadURI(aURI);
 }
 

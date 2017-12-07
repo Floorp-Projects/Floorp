@@ -336,11 +336,11 @@ function test()
   PreferenceObserver.init();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(startTest);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,<p>test recent files in Scratchpad");
+  content.location = "data:text/html,<p>test recent files in Scratchpad";
 }
 
 function finishTest()

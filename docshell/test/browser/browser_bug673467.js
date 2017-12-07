@@ -19,35 +19,32 @@ var doc = "data:text/html,<html><body onload='load()'>" +
 function test() {
   waitForExplicitFinish();
 
-  let taskFinished;
+  let tab = BrowserTestUtils.addTab(gBrowser, doc);
+  let tabBrowser = tab.linkedBrowser;
 
-  let tab = BrowserTestUtils.addTab(gBrowser, doc, {}, (tab) => {
-    taskFinished = ContentTask.spawn(tab.linkedBrowser, null, () => {
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
+    return ContentTask.spawn(tab.linkedBrowser, null, () => {
       return new Promise(resolve => {
-        addEventListener("load", function() {
-          // The main page has loaded.  Now wait for the iframe to load.
-          let iframe = content.document.getElementById('iframe');
-          iframe.addEventListener('load', function listener(aEvent) {
+        // The main page has loaded.  Now wait for the iframe to load.
+        let iframe = content.document.getElementById('iframe');
+        iframe.addEventListener('load', function listener(aEvent) {
 
-            // Wait for the iframe to load the new document, not about:blank.
-            if (!iframe.src)
-              return;
+          // Wait for the iframe to load the new document, not about:blank.
+          if (!iframe.src)
+            return;
 
-            iframe.removeEventListener('load', listener, true);
-            let shistory = content
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
-                            .sessionHistory;
+          iframe.removeEventListener('load', listener, true);
+          let shistory = content
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .sessionHistory;
 
-            Assert.equal(shistory.count, 1, "shistory count should be 1.");
-            resolve();
-          }, true);
+          Assert.equal(shistory.count, 1, "shistory count should be 1.");
+          resolve();
         }, true);
       });
     });
-  });
-
-  taskFinished.then(() => {
+  }).then(() => {
     gBrowser.removeTab(tab);
     finish();
   });

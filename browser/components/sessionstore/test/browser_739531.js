@@ -13,13 +13,11 @@ function test() {
 
   let loadCount = 0;
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
-
-  let removeFunc;
-  removeFunc = BrowserTestUtils.addContentEventListener(tab.linkedBrowser, "load", function onLoad(aEvent) {
+  tab.linkedBrowser.addEventListener("load", function onLoad(aEvent) {
     // make sure both the page and the frame are loaded
     if (++loadCount < 2)
       return;
-    removeFunc();
+    tab.linkedBrowser.removeEventListener("load", onLoad, true);
 
     // executeSoon to allow the JS to execute on the page
     executeSoon(function() {

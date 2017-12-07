@@ -6,6 +6,6 @@ add_task(async function test_summary() {
     url: "resource://payments/paymentRequest.xhtml",
   }, async browser => {
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    ok(browser.contentDocumentAsCPOW.getElementById("cancel"), "Cancel button exists");
+    ok(browser.contentDocument.getElementById("cancel"), "Cancel button exists");
   });
 });

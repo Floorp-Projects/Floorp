@@ -7,7 +7,7 @@ function test() {
   ok(gIdentityHandler, "gIdentityHandler should exist");
 
   BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", true).then(() => {
-    BrowserTestUtils.addContentEventListener(gBrowser.selectedBrowser, "load", checkResult, true);
+    gBrowser.selectedBrowser.addEventListener("load", checkResult, true);
     nextTest();
   });
 }
@@ -79,6 +79,7 @@ function nextTest() {
     }
 
     if (gCurrentTestIndex == -1) {
+      gBrowser.selectedBrowser.removeEventListener("load", checkResult, true);
       gBrowser.removeCurrentTab();
       finish();
       return;
@@ -122,8 +123,8 @@ function nextTest() {
   }
 }
 
-function checkResult() {
-  if (gBrowser.selectedBrowser.currentURI.spec == "about:blank")
+function checkResult(event) {
+  if (event.target.URL == "about:blank")
     return;
 
   // Sanity check other values, and the value of gIdentityHandler.getEffectiveHost()

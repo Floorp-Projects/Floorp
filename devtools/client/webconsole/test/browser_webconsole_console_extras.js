@@ -37,7 +37,7 @@ function consoleOpened(hud) {
     finishTest();
   });
 
-  let button = gBrowser.contentDocumentAsCPOW.querySelector("button");
+  let button = content.document.querySelector("button");
   ok(button, "we have the button");
-  EventUtils.sendMouseEvent({ type: "click" }, button, gBrowser.contentWindowAsCPOW);
+  EventUtils.sendMouseEvent({ type: "click" }, button, content);
 }

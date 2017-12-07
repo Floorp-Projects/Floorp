@@ -111,7 +111,6 @@ var WebProgressListener = {
 
     return {
       contentWindow: content,
-      contentDocument: content.document,
       // DOMWindow is not necessarily the content-window with subframes.
       DOMWindow: domWindow,
       webProgress: aWebProgress,

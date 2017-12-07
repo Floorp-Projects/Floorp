@@ -30,7 +30,7 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  BrowserTestUtils.addContentEventListener(gTestBrowser, "PluginBindingAttached", pluginBindingAttached, true, null, true);
+  gTestBrowser.addEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
 
   let testRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
   await promiseTabLoadEvent(gBrowser.selectedTab, testRoot + "plugin_bug744745.html");

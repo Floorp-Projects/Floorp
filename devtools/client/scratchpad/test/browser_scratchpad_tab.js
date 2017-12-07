@@ -9,13 +9,13 @@ function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     Services.prefs.setIntPref("devtools.editor.tabsize", 5);
 
     openScratchpad(runTests);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,Scratchpad test for the Tab key, bug 660560");
+  content.location = "data:text/html,Scratchpad test for the Tab key, bug 660560";
 }
 
 function runTests() {

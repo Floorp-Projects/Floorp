@@ -66,8 +66,19 @@ function promiseStarState(aValue) {
 function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
   if (!aFinalURL)
     aFinalURL = aURL;
-
-  info("Wait for load tab event");
-  aTab.linkedBrowser.loadURI(aURL);
-  return BrowserTestUtils.browserLoaded(aTab.linkedBrowser, false, aFinalURL);
+  return new Promise(resolve => {
+    info("Wait for load tab event");
+    aTab.linkedBrowser.addEventListener("load", function load(event) {
+      if (event.originalTarget != aTab.linkedBrowser.contentDocument ||
+          event.target.location.href == "about:blank" ||
+          event.target.location.href != aFinalURL) {
+        info("skipping spurious load event");
+        return;
+      }
+      aTab.linkedBrowser.removeEventListener("load", load, true);
+      info("Tab load event received");
+      resolve();
+    }, true, true);
+    aTab.linkedBrowser.loadURI(aURL);
+  });
 }
