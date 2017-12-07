@@ -355,7 +355,7 @@ public class SearchEngineManager extends BroadcastReceiver {
     }
 
     public static synchronized void restoreDefaultSearchEngines(SharedPreferences sharedPreferences) {
-        sharedPreferences.edit().remove(PREF_KEY_HIDDEN_DEFAULT_ENGINES).commit();
+        sharedPreferences.edit().remove(PREF_KEY_HIDDEN_DEFAULT_ENGINES).apply();
     }
 
     private synchronized void invalidateSearchEngines() {
