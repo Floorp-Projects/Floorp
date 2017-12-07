@@ -62,7 +62,7 @@ function testMessages(hud) {
   Cu.nukeSandbox(sandbox);
 
   // Add a message from a content window.
-  gBrowser.contentWindowAsCPOW.console.log("bug587757b");
+  content.console.log("bug587757b");
 
   // Test eval.
   hud.jsterm.execute("document.location.href");

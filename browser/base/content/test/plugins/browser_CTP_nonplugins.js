@@ -31,7 +31,7 @@ add_task(async function() {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
   ok(popupNotification, "Test 1, Should have a click-to-play notification");
 
-  let pluginRemovedPromise = BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "PluginRemoved", true, null, true);
+  let pluginRemovedPromise = waitForEvent(gBrowser.selectedBrowser, "PluginRemoved", null, true, true);
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     let plugin = content.document.getElementById("secondtestA");
     plugin.remove();

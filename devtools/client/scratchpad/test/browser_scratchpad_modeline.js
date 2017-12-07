@@ -15,11 +15,11 @@ function test() {
 
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,<p>test file open and save in Scratchpad");
+  content.location = "data:text/html,<p>test file open and save in Scratchpad";
 }
 
 function runTests() {

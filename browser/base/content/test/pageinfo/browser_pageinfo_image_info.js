@@ -13,9 +13,9 @@ function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    var doc = gBrowser.contentDocumentAsCPOW;
+    var doc = gBrowser.contentDocument;
     var testImg = doc.getElementById("test-image");
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,
                                    "mediaTab", getImageInfo(testImg));
@@ -35,14 +35,14 @@ function test() {
         });
       });
     }, {capture: true, once: true});
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI(
+  content.location =
     "data:text/html," +
     "<style type='text/css'>%23test-image,%23not-test-image {background-image: url('about:logo?c');}</style>" +
     "<img src='about:logo?b' height=300 width=350 alt=2 id='not-test-image'>" +
     "<img src='about:logo?b' height=300 width=350 alt=2>" +
     "<img src='about:logo?a' height=200 width=250>" +
     "<img src='about:logo?b' height=200 width=250 alt=1>" +
-    "<img src='about:logo?b' height=100 width=150 alt=2 id='test-image'>");
+    "<img src='about:logo?b' height=100 width=150 alt=2 id='test-image'>";
 }

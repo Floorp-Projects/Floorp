@@ -40,59 +40,50 @@ requiredSize.innerWidth =
   (3 * (290 + 20)) + // 3 cols * (tile width + side margins)
   100; // breathing room
 
-add_task(async function setupWindowSize() {
-  let [oldSize, curWidth, curHeight] = await ContentTask.spawn(gBrowser.selectedBrowser, requiredSize, (requiredSizeArg) => {
-    var oldSizeVar = {};
-    Object.keys(requiredSizeArg).forEach(prop => {
-      info([prop, content[prop], requiredSizeArg[prop]]);
-      if (content[prop] < requiredSizeArg[prop]) {
-        oldSizeVar[prop] = content[prop];
-        info("Changing browser " + prop + " from " + oldSizeVar[prop] + " to " +
-             requiredSizeArg[prop]);
-        content[prop] = requiredSizeArg[prop];
-      }
-    });
-    return [oldSizeVar, content.outerWidth, content.outerHeight];
-  });
-
-  var screenHeight = {};
-  var screenWidth = {};
-  Cc["@mozilla.org/gfx/screenmanager;1"].
-    getService(Ci.nsIScreenManager).
-    primaryScreen.
-    GetAvailRectDisplayPix({}, {}, screenWidth, screenHeight);
-  screenHeight = screenHeight.value;
-  screenWidth = screenWidth.value;
-
-  if (screenHeight < curHeight) {
-    info("Warning: Browser outer height is now " +
-         curHeight + ", which is larger than the " +
-         "available screen height, " + screenHeight +
-         ". That may cause problems.");
+var oldSize = {};
+Object.keys(requiredSize).forEach(prop => {
+  info([prop, gBrowser.contentWindow[prop], requiredSize[prop]]);
+  if (gBrowser.contentWindow[prop] < requiredSize[prop]) {
+    oldSize[prop] = gBrowser.contentWindow[prop];
+    info("Changing browser " + prop + " from " + oldSize[prop] + " to " +
+         requiredSize[prop]);
+    gBrowser.contentWindow[prop] = requiredSize[prop];
   }
-
-  if (screenWidth < curWidth) {
-    info("Warning: Browser outer width is now " +
-         curWidth + ", which is larger than the " +
-         "available screen width, " + screenWidth +
-         ". That may cause problems.");
-  }
-
-  registerCleanupFunction(function() {
-    while (gWindow.gBrowser.tabs.length > 1)
-      gWindow.gBrowser.removeTab(gWindow.gBrowser.tabs[1]);
-
-    ContentTask.spawn(gBrowser.selectedBrowser, oldSize, (oldSizeArg) => {
-      Object.keys(oldSizeArg).forEach(prop => {
-        if (oldSizeArg[prop]) {
-          content[prop] = oldSizeArg[prop];
-        }
-      });
-    });
-  });
 });
 
+var screenHeight = {};
+var screenWidth = {};
+Cc["@mozilla.org/gfx/screenmanager;1"].
+  getService(Ci.nsIScreenManager).
+  primaryScreen.
+  GetAvailRectDisplayPix({}, {}, screenWidth, screenHeight);
+screenHeight = screenHeight.value;
+screenWidth = screenWidth.value;
+
+if (screenHeight < gBrowser.contentWindow.outerHeight) {
+  info("Warning: Browser outer height is now " +
+       gBrowser.contentWindow.outerHeight + ", which is larger than the " +
+       "available screen height, " + screenHeight +
+       ". That may cause problems.");
+}
+
+if (screenWidth < gBrowser.contentWindow.outerWidth) {
+  info("Warning: Browser outer width is now " +
+       gBrowser.contentWindow.outerWidth + ", which is larger than the " +
+       "available screen width, " + screenWidth +
+       ". That may cause problems.");
+}
+
 registerCleanupFunction(function() {
+  while (gWindow.gBrowser.tabs.length > 1)
+    gWindow.gBrowser.removeTab(gWindow.gBrowser.tabs[1]);
+
+  Object.keys(oldSize).forEach(prop => {
+    if (oldSize[prop]) {
+      gBrowser.contentWindow[prop] = oldSize[prop];
+    }
+  });
+
   Services.prefs.clearUserPref(PREF_NEWTAB_ENABLED);
   Services.prefs.clearUserPref(PREF_NEWTAB_ACTIVITY_STREAM);
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gOrigDirectorySource);

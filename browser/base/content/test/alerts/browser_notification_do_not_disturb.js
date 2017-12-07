@@ -35,11 +35,12 @@ function test() {
   addNotificationPermission(notificationURL).then(function openTab() {
     tab = BrowserTestUtils.addTab(gBrowser, notificationURL);
     gBrowser.selectedTab = tab;
-    BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => onLoad());
+    tab.linkedBrowser.addEventListener("load", onLoad, true);
   });
 }
 
 function onLoad() {
+  tab.linkedBrowser.removeEventListener("load", onLoad, true);
   openNotification(tab.linkedBrowser, "showNotification2").then(onAlertShowing);
 }
 
