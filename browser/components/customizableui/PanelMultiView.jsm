@@ -495,10 +495,13 @@ this.PanelMultiView = class {
       }
 
       viewNode.panelMultiView = this.node;
-      this._setHeader(viewNode, viewNode.getAttribute("title") ||
-                                (aAnchor && aAnchor.getAttribute("label")));
 
       let reverse = !!aPreviousView;
+      if (!reverse) {
+        this._setHeader(viewNode, viewNode.getAttribute("title") ||
+                                  (aAnchor && aAnchor.getAttribute("label")));
+      }
+
       let previousViewNode = aPreviousView || this._currentSubView;
       // If the panelview to show is the same as the previous one, the 'ViewShowing'
       // event has already been dispatched. Don't do it twice.

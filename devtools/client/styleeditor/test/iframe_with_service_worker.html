@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+Iframe loading a stylesheet via a service worker
+<script>
+"use strict";
+
+function waitForActive(swr) {
+  let sw = swr.installing || swr.waiting || swr.active;
+  return new Promise(resolve => {
+    if (sw.state === "activated") {
+      resolve(swr);
+      return;
+    }
+    sw.addEventListener("statechange", function onStateChange(evt) {
+      if (sw.state === "activated") {
+        sw.removeEventListener("statechange", onStateChange);
+        resolve(swr);
+      }
+    });
+  });
+}
+
+navigator.serviceWorker.register("iframe_service_worker.js", {scope: "."})
+  .then(registration => waitForActive(registration))
+  .then(() => {
+    let link = document.createElement("link");
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute("type", "text/css");
+    link.setAttribute("href", "sheet.css");
+    document.documentElement.appendChild(link);
+  });
+</script>

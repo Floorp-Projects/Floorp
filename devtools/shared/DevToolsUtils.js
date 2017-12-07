@@ -589,7 +589,18 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
       // the input unmodified. Essentially we try to decode the data as UTF-8
       // and if that fails, we use the locale specific default encoding. This is
       // the best we can do if the source does not provide charset info.
-      let charset = bomCharset || channel.contentCharset || aOptions.charset || "UTF-8";
+      let charset = bomCharset;
+      if (!charset) {
+        try {
+          charset = channel.contentCharset;
+        } catch (e) {
+          // Accessing `contentCharset` on content served by a service worker in
+          // non-e10s may throw.
+        }
+      }
+      if (!charset) {
+        charset = aOptions.charset || "UTF-8";
+      }
       let unicodeSource = NetworkHelper.convertToUnicode(source, charset);
 
       deferred.resolve({

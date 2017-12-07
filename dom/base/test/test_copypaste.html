@@ -6,6 +6,7 @@
   <title>Test for copy/paste</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="copypaste.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -18,7 +19,11 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(() => testCopyPaste(false));
+addLoadEvent(() => {
+  add_task(async function test_copyhtml() {
+    await testCopyPaste(false);
+  });
+});
 
 </script>
 </pre>
