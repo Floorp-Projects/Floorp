@@ -22,3 +22,6 @@ LOCAL_INCLUDES += [
     '/widget',
     '/widget/android',
 ]
+
+if CONFIG['MOZ_NATIVE_DEVICES']:
+    DEFINES['MOZ_NATIVE_DEVICES'] = True
