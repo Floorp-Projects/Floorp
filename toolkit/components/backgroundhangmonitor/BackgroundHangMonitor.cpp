@@ -26,6 +26,10 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "GeckoProfiler.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "mozilla/TimeStamp.h"
+#include "ProfilerMarkerPayload.h"
+#endif
 #include "nsNetCID.h"
 #include "HangDetails.h"
 
@@ -214,7 +218,7 @@ public:
 
   // Report a hang; aManager->mLock IS locked. The hang will be processed
   // off-main-thread, and will then be submitted back.
-  void ReportHang(PRIntervalTime aHangTime);
+  void ReportHang(PRIntervalTime aHangTime, TimeStamp aHangEndTime);
   // Report a permanent hang; aManager->mLock IS locked
   void ReportPermaHang();
   // Called by BackgroundHangMonitor::NotifyActivity
@@ -386,7 +390,7 @@ BackgroundHangManager::RunMonitorThread()
       } else {
         if (MOZ_LIKELY(interval != currentThread->mHangStart)) {
           // A hang ended
-          currentThread->ReportHang(intervalNow - currentThread->mHangStart);
+          currentThread->ReportHang(intervalNow - currentThread->mHangStart, TimeStamp::Now());
           currentThread->mHanging = false;
         }
       }
@@ -464,12 +468,13 @@ BackgroundHangThread::~BackgroundHangThread()
 }
 
 void
-BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
+BackgroundHangThread::ReportHang(PRIntervalTime aHangTime, TimeStamp aHangEndTime)
 {
   // Recovered from a hang; called on the monitor thread
   // mManager->mLock IS locked
 
   HangDetails hangDetails(aHangTime,
+                          aHangEndTime,
                           XRE_GetProcessType(),
                           mThreadName,
                           mRunnableName,
@@ -501,7 +506,7 @@ BackgroundHangThread::ReportPermaHang()
   //
   // We currently don't look at hang reports outside of nightly, and already
   // collect native stacks eagerly on nightly, so this should be OK.
-  ReportHang(mMaxTimeout);
+  ReportHang(mMaxTimeout, TimeStamp::Now());
 }
 
 MOZ_ALWAYS_INLINE void

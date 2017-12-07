@@ -250,4 +250,16 @@ private:
   JS::UniqueChars mTimingData;
 };
 
+class HangMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  HangMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                    const mozilla::TimeStamp& aEndTime)
+   : ProfilerMarkerPayload(aStartTime, aEndTime)
+  {}
+
+  DECL_STREAM_PAYLOAD
+private:
+};
+
 #endif // ProfilerMarkerPayload_h
