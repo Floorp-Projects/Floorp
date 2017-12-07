@@ -470,7 +470,6 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   mSharedInfo->mResources.AppendElement(this);
 
   mIsLiveStream = cl < 0;
-  MOZ_ASSERT(GetOffset() == 0, "Who set offset already?");
   mListener = new Listener(this, 0, ++mLoadID);
   *aStreamListener = mListener;
   NS_ADDREF(*aStreamListener);
@@ -841,12 +840,9 @@ ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
   // Don't create a new channel if we are still suspended. The channel will
   // be recreated when we are resumed.
   if (mSuspendAgent.IsSuspended()) {
-    // Store the offset so we know where to seek when resumed.
-    mPendingSeekOffset = aOffset;
     return NS_OK;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(mPendingSeekOffset == -1);
   nsresult rv = RecreateChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -945,12 +941,6 @@ int64_t
 ChannelMediaResource::GetLength()
 {
   return mCacheStream.GetLength();
-}
-
-int64_t
-ChannelMediaResource::GetOffset() const
-{
-  return mCacheStream.GetOffset();
 }
 
 nsCString

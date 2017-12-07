@@ -2429,14 +2429,6 @@ MediaCacheStream::GetLength()
 }
 
 int64_t
-MediaCacheStream::GetOffset() const
-{
-  // TODO: Assert non-main thread.
-  AutoLock lock(mMediaCache->Monitor());
-  return mChannelOffset;
-}
-
-int64_t
 MediaCacheStream::GetNextCachedData(int64_t aOffset)
 {
   MOZ_ASSERT(!NS_IsMainThread());
