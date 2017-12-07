@@ -16,7 +16,6 @@ extern crate nsstring;
 extern crate nserror;
 
 use std::slice;
-use std::cmp::Ordering;
 use encoding_rs::*;
 use nsstring::*;
 use nserror::*;
@@ -51,113 +50,6 @@ macro_rules! try_dst_set_len {
         }
     }
      )
-}
-
-static ENCODINGS_SORTED_BY_NAME: [&'static Encoding; 39] = [&GBK_INIT,
-                                                            &BIG5_INIT,
-                                                            &IBM866_INIT,
-                                                            &EUC_JP_INIT,
-                                                            &KOI8_R_INIT,
-                                                            &EUC_KR_INIT,
-                                                            &KOI8_U_INIT,
-                                                            &GB18030_INIT,
-                                                            &UTF_16BE_INIT,
-                                                            &UTF_16LE_INIT,
-                                                            &SHIFT_JIS_INIT,
-                                                            &MACINTOSH_INIT,
-                                                            &ISO_8859_2_INIT,
-                                                            &ISO_8859_3_INIT,
-                                                            &ISO_8859_4_INIT,
-                                                            &ISO_8859_5_INIT,
-                                                            &ISO_8859_6_INIT,
-                                                            &ISO_8859_7_INIT,
-                                                            &ISO_8859_8_INIT,
-                                                            &ISO_8859_10_INIT,
-                                                            &ISO_8859_13_INIT,
-                                                            &ISO_8859_14_INIT,
-                                                            &WINDOWS_874_INIT,
-                                                            &ISO_8859_15_INIT,
-                                                            &ISO_8859_16_INIT,
-                                                            &ISO_2022_JP_INIT,
-                                                            &REPLACEMENT_INIT,
-                                                            &WINDOWS_1250_INIT,
-                                                            &WINDOWS_1251_INIT,
-                                                            &WINDOWS_1252_INIT,
-                                                            &WINDOWS_1253_INIT,
-                                                            &WINDOWS_1254_INIT,
-                                                            &WINDOWS_1255_INIT,
-                                                            &WINDOWS_1256_INIT,
-                                                            &WINDOWS_1257_INIT,
-                                                            &WINDOWS_1258_INIT,
-                                                            &ISO_8859_8_I_INIT,
-                                                            &X_MAC_CYRILLIC_INIT,
-                                                            &X_USER_DEFINED_INIT];
-
-/// If the argument matches exactly (case-sensitively; no whitespace
-/// removal performed) the name of an encoding, returns
-/// `const Encoding*` representing that encoding. Otherwise panics.
-///
-/// The motivating use case for this function is interoperability with
-/// legacy Gecko code that represents encodings as name string instead of
-/// type-safe `Encoding` objects. Using this function for other purposes is
-/// most likely the wrong thing to do.
-///
-/// `name` must be non-`NULL` even if `name_len` is zero. When `name_len`
-/// is zero, it is OK for `name` to be something non-dereferencable,
-/// such as `0x1`. This is required due to Rust's optimization for slices
-/// within `Option`.
-///
-/// # Panics
-///
-/// Panics if the argument is not the name of an encoding.
-///
-/// # Undefined behavior
-///
-/// UB ensues if `name` and `name_len` don't designate a valid memory block
-/// of if `name` is `NULL`.
-#[no_mangle]
-pub unsafe extern "C" fn mozilla_encoding_for_name(name: *const u8, name_len: usize) -> *const Encoding {
-    let name_slice = ::std::slice::from_raw_parts(name, name_len);
-    encoding_for_name(name_slice)
-}
-
-/// If the argument matches exactly (case-sensitively; no whitespace
-/// removal performed) the name of an encoding, returns
-/// `&'static Encoding` representing that encoding. Otherwise panics.
-///
-/// The motivating use case for this method is interoperability with
-/// legacy Gecko code that represents encodings as name string instead of
-/// type-safe `Encoding` objects. Using this method for other purposes is
-/// most likely the wrong thing to do.
-///
-/// Available via the C wrapper.
-///
-/// # Panics
-///
-/// Panics if the argument is not the name of an encoding.
-#[cfg_attr(feature = "cargo-clippy", allow(match_wild_err_arm))]
-pub fn encoding_for_name(name: &[u8]) -> &'static Encoding {
-    // The length of `"UTF-8"` is unique, so it's easy to check the most
-    // common case first.
-    if name.len() == 5 {
-        assert_eq!(name, b"UTF-8", "Bogus encoding name");
-        return UTF_8;
-    }
-    match ENCODINGS_SORTED_BY_NAME.binary_search_by(
-        |probe| {
-            let bytes = probe.name().as_bytes();
-            let c = bytes.len().cmp(&name.len());
-            if c != Ordering::Equal {
-                return c;
-            }
-            let probe_iter = bytes.iter().rev();
-            let candidate_iter = name.iter().rev();
-            probe_iter.cmp(candidate_iter)
-        }
-    ) {
-        Ok(i) => ENCODINGS_SORTED_BY_NAME[i],
-        Err(_) => panic!("Bogus encoding name"),
-    }
 }
 
 #[no_mangle]
