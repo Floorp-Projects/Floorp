@@ -1,0 +1,4 @@
+%include build/sparse-profiles/mach
+
+[include]
+path:build/upload_generated_sources.py
