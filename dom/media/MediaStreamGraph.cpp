@@ -73,31 +73,6 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl()
 }
 
 void
-MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
-{
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
-  if (aStream->mFinished)
-    return;
-  LOG(LogLevel::Debug, ("MediaStream %p will finish", aStream));
-#ifdef DEBUG
-  for (StreamTracks::TrackIter track(aStream->mTracks);
-         !track.IsEnded(); track.Next()) {
-    if (!track->IsEnded()) {
-      LOG(LogLevel::Error,
-          ("MediaStream %p will finish, but track %d has not ended.",
-           aStream,
-           track->GetID()));
-      NS_ASSERTION(false, "Finished stream cannot contain live track");
-    }
-  }
-#endif
-  aStream->mFinished = true;
-  aStream->mTracks.AdvanceKnownTracksTime(STREAM_TIME_MAX);
-
-  SetStreamOrderDirty();
-}
-
-void
 MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream)
 {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
@@ -170,18 +145,6 @@ MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
        mStreams.Length()));
 
   NS_RELEASE(aStream); // probably destroying it
-}
-
-void
-MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
-                                          GraphTime aDesiredUpToTime,
-                                          bool* aEnsureNextIteration)
-{
-  MOZ_ASSERT(OnGraphThread());
-
-  if (aStream->ExtractPendingInput(aDesiredUpToTime, aEnsureNextIteration)) {
-    FinishStream(aStream);
-  }
 }
 
 StreamTime
@@ -1188,7 +1151,7 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
   // Grab pending stream input and compute blocking time
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
-      ExtractPendingInput(is, aEndBlockingDecisions, &ensureNextIteration);
+      is->ExtractPendingInput(aEndBlockingDecisions, &ensureNextIteration);
     }
 
     if (stream->mFinished) {
@@ -1962,7 +1925,27 @@ MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime) const
 void
 MediaStream::FinishOnGraphThread()
 {
-  GraphImpl()->FinishStream(this);
+  if (mFinished) {
+    return;
+  }
+  LOG(LogLevel::Debug, ("MediaStream %p will finish", this));
+#ifdef DEBUG
+  for (StreamTracks::TrackIter track(mTracks); !track.IsEnded(); track.Next()) {
+    if (!track->IsEnded()) {
+      LOG(LogLevel::Error,
+          ("MediaStream %p will finish, but track %d has not ended.",
+           this,
+           track->GetID()));
+      NS_ASSERTION(false, "Finished stream cannot contain live track");
+    }
+  }
+#endif
+  mFinished = true;
+  mTracks.AdvanceKnownTracksTime(STREAM_TIME_MAX);
+
+  // Let the MSG knows that this stream can be destroyed if necessary to avoid
+  // unnecessarily processing it in the future.
+  GraphImpl()->SetStreamOrderDirty();
 }
 
 StreamTracks::Track*
@@ -2710,7 +2693,7 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
   }
 }
 
-bool
+void
 SourceMediaStream::ExtractPendingInput(StreamTime aDesiredUpToTime,
                                        bool* aEnsureNextIteration)
 {
@@ -2871,7 +2854,9 @@ SourceMediaStream::ExtractPendingInput(StreamTime aDesiredUpToTime,
     mHasCurrentData = true;
   }
 
-  return finished;
+  if (finished) {
+    FinishOnGraphThread();
+  }
 }
 
 void
@@ -3487,7 +3472,7 @@ ProcessedMediaStream::QueueFinish()
       : ControlMessage(aStream) {}
     void Run() override
     {
-      mStream->GraphImpl()->FinishStream(mStream);
+      mStream->FinishOnGraphThread();
     }
   };
   GraphImpl()->AppendMessage(MakeUnique<Message>(this));
