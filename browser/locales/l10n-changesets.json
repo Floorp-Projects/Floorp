@@ -642,7 +642,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "6fcf594e7253"
+        "revision": "27c8dd4c6e41"
     }, 
     "hsb": {
         "platforms": [
@@ -782,7 +782,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "c231bfbbe3bb"
+        "revision": "736191672de3"
     }, 
     "kk": {
         "platforms": [
