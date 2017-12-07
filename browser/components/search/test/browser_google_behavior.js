@@ -21,56 +21,37 @@ const SEARCH_ENGINE_DETAILS = [{
   name: "Google",
 }];
 
-async function promiseStateChangeURI() {
-  let promise = BrowserTestUtils.waitForMessage(gBrowser.selectedBrowser.messageManager, "test:onStateChange");
-
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    const Ci = Components.interfaces;
-
+function promiseStateChangeURI() {
+  return new Promise(resolve => {
     let listener = {
       onStateChange: function onStateChange(webProgress, req, flags, status) {
         info("onStateChange");
         // Only care about top-level document starts
         let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
                        Ci.nsIWebProgressListener.STATE_START;
-        if ((flags & docStart) != docStart || !webProgress.isTopLevel) {
+        if (!(flags & docStart) || !webProgress.isTopLevel)
           return;
-        }
-
-        Assert.ok(req instanceof Ci.nsIChannel, "req is a channel");
 
         let spec = req.originalURI.spec;
         if (spec == "about:blank")
           return;
 
-        webProgress.removeProgressListener(listener);
+        gBrowser.removeProgressListener(listener);
 
         info("received document start");
 
+        Assert.ok(req instanceof Ci.nsIChannel, "req is a channel");
+
         req.cancel(Components.results.NS_ERROR_FAILURE);
 
-        sendAsyncMessage("test:onStateChange", req.originalURI.spec);
-      },
-
-      QueryInterface: function QueryInterface(aIID) {
-        if (aIID.equals(Ci.nsIWebProgressListener) ||
-            aIID.equals(Ci.nsIWebProgressListener2) ||
-            aIID.equals(Ci.nsISupportsWeakReference) ||
-            aIID.equals(Ci.nsISupports)) {
-          return this;
-        }
-
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        executeSoon(() => {
+          resolve(spec);
+        });
       }
     };
 
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(listener,
-                                    Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+    gBrowser.addProgressListener(listener);
   });
-
-  return [promise];
 }
 
 function promiseContentSearchReady(browser) {
@@ -191,7 +172,7 @@ async function testSearchEngine(engineDetails) {
       await test.preTest(tab);
     }
 
-    let [stateChangePromise] = await promiseStateChangeURI();
+    let stateChangePromise = promiseStateChangeURI();
 
     await test.run(tab);
 

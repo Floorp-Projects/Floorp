@@ -70,7 +70,9 @@ function listenToTabLoad() {
   return new Promise((resolve) => {
     gBrowser.tabContainer.addEventListener("TabOpen", function (evt) {
       let newTab = evt.target;
-      BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(() => resolve(newTab));
+      newTab.linkedBrowser.addEventListener("load", function () {
+        resolve(newTab);
+      }, {capture: true, once: true});
     }, {capture: true, once: true});
   });
 }

@@ -13,20 +13,16 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("offline-apps.allow_by_default");
 });
 
+var cacheCount = 0;
+var intervalID = 0;
+
 //
 // Handle "message" events which are posted from the iframe upon
 // offline cache events.
 //
-function contentTask() {
-  let resolve;
-  let promise = new Promise(r => { resolve = r; });
-
-  var cacheCount = 0;
-  var intervalID = 0;
-
-  function handleMessageEvents(event) {
-    cacheCount++;
-    switch (cacheCount) {
+function handleMessageEvents(event) {
+  cacheCount++;
+  switch (cacheCount) {
     case 1:
       // This is the initial caching off offline data.
       is(event.data, "oncache", "Child was successfully cached.");
@@ -58,16 +54,12 @@ function contentTask() {
     case 2:
       is(event.data, "onupdate", "Child was successfully updated.");
       clearInterval(intervalID);
-      resolve();
+      finish();
       break;
     default:
       // how'd we get here?
       ok(false, "cacheCount not 1 or 2");
-    }
   }
-
-  content.addEventListener("message", handleMessageEvents);
-  return promise;
 }
 
 function test() {
@@ -80,6 +72,9 @@ function test() {
   registerCleanupFunction(() => gBrowser.removeCurrentTab());
 
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    ContentTask.spawn(gBrowser.selectedBrowser, null, contentTask).then(finish);
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    let window = gBrowser.selectedBrowser.contentWindow;
+
+    window.addEventListener("message", handleMessageEvents);
   });
 }

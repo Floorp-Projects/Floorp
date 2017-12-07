@@ -12,11 +12,11 @@ function test()
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,Scratchpad test for bug 646070 - chrome context preference");
+  content.location = "data:text/html,Scratchpad test for bug 646070 - chrome context preference";
 }
 
 function runTests()

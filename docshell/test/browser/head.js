@@ -51,7 +51,9 @@ function timelineTestOpenUrl(url) {
     let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
     let linkedBrowser = tab.linkedBrowser;
 
-    BrowserTestUtils.browserLoaded(linkedBrowser).then(() => resolve(tab));
+    linkedBrowser.addEventListener("load", function() {
+      resolve(tab);
+    }, {capture: true, once: true});
   });
 
   return Promise.all([tabSwitchPromise, loadPromise]).then(([_, tab]) => tab);

@@ -8,11 +8,11 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(testFalsy);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,<p>test falsy display() values in Scratchpad");
+  content.location = "data:text/html,<p>test falsy display() values in Scratchpad";
 }
 
 function testFalsy()

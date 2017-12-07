@@ -17,7 +17,7 @@ function test() {
 }
 
 function consoleOpened(hud) {
-  let doc = gBrowser.contentWindowAsCPOW.wrappedJSObject.document;
+  let doc = content.wrappedJSObject.document;
   getterValue = doc.foobar._val;
   hud.jsterm.execute("console.dir(document)");
 
@@ -26,7 +26,7 @@ function consoleOpened(hud) {
 }
 
 function onViewOpened(hud, event, view) {
-  let doc = gBrowser.contentWindowAsCPOW.wrappedJSObject.document;
+  let doc = content.wrappedJSObject.document;
 
   findVariableViewProperties(view, [
     { name: /^(width|height)$/, dontMatch: 1 },

@@ -103,7 +103,7 @@ function get_cache_for_private_window() {
       win.gBrowser.selectedTab = tab;
       let newTabBrowser = win.gBrowser.getBrowserForTab(tab);
 
-      BrowserTestUtils.browserLoaded(newTabBrowser).then(function() {
+      newTabBrowser.addEventListener("load", function() {
         executeSoon(function() {
 
           getStorageEntryCount("private", function(nrEntriesP) {
@@ -119,7 +119,7 @@ function get_cache_for_private_window() {
             });
           });
         });
-      });
+      }, {capture: true, once: true});
     });
   });
 }

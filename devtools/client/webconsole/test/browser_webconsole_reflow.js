@@ -14,8 +14,8 @@ add_task(function* () {
   let hud = yield openConsole();
 
   function onReflowListenersReady() {
-    browser.contentDocumentAsCPOW.body.style.display = "none";
-    browser.contentDocumentAsCPOW.body.clientTop;
+    browser.contentDocument.body.style.display = "none";
+    browser.contentDocument.body.clientTop;
   }
 
   Services.prefs.setBoolPref("devtools.webconsole.filter.csslog", true);

@@ -19,10 +19,12 @@ function tab1Loaded() {
 function win2Loaded() {
   tab2 = win2.gBrowser.addTab(TEST_URI);
   win2.gBrowser.selectedTab = tab2;
-  BrowserTestUtils.browserLoaded(tab2.linkedBrowser).then(tab2Loaded);
+  tab2.linkedBrowser.addEventListener("load", tab2Loaded, true);
 }
 
 function tab2Loaded(aEvent) {
+  tab2.linkedBrowser.removeEventListener(aEvent.type, tab2Loaded, true);
+
   let consolesOpened = 0;
   function onWebConsoleOpen() {
     consolesOpened++;

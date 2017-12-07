@@ -116,10 +116,13 @@ function promiseTestPageLoad(url) {
   return new Promise(resolve => {
     let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
     let browser = gBrowser.selectedBrowser;
-    BrowserTestUtils.browserLoaded(browser, false, (loadurl) => loadurl != "about:blank").then(() => {
+    browser.addEventListener("load", function listener() {
+      if (browser.currentURI.spec == "about:blank")
+        return;
       info("Page loaded: " + browser.currentURI.spec);
+      browser.removeEventListener("load", listener, true);
       resolve(tab);
-    });
+    }, true);
   });
 }
 

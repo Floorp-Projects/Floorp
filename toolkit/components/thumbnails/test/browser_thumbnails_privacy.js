@@ -62,7 +62,7 @@ function testCombination(combi, url, aCombinations, aResult) {
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
 
-  BrowserTestUtils.browserLoaded(browser).then(() => {
+  whenLoaded(browser, () => {
     let msg = JSON.stringify(combi) + " == " + aResult;
     PageThumbs.shouldStoreThumbnail(browser, (aIsSafeSite) => {
       is(aIsSafeSite, aResult, msg);
