@@ -64,8 +64,8 @@ class DllServices : public detail::DllServicesBase
 public:
   virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override final
   {
-    nsDependentString strDllName(aDllName->Buffer,
-                                 aDllName->Length / sizeof(wchar_t));
+    nsDependentSubstring strDllName(aDllName->Buffer,
+                                    aDllName->Length / sizeof(wchar_t));
 
     nsCOMPtr<nsIRunnable> runnable(
       NewRunnableMethod<bool, nsString>("DllServices::NotifyDllLoad",
