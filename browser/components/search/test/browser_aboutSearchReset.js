@@ -65,7 +65,7 @@ var gTests = [
 
     let loadPromise = promiseStoppedLoad(expectedURL);
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    gBrowser.contentDocumentAsCPOW.getElementById("searchResetKeepCurrent").click();
+    gBrowser.contentDocument.getElementById("searchResetKeepCurrent").click();
     await loadPromise;
 
     is(engine, Services.search.currentEngine,
@@ -84,7 +84,7 @@ var gTests = [
     let currentEngine = Services.search.currentEngine;
     let originalEngine = Services.search.originalDefaultEngine;
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    let doc = gBrowser.contentDocumentAsCPOW;
+    let doc = gBrowser.contentDocument;
     let defaultEngineSpan = doc.getElementById("defaultEngine");
     is(defaultEngineSpan.textContent, originalEngine.name,
        "the name of the original default engine is displayed");
@@ -117,7 +117,7 @@ var gTests = [
                                                      false,
                                                      "about:preferences#search");
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    gBrowser.contentDocumentAsCPOW.getElementById("linkSettingsPage").click();
+    gBrowser.contentDocument.getElementById("linkSettingsPage").click();
     await loadPromise;
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.OPENED_SETTINGS);

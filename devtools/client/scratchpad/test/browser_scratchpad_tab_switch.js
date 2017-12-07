@@ -12,16 +12,16 @@ function test()
 
   tab1 = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab1;
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     tab2 = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab2;
-    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+    gBrowser.selectedBrowser.addEventListener("load", function () {
       openScratchpad(runTests);
-    });
-    gBrowser.loadURI("data:text/html,test context switch in Scratchpad tab 2");
-  });
+    }, {capture: true, once: true});
+    content.location = "data:text/html,test context switch in Scratchpad tab 2";
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html,test context switch in Scratchpad tab 1");
+  content.location = "data:text/html,test context switch in Scratchpad tab 1";
 }
 
 function runTests()
@@ -52,11 +52,11 @@ function runTests()
 
   sp.setText("window.foosbug653108 = 'aloha';");
 
-  ok(!gBrowser.contentWindowAsCPOW.wrappedJSObject.foosbug653108,
+  ok(!content.wrappedJSObject.foosbug653108,
      "no content.foosbug653108");
 
   sp.run().then(function () {
-    is(gBrowser.contentWindowAsCPOW.wrappedJSObject.foosbug653108, "aloha",
+    is(content.wrappedJSObject.foosbug653108, "aloha",
        "content.foosbug653108 has been set");
 
     gBrowser.tabContainer.addEventListener("TabSelect", runTests2, true);
@@ -75,16 +75,17 @@ function runTests2() {
 
     sp.setText("window.foosbug653108 = 'ahoyhoy';");
     sp.run().then(function () {
-      is(gBrowser.contentWindowAsCPOW.wrappedJSObject.foosbug653108, "ahoyhoy",
+      is(content.wrappedJSObject.foosbug653108, "ahoyhoy",
          "content.foosbug653108 has been set 2");
 
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(runTests3);
-      gBrowser.loadURI("data:text/html,test context switch in Scratchpad location 2");
+      gBrowser.selectedBrowser.addEventListener("load", runTests3, true);
+      content.location = "data:text/html,test context switch in Scratchpad location 2";
     });
   });
 }
 
 function runTests3() {
+  gBrowser.selectedBrowser.removeEventListener("load", runTests3, true);
   // Check that the sandbox is not cached.
 
   sp.setText("typeof foosbug653108;");

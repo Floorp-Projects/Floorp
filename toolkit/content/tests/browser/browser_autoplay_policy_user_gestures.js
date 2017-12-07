@@ -20,8 +20,7 @@ function setup_test_preference() {
 }
 
 function simulateUserGesture(gesture, targetBrowser) {
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let targetElement = targetBrowser.contentDocumentAsCPOW.documentElement;
+  let targetElement = targetBrowser.contentDocument.documentElement;
   info(`- simulate ${gesture.type} event -`);
   switch (gesture.type) {
     case UserGestures.MOUSE_CLICK:
@@ -43,8 +42,7 @@ async function test_play_without_user_gesture() {
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
   info("- create autoplay video -");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let document = tab.linkedBrowser.contentDocumentAsCPOW;
+  let document = tab.linkedBrowser.contentDocument;
   let video = document.createElement("video");
   video.src = FILE;
   video.autoplay = true;
@@ -69,8 +67,7 @@ async function test_play_with_user_gesture(gesture) {
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
   info("- create autoplay video -");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let document = tab.linkedBrowser.contentDocumentAsCPOW;
+  let document = tab.linkedBrowser.contentDocument;
   let video = document.createElement("video");
   video.src = FILE;
   document.body.appendChild(video);

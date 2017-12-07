@@ -20,8 +20,8 @@ add_task(function* () {
                    .getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), false, "cmd_copy is disabled");
 
-  gBrowser.contentWindowAsCPOW.console.log("Hello world! bug916997a");
-  gBrowser.contentWindowAsCPOW.console.log("Hello world 2! bug916997b");
+  content.console.log("Hello world! bug916997a");
+  content.console.log("Hello world 2! bug916997b");
 
   yield waitForMessages({
     webconsole: hud,

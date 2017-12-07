@@ -8,12 +8,12 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests, {"state":{"text":""}});
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html, test that exceptions are output as " +
-                   "comments correctly in Scratchpad");
+  content.location = "data:text/html, test that exceptions are output as " +
+      "comments correctly in Scratchpad";
 }
 
 function runTests()

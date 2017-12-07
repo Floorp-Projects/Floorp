@@ -24,7 +24,7 @@ function test()
   testRestoreFromFileUnsaved();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.loadURI("data:text/html,<p>test star* UI for unsaved file changes");
+  content.location = "data:text/html,<p>test star* UI for unsaved file changes";
 }
 
 function testListeners()

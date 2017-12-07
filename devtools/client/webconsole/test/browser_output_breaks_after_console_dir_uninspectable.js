@@ -34,7 +34,7 @@ add_task(function* () {
     }],
   });
 
-  gBrowser.contentWindowAsCPOW.console.log("fooBug773466b");
+  content.console.log("fooBug773466b");
 
   yield waitForMessages({
     webconsole: hud,

@@ -21,7 +21,7 @@ function test() {
     gBrowser.removeTab(tab);
     Services.prefs.clearUserPref(kShowUIPref);
   });
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
+  tab.linkedBrowser.addEventListener("load", function() {
     (async function() {
       for (let testCase of gTests) {
         info(testCase.desc);
@@ -31,9 +31,9 @@ function test() {
      ok(false, "Unexpected Exception: " + ex);
      finish();
     });
-   });
+   }, {capture: true, once: true});
 
-  gBrowser.selectedBrowser.loadURI("http://example.com/");
+  content.location = "http://example.com/";
 }
 
 function getLanguageExceptions() {

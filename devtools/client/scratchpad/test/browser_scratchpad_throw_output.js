@@ -8,11 +8,11 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(testThrowOutput);
-  });
+  }, {capture: true, once: true});
 
-  gBrowser.loadURI("data:text/html;charset=utf8,<p>Test throw outputs in Scratchpad</p>");
+  content.location = "data:text/html;charset=utf8,<p>Test throw outputs in Scratchpad</p>";
 }
 
 function testThrowOutput()
