@@ -1,13 +1,17 @@
 const {GlobalOverrider, FakePrefs, FakePerformance, EventEmitter} = require("test/unit/utils");
 const {chaiAssertions} = require("test/schemas/pings");
 
+const Adapter = require("enzyme-adapter-react-15");
+const enzyme = require("enzyme");
+enzyme.configure({adapter: new Adapter()});
+
 // Cause React warnings to make tests that trigger them fail
 const origConsoleError = console.error; // eslint-disable-line no-console
 console.error = function(msg, ...args) { // eslint-disable-line no-console
   // eslint-disable-next-line no-console
   origConsoleError.apply(console, [msg, ...args]);
 
-  if (/(Invalid prop|Failed prop type|Check the render method)/.test(msg)) {
+  if (/(Invalid prop|Failed prop type|Check the render method|React Intl)/.test(msg)) {
     throw new Error(msg);
   }
 };
