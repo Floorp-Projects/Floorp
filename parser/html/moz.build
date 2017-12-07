@@ -98,6 +98,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang':
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow',
                  '-Wno-implicit-fallthrough']

@@ -137,7 +137,7 @@ if use_arm_neon_gcc:
     SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CFLAGS += [
         '-Wno-address',
         '-Wno-missing-field-initializers',
@@ -145,7 +145,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl':
         '-Wno-incompatible-pointer-types',
         '-Wno-unused',                      # too many unused warnings; ignore
     ]
-if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += [
         '-Wno-incompatible-pointer-types',
         '-Wno-tautological-compare',
@@ -155,7 +155,7 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-unused-variable',
     ]
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
+if CONFIG['CC_TYPE'] == 'msvc':
     CFLAGS += [
         '-wd4047', # different levels of indirection
         '-wd4101', # unreferenced local variable
