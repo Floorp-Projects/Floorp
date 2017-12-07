@@ -26,20 +26,15 @@ public class SupportUtils {
         USAGE_DATA("usage-data"),
         WHATS_NEW("whats-new-focus-android-4");
 
-        private final String topicStr;
+        @VisibleForTesting final String topicStr;
 
         SumoTopic(final String topicStr) {
             this.topicStr = topicStr;
         }
     }
 
-    // The two methods are temporary to simplify the changes and review.
     public static String getSumoURLForTopic(final Context context, final SumoTopic topic) {
-        return getSumoURLForTopic(context, topic.topicStr);
-    }
-
-    public static String getSumoURLForTopic(final Context context, final String topic) {
-        final String escapedTopic = getEncodedTopicUTF8(topic);
+        final String escapedTopic = getEncodedTopicUTF8(topic.topicStr);
         final String appVersion = getAppVersion(context);
         final String osTarget = "Android";
         final String langTag = Locales.getLanguageTag(Locale.getDefault());
