@@ -694,8 +694,19 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
         FcPatternAddBool(aRenderPattern, FC_EMBEDDED_BITMAP, FcFalse);
     }
 
+    AutoTArray<FT_Fixed,8> coords;
+    if (!aStyle->variationSettings.IsEmpty()) {
+        FT_Face ftFace = GetFTFace();
+        if (ftFace) {
+            gfxFT2FontBase::SetupVarCoords(ftFace, aStyle->variationSettings,
+                                           &coords);
+        }
+    }
+
     cairo_font_face_t *face =
-        cairo_ft_font_face_create_for_pattern(aRenderPattern);
+        cairo_ft_font_face_create_for_pattern(aRenderPattern,
+                                              coords.Elements(),
+                                              coords.Length());
 
     if (mFontData) {
         // for data fonts, add the face/data pointer to the cairo font face
@@ -928,6 +939,24 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     return newFont;
 }
 
+FT_Face
+gfxFontconfigFontEntry::GetFTFace()
+{
+    if (!mFTFaceInitialized) {
+        mFTFaceInitialized = true;
+        FcChar8 *filename;
+        if (FcPatternGetString(mFontPattern, FC_FILE, 0, &filename) != FcResultMatch) {
+            return nullptr;
+        }
+        int index;
+        if (FcPatternGetInteger(mFontPattern, FC_INDEX, 0, &index) != FcResultMatch) {
+            index = 0; // default to 0 if not found in pattern
+        }
+        mFTFace = Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
+    }
+    return mFTFace;
+}
+
 nsresult
 gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
                                       nsTArray<uint8_t>& aBuffer)
@@ -935,34 +964,19 @@ gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
     NS_ASSERTION(!mIsDataUserFont,
                  "data fonts should be reading tables directly from memory");
 
-    if (!mFTFaceInitialized) {
-        mFTFaceInitialized = true;
-        FcChar8 *filename;
-        if (FcPatternGetString(mFontPattern, FC_FILE, 0, &filename) != FcResultMatch) {
-            return NS_ERROR_FAILURE;
-        }
-        int index;
-        if (FcPatternGetInteger(mFontPattern, FC_INDEX, 0, &index) != FcResultMatch) {
-            index = 0; // default to 0 if not found in pattern
-        }
-        mFTFace = Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
-        if (!mFTFace) {
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    if (!mFTFace) {
+    FT_Face face = GetFTFace();
+    if (!face) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
     FT_ULong length = 0;
-    if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nullptr, &length) != 0) {
+    if (FT_Load_Sfnt_Table(face, aTableTag, 0, nullptr, &length) != 0) {
         return NS_ERROR_NOT_AVAILABLE;
     }
     if (!aBuffer.SetLength(length, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, aBuffer.Elements(), &length) != 0) {
+    if (FT_Load_Sfnt_Table(face, aTableTag, 0, aBuffer.Elements(), &length) != 0) {
         aBuffer.Clear();
         return NS_ERROR_FAILURE;
     }
