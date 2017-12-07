@@ -25,7 +25,7 @@ x { width:32px; height:2px; background:cyan; }
 </head>
 <body>
 
-<div class="grid" style="grid:24px 10px 24px / repeat(7, 32px); grid-column-gap: 10px;">
+<div class="grid" style="grid: minmax(auto, 24px) minmax(auto, 10px) minmax(auto, 24px) / repeat(7, minmax(auto, 32px)); grid-column-gap: 10px;">
 <div style="height:24px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:24px; grid-row:3"></div>
@@ -34,7 +34,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid w24" style="grid:32px 10px 32px / repeat(7, 24px); grid-column-gap: 10px;">
+<div class="grid w24" style="grid: minmax(auto, 32px) minmax(auto, 10px) minmax(auto, 32px) / repeat(7, minmax(auto, 24px)); grid-column-gap: 10px;">
 <div style="height:32px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:32px; grid-row:3"></div>
@@ -43,7 +43,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid w4" style="grid:8px 10px 8px / repeat(7, 4px); grid-column-gap:32px; ">
+<div class="grid w4" style="grid: minmax(auto, 8px) minmax(auto, 10px) minmax(auto, 8px) / repeat(7, minmax(auto, 4px)); grid-column-gap:32px; ">
 <div style="height:8px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:8px; grid-row:3"></div>
@@ -52,7 +52,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid w4" style="grid:32px 10px 32px / repeat(7, 4px); grid-column-gap:32px; ">
+<div class="grid w4" style="grid: minmax(auto, 32px) minmax(auto, 10px) minmax(auto, 32px) / repeat(7, minmax(auto, 4px)); grid-column-gap:32px; ">
 <div style="height:32px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:32px; grid-row:3"></div>
@@ -61,7 +61,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid w8" style="grid:repeat(3, 4px) / repeat(7, 8px); grid-gap:8px; ">
+<div class="grid w8" style="grid: repeat(3, minmax(auto, 4px)) / repeat(7, minmax(auto, 8px)); grid-gap:8px; ">
 <div style="height:4px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:4px; grid-row:3"></div>
@@ -70,7 +70,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid" style="grid:repeat(3, 8px) / repeat(7, 32px); grid-gap:16px; ">
+<div class="grid" style="grid: repeat(3, minmax(auto, 8px)) / repeat(7, minmax(auto, 32px)); grid-gap:16px; ">
 <div style="height:4px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:4px; grid-row:3"></div>
