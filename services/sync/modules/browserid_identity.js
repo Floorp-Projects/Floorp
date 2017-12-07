@@ -608,20 +608,13 @@ this.BrowserIDManager.prototype = {
       );
     };
 
-    let getToken = assertion => {
+    let getToken = async (assertion) => {
       log.debug("Getting a token");
-      let deferred = PromiseUtils.defer();
-      let cb = function(err, token) {
-        if (err) {
-          return deferred.reject(err);
-        }
-        log.debug("Successfully got a sync token");
-        return deferred.resolve(token);
-      };
-
       let headers = {"X-Client-State": userData.kXCS};
-      client.getTokenFromBrowserIDAssertion(tokenServerURI, assertion, cb, headers);
-      return deferred.promise;
+      // Exceptions will be handled by the caller.
+      const token = await client.getTokenFromBrowserIDAssertion(tokenServerURI, assertion, headers);
+      log.debug("Successfully got a sync token");
+      return token;
     };
 
     let getAssertion = () => {
