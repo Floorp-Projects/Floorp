@@ -368,7 +368,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     context)
 
             elif len(candidates) > 1:
-                paths = (mozpath.join(l.relativedir, 'moz.build')
+                paths = (mozpath.join(l.relsrcdir, 'moz.build')
                     for l in candidates)
                 raise SandboxValidationError(
                     '%s contains "%s", which matches a %s defined in multiple '
@@ -546,7 +546,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 raise SandboxValidationError(
                     'Cannot use "%s" as %s name, '
                     'because it is already used in %s' % (program, kind,
-                    self._binaries[program].relativedir), context)
+                    self._binaries[program].relsrcdir), context)
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
             program = context.get(kind)
             if program:
@@ -597,7 +597,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError(
                         'Cannot use "%s" in %s, '
                         'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
+                        self._binaries[program].relsrcdir), context)
                 self._binaries[program] = cls(context, program,
                     is_unit_test=kind == 'CPP_UNIT_TESTS')
                 self._linkage.append((context, self._binaries[program],
