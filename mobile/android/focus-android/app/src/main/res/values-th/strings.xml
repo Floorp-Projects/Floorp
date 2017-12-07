@@ -95,6 +95,7 @@
   <string name="search_add_confirmation">เพิ่มเครื่องมือค้นหาใหม่แล้ว</string>
   <string name="search_add_error_empty_name">ป้อนชื่อเครื่องมือค้นหา</string>
   <string name="search_add_error_empty_search">ป้อนสตริงการค้นหา</string>
+  <string name="search_add_error_format">ตรวจสอบว่าสตริงการค้นหาตรงกับรูปแบบตัวอย่าง</string>
   <string name="content_description_clear_input">ล้างข้อมูลที่ป้อน</string>
   <string name="content_description_dismiss_input">ยกเลิก</string>
   <string name="content_description_erase">ล้างประวัติการท่องเว็บ</string>

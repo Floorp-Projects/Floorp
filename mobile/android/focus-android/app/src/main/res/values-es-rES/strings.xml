@@ -32,7 +32,7 @@
   <string name="preference_subitem_autocomplete">Autocompletar URL</string>
   <string name="preference_switch_autocomplete">Autocompletar</string>
   <string name="preference_category_autocomplete_preinstalled">Lista de URLs predeterminadas</string>
-  <string name="preference_autocomplete_preinstalled_summary">Actívalo para que %1$s autocomplete más de 450 URLs populares en la barra de direcciones.</string>
+  <string name="preference_autocomplete_preinstalled_summary">Actívalo para que %1$s complete automáticamente más de 450 URL populares en la barra de direcciones.</string>
   <string name="preference_category_autocomplete_custom">URL personalizada</string>
   <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
