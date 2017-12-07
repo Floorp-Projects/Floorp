@@ -8,7 +8,6 @@ import android.app.Fragment
 import android.content.Context
 import android.os.Bundle
 import android.view.*
-import android.view.inputmethod.InputMethodManager
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.SettingsFragment
 
@@ -39,12 +38,7 @@ class AutocompleteAddFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        val view = activity.currentFocus
-        if (view != null) {
-            val imm = activity
-                    .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(view.windowToken, 0)
-        }
+        ViewUtils.hideKeyboard(activity.currentFocus)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View =
