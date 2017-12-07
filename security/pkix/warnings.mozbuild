@@ -1,4 +1,4 @@
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Weverything',
 

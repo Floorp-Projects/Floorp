@@ -37,7 +37,7 @@ AllowCompilerWarnings()
 
 # We allow compiler warnings, but we can at least cut down on spammy
 # warnings that get triggered for every file.
-if CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-macro-redefined',
         '-Wno-microsoft-include',
@@ -47,7 +47,7 @@ if CONFIG['CLANG_CL']:
         '-Wno-microsoft-include',
     ]
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
     CFLAGS += [
         '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
         '-wd4996', # The compiler encountered a deprecated declaration.

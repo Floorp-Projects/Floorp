@@ -21,7 +21,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         '-Wno-unknown-pragmas',
         '-Wno-unreachable-code',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         CXXFLAGS += [
             '-Wno-inconsistent-missing-override',
             '-Wno-unused-private-field',

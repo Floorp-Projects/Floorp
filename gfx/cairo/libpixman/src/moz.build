@@ -24,7 +24,7 @@ if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             'pixman-arm-simd-asm-scaled.S',
             'pixman-arm-simd-asm.S',
         ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         ASFLAGS += [
             '-no-integrated-as',
         ]
@@ -137,7 +137,7 @@ if use_arm_neon_gcc:
     SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-address',
         '-Wno-missing-field-initializers',
@@ -145,17 +145,17 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
         '-Wno-incompatible-pointer-types',
         '-Wno-unused',                      # too many unused warnings; ignore
     ]
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-incompatible-pointer-types',
         '-Wno-tautological-compare',
         '-Wno-tautological-constant-out-of-range-compare',
     ]
-if CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-unused-variable',
     ]
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
     CFLAGS += [
         '-wd4047', # different levels of indirection
         '-wd4101', # unreferenced local variable
