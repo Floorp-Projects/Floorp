@@ -540,14 +540,18 @@ class DeviceManagerADB(DeviceManager):
                 localDir = '/'.join(localDir.rstrip('/').split('/')[:-1])
         cmd = ["pull", remoteDir, localDir]
         proc = self._runCmd(cmd)
+        if proc.returncode != 0:
+            # Raise a DMError when the device is missing, but not when the
+            # directory is empty or missing.
+            output = ''.join(proc.output)
+            if ("no devices/emulators found" in output or
+                ("pulled" not in output and
+                 "does not exist" not in output)):
+                raise DMError("getDirectory() failed to pull %s: %s" %
+                              (remoteDir, proc.output))
         if copyRequired:
-            try:
-                dir_util.copy_tree(localDir, originalLocal)
-                mozfile.remove(tempParent)
-            except:
-                self._logger.error("getDirectory() failed after %s" % str(cmd))
-                self._logger.error("rc=%d out=%s" % (proc.returncode, str(proc.output)))
-                raise
+            dir_util.copy_tree(localDir, originalLocal)
+            mozfile.remove(tempParent)
 
     def validateFile(self, remoteFile, localFile):
         md5Remote = self._getRemoteHash(remoteFile)
