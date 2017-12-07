@@ -29,7 +29,7 @@ elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         '-Wno-unused-but-set-variable',
     ]
 
-if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
      CXXFLAGS += [
          '-Wno-c++11-narrowing',
      ]

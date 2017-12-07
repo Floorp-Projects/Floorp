@@ -50,7 +50,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-Wno-sign-compare']
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
+if CONFIG['CC_TYPE'] == 'msvc':
     CFLAGS += [
         '-wd4018', # '<' : signed/unsigned mismatch
         '-wd4101', # unreferenced local variable

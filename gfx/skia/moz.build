@@ -721,7 +721,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 # We should autogenerate these SSE related flags.
 
-if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl'):
+if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc')):
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
     SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -758,7 +758,7 @@ if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['SK_CAN_USE_DLOPEN'] = 0
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CXXFLAGS += [
         '-Wno-deprecated-declarations',
         '-Wno-overloaded-virtual',
@@ -767,12 +767,12 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl':
         '-Wno-unreachable-code',
         '-Wno-unused-function',
     ]
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') and CONFIG['CC_TYPE'] != 'clang' and CONFIG['CC_TYPE'] != 'clang-cl':
+if CONFIG['CC_TYPE'] == 'gcc':
     CXXFLAGS += [
         '-Wno-logical-op',
         '-Wno-maybe-uninitialized',
     ]
-if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [
         '-Wno-implicit-fallthrough',
         '-Wno-inconsistent-missing-override',
