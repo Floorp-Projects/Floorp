@@ -135,17 +135,18 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom)
     return false;
 
   nsIContent* content = aFrame->GetContent();
-  if (!content)
+  if (!content || !content->IsElement())
     return false;
 
   if (content->IsHTMLElement())
-    return content->HasAttr(kNameSpaceID_None, aAtom);
+    return content->AsElement()->HasAttr(kNameSpaceID_None, aAtom);
 
   // For XML/XUL elements, an attribute must be equal to the literal
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
-  return content->AttrValueIs(kNameSpaceID_None, aAtom,
-                              NS_LITERAL_STRING("true"), eCaseMatters);
+  return content->AsElement()->AttrValueIs(kNameSpaceID_None, aAtom,
+                                           NS_LITERAL_STRING("true"),
+                                           eCaseMatters);
 }
 
 /* static */
@@ -155,8 +156,12 @@ nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsAtom* aAtom, int32_t defaultValu
   if (!aFrame)
     return defaultValue;
 
+  nsIContent* content = aFrame->GetContent();
+  if (!content || !content->IsElement())
+    return defaultValue;
+
   nsAutoString attr;
-  aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
+  content->AsElement()->GetAttr(kNameSpaceID_None, aAtom, attr);
   nsresult err;
   int32_t value = attr.ToInteger(&err);
   if (attr.IsEmpty() || NS_FAILED(err))
@@ -225,8 +230,9 @@ nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
 
   nsIContent* content = aFrame->GetContent();
   return content->IsXULElement(nsGkAtoms::button) &&
-         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                              NS_LITERAL_STRING("menu"), eCaseMatters);
+         content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                           NS_LITERAL_STRING("menu"),
+                                           eCaseMatters);
 }
 
 bool
@@ -362,7 +368,7 @@ nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates)
   }
 
   nsIContent* content = aFrame->GetContent();
-  if (!content) {
+  if (!content || !content->IsElement()) {
     return false;
   }
 
@@ -373,8 +379,10 @@ nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates)
   // For XML/XUL elements, an attribute must be equal to the literal
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
-  return content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                              NS_LITERAL_STRING("true"), eCaseMatters);
+  return content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::disabled,
+                                           NS_LITERAL_STRING("true"),
+                                           eCaseMatters);
 }
 
 /* static */ bool
@@ -405,12 +413,17 @@ nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
   if (!aFrame)
     return 0;
 
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::scrollbarDownBottom, &nsGkAtoms::scrollbarDownTop,
      &nsGkAtoms::scrollbarUpBottom, &nsGkAtoms::scrollbarUpTop,
      nullptr};
 
-  switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
+  nsIContent* content = aFrame->GetContent();
+  if (!content || !content->IsElement()) {
+    return 0;
+  }
+
+  switch (content->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::sbattr,
                                                 strings, eCaseMatters)) {
     case 0: return eScrollbarButton_Down | eScrollbarButton_Bottom;
@@ -429,13 +442,17 @@ nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
   if (!aFrame || !aFrame->GetContent())
     return eTreeSortDirection_Natural;
 
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::descending, &nsGkAtoms::ascending, nullptr};
-  switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::sortDirection,
-                                                strings, eCaseMatters)) {
-    case 0: return eTreeSortDirection_Descending;
-    case 1: return eTreeSortDirection_Ascending;
+
+  nsIContent* content = aFrame->GetContent();
+  if (content->IsElement()) {
+      switch (content->AsElement()->FindAttrValueIn(kNameSpaceID_None,
+                                                    nsGkAtoms::sortDirection,
+                                                    strings, eCaseMatters)) {
+        case 0: return eTreeSortDirection_Descending;
+        case 1: return eTreeSortDirection_Ascending;
+      }
   }
 
   return eTreeSortDirection_Natural;
@@ -458,8 +475,10 @@ nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame)
   }
 
   // If the column picker is visible, this can't be the last column.
-  if (parent && !parent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidecolumnpicker,
-                                     NS_LITERAL_STRING("true"), eCaseMatters))
+  if (parent && !parent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                  nsGkAtoms::hidecolumnpicker,
+                                                  NS_LITERAL_STRING("true"),
+                                                  eCaseMatters))
     return false;
 
   while ((aFrame = aFrame->GetNextSibling())) {
@@ -477,7 +496,12 @@ nsNativeTheme::IsBottomTab(nsIFrame* aFrame)
     return false;
 
   nsAutoString classStr;
-  aFrame->GetContent()->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, classStr);
+  if (aFrame->GetContent()->IsElement()) {
+    aFrame->GetContent()->AsElement()->GetAttr(kNameSpaceID_None,
+                                               nsGkAtoms::_class,
+                                               classStr);
+  }
+  // FIXME: This looks bogus, shouldn't this be looking at GetClasses()?
   return !classStr.IsEmpty() && classStr.Find("tab-bottom") != kNotFound;
 }
 
@@ -500,10 +524,14 @@ nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
 {
   if (!aFrame)
     return false;
-    
-  return !aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::orient,
-                                            nsGkAtoms::vertical, 
-                                            eCaseMatters);
+
+  if (!aFrame->GetContent()->IsElement())
+    return true;
+
+  return !aFrame->GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                         nsGkAtoms::orient,
+                                                         nsGkAtoms::vertical,
+                                                         eCaseMatters);
 }
 
 bool
@@ -539,16 +567,17 @@ bool
 nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
                                        EventStates aEventStates)
 {
-  if (!aFrame || !aFrame->GetContent())
+  if (!aFrame || !aFrame->GetContent()|| !aFrame->GetContent()->IsElement())
     return false;
 
   if (aFrame->GetContent()->IsHTMLElement(nsGkAtoms::progress)) {
     return aEventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
   }
 
-  return aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mode,
-                                           NS_LITERAL_STRING("undetermined"),
-                                           eCaseMatters);
+  return aFrame->GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                        nsGkAtoms::mode,
+                                                        NS_LITERAL_STRING("undetermined"),
+                                                        eCaseMatters);
 }
 
 bool

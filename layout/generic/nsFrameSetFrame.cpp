@@ -1128,7 +1128,9 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
 {
   nsIContent* content = aChildFrame->GetContent();
 
-  return content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::noresize);
+  return content &&
+    content->IsElement() &&
+    content->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::noresize);
 }
 
 bool

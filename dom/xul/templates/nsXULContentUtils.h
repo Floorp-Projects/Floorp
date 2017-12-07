@@ -126,7 +126,7 @@ public:
     GetResource(int32_t aNameSpaceID, const nsAString& aAttribute, nsIRDFResource** aResult);
 
     static nsresult
-    SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
+    SetCommandUpdater(nsIDocument* aDocument, mozilla::dom::Element* aElement);
 
     /**
      * Log a message to the error console

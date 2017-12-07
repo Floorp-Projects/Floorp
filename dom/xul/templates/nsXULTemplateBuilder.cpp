@@ -2157,7 +2157,9 @@ nsXULTemplateBuilder::DetermineMemberVariable(nsIContent* aElement)
          child;
          child = child->GetNextSibling()) {
         nsAutoString uri;
-        child->GetAttr(kNameSpaceID_None, nsGkAtoms::uri, uri);
+        if (child->IsElement()) {
+          child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::uri, uri);
+        }
         if (!uri.IsEmpty() && uri[0] == char16_t('?')) {
             return NS_Atomize(uri);
         }
@@ -2254,7 +2256,7 @@ nsXULTemplateBuilder::CompileSimpleQuery(Element* aRuleElement,
 
 nsresult
 nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
-                                        nsIContent* aCondition)
+                                        Element* aCondition)
 {
     nsAutoString tag;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::parent, tag);
@@ -2271,7 +2273,8 @@ nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
          node = node->GetNextSibling()) {
 
         if (node->NodeInfo()->Equals(nsGkAtoms::where, kNameSpaceID_XUL)) {
-            nsresult rv = CompileWhereCondition(aRule, node, &currentCondition);
+            nsresult rv =
+              CompileWhereCondition(aRule, node->AsElement(), &currentCondition);
             if (NS_FAILED(rv))
                 return rv;
         }
@@ -2282,7 +2285,7 @@ nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
 
 nsresult
 nsXULTemplateBuilder::CompileWhereCondition(nsTemplateRule* aRule,
-                                            nsIContent* aCondition,
+                                            Element* aCondition,
                                             nsTemplateCondition** aCurrentCondition)
 {
     // Compile a <where> condition, which must be of the form:
@@ -2389,7 +2392,7 @@ nsXULTemplateBuilder::CompileBindings(nsTemplateRule* aRule, nsIContent* aBindin
 
         if (binding->NodeInfo()->Equals(nsGkAtoms::binding,
                                         kNameSpaceID_XUL)) {
-            rv = CompileBinding(aRule, binding);
+            rv = CompileBinding(aRule, binding->AsElement());
             if (NS_FAILED(rv))
                 return rv;
         }
@@ -2403,7 +2406,7 @@ nsXULTemplateBuilder::CompileBindings(nsTemplateRule* aRule, nsIContent* aBindin
 
 nsresult
 nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
-                                     nsIContent* aBinding)
+                                     Element* aBinding)
 {
     // Compile a <binding> "condition", which must be of the form:
     //

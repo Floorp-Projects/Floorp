@@ -122,7 +122,7 @@ XULButtonAccessible::NativeState()
   if (ContainsMenu())
     state |= states::HASPOPUP;
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::_default))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::_default))
     state |= states::DEFAULT;
 
   return state;
@@ -189,8 +189,8 @@ XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
     return false;
   }
 
-  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                               nsGkAtoms::menuButton, eCaseMatters);
+  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                            nsGkAtoms::menuButton, eCaseMatters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,12 +199,12 @@ XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
 bool
 XULButtonAccessible::ContainsMenu() const
 {
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::menu, &nsGkAtoms::menuButton, nullptr};
 
-  return mContent->FindAttrValueIn(kNameSpaceID_None,
-                                   nsGkAtoms::type,
-                                   strings, eCaseMatters) >= 0;
+  return mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
+                                                nsGkAtoms::type,
+                                                strings, eCaseMatters) >= 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -603,7 +603,7 @@ XULToolbarAccessible::NativeRole()
 ENameValueFlag
 XULToolbarAccessible::NativeName(nsString& aName)
 {
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::toolbarname, aName))
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::toolbarname, aName))
     aName.CompressWhitespace();
 
   return eNameOK;

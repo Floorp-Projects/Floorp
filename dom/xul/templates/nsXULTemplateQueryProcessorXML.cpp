@@ -234,7 +234,9 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
     nsCOMPtr<nsIContent> content = do_QueryInterface(aQueryNode);
 
     nsAutoString expr;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::expr, expr);
+    if (content->IsElement()) {
+      content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::expr, expr);
+    }
 
     // if an expression is not specified, then the default is to
     // just take all of the children
@@ -259,10 +261,10 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         if (condition->NodeInfo()->Equals(nsGkAtoms::assign,
                                           kNameSpaceID_XUL)) {
             nsAutoString var;
-            condition->GetAttr(kNameSpaceID_None, nsGkAtoms::var, var);
+            condition->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::var, var);
 
             nsAutoString expr;
-            condition->GetAttr(kNameSpaceID_None, nsGkAtoms::expr, expr);
+            condition->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::expr, expr);
 
             // ignore assignments without a variable or an expression
             if (!var.IsEmpty() && !expr.IsEmpty()) {

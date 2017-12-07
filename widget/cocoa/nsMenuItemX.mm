@@ -75,7 +75,9 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
   // to the command DOM node
   if (doc) {
     nsAutoString ourCommand;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, ourCommand);
+    if (mContent->IsElement()) {
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::command, ourCommand);
+    }
 
     if (!ourCommand.IsEmpty()) {
       Element* commandElement = doc->GetElementById(ourCommand);
@@ -106,8 +108,9 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
     [mNativeMenuItem setEnabled:(BOOL)isEnabled];
 
-    SetChecked(mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
-                                     nsGkAtoms::_true, eCaseMatters));
+    SetChecked(mContent->IsElement() &&
+               mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                                                  nsGkAtoms::_true, eCaseMatters));
     SetKeyEquiv();
   }
 
@@ -206,7 +209,9 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
 void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
 {
   nsAutoString myGroupName;
-  inCheckedContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
+  if (inCheckedContent->IsElement()) {
+    inCheckedContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
+  }
   if (!myGroupName.Length()) // no groupname, nothing to do
     return;
 
@@ -236,9 +241,12 @@ void nsMenuItemX::SetKeyEquiv()
 
   // Set key shortcut and modifiers
   nsAutoString keyValue;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
+  if (mContent->IsElement()) {
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
+  }
+
   if (!keyValue.IsEmpty() && mContent->GetUncomposedDoc()) {
-    nsIContent *keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
+    Element* keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
     if (keyContent) {
       nsAutoString keyChar;
       bool hasKey = keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);

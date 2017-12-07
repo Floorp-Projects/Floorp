@@ -309,7 +309,7 @@ nsXULTreeBuilder::GetCellProperties(int32_t aRow, nsTreeColumn& aColumn,
         return;
     }
 
-    nsIContent* cell = GetTemplateActionCellFor(aRow, aColumn);
+    Element* cell = GetTemplateActionCellFor(aRow, aColumn);
     if (cell) {
         nsAutoString raw;
         cell->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, raw);
@@ -551,7 +551,7 @@ nsXULTreeBuilder::GetImageSrc(int32_t aRow, nsTreeColumn& aColumn,
     }
 
     // Find the <cell> that corresponds to the column we want.
-    nsIContent* cell = GetTemplateActionCellFor(aRow, aColumn);
+    Element* cell = GetTemplateActionCellFor(aRow, aColumn);
     if (cell) {
         nsAutoString raw;
         cell->GetAttr(kNameSpaceID_None, nsGkAtoms::src, raw);
@@ -583,7 +583,7 @@ nsXULTreeBuilder::GetProgressMode(int32_t aRow, nsTreeColumn& aColumn,
     }
 
     // Find the <cell> that corresponds to the column we want.
-    nsIContent* cell = GetTemplateActionCellFor(aRow, aColumn);
+    Element* cell = GetTemplateActionCellFor(aRow, aColumn);
     if (cell) {
         nsAutoString raw;
         cell->GetAttr(kNameSpaceID_None, nsGkAtoms::mode, raw);
@@ -624,7 +624,7 @@ nsXULTreeBuilder::GetCellValue(int32_t aRow, nsTreeColumn& aColumn,
     }
 
     // Find the <cell> that corresponds to the column we want.
-    nsIContent* cell = GetTemplateActionCellFor(aRow, aColumn);
+    Element* cell = GetTemplateActionCellFor(aRow, aColumn);
     if (cell) {
         nsAutoString raw;
         cell->GetAttr(kNameSpaceID_None, nsGkAtoms::value, raw);
@@ -656,7 +656,7 @@ nsXULTreeBuilder::GetCellText(int32_t aRow, nsTreeColumn& aColumn,
     }
 
     // Find the <cell> that corresponds to the column we want.
-    nsIContent* cell = GetTemplateActionCellFor(aRow, aColumn);
+    Element* cell = GetTemplateActionCellFor(aRow, aColumn);
     if (cell) {
         nsAutoString raw;
         cell->GetAttr(kNameSpaceID_None, nsGkAtoms::label, raw);
@@ -869,7 +869,7 @@ nsXULTreeBuilder::IsEditable(int32_t aRow, nsTreeColumn& aColumn,
     }
 
     // Find the <cell> that corresponds to the column we want.
-    nsIContent* cell = GetTemplateActionCellFor(aRow, aColumn);
+    Element* cell = GetTemplateActionCellFor(aRow, aColumn);
     if (!cell) {
         return true;
     }
@@ -904,7 +904,7 @@ nsXULTreeBuilder::IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
     }
 
     // Find the <cell> that corresponds to the column we want.
-    nsIContent* cell = GetTemplateActionCellFor(aRow, aColumn);
+    Element* cell = GetTemplateActionCellFor(aRow, aColumn);
     if (!cell) {
         return true;
     }
@@ -1265,18 +1265,19 @@ nsXULTreeBuilder::EnsureSortVariables()
 
         if (child->NodeInfo()->Equals(nsGkAtoms::treecol,
                                       kNameSpaceID_XUL)) {
-            if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::sortActive,
-                                   nsGkAtoms::_true, eCaseMatters)) {
+            if (child->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                nsGkAtoms::sortActive,
+                                                nsGkAtoms::_true, eCaseMatters)) {
                 nsAutoString sort;
-                child->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
+                child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
                 if (! sort.IsEmpty()) {
                     mSortVariable = NS_Atomize(sort);
 
-                    static nsIContent::AttrValuesArray strings[] =
+                    static Element::AttrValuesArray strings[] =
                       {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
-                    switch (child->FindAttrValueIn(kNameSpaceID_None,
-                                                   nsGkAtoms::sortDirection,
-                                                   strings, eCaseMatters)) {
+                    switch (child->AsElement()->FindAttrValueIn(kNameSpaceID_None,
+                                                                nsGkAtoms::sortDirection,
+                                                                strings, eCaseMatters)) {
                        case 0: mSortDirection = eDirection_Ascending; break;
                        case 1: mSortDirection = eDirection_Descending; break;
                        default: mSortDirection = eDirection_Natural; break;
@@ -1380,7 +1381,7 @@ nsXULTreeBuilder::GetTemplateActionRowFor(int32_t aRow, Element** aResult)
     return NS_OK;
 }
 
-nsIContent*
+Element*
 nsXULTreeBuilder::GetTemplateActionCellFor(int32_t aRow, nsTreeColumn& aCol)
 {
     RefPtr<Element> row;
@@ -1392,20 +1393,21 @@ nsXULTreeBuilder::GetTemplateActionCellFor(int32_t aRow, nsTreeColumn& aCol)
     RefPtr<nsAtom> colAtom(aCol.GetAtom());
     int32_t colIndex(aCol.GetIndex());
 
-    nsIContent* result = nullptr;
+    Element* result = nullptr;
     uint32_t j = 0;
     for (nsIContent* child = row->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
         if (child->NodeInfo()->Equals(nsGkAtoms::treecell, kNameSpaceID_XUL)) {
             if (colAtom &&
-                child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ref, colAtom,
-                                   eCaseMatters)) {
-                return child;
+                child->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                nsGkAtoms::ref, colAtom,
+                                                eCaseMatters)) {
+                return child->AsElement();
             }
 
             if (j == (uint32_t)colIndex) {
-                result = child;
+                result = child->AsElement();
             }
             ++j;
         }
