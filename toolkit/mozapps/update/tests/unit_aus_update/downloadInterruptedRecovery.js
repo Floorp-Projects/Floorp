@@ -6,16 +6,20 @@
 function run_test() {
   setupTestCommon();
 
-  debugDump("testing mar download when offline");
+  debugDump("testing mar mar download interrupted recovery");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
   setUpdateURL(gURLData + gHTTPHandlerPath);
+
   initMockIncrementalDownload();
-  gIncrementalDownloadErrorType = 4;
+  gIncrementalDownloadErrorType = 0;
   let patches = getRemotePatchString({});
   let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
+  gUpdates = null;
+  gUpdateCount = null;
+  gStatusResult = null;
   gCheckFunc = updateCheckCompleted;
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
