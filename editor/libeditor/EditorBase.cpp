@@ -1455,7 +1455,7 @@ EditorBase::CreateNode(nsAtom* aTag,
     pointToInsert.Set(ret);
   }
 
-  mRangeUpdater.SelAdjCreateNode(pointToInsert.Container(), offset);
+  mRangeUpdater.SelAdjCreateNode(pointToInsert.GetContainer(), offset);
 
   {
     AutoActionListenerArray listeners(mActionListeners);
@@ -1511,7 +1511,7 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
     CreateTxnForInsertNode(aContentToInsert, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
 
-  mRangeUpdater.SelAdjInsertNode(aPointToInsert.Container(),
+  mRangeUpdater.SelAdjInsertNode(aPointToInsert.GetContainer(),
                                  aPointToInsert.Offset());
 
   {
@@ -1551,7 +1551,7 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
                       ErrorResult& aError)
 {
   if (NS_WARN_IF(!aStartOfRightNode.IsSet()) ||
-      NS_WARN_IF(!aStartOfRightNode.Container()->IsContent())) {
+      NS_WARN_IF(!aStartOfRightNode.GetContainerAsContent())) {
     aError.Throw(NS_ERROR_INVALID_ARG);
     return nullptr;
   }
@@ -1568,7 +1568,7 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
       // XXX Unfortunately, we need to compute offset here because the container
       //     may be a data node like text node.  However, nobody implements this
       //     method actually.  So, we should get rid of this in a follow up bug.
-      listener->WillSplitNode(aStartOfRightNode.Container()->AsDOMNode(),
+      listener->WillSplitNode(aStartOfRightNode.GetContainerAsDOMNode(),
                               aStartOfRightNode.Offset());
     }
   }
@@ -1580,13 +1580,13 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
   nsCOMPtr<nsIContent> newNode = transaction->GetNewNode();
   NS_WARNING_ASSERTION(newNode, "Failed to create a new left node");
 
-  mRangeUpdater.SelAdjSplitNode(*aStartOfRightNode.Container()->AsContent(),
+  mRangeUpdater.SelAdjSplitNode(*aStartOfRightNode.GetContainerAsContent(),
                                 newNode);
 
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidSplitNode(aStartOfRightNode.Container()->AsDOMNode(),
+      listener->DidSplitNode(aStartOfRightNode.GetContainerAsDOMNode(),
                              GetAsDOMNode(newNode));
     }
   }
@@ -1785,7 +1785,7 @@ EditorBase::RemoveContainer(nsIContent* aNode)
 
   // Notify our internal selection state listener.
   AutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode,
-                                         pointToInsertChildren.Container(),
+                                         pointToInsertChildren.GetContainer(),
                                          pointToInsertChildren.Offset(),
                                          aNode->GetChildCount());
 
@@ -1800,8 +1800,9 @@ EditorBase::RemoveContainer(nsIContent* aNode)
     // Insert the last child before the previous last child.  So, we need to
     // use offset here because previous child might have been moved to
     // container.
-    rv = InsertNode(*child, EditorRawDOMPoint(pointToInsertChildren.Container(),
-                                              pointToInsertChildren.Offset()));
+    rv = InsertNode(*child,
+                    EditorRawDOMPoint(pointToInsertChildren.GetContainer(),
+                                      pointToInsertChildren.Offset()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1981,7 +1982,7 @@ EditorBase::MoveChildren(nsIContent& aFirstChild,
   nsCOMPtr<nsINode> oldContainer = aFirstChild.GetParentNode();
   if (NS_WARN_IF(oldContainer != aLastChild.GetParentNode()) ||
       NS_WARN_IF(!aPointToInsert.IsSet()) ||
-      NS_WARN_IF(!aPointToInsert.Container()->IsContainerNode())) {
+      NS_WARN_IF(!aPointToInsert.CanContainerHaveChildren())) {
     aError.Throw(NS_ERROR_INVALID_ARG);
     return;
   }
@@ -2002,7 +2003,7 @@ EditorBase::MoveChildren(nsIContent& aFirstChild,
     return;
   }
 
-  nsCOMPtr<nsINode> newContainer = aPointToInsert.Container();
+  nsCOMPtr<nsINode> newContainer = aPointToInsert.GetContainer();
   nsCOMPtr<nsIContent> nextNode = aPointToInsert.GetChildAtOffset();
   for (size_t i = children.Length(); i > 0; --i) {
     nsCOMPtr<nsIContent>& child = children[i - 1];
@@ -2021,7 +2022,7 @@ EditorBase::MoveChildren(nsIContent& aFirstChild,
       // container.
       EditorRawDOMPoint pointToInsert(nextNode);
       if (NS_WARN_IF(!pointToInsert.IsSet()) ||
-          NS_WARN_IF(pointToInsert.Container() != newContainer)) {
+          NS_WARN_IF(pointToInsert.GetContainer() != newContainer)) {
         // The next node of insertion point has been moved by mutation observer.
         // Let's stop moving the remaining nodes.
         // XXX Or should we move remaining children after the last moved child?
@@ -2590,7 +2591,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
 
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  if (aPoint.Container()->IsNodeOfType(nsINode::eTEXT)) {
+  if (aPoint.IsInTextNode()) {
     // There is no "better" insertion point.
     return aPoint;
   }
@@ -2604,14 +2605,14 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
   }
 
   nsCOMPtr<nsINode> root = GetRoot();
-  if (aPoint.Container() == root) {
+  if (aPoint.GetContainer() == root) {
     // In some cases, aNode is the anonymous DIV, and offset is 0.  To avoid
     // injecting unneeded text nodes, we first look to see if we have one
     // available.  In that case, we'll just adjust node and offset accordingly.
     if (aPoint.IsStartOfContainer() &&
-        aPoint.Container()->HasChildren() &&
-        aPoint.Container()->GetFirstChild()->IsNodeOfType(nsINode::eTEXT)) {
-      return EditorRawDOMPoint(aPoint.Container()->GetFirstChild(), 0);
+        aPoint.GetContainer()->HasChildren() &&
+        aPoint.GetContainer()->GetFirstChild()->IsNodeOfType(nsINode::eTEXT)) {
+      return EditorRawDOMPoint(aPoint.GetContainer()->GetFirstChild(), 0);
     }
 
     // In some other cases, aNode is the anonymous DIV, and offset points to the
@@ -2631,7 +2632,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
       } else {
         // If we're in a real plaintext editor, use a fast path that avoids
         // calling GetChildAt() which may perform a linear search.
-        nsIContent* child = aPoint.Container()->GetLastChild();
+        nsIContent* child = aPoint.GetContainer()->GetLastChild();
         while (child) {
           if (child->IsNodeOfType(nsINode::eTEXT)) {
             if (NS_WARN_IF(child->Length() > INT32_MAX)) {
@@ -2648,9 +2649,9 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
   // Sometimes, aNode is the mozBR element itself.  In that case, we'll adjust
   // the insertion point to the previous text node, if one exists, or to the
   // parent anonymous DIV.
-  if (TextEditUtils::IsMozBR(aPoint.Container()) &&
+  if (TextEditUtils::IsMozBR(aPoint.GetContainer()) &&
       aPoint.IsStartOfContainer()) {
-    nsIContent* previousSibling = aPoint.Container()->GetPreviousSibling();
+    nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
     if (previousSibling && previousSibling->IsNodeOfType(nsINode::eTEXT)) {
       if (NS_WARN_IF(previousSibling->Length() > INT32_MAX)) {
         return aPoint;
@@ -2658,10 +2659,10 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
       return EditorRawDOMPoint(previousSibling, previousSibling->Length());
     }
 
-    nsINode* parentOfContainer = aPoint.Container()->GetParentNode();
+    nsINode* parentOfContainer = aPoint.GetContainer()->GetParentNode();
     if (parentOfContainer && parentOfContainer == root) {
       return EditorRawDOMPoint(parentOfContainer,
-                               aPoint.Container()->AsContent(), 0);
+                               aPoint.GetContainerAsContent(), 0);
     }
   }
 
@@ -2704,12 +2705,12 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
   EditorRawDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
 
   // If a neighboring text node already exists, use that
-  if (!pointToInsert.Container()->IsNodeOfType(nsINode::eTEXT)) {
+  if (!pointToInsert.IsInTextNode()) {
     nsIContent* child = nullptr;
     if (!pointToInsert.IsStartOfContainer() &&
         (child = pointToInsert.GetPreviousSiblingOfChildAtOffset()) &&
         child->IsNodeOfType(nsINode::eTEXT)) {
-      pointToInsert.SetToEndOf(child);
+      pointToInsert.Set(child, child->Length());
     } else if (!pointToInsert.IsEndOfContainer() &&
                (child = pointToInsert.GetChildAtOffset()) &&
                child->IsNodeOfType(nsINode::eTEXT)) {
@@ -2719,7 +2720,7 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
 
   if (ShouldHandleIMEComposition()) {
     CheckedInt<int32_t> newOffset;
-    if (!pointToInsert.Container()->IsNodeOfType(nsINode::eTEXT)) {
+    if (!pointToInsert.IsInTextNode()) {
       // create a text node
       RefPtr<nsTextNode> newNode =
         EditorBase::CreateTextNode(aDocument, EmptyString());
@@ -2734,27 +2735,27 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
     }
     nsresult rv =
       InsertTextIntoTextNodeImpl(aStringToInsert,
-                                 *pointToInsert.Container()->GetAsText(),
+                                 *pointToInsert.GetContainerAsText(),
                                  pointToInsert.Offset());
     NS_ENSURE_SUCCESS(rv, rv);
     if (aPointAfterInsertedString) {
-      aPointAfterInsertedString->Set(pointToInsert.Container(),
+      aPointAfterInsertedString->Set(pointToInsert.GetContainer(),
                                      newOffset.value());
     }
     return NS_OK;
   }
 
-  if (pointToInsert.Container()->IsNodeOfType(nsINode::eTEXT)) {
+  if (pointToInsert.IsInTextNode()) {
     CheckedInt<int32_t> newOffset = lengthToInsert + pointToInsert.Offset();
     NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
     // we are inserting text into an existing text node.
     nsresult rv =
       InsertTextIntoTextNodeImpl(aStringToInsert,
-                                 *pointToInsert.Container()->GetAsText(),
+                                 *pointToInsert.GetContainerAsText(),
                                  pointToInsert.Offset());
     NS_ENSURE_SUCCESS(rv, rv);
     if (aPointAfterInsertedString) {
-      aPointAfterInsertedString->Set(pointToInsert.Container(),
+      aPointAfterInsertedString->Set(pointToInsert.GetContainer(),
                                      newOffset.value());
     }
     return NS_OK;
@@ -3144,7 +3145,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
     }
   }
 
-  nsCOMPtr<nsINode> parent = aStartOfRightNode.Container()->GetParentNode();
+  nsCOMPtr<nsINode> parent = aStartOfRightNode.GetContainer()->GetParentNode();
   if (NS_WARN_IF(!parent)) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
@@ -3152,7 +3153,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
 
   // Fix the child before mutation observer may touch the DOM tree.
   nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChildAtOffset();
-  parent->InsertBefore(aNewLeftNode, aStartOfRightNode.Container(),
+  parent->InsertBefore(aNewLeftNode, aStartOfRightNode.GetContainer(),
                        aError);
   if (NS_WARN_IF(aError.Failed())) {
     return;
@@ -3162,7 +3163,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
   // the children which are before aStartOfRightNode.
   if (!aStartOfRightNode.IsStartOfContainer()) {
     // If it's a text node, just shuffle around some text
-    Text* rightAsText = aStartOfRightNode.Container()->GetAsText();
+    Text* rightAsText = aStartOfRightNode.GetContainerAsText();
     Text* leftAsText = aNewLeftNode.GetAsText();
     if (rightAsText && leftAsText) {
       // Fix right node
@@ -3177,11 +3178,11 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
       // Otherwise it's an interior node, so shuffle around the children. Go
       // through list backwards so deletes don't interfere with the iteration.
       if (!firstChildOfRightNode) {
-        MoveAllChildren(*aStartOfRightNode.Container(),
+        MoveAllChildren(*aStartOfRightNode.GetContainer(),
                         EditorRawDOMPoint(&aNewLeftNode, 0), aError);
         NS_WARNING_ASSERTION(!aError.Failed(),
           "Failed to move all children from the right node to the left node");
-      } else if (NS_WARN_IF(aStartOfRightNode.Container() !=
+      } else if (NS_WARN_IF(aStartOfRightNode.GetContainer() !=
                               firstChildOfRightNode->GetParentNode())) {
           // firstChildOfRightNode has been moved by mutation observer.
           // In this case, we what should we do?  Use offset?  But we cannot
@@ -3234,7 +3235,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
     }
 
     // Split the selection into existing node and new node.
-    if (range.mStartContainer == aStartOfRightNode.Container()) {
+    if (range.mStartContainer == aStartOfRightNode.GetContainer()) {
       if (static_cast<uint32_t>(range.mStartOffset) <
             aStartOfRightNode.Offset()) {
         range.mStartContainer = &aNewLeftNode;
@@ -3243,7 +3244,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
       }
     }
 
-    if (range.mEndContainer == aStartOfRightNode.Container()) {
+    if (range.mEndContainer == aStartOfRightNode.GetContainer()) {
       if (static_cast<uint32_t>(range.mEndOffset) <
             aStartOfRightNode.Offset()) {
         range.mEndContainer = &aNewLeftNode;
@@ -3532,20 +3533,18 @@ EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
                                     bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
-  NS_WARNING_ASSERTION(!aPoint.Container()->IsNodeOfType(nsINode::eDATA_NODE) ||
-                       aPoint.Container()->IsNodeOfType(nsINode::eTEXT),
+  NS_WARNING_ASSERTION(!aPoint.IsInDataNode() || aPoint.IsInTextNode(),
     "GetPreviousNodeInternal() doesn't assume that the start point is a "
     "data node except text node");
 
   // If we are at the beginning of the node, or it is a text node, then just
   // look before it.
-  if (aPoint.IsStartOfContainer() ||
-      aPoint.Container()->IsNodeOfType(nsINode::eTEXT)) {
-    if (aNoBlockCrossing && IsBlockNode(aPoint.Container())) {
+  if (aPoint.IsStartOfContainer() || aPoint.IsInTextNode()) {
+    if (aNoBlockCrossing && IsBlockNode(aPoint.GetContainer())) {
       // If we aren't allowed to cross blocks, don't look before this block.
       return nullptr;
     }
-    return GetPreviousNodeInternal(*aPoint.Container(),
+    return GetPreviousNodeInternal(*aPoint.GetContainer(),
                                    aFindEditableNode, aNoBlockCrossing);
   }
 
@@ -3558,7 +3557,7 @@ EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
   // unless there isn't one, in which case we are at the end of the node
   // and want the deep-right child.
   nsIContent* rightMostNode =
-    GetRightmostChild(aPoint.Container(), aNoBlockCrossing);
+    GetRightmostChild(aPoint.GetContainer(), aNoBlockCrossing);
   if (!rightMostNode) {
     return nullptr;
   }
@@ -3589,16 +3588,15 @@ EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
                                 bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
-  NS_WARNING_ASSERTION(!aPoint.Container()->IsNodeOfType(nsINode::eDATA_NODE) ||
-                       aPoint.Container()->IsNodeOfType(nsINode::eTEXT),
+  NS_WARNING_ASSERTION(!aPoint.IsInDataNode() || aPoint.IsInTextNode(),
     "GetNextNodeInternal() doesn't assume that the start point is a "
     "data node except text node");
 
   EditorRawDOMPoint point(aPoint);
 
   // if the container is a text node, use its location instead
-  if (point.Container()->IsNodeOfType(nsINode::eTEXT)) {
-    point.Set(point.Container());
+  if (point.IsInTextNode()) {
+    point.Set(point.GetContainer());
     bool advanced = point.AdvanceOffset();
     if (NS_WARN_IF(!advanced)) {
       return nullptr;
@@ -3632,12 +3630,12 @@ EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the next one.
-  if (aNoBlockCrossing && IsBlockNode(point.Container())) {
+  if (aNoBlockCrossing && IsBlockNode(point.GetContainer())) {
     // don't cross out of parent block
     return nullptr;
   }
 
-  return GetNextNodeInternal(*point.Container(),
+  return GetNextNodeInternal(*point.GetContainer(),
                              aFindEditableNode, aNoBlockCrossing);
 }
 
@@ -4058,7 +4056,7 @@ EditorBase::GetStartNodeAndOffset(Selection* aSelection,
     return NS_ERROR_FAILURE;
   }
 
-  NS_ADDREF(*aStartContainer = point.Container());
+  NS_ADDREF(*aStartContainer = point.GetContainer());
   *aStartOffset = point.Offset();
   return NS_OK;
 }
@@ -4123,7 +4121,7 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
     return NS_ERROR_FAILURE;
   }
 
-  NS_ADDREF(*aEndContainer = point.Container());
+  NS_ADDREF(*aEndContainer = point.GetContainer());
   *aEndOffset = point.Offset();
   return NS_OK;
 }
@@ -4219,9 +4217,10 @@ EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
                           SplitAtEdges aSplitAtEdges)
 {
   MOZ_ASSERT(aStartOfDeepestRightNode.IsSetAndValid());
-  MOZ_ASSERT(aStartOfDeepestRightNode.Container() == &aMostAncestorToSplit ||
-             EditorUtils::IsDescendantOf(*aStartOfDeepestRightNode.Container(),
-                                         aMostAncestorToSplit));
+  MOZ_ASSERT(aStartOfDeepestRightNode.GetContainer() == &aMostAncestorToSplit ||
+             EditorUtils::IsDescendantOf(
+                            *aStartOfDeepestRightNode.GetContainer(),
+                            aMostAncestorToSplit));
 
   if (NS_WARN_IF(!aStartOfDeepestRightNode.IsSet())) {
     return SplitNodeResult(NS_ERROR_INVALID_ARG);
@@ -4232,8 +4231,8 @@ EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
   while (true) {
     // If we meet an orphan node before meeting aMostAncestorToSplit, we need
     // to stop splitting.  This is a bug of the caller.
-    if (NS_WARN_IF(atStartOfRightNode.Container() != &aMostAncestorToSplit &&
-                   !atStartOfRightNode.Container()->GetParent())) {
+    if (NS_WARN_IF(atStartOfRightNode.GetContainer() != &aMostAncestorToSplit &&
+                   !atStartOfRightNode.GetContainer()->GetParent())) {
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
 
@@ -4242,15 +4241,15 @@ EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
     // just have some smarts about unneccessarily splitting text nodes, which
     // should be universal enough to put straight in this EditorBase routine.
 
-    if (NS_WARN_IF(!atStartOfRightNode.Container()->IsContent())) {
+    if (NS_WARN_IF(!atStartOfRightNode.GetContainerAsContent())) {
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
-    nsIContent* currentRightNode = atStartOfRightNode.Container()->AsContent();
+    nsIContent* currentRightNode = atStartOfRightNode.GetContainerAsContent();
 
     // If the split point is middle of the node or the node is not a text node
     // and we're allowed to create empty element node, split it.
     if ((aSplitAtEdges == SplitAtEdges::eAllowToCreateEmptyContainer &&
-         !atStartOfRightNode.Container()->GetAsText()) ||
+         !atStartOfRightNode.GetContainerAsText()) ||
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
       IgnoredErrorResult error;
@@ -4547,17 +4546,16 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
   // If the selection is a chardata node, split it if necessary and compute
   // where to put the new node
   EditorDOMPoint atAnchor(selection->AnchorRef());
-  if (NS_WARN_IF(!atAnchor.IsSet()) ||
-      !atAnchor.Container()->IsNodeOfType(nsINode::eDATA_NODE)) {
+  if (NS_WARN_IF(!atAnchor.IsSet()) || !atAnchor.IsInDataNode()) {
     return NS_OK;
   }
 
-  if (NS_WARN_IF(!atAnchor.Container()->GetParentNode())) {
+  if (NS_WARN_IF(!atAnchor.GetContainer()->GetParentNode())) {
     return NS_ERROR_FAILURE;
   }
 
   if (atAnchor.IsStartOfContainer()) {
-    EditorRawDOMPoint atAnchorContainer(atAnchor.Container());
+    EditorRawDOMPoint atAnchorContainer(atAnchor.GetContainer());
     if (NS_WARN_IF(!atAnchorContainer.IsSetAndValid())) {
       return NS_ERROR_FAILURE;
     }
@@ -4570,7 +4568,7 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
   }
 
   if (atAnchor.IsEndOfContainer()) {
-    EditorRawDOMPoint afterAnchorContainer(atAnchor.Container());
+    EditorRawDOMPoint afterAnchorContainer(atAnchor.GetContainer());
     if (NS_WARN_IF(!afterAnchorContainer.AdvanceOffset())) {
       return NS_ERROR_FAILURE;
     }
@@ -4588,7 +4586,7 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
     return error.StealNSResult();
   }
 
-  EditorRawDOMPoint atRightNode(atAnchor.Container());
+  EditorRawDOMPoint atRightNode(atAnchor.GetContainer());
   if (NS_WARN_IF(!atRightNode.IsSet())) {
     return NS_ERROR_FAILURE;
   }
@@ -5252,7 +5250,7 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     EditorRawDOMPoint atStartOfFirstRange(firstRange->StartRef());
     EditorRawDOMPoint betterInsertionPoint =
       FindBetterInsertionPoint(atStartOfFirstRange);
-    Text* textNode = betterInsertionPoint.Container()->GetAsText();
+    Text* textNode = betterInsertionPoint.GetContainerAsText();
     MOZ_ASSERT(textNode,
                "There must be text node if mIMETextLength is larger than 0");
     if (textNode) {

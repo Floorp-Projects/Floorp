@@ -320,7 +320,8 @@ RangeUpdater::SelAdjSplitNode(nsIContent& aRightNode,
   }
 
   EditorRawDOMPoint atLeftNode(aNewLeftNode);
-  nsresult rv = SelAdjInsertNode(atLeftNode.Container(), atLeftNode.Offset());
+  nsresult rv =
+    SelAdjInsertNode(atLeftNode.GetContainer(), atLeftNode.Offset());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
