@@ -130,8 +130,10 @@ config = {
     # binaries are in the object directory, ready to be packaged into the
     # GeckoView AAR.
     'postflight_build_mach_commands': [
-        ['android',
-         'archive-geckoview',
+        ['gradle',
+         'geckoview:assembleWithGeckoBinaries',
+         'geckoview_example:assembleWithGeckoBinaries',
+         'uploadArchives',
         ],
     ],
 }
