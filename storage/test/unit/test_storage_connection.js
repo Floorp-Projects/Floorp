@@ -4,6 +4,16 @@
 
 // This file tests the functions of mozIStorageConnection
 
+function fetchAllNames(conn) {
+  let names = [];
+  let stmt = conn.createStatement(`SELECT name FROM test ORDER BY name`);
+  while (stmt.executeStep()) {
+    names.push(stmt.getUTF8String(0));
+  }
+  stmt.finalize();
+  return names;
+}
+
 // Test Functions
 
 add_task(async function test_connectionReady_open() {
@@ -716,16 +726,26 @@ add_task(async function test_clone_attach_database() {
     file.append("test_storage_" + (++c) + ".sqlite");
     let db = Services.storage.openUnsharedDatabase(file);
     conn.executeSimpleSQL(`ATTACH DATABASE '${db.databaseFile.path}' AS ${name}`);
+    db.executeSimpleSQL(`CREATE TABLE test_${name}(name TEXT);`);
     db.close();
   }
   attachDB(db1, "attached_1");
   attachDB(db1, "attached_2");
+  db1.executeSimpleSQL(`
+    CREATE TEMP TRIGGER test_temp_afterinsert_trigger
+    AFTER DELETE ON test_attached_1 FOR EACH ROW
+    BEGIN
+      INSERT INTO test(name) VALUES(OLD.name);
+    END`);
 
   // These should not throw.
   let stmt = db1.createStatement("SELECT * FROM attached_1.sqlite_master");
   stmt.finalize();
   stmt = db1.createStatement("SELECT * FROM attached_2.sqlite_master");
   stmt.finalize();
+  db1.executeSimpleSQL("INSERT INTO test_attached_1(name) VALUES('asuth')");
+  db1.executeSimpleSQL("DELETE FROM test_attached_1");
+  do_check_true(fetchAllNames(db1).includes("asuth"));
 
   // R/W clone.
   let db2 = db1.clone();
@@ -736,6 +756,11 @@ add_task(async function test_clone_attach_database() {
   stmt.finalize();
   stmt = db2.createStatement("SELECT * FROM attached_2.sqlite_master");
   stmt.finalize();
+  db2.executeSimpleSQL("INSERT INTO test_attached_1(name) VALUES('past')");
+  db2.executeSimpleSQL("DELETE FROM test_attached_1");
+  let newNames = fetchAllNames(db2);
+  do_check_true(newNames.includes("past"));
+  do_check_matches(fetchAllNames(db1), newNames);
 
   // R/O clone.
   let db3 = db1.clone(true);
@@ -789,12 +814,7 @@ add_task(async function test_async_clone_with_temp_trigger_and_table() {
   deleteStmt.finalize();
 
   do_print("Read from original connection");
-  let names = [];
-  let readStmt = db.createStatement(`SELECT name FROM test`);
-  while (readStmt.executeStep()) {
-    names.push(readStmt.getUTF8String(0));
-  }
-  readStmt.finalize();
+  let names = fetchAllNames(db);
   do_check_true(names.includes("mak"));
   do_check_true(names.includes("standard8"));
   do_check_true(names.includes("markh"));
