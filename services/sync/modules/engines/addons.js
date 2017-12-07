@@ -48,7 +48,6 @@ ChromeUtils.import("resource://services-sync/record.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://services-sync/collection_validator.js");
-ChromeUtils.import("resource://services-common/async.js");
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
@@ -382,7 +381,7 @@ AddonsStore.prototype = {
       // We continue with processing because there could be state or ID change.
     }
 
-    this.updateUserDisabled(addon, !record.enabled);
+    await this.updateUserDisabled(addon, !record.enabled);
   },
 
   /**
@@ -651,7 +650,7 @@ AddonsStore.prototype = {
    * @param value
    *        Boolean to which to set userDisabled on the passed Addon.
    */
-  updateUserDisabled(addon, value) {
+  async updateUserDisabled(addon, value) {
     if (addon.userDisabled == value) {
       return;
     }
@@ -668,7 +667,7 @@ AddonsStore.prototype = {
     // meaning the reconciler will not update its state and may resync the
     // addon - so explicitly rectify the state (bug 1366994)
     if (addon.appDisabled) {
-      this.reconciler.rectifyStateFromAddon(addon);
+      await this.reconciler.rectifyStateFromAddon(addon);
     }
   },
 };
@@ -696,14 +695,14 @@ AddonsTracker.prototype = {
    * This callback is executed whenever the AddonsReconciler sends out a change
    * notification. See AddonsReconciler.addChangeListener().
    */
-  changeListener: function changeHandler(date, change, addon) {
+  async changeListener(date, change, addon) {
     this._log.debug("changeListener invoked: " + change + " " + addon.id);
     // Ignore changes that occur during sync.
     if (this.ignoreAll) {
       return;
     }
 
-    if (!Async.promiseSpinningly(this.store.isAddonSyncable(addon))) {
+    if (!(await this.store.isAddonSyncable(addon))) {
       this._log.debug("Ignoring change because add-on isn't syncable: " +
                       addon.id);
       return;
