@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_DOMString_h
 #define mozilla_dom_DOMString_h
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsStringBuffer.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"

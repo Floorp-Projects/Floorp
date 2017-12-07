@@ -7,7 +7,7 @@
 #ifndef nsDOMString_h___
 #define nsDOMString_h___
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 inline bool DOMStringIsNull(const nsAString& aString)
 {
