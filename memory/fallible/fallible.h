@@ -48,18 +48,14 @@
  *     }
  *
  */
+
+#include <new>
+
 namespace mozilla {
 
-struct fallible_t { };
+using fallible_t = std::nothrow_t;
 
-/* This symbol is kept unexported, such that in corner cases where the
- * compiler can't remove its use (essentially, cross compilation-unit
- * calls), the smallest machine code is used.
- * Depending how the linker packs symbols, it will consume between 1 and
- * 8 bytes of read-only data in each executable or shared library, but
- * only in those where it's actually not optimized out by the compiler.
- */
-extern const fallible_t fallible;
+const fallible_t fallible = std::nothrow;
 
 } // namespace mozilla
 
