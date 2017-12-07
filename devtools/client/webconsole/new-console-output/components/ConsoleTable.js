@@ -50,7 +50,11 @@ class ConsoleTable extends Component {
 
   getHeaders(columns) {
     let headerItems = [];
-    columns.forEach((value, key) => headerItems.push(dom.th({}, value)));
+    columns.forEach((value, key) => headerItems.push(dom.div({
+      className: "new-consoletable-header",
+      role: "columnheader"
+    }, value))
+  );
     return headerItems;
   }
 
@@ -60,12 +64,15 @@ class ConsoleTable extends Component {
       serviceContainer,
     } = this.props;
 
-    return items.map(item => {
+    return items.map((item, index) => {
       let cells = [];
       columns.forEach((value, key) => {
         cells.push(
-          dom.td(
-            {},
+          dom.div(
+            {
+              role: "gridcell",
+              className: (index % 2) ? "odd" : "even"
+            },
             GripMessageBody({
               grip: item[key],
               mode: MODE.SHORT,
@@ -76,7 +83,7 @@ class ConsoleTable extends Component {
           )
         );
       });
-      return dom.tr({}, cells);
+      return cells;
     });
   }
 
@@ -97,9 +104,15 @@ class ConsoleTable extends Component {
     );
 
     return (
-      dom.table({className: "new-consoletable devtools-monospace"},
-        dom.thead({}, this.getHeaders(columns)),
-        dom.tbody({}, this.getRows(columns, items))
+      dom.div({
+        className: "new-consoletable",
+        role: "grid",
+        style: {
+          gridTemplateColumns: `repeat(${columns.size}, auto)`
+        }
+      },
+        this.getHeaders(columns),
+        this.getRows(columns, items)
       )
     );
   }
