@@ -246,17 +246,6 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
       UpdateHitTestingTree(layer, "CreateColorLayer");
       break;
     }
-    case Edit::TOpCreateTextLayer: {
-      MOZ_LAYERS_LOG(("[ParentSide] CreateTextLayer"));
-
-      RefPtr<TextLayer> layer = mLayerManager->CreateTextLayer();
-      if (!BindLayer(layer, edit.get_OpCreateTextLayer())) {
-        return IPC_FAIL_NO_REASON(this);
-      }
-
-      UpdateHitTestingTree(layer, "CreateTextLayer");
-      break;
-    }
     case Edit::TOpCreateBorderLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateBorderLayer"));
 
@@ -620,19 +609,6 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
     }
     colorLayer->SetColor(specific.get_ColorLayerAttributes().color().value());
     colorLayer->SetBounds(specific.get_ColorLayerAttributes().bounds());
-    break;
-  }
-  case Specific::TTextLayerAttributes: {
-    MOZ_LAYERS_LOG(("[ParentSide]   text layer"));
-
-    TextLayer* textLayer = layer->AsTextLayer();
-    if (!textLayer) {
-      return false;
-    }
-    const auto& tla = specific.get_TextLayerAttributes();
-    textLayer->SetBounds(tla.bounds());
-    textLayer->SetGlyphs(Move(const_cast<nsTArray<GlyphArray>&>(tla.glyphs())));
-    textLayer->SetScaledFont(reinterpret_cast<gfx::ScaledFont*>(tla.scaledFont()));
     break;
   }
   case Specific::TBorderLayerAttributes: {
