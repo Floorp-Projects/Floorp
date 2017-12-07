@@ -38,6 +38,10 @@ public:
 
     virtual FontType GetType() const override { return FONT_TYPE_FT2; }
 
+    static void SetupVarCoords(FT_Face aFace,
+                               const nsTArray<gfxFontVariation>& aVariations,
+                               nsTArray<FT_Fixed>* aCoords);
+
 private:
     uint32_t GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
     void InitMetrics();
