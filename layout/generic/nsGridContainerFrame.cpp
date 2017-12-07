@@ -1092,15 +1092,9 @@ struct nsGridContainerFrame::Tracks
                   nscoord                     aContentBoxSize);
 
   /**
-   * Return true if aRange spans at least one track with an intrinsic sizing
-   * function and does not span any tracks with a <flex> max-sizing function.
-   * @param aRange the span of tracks to check
-   * @param aState will be set to the union of the state bits of all the spanned
-   *               tracks, unless a flex track is found - then it only contains
-   *               the union of the tracks up to and including the flex track.
+   * Return the union of the state bits for the tracks in aRange.
    */
-  bool HasIntrinsicButNoFlexSizingInRange(const LineRange&      aRange,
-                                          TrackSize::StateBits* aState) const;
+   TrackSize::StateBits StateBitsForRange(const LineRange& aRange) const;
 
   // Some data we collect for aligning baseline-aligned items.
   struct ItemBaselineData
@@ -3755,28 +3749,17 @@ nsGridContainerFrame::Tracks::CalculateSizes(
   }
 }
 
-bool
-nsGridContainerFrame::Tracks::HasIntrinsicButNoFlexSizingInRange(
-  const LineRange&      aRange,
-  TrackSize::StateBits* aState) const
+TrackSize::StateBits
+nsGridContainerFrame::Tracks::StateBitsForRange(const LineRange& aRange) const
 {
   MOZ_ASSERT(!aRange.IsAuto(), "must have a definite range");
+  TrackSize::StateBits state = TrackSize::StateBits(0);
   const uint32_t start = aRange.mStart;
   const uint32_t end = aRange.mEnd;
-  const TrackSize::StateBits selector =
-    TrackSize::eIntrinsicMinSizing | TrackSize::eIntrinsicMaxSizing;
-  bool foundIntrinsic = false;
   for (uint32_t i = start; i < end; ++i) {
-    TrackSize::StateBits state = mSizes[i].mState;
-    *aState |= state;
-    if (state & TrackSize::eFlexMaxSizing) {
-      return false;
-    }
-    if (state & selector) {
-      foundIntrinsic = true;
-    }
+    state |= mSizes[i].mState;
   }
-  return foundIntrinsic;
+  return state;
 }
 
 bool
@@ -4215,8 +4198,10 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         gridItem.mState[mAxis] |= ItemState::eIsFlexing;
       }
     } else {
-      TrackSize::StateBits state = TrackSize::StateBits(0);
-      if (HasIntrinsicButNoFlexSizingInRange(lineRange, &state)) {
+      TrackSize::StateBits state = StateBitsForRange(lineRange);
+      if ((state & (TrackSize::eIntrinsicMinSizing |
+                    TrackSize::eIntrinsicMaxSizing)) &&
+          !(state & TrackSize::eFlexMaxSizing)) {
         // Collect data for Step 2.
         maxSpan = std::max(maxSpan, span);
         if (span >= stateBitsPerSpan.Length()) {
