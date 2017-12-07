@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 273168 2014-10-16 15:36:04Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 309682 2016-12-07 19:30:59Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_HEADER_H_
@@ -153,15 +155,32 @@ struct sctp_supported_chunk_types_param {
  */
 struct sctp_data {
 	uint32_t tsn;
-	uint16_t stream_id;
-	uint16_t stream_sequence;
-	uint32_t protocol_id;
+	uint16_t sid;
+	uint16_t ssn;
+	uint32_t ppid;
 	/* user data follows */
 } SCTP_PACKED;
 
 struct sctp_data_chunk {
 	struct sctp_chunkhdr ch;
 	struct sctp_data dp;
+} SCTP_PACKED;
+
+struct sctp_idata {
+	uint32_t tsn;
+	uint16_t sid;
+	uint16_t reserved;	/* Where does the SSN go? */
+	uint32_t mid;
+	union {
+		uint32_t ppid;
+		uint32_t fsn;	/* Fragment Sequence Number */
+	} ppid_fsn;
+	/* user data follows */
+} SCTP_PACKED;
+
+struct sctp_idata_chunk {
+	struct sctp_chunkhdr ch;
+	struct sctp_idata dp;
 } SCTP_PACKED;
 
 /*
@@ -218,34 +237,6 @@ struct sctp_state_cookie {	/* this is our definition... */
 	 * at the end is tacked on the INIT chunk and the INIT-ACK chunk
 	 * (minus the cookie).
 	 */
-} SCTP_PACKED;
-
-
-/* Used for NAT state error cause */
-struct sctp_missing_nat_state {
-	uint16_t cause;
-	uint16_t length;
-        uint8_t data[];
-} SCTP_PACKED;
-
-
-struct sctp_inv_mandatory_param {
-	uint16_t cause;
-	uint16_t length;
-	uint32_t num_param;
-	uint16_t param;
-	/*
-	 * We include this to 0 it since only a missing cookie will cause
-	 * this error.
-	 */
-	uint16_t resv;
-} SCTP_PACKED;
-
-struct sctp_unresolv_addr {
-	uint16_t cause;
-	uint16_t length;
-	uint16_t addr_type;
-	uint16_t reserved;	/* Only one invalid addr type */
 } SCTP_PACKED;
 
 /* state cookie parameter */
@@ -388,26 +379,9 @@ struct sctp_shutdown_complete_chunk {
 	struct sctp_chunkhdr ch;
 } SCTP_PACKED;
 
-/* Oper error holding a stale cookie */
-struct sctp_stale_cookie_msg {
-	struct sctp_paramhdr ph;/* really an error cause */
-	uint32_t time_usec;
-} SCTP_PACKED;
-
 struct sctp_adaptation_layer_indication {
 	struct sctp_paramhdr ph;
 	uint32_t indication;
-} SCTP_PACKED;
-
-struct sctp_cookie_while_shutting_down {
-	struct sctphdr sh;
-	struct sctp_chunkhdr ch;
-	struct sctp_paramhdr ph;/* really an error cause */
-} SCTP_PACKED;
-
-struct sctp_shutdown_complete_msg {
-	struct sctphdr sh;
-	struct sctp_shutdown_complete_chunk shut_cmp;
 } SCTP_PACKED;
 
 /*
@@ -437,9 +411,15 @@ struct sctp_forward_tsn_chunk {
 } SCTP_PACKED;
 
 struct sctp_strseq {
-	uint16_t stream;
-	uint16_t sequence;
+	uint16_t sid;
+	uint16_t ssn;
 } SCTP_PACKED;
+
+struct sctp_strseq_mid {
+	uint16_t sid;
+	uint16_t flags;
+	uint32_t mid;
+};
 
 struct sctp_forward_tsn_msg {
 	struct sctphdr sh;
@@ -572,12 +552,6 @@ struct sctp_auth_chunk {
 	uint8_t hmac[];
 } SCTP_PACKED;
 
-struct sctp_auth_invalid_hmac {
-	struct sctp_paramhdr ph;
-	uint16_t hmac_id;
-	uint16_t padding;
-} SCTP_PACKED;
-
 /*
  * we pre-reserve enough room for a ECNE or CWR AND a SACK with no missing
  * pieces. If ENCE is missing we could have a couple of blocks. This way we
@@ -631,7 +605,7 @@ struct sctp_auth_invalid_hmac {
 #include <packoff.h>
 #endif
 #if defined(__Userspace_os_Windows)
-#pragma pack ()
+#pragma pack(pop)
 #endif
 #undef SCTP_PACKED
 #endif				/* !__sctp_header_h__ */
