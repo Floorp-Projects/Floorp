@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'NonParamInsideFunctionDeclChecker.cpp',
     'OverrideBaseCallChecker.cpp',
     'OverrideBaseCallUsageChecker.cpp',
+    'ParamTraitsEnumChecker.cpp',
     'RefCountedCopyConstructorChecker.cpp',
     'RefCountedInsideLambdaChecker.cpp',
     'ScopeChecker.cpp',
