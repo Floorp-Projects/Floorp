@@ -10,6 +10,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsCRT.h"
 #include "mozilla/Likely.h"
+#include "nsMemory.h"
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozEnglishWordUtils)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozEnglishWordUtils)

@@ -16,6 +16,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSValue.h"
+#include "nsMemory.h"
 #include "nsStyleStruct.h"
 
 struct nsRuleData;
