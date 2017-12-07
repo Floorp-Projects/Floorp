@@ -414,7 +414,14 @@ static DWORD WINAPI SendThreadProc(LPVOID param)
     }
   }
 
-  PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
+  if (gAutoSubmit) {
+    // Ordinarily this is done on the main thread in CrashReporterDialogProc,
+    // for auto submit we don't run that and it should be safe to finish up
+    // here as is done on other platforms.
+    SendCompleted(finishedOk, WideToUTF8(gSendData.serverResponse));
+  } else {
+    PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
+  }
 
   return 0;
 }
@@ -1356,6 +1363,16 @@ bool UIShowCrashUI(const StringTable& files,
   if (gStrings.find("isRTL") != gStrings.end() &&
       gStrings["isRTL"] == "yes")
     gRTLlayout = true;
+
+  if (gAutoSubmit) {
+    gSendData.queryParameters = gQueryParameters;
+
+    gThreadHandle = CreateThread(nullptr, 0, SendThreadProc, &gSendData, 0,
+                                 nullptr);
+    WaitForSingleObject(gThreadHandle, INFINITE);
+    // SendCompleted was called from SendThreadProc
+    return true;
+  }
 
   return 1 == DialogBoxParamMaybeRTL(IDD_SENDDIALOG, nullptr,
                                      (DLGPROC)CrashReporterDialogProc, 0);
