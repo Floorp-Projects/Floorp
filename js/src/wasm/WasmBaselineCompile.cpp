@@ -3977,6 +3977,34 @@ class BaseCompiler final : public BaseCompilerInterface
 #endif
     }
 
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+    BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access, AccessCheck* check, RegI32 tls,
+                                        RegI32 ptr)
+    {
+        MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
+        prepareMemoryAccess(access, check, tls, ptr);
+        return BaseIndex(HeapReg, ptr, TimesOne, access->offset());
+    }
+#elif defined(JS_CODEGEN_X86)
+    // Some consumers depend on the address not retaining tls, as tls may be the
+    // scratch register.
+
+    Address prepareAtomicMemoryAccess(MemoryAccessDesc* access, AccessCheck* check, RegI32 tls,
+                                      RegI32 ptr)
+    {
+        MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
+        prepareMemoryAccess(access, check, tls, ptr);
+        masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
+        return Address(ptr, access->offset());
+    }
+#else
+    Address prepareAtomicMemoryAccess(MemoryAccessDesc* access, AccessCheck* check, RegI32 tls,
+                                      RegI32 ptr)
+    {
+        MOZ_CRASH("BaseCompiler platform hook: prepareAtomicMemoryAccess");
+    }
+#endif
+
     void needLoadTemps(const MemoryAccessDesc& access, RegI32* temp1, RegI32* temp2,
                        RegI32* temp3)
     {
@@ -8134,29 +8162,6 @@ BaseCompiler::emitCurrentMemory()
     return true;
 }
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
-
-# define ATOMIC_PTR(name, access, tls, ptr)                             \
-    BaseIndex name(HeapReg, (ptr), TimesOne, (access)->offset())
-
-#elif defined(JS_CODEGEN_X86)
-
-    // Some code below depends on the address not retaining tls, as tls may be
-    // the scratch register.
-
-# define ATOMIC_PTR(name, access, tls, ptr)                             \
-    MOZ_ASSERT((tls).isValid());                                        \
-    masm.addPtr(Address((tls), offsetof(TlsData, memoryBase)), (ptr));  \
-    Address name((ptr), (access)->offset())
-
-#else
-
-# define ATOMIC_PTR(name, access, tls, ptr)                       \
-    MOZ_CRASH("BaseCompiler platform hook: address computation"); \
-    Address srcAddr
-
-#endif
-
 bool
 BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
 {
@@ -8179,9 +8184,7 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
         RegI32 rp = popMemoryAccess(&access, &check);
         RegI32 tls = maybeLoadTlsForAccess(check);
 
-        prepareMemoryAccess(&access, &check, tls, rp);
-        ATOMIC_PTR(srcAddr, &access, tls, rp);
-        regs.atomicCmpXchg32(srcAddr, viewType);
+        regs.atomicCmpXchg32(prepareAtomicMemoryAccess(&access, &check, tls, rp), viewType);
 
         maybeFreeI32(tls);
         freeI32(rp);
@@ -8204,17 +8207,10 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
 #ifdef JS_CODEGEN_X86
     ScratchEBX ebx(*this);
     RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-    prepareMemoryAccess(&access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, &access, tls, rp);
-
-    regs.atomicCmpXchg64(srcAddr, ebx);
+    regs.atomicCmpXchg64(prepareAtomicMemoryAccess(&access, &check, tls, rp), ebx);
 #else
     RegI32 tls = maybeLoadTlsForAccess(check);
-    prepareMemoryAccess(&access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, &access, tls, rp);
-
-    regs.atomicCmpXchg64(srcAddr);
-
+    regs.atomicCmpXchg64(prepareAtomicMemoryAccess(&access, &check, tls, rp));
     maybeFreeI32(tls);
 #endif
 
@@ -8253,16 +8249,10 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
 # ifdef JS_CODEGEN_X86
     ScratchEBX ebx(*this);
     RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-    prepareMemoryAccess(&access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, &access, tls, rp);
-
-    regs.atomicLoad64(srcAddr, ebx);
+    regs.atomicLoad64(prepareAtomicMemoryAccess(&access, &check, tls, rp), ebx);
 # else
     RegI32 tls = maybeLoadTlsForAccess(check);
-    prepareMemoryAccess(&access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, &access, tls, rp);
-
-    regs.atomicLoad64(srcAddr);
+    regs.atomicLoad64(prepareAtomicMemoryAccess(&access, &check, tls, rp));
     maybeFreeI32(tls);
 # endif
 
@@ -8293,10 +8283,8 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
         AccessCheck check;
         RegI32 rp = popMemoryAccess(&access, &check);
         RegI32 tls = maybeLoadTlsForAccess(check);
-        prepareMemoryAccess(&access, &check, tls, rp);
-        ATOMIC_PTR(srcAddr, &access, tls, rp);
 
-        regs.atomicRMW32(srcAddr, viewType, op);
+        regs.atomicRMW32(prepareAtomicMemoryAccess(&access, &check, tls, rp), viewType, op);
 
         maybeFreeI32(tls);
         freeI32(rp);
@@ -8318,23 +8306,17 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
 #ifdef JS_CODEGEN_X86
     ScratchEBX ebx(*this);
     RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-    prepareMemoryAccess(&access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, &access, tls, rp);
 
     fr.pushPtr(regs.valueHigh());
     fr.pushPtr(regs.valueLow());
     Address value(esp, 0);
 
-    regs.atomicRMW64(srcAddr, op, value, ebx);
+    regs.atomicRMW64(prepareAtomicMemoryAccess(&access, &check, tls, rp), op, value, ebx);
 
     fr.popBytes(8);
 #else
     RegI32 tls = maybeLoadTlsForAccess(check);
-    prepareMemoryAccess(&access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, &access, tls, rp);
-
-    regs.atomicRMW64(srcAddr, op);
-
+    regs.atomicRMW64(prepareAtomicMemoryAccess(&access, &check, tls, rp), op);
     maybeFreeI32(tls);
 #endif
 
@@ -8391,10 +8373,7 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
         RegI32 rp = popMemoryAccess(&access, &check);
         RegI32 tls = maybeLoadTlsForAccess(check);
 
-        prepareMemoryAccess(&access, &check, tls, rp);
-        ATOMIC_PTR(srcAddr, &access, tls, rp);
-
-        regs.atomicXchg32(srcAddr, viewType);
+        regs.atomicXchg32(prepareAtomicMemoryAccess(&access, &check, tls, rp), viewType);
 
         maybeFreeI32(tls);
         freeI32(rp);
@@ -8423,16 +8402,10 @@ BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access, ValType type, WantResul
 #ifdef JS_CODEGEN_X86
     ScratchEBX ebx(*this);
     RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-    prepareMemoryAccess(access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, access, tls, rp);
-
-    regs.atomicXchg64(srcAddr, ebx);
+    regs.atomicXchg64(prepareAtomicMemoryAccess(access, &check, tls, rp), ebx);
 #else
     RegI32 tls = maybeLoadTlsForAccess(check);
-    prepareMemoryAccess(access, &check, tls, rp);
-    ATOMIC_PTR(srcAddr, access, tls, rp);
-
-    regs.atomicXchg64(srcAddr);
+    regs.atomicXchg64(prepareAtomicMemoryAccess(access, &check, tls, rp));
     maybeFreeI32(tls);
 #endif
 
@@ -9402,4 +9375,3 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
 #undef RABALDR_INT_DIV_I64_CALLOUT
 #undef RABALDR_I64_TO_FLOAT_CALLOUT
 #undef RABALDR_FLOAT_TO_I64_CALLOUT
-#undef ATOMIC_PTR
