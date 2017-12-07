@@ -12,7 +12,11 @@
 namespace mozilla {
 class MediaByteBuffer;
 
-class BufferStream : public ByteStream
+DDLoggedTypeDeclNameAndBase(BufferStream, ByteStream);
+
+class BufferStream
+  : public ByteStream
+  , public mozilla::DecoderDoctorLifeLogger<BufferStream>
 {
 public:
   /* BufferStream does not take ownership of aData nor does it make a copy.

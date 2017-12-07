@@ -13844,6 +13844,15 @@
     "n_values": 64,
     "description": "URL CLassifier-related (aka Safe Browsing) UI events. See nsIUrlClassifierUITelemetry.idl for the specific values."
   },
+  "USER_CHROME_CSS_LOADED": {
+    "record_in_processes": ["main"],
+    "bug_numbers": [1416044],
+    "expires_in_version": "62",
+    "alert_emails": ["sfoster@mozilla.com"],
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Was a userChrome.css stylesheet loaded when the profile was initialized?"
+  },
  "WEBAUTHN_CREATE_CREDENTIAL_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],

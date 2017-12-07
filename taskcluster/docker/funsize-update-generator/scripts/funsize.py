@@ -1,13 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function
 
-import ConfigParser
+import configparser
 import argparse
-import functools
 import hashlib
 import json
 import logging
@@ -108,7 +107,7 @@ def get_option(directory, filename, section, option):
     log.debug("Exctracting [%s]: %s from %s/**/%s", section, option, directory,
               filename)
     f = find_file(directory, filename)
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(f)
     rv = config.get(section, option)
     log.debug("Found %s", rv)
@@ -137,8 +136,7 @@ def generate_partial(work_env, from_dir, to_dir, dest_mar, channel_ids,
 def get_hash(path, hash_type="sha512"):
     h = hashlib.new(hash_type)
     with open(path, "rb") as f:
-        for chunk in iter(functools.partial(f.read, 4096), ''):
-            h.update(chunk)
+        h.update(f.read())
     return h.hexdigest()
 
 
@@ -208,8 +206,8 @@ def main():
                         default=logging.DEBUG)
     args = parser.parse_args()
 
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
-                        level=args.log_level)
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
+    log.setLevel(args.log_level)
     task = json.load(args.task_definition)
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
 

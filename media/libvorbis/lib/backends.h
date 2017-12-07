@@ -12,7 +12,6 @@
 
  function: libvorbis backend and mapping structures; needed for
            static mode headers
- last mod: $Id$
 
  ********************************************************************/
 

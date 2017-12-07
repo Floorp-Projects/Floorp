@@ -491,6 +491,17 @@
                            label="&appMenuRemoteTabs.signin.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
+          <vbox id="PanelUI-remotetabs-unverified"
+                flex="1"
+                align="center"
+                class="PanelUI-remotetabs-instruction-box"
+                observes="sync-unverified-state">
+            <image class="fxaSyncIllustrationIssue"/>
+            <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.unverified.label;</label>
+            <toolbarbutton class="PanelUI-remotetabs-button"
+                           label="&appMenuRemoteTabs.signin.label;"
+                           oncommand="gSync.openPrefs('synced-tabs');"/>
+          </vbox>
         </hbox>
       </vbox>
     </panelview>

@@ -18,7 +18,11 @@
 
 namespace mozilla {
 
-class VorbisDataDecoder : public MediaDataDecoder
+DDLoggedTypeDeclNameAndBase(VorbisDataDecoder, MediaDataDecoder);
+
+class VorbisDataDecoder
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<VorbisDataDecoder>
 {
 public:
   explicit VorbisDataDecoder(const CreateDecoderParams& aParams);

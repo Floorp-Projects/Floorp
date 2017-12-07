@@ -2,40 +2,36 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "command": "${workspaceRoot}/mach",
     "windows": {
       "command": "\"\\mozilla-build\\start-shell.bat mach\""
     },
-    "osx": {
-      "command": "${workspaceRoot}/mach"
-    },
-    "linux": {
-      "command": "${workspaceRoot}/mach"
-    },
-    "isShellCommand": true,
     "args": ["--log-no-times"],
-    "showOutput": "silent",
     "echoCommand": true,
-    "suppressTaskName": false,
     "tasks": [
       {
-        "taskName": "clobber"
+        "label": "clobber-python",
+        "type":"shell",
+        "command": "${workspaceRoot}/mach",
+        "windows": {
+          "command": "\"\\mozilla-build\\start-shell.bat mach\""
+        },
+        "args": ["clobber", "python"],
+        "problemMatcher": []
       },
       {
-        "taskName": "clobber-python",
-        "suppressTaskName": true,
-        "args": ["clobber", "python"]
+        "label": "configure",
+        "type":"shell",
+        "problemMatcher": []
       },
       {
-        "taskName": "configure"
-      },
-      {
-        "taskName": "build",
-        "isBuildCommand": true,
+        "label": "build",
+        "type":"shell",
         "problemMatcher": {
           "owner": "cpp",
           "fileLocation": "absolute",
           "pattern": {
-            "regexp": "^.*?tools([^\\s]*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "regexp": "^.*?([^\\s]*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
             "file": 1,
             "line": 2,
             "column": 3,
@@ -45,9 +41,38 @@
         }
       },
       {
-        "taskName": "build-binaries",
-        "suppressTaskName": true,
-        "args": ["build", "binaries"],
+        "label": "build-binaries",
+        "type":"shell",
+        "command": "${workspaceRoot}/mach",
+        "windows": {
+          "command": "\"\\mozilla-build\\start-shell.bat mach\""
+        },
+        "args": ["--log-no-times", "build", "binaries"],
+        "problemMatcher": {
+          "owner": "cpp",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        },
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        }
+      },
+      {
+        "label": "build-faster",
+        "type":"shell",
+        "command": "${workspaceRoot}/mach",
+        "windows": {
+          "command": "\"\\mozilla-build\\start-shell.bat mach\""
+        },
+        "args": ["--log-no-times", "build", "faster"],
         "problemMatcher": {
           "owner": "cpp",
           "fileLocation": "absolute",
@@ -62,53 +87,50 @@
         }
       },
       {
-        "taskName": "build-faster",
-        "suppressTaskName": true,
-        "args": ["build", "faster"],
-        "problemMatcher": {
-          "owner": "cpp",
-          "fileLocation": "absolute",
-          "pattern": {
-            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-            "file": 1,
-            "line": 2,
-            "column": 3,
-            "severity": 4,
-            "message": 5
-          }
-        }
-      },
-      {
-        "taskName": "run",
+        "label": "run",
+        "type":"shell",
         "args": ["-purgecaches"],
-        "showOutput": "always"
+        "problemMatcher": []
       },
       {
-        "taskName": "lint-wo",
-        "suppressTaskName": true,
+        "label": "lint-wo",
+        "type":"shell",
+        "command": "${workspaceRoot}/mach",
+        "windows": {
+          "command": "\"\\mozilla-build\\start-shell.bat mach\""
+        },
         "args": ["lint", "-wo"],
         "problemMatcher": ["$eslint-stylish"]
       },
       {
-        "taskName": "eslint",
+        "label": "eslint",
+        "type": "shell",
         "problemMatcher": ["$eslint-stylish"]
       },
       {
-        "taskName": "eslint-fix",
-        "suppressTaskName": true,
+        "label": "eslint-fix",
+        "type":"shell",
+        "command": "${workspaceRoot}/mach",
+        "windows": {
+          "command": "\"\\mozilla-build\\start-shell.bat mach\""
+        },
         "args": ["eslint", "--fix", "${file}"],
         "problemMatcher": ["$eslint-stylish"]
       },
       {
-        "taskName": "test",
+        "label": "test",
+        "type":"shell",
         "args": ["${relativeFile}"],
-        "isTestCommand": true,
-        "showOutput": "always"
+        "group":"test",
+        "presentation": {
+            "reveal": "always",
+            "panel": "new"
+        }
       },
       {
-        "taskName": "mochitest",
+        "label": "mochitest",
+        "type":"shell",
         "args": ["${relativeFile}"],
-        "showOutput": "always",
         "problemMatcher": {
           "fileLocation": ["relative", "${workspaceRoot}"],
           "pattern": {
@@ -117,12 +139,16 @@
               "file": 2,
               "message": 3
           }
+        },
+        "presentation": {
+            "reveal": "always",
+            "panel": "new"
         }
       },
       {
-        "taskName": "reftest",
+        "label": "reftest",
+        "type":"shell",
         "args": ["${relativeFile}"],
-        "showOutput": "always",
         "problemMatcher": {
           "fileLocation": ["absolute"],
           "pattern": {
@@ -131,12 +157,16 @@
               "file": 2,
               "message": 3
           }
+        },
+        "presentation": {
+            "reveal": "always",
+            "panel": "new"
         }
       },
       {
-        "taskName": "xpcshell-test",
+        "label": "xpcshell-test",
+        "type":"shell",
         "args": ["${relativeFile}", "--sequential"],
-        "showOutput": "always",
         "problemMatcher": {
           "fileLocation": ["relative", "${workspaceRoot}"],
           "pattern": {
@@ -146,6 +176,10 @@
               "location": 3,
               "message": 4
           }
+        },
+        "presentation": {
+              "reveal": "always",
+              "panel": "new"
         }
       }
     ]

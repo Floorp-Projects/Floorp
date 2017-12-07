@@ -14,7 +14,9 @@
 #include "mozilla/UniquePtr.h"
 #include "VideoUtils.h"
 
-#define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
+#define LOGEX(_this, ...)                                                      \
+  DDMOZ_LOGEX(_this, sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
 #define FourCC2Str(n) ((char[5]){(char)(n >> 24), (char)(n >> 16), (char)(n >> 8), (char)(n), 0})
 
 namespace mozilla {
@@ -622,7 +624,7 @@ _MetadataCallback(void* aAppleATDecoder,
   AppleATDecoder* decoder = static_cast<AppleATDecoder*>(aAppleATDecoder);
   MOZ_RELEASE_ASSERT(decoder->mTaskQueue->IsCurrentThreadIn());
 
-  LOG("MetadataCallback receiving: '%s'", FourCC2Str(aProperty));
+  LOGEX(decoder, "MetadataCallback receiving: '%s'", FourCC2Str(aProperty));
   if (aProperty == kAudioFileStreamProperty_MagicCookieData) {
     UInt32 size;
     Boolean writeable;
@@ -631,8 +633,10 @@ _MetadataCallback(void* aAppleATDecoder,
                                                  &size,
                                                  &writeable);
     if (rv) {
-      LOG("Couldn't get property info for '%s' (%s)",
-          FourCC2Str(aProperty), FourCC2Str(rv));
+      LOGEX(decoder,
+            "Couldn't get property info for '%s' (%s)",
+            FourCC2Str(aProperty),
+            FourCC2Str(rv));
       decoder->mFileStreamError = true;
       return;
     }
@@ -640,8 +644,10 @@ _MetadataCallback(void* aAppleATDecoder,
     rv = AudioFileStreamGetProperty(aStream, aProperty,
                                     &size, data.get());
     if (rv) {
-      LOG("Couldn't get property '%s' (%s)",
-          FourCC2Str(aProperty), FourCC2Str(rv));
+      LOGEX(decoder,
+            "Couldn't get property '%s' (%s)",
+            FourCC2Str(aProperty),
+            FourCC2Str(rv));
       decoder->mFileStreamError = true;
       return;
     }
@@ -709,3 +715,6 @@ AppleATDecoder::GetImplicitAACMagicCookie(const MediaRawData* aSample)
 }
 
 } // namespace mozilla
+
+#undef LOG
+#undef LOGEX

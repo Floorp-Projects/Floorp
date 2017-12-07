@@ -60,15 +60,8 @@ class TestGenerateManifest(TestWithTmpDir):
             self.assertTrue(os.path.exists(self.tmppath('dest/foo/file2')))
             self.assertTrue(os.path.exists(self.tmppath('dest/foo/file3')))
 
-    @expectedFailure
-    def test_process_manifest2(self):
-        self.test_process_manifest()
         m = InstallManifest()
-        p = self.tmppath('m')
         m.write(path=p)
-
-        dest = self.tmppath('dest')
-        track = self.tmppath('track')
 
         for i in range(2):
             process_install_manifest.process_manifest(dest, [p], track)

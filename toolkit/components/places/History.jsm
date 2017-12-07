@@ -1315,6 +1315,7 @@ var remove = async function(db, {guids, urls}, onResult = null) {
  */
 function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
   pageInfo.guid = updateInfo.guid;
+  pageInfo.title = updateInfo.title;
   if (!pageInfo.url) {
     pageInfo.url = new URL(updateInfo.uri.spec);
     pageInfo.title = updateInfo.title;

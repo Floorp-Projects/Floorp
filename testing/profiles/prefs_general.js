@@ -159,8 +159,6 @@ user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_com
 user_pref("dom.use_xbl_scopes_for_remote_xul", true);
 
 user_pref("captivedetect.canonicalURL", "http://%(server)s/captive-detect/success.txt");
-// Get network events.
-user_pref("network.activity.blipIntervalMilliseconds", 250);
 
 // We do not wish to display datareporting policy notifications as it might
 // cause other tests to fail. Tests that wish to test the notification functionality

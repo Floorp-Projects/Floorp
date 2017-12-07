@@ -18,7 +18,11 @@ namespace mozilla {
 
 class BaseMediaResource;
 
-class ChannelMediaDecoder : public MediaDecoder
+DDLoggedTypeDeclNameAndBase(ChannelMediaDecoder, MediaDecoder);
+
+class ChannelMediaDecoder
+  : public MediaDecoder
+  , public DecoderDoctorLifeLogger<ChannelMediaDecoder>
 {
   // Used to register with MediaResource to receive notifications which will
   // be forwarded to MediaDecoder.
@@ -36,6 +40,8 @@ class ChannelMediaDecoder : public MediaDecoder
     void Disconnect();
 
   private:
+    ~ResourceCallback();
+
     /* MediaResourceCallback functions */
     AbstractThread* AbstractMainThread() const override;
     MediaDecoderOwner* GetMediaOwner() const override;

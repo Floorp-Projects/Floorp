@@ -11,7 +11,6 @@
  ********************************************************************
 
  function: maintain the info structure, info <-> header packets
- last mod: $Id$
 
  ********************************************************************/
 
@@ -212,9 +211,9 @@ static int _vorbis_unpack_info(vorbis_info *vi,oggpack_buffer *opb){
   vi->channels=oggpack_read(opb,8);
   vi->rate=oggpack_read(opb,32);
 
-  vi->bitrate_upper=oggpack_read(opb,32);
-  vi->bitrate_nominal=oggpack_read(opb,32);
-  vi->bitrate_lower=oggpack_read(opb,32);
+  vi->bitrate_upper=(ogg_int32_t)oggpack_read(opb,32);
+  vi->bitrate_nominal=(ogg_int32_t)oggpack_read(opb,32);
+  vi->bitrate_lower=(ogg_int32_t)oggpack_read(opb,32);
 
   ci->blocksizes[0]=1<<oggpack_read(opb,4);
   ci->blocksizes[1]=1<<oggpack_read(opb,4);
@@ -648,7 +647,7 @@ int vorbis_analysis_headerout(vorbis_dsp_state *v,
   memset(op_code,0,sizeof(*op_code));
 
   if(b){
-    oggpack_writeclear(&opb);
+    if(vi->channels>0)oggpack_writeclear(&opb);
     if(b->header)_ogg_free(b->header);
     if(b->header1)_ogg_free(b->header1);
     if(b->header2)_ogg_free(b->header2);

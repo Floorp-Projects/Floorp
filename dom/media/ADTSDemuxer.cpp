@@ -12,10 +12,10 @@
 #include <inttypes.h>
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
-#define ADTSLOG(msg, ...) \
-  MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, ("ADTSDemuxer " msg, ##__VA_ARGS__))
-#define ADTSLOGV(msg, ...) \
-  MOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, ("ADTSDemuxer " msg, ##__VA_ARGS__))
+#define ADTSLOG(msg, ...)                                                      \
+  DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
+#define ADTSLOGV(msg, ...)                                                     \
+  DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, msg, ##__VA_ARGS__)
 
 namespace mozilla {
 namespace adts {
@@ -263,6 +263,7 @@ using media::TimeUnit;
 ADTSDemuxer::ADTSDemuxer(MediaResource* aSource)
   : mSource(aSource)
 {
+  DDLINKCHILD("source", aSource);
 }
 
 bool
@@ -270,6 +271,7 @@ ADTSDemuxer::InitInternal()
 {
   if (!mTrackDemuxer) {
     mTrackDemuxer = new ADTSTrackDemuxer(mSource);
+    DDLINKCHILD("track demuxer", mTrackDemuxer.get());
   }
   return mTrackDemuxer->Init();
 }
@@ -326,6 +328,7 @@ ADTSTrackDemuxer::ADTSTrackDemuxer(MediaResource* aSource)
   , mSamplesPerSecond(0)
   , mChannels(0)
 {
+  DDLINKCHILD("source", aSource);
   Reset();
 }
 

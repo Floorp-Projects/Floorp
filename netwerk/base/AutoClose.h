@@ -8,6 +8,7 @@
 #define mozilla_net_AutoClose_h
 
 #include "nsCOMPtr.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla { namespace net {
 
@@ -18,49 +19,48 @@ template <typename T>
 class AutoClose
 {
 public:
-  AutoClose() { }
+  AutoClose() : mMutex("net::AutoClose.mMutex") { }
   ~AutoClose(){
-    Close();
+    CloseAndRelease();
   }
 
-  explicit operator bool() const
+  explicit operator bool()
   {
+    MutexAutoLock lock(mMutex);
     return mPtr;
   }
 
   already_AddRefed<T> forget()
   {
+    MutexAutoLock lock(mMutex);
     return mPtr.forget();
   }
 
   void takeOver(nsCOMPtr<T> & rhs)
   {
-    Close();
-    mPtr = rhs.forget();
-  }
-
-  void takeOver(AutoClose<T> & rhs)
-  {
-    Close();
-    mPtr = rhs.mPtr.forget();
+    already_AddRefed<T> other = rhs.forget();
+    TakeOverInternal(&other);
   }
 
   void CloseAndRelease()
   {
-    Close();
-    mPtr = nullptr;
-  }
-
-  T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
-  {
-    return mPtr.operator->();
+    TakeOverInternal(nullptr);
   }
 
 private:
-  void Close()
+  void TakeOverInternal(already_AddRefed<T> *aOther)
   {
-    if (mPtr) {
-      mPtr->Close();
+    nsCOMPtr<T> ptr;
+    {
+      MutexAutoLock lock(mMutex);
+      ptr.swap(mPtr);
+      if (aOther) {
+        mPtr = *aOther;
+      }
+    }
+
+    if (ptr) {
+      ptr->Close();
     }
   }
 
@@ -68,6 +68,7 @@ private:
   AutoClose(const AutoClose<T> &) = delete;
 
   nsCOMPtr<T> mPtr;
+  Mutex mMutex;
 };
 
 } // namespace net

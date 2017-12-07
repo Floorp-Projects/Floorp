@@ -248,19 +248,38 @@ ProgressGraphHelper.prototype = {
 
   /**
    * Create the path segments from given parameters.
-   * @param {Number} startTime - Starting time of animation.
-   * @param {Number} endTime - Ending time of animation.
+   *
+   * @param {Number} duration - Duration of animation.
    * @param {Number} minSegmentDuration - Minimum segment duration.
    * @param {Number} minProgressThreshold - Minimum progress threshold.
    * @return {Array} path segments -
    *                 [{x: {Number} time, y: {Number} progress}, ...]
    */
-  createPathSegments: function (startTime, endTime,
-                                minSegmentDuration, minProgressThreshold) {
-    return !this.valueHelperFunction
-           ? createKeyframesPathSegments(endTime - startTime, this.devtoolsKeyframes)
-           : createPathSegments(startTime, endTime,
-                                minSegmentDuration, minProgressThreshold, this);
+  createPathSegments: function (duration, minSegmentDuration, minProgressThreshold) {
+    if (!this.valueHelperFunction) {
+      return createKeyframesPathSegments(duration, this.devtoolsKeyframes);
+    }
+
+    const segments = [];
+
+    for (let i = 0; i < this.devtoolsKeyframes.length - 1; i++) {
+      const startKeyframe = this.devtoolsKeyframes[i];
+      const endKeyframe = this.devtoolsKeyframes[i + 1];
+
+      let threshold = getPreferredProgressThreshold(startKeyframe.easing);
+      if (threshold !== DEFAULT_MIN_PROGRESS_THRESHOLD) {
+        // We should consider the keyframe's duration.
+        threshold *= (endKeyframe.offset - startKeyframe.offset);
+      }
+
+      const startTime = parseFloat((startKeyframe.offset * duration).toFixed(3));
+      const endTime = parseFloat((endKeyframe.offset * duration).toFixed(3));
+
+      segments.push(...createPathSegments(startTime, endTime,
+                                          minSegmentDuration, threshold, this));
+    }
+
+    return segments;
   },
 
   /**
@@ -354,12 +373,24 @@ SummaryGraphHelper.prototype = {
    */
   setKeyframes: function (keyframes) {
     let frames = null;
+    // We need to change the duration resolution in case of interval of keyframes offset
+    // was narrow.
+    let durationResolution = DURATION_RESOLUTION;
+
     if (keyframes) {
+      let previousOffset = 0;
+
       // Create new keyframes for opacity as computed style.
       // The reason why we use computed value instead of computed timing progress is to
       // include the easing in keyframes as well. Although the computed timing progress
       // is not affected by the easing in keyframes at all, computed value reflects that.
       frames = keyframes.map(keyframe => {
+        if (previousOffset) {
+          const interval = keyframe.offset - previousOffset;
+          durationResolution = Math.max(durationResolution, Math.ceil(1 / interval));
+        }
+        previousOffset = keyframe.offset;
+
         return {
           opacity: keyframe.offset,
           offset: keyframe.offset,
@@ -371,6 +402,8 @@ SummaryGraphHelper.prototype = {
       // during the delay phase and it is not filling backwards, we get zero.
       this.targetEl.style.opacity = 0;
     }
+
+    this.durationResolution = durationResolution;
     this.animation.effect.setKeyframes(frames);
     this.hasFrames = !!frames;
   },
@@ -436,14 +469,12 @@ SummaryGraphHelper.prototype = {
    * Create the path segments from given parameters.
    * @param {Number} startTime - Starting time of animation.
    * @param {Number} endTime - Ending time of animation.
-   * @param {Number} minSegmentDuration - Minimum segment duration.
-   * @param {Number} minProgressThreshold - Minimum progress threshold.
    * @return {Array} path segments -
    *                 [{x: {Number} time, y: {Number} progress}, ...]
    */
   createPathSegments: function (startTime, endTime) {
-    return createPathSegments(startTime, endTime,
-                              this.minSegmentDuration, this.minProgressThreshold, this);
+    return createPathSegments(startTime, endTime, this.minSegmentDuration,
+                              this.minProgressThreshold, this, this.durationResolution);
   },
 
   /**
@@ -484,13 +515,16 @@ exports.SummaryGraphHelper = SummaryGraphHelper;
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
  * @param {Object} segmentHelper
+ * @param {Number} resolution - Duration resolution for first time.
+ *                              If null, use DURATION_RESOLUTION.
  * - getSegment(time): Helper function that, given a time,
  *                     will calculate the animation progress.
  * @return {Array} path segments -
  *                 [{x: {Number} time, y: {Number} progress}, ...]
  */
 function createPathSegments(startTime, endTime, minSegmentDuration,
-                            minProgressThreshold, segmentHelper) {
+                            minProgressThreshold, segmentHelper,
+                            resolution = DURATION_RESOLUTION) {
   // If the duration is too short, early return.
   if (endTime - startTime < minSegmentDuration) {
     return [segmentHelper.getSegment(startTime),
@@ -507,8 +541,8 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
 
   // Split the duration in equal intervals, and iterate over them.
   // See the definition of DURATION_RESOLUTION for more information about this.
-  const interval = (endTime - startTime) / DURATION_RESOLUTION;
-  for (let index = 1; index <= DURATION_RESOLUTION; index++) {
+  const interval = (endTime - startTime) / resolution;
+  for (let index = 1; index <= resolution; index++) {
     // Create a segment for this interval.
     const currentSegment =
       segmentHelper.getSegment(startTime + index * interval);

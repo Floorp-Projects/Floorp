@@ -159,7 +159,7 @@ add_task(async function testPanelStatus() {
   account = {verified: false};
 
   result = await component.getPanelStatus();
-  Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
+  Assert.equal(result, component.PANELS.UNVERIFIED);
 
   account = {verified: true};
 

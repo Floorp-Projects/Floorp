@@ -14,7 +14,11 @@
 
 namespace mozilla {
 
-class RemoteDataDecoder : public MediaDataDecoder
+DDLoggedTypeDeclNameAndBase(RemoteDataDecoder, MediaDataDecoder);
+
+class RemoteDataDecoder
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<RemoteDataDecoder>
 {
 public:
   static already_AddRefed<MediaDataDecoder>

@@ -21,8 +21,9 @@ extern "C" {
 #include "opus/opus_multistream.h"
 }
 
-#define OPUS_DEBUG(arg, ...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, \
-    ("OpusDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define OPUS_DEBUG(arg, ...)                                                   \
+  DDMOZ_LOG(                                                                   \
+    sPDMLog, mozilla::LogLevel::Debug, "::%s: " arg, __func__, ##__VA_ARGS__)
 
 namespace mozilla {
 

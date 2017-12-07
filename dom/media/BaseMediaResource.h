@@ -17,7 +17,11 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-class BaseMediaResource : public MediaResource
+DDLoggedTypeDeclNameAndBase(BaseMediaResource, MediaResource);
+
+class BaseMediaResource
+  : public MediaResource
+  , public DecoderDoctorLifeLogger<BaseMediaResource>
 {
 public:
   /**

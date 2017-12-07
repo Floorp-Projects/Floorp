@@ -111,10 +111,16 @@ MoofParser::FirstCompleteMediaSegment()
   return MediaByteRange();
 }
 
-class BlockingStream : public ByteStream {
+DDLoggedTypeDeclNameAndBase(BlockingStream, ByteStream);
+
+class BlockingStream
+  : public ByteStream
+  , public DecoderDoctorLifeLogger<BlockingStream>
+{
 public:
   explicit BlockingStream(ByteStream* aStream) : mStream(aStream)
   {
+    DDLINKCHILD("stream", aStream);
   }
 
   bool ReadAt(int64_t offset, void* data, size_t size, size_t* bytes_read)

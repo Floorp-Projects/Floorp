@@ -17,15 +17,17 @@ mozilla::LogModule* GetSourceBufferResourceLog()
 }
 
 #define SBR_DEBUG(arg, ...)                                                    \
-  MOZ_LOG(                                                                     \
-    GetSourceBufferResourceLog(),                                              \
-    mozilla::LogLevel::Debug,                                                  \
-    ("SourceBufferResource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+  DDMOZ_LOG(GetSourceBufferResourceLog(),                                      \
+            mozilla::LogLevel::Debug,                                          \
+            "::%s: " arg,                                                      \
+            __func__,                                                          \
+            ##__VA_ARGS__)
 #define SBR_DEBUGV(arg, ...)                                                   \
-  MOZ_LOG(                                                                     \
-    GetSourceBufferResourceLog(),                                              \
-    mozilla::LogLevel::Verbose,                                                \
-    ("SourceBufferResource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+  DDMOZ_LOG(GetSourceBufferResourceLog(),                                      \
+            mozilla::LogLevel::Verbose,                                        \
+            "::%s: " arg,                                                      \
+            __func__,                                                          \
+            ##__VA_ARGS__)
 
 namespace mozilla {
 

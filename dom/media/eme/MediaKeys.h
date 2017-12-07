@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_mediakeys_h__
 #define mozilla_dom_mediakeys_h__
 
+#include "DecoderDoctorLogger.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "mozilla/Attributes.h"
@@ -27,6 +28,11 @@ namespace mozilla {
 class CDMProxy;
 
 namespace dom {
+class MediaKeys;
+} // namespace dom
+DDLoggedTypeName(dom::MediaKeys);
+
+namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
 class MediaKeySession;
@@ -41,9 +47,11 @@ typedef uint32_t PromiseId;
 
 // This class is used on the main thread only.
 // Note: its addref/release is not (and can't be) thread safe!
-class MediaKeys final : public nsISupports,
-                        public nsWrapperCache,
-                        public SupportsWeakPtr<MediaKeys>
+class MediaKeys final
+  : public nsISupports
+  , public nsWrapperCache
+  , public SupportsWeakPtr<MediaKeys>
+  , public DecoderDoctorLifeLogger<MediaKeys>
 {
   ~MediaKeys();
 

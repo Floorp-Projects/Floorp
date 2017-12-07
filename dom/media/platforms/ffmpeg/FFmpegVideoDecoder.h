@@ -19,8 +19,15 @@ class FFmpegVideoDecoder : public FFmpegDataDecoder<V>
 {
 };
 
-template <>
-class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
+template<>
+class FFmpegVideoDecoder<LIBAV_VER>;
+DDLoggedTypeNameAndBase(FFmpegVideoDecoder<LIBAV_VER>,
+                        FFmpegDataDecoder<LIBAV_VER>);
+
+template<>
+class FFmpegVideoDecoder<LIBAV_VER>
+  : public FFmpegDataDecoder<LIBAV_VER>
+  , public DecoderDoctorLifeLogger<FFmpegVideoDecoder<LIBAV_VER>>
 {
   typedef mozilla::layers::Image Image;
   typedef mozilla::layers::ImageContainer ImageContainer;

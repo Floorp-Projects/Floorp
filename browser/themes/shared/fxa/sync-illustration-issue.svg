@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 173.9 156.5">
   <style>
-    .st0{opacity:0.1;fill:#0C0C0D;enable-background:new ;} .st1{fill:#FFFFFF;} .st2{fill:url(#SVGID_1_);} .st3{fill:#F9F9FA;} .st4{fill:url(#SVGID_2_);} .st5{fill:url(#SVGID_3_);} .st6{fill:url(#SVGID_4_);} .st7{fill:url(#SVGID_5_);} .st8{fill:url(#SVGID_6_);} .st9{fill:url(#SVGID_7_);}
+    .st0{opacity:0.1;fill:#0C0C0D;} .st1{fill:#FFFFFF;} .st2{fill:url(#SVGID_1_);} .st3{fill:#F9F9FA;} .st4{fill:url(#SVGID_2_);} .st5{fill:url(#SVGID_3_);} .st6{fill:url(#SVGID_4_);} .st7{fill:url(#SVGID_5_);} .st8{fill:url(#SVGID_6_);} .st9{fill:url(#SVGID_7_);}
   </style>
   <path class="st0" d="M140.9 152h-69c-.6 0-1-.4-1-1s.4-1 1-1H141c.6 0 1 .4 1 1s-.5 1-1.1 1zm-9.3-5.1h-12c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h12c.3 0 .5.2.5.5s-.2.5-.5.5zm-15.7 9.6h-12c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h12c.3 0 .5.2.5.5s-.2.5-.5.5zm-20 0h-3c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h3c.3 0 .5.2.5.5s-.2.5-.5.5zm-7 0h-1c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h1c.3 0 .5.2.5.5s-.2.5-.5.5zm-10 0h-12c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h12c.3 0 .5.2.5.5s-.2.5-.5.5zm-20 0h-3c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h3c.3 0 .5.2.5.5s-.2.5-.5.5zm-7 0h-1c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h1c.3 0 .5.2.5.5s-.2.5-.5.5zm-10 0h-12c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h12c.3 0 .5.2.5.5s-.2.5-.5.5zm-20 0h-3c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h3c.3 0 .5.2.5.5s-.2.5-.5.5zm-7 0h-1c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
   <path class="st1" d="M85 20.4h21.3s-6.7-14.9 7.5-16.8c12.6-1.7 17.6 11.3 17.6 11.3s1.5-7.5 9-6.1 12.9 13.3 12.9 13.3h18.6"/>
