@@ -747,6 +747,7 @@ AnimationsTimeline.prototype = {
 
         for (let {value, offset, easing, distance} of values) {
           distance = distance ? distance : 0;
+          offset = parseFloat(offset.toFixed(3));
           tracks[name].push({value, offset, easing, distance});
         }
       }
@@ -776,7 +777,7 @@ AnimationsTimeline.prototype = {
 
           tracks[propertyCSSName].push({
             value: frame[name],
-            offset: frame.computedOffset,
+            offset: parseFloat(frame.computedOffset.toFixed(3)),
             easing: frame.easing,
             distance: 0
           });
