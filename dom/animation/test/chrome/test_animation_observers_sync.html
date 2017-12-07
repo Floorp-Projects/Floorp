@@ -808,6 +808,226 @@ function runTest() {
 
     }, "set_keyframes");
 
+    // Test that starting a single transition that is cancelled by resetting
+    // the transition-property property dispatches an added notification and
+    // then a removed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition: background-color 100s; " +
+                           "background-color: yellow;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      getComputedStyle(div).transitionProperty;
+      div.style.backgroundColor = "lime";
+
+      // The transition should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition start");
+
+      // Cancel the transition by setting transition-property.
+      div.style.transitionProperty = "none";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after transition end");
+    }, "single_transition_cancelled_property");
+
+    // Test that starting a single transition that is cancelled by setting
+    // style to the currently animated value dispatches an added
+    // notification and then a removed notification.
+    test(t => {
+      // A long transition with a predictable value.
+      var div =
+        addDiv(t, { style: "transition: background-color 100s steps(2, end) -51s; " +
+                           "background-color: yellow;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+      getComputedStyle(div).transitionProperty;
+      div.style.backgroundColor = "lime";
+
+      // The transition should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition start");
+
+      // Cancel the transition by setting the current animation value.
+      var value = "rgb(128, 255, 0)";
+      assert_equals(getComputedStyle(div).backgroundColor, value,
+        "half-way transition value");
+      div.style.backgroundColor = value;
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after transition end");
+    }, "single_transition_cancelled_value");
+
+    // Test that starting a single transition that is cancelled by setting
+    // style to a non-interpolable value dispatches an added notification
+    // and then a removed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition: line-height 100s; " +
+                           "line-height: 16px;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      getComputedStyle(div).transitionProperty;
+      div.style.lineHeight = "100px";
+
+      // The transition should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition start");
+
+      // Cancel the transition by setting line-height to a non-interpolable value.
+      div.style.lineHeight = "normal";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after transition end");
+    }, "single_transition_cancelled_noninterpolable");
+
+    // Test that starting a single transition and then reversing it
+    // dispatches an added notification, then a simultaneous removed and
+    // added notification, then a removed notification once finished.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition: background-color 100s step-start; " +
+                           "background-color: yellow;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      getComputedStyle(div).transitionProperty;
+      div.style.backgroundColor = "lime";
+
+      var animations = div.getAnimations();
+
+      // The transition should cause the creation of a single Animation.
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      var firstAnimation = animations[0];
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [firstAnimation], changed: [], removed: [] }],
+        "records after transition start");
+
+      firstAnimation.currentTime = 50 * MS_PER_SEC;
+
+      // Reverse the transition by setting the background-color back to its
+      // original value.
+      div.style.backgroundColor = "yellow";
+
+      // The reversal should cause the creation of a new Animation.
+      animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition reversal");
+
+      var secondAnimation = animations[0];
+
+      assert_true(firstAnimation != secondAnimation,
+        "second Animation should be different from the first");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [firstAnimation], removed: [] },
+         { added: [secondAnimation], changed: [], removed: [firstAnimation] }],
+        "records after transition reversal");
+
+      // Cancel the transition.
+      div.style.transitionProperty = "none";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [secondAnimation] }],
+        "records after transition end");
+    }, "single_transition_reversed");
+
+    // Test that multiple transitions starting and ending on an element
+    // at the same time get batched up into a single MutationRecord.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition-duration: 100s; " +
+                           "transition-property: color, background-color, line-height" +
+                           "background-color: yellow; line-height: 16px" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+      getComputedStyle(div).transitionProperty;
+
+      div.style.backgroundColor = "lime";
+      div.style.color = "blue";
+      div.style.lineHeight = "24px";
+
+      // The transitions should cause the creation of three Animations.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 3,
+        "getAnimations().length after transition starts");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition starts");
+
+      assert_equals(animations.filter(p => p.playState == "running").length, 3,
+         "number of running Animations");
+
+      // Seek well into each animation.
+      animations.forEach(p => p.currentTime = 50 * MS_PER_SEC);
+
+      // Prepare the set of expected change MutationRecords, one for each
+      // animation that was seeked.
+      var seekRecords = animations.map(
+        p => ({ added: [], changed: [p], removed: [] })
+      );
+
+      // Cancel one of the transitions by setting transition-property.
+      div.style.transitionProperty = "background-color, line-height";
+
+      var colorAnimation  = animations.filter(p => p.playState != "running");
+      var otherAnimations = animations.filter(p => p.playState == "running");
+
+      assert_equals(colorAnimation.length, 1,
+        "number of non-running Animations after cancelling one");
+      assert_equals(otherAnimations.length, 2,
+        "number of running Animations after cancelling one");
+
+      assert_equals_records(observer.takeRecords(),
+        seekRecords.concat({ added: [], changed: [], removed: colorAnimation }),
+        "records after color transition end");
+
+      // Cancel the remaining transitions.
+      div.style.transitionProperty = "none";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: otherAnimations }],
+        "records after other transition ends");
+    }, "multiple_transitions");
+
   });
 
   test(t => {
