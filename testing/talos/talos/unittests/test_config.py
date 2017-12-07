@@ -122,6 +122,9 @@ class Test_get_browser_config(object):
     optional = ['bcontroller_config',
                 'branch_name',
                 'child_process',
+                'debug',
+                'debugger',
+                'debugger_args',
                 'develop',
                 'e10s',
                 'process',
@@ -176,7 +179,7 @@ class Test_get_browser_config(object):
 
         browser_config = get_browser_config(config_extensive)
         assert browser_config != config_extensive
-        assert set(browser_config.keys()).issubset(set(config_extensive.keys()))
+        assert set(browser_config).issubset(set(config_extensive))
 
 
 class Test_get_config(object):
