@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "nsIVariant.h"
+#include "nsMemory.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
