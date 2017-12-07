@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.mozilla.focus.utils.UrlUtils;
 
 public class SearchEngine {
 
@@ -65,7 +66,8 @@ public class SearchEngine {
         final Uri searchUri = resultsUris.get(0);
 
         final String template = Uri.decode(searchUri.toString());
-        return paramSubstitution(template, Uri.encode(searchTerm));
+        final String urlWithSubstitutions = paramSubstitution(template, Uri.encode(searchTerm));
+        return UrlUtils.normalize(urlWithSubstitutions); // User-entered search engines may need normalization.
     }
 
     public String getBaseSearchUrl() {
