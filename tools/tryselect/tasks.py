@@ -11,6 +11,7 @@ from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
 
+import taskgraph
 from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import (
     ParameterMismatch,
@@ -68,6 +69,7 @@ def generate_tasks(params, full, root):
         print(PARAMETER_MISMATCH.format(e.args[0]))
         sys.exit(1)
 
+    taskgraph.fast = True
     cwd = os.getcwd()
     os.chdir(build.topsrcdir)
 
