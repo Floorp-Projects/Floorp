@@ -24,7 +24,6 @@
 // radix values for ToInteger/AppendInt
 #define kRadix10        (10)
 #define kRadix16        (16)
-#define kAutoDetect     (100)
 #endif
 
 #include "nsTString.h"

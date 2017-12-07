@@ -120,7 +120,6 @@ ToIntegerCommon(const nsTString<T>& aSrc,
   using char_type = typename nsTString<T>::char_type;
 
   auto cp = aSrc.BeginReading();
-  int32_t theRadix = 10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)
   int_type result = 0;
   bool negate = false;
   char_type theChar = 0;
@@ -135,11 +134,19 @@ ToIntegerCommon(const nsTString<T>& aSrc,
     auto endcp=aSrc.EndReading();
     bool done=false;
 
+    // NB: For backwards compatibility I'm not going to change this logic but
+    //     it seems really odd. Previously there was logic to auto-detect the
+    //     radix if kAutoDetect was passed in. In practice this value was never
+    //     used, so it pretended to auto detect and skipped some preceding
+    //     letters (excluding valid hex digits) but never used the result.
+    //
+    //     For example if you pass in "Get the number: 10", aRadix = 10 we'd
+    //     skip the 'G', and then fail to parse "et the number: 10". If aRadix =
+    //     16 we'd skip the 'G', and parse just 'e' returning 14.
     while((cp<endcp) && (!done)){
       switch(*cp++) {
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-          theRadix=16;
           done=true;
           break;
         case '0': case '1': case '2': case '3': case '4':
@@ -149,23 +156,19 @@ ToIntegerCommon(const nsTString<T>& aSrc,
         case '-':
           negate=true; //fall through...
           break;
-        case 'X': case 'x':
-          theRadix=16;
-          break;
         default:
           break;
       } //switch
     }
 
     if (done) {
+      // Step back.
+      cp--;
 
       //integer found
       *aErrorCode = NS_OK;
 
-      if (aRadix!=kAutoDetect) theRadix = aRadix; // override
-
       //now iterate the numeric chars and build our result
-      auto first=--cp;  //in case we have to back up.
       bool haveValue = false;
 
       while(cp<endcp){
@@ -173,51 +176,35 @@ ToIntegerCommon(const nsTString<T>& aSrc,
 
         theChar=*cp++;
         if(('0'<=theChar) && (theChar<='9')){
-          result = (theRadix * result) + (theChar-'0');
+          result = (aRadix * result) + (theChar-'0');
           haveValue = true;
         }
         else if((theChar>='A') && (theChar<='F')) {
-          if(10==theRadix) {
-            if(kAutoDetect==aRadix){
-              theRadix=16;
-              cp=first; //backup
-              result=0;
-              haveValue = false;
-            }
-            else {
-              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-              result=0;
-              break;
-            }
+          if(10==aRadix) {
+            *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+            result=0;
+            break;
           }
           else {
-            result = (theRadix * result) + ((theChar-'A')+10);
+            result = (aRadix * result) + ((theChar-'A')+10);
             haveValue = true;
           }
         }
         else if((theChar>='a') && (theChar<='f')) {
-          if(10==theRadix) {
-            if(kAutoDetect==aRadix){
-              theRadix=16;
-              cp=first; //backup
-              result=0;
-              haveValue = false;
-            }
-            else {
-              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-              result=0;
-              break;
-            }
+          if(10==aRadix) {
+            *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+            result=0;
+            break;
           }
           else {
-            result = (theRadix * result) + ((theChar-'a')+10);
+            result = (aRadix * result) + ((theChar-'a')+10);
             haveValue = true;
           }
         }
         else if((('X'==theChar) || ('x'==theChar)) && (!haveValue || result == 0)) {
-          continue;
-        }
-        else if((('#'==theChar) || ('+'==theChar)) && !haveValue) {
+          // For some reason we support a leading 'x' regardless of radix. For
+          // example: "000000x500", aRadix = 10 would be parsed as 500 rather
+          // than 0.
           continue;
         }
         else {
