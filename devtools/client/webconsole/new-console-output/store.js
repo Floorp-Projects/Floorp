@@ -227,23 +227,12 @@ function enableNetProvider(hud) {
         }
       }
 
-      // Process all incoming HTTP details packets. Note that
-      // Network event update packets are sent in batches from:
-      // `NewConsoleOutputWrapper.dispatchMessageUpdate` using
-      // NETWORK_MESSAGE_UPDATE action.
-      // Make sure to call `dataProvider.onNetworkEventUpdate`
-      // to fetch data from the backend.
+      // Process all incoming HTTP details packets.
       if (type == NETWORK_MESSAGE_UPDATE) {
         let actor = action.response.networkInfo.actor;
         let open = getAllMessagesUiById(state).includes(actor);
         if (open) {
-          let message = getMessage(state, actor);
-          message.updates.forEach(updateType => {
-            dataProvider.onNetworkEventUpdate(null, {
-              packet: { updateType },
-              networkInfo: message,
-            });
-          });
+          dataProvider.onNetworkEventUpdate(null, action.response);
         }
       }
 
