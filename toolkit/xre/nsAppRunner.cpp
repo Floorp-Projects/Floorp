@@ -4576,9 +4576,9 @@ XREMain::XRE_mainRun()
   }
 
 #if defined(MOZ_SANDBOX)
-  // Call SandboxBroker to cache directories needed for policy rules, this must
-  // be called after mDirProvider.DoStartup as it needs the profile dir.
-  SandboxBroker::CacheRulesDirectories();
+  // Call SandboxBroker to initialize things that depend on Gecko machinery like
+  // the directory provider.
+  SandboxBroker::GeckoDependentInitialize();
 #endif
 #endif
 
