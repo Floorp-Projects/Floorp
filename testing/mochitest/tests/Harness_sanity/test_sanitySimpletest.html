@@ -46,41 +46,47 @@ function starttest() {
         },
         function () {
           check = true;
+          is(check, true, "waitForClipboard should work");
+          manipulateElements();
         },
         function () {
           check = false;
+          is(check, false, "waitForClipboard should work");
+          manipulateElements();
         }
       );
-      is(check, true, "waitForClipboard should work");
     
       //use helper functions
-      var div1 = createEl('div', {'id': 'somediv', 'display': 'block'}, "I am a div");
-      document.body.appendChild(div1);
-      var divObj = this.getElement('somediv');
-      is(divObj, div1, 'createEl did not create element as expected');
-      is($('somediv'), divObj, '$ helper did not get element as expected');
-      is(computedStyle(divObj, 'display'), 'block', 'computedStyle did not get right display value');
-      document.body.removeChild(div1);
-    
-      /* note: expectChildProcessCrash is not being tested here, as it causes wildly variable
-       * run times. It is currently being tested in: 
-       *  dom/plugins/test/test_hanging.html and dom/plugins/test/test_crashing.html
-       */
+      function manipulateElements()
+      {
+        var div1 = createEl('div', {'id': 'somediv', 'display': 'block'}, "I am a div");
+        document.body.appendChild(div1);
+        var divObj = this.getElement('somediv');
+        is(divObj, div1, 'createEl did not create element as expected');
+        is($('somediv'), divObj, '$ helper did not get element as expected');
+        is(computedStyle(divObj, 'display'), 'block', 'computedStyle did not get right display value');
+        document.body.removeChild(div1);
 
-      //note: this also adds a short wait period
-      SimpleTest.executeSoon(
-        function () {
-          //finish() calls a slew of SimpleTest functions
-          SimpleTest.finish();
-          //call this after finish so we can make sure it works and doesn't hang our process
-          var endTime = new Date();
-          info("Profile::SimpleTestRunTime: " + (endTime-startTime));
-          //expect and throw exception here. Otherwise, any code that follows the throw call will never be executed
-          SimpleTest.expectUncaughtException();
-          //make sure we catch this error
-          throw "i am an uncaught exception"
-        }
-      );
+        /* note: expectChildProcessCrash is not being tested here, as it causes wildly variable
+         * run times. It is currently being tested in:
+         *  dom/plugins/test/test_hanging.html and dom/plugins/test/test_crashing.html
+         */
+
+        //note: this also adds a short wait period
+        SimpleTest.executeSoon(
+          function () {
+            //finish() calls a slew of SimpleTest functions
+            SimpleTest.finish();
+            //call this after finish so we can make sure it works and doesn't hang our process
+            var endTime = new Date();
+            info("Profile::SimpleTestRunTime: " + (endTime-startTime));
+            //expect and throw exception here. Otherwise, any code that follows the throw call will never be executed
+            SimpleTest.expectUncaughtException();
+            //make sure we catch this error
+            throw "i am an uncaught exception"
+          }
+        );
+      }
     }
   );
 };

@@ -24,10 +24,12 @@ var focusScript;
 var createEmbededFrame = false;
 var testSelectionChange = false;
 
-function copyToClipboard(str) {
+function copyToClipboard(str, callback) {
   gTextarea.value = str;
   SpecialPowers.wrap(gTextarea).editor.selectAll();
-  SpecialPowers.wrap(gTextarea).editor.copy();
+  SimpleTest.waitForClipboard(() => true, () => {
+    SpecialPowers.wrap(gTextarea).editor.copy();
+  }, callback, () => { ok(false, "clipboard copy failed"); });
 }
 
 function getScriptForGetContent() {
@@ -212,36 +214,37 @@ function testSelectAll(e) {
 function testCopy1(e) {
   // Right now we're at "selectall" state, so we can test copy commnad by
   // calling doCommand
-  copyToClipboard("");
-  let setup = function() {
-    doCommand("copy");
-  };
+  copyToClipboard("", () => {
+    let setup = function() {
+      doCommand("copy");
+    };
 
-  let nextTest = function(success) {
-    ok(success, "copy command works" + stateMeaning);
-    SimpleTest.executeSoon(function() { testPaste1(e); });
-  };
+    let nextTest = function(success) {
+      ok(success, "copy command works" + stateMeaning);
+      SimpleTest.executeSoon(function() { testPaste1(e); });
+    };
 
-  let success = function() {
-    nextTest(true);
-  }
+    let success = function() {
+      nextTest(true);
+    }
 
-  let fail = function() {
-    nextTest(false);
-  }
+    let fail = function() {
+      nextTest(false);
+    }
 
-  let compareData = defaultData;
-  SimpleTest.waitForClipboard(compareData, setup, success, fail);
+    let compareData = defaultData;
+    SimpleTest.waitForClipboard(compareData, setup, success, fail);
+  });
 }
 
 function testPaste1(e) {
   // Next test paste command, first we copy to global clipboard in parent side.
   // Then paste it to child side.
-  copyToClipboard(pasteData);
-
-  doCommand('selectall');
-  doCommand("paste");
-  SimpleTest.executeSoon(function() { testPaste2(e); });
+  copyToClipboard(pasteData, () => {
+    doCommand('selectall');
+    doCommand("paste");
+    SimpleTest.executeSoon(function() { testPaste2(e); });
+  });
 }
 
 function testPaste2(e) {
@@ -264,40 +267,42 @@ function testPaste2(e) {
 
 function testCut1(e) {
   // Clean clipboard first
-  copyToClipboard("");
-  let setup = function() {
-    doCommand("selectall");
-    doCommand("cut");
-  };
+  copyToClipboard("", () => {
+    let setup = function() {
+      doCommand("selectall");
+      doCommand("cut");
+    };
 
-  let nextTest = function(success) {
-    if (state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) {
-      // Something weird when we doCommand with content editable element in OOP.
-      todo(false, "cut function works" + stateMeaning);
-    } else {
-      ok(success, "cut function works" + stateMeaning);
+    let nextTest = function(success) {
+      if (state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) {
+        // Something weird when we doCommand with content editable element in OOP.
+        todo(false, "cut function works" + stateMeaning);
+      } else {
+        ok(success, "cut function works" + stateMeaning);
+      }
+      SimpleTest.executeSoon(function() { testCut2(e); });
+    };
+
+    let success = function() {
+      nextTest(true);
     }
-    SimpleTest.executeSoon(function() { testCut2(e); });
-  };
 
-  let success = function() {
-    nextTest(true);
-  }
+    let fail = function() {
+      nextTest(false);
+    }
 
-  let fail = function() {
-    nextTest(false);
-  }
+    let compareData = pasteData;
 
-  let compareData = pasteData;
-  // Something weird when we doCommand with content editable element in OOP.
-  // Always true in this case
-  // Normal div case cannot cut, always true as well.
-  if ((state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) ||
-      state == 4) {
-    compareData = function() { return true; }
-  }
+    // Something weird when we doCommand with content editable element in OOP.
+    // Always true in this case
+    // Normal div case cannot cut, always true as well.
+    if ((state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) ||
+        state == 4) {
+      compareData = function() { return true; }
+    }
 
-  SimpleTest.waitForClipboard(compareData, setup, success, fail);
+    SimpleTest.waitForClipboard(compareData, setup, success, fail);
+  });
 }
 
 function testCut2(e) {

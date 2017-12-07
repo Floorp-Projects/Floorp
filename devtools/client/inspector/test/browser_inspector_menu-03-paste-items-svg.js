@@ -32,7 +32,12 @@ add_task(function* () {
       target: markupTagLine,
     });
     info(`Testing ${menuId} for ${clipboardData}`);
-    clipboard.copyString(clipboardData);
+
+    yield SimpleTest.promiseClipboardChange(clipboardData,
+      () => {
+        clipboard.copyString(clipboardData);
+      }
+    );
 
     let onMutation = inspector.once("markupmutation");
     allMenuItems.find(item => item.id === menuId).click();

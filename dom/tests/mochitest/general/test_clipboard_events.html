@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -19,84 +20,60 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
 var content = document.getElementById("content");
 var contentInput = document.getElementById("content-input");
 var clipboardInitialValue = "empty";
 
-// Test that clearing and reading the clipboard works.  A random number
-// is used to make sure that leftover clipboard values from a previous
-// test run don't cause a false-positive test.
-var cb_text = "empty_" + Math.random();
-setClipboardText(cb_text);
-
-is(getClipboardText(), cb_text, "set/get clipboard text failed");
-
 var cachedCutData, cachedCopyData, cachedPasteData;
 
-// A list of test functions to run.  Before each test function is run, the
-// clipboard is initialized to clipboardInitialValue, and the contents of
-// div#content are set as the window's selection.
-var testFunctions = [
-  test_dom_oncopy,
-  test_dom_oncut,
-  test_dom_onpaste,
-  test_dom_oncopy_abort,
-  test_input_oncopy,
-  test_input_oncut,
-  test_input_onpaste,
-  test_input_oncopy_abort,
-  test_input_oncut_abort,
-  test_input_onpaste_abort,
-  test_input_cut_dataTransfer,
-  test_input_cut_abort_dataTransfer,
-  test_input_copy_dataTransfer,
-  test_input_paste_dataTransfer,
-  test_input_paste_abort_dataTransfer,
-  test_input_copypaste_dataTransfer_multiple,
-  test_input_copy_button_dataTransfer,
-  test_eventspref_disabled,
-  test_input_cut_disallowed_types_dataTransfer,
-  test_image_dataTransfer,
-  ];
+// Before each test function is run, the clipboard is initialized
+// to clipboardInitialValue, and the contents of div#content are
+// set as the window's selection.
 
-function doTests()
-{
+add_task(async function initialize_for_tests() {
+  await SimpleTest.promiseFocus();
+
+  await new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({
+      // NOTE: These tests operate under the assumption that the protected mode of
+      // DataTransfer is enabled.
+      "set": [["dom.events.dataTransfer.protected.enabled", true]]
+    }, resolve);
+  });
+
+  // Test that clearing and reading the clipboard works.  A random number
+  // is used to make sure that leftover clipboard values from a previous
+  // test run don't cause a false-positive test.
+  var cb_text = "empty_" + Math.random();
+
+  await putOnClipboard(cb_text, () => { setClipboardText(cb_text) },
+                        "initial set/get clipboard text");
+});
+
+async function reset() {
   // Init clipboard
-  setClipboardText(clipboardInitialValue);
+  await putOnClipboard(clipboardInitialValue,
+                       () => { setClipboardText(clipboardInitialValue) },
+                       "reset clipboard");
 
   // Reset value of contentInput.
   contentInput.value = "INPUT TEXT";
-
-  if (testFunctions.length) {
-    let func = testFunctions.shift();
-    let result = func();
-    if (result instanceof Promise) {
-      result.then(doTests);
-    }
-    else {
-      doTests();
-    }
-  }
-  else {
-    // Check if the cached clipboard data can be accessed or modified
-    // and whether it modifies the real clipboard
-    checkCachedDataTransfer(cachedCutData, "cut");
-    checkCachedDataTransfer(cachedCopyData, "copy");
-    checkCachedDataTransfer(cachedPasteData, "paste");
-
-    checkSyntheticEvents();
-
-    SimpleTest.finish();
-  }
 }
-
-SimpleTest.waitForExplicitFinish();
 
 function getClipboardText() {
   return SpecialPowers.getClipboardData("text/unicode");
 }
 
+async function putOnClipboard(expected, operationFn, desc, type) {
+  await SimpleTest.promiseClipboardChange(expected, operationFn, type);
+  ok(true, desc);
+}
+
+async function wontPutOnClipboard(expected, operationFn, desc, type) {
+  await SimpleTest.promiseClipboardChange(null, operationFn, type, 300, true);
+  ok(SpecialPowers.getClipboardData(type || "text/unicode")
+                  .includes("waitForClipboard-known-value"), desc + " data");
+}
 
 function setClipboardText(text) {
   var helper = SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]
@@ -116,25 +93,29 @@ function selectContentInput() {
   contentInput.focus();
 }
 
-function test_dom_oncopy() {
+add_task(async function test_dom_oncopy() {
+  await reset();
+
   // Setup an oncopy event handler, fire copy.  Ensure that the event
   // handler was called, and the clipboard contents have set to CONTENT TEXT.
   // Test firing oncopy event on ctrl-c:
   selectContentDiv();
-  
+
   var oncopy_fired = false;
   content.oncopy = function() { oncopy_fired = true; };
   try {
-    synthesizeKey("c", {accelKey: 1});
+    await putOnClipboard("CONTENT TEXT", () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "copy on DOM element set clipboard correctly");
     ok(oncopy_fired, "copy event firing on DOM element");
-    is(getClipboardText(), "CONTENT TEXT",
-      "copy on DOM element set clipboard correctly");
   } finally {
     content.oncopy = null;
   }
-}
+});
 
-function test_dom_oncut() {
+add_task(async function test_dom_oncut() {
+  await reset();
+
   // Setup an oncut event handler, fire cut.  Ensure that the event handler
   // was called.  The <div> doesn't handle a cut, so ensure that the
   // clipboard text is clipboardInitialValue, NOT "CONTENT TEXT".
@@ -142,17 +123,18 @@ function test_dom_oncut() {
   var oncut_fired = false;
   content.oncut = function() { oncut_fired = true; };
   try {
-    synthesizeKey("x", {accelKey: 1});
+    await wontPutOnClipboard(clipboardInitialValue, () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "cut on DOM element set clipboard correctly");
     ok(oncut_fired, "cut event firing on DOM element")
-    is(getClipboardText(), clipboardInitialValue,
-      "cut on DOM element did not modify clipboard");
   } finally {
     content.oncut = null;
   }
-}
+});
 
+add_task(async function test_dom_onpaste() {
+  await reset();
 
-function test_dom_onpaste() {
   // Setup an onpaste event handler, fire paste.  Ensure that the event
   // handler was called.
   selectContentDiv();
@@ -164,10 +146,11 @@ function test_dom_onpaste() {
   } finally {
     content.onpaste = null;
   }
-}
+});
 
+add_task(async function test_dom_oncopy_abort() {
+  await reset();
 
-function test_dom_oncopy_abort() {
   // Setup an oncopy event handler that aborts the copy, and fire the copy
   // event.  Ensure that the event handler was fired, and the clipboard
   // contents have not been modified.
@@ -175,17 +158,18 @@ function test_dom_oncopy_abort() {
   var oncopy_fired = false;
   content.oncopy = function() { oncopy_fired = true; return false; };
   try {
-    synthesizeKey("c", {accelKey: 1});
+    await wontPutOnClipboard(clipboardInitialValue, () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "aborted copy on DOM element did not modify clipboard");
     ok(oncopy_fired, "copy event (to-be-cancelled) firing on DOM element");
-    is(getClipboardText(), clipboardInitialValue,
-      "aborted copy on DOM element did not modify clipboard");
   } finally {
     content.oncopy = null;
   }
-}
+});
 
+add_task(async function test_input_oncopy() {
+  await reset();
 
-function test_input_oncopy() {
   // Setup an oncopy event handler, fire copy.  Ensure that the event
   // handler was called, and the clipboard contents have been set to 'PUT TE',
   // which is the part that is selected below.
@@ -196,17 +180,18 @@ function test_input_oncopy() {
   var oncopy_fired = false;
   contentInput.oncopy = function() { oncopy_fired = true; };
   try {
-    synthesizeKey("c", {accelKey: 1});
+    await putOnClipboard("PUT TE", () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "copy on plaintext editor set clipboard correctly");
     ok(oncopy_fired, "copy event firing on plaintext editor");
-    is(getClipboardText(), "PUT TE",
-      "copy on plaintext editor set clipboard correctly");
   } finally {
     contentInput.oncopy = null;
   }
-}
+});
 
+add_task(async function test_input_oncut() {
+  await reset();
 
-function test_input_oncut() {
   // Setup an oncut event handler, and fire cut.  Ensure that the event
   // handler was fired, the clipboard contains the INPUT TEXT, and
   // that the input itself is empty.
@@ -214,19 +199,20 @@ function test_input_oncut() {
   var oncut_fired = false;
   contentInput.oncut = function() { oncut_fired = true; };
   try {
-    synthesizeKey("x", {accelKey: 1});
+    await putOnClipboard("INPUT TEXT", () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "cut on plaintext editor set clipboard correctly");
     ok(oncut_fired, "cut event firing on plaintext editor");
-    is(getClipboardText(), "INPUT TEXT",
-      "cut on plaintext editor set clipboard correctly");
     is(contentInput.value, "",
       "cut on plaintext editor emptied editor");
   } finally {
     contentInput.oncut = null;
   }
-}
+});
 
+add_task(async function test_input_onpaste() {
+  await reset();
 
-function test_input_onpaste() {
   // Setup an onpaste event handler, and fire paste.  Ensure that the event
   // handler was fired, the clipboard contents didn't change, and that the
   // input value did change (ie. paste succeeded).
@@ -243,27 +229,29 @@ function test_input_onpaste() {
   } finally {
     contentInput.onpaste = null;
   }
-}
+});
 
+add_task(async function test_input_oncopy_abort() {
+  await reset();
 
-function test_input_oncopy_abort() {
   // Setup an oncopy event handler, fire copy.  Ensure that the event
   // handler was called, and that the clipboard value did NOT change.
   selectContentInput();
   var oncopy_fired = false;
   contentInput.oncopy = function() { oncopy_fired = true; return false; };
   try {
-    synthesizeKey("c", {accelKey: 1});
+    await wontPutOnClipboard(clipboardInitialValue, () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "aborted copy on plaintext editor did not modify clipboard");
     ok(oncopy_fired, "copy event (to-be-cancelled) firing on plaintext editor");
-    is(getClipboardText(), clipboardInitialValue,
-      "aborted copy on plaintext editor did not modify clipboard");
   } finally {
     contentInput.oncopy = null;
   }
-}
+});
 
+add_task(async function test_input_oncut_abort() {
+  await reset();
 
-function test_input_oncut_abort() {
   // Setup an oncut event handler, and fire cut.  Ensure that the event
   // handler was fired, the clipboard contains the INPUT TEXT, and
   // that the input itself is empty.
@@ -271,19 +259,20 @@ function test_input_oncut_abort() {
   var oncut_fired = false;
   contentInput.oncut = function() { oncut_fired = true; return false; };
   try {
-    synthesizeKey("x", {accelKey: 1});
+    await wontPutOnClipboard(clipboardInitialValue, () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "aborted cut on plaintext editor did not modify clipboard");
     ok(oncut_fired, "cut event (to-be-cancelled) firing on plaintext editor");
-    is(getClipboardText(), clipboardInitialValue,
-      "aborted cut on plaintext editor did not modify clipboard.");
     is(contentInput.value, "INPUT TEXT",
       "aborted cut on plaintext editor did not modify editor contents");
   } finally {
     contentInput.oncut = null;
   }
-}
+});
 
+add_task(async function test_input_onpaste_abort() {
+  await reset();
 
-function test_input_onpaste_abort() {
   // Setup an onpaste event handler, and fire paste.  Ensure that the event
   // handler was fired, the clipboard contents didn't change, and that the
   // input value did change (ie. paste succeeded).
@@ -301,10 +290,11 @@ function test_input_onpaste_abort() {
   } finally {
     contentInput.onpaste = null;
   }
-}
+});
 
+add_task(async function test_input_cut_dataTransfer() {
+  await reset();
 
-function test_input_cut_dataTransfer() {
   // Cut using event.dataTransfer. The event is not cancelled so the default
   // cut should occur
   selectContentInput();
@@ -318,18 +308,19 @@ function test_input_cut_dataTransfer() {
     cachedCutData = event.clipboardData;
   };
   try {
-    synthesizeKey("x", {accelKey: 1});
-    is(getClipboardText(), "INPUT TEXT",
-      "cut using dataTransfer on plaintext editor set clipboard correctly");
+    await putOnClipboard("INPUT TEXT", () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "cut using dataTransfer on plaintext editor set clipboard correctly");
     is(contentInput.value, "",
       "cut using dataTransfer on plaintext editor cleared input");
   } finally {
     contentInput.oncut = null;
   }
-}
+});
 
+add_task(async function test_input_cut_abort_dataTransfer() {
+  await reset();
 
-function test_input_cut_abort_dataTransfer() {
   // Cut using event.dataTransfer but cancel the event. The data should be
   // put on the clipboard but since we don't modify the input value, the input
   // should have the same value.
@@ -339,18 +330,19 @@ function test_input_cut_abort_dataTransfer() {
     return false;
   };
   try {
-    synthesizeKey("x", {accelKey: 1});
-    is(getClipboardText(), "Cut dataTransfer text",
-      "aborted cut using dataTransfer on plaintext editor set clipboard correctly");
+    await putOnClipboard("Cut dataTransfer text", () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "aborted cut using dataTransfer on plaintext editor set clipboard correctly");
     is(contentInput.value, "INPUT TEXT",
       "aborted cut using dataTransfer on plaintext editor did not modify input");
   } finally {
     contentInput.oncut = null;
   }
-}
+});
 
+add_task(async function test_input_copy_dataTransfer() {
+  await reset();
 
-function test_input_copy_dataTransfer() {
   // Copy using event.dataTransfer
   selectContentInput();
   contentInput.oncopy = function(event) {
@@ -363,18 +355,19 @@ function test_input_copy_dataTransfer() {
     cachedCopyData = event.clipboardData;
   };
   try {
-    synthesizeKey("c", {accelKey: 1});
-    is(getClipboardText(), "INPUT TEXT",
-      "copy using dataTransfer on plaintext editor set clipboard correctly");
+    await putOnClipboard("INPUT TEXT", () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "copy using dataTransfer on plaintext editor set clipboard correctly");
     is(contentInput.value, "INPUT TEXT",
       "copy using dataTransfer on plaintext editor did not modify input");
   } finally {
     contentInput.oncopy = null;
   }
-}
+});
 
+add_task(async function test_input_copy_abort_dataTransfer() {
+  await reset();
 
-function test_input_copy_abort_dataTransfer() {
   // Copy using event.dataTransfer but cancel the event.
   selectContentInput();
   contentInput.oncopy = function(event) {
@@ -382,18 +375,19 @@ function test_input_copy_abort_dataTransfer() {
     return false;
   };
   try {
-    synthesizeKey("x", {accelKey: 1});
-    is(getClipboardText(), "Copy dataTransfer text",
-      "aborted copy using dataTransfer on plaintext editor set clipboard correctly");
+    await putOnClipboard("Copy dataTransfer text", () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "aborted copy using dataTransfer on plaintext editor set clipboard correctly");
     is(contentInput.value, "INPUT TEXT",
       "aborted copy using dataTransfer on plaintext editor did not modify input");
   } finally {
     contentInput.oncopy = null;
   }
-}
+});
 
+add_task(async function test_input_paste_dataTransfer() {
+  await reset();
 
-function test_input_paste_dataTransfer() {
   // Paste using event.dataTransfer
   selectContentInput();
   contentInput.onpaste = function(event) {
@@ -413,10 +407,11 @@ function test_input_paste_dataTransfer() {
   } finally {
     contentInput.onpaste = null;
   }
-}
+});
 
+add_task(async function test_input_paste_abort_dataTransfer() {
+  await reset();
 
-function test_input_paste_abort_dataTransfer() {
   // Paste using event.dataTransfer but cancel the event
   selectContentInput();
   contentInput.onpaste = function(event) {
@@ -433,9 +428,11 @@ function test_input_paste_abort_dataTransfer() {
   } finally {
     contentInput.onpaste = null;
   }
-}
+});
 
-function test_input_copypaste_dataTransfer_multiple() {
+add_task(async function test_input_copypaste_dataTransfer_multiple() {
+  await reset();
+
   // Cut several types of data and paste it again
   contentInput.value = "This is a line of text";
   contentInput.oncopy = function(event) {
@@ -463,13 +460,14 @@ function test_input_copypaste_dataTransfer_multiple() {
 
   try {
     selectContentInput();
-    synthesizeKey("c", {accelKey: 1});
+
+    await putOnClipboard("would be a phrase", () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "copy multiple types text");
   }
   finally {
     contentInput.oncopy = null;
   }
-
-  is(getClipboardText(), "would be a phrase", "copy multiple types text");
 
   contentInput.setSelectionRange(5, 14);
 
@@ -506,9 +504,11 @@ function test_input_copypaste_dataTransfer_multiple() {
   } finally {
     contentInput.onpaste = null;
   }
-}
+});
 
-function test_input_copy_button_dataTransfer() {
+add_task(async function test_input_copy_button_dataTransfer() {
+  await reset();
+
   // Copy using event.dataTransfer when a button is focused.
   var button = document.getElementById("button");
   button.focus();
@@ -519,67 +519,72 @@ function test_input_copy_button_dataTransfer() {
   try {
     // copy should not occur here because buttons don't have any controller
     // for the copy command
-    synthesizeKey("c", {accelKey: 1});
-    is(getClipboardText(), clipboardInitialValue,
-      "copy using dataTransfer on plaintext editor set clipboard correctly for button");
+    await wontPutOnClipboard(clipboardInitialValue, () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "copy using dataTransfer on plaintext editor set clipboard correctly for button");
 
     selectContentDiv();
-    synthesizeKey("c", {accelKey: 1});
-    is(getClipboardText(), "CONTENT TEXT",
-      "copy using dataTransfer with selection on plaintext editor set clipboard correctly for button");
 
+    await putOnClipboard("CONTENT TEXT", () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "copy using dataTransfer with selection on plaintext editor set clipboard correctly for button");
   } finally {
     document.documentElement.oncopy = null;
   }
-}
+});
 
-function test_eventspref_disabled() {
+add_task(async function test_eventspref_disabled() {
+  await reset();
+
   // Disable clipboard events
-  return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [['dom.event.clipboardevents.enabled', false]]}, doPrefDisabledTest);
-
-    function doPrefDisabledTest() {
-      var event_fired = false;
-      contentInput.oncut = function() { event_fired = true; };
-      contentInput.oncopy = function() { event_fired = true; };
-      contentInput.onpaste = function() { event_fired = true; };
-      try {
-        selectContentInput();
-        contentInput.setSelectionRange(1, 4);
-        synthesizeKey("x", {accelKey: 1});
-        is(contentInput.value, "IT TEXT", "cut changed text when preference is disabled");
-        is(getClipboardText(), "NPU", "cut changed clipboard when preference is disabled");
-        ok(!event_fired, "cut event did not fire when preference is disabled")
-
-        event_fired = false;
-        contentInput.setSelectionRange(3, 6);
-        synthesizeKey("c", {accelKey: 1});
-        is(getClipboardText(), "TEX", "copy changed clipboard when preference is disabled");
-        ok(!event_fired, "copy event did not fire when preference is disabled")
-
-        event_fired = false;
-        contentInput.setSelectionRange(0, 2);
-        synthesizeKey("v", {accelKey: 1});
-        is(contentInput.value, "TEX TEXT", "paste changed text when preference is disabled");
-        ok(!event_fired, "paste event did not fire when preference is disabled")
-      } finally {
-        contentInput.oncut = null;
-        contentInput.oncopy = null;
-        contentInput.onpaste = null;
-      }
-
-      SpecialPowers.popPrefEnv(resolve);
-    }
+  await new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [['dom.event.clipboardevents.enabled', false]]}, resolve);
   });
-}
+
+  var event_fired = false;
+  contentInput.oncut = function() { event_fired = true; };
+  contentInput.oncopy = function() { event_fired = true; };
+  contentInput.onpaste = function() { event_fired = true; };
+  try {
+    selectContentInput();
+    contentInput.setSelectionRange(1, 4);
+
+    await putOnClipboard("NPU", () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "cut changed clipboard when preference is disabled");
+    is(contentInput.value, "IT TEXT", "cut changed text when preference is disabled");
+    ok(!event_fired, "cut event did not fire when preference is disabled")
+
+    event_fired = false;
+    contentInput.setSelectionRange(3, 6);
+    await putOnClipboard("TEX", () => {
+      synthesizeKey("c", {accelKey: 1});
+    }, "copy changed clipboard when preference is disabled");
+    ok(!event_fired, "copy event did not fire when preference is disabled")
+
+    event_fired = false;
+    contentInput.setSelectionRange(0, 2);
+    synthesizeKey("v", {accelKey: 1});
+    is(contentInput.value, "TEX TEXT", "paste changed text when preference is disabled");
+    ok(!event_fired, "paste event did not fire when preference is disabled")
+  } finally {
+    contentInput.oncut = null;
+    contentInput.oncopy = null;
+    contentInput.onpaste = null;
+  }
+
+  await new Promise(resolve => {
+    SpecialPowers.popPrefEnv(resolve);
+  });
+});
 
 let expectedData = [];
 
 // Check to make that synthetic events do not change the clipboard
-function checkSyntheticEvents()
-{
+add_task(async function test_synthetic_events() {
+  await reset();
+
   let syntheticSpot = document.getElementById("syntheticSpot");
-  setClipboardText(clipboardInitialValue);
 
   // No dataType specified
   let event = new ClipboardEvent("cut", { data: "something" });
@@ -623,10 +628,9 @@ function checkSyntheticEvents()
   syntheticSpot.dispatchEvent(event);
   ok(expectedData.eventFired, "paste event fired");
   compareSynthetic(event, "after");
-}
+});
 
-function compareSynthetic(event, eventtype)
-{
+function compareSynthetic(event, eventtype) {
   let step = (eventtype == "cut" || eventtype == "copy" || eventtype == "paste") ? "during" : eventtype;
   if (step == "during") {
     is(eventtype, expectedData.type, "synthetic " + eventtype + " event fired");
@@ -652,11 +656,11 @@ function compareSynthetic(event, eventtype)
   }
 }
 
-function checkCachedDataTransfer(cd, eventtype)
-{
+async function checkCachedDataTransfer(cd, eventtype) {
   var testprefix = "cached " + eventtype + " dataTransfer";
 
-  setClipboardText("Some Clipboard Text");
+  await putOnClipboard("Some Clipboard Text", () => { setClipboardText("Some Clipboard Text") },
+                       "change clipboard outside of event");
 
   var oldtext = cd.getData("text/plain");
   ok(!oldtext, "clipboard get using " + testprefix);
@@ -676,7 +680,19 @@ function checkCachedDataTransfer(cd, eventtype)
   is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
 }
 
-function test_input_cut_disallowed_types_dataTransfer() {
+add_task(async function test_modify_datatransfer_outofevent() {
+  await reset();
+
+  // Check if the cached clipboard data can be accessed or modified
+  // and whether it modifies the real clipboard
+  await checkCachedDataTransfer(cachedCutData, "cut");
+  await checkCachedDataTransfer(cachedCopyData, "copy");
+  await checkCachedDataTransfer(cachedPasteData, "paste");
+});
+
+add_task(async function test_input_cut_disallowed_types_dataTransfer() {
+  await reset();
+
   selectContentInput();
   let oncutExecuted = false;
   contentInput.oncut = function(event) {
@@ -700,23 +716,29 @@ function test_input_cut_disallowed_types_dataTransfer() {
   };
 
   try {
-    synthesizeKey("x", {accelKey: 1});
+    await putOnClipboard("INPUT TEXT", () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "The oncut handler should have been executed data");
     ok(oncutExecuted, "The oncut handler should have been executed");
   } finally {
     contentInput.oncut = null;
   }
-}
+});
 
 // Try copying an image to the clipboard and make sure that it looks correct when pasting it.
-function test_image_dataTransfer() {
+add_task(async function test_image_dataTransfer() {
+  await reset();
+
   // cmd_copyImageContents errors on Android (bug 1299578).
   if (navigator.userAgent.includes("Android")) {
     return;
   }
 
   // Copy the image's data to the clipboard
-  SpecialPowers.setCommandNode(window, document.getElementById("image"));
-  SpecialPowers.doCommand(window, "cmd_copyImageContents");
+  await putOnClipboard("", () => {
+    SpecialPowers.setCommandNode(window, document.getElementById("image"));
+    SpecialPowers.doCommand(window, "cmd_copyImageContents");
+  }, "copy changed clipboard when preference is disabled");
 
   let onpasteCalled = false;
   document.onpaste = function(event) {
@@ -744,14 +766,6 @@ function test_image_dataTransfer() {
   } finally {
     document.onpaste = null;
   }
-}
-
-SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({
-    // NOTE: These tests operate under the assumption that the protected mode of
-    // DataTransfer is enabled.
-    "set": [["dom.events.dataTransfer.protected.enabled", true]]
-  }, doTests);
 });
 
 </script>
