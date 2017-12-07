@@ -4,18 +4,6 @@
 
 "use strict";
 
-const nsIAccessibleRole = Ci.nsIAccessibleRole; // eslint-disable-line no-unused-vars
-
-/* import-globals-from ../../mochitest/role.js */
-loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
-
-async function openNewTab(url) {
-  const forceNewProcess = true;
-
-  return BrowserTestUtils.openNewForegroundTab(
-    { gBrowser, url, forceNewProcess });
-}
-
 const tab1URL = `data:text/html,
   <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
