@@ -20,6 +20,7 @@ bool is_in_compositor_thread();
 bool is_in_main_thread();
 bool is_in_render_thread();
 bool is_glcontext_egl(void* glcontext_ptr);
+bool is_glcontext_angle(void* glcontext_ptr);
 bool gfx_use_wrench();
 const char* gfx_wr_resource_path_override();
 void gfx_critical_note(const char* msg);

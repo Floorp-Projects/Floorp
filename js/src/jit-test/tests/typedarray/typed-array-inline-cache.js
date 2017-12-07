@@ -41,11 +41,12 @@ function test_with_no_protochain(a) {
 // return false, and not consider the prototype chain at all"
 function test_with_protochain(a) {
     var a = new Int32Array(1000).fill(1);
-    // try to force the behaviour of 9.4.5.2
-    a[1012] = "1012";
-    a["-0"]   = "-0";
-    a[-10]  = "-10";
     warmup(a);
+    // try to force the behaviour of 9.4.5.2
+    Object.prototype["-0"] = "value";
+    Object.prototype[-1]   = "value";
+    Object.prototype[-10]  = "value";
+    Object.prototype[1012] = "value";
     check_assertions(a);
 }
 
