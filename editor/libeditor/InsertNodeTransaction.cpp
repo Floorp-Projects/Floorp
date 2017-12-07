@@ -66,16 +66,14 @@ InsertNodeTransaction::DoTransaction()
       if (!newPointToInsert.IsSet()) {
         // The insertion point has been removed from the DOM tree.
         // In this case, we should append the node to the container instead.
-        newPointToInsert.Set(mPointToInsert.Container(),
-                             mPointToInsert.Container()->Length());
+        newPointToInsert.SetToEndOf(mPointToInsert.Container());
         if (NS_WARN_IF(!newPointToInsert.IsSet())) {
           return NS_ERROR_FAILURE;
         }
       }
       mPointToInsert = newPointToInsert;
     } else {
-      mPointToInsert.Set(mPointToInsert.Container(),
-                         mPointToInsert.Container()->Length());
+      mPointToInsert.SetToEndOf(mPointToInsert.Container());
       if (NS_WARN_IF(!mPointToInsert.IsSet())) {
         return NS_ERROR_FAILURE;
       }

@@ -1446,8 +1446,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           if (br->GetNextSibling()) {
             pointToInsert.Set(br->GetNextSibling());
           } else {
-            pointToInsert.Set(currentPoint.Container(),
-                              currentPoint.Container()->Length());
+            pointToInsert.SetToEndOf(currentPoint.Container());
           }
           // XXX In most cases, pointToInsert and currentPoint are same here.
           //     But if the <br> element has been moved to different point by
@@ -1519,8 +1518,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           if (newBRElement->GetNextSibling()) {
             pointToInsert.Set(newBRElement->GetNextSibling());
           } else {
-            pointToInsert.Set(currentPoint.Container(),
-                              currentPoint.Container()->Length());
+            pointToInsert.SetToEndOf(currentPoint.Container());
           }
           currentPoint.Set(newBRElement);
           DebugOnly<bool> advanced = currentPoint.AdvanceOffset();
@@ -6887,7 +6885,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
         if (NS_WARN_IF(error.Failed())) {
           return EditActionResult(error.StealNSResult());
         }
-        pointToSplitParentDivOrP.Set(newLeftDivOrP, newLeftDivOrP->Length());
+        pointToSplitParentDivOrP.SetToEndOf(newLeftDivOrP);
       }
 
       // We need to put new <br> after the left node if given node was split
@@ -7614,7 +7612,8 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
     }
   }
 
-  EditorDOMPoint ret(&aNodeRight, aNodeLeft.Length());
+  EditorDOMPoint ret;
+  ret.SetToEndOf(&aNodeRight);
 
   // Separate join rules for differing blocks
   if (HTMLEditUtils::IsList(&aNodeLeft) || aNodeLeft.GetAsText()) {
@@ -7920,7 +7919,7 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     EditorRawDOMPoint endPoint;
     if (EditorBase::IsTextNode(tmp) ||
         mHTMLEditor->IsContainer(tmp)) {
-      endPoint.Set(tmp, tmp->Length());
+      endPoint.SetToEndOf(tmp);
     } else {
       endPoint.Set(tmp);
       if (NS_WARN_IF(!endPoint.AdvanceOffset())) {
@@ -9304,8 +9303,8 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
                                    splitNodeResult.SplitPoint());
           mNewBlock = curPositionedDiv;
         }
-        EditorRawDOMPoint atEndOfCurPositionedDiv(curPositionedDiv,
-                                                  curPositionedDiv->Length());
+        EditorRawDOMPoint atEndOfCurPositionedDiv;
+        atEndOfCurPositionedDiv.SetToEndOf(curPositionedDiv);
         curList =
           htmlEditor->CreateNode(containerName, atEndOfCurPositionedDiv);
         NS_ENSURE_STATE(curList);
@@ -9354,8 +9353,8 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
             htmlEditor->CreateNode(nsGkAtoms::div, atListItemParent);
           mNewBlock = curPositionedDiv;
         }
-        EditorRawDOMPoint atEndOfCurPositionedDiv(curPositionedDiv,
-                                                  curPositionedDiv->Length());
+        EditorRawDOMPoint atEndOfCurPositionedDiv;
+        atEndOfCurPositionedDiv.SetToEndOf(curPositionedDiv);
         curList =
           htmlEditor->CreateNode(containerName, atEndOfCurPositionedDiv);
         NS_ENSURE_STATE(curList);

@@ -155,8 +155,7 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
       if (NS_WARN_IF(!pointToInsert.Offset())) {
         // Append the remaining children to the container if offset is
         // overflown.
-        pointToInsert.Set(pointToInsert.Container(),
-                          pointToInsert.Container()->Length());
+        pointToInsert.SetToEndOf(pointToInsert.Container());
       }
     }
   }

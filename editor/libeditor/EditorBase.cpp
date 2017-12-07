@@ -2709,7 +2709,7 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
     if (!pointToInsert.IsStartOfContainer() &&
         (child = pointToInsert.GetPreviousSiblingOfChildAtOffset()) &&
         child->IsNodeOfType(nsINode::eTEXT)) {
-      pointToInsert.Set(child, child->Length());
+      pointToInsert.SetToEndOf(child);
     } else if (!pointToInsert.IsEndOfContainer() &&
                (child = pointToInsert.GetChildAtOffset()) &&
                child->IsNodeOfType(nsINode::eTEXT)) {

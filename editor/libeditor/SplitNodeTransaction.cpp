@@ -90,7 +90,8 @@ SplitNodeTransaction::DoTransaction()
       error.SuppressException();
     }
     MOZ_ASSERT(mStartOfRightNode.Offset() == mNewLeftNode->Length());
-    EditorRawDOMPoint atEndOfLeftNode(mNewLeftNode, mNewLeftNode->Length());
+    EditorRawDOMPoint atEndOfLeftNode;
+    atEndOfLeftNode.SetToEndOf(mNewLeftNode);
     selection->Collapse(atEndOfLeftNode, error);
   }
 
