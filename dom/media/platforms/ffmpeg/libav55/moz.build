@@ -17,7 +17,7 @@ LOCAL_INCLUDES += [
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
   CXXFLAGS += [ '-Wno-deprecated-declarations' ]
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Wno-unknown-attributes',
   ]

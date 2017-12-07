@@ -60,7 +60,7 @@ else:
         else:
             DEFINES['EH_FRAME_FLAGS'] = '"a"'
 
-    if CONFIG['CLANG_CL']:
+    if CONFIG['CC_TYPE'] == 'clang-cl':
         ASFLAGS += ['-clang-cl']
 
     # Common source files.
@@ -76,7 +76,7 @@ else:
     ffi_srcs = ()
     if CONFIG['FFI_TARGET'] == 'ARM':
         ffi_srcs = ('sysv.S', 'ffi.c')
-        if CONFIG['CLANG_CXX']:
+        if CONFIG['CC_TYPE'] == 'clang':
             ASFLAGS += ['-no-integrated-as']
     elif CONFIG['FFI_TARGET'] == 'AARCH64':
         ffi_srcs = ('sysv.S', 'ffi.c')

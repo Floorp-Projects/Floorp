@@ -16,7 +16,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         '-Wno-sign-compare',
     ]
 
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
     CXXFLAGS += [
         '-Wno-dangling-else',
     ]

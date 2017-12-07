@@ -348,7 +348,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         '-Wno-unknown-pragmas',
         '-Wno-unreachable-code',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         CXXFLAGS += [
             '-Wno-inconsistent-missing-override',
             '-Wno-unused-private-field',
@@ -359,7 +359,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             '-Wno-shadow-local',
         ]
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
     CXXFLAGS += [
         '-wd4018', # '>' : signed/unsigned mismatch
         '-wd4530', # C++ exception handler used, without /EHsc

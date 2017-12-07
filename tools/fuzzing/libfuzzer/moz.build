@@ -36,7 +36,7 @@ SOURCES += [
     'FuzzerUtilWindows.cpp'
 ]
 
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
     CXXFLAGS += ['-Wno-unreachable-code-return']
 
 # According to the LLVM docs, LibFuzzer isn't supposed to be built with any

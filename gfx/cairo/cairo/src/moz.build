@@ -213,7 +213,7 @@ if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['FT_LCD_FILTER_H'] = '%s/modules/freetype2/include/freetype/ftlcdfil.h' % TOPSRCDIR
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-enum-compare',
         '-Wno-int-to-pointer-cast',
@@ -229,7 +229,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
         '-Wno-unused-variable',
         '-Wno-error=uninitialized',
     ]
-    if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl':
         CFLAGS += [
             '-Wno-absolute-value',
             '-Wno-deprecated-register',
@@ -243,7 +243,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
     else:
         CFLAGS += ['-Wno-unused-but-set-variable']
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
     CFLAGS += [
         '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
         '-wd4018', # '>' : signed/unsigned mismatch
