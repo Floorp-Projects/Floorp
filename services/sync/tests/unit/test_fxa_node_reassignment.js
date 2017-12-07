@@ -71,20 +71,22 @@ function prepareServer(cbAfterTokenFetch) {
   let numReassigns = 0;
   return configureIdentity(config).then(() => {
     Service.identity._tokenServerClient = {
-      getTokenFromBrowserIDAssertion(uri, assertion, cb) {
-        // Build a new URL with trailing zeros for the SYNC_VERSION part - this
-        // will still be seen as equivalent by the test server, but different
-        // by sync itself.
-        numReassigns += 1;
-        let trailingZeros = new Array(numReassigns + 1).join("0");
-        let token = config.fxaccount.token;
-        token.endpoint = server.baseURI + "1.1" + trailingZeros + "/johndoe";
-        token.uid = config.username;
-        numTokenRequests += 1;
-        cb(null, token);
-        if (cbAfterTokenFetch) {
-          cbAfterTokenFetch();
-        }
+      getTokenFromBrowserIDAssertion(uri, assertion) {
+        return new Promise(res => {
+          // Build a new URL with trailing zeros for the SYNC_VERSION part - this
+          // will still be seen as equivalent by the test server, but different
+          // by sync itself.
+          numReassigns += 1;
+          let trailingZeros = new Array(numReassigns + 1).join("0");
+          let token = config.fxaccount.token;
+          token.endpoint = server.baseURI + "1.1" + trailingZeros + "/johndoe";
+          token.uid = config.username;
+          numTokenRequests += 1;
+          res(token);
+          if (cbAfterTokenFetch) {
+            cbAfterTokenFetch();
+          }
+        });
       },
     };
     return server;
