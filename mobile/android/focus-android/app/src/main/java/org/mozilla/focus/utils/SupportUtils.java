@@ -20,6 +20,7 @@ public class SupportUtils {
     public static final String DEFAULT_BROWSER_URL = "https://support.mozilla.org/kb/set-firefox-focus-default-browser-android";
 
     public enum SumoTopic {
+        ADD_SEARCH_ENGINE("add-search-engine"),
         AUTOCOMPLETE("autofill-domain-android"),
         USAGE_DATA("usage-data"),
         WHATS_NEW("whats-new-focus-android-4");

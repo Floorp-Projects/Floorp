@@ -97,7 +97,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
         switch (item.getItemId()) {
             case R.id.learn_more:
                 final Context context = getActivity();
-                final String url = SupportUtils.getSumoURLForTopic(context, "add-search-engine");
+                final String url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.ADD_SEARCH_ENGINE);
 
                 final String title = ((AppCompatActivity) getActivity()).getSupportActionBar().getTitle().toString();
                 final Intent intent = InfoActivity.getIntentFor(context, url, title);
