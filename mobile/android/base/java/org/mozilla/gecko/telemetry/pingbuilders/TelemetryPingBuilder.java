@@ -25,13 +25,23 @@ abstract class TelemetryPingBuilder {
     // In the server url, the initial path directly after the "scheme://host:port/"
     private static final String SERVER_INITIAL_PATH = "submit/telemetry";
 
+    // By default Fennec ping's use the old telemetry version, this can be overridden
+    private static final int DEFAULT_TELEMETRY_VERSION = 1;
+
+    // Unified telemetry is version 4
+    public static final int UNIFIED_TELEMETRY_VERSION = 4;
+
     private final String serverPath;
     protected final ExtendedJSONObject payload;
     protected final String docID;
 
     public TelemetryPingBuilder() {
+        this(DEFAULT_TELEMETRY_VERSION);
+    }
+
+    public TelemetryPingBuilder(int version) {
         docID = UUID.randomUUID().toString();
-        serverPath = getTelemetryServerPath(getDocType(), docID);
+        serverPath = getTelemetryServerPath(getDocType(), docID, version);
         payload = new ExtendedJSONObject();
     }
 
@@ -66,9 +76,11 @@ abstract class TelemetryPingBuilder {
      *   http://hostname/submit/telemetry/docId/docType/appName/appVersion/appUpdateChannel/appBuildID
      *
      * @param docType The name of the ping (e.g. "main")
+     * @param docID A UUID that identifies the ping
+     * @param version The ping format version
      * @return a url at which to POST the telemetry data to
      */
-    private static String getTelemetryServerPath(final String docType, final String docID) {
+    private static String getTelemetryServerPath(final String docType, final String docID, int version) {
         final String appName = AppConstants.MOZ_APP_BASENAME;
         final String appVersion = AppConstants.MOZ_APP_VERSION;
         final String appUpdateChannel = AppConstants.MOZ_UPDATE_CHANNEL;
@@ -82,6 +94,7 @@ abstract class TelemetryPingBuilder {
                 appName + '/' +
                 appVersion + '/' +
                 appUpdateChannel + '/' +
-                appBuildId;
+                appBuildId +
+                (version == UNIFIED_TELEMETRY_VERSION ? "?v=4" : "");
     }
 }
