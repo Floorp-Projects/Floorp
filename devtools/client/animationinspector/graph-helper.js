@@ -272,8 +272,8 @@ ProgressGraphHelper.prototype = {
         threshold *= (endKeyframe.offset - startKeyframe.offset);
       }
 
-      const startTime = startKeyframe.offset * duration;
-      const endTime = endKeyframe.offset * duration;
+      const startTime = parseFloat((startKeyframe.offset * duration).toFixed(3));
+      const endTime = parseFloat((endKeyframe.offset * duration).toFixed(3));
 
       segments.push(...createPathSegments(startTime, endTime,
                                           minSegmentDuration, threshold, this));
