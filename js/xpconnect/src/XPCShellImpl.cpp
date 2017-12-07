@@ -1307,7 +1307,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         // Required for sandboxed child processes.
         if (aShellData->sandboxBrokerServices) {
           SandboxBroker::Initialize(aShellData->sandboxBrokerServices);
-          SandboxBroker::CacheRulesDirectories();
+          SandboxBroker::GeckoDependentInitialize();
         } else {
           NS_WARNING("Failed to initialize broker services, sandboxed "
                      "processes will fail to start.");
