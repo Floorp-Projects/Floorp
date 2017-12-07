@@ -207,32 +207,18 @@ gfxFT2FontBase::InitMetrics()
         return;
     }
 
-    // For variation fonts, figure out the variation coordinates to be applied
-    // for each axis, in freetype's order (which may not match the order of
-    // axes in mStyle.variationSettings, so we need to search by axis tag).
-    if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-        typedef FT_UInt (*GetVarFunc)(FT_Face, FT_MM_Var**);
-        typedef FT_UInt (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
-        static GetVarFunc getVar =
-            (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
-        static SetCoordsFunc setCoords =
-            (SetCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
-        FT_MM_Var* ftVar;
-        if (getVar && setCoords && FT_Err_Ok == (*getVar)(face, &ftVar)) {
-            for (unsigned i = 0; i < ftVar->num_axis; ++i) {
-                mCoords.AppendElement(ftVar->axis[i].def);
-                for (const auto& v : mStyle.variationSettings) {
-                    if (ftVar->axis[i].tag == v.mTag) {
-                        FT_Fixed val = v.mValue * 0x10000;
-                        val = std::min(val, ftVar->axis[i].maximum);
-                        val = std::max(val, ftVar->axis[i].minimum);
-                        mCoords[i] = val;
-                        break;
-                    }
-                }
+    if (!mStyle.variationSettings.IsEmpty()) {
+        SetupVarCoords(face, mStyle.variationSettings, &mCoords);
+        if (!mCoords.IsEmpty()) {
+            typedef FT_UInt (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
+            static SetCoordsFunc setCoords;
+            static bool firstTime = true;
+            if (firstTime) {
+                firstTime = false;
+                setCoords = (SetCoordsFunc)
+                    dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
             }
-            free(ftVar);
-            if (!mCoords.IsEmpty()) {
+            if (setCoords) {
                 (*setCoords)(face, mCoords.Length(), mCoords.Elements());
             }
         }
@@ -580,4 +566,41 @@ gfxFT2FontBase::SetupCairoFont(DrawTarget* aDrawTarget)
     // font for pdf and ps surfaces (bug 403513).
     cairo_set_scaled_font(gfxFont::RefCairo(aDrawTarget), cairoFont);
     return true;
+}
+
+// For variation fonts, figure out the variation coordinates to be applied
+// for each axis, in freetype's order (which may not match the order of
+// axes in mStyle.variationSettings, so we need to search by axis tag).
+/*static*/
+void
+gfxFT2FontBase::SetupVarCoords(FT_Face aFace,
+                               const nsTArray<gfxFontVariation>& aVariations,
+                               nsTArray<FT_Fixed>* aCoords)
+{
+    aCoords->TruncateLength(0);
+    if (aFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+        typedef FT_UInt (*GetVarFunc)(FT_Face, FT_MM_Var**);
+        static GetVarFunc getVar;
+        static bool firstTime = true;
+        if (firstTime) {
+            firstTime = false;
+            getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
+        }
+        FT_MM_Var* ftVar;
+        if (getVar && FT_Err_Ok == (*getVar)(aFace, &ftVar)) {
+            for (unsigned i = 0; i < ftVar->num_axis; ++i) {
+                aCoords->AppendElement(ftVar->axis[i].def);
+                for (const auto& v : aVariations) {
+                    if (ftVar->axis[i].tag == v.mTag) {
+                        FT_Fixed val = v.mValue * 0x10000;
+                        val = std::min(val, ftVar->axis[i].maximum);
+                        val = std::max(val, ftVar->axis[i].minimum);
+                        (*aCoords)[i] = val;
+                        break;
+                    }
+                }
+            }
+            free(ftVar);
+        }
+    }
 }

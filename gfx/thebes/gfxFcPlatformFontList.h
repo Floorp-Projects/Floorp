@@ -112,6 +112,8 @@ public:
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
     bool TestCharacterMap(uint32_t aCh) override;
 
+    FT_Face GetFTFace();
+
     hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
     void ForgetHBFace() override;
