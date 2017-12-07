@@ -67,7 +67,7 @@ public class InfoActivity extends AppCompatActivity {
 
     public static Intent getTrackerHelpIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
-        return getIntentFor(context, SupportUtils.getSumoURLForTopic(context, "trackers"), resources.getString(R.string.menu_help));
+        return getIntentFor(context, SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.TRACKERS), resources.getString(R.string.menu_help));
     }
 
     @Override

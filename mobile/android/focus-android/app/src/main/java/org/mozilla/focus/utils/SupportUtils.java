@@ -22,6 +22,7 @@ public class SupportUtils {
     public enum SumoTopic {
         ADD_SEARCH_ENGINE("add-search-engine"),
         AUTOCOMPLETE("autofill-domain-android"),
+        TRACKERS("trackers"),
         USAGE_DATA("usage-data"),
         WHATS_NEW("whats-new-focus-android-4");
 
