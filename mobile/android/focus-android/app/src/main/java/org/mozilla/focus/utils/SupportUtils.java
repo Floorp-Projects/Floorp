@@ -27,29 +27,32 @@ public class SupportUtils {
     }
 
     public static String getSumoURLForTopic(final Context context, final String topic) {
-        String escapedTopic;
-        try {
-            escapedTopic = URLEncoder.encode(topic, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("utf-8 should always be available", e);
-        }
-
-        final String appVersion;
-        try {
-            appVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            // This should be impossible - we should always be able to get information about ourselves:
-            throw new IllegalStateException("Unable find package details for Focus", e);
-        }
-
+        final String escapedTopic = getEncodedTopicUTF8(topic);
+        final String appVersion = getAppVersion(context);
         final String osTarget = "Android";
         final String langTag = Locales.getLanguageTag(Locale.getDefault());
-
         return "https://support.mozilla.org/1/mobile/" + appVersion + "/" + osTarget + "/" + langTag + "/" + escapedTopic;
     }
 
     public static String getManifestoURL() {
         final String langTag = Locales.getLanguageTag(Locale.getDefault());
         return "https://www.mozilla.org/" + langTag + "/about/manifesto/";
+    }
+
+    private static String getEncodedTopicUTF8(final String topic) {
+        try {
+            return URLEncoder.encode(topic, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("utf-8 should always be available", e);
+        }
+    }
+
+    private static String getAppVersion(final Context context) {
+        try {
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            // This should be impossible - we should always be able to get information about ourselves:
+            throw new IllegalStateException("Unable find package details for Focus", e);
+        }
     }
 }
