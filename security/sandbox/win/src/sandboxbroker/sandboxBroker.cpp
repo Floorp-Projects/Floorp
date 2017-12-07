@@ -179,6 +179,7 @@ SandboxBroker::SandboxBroker()
 bool
 SandboxBroker::LaunchApp(const wchar_t *aPath,
                          const wchar_t *aArguments,
+                         base::EnvironmentMap& aEnvironment,
                          GeckoProcessType aProcessType,
                          const bool aEnableLogging,
                          void **aProcessHandle)
@@ -265,7 +266,7 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   PROCESS_INFORMATION targetInfo = {0};
   sandbox::ResultCode last_warning = sandbox::SBOX_ALL_OK;
   DWORD last_error = ERROR_SUCCESS;
-  result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy,
+  result = sBrokerService->SpawnTarget(aPath, aArguments, aEnvironment, mPolicy,
                                        &last_warning, &last_error, &targetInfo);
   if (sandbox::SBOX_ALL_OK != result) {
     nsAutoCString key;
