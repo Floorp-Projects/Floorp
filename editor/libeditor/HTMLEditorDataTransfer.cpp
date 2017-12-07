@@ -151,11 +151,12 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
       //     incrementing offset will cause odd result.  Next new node
       //     will be inserted after existing node and the offset will be
       //     overflown from the container node.
-      pointToInsert.Set(pointToInsert.Container(), pointToInsert.Offset() + 1);
+      pointToInsert.Set(pointToInsert.GetContainer(),
+                        pointToInsert.Offset() + 1);
       if (NS_WARN_IF(!pointToInsert.Offset())) {
         // Append the remaining children to the container if offset is
         // overflown.
-        pointToInsert.SetToEndOf(pointToInsert.Container());
+        pointToInsert.SetToEndOf(pointToInsert.GetContainer());
       }
     }
   }
@@ -354,7 +355,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // if there are any invisible br's after our insertion point, remove them.
     // this is because if there is a br at end of what we paste, it will make
     // the invisible br visible.
-    WSRunObject wsObj(this, pointToInsert.Container(), pointToInsert.Offset());
+    WSRunObject wsObj(this, pointToInsert.GetContainer(),
+                      pointToInsert.Offset());
     if (wsObj.mEndReasonNode &&
         TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
         !IsVisibleBRElement(wsObj.mEndReasonNode)) {
@@ -364,12 +366,12 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     }
 
     // Remember if we are in a link.
-    bool bStartedInLink = IsInLink(pointToInsert.Container()->AsDOMNode());
+    bool bStartedInLink = IsInLink(pointToInsert.GetContainerAsDOMNode());
 
     // Are we in a text node? If so, split it.
-    if (IsTextNode(pointToInsert.Container())) {
+    if (pointToInsert.IsInTextNode()) {
       SplitNodeResult splitNodeResult =
-        SplitNodeDeep(*pointToInsert.Container()->AsContent(),
+        SplitNodeDeep(*pointToInsert.GetContainerAsContent(),
                       pointToInsert.AsRaw(),
                       SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
@@ -419,14 +421,15 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                endListAndTableArray, highWaterMark);
     }
 
-    MOZ_ASSERT(pointToInsert.Container()->GetChildAt(pointToInsert.Offset()) ==
+    MOZ_ASSERT(pointToInsert.GetContainer()->
+                               GetChildAt(pointToInsert.Offset()) ==
                  pointToInsert.GetChildAtOffset());
 
     // Loop over the node list and paste the nodes:
     nsCOMPtr<nsINode> parentBlock =
-      IsBlockNode(pointToInsert.Container()) ?
-        pointToInsert.Container() :
-        GetBlockNodeParent(pointToInsert.Container());
+      IsBlockNode(pointToInsert.GetContainer()) ?
+        pointToInsert.GetContainer() :
+        GetBlockNodeParent(pointToInsert.GetContainer());
     nsCOMPtr<nsIContent> lastInsertNode;
     nsCOMPtr<nsINode> insertedContextParent;
     for (OwningNonNull<nsINode>& curNode : nodeList) {
@@ -450,9 +453,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       // into a table or table row, insert the appropriate children instead.
       bool bDidInsert = false;
       if (HTMLEditUtils::IsTableRow(curNode) &&
-          HTMLEditUtils::IsTableRow(pointToInsert.Container()) &&
+          HTMLEditUtils::IsTableRow(pointToInsert.GetContainer()) &&
           (HTMLEditUtils::IsTable(curNode) ||
-           HTMLEditUtils::IsTable(pointToInsert.Container()))) {
+           HTMLEditUtils::IsTable(pointToInsert.GetContainer()))) {
         for (nsCOMPtr<nsIContent> firstChild = curNode->GetFirstChild();
              firstChild;
              firstChild = curNode->GetFirstChild()) {
@@ -476,8 +479,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       // into a list or list item, insert the appropriate children instead,
       // ie, merge the lists instead of pasting in a sublist.
       else if (HTMLEditUtils::IsList(curNode) &&
-               (HTMLEditUtils::IsList(pointToInsert.Container()) ||
-                HTMLEditUtils::IsListItem(pointToInsert.Container()))) {
+               (HTMLEditUtils::IsList(pointToInsert.GetContainer()) ||
+                HTMLEditUtils::IsListItem(pointToInsert.GetContainer()))) {
         for (nsCOMPtr<nsIContent> firstChild = curNode->GetFirstChild();
              firstChild;
              firstChild = curNode->GetFirstChild()) {
@@ -485,15 +488,16 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
               HTMLEditUtils::IsList(firstChild)) {
             // Check if we are pasting into empty list item. If so
             // delete it and paste into parent list instead.
-            if (HTMLEditUtils::IsListItem(pointToInsert.Container())) {
+            if (HTMLEditUtils::IsListItem(pointToInsert.GetContainer())) {
               bool isEmpty;
-              rv = IsEmptyNode(pointToInsert.Container(), &isEmpty, true);
+              rv = IsEmptyNode(pointToInsert.GetContainer(), &isEmpty, true);
               if (NS_SUCCEEDED(rv) && isEmpty) {
-                if (NS_WARN_IF(!pointToInsert.Container()->GetParentNode())) {
+                if (NS_WARN_IF(!pointToInsert.GetContainer()->
+                                                GetParentNode())) {
                   // Is it an orphan node?
                 } else {
-                  DeleteNode(pointToInsert.Container());
-                  pointToInsert.Set(pointToInsert.Container());
+                  DeleteNode(pointToInsert.GetContainer());
+                  pointToInsert.Set(pointToInsert.GetContainer());
                 }
               }
             }
@@ -618,7 +622,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         }
         // The container might be null in case a mutation listener removed
         // the stuff we just inserted from the DOM.
-        selNode = pointAtContainer.Container();
+        selNode = pointAtContainer.GetContainer();
         // Want to be *after* last leaf node in paste.
         selOffset = pointAtContainer.Offset() + 1;
       }
@@ -639,7 +643,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
           // don't leave selection past an invisible break;
           // reset {selNode,selOffset} to point before break
           EditorRawDOMPoint atStartReasonNode(wsRunObj.mStartReasonNode);
-          selNode = atStartReasonNode.Container();
+          selNode = atStartReasonNode.GetContainer();
           selOffset = atStartReasonNode.Offset();
           // we want to be inside any inline style prior to break
           WSRunObject wsRunObj(this, selNode, selOffset);
@@ -652,7 +656,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
             // prior visible thing is an image or some other non-text thingy.
             // We want to be right after it.
             atStartReasonNode.Set(wsRunObj.mStartReasonNode);
-            selNode = atStartReasonNode.Container();
+            selNode = atStartReasonNode.GetContainer();
             selOffset = atStartReasonNode.Offset() + 1;
           }
         }

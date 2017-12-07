@@ -1370,7 +1370,8 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
     return aPointToInsert;
   }
 
-  WSRunObject wsObj(this, aPointToInsert.Container(), aPointToInsert.Offset());
+  WSRunObject wsObj(this, aPointToInsert.GetContainer(),
+                    aPointToInsert.Offset());
 
   // If the insertion position is after the last visible item in a line,
   // i.e., the insertion position is just before a visible line break <br>,
@@ -1378,7 +1379,7 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   nsCOMPtr<nsINode> nextVisibleNode;
   int32_t nextVisibleOffset = 0;
   WSType nextVisibleType;
-  wsObj.NextVisibleNode(aPointToInsert.Container(), aPointToInsert.Offset(),
+  wsObj.NextVisibleNode(aPointToInsert.GetContainer(), aPointToInsert.Offset(),
                         address_of(nextVisibleNode),
                         &nextVisibleOffset, &nextVisibleType);
   // So, if the next visible node isn't a <br> element, we can insert the block
@@ -1395,7 +1396,7 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   nsCOMPtr<nsINode> previousVisibleNode;
   int32_t previousVisibleOffset = 0;
   WSType previousVisibleType;
-  wsObj.PriorVisibleNode(aPointToInsert.Container(), aPointToInsert.Offset(),
+  wsObj.PriorVisibleNode(aPointToInsert.GetContainer(), aPointToInsert.Offset(),
                          address_of(previousVisibleNode),
                          &previousVisibleOffset, &previousVisibleType);
   // So, if there is no previous visible node,
@@ -1529,21 +1530,21 @@ HTMLEditor::InsertNodeIntoProperAncestor(
   // Search up the parent chain to find a suitable container.
   EditorDOMPoint pointToInsert(aPointToInsert);
   MOZ_ASSERT(pointToInsert.IsSet());
-  while (!CanContain(*pointToInsert.Container(), aNode)) {
+  while (!CanContain(*pointToInsert.GetContainer(), aNode)) {
     // If the current parent is a root (body or table element)
     // then go no further - we can't insert.
-    if (pointToInsert.Container()->IsHTMLElement(nsGkAtoms::body) ||
-        HTMLEditUtils::IsTableElement(pointToInsert.Container())) {
+    if (pointToInsert.IsContainerHTMLElement(nsGkAtoms::body) ||
+        HTMLEditUtils::IsTableElement(pointToInsert.GetContainer())) {
       return EditorDOMPoint();
     }
 
     // Get the next point.
-    pointToInsert.Set(pointToInsert.Container());
+    pointToInsert.Set(pointToInsert.GetContainer());
     if (NS_WARN_IF(!pointToInsert.IsSet())) {
       return EditorDOMPoint();
     }
 
-    if (!IsEditable(pointToInsert.Container())) {
+    if (!IsEditable(pointToInsert.GetContainer())) {
       // There's no suitable place to put the node in this editing host.  Maybe
       // someone is trying to put block content in a span.  So just put it
       // where we were originally asked.
@@ -1923,7 +1924,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
 
     EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
     if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.Container()->IsContent())) {
+        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
       return NS_ERROR_FAILURE;
     }
 
@@ -1931,15 +1932,15 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     EditorDOMPoint pointToInsertList(atStartOfSelection);
 
     RefPtr<nsAtom> listAtom = NS_Atomize(aListType);
-    while (!CanContainTag(*pointToInsertList.Container(), *listAtom)) {
-      pointToInsertList.Set(pointToInsertList.Container());
+    while (!CanContainTag(*pointToInsertList.GetContainer(), *listAtom)) {
+      pointToInsertList.Set(pointToInsertList.GetContainer());
       if (NS_WARN_IF(!pointToInsertList.IsSet()) ||
-          NS_WARN_IF(!pointToInsertList.Container()->IsContent())) {
+          NS_WARN_IF(!pointToInsertList.GetContainerAsContent())) {
         return NS_ERROR_FAILURE;
       }
     }
 
-    if (pointToInsertList.Container() != atStartOfSelection.Container()) {
+    if (pointToInsertList.GetContainer() != atStartOfSelection.GetContainer()) {
       // We need to split up to the child of parent.
       SplitNodeResult splitNodeResult =
         SplitNodeDeep(*pointToInsertList.GetChildAtOffset(),
@@ -2072,7 +2073,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 
     EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
     if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.Container()->IsContent())) {
+        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
       return NS_ERROR_FAILURE;
     }
 
@@ -2080,15 +2081,16 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     EditorDOMPoint pointToInsertBlock(atStartOfSelection);
 
     RefPtr<nsAtom> blockAtom = NS_Atomize(aBlockType);
-    while (!CanContainTag(*pointToInsertBlock.Container(), *blockAtom)) {
-      pointToInsertBlock.Set(pointToInsertBlock.Container());
+    while (!CanContainTag(*pointToInsertBlock.GetContainer(), *blockAtom)) {
+      pointToInsertBlock.Set(pointToInsertBlock.GetContainer());
       if (NS_WARN_IF(!pointToInsertBlock.IsSet()) ||
-          NS_WARN_IF(!pointToInsertBlock.Container()->IsContent())) {
+          NS_WARN_IF(!pointToInsertBlock.GetContainerAsContent())) {
         return NS_ERROR_FAILURE;
       }
     }
 
-    if (pointToInsertBlock.Container() != atStartOfSelection.Container()) {
+    if (pointToInsertBlock.GetContainer() !=
+          atStartOfSelection.GetContainer()) {
       // We need to split up to the child of the point to insert a block.
       SplitNodeResult splitBlockResult =
         SplitNodeDeep(*pointToInsertBlock.GetChildAtOffset(),
@@ -2154,24 +2156,24 @@ HTMLEditor::Indent(const nsAString& aIndent)
 
     EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
     if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.Container()->IsContent())) {
+        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
       return NS_ERROR_FAILURE;
     }
 
     // Have to find a place to put the blockquote.
     EditorDOMPoint pointToInsertBlockquote(atStartOfSelection);
 
-    while (!CanContainTag(*pointToInsertBlockquote.Container(),
+    while (!CanContainTag(*pointToInsertBlockquote.GetContainer(),
                           *nsGkAtoms::blockquote)) {
-      pointToInsertBlockquote.Set(pointToInsertBlockquote.Container());
+      pointToInsertBlockquote.Set(pointToInsertBlockquote.GetContainer());
       if (NS_WARN_IF(!pointToInsertBlockquote.IsSet()) ||
-          NS_WARN_IF(!pointToInsertBlockquote.Container()->IsContent())) {
+          NS_WARN_IF(!pointToInsertBlockquote.GetContainerAsContent())) {
         return NS_ERROR_FAILURE;
       }
     }
 
-    if (pointToInsertBlockquote.Container() !=
-          atStartOfSelection.Container()) {
+    if (pointToInsertBlockquote.GetContainer() !=
+          atStartOfSelection.GetContainer()) {
       // We need to split up to the child of parent.
       SplitNodeResult splitBlockquoteResult =
         SplitNodeDeep(*pointToInsertBlockquote.GetChildAtOffset(),
@@ -2252,13 +2254,13 @@ HTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
     }
 
     // Try to get the actual selected node
-    if (atAnchor.Container()->HasChildNodes() &&
-        atAnchor.Container()->IsContent()) {
+    if (atAnchor.GetContainer()->HasChildNodes() &&
+        atAnchor.GetContainerAsContent()) {
       node = atAnchor.GetChildAtOffset();
     }
     // Anchor node is probably a text node - just use that
     if (!node) {
-      node = atAnchor.Container();
+      node = atAnchor.GetContainer();
     }
   }
 
@@ -3141,7 +3143,7 @@ HTMLEditor::InsertTextImpl(nsIDocument& aDocument,
   }
 
   // Do nothing if the node is read-only
-  if (!IsModifiableNode(aPointToInsert.Container())) {
+  if (!IsModifiableNode(aPointToInsert.GetContainer())) {
     return NS_ERROR_FAILURE;
   }
 

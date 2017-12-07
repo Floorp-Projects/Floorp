@@ -736,8 +736,8 @@ TextEditRules::WillInsertText(EditAction aAction,
 
   // don't put text in places that can't have it
   NS_ENSURE_STATE(mTextEditor);
-  if (!EditorBase::IsTextNode(atStartOfSelection.Container()) &&
-      !mTextEditor->CanContainTag(*atStartOfSelection.Container(),
+  if (!atStartOfSelection.IsInTextNode() &&
+      !mTextEditor->CanContainTag(*atStartOfSelection.GetContainer(),
                                   *nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
@@ -756,9 +756,9 @@ TextEditRules::WillInsertText(EditAction aAction,
     // the insertion point.
     int32_t IMESelectionOffset =
       mTextEditor->GetIMESelectionStartOffsetIn(
-                     betterInsertionPoint.Container());
+                     betterInsertionPoint.GetContainer());
     if (IMESelectionOffset >= 0) {
-      betterInsertionPoint.Set(betterInsertionPoint.Container(),
+      betterInsertionPoint.Set(betterInsertionPoint.GetContainer(),
                                IMESelectionOffset);
     }
     rv = mTextEditor->InsertTextImpl(*doc, *outString, betterInsertionPoint);

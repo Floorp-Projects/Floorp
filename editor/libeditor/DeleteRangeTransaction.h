@@ -78,8 +78,8 @@ protected:
 
   /**
    * CreateTxnsToDeleteContent() creates a DeleteTextTransaction to delete
-   * text between start of aPoint.Container() and aPoint or aPoint and end of
-   * aPoint.Container() and appends the created transaction to the array.
+   * text between start of aPoint.GetContainer() and aPoint or aPoint and end of
+   * aPoint.GetContainer() and appends the created transaction to the array.
    *
    * @param aPoint      Must be set and valid point.  If the container is not
    *                    a data node, this method does nothing.
