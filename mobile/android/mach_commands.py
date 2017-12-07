@@ -40,6 +40,13 @@ def REMOVED(cls):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
+    def _root_url(self, artifactdir=None, objdir=None):
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            return 'https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/{}'.format(os.environ['TASK_ID'], os.environ['RUN_ID'], artifactdir)
+        else:
+            return os.path.join(self.topobjdir, objdir)
+
+
     @Command('android', category='devenv',
         description='Run Android-specific commands.',
         conditions=[conditions.is_android])
@@ -67,10 +74,9 @@ class MachCommands(MachCommandBase):
             FileFinder,
         )
 
-        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/android/unittest".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
-        else:
-            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/tests')
+        root_url = self._root_url(
+            artifactdir='public/android/unittest',
+            objdir='gradle/build/mobile/android/app/reports/tests')
 
         reports = ('officialPhotonDebug',)
         for report in reports:
@@ -79,6 +85,14 @@ class MachCommands(MachCommandBase):
                 f = open(os.path.join(finder.base, p), 'rt')
                 tree = ET.parse(f)
                 root = tree.getroot()
+
+                # Log reports for Tree Herder "Job Details".
+                print('TinderboxPrint: report<br/><a href="{}/{}/index.html">HTML {} report</a>, visit "Inspect Task" link for details'.format(root_url, report, report))
+
+                # And make the report display as soon as possible.
+                failed = root.findall('testcase/error') or root.findall('testcase/failure')
+                if failed:
+                    print('TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: {}/{}/index.html'.format(root_url, report))
 
                 print('SUITE-START | android-test | {} {}'.format(report, root.get('name')))
 
@@ -111,9 +125,6 @@ class MachCommands(MachCommandBase):
 
                 print('SUITE-END | android-test | {} {}'.format(report, root.get('name')))
 
-            title = report
-            print("TinderboxPrint: report<br/><a href='{}/{}/index.html'>HTML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
-
         return ret
 
 
@@ -132,16 +143,25 @@ class MachCommands(MachCommandBase):
         # report(s) for human consumption.
         import xml.etree.ElementTree as ET
 
-        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/android/lint".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
-        else:
-            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports')
+        root_url = self._root_url(
+            artifactdir='public/android/lint',
+            objdir='gradle/build/mobile/android/app/reports')
 
         reports = ('officialPhotonDebug',)
         for report in reports:
             f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)), 'rt')
             tree = ET.parse(f)
             root = tree.getroot()
+
+            # Log reports for Tree Herder "Job Details".
+            html_report_url = '{}/lint-results-{}.html'.format(root_url, report)
+            xml_report_url = '{}/lint-results-{}.xml'.format(root_url, report)
+            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))
+            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))
+
+            # And make the report display as soon as possible.
+            if root.findall("issue[@severity='Error']"):
+                print('TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: {}'.format(html_report_url))
 
             print('SUITE-START | android-lint | {}'.format(report))
             for issue in root.findall("issue[@severity='Error']"):
@@ -152,10 +172,6 @@ class MachCommands(MachCommandBase):
                     print('TEST-UNEXPECTED-FAIL | {}'.format(line))
                 ret |= 1
             print('SUITE-END | android-lint | {}'.format(report))
-
-            title = report
-            print("TinderboxPrint: report<br/><a href='{}/lint-results-{}.html'>HTML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
-            print("TinderboxPrint: report<br/><a href='{}/lint-results-{}.xml'>XML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
 
         return ret
 
@@ -179,6 +195,22 @@ class MachCommands(MachCommandBase):
         tree = ET.parse(f)
         root = tree.getroot()
 
+        # Now the reports, linkified.
+        root_url = self._root_url(
+            artifactdir='public/android/checkstyle',
+            objdir='gradle/build/mobile/android/app/reports/checkstyle')
+
+        # Log reports for Tree Herder "Job Details".
+        print('TinderboxPrint: report<br/><a href="{}/checkstyle.html">HTML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))
+        print('TinderboxPrint: report<br/><a href="{}/checkstyle.xml">XML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))
+
+        # And make the report display as soon as possible.
+        if root.findall('file/error'):
+            ret |= 1
+
+        if ret:
+            print('TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: {}/checkstyle.html'.format(root_url))
+
         print('SUITE-START | android-checkstyle')
         for file in root.findall('file'):
             name = file.get('name')
@@ -193,20 +225,10 @@ class MachCommands(MachCommandBase):
                 for line in ET.tostring(error).strip().splitlines():
                     print('TEST-UNEXPECTED-FAIL | {}'.format(line))
                 error_count += 1
-                ret |= 1
 
             if not error_count:
                 print('TEST-PASS | {}'.format(name))
         print('SUITE-END | android-checkstyle')
-
-        # Now the reports, linkified.
-        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/android/checkstyle".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
-        else:
-            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/checkstyle')
-
-        print("TinderboxPrint: report<br/><a href='{}/checkstyle.html'>HTML checkstyle report</a>, visit \"Inspect Task\" link for details".format(root_url))
-        print("TinderboxPrint: report<br/><a href='{}/checkstyle.xml'>XML checkstyle report</a>, visit \"Inspect Task\" link for details".format(root_url))
 
         return ret
 
@@ -227,10 +249,9 @@ class MachCommands(MachCommandBase):
         # report(s) for human consumption.
         import xml.etree.ElementTree as ET
 
-        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/artifacts/findbugs".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
-        else:
-            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs')
+        root_url = self._root_url(
+            artifactdir='public/android/findbugs',
+            objdir='gradle/build/mobile/android/app/reports/findbugs')
 
         reports = ('findbugs-officialPhotonDebug-output.xml',)
         for report in reports:
@@ -242,6 +263,17 @@ class MachCommands(MachCommandBase):
             tree = ET.parse(f)
             root = tree.getroot()
 
+            # Log reports for Tree Herder "Job Details".
+            title = report.replace('findbugs-', '').replace('-output.xml', '')
+            html_report_url = '{}/{}'.format(root_url, report.replace('.xml', '.html'))
+            xml_report_url = '{}/{}'.format(root_url, report)
+            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))
+            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))
+
+            # And make the report display as soon as possible.
+            if root.findall("./BugInstance"):
+                print('TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: {}'.format(html_report_url))
+
             print('SUITE-START | android-findbugs | {}'.format(report))
             for error in root.findall('./BugInstance'):
                 # There's no particular advantage to formatting the
@@ -252,10 +284,6 @@ class MachCommands(MachCommandBase):
                     print('TEST-UNEXPECTED-FAIL | {}:{} | {}'.format(report, error.get('type'), line))
                 ret |= 1
             print('SUITE-END | android-findbugs | {}'.format(report))
-
-            title = report.replace('findbugs-', '').replace('-output.xml', '')
-            print("TinderboxPrint: report<br/><a href='{}/{}'>HTML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report.replace('.xml', '.html'), title))
-            print("TinderboxPrint: report<br/><a href='{}/{}'>XML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
 
         return ret
 
@@ -284,7 +312,7 @@ class MachCommands(MachCommandBase):
         # We don't want to gate producing dependency archives on clean
         # lint or checkstyle, particularly because toolchain versions
         # can change the outputs for those processes.
-        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
+        self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
 
         return 0
 
