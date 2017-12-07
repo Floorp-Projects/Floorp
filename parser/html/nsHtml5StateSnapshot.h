@@ -82,20 +82,21 @@ public:
     bool framesetOk,
     bool needToDropLF,
     bool quirks);
-  jArray<nsHtml5StackNode*, int32_t> getStack();
-  jArray<int32_t, int32_t> getTemplateModeStack();
-  jArray<nsHtml5StackNode*, int32_t> getListOfActiveFormattingElements();
-  nsIContentHandle* getFormPointer();
-  nsIContentHandle* getHeadPointer();
-  nsIContentHandle* getDeepTreeSurrogateParent();
-  int32_t getMode();
-  int32_t getOriginalMode();
-  bool isFramesetOk();
-  bool isNeedToDropLF();
-  bool isQuirks();
-  int32_t getListOfActiveFormattingElementsLength();
-  int32_t getStackLength();
-  int32_t getTemplateModeStackLength();
+  jArray<nsHtml5StackNode*, int32_t> getStack() override;
+  jArray<int32_t, int32_t> getTemplateModeStack() override;
+  jArray<nsHtml5StackNode*, int32_t> getListOfActiveFormattingElements()
+    override;
+  nsIContentHandle* getFormPointer() override;
+  nsIContentHandle* getHeadPointer() override;
+  nsIContentHandle* getDeepTreeSurrogateParent() override;
+  int32_t getMode() override;
+  int32_t getOriginalMode() override;
+  bool isFramesetOk() override;
+  bool isNeedToDropLF() override;
+  bool isQuirks() override;
+  int32_t getListOfActiveFormattingElementsLength() override;
+  int32_t getStackLength() override;
+  int32_t getTemplateModeStackLength() override;
   ~nsHtml5StateSnapshot();
   static void initializeStatics();
   static void releaseStatics();
