@@ -21,6 +21,7 @@ public class SupportUtils {
 
     public enum SumoTopic {
         AUTOCOMPLETE("autofill-domain-android"),
+        USAGE_DATA("usage-data"),
         WHATS_NEW("whats-new-focus-android-4");
 
         private final String topicStr;

@@ -76,7 +76,7 @@ class TelemetrySwitchPreference extends Preference {
             public void onClick(View v) {
                 // This is a hardcoded link: if we ever end up needing more of these links, we should
                 // move the link into an xml parameter, but there's no advantage to making it configurable now.
-                final String url = SupportUtils.getSumoURLForTopic(getContext(), "usage-data");
+                final String url = SupportUtils.getSumoURLForTopic(getContext(), SupportUtils.SumoTopic.USAGE_DATA);
                 final String title = getTitle().toString();
 
                 final Intent intent = InfoActivity.getIntentFor(getContext(), url, title);
