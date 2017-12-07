@@ -699,10 +699,15 @@ public:
   void SetPullEnabled(bool aEnabled);
 
   /**
+   * Call all MediaStreamListeners to request new data via the NotifyPull API
+   * (if enabled).
+   */
+  void PullNewData(StreamTime aDesiredUpToTime, bool* aEnsureNextIteration);
+
+  /**
    * Extract any state updates pending in the stream, and apply them.
    */
-  void ExtractPendingInput(StreamTime aDesiredUpToTime,
-                           bool* aEnsureNextIteration);
+  void ExtractPendingInput();
 
   /**
    * These add/remove DirectListeners, which allow bypassing the graph and any
