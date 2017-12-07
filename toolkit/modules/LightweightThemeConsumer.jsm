@@ -130,6 +130,7 @@ LightweightThemeConsumer.prototype = {
     let textcolor = this._sanitizeCSSColor(aData.textcolor) || "black";
     _setProperty(root, active, "--lwt-text-color", textcolor);
     _setProperty(root, active, "--lwt-accent-color", this._sanitizeCSSColor(aData.accentcolor) || "white");
+
     if (active) {
       let dummy = this._doc.createElement("dummy");
       dummy.style.color = textcolor;
@@ -175,10 +176,12 @@ LightweightThemeConsumer.prototype = {
     span.style.color = cssColor;
     cssColor = span.style.color;
     if (cssColor == "transparent" ||
-        cssColor == "rgba(0, 0, 0, 0)") {
+        cssColor == "rgba(0, 0, 0, 0)" ||
+        !cssColor) {
       return "";
     }
-    return cssColor;
+    // Remove alpha channel from color
+    return `rgb(${_parseRGB(cssColor).join(", ")})`;
   }
 };
 
