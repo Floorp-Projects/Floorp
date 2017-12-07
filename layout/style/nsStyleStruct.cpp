@@ -3692,13 +3692,16 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   MOZ_COUNT_CTOR(nsStyleDisplay);
 }
 
-nsStyleDisplay::~nsStyleDisplay()
+
+static
+void ReleaseSharedListOnMainThread(const char* aName,
+                                   RefPtr<nsCSSValueSharedList>& aList)
 {
   // We don't allow releasing nsCSSValues with refcounted data in the Servo
   // traversal, since the refcounts aren't threadsafe. Since Servo may trigger
   // the deallocation of style structs during styling, we need to handle it
   // here.
-  if (mSpecifiedTransform && ServoStyleSet::IsInServoTraversal()) {
+  if (aList && ServoStyleSet::IsInServoTraversal()) {
     // The default behavior of NS_ReleaseOnMainThreadSystemGroup is to only
     // proxy the release if we're not already on the main thread. This is a nice
     // optimization for the cases we happen to be doing a sequential traversal
@@ -3711,10 +3714,14 @@ nsStyleDisplay::~nsStyleDisplay()
 #else
       false;
 #endif
-    NS_ReleaseOnMainThreadSystemGroup(
-      "nsStyleDisplay::mSpecifiedTransform",
-      mSpecifiedTransform.forget(), alwaysProxy);
+    NS_ReleaseOnMainThreadSystemGroup(aName, aList.forget(), alwaysProxy);
   }
+}
+
+nsStyleDisplay::~nsStyleDisplay()
+{
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTransform",
+                                mSpecifiedTransform);
 
   MOZ_COUNT_DTOR(nsStyleDisplay);
 }
@@ -4644,18 +4651,8 @@ nsStyleUIReset::~nsStyleUIReset()
 {
   MOZ_COUNT_DTOR(nsStyleUIReset);
 
-  // See the nsStyleDisplay destructor for why we're doing this.
-  if (mSpecifiedWindowTransform && ServoStyleSet::IsInServoTraversal()) {
-    bool alwaysProxy =
-#ifdef DEBUG
-      true;
-#else
-      false;
-#endif
-    NS_ReleaseOnMainThreadSystemGroup(
-      "nsStyleUIReset::mSpecifiedWindowTransform",
-      mSpecifiedWindowTransform.forget(), alwaysProxy);
-  }
+  ReleaseSharedListOnMainThread("nsStyleUIReset::mSpecifiedWindowTransform",
+                                mSpecifiedWindowTransform);
 }
 
 nsChangeHint
