@@ -76,13 +76,12 @@ function openNewTab(aWindow, aCallback) {
 
   let browser = aWindow.gBrowser.selectedBrowser;
   // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let doc = browser.contentDocumentAsCPOW;
-  if (doc && doc.readyState === "complete") {
+  if (browser.contentDocument.readyState === "complete") {
     executeSoon(aCallback);
     return;
   }
 
-  BrowserTestUtils.browserLoaded(browser).then(() => {
+  browser.addEventListener("load", function() {
     executeSoon(aCallback);
-  });
+  }, {capture: true, once: true});
 }

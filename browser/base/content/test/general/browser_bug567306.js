@@ -11,12 +11,14 @@ add_task(async function() {
 
   let selectedBrowser = newwindow.gBrowser.selectedBrowser;
   await new Promise((resolve, reject) => {
-    BrowserTestUtils.waitForContentEvent(selectedBrowser, "pageshow", true, (event) => {
-      return content.location.href != "about:blank";
-    }).then(function pageshowListener() {
-      ok(true, "pageshow listener called: " + newwindow.gBrowser.currentURI.spec);
+    selectedBrowser.addEventListener("pageshow", function pageshowListener() {
+      if (selectedBrowser.currentURI.spec == "about:blank")
+        return;
+
+      selectedBrowser.removeEventListener("pageshow", pageshowListener, true);
+      ok(true, "pageshow listener called: " + newwindow.content.location);
       resolve();
-    });
+    }, true);
     selectedBrowser.loadURI("data:text/html,<h1 id='h1'>Select Me</h1>");
   });
 

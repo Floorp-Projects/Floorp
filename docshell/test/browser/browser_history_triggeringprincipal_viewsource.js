@@ -37,7 +37,7 @@ add_task(async function() {
     popupPromise = BrowserTestUtils.waitForEvent(backCtxtMenu, "popupshown");
     BrowserTestUtils.synthesizeMouseAtCenter("body", { type: "contextmenu", button: 2 }, aBrowser);
     await popupPromise;
-    loadPromise = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
+    loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, VIEW_SRC_URI);
     let backItem = backCtxtMenu.getElementsByAttribute("id", "context-back")[0];
     backItem.click();
     backCtxtMenu.hidePopup();

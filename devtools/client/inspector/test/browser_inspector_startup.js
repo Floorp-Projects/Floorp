@@ -69,7 +69,11 @@ add_task(function* () {
 });
 
 function waitForLinkedBrowserEvent(tab, event) {
-  return BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, event, true);
+  return new Promise(resolve => {
+    tab.linkedBrowser.addEventListener(event, function () {
+      resolve();
+    }, {capture: true, once: true});
+  });
 }
 
 function contentReadyState(tab) {

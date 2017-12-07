@@ -45,5 +45,9 @@ add_task(async function test_keyword_bookmarklet() {
 });
 
 function promisePageShow() {
-  return BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "pageshow");
+  return new Promise(resolve => {
+    gBrowser.selectedBrowser.addEventListener("pageshow", function() {
+      resolve();
+    }, {once: true});
+  });
 }

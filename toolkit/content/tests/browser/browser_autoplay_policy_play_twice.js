@@ -14,7 +14,7 @@ async function allow_play_for_played_video() {
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
   info("- create video -");
-  let document = tab.linkedBrowser.contentDocumentAsCPOW;
+  let document = tab.linkedBrowser.contentDocument;
   let video = document.createElement("video");
   video.src = FILE;
   video.controls = true;
