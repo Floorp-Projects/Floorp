@@ -39,7 +39,7 @@ include('../../warnings.mozbuild')
 
 # GTest uses a variadic macro in a questionable way and it doesn't seem to be
 # possible to selectively disable just that error when -pedantic-errors is set.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') and not CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') and CONFIG['CC_TYPE'] != 'clang':
   CXXFLAGS.remove('-pedantic-errors')
 
 # These warnings are disabled in order to minimize the amount of boilerplate
@@ -50,7 +50,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     '-Wno-error=shadow',
     '-Wno-old-style-cast',
   ]
-  if CONFIG['CLANG_CXX']:
+  if CONFIG['CC_TYPE'] == 'clang':
     CXXFLAGS += [
       '-Wno-exit-time-destructors',
       '-Wno-global-constructors',

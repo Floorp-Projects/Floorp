@@ -28,7 +28,7 @@ else:
 LOCAL_INCLUDES += ['/media/libav']
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-pointer-sign',
@@ -36,12 +36,12 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc') or CONFIG['CLANG_CL']:
         '-Wno-switch',
         '-Wno-type-limits',
     ]
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang' or CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-incompatible-pointer-types-discards-qualifiers',
         '-Wno-logical-op-parentheses',
     ]
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CC_TYPE'] != 'clang-cl':
     CFLAGS += [
         '-wd4090', # 'return' : different 'const' qualifiers
         '-wd4018', # '>' : signed/unsigned mismatch

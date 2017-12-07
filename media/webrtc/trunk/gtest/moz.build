@@ -561,7 +561,7 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
             '-Wno-inconsistent-missing-override',
             '-Wno-overloaded-virtual',
         ]
-        if CONFIG['CLANG_CXX']:
+        if CONFIG['CC_TYPE'] == 'clang':
             CXXFLAGS += ['-Wno-comma']
 
     if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
