@@ -58,8 +58,10 @@ struct BaseRect {
   }
 
   // Emptiness. An empty rect is one that has no area, i.e. its height or width
-  // is <= 0
-  bool IsEmpty() const { return height <= 0 || width <= 0; }
+  // is <= 0.  Zero rect is the one with height and width set to zero.  Note
+  // that SetEmpty() may change a rectangle that identified as IsEmpty().
+  MOZ_ALWAYS_INLINE bool IsZero() const { return height == 0 || width == 0; }
+  MOZ_ALWAYS_INLINE bool IsEmpty() const { return height <= 0 || width <= 0; }
   void SetEmpty() { width = height = 0; }
 
   // "Finite" means not inf and not NaN
@@ -84,10 +86,18 @@ struct BaseRect {
   // Returns true if this rectangle contains the point. Points are considered
   // in the rectangle if they are on the left or top edge, but outside if they
   // are on the right or bottom edge.
-  bool Contains(T aX, T aY) const
+  MOZ_ALWAYS_INLINE bool Contains(T aX, T aY) const
   {
     return x <= aX && aX < XMost() &&
            y <= aY && aY < YMost();
+  }
+  MOZ_ALWAYS_INLINE bool ContainsX(T aX) const
+  {
+    return x <= aX && aX < XMost();
+  }
+  MOZ_ALWAYS_INLINE bool ContainsY(T aY) const
+  {
+    return y <= aY && aY < YMost();
   }
   // Returns true if this rectangle contains the point. Points are considered
   // in the rectangle if they are on the left or top edge, but outside if they
@@ -199,25 +209,49 @@ struct BaseRect {
     }
   }
 
-  void SetRect(T aX, T aY, T aWidth, T aHeight)
+  MOZ_ALWAYS_INLINE void SetRect(T aX, T aY, T aWidth, T aHeight)
   {
     x = aX; y = aY; width = aWidth; height = aHeight;
+  }
+  MOZ_ALWAYS_INLINE void SetRectX(T aX, T aWidth)
+  {
+    x = aX; width = aWidth;
+  }
+  MOZ_ALWAYS_INLINE void SetRectY(T aY, T aHeight)
+  {
+    y = aY; height = aHeight;
+  }
+  MOZ_ALWAYS_INLINE void SetBox(T aX, T aY, T aXMost, T aYMost)
+  {
+    x = aX; y = aY; width = aXMost - aX; height = aYMost - aY;
+  }
+  MOZ_ALWAYS_INLINE void SetBoxX(T aX, T aXMost)
+  {
+    x = aX; width = aXMost - aX;
+  }
+  MOZ_ALWAYS_INLINE void SetBoxY(T aY, T aYMost)
+  {
+    y = aY; height = aYMost - aY;
   }
   void SetRect(const Point& aPt, const SizeT& aSize)
   {
     SetRect(aPt.x, aPt.y, aSize.width, aSize.height);
   }
-  void GetRect(T* aX, T* aY, T* aWidth, T* aHeight)
+  MOZ_ALWAYS_INLINE void GetRect(T* aX, T* aY, T* aWidth, T* aHeight)
   {
     *aX = x; *aY = y; *aWidth = width; *aHeight = height;
   }
 
-  void MoveTo(T aX, T aY) { x = aX; y = aY; }
-  void MoveTo(const Point& aPoint) { x = aPoint.x; y = aPoint.y; }
-  void MoveBy(T aDx, T aDy) { x += aDx; y += aDy; }
-  void MoveBy(const Point& aPoint) { x += aPoint.x; y += aPoint.y; }
-  void SizeTo(T aWidth, T aHeight) { width = aWidth; height = aHeight; }
-  void SizeTo(const SizeT& aSize) { width = aSize.width; height = aSize.height; }
+  MOZ_ALWAYS_INLINE void MoveTo(T aX, T aY) { x = aX; y = aY; }
+  MOZ_ALWAYS_INLINE void MoveToX(T aX) { x = aX; }
+  MOZ_ALWAYS_INLINE void MoveToY(T aY) { y = aY; }
+  MOZ_ALWAYS_INLINE void MoveTo(const Point& aPoint) { x = aPoint.x; y = aPoint.y; }
+  MOZ_ALWAYS_INLINE void MoveBy(T aDx, T aDy) { x += aDx; y += aDy; }
+  MOZ_ALWAYS_INLINE void MoveByX(T aDx) { x += aDx; }
+  MOZ_ALWAYS_INLINE void MoveByY(T aDy) { y += aDy; }
+  MOZ_ALWAYS_INLINE void MoveBy(const Point& aPoint) { x += aPoint.x; y += aPoint.y; }
+  MOZ_ALWAYS_INLINE void SizeTo(T aWidth, T aHeight) { width = aWidth; height = aHeight; }
+  MOZ_ALWAYS_INLINE void SizeTo(const SizeT& aSize) { width = aSize.width; height = aSize.height; }
 
   void Inflate(T aD) { Inflate(aD, aD); }
   void Inflate(T aDx, T aDy)
@@ -262,6 +296,20 @@ struct BaseRect {
     return x == aRect.x && y == aRect.y &&
            width == aRect.width && height == aRect.height;
   }
+  MOZ_ALWAYS_INLINE bool IsEqualRect(T aX, T aY, T aW, T aH)
+  {
+    return x == aX && y == aY && width == aW && height == aH;
+  }
+  MOZ_ALWAYS_INLINE bool IsEqualXY(T aX, T aY)
+  {
+    return x == aX && y == aY;
+  }
+
+  MOZ_ALWAYS_INLINE bool IsEqualSize(T aW, T aH)
+  {
+    return width == aW && height == aH;
+  }
+
   // Return true if the rectangles contain the same area of the plane.
   // Use when we do not care about differences in empty rectangles.
   bool IsEqualInterior(const Sub& aRect) const
