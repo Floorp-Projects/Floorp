@@ -789,7 +789,7 @@
     "wo": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo", "bing", "amazondotcom", "ddg", "wikipedia-wo"
+          "google", "yahoo-france", "bing", "amazon-france", "ddg", "ebay-fr", "twitter", "wikipedia-wo"
         ]
       }
     },
