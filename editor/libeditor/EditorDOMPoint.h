@@ -10,8 +10,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/Text.h"
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsIDOMNode.h"
 #include "nsINode.h"
 
 namespace mozilla {
@@ -166,12 +170,89 @@ public:
   {
   }
 
-  // Following methods are just copy of same methods of RangeBoudnaryBase.
-
+  /**
+   * GetContainer() returns the container node at the point.
+   * GetContainerAs*() returns the container node as specific type.
+   */
   nsINode*
-  Container() const
+  GetContainer() const
   {
     return mParent;
+  }
+
+  nsIContent*
+  GetContainerAsContent() const
+  {
+    return mParent && mParent->IsContent() ? mParent->AsContent() : nullptr;
+  }
+
+  dom::Element*
+  GetContainerAsElement() const
+  {
+    return mParent && mParent->IsElement() ? mParent->AsElement() : nullptr;
+  }
+
+  dom::Text*
+  GetContainerAsText() const
+  {
+    return mParent ? mParent->GetAsText() : nullptr;
+  }
+
+  nsIDOMNode*
+  GetContainerAsDOMNode() const
+  {
+    return mParent ? mParent->AsDOMNode() : nullptr;
+  }
+
+  /**
+   * CanContainerHaveChildren() returns true if the container node can have
+   * child nodes.  Otherwise, e.g., when the container is a text node, returns
+   * false.
+   */
+  bool
+  CanContainerHaveChildren() const
+  {
+    return mParent && mParent->IsContainerNode();
+  }
+
+  /**
+   * IsInDataNode() returns true if the container node is a data node including
+   * text node.
+   */
+  bool
+  IsInDataNode() const
+  {
+    return mParent && mParent->IsNodeOfType(nsINode::eDATA_NODE);
+  }
+
+  /**
+   * IsInTextNode() returns true if the container node is a text node.
+   */
+  bool
+  IsInTextNode() const
+  {
+    return mParent && mParent->IsNodeOfType(nsINode::eTEXT);
+  }
+
+  /**
+   * IsContainerHTMLElement() returns true if the container node is an HTML
+   * element node and its node name is aTag.
+   */
+  bool
+  IsContainerHTMLElement(nsAtom* aTag) const
+  {
+    return mParent && mParent->IsHTMLElement(aTag);
+  }
+
+  /**
+   * IsContainerAnyOfHTMLElements() returns true if the container node is an
+   * HTML element node and its node name is one of the arguments.
+   */
+  template<typename First, typename... Args>
+  bool
+  IsContainerAnyOfHTMLElements(First aFirst, Args... aArgs) const
+  {
+    return mParent && mParent->IsAnyOfHTMLElements(aFirst, aArgs...);
   }
 
   nsIContent*
@@ -703,7 +784,7 @@ public:
     : mPoint(aPoint)
   {
     MOZ_ASSERT(aPoint.IsSetAndValid());
-    MOZ_ASSERT(mPoint.Container()->IsContainerNode());
+    MOZ_ASSERT(mPoint.CanContainerHaveChildren());
     mChild = mPoint.GetChildAtOffset();
   }
 
@@ -722,7 +803,7 @@ public:
     } else {
       // If the point referred after the last child, let's keep referring
       // after current last node of the old container.
-      mPoint.SetToEndOf(mPoint.Container());
+      mPoint.SetToEndOf(mPoint.GetContainer());
     }
   }
 
@@ -770,7 +851,7 @@ public:
    */
   void InvalidateChild()
   {
-    mPoint.Set(mPoint.Container(), mPoint.Offset());
+    mPoint.Set(mPoint.GetContainer(), mPoint.Offset());
   }
 
 private:

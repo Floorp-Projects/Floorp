@@ -109,19 +109,20 @@ CreateElementTransaction::InsertNewNode(ErrorResult& aError)
 {
   if (mPointToInsert.IsSetAndValid()) {
     if (mPointToInsert.IsEndOfContainer()) {
-      mPointToInsert.Container()->AppendChild(*mNewNode, aError);
+      mPointToInsert.GetContainer()->AppendChild(*mNewNode, aError);
       NS_WARNING_ASSERTION(!aError.Failed(), "Failed to append the new node");
       return;
     }
-    mPointToInsert.Container()->InsertBefore(*mNewNode,
-                                             mPointToInsert.GetChildAtOffset(),
-                                             aError);
+    mPointToInsert.GetContainer()->
+                     InsertBefore(*mNewNode,
+                                  mPointToInsert.GetChildAtOffset(),
+                                  aError);
     NS_WARNING_ASSERTION(!aError.Failed(), "Failed to insert the new node");
     return;
   }
 
   if (NS_WARN_IF(mPointToInsert.GetChildAtOffset() &&
-                 mPointToInsert.Container() !=
+                 mPointToInsert.GetContainer() !=
                    mPointToInsert.GetChildAtOffset()->GetParentNode())) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
@@ -129,7 +130,7 @@ CreateElementTransaction::InsertNewNode(ErrorResult& aError)
 
   // If mPointToInsert has only offset and it's not valid, we need to treat
   // it as pointing end of the container.
-  mPointToInsert.Container()->AppendChild(*mNewNode, aError);
+  mPointToInsert.GetContainer()->AppendChild(*mNewNode, aError);
   NS_WARNING_ASSERTION(!aError.Failed(), "Failed to append the new node");
 }
 
@@ -141,7 +142,7 @@ CreateElementTransaction::UndoTransaction()
   }
 
   ErrorResult error;
-  mPointToInsert.Container()->RemoveChild(*mNewNode, error);
+  mPointToInsert.GetContainer()->RemoveChild(*mNewNode, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
