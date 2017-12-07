@@ -46,6 +46,7 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/PromiseWindowProxy.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/TypedArray.h"
@@ -363,10 +364,9 @@ ServiceWorkerManager::MaybeStartShutdown()
 
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public ServiceWorkerJob::Callback
 {
-  RefPtr<nsPIDOMWindowInner> mWindow;
   // The promise "returned" by the call to Update up to
   // navigator.serviceWorker.register().
-  RefPtr<Promise> mPromise;
+  PromiseWindowProxy mPromise;
 
   ~ServiceWorkerResolveWindowPromiseOnRegisterCallback()
   {}
@@ -376,9 +376,18 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aJob);
+    RefPtr<Promise> promise = mPromise.Get();
+    if (!promise) {
+      return;
+    }
 
     if (aStatus.Failed()) {
-      mPromise->MaybeReject(aStatus);
+      promise->MaybeReject(aStatus);
+      return;
+    }
+
+    nsCOMPtr<nsPIDOMWindowInner> window = mPromise.GetWindow();
+    if (!window) {
       return;
     }
 
@@ -388,15 +397,14 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
     RefPtr<ServiceWorkerRegistration> swr =
-      mWindow->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(reg->mScope));
-    mPromise->MaybeResolve(swr);
+      window->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(reg->mScope));
+    promise->MaybeResolve(swr);
   }
 
 public:
   ServiceWorkerResolveWindowPromiseOnRegisterCallback(nsPIDOMWindowInner* aWindow,
                                                       Promise* aPromise)
-    : mWindow(aWindow)
-    , mPromise(aPromise)
+    : mPromise(aWindow, aPromise)
   {}
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerResolveWindowPromiseOnRegisterCallback, override)
