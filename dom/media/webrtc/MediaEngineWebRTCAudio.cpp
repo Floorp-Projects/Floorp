@@ -771,39 +771,61 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
                (channelCountFarend == 1 || channelCountFarend == 2) &&
                framesPerPacketFarend);
 
-    if (mInputBuffer.Length() < framesPerPacketFarend * channelCountFarend) {
-      mInputBuffer.SetLength(framesPerPacketFarend * channelCountFarend);
-    }
-
     offset = 0;
     for (size_t i = 0; i < deinterleavedPacketDataChannelPointers.Length(); ++i) {
-      deinterleavedPacketDataChannelPointers[i] = mInputBuffer.Data() + offset;
+      deinterleavedPacketDataChannelPointers[i] = packetDataPointer + offset;
       offset += framesPerPacketFarend;
     }
 
-    // Deinterleave, prepare a channel pointers array, with enough storage for
-    // the frames.
-    //
-    // If this is a platform that uses s16 for audio input and output,
-    // convert to floats, the APM API we use only accepts floats.
-    DeinterleaveAndConvertBuffer(interleavedFarend,
-                                 framesPerPacketFarend,
-                                 channelCountFarend,
-                                 deinterleavedPacketDataChannelPointers.Elements());
+    // deinterleave back into the FarEndAudioChunk buffer to save an alloc.
+    // There is enough room because either there is the same number of
+    // channels/frames or we've just downmixed.
+    Deinterleave(interleavedFarend,
+                 framesPerPacketFarend,
+                 channelCountFarend,
+                 deinterleavedPacketDataChannelPointers.Elements());
 
     // Having the same config for input and output means we potentially save
-    // some CPU.
+    // some CPU. We won't need the output here, the API forces us to set a
+    // valid pointer with enough space.
     StreamConfig inputConfig(mAudioOutputObserver->PlayoutFrequency(),
                              channelCountFarend,
                              false /* we don't use typing detection*/);
     StreamConfig outputConfig = inputConfig;
 
+    // Prepare a channel pointers array, with enough storage for the
+    // frames.
+    //
+    // If this is a platform that uses s16 for audio input and output,
+    // convert to floats, the APM API we use only accepts floats.
+
+    float* inputData = nullptr;
+#ifdef MOZ_SAMPLE_TYPE_S16
+    // Convert to floats, use mInputBuffer for this.
+    size_t sampleCount = framesPerPacketFarend * channelCountFarend;
+    if (mInputBuffer.Length() < sampleCount) {
+      mInputBuffer.SetLength(sampleCount);
+    }
+    ConvertAudioSamples(buffer->mData, mInputBuffer.Data(), sampleCount);
+    inputData = mInputBuffer.Data();
+#else // MOZ_SAMPLE_TYPE_F32
+    inputData = buffer->mData;
+#endif
+
+    AutoTArray<float*, MAX_CHANNELS> channelsPointers;
+    channelsPointers.SetLength(channelCountFarend);
+    offset = 0;
+    for (size_t i = 0; i < channelsPointers.Length(); ++i) {
+      channelsPointers[i]  = inputData + offset;
+      offset += framesPerPacketFarend;
+    }
+
     // Passing the same pointers here saves a copy inside this function.
     int err =
-      mAudioProcessing->ProcessReverseStream(deinterleavedPacketDataChannelPointers.Elements(),
+      mAudioProcessing->ProcessReverseStream(channelsPointers.Elements(),
                                              inputConfig,
                                              outputConfig,
-                                             deinterleavedPacketDataChannelPointers.Elements());
+                                             channelsPointers.Elements());
 
     if (err) {
       MOZ_LOG(GetMediaManagerLog(), LogLevel::Error,
@@ -821,8 +843,6 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
       mPacketizer->Channels();
     if (mInputBuffer.Length() < samplesPerPacket) {
       mInputBuffer.SetLength(samplesPerPacket);
-    }
-    if (mDeinterleavedBuffer.Length() < samplesPerPacket) {
       mDeinterleavedBuffer.SetLength(samplesPerPacket);
     }
     float* packet = mInputBuffer.Data();
