@@ -487,9 +487,6 @@ function promiseOneObserver(topic, callback) {
   });
 }
 
-function promiseStopServer(server) {
-  return new Promise(resolve => server.stop(resolve));
-}
 // Avoid an issue where `client.name2` containing unicode characters causes
 // a number of tests to fail, due to them assuming that we do not need to utf-8
 // encode or decode data sent through the mocked server (see bug 1268912).

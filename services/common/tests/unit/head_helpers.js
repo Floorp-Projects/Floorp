@@ -105,6 +105,10 @@ function httpd_handler(statusCode, status, body) {
   };
 }
 
+function promiseStopServer(server) {
+  return new Promise(resolve => server.stop(resolve));
+}
+
 /*
  * Read bytes string from an nsIInputStream.  If 'count' is omitted,
  * all available input is read.

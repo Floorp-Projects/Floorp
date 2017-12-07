@@ -62,7 +62,7 @@ add_task(async function test_authenticated_get_request() {
 
   Assert.equal("Great Success!", result.msg);
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 async function check_authenticated_request(method) {
@@ -82,7 +82,7 @@ async function check_authenticated_request(method) {
 
   Assert.equal("bar", result.foo);
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 }
 
 add_task(function test_authenticated_post_request() {
@@ -117,7 +117,7 @@ add_task(async function test_extra_headers() {
 
   Assert.equal("bar", result.foo);
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_credentials_optional() {
@@ -137,7 +137,7 @@ add_task(async function test_credentials_optional() {
   let result = await client.request("/foo", method); // credentials undefined
   Assert.equal(JSON.parse(result.body).msg, "you're in the friend zone");
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_server_error() {
@@ -160,7 +160,7 @@ add_task(async function test_server_error() {
     Assert.equal("I am a Teapot", err.message);
   }
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_server_error_json() {
@@ -182,7 +182,7 @@ add_task(async function test_server_error_json() {
     Assert.equal("Cannot get ye flask.", err.error);
   }
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_offset_after_request() {
@@ -205,7 +205,7 @@ add_task(async function test_offset_after_request() {
   // Should be about an hour off
   Assert.ok(Math.abs(client.localtimeOffsetMsec + HOUR_MS) < SECOND_MS);
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_offset_in_hawk_header() {
@@ -248,7 +248,7 @@ add_task(async function test_offset_in_hawk_header() {
   Assert.ok(Math.abs(client.localtimeOffsetMsec + 12 * HOUR_MS) < MINUTE_MS);
   await client.request("/second", method, TEST_CREDS);
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_2xx_success() {
@@ -272,7 +272,7 @@ add_task(async function test_2xx_success() {
   // Shouldn't be any content in a 202
   Assert.equal(response.body, "");
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_retry_request_on_fail() {
@@ -323,7 +323,7 @@ add_task(async function test_retry_request_on_fail() {
   let response = await client.request("/maybe", method, credentials);
   Assert.equal(response.body, "i love you!!!");
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_multiple_401_retry_once() {
@@ -369,7 +369,7 @@ add_task(async function test_multiple_401_retry_once() {
   }
   Assert.equal(attempts, 2);
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_500_no_retry() {
@@ -406,7 +406,7 @@ add_task(async function test_500_no_retry() {
     Assert.equal(err.code, 500);
   }
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function test_401_then_500() {
@@ -466,7 +466,7 @@ add_task(async function test_401_then_500() {
   }
   Assert.equal(attempts, 2);
 
-  await deferredStop(server);
+  await promiseStopServer(server);
 });
 
 add_task(async function throw_if_not_json_body() {
@@ -486,12 +486,6 @@ function getTimestampDelta(authHeader, now = Date.now()) {
   let tsMS = new Date(
       parseInt(/ts="(\d+)"/.exec(authHeader)[1], 10) * SECOND_MS);
   return Math.abs(tsMS - now);
-}
-
-function deferredStop(server) {
-  return new Promise(resolve => {
-    server.stop(resolve);
-  });
 }
 
 function run_test() {
