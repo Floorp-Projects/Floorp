@@ -40,13 +40,6 @@ def REMOVED(cls):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    def _root_url(self, artifactdir=None, objdir=None):
-        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            return 'https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/{}'.format(os.environ['TASK_ID'], os.environ['RUN_ID'], artifactdir)
-        else:
-            return os.path.join(self.topobjdir, objdir)
-
-
     @Command('android', category='devenv',
         description='Run Android-specific commands.',
         conditions=[conditions.is_android])
@@ -54,22 +47,15 @@ class MachCommands(MachCommandBase):
         pass
 
 
-    @SubCommand('android', 'assemble-app',
-        """Assemble Firefox for Android.
-        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def android_assemble_app(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_APP_TASKS'] + ['-x', 'lint', '--continue'] + args, verbose=True)
-
-        return ret
-
-
     @SubCommand('android', 'test',
         """Run Android local unit tests.
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_test(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_TEST_TASKS'] + ["--continue"] + args, verbose=True)
+        gradle_targets = [
+            'app:testOfficialPhotonDebugUnitTest',
+        ]
+        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
 
         # Findbug produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -81,25 +67,18 @@ class MachCommands(MachCommandBase):
             FileFinder,
         )
 
-        root_url = self._root_url(
-            artifactdir='public/android/unittest',
-            objdir='gradle/build/mobile/android/app/reports/tests')
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/android/unittest".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
+        else:
+            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/tests')
 
-        reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
+        reports = ('officialPhotonDebug',)
         for report in reports:
             finder = FileFinder(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/test-results/', report))
             for p, _ in finder.find('TEST-*.xml'):
                 f = open(os.path.join(finder.base, p), 'rt')
                 tree = ET.parse(f)
                 root = tree.getroot()
-
-                # Log reports for Tree Herder "Job Details".
-                print('TinderboxPrint: report<br/><a href="{}/{}/index.html">HTML {} report</a>, visit "Inspect Task" link for details'.format(root_url, report, report))
-
-                # And make the report display as soon as possible.
-                failed = root.findall('testcase/error') or root.findall('testcase/failure')
-                if failed:
-                    print('TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: {}/{}/index.html'.format(root_url, report))
 
                 print('SUITE-START | android-test | {} {}'.format(report, root.get('name')))
 
@@ -132,6 +111,9 @@ class MachCommands(MachCommandBase):
 
                 print('SUITE-END | android-test | {} {}'.format(report, root.get('name')))
 
+            title = report
+            print("TinderboxPrint: report<br/><a href='{}/{}/index.html'>HTML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
+
         return ret
 
 
@@ -140,32 +122,26 @@ class MachCommands(MachCommandBase):
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-lint""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_lint(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_LINT_TASKS'] + ["--continue"] + args, verbose=True)
+        gradle_targets = [
+            'app:lintOfficialPhotonDebug',
+        ]
+        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
 
         # Android Lint produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
         # report(s) for human consumption.
         import xml.etree.ElementTree as ET
 
-        root_url = self._root_url(
-            artifactdir='public/android/lint',
-            objdir='gradle/build/mobile/android/app/reports')
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/android/lint".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
+        else:
+            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports')
 
-        reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
+        reports = ('officialPhotonDebug',)
         for report in reports:
             f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)), 'rt')
             tree = ET.parse(f)
             root = tree.getroot()
-
-            # Log reports for Tree Herder "Job Details".
-            html_report_url = '{}/lint-results-{}.html'.format(root_url, report)
-            xml_report_url = '{}/lint-results-{}.xml'.format(root_url, report)
-            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))
-            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))
-
-            # And make the report display as soon as possible.
-            if root.findall("issue[@severity='Error']"):
-                print('TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: {}'.format(html_report_url))
 
             print('SUITE-START | android-lint | {}'.format(report))
             for issue in root.findall("issue[@severity='Error']"):
@@ -177,6 +153,10 @@ class MachCommands(MachCommandBase):
                 ret |= 1
             print('SUITE-END | android-lint | {}'.format(report))
 
+            title = report
+            print("TinderboxPrint: report<br/><a href='{}/lint-results-{}.html'>HTML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
+            print("TinderboxPrint: report<br/><a href='{}/lint-results-{}.xml'>XML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
+
         return ret
 
 
@@ -185,7 +165,10 @@ class MachCommands(MachCommandBase):
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-checkstyle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_checkstyle(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] + ["--continue"] + args, verbose=True)
+        gradle_targets = [
+            'app:checkstyle',
+        ]
+        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
 
         # Checkstyle produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -195,22 +178,6 @@ class MachCommands(MachCommandBase):
         f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml'), 'rt')
         tree = ET.parse(f)
         root = tree.getroot()
-
-        # Now the reports, linkified.
-        root_url = self._root_url(
-            artifactdir='public/android/checkstyle',
-            objdir='gradle/build/mobile/android/app/reports/checkstyle')
-
-        # Log reports for Tree Herder "Job Details".
-        print('TinderboxPrint: report<br/><a href="{}/checkstyle.html">HTML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))
-        print('TinderboxPrint: report<br/><a href="{}/checkstyle.xml">XML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))
-
-        # And make the report display as soon as possible.
-        if root.findall('file/error'):
-            ret |= 1
-
-        if ret:
-            print('TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: {}/checkstyle.html'.format(root_url))
 
         print('SUITE-START | android-checkstyle')
         for file in root.findall('file'):
@@ -226,10 +193,20 @@ class MachCommands(MachCommandBase):
                 for line in ET.tostring(error).strip().splitlines():
                     print('TEST-UNEXPECTED-FAIL | {}'.format(line))
                 error_count += 1
+                ret |= 1
 
             if not error_count:
                 print('TEST-PASS | {}'.format(name))
         print('SUITE-END | android-checkstyle')
+
+        # Now the reports, linkified.
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/android/checkstyle".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
+        else:
+            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/checkstyle')
+
+        print("TinderboxPrint: report<br/><a href='{}/checkstyle.html'>HTML checkstyle report</a>, visit \"Inspect Task\" link for details".format(root_url))
+        print("TinderboxPrint: report<br/><a href='{}/checkstyle.xml'>XML checkstyle report</a>, visit \"Inspect Task\" link for details".format(root_url))
 
         return ret
 
@@ -239,36 +216,31 @@ class MachCommands(MachCommandBase):
         See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-findbugs""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_findbugs(self, dryrun=False, args=[]):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_FINDBUGS_TASKS'] + ["--continue"] + args, verbose=True)
+        gradle_targets = [
+            'app:findbugsXmlOfficialPhotonDebug',
+            'app:findbugsHtmlOfficialPhotonDebug',
+        ]
+        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
 
         # Findbug produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
         # report(s) for human consumption.
         import xml.etree.ElementTree as ET
 
-        root_url = self._root_url(
-            artifactdir='public/android/findbugs',
-            objdir='gradle/build/mobile/android/app/reports/findbugs')
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/artifacts/findbugs".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
+        else:
+            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs')
 
-        reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
+        reports = ('findbugs-officialPhotonDebug-output.xml',)
         for report in reports:
             try:
-                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs', 'findbugs-{}-output.xml'.format(report)), 'rt')
+                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs', report), 'rt')
             except IOError:
                 continue
 
             tree = ET.parse(f)
             root = tree.getroot()
-
-            # Log reports for Tree Herder "Job Details".
-            html_report_url = '{}/findbugs-{}-output.html'.format(root_url, report)
-            xml_report_url = '{}/findbugs-{}-output.xml'.format(root_url, report)
-            print('TinderboxPrint: report<br/><a href="{}">HTML {} report</a>, visit "Inspect Task" link for details'.format(html_report_url, report))
-            print('TinderboxPrint: report<br/><a href="{}">XML {} report</a>, visit "Inspect Task" link for details'.format(xml_report_url, report))
-
-            # And make the report display as soon as possible.
-            if root.findall("./BugInstance"):
-                print('TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: {}'.format(html_report_url))
 
             print('SUITE-START | android-findbugs | {}'.format(report))
             for error in root.findall('./BugInstance'):
@@ -281,6 +253,10 @@ class MachCommands(MachCommandBase):
                 ret |= 1
             print('SUITE-END | android-findbugs | {}'.format(report))
 
+            title = report.replace('findbugs-', '').replace('-output.xml', '')
+            print("TinderboxPrint: report<br/><a href='{}/{}'>HTML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report.replace('.xml', '.html'), title))
+            print("TinderboxPrint: report<br/><a href='{}/{}'>XML {} report</a>, visit \"Inspect Task\" link for details".format(root_url, report, title))
+
         return ret
 
 
@@ -289,22 +265,28 @@ class MachCommands(MachCommandBase):
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_gradle_dependencies(self, args):
+        # The union, plus a bit more, of all of the Gradle tasks
+        # invoked by the android-* automation jobs.
+        gradle_targets = [
+            'app:checkstyle',
+            'app:assembleOfficialPhotonRelease',
+            'app:assembleOfficialPhotonDebug',
+            'app:assembleOfficialPhotonDebugAndroidTest',
+            'app:findbugsXmlOfficialPhotonDebug',
+            'app:findbugsHtmlOfficialPhotonDebug',
+            'app:lintOfficialPhotonDebug',
+            # Does not include Gecko binaries -- see mobile/android/gradle/with_gecko_binaries.gradle.
+            'geckoview:assembleWithoutGeckoBinaries',
+            # So that we pick up the test dependencies for the builders.
+            'geckoview_example:assembleWithoutGeckoBinaries',
+            'geckoview_example:assembleWithoutGeckoBinariesAndroidTest',
+        ]
         # We don't want to gate producing dependency archives on clean
         # lint or checkstyle, particularly because toolchain versions
         # can change the outputs for those processes.
-        self.gradle(self.substs['GRADLE_ANDROID_DEPENDENCIES_TASKS'] + ["--continue"] + args, verbose=True)
+        ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
 
         return 0
-
-
-    @SubCommand('android', 'archive-geckoview',
-        """Create GeckoView archives.
-        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def android_archive_geckoview(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args, verbose=True)
-
-        return ret
 
 
     @Command('gradle', category='devenv',

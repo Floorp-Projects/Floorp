@@ -41,7 +41,6 @@ android-test/opt:
         skip-unless-changed:
             - "mobile/android/base/**"
             - "mobile/android/config/**"
-            - "mobile/android/gradle.configure"
             - "mobile/android/tests/background/junit4/**"
             - "**/*.gradle"
 
@@ -97,10 +96,9 @@ android-lint/opt:
             - "mobile/android/**/*.jpg"
             - "mobile/android/**/*.png"
             - "mobile/android/**/*.svg"
-            - "mobile/android/**/*.xml"
+            - "mobile/android/**/*.xml"  # Manifest & android resources
             - "mobile/android/**/Makefile.in"
             - "mobile/android/config/**"
-            - "mobile/android/gradle.configure"
             - "mobile/android/**/moz.build"
             - "**/*.gradle"
 
@@ -152,7 +150,6 @@ android-checkstyle/opt:
             - "mobile/android/**/*.java"
             - "mobile/android/**/Makefile.in"
             - "mobile/android/config/**"
-            - "mobile/android/gradle.configure"
             - "mobile/android/**/moz.build"
             - "**/*.gradle"
 
@@ -203,6 +200,5 @@ android-findbugs/opt:
             - "mobile/android/**/*.java"
             - "mobile/android/**/Makefile.in"
             - "mobile/android/config/**"
-            - "mobile/android/gradle.configure"
             - "mobile/android/**/moz.build"
             - "**/*.gradle"
