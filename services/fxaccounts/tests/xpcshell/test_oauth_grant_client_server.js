@@ -45,12 +45,6 @@ function startServer() {
   return srv;
 }
 
-function promiseStopServer(server) {
-  return new Promise(resolve => {
-    server.stop(resolve);
-  });
-}
-
 add_task(async function getAndRevokeToken() {
   Services.prefs.setBoolPref("identity.fxaccounts.allowHttp", true);
   let server = startServer();
