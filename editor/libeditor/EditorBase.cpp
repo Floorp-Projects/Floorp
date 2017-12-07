@@ -1437,7 +1437,7 @@ EditorBase::CreateNode(nsAtom* aTag,
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillCreateNode(nsDependentAtomString(aTag),
-                               GetAsDOMNode(pointToInsert.GetChildAtOffset()));
+                               GetAsDOMNode(pointToInsert.GetChild()));
     }
   }
 
@@ -1449,7 +1449,7 @@ EditorBase::CreateNode(nsAtom* aTag,
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
     MOZ_ASSERT(ret);
-    // Now, aPointToInsert may be invalid.  I.e., ChildAtOffset() keeps
+    // Now, aPointToInsert may be invalid.  I.e., GetChild() keeps
     // referring the next sibling of new node but Offset() refers the
     // new node.  Let's make refer the new node.
     pointToInsert.Set(ret);
@@ -1503,7 +1503,7 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
     for (auto& listener : listeners) {
       listener->WillInsertNode(
                   aContentToInsert.AsDOMNode(),
-                  GetAsDOMNode(aPointToInsert.GetNextSiblingOfChildAtOffset()));
+                  GetAsDOMNode(aPointToInsert.GetNextSiblingOfChild()));
     }
   }
 
@@ -2004,7 +2004,7 @@ EditorBase::MoveChildren(nsIContent& aFirstChild,
   }
 
   nsCOMPtr<nsINode> newContainer = aPointToInsert.GetContainer();
-  nsCOMPtr<nsIContent> nextNode = aPointToInsert.GetChildAtOffset();
+  nsCOMPtr<nsIContent> nextNode = aPointToInsert.GetChild();
   for (size_t i = children.Length(); i > 0; --i) {
     nsCOMPtr<nsIContent>& child = children[i - 1];
     if (child->GetParentNode() != oldContainer) {
@@ -2622,7 +2622,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
       if (AsHTMLEditor()) {
         // Fall back to a slow path that uses GetChildAt() for Thunderbird's
         // plaintext editor.
-        nsIContent* child = aPoint.GetPreviousSiblingOfChildAtOffset();
+        nsIContent* child = aPoint.GetPreviousSiblingOfChild();
         if (child && child->IsNodeOfType(nsINode::eTEXT)) {
           if (NS_WARN_IF(child->Length() > INT32_MAX)) {
             return aPoint;
@@ -2708,11 +2708,11 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
   if (!pointToInsert.IsInTextNode()) {
     nsIContent* child = nullptr;
     if (!pointToInsert.IsStartOfContainer() &&
-        (child = pointToInsert.GetPreviousSiblingOfChildAtOffset()) &&
+        (child = pointToInsert.GetPreviousSiblingOfChild()) &&
         child->IsNodeOfType(nsINode::eTEXT)) {
       pointToInsert.Set(child, child->Length());
     } else if (!pointToInsert.IsEndOfContainer() &&
-               (child = pointToInsert.GetChildAtOffset()) &&
+               (child = pointToInsert.GetChild()) &&
                child->IsNodeOfType(nsINode::eTEXT)) {
       pointToInsert.Set(child, 0);
     }
@@ -3152,7 +3152,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
   }
 
   // Fix the child before mutation observer may touch the DOM tree.
-  nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChildAtOffset();
+  nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChild();
   parent->InsertBefore(aNewLeftNode, aStartOfRightNode.GetContainer(),
                        aError);
   if (NS_WARN_IF(aError.Failed())) {
@@ -3549,8 +3549,8 @@ EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
   }
 
   // else look before the child at 'aOffset'
-  if (aPoint.GetChildAtOffset()) {
-    return GetPreviousNodeInternal(*aPoint.GetChildAtOffset(),
+  if (aPoint.GetChild()) {
+    return GetPreviousNodeInternal(*aPoint.GetChild(),
                                    aFindEditableNode, aNoBlockCrossing);
   }
 
@@ -3603,16 +3603,15 @@ EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
     }
   }
 
-  // look at the child at 'aOffset'
-  if (point.GetChildAtOffset()) {
-    if (aNoBlockCrossing && IsBlockNode(point.GetChildAtOffset())) {
-      return point.GetChildAtOffset();
+  if (point.GetChild()) {
+    if (aNoBlockCrossing && IsBlockNode(point.GetChild())) {
+      return point.GetChild();
     }
 
     nsIContent* leftMostNode =
-      GetLeftmostChild(point.GetChildAtOffset(), aNoBlockCrossing);
+      GetLeftmostChild(point.GetChild(), aNoBlockCrossing);
     if (!leftMostNode) {
-      return point.GetChildAtOffset();
+      return point.GetChild();
     }
 
     if (!IsDescendantOfEditorRoot(leftMostNode)) {
