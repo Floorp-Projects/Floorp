@@ -254,7 +254,7 @@ open class AutocompleteListFragment : Fragment() {
                     selectedDomains.remove(domain)
                 }
 
-                fragment.activity?.let { it.invalidateOptionsMenu() }
+                fragment.activity?.invalidateOptionsMenu()
             })
 
             handleView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
