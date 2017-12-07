@@ -1375,10 +1375,10 @@ void av1_selfguided_restoration_highbd_sse4_1(uint16_t *dgd, int width,
                                               int height, int dgd_stride,
                                               int32_t *dst, int dst_stride,
                                               int bit_depth, int r, int eps) {
+  DECLARE_ALIGNED(16, int32_t, A_[RESTORATION_PROC_UNIT_PELS]);
+  DECLARE_ALIGNED(16, int32_t, B_[RESTORATION_PROC_UNIT_PELS]);
   const int width_ext = width + 2 * SGRPROJ_BORDER_HORZ;
   const int height_ext = height + 2 * SGRPROJ_BORDER_VERT;
-  int32_t A_[RESTORATION_PROC_UNIT_PELS];
-  int32_t B_[RESTORATION_PROC_UNIT_PELS];
   int32_t *A = A_;
   int32_t *B = B_;
   int i, j;
