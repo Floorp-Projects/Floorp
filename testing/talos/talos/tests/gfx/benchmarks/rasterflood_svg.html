@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Paint-In-Time</title>
+  <style>
+    svg {
+      width: 600px;
+      height: 800px;
+    }
+  </style>
+</head>
+<body>
+  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+    <defs>
+      <filter id="filter1">
+        <feGaussianBlur stdDeviation=".5"></feGaussianBlur>
+      </filter>
+      <filter id="filter2">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur1"></feGaussianBlur>
+        <feSpecularLighting result="specOut" in="blur1" specularExponent="20" lighting-color="#cccccc">
+          <fePointLight x="50" y="50" z="1"></fePointLight>
+        </feSpecularLighting>
+        <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"></feComposite>
+      </filter>
+    </defs>
+    <g fill="none" stroke="blue" stroke-width="20" stroke-dasharray="1" class="rotating">
+     <rect x="50" y="50" width="80px" height="80px" fill="blue" id="rect1" opacity="0.25" filter="url(#filter2)" transform="rotate(202 64 64)">
+     </rect>
+    </g>
+    <g fill="none" stroke="red" stroke-width="20" lass="rotating">
+     <rect x="75" y="75" width="80px" height="80px" fill="blue" id="rect2" opacity="0.5" filter="url(#filter1)" transform="rotate(202 89 89)">
+     </rect>
+    </g>
+    <g fill="none" stroke="green" stroke-width="20" class="rotating">
+     <rect x="100" y="100" width="80px" height="80px" fill="green" id="rect3" opacity="0.75" filter="url(#filter1)" transform="rotate(202 114 114)">
+     </rect>
+    </g>
+    <g fill="none" stroke="yellow" stroke-width="20" stroke-dasharray="1" class="rotating">
+     <rect x="125" y="125" width="80px" height="80px" fill="green" id="rect4" opacity="1" filter="url(#filter2)" transform="rotate(202 139 139)">
+     </rect>
+    </g>
+    <g fill="none" stroke="pink" stroke-width="20" stroke-dasharray="1" class="rotating">
+     <rect x="75" y="125" width="80px" height="80px" fill="green" id="rect5" opacity="1" filter="url(#filter2)" transform="rotate(202 89 139)">
+     </rect>
+    </g>
+  </svg>
+
+<script>
+
+// Only allow painting a tiny slice of the frame - here, 15ms.
+var kFrameBudgetMs = 14;
+var kDegPerFrame =  1;
+var kCurrentRotation = 0;
+var kMaxIterations = 600;
+var kMinSize = 80;
+var kMaxSize = 200;
+var kOpacityPerFrame = [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05];
+
+var gCrazyCounter = 0;
+var gStart;
+var gSizeChangePerFrame = 1;
+var gCurrentSize = 50;
+var gIterations = 0;
+
+function runFrame() {
+  var start = performance.now();
+
+  // Spin loop.
+  while (performance.now() - start < kFrameBudgetMs)
+    gCrazyCounter++;
+
+  // Change rotation.
+  var elts = [
+    document.getElementById("rect1"),
+    document.getElementById("rect2"),
+    document.getElementById("rect3"),
+    document.getElementById("rect4"),
+    document.getElementById("rect5"),
+  ];
+
+  kCurrentRotation = (kCurrentRotation + kDegPerFrame) % 360;
+
+  // Change size.
+  if (gCurrentSize >= kMaxSize)
+    gSizeChangePerFrame = -1;
+  else if (gCurrentSize <= kMinSize)
+    gSizeChangePerFrame = 1;
+  gCurrentSize += gSizeChangePerFrame;
+
+  for (var i = 0; i < elts.length; i++) {
+    var elt = elts[i];
+
+    elt.setAttribute("height", gCurrentSize + "px");
+    elt.setAttribute("width", gCurrentSize + "px");
+
+    var bb = elt.getBBox();
+    var x = bb.x + bb.width / 2;
+    var y = bb.y + bb.height / 2;
+    var origin = x + " " + y;
+    elt.setAttribute("transform", "rotate(" + kCurrentRotation + " " + origin + ")");
+
+    var opacity = parseFloat(window.getComputedStyle(elt).getPropertyValue("opacity"));
+    if (opacity + kOpacityPerFrame[i] >= 1.0) {
+      opacity = 1.0;
+      kOpacityPerFrame[i] = -kOpacityPerFrame[i];
+    } else if (opacity + kOpacityPerFrame[i] < 0.1) {
+      opacity = 1.0;
+      kOpacityPerFrame[i] = -kOpacityPerFrame[i];
+    }
+    elt.setAttribute("opacity", opacity);
+  }
+
+  if (gIterations >= kMaxIterations) {
+    var end = performance.now();
+    if (window.tpRecordTime) {
+      window.tpRecordTime(end - gStart, gStart);
+    }
+    if (parent.reportResults) {
+      parent.reportResults(end - gStart, gStart);
+    }
+    return;
+  }
+
+  window.requestAnimationFrame(runFrame);
+  gIterations++;
+}
+
+function startTest() {
+  gStart = performance.now();
+  window.requestAnimationFrame(runFrame);
+}
+
+addEventListener("load", function() {
+  try {
+    // Outside of talos, this throws a security exception which no-op this file.
+    // (It's not required nor allowed for addons since Firefox 17)
+    // It's used inside talos from non-privileged pages (like during tscroll),
+    // and it works because talos disables all/most security measures.
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  } catch (e) {}
+
+  try {
+    Components.utils.import("resource://gre/modules/Services.jsm");
+    Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
+
+    TalosContentProfiler.resume("rasterflood_svg.html loaded", true).then(() => {
+      startTest();
+    });
+  } catch (e) {
+    startTest();
+  }
+});
+</script>
+
+</body></html>

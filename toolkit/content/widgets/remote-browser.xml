@@ -258,37 +258,6 @@
         ]]></body>
       </method>
 
-      <property name="renderLayers">
-        <getter>
-          <![CDATA[
-            let {frameLoader} = this;
-            if (frameLoader && frameLoader.tabParent) {
-              return frameLoader.tabParent.renderLayers;
-            }
-            return false;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            let {frameLoader} = this;
-            if (frameLoader && frameLoader.tabParent) {
-              return frameLoader.tabParent.renderLayers = val;
-            }
-            return false;
-          ]]>
-        </setter>
-      </property>
-
-      <property name="hasLayers" readonly="true">
-        <getter><![CDATA[
-          let {frameLoader} = this;
-          if (frameLoader.tabParent) {
-            return frameLoader.tabParent.hasLayers;
-          }
-          return false;
-        ]]></getter>
-      </property>
-
       <field name="_manifestURI"/>
       <property name="manifestURI"
                 onget="return this._manifestURI"
