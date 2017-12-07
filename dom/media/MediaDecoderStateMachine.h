@@ -156,6 +156,8 @@ enum class VideoDecodeMode : uint8_t
   Suspend
 };
 
+DDLoggedTypeDeclName(MediaDecoderStateMachine);
+
 /*
   The state machine class. This manages the decoding and seeking in the
   MediaDecoderReader on the decode task queue, and A/V sync on the shared
@@ -168,6 +170,7 @@ enum class VideoDecodeMode : uint8_t
   See MediaDecoder.h for more details.
 */
 class MediaDecoderStateMachine
+  : public DecoderDoctorLifeLogger<MediaDecoderStateMachine>
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 

@@ -8,6 +8,7 @@
 #define mozilla_MultiWriterQueue_h_
 
 #include "mozilla/Atomics.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "prthread.h"
@@ -253,6 +254,12 @@ public:
     }
   }
 
+  // Size of all buffers (used, or recyclable), excluding external data.
+  size_t ShallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return mAllocatedBuffersStats.Count() * sizeof(Buffer);
+  }
+
   struct CountAndWatermark
   {
     int mCount;
@@ -300,7 +307,10 @@ private:
     T mT;
     // mValid should be atomically changed to true *after* mT has been written,
     // so that the reader can only see valid data.
-    Atomic<bool> mValid{ false };
+    // ReleaseAcquire, because when set to `true`, we want the just-written mT
+    // to be visible to the thread reading this `true`; and when set to `false`,
+    // we want the previous reads to have completed.
+    Atomic<bool, ReleaseAcquire> mValid{ false };
   };
 
   // Buffer contains a sequence of BufferedElements starting at a specific
@@ -447,7 +457,11 @@ private:
   // Index of the next element to write. Modified when an element index is
   // claimed for a push. If the last element of a buffer is claimed, that push
   // will be responsible for adding a new head buffer.
-  Atomic<Index::ValueType> mNextElementToWrite{ 0 };
+  // Relaxed, because there is no synchronization based on this variable, each
+  // thread just needs to get a different value, and will then write different
+  // things (which themselves have some atomic validation before they may be
+  // read elsewhere, independent of this `mNextElementToWrite`.)
+  Atomic<Index::ValueType, Relaxed> mNextElementToWrite{ 0 };
 
   // Index that a live recent buffer reaches. If a push claims a lesser-or-
   // equal number, the corresponding buffer is guaranteed to still be alive:
@@ -456,15 +470,21 @@ private:
   //   including the one that just claimed a position within it.
   // Also, the push that claims this exact number is responsible for adding the
   // next buffer and updating this value accordingly.
-  Atomic<Index::ValueType> mBuffersCoverAtLeastUpTo;
+  // ReleaseAcquire, because when set to a certain value, the just-created
+  // buffer covering the new range must be visible to readers.
+  Atomic<Index::ValueType, ReleaseAcquire> mBuffersCoverAtLeastUpTo;
 
   // Pointer to the most recent buffer. Never null.
   // This is the most recent of a deque of yet-unread buffers.
   // Only modified when adding a new head buffer.
-  Atomic<Buffer*> mMostRecentBuffer;
+  // ReleaseAcquire, because when modified, the just-created new buffer must be
+  // visible to readers.
+  Atomic<Buffer*, ReleaseAcquire> mMostRecentBuffer;
 
   // Stack of reusable buffers.
-  Atomic<Buffer*> mReusableBuffers;
+  // ReleaseAcquire, because when modified, the just-added buffer must be
+  // visible to readers.
+  Atomic<Buffer*, ReleaseAcquire> mReusableBuffers;
 
   // Template-provided locking mechanism to protect PopAll()-only member
   // variables below.
@@ -486,6 +506,8 @@ private:
       , mWatermark(aCount)
     {
     }
+
+    int Count() const { return int(mCount); }
 
     CountAndWatermark Get() const
     {
@@ -518,8 +540,10 @@ private:
     }
 
   private:
-    Atomic<int> mCount;
-    Atomic<int> mWatermark;
+    // Relaxed, as these are just gathering stats, so consistency is not
+    // critical.
+    Atomic<int, Relaxed> mCount;
+    Atomic<int, Relaxed> mWatermark;
   };
   // All buffers in the mMostRecentBuffer deque.
   AtomicCountAndWatermark mLiveBuffersStats;

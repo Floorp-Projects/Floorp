@@ -116,6 +116,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "TouchManager.h"
+#include "DecoderDoctorLogger.h"
 #include "MediaDecoder.h"
 #include "MediaPrefs.h"
 #include "mozilla/ServoBindings.h"
@@ -254,6 +255,7 @@ nsLayoutStatics::Initialize()
   }
 
   AsyncLatencyLogger::InitializeStatics();
+  DecoderDoctorLogger::Init();
   MediaManager::StartupInit();
   CubebUtils::InitLibrary();
 

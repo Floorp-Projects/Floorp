@@ -118,9 +118,6 @@
           <vbox id="experimental" hidden="true">
             <description class="text-blurb" id="warningDesc">
               &warningDesc.version;
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-              &warningDesc.telemetryDesc;
-#endif
             </description>
             <description class="text-blurb" id="communityExperimentalDesc">
               &community.exp.start;<label class="text-link" href="http://www.mozilla.org/">&community.exp.mozillaLink;</label>&community.exp.middle;<label class="text-link" useoriginprincipal="true" href="about:credits">&community.exp.creditsLink;</label>&community.exp.end;

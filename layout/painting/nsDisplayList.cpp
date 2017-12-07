@@ -3118,7 +3118,7 @@ bool
 nsDisplayItem::CanUseAdvancedLayer(LayerManager* aManager) const
 {
   if (!gfxPrefs::LayersAdvancedBasicLayerEnabled() &&
-      aManager && aManager->GetBackendType() == layers::LayersBackend::LAYERS_BASIC) {
+      aManager && aManager->GetBackendType() != layers::LayersBackend::LAYERS_WR) {
     return false;
   }
 

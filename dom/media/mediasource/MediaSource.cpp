@@ -56,8 +56,18 @@ mozilla::LogModule* GetMediaSourceAPILog()
   return sLogModule;
 }
 
-#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("MediaSource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define MSE_API(arg, ...) MOZ_LOG(GetMediaSourceAPILog(), mozilla::LogLevel::Debug, ("MediaSource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...)                                                    \
+  DDMOZ_LOG(GetMediaSourceLog(),                                               \
+            mozilla::LogLevel::Debug,                                          \
+            "::%s: " arg,                                                      \
+            __func__,                                                          \
+            ##__VA_ARGS__)
+#define MSE_API(arg, ...)                                                      \
+  DDMOZ_LOG(GetMediaSourceAPILog(),                                            \
+            mozilla::LogLevel::Debug,                                          \
+            "::%s: " arg,                                                      \
+            __func__,                                                          \
+            ##__VA_ARGS__)
 
 // Arbitrary limit.
 static const unsigned int MAX_SOURCE_BUFFERS = 16;
@@ -260,6 +270,7 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     return nullptr;
   }
   mSourceBuffers->Append(sourceBuffer);
+  DDLINKCHILD("sourcebuffer[]", sourceBuffer.get());
   MSE_DEBUG("sourceBuffer=%p", sourceBuffer.get());
   return sourceBuffer.forget();
 }
@@ -335,6 +346,7 @@ MediaSource::RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv)
     mActiveSourceBuffers->Remove(sourceBuffer);
   }
   mSourceBuffers->Remove(sourceBuffer);
+  DDUNLINKCHILD(sourceBuffer);
   // TODO: Free all resources associated with sourceBuffer
 }
 
@@ -390,10 +402,12 @@ MediaSource::IsTypeSupported(const GlobalObject& aOwner, const nsAString& aType)
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aOwner.GetAsSupports());
   diagnostics.StoreFormatDiagnostics(window ? window->GetExtantDoc() : nullptr,
                                      aType, NS_SUCCEEDED(rv), __func__);
-#define this nullptr
-  MSE_API("IsTypeSupported(aType=%s)%s ",
-          NS_ConvertUTF16toUTF8(aType).get(), rv == NS_OK ? "OK" : "[not supported]");
-#undef this // don't ever remove this line !
+  MOZ_LOG(GetMediaSourceAPILog(),
+          mozilla::LogLevel::Debug,
+          ("MediaSource::%s: IsTypeSupported(aType=%s) %s",
+           __func__,
+           NS_ConvertUTF16toUTF8(aType).get(),
+           rv == NS_OK ? "OK" : "[not supported]"));
   return NS_SUCCEEDED(rv);
 }
 

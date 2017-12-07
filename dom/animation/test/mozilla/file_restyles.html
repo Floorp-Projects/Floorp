@@ -89,12 +89,23 @@ function waitForWheelEvent(aTarget) {
   });
 }
 
+// Returns true if |aAnimation| begins at the current timeline time.  We
+// sometimes need to detect this case because if we started an animation
+// asynchronously (e.g. using play()) and then ended up running the next frame
+// at precisely the time the animation started (due to aligning with vsync
+// refresh rate) then we won't end up restyling in that frame.
+function startsRightNow(aAnimation) {
+  return aAnimation.startTime === aAnimation.timeline.currentTime &&
+         aAnimation.currentTime === 0;
+}
+
 var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
 var isServo = isStyledByServo();
 var offscreenThrottlingEnabled =
   SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
+var hasMicroTaskCheckpointForAnimation;
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -107,6 +118,38 @@ function add_task_if_omta_enabled(test) {
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
 waitForAllPaints(() => {
+  // Drop this once we have the micro task checkpoint for animations
+  // (bug 1416966).
+  add_task(async function check_micro_task_checkpoint_for_animations() {
+    const div = addDiv(null);
+
+    async function checkMicroTaskCheckpoint() {
+      return new Promise(resolve => {
+        let didRequestAnimationFrame = false;
+
+        requestAnimationFrame(() => {
+          const animation = div.animate({ }, 100 * MS_PER_SEC);
+
+          requestAnimationFrame(() => {
+            didRequestAnimationFrame = true;
+          });
+
+          animation.ready.then(() => {
+            // If the animation.ready.then callback is called before the next
+            // requestAnimationFrame callback, that means that there is a
+            // micro task checkpoint between animation tick and
+            // requestAnimationFrame callbacks.
+            resolve(!didRequestAnimationFrame);
+          });
+        });
+      });
+    }
+
+    hasMicroTaskCheckpointForAnimation = await checkMicroTaskCheckpoint();
+
+    await ensureElementRemoval(div);
+  });
+
   add_task(async function restyling_for_main_thread_animations() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
@@ -114,8 +157,26 @@ waitForAllPaints(() => {
     await animation.ready;
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
+    // Normally we expect one restyling for each requestAnimationFrame (as
+    // called by observeRestyling) PLUS one for the last frame becasue of bug
+    // 1193394.  However, we won't observe that initial restyling unless BOTH of
+    // the following two conditions hold:
+    //
+    // 1. We are running *before* restyling happens.  This only happens if we
+    //    perform a micro task checkpoint after resolving the 'ready' promise
+    //    above (bug 1416966).
+    // 2. The animation actually needs a restyle because it started prior to
+    //    this frame.  Even if (1) is true, in some cases due to aligning with
+    //    the refresh driver, the animation fame in which the ready promise is
+    //    resolved happens to coincide perfectly with the start time of the
+    //    animation.  In this case no restyling is needed so we won't observe
+    //    an additional restyle.
+    const expectedRestyleCount =
+      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
+        ? 6
+        : 5;
     var markers = await observeStyling(5);
-    is(markers.length, 5,
+    is(markers.length, expectedRestyleCount,
        'CSS animations running on the main-thread should update style ' +
        'on the main thread');
     await ensureElementRemoval(div);
@@ -507,8 +568,13 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Animations running on the main-thread which is in scrolled out ' +
+       'elements should not update restyling');
+
     parentElement.style.height = '100px';
-    var markers = await observeStyling(1);
+    markers = await observeStyling(1);
 
     is(markers.length, 1,
        'Animations running on the main-thread which was in scrolled out ' +
@@ -867,9 +933,13 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
+    const expectedRestyleCount =
+      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
+        ? 6
+        : 5;
     var markers = await observeStyling(5);
 
-    is(markers.length, 5,
+    is(markers.length, expectedRestyleCount,
        'Discrete animation has has no keyframe whose offset is 0 or 1 in an ' +
        'out-of-view element should not be throttled');
     await ensureElementRemoval(div);
@@ -934,8 +1004,12 @@ waitForAllPaints(() => {
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
     await animation.ready;
 
+    const expectedRestyleCount =
+      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
+        ? 6
+        : 5;
     var markers = await observeStyling(5);
-    is(markers.length, 5,
+    is(markers.length, expectedRestyleCount,
        'CSS animations on an in-view svg element with post-transform should ' +
        'not be throttled.');
 
@@ -994,8 +1068,12 @@ waitForAllPaints(() => {
     var animation = targetDiv.getAnimations()[0];
     await animation.ready;
 
+    const expectedRestyleCount =
+      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
+        ? 6
+        : 5;
     var markers = await observeStyling(5);
-    is(markers.length, 5,
+    is(markers.length, expectedRestyleCount,
        'CSS animation on an in-view element with pre-transform should not ' +
        'be throttled.');
 

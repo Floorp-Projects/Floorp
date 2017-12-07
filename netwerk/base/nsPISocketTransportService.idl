@@ -49,13 +49,13 @@ interface nsPISocketTransportService : nsIRoutedSocketTransportService
 
 %{C++
 /*
- * Network activity indicator: we send out these topics no more than every
- * blipIntervalMilliseconds (as set by the
- * "network.activity.blipIntervalMilliseconds" preference: if 0 no notifications
+ * Network activity: we send out this topic no more than every
+ * intervalMilliseconds (as set by the
+ * "network.activity.intervalMilliseconds" preference: if 0 no notifications
  * are sent) if the network is currently active (i.e. we're sending/receiving
  * data to/from the socket).
  */
-#define NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC   "network-activity-blip-upload"
-#define NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC "network-activity-blip-download"
+#define NS_NETWORK_ACTIVITY "network-activity"
+
 
 %}

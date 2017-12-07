@@ -9138,7 +9138,17 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
 
   uint32_t lifetimePolicy;
   uint32_t behavior;
-  GetCookieBehaviorForPrincipal(aPrincipal, &lifetimePolicy, &behavior);
+
+  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
+  // and ACCEPT_NORMALLY as lifetimePolicy (See Bug 1406675 for rationale).
+  auto policy = BasePrincipal::Cast(aPrincipal)->AddonPolicy();
+
+  if (policy) {
+    behavior = nsICookieService::BEHAVIOR_ACCEPT;
+    lifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+  } else {
+    GetCookieBehaviorForPrincipal(aPrincipal, &lifetimePolicy, &behavior);
+  }
 
   // Check if we should only allow storage for the session, and record that fact
   if (lifetimePolicy == nsICookieService::ACCEPT_SESSION) {

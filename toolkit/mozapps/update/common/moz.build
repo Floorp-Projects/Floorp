@@ -26,7 +26,25 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 Library('updatecommon')
 
 DEFINES['NS_NO_XPCOM'] = True
+USE_STATIC_LIBS = True
 
-srcdir = '.'
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    SOURCES += [
+        'pathhash.cpp',
+        'uachelper.cpp',
+        'updatehelper.cpp',
+    ]
+    if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+        SOURCES += [
+            'certificatecheck.cpp',
+            'registrycertificates.cpp',
+        ]
+        OS_LIBS += [
+            'crypt32',
+            'wintrust',
+        ]
 
-include('sources.mozbuild')
+SOURCES += [
+    'readstrings.cpp',
+    'updatecommon.cpp',
+]

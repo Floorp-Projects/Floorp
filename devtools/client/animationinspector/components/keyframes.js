@@ -8,7 +8,7 @@
 
 const {createNode, createSVGNode} =
   require("devtools/client/animationinspector/utils");
-const {ProgressGraphHelper, getPreferredKeyframesProgressThreshold} =
+const { ProgressGraphHelper, } =
   require("devtools/client/animationinspector/graph-helper.js");
 
 // Counter for linearGradient ID.
@@ -64,8 +64,7 @@ Keyframes.prototype = {
     const graphHelper =
       new ProgressGraphHelper(win, propertyName, animationType, keyframes, totalDuration);
 
-    renderPropertyGraph(graphEl, totalDuration, minSegmentDuration,
-                        getPreferredKeyframesProgressThreshold(keyframes), graphHelper);
+    renderPropertyGraph(graphEl, totalDuration, minSegmentDuration, graphHelper);
 
     // Destroy ProgressGraphHelper resources.
     graphHelper.destroy();
@@ -105,13 +104,10 @@ Keyframes.prototype = {
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Number} duration - Duration of one iteration.
  * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
  * @param {ProgressGraphHelper} graphHelper - The object of ProgressGraphHalper.
  */
-function renderPropertyGraph(parentEl, duration, minSegmentDuration,
-                             minProgressThreshold, graphHelper) {
-  const segments = graphHelper.createPathSegments(0, duration, minSegmentDuration,
-                                                  minProgressThreshold);
+function renderPropertyGraph(parentEl, duration, minSegmentDuration, graphHelper) {
+  const segments = graphHelper.createPathSegments(duration, minSegmentDuration);
 
   const graphType = graphHelper.getGraphType();
   if (graphType !== "color") {
@@ -168,32 +164,17 @@ function renderEasingHint(parentEl, segments, helper) {
   // Split segments for each keyframe.
   for (let i = 0, indexOfSegments = 0; i < keyframes.length - 1; i++) {
     const startKeyframe = keyframes[i];
-    const startTime = startKeyframe.offset * duration;
     const endKeyframe = keyframes[i + 1];
     const endTime = endKeyframe.offset * duration;
 
     const keyframeSegments = [];
     for (; indexOfSegments < segments.length; indexOfSegments++) {
       const segment = segments[indexOfSegments];
-      if (segment.x < startTime) {
-        // If previous easings were linear, we need to increment the indexOfSegments.
-        continue;
-      }
-      if (segment.x > endTime) {
-        indexOfSegments -= 1;
+      keyframeSegments.push(segment);
+
+      if (segment.x === endTime) {
         break;
       }
-      keyframeSegments.push(segment);
-    }
-
-    // If keyframeSegments does not have segment which is at startTime,
-    // get and set the segment.
-    if (keyframeSegments[0].x !== startTime) {
-      keyframeSegments.unshift(helper.getSegment(startTime));
-    }
-    // Also, endTime.
-    if (keyframeSegments[keyframeSegments.length - 1].x !== endTime) {
-      keyframeSegments.push(helper.getSegment(endTime));
     }
 
     // Append easing hint as text and emphasis path.

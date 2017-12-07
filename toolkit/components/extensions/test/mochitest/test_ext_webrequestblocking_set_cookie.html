@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Testing modifying cookies in webRequest.onHeadersReceived</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_modifying_cookies_from_onHeadersReceived() {
+  let extension;
+  SimpleTest.waitForExplicitFinish();
+  async function background() {
+    /**
+     * Check that all the cookies described by `prefixes` are in the cookie jar.
+     *
+     * @param {Array.string} prefixes
+     *   Zero or more prefixes, describing cookies that are expected to be set
+     *   in the current cookie jar.  Each prefix describes both a cookie
+     *   name and corresponding value.  For example, if the string "ext"
+     *   is passed as an argument, then this function expects to see
+     *   a cookie called "extcookie" and corresponding value of "extvalue".
+     */
+    async function checkCookies(prefixes) {
+      const numPrefixes = prefixes.length;
+      const currentCookies = await browser.cookies.getAll({});
+      browser.test.assertEq(numPrefixes, currentCookies.length, `${numPrefixes} cookies were set`);
+
+      for (let cookiePrefix of prefixes) {
+        let cookieName = `${cookiePrefix}cookie`;
+        let expectedCookieValue = `${cookiePrefix}value`;
+        let fetchedCookie = await browser.cookies.getAll({name: cookieName});
+        browser.test.assertEq(1, fetchedCookie.length, `Found 1 cookie with name "${cookieName}"`);
+        browser.test.assertEq(expectedCookieValue, fetchedCookie[0] && fetchedCookie[0].value, `Cookie "${cookieName}" has expected value of "${expectedCookieValue}"`);
+      }
+    }
+
+    /**
+     * Opens up a new tab, loading the given file.
+     *
+     * @param {string} filename
+     *   The name of a html file in the
+     *   "toolkit/components/extensions/test/mochitest" directory.
+     *
+     * @returns {object}
+     *   An object with windowId and tabId properties, describing the tab
+     *   that was opened.
+     */
+    async function openWindowAndTab(filename) {
+      const fileUrl = `http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/${filename}?nocache=${Math.random()}`;
+      const tabReadyPromise = new Promise(resolve => {
+        browser.webNavigation.onDOMContentLoaded.addListener(function listener({tabId}) {
+          browser.webNavigation.onDOMContentLoaded.removeListener(listener);
+          resolve(tabId);
+        }, {
+          url: [{
+            urlPrefix: fileUrl,
+          }],
+        });
+      });
+      const {id: windowId} = await browser.windows.create({url: fileUrl});
+      const tabId = await tabReadyPromise;
+      return {windowId, tabId};
+    }
+
+    /**
+     * Tests that expected cookies are in the cookie jar after opening a file.
+     *
+     * @param {string} filename
+     *   The name of a html file in the
+     *   "toolkit/components/extensions/test/mochitest" directory.
+     * @param {?Array.string} prefixes
+     *   Zero or more prefixes, describing cookies that are expected to be set
+     *   in the current cookie jar.  Each prefix describes both a cookie
+     *   name and corresponding value.  For example, if the string "ext"
+     *   is passed as an argument, then this function expects to see
+     *   a cookie called "extcookie" and corresponding value of "extvalue".
+     *   If undefined, then no checks are automatically performed, and the
+     *   caller should provide a callback to perform the checks.
+     * @param {?Function} callback
+     *   An optional async callback function that, if provided, will be called
+     *   with an object that contains windowId and tabId parameters.
+     *   Callers can use this callback to apply extra tests about the state of
+     *   the cookie jar, or to query the state of the opened page.
+     */
+    async function testCookiesWithFile(filename, prefixes, callback) {
+      await browser.browsingData.removeCookies({});
+      const tabDetails = await openWindowAndTab(filename);
+
+      if (prefixes !== undefined) {
+        await checkCookies(prefixes);
+      }
+
+      if (callback !== undefined) {
+        await callback(tabDetails);
+      }
+      await browser.windows.remove(tabDetails.windowId);
+    }
+
+    const filter = {
+      urls: ["<all_urls>"],
+      types: ["main_frame", "sub_frame"],
+    };
+
+    const headersReceivedInfoSpec = ["blocking", "responseHeaders"];
+
+    const onHeadersReceived = details => {
+      details.responseHeaders.push({
+        name: "Set-Cookie",
+        value: "extcookie=extvalue",
+      });
+
+      return {
+        responseHeaders: details.responseHeaders,
+      };
+    };
+    browser.webRequest.onHeadersReceived.addListener(onHeadersReceived, filter, headersReceivedInfoSpec);
+
+    if (browser.windows) {
+      // First, perform a request that should not set any cookies, and check
+      // that the cookie the extension sets is the only cookie in the
+      // cookie jar.
+      await testCookiesWithFile("file_sample.html", ["ext"]);
+
+      // Next, preform a request that will set on cookie (reqcookie=reqvalue)
+      // and check that two cookies wind up in the cookie jar (the request
+      // set cookie, and the extension set cookie).
+      await testCookiesWithFile("file_webrequestblocking_set_cookie.html", ["ext", "req"]);
+
+      // Third, register another onHeadersReceived handler that also
+      // sets a cookie (thirdcookie=thirdvalue), to make sure modifications from
+      // multiple onHeadersReceived listeners are merged correctly.
+      const thirdOnHeadersRecievedListener = details => {
+        details.responseHeaders.push({
+          name: "Set-Cookie",
+          value: "thirdcookie=thirdvalue",
+        });
+
+        browser.test.log(JSON.stringify(details.responseHeaders));
+
+        return {
+          responseHeaders: details.responseHeaders,
+        };
+      };
+      browser.webRequest.onHeadersReceived.addListener(thirdOnHeadersRecievedListener, filter, headersReceivedInfoSpec);
+      await testCookiesWithFile("file_webrequestblocking_set_cookie.html", ["ext", "req", "third"]);
+      browser.webRequest.onHeadersReceived.removeListener(onHeadersReceived);
+      browser.webRequest.onHeadersReceived.removeListener(thirdOnHeadersRecievedListener);
+
+      // Fourth, test to make sure that extensions can remove cookies
+      // using onHeadersReceived too, by 1. making a request that
+      // sets a cookie (reqcookie=reqvalue), 2. having the extension remove
+      // that cookie by removing that header, and 3. adding a new cookie
+      // (extcookie=extvalue).
+      const fourthOnHeadersRecievedListener = details => {
+        // Remove the cookie set by the request (reqcookie=reqvalue).
+        const newHeaders = details.responseHeaders.filter(cookie => cookie.name !== "set-cookie");
+
+        // And then add a new cookie in its place (extcookie=extvalue).
+        newHeaders.push({
+          name: "Set-Cookie",
+          value: "extcookie=extvalue",
+        });
+
+        return {
+          responseHeaders: newHeaders,
+        };
+      };
+      browser.webRequest.onHeadersReceived.addListener(fourthOnHeadersRecievedListener, filter, headersReceivedInfoSpec);
+      await testCookiesWithFile("file_webrequestblocking_set_cookie.html", ["ext"]);
+      browser.webRequest.onHeadersReceived.removeListener(fourthOnHeadersRecievedListener);
+
+      // Fifth, check that extensions are able to overwrite headers set by
+      // pages. In this test, make a request that will set "reqcookie=reqvalue",
+      // and add a listener that sets "reqcookie=changedvalue".  Check
+      // to make sure that the cookie jar contains "reqcookie=changedvalue"
+      // and not "reqcookie=reqvalue".
+      const fifthOnHeadersRecievedListener = details => {
+        // Remove the cookie set by the request (reqcookie=reqvalue).
+        const newHeaders = details.responseHeaders.filter(cookie => cookie.name !== "set-cookie");
+
+        // And then add a new cookie in its place (reqcookie=changedvalue).
+        newHeaders.push({
+          name: "Set-Cookie",
+          value: "reqcookie=changedvalue",
+        });
+
+        return {
+          responseHeaders: newHeaders,
+        };
+      };
+      browser.webRequest.onHeadersReceived.addListener(fifthOnHeadersRecievedListener, filter, headersReceivedInfoSpec);
+
+      await testCookiesWithFile("file_webrequestblocking_set_cookie.html", undefined, async tabDetails => {
+        const currentCookies = await browser.cookies.getAll({});
+        browser.test.assertEq(1, currentCookies.length, `1 cookie was set`);
+
+        const cookieName = "reqcookie";
+        const expectedCookieValue = "changedvalue";
+        const fetchedCookie = await browser.cookies.getAll({name: cookieName});
+
+        browser.test.assertEq(1, fetchedCookie.length, `Found 1 cookie with name "${cookieName}"`);
+        browser.test.assertEq(expectedCookieValue, fetchedCookie[0] && fetchedCookie[0].value, `Cookie "${cookieName}" has expected value of "${expectedCookieValue}"`);
+      });
+      browser.webRequest.onHeadersReceived.removeListener(fifthOnHeadersRecievedListener);
+    }
+
+    browser.test.notifyPass("cookie modifying extension");
+  }
+
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "browsingData",
+        "cookies",
+        "webNavigation",
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
+      ],
+    },
+    background,
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("cookie modifying extension");
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

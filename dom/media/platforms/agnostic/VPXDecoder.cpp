@@ -16,7 +16,9 @@
 #include <algorithm>
 
 #undef LOG
-#define LOG(arg, ...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("VPXDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...)                                                          \
+  DDMOZ_LOG(                                                                   \
+    sPDMLog, mozilla::LogLevel::Debug, "::%s: " arg, __func__, ##__VA_ARGS__)
 
 namespace mozilla {
 

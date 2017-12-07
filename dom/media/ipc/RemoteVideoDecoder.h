@@ -12,6 +12,14 @@
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
+
+namespace dom {
+class RemoteVideoDecoder;
+}
+DDLoggedTypeCustomNameAndBase(dom::RemoteVideoDecoder,
+                              RemoteVideoDecoder,
+                              MediaDataDecoder);
+
 namespace dom {
 
 class VideoDecoderChild;
@@ -21,7 +29,9 @@ class RemoteDecoderModule;
 // to a 'real' decoder in the GPU process.
 // All requests get forwarded to a VideoDecoderChild instance that
 // operates solely on the VideoDecoderManagerChild thread.
-class RemoteVideoDecoder : public MediaDataDecoder
+class RemoteVideoDecoder
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<RemoteVideoDecoder>
 {
 public:
   friend class RemoteDecoderModule;

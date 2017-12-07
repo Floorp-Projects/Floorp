@@ -1046,7 +1046,9 @@ public:
         place.guid = lastFetchedPlace->guid;
         place.lastVisitId = lastFetchedPlace->visitId;
         place.lastVisitTime = lastFetchedPlace->visitTime;
-        place.titleChanged = !lastFetchedPlace->title.Equals(place.title);
+        if (!place.title.IsVoid()) {
+          place.titleChanged = !lastFetchedPlace->title.Equals(place.title);
+        }
         place.frecency = lastFetchedPlace->frecency;
         // Add one visit for the previous loop.
         place.visitCount = ++lastFetchedVisitCount;
@@ -2275,7 +2277,19 @@ History::UpdatePlace(const VisitData& aPlace)
   MOZ_ASSERT(aPlace.placeId > 0, "must have a valid place id!");
   MOZ_ASSERT(!aPlace.guid.IsVoid(), "must have a guid!");
 
-  nsCOMPtr<mozIStorageStatement> stmt = GetStatement(
+  nsCOMPtr<mozIStorageStatement> stmt;
+  bool titleIsVoid = aPlace.title.IsVoid();
+  if (titleIsVoid) {
+    // Don't change the title.
+    stmt = GetStatement(
+      "UPDATE moz_places "
+      "SET hidden = :hidden, "
+          "typed = :typed, "
+          "guid = :guid "
+      "WHERE id = :page_id "
+    );
+  } else {
+    stmt = GetStatement(
       "UPDATE moz_places "
       "SET title = :title, "
           "hidden = :hidden, "
@@ -2283,19 +2297,21 @@ History::UpdatePlace(const VisitData& aPlace)
           "guid = :guid "
       "WHERE id = :page_id "
     );
+  }
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv;
-  // Empty strings should clear the title, just like nsNavHistory::SetPageTitle.
-  if (aPlace.title.IsEmpty()) {
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
+  if (!titleIsVoid) {
+    // An empty string clears the title.
+    if (aPlace.title.IsEmpty()) {
+      rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
+    } else {
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
+                                  StringHead(aPlace.title, TITLE_LENGTH_MAX));
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  else {
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
-                                StringHead(aPlace.title, TITLE_LENGTH_MAX));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
@@ -2387,8 +2403,8 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
   }
   // Otherwise, just indicate if the title has changed.
   else {
-    _place.titleChanged = !(_place.title.Equals(title) ||
-                            (_place.title.IsEmpty() && title.IsVoid()));
+    _place.titleChanged = !(_place.title.Equals(title)) &&
+                          !(_place.title.IsEmpty() && title.IsVoid());
   }
 
   int32_t hidden;
@@ -2998,7 +3014,12 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       NS_ENSURE_SUCCESS(rv, rv);
 
       VisitData& data = *visitData.AppendElement(VisitData(uri));
-      data.title = title;
+      if (!title.IsEmpty()) {
+        data.title = title;
+      } else if (!title.IsVoid()) {
+        // Setting data.title to an empty string wouldn't make it non-void.
+        data.title.SetIsVoid(false);
+      }
       data.guid = guid;
 
       // We must have a date and a transaction type!

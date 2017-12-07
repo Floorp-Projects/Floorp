@@ -54,7 +54,8 @@ this.PlacesTestUtils = Object.freeze({
     let lastStoredVisit;
     for (let place of places) {
       let info = {url: place.uri};
-      info.title = (typeof place.title === "string") ? place.title : "test visit for " + info.url.spec ;
+      let spec = place.uri instanceof Ci.nsIURI ? place.uri.spec : new URL(place.uri).href;
+      info.title = "title" in place ? place.title : "test visit for " + spec ;
       if (typeof place.referrer == "string") {
         place.referrer = Services.io.newURI(place.referrer);
       } else if (place.referrer && place.referrer instanceof URL) {

@@ -381,6 +381,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY appMenuRemoteTabs.noclients.subtitle "Want to see your tabs from other devices here?">
 <!ENTITY appMenuRemoteTabs.openprefs.label "Sync Preferences">
 <!ENTITY appMenuRemoteTabs.notsignedin.label "Sign in to view a list of tabs from your other devices.">
+<!ENTITY appMenuRemoteTabs.unverified.label "Your account needs to be verified.">
 <!ENTITY appMenuRemoteTabs.signin.label "Sign in to Sync">
 <!ENTITY appMenuRemoteTabs.managedevices.label "Manage Devices…">
 <!ENTITY appMenuRemoteTabs.sidebar.label "View Synced Tabs Sidebar">
@@ -794,6 +795,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY syncedTabs.sidebar.noclients.label    "Sign in to Firefox from your other devices to view their tabs here.">
 <!ENTITY syncedTabs.sidebar.noclients.subtitle "Want to see your tabs from other devices here?">
 <!ENTITY syncedTabs.sidebar.notsignedin.label  "Sign in to view a list of tabs from your other devices.">
+<!ENTITY syncedTabs.sidebar.unverified.label   "Your account needs to be verified.">
 <!ENTITY syncedTabs.sidebar.notabs.label       "No open tabs">
 <!ENTITY syncedTabs.sidebar.openprefs.label    "Open &syncBrand.shortName.label; Preferences">
 <!-- LOCALIZATION NOTE (syncedTabs.sidebar.tabsnotsyncing.label): This is shown

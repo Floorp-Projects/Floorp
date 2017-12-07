@@ -69,7 +69,9 @@ def process_manifest(destdir, paths, track,
         remove_empty_directories=remove_empty_directories)
 
     if track:
-        manifest.write(path=track)
+        # We should record files that we actually copied.
+        # It is too late to expand wildcards when the track file is read.
+        manifest.write(path=track, expand_pattern=True)
 
     return result
 

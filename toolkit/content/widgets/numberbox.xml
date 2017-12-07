@@ -58,25 +58,6 @@
           return val;
         </setter>
       </property>
-
-      <property name="wrapAround">
-        <getter>
-        <![CDATA[
-          return (this.getAttribute("wraparound") == "true");
-        ]]>
-        </getter>
-        <setter>
-        <![CDATA[
-          if (val)
-            this.setAttribute("wraparound", "true");
-          else
-            this.removeAttribute("wraparound");
-          this._enableDisableButtons();
-          return val;
-        ]]>
-        </setter>
-      </property>
-
       <property name="min">
         <getter>
           var min = this.getAttribute("min");
@@ -185,9 +166,7 @@
         <body>
           <![CDATA[
             var buttons = this.spinButtons;
-            if (this.wrapAround) {
-              buttons.decreaseDisabled = buttons.increaseDisabled = false;
-            } else if (this.disabled || this.readOnly) {
+            if (this.disabled || this.readOnly) {
               buttons.decreaseDisabled = buttons.increaseDisabled = true;
             } else {
               buttons.decreaseDisabled = (this.valueNumber <= this.min);
@@ -206,12 +185,10 @@
 
             var min = this.min;
             var max = this.max;
-            var wrapAround = this.wrapAround &&
-                             min != -Infinity && max != Infinity;
             if (aValue < min)
-              aValue = (aIsIncDec && wrapAround ? max : min);
+              aValue = min;
             else if (aValue > max)
-              aValue = (aIsIncDec && wrapAround ? min : max);
+              aValue = max;
 
             var places = this.decimalPlaces;
             aValue = (places == Infinity) ? "" + aValue : aValue.toFixed(places);
@@ -220,8 +197,7 @@
             this._value = Number(aValue);
             this.inputField.value = aValue.replace(/\./, this.decimalSymbol);
 
-            if (!wrapAround)
-              this._enableDisableButtons();
+            this._enableDisableButtons();
 
             return aValue;
           ]]>

@@ -1,4 +1,8 @@
-# Usage: /bin/sh update.sh <vorbis_src_directory>
+#!/bin/sh
+if test $# -ne 1; then
+	echo "Usage: /bin/sh update.sh <vorbis_src_directory>"
+	exit 1
+fi
 #
 # Copies the needed files from a directory containing the original
 # libvorbis source that we need for the Mozilla HTML5 media support.
@@ -44,9 +48,8 @@ cp $1/lib/codebook.c ./lib/vorbis_codebook.c
 cp $1/lib/bitrate.c ./lib/vorbis_bitrate.c
 cp $1/lib/block.c ./lib/vorbis_block.c
 cp $1/include/vorbis/codec.h ./include/vorbis/codec.h
-cp $1/todo.txt ./todo.txt
 cp $1/COPYING ./COPYING
-cp $1/README ./README
+cp $1/README.md ./README.md
 cp $1/AUTHORS ./AUTHORS
 
 # Encoder support
