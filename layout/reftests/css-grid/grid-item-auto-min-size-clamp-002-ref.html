@@ -32,12 +32,12 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   grid-template-rows:    repeat(2,10px);
 }
 .min {
-  grid-template-columns: repeat(2,minmax(max-content, 15px));
-  grid-template-rows:    repeat(2,minmax(max-content, 10px));
-}
-.max {
   grid-template-columns: repeat(2,minmax(min-content, 15px));
   grid-template-rows:    repeat(2,minmax(min-content, 10px));
+}
+.max {
+  grid-template-columns: repeat(2,minmax(max-content, 15px));
+  grid-template-rows:    repeat(2,minmax(max-content, 10px));
 }
 
 .larger .grid {
@@ -49,12 +49,12 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   grid-template-rows:    repeat(2,28px);
 }
 .larger .min {
-  grid-template-columns: repeat(2,minmax(max-content, 25px));
-  grid-template-rows:    repeat(2,minmax(max-content, 28px));
-}
-.larger .max {
   grid-template-columns: repeat(2,minmax(min-content, 25px));
   grid-template-rows:    repeat(2,minmax(min-content, 28px));
+}
+.larger .max {
+  grid-template-columns: repeat(2,minmax(max-content, 25px));
+  grid-template-rows:    repeat(2,minmax(max-content, 28px));
 }
 
 .stretch .grid {
@@ -77,9 +77,17 @@ span {
   border: 1px solid;
   padding: 1px 3px 5px 7px;
   margin: 3px 5px 7px 1px;
+  width: 0;
+  height: 0;
 }
 .span2 {
   grid-area: 1 / 1 / span 2 / span 2;
+  width: 13px;
+  height: 3px;
+}
+.larger .grid span {
+  width: 7px;
+  height: 10px;
 }
 .larger .grid .span2 {
   font-size: 32px;
