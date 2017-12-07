@@ -34,12 +34,12 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   grid-template-rows:    repeat(2,10px);
 }
 .min {
-  grid-template-columns: repeat(2,minmax(max-content, 15px));
-  grid-template-rows:    repeat(2,minmax(max-content, 10px));
-}
-.max {
   grid-template-columns: repeat(2,minmax(min-content, 15px));
   grid-template-rows:    repeat(2,minmax(min-content, 10px));
+}
+.max {
+  grid-template-columns: repeat(2,minmax(max-content, 15px));
+  grid-template-rows:    repeat(2,minmax(max-content, 10px));
 }
 
 .larger .grid {
@@ -51,12 +51,12 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   grid-template-rows:    repeat(2,28px);
 }
 .larger .min {
-  grid-template-columns: repeat(2,minmax(max-content, 25px));
-  grid-template-rows:    repeat(2,minmax(max-content, 28px));
-}
-.larger .max {
   grid-template-columns: repeat(2,minmax(min-content, 25px));
   grid-template-rows:    repeat(2,minmax(min-content, 28px));
+}
+.larger .max {
+  grid-template-columns: repeat(2,minmax(max-content, 25px));
+  grid-template-rows:    repeat(2,minmax(max-content, 28px));
 }
 
 .stretch .grid {
