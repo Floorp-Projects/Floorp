@@ -20,6 +20,7 @@ include protocol PHeapSnapshotTempFileHelper;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PIPCBlobInputStream;
+include protocol PLoginReputation;
 include protocol PMedia;
 include protocol PNecko;
 include protocol PStreamFilter;
@@ -316,6 +317,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PURLClassifier;
     manages PURLClassifierLocal;
     manages PScriptCache;
+    manages PLoginReputation;
 
 both:
     // Depending on exactly how the new browser is being created, it might be
@@ -768,6 +770,8 @@ parent:
         returns (nsresult rv, nsCString[] results);
     // The async version of ClassifyLocal.
     async PURLClassifierLocal(URIParams uri, nsCString tables);
+
+    async PLoginReputation(URIParams formURI);
 
     // Services remoting
 
