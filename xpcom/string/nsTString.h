@@ -379,7 +379,7 @@ public:
   /**
    * Perform string to int conversion.
    * @param   aErrorCode will contain error if one occurs
-   * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
+   * @param   aRadix is the radix to use. Only 10 and 16 are supported.
    * @return  int rep of string value, and possible (out) error code
    */
   int32_t ToInteger(nsresult* aErrorCode, uint32_t aRadix = kRadix10) const;
@@ -387,7 +387,7 @@ public:
   /**
    * Perform string to 64-bit int conversion.
    * @param   aErrorCode will contain error if one occurs
-   * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
+   * @param   aRadix is the radix to use. Only 10 and 16 are supported.
    * @return  64-bit int rep of string value, and possible (out) error code
    */
   int64_t ToInteger64(nsresult* aErrorCode, uint32_t aRadix = kRadix10) const;
