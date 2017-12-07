@@ -35,9 +35,6 @@ class Encoder;
 
 extern "C" {
 
-mozilla::Encoding const*
-mozilla_encoding_for_name(uint8_t const* name, size_t name_len);
-
 nsresult
 mozilla_encoding_decode_to_nsstring(mozilla::Encoding const** encoding,
                                     uint8_t const* src,
@@ -256,23 +253,6 @@ public:
     size_t len = aBuffer.Length();
     const Encoding* encoding = encoding_for_bom(aBuffer.Elements(), &len);
     return MakeTuple(encoding, len);
-  }
-
-  /**
-   * If the argument matches exactly (case-sensitively; no whitespace
-   * removal performed) the name of an encoding, returns
-   * `const Encoding*` representing that encoding. Otherwise `MOZ_CRASH`es.
-   *
-   * The motivating use case for this method is interoperability with
-   * legacy Gecko code that represents encodings as name string instead of
-   * type-safe `Encoding` objects. Using this method for other purposes is
-   * most likely the wrong thing to do.
-   */
-  static inline NotNull<const mozilla::Encoding*> ForName(
-    Span<const char> aName)
-  {
-    return WrapNotNull(mozilla_encoding_for_name(
-      reinterpret_cast<const uint8_t*>(aName.Elements()), aName.Length()));
   }
 
   /**
