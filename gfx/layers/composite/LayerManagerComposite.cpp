@@ -1236,50 +1236,6 @@ LayerManagerComposite::HandlePixelsTarget()
 }
 #endif
 
-class TextLayerComposite : public TextLayer,
-                           public LayerComposite
-{
-public:
-  explicit TextLayerComposite(LayerManagerComposite *aManager)
-    : TextLayer(aManager, nullptr)
-    , LayerComposite(aManager)
-  {
-    MOZ_COUNT_CTOR(TextLayerComposite);
-    mImplData = static_cast<LayerComposite*>(this);
-  }
-
-protected:
-  ~TextLayerComposite()
-  {
-    MOZ_COUNT_DTOR(TextLayerComposite);
-    Destroy();
-  }
-
-public:
-  // LayerComposite Implementation
-  virtual Layer* GetLayer() override { return this; }
-
-  virtual void SetLayerManager(HostLayerManager* aManager) override
-  {
-    LayerComposite::SetLayerManager(aManager);
-    mManager = aManager;
-  }
-
-  virtual void Destroy() override { mDestroyed = true; }
-
-  virtual void RenderLayer(const gfx::IntRect& aClipRect,
-                           const Maybe<gfx::Polygon>& aGeometry) override {}
-  virtual void CleanupResources() override {};
-
-  virtual void GenEffectChain(EffectChain& aEffect) override {}
-
-  CompositableHost* GetCompositableHost() override { return nullptr; }
-
-  virtual HostLayer* AsHostLayer() override { return this; }
-
-  virtual const char* Name() const override { return "TextLayerComposite"; }
-};
-
 class BorderLayerComposite : public BorderLayer,
                              public LayerComposite
 {
@@ -1382,16 +1338,6 @@ LayerManagerComposite::CreateRefLayer()
     return nullptr;
   }
   return RefPtr<RefLayer>(new RefLayerComposite(this)).forget();
-}
-
-already_AddRefed<TextLayer>
-LayerManagerComposite::CreateTextLayer()
-{
-  if (LayerManagerComposite::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return RefPtr<TextLayer>(new TextLayerComposite(this)).forget();
 }
 
 already_AddRefed<BorderLayer>

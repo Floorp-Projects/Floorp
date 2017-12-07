@@ -302,7 +302,6 @@ const LayersPacket_Layer_LayerType LayersPacket_Layer::PaintedLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::CanvasLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::ImageLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::ColorLayer;
-const LayersPacket_Layer_LayerType LayersPacket_Layer::TextLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::RefLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::ReadbackLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::DisplayItemLayer;

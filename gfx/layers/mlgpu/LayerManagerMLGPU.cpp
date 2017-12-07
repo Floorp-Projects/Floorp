@@ -164,13 +164,6 @@ LayerManagerMLGPU::CreateBorderLayer()
   return nullptr;
 }
 
-already_AddRefed<TextLayer>
-LayerManagerMLGPU::CreateTextLayer()
-{
-  MOZ_ASSERT_UNREACHABLE("Not yet implemented");
-  return nullptr;
-}
-
 already_AddRefed<CanvasLayer>
 LayerManagerMLGPU::CreateCanvasLayer()
 {

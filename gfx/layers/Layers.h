@@ -92,7 +92,6 @@ class DisplayItemLayer;
 class ColorLayer;
 class CompositorAnimations;
 class CompositorBridgeChild;
-class TextLayer;
 class CanvasLayer;
 class BorderLayer;
 class ReadbackLayer;
@@ -434,11 +433,6 @@ public:
    * Create a ColorLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ColorLayer> CreateColorLayer() = 0;
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Create a TextLayer for this manager's layer tree.
-   */
-  virtual already_AddRefed<TextLayer> CreateTextLayer() = 0;
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a BorderLayer for this manager's layer tree.
@@ -830,7 +824,6 @@ public:
     TYPE_CONTAINER,
     TYPE_DISPLAYITEM,
     TYPE_IMAGE,
-    TYPE_TEXT,
     TYPE_BORDER,
     TYPE_READBACK,
     TYPE_REF,
@@ -1562,12 +1555,6 @@ public:
     * ColorLayer.
     */
   virtual ColorLayer* AsColorLayer() { return nullptr; }
-
-  /**
-    * Dynamic cast to a TextLayer. Returns null if this is not a
-    * TextLayer.
-    */
-  virtual TextLayer* AsTextLayer() { return nullptr; }
 
   /**
     * Dynamic cast to a Border. Returns null if this is not a
@@ -2521,63 +2508,6 @@ protected:
 
   gfx::IntRect mBounds;
   gfx::Color mColor;
-};
-
-/**
- * A Layer which renders Glyphs.
- */
-class TextLayer : public Layer {
-public:
-  virtual TextLayer* AsTextLayer() override { return this; }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   */
-  void SetBounds(const gfx::IntRect& aBounds)
-  {
-    if (!mBounds.IsEqualEdges(aBounds)) {
-      mBounds = aBounds;
-      Mutated();
-    }
-  }
-
-  const gfx::IntRect& GetBounds()
-  {
-    return mBounds;
-  }
-
-  void SetScaledFont(gfx::ScaledFont* aScaledFont) {
-    if (aScaledFont != mFont) {
-      mFont = aScaledFont;
-      Mutated();
-    }
-  }
-
-  const nsTArray<GlyphArray>& GetGlyphs() { return mGlyphs; }
-
-  gfx::ScaledFont* GetScaledFont() { return mFont; }
-
-  MOZ_LAYER_DECL_NAME("TextLayer", TYPE_TEXT)
-
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
-  {
-    gfx::Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
-    mEffectiveTransform = SnapTransformTranslation(idealTransform, nullptr);
-    ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
-  }
-
-  virtual void SetGlyphs(nsTArray<GlyphArray>&& aGlyphs);
-protected:
-  TextLayer(LayerManager* aManager, void* aImplData);
-  ~TextLayer();
-
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
-
-  gfx::IntRect mBounds;
-  nsTArray<GlyphArray> mGlyphs;
-  RefPtr<gfx::ScaledFont> mFont;
 };
 
 /**

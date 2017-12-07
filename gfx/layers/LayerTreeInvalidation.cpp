@@ -651,49 +651,6 @@ public:
   BorderWidths mWidths;
 };
 
-struct TextLayerProperties : public LayerPropertiesBase
-{
-  explicit TextLayerProperties(TextLayer *aLayer)
-    : LayerPropertiesBase(aLayer)
-    , mBounds(aLayer->GetBounds())
-    , mGlyphs(aLayer->GetGlyphs())
-    , mFont(aLayer->GetScaledFont())
-  { }
-
-protected:
-  TextLayerProperties(const TextLayerProperties& a) = delete;
-  TextLayerProperties& operator=(const TextLayerProperties& a) = delete;
-
-public:
-  bool ComputeChangeInternal(const char* aPrefix,
-                             nsIntRegion& aOutRegion,
-                             NotifySubDocInvalidationFunc aCallback) override
-  {
-    TextLayer* text = static_cast<TextLayer*>(mLayer.get());
-
-    if (!text->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
-      IntRect result = NewTransformedBoundsForLeaf();
-      result = result.Union(OldTransformedBoundsForLeaf());
-      aOutRegion = result;
-      return true;
-    }
-
-    if (!mBounds.IsEqualEdges(text->GetBounds()) ||
-        mGlyphs != text->GetGlyphs() ||
-        mFont != text->GetScaledFont()) {
-      LTI_DUMP(NewTransformedBoundsForLeaf(), "bounds");
-      aOutRegion = NewTransformedBoundsForLeaf();
-      return true;
-    }
-
-    return true;
-  }
-
-  gfx::IntRect mBounds;
-  nsTArray<GlyphArray> mGlyphs;
-  gfx::ScaledFont* mFont;
-};
-
 static ImageHost* GetImageHost(Layer* aLayer)
 {
   HostLayer* compositor = aLayer->AsHostLayer();
@@ -830,8 +787,6 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
       return MakeUnique<CanvasLayerProperties>(static_cast<CanvasLayer*>(aRoot));
     case Layer::TYPE_BORDER:
       return MakeUnique<BorderLayerProperties>(static_cast<BorderLayer*>(aRoot));
-    case Layer::TYPE_TEXT:
-      return MakeUnique<TextLayerProperties>(static_cast<TextLayer*>(aRoot));
     case Layer::TYPE_DISPLAYITEM:
     case Layer::TYPE_READBACK:
     case Layer::TYPE_SHADOW:
