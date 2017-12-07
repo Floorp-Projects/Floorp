@@ -557,6 +557,7 @@ endif
 # @BuildFlag annotation in Java). For example, add a "MOZ_FOO \" line to this
 # list to support @BuildFlag(MOZ_FOO).
 BINDING_BUILD_FLAGS = \
+  MOZ_NATIVE_DEVICES \
   $(NULL)
 
 # Preprocess a JNI binding file using the build flags defined above.
