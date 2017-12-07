@@ -662,6 +662,12 @@ public:
   virtual bool
   DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor) override;
 
+  virtual PLoginReputationChild*
+  AllocPLoginReputationChild(const URIParams& aUri) override;
+
+  virtual bool
+  DeallocPLoginReputationChild(PLoginReputationChild* aActor) override;
+
   nsTArray<LookAndFeelInt>&
   LookAndFeelCache() {
     return mLookAndFeelCache;

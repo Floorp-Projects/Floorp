@@ -6,6 +6,8 @@
 #include "LoginReputation.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -126,6 +128,19 @@ LoginReputationService::QueryReputationAsync(nsIDOMHTMLInputElement* aInput,
   NS_ENSURE_STATE(documentURI);
 
   if (XRE_IsContentProcess()) {
+    using namespace mozilla::ipc;
+
+    ContentChild* content = ContentChild::GetSingleton();
+    if (content->IsShuttingDown()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    URIParams uri;
+    SerializeURI(documentURI, uri);
+
+    if (!content->SendPLoginReputationConstructor(uri)) {
+      return NS_ERROR_FAILURE;
+    }
   } else {
     nsCOMPtr<nsILoginReputationQuery> query =
       LoginReputationService::ConstructQueryParam(documentURI);
