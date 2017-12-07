@@ -22,8 +22,6 @@ interface nsIX509CertList : nsISupports {
   [must_use]
   void addCert(in nsIX509Cert cert);
   [must_use]
-  void deleteCert(in nsIX509Cert cert);
-  [must_use]
   nsISimpleEnumerator getEnumerator();
 
   /**
