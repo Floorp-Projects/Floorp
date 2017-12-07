@@ -496,7 +496,7 @@ var gPrivacyPane = {
   updatePrivacyMicroControls() {
     if (document.getElementById("historyMode").value == "custom") {
       let disabled = this._autoStartPrivateBrowsing =
-        document.getElementById("privateBrowsingAutoStart").checked;
+        document.getElementById("browser.privatebrowsing.autostart").value;
       this.dependentControls.forEach(function(aElement) {
         let control = document.getElementById(aElement);
         let preferenceId = control.getAttribute("preference");
