@@ -21,6 +21,10 @@
   --tab-min-height: 41px;
 }
 
+:root:-moz-lwtheme {
+  --tab-line-color: var(--lwt-accent-color);
+}
+
 tabbrowser {
   /* Value for --in-content-page-background in in-content/common.inc.css */
   background-color: #f9f9fa;
