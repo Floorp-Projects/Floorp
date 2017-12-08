@@ -48,6 +48,12 @@ void
 ClientManagerOpParent::Init(const ClientOpConstructorArgs& aArgs)
 {
   switch (aArgs.type()) {
+    case ClientOpConstructorArgs::TClientNavigateArgs:
+    {
+      DoServiceOp(&ClientManagerService::Navigate,
+                  aArgs.get_ClientNavigateArgs());
+      break;
+    }
     case ClientOpConstructorArgs::TClientMatchAllArgs:
     {
       DoServiceOp(&ClientManagerService::MatchAll,

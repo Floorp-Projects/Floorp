@@ -7,6 +7,7 @@
 #include "ClientManagerService.h"
 
 #include "ClientManagerParent.h"
+#include "ClientNavigateOpParent.h"
 #include "ClientSourceParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -300,6 +301,47 @@ ClientManagerService::RemoveManager(ClientManagerParent* aManager)
   MOZ_DIAGNOSTIC_ASSERT(aManager);
   DebugOnly<bool> removed = mManagerList.RemoveElement(aManager);
   MOZ_ASSERT(removed);
+}
+
+RefPtr<ClientOpPromise>
+ClientManagerService::Navigate(const ClientNavigateArgs& aArgs)
+{
+  RefPtr<ClientOpPromise> ref;
+
+  ClientSourceParent* source = FindSource(aArgs.target().id(),
+                                          aArgs.target().principalInfo());
+  if (!source) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    return ref.forget();
+  }
+
+  PClientManagerParent* manager = source->Manager();
+  MOZ_DIAGNOSTIC_ASSERT(manager);
+
+  ClientNavigateOpConstructorArgs args;
+  args.url() = aArgs.url();
+  args.baseURL() = aArgs.baseURL();
+
+  // This is safe to do because the ClientSourceChild cannot directly delete
+  // itself.  Instead it sends a Teardown message to the parent which then
+  // calls delete.  That means we can be sure that we are not racing with
+  // source destruction here.
+  args.targetParent() = source;
+
+  RefPtr<ClientOpPromise::Private> promise =
+    new ClientOpPromise::Private(__func__);
+
+  ClientNavigateOpParent* op = new ClientNavigateOpParent(args, promise);
+  PClientNavigateOpParent* result =
+    manager->SendPClientNavigateOpConstructor(op, args);
+  if (!result) {
+    promise->Reject(NS_ERROR_FAILURE, __func__);
+    ref = promise;
+    return ref.forget();
+  }
+
+  ref = promise;
+  return ref.forget();
 }
 
 namespace

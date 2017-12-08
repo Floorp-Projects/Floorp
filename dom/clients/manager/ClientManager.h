@@ -24,6 +24,7 @@ class ClientHandle;
 class ClientInfo;
 class ClientManagerChild;
 class ClientMatchAllArgs;
+class ClientNavigateArgs;
 class ClientOpConstructorArgs;
 class ClientSource;
 enum class ClientType : uint8_t;
@@ -105,6 +106,10 @@ public:
   static RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs,
                   nsISerialEventTarget* aSerialEventTarget);
+
+  static RefPtr<ClientOpPromise>
+  Navigate(const ClientNavigateArgs& aArgs,
+           nsISerialEventTarget* aSerialEventTarget);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManager)
 };
