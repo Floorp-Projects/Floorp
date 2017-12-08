@@ -1,3 +1,3 @@
 # uluru
 
-A simple, fast, LRU cache implementation used for Servo's style system.
+A simple, fast, least-recently-used (LRU) cache implementation used for Servo's style system.

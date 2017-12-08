@@ -1,12 +1,14 @@
 language: rust
 sudo: false
+env:
+  - FEATURES='serde-1'
 matrix:
   include:
-    - rust: 1.2.0
+    - rust: 1.14.0
     - rust: stable
       env:
-        - FEATURES="use_generic_array"
         - NODEFAULT=1
+        - NODROP_FEATURES='use_needs_drop'
     - rust: beta
     - rust: nightly
       env:
@@ -16,7 +18,7 @@ matrix:
       - NODROP_FEATURES='use_needs_drop'
     - rust: nightly
       env:
-      - FEATURES='use_union use_generic_array'
+      - FEATURES='serde use_union'
       - NODROP_FEATURES='use_union'
 branches:
   only:

@@ -12,7 +12,10 @@ use std::slice;
 use array::{Array, ArrayExt};
 use array::Index;
 use CapacityError;
-use odds::char::encode_utf8;
+use char::encode_utf8;
+
+#[cfg(feature="serde-1")]
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 /// A string with a fixed capacity.
 ///
@@ -25,6 +28,13 @@ use odds::char::encode_utf8;
 pub struct ArrayString<A: Array<Item=u8>> {
     xs: A,
     len: A::Index,
+}
+
+impl<A: Array<Item=u8>> Default for ArrayString<A> {
+    /// Return an empty `ArrayString`
+    fn default() -> ArrayString<A> {
+        ArrayString::new()
+    }
 }
 
 impl<A: Array<Item=u8>> ArrayString<A> {
@@ -65,7 +75,7 @@ impl<A: Array<Item=u8>> ArrayString<A> {
     /// ```
     pub fn from(s: &str) -> Result<Self, CapacityError<&str>> {
         let mut arraystr = Self::new();
-        try!(arraystr.push_str(s));
+        arraystr.try_push_str(s)?;
         Ok(arraystr)
     }
 
@@ -81,7 +91,7 @@ impl<A: Array<Item=u8>> ArrayString<A> {
     pub fn from_byte_string(b: &A) -> Result<Self, Utf8Error> {
         let mut arraystr = Self::new();
         let s = try!(str::from_utf8(b.as_slice()));
-        let _result = arraystr.push_str(s);
+        let _result = arraystr.try_push_str(s);
         debug_assert!(_result.is_ok());
         Ok(arraystr)
     }
@@ -111,6 +121,24 @@ impl<A: Array<Item=u8>> ArrayString<A> {
 
     /// Adds the given char to the end of the string.
     ///
+    /// ***Panics*** if the backing array is not large enough to fit the additional char.
+    ///
+    /// ```
+    /// use arrayvec::ArrayString;
+    ///
+    /// let mut string = ArrayString::<[_; 2]>::new();
+    ///
+    /// string.push('a');
+    /// string.push('b');
+    ///
+    /// assert_eq!(&string[..], "ab");
+    /// ```
+    pub fn push(&mut self, c: char) {
+        self.try_push(c).unwrap();
+    }
+
+    /// Adds the given char to the end of the string.
+    ///
     /// Returns `Ok` if the push succeeds.
     ///
     /// **Errors** if the backing array is not large enough to fit the additional char.
@@ -120,14 +148,14 @@ impl<A: Array<Item=u8>> ArrayString<A> {
     ///
     /// let mut string = ArrayString::<[_; 2]>::new();
     ///
-    /// string.push('a').unwrap();
-    /// string.push('b').unwrap();
-    /// let overflow = string.push('c');
+    /// string.try_push('a').unwrap();
+    /// string.try_push('b').unwrap();
+    /// let overflow = string.try_push('c');
     ///
     /// assert_eq!(&string[..], "ab");
     /// assert_eq!(overflow.unwrap_err().element(), 'c');
     /// ```
-    pub fn push(&mut self, c: char) -> Result<(), CapacityError<char>> {
+    pub fn try_push(&mut self, c: char) -> Result<(), CapacityError<char>> {
         let len = self.len();
         unsafe {
             match encode_utf8(c, &mut self.raw_mut_bytes()[len..]) {
@@ -142,6 +170,24 @@ impl<A: Array<Item=u8>> ArrayString<A> {
 
     /// Adds the given string slice to the end of the string.
     ///
+    /// ***Panics*** if the backing array is not large enough to fit the string.
+    ///
+    /// ```
+    /// use arrayvec::ArrayString;
+    ///
+    /// let mut string = ArrayString::<[_; 2]>::new();
+    ///
+    /// string.push_str("a");
+    /// string.push_str("d");
+    ///
+    /// assert_eq!(&string[..], "ad");
+    /// ```
+    pub fn push_str(&mut self, s: &str) {
+        self.try_push_str(s).unwrap()
+    }
+
+    /// Adds the given string slice to the end of the string.
+    ///
     /// Returns `Ok` if the push succeeds.
     ///
     /// **Errors** if the backing array is not large enough to fit the string.
@@ -151,16 +197,16 @@ impl<A: Array<Item=u8>> ArrayString<A> {
     ///
     /// let mut string = ArrayString::<[_; 2]>::new();
     ///
-    /// string.push_str("a").unwrap();
-    /// let overflow1 = string.push_str("bc");
-    /// string.push_str("d").unwrap();
-    /// let overflow2 = string.push_str("ef");
+    /// string.try_push_str("a").unwrap();
+    /// let overflow1 = string.try_push_str("bc");
+    /// string.try_push_str("d").unwrap();
+    /// let overflow2 = string.try_push_str("ef");
     ///
     /// assert_eq!(&string[..], "ad");
     /// assert_eq!(overflow1.unwrap_err().element(), "bc");
     /// assert_eq!(overflow2.unwrap_err().element(), "ef");
     /// ```
-    pub fn push_str<'a>(&mut self, s: &'a str) -> Result<(), CapacityError<&'a str>> {
+    pub fn try_push_str<'a>(&mut self, s: &'a str) -> Result<(), CapacityError<&'a str>> {
         if s.len() > self.capacity() - self.len() {
             return Err(CapacityError::new(s));
         }
@@ -174,6 +220,99 @@ impl<A: Array<Item=u8>> ArrayString<A> {
         Ok(())
     }
 
+    /// Removes the last character from the string and returns it.
+    ///
+    /// Returns `None` if this `ArrayString` is empty.
+    ///
+    /// ```
+    /// use arrayvec::ArrayString;
+    /// 
+    /// let mut s = ArrayString::<[_; 3]>::from("foo").unwrap();
+    ///
+    /// assert_eq!(s.pop(), Some('o'));
+    /// assert_eq!(s.pop(), Some('o'));
+    /// assert_eq!(s.pop(), Some('f'));
+    ///
+    /// assert_eq!(s.pop(), None);
+    /// ```
+    #[inline]
+    pub fn pop(&mut self) -> Option<char> {
+        let ch = match self.chars().rev().next() {
+            Some(ch) => ch,
+            None => return None,
+        };
+        let new_len = self.len() - ch.len_utf8();
+        unsafe {
+            self.set_len(new_len);
+        }
+        Some(ch)
+    }
+
+    /// Shortens this `ArrayString` to the specified length.
+    ///
+    /// If `new_len` is greater than the string’s current length, this has no
+    /// effect.
+    ///
+    /// ***Panics*** if `new_len` does not lie on a `char` boundary.
+    ///
+    /// ```
+    /// use arrayvec::ArrayString;
+    ///
+    /// let mut string = ArrayString::<[_; 6]>::from("foobar").unwrap();
+    /// string.truncate(3);
+    /// assert_eq!(&string[..], "foo");
+    /// string.truncate(4);
+    /// assert_eq!(&string[..], "foo");
+    /// ```
+    #[inline]
+    pub fn truncate(&mut self, new_len: usize) {
+        if new_len <= self.len() {
+            assert!(self.is_char_boundary(new_len));
+            unsafe { 
+                // In libstd truncate is called on the underlying vector,
+                // which in turns drops each element.
+                // As we know we don't have to worry about Drop,
+                // we can just set the length (a la clear.)
+                self.set_len(new_len);
+            }
+        }
+    }
+
+    /// Removes a `char` from this `ArrayString` at a byte position and returns it.
+    ///
+    /// This is an `O(n)` operation, as it requires copying every element in the
+    /// array.
+    ///
+    /// ***Panics*** if `idx` is larger than or equal to the `ArrayString`’s length,
+    /// or if it does not lie on a `char` boundary.
+    ///
+    /// ```
+    /// use arrayvec::ArrayString;
+    /// 
+    /// let mut s = ArrayString::<[_; 3]>::from("foo").unwrap();
+    ///
+    /// assert_eq!(s.remove(0), 'f');
+    /// assert_eq!(s.remove(1), 'o');
+    /// assert_eq!(s.remove(0), 'o');
+    /// ```
+    #[inline]
+    pub fn remove(&mut self, idx: usize) -> char {
+        let ch = match self[idx..].chars().next() {
+            Some(ch) => ch,
+            None => panic!("cannot remove a char from the end of a string"),
+        };
+
+        let next = idx + ch.len_utf8();
+        let len = self.len();
+        unsafe {
+            ptr::copy(self.xs.as_ptr().offset(next as isize),
+                      self.xs.as_mut_ptr().offset(idx as isize),
+                      len - next);
+            self.set_len(len - (next - idx));
+        }
+        ch
+    }
+
     /// Make the string empty.
     pub fn clear(&mut self) {
         unsafe {
@@ -181,12 +320,13 @@ impl<A: Array<Item=u8>> ArrayString<A> {
         }
     }
 
-    /// Set the strings's length.
-    ///
-    /// May panic if `length` is greater than the capacity.
+    /// Set the strings’s length.
     ///
     /// This function is `unsafe` because it changes the notion of the
     /// number of “valid” bytes in the string. Use with care.
+    ///
+    /// This method uses *debug assertions* to check the validity of `length`
+    /// and may use other debug assertions.
     #[inline]
     pub unsafe fn set_len(&mut self, length: usize) {
         debug_assert!(length <= self.capacity());
@@ -198,7 +338,7 @@ impl<A: Array<Item=u8>> ArrayString<A> {
         self
     }
 
-    /// Return a mutable slice of the whole string's buffer
+    /// Return a mutable slice of the whole string’s buffer
     unsafe fn raw_mut_bytes(&mut self) -> &mut [u8] {
         slice::from_raw_parts_mut(self.xs.as_mut_ptr(), self.capacity())
     }
@@ -271,10 +411,11 @@ impl<A: Array<Item=u8>> fmt::Display for ArrayString<A> {
 /// `Write` appends written data to the end of the string.
 impl<A: Array<Item=u8>> fmt::Write for ArrayString<A> {
     fn write_char(&mut self, c: char) -> fmt::Result {
-        self.push(c).map_err(|_| fmt::Error)
+        self.try_push(c).map_err(|_| fmt::Error)
     }
+
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.push_str(s).map_err(|_| fmt::Error)
+        self.try_push_str(s).map_err(|_| fmt::Error)
     }
 }
 
@@ -285,7 +426,7 @@ impl<A: Array<Item=u8> + Copy> Clone for ArrayString<A> {
     fn clone_from(&mut self, rhs: &Self) {
         // guaranteed to fit due to types matching.
         self.clear();
-        self.push_str(rhs).ok();
+        self.try_push_str(rhs).ok();
     }
 }
 
@@ -322,5 +463,52 @@ impl<A: Array<Item=u8>> PartialOrd<ArrayString<A>> for str {
 impl<A: Array<Item=u8>> Ord for ArrayString<A> {
     fn cmp(&self, rhs: &Self) -> cmp::Ordering {
         (**self).cmp(&**rhs)
+    }
+}
+
+#[cfg(feature="serde-1")]
+/// Requires crate feature `"serde-1"`
+impl<A: Array<Item=u8>> Serialize for ArrayString<A> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&*self)
+    }
+}
+
+#[cfg(feature="serde-1")]
+/// Requires crate feature `"serde-1"`
+impl<'de, A: Array<Item=u8>> Deserialize<'de> for ArrayString<A> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        use serde::de::{self, Visitor};
+        use std::marker::PhantomData;
+
+        struct ArrayStringVisitor<A: Array<Item=u8>>(PhantomData<A>);
+
+        impl<'de, A: Array<Item=u8>> Visitor<'de> for ArrayStringVisitor<A> {
+            type Value = ArrayString<A>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(formatter, "a string no more than {} bytes long", A::capacity())
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where E: de::Error,
+            {
+                ArrayString::from(v).map_err(|_| E::invalid_length(v.len(), &self))
+            }
+
+            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                where E: de::Error,
+            {
+                let s = try!(str::from_utf8(v).map_err(|_| E::invalid_value(de::Unexpected::Bytes(v), &self)));
+
+                ArrayString::from(s).map_err(|_| E::invalid_length(s.len(), &self))
+            }
+        }
+
+        deserializer.deserialize_str(ArrayStringVisitor::<A>(PhantomData))
     }
 }
