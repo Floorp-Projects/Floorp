@@ -71,6 +71,10 @@ public:
   RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs);
 
+  RefPtr<ClientOpPromise>
+  OpenWindow(const ClientOpenWindowArgs& aArgs,
+             already_AddRefed<ContentParent> aSourceProcess);
+
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManagerService)
 };
 
