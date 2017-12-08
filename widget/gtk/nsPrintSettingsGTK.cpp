@@ -214,18 +214,12 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t *aOutputFormat)
     return rv;
   }
 
-  if (format == nsIPrintSettings::kOutputFormatNative) {
-    if (GTK_IS_PRINTER(mGTKPrinter)) {
-      // Prior to gtk 2.24, gtk_printer_accepts_pdf() and
-      // gtk_printer_accepts_ps() always returned true regardless of the
-      // printer's capability.
-      bool shouldTrustGTK =
-        (gtk_major_version > 2 ||
-         (gtk_major_version == 2 && gtk_minor_version >= 24));
-      bool acceptsPDF = shouldTrustGTK && gtk_printer_accepts_pdf(mGTKPrinter);
-
-      format = acceptsPDF ? nsIPrintSettings::kOutputFormatPDF
-                          : nsIPrintSettings::kOutputFormatPS;
+  if (format == nsIPrintSettings::kOutputFormatNative &&
+      GTK_IS_PRINTER(mGTKPrinter)) {
+    if (gtk_printer_accepts_pdf(mGTKPrinter)) {
+      format = nsIPrintSettings::kOutputFormatPDF;
+    } else {
+      format = nsIPrintSettings::kOutputFormatPS;
     }
   }
 
