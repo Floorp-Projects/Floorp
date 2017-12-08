@@ -193,7 +193,7 @@ for var in ('MOZ_TREE_CAIRO', 'MOZ_TREE_PIXMAN'):
     if CONFIG[var]:
         DEFINES[var] = True
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     DEFINES['HAVE_CXX11_ATOMIC_PRIMITIVES'] = True
     # We would normally use autoconf to set these up, using AC_CHECK_SIZEOF.
     # But AC_CHECK_SIZEOF requires running programs to determine the sizes,
@@ -213,7 +213,7 @@ if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['FT_LCD_FILTER_H'] = '%s/modules/freetype2/include/freetype/ftlcdfil.h' % TOPSRCDIR
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CFLAGS += [
         '-Wno-enum-compare',
         '-Wno-int-to-pointer-cast',
@@ -229,7 +229,7 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-unused-variable',
         '-Wno-error=uninitialized',
     ]
-    if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
         CFLAGS += [
             '-Wno-absolute-value',
             '-Wno-deprecated-register',
@@ -243,7 +243,7 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
     else:
         CFLAGS += ['-Wno-unused-but-set-variable']
 
-if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'msvc':
     CFLAGS += [
         '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
         '-wd4018', # '>' : signed/unsigned mismatch
@@ -264,7 +264,7 @@ if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
     ]
 
 # See bug 386897.
-if CONFIG['GNU_CC'] and CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') and CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
     CFLAGS += ['-O2']
     CXXFLAGS += ['-O2']
 

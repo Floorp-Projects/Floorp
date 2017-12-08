@@ -149,7 +149,6 @@ DEFAULTS = dict(
         'extensions.update.enabled': False,
         'extensions.webservice.discoverURL':
             'http://127.0.0.1/extensions-dummy/discoveryURL',
-        'extensions.getAddons.maxResults': 0,
         'extensions.getAddons.get.url':
             'http://127.0.0.1/extensions-dummy/repositoryGetURL',
         'extensions.getAddons.getWithPerformance.url':
@@ -157,8 +156,6 @@ DEFAULTS = dict(
             '/repositoryGetWithPerformanceURL',
         'extensions.getAddons.search.browseURL':
             'http://127.0.0.1/extensions-dummy/repositoryBrowseURL',
-        'extensions.getAddons.search.url':
-            'http://127.0.0.1/extensions-dummy/repositorySearchURL',
         'media.gmp-manager.url':
             'http://127.0.0.1/gmpmanager-dummy/update.xml',
         'media.gmp-manager.updateEnabled': False,

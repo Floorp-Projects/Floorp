@@ -77,17 +77,17 @@ for_each_tuple!(bounded_tuple);
 bounded_impl!(f64, f64::MIN, f64::MAX);
 
 
-macro_rules! test_wrapping_bounded {
-    ($($t:ty)+) => {
-        $(
-            assert_eq!(Wrapping::<$t>::min_value().0, <$t>::min_value());
-            assert_eq!(Wrapping::<$t>::max_value().0, <$t>::max_value());
-        )+   
-    };
-}
-
 #[test]
 fn wrapping_bounded() {
+    macro_rules! test_wrapping_bounded {
+        ($($t:ty)+) => {
+            $(
+                assert_eq!(Wrapping::<$t>::min_value().0, <$t>::min_value());
+                assert_eq!(Wrapping::<$t>::max_value().0, <$t>::max_value());
+            )+
+        };
+    }
+
     test_wrapping_bounded!(usize u8 u16 u32 u64 isize i8 i16 i32 i64);
 }
 

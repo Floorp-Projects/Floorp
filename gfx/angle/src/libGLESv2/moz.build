@@ -20,7 +20,7 @@ UNIFIED_SOURCES += [
 ]
 
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-attributes',
         '-Wno-shadow',
@@ -28,7 +28,7 @@ if CONFIG['GNU_CXX']:
         '-Wno-unknown-pragmas',
         '-Wno-unreachable-code',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         CXXFLAGS += [
             '-Wno-inconsistent-missing-override',
             '-Wno-unused-private-field',
@@ -39,7 +39,7 @@ if CONFIG['GNU_CXX']:
             '-Wno-shadow-local',
         ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += ['-wd5038'] # C5038: initializer list order warnings
 
 if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:

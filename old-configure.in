@@ -1507,32 +1507,6 @@ if test "$ac_cv_pthread_cond_timewait_monotonic_np" != "no"; then
     AC_DEFINE(HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC)
 fi
 
-dnl check for wcrtomb/mbrtowc
-dnl =======================================================================
-if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_CACHE_CHECK(for wcrtomb,
-    ac_cv_have_wcrtomb,
-    [AC_TRY_LINK([#include <wchar.h>],
-                 [mbstate_t ps={0};wcrtomb(0,'f',&ps);],
-                 ac_cv_have_wcrtomb="yes",
-                 ac_cv_have_wcrtomb="no")])
-if test "$ac_cv_have_wcrtomb" = "yes"; then
-    AC_DEFINE(HAVE_WCRTOMB)
-fi
-AC_CACHE_CHECK(for mbrtowc,
-    ac_cv_have_mbrtowc,
-    [AC_TRY_LINK([#include <wchar.h>],
-                 [mbstate_t ps={0};mbrtowc(0,0,0,&ps);],
-                 ac_cv_have_mbrtowc="yes",
-                 ac_cv_have_mbrtowc="no")])
-if test "$ac_cv_have_mbrtowc" = "yes"; then
-    AC_DEFINE(HAVE_MBRTOWC)
-fi
-AC_LANG_RESTORE
-fi
-
 AC_CACHE_CHECK(
     [for res_ninit()],
     ac_cv_func_res_ninit,
@@ -1562,69 +1536,6 @@ dnl else
 dnl    AC_CHECK_LIB(bind, res_ninit, AC_DEFINE(HAVE_RES_NINIT),
 dnl        AC_CHECK_LIB(resolv, res_ninit, AC_DEFINE(HAVE_RES_NINIT)))
 fi
-
-AC_LANG_CPLUSPLUS
-
-ICONV_LIBS=
-
-case $target_os in
-    darwin*|mingw*)
-        ;;
-    *)
-
-AC_CHECK_LIB(c, iconv, [ICONV_LIBS=],
-    AC_CHECK_LIB(iconv, iconv, [ICONV_LIBS="-liconv"],
-        AC_CHECK_LIB(iconv, libiconv, [ICONV_LIBS="-liconv"])))
-_SAVE_LIBS=$LIBS
-LIBS="$LIBS $ICONV_LIBS"
-AC_CACHE_CHECK(
-    [for iconv()],
-    ac_cv_func_iconv,
-    [AC_TRY_LINK([
-        #include <stdlib.h>
-        #include <iconv.h>
-        ],
-        [
-            iconv_t h = iconv_open("", "");
-            iconv(h, NULL, NULL, NULL, NULL);
-            iconv_close(h);
-        ],
-        [ac_cv_func_iconv=yes],
-        [ac_cv_func_iconv=no]
-        )]
-    )
-if test "$ac_cv_func_iconv" = "yes"; then
-    AC_DEFINE(HAVE_ICONV)
-    LIBICONV="$ICONV_LIBS"
-    AC_CACHE_CHECK(
-        [for iconv() with const input],
-        ac_cv_func_const_iconv,
-        [AC_TRY_COMPILE([
-            #include <stdlib.h>
-            #include <iconv.h>
-            ],
-            [
-                const char *input = "testing";
-                iconv_t h = iconv_open("", "");
-                iconv(h, &input, NULL, NULL, NULL);
-                iconv_close(h);
-            ],
-            [ac_cv_func_const_iconv=yes],
-            [ac_cv_func_const_iconv=no]
-            )]
-        )
-    if test "$ac_cv_func_const_iconv" = "yes"; then
-        AC_DEFINE(HAVE_ICONV_WITH_CONST_INPUT)
-    fi
-fi
-LIBS=$_SAVE_LIBS
-
-    ;;
-esac
-
-AC_SUBST_LIST(ICONV_LIBS)
-
-AM_LANGINFO_CODESET
 
 AC_LANG_C
 
@@ -4467,7 +4378,6 @@ AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST_SET(MOZ_EXTENSIONS)
-AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 
@@ -4947,10 +4857,6 @@ _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES
 CPP_THROW_NEW
 HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_GETPAGESIZE
-HAVE_ICONV
-HAVE_ICONV_WITH_CONST_INPUT
-HAVE_MBRTOWC
-HAVE_WCRTOMB
 HAVE_STATVFS64
 HAVE_STATVFS
 HAVE_STATFS64

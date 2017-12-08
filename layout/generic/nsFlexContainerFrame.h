@@ -20,6 +20,54 @@ class LogicalPoint;
 nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
+/**
+ * These structures are used to capture data during reflow to be
+ * extracted by devtools via Chrome APIs. The structures are only
+ * created when requested in GetFlexFrameWithComputedInfo(), and
+ * the structures are attached to the nsFlexContainerFrame via the
+ * FlexContainerInfo property.
+ */
+struct ComputedFlexItemInfo
+{
+  nsCOMPtr<nsINode> mNode;
+  /**
+   * mMainBaseSize is a measure of the size of the item in the main
+   * axis before the flex sizing algorithm is applied. In the spec,
+   * this is called "flex base size", but we use this name to connect
+   * the value to the other main axis sizes.
+   */
+  nscoord mMainBaseSize;
+  /**
+   * mMainDeltaSize is the value that the flex sizing algorithm
+   * "wants" to use to stretch or shrink the item, before clamping to
+   * the item's main min and max sizes. Since the flex sizing
+   * algorithm proceeds linearly, the mMainDeltaSize for an item only
+   * respects the resolved size of items already frozen.
+   */
+  nscoord mMainDeltaSize;
+  nscoord mMainMinSize;
+  nscoord mMainMaxSize;
+  nscoord mCrossMinSize;
+  nscoord mCrossMaxSize;
+};
+
+struct ComputedFlexLineInfo
+{
+  nsTArray<ComputedFlexItemInfo> mItems;
+  nscoord mCrossSize;
+  nscoord mFirstBaselineOffset;
+  nscoord mLastBaselineOffset;
+  enum GrowthState {
+    UNCHANGED,
+    SHRINKING,
+    GROWING,
+  } mGrowthState;
+};
+
+struct ComputedFlexContainerInfo
+{
+  nsTArray<ComputedFlexLineInfo> mLines;
+};
 
 /**
  * This is the rendering object used for laying out elements with
@@ -108,24 +156,48 @@ public:
   bool IsHorizontal();
 
   /**
-    * Helper function to calculate packing space and initial offset of alignment
-    * subjects in MainAxisPositionTracker() and CrossAxisPositionTracker() for
-    * space-between, space-around, and space-evenly.
-    *
-    * @param aNumThingsToPack             Number of alignment subjects.
-    * @param aAlignVal                    Value for align-self or justify-self.
-    * @param aFirstSubjectOffset          Outparam for first subject offset.
-    * @param aNumPackingSpacesRemaining   Outparam for number of equal-sized
-    *                                     packing spaces to apply between each
-    *                                     alignment subject.
-    * @param aPackingSpaceRemaining       Outparam for total amount of packing
-    *                                     space to be divided up.
-    */
+   * Helper function to calculate packing space and initial offset of alignment
+   * subjects in MainAxisPositionTracker() and CrossAxisPositionTracker() for
+   * space-between, space-around, and space-evenly.
+   *    * @param aNumThingsToPack             Number of alignment subjects.
+   * @param aAlignVal                    Value for align-self or justify-self.
+   * @param aFirstSubjectOffset          Outparam for first subject offset.
+   * @param aNumPackingSpacesRemaining   Outparam for number of equal-sized
+   *                                     packing spaces to apply between each
+   *                                     alignment subject.
+   * @param aPackingSpaceRemaining       Outparam for total amount of packing
+   *                                     space to be divided up.
+   */
   static void CalculatePackingSpace(uint32_t aNumThingsToPack,
                                     uint8_t aAlignVal,
                                     nscoord* aFirstSubjectOffset,
                                     uint32_t* aNumPackingSpacesRemaining,
                                     nscoord* aPackingSpaceRemaining);
+
+  /**
+   * This property is created by a call to
+   * nsFlexContainerFrame::GetFlexFrameWithComputedInfo.
+   */
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(FlexContainerInfo, ComputedFlexContainerInfo)
+  /**
+   * This function should only be called on a nsFlexContainerFrame
+   * that has just been returned by a call to
+   * GetFlexFrameWithComputedInfo.
+   */
+  const ComputedFlexContainerInfo* GetFlexContainerInfo()
+  {
+    const ComputedFlexContainerInfo* info = GetProperty(FlexContainerInfo());
+    MOZ_ASSERT(info, "Property generation wasn't requested.");
+    return info;
+  }
+
+  /**
+   * Return aFrame as a flex frame after ensuring it has computed flex info.
+   * @return nullptr if aFrame is null or doesn't have a flex frame
+   *         as its content insertion frame.
+   * @note this might destroy layout/style data since it may flush layout.
+   */
+  static nsFlexContainerFrame* GetFlexFrameWithComputedInfo(nsIFrame* aFrame);
 
 protected:
   // Protected constructor & destructor

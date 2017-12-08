@@ -85,7 +85,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
 
     FINAL_LIBRARY = 'xul'
 
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         ASFLAGS += [
             '-no-integrated-as',
         ]

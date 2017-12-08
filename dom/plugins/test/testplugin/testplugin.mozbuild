@@ -55,7 +55,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     OS_LIBS += CONFIG['XLIBS']
     OS_LIBS += CONFIG['XEXT_LIBS']
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # This is intended as a temporary hack to support building with VS2015.
     # conversion from 'X' to 'Y' requires a narrowing conversion
     CXXFLAGS += ['-wd4838']
@@ -66,5 +66,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 else:
     FINAL_TARGET = 'dist/plugins'
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

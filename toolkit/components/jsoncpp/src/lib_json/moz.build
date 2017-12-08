@@ -16,12 +16,12 @@ LOCAL_INCLUDES += [
 
 # This code is only used in the stand-alone minidump analyzer executable so
 # enabling exceptions should be fine.
-if CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
         '-Xclang',
         '-fcxx-exceptions',
     ]
-elif not CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] not in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-fexceptions',
     ]
@@ -32,22 +32,22 @@ DisableStlWrapping()
 Library('jsoncpp')
 
 # Suppress warnings in third-party code.
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-wd4005', # macro redefinition
     ]
-elif CONFIG['GNU_CXX']:
+elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-unused-local-typedefs',
         '-Wno-shadow',
     ]
 
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [
         '-Wno-c++11-narrowing',
     ]
 
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL'] or CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CXXFLAGS += [
         '-Wno-implicit-fallthrough',
     ]

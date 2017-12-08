@@ -91,7 +91,7 @@ else:
     # in the environment, which isn't true here. I don't know that
     # setting that would be harmful, but we already have this information
     # anyway.
-    if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
         gyp_vars['cc_is_clang'] = 1
     if CONFIG['GCC_USE_GNU_LD']:
         gyp_vars['cc_use_gnu_ld'] = 1

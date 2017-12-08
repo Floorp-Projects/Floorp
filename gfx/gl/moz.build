@@ -79,7 +79,7 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     SOURCES += [
         'SkiaGLGlue.cpp',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         # Suppress warnings from Skia header files.
         SOURCES['SkiaGLGlue.cpp'].flags += ['-Wno-implicit-fallthrough']
 
@@ -158,5 +158,5 @@ CFLAGS += CONFIG['TK_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

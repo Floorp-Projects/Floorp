@@ -2,7 +2,7 @@
 
 This is a library for controlling colours and formatting, such as red bold text or blue underlined text, on ANSI terminals.
 
-### [View the Rustdoc](http://ogham.rustdocs.org/ansi_term)
+### [View the Rustdoc](https://docs.rs/ansi_term/0.9.0/ansi_term/)
 
 
 # Installation
@@ -11,7 +11,7 @@ This crate works with [Cargo](http://crates.io). Add the following to your `Carg
 
 ```toml
 [dependencies]
-ansi_term = "0.8"
+ansi_term = "0.9"
 ```
 
 
@@ -44,6 +44,11 @@ use std::string::ToString;
 let red_string = Red.paint("a red string").to_string();
 ```
 
+**Note for Windows 10 users:** On Windows 10, the application must enable ANSI support first:
+
+```rust
+let enabled = ansi_term::enable_ansi_support();
+```
 
 ## Bold, underline, background, and other styles
 
