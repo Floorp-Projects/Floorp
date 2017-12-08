@@ -70,6 +70,12 @@ public:
   RefPtr<GenericPromise>
   Control(const ServiceWorkerDescriptor& aServiceWorker);
 
+  // Focus the Client if possible.  If successful the promise will resolve with
+  // a new ClientState snapshot after focus has completed.  If focusing fails
+  // for any reason then the promise will reject.
+  RefPtr<ClientStatePromise>
+  Focus();
+
   NS_INLINE_DECL_REFCOUNTING(ClientHandle);
 };
 
