@@ -240,6 +240,8 @@ var expectedMaxServerCompletionSet = 0;
 var maxServerCompletionSet = 0;
 
 function run_test() {
+  // This test case exercises the backoff functionality so we can't leave it disabled.
+  Services.prefs.setBoolPref("browser.safebrowsing.provider.test.disableBackoff", false);
   // Generate a random completion set that return successful responses.
   completionSets.push(getRandomCompletionSet(false));
   // We backoff after receiving an error, so requests shouldn't reach the
@@ -393,6 +395,8 @@ callback.prototype = {
 };
 
 function finish() {
+  Services.prefs.clearUserPref("browser.safebrowsing.provider.test.disableBackoff");
+
   do_check_eq(expectedMaxServerCompletionSet, maxServerCompletionSet);
   server.stop(function() {
     do_test_finished();
