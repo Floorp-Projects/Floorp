@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.support.design.widget.Snackbar;
@@ -201,10 +200,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
         // TODO: we should share the code to substitute and normalize the search string (see SearchEngine.buildSearchUrl).
         final String encodedTestQuery = Uri.encode("test");
 
-        // We enforce HTTPS because some search engines will redirect http queries to https, which our
-        // validation (a 200 check) will fail, and since most search engines should support HTTPS, we
-        // try to be safer by defaulting to it.
-        final String normalizedHttpsSearchURLStr = enforceHTTPS(UrlUtils.normalize(query));
+        final String normalizedHttpsSearchURLStr = UrlUtils.normalize(query);
         final String searchURLStr = normalizedHttpsSearchURLStr.replaceAll("%s", encodedTestQuery);
 
         final URL searchURL;
@@ -222,9 +218,8 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
             connection.setConnectTimeout(SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS);
             connection.setReadTimeout(SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS);
 
-            // Checking for 200 is not perfect - what if a search engine redirects us? -
-            // but we're in a rush and it's good enough for now.
-            return connection.getResponseCode() == 200;
+            // A non-error HTTP response is good enough as a sanity check, some search engines redirect to https.
+            return connection.getResponseCode() < 400;
 
         } catch (final IOException e) {
             // Don't log exception to avoid leaking URL.
@@ -237,16 +232,6 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 } catch (final IOException e) { } // Whatever.
                 connection.disconnect();
             }
-        }
-    }
-
-    private static String enforceHTTPS(@NonNull String input) {
-        if (input.startsWith("https://")) {
-            return input;
-        } else if (input.startsWith("http://")) {
-            return input.replace("http", "https");
-        } else { // must be non-HTTP url, nothing to do.
-            return input;
         }
     }
 }
