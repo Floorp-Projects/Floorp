@@ -75,7 +75,7 @@ function openPopup(aPopup) {
   return new Promise(resolve => {
 
     aPopup.addEventListener("popupshown", function() {
-      resolve();
+      TestUtils.executeSoon(resolve);
     }, {once: true});
 
     aPopup.focus();
@@ -90,7 +90,7 @@ function waitForWindowLoad(aWin) {
   return new Promise(resolve => {
 
     aWin.addEventListener("load", function() {
-      resolve();
+      TestUtils.executeSoon(resolve);
     }, {capture: true, once: true});
 
   });
