@@ -5333,7 +5333,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                       /* ignoresReturnValue = */ BytecodeIsPopped(pc));
-    callInfo.savePriorCallStack(this, current, 4);
+    MOZ_TRY(callInfo.savePriorCallStack(this, current, 4));
 
     // Vp
     MDefinition* vp = current->pop();
