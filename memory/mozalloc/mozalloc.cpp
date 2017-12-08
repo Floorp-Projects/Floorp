@@ -54,7 +54,7 @@ MOZ_MEMORY_API char *strndup_impl(const char *, size_t);
 
 #include <errno.h>
 #include <new>                  // for std::bad_alloc
-#include <string.h>
+#include <cstring>
 
 #include <sys/types.h>
 
