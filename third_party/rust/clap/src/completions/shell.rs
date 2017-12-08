@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::ascii::AsciiExt;
 use std::str::FromStr;
 use std::fmt;
@@ -6,7 +7,7 @@ use std::fmt;
 #[cfg_attr(feature = "lints", allow(enum_variant_names))]
 #[derive(Debug, Copy, Clone)]
 pub enum Shell {
-    /// Generates a .bash-completion completion file for the Bourne Again SHell (BASH)
+    /// Generates a .bash completion file for the Bourne Again SHell (BASH)
     Bash,
     /// Generates a .fish completion file for the Friendly Interactive SHell (fish)
     Fish,
@@ -26,7 +27,6 @@ impl FromStr for Shell {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-
             "ZSH" | _ if s.eq_ignore_ascii_case("zsh") => Ok(Shell::Zsh),
             "FISH" | _ if s.eq_ignore_ascii_case("fish") => Ok(Shell::Fish),
             "BASH" | _ if s.eq_ignore_ascii_case("bash") => Ok(Shell::Bash),

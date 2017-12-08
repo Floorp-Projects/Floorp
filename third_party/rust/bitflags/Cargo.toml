@@ -12,19 +12,18 @@
 
 [package]
 name = "bitflags"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["The Rust Project Developers"]
 description = "A macro to generate structures which behave like bitflags.\n"
 homepage = "https://github.com/rust-lang-nursery/bitflags"
 documentation = "https://docs.rs/bitflags"
 readme = "README.md"
-keywords = ["bit", "bitmask", "bitflags"]
+keywords = ["bit", "bitmask", "bitflags", "flags"]
 categories = ["no-std"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-lang-nursery/bitflags"
 
 [features]
-unstable_testing = []
 default = ["example_generated"]
 example_generated = []
 [badges.travis-ci]

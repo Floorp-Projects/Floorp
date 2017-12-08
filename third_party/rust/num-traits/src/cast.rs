@@ -466,29 +466,29 @@ fn to_primitive_float() {
     assert!((f64::NAN).to_f32().map_or(false, |f| f.is_nan()));
 }
 
-macro_rules! test_wrapping_to_primitive {
-    ($($t:ty)+) => {
-        $({
-            let i: $t = 0;
-            let w = Wrapping(i);
-            assert_eq!(i.to_u8(),    w.to_u8());
-            assert_eq!(i.to_u16(),   w.to_u16());
-            assert_eq!(i.to_u32(),   w.to_u32());
-            assert_eq!(i.to_u64(),   w.to_u64());
-            assert_eq!(i.to_usize(), w.to_usize());
-            assert_eq!(i.to_i8(),    w.to_i8());
-            assert_eq!(i.to_i16(),   w.to_i16());
-            assert_eq!(i.to_i32(),   w.to_i32());
-            assert_eq!(i.to_i64(),   w.to_i64());
-            assert_eq!(i.to_isize(), w.to_isize());
-            assert_eq!(i.to_f32(),   w.to_f32());
-            assert_eq!(i.to_f64(),   w.to_f64());
-        })+   
-    };
-}
-
 #[test]
 fn wrapping_to_primitive() {
+    macro_rules! test_wrapping_to_primitive {
+        ($($t:ty)+) => {
+            $({
+                let i: $t = 0;
+                let w = Wrapping(i);
+                assert_eq!(i.to_u8(),    w.to_u8());
+                assert_eq!(i.to_u16(),   w.to_u16());
+                assert_eq!(i.to_u32(),   w.to_u32());
+                assert_eq!(i.to_u64(),   w.to_u64());
+                assert_eq!(i.to_usize(), w.to_usize());
+                assert_eq!(i.to_i8(),    w.to_i8());
+                assert_eq!(i.to_i16(),   w.to_i16());
+                assert_eq!(i.to_i32(),   w.to_i32());
+                assert_eq!(i.to_i64(),   w.to_i64());
+                assert_eq!(i.to_isize(), w.to_isize());
+                assert_eq!(i.to_f32(),   w.to_f32());
+                assert_eq!(i.to_f64(),   w.to_f64());
+            })+
+        };
+    }
+
     test_wrapping_to_primitive!(usize u8 u16 u32 u64 isize i8 i16 i32 i64);
 }
 

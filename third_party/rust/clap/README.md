@@ -10,9 +10,9 @@ Command Line Argument Parser for Rust
 
 It is a simple-to-use, efficient, and full-featured library for parsing command line arguments and subcommands when writing console/terminal applications.
 
-## [documentation](https://docs.rs/clap/)
-## [website](https://clap.rs/)
-## [blog](https://blog.clap.rs/)
+* [documentation](https://docs.rs/clap/)
+* [website](https://clap.rs/)
+* [video tutorials](https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U)
 
 Table of Contents
 =================
@@ -31,12 +31,9 @@ Table of Contents
   * [More Information](#more-information)
     * [Video Tutorials](#video-tutorials)
 * [How to Contribute](#how-to-contribute)
-  * [Testing Code](#testing-code)
-  * [Linting Code](#linting-code)
-  * [Debugging Code](#debugging-code)
-  * [Goals](#goals)
   * [Compatibility Policy](#compatibility-policy)
     * [Minimum Version of Rust](#minimum-version-of-rust)
+* [Related Crates](#related-crates)
 * [License](#license)
 * [Recent Breaking Changes](#recent-breaking-changes)
   * [Deprecations](#deprecations)
@@ -45,114 +42,35 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## What's New
 
-Here's whats new in 2.27.1:
+Here's whats new in 2.29.0:
 
-** This release also contains a very minor breaking change to fix a bug **
+* **Arg:**  adds Arg::hide_env_values(bool) which allows one to hide any current env values and display only the key in help messages
 
-The only CLIs affected will be those using unrestrained multiple values and subcommands where the
-subcommand name can coincide with one of the multiple values.
+Here's whats new in 2.28.0:
 
-See the commit [0c223f54](https://github.com/kbknapp/clap-rs/commit/0c223f54ed46da406bc8b43a5806e0b227863b31) for full details.
+The minimum required Rust is now 1.20. This was done to start using bitflags 1.0 and having >1.0 deps is a *very good* thing!
 
-*    Adds `term_size` as an optional dependency (with feature `wrap_help`) to fix compile bug
-*   **The minimum required version of Rust is now 1.18.0 (Stable)**
-*   Values from global args are now propagated UP and DOWN!
-*   fixes a bug where using AppSettings::AllowHyphenValues would allow invalid arguments even when there is no way for them to be valid
-*   when an argument requires a value and that value happens to match a subcommand name, its parsed as a value
-*   fixes a bug that prevented number_of_values and default_values to be used together
-*   fixes a bug that didn't allow args with default values to have conflicts
-*   fixes a panic when using global args and calling App::get_matches_from_safe_borrow multiple times
-*   fixes issues and potential regressions with global args values not being propagated properly or at all
-*   fixes a bug where default values are not applied if the option supports zero values
-*   adds addtional blurbs about using multiples with subcommands
-*   updates the docs to reflect changes to global args and that global args values can now be propagated back up the stack
-*   add html_root_url attribute
-*   sync README version numbers with crate version
-*   args that have require_delimiter(true) is now reflected in help and usage strings
-*   if all subcommands are hidden, the subcommands section of the help message is no longer displayed
-*   fixes when an argument requires a value and that value happens to match a subcommand name, its parsed as a value
-* **AppSettings::PropagateGlobalValuesDown:**  this setting deprecated and is no longer required to propagate values down or up
-
-Here's the highlights for v2.21.0 to v2.26.2
-
-*   if all subcommands are hidden, the subcommands section of the help message is no longer displayed
-*   fixes a bug where default values are not applied if the option supports zero values
-*   fixes using require_equals(true) and min_values(0) together
-*   escape special characters in zsh and fish completions
-*   avoid panic generating default help msg if term width set to 0 due to bug in textwrap 0.7.0
-*   Change `who's` -> `whose` in documentation
-* **Help Message:**  fixes `App::long_about` not being displayed
-* **Suggestions:**  output for flag after subcommand
-*   **The minimum required version of Rust is now 1.13.0 (Stable)**
-*   bumps unicode-segmentation to v1.2
-*   update textwrap to version 0.7.0 which increases the performance of writing help strings
-* impl Default for Values + OsValues for any lifetime.
-* use textwrap crate for wrapping help texts
-* suggests to use flag after subcommand when applicable
-* Bumps bitflags crate to v0.9
-* fixes a bug where args that allow values to start with a hyphen couldnt contain a double hyphen -- as a value
-* fixes a bug where positional argument help text is misaligned
-* **App::template docs:**  adds details about the necessity to use AppSettings::UnifiedHelpMessage when using {unified} tags in the help template
-* **Arg::allow_hyphen_values docs:**  updates the docs to include warnings for allow_hyphen_values and multiple(true) used together
-* **clap_app! docs:**  adds using the @group specifier to the macro docs
-* adds a debug assertion to ensure all args added to groups actually exist
-* fixes a bug where args with last(true) and required(true) set were not being printed in the usage string
-* fixes a bug that was printing the arg name, instead of value name when Arg::last(true) was used
-* fixes a bug where flags were parsed as flags AND positional values when specific combinations of settings were used
-* **README.md:**  fix some typos
-* **Arg:**  add `default_value_os`
-* **arg_matches.rs:**  Added a Default implementation for Values and OsValues iterators.
-* **PowerShell Completions:**
-  * fixes a bug where powershells completions cant be used if no subcommands are defined
-  * massively dedups subcommand names in the generate script to make smaller scripts that are still functionally equiv
-* allows specifying a short help vs a long help (i.e. varying levels of detail depending on if -h or --help was used)
-* **clap_app!:**  adds support for arg names with hyphens similar to longs with hyphens
-* fixes a bug that wasn't allowing help and version to be properly overridden
-  * This may break code that was relying on this bug! If you add a flag with a long of `help` manually *and* rely on the help message to be printed automatically your code could break. Please see the commit link in the full CHANGELOG.md
-* `App::long_about`
-* `App::long_version`
-* `App::print_long_help`
-* `App::write_long_help`
-* `App::print_long_version`
-* `App::write_long_version`
-* `Arg::long_help`
-* **clap_app!:**  documents the `--("some-arg")` method for using args with hyphens inside them
-* fixes the usage string regression when using help templates
-* fixes a big regression with custom usage strings
-* adds the ability to change the name of the App instance after creation
-* adds ability to hide the default value of an argument from the help string
-* fixes support for loading author info from yaml
-* adds fish subcommand help support
-* options that use `require_equals(true)` now display the equals sign in help messages, usage strings, and errors
-* setting the max term width now correctly propagates down through child subcommands
-* fixes the precedence of this error to prioritize over other error messages
-* fixes some regression bugs resulting from old asserts in debug mode.
-* adds the ability to mark a positional argument as 'last' which means it should be used with `--` syntax and can be accessed early to effectivly skip other positional args
-* Some performance improvements by reducing the ammount of duplicate work, cloning, and allocations in all cases.
-* Some massive performance gains when using many args (i.e. things like shell glob expansions)
-* adds a setting to allow one to infer shortened subcommands or aliases (i.e. for subcommmand "test", "t", "te", or "tes" would be allowed assuming no other ambiguities)
-* when `AppSettings::SubcommandsNegateReqs` and `ArgsNegateSubcommands` are used, a new more accurate double line usage string is shown
-* provides `default_value_os` and `default_value_if[s]_os`
-* provides `App::help_message` and `App::version_message` which allows one to override the auto-generated help/version flag associated help
-* adds the ability to require the equals syntax with options `--opt=val`
-* doesn't print the argument sections in the help message if all args in that section are hidden
-* doesn't include the various `[ARGS]` `[FLAGS]` or `[OPTIONS]` if the only ones available are hidden
-* now correctly shows subcommand as required in the usage string when AppSettings::SubcommandRequiredElseHelp is used
-* fixes some "memory leaks" when an error is detected and clap exits
-* fixes a trait that's marked private accidentlly, but should be crate internal public
-* fixes a bug that tried to propogate global args multiple times when generating multiple completion scripts
-* Fixes a critical bug in the `clap_app!` macro of a missing fragment specifier when using `!property` style tags.
-* Fix examples link in CONTRIBUTING.md
+* Updates `bitflags` to 1.0
+* Adds the traits to be used with the `clap-derive` crate to be able to use Custom Derive (for now must be accessed with `unstable` feature flag)
+* Adds Arg::case_insensitive(bool) which allows matching Arg::possible_values without worrying about ASCII case
+* Fixes a regression where --help couldn't be overridden
+* adds '[SUBCOMMAND]' to usage strings with only AppSettings::AllowExternalSubcommands is used with no other subcommands
+* uses `.bash` for Bash completion scripts now instead of `.bash-completion` due to convention and `.bash-completion` not being supported by completion projects
+* Fix URL path to github hosted files
+* fix typos in docs
+* **README.md:**  updates the readme and pulls out some redundant sections
+* fixes a bug that allowed options to pass parsing when no value was provided
+* ignore PropagateGlobalValuesDown deprecation warning
 
 For full details, see [CHANGELOG.md](https://github.com/kbknapp/clap-rs/blob/master/CHANGELOG.md)
 
 ## About
 
-`clap` is used to parse *and validate* the string of command line arguments provided by the user at runtime. You provide the list of valid possibilities, and `clap` handles the rest. This means you focus on your *applications* functionality, and less on the parsing and validating of arguments.
+`clap` is used to parse *and validate* the string of command line arguments provided by a user at runtime. You provide the list of valid possibilities, and `clap` handles the rest. This means you focus on your *applications* functionality, and less on the parsing and validating of arguments.
 
-`clap` also provides the traditional version and help switches (or flags) 'for free' meaning automatically with no configuration. It does this by checking list of valid possibilities you supplied and adding only the ones you haven't already defined. If you are using subcommands, `clap` will also auto-generate a `help` subcommand for you in addition to the traditional flags.
+`clap` provides many things 'for free' (with no configuration) including the traditional version and help switches (or flags) along with associated messages. If you are using subcommands, `clap` will also auto-generate a `help` subcommand and separate associated help messages.
 
-Once `clap` parses the user provided string of arguments, it returns the matches along with any applicable values. If the user made an error or typo, `clap` informs them of the mistake and exits gracefully (or returns a `Result` type and allows you to perform any clean up prior to exit). Because of this, you can make reasonable assumptions in your code about the validity of the arguments.
+Once `clap` parses the user provided string of arguments, it returns the matches along with any applicable values. If the user made an error or typo, `clap` informs them with a friendly message and exits gracefully (or returns a `Result` type and allows you to perform any clean up prior to exit). Because of this, you can make reasonable assumptions in your code about the validity of the arguments prior to your applications main execution.
 
 ## FAQ
 
@@ -178,17 +96,21 @@ I first want to say I'm a big a fan of BurntSushi's work, the creator of `Docopt
 
 Because `docopt` is doing a ton of work to parse your help messages and determine what you were trying to communicate as valid arguments, it's also one of the more heavy weight parsers performance-wise. For most applications this isn't a concern and this isn't to say `docopt` is slow, in fact far from it. This is just something to keep in mind while comparing.
 
-#### All else being equal, what are some reasons to use `clap`?
+#### All else being equal, what are some reasons to use `clap`? (The Pitch)
 
 `clap` is as fast, and as lightweight as possible while still giving all the features you'd expect from a modern argument parser. In fact, for the amount and type of features `clap` offers it remains about as fast as `getopts`. If you use `clap` when just need some simple arguments parsed, you'll find it's a walk in the park. `clap` also makes it possible to represent extremely complex, and advanced requirements, without too much thought. `clap` aims to be intuitive, easy to use, and fully capable for wide variety use cases and needs.
+
+#### All else being equal, what are some reasons *not* to use `clap`? (The Anti Pitch)
+
+Depending on the style in which you choose to define the valid arguments, `clap` can be very verbose. `clap` also offers so many finetuning knobs and dials, that learning everything can seem overwhelming. I strive to keep the simple cases simple, but when turning all those custom dials it can get complex. `clap` is also opinionated about parsing. Even though so much can be tweaked and tuned with `clap` (and I'm adding more all the time), there are still certain features which `clap` implements in specific ways which may be contrary to some users use-cases. Finally, `clap` is "stringly typed" when referring to arguments which can cause typos in code. This particular paper-cut is being actively worked on, and should be gone in v3.x.
 
 ## Features
 
 Below are a few of the features which `clap` supports, full descriptions and usage can be found in the [documentation](https://docs.rs/clap/) and [examples/](examples) directory
 
 * **Auto-generated Help, Version, and Usage information**
-  - Can optionally be fully, or partially overridden if you want a custom help, version, or usage
-* **Auto-generated bash completion scripts at compile time**
+  - Can optionally be fully, or partially overridden if you want a custom help, version, or usage statements
+* **Auto-generated completion scripts at compile time (Bash, Zsh, Fish, and PowerShell)**
   - Even works through many multiple levels of subcommands
   - Works with options which only accept certain values
   - Works with subcommand aliases
@@ -217,6 +139,7 @@ Below are a few of the features which `clap` supports, full descriptions and usa
   - Can be required by default
   - Can be required only if certain arguments are present
   - Can require other arguments to be present
+  - Can be required only if certain values of other arguments are used
 * **Confliction Rules**: Arguments can optionally define the following types of exclusion rules
   - Can be disallowed when certain arguments are present
   - Can disallow use of other arguments when present
@@ -224,11 +147,12 @@ Below are a few of the features which `clap` supports, full descriptions and usa
   - Fully compatible with other relational rules (requirements, conflicts, and overrides) which allows things like requiring the use of any arg in a group, or denying the use of an entire group conditionally
 * **Specific Value Sets**: Positional or Option Arguments can define a specific set of allowed values (i.e. imagine a `--mode` option which may *only* have one of two values `fast` or `slow` such as `--mode fast` or `--mode slow`)
 * **Default Values**
+  - Also supports conditional default values (i.e. a default which only applies if specific arguments are used, or specific values of those arguments)
 * **Automatic Version from Cargo.toml**: `clap` is fully compatible with Rust's `env!()` macro for automatically setting the version of your application to the version in your Cargo.toml. See [09_auto_version example](examples/09_auto_version.rs) for how to do this (Thanks to [jhelwig](https://github.com/jhelwig) for pointing this out)
 * **Typed Values**: You can use several convenience macros provided by `clap` to get typed values (i.e. `i32`, `u8`, etc.) from positional or option arguments so long as the type you request implements `std::str::FromStr` See the [12_typed_values example](examples/12_typed_values.rs). You can also use `clap`s `arg_enum!` macro to create an enum with variants that automatically implement `std::str::FromStr`. See [13a_enum_values_automatic example](examples/13a_enum_values_automatic.rs) for details
 * **Suggestions**: Suggests corrections when the user enters a typo. For example, if you defined a `--myoption` argument, and the user mistakenly typed `--moyption` (notice `y` and `o` transposed), they would receive a `Did you mean '--myoption'?` error and exit gracefully. This also works for subcommands and flags. (Thanks to [Byron](https://github.com/Byron) for the implementation) (This feature can optionally be disabled, see 'Optional Dependencies / Features')
 * **Colorized Errors (Non Windows OS only)**: Error message are printed in in colored text (this feature can optionally be disabled, see 'Optional Dependencies / Features').
-* **Global Arguments**: Arguments can optionally be defined once, and be available to all child subcommands.
+* **Global Arguments**: Arguments can optionally be defined once, and be available to all child subcommands. There values will also be propagated up/down throughout all subcommands.
 * **Custom Validations**: You can define a function to use as a validator of argument values. Imagine defining a function to validate IP addresses, or fail parsing upon error. This means your application logic can be solely focused on *using* values.
 * **POSIX Compatible Conflicts/Overrides** - In POSIX args can be conflicting, but not fail parsing because whichever arg comes *last* "wins" so to speak. This allows things such as aliases (i.e. `alias ls='ls -l'` but then using `ls -C` in your terminal which ends up passing `ls -l -C` as the final arguments. Since `-l` and `-C` aren't compatible, this effectively runs `ls -C` in `clap` if you choose...`clap` also supports hard conflicts that fail parsing). (Thanks to [Vinatorul](https://github.com/Vinatorul)!)
 * Supports the Unix `--` meaning, only positional arguments follow
@@ -237,9 +161,9 @@ Below are a few of the features which `clap` supports, full descriptions and usa
 
 The following examples show a quick example of some of the very basic functionality of `clap`. For more advanced usage, such as requirements, conflicts, groups, multiple values and occurrences see the [documentation](https://docs.rs/clap/), [examples/](examples) directory of this repository or the [video tutorials](https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U).
 
- **NOTE:** All of these examples are functionally the same, but show different styles in which to use `clap`
+ **NOTE:** All of these examples are functionally the same, but show different styles in which to use `clap`. These different styles are purely a matter of personal preference.
 
-The first example shows a method that allows more advanced configuration options (not shown in this small example), or even dynamically generating arguments when desired. The downside is it's more verbose.
+The first example shows a method using the 'Builder Pattern' which allows more advanced configuration options (not shown in this small example), or even dynamically generating arguments when desired. The downside is it's more verbose.
 
 ```rust
 // (Full example with detailed comments in examples/01b_quick_example.rs)
@@ -377,9 +301,9 @@ subcommands:
 
 Since this feature requires additional dependencies that not everyone may want, it is *not* compiled in by default and we need to enable a feature flag in Cargo.toml:
 
-Simply change your `clap = "2.27"` to `clap = {version = "2.27", features = ["yaml"]}`.
+Simply change your `clap = "2.29"` to `clap = {version = "2.87", features = ["yaml"]}`.
 
-At last we create our `main.rs` file just like we would have with the previous two examples:
+Finally we create our `main.rs` file just like we would have with the previous two examples:
 
 ```rust
 // (Full example with detailed comments in examples/17_yaml.rs)
@@ -399,7 +323,7 @@ fn main() {
 }
 ```
 
-Finally there is a macro version, which is like a hybrid approach offering the speed of the builder pattern (the first example), but without all the verbosity.
+Last but not least there is a macro version, which is like a hybrid approach offering the runtime speed of the builder pattern (the first example), but without all the verbosity.
 
 ```rust
 #[macro_use]
@@ -437,7 +361,7 @@ USAGE:
     MyApp [FLAGS] [OPTIONS] <INPUT> [SUBCOMMAND]
 
 FLAGS:
-    -h, --help       Prints this message
+    -h, --help       Prints help information
     -v               Sets the level of verbosity
     -V, --version    Prints version information
 
@@ -448,22 +372,23 @@ ARGS:
     INPUT    The input file to use
 
 SUBCOMMANDS:
-    help    Prints this message
+    help    Prints this message or the help of the given subcommand(s)
     test    Controls testing features
 ```
 
-**NOTE:** You could also run `myapp test --help` to see similar output and options for the `test` subcommand.
+**NOTE:** You could also run `myapp test --help` or `myapp help test` to see the help message for the `test` subcommand.
 
 ## Try it!
 
 ### Pre-Built Test
 
-To try out the pre-built example, use the following steps:
+To try out the pre-built examples, use the following steps:
 
-* Clone the repository `$ git clone https://github.com/kbknapp/clap-rs && cd clap-rs/tests`
-* Compile the example `$ cargo build --release`
-* Run the help info `$ ./target/release/claptests --help`
+* Clone the repository `$ git clone https://github.com/kbknapp/clap-rs && cd clap-rs/`
+* Compile the example `$ cargo build --example <EXAMPLE>`
+* Run the help info `$ ./target/debug/examples/<EXAMPLE> --help`
 * Play with the arguments!
+* You can also do a onetime run via `$ cargo run --example <EXAMPLE> -- [args to example]
 
 ### BYOB (Build Your Own Binary)
 
@@ -496,7 +421,7 @@ For full usage, add `clap` as a dependency in your `Cargo.toml` () to use from c
 
 ```toml
 [dependencies]
-clap = "~2.27"
+clap = "~2.29"
 ```
 
 (**note**: If you are concerned with supporting a minimum version of Rust that is *older* than the current stable Rust minus 2 stable releases, it's recommended to use the `~major.minor.patch` style versions in your `Cargo.toml` which will only update the patch version automatically. For more information see the [Compatibility Policy](#compatibility-policy))
@@ -513,14 +438,13 @@ Then run `cargo build` or `cargo update && cargo build` for your project.
 
 * **"suggestions"**: Turns on the `Did you mean '--myoption'?` feature for when users make typos. (builds dependency `strsim`)
 * **"color"**: Turns on colored error messages. This feature only works on non-Windows OSs. (builds dependency `ansi-term`)
-* **"wrap_help"**: Wraps the help at the actual terminal width when available, instead of 120 characters. (builds dependency `term_size`)
 * **"vec_map"**: Use [`VecMap`](https://crates.io/crates/vec_map) internally instead of a [`BTreeMap`](https://doc.rust-lang.org/stable/std/collections/struct.BTreeMap.html). This feature provides a _slight_ performance improvement. (builds dependency `vec_map`)
 
 To disable these, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies.clap]
-version = "2.27"
+version = "2.29"
 default-features = false
 ```
 
@@ -528,7 +452,7 @@ You can also selectively enable only the features you'd like to include, by addi
 
 ```toml
 [dependencies.clap]
-version = "2.27"
+version = "2.29"
 default-features = false
 
 # Cherry-pick the features you'd like to use
@@ -564,85 +488,7 @@ These videos slowly trickle out as I finish them and currently a work in progres
 
 ## How to Contribute
 
-Contributions are always welcome! And there is a multitude of ways in which you can help depending on what you like to do, or are good at. Anything from documentation, code cleanup, issue completion, new features, you name it, even filing issues is contributing and greatly appreciated!
-
-Another really great way to help is if you find an interesting, or helpful way in which to use `clap`. You can either add it to the [examples/](examples) directory, or file an issue and tell me. I'm all about giving credit where credit is due :)
-
-Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) before you start contributing.
-
-
-### Testing Code
-
-To test with all features both enabled and disabled, you can run these commands:
-
-```sh
-$ cargo test --no-default-features
-$ cargo test --features "yaml unstable"
-```
-
-Alternatively, if you have [`just`](https://github.com/casey/just) installed you can run the prebuilt recipes. *Not* using `just` is perfectly fine as well, it simply bundles commands automatically.
-
-For example, to test the code, as above simply run:
-
-```sh
-$ just run-tests
-```
-
-From here on, I will list the appropriate `cargo` command as well as the `just` command.
-
-Sometimes it's helpful to only run a subset of the tests, which can be done via:
-
-```sh
-$ cargo test --test <test_name>
-
-# Or
-
-$ just run-test <test_name>
-```
-
-### Linting Code
-
-During the CI process `clap` runs against many different lints using [`clippy`](https://github.com/Manishearth/rust-clippy). In order to check if these lints pass on your own computer prior to submitting a PR you'll need a nightly compiler.
-
-In order to check the code for lints run either:
-
-```sh
-$ rustup override add nightly
-$ cargo build --features lints
-$ rustup override remove
-
-# Or
-
-$ just lint
-```
-
-### Debugging Code
-
-Another helpful technique is to see the `clap` debug output while developing features. In order to see the debug output while running the full test suite or individual tests, run:
-
-```sh
-$ cargo test --features debug
-
-# Or for individual tests
-$ cargo test --test <test_name> --features debug
-
-# The corresponding just command for individual debugging tests is:
-$ just debug <test_name>
-```
-
-### Goals
-
-There are a few goals of `clap` that I'd like to maintain throughout contributions. If your proposed changes break, or go against any of these goals we'll discuss the changes further before merging (but will *not* be ignored, all contributes are welcome!). These are by no means hard-and-fast rules, as I'm no expert and break them myself from time to time (even if by mistake or ignorance :P).
-
-* Remain backwards compatible when possible
-  - If backwards compatibility *must* be broken, use deprecation warnings if at all possible before removing legacy code
-  - This does not apply for security concerns
-* Parse arguments quickly
-  - Parsing of arguments shouldn't slow down usage of the main program
-  - This is also true of generating help and usage information (although *slightly* less stringent, as the program is about to exit)
-* Try to be cognizant of memory usage
-  - Once parsing is complete, the memory footprint of `clap` should be low since the  main program is the star of the show
-* `panic!` on *developer* error, exit gracefully on *end-user* error
+Details on how to contribute can be found in the [CONTRIBUTING.md](.github/CONTRIBUTING.md) file.
 
 ### Compatibility Policy
 
@@ -654,7 +500,7 @@ In order to keep from being surprised of breaking changes, it is **highly** reco
 
 ```toml
 [dependencies]
-clap = "~2.27"
+clap = "~2.29"
 ```
 
 This will cause *only* the patch version to be updated upon a `cargo update` call, and therefore cannot break due to new features, or bumped minimum versions of Rust.
@@ -671,12 +517,11 @@ Right now Cargo's version resolution is pretty naive, it's just a brute-force se
 
 # In one Cargo.toml
 [dependencies]
-clap = "~2.27.0"
+clap = "~2.29.0"
 
 # In another Cargo.toml
 [dependencies]
-clap = "2.27"
-
+clap = "2.29"
 ```
 
 This is inherently an unresolvable crate graph in Cargo right now. Cargo requires there's only one major version of a crate, and being in the same workspace these two crates must share a version. This is impossible in this location, though, as these version constraints cannot be met.
@@ -701,9 +546,20 @@ Upon bumping the minimum version of Rust (assuming it's within the stable-2 rang
 
 `clap` is licensed under the MIT license. Please read the [LICENSE-MIT](LICENSE-MIT) file in this repository for more information.
 
+## Related Crates
+
+There are several excellent crates which can be used with `clap`, I recommend checking them all out! If you've got a crate that would be a good fit to be used with `clap` open an issue and let me know, I'd love to add it!
+
+* [`structopt`](https://github.com/TeXitoi/structopt) - This crate allows you to define a struct, and build a CLI from it! No more "stringly typed" and it uses `clap` behind the scenes! (*Note*: There is work underway to pull this crate into mainline `clap`).
+* [`assert_cli`](https://github.com/killercup/assert_cli) - This crate allows you test your CLIs in a very intuitive and functional way!
+
 ## Recent Breaking Changes
 
 `clap` follows semantic versioning, so breaking changes should only happen upon major version bumps. The only exception to this rule is breaking changes that happen due to implementation that was deemed to be a bug, security concerns, or it can be reasonably proved to affect no code. For the full details, see [CHANGELOG.md](./CHANGELOG.md).
+
+As of 2.27.0:
+
+* Argument values now take precedence over subcommand names. This only arises by using unrestrained multiple values and subcommands together where the subcommand name can coincide with one of the multiple values. Such as `$ prog <files>... <subcommand>`. The fix is to place restraints on number of values, or disallow the use of `$ prog <prog-args> <subcommand>` structure.
 
 As of 2.0.0 (From 1.x)
 
