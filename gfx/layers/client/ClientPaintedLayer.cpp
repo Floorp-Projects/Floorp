@@ -324,13 +324,7 @@ already_AddRefed<PaintedLayer>
 ClientLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  // The non-tiling ContentClient requires CrossProcessSemaphore which
-  // isn't implemented for OSX.
-#ifdef XP_MACOSX
-  if (true) {
-#else
-  if (gfxPrefs::LayersTilesEnabled()) {
-#endif
+  if (gfxPlatform::GetPlatform()->UsesTiling()) {
     RefPtr<ClientTiledPaintedLayer> layer = new ClientTiledPaintedLayer(this, aHint);
     CREATE_SHADOW(Painted);
     return layer.forget();

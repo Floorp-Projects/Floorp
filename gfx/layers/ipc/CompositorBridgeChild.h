@@ -250,7 +250,7 @@ public:
   // Must only be called from the paint thread. Notifies the CompositorBridge
   // that the paint thread has finished an asynchronous paint request.
   template<typename CapturedState>
-  void NotifyFinishedAsyncPaint(CapturedState& aState)
+  bool NotifyFinishedAsyncWorkerPaint(CapturedState& aState)
   {
     MOZ_ASSERT(PaintThread::IsOnPaintThread());
 
@@ -261,17 +261,23 @@ public:
       aClient->DropPaintThreadRef();
     });
     aState->DropTextureClients();
+
+    // If the main thread has completed queuing work and this was the
+    // last paint, then it is time to end the layer transaction and sync
+    return mOutstandingAsyncEndTransaction && mOutstandingAsyncPaints == 0;
   }
 
   // Must only be called from the main thread. Notifies the CompositorBridge
-  // that the paint thread is going to perform texture synchronization at the
-  // end of async painting, and should postpone messages if needed until
-  // finished.
-  void NotifyBeginAsyncEndLayerTransaction();
+  // that all work has been submitted to the paint thread or paint worker
+  // threads, and returns whether all paints are completed. If this returns
+  // true, then an AsyncEndLayerTransaction must be queued, otherwise once
+  // NotifyFinishedAsyncWorkerPaint returns true, an AsyncEndLayerTransaction
+  // must be executed.
+  bool NotifyBeginAsyncEndLayerTransaction(SyncObjectClient* aSyncObject);
 
   // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished all async paints and texture syncs from
-  // a given transaction and may resume sending messages.
+  // that the paint thread has finished all async paints and and may do the
+  // requested texture sync and resume sending messages.
   void NotifyFinishedAsyncEndLayerTransaction();
 
   // Must only be called from the main thread. Notifies the CompoistorBridge
@@ -406,6 +412,7 @@ private:
 
   // Whether we are waiting for an async paint end transaction
   bool mOutstandingAsyncEndTransaction;
+  RefPtr<SyncObjectClient> mOutstandingAsyncSyncObject;
 
   // True if this CompositorBridge is currently delaying its messages until the
   // paint thread completes. This is R/W on both the main and paint threads, and

@@ -103,6 +103,14 @@ gfxPlatformMac::~gfxPlatformMac()
     gfxCoreTextShaper::Shutdown();
 }
 
+bool
+gfxPlatformMac::UsesTiling() const
+{
+    // The non-tiling ContentClient requires CrossProcessSemaphore which
+    // isn't implemented for OSX.
+    return true;
+}
+
 gfxPlatformFontList*
 gfxPlatformMac::CreatePlatformFontList()
 {

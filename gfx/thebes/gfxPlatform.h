@@ -580,6 +580,8 @@ public:
     virtual gfxImageFormat GetOffscreenFormat()
     { return mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32; }
 
+    virtual bool UsesTiling() const;
+
     /**
      * Returns a logger if one is available and logging is enabled
      */
