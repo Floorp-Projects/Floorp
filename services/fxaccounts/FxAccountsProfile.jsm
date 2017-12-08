@@ -114,13 +114,18 @@ this.FxAccountsProfile.prototype = {
     return this._currentFetchPromise;
   },
 
-  // Returns cached data right away if available, then fetches the latest profile
-  // data in the background. After data is fetched a notification will be sent
-  // out if the profile has changed.
+  // Returns cached data right away if available, otherwise returns null - if
+  // it returns null, or if the profile is possibly stale, it attempts to
+  // fetch the latest profile data in the background. After data is fetched a
+  // notification will be sent out if the profile has changed.
   async getProfile() {
     const profileCache = await this.fxa.getProfileCache();
     if (!profileCache) {
-      return this._fetchAndCacheProfile();
+      // fetch and cache it in the background.
+      this._fetchAndCacheProfile().catch(err => {
+        log.error("Background refresh of initial profile failed", err);
+      });
+      return null;
     }
     if (Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD) {
       // Note that _fetchAndCacheProfile isn't returned, so continues
