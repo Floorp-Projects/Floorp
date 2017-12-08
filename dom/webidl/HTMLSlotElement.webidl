@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Pref="dom.webcomponents.enabled", Exposed=Window, HTMLConstructor]
+[Func="nsDocument::IsWebComponentsEnabled", Exposed=Window, HTMLConstructor]
 interface HTMLSlotElement : HTMLElement {
   [CEReactions, SetterThrows] attribute DOMString name;
   sequence<Node> assignedNodes(optional AssignedNodesOptions options);

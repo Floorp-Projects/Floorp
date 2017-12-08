@@ -1538,6 +1538,7 @@ nsIDocument::nsIDocument()
     mBufferingCSPViolations(false),
     mAllowPaymentRequest(false),
     mEncodingMenuDisabled(false),
+    mIsWebComponentsEnabled(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -2718,6 +2719,48 @@ nsDocument::IsSynthesized() {
     MOZ_ASSERT(NS_SUCCEEDED(rv), "GetResponseSynthesized shouldn't fail.");
   }
   return synthesized;
+}
+
+bool
+nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
+{
+  JS::Rooted<JSObject*> obj(aCx, aObject);
+
+  JSAutoCompartment ac(aCx, obj);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, obj));
+  nsCOMPtr<nsPIDOMWindowInner> window =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(global));
+
+  nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+  if (!doc) {
+    return false;
+  }
+
+  // Once it is enabled for a document, it stays enabled.
+  if (doc->IsWebComponentsEnabled()) {
+    return true;
+  }
+
+  bool enabled = nsContentUtils::IsWebComponentsEnabled();
+  doc->SetWebComponentsEnabled(enabled);
+
+  return enabled;
+}
+
+bool
+nsDocument::IsWebComponentsEnabled(const nsINode* aNode)
+{
+  nsIDocument* doc = aNode->OwnerDoc();
+
+  // Once it is enabled for a document, it stays enabled.
+  if (doc->IsWebComponentsEnabled()) {
+    return true;
+  }
+
+  bool enabled = nsContentUtils::IsWebComponentsEnabled();
+  doc->SetWebComponentsEnabled(enabled);
+
+  return enabled;
 }
 
 nsresult
