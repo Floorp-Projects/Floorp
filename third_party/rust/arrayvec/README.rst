@@ -2,11 +2,11 @@
 arrayvec
 ========
 
-A vector with fixed capacity.  Requires Rust 1.2+.
+A vector with fixed capacity.
 
 Please read the `API documentation here`__
 
-__ https://bluss.github.io/arrayvec
+__ https://docs.rs/arrayvec
 
 |build_status|_ |crates|_ |crates2|_
 
@@ -21,6 +21,64 @@ __ https://bluss.github.io/arrayvec
 
 Recent Changes (arrayvec)
 -------------------------
+
+- 0.4.6
+
+  - Fix compilation on 16-bit targets. This means, the 65536 array size is not
+    included on these targets.
+
+- 0.3.24
+
+  - Fix compilation on 16-bit targets. This means, the 65536 array size is not
+    included on these targets.
+  - Fix license files so that they are both included (was fixed in 0.4 before)
+
+- 0.4.5
+
+  - Add methods to ``ArrayString`` by @DenialAdams:
+
+    - ``.pop() -> Option<char>``
+    - ``.truncate(new_len)``
+    - ``.remove(index) -> char``
+
+  - Remove dependency on crate odds
+  - Document debug assertions in unsafe methods better
+
+- 0.4.4
+
+  - Add method ``ArrayVec::truncate()`` by @niklasf
+
+- 0.4.3
+
+  - Improve performance for ``ArrayVec::extend`` with a lower level
+    implementation (#74)
+  - Small cleanup in dependencies (use no std for crates where we don't need more)
+
+- 0.4.2
+
+  - Add constructor method ``new`` to ``CapacityError``.
+
+- 0.4.1
+
+  - Add ``Default`` impl to ``ArrayString`` by @tbu-
+
+- 0.4.0
+
+  - Reformed signatures and error handling by @bluss and @tbu-:
+
+    - ``ArrayVec``'s ``push, insert, remove, swap_remove`` now match ``Vec``'s
+      corresponding signature and panic on capacity errors where applicable.
+    - Add fallible methods ``try_push, insert`` and checked methods
+      ``pop_at, swap_pop``.
+    - Similar changes to ``ArrayString``'s push methods.
+
+  - Use a local version of the ``RangeArgument`` trait
+  - Add array sizes 50, 150, 200 by @daboross
+  - Support serde 1.0 by @daboross
+  - New method ``.push_unchecked()`` by @niklasf
+  - ``ArrayString`` implements ``PartialOrd, Ord`` by @tbu-
+  - Require Rust 1.14
+  - crate feature ``use_generic_array`` was dropped.
 
 - 0.3.23
 
@@ -100,47 +158,6 @@ Recent Changes (arrayvec)
 
   - Added method .into_inner()
   - Added unsafe method .set_len()
-
-Recent Changes (nodrop)
------------------------
-
-- 0.1.9
-
-  - Fix issue in recent nightly where ``repr(u8)`` did not work. Use
-    a better way to get rid of the enum layout optimization.
-
-- 0.1.8
-  
-  - Add crate feature ``use_union`` that uses untagged unions to implement NoDrop.
-    Finally we have an implementation without hacks, without a runtime flag,
-    and without an actual ``Drop`` impl (which was needed to suppress drop).
-    The crate feature requires nightly and is unstable.
-
-- 0.1.7
-
-  - Remove crate feature ``no_drop_flag``, because it doesn't compile on nightly
-    anymore. Drop flags are gone anyway!
-
-- 0.1.6
-
-  - Add feature std, which you can opt out of to use ``no_std``.
-
-- 0.1.5
-
-  - Added crate feature ``use_needs_drop`` which is a nightly-only
-    optimization, which skips overwriting if the inner value does not need
-    drop.
-
-Recent Changes (nodrop-union)
------------------------
-
-- 0.1.9
-
-  - Add ``Copy, Clone`` implementations
-
-- 0.1.8
-
-  - Initial release
 
 
 License

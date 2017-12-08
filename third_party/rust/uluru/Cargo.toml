@@ -12,13 +12,18 @@
 
 [package]
 name = "uluru"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["The Servo Project Developers"]
 description = "A simple, fast, LRU cache implementation"
+readme = "README.md"
+keywords = ["cache", "linkedlist", "array", "no_std"]
+categories = ["data-structures", "no-std"]
 license = "MPL-2.0"
+repository = "https://github.com/servo/uluru"
 
 [lib]
 name = "uluru"
 path = "lib.rs"
 [dependencies.arrayvec]
-version = "0.3.20"
+version = "0.4.6"
+default-features = false

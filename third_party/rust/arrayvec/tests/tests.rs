@@ -1,8 +1,10 @@
 extern crate arrayvec;
+#[macro_use] extern crate matches;
 
 use arrayvec::ArrayVec;
 use arrayvec::ArrayString;
 use std::mem;
+use arrayvec::CapacityError;
 
 use std::collections::HashMap;
 
@@ -30,9 +32,9 @@ fn test_u16_index() {
     const N: usize = 4096;
     let mut vec: ArrayVec<[_; N]> = ArrayVec::new();
     for _ in 0..N {
-        assert!(vec.push(1u8).is_none());
+        assert!(vec.try_push(1u8).is_ok());
     }
-    assert!(vec.push(0).is_some());
+    assert!(vec.try_push(0).is_err());
     assert_eq!(vec.len(), N);
 }
 
@@ -77,7 +79,9 @@ fn test_drop() {
         array.push(vec![Bump(flag)]);
         array.push(vec![Bump(flag), Bump(flag)]);
         array.push(vec![]);
-        array.push(vec![Bump(flag)]);
+        let push4 = array.try_push(vec![Bump(flag)]);
+        assert_eq!(flag.get(), 0);
+        drop(push4);
         assert_eq!(flag.get(), 1);
         drop(array.pop());
         assert_eq!(flag.get(), 1);
@@ -217,32 +221,25 @@ fn test_drop_panic_into_iter() {
 #[test]
 fn test_insert() {
     let mut v = ArrayVec::from([]);
-    assert_eq!(v.push(1), Some(1));
-    assert_eq!(v.insert(0, 1), Some(1));
+    assert_matches!(v.try_push(1), Err(_));
 
     let mut v = ArrayVec::<[_; 3]>::new();
     v.insert(0, 0);
     v.insert(1, 1);
+    //let ret1 = v.try_insert(3, 3);
+    //assert_matches!(ret1, Err(InsertError::OutOfBounds(_)));
+    assert_eq!(&v[..], &[0, 1]);
     v.insert(2, 2);
-    v.insert(3, 3);
     assert_eq!(&v[..], &[0, 1, 2]);
-    v.insert(1, 9);
-    assert_eq!(&v[..], &[0, 9, 1]);
+
+    let ret2 = v.try_insert(1, 9);
+    assert_eq!(&v[..], &[0, 1, 2]);
+    assert_matches!(ret2, Err(_));
 
     let mut v = ArrayVec::from([2]);
-    assert_eq!(v.insert(1, 1), Some(1));
-    assert_eq!(v.insert(2, 1), Some(1));
-}
-
-#[test]
-fn test_in_option() {
-    // Sanity check that we are sound w.r.t Option & non-nullable layout optimization.
-    let mut v = Some(ArrayVec::<[&i32; 1]>::new());
-    assert!(v.is_some());
-    unsafe {
-        *v.as_mut().unwrap().get_unchecked_mut(0) = mem::zeroed();
-    }
-    assert!(v.is_some());
+    assert_matches!(v.try_insert(0, 1), Err(CapacityError { .. }));
+    assert_matches!(v.try_insert(1, 1), Err(CapacityError { .. }));
+    //assert_matches!(v.try_insert(2, 1), Err(CapacityError { .. }));
 }
 
 #[test]
@@ -310,7 +307,7 @@ fn test_string() {
 
     let text = "hello world";
     let mut s = ArrayString::<[_; 16]>::new();
-    s.push_str(text).unwrap();
+    s.try_push_str(text).unwrap();
     assert_eq!(&s, text);
     assert_eq!(text, &s);
 
@@ -320,10 +317,10 @@ fn test_string() {
     assert_eq!(map[text], 1);
 
     let mut t = ArrayString::<[_; 2]>::new();
-    assert!(t.push_str(text).is_err());
+    assert!(t.try_push_str(text).is_err());
     assert_eq!(&t, "");
 
-    t.push_str("ab").unwrap();
+    t.push_str("ab");
     // DerefMut
     let tmut: &mut str = &mut t;
     assert_eq!(tmut, "ab");
@@ -331,7 +328,7 @@ fn test_string() {
     // Test Error trait / try
     let t = || -> Result<(), Box<Error>> {
         let mut t = ArrayString::<[_; 2]>::new();
-        try!(t.push_str(text));
+        try!(t.try_push_str(text));
         Ok(())
     }();
     assert!(t.is_err());
@@ -358,7 +355,7 @@ fn test_string_from_bytes() {
 fn test_string_clone() {
     let text = "hi";
     let mut s = ArrayString::<[_; 4]>::new();
-    s.push_str("abcd").unwrap();
+    s.push_str("abcd");
     let t = ArrayString::<[_; 4]>::from(text).unwrap();
     s.clone_from(&t);
     assert_eq!(&t, &s);
@@ -369,41 +366,43 @@ fn test_string_push() {
     let text = "abcαβγ";
     let mut s = ArrayString::<[_; 8]>::new();
     for c in text.chars() {
-        if let Err(_) = s.push(c) {
+        if let Err(_) = s.try_push(c) {
             break;
         }
     }
     assert_eq!("abcαβ", &s[..]);
-    s.push('x').ok();
+    s.push('x');
     assert_eq!("abcαβx", &s[..]);
-    assert!(s.push('x').is_err());
+    assert!(s.try_push('x').is_err());
 }
 
 
 #[test]
 fn test_insert_at_length() {
     let mut v = ArrayVec::<[_; 8]>::new();
-    let result1 = v.insert(0, "a");
-    let result2 = v.insert(1, "b");
-    assert!(result1.is_none() && result2.is_none());
+    let result1 = v.try_insert(0, "a");
+    let result2 = v.try_insert(1, "b");
+    assert!(result1.is_ok() && result2.is_ok());
     assert_eq!(&v[..], &["a", "b"]);
 }
 
+#[should_panic]
 #[test]
 fn test_insert_out_of_bounds() {
     let mut v = ArrayVec::<[_; 8]>::new();
-    let result = v.insert(1, "test");
-    assert_eq!(result, Some("test"));
-    assert_eq!(v.len(), 0);
-
-    let mut u = ArrayVec::from([1, 2, 3, 4]);
-    let ret = u.insert(3, 99);
-    assert_eq!(&u[..], &[1, 2, 3, 99]);
-    assert_eq!(ret, Some(4));
-    let ret = u.insert(4, 77);
-    assert_eq!(&u[..], &[1, 2, 3, 99]);
-    assert_eq!(ret, Some(77));
+    let _ = v.try_insert(1, "test");
 }
+
+/*
+ * insert that pushes out the last
+    let mut u = ArrayVec::from([1, 2, 3, 4]);
+    let ret = u.try_insert(3, 99);
+    assert_eq!(&u[..], &[1, 2, 3, 99]);
+    assert_matches!(ret, Err(_));
+    let ret = u.try_insert(4, 77);
+    assert_eq!(&u[..], &[1, 2, 3, 99]);
+    assert_matches!(ret, Err(_));
+*/
 
 #[test]
 fn test_drop_in_insert() {
@@ -427,9 +426,9 @@ fn test_drop_in_insert() {
         array.push(Bump(flag));
         array.insert(0, Bump(flag));
         assert_eq!(flag.get(), 0);
-        let ret = array.insert(1, Bump(flag));
+        let ret = array.try_insert(1, Bump(flag));
         assert_eq!(flag.get(), 0);
-        assert!(ret.is_some());
+        assert_matches!(ret, Err(_));
         drop(ret);
         assert_eq!(flag.get(), 1);
     }
@@ -437,7 +436,33 @@ fn test_drop_in_insert() {
 }
 
 #[test]
+fn test_pop_at() {
+    let mut v = ArrayVec::<[String; 4]>::new();
+    let s = String::from;
+    v.push(s("a"));
+    v.push(s("b"));
+    v.push(s("c"));
+    v.push(s("d"));
+
+    assert_eq!(v.pop_at(4), None);
+    assert_eq!(v.pop_at(1), Some(s("b")));
+    assert_eq!(v.pop_at(1), Some(s("c")));
+    assert_eq!(v.pop_at(2), None);
+    assert_eq!(&v[..], &["a", "d"]);
+}
+
+#[test]
 fn test_sizes() {
     let v = ArrayVec::from([0u8; 1 << 16]);
     assert_eq!(vec![0u8; v.len()], &v[..]);
+}
+
+#[test]
+fn test_default() {
+    use std::net;
+    let s: ArrayString<[u8; 4]> = Default::default();
+    // Something without `Default` implementation.
+    let v: ArrayVec<[net::TcpStream; 4]> = Default::default();
+    assert_eq!(s.len(), 0);
+    assert_eq!(v.len(), 0);
 }
