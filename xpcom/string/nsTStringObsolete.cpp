@@ -111,27 +111,20 @@ nsTString<T>::RFindCharInSet(const char_type* aSet, int32_t aOffset) const
 }
 
 
-// Common logic for nsTString<T>::ToIntger and nsTString<T>::ToInteger64.
+// Common logic for nsTString<T>::ToInteger and nsTString<T>::ToInteger64.
 template<typename T, typename int_type>
 int_type
 ToIntegerCommon(const nsTString<T>& aSrc, nsresult* aErrorCode, uint32_t aRadix)
 {
   MOZ_ASSERT(aRadix == 10 || aRadix == 16);
 
-  using char_type = typename nsTString<T>::char_type;
-
-  auto cp = aSrc.BeginReading();
-  mozilla::CheckedInt<int_type> result;
-  bool negate = false;
-  char_type theChar = 0;
-
-  // initial value, override if we find an integer
+  // Initial value, override if we find an integer.
   *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
 
-  // begin by skipping over leading chars that shouldn't be part of the
-  // number...
-
+  // Begin by skipping over leading chars that shouldn't be part of the number.
+  auto cp = aSrc.BeginReading();
   auto endcp = aSrc.EndReading();
+  bool negate = false;
   bool done = false;
 
   // NB: For backwards compatibility I'm not going to change this logic but
@@ -154,11 +147,11 @@ ToIntegerCommon(const nsTString<T>& aSrc, nsresult* aErrorCode, uint32_t aRadix)
         break;
       // clang-format on
       case '-':
-        negate = true; // fall through...
+        negate = true;
         break;
       default:
         break;
-    } // switch
+    }
   }
 
   if (!done) {
@@ -169,27 +162,24 @@ ToIntegerCommon(const nsTString<T>& aSrc, nsresult* aErrorCode, uint32_t aRadix)
   // Step back.
   cp--;
 
-  // integer found
-  *aErrorCode = NS_OK;
+  mozilla::CheckedInt<int_type> result;
 
-  // now iterate the numeric chars and build our result
+  // Now iterate the numeric chars and build our result.
   while (cp < endcp) {
-    theChar = *cp++;
+    auto theChar = *cp++;
     if (('0' <= theChar) && (theChar <= '9')) {
       result = (aRadix * result) + (theChar - '0');
     } else if ((theChar >= 'A') && (theChar <= 'F')) {
       if (10 == aRadix) {
-        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-        result = 0;
-        break;
+        // Invalid base 10 digit, error out.
+        return 0;
       } else {
         result = (aRadix * result) + ((theChar - 'A') + 10);
       }
     } else if ((theChar >= 'a') && (theChar <= 'f')) {
       if (10 == aRadix) {
-        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-        result = 0;
-        break;
+        // Invalid base 10 digit, error out.
+        return 0;
       } else {
         result = (aRadix * result) + ((theChar - 'a') + 10);
       }
@@ -199,16 +189,19 @@ ToIntegerCommon(const nsTString<T>& aSrc, nsresult* aErrorCode, uint32_t aRadix)
       // than 0.
       continue;
     } else {
-      // we've encountered a char that's not a legal number or sign
+      // We've encountered a char that's not a legal number or sign and we can
+      // terminate processing.
       break;
     }
 
     if (!result.isValid()) {
-      // overflow!
-      *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+      // Overflow!
       return 0;
     }
-  } // while
+  }
+
+  // Integer found.
+  *aErrorCode = NS_OK;
 
   if (negate) {
     result = -result;
