@@ -259,6 +259,15 @@ ClientManager::CreateHandle(const ClientInfo& aClientInfo,
 
 // static
 RefPtr<ClientOpPromise>
+ClientManager::MatchAll(const ClientMatchAllArgs& aArgs,
+                        nsISerialEventTarget* aSerialEventTarget)
+{
+  RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
+  return mgr->StartOp(aArgs, aSerialEventTarget);
+}
+
+// static
+RefPtr<ClientOpPromise>
 ClientManager::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs,
                                nsISerialEventTarget* aSerialEventTarget)
 {

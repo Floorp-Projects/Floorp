@@ -48,6 +48,12 @@ void
 ClientManagerOpParent::Init(const ClientOpConstructorArgs& aArgs)
 {
   switch (aArgs.type()) {
+    case ClientOpConstructorArgs::TClientMatchAllArgs:
+    {
+      DoServiceOp(&ClientManagerService::MatchAll,
+                  aArgs.get_ClientMatchAllArgs());
+      break;
+    }
     case ClientOpConstructorArgs::TClientGetInfoAndStateArgs:
     {
       DoServiceOp(&ClientManagerService::GetInfoAndState,

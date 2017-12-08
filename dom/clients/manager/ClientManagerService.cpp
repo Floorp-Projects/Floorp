@@ -302,6 +302,151 @@ ClientManagerService::RemoveManager(ClientManagerParent* aManager)
   MOZ_ASSERT(removed);
 }
 
+namespace
+{
+
+class PromiseListHolder final
+{
+  RefPtr<ClientOpPromise::Private> mResultPromise;
+  nsTArray<RefPtr<ClientOpPromise>> mPromiseList;
+  nsTArray<ClientInfoAndState> mResultList;
+  uint32_t mOutstandingPromiseCount;
+
+  void
+  ProcessSuccess(const ClientInfoAndState& aResult)
+  {
+    mResultList.AppendElement(aResult);
+    ProcessCompletion();
+  }
+
+  void
+  ProcessCompletion()
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mOutstandingPromiseCount > 0);
+    mOutstandingPromiseCount -= 1;
+    MaybeFinish();
+  }
+
+  ~PromiseListHolder() = default;
+public:
+  PromiseListHolder()
+    : mResultPromise(new ClientOpPromise::Private(__func__))
+    , mOutstandingPromiseCount(0)
+  {
+  }
+
+  already_AddRefed<ClientOpPromise>
+  GetResultPromise()
+  {
+    RefPtr<PromiseListHolder> kungFuDeathGrip = this;
+    mResultPromise->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [kungFuDeathGrip] (const ClientOpResult& aResult) { },
+      [kungFuDeathGrip] (nsresult aResult) { });
+
+    RefPtr<ClientOpPromise> ref = mResultPromise;
+    return ref.forget();
+  }
+
+  void
+  AddPromise(RefPtr<ClientOpPromise>&& aPromise)
+  {
+    mPromiseList.AppendElement(Move(aPromise));
+    MOZ_DIAGNOSTIC_ASSERT(mPromiseList.LastElement());
+    mOutstandingPromiseCount += 1;
+
+    RefPtr<PromiseListHolder> self(this);
+    mPromiseList.LastElement()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [self] (const ClientOpResult& aResult) {
+        // TODO: This is pretty clunky.  Try to figure out a better
+        //       wait for MatchAll() and Claim() to share this code
+        //       even though they expect different return values.
+        if (aResult.type() == ClientOpResult::TClientInfoAndState) {
+          self->ProcessSuccess(aResult.get_ClientInfoAndState());
+        } else {
+          self->ProcessCompletion();
+        }
+      }, [self] (nsresult aResult) {
+        self->ProcessCompletion();
+      });
+  }
+
+  void
+  MaybeFinish()
+  {
+    if (!mOutstandingPromiseCount) {
+      mResultPromise->Resolve(mResultList, __func__);
+    }
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(PromiseListHolder)
+};
+
+} // anonymous namespace
+
+RefPtr<ClientOpPromise>
+ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
+{
+  AssertIsOnBackgroundThread();
+
+  const ClientEndPoint& endpoint = aArgs.endpoint();
+
+  const PrincipalInfo& principalInfo =
+    endpoint.type() == ClientEndPoint::TIPCClientInfo
+      ? endpoint.get_IPCClientInfo().principalInfo()
+      : endpoint.get_IPCServiceWorkerDescriptor().principalInfo();
+
+  RefPtr<PromiseListHolder> promiseList = new PromiseListHolder();
+
+  for (auto iter = mSourceTable.Iter(); !iter.Done(); iter.Next()) {
+    ClientSourceParent* source = iter.UserData();
+    MOZ_DIAGNOSTIC_ASSERT(source);
+
+    if (source->IsFrozen() || !source->ExecutionReady()) {
+      continue;
+    }
+
+    if (aArgs.type() != ClientType::All &&
+        source->Info().Type() != aArgs.type()) {
+      continue;
+    }
+
+    if (!MatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
+      continue;
+    }
+
+    if (!aArgs.includeUncontrolled()) {
+      if (endpoint.type() != ClientEndPoint::TIPCServiceWorkerDescriptor) {
+        continue;
+      }
+
+      const Maybe<ServiceWorkerDescriptor>& controller =
+        source->GetController();
+      if (controller.isNothing()) {
+        continue;
+      }
+
+      const IPCServiceWorkerDescriptor& serviceWorker =
+        endpoint.get_IPCServiceWorkerDescriptor();
+
+      if(controller.ref().Id() != serviceWorker.id() ||
+         controller.ref().Scope() != serviceWorker.scope()) {
+        continue;
+      }
+    }
+
+    promiseList->AddPromise(
+      source->StartOp(Move(ClientGetInfoAndStateArgs(source->Info().Id(),
+                                                     source->Info().PrincipalInfo()))));
+  }
+
+  // Maybe finish the promise now in case we didn't find any matching clients.
+  promiseList->MaybeFinish();
+
+  return promiseList->GetResultPromise();
+}
+
 RefPtr<ClientOpPromise>
 ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
 {
