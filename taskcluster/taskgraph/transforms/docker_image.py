@@ -50,9 +50,10 @@ docker_image_schema = Schema({
 @transforms.add
 def validate(config, tasks):
     for task in tasks:
-        yield validate_schema(
+        validate_schema(
             docker_image_schema, task,
             "In docker image {!r}:".format(task.get('name', 'unknown')))
+        yield task
 
 
 @transforms.add
