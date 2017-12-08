@@ -7804,14 +7804,6 @@
     "kind": "boolean",
     "description": "New tab page is enhanced (showing suggestions)."
   },
-  "NEWTAB_PAGE_LIFE_SPAN": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 1200,
-    "n_buckets": 100,
-    "description": "Life-span of a new tab without suggested tile: time delta between first-visible and unload events (half-seconds)."
-  },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
@@ -7826,19 +7818,6 @@
     "high": 100,
     "n_buckets": 10,
     "description": "Number of sites blocked from the new tab page."
-  },
-  "NEWTAB_PAGE_SHOWN": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "35",
-    "kind": "boolean",
-    "description": "Number of times about:newtab was shown from opening a new tab or window. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "NEWTAB_PAGE_SITE_CLICKED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS": {
     "record_in_processes": ["main", "content"],
