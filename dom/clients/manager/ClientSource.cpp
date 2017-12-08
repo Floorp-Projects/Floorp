@@ -12,7 +12,15 @@
 #include "ClientState.h"
 #include "ClientValidation.h"
 #include "mozilla/dom/ClientIPCTypes.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/ServiceWorkerContainer.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
+#include "mozilla/dom/workers/bindings/ServiceWorker.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
@@ -20,8 +28,13 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::dom::ipc::StructuredCloneData;
+using mozilla::dom::workers::ServiceWorkerInfo;
+using mozilla::dom::workers::ServiceWorkerManager;
+using mozilla::dom::workers::ServiceWorkerRegistrationInfo;
 using mozilla::dom::workers::WorkerPrivate;
 using mozilla::ipc::PrincipalInfo;
+using mozilla::ipc::PrincipalInfoToPrincipal;
 
 void
 ClientSource::Shutdown()
@@ -408,6 +421,128 @@ ClientSource::Focus(const ClientFocusArgs& aArgs)
   }
 
   ref = ClientOpPromise::CreateAndResolve(state.ToIPC(), __func__);
+  return ref.forget();
+}
+
+RefPtr<ClientOpPromise>
+ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+  RefPtr<ClientOpPromise> ref;
+
+  ServiceWorkerDescriptor source(aArgs.serviceWorker());
+  const PrincipalInfo& principalInfo = source.PrincipalInfo();
+
+  StructuredCloneData clonedData;
+  clonedData.BorrowFromClonedMessageDataForBackgroundChild(aArgs.clonedData());
+
+  // Currently we only support firing these messages on window Clients.
+  // Once we expose ServiceWorkerContainer and the ServiceWorker on Worker
+  // threads then this will need to change.  See bug 1113522.
+  if (mClientInfo.Type() != ClientType::Window) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+    return ref.forget();
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<ServiceWorkerContainer> target;
+  nsCOMPtr<nsIGlobalObject> globalObject;
+
+  // We don't need to force the creation of the about:blank document
+  // here because there is no postMessage listener.  If a listener
+  // was registered then the document will already be created.
+  nsPIDOMWindowInner* window = GetInnerWindow();
+  if (window) {
+    globalObject = do_QueryInterface(window);
+    RefPtr<Navigator> navigator =
+      static_cast<Navigator*>(window->GetNavigator());
+    if (navigator) {
+      target = navigator->ServiceWorker();
+    }
+  }
+
+  if (NS_WARN_IF(!target)) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
+    return ref.forget();
+  }
+
+  // If AutoJSAPI::Init() fails then either global is nullptr or not
+  // in a usable state.
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(globalObject)) {
+    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+    return ref.forget();
+  }
+
+  JSContext* cx = jsapi.cx();
+
+  ErrorResult result;
+  JS::Rooted<JS::Value> messageData(cx);
+  clonedData.Read(cx, &messageData, result);
+  if (result.MaybeSetPendingException(cx)) {
+    // We reported the error in the current window context.  Resolve
+    // promise instead of rejecting.
+    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+    return ref.forget();
+  }
+
+  RootedDictionary<MessageEventInit> init(cx);
+
+  init.mData = messageData;
+  if (!clonedData.TakeTransferredPortsAsSequence(init.mPorts)) {
+    // Report the error in the current window context and resolve the
+    // promise instead of rejecting.
+    xpc::Throw(cx, NS_ERROR_OUT_OF_MEMORY);
+    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+    return ref.forget();
+  }
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(principalInfo, &rv);
+  if (NS_FAILED(rv) || !principal) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    return ref.forget();
+  }
+
+  nsAutoCString origin;
+  rv = principal->GetOriginNoSuffix(origin);
+  if (NS_SUCCEEDED(rv)) {
+    CopyUTF8toUTF16(origin, init.mOrigin);
+  }
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // Shutting down. Just don't deliver this message.
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    return ref.forget();
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> reg =
+    swm->GetRegistration(principal, source.Scope());
+  if (reg) {
+    RefPtr<ServiceWorkerInfo> serviceWorker = reg->GetByID(source.Id());
+    if (serviceWorker) {
+      init.mSource.SetValue().SetAsServiceWorker() =
+        serviceWorker->GetOrCreateInstance(GetInnerWindow());
+    }
+  }
+
+  RefPtr<MessageEvent> event =
+    MessageEvent::Constructor(target, NS_LITERAL_STRING("message"), init);
+  event->SetTrusted(true);
+
+  bool preventDefaultCalled = false;
+  rv = target->DispatchEvent(static_cast<dom::Event*>(event.get()),
+                             &preventDefaultCalled);
+  if (NS_FAILED(rv)) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    return ref.forget();
+  }
+
+  ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
   return ref.forget();
 }
 

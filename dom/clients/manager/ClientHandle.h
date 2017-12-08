@@ -25,6 +25,10 @@ class ClientOpConstructorArgs;
 class PClientManagerChild;
 class ServiceWorkerDescriptor;
 
+namespace ipc {
+class StructuredCloneData;
+}
+
 // The ClientHandle allows code to take a simple ClientInfo struct and
 // convert it into a live actor-backed object attached to a particular
 // ClientSource somewhere in the browser.  If the ClientSource is
@@ -75,6 +79,16 @@ public:
   // for any reason then the promise will reject.
   RefPtr<ClientStatePromise>
   Focus();
+
+  // Send a postMessage() call to the target Client.  Currently this only
+  // supports sending from a ServiceWorker source and the MessageEvent is
+  // dispatched to the Client's navigator.serviceWorker event target.  The
+  // returned promise will resolve if the MessageEvent is dispatched or if
+  // it triggers an error handled in the Client's context.  Other errors
+  // will result in the promise rejecting.
+  RefPtr<GenericPromise>
+  PostMessage(ipc::StructuredCloneData& aData,
+              const ServiceWorkerDescriptor& aSource);
 
   NS_INLINE_DECL_REFCOUNTING(ClientHandle);
 };
