@@ -289,6 +289,12 @@ NullHttpChannel::RedirectTo(nsIURI *aNewURI)
 }
 
 NS_IMETHODIMP
+NullHttpChannel::UpgradeToSecure()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetRequestContextID(uint64_t *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
