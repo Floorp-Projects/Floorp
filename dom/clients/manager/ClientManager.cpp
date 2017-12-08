@@ -284,5 +284,14 @@ ClientManager::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs,
   return mgr->StartOp(aArgs, aSerialEventTarget);
 }
 
+// static
+RefPtr<ClientOpPromise>
+ClientManager::Navigate(const ClientNavigateArgs& aArgs,
+                        nsISerialEventTarget* aSerialEventTarget)
+{
+  RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
+  return mgr->StartOp(aArgs, aSerialEventTarget);
+}
+
 } // namespace dom
 } // namespace mozilla
