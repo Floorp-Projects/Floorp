@@ -40,6 +40,7 @@ protected:
   bool                mIgnoreEmptyNotification;
   nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
   nsCOMPtr<nsITransferable>   mTransferable;
+
 };
 
 #endif // nsBaseClipboard_h__

@@ -28,7 +28,6 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "gfxPlatform.h"
 
 using mozilla::LogLevel;
 
@@ -93,7 +92,7 @@ nsSound::GetInstance()
 {
   if (!sInstance) {
     if (gfxPlatform::IsHeadless()) {
-      sInstance = new mozilla::widget::HeadlessSound();
+      sInstance = new widget::HeadlessSound();
     } else {
       RefPtr<nsSound> sound = new nsSound();
       nsresult rv = sound->CreatePlayerThread();

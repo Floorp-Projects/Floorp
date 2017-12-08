@@ -12,7 +12,6 @@
 #include "nsIWidget.h"
 #include "nsString.h"
 #include "WidgetUtils.h"
-#include "nsPIDOMWindow.h"
 
 using namespace mozilla::widget;
 
