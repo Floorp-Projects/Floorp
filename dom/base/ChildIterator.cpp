@@ -12,7 +12,6 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsDocument.h"
 
 namespace mozilla {
 namespace dom {
@@ -67,8 +66,7 @@ ExplicitChildIterator::ExplicitChildIterator(const nsIContent* aParent,
     mIsFirst(aStartAtBeginning),
     mIndexInInserted(0)
 {
-  mParentAsSlot = nsDocument::IsWebComponentsEnabled(mParent) ?
-    HTMLSlotElement::FromContent(mParent) : nullptr;
+  mParentAsSlot = HTMLSlotElement::FromContent(mParent);
 }
 
 nsIContent*
