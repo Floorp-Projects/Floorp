@@ -913,8 +913,8 @@ ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
 
   JS::Value parseError = FindFirstParseError(aRequest);
   if (!parseError.isUndefined()) {
-    LOG(("ScriptLoadRequest (%p):   found parse error", aRequest));
     moduleScript->SetErrorToRethrow(parseError);
+    LOG(("ScriptLoadRequest (%p):   found parse error", aRequest));
     return true;
   }
 
