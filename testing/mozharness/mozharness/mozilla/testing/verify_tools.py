@@ -77,6 +77,7 @@ class VerifyToolsMixin(object):
                     ('plain', 'clipboard') : 'plain-clipboard',
                     ('browser-chrome', 'devtools') : 'mochitest-devtools-chrome',
                     ('browser-chrome', 'gpu') : 'browser-chrome-gpu',
+                    ('browser-chrome', 'screenshots') : 'browser-chrome-screenshots',
                     ('chrome', 'gpu') : 'chrome-gpu',
                     ('plain', 'gpu') : 'plain-gpu',
                     ('plain', 'media') : 'mochitest-media',
