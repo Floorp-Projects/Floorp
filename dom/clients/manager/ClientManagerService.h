@@ -60,6 +60,9 @@ public:
   RemoveManager(ClientManagerParent* aManager);
 
   RefPtr<ClientOpPromise>
+  MatchAll(const ClientMatchAllArgs& aArgs);
+
+  RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManagerService)
