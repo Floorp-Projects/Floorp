@@ -262,6 +262,10 @@ release-bouncer-aliases
 ------------------------------
 Update Bouncers (download.mozilla.org) "latest" aliases.
 
+release-generate-checksums
+--------------------------
+Generate the per-release checksums along with the summaries and upload it to S3.
+
 release-final-verify
 ---------------------
 Verifies the contents and package of release update MARs.
