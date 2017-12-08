@@ -1929,8 +1929,11 @@ TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, 
 static bool
 GetTemplateObjectForSimd(JSContext* cx, JSFunction* target, MutableHandleObject res)
 {
+    if (!target->hasJitInfo())
+        return false;
+
     const JSJitInfo* jitInfo = target->jitInfo();
-    if (!jitInfo || jitInfo->type() != JSJitInfo::InlinableNative)
+    if (jitInfo->type() != JSJitInfo::InlinableNative)
         return false;
 
     // Check if this is a native inlinable SIMD operation.
@@ -2370,11 +2373,10 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             MOZ_ASSERT_IF(templateObject, !templateObject->group()->maybePreliminaryObjects());
         }
 
-        bool ignoresReturnValue = false;
-        if (op == JSOP_CALL_IGNORES_RV && fun->isNative()) {
-            const JSJitInfo* jitInfo = fun->jitInfo();
-            ignoresReturnValue = jitInfo && jitInfo->type() == JSJitInfo::IgnoresReturnValueNative;
-        }
+        bool ignoresReturnValue = op == JSOP_CALL_IGNORES_RV &&
+                                  fun->isNative() &&
+                                  fun->hasJitInfo() &&
+                                  fun->jitInfo()->type() == JSJitInfo::IgnoresReturnValueNative;
 
         JitSpew(JitSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s, spread=%s)",
                 fun.get(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
@@ -3554,6 +3556,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     masm.callWithABI(Address(ICStubReg, ICCall_Native::offsetOfNative()));
 #else
     if (ignoresReturnValue_) {
+        MOZ_ASSERT(callee_->hasJitInfo());
         masm.loadPtr(Address(callee, JSFunction::offsetOfJitInfo()), callee);
         masm.callWithABI(Address(callee, JSJitInfo::offsetOfIgnoresReturnValueNative()));
     } else {

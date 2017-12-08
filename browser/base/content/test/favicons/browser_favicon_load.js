@@ -9,17 +9,19 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 const TEST_SITE = "http://example.net";
 const TEST_THIRD_PARTY_SITE = "http://mochi.test:8888";
 
-const TEST_PAGE = TEST_SITE + "/browser/browser/components/originattributes/" +
-                  "test/browser/file_favicon.html";
-const FAVICON_URI = TEST_SITE + "/browser/browser/components/originattributes/" +
-                    "test/browser/file_favicon.png";
-const TEST_THIRD_PARTY_PAGE = "http://example.com/browser/browser/components/" +
-                              "originattributes/test/browser/file_favicon_thirdParty.html";
-const THIRD_PARTY_FAVICON_URI = TEST_THIRD_PARTY_SITE + "/browser/browser/components/" +
-                                "originattributes/test/browser/file_favicon.png";
+const TEST_PAGE =
+  TEST_SITE + "/browser/browser/base/content/test/favicons/file_favicon.html";
+const FAVICON_URI =
+  TEST_SITE + "/browser/browser/base/content/test/favicons/file_favicon.png";
+const TEST_THIRD_PARTY_PAGE =
+  TEST_SITE + "/browser/browser/base/content/test/favicons/file_favicon_thirdParty.html";
+const THIRD_PARTY_FAVICON_URI =
+  TEST_THIRD_PARTY_SITE + "/browser/browser/base/content/test/favicons/file_favicon.png";
 
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+                                  "resource://testing-common/PlacesTestUtils.jsm");
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 

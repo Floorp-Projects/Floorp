@@ -184,15 +184,15 @@ UiaHookProc(int aCode, WPARAM aWParam, LPARAM aLParam)
   if (gUiaMsg && cwp->message == gUiaMsg) {
     Maybe<bool> shouldCallNextHook =
       a11y::Compatibility::OnUIAMessage(cwp->wParam, cwp->lParam);
-    if (shouldCallNextHook.isSome()) {
-      // We've got an instantiator, disconnect this hook
-      if (::UnhookWindowsHookEx(gUiaHook)) {
-        gUiaHook = nullptr;
-      }
 
-      if (!shouldCallNextHook.value()) {
-        return 0;
-      }
+    // Unconditionally remove the hook, as UIA detection is too expensive to
+    // leave running for every single request.
+    if (::UnhookWindowsHookEx(gUiaHook)) {
+      gUiaHook = nullptr;
+    }
+
+    if (shouldCallNextHook.isSome() && !shouldCallNextHook.value()) {
+      return 0;
     }
   }
 
