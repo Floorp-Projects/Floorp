@@ -882,6 +882,10 @@ public class Tab {
             bundle.putString("icon", "drawable://add_to_homescreen");
             bundle.putBoolean("important", true);
             EventDispatcher.getInstance().dispatch("PageActions:Add", bundle);
+        } else {
+            GeckoBundle bundle = new GeckoBundle();
+            bundle.putString("id", UUID_PAGE_ACTION_PWA);
+            EventDispatcher.getInstance().dispatch("PageActions:Remove", bundle);
         }
     }
 }
