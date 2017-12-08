@@ -10,7 +10,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-sync/addonutils.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://tps/logger.jsm");
@@ -85,13 +84,11 @@ Addon.prototype = {
     }
   },
 
-  install: function install() {
+  async install() {
     // For Install, the id parameter initially passed is really the filename
     // for the addon's install .xml; we'll read the actual id from the .xml.
 
-    let cb = Async.makeSpinningCallback();
-    AddonUtils.installAddons([{id: this.id, requireSecureURI: false}], cb);
-    let result = cb.wait();
+    const result = await AddonUtils.installAddons([{id: this.id, requireSecureURI: false}]);
 
     Logger.AssertEqual(1, result.installedIDs.length, "Exactly 1 add-on was installed.");
     Logger.AssertEqual(this.id, result.installedIDs[0],
