@@ -214,9 +214,9 @@ XULMenuitemAccessible::KeyboardShortcut() const
     nsAutoString keyCodeStr;
     keyElm->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, keyCodeStr);
     nsresult errorCode;
-    key = keyStr.ToInteger(&errorCode, kRadix10);
+    key = keyStr.ToInteger(&errorCode, /* aRadix = */ 10);
     if (NS_FAILED(errorCode)) {
-      key = keyStr.ToInteger(&errorCode, kRadix16);
+      key = keyStr.ToInteger(&errorCode, /* aRadix = */ 16);
     }
   } else {
     key = keyStr[0];
