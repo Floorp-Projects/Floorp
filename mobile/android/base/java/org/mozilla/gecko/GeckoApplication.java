@@ -569,10 +569,17 @@ public class GeckoApplication extends Application
             // If a page has associated manifest, lets install it (PWA A2HS)
             // At this time, this page must be a secure page.
             // Please hide PWA badge UI in front end side.
-            // Otherwise we'll throw an exception here.
             final boolean safeForPwa = PwaUtils.shouldAddPwaShortcut(selectedTab);
             if (!safeForPwa) {
-                throw new IllegalStateException("This page is not safe for PWA");
+                final String message = "This page is not safe for PWA";
+                // For release and beta, we record an error message
+                if (AppConstants.RELEASE_OR_BETA) {
+                    Log.e(LOG_TAG, message);
+                } else {
+                    // For nightly and local build, we'll throw an exception here.
+                    throw new IllegalStateException(message);
+                }
+
             }
 
             final GeckoBundle message = new GeckoBundle();
