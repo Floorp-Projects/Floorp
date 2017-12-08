@@ -84,6 +84,12 @@ union ClientEndPoint
   IPCServiceWorkerDescriptor;
 };
 
+struct ClientPostMessageArgs
+{
+  ClonedMessageData clonedData;
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
 struct ClientMatchAllArgs
 {
   ClientEndPoint endpoint;
@@ -114,6 +120,7 @@ union ClientOpConstructorArgs
   ClientControlledArgs;
   ClientFocusArgs;
   ClientNavigateArgs;
+  ClientPostMessageArgs;
   ClientMatchAllArgs;
   ClientClaimArgs;
   ClientGetInfoAndStateArgs;
