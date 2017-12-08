@@ -66,7 +66,8 @@ ExplicitChildIterator::ExplicitChildIterator(const nsIContent* aParent,
     mIsFirst(aStartAtBeginning),
     mIndexInInserted(0)
 {
-  mParentAsSlot = HTMLSlotElement::FromContent(mParent);
+  mParentAsSlot = nsContentUtils::IsWebComponentsEnabled() ?
+    HTMLSlotElement::FromContent(mParent) : nullptr;
 }
 
 nsIContent*
