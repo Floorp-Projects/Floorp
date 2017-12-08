@@ -221,9 +221,11 @@ public:
     nsIntRegion mDirtyRegion;
   };
 
-  CapturedTiledPaintState(gfx::DrawTarget* aTargetTiled,
+  CapturedTiledPaintState()
+  {}
+  CapturedTiledPaintState(gfx::DrawTarget* aTarget,
                           gfx::DrawTargetCapture* aCapture)
-  : mTargetTiled(aTargetTiled)
+  : mTarget(aTarget)
   , mCapture(aCapture)
   {}
 
@@ -240,7 +242,7 @@ public:
     mClients.clear();
   }
 
-  RefPtr<gfx::DrawTarget> mTargetTiled;
+  RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTargetCapture> mCapture;
   std::vector<Copy> mCopies;
   std::vector<Clear> mClears;
