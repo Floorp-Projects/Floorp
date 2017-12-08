@@ -1377,8 +1377,8 @@ InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
         }
         Reverse(shapes.begin(), shapes.end());
 
-        for (Shape* shape : shapes) {
-            Rooted<StackShape> child(cx, StackShape(shape));
+        for (Shape* shapeToClone : shapes) {
+            Rooted<StackShape> child(cx, StackShape(shapeToClone));
             shape = cx->zone()->propertyTree().getChild(cx, shape, child);
             if (!shape)
                 return false;
