@@ -2,18 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! A simple LRU cache.
+#![no_std]
+
+//! A simple least-recently-used (LRU) cache.
 
 extern crate arrayvec;
 
 use arrayvec::{Array, ArrayVec};
 
+#[cfg(test)] mod tests;
+
 /// A LRU cache using a statically-sized array for storage.
 ///
-/// The most-recently-used entry is at index `head`. The entries form a linked list, linked to each
-/// other by indices within the `entries` array.  After an entry is added to the array, its index
-/// never changes, so these links are never invalidated.
-pub struct LRUCache<T, A: Array<Item=Entry<T>>> {
+/// `LRUCache` uses a fixed-capacity array for storage. It provides `O(1)` insertion, and `O(n)`
+/// lookup.
+///
+/// All items are stored inline within the `LRUCache`, so it does not impose any heap allocation or
+/// indirection.  A linked list is used to record the cache order, so the items themselves do not
+/// need to be moved when the order changes.  (This is important for speed if the items are large.)
+pub struct LRUCache<A: Array> {
+    /// The most-recently-used entry is at index `head`. The entries form a linked list, linked to
+    /// each other by indices within the `entries` array.  After an entry is added to the array,
+    /// its index never changes, so these links are never invalidated.
     entries: ArrayVec<A>,
     /// Index of the first entry. If the cache is empty, ignore this field.
     head: u16,
@@ -33,7 +43,7 @@ pub struct Entry<T> {
     next: u16,
 }
 
-impl<T, A: Array<Item=Entry<T>>> Default for LRUCache<T, A> {
+impl<A: Array> Default for LRUCache<A> {
     fn default() -> Self {
         let cache = LRUCache {
             entries: ArrayVec::new(),
@@ -45,7 +55,7 @@ impl<T, A: Array<Item=Entry<T>>> Default for LRUCache<T, A> {
     }
 }
 
-impl<T, A: Array<Item=Entry<T>>> LRUCache<T, A> {
+impl<T, A: Array<Item=Entry<T>>> LRUCache<A> {
     /// Returns the number of elements in the cache.
     pub fn num_entries(&self) -> usize {
         self.entries.len()
@@ -72,7 +82,7 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<T, A> {
 
     /// Iterate over the contents of this cache, from more to less recently
     /// used.
-    pub fn iter(&self) -> LRUCacheIterator<T, A> {
+    pub fn iter(&self) -> LRUCacheIterator<A> {
         LRUCacheIterator {
             pos: self.head,
             done: self.entries.len() == 0,
@@ -81,7 +91,7 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<T, A> {
     }
 
     /// Iterate mutably over the contents of this cache.
-    pub fn iter_mut(&mut self) -> LRUCacheMutIterator<T, A> {
+    pub fn iter_mut(&mut self) -> LRUCacheMutIterator<A> {
         LRUCacheMutIterator {
             pos: self.head,
             done: self.entries.len() == 0,
@@ -107,14 +117,30 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<T, A> {
             None => None,
             Some((i, r)) => {
                 self.touch(i);
-                let front = self.front_mut().unwrap();
-                debug_assert!(test_one(front).is_some());
                 Some(r)
             }
         }
     }
 
+    /// Returns the first item in the cache that matches the given predicate.
+    /// Touches the result on a hit.
+    pub fn find<F>(&mut self, mut pred: F) -> Option<&mut T>
+    where
+        F: FnMut(&T) -> bool
+    {
+        match self.iter_mut().find(|&(_, ref x)| pred(x)) {
+            Some((i, _)) => {
+                self.touch(i);
+                self.front_mut()
+            }
+            None => None
+        }
+    }
+
     /// Insert a given key in the cache.
+    ///
+    /// This item becomes the front (most-recently-used) item in the cache.  If the cache is full,
+    /// the back (least-recently-used) item will be removed.
     pub fn insert(&mut self, val: T) {
         let entry = Entry { val, prev: 0, next: 0 };
 
@@ -131,7 +157,7 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<T, A> {
         self.push_front(new_head);
     }
 
-    /// Remove an from the linked list.
+    /// Remove an entry from the linked list.
     ///
     /// Note: This only unlinks the entry from the list; it does not remove it from the array.
     fn remove(&mut self, i: u16) {
@@ -179,13 +205,13 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<T, A> {
 }
 
 /// Immutable iterator over values in an LRUCache, from most-recently-used to least-recently-used.
-pub struct LRUCacheIterator<'a, T: 'a, A: 'a + Array<Item=Entry<T>>> {
-    cache: &'a LRUCache<T, A>,
+pub struct LRUCacheIterator<'a, A: 'a + Array> {
+    cache: &'a LRUCache<A>,
     pos: u16,
     done: bool,
 }
 
-impl<'a, T, A> Iterator for LRUCacheIterator<'a, T, A>
+impl<'a, T, A> Iterator for LRUCacheIterator<'a, A>
 where T: 'a,
       A: 'a + Array<Item=Entry<T>>
 {
@@ -207,13 +233,13 @@ where T: 'a,
 }
 
 /// Mutable iterator over values in an LRUCache, from most-recently-used to least-recently-used.
-pub struct LRUCacheMutIterator<'a, T: 'a, A: 'a + Array<Item=Entry<T>>> {
-    cache: &'a mut LRUCache<T, A>,
+pub struct LRUCacheMutIterator<'a, A: 'a + Array> {
+    cache: &'a mut LRUCache<A>,
     pos: u16,
     done: bool,
 }
 
-impl<'a, T, A> Iterator for LRUCacheMutIterator<'a, T, A>
+impl<'a, T, A> Iterator for LRUCacheMutIterator<'a, A>
 where T: 'a,
       A: 'a + Array<Item=Entry<T>>
 {

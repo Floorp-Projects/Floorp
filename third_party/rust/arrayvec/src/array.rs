@@ -1,7 +1,7 @@
 
 /// Trait for fixed size arrays.
 pub unsafe trait Array {
-    /// The array's element type
+    /// The array’s element type
     type Item;
     #[doc(hidden)]
     /// The smallest index type that indexes the array.
@@ -31,24 +31,6 @@ pub trait ArrayExt : Array {
 }
 
 impl<A> ArrayExt for A where A: Array { }
-
-#[cfg(feature = "use_generic_array")]
-unsafe impl<T, U> Array for ::generic_array::GenericArray<T, U>
-    where U: ::generic_array::ArrayLength<T>
-{
-    type Item = T;
-    type Index = usize;
-    fn as_ptr(&self) -> *const Self::Item {
-        (**self).as_ptr()
-    }
-    fn as_mut_ptr(&mut self) -> *mut Self::Item {
-        (**self).as_mut_ptr()
-    }
-    fn capacity() -> usize {
-        U::to_usize()
-    }
-
-}
 
 impl Index for u8 {
     #[inline(always)]
@@ -103,7 +85,9 @@ macro_rules! fix_array_impl_recursive {
 
 fix_array_impl_recursive!(u8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                           16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-                          32, 40, 48, 56, 64, 72, 96, 128, 160, 192, 224,);
+                          32, 40, 48, 50, 56, 64, 72, 96, 100, 128, 160, 192, 200, 224,);
 fix_array_impl_recursive!(u16, 256, 384, 512, 768, 1024, 2048, 4096, 8192, 16384, 32768,);
+// This array size doesn't exist on 16-bit
+#[cfg(any(target_pointer_width="32", target_pointer_width="64"))]
 fix_array_impl_recursive!(u32, 1 << 16,);
 

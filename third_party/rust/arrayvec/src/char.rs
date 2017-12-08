@@ -8,9 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 //
-// Original authors: alexchrichton
-
-//! Extra functions for `char`
+// Original authors: alexchrichton, bluss
 
 // UTF-8 ranges and tags for encoding characters
 const TAG_CONT: u8    = 0b1000_0000;
@@ -22,8 +20,7 @@ const MAX_TWO_B: u32   =    0x800;
 const MAX_THREE_B: u32 =  0x10000;
 
 /// Placeholder
-#[derive(Debug, Copy, Clone)]
-pub struct EncodeUtf8Error(());
+pub struct EncodeUtf8Error;
 
 /// Encode a char into buf using UTF-8.
 ///
@@ -52,6 +49,6 @@ pub fn encode_utf8(ch: char, buf: &mut [u8]) -> Result<usize, EncodeUtf8Error>
         buf[3] = (code & 0x3F) as u8 | TAG_CONT;
         return Ok(4);
     };
-    Err(EncodeUtf8Error(()))
+    Err(EncodeUtf8Error)
 }
 

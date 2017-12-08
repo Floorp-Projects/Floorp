@@ -3,11 +3,10 @@
 //!
 //! - `std`
 //!   - Optional, enabled by default
-//!   - Requires Rust 1.6 *to disable*
 //!   - Use libstd
 //! - `use_needs_drop`
 //!   - Optional
-//!   - Requires nightly channel.
+//!   - Requires Rust 1.21
 //!   - Use `needs_drop` to skip overwriting if not necessary
 //! - `use_union`
 //!   - Optional
@@ -16,14 +15,9 @@
 //!     for example the fact that `NoDrop<T>` never has a destructor anymore.
 //!
 
-#![cfg_attr(feature="use_needs_drop", feature(core_intrinsics))]
-
 #![cfg_attr(not(any(test, feature="std")), no_std)]
 #[cfg(not(any(test, feature="std")))]
 extern crate core as std;
-
-#[cfg(not(feature = "use_union"))]
-extern crate odds;
 
 #[cfg(feature = "use_union")]
 extern crate nodrop_union as imp;
@@ -33,7 +27,6 @@ pub use imp::NoDrop;
 
 #[cfg(not(feature = "use_union"))]
 mod imp {
-    use odds::debug_assert_unreachable;
     use std::ptr;
     use std::mem;
     use std::ops::{Deref, DerefMut};
@@ -81,7 +74,7 @@ mod imp {
     #[inline]
     fn needs_drop<T>() -> bool {
         unsafe {
-            ::std::intrinsics::needs_drop::<T>()
+            ::std::mem::needs_drop::<T>()
         }
     }
 
@@ -127,7 +120,14 @@ mod imp {
         // as Option would do.
         assert!(mem::size_of::<Flag<&i32>>() > mem::size_of::<&i32>());
         assert!(mem::size_of::<Flag<Vec<i32>>>() > mem::size_of::<Vec<i32>>());
-        assert!(mem::size_of::<Option<Flag<&i32>>>() > mem::size_of::<Flag<&i32>>());
+    }
+
+    // copying this code saves us microcrate deps
+    #[inline]
+    unsafe fn debug_assert_unreachable() -> ! {
+        debug_assert!(false, "Reached unreachable section: this is a bug!");
+        enum Void { }
+        match *(1 as *const Void) { }
     }
 }
 
