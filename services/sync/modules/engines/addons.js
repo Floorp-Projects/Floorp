@@ -183,7 +183,7 @@ AddonsEngine.prototype = {
           continue;
       }
 
-      if (!this.isAddonSyncable(addons[id])) {
+      if (!(await this.isAddonSyncable(addons[id]))) {
         continue;
       }
 
@@ -239,6 +239,7 @@ AddonsEngine.prototype = {
     return this._reconciler.refreshGlobalState();
   },
 
+  // Returns a promise
   isAddonSyncable(addon, ignoreRepoCheck) {
     return this._store.isAddonSyncable(addon, ignoreRepoCheck);
   }
@@ -291,7 +292,7 @@ AddonsStore.prototype = {
     // Ignore incoming records for which an existing non-syncable addon
     // exists.
     let existingMeta = this.reconciler.addons[record.addonID];
-    if (existingMeta && !this.isAddonSyncable(existingMeta)) {
+    if (existingMeta && !(await this.isAddonSyncable(existingMeta))) {
       this._log.info("Ignoring incoming record for an existing but non-syncable addon", record.addonID);
       return;
     }
@@ -465,7 +466,7 @@ AddonsStore.prototype = {
     let addons = this.reconciler.addons;
     for (let id in addons) {
       let addon = addons[id];
-      if (this.isAddonSyncable(addon)) {
+      if ((await this.isAddonSyncable(addon))) {
         ids[addon.guid] = true;
       }
     }
@@ -536,7 +537,7 @@ AddonsStore.prototype = {
    *         for testing and validation).
    * @return Boolean indicating whether it is appropriate for Sync
    */
-  isAddonSyncable: function isAddonSyncable(addon, ignoreRepoCheck = false) {
+  async isAddonSyncable(addon, ignoreRepoCheck = false) {
     // Currently, we limit syncable add-ons to those that are:
     //   1) In a well-defined set of types
     //   2) Installed in the current profile
@@ -589,9 +590,9 @@ AddonsStore.prototype = {
       return true;
     }
 
-    let cb = Async.makeSyncCallback();
-    AddonRepository.getCachedAddonByID(addon.id, cb);
-    let result = Async.waitForSyncCallback(cb);
+    let result = await new Promise(res => {
+      AddonRepository.getCachedAddonByID(addon.id, res);
+    });
 
     if (!result) {
       this._log.debug(addon.id + " not syncable: add-on not found in add-on " +
@@ -705,7 +706,7 @@ AddonsTracker.prototype = {
       return;
     }
 
-    if (!this.store.isAddonSyncable(addon)) {
+    if (!Async.promiseSpinningly(this.store.isAddonSyncable(addon))) {
       this._log.debug("Ignoring change because add-on isn't syncable: " +
                       addon.id);
       return;
@@ -783,10 +784,12 @@ class AddonValidator extends CollectionValidator {
     return item.applicationID === Services.appinfo.ID;
   }
 
-  syncedByClient(item) {
+  async syncedByClient(item) {
     return !item.original.hidden &&
            !item.original.isSystem &&
            !(item.original.pendingOperations & AddonManager.PENDING_UNINSTALL) &&
+           // No need to await the returned promise explicitely:
+           // |expr1 && expr2| evaluates to expr2 if expr1 is true.
            this.engine.isAddonSyncable(item.original, true);
   }
 }
