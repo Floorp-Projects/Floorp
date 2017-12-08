@@ -448,6 +448,54 @@ ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
 }
 
 RefPtr<ClientOpPromise>
+ClientManagerService::Claim(const ClientClaimArgs& aArgs)
+{
+  AssertIsOnBackgroundThread();
+
+  const IPCServiceWorkerDescriptor& serviceWorker = aArgs.serviceWorker();
+  const PrincipalInfo& principalInfo = serviceWorker.principalInfo();
+
+  RefPtr<PromiseListHolder> promiseList = new PromiseListHolder();
+
+  for (auto iter = mSourceTable.Iter(); !iter.Done(); iter.Next()) {
+    ClientSourceParent* source = iter.UserData();
+    MOZ_DIAGNOSTIC_ASSERT(source);
+
+    if (source->IsFrozen()) {
+      continue;
+    }
+
+    if (!MatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
+      continue;
+    }
+
+    const Maybe<ServiceWorkerDescriptor>& controller = source->GetController();
+    if (controller.isSome() &&
+        controller.ref().Scope() == serviceWorker.scope() &&
+        controller.ref().Id() == serviceWorker.id()) {
+      continue;
+    }
+
+    // TODO: This logic to determine if a service worker should control
+    //       a particular client should be moved to the ServiceWorkerManager.
+    //       This can't happen until the SWM is moved to the parent process,
+    //       though.
+    if (!source->ExecutionReady() ||
+        source->Info().Type() == ClientType::Serviceworker ||
+        source->Info().URL().Find(serviceWorker.scope()) != 0) {
+      continue;
+    }
+
+    promiseList->AddPromise(source->StartOp(aArgs));
+  }
+
+  // Maybe finish the promise now in case we didn't find any matching clients.
+  promiseList->MaybeFinish();
+
+  return promiseList->GetResultPromise();
+}
+
+RefPtr<ClientOpPromise>
 ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
 {
   RefPtr<ClientOpPromise> ref;

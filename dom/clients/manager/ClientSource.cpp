@@ -362,6 +362,17 @@ ClientSource::GetController() const
 }
 
 RefPtr<ClientOpPromise>
+ClientSource::Claim(const ClientClaimArgs& aArgs)
+{
+  SetController(ServiceWorkerDescriptor(aArgs.serviceWorker()));
+
+  RefPtr<ClientOpPromise> ref =
+    ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+
+  return ref.forget();
+}
+
+RefPtr<ClientOpPromise>
 ClientSource::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
 {
   RefPtr<ClientOpPromise> ref;

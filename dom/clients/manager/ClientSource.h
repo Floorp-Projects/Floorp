@@ -19,6 +19,7 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
+class ClientClaimArgs;
 class ClientControlledArgs;
 class ClientManager;
 class ClientSourceChild;
@@ -130,6 +131,9 @@ public:
   // been set.
   const Maybe<ServiceWorkerDescriptor>&
   GetController() const;
+
+  RefPtr<ClientOpPromise>
+  Claim(const ClientClaimArgs& aArgs);
 
   RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs);

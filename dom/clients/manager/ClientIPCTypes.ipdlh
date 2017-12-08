@@ -80,6 +80,11 @@ struct ClientMatchAllArgs
   bool includeUncontrolled;
 };
 
+struct ClientClaimArgs
+{
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
 struct ClientGetInfoAndStateArgs
 {
   nsID id;
@@ -94,6 +99,7 @@ union ClientOpConstructorArgs
 {
   ClientControlledArgs;
   ClientMatchAllArgs;
+  ClientClaimArgs;
   ClientGetInfoAndStateArgs;
 };
 
