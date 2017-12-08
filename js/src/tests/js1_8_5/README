@@ -1,0 +1,4 @@
+JavaScript 1.8.5
+
+Use this suite for tests which require EcmaScript 5 along with features such as
+|let|, |yield|
