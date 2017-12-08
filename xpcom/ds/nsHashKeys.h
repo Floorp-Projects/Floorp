@@ -15,7 +15,7 @@
 #include "PLDHashTable.h"
 #include <new>
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsCRTGlue.h"
 #include "nsUnicharUtils.h"
 #include "nsPointerHashKeys.h"

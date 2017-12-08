@@ -166,7 +166,9 @@ class FontInspector {
 
     if (!fonts || !fonts.length) {
       // No fonts to display. Clear the previously shown fonts.
-      this.store.dispatch(updateFonts(fonts));
+      if (this.store) {
+        this.store.dispatch(updateFonts(fonts));
+      }
       return;
     }
 

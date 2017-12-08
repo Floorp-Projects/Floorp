@@ -22,7 +22,7 @@
 
 #include "prinit.h"
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #ifndef MOZ_CALLSTACK_DISABLED
 #include "nsTArray.h"

@@ -11,7 +11,7 @@
 #include <stdint.h>
 #if defined(XP_WIN) && !defined(UPDATER_NO_STRING_GLUE_STL)
 #include <wchar.h>
-#include "nsStringGlue.h"
+#include "nsString.h"
 #endif
 
 struct VersionPart

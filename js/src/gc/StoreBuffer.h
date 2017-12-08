@@ -77,14 +77,20 @@ class StoreBuffer
          */
         T last_;
 
-        /* Maximum number of entries before we request a minor GC. */
-        const static size_t MaxEntries = 48 * 1024 / sizeof(T);
+        /*
+         * Maximum number of entries before we request a minor GC.
+         *
+         * This is passed to HashSet::init(), which will pre-allocate a hash
+         * table capable of holding this many entries before rehashing, which is
+         * currently 4/3 this value.
+         */
+        const static size_t MaxEntries = 8192;
 
         explicit MonoTypeBuffer() : last_(T()) {}
         ~MonoTypeBuffer() { stores_.finish(); }
 
         MOZ_MUST_USE bool init() {
-            if (!stores_.initialized() && !stores_.init())
+            if (!stores_.initialized() && !stores_.init(MaxEntries))
                 return false;
             clear();
             return true;
@@ -94,6 +100,7 @@ class StoreBuffer
             last_ = T();
             if (stores_.initialized())
                 stores_.clear();
+            MOZ_ASSERT(stores_.capacity() > MaxEntries);
         }
 
         /* Add one item to the buffer. */

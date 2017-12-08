@@ -65,7 +65,7 @@ struct icmp6_hdr {
 		u_int8_t icmp6_un_data8[4];
 	} icmp6_dataun;
 };
-#pragma pack()
+#pragma pack(pop)
 
 #define icmp6_data32 icmp6_dataun.icmp6_un_data32
 #define icmp6_mtu icmp6_data32[0]
