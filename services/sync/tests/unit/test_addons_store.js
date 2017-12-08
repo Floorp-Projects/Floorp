@@ -250,16 +250,16 @@ add_task(async function test_apply_uninstall() {
   Assert.equal(null, addon);
 });
 
-add_test(function test_addon_syncability() {
+add_task(async function test_addon_syncability() {
   _("Ensure isAddonSyncable functions properly.");
 
   Svc.Prefs.set("addons.trustedSourceHostnames",
                 "addons.mozilla.org,other.example.com");
 
-  Assert.ok(!store.isAddonSyncable(null));
+  Assert.ok(!(await store.isAddonSyncable(null)));
 
   let addon = installAddon("test_bootstrap1_1");
-  Assert.ok(store.isAddonSyncable(addon));
+  Assert.ok((await store.isAddonSyncable(addon)));
 
   let dummy = {};
   const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall", "isSyncable"];
@@ -267,22 +267,22 @@ add_test(function test_addon_syncability() {
     dummy[k] = addon[k];
   }
 
-  Assert.ok(store.isAddonSyncable(dummy));
+  Assert.ok((await store.isAddonSyncable(dummy)));
 
   dummy.type = "UNSUPPORTED";
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.type = addon.type;
 
   dummy.scope = 0;
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.scope = addon.scope;
 
   dummy.isSyncable = false;
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.isSyncable = addon.isSyncable;
 
   dummy.foreignInstall = true;
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.foreignInstall = false;
 
   uninstallAddon(addon);
@@ -317,8 +317,6 @@ add_test(function test_addon_syncability() {
   Assert.ok(store.isSourceURITrusted(Services.io.newURI("https://addons.mozilla.org/foo")));
 
   Svc.Prefs.reset("addons.trustedSourceHostnames");
-
-  run_next_test();
 });
 
 add_task(async function test_get_all_ids() {
@@ -336,9 +334,9 @@ add_task(async function test_get_all_ids() {
   let addon3 = installAddon("test_install3");
 
   _("Ensure they're syncable.");
-  Assert.ok(store.isAddonSyncable(addon1));
-  Assert.ok(store.isAddonSyncable(addon2));
-  Assert.ok(store.isAddonSyncable(addon3));
+  Assert.ok((await store.isAddonSyncable(addon1)));
+  Assert.ok((await store.isAddonSyncable(addon2)));
+  Assert.ok((await store.isAddonSyncable(addon3)));
 
   let ids = await store.getAllIDs();
 

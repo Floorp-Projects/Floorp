@@ -123,7 +123,7 @@ class CollectionValidator {
 
   // Return whether or not a client item should be present on the server. Expected
   // to be overridden
-  syncedByClient(item) {
+  async syncedByClient(item) {
     return true;
   }
 
@@ -186,7 +186,7 @@ class CollectionValidator {
     let seenClient = new Map();
     for (let record of clientRecords) {
       let id = record[this.idProp];
-      record.shouldSync = this.syncedByClient(record);
+      record.shouldSync = await this.syncedByClient(record);
       let clientHasPossibleDupe = seenClient.has(id);
       if (clientHasPossibleDupe && record.shouldSync) {
         // Only report duplicate client IDs for syncable records.
