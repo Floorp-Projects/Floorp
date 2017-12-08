@@ -13,7 +13,8 @@
     <android.support.design.widget.TextInputLayout
         android:id="@+id/edit_engine_name_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/textinputlayout_spacing">
         <android.support.design.widget.TextInputEditText
             android:id="@+id/edit_engine_name"
             android:layout_width="match_parent"

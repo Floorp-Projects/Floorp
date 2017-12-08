@@ -39,4 +39,6 @@
     <dimen name="preference_padding_horizontal">16dp</dimen>
     <dimen name="preference_padding_vertical">12dp</dimen>
     <dimen name="preference_row_height">48dp</dimen>
+
+    <dimen name="textinputlayout_spacing">8dp</dimen>
 </resources>
