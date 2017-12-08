@@ -24,6 +24,7 @@ using mozilla::ipc::PrincipalInfo;
 namespace {
 
 ClientManagerService* sClientManagerServiceInstance = nullptr;
+bool sClientManagerServiceShutdownRegistered = false;
 
 bool
 MatchPrincipalInfo(const PrincipalInfo& aLeft, const PrincipalInfo& aRight)
@@ -146,19 +147,29 @@ ClientManagerService::ClientManagerService()
 {
   AssertIsOnBackgroundThread();
 
-  // While the ClientManagerService will be gracefully terminated as windows
-  // and workers are naturally killed, this can cause us to do extra work
-  // relatively late in the shutdown process.  To avoid this we eagerly begin
-  // shutdown at the first sign it has begun.  Since we handle normal shutdown
-  // gracefully we don't really need to block anything here.  We just begin
-  // destroying our IPC actors immediately.
-  OnShutdown()->Then(GetCurrentThreadSerialEventTarget(), __func__,
-    [] () {
-      RefPtr<ClientManagerService> svc = ClientManagerService::GetInstance();
-      if (svc) {
-        svc->Shutdown();
-      }
-    });
+  // Only register one shutdown handler at a time.  If a previous service
+  // instance did this, but shutdown has not come, then we can avoid
+  // doing it again.
+  if (!sClientManagerServiceShutdownRegistered) {
+    sClientManagerServiceShutdownRegistered = true;
+
+    // While the ClientManagerService will be gracefully terminated as windows
+    // and workers are naturally killed, this can cause us to do extra work
+    // relatively late in the shutdown process.  To avoid this we eagerly begin
+    // shutdown at the first sign it has begun.  Since we handle normal shutdown
+    // gracefully we don't really need to block anything here.  We just begin
+    // destroying our IPC actors immediately.
+    OnShutdown()->Then(GetCurrentThreadSerialEventTarget(), __func__,
+      [] () {
+        // Look up the latest service instance, if it exists.  This may
+        // be different from the instance that registered the shutdown
+        // handler.
+        RefPtr<ClientManagerService> svc = ClientManagerService::GetInstance();
+        if (svc) {
+          svc->Shutdown();
+        }
+      });
+  }
 }
 
 ClientManagerService::~ClientManagerService()
@@ -175,6 +186,7 @@ void
 ClientManagerService::Shutdown()
 {
   AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(sClientManagerServiceShutdownRegistered);
 
   // If many ClientManagerService are created and destroyed quickly we can
   // in theory get more than one shutdown listener calling us.

@@ -13,7 +13,7 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
 .grid {
   display: grid;
   float: left;
-  grid: auto-flow auto / 10px 30px 10px 30px 10px 30px 10px 30px auto auto auto auto;
+  grid: auto-flow auto / 10px 30px 10px 30px 10px 30px 10px 30px 26px 26px 26px 26px;
   grid-gap: 5px;
   border:1px solid;
   align-items: stretch;
@@ -64,7 +64,7 @@ img {
 <img class="end">
 </div>
 
-<div class="grid">
+<div class="grid" style="grid-template-columns: 10px 30px 10px 30px 10px 30px 10px 30px 26px 16px">
 <img>
 <img>
 <img class="jend">
@@ -101,9 +101,21 @@ var imgSizes =
   ['28px', '20px'],
   ['8px', '20px'],
   ['16px', '20px'],
+  ['24px', '20px'],
   ['16px', '20px'],
+  ['24px', '20px'],
   ['16px', '20px'],
+  ['8px', '20px'],
+  ['28px', '20px'],
+  ['8px', '20px'],
   ['16px', '20px'],
+  ['8px', '20px'],
+  ['28px', '20px'],
+  ['8px', '20px'],
+  ['16px', '20px'],
+  ['24px', '20px'],
+  ['16px', '20px'],
+  ['24px', '20px'],
   ['16px', '20px'],
   ['8px', '20px'],
   ['28px', '20px'],
@@ -117,22 +129,10 @@ var imgSizes =
   ['16px', '20px'],
   ['16px', '20px'],
   ['16px', '20px'],
-  ['8px', '20px'],
-  ['28px', '20px'],
-  ['8px', '20px'],
-  ['16px', '20px'],
-  ['8px', '20px'],
-  ['28px', '20px'],
-  ['8px', '20px'],
   ['16px', '20px'],
   ['16px', '20px'],
   ['16px', '20px'],
-  ['16px', '20px'],
-  ['16px', '20px'],
-  ['16px', '20px'],
-  ['16px', '20px'],
-  ['16px', '20px'],
-  ['16px', '20px'],
+  ['16px', '20px']
 ];
 var imgs = document.querySelectorAll('img');
 for (var i = 0; i < imgs.length; ++i) {

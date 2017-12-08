@@ -110,7 +110,6 @@ class IncrementalRunnable;
 class IntlUtils;
 class Location;
 class MediaQueryList;
-class MozSelfSupport;
 class Navigator;
 class OwningExternalOrWindowProxy;
 class Promise;

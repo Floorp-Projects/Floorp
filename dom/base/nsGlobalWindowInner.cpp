@@ -235,7 +235,6 @@
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/IntlUtils.h"
-#include "mozilla/dom/MozSelfSupportBinding.h"
 #include "mozilla/dom/PopStateEvent.h"
 #include "mozilla/dom/PopupBlockedEvent.h"
 #include "mozilla/dom/PrimitiveConversions.h"
@@ -1211,8 +1210,6 @@ nsGlobalWindowInner::CleanUp()
 
   mExternal = nullptr;
 
-  mMozSelfSupport = nullptr;
-
   mPerformance = nullptr;
 
 #ifdef MOZ_WEBSPEECH
@@ -1508,7 +1505,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMozSelfSupport)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
 
   tmp->TraverseHostObjectURIs(cb);
@@ -1586,7 +1582,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMozSelfSupport)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntlUtils)
 
   tmp->UnlinkHostObjectURIs();
@@ -1801,9 +1796,7 @@ nsGlobalWindowInner::EnsureClientSource()
     mClientSource = ClientManager::CreateSource(ClientType::Window,
                                                 EventTargetFor(TaskCategory::Other),
                                                 mDoc->NodePrincipal());
-    if (NS_WARN_IF(!mClientSource)) {
-      return NS_ERROR_FAILURE;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(mClientSource);
     newClientSource = true;
   }
 
@@ -1833,9 +1826,7 @@ nsGlobalWindowInner::EnsureClientSource()
         ClientManager::CreateSource(ClientType::Window,
                                     EventTargetFor(TaskCategory::Other),
                                     mDoc->NodePrincipal());
-      if (NS_WARN_IF(!mClientSource)) {
-        return NS_ERROR_FAILURE;
-      }
+      MOZ_DIAGNOSTIC_ASSERT(mClientSource);
       newClientSource = true;
     }
   }
@@ -2587,21 +2578,6 @@ nsGlobalWindowInner::GetContent(JSContext* aCx,
 {
   FORWARD_TO_OUTER_OR_THROW(GetContentOuter,
                             (aCx, aRetval, aCallerType, aError), aError, );
-}
-
-MozSelfSupport*
-nsGlobalWindowInner::GetMozSelfSupport(ErrorResult& aError)
-{
-  if (mMozSelfSupport) {
-    return mMozSelfSupport;
-  }
-
-  // We're called from JS and want to use out existing JSContext (and,
-  // importantly, its compartment!) here.
-  AutoJSContext cx;
-  GlobalObject global(cx, FastGetGlobalJSObject());
-  mMozSelfSupport = MozSelfSupport::Constructor(global, cx, aError);
-  return mMozSelfSupport;
 }
 
 BarProp*

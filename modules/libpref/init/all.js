@@ -2205,16 +2205,25 @@ pref("network.auth.private-browsing-sso", false);
 // Control how throttling of http responses works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
 pref("network.http.throttle.enable", true);
+pref("network.http.throttle.version", 1);
+
+// V1 prefs
 pref("network.http.throttle.suspend-for", 900);
 pref("network.http.throttle.resume-for", 100);
+
+// V2 prefs
+pref("network.http.throttle.read-limit-bytes", 8000);
+pref("network.http.throttle.read-interval-ms", 500);
+
+// Common prefs
 // Delay we resume throttled background responses after the last unthrottled
 // response has finished.  Prevents resuming too soon during an active page load
 // at which sub-resource reqeusts quickly come and go.
-pref("network.http.throttle.resume-background-in", 1000);
+pref("network.http.throttle.hold-time-ms", 800);
 // After the last transaction activation or last data chunk response we only
 // throttle for this period of time.  This prevents comet and unresponsive
 // http requests to engage long-standing throttling.
-pref("network.http.throttle.time-window", 3000);
+pref("network.http.throttle.max-time-ms", 500);
 
 // Give higher priority to requests resulting from a user interaction event
 // like click-to-play, image fancy-box zoom, navigation.
