@@ -1,20 +1,20 @@
 {
-  "\\fi_unknown": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 8192
-  },
-  "c:\\$extend\\$usnjrnl:$j": {
+  "C:\\$Extend\\$UsnJrnl:$J": {
     "ignore": true
   },
-  "c:\\$logfile": {
+  "C:\\$Mft": {
     "ignore": true
   },
-  "c:\\$mft": {
+  "C:\\$Secure": {
     "ignore": true
   },
-  "c:\\$secure": {
+  "C:\\$logfile": {
+    "ignore": true
+  },
+  "Z:\\$logfile": {
+    "ignore": true
+  },
+  "C:\\Windows\\Prefetch\\{prefetch}.pf": {
     "ignore": true
   },
   "c:\\program files\\desktop.ini": {
@@ -23,11 +23,11 @@
     "minbytes": 352,
     "maxbytes": 352
   },
-  "c:\\program files\\{nvidia_3d_vision}": {
+  "c:\\program files\\nvidia corporation\\3d vision\\nvstereoapii.dll": {
     "mincount": 0,
-    "maxcount": 24,
-    "minbytes": 0,
-    "maxbytes": 578560
+    "maxcount": 4,
+    "minbytes": 2,
+    "maxbytes": 33792
   },
   "c:\\programdata\\nvidia corporation\\drs\\nvapptimestamps": {
     "mincount": 22,
@@ -41,35 +41,17 @@
     "minbytes": 2,
     "maxbytes": 2
   },
-  "c:\\slave\\test\\build\\venv\\lib\\site-packages\\{pip_vendor}": {
-    "ignore": true
-  },
-  "c:\\users\\{cltbld}\\appdata\\locallow\\mozilla": {
-    "mincount": 0,
-    "maxcount": 8,
-    "minbytes": 0,
-    "maxbytes": 32768
-  },
   "c:\\users\\desktop.ini": {
     "mincount": 2,
     "maxcount": 2,
     "minbytes": 352,
     "maxbytes": 352
   },
-  "c:\\windows\\fonts\\segoeuii.ttf": {
-    "mincount": 0,
-    "maxcount": 4,
-    "minbytes": 0,
-    "maxbytes": 90112
-  },
   "c:\\windows\\fonts\\staticcache.dat": {
     "mincount": 2,
     "maxcount": 2,
     "minbytes": 120,
     "maxbytes": 120
-  },
-  "c:\\windows\\prefetch\\{prefetch}.pf": {
-    "ignore": true
   },
   "c:\\windows\\system32\\audioses.dll": {
     "mincount": 4,
@@ -83,44 +65,17 @@
     "minbytes": 16384,
     "maxbytes": 90112
   },
-  "c:\\windows\\system32\\gdi32.dll": {
-    "mincount": 0,
-    "maxcount": 4,
-    "minbytes": 0,
-    "maxbytes": 114688
-  },
-  "c:\\windows\\system32\\kernel32.dll": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 65536
-  },
-  "c:\\windows\\system32\\mscms.dll": {
-    "mincount": 0,
-    "maxcount": 73728,
-    "minbytes": 0,
-    "maxbytes": 73728
-  },
   "c:\\windows\\system32\\msctf.dll": {
     "mincount": 0,
     "maxcount": 2,
     "minbytes": 0,
     "maxbytes": 65536
   },
-  "c:\\windows\\system32\\spool\\drivers\\color": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 8192
-  },
   "c:\\windows\\system32\\spool\\drivers\\color\\srgb color space profile.icm": {
     "mincount": 2,
     "maxcount": 2,
     "minbytes": 8192,
     "maxbytes": 8192
-  },
-  "z:\\$logfile": {
-    "ignore": true
   },
   "{appdata}\\local\\temp": {
     "mincount": 0,
@@ -134,44 +89,14 @@
     "minbytes": 1692,
     "maxbytes": 1692
   },
-  "{firefox}\\browser\\blocklist.xml": {
-    "mincount": 0,
-    "maxcount": 66,
-    "minbytes": 0,
-    "maxbytes": 540672
-  },
-  "{firefox}\\browser\\extensions\\{uuid}.xpi": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 8192
-  },
-  "{firefox}\\browser\\features\\aushelper@mozilla.org.xpi": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 24576
-  },
-  "{firefox}\\browser\\features\\flyweb@mozilla.org.xpi": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 32768
+  "{firefox}\\Crash Reports\\{time}": {
+    "ignore": true
   },
   "{firefox}\\browser\\omni.ja": {
     "mincount": 0,
     "maxcount": 28,
     "minbytes": 0,
     "maxbytes": 1835008
-  },
-  "{firefox}\\crash reports\\lastcrash": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 20
-  },
-  "{firefox}\\crash reports\\{time}": {
-    "ignore": true
   },
   "{firefox}\\defaults\\pref\\channel-prefs.js": {
     "mincount": 4,
@@ -245,12 +170,6 @@
     "minbytes": 65768,
     "maxbytes": 65768
   },
-  "{profile}\\content-prefs.sqlite-journal": {
-    "mincount": 14,
-    "maxcount": 116,
-    "minbytes": 112,
-    "maxbytes": 1244640
-  },
   "{profile}\\cookies.sqlite": {
     "mincount": 1,
     "maxcount": 6,
@@ -323,12 +242,6 @@
     "minbytes": 0,
     "maxbytes": 127000
   },
-  "{profile}\\extensions\\pageloader@mozilla.org\\install.rdf": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 8192
-  },
   "{profile}\\extensions\\talos-powers@mozilla.org\\chrome.manifest": {
     "mincount": 2,
     "maxcount": 2,
@@ -347,12 +260,6 @@
     "minbytes": 196808,
     "maxbytes": 393216
   },
-  "{profile}\\favicons.sqlite-journal": {
-    "mincount": 2,
-    "maxcount": 8,
-    "minbytes": 16,
-    "maxbytes": 9264
-  },
   "{profile}\\favicons.sqlite-shm": {
     "mincount": 0,
     "maxcount": 4,
@@ -370,12 +277,6 @@
     "maxcount": 4,
     "minbytes": 0,
     "maxbytes": 1388
-  },
-  "{profile}\\invalidprefs.js": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 25412
   },
   "{profile}\\key3.db": {
     "mincount": 0,
@@ -419,12 +320,6 @@
     "minbytes": 196808,
     "maxbytes": 196808
   },
-  "{profile}\\places.sqlite-journal": {
-    "mincount": 2,
-    "maxcount": 8,
-    "minbytes": 16,
-    "maxbytes": 9264
-  },
   "{profile}\\places.sqlite-shm": {
     "mincount": 2,
     "maxcount": 2,
@@ -442,12 +337,6 @@
     "maxcount": 2,
     "minbytes": 1892,
     "maxbytes": 1892
-  },
-  "{profile}\\pluginreg.dat.tmp": {
-    "mincount": 0,
-    "maxcount": 30,
-    "minbytes": 0,
-    "maxbytes": 958
   },
   "{profile}\\prefs-1.js": {
     "mincount": 0,
@@ -515,10 +404,16 @@
     "minbytes": 0,
     "maxbytes": 702
   },
-  "{talos}\\talos\\tests\\{tp5n_files}": {
+  "{talos}\\talos\\tests\\tp5n\\tp5n.manifest": {
     "mincount": 0,
-    "maxcount": 2,
+    "maxcount": 8,
     "minbytes": 0,
-    "maxbytes": 16384
+    "maxbytes": 32786
+  },
+  "{talos}\\talos\\tests\\tp5n\\tp5n.manifest.develop": {
+    "mincount": 0,
+    "maxcount": 8,
+    "minbytes": 0,
+    "maxbytes": 32786
   }
 }
