@@ -159,8 +159,8 @@ function run_test() {
               gItemsNotChecked.push(addon.id);
               updateListener.pendingCount++;
               installedItem.findUpdates(updateListener,
-                                        AddonManager.UPDATE_WHEN_USER_REQUESTED,
-                                        "3", "3");
+                                            AddonManager.UPDATE_WHEN_USER_REQUESTED,
+                                            "3", "3");
             }
           }
         }

@@ -194,17 +194,17 @@ function DBAddonInternal(aLoaded) {
   this._sourceBundle = aLoaded._sourceBundle;
 
   XPCOMUtils.defineLazyGetter(this, "pendingUpgrade", function() {
-    for (let install of XPIProvider.installs) {
-      if (install.state == AddonManager.STATE_INSTALLED &&
+      for (let install of XPIProvider.installs) {
+        if (install.state == AddonManager.STATE_INSTALLED &&
             !(install.addon.inDatabase) &&
             install.addon.id == this.id &&
             install.installLocation == this._installLocation) {
-        delete this.pendingUpgrade;
-        return this.pendingUpgrade = install.addon;
+          delete this.pendingUpgrade;
+          return this.pendingUpgrade = install.addon;
+        }
       }
-    }
-    return null;
-  });
+      return null;
+    });
 }
 
 DBAddonInternal.prototype = Object.create(AddonInternal.prototype);
@@ -567,7 +567,7 @@ this.XPIDatabase = {
       byteArray => {
         logger.debug("Async JSON file read took " + readOptions.outExecutionDuration + " MS");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
-                                                readOptions.outExecutionDuration);
+          readOptions.outExecutionDuration);
 
         if (this.addonDB) {
           logger.debug("Synchronous load completed while waiting for async load");
@@ -727,10 +727,10 @@ this.XPIDatabase = {
         getRepositoryAddon(_findAddon(addonDB, aFilter), makeSafe(aCallback));
       })
     .catch(
-      error => {
-        logger.error("getAddon failed", error);
-        makeSafe(aCallback)(null);
-      });
+        error => {
+          logger.error("getAddon failed", error);
+          makeSafe(aCallback)(null);
+        });
   },
 
   /**
@@ -746,8 +746,8 @@ this.XPIDatabase = {
    */
   getAddonInLocation(aId, aLocation, aCallback) {
     this.asyncLoadDB().then(
-      addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId),
-                                    makeSafe(aCallback)));
+        addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId),
+                                      makeSafe(aCallback)));
   },
 
   /**
@@ -825,7 +825,7 @@ this.XPIDatabase = {
       logger.warn(`Synchronous load of XPI database due to ` +
                   `getVisibleAddonForInternalName. Stack: ${Error().stack}`);
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_forInternalName",
-                                              XPIProvider.runPhase);
+          XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
 
@@ -844,13 +844,13 @@ this.XPIDatabase = {
    */
   getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
     this.getAddonList(
-      aAddon => (aAddon.visible &&
+        aAddon => (aAddon.visible &&
                    (aAddon.pendingUninstall ||
                     // Logic here is tricky. If we're active but disabled,
                     // we're pending disable; !active && !disabled, we're pending enable
                     (aAddon.active == aAddon.disabled)) &&
                    (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1))),
-      aCallback);
+        aCallback);
   },
 
   /**
@@ -895,7 +895,7 @@ this.XPIDatabase = {
   addAddonMetadata(aAddon, aPath) {
     if (!this.addonDB) {
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_addMetadata",
-                                              XPIProvider.runPhase);
+          XPIProvider.runPhase);
       this.syncLoadDB(false);
     }
 
@@ -1068,7 +1068,7 @@ this.XPIDatabase = {
       logger.warn("updateActiveAddons called when DB isn't loaded");
       // force the DB to load
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_updateActive",
-                                              XPIProvider.runPhase);
+          XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
     logger.debug("Updating add-on states");

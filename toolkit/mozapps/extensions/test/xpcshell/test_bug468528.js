@@ -4,36 +4,34 @@
 
 const nsIBLS = Components.interfaces.nsIBlocklistService;
 
-var PLUGINS = [
-  {
-    // Normal blacklisted plugin, before an invalid regexp
-    name: "test_bug468528_1",
-    version: "5",
-    disabled: false,
-    blocklisted: false
-  },
-  {
-    // Normal blacklisted plugin, with an invalid regexp
-    name: "test_bug468528_2",
-    version: "5",
-    disabled: false,
-    blocklisted: false
-  },
-  {
-    // Normal blacklisted plugin, after an invalid regexp
-    name: "test_bug468528_3",
-    version: "5",
-    disabled: false,
-    blocklisted: false
-  },
-  {
-    // Non-blocklisted plugin
-    name: "test_bug468528_4",
-    version: "5",
-    disabled: false,
-    blocklisted: false
-  },
-];
+var PLUGINS = [{
+  // Normal blacklisted plugin, before an invalid regexp
+  name: "test_bug468528_1",
+  version: "5",
+  disabled: false,
+  blocklisted: false
+},
+{
+  // Normal blacklisted plugin, with an invalid regexp
+  name: "test_bug468528_2",
+  version: "5",
+  disabled: false,
+  blocklisted: false
+},
+{
+  // Normal blacklisted plugin, after an invalid regexp
+  name: "test_bug468528_3",
+  version: "5",
+  disabled: false,
+  blocklisted: false
+},
+{
+  // Non-blocklisted plugin
+  name: "test_bug468528_4",
+  version: "5",
+  disabled: false,
+  blocklisted: false
+}];
 
 
 function run_test() {

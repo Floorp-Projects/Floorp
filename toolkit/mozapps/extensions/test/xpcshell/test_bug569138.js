@@ -105,43 +105,43 @@ function run_test() {
 
   startupManager();
 
-  AddonManager.getAddonsByIDs(
-    ["addon1@tests.mozilla.org",
-     "addon2@tests.mozilla.org",
-     "addon3@tests.mozilla.org",
-     "addon4@tests.mozilla.org",
-     "addon5@tests.mozilla.org",
-     "addon6@tests.mozilla.org",
-     "addon7@tests.mozilla.org"],
-    function([a1, a2, a3, a4, a5, a6, a7]) {
-      do_check_neq(a1, null);
-      do_check_false(a1.appDisabled);
-      do_check_true(a1.isActive);
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org",
+                               "addon6@tests.mozilla.org",
+                               "addon7@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5, a6, a7]) {
+    do_check_neq(a1, null);
+    do_check_false(a1.appDisabled);
+    do_check_true(a1.isActive);
 
-      do_check_neq(a2, null);
-      do_check_true(a2.appDisabled);
-      do_check_false(a2.isActive);
+    do_check_neq(a2, null);
+    do_check_true(a2.appDisabled);
+    do_check_false(a2.isActive);
 
-      do_check_neq(a3, null);
-      do_check_true(a3.appDisabled);
-      do_check_false(a3.isActive);
+    do_check_neq(a3, null);
+    do_check_true(a3.appDisabled);
+    do_check_false(a3.isActive);
 
-      do_check_neq(a4, null);
-      do_check_true(a4.appDisabled);
-      do_check_false(a4.isActive);
+    do_check_neq(a4, null);
+    do_check_true(a4.appDisabled);
+    do_check_false(a4.isActive);
 
-      do_check_neq(a5, null);
-      do_check_true(a5.appDisabled);
-      do_check_false(a5.isActive);
+    do_check_neq(a5, null);
+    do_check_true(a5.appDisabled);
+    do_check_false(a5.isActive);
 
-      do_check_neq(a6, null);
-      do_check_true(a6.appDisabled);
-      do_check_false(a6.isActive);
+    do_check_neq(a6, null);
+    do_check_true(a6.appDisabled);
+    do_check_false(a6.isActive);
 
-      do_check_neq(a6, null);
-      do_check_true(a6.appDisabled);
-      do_check_false(a6.isActive);
+    do_check_neq(a6, null);
+    do_check_true(a6.appDisabled);
+    do_check_false(a6.isActive);
 
-      do_execute_soon(do_test_finished);
-    });
+    do_execute_soon(do_test_finished);
+
+  });
 }

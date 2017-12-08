@@ -64,8 +64,8 @@ async function testOpenedAndDraggedXPI(aBrowser) {
   let tab = gBrowser.getTabForBrowser(aBrowser);
   promiseNotification = promiseInstallNotification(aBrowser);
   let effect = EventUtils.synthesizeDrop(tab, tab,
-                                         [[{type: "text/uri-list", data: fileurl1.spec}]],
-                                         "move");
+               [[{type: "text/uri-list", data: fileurl1.spec}]],
+               "move");
   is(effect, "move", "Drag should be accepted");
   await promiseNotification;
   await CheckBrowserInPid(aBrowser, browserPid,
@@ -75,9 +75,9 @@ async function testOpenedAndDraggedXPI(aBrowser) {
   promiseNotification = promiseInstallNotification(aBrowser);
   let promiseTabAndNotification = waitForAnyNewTabAndInstallNotification();
   effect = EventUtils.synthesizeDrop(tab, tab,
-                                     [[{type: "text/uri-list", data: fileurl1.spec}],
-                                      [{type: "text/uri-list", data: fileurl2.spec}]],
-                                     "move");
+           [[{type: "text/uri-list", data: fileurl1.spec}],
+            [{type: "text/uri-list", data: fileurl2.spec}]],
+           "move");
   is(effect, "move", "Drag should be accepted");
   let [newTab, newTabInstallNotification] = await promiseTabAndNotification;
   await promiseNotification;

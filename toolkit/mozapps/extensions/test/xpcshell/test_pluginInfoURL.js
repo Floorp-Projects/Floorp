@@ -58,7 +58,7 @@ add_task(async function test_infoURL() {
   let testInfoURL = "http://test.url.com/";
 
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[0]),
-                     testInfoURL, "Should be the provided url when an infoURL tag is available");
+    testInfoURL, "Should be the provided url when an infoURL tag is available");
 });
 
 /**
@@ -69,7 +69,7 @@ add_task(async function test_altInfoURL() {
   let altTestInfoURL = "http://alt.test.url.com/";
 
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[1]),
-                     altTestInfoURL, "Should be the alternative infoURL");
+    altTestInfoURL, "Should be the alternative infoURL");
 });
 
 /**
@@ -78,13 +78,13 @@ add_task(async function test_altInfoURL() {
  */
 add_task(async function test_infoURL_missing() {
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[2]), null,
-                     "Should be null when no infoURL tag is available.");
+    "Should be null when no infoURL tag is available.");
 });
 
 add_task(async function test_intoURL_newVersion() {
   let testInfoURL = "http://test.url2.com/";
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[3]),
-                     testInfoURL, "Old plugin should match");
+    testInfoURL, "Old plugin should match");
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[4]),
-                     null, "New plugin should not match");
+    null, "New plugin should not match");
 });
