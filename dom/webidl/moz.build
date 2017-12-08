@@ -214,9 +214,6 @@ with Files("Media*Track*"):
 with Files("Mouse*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
-with Files("MozSelfSupport.webidl"):
-    BUG_COMPONENT = ("Firefox Health Report", "Client: Desktop")
-
 with Files("MozTimeManager.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
@@ -693,7 +690,6 @@ WEBIDL_FILES = [
     'MimeTypeArray.webidl',
     'MouseEvent.webidl',
     'MouseScrollEvent.webidl',
-    'MozSelfSupport.webidl',
     'MozStorageAsyncStatementParams.webidl',
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',

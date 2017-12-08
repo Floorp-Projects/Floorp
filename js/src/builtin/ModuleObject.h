@@ -7,6 +7,8 @@
 #ifndef builtin_ModuleObject_h
 #define builtin_ModuleObject_h
 
+#include "mozilla/Maybe.h"
+
 #include "jsapi.h"
 #include "jsatom.h"
 
@@ -128,27 +130,27 @@ typedef Handle<RequestedModuleObject*> HandleRequestedModuleObject;
 class IndirectBindingMap
 {
   public:
-    explicit IndirectBindingMap(Zone* zone);
-    bool init();
-
     void trace(JSTracer* trc);
 
     bool put(JSContext* cx, HandleId name,
              HandleModuleEnvironmentObject environment, HandleId localName);
 
     size_t count() const {
-        return map_.count();
+        return map_ ? map_->count() : 0;
     }
 
     bool has(jsid name) const {
-        return map_.has(name);
+        return map_ ? map_->has(name) : false;
     }
 
     bool lookup(jsid name, ModuleEnvironmentObject** envOut, Shape** shapeOut) const;
 
     template <typename Func>
     void forEachExportedName(Func func) const {
-        for (auto r = map_.all(); !r.empty(); r.popFront())
+        if (!map_)
+            return;
+
+        for (auto r = map_->all(); !r.empty(); r.popFront())
             func(r.front().key());
     }
 
@@ -162,7 +164,7 @@ class IndirectBindingMap
 
     typedef HashMap<jsid, Binding, DefaultHasher<jsid>, ZoneAllocPolicy> Map;
 
-    Map map_;
+    mozilla::Maybe<Map> map_;
 };
 
 class ModuleNamespaceObject : public ProxyObject

@@ -34,7 +34,6 @@ module.exports = {
     "MatchPatternSet": false,
     "MenuBoxObject": false,
     // Specific to Firefox (Chrome code only).
-    "MozSelfSupport": false,
     "SharedArrayBuffer": false,
     "SimpleGestureEvent": false,
     // Note: StopIteration will likely be removed as part of removing legacy

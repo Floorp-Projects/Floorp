@@ -490,10 +490,6 @@
 @RESPATH@/components/nsINIProcessor.js
 @RESPATH@/components/nsPrompter.manifest
 @RESPATH@/components/nsPrompter.js
-#ifdef MOZ_SERVICES_HEALTHREPORT
-@RESPATH@/browser/components/SelfSupportService.manifest
-@RESPATH@/browser/components/SelfSupportService.js
-#endif
 @RESPATH@/components/SyncComponents.manifest
 @RESPATH@/components/Weave.js
 @RESPATH@/components/FxAccountsComponents.manifest

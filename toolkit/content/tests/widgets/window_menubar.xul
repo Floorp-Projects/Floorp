@@ -95,14 +95,14 @@ window.opener.SimpleTest.waitForFocus(function () {
 function pressF10Events()
 {
   return navigator.platform.indexOf("Linux") >= 0 ?
-    [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "popupshowing filepopup", "DOMMenuItemActive item1", "popupshown filepopup"] :
+    [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "popupshowing filepopup", "popupshown filepopup"] :
     [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
 }
 
 function closeAfterF10Events(extraInactive)
 {
   if (navigator.platform.indexOf("Linux") >= 0) {
-    var events = [ "popuphiding filepopup", "popuphidden filepopup", "DOMMenuItemInactive item1",
+    var events = [ "popuphiding filepopup", "popuphidden filepopup",
                    "DOMMenuInactive filepopup", "DOMMenuBarInactive menubar",
                    "DOMMenuItemInactive filemenu" ];
     if (extraInactive)
@@ -479,9 +479,9 @@ var popupTests = [
                // "accelerator on active menubar" because menus opened from a
                // shortcut key are fired asynchronously
                "popuphiding filepopup", "popuphidden filepopup",
-               "popupshowing helppopup", "DOMMenuItemInactive item1",
-               "DOMMenuItemActive item2", "DOMMenuItemInactive item2",
-               "DOMMenuInactive filepopup", "DOMMenuItemActive contents",
+               "popupshowing helppopup",
+               "DOMMenuItemActive item1", "DOMMenuItemInactive item1",
+               "DOMMenuInactive filepopup",
                "popupshown helppopup" ] :
             [ "popupshowing helppopup", "DOMMenuItemInactive filemenu",
               "DOMMenuItemActive helpmenu",
@@ -499,7 +499,9 @@ var popupTests = [
   // should not close because there is more than one item corresponding to
   // that letter
   testname: "menuitem with no accelerator",
-  events: [ "DOMMenuItemInactive contents", "DOMMenuItemActive one" ],
+  events: (navigator.platform.indexOf("Linux") >= 0) ?
+           [ "DOMMenuItemActive one" ] :
+           [ "DOMMenuItemInactive contents", "DOMMenuItemActive one" ],
   test: function() { sendChar("o"); },
   result: function(testname) { checkOpen("helpmenu", testname); }
 },

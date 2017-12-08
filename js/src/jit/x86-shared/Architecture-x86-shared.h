@@ -238,13 +238,11 @@ class FloatRegisters {
     static const uint32_t TotalPhys = 8;
     static const uint32_t Allocatable = 7;
     typedef uint32_t SetType;
-
 #elif defined(JS_CODEGEN_X64)
     static const uint32_t Total = 16 * NumTypes;
     static const uint32_t TotalPhys = 16;
     static const uint32_t Allocatable = 15;
     typedef uint64_t SetType;
-
 #endif
 
     static_assert(sizeof(SetType) * 8 >= Total,
@@ -285,7 +283,6 @@ class FloatRegisters {
           (1 << X86Encoding::xmm5)
         ) * SpreadScalar
         | AllPhysMask * SpreadVector;
-
 #else
     static const SetType VolatileMask =
         AllMask;

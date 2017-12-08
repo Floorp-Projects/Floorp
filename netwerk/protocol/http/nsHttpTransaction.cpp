@@ -104,6 +104,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
     , mHttpResponseCode(0)
     , mCurrentHttpResponseHeaderSize(0)
+    , mThrottlingReadAllowance(THROTTLE_NO_LIMIT)
     , mCapsToClear(0)
     , mResponseIsComplete(false)
     , mReadingStopped(false)
@@ -166,6 +167,11 @@ void nsHttpTransaction::ResumeReading()
     LOG(("nsHttpTransaction::ResumeReading %p", this));
 
     mReadingStopped = false;
+
+    // This with either reengage the limit when still throttled in WriteSegments or
+    // simply reset to allow unlimeted reading again.
+    mThrottlingReadAllowance = THROTTLE_NO_LIMIT;
+
     if (mConnection) {
         nsresult rv = mConnection->ResumeRecv();
         if (NS_FAILED(rv)) {
@@ -853,16 +859,16 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     return rv; // failure code only stops WriteSegments; it is not propagated.
 }
 
-bool nsHttpTransaction::ShouldStopReading()
+bool nsHttpTransaction::ShouldThrottle()
 {
     if (mActivatedAsH2) {
         // Throttling feature is now disabled for http/2 transactions
         // because of bug 1367861.  The logic around mActivatedAsH2
         // will be removed when that is fixed.
         // 
-        // Calling ShouldStopReading on the manager just to make sure 
+        // Calling ShouldThrottle on the manager just to make sure
         // the throttling time window is correctly updated by this transaction.
-        Unused << gHttpHandler->ConnMgr()->ShouldStopReading(this);
+        Unused << gHttpHandler->ConnMgr()->ShouldThrottle(this);
         return false;
     }
 
@@ -876,21 +882,25 @@ bool nsHttpTransaction::ShouldStopReading()
         return false;
     }
 
-    if (!gHttpHandler->ConnMgr()->ShouldStopReading(this)) {
+    if (!gHttpHandler->ConnMgr()->ShouldThrottle(this)) {
         // We are not obligated to throttle
         return false;
     }
 
     if (mContentRead < 16000) {
         // Let the first bytes go, it may also well be all the content we get
-        LOG(("nsHttpTransaction::ShouldStopReading too few content (%" PRIi64 ") this=%p", mContentRead, this));
+        LOG(("nsHttpTransaction::ShouldThrottle too few content (%" PRIi64 ") this=%p", mContentRead, this));
         return false;
     }
 
-    if (gHttpHandler->ConnMgr()->IsConnEntryUnderPressure(mConnInfo)) {
-        LOG(("nsHttpTransaction::ShouldStopReading entry pressure this=%p", this));
+    if (!(mClassOfService & nsIClassOfService::Throttleable) &&
+        gHttpHandler->ConnMgr()->IsConnEntryUnderPressure(mConnInfo)) {
+        LOG(("nsHttpTransaction::ShouldThrottle entry pressure this=%p", this));
         // This is expensive to check (two hashtable lookups) but may help
         // freeing connections for active tab transactions.
+        // Checking this only for transactions that are not explicitly marked
+        // as throttleable because trackers and (specially) downloads should
+        // keep throttling even under pressure.
         return false;
     }
 
@@ -909,7 +919,16 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
         return NS_SUCCEEDED(mStatus) ? NS_BASE_STREAM_CLOSED : mStatus;
     }
 
-    if (ShouldStopReading()) {
+    if (ShouldThrottle()) {
+        if (mThrottlingReadAllowance == THROTTLE_NO_LIMIT) { // no limit set
+            // V1: ThrottlingReadLimit() returns 0
+            mThrottlingReadAllowance = gHttpHandler->ThrottlingReadLimit();
+        }
+    } else {
+        mThrottlingReadAllowance = THROTTLE_NO_LIMIT; // don't limit
+    }
+
+    if (mThrottlingReadAllowance == 0) { // depleted
         if (gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId() !=
             mTopLevelOuterContentWindowId) {
             nsHttp::NotifyActiveTabLoadOptimization();
@@ -935,6 +954,12 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
 
     if (!mPipeOut) {
         return NS_ERROR_UNEXPECTED;
+    }
+
+    if (mThrottlingReadAllowance > 0) {
+        LOG(("nsHttpTransaction::WriteSegments %p limiting read from %u to %d",
+             this, count, mThrottlingReadAllowance));
+        count = std::min(count, static_cast<uint32_t>(mThrottlingReadAllowance));
     }
 
     nsresult rv = mPipeOut->WriteSegments(WritePipeSegment, this, count, countWritten);
@@ -963,6 +988,9 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
             NS_ERROR("no socket thread event target");
             rv = NS_ERROR_UNEXPECTED;
         }
+    } else if (mThrottlingReadAllowance > 0 && NS_SUCCEEDED(rv)) {
+        MOZ_ASSERT(count >= *countWritten);
+        mThrottlingReadAllowance -= *countWritten;
     }
 
     return rv;
