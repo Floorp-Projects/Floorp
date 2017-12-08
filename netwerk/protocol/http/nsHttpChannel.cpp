@@ -460,16 +460,20 @@ nsHttpChannel::OnBeforeConnect()
     rv = mURI->SchemeIs("http", &isHttp);
     NS_ENSURE_SUCCESS(rv,rv);
 
+    // At this point it is no longer possible to call HttpBaseChannel::UpgradeToSecure.
+    mUpgradableToSecure = false;
     if (isHttp) {
-        bool shouldUpgrade = false;
-        rv = NS_ShouldSecureUpgrade(mURI,
-                                    mLoadInfo,
-                                    resultPrincipal,
-                                    mPrivateBrowsing,
-                                    mAllowSTS,
-                                    originAttributes,
-                                    shouldUpgrade);
-        NS_ENSURE_SUCCESS(rv, rv);
+        bool shouldUpgrade = mUpgradeToSecure;
+        if (!shouldUpgrade) {
+            rv = NS_ShouldSecureUpgrade(mURI,
+                                        mLoadInfo,
+                                        resultPrincipal,
+                                        mPrivateBrowsing,
+                                        mAllowSTS,
+                                        originAttributes,
+                                        shouldUpgrade);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
         if (shouldUpgrade) {
             return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
         }
