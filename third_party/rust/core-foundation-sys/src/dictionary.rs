@@ -9,18 +9,17 @@
 
 use libc::{c_void};
 
-use base::{CFAllocatorRef, CFIndex, CFTypeID, Boolean};
+use base::{CFAllocatorRef, CFHashCode, CFIndex, CFTypeID, Boolean};
+use string::CFStringRef;
 
-pub type CFDictionaryApplierFunction = extern "C" fn (key: *const c_void,
-                                                      value: *const c_void,
-                                                      context: *mut c_void);
-pub type CFDictionaryCopyDescriptionCallBack = *const u8;
-pub type CFDictionaryEqualCallBack = *const u8;
-pub type CFDictionaryHashCallBack = *const u8;
-pub type CFDictionaryReleaseCallBack = *const u8;
-pub type CFDictionaryRetainCallBack = *const u8;
+pub type CFDictionaryApplierFunction = extern "C" fn(key: *const c_void, value: *const c_void, context: *mut c_void);
 
-#[allow(dead_code)]
+pub type CFDictionaryRetainCallBack = extern "C" fn(allocator: CFAllocatorRef, value: *const c_void) -> *const c_void;
+pub type CFDictionaryReleaseCallBack = extern "C" fn(allocator: CFAllocatorRef, value: *const c_void);
+pub type CFDictionaryCopyDescriptionCallBack = extern "C" fn(value: *const c_void) -> CFStringRef;
+pub type CFDictionaryEqualCallBack = extern "C" fn(value1: *const c_void, value2: *const c_void) -> Boolean;
+pub type CFDictionaryHashCallBack = extern "C" fn(value: *const c_void) -> CFHashCode;
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct CFDictionaryKeyCallBacks {
@@ -32,7 +31,6 @@ pub struct CFDictionaryKeyCallBacks {
     pub hash: CFDictionaryHashCallBack
 }
 
-#[allow(dead_code)]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct CFDictionaryValueCallBacks {

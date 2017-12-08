@@ -9,7 +9,7 @@
 
 use libc::c_void;
 
-use base::{CFAllocatorRef, CFTypeID};
+use base::{CFAllocatorRef, CFTypeID, CFComparisonResult};
 
 #[repr(C)]
 pub struct __CFBoolean(c_void);
@@ -23,7 +23,7 @@ pub type CFNumberType = u32;
 // static kCFNumberSInt16Type:    CFNumberType = 2;
 pub static kCFNumberSInt32Type:    CFNumberType = 3;
 pub static kCFNumberSInt64Type:    CFNumberType = 4;
-// static kCFNumberFloat32Type:   CFNumberType = 5;
+pub static kCFNumberFloat32Type:   CFNumberType = 5;
 pub static kCFNumberFloat64Type:   CFNumberType = 6;
 // static kCFNumberCharType:      CFNumberType = 7;
 // static kCFNumberShortType:     CFNumberType = 8;
@@ -55,6 +55,6 @@ extern {
                           -> CFNumberRef;
     //fn CFNumberGetByteSize
     pub fn CFNumberGetValue(number: CFNumberRef, theType: CFNumberType, valuePtr: *mut c_void) -> bool;
-    //fn CFNumberCompare
+    pub fn CFNumberCompare(date: CFNumberRef, other: CFNumberRef, context: *mut c_void) -> CFComparisonResult;
     pub fn CFNumberGetTypeID() -> CFTypeID;
 }
