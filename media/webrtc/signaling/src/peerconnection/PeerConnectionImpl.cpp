@@ -3469,8 +3469,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
     // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
     // This is pending spec work
     // Gather pipeline stats.
-    switch (mp.direction()) {
-      case MediaPipeline::TRANSMIT: {
+    switch (mp.Direction()) {
+      case MediaPipeline::DirectionType::TRANSMIT: {
         nsString localId = NS_LITERAL_STRING("outbound_rtp_") + idstr;
         nsString remoteId;
         nsString ssrc;
@@ -3527,8 +3527,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           s.mMediaType.Construct(mediaType);
           s.mRemoteId.Construct(remoteId);
           s.mIsRemote = false;
-          s.mPacketsSent.Construct(mp.rtp_packets_sent());
-          s.mBytesSent.Construct(mp.rtp_bytes_sent());
+          s.mPacketsSent.Construct(mp.RtpPacketsSent());
+          s.mBytesSent.Construct(mp.RtpBytesSent());
 
           // Fill in packet type statistics
           webrtc::RtcpPacketTypeCounter counters;
@@ -3568,7 +3568,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         }
         break;
       }
-      case MediaPipeline::RECEIVE: {
+      case MediaPipeline::DirectionType::RECEIVE: {
         nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
         nsString remoteId;
         nsString ssrc;
@@ -3618,8 +3618,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           s.mRemoteId.Construct(remoteId);
         }
         s.mIsRemote = false;
-        s.mPacketsReceived.Construct(mp.rtp_packets_received());
-        s.mBytesReceived.Construct(mp.rtp_bytes_received());
+        s.mPacketsReceived.Construct(mp.RtpPacketsReceived());
+        s.mBytesReceived.Construct(mp.RtpBytesReceived());
 
         if (query->internalStats && isAudio) {
           int32_t jitterBufferDelay;
