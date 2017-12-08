@@ -144,7 +144,7 @@ add_task(async function test_initialializeWithNoKeys() {
     Assert.equal(globalBrowseridManager._token, null, "we don't have a token");
 });
 
-add_test(function test_getResourceAuthenticator() {
+add_task(async function test_getResourceAuthenticator() {
     _("BrowserIDManager supplies a Resource Authenticator callback which returns a Hawk header.");
     configureFxAccountIdentity(globalBrowseridManager);
     let authenticator = globalBrowseridManager.getResourceAuthenticator();
@@ -152,17 +152,16 @@ add_test(function test_getResourceAuthenticator() {
     let req = {uri: CommonUtils.makeURI(
       "https://example.net/somewhere/over/the/rainbow"),
                method: "GET"};
-    let output = authenticator(req, "GET");
+    let output = await authenticator(req, "GET");
     Assert.ok("headers" in output);
     Assert.ok("authorization" in output.headers);
     Assert.ok(output.headers.authorization.startsWith("Hawk"));
     _("Expected internal state after successful call.");
     Assert.equal(globalBrowseridManager._token.uid, globalIdentityConfig.fxaccount.token.uid);
-    run_next_test();
   }
 );
 
-add_test(function test_resourceAuthenticatorSkew() {
+add_task(async function test_resourceAuthenticatorSkew() {
   _("BrowserIDManager Resource Authenticator compensates for clock skew in Hawk header.");
 
   // Clock is skewed 12 hours into the future
@@ -211,7 +210,7 @@ add_test(function test_resourceAuthenticatorSkew() {
 
   let request = new Resource("https://example.net/i/like/pie/");
   let authenticator = browseridManager.getResourceAuthenticator();
-  let output = authenticator(request, "GET");
+  let output = await authenticator(request, "GET");
   dump("output" + JSON.stringify(output));
   let authHeader = output.headers.authorization;
   Assert.ok(authHeader.startsWith("Hawk"));
@@ -221,11 +220,9 @@ add_test(function test_resourceAuthenticatorSkew() {
   Assert.equal(getTimestamp(authHeader), now - 12 * HOUR_MS);
   Assert.ok(
       (getTimestampDelta(authHeader, now) - 12 * HOUR_MS) < 2 * MINUTE_MS);
-
-  run_next_test();
 });
 
-add_test(function test_RESTResourceAuthenticatorSkew() {
+add_task(async function test_RESTResourceAuthenticatorSkew() {
   _("BrowserIDManager REST Resource Authenticator compensates for clock skew in Hawk header.");
 
   // Clock is skewed 12 hours into the future from our arbitary date
@@ -255,7 +252,7 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
 
   let request = new Resource("https://example.net/i/like/pie/");
   let authenticator = browseridManager.getResourceAuthenticator();
-  let output = authenticator(request, "GET");
+  let output = await authenticator(request, "GET");
   dump("output" + JSON.stringify(output));
   let authHeader = output.headers.authorization;
   Assert.ok(authHeader.startsWith("Hawk"));
@@ -265,8 +262,6 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
   Assert.equal(getTimestamp(authHeader), now - 12 * HOUR_MS);
   Assert.ok(
       (getTimestampDelta(authHeader, now) - 12 * HOUR_MS) < 2 * MINUTE_MS);
-
-  run_next_test();
 });
 
 add_task(async function test_ensureLoggedIn() {
@@ -302,7 +297,7 @@ add_task(async function test_ensureLoggedIn() {
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "final ensureLoggedIn worked");
 });
 
-add_test(function test_tokenExpiration() {
+add_task(async function test_tokenExpiration() {
     _("BrowserIDManager notices token expiration:");
     let bimExp = new BrowserIDManager();
     configureFxAccountIdentity(bimExp, globalIdentityConfig);
@@ -312,7 +307,7 @@ add_test(function test_tokenExpiration() {
     let req = {uri: CommonUtils.makeURI(
       "https://example.net/somewhere/over/the/rainbow"),
                method: "GET"};
-    authenticator(req, "GET");
+    await authenticator(req, "GET");
 
     // Mock the clock.
     _("Forcing the token to expire ...");
@@ -325,7 +320,6 @@ add_test(function test_tokenExpiration() {
     Assert.ok(bimExp._token.expiration < bimExp._now());
     _("... means BrowserIDManager knows to re-fetch it on the next call.");
     Assert.ok(!bimExp.hasValidToken());
-    run_next_test();
   }
 );
 
