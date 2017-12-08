@@ -8,11 +8,6 @@ const LoginInfo = Components.Constructor(
 const PropertyBag = Components.Constructor(
   "@mozilla.org/hash-property-bag;1", Ci.nsIWritablePropertyBag);
 
-function run_test() {
-  Service.engineManager.unregister("addons"); // To silence errors.
-  run_next_test();
-}
-
 async function cleanup(engine, server) {
   Svc.Obs.notify("weave:engine:stop-tracking");
   await engine.wipeClient();
@@ -20,6 +15,10 @@ async function cleanup(engine, server) {
   Service.recordManager.clearCache();
   await promiseStopServer(server);
 }
+
+add_task(async function setup() {
+  await Service.engineManager.unregister("addons"); // To silence errors.
+});
 
 add_task(async function test_ignored_fields() {
   _("Only changes to syncable fields should be tracked");

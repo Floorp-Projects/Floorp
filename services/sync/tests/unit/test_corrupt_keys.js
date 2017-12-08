@@ -43,7 +43,7 @@ add_task(async function test_locally_changed_keys() {
     Service.clusterURL = Service.identity._token.endpoint;
 
     await Service.engineManager.register(HistoryEngine);
-    Service.engineManager.unregister("addons");
+    await Service.engineManager.unregister("addons");
 
     async function corrupt_local_keys() {
       Service.collectionKeys._default.keyPair = [

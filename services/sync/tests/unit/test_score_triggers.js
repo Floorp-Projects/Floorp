@@ -65,7 +65,7 @@ add_task(async function test_tracker_score_updated() {
     Svc.Obs.remove("weave:engine:score:updated", onScoreUpdated);
     tracker.resetScore();
     tracker.clearChangedIDs();
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -87,7 +87,7 @@ add_task(async function test_sync_triggered() {
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();
-  Service.engineManager.unregister(engine);
+  await Service.engineManager.unregister(engine);
 });
 
 add_task(async function test_clients_engine_sync_triggered() {
@@ -114,7 +114,7 @@ add_task(async function test_clients_engine_sync_triggered() {
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();
-  Service.engineManager.unregister(engine);
+  await Service.engineManager.unregister(engine);
 });
 
 add_task(async function test_incorrect_credentials_sync_not_triggered() {
@@ -148,5 +148,5 @@ add_task(async function test_incorrect_credentials_sync_not_triggered() {
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();
-  Service.engineManager.unregister(engine);
+  await Service.engineManager.unregister(engine);
 });
