@@ -926,7 +926,7 @@ var TPS = {
         for (let engine of Weave.Service.engineManager.getEnabled()) {
           if (!(engine.name in names)) {
             Logger.logInfo("Unregistering unused engine: " + engine.name);
-            Weave.Service.engineManager.unregister(engine);
+            await Weave.Service.engineManager.unregister(engine);
           }
         }
       }

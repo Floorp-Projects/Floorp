@@ -619,7 +619,7 @@ EngineManager.prototype = {
     }
   },
 
-  unregister(val) {
+  async unregister(val) {
     let name = val;
     if (val instanceof Engine) {
       name = val.name;
@@ -627,15 +627,15 @@ EngineManager.prototype = {
     if (name in this._engines) {
       let engine = this._engines[name];
       delete this._engines[name];
-      Async.promiseSpinningly(engine.finalize());
+      await engine.finalize();
     }
   },
 
-  clear() {
+  async clear() {
     for (let name in this._engines) {
       let engine = this._engines[name];
       delete this._engines[name];
-      Async.promiseSpinningly(engine.finalize());
+      await engine.finalize();
     }
   },
 };
