@@ -137,8 +137,14 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 Snackbar.make(that.getView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show();
                 that.getFragmentManager().popBackStack();
             } else {
-                // TODO: show error.
+                showServerError(that);
             }
+        }
+
+        private void showServerError(final ManualAddSearchEngineSettingsFragment that) {
+            final ManualAddSearchEnginePreference pref = (ManualAddSearchEnginePreference) that.findPreference(
+                    that.getString(R.string.pref_key_manual_add_search_engine));
+            pref.setSearchQueryErrorText(that.getString(R.string.error_hostLookup_title));
         }
     }
 

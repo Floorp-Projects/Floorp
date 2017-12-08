@@ -89,4 +89,8 @@ public class ManualAddSearchEnginePreference extends Preference {
             public void afterTextChanged(Editable editable) {}
         };
     }
+
+    public void setSearchQueryErrorText(final String err) {
+        searchQueryErrorLayout.setError(err);
+    }
 }
