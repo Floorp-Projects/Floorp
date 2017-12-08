@@ -93,7 +93,7 @@ add_task(async function hmac_error_during_404() {
     Assert.equal(hmacErrorCount, 0);
   } finally {
     tracker.clearChangedIDs();
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await promiseStopServer(server);
