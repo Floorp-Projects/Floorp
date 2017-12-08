@@ -12,6 +12,10 @@
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/Variant.h"
 
+#ifdef XP_WIN
+#undef PostMessage
+#endif
+
 class nsIDocShell;
 class nsISerialEventTarget;
 class nsPIDOMWindowInner;
@@ -22,10 +26,14 @@ namespace dom {
 class ClientClaimArgs;
 class ClientControlledArgs;
 class ClientFocusArgs;
+class ClientGetInfoAndStateArgs;
 class ClientManager;
+class ClientPostMessageArgs;
 class ClientSourceChild;
 class ClientSourceConstructorArgs;
 class ClientSourceExecutionReadyArgs;
+class ClientState;
+class ClientWindowState;
 class PClientManagerChild;
 
 namespace workers {
@@ -135,6 +143,9 @@ public:
 
   RefPtr<ClientOpPromise>
   Focus(const ClientFocusArgs& aArgs);
+
+  RefPtr<ClientOpPromise>
+  PostMessage(const ClientPostMessageArgs& aArgs);
 
   RefPtr<ClientOpPromise>
   Claim(const ClientClaimArgs& aArgs);
