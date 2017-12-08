@@ -46,8 +46,7 @@ job-template:
         using: run-task
         command: >
             cd /builds/worker/checkouts/gecko &&
-            wget https://queue.taskcluster.net/v1/task/${ARTIFACT_TASKID}/artifacts/public/build/target.crashreporter-symbols-full.zip &&
-            ./mach python toolkit/crashreporter/tools/upload_symbols.py target.crashreporter-symbols-full.zip
+            ./mach python toolkit/crashreporter/tools/upload_symbols.py https://queue.taskcluster.net/v1/task/${ARTIFACT_TASKID}/artifacts/public/build/target.crashreporter-symbols-full.zip
         sparse-profile: upload-symbols
     optimization:
         only-if-dependencies-run: null
