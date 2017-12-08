@@ -31,10 +31,7 @@ const PREF_GETADDONS_CACHE_ID_ENABLED    = "extensions.%ID%.getAddons.cache.enab
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_GETADDONS_BYIDS_PERFORMANCE   = "extensions.getAddons.getWithPerformance.url";
-const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
-const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
-const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema";
 
 const PREF_METADATA_LASTUPDATE           = "extensions.getAddons.cache.lastUpdate";
@@ -694,15 +691,6 @@ this.AddonRepository = {
   },
 
   /**
-   * The url that can be visited to see recommended add-ons in this repository.
-   * If the corresponding preference is not defined, defaults to about:blank.
-   */
-  getRecommendedURL() {
-    let url = this._formatURLPref(PREF_GETADDONS_BROWSERECOMMENDED, {});
-    return (url != null) ? url : "about:blank";
-  },
-
-  /**
    * Retrieves the url that can be visited to see search results for the given
    * terms. If the corresponding preference is not defined, defaults to
    * about:blank.
@@ -856,70 +844,6 @@ this.AddonRepository = {
    */
   backgroundUpdateCheck() {
     return this._repopulateCacheInternal(true);
-  },
-
-  /**
-   * Begins a search for recommended add-ons in this repository. Results will
-   * be passed to the given callback.
-   *
-   * @param  aMaxResults
-   *         The maximum number of results to return
-   * @param  aCallback
-   *         The callback to pass results to
-   */
-  retrieveRecommendedAddons(aMaxResults, aCallback) {
-    let url = this._formatURLPref(PREF_GETADDONS_GETRECOMMENDED, {
-      API_VERSION,
-
-      // Get twice as many results to account for potential filtering
-      MAX_RESULTS: 2 * aMaxResults
-    });
-
-    let handleResults = (aElements, aTotalResults) => {
-      this._getLocalAddonIds(aLocalAddonIds => {
-        // aTotalResults irrelevant
-        this._parseAddons(aElements, -1, aLocalAddonIds);
-      });
-    };
-
-    this._beginSearch(url, aMaxResults, aCallback, handleResults);
-  },
-
-  /**
-   * Begins a search for add-ons in this repository. Results will be passed to
-   * the given callback.
-   *
-   * @param  aSearchTerms
-   *         The terms to search for
-   * @param  aMaxResults
-   *         The maximum number of results to return
-   * @param  aCallback
-   *         The callback to pass results to
-   */
-  searchAddons(aSearchTerms, aMaxResults, aCallback) {
-    let compatMode = "normal";
-    if (!AddonManager.checkCompatibility)
-      compatMode = "ignore";
-    else if (AddonManager.strictCompatibility)
-      compatMode = "strict";
-
-    let substitutions = {
-      API_VERSION,
-      TERMS: encodeURIComponent(aSearchTerms),
-      // Get twice as many results to account for potential filtering
-      MAX_RESULTS: 2 * aMaxResults,
-      COMPATIBILITY_MODE: compatMode,
-    };
-
-    let url = this._formatURLPref(PREF_GETADDONS_GETSEARCHRESULTS, substitutions);
-
-    let handleResults = (aElements, aTotalResults) => {
-      this._getLocalAddonIds(aLocalAddonIds => {
-        this._parseAddons(aElements, aTotalResults, aLocalAddonIds);
-      });
-    };
-
-    this._beginSearch(url, aMaxResults, aCallback, handleResults);
   },
 
   // Posts results to the callback
@@ -1451,29 +1375,6 @@ this.AddonRepository = {
       aHandleResults(elements, totalResults, compatData);
     });
     this._request.send(null);
-  },
-
-  // Gets the id's of local add-ons, and the sourceURI's of local installs,
-  // passing the results to aCallback
-  _getLocalAddonIds(aCallback) {
-    let localAddonIds = {ids: null, sourceURIs: null};
-
-    AddonManager.getAllAddons(function(aAddons) {
-      localAddonIds.ids = aAddons.map(a => a.id);
-      if (localAddonIds.sourceURIs)
-        aCallback(localAddonIds);
-    });
-
-    AddonManager.getAllInstalls(function(aInstalls) {
-      localAddonIds.sourceURIs = [];
-      for (let install of aInstalls) {
-        if (install.state != AddonManager.STATE_AVAILABLE)
-          localAddonIds.sourceURIs.push(install.sourceURI.spec);
-      }
-
-      if (localAddonIds.ids)
-        aCallback(localAddonIds);
-    });
   },
 
   // Create url from preference, returning null if preference does not exist

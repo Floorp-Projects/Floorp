@@ -665,7 +665,7 @@ if CONFIG['JS_HAS_CTYPES']:
 if CONFIG['MOZ_LINKER']:
     DEFINES['MOZ_LINKER'] = True
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     if CONFIG['CPU_ARCH'] == 'x86':
         SOURCES['builtin/RegExp.cpp'].no_pgo = True # Bug 772303
     elif CONFIG['CPU_ARCH'] == 'x86_64' and CONFIG['JS_HAS_CTYPES']:
@@ -739,13 +739,13 @@ if CONFIG['JS_HAS_CTYPES']:
         # Windows needs this to be linked with a static library.
         DEFINES['FFI_BUILDING'] = True
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     # Also disable strict-aliasing for GCC compiler, that is enabled by default
     # starting with version 7.1, see Bug 1363009
     CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
 
 # Suppress warnings in third-party code.
-if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['jsdtoa.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 # Generate GC statistics phase data.

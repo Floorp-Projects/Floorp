@@ -89,9 +89,9 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
     GYP_DIRS['trunk/third_party/gflags'].variables = gyp_vars_copy
     GYP_DIRS['trunk/third_party/gflags'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
 
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         # Avoid warnings from third-party code that we can not modify.
-        if CONFIG['CLANG_CL']:
+        if CONFIG['CC_TYPE'] == 'clang-cl':
             CXXFLAGS += ['-Wno-invalid-source-encoding']
         else:
             CXXFLAGS += [

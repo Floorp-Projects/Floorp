@@ -24,9 +24,9 @@ header = """
 skia_opt_flags = []
 
 if CONFIG['MOZ_OPTIMIZE']:
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         skia_opt_flags += ['-O2']
-    elif CONFIG['GNU_CC']:
+    elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         skia_opt_flags += ['-O3']
 
 """
@@ -76,7 +76,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 # We should autogenerate these SSE related flags.
 
-if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
+if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc')):
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
     SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -85,7 +85,7 @@ if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2']
-elif CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
     # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
@@ -96,9 +96,9 @@ elif CONFIG['_MSC_VER']:
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=42']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=51']
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=52']
-elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
+elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += CONFIG['NEON_FLAGS']
-elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['GNU_CC']:
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
@@ -113,7 +113,7 @@ if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['SK_CAN_USE_DLOPEN'] = 0
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CXXFLAGS += [
         '-Wno-deprecated-declarations',
         '-Wno-overloaded-virtual',
@@ -122,12 +122,12 @@ if CONFIG['GNU_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-unreachable-code',
         '-Wno-unused-function',
     ]
-if CONFIG['GNU_CXX'] and not CONFIG['CLANG_CXX'] and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'gcc':
     CXXFLAGS += [
         '-Wno-logical-op',
         '-Wno-maybe-uninitialized',
     ]
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [
         '-Wno-implicit-fallthrough',
         '-Wno-inconsistent-missing-override',
@@ -449,11 +449,11 @@ def write_mozbuild(sources):
   write_sources(f, sources['intel'], 4)
   write_cflags(f, sources['intel'], opt_whitelist, 'skia_opt_flags', 4)
 
-  f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:\n")
+  f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):\n")
   write_sources(f, sources['arm'], 4)
   write_cflags(f, sources['arm'], opt_whitelist, 'skia_opt_flags', 4)
 
-  f.write("elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['GNU_CC']:\n")
+  f.write("elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):\n")
   write_sources(f, sources['arm64'], 4)
   write_cflags(f, sources['arm64'], opt_whitelist, 'skia_opt_flags', 4)
 

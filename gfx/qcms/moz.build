@@ -19,7 +19,7 @@ SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-Wno-missing-field-initializers']
 
 use_sse1 = False
@@ -27,7 +27,7 @@ use_sse2 = False
 use_altivec = False
 if '86' in CONFIG['OS_TEST']:
     use_sse2 = True
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['OS_TEST'] != 'x86_64':
             use_sse1 = True
     else:

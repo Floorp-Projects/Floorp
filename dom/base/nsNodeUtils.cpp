@@ -52,14 +52,10 @@ using mozilla::AutoJSContext;
   }                                                               \
   nsINode* node = content_;                                       \
   NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");        \
-  if (doc) {                                                      \
-    doc->BindingManager()->func_ params_;                         \
-  }                                                               \
+  doc->BindingManager()->func_ params_;                           \
   do {                                                            \
     nsINode::nsSlots* slots = node->GetExistingSlots();           \
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
-      /* No need to explicitly notify the first observer first    \
-         since that'll happen anyway. */                          \
       NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(                    \
         slots->mMutationObservers, nsIMutationObserver, 1,        \
         func_, params_);                                          \
@@ -86,8 +82,6 @@ using mozilla::AutoJSContext;
   do {                                                            \
     nsINode::nsSlots* slots = node->GetExistingSlots();           \
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
-      /* No need to explicitly notify the first observer first    \
-         since that'll happen anyway. */                          \
       NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS_WITH_QI(            \
         slots->mMutationObservers, nsIMutationObserver, 1,        \
         nsIAnimationObserver, func_, params_);                    \

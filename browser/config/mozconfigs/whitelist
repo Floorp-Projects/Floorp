@@ -42,7 +42,6 @@ for platform in all_platforms:
         'ac_add_options --enable-official-branding',
         'export BUILDING_RELEASE=1',
         'if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then',
-        'MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}',
         'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
         'fi',
     ]

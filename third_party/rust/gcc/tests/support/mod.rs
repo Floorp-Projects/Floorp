@@ -36,7 +36,7 @@ impl Test {
 
     pub fn gnu() -> Test {
         let t = Test::new();
-        t.shim("cc").shim("ar");
+        t.shim("cc").shim("c++").shim("ar");
         t
     }
 
@@ -55,8 +55,8 @@ impl Test {
         self
     }
 
-    pub fn gcc(&self) -> gcc::Config {
-        let mut cfg = gcc::Config::new();
+    pub fn gcc(&self) -> gcc::Build {
+        let mut cfg = gcc::Build::new();
         let mut path = env::split_paths(&env::var_os("PATH").unwrap()).collect::<Vec<_>>();
         path.insert(0, self.td.path().to_owned());
         let target = if self.msvc {

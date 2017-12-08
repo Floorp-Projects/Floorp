@@ -13,10 +13,10 @@ Test chrome-only MutationObserver animation notifications (async tests)
   in test_animation_observers_sync.html.
 
 -->
-<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
 <script src="../testcommon.js"></script>
-<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<div id="log"></div>
 <style>
 @keyframes anim {
   to { transform: translate(100px); }
@@ -39,72 +39,13 @@ var gObserver = new MutationObserver(newRecords => {
   gRecords.push(...newRecords);
 });
 
-// Asynchronous testing framework based on layout/style/test/animation_utils.js.
-
-var gTests = [];
-var gCurrentTestName;
-
-function addAsyncAnimTest(aName, aOptions, aTestGenerator) {
-  aTestGenerator.testName = aName;
-  aTestGenerator.options = aOptions || {};
-  gTests.push(aTestGenerator);
-}
-
-function runAsyncTest(aTestGenerator) {
-  return waitForFrame().then(() => {
-    var generator;
-
-    function step(arg) {
-      var next;
-      try {
-        next = generator.next(arg);
-      } catch (e) {
-        return Promise.reject(e);
-      }
-      if (next.done) {
-        return Promise.resolve(next.value);
-      } else {
-        return Promise.resolve(next.value).then(step);
-      }
-    }
-
-    var subtree = aTestGenerator.options.subtree;
-
-    gCurrentTestName = aTestGenerator.testName;
-    if (subtree) {
-      gCurrentTestName += ":subtree";
-    }
-
-    gRecords = [];
+function setupAsynchronousObserver(t, options) {
+  gRecords = [];
+  t.add_cleanup(() => {
     gObserver.disconnect();
-    gObserver.observe(aTestGenerator.options.observe,
-                      { animations: true, subtree: subtree});
-
-    generator = aTestGenerator();
-    return step();
   });
-};
-
-function runAllAsyncTests() {
-  return gTests.reduce((sequence, test) => {
-    return sequence.then(() => runAsyncTest(test));
-  }, Promise.resolve());
-}
-
-// Wrap is and ok with versions that prepend the current sub-test name
-// to the assertion description.
-var old_is = is, old_ok = ok;
-is = function(a, b, message) {
-  if (gCurrentTestName && message) {
-    message = `[${gCurrentTestName}] ${message}`;
-  }
-  old_is(a, b, message);
-}
-ok = function(a, message) {
-  if (gCurrentTestName && message) {
-    message = `[${gCurrentTestName}] ${message}`;
-  }
-  old_ok(a, message);
+  gObserver.observe(options.subtree ? div.parentNode : div,
+                    { animations: true, subtree: options.subtree });
 }
 
 // Adds an event listener and returns a Promise that is resolved when the
@@ -120,20 +61,21 @@ function await_event(aElement, aEventName) {
 }
 
 function assert_record_list(actual, expected, desc, index, listName) {
-  is(actual.length, expected.length, `${desc} - record[${index}].${listName} length`);
+  assert_equals(actual.length, expected.length,
+    `${desc} - record[${index}].${listName} length`);
   if (actual.length != expected.length) {
     return;
   }
   for (var i = 0; i < actual.length; i++) {
-    ok(actual.indexOf(expected[i]) != -1,
-       `${desc} - record[${index}].${listName} contains expected Animation`);
+    assert_not_equals(actual.indexOf(expected[i]), -1,
+      `${desc} - record[${index}].${listName} contains expected Animation`);
   }
 }
 
 function assert_records(expected, desc) {
   var records = gRecords;
   gRecords = [];
-  is(records.length, expected.length, `${desc} - number of records`);
+  assert_equals(records.length, expected.length, `${desc} - number of records`);
   if (records.length != expected.length) {
     return;
   }
@@ -190,267 +132,327 @@ function assert_records_any_order(expected, desc) {
 // targeting the div and observing its parent while using the subtree:true
 // MutationObserver option.
 
-[
-  { observe: div,            target: div, subtree: false },
-  { observe: div.parentNode, target: div, subtree: true  },
-].forEach(aOptions => {
+function runTest() {
+  [
+    { observe: div,            target: div, subtree: false },
+    { observe: div.parentNode, target: div, subtree: true  },
+  ].forEach(aOptions => {
 
-  var e = aOptions.target;
+    var e = aOptions.target;
 
-  // Test that starting a single transition that completes normally
-  // dispatches an added notification and then a removed notification.
-  addAsyncAnimTest("single_transition", aOptions, function*() {
-    // Start a transition.
-    e.style = "transition: background-color 100s; background-color: lime;";
+    promise_test(t => {
+      setupAsynchronousObserver(t, aOptions);
+      // Clear all styles once test finished since we re-use the same element
+      // in all test cases.
+      t.add_cleanup(() => {
+        e.style = "";
+        flushComputedStyle(e);
+      });
 
-    // Register for the end of the transition.
-    var transitionEnd = await_event(e, "transitionend");
+      // Start a transition.
+      e.style = "transition: background-color 100s; background-color: lime;";
 
-    // The transition should cause the creation of a single Animation.
-    var animations = e.getAnimations();
-    is(animations.length, 1, "getAnimations().length after transition start");
+      // Register for the end of the transition.
+      var transitionEnd = await_event(e, "transitionend");
 
-    // Wait for the single MutationRecord for the Animation addition to
-    // be delivered.
-    yield waitForFrame();
-    assert_records([{ added: animations, changed: [], removed: [] }],
-                   "records after transition start");
+      // The transition should cause the creation of a single Animation.
+      var animations = e.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
 
-    // Advance until near the end of the transition, then wait for it to finish.
-    animations[0].currentTime = 99900;
-    yield transitionEnd;
+      // Wait for the single MutationRecord for the Animation addition to
+      // be delivered.
+      return waitForFrame().then(() => {
+        assert_records([{ added: animations, changed: [], removed: [] }],
+                       "records after transition start");
 
-    // After the transition has finished, the Animation should disappear.
-    is(e.getAnimations().length, 0,
-       "getAnimations().length after transition end");
+        // Advance until near the end of the transition, then wait for it to
+        // finish.
+        animations[0].currentTime = 99900;
+      }).then(() => {
+        return transitionEnd;
+      }).then(() => {
+        // After the transition has finished, the Animation should disappear.
+        assert_equals(e.getAnimations().length, 0,
+           "getAnimations().length after transition end");
 
-    // Wait for the change MutationRecord for seeking the Animation to be
-    // delivered, followed by the the removal MutationRecord.
-    yield waitForFrame();
-    assert_records([{ added: [], changed: animations, removed: [] },
-                    { added: [], changed: [], removed: animations }],
-                   "records after transition end");
+        // Wait for the change MutationRecord for seeking the Animation to be
+        // delivered, followed by the the removal MutationRecord.
+        return waitForFrame();
+      }).then(() => {
+        assert_records([{ added: [], changed: animations, removed: [] },
+                        { added: [], changed: [], removed: animations }],
+                       "records after transition end");
+      });
+    }, `single_transition ${aOptions.subtree ? ': subtree' : ''}`);
 
-    e.style = "";
+    // Test that starting a single animation that completes normally
+    // dispatches an added notification and then a removed notification.
+    promise_test(t => {
+      setupAsynchronousObserver(t, aOptions);
+      t.add_cleanup(() => {
+        e.style = "";
+        flushComputedStyle(e);
+      });
+
+      // Start an animation.
+      e.style = "animation: anim 100s;";
+
+      // Register for the end of the animation.
+      var animationEnd = await_event(e, "animationend");
+
+      // The animation should cause the creation of a single Animation.
+      var animations = e.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      // Wait for the single MutationRecord for the Animation addition to
+      // be delivered.
+      return waitForFrame().then(() => {
+        assert_records([{ added: animations, changed: [], removed: [] }],
+                       "records after animation start");
+
+        // Advance until near the end of the animation, then wait for it to finish.
+        animations[0].currentTime = 99900;
+        return animationEnd;
+      }).then(() => {
+        // After the animation has finished, the Animation should disappear.
+        assert_equals(e.getAnimations().length, 0,
+          "getAnimations().length after animation end");
+
+        // Wait for the change MutationRecord from seeking the Animation to
+        // be delivered, followed by a further MutationRecord for the Animation
+        // removal.
+        return waitForFrame();
+      }).then(() => {
+        assert_records([{ added: [], changed: animations, removed: [] },
+                        { added: [], changed: [], removed: animations }],
+                       "records after animation end");
+      });
+    }, `single_animation ${aOptions.subtree ? ': subtree' : ''}`);
+
+    // Test that starting a single animation that is cancelled by updating
+    // the animation-fill-mode property dispatches an added notification and
+    // then a removed notification.
+    promise_test(t => {
+      setupAsynchronousObserver(t, aOptions);
+      t.add_cleanup(() => {
+        e.style = "";
+        flushComputedStyle(e);
+      });
+
+      // Start a short, filled animation.
+      e.style = "animation: anim 100s forwards;";
+
+      // Register for the end of the animation.
+      var animationEnd = await_event(e, "animationend");
+
+      // The animation should cause the creation of a single Animation.
+      var animations = e.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      // Wait for the single MutationRecord for the Animation addition to
+      // be delivered.
+      return waitForFrame().then(() => {
+        assert_records([{ added: animations, changed: [], removed: [] }],
+                       "records after animation start");
+
+        // Advance until near the end of the animation, then wait for it to finish.
+        animations[0].currentTime = 99900;
+        return animationEnd;
+      }).then(() => {
+        // The only MutationRecord at this point should be the change from
+        // seeking the Animation.
+        assert_records([{ added: [], changed: animations, removed: [] }],
+                       "records after animation starts filling");
+
+        // Cancel the animation by setting animation-fill-mode.
+        e.style.animationFillMode = "none";
+        // Explicitly flush style to make sure the above style change happens.
+        // Normally we don't need explicit style flush if there is a waitForFrame()
+        // call but in this particular case we are in the middle of animation events'
+        // callback handling and requestAnimationFrame handling so that we have no
+        // chance to process styling even after the requestAnimationFrame handling.
+        flushComputedStyle(e);
+
+        // Wait for the single MutationRecord for the Animation removal to
+        // be delivered.
+        return waitForFrame();
+      }).then(() => {
+        assert_records([{ added: [], changed: [], removed: animations }],
+                       "records after animation end");
+      });
+    }, `single_animation_cancelled_fill ${aOptions.subtree ? ': subtree' : ''}`);
+
+    // Test that calling finish() on a paused (but otherwise finished) animation
+    // dispatches a changed notification.
+    promise_test(t => {
+      setupAsynchronousObserver(t, aOptions);
+      t.add_cleanup(() => {
+        e.style = "";
+        flushComputedStyle(e);
+      });
+
+      // Start a long animation
+      e.style = "animation: anim 100s forwards";
+
+      // The animation should cause the creation of a single Animation.
+      var animations = e.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      // Wait for the single MutationRecord for the Animation addition to
+      // be delivered.
+      return waitForFrame().then(() => {
+        assert_records([{ added: animations, changed: [], removed: [] }],
+                        "records after animation start");
+
+        // Wait until the animation is playing.
+        return animations[0].ready;
+      }).then(() => {
+        // Finish and pause.
+        animations[0].finish();
+        animations[0].pause();
+
+        // Wait for the pause to complete.
+        return animations[0].ready;
+      }).then(() => {
+        assert_equals(animations[0].playState, "paused",
+          "playState after finishing and pausing");
+
+        // We should have two MutationRecords for the Animation changes:
+        // one for the finish, one for the pause.
+        assert_records([{ added: [], changed: animations, removed: [] },
+                        { added: [], changed: animations, removed: [] }],
+                        "records after finish() and pause()");
+
+        // Call finish() again.
+        animations[0].finish();
+        assert_equals(animations[0].playState, "finished",
+          "playState after finishing from paused state");
+
+        // Wait for the single MutationRecord for the Animation change to
+        // be delivered. Even though the currentTime does not change, the
+        // playState will change.
+        return waitForFrame();
+      }).then(() => {
+        assert_records([{ added: [], changed: animations, removed: [] }],
+                        "records after finish() and pause()");
+
+        // Cancel the animation.
+        e.style = "";
+
+        // Wait for the single removal notification.
+        return waitForFrame();
+      }).then(() => {
+        assert_records([{ added: [], changed: [], removed: animations }],
+                        "records after animation end");
+      });
+    }, `finish_from_pause ${aOptions.subtree ? ': subtree' : ''}`);
+
+    // Test that calling play() on a paused Animation dispatches a changed
+    // notification.
+    promise_test(t => {
+      setupAsynchronousObserver(t, aOptions);
+      t.add_cleanup(() => {
+        e.style = "";
+        flushComputedStyle(e);
+      });
+
+      // Start a long, paused animation
+      e.style = "animation: anim 100s paused";
+
+      // The animation should cause the creation of a single Animation.
+      var animations = e.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      // Wait for the single MutationRecord for the Animation addition to
+      // be delivered.
+      return waitForFrame().then(() => {
+        assert_records([{ added: animations, changed: [], removed: [] }],
+                        "records after animation start");
+
+        // Wait until the animation is ready
+        return animations[0].ready;
+      }).then(() => {
+        // Play
+        animations[0].play();
+
+        // Wait for the single MutationRecord for the Animation change to
+        // be delivered.
+        return animations[0].ready;
+      }).then(() => {
+        assert_records([{ added: [], changed: animations, removed: [] }],
+                        "records after play()");
+
+        // Redundant play
+        animations[0].play();
+
+        // Wait to ensure no change is dispatched
+        return waitForFrame();
+      }).then(() => {
+        assert_records([], "records after redundant play()");
+
+        // Cancel the animation.
+        e.style = "";
+
+        // Wait for the single removal notification.
+        return waitForFrame();
+      }).then(() => {
+        assert_records([{ added: [], changed: [], removed: animations }],
+                        "records after animation end");
+      });
+    }, `play ${aOptions.subtree ? ': subtree' : ''}`);
+
+    // Test that a non-cancelling change to an animation followed immediately by a
+    // cancelling change will only send an animation removal notification.
+    promise_test(t => {
+      setupAsynchronousObserver(t, aOptions);
+      t.add_cleanup(() => {
+        e.style = "";
+        flushComputedStyle(e);
+      });
+
+      // Start a long animation.
+      e.style = "animation: anim 100s;";
+
+      // The animation should cause the creation of a single Animation.
+      var animations = e.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      // Wait for the single MutationRecord for the Animation addition to
+      // be delivered.
+      return waitForFrame().then(() => {;
+        assert_records([{ added: animations, changed: [], removed: [] }],
+                       "records after animation start");
+
+        // Update the animation's delay such that it is still running.
+        e.style.animationDelay = "-1s";
+
+        // Then cancel the animation by updating its duration.
+        e.style.animationDuration = "0.5s";
+
+        // We should get a single removal notification.
+        return waitForFrame();
+      }).then(() => {
+        assert_records([{ added: [], changed: [], removed: animations }],
+                       "records after animation end");
+      });
+    }, `coalesce_change_cancel ${aOptions.subtree ? ': subtree' : ''}`);
+
+  });
+}
+
+promise_test(t => {
+  setupAsynchronousObserver(t, { observe: div, subtree: true });
+  t.add_cleanup(() => {
+    div.style = "";
+    flushComputedStyle(div);
   });
 
-  // Test that starting a single animation that completes normally
-  // dispatches an added notification and then a removed notification.
-  addAsyncAnimTest("single_animation", aOptions, function*() {
-    // Start an animation.
-    e.style = "animation: anim 100s;";
-
-    // Register for the end of the animation.
-    var animationEnd = await_event(e, "animationend");
-
-    // The animation should cause the creation of a single Animation.
-    var animations = e.getAnimations();
-    is(animations.length, 1, "getAnimations().length after animation start");
-
-    // Wait for the single MutationRecord for the Animation addition to
-    // be delivered.
-    yield waitForFrame();
-    assert_records([{ added: animations, changed: [], removed: [] }],
-                   "records after animation start");
-
-    // Advance until near the end of the animation, then wait for it to finish.
-    animations[0].currentTime = 99900;
-    yield animationEnd;
-
-    // After the animation has finished, the Animation should disappear.
-    is(e.getAnimations().length, 0,
-       "getAnimations().length after animation end");
-
-    // Wait for the change MutationRecord from seeking the Animation to
-    // be delivered, followed by a further MutationRecord for the Animation
-    // removal.
-    yield waitForFrame();
-    assert_records([{ added: [], changed: animations, removed: [] },
-                    { added: [], changed: [], removed: animations }],
-                   "records after animation end");
-
-    e.style = "";
-  });
-
-  // Test that starting a single animation that is cancelled by updating
-  // the animation-fill-mode property dispatches an added notification and
-  // then a removed notification.
-  addAsyncAnimTest("single_animation_cancelled_fill", aOptions, function*() {
-    // Start a short, filled animation.
-    e.style = "animation: anim 100s forwards;";
-
-    // Register for the end of the animation.
-    var animationEnd = await_event(e, "animationend");
-
-    // The animation should cause the creation of a single Animation.
-    var animations = e.getAnimations();
-    is(animations.length, 1, "getAnimations().length after animation start");
-
-    // Wait for the single MutationRecord for the Animation addition to
-    // be delivered.
-    yield waitForFrame();
-    assert_records([{ added: animations, changed: [], removed: [] }],
-                   "records after animation start");
-
-    // Advance until near the end of the animation, then wait for it to finish.
-    animations[0].currentTime = 99900;
-    yield animationEnd;
-
-    // The only MutationRecord at this point should be the change from
-    // seeking the Animation.
-    assert_records([{ added: [], changed: animations, removed: [] }],
-                   "records after animation starts filling");
-
-    // Cancel the animation by setting animation-fill-mode.
-    e.style.animationFillMode = "none";
-    // Explicitly flush style to make sure the above style change happens.
-    // Normally we don't need explicit style flush if there is a waitForFrame()
-    // call but in this particular case we are in the middle of animation events'
-    // callback handling and requestAnimationFrame handling so that we have no
-    // chance to process styling even after the requestAnimationFrame handling.
-    flushComputedStyle(e);
-
-    // Wait for the single MutationRecord for the Animation removal to
-    // be delivered.
-    yield waitForFrame();
-    assert_records([{ added: [], changed: [], removed: animations }],
-                   "records after animation end");
-
-    e.style = "";
-  });
-
-  // Test that calling finish() on a paused (but otherwise finished) animation
-  // dispatches a changed notification.
-  addAsyncAnimTest("finish_from_pause", aOptions, function*() {
-    // Start a long animation
-    e.style = "animation: anim 100s forwards";
-
-    // The animation should cause the creation of a single Animation.
-    var animations = e.getAnimations();
-    is(animations.length, 1, "getAnimations().length after animation start");
-
-    // Wait for the single MutationRecord for the Animation addition to
-    // be delivered.
-    yield waitForFrame();
-    assert_records([{ added: animations, changed: [], removed: [] }],
-                    "records after animation start");
-
-    // Wait until the animation is playing.
-    yield animations[0].ready;
-
-    // Finish and pause.
-    animations[0].finish();
-    animations[0].pause();
-
-    // Wait for the pause to complete.
-    yield animations[0].ready;
-    is(animations[0].playState, "paused",
-       "playState after finishing and pausing");
-
-    // We should have two MutationRecords for the Animation changes:
-    // one for the finish, one for the pause.
-    assert_records([{ added: [], changed: animations, removed: [] },
-                    { added: [], changed: animations, removed: [] }],
-                    "records after finish() and pause()");
-
-    // Call finish() again.
-    animations[0].finish();
-    is(animations[0].playState, "finished",
-       "playState after finishing from paused state");
-
-    // Wait for the single MutationRecord for the Animation change to
-    // be delivered. Even though the currentTime does not change, the
-    // playState will change.
-    yield waitForFrame();
-    assert_records([{ added: [], changed: animations, removed: [] }],
-                    "records after finish() and pause()");
-
-    // Cancel the animation.
-    e.style = "";
-
-    // Wait for the single removal notification.
-    yield waitForFrame();
-    assert_records([{ added: [], changed: [], removed: animations }],
-                    "records after animation end");
-  });
-
-  // Test that calling play() on a paused Animation dispatches a changed
-  // notification.
-  addAsyncAnimTest("play", aOptions, function*() {
-    // Start a long, paused animation
-    e.style = "animation: anim 100s paused";
-
-    // The animation should cause the creation of a single Animation.
-    var animations = e.getAnimations();
-    is(animations.length, 1, "getAnimations().length after animation start");
-
-    // Wait for the single MutationRecord for the Animation addition to
-    // be delivered.
-    yield waitForFrame();
-    assert_records([{ added: animations, changed: [], removed: [] }],
-                    "records after animation start");
-
-    // Wait until the animation is ready
-    yield animations[0].ready;
-
-    // Play
-    animations[0].play();
-
-    // Wait for the single MutationRecord for the Animation change to
-    // be delivered.
-    yield animations[0].ready;
-    assert_records([{ added: [], changed: animations, removed: [] }],
-                    "records after play()");
-
-    // Redundant play
-    animations[0].play();
-
-    // Wait to ensure no change is dispatched
-    yield waitForFrame();
-    assert_records([], "records after redundant play()");
-
-    // Cancel the animation.
-    e.style = "";
-
-    // Wait for the single removal notification.
-    yield waitForFrame();
-    assert_records([{ added: [], changed: [], removed: animations }],
-                    "records after animation end");
-  });
-
-  // Test that a non-cancelling change to an animation followed immediately by a
-  // cancelling change will only send an animation removal notification.
-  addAsyncAnimTest("coalesce_change_cancel", aOptions, function*() {
-    // Start a long animation.
-    e.style = "animation: anim 100s;";
-
-    // The animation should cause the creation of a single Animation.
-    var animations = e.getAnimations();
-    is(animations.length, 1, "getAnimations().length after animation start");
-
-    // Wait for the single MutationRecord for the Animation addition to
-    // be delivered.
-    yield waitForFrame();
-    assert_records([{ added: animations, changed: [], removed: [] }],
-                   "records after animation start");
-
-    // Update the animation's delay such that it is still running.
-    e.style.animationDelay = "-1s";
-
-    // Then cancel the animation by updating its duration.
-    e.style.animationDuration = "0.5s";
-
-    // We should get a single removal notification.
-    yield waitForFrame();
-    assert_records([{ added: [], changed: [], removed: animations }],
-                   "records after animation end");
-
-    e.style = "";
-  });
-
-});
-
-addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   // Add style for pseudo elements
   var extraStyle = document.createElement('style');
   document.head.appendChild(extraStyle);
@@ -491,7 +493,7 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
 
   // Check all animations we have in this document
   var docAnims = document.getAnimations();
-  is(docAnims.length, 10, "total animations");
+  assert_equals(docAnims.length, 10, "total animations");
 
   var divAnimations = div.getAnimations();
   var childAAnimations = childA.getAnimations();
@@ -506,6 +508,7 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   var childBPseudoAnimations =
     docAnims.filter(x => x.effect.target.parentElement == childB);
 
+  var seekRecords;
   // The order in which we get the corresponding records is currently
   // based on the order we visit these nodes when updating styles.
   //
@@ -513,75 +516,73 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   // mutation records when we flush styles. We may introduce that in the
   // future but for now all we are interested in testing here is that the
   // right records are generated, but we allow them to occur in any order.
-  yield waitForFrame();
-  assert_records_any_order(
-    [{ added: divAfterAnimations, changed: [], removed: [] },
-     { added: childAAnimations, changed: [], removed: [] },
-     { added: childBAnimations, changed: [], removed: [] },
-     { added: childBPseudoAnimations, changed: [], removed: [] },
-     { added: divAnimations, changed: [], removed: [] },
-     { added: divBeforeAnimations, changed: [], removed: [] }],
-    "records after simultaneous animation start");
+  return waitForFrame().then(() => {
+    assert_records_any_order(
+      [{ added: divAfterAnimations, changed: [], removed: [] },
+       { added: childAAnimations, changed: [], removed: [] },
+       { added: childBAnimations, changed: [], removed: [] },
+       { added: childBPseudoAnimations, changed: [], removed: [] },
+       { added: divAnimations, changed: [], removed: [] },
+       { added: divBeforeAnimations, changed: [], removed: [] }],
+      "records after simultaneous animation start");
 
-  // The one case where we *do* currently perform document-level (or actually
-  // timeline-level) batching is when animations are updated from a refresh
-  // driver tick. In particular, this means that when animations finish
-  // naturally the removed records should be dispatched according to the
-  // position of the elements in the tree.
+    // The one case where we *do* currently perform document-level (or actually
+    // timeline-level) batching is when animations are updated from a refresh
+    // driver tick. In particular, this means that when animations finish
+    // naturally the removed records should be dispatched according to the
+    // position of the elements in the tree.
 
-  // First, flatten the set of animations. we put the animations targeting to
-  // pseudo elements last. (Actually, we don't care the order in the list.)
-  var animations = [ ...divAnimations,
-                     ...childAAnimations,
-                     ...childBAnimations,
-                     ...divBeforeAnimations,
-                     ...divAfterAnimations,
-                     ...childBPseudoAnimations ];
+    // First, flatten the set of animations. we put the animations targeting to
+    // pseudo elements last. (Actually, we don't care the order in the list.)
+    var animations = [ ...divAnimations,
+                       ...childAAnimations,
+                       ...childBAnimations,
+                       ...divBeforeAnimations,
+                       ...divAfterAnimations,
+                       ...childBPseudoAnimations ];
 
-  // Fast-forward to *just* before the end of the animation.
-  animations.forEach(animation => animation.currentTime = 99999);
+    // Fast-forward to *just* before the end of the animation.
+    animations.forEach(animation => animation.currentTime = 99999);
 
-  // Prepare the set of expected change MutationRecords, one for each
-  // animation that was seeked.
-  var seekRecords = animations.map(
-    p => ({ added: [], changed: [p], removed: [] })
-  );
+    // Prepare the set of expected change MutationRecords, one for each
+    // animation that was seeked.
+    seekRecords = animations.map(
+      p => ({ added: [], changed: [p], removed: [] })
+    );
 
-  yield await_event(div, "animationend");
+    return await_event(div, "animationend");
+  }).then(() => {
+    // After the changed notifications, which will be dispatched in the order that
+    // the animations were seeked, we should get removal MutationRecords in order
+    // (div, div::before, div::after), childA, (childB, childB::before).
+    // Note: The animations targeting to the pseudo element are appended after
+    //       the animations of its parent element.
+    divAnimations = [ ...divAnimations,
+                      ...divBeforeAnimations,
+                      ...divAfterAnimations ];
+    childBAnimations = [ ...childBAnimations, ...childBPseudoAnimations ];
+    assert_records(seekRecords.concat(
+                     { added: [], changed: [], removed: divAnimations },
+                     { added: [], changed: [], removed: childAAnimations },
+                     { added: [], changed: [], removed: childBAnimations }),
+                   "records after finishing");
 
-  // After the changed notifications, which will be dispatched in the order that
-  // the animations were seeked, we should get removal MutationRecords in order
-  // (div, div::before, div::after), childA, (childB, childB::before).
-  // Note: The animations targeting to the pseudo element are appended after
-  //       the animations of its parent element.
-  divAnimations = [ ...divAnimations,
-                    ...divBeforeAnimations,
-                    ...divAfterAnimations ];
-  childBAnimations = [ ...childBAnimations, ...childBPseudoAnimations ];
-  assert_records(seekRecords.concat(
-                   { added: [], changed: [], removed: divAnimations },
-                   { added: [], changed: [], removed: childAAnimations },
-                   { added: [], changed: [], removed: childBAnimations }),
-                 "records after finishing");
-
-  // Clean up
-  div.classList.remove("before");
-  div.classList.remove("after");
-  div.style = "";
-  childA.remove();
-  childB.remove();
-  extraStyle.remove();
-});
+    // Clean up
+    div.classList.remove("before");
+    div.classList.remove("after");
+    div.style = "";
+    childA.remove();
+    childB.remove();
+    extraStyle.remove();
+  });
+}, "tree_ordering: subtree");
 
 // Run the tests.
-SimpleTest.requestLongerTimeout(2);
-SimpleTest.waitForExplicitFinish();
+setup({explicit_done: true});
 
 SpecialPowers.pushPrefEnv(
   { set: [["dom.animations-api.pending-member.enabled", true]] }
-).then(runAllAsyncTests).then(() => {
-  SimpleTest.finish();
-}, aError => {
-  ok(false, "Something failed: " + aError);
+).then(runTest).then(() => {
+  done();
 });
 </script>

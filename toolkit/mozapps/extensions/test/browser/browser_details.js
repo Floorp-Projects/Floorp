@@ -7,8 +7,6 @@
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
-const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
-const SEARCH_URL = TESTROOT + "browser_details.xml";
 const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
 
 var gManagerWindow;
@@ -46,9 +44,6 @@ function get(aId) {
 
 function test() {
   requestLongerTimeout(2);
-  // Turn on searching for this test
-  Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
-  Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, SEARCH_URL);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_ID, "hotfix@tests.mozilla.org");
 
   waitForExplicitFinish();

@@ -413,20 +413,6 @@ PeerConnectionImpl::~PeerConnectionImpl()
   // to release off a timer (and XPCOM Shutdown) to avoid churn
 }
 
-OwningNonNull<DOMMediaStream>
-PeerConnectionImpl::MakeMediaStream()
-{
-  MediaStreamGraph* graph =
-    MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, GetWindow());
-
-  RefPtr<DOMMediaStream> stream =
-    DOMMediaStream::CreateSourceStreamAsInput(GetWindow(), graph);
-
-  CSFLogDebug(LOGTAG, "Created media stream %p, inner: %p", stream.get(), stream->GetInputStream());
-
-  return *stream;
-}
-
 /**
  * In JS, an RTCConfiguration looks like this:
  *
@@ -1216,13 +1202,13 @@ PeerConnectionImpl::CreateTransceiverImpl(
     aSendTrack->AddPrincipalChangeObserver(this);
   }
 
-  OwningNonNull<DOMMediaStream> receiveStream =
-    CreateReceiveStreamWithTrack(aJsepTransceiver->GetMediaType());
+  OwningNonNull<dom::MediaStreamTrack> receiveTrack =
+    CreateReceiveTrack(aJsepTransceiver->GetMediaType());
 
   RefPtr<TransceiverImpl> transceiverImpl;
 
   aRv = mMedia->AddTransceiver(aJsepTransceiver,
-                               *receiveStream,
+                               *receiveTrack,
                                aSendTrack,
                                &transceiverImpl);
 
@@ -2382,11 +2368,21 @@ static int GetDTMFToneCode(uint16_t c)
   return i - DTMF_TONECODES;
 }
 
-OwningNonNull<DOMMediaStream>
-PeerConnectionImpl::CreateReceiveStreamWithTrack(
-    SdpMediaSection::MediaType type) {
+OwningNonNull<dom::MediaStreamTrack>
+PeerConnectionImpl::CreateReceiveTrack(SdpMediaSection::MediaType type)
+{
+  bool audio = (type == SdpMediaSection::MediaType::kAudio);
 
-  OwningNonNull<DOMMediaStream> stream = MakeMediaStream();
+  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
+      audio ?
+        MediaStreamGraph::AUDIO_THREAD_DRIVER :
+        MediaStreamGraph::SYSTEM_THREAD_DRIVER,
+      GetWindow());
+
+  RefPtr<DOMMediaStream> stream =
+    DOMMediaStream::CreateSourceStreamAsInput(GetWindow(), graph);
+
+  CSFLogDebug(LOGTAG, "Created media stream %p, inner: %p", stream.get(), stream->GetInputStream());
 
   // Set the principal used for creating the tracks. This makes the stream
   // data (audio/video samples) accessible to the receiving page. We're
@@ -2403,27 +2399,25 @@ PeerConnectionImpl::CreateReceiveStreamWithTrack(
   }
 
   RefPtr<MediaStreamTrack> track;
-  switch (type) {
-    case SdpMediaSection::MediaType::kAudio:
-      track = stream->CreateDOMTrack(
-          kAudioTrack,
-          MediaSegment::AUDIO,
-          new RemoteTrackSource(principal,
-                                NS_ConvertASCIItoUTF16("remote audio")));
-      break;
-    case SdpMediaSection::MediaType::kVideo:
-      track = stream->CreateDOMTrack(
-          kVideoTrack,
-          MediaSegment::VIDEO,
-          new RemoteTrackSource(principal,
-                                NS_ConvertASCIItoUTF16("remote video")));
-      break;
-    default:
-      MOZ_ASSERT(false, "Bad media kind; our JS passed some garbage");
+  if (audio) {
+    track = stream->CreateDOMTrack(
+        kAudioTrack,
+        MediaSegment::AUDIO,
+        new RemoteTrackSource(principal,
+                              NS_ConvertASCIItoUTF16("remote audio")));
+  } else {
+    track = stream->CreateDOMTrack(
+        kVideoTrack,
+        MediaSegment::VIDEO,
+        new RemoteTrackSource(principal,
+                              NS_ConvertASCIItoUTF16("remote video")));
   }
-  stream->AddTrackInternal(track);
 
-  return stream;
+  stream->AddTrackInternal(track);
+  // Spec says remote tracks start out muted.
+  track->MutedChanged(true);
+
+  return OwningNonNull<dom::MediaStreamTrack>(*track);
 }
 
 NS_IMETHODIMP

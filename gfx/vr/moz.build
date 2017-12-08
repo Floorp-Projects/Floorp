@@ -90,7 +90,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 # This is intended as a temporary hack to enable VS2015 builds.
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # ovr_capi_dynamic.h '<unnamed-tag>': Alignment specifier is less than
     # actual alignment (8), and will be ignored
     CXXFLAGS += ['-wd4359']

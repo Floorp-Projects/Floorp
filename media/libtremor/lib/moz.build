@@ -24,7 +24,7 @@ FINAL_LIBRARY = 'gkmedias'
 if CONFIG['OS_ARCH'] == 'AIX':
     DEFINES['alloca'] = '__alloca'
 
-if CONFIG['TARGET_CPU'] == 'arm' and CONFIG['GNU_CC'] and not CONFIG['MOZ_THUMB2']:
+if CONFIG['TARGET_CPU'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc') and not CONFIG['MOZ_THUMB2']:
     DEFINES['_ARM_ASSEM_'] = True
 
 LOCAL_INCLUDES += [

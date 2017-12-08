@@ -117,7 +117,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // TODO: Let's move the TransceiverImpl stuff to PeerConnectionImpl.
   nsresult AddTransceiver(
       JsepTransceiver* aJsepTransceiver,
-      DOMMediaStream& aReceiveStream,
+      dom::MediaStreamTrack& aReceiveTrack,
       dom::MediaStreamTrack* aSendTrack,
       RefPtr<TransceiverImpl>* aTransceiverImpl);
 

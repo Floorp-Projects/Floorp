@@ -13,7 +13,7 @@ EXPORTS += [
 # the standard GNU assembler, so use the C fallback paths for now.
 # This may be fixable if clang's ARM/iOS assembler improves into a
 # viable solution in the future.
-if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['GNU_CC']:
+if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     if CONFIG['HAVE_ARM_NEON']:
         SOURCES += [
             'pixman-arm-neon-asm-bilinear.S',
@@ -24,7 +24,7 @@ if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['GNU_CC']:
             'pixman-arm-simd-asm-scaled.S',
             'pixman-arm-simd-asm.S',
         ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         ASFLAGS += [
             '-no-integrated-as',
         ]
@@ -85,12 +85,12 @@ use_arm_neon_gcc = False
 if '86' in CONFIG['OS_TEST']:
     use_sse2 = True
     if '64' not in CONFIG['OS_TEST']:
-        if CONFIG['_MSC_VER']:
+        if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
             use_mmx = True
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         use_mmx = True
 elif 'ppc' in CONFIG['OS_TEST']:
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         use_vmx = True
 # Apple's arm assembler doesn't support the same syntax as
 # the standard GNU assembler, so use the C fallback paths for now.
@@ -107,7 +107,7 @@ if use_mmx:
     DEFINES['USE_MMX'] = True
     SOURCES += ['pixman-mmx.c']
     SOURCES['pixman-mmx.c'].flags += CONFIG['MMX_FLAGS']
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         SOURCES['pixman-mmx.c'].flags += [
             '-Winline',
             '--param', 'inline-unit-growth=10000',
@@ -119,7 +119,7 @@ if use_sse2:
     DEFINES['USE_SSE2'] = True
     SOURCES += ['pixman-sse2.c']
     SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         SOURCES['pixman-sse2.c'].flags += ['-Winline']
 
 if use_vmx:
@@ -137,7 +137,7 @@ if use_arm_neon_gcc:
     SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CFLAGS += [
         '-Wno-address',
         '-Wno-missing-field-initializers',
@@ -145,17 +145,17 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-incompatible-pointer-types',
         '-Wno-unused',                      # too many unused warnings; ignore
     ]
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += [
         '-Wno-incompatible-pointer-types',
         '-Wno-tautological-compare',
         '-Wno-tautological-constant-out-of-range-compare',
     ]
-if CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-unused-variable',
     ]
-if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'msvc':
     CFLAGS += [
         '-wd4047', # different levels of indirection
         '-wd4101', # unreferenced local variable

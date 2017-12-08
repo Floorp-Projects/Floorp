@@ -16,6 +16,8 @@
     const test = new PeerConnectionTest(options);
     const helper = new VideoStreamHelper();
     var originalTrack;
+    let haveMuteEvent;
+    let haveUnmuteEvent;
     addRenegotiation(test.chain,
       [
         function PC_REMOTE_FIND_RECEIVER(test) {
@@ -37,6 +39,9 @@
         },
       ],
       [
+        function PC_REMOTE_WAIT_FOR_UNMUTE() {
+          return haveUnmuteEvent;
+        },
         function PC_REMOTE_CHECK_ADDED_TRACK(test) {
           is(test.pcRemote._pc.getTransceivers().length, 2,
               "pcRemote should have two transceivers");
@@ -45,6 +50,9 @@
           const vAdded = test.pcRemote.remoteMediaElements.find(
               elem => elem.id.includes(track.id));
           return helper.checkVideoPlaying(vAdded);
+        },
+        function PC_REMOTE_WAIT_FOR_MUTE() {
+          return haveMuteEvent;
         },
         function PC_REMOTE_CHECK_REMOVED_TRACK(test) {
           is(test.pcRemote._pc.getTransceivers().length, 2,
@@ -57,6 +65,15 @@
         }
       ]
     );
+
+    test.chain.insertBefore("PC_REMOTE_SET_LOCAL_DESCRIPTION", [
+      function PC_REMOTE_SETUP_ONMUTE(test) {
+        haveMuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[0].track, "mute");
+      },
+      function PC_REMOTE_SETUP_ONUNMUTE(test) {
+        haveUnmuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[1].track, "unmute");
+      }
+    ], false, 1);
 
     test.setMediaConstraints([{video: true}], [{video: true}]);
     test.run();

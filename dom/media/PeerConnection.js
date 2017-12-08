@@ -981,6 +981,8 @@ class RTCPeerConnection {
         this._onSetLocalDescriptionFailure = reject;
         this._impl.setLocalDescription(action, sdp);
       });
+      this._negotiationNeeded = false;
+      this.updateNegotiationNeeded();
     });
   }
 
@@ -1060,6 +1062,8 @@ class RTCPeerConnection {
         await this._validateIdentity(sdp, origin);
       }
       await haveSetRemote;
+      this._negotiationNeeded = false;
+      this.updateNegotiationNeeded();
     });
   }
 
@@ -1638,15 +1642,11 @@ class PeerConnectionObserver {
 
   onSetLocalDescriptionSuccess() {
     this._dompc._syncTransceivers();
-    this._negotiationNeeded = false;
-    this._dompc.updateNegotiationNeeded();
     this._dompc._onSetLocalDescriptionSuccess();
   }
 
   onSetRemoteDescriptionSuccess() {
     this._dompc._syncTransceivers();
-    this._negotiationNeeded = false;
-    this._dompc.updateNegotiationNeeded();
     this._dompc._onSetRemoteDescriptionSuccess();
   }
 

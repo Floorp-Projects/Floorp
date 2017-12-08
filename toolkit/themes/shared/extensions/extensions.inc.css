@@ -195,9 +195,6 @@ button.warning {
   display: none;
 }
 
-#category-search > .category-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/category-search.svg");
-}
 #category-discover > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
 }
@@ -632,29 +629,6 @@ button.warning {
 
 .addon[status="uninstalled"][selected] {
   background-color: transparent;
-}
-
-
-/*** search view ***/
-
-#search-filter {
-  padding: 5px 20px;
-  margin-right: 48px;
-  margin-left: 48px;
-  font-size: 120%;
-  border-bottom: 1px solid #c1c1c1;
-  overflow-x: hidden;
-}
-
-#search-filter-label {
-  font-weight: bold;
-  color: grey;
-  margin-inline-end: 10px;
-}
-
-#search-allresults-link {
-  margin-top: 1em;
-  margin-bottom: 2em;
 }
 
 

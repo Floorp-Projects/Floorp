@@ -1,0 +1,4 @@
+%include build/sparse-profiles/mach
+
+[include]
+path:toolkit/crashreporter/tools/upload_symbols.py

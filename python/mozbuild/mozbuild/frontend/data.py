@@ -54,7 +54,7 @@ class ContextDerived(TreeMetadata):
         'context_all_paths',
         'topsrcdir',
         'topobjdir',
-        'relativedir',
+        'relsrcdir',
         'srcdir',
         'objdir',
         'config',
@@ -72,7 +72,7 @@ class ContextDerived(TreeMetadata):
         self.topsrcdir = context.config.topsrcdir
         self.topobjdir = context.config.topobjdir
 
-        self.relativedir = context.relsrcdir
+        self.relsrcdir = context.relsrcdir
         self.srcdir = context.srcdir
         self.objdir = context.objdir
 

@@ -241,6 +241,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   void increment_rtp_packets_sent(int bytes);
   void increment_rtcp_packets_sent();
   void increment_rtp_packets_received(int bytes);
+  virtual void OnRtpPacketReceived() {};
   void increment_rtcp_packets_received();
 
   virtual nsresult SendPacket(TransportFlow *flow, const void *data, int len);
@@ -405,7 +406,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> main_thread,
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             RefPtr<AudioSessionConduit> conduit,
-                            SourceMediaStream* aStream);
+                            dom::MediaStreamTrack* aTrack);
 
   void DetachMedia() override;
 
@@ -415,6 +416,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
 
   void Start() override;
   void Stop() override;
+
+  void OnRtpPacketReceived() override;
 
  private:
   // Separate class to allow ref counting
@@ -432,7 +435,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> main_thread,
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             RefPtr<VideoSessionConduit> conduit,
-                            SourceMediaStream* aStream);
+                            dom::MediaStreamTrack* aTrack);
 
   // Called on the main thread.
   void DetachMedia() override;
@@ -443,6 +446,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
 
   void Start() override;
   void Stop() override;
+
+  void OnRtpPacketReceived() override;
 
  private:
   class PipelineRenderer;

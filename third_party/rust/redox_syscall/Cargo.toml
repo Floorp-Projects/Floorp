@@ -12,7 +12,7 @@
 
 [package]
 name = "redox_syscall"
-version = "0.1.31"
+version = "0.1.32"
 authors = ["Jeremy Soller <jackpot51@gmail.com>"]
 description = "A Rust library to access raw Redox system calls"
 documentation = "https://docs.rs/redox_syscall"

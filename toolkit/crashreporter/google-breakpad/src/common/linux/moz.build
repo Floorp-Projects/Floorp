@@ -52,5 +52,5 @@ HOST_DEFINES['NO_STABS_SUPPORT'] = True
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow']

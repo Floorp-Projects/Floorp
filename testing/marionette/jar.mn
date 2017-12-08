@@ -13,7 +13,6 @@ marionette.jar:
   content/accessibility.js (accessibility.js)
   content/listener.js (listener.js)
   content/element.js (element.js)
-  content/frame.js (frame.js)
   content/cert.js (cert.js)
   content/event.js  (event.js)
   content/error.js (error.js)

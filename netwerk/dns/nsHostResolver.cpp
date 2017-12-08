@@ -599,7 +599,7 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
         while (node != aPendingQ) {
             nsHostRecord *rec = static_cast<nsHostRecord *>(node);
             node = node->next;
-            OnLookupComplete(rec, NS_ERROR_ABORT, nullptr);
+            CompleteLookup(rec, NS_ERROR_ABORT, nullptr);
         }
     }
 }
@@ -977,7 +977,7 @@ nsHostResolver::ResolveHost(const char             *host,
         }
     }
     if (result) {
-        callback->OnLookupComplete(this, result, status);
+        callback->OnResolveHostComplete(this, result, status);
     }
 
     return rv;
@@ -1019,7 +1019,7 @@ nsHostResolver::DetachCallback(const char             *host,
     // complete callback with the given status code; this would only be done if
     // the record was in the process of being resolved.
     if (rec)
-        callback->OnLookupComplete(this, rec, status);
+        callback->OnResolveHostComplete(this, rec, status);
 }
 
 nsresult
@@ -1285,11 +1285,11 @@ different_rrset(AddrInfo *rrset1, AddrInfo *rrset2)
 }
 
 //
-// OnLookupComplete() checks if the resolving should be redone and if so it
+// CompleteLookup() checks if the resolving should be redone and if so it
 // returns LOOKUP_RESOLVEAGAIN, but only if 'status' is not NS_ERROR_ABORT.
 // takes ownership of AddrInfo parameter
 nsHostResolver::LookupStatus
-nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* newRRSet)
+nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* newRRSet)
 {
     // get the list of pending callbacks for this lookup, and notify
     // them that the lookup is complete.
@@ -1380,7 +1380,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* n
             nsResolveHostCallback *callback =
                     static_cast<nsResolveHostCallback *>(node);
             node = node->next;
-            callback->OnLookupComplete(this, rec, status);
+            callback->OnResolveHostComplete(this, rec, status);
             // NOTE: callback must not be dereferenced after this point!!
         }
     }
@@ -1420,7 +1420,7 @@ nsHostResolver::CancelAsyncRequest(const char             *host,
                 // Remove from the list of callbacks
                 PR_REMOVE_LINK(callback);
                 recPtr = he->rec;
-                callback->OnLookupComplete(this, recPtr, status);
+                callback->OnResolveHostComplete(this, recPtr, status);
                 break;
             }
             node = node->next;
@@ -1473,7 +1473,7 @@ nsHostResolver::ThreadFunc(void *arg)
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
 #endif
-    nsHostResolver *resolver = (nsHostResolver *)arg;
+    RefPtr<nsHostResolver> resolver = dont_AddRef((nsHostResolver *)arg);
     nsHostRecord *rec  = nullptr;
     AddrInfo *ai = nullptr;
 
@@ -1523,12 +1523,12 @@ nsHostResolver::ThreadFunc(void *arg)
             }
         }
 
-        // OnLookupComplete may release "rec", long before we lose it.
+        // CompleteLookup may release "rec", long before we lose it.
         LOG(("DNS lookup thread - lookup completed for host [%s%s%s]: %s.\n",
              LOG_HOST(rec->host, rec->netInterface),
              ai ? "success" : "failure: unknown host"));
 
-        if (LOOKUP_RESOLVEAGAIN == resolver->OnLookupComplete(rec, status, ai)) {
+        if (LOOKUP_RESOLVEAGAIN == resolver->CompleteLookup(rec, status, ai)) {
             // leave 'rec' assigned and loop to make a renewed host resolve
             LOG(("DNS lookup thread - Re-resolving host [%s%s%s].\n",
                  LOG_HOST(rec->host, rec->netInterface)));
@@ -1537,7 +1537,7 @@ nsHostResolver::ThreadFunc(void *arg)
         }
     }
     resolver->mThreadCount--;
-    NS_RELEASE(resolver);
+    resolver = nullptr;
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
 }
 

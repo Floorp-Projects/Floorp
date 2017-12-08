@@ -22,5 +22,5 @@ DisableStlWrapping()
 
 PYTHON_UNITTEST_MANIFESTS += ['python.ini']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

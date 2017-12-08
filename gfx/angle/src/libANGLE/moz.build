@@ -340,7 +340,7 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
 
 CXXFLAGS += CONFIG['SSE2_FLAGS']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-attributes',
         '-Wno-shadow',
@@ -348,7 +348,7 @@ if CONFIG['GNU_CXX']:
         '-Wno-unknown-pragmas',
         '-Wno-unreachable-code',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         CXXFLAGS += [
             '-Wno-inconsistent-missing-override',
             '-Wno-unused-private-field',
@@ -359,7 +359,7 @@ if CONFIG['GNU_CXX']:
             '-Wno-shadow-local',
         ]
 
-if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'msvc':
     CXXFLAGS += [
         '-wd4018', # '>' : signed/unsigned mismatch
         '-wd4530', # C++ exception handler used, without /EHsc

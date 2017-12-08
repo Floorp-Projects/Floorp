@@ -55,7 +55,7 @@ namespace mozilla {
 
 using fallible_t = std::nothrow_t;
 
-const fallible_t fallible = std::nothrow;
+static const fallible_t& fallible = std::nothrow;
 
 } // namespace mozilla
 
