@@ -81,6 +81,19 @@ exports.isTemporaryID = function (addonID) {
   return AddonManagerPrivate.isTemporaryInstallID(addonID);
 };
 
+exports.isLegacyTemporaryExtension = function (addonForm) {
+  if (!addonForm.type) {
+    // If about:debugging is connected to an older then 59 remote Firefox, and type is
+    // not available on the addon/webextension actors, return false to avoid showing
+    // irrelevant warning messages.
+    return false;
+  }
+  return addonForm.type == "extension" &&
+         addonForm.temporarilyInstalled &&
+         !addonForm.isWebExtension &&
+         !addonForm.isAPIExtension;
+};
+
 exports.parseFileUri = function (url) {
   // Strip a leading slash from Windows drive letter URIs.
   // file:///home/foo ~> /home/foo
