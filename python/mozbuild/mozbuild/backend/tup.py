@@ -190,7 +190,7 @@ class TupOnly(CommonBackend, PartialBackend):
         self._installed_files = '$(MOZ_OBJ_ROOT)/<installed-files>'
 
     def _get_backend_file(self, relobjdir):
-        objdir = mozpath.join(self.environment.topobjdir, relobjdir)
+        objdir = mozpath.normpath(mozpath.join(self.environment.topobjdir, relobjdir))
         if objdir not in self._backend_files:
             self._backend_files[objdir] = \
                     BackendTupfile(objdir, self.environment,
@@ -385,9 +385,9 @@ class TupOnly(CommonBackend, PartialBackend):
             return
 
         for path, files in obj.files.walk():
-            backend_file = self._get_backend_file(mozpath.join(target, path))
             for f in files:
                 if not isinstance(f, ObjDirPath):
+                    backend_file = self._get_backend_file(mozpath.join(target, path))
                     if '*' in f:
                         if f.startswith('/') or isinstance(f, AbsolutePath):
                             basepath, wild = os.path.split(f.full_path)
