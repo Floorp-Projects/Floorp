@@ -63,14 +63,13 @@ const GMP_PLUGINS = [
   }];
 XPCOMUtils.defineConstant(this, "GMP_PLUGINS", GMP_PLUGINS);
 
-XPCOMUtils.defineLazyGetter(
-  this, "pluginsBundle",
+XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
+XPCOMUtils.defineLazyGetter(this, "gmpService",
+  () => Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(Ci.mozIGeckoMediaPluginChromeService));
 
-XPCOMUtils.defineLazyServiceGetters(this, {
-  gmpService: ["@mozilla.org/gecko-media-plugin-service;1", "mozIGeckoMediaPluginChromeService"],
-  messageManager: ["@mozilla.org/globalmessagemanager;1", "nsIMessageListenerManager"],
-});
+var messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                       .getService(Ci.nsIMessageListenerManager);
 
 var gLogger;
 var gLogAppenderDump = null;
@@ -110,7 +109,7 @@ function GMPWrapper(aPluginInfo) {
                                                  this._plugin.id),
                              this, true);
   Services.prefs.addObserver(GMPPrefs.getPrefKey(GMPPrefs.KEY_PLUGIN_VERSION,
-                                                 this._plugin.id),
+                                          this._plugin.id),
                              this, true);
   if (this._plugin.isEME) {
     Services.prefs.addObserver(GMPPrefs.KEY_EME_ENABLED, this, true);

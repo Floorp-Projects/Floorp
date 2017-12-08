@@ -554,9 +554,9 @@ function run_test() {
     do_check_eq(ltm.usedThemes[2].id, "builtInTheme1");
 
     Assert.throws(() => { ltm.addBuiltInTheme(dummy("builtInTheme0")); },
-                  "Exception is thrown adding a duplicate theme");
+      "Exception is thrown adding a duplicate theme");
     Assert.throws(() => { ltm.addBuiltInTheme("not a theme object"); },
-                  "Exception is thrown adding an invalid theme");
+      "Exception is thrown adding an invalid theme");
 
     AddonManager.getAddonByID("x0@personas.mozilla.org", x0Addon => {
       // Currently applied (non-app-specific) can be uninstalled or disabled,

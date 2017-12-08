@@ -188,14 +188,14 @@ add_task(async function run_test_1() {
   restartManager();
   [a1, a2, a3, a4, a5, a6, a7, t1, t2] =
     await promiseAddonsByIDs(["addon1@tests.mozilla.org",
-                              "addon2@tests.mozilla.org",
-                              "addon3@tests.mozilla.org",
-                              "addon4@tests.mozilla.org",
-                              "addon5@tests.mozilla.org",
-                              "addon6@tests.mozilla.org",
-                              "addon7@tests.mozilla.org",
-                              "theme1@tests.mozilla.org",
-                              "theme2@tests.mozilla.org"]);
+                             "addon2@tests.mozilla.org",
+                             "addon3@tests.mozilla.org",
+                             "addon4@tests.mozilla.org",
+                             "addon5@tests.mozilla.org",
+                             "addon6@tests.mozilla.org",
+                             "addon7@tests.mozilla.org",
+                             "theme1@tests.mozilla.org",
+                             "theme2@tests.mozilla.org"]);
 
   do_check_neq(a1, null);
   do_check_true(a1.isActive);
@@ -379,14 +379,14 @@ add_task(async function run_test_1() {
 
   [a1, a2, a3, a4, a5, a6, a7, t1, t2] =
     await promiseAddonsByIDs(["addon1@tests.mozilla.org",
-                              "addon2@tests.mozilla.org",
-                              "addon3@tests.mozilla.org",
-                              "addon4@tests.mozilla.org",
-                              "addon5@tests.mozilla.org",
-                              "addon6@tests.mozilla.org",
-                              "addon7@tests.mozilla.org",
-                              "theme1@tests.mozilla.org",
-                              "theme2@tests.mozilla.org"]);
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org",
+                               "addon6@tests.mozilla.org",
+                               "addon7@tests.mozilla.org",
+                               "theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"]);
 
   do_check_neq(a1, null);
   do_check_true(a1.isActive);

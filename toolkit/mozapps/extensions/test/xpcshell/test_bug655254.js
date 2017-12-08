@@ -126,39 +126,39 @@ async function run_test_1() {
 // Set up the profile
 function run_test_2() {
   AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(async function(a2) {
-    do_check_neq(a2, null);
-    do_check_false(a2.appDisabled);
-    do_check_true(a2.isActive);
-    do_check_false(isExtensionInAddonsList(userDir, a2.id));
-    do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
+   do_check_neq(a2, null);
+   do_check_false(a2.appDisabled);
+   do_check_true(a2.isActive);
+   do_check_false(isExtensionInAddonsList(userDir, a2.id));
+   do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
-    a2.userDisabled = true;
-    do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
+   a2.userDisabled = true;
+   do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
 
-    shutdownManager();
+   shutdownManager();
 
-    userDir.parent.moveTo(gProfD, "extensions4");
-    userDir = gProfD.clone();
-    userDir.append("extensions4");
-    userDir.append(gAppInfo.ID);
-    do_check_true(userDir.exists());
+   userDir.parent.moveTo(gProfD, "extensions4");
+   userDir = gProfD.clone();
+   userDir.append("extensions4");
+   userDir.append(gAppInfo.ID);
+   do_check_true(userDir.exists());
 
-    await promiseStartupManager(false);
+   await promiseStartupManager(false);
 
-    AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                 "addon2@tests.mozilla.org"], function([a1_2, a2_2]) {
-      do_check_neq(a1_2, null);
-      do_check_false(a1_2.appDisabled);
-      do_check_true(a1_2.isActive);
-      do_check_true(isExtensionInAddonsList(userDir, a1_2.id));
+   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                "addon2@tests.mozilla.org"], function([a1_2, a2_2]) {
+     do_check_neq(a1_2, null);
+     do_check_false(a1_2.appDisabled);
+     do_check_true(a1_2.isActive);
+     do_check_true(isExtensionInAddonsList(userDir, a1_2.id));
 
-      do_check_neq(a2_2, null);
-      do_check_true(a2_2.userDisabled);
-      do_check_false(a2_2.isActive);
-      do_check_false(isExtensionInAddonsList(userDir, a2_2.id));
-      do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
+     do_check_neq(a2_2, null);
+     do_check_true(a2_2.userDisabled);
+     do_check_false(a2_2.isActive);
+     do_check_false(isExtensionInAddonsList(userDir, a2_2.id));
+     do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
 
-      end_test();
-    });
+     end_test();
+   });
   }));
 }

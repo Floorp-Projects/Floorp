@@ -234,9 +234,9 @@ add_task(async function() {
   if (shutdownError) {
     do_print("Previous XPI save failed");
     check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED,
-                          ["addon6@tests.mozilla.org"]);
+        ["addon6@tests.mozilla.org"]);
     check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED,
-                          ["addon4@tests.mozilla.org"]);
+        ["addon4@tests.mozilla.org"]);
   } else {
     do_print("Previous XPI save succeeded");
     check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);

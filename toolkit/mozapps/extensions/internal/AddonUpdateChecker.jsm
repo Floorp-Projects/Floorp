@@ -803,8 +803,8 @@ this.AddonUpdateChecker = {
    * @return an update object if one matches or null if not
    */
   getCompatibilityUpdate(aUpdates, aVersion, aIgnoreCompatibility,
-                         aAppVersion, aPlatformVersion,
-                         aIgnoreMaxVersion, aIgnoreStrictCompat) {
+                                   aAppVersion, aPlatformVersion,
+                                   aIgnoreMaxVersion, aIgnoreStrictCompat) {
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
@@ -819,7 +819,7 @@ this.AddonUpdateChecker = {
               return update;
           }
         } else if (matchesVersions(update, aAppVersion, aPlatformVersion,
-                                   aIgnoreMaxVersion, aIgnoreStrictCompat)) {
+                                 aIgnoreMaxVersion, aIgnoreStrictCompat)) {
           return update;
         }
       }
@@ -845,8 +845,8 @@ this.AddonUpdateChecker = {
    * @return an update object if one matches or null if not
    */
   getNewestCompatibleUpdate(aUpdates, aAppVersion, aPlatformVersion,
-                            aIgnoreMaxVersion, aIgnoreStrictCompat,
-                            aCompatOverrides) {
+                                      aIgnoreMaxVersion, aIgnoreStrictCompat,
+                                      aCompatOverrides) {
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)

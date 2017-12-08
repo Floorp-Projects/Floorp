@@ -29,13 +29,13 @@ function install_addon(aXpi) {
   return new Promise(resolve => {
     AddonManager.getInstallForURL(TESTROOT + "addons/" + aXpi + ".xpi",
                                   function(aInstall) {
-                                    aInstall.addListener({
-                                      onInstallEnded(aInstall) {
-                                        resolve();
-                                      }
-                                    });
-                                    aInstall.install();
-                                  }, "application/x-xpinstall");
+      aInstall.addListener({
+        onInstallEnded(aInstall) {
+          resolve();
+        }
+      });
+      aInstall.install();
+    }, "application/x-xpinstall");
   });
 }
 

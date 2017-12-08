@@ -26,10 +26,10 @@ async function testSimpleIconsetParsing(manifest) {
 
   function check_icons(addon_copy) {
     deepEqual(addon_copy.icons, {
-      16: uri + "icon16.png",
-      32: uri + "icon32.png",
-      48: uri + "icon48.png",
-      64: uri + "icon64.png"
+        16: uri + "icon16.png",
+        32: uri + "icon32.png",
+        48: uri + "icon48.png",
+        64: uri + "icon64.png"
     });
 
     // iconURL should map to icons[48] and icons[64]

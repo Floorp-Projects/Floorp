@@ -369,10 +369,10 @@ add_task(async function() {
     bootstrap: true,
     unpack: true,
     targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
+          id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
       maxVersion: "1"
-    }],
+        }],
     name: "Test Bootstrap 1 (temporary)",
   }, tempdir);
 
@@ -637,10 +637,10 @@ add_task(async function() {
     bootstrap: true,
     unpack: true,
     targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
+          id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
       maxVersion: "1"
-    }],
+        }],
     name: "Test Bootstrap 1 (temporary)",
   }, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
 
@@ -738,10 +738,10 @@ add_task(async function() {
     bootstrap: true,
     unpack: true,
     targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
+          id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
       maxVersion: "1"
-    }],
+        }],
     name: "Test 1 (temporary)",
   }, tempdir);
 
@@ -754,7 +754,7 @@ add_task(async function() {
              + " a rejected promise");
   } catch (err) {
     do_check_eq(err.message,
-                "Non-restartless add-on with ID addon1@tests.mozilla.org is"
+        "Non-restartless add-on with ID addon1@tests.mozilla.org is"
         + " already installed");
   }
 
