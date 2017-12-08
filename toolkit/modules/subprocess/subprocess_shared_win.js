@@ -152,11 +152,11 @@ Object.assign(win32, {
   ]),
 
   OVERLAPPED: new ctypes.StructType("OVERLAPPED", [
-     {"Internal": win32.ULONG_PTR},
-     {"InternalHigh": win32.ULONG_PTR},
-     {"Offset": win32.DWORD},
-     {"OffsetHigh": win32.DWORD},
-     {"hEvent": win32.HANDLE},
+    {"Internal": win32.ULONG_PTR},
+    {"InternalHigh": win32.ULONG_PTR},
+    {"Offset": win32.DWORD},
+    {"OffsetHigh": win32.DWORD},
+    {"hEvent": win32.HANDLE},
   ]),
 
   PROCESS_INFORMATION: new ctypes.StructType("PROCESS_INFORMATION", [
