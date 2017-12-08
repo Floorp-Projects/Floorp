@@ -109,7 +109,7 @@ DELAYLOAD_DLLS += [
     'wsock32.dll',
 ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 elif CONFIG['OS_ARCH'] == 'WINNT':
     WIN32_EXE_LDFLAGS += ['-municode']

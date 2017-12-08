@@ -39,5 +39,5 @@ include('/ipc/chromium/chromium-config.mozbuild')
 # Suppress some GCC warnings being treated as errors:
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about an important MOZ_EXPORT for android::AString
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
   CXXFLAGS += ['-Wno-error=attributes']

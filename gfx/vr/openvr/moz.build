@@ -17,7 +17,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['OS_ARCH'] == 'Darwin':
     DEFINES['POSIX'] = True
     DEFINES['OSX'] = True
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         CXXFLAGS += ['-xobjective-c++']
 
 if CONFIG['OS_ARCH'] == 'Linux':
@@ -51,7 +51,7 @@ SOURCES += [
     'src/vrpathregistry_public.cpp',
 ]
 
-if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     # Harmless warnings in 3rd party code
     CXXFLAGS += [
         '-Wno-error=parentheses',

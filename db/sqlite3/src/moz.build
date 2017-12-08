@@ -94,7 +94,7 @@ elif CONFIG['HAVE_64BIT_BUILD']:
     DEFINES['SQLITE_TEMP_STORE'] = 2
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-Wno-sign-compare',
         '-Wno-type-limits',

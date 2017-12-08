@@ -62,7 +62,7 @@ if CONFIG['LIBFUZZER']:
 if CONFIG['ENABLE_GECKODRIVER']:
     DEFINES['MOZ_GECKODRIVER'] = True
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # Always enter a Windows program through wmain, whether or not we're
     # a console application.
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
@@ -95,7 +95,7 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
 # The heap will grow if need be.
 #
 # Set it to 256k.  See bug 127069.
-if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CC_TYPE'] not in ('clang', 'gcc'):
     LDFLAGS += ['/HEAP:0x40000']
 
 DisableStlWrapping()

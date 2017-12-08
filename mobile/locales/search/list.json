@@ -6,10 +6,7 @@
   },
   "regionOverrides": {
     "US": {
-      "google": "google-nocodes"
-    },
-    "CA": {
-      "google": "google-nocodes"
+      "google": "google-2018"
     },
     "KZ": {
       "google": "google-nocodes"
@@ -27,12 +24,6 @@
       "google": "google-nocodes"
     },
     "CN": {
-      "google": "google-nocodes"
-    },
-    "TW": {
-      "google": "google-nocodes"
-    },
-    "HK": {
       "google": "google-nocodes"
     }
   },

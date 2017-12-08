@@ -13,10 +13,13 @@ pub trait Trig {
     fn sin(self) -> Self;
     fn cos(self) -> Self;
     fn tan(self) -> Self;
+    fn fast_atan2(y: Self, x: Self) -> Self;
+    fn degrees_to_radians(deg: Self) -> Self;
+    fn radians_to_degrees(rad: Self) -> Self;
 }
 
 macro_rules! trig {
-    ($ty:ty) => (
+    ($ty:ident) => (
         impl Trig for $ty {
             #[inline]
             fn sin(self) -> $ty { self.sin() }
@@ -24,9 +27,45 @@ macro_rules! trig {
             fn cos(self) -> $ty { self.cos() }
             #[inline]
             fn tan(self) -> $ty { self.tan() }
+
+            /// A slightly faster approximation of atan2.
+            ///
+            /// Note that it does not deal with the case where both x and y are 0.
+            #[inline]
+            fn fast_atan2(y: $ty, x: $ty) -> $ty {
+                // See https://math.stackexchange.com/questions/1098487/atan2-faster-approximation#1105038
+                use std::$ty::consts;
+                let x_abs = x.abs();
+                let y_abs = y.abs();
+                let a = x_abs.min(y_abs) / x_abs.max(y_abs);
+                let s = a * a;
+                let mut result = ((-0.0464964749 * s + 0.15931422) * s - 0.327622764) * s * a + a;
+                if y_abs > x_abs {
+                    result = consts::FRAC_PI_2 - result;
+                }
+                if x < 0.0 {
+                    result = consts::PI - result
+                }
+                if y < 0.0 {
+                    result = -result
+                }
+
+                result
+            }
+
+            #[inline]
+            fn degrees_to_radians(deg: Self) -> Self {
+                deg.to_radians()
+            }
+
+            #[inline]
+            fn radians_to_degrees(rad: Self) -> Self {
+                rad.to_degrees()
+            }
         }
     )
 }
 
 trig!(f32);
 trig!(f64);
+

@@ -138,7 +138,7 @@ if CONFIG['MOZ_TASK_TRACER']:
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-error=shadow',
         '-Wno-ignored-qualifiers', # due to use of breakpad headers

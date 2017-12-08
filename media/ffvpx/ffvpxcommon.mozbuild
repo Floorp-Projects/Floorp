@@ -50,7 +50,7 @@ LOCAL_INCLUDES += ['/media/ffvpx']
 AllowCompilerWarnings()
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-pointer-sign',
@@ -61,7 +61,7 @@ if CONFIG['GNU_CC']:
         # XXX This does not seem to have any effect on some versions of GCC.
         '-Wno-deprecated-declarations',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         CFLAGS += [
             '-Wno-incompatible-pointer-types-discards-qualifiers',
             '-Wno-string-conversion',
@@ -76,7 +76,7 @@ if CONFIG['GNU_CC']:
         ]
     # Force visibility of cpu and av_log symbols.
     CFLAGS += ['-include', 'libavutil_visibility.h']
-elif CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CFLAGS += [
         '-wd4090', # 'return' : different 'const' qualifiers
         '-wd4018', # '>' : signed/unsigned mismatch
@@ -120,7 +120,7 @@ elif not CONFIG['RELEASE_OR_BETA']:
 #
 # As a temporary workaround while upstream decides how to address this,
 # we enable modules to make <intrin.h> more MSVC-compatible.
-if CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Xclang',
         '-fmodules',

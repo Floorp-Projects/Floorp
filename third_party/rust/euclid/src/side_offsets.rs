@@ -17,9 +17,6 @@ use std::fmt;
 use std::ops::Add;
 use std::marker::PhantomData;
 
-#[cfg(feature = "unstable")]
-use heapsize::HeapSizeOf;
-
 /// A group of side offsets, which correspond to top/left/bottom/right for borders, padding,
 /// and margins in CSS, optionally tagged with a unit.
 define_matrix! {
@@ -135,11 +132,6 @@ pub struct SideOffsets2DSimdI32 {
     pub bottom: i32,
     pub right: i32,
     pub left: i32,
-}
-
-#[cfg(feature = "unstable")]
-impl HeapSizeOf for SideOffsets2DSimdI32 {
-    fn heap_size_of_children(&self) -> usize { 0 }
 }
 
 #[cfg(feature = "unstable")]

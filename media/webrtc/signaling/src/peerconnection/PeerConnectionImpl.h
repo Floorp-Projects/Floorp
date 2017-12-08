@@ -68,8 +68,6 @@ class NrIceTurnServer;
 class MediaPipeline;
 class TransceiverImpl;
 
-class DOMMediaStream;
-
 namespace dom {
 class RTCCertificate;
 struct RTCConfiguration;
@@ -116,7 +114,6 @@ using mozilla::dom::PeerConnectionObserver;
 using mozilla::dom::RTCConfiguration;
 using mozilla::dom::RTCIceServer;
 using mozilla::dom::RTCOfferOptions;
-using mozilla::DOMMediaStream;
 using mozilla::NrIceCtx;
 using mozilla::NrIceMediaStream;
 using mozilla::DtlsIdentity;
@@ -258,7 +255,6 @@ public:
   static already_AddRefed<PeerConnectionImpl>
       Constructor(const mozilla::dom::GlobalObject& aGlobal, ErrorResult& rv);
   static PeerConnectionImpl* CreatePeerConnection();
-  OwningNonNull<DOMMediaStream> MakeMediaStream();
 
   nsresult CreateRemoteSourceStreamInfo(RefPtr<RemoteSourceStreamInfo>* aInfo,
                                         const std::string& aId);
@@ -410,7 +406,7 @@ public:
       dom::MediaStreamTrack* aSendTrack,
       ErrorResult& rv);
 
-  OwningNonNull<DOMMediaStream> CreateReceiveStreamWithTrack(
+  OwningNonNull<dom::MediaStreamTrack> CreateReceiveTrack(
       SdpMediaSection::MediaType type);
 
   bool CheckNegotiationNeeded(ErrorResult &rv);

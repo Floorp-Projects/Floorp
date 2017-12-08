@@ -13,7 +13,7 @@ Library('xpcomglue')
 
 FORCE_STATIC_LIB = True
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     DEFINES['_USE_ANSI_CPP'] = True
     # Don't include directives about which CRT to use
     CFLAGS += ['-Zl']

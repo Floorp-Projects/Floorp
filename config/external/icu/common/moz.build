@@ -11,7 +11,7 @@ DEFINES['U_COMMON_IMPLEMENTATION'] = True
 
 LOCAL_INCLUDES += ['/intl/icu/source/i18n']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-deprecated-declarations',
         '-Wno-type-limits',

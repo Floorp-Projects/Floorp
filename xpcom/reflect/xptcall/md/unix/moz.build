@@ -53,7 +53,7 @@ if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
 
 if CONFIG['OS_ARCH'] == 'SunOS' and '86' in CONFIG['OS_TEST']:
     if CONFIG['OS_TEST'] == 'x86_64':
-        if CONFIG['GNU_CC']:
+        if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             SOURCES += [
                 'xptcinvoke_asm_x86_64_unix.S',
                 'xptcinvoke_x86_64_unix.cpp',
@@ -70,7 +70,7 @@ if CONFIG['OS_ARCH'] == 'SunOS' and '86' in CONFIG['OS_TEST']:
                 'xptcstubs_x86_64_solaris.cpp',
             ]
     else:
-        if CONFIG['GNU_CC']:
+        if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             SOURCES += [
                 'xptcinvoke_gcc_x86_unix.cpp',
                 'xptcstubs_gcc_x86_unix.cpp'
@@ -136,7 +136,7 @@ if CONFIG['OS_ARCH'] == 'HP-UX':
 
 if CONFIG['OS_ARCH'] == 'Linux':
     if CONFIG['OS_TEST'] in ('hppa', 'hppa2.0', 'hppa1.1'):
-        if CONFIG['GNU_CXX']:
+        if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             SOURCES += [
                 'xptcinvoke_asm_parisc_linux.s',
                 'xptcinvoke_pa32.cpp',
@@ -285,7 +285,7 @@ if CONFIG['OS_ARCH'] == 'SunOS' and '86' not in CONFIG['OS_TEST']:
             'xptcinvoke_sparc_solaris.cpp',
             'xptcstubs_sparc_solaris.cpp',
         ]
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         SOURCES += [
             'xptcinvoke_asm_sparc_solaris_GCC3.s',
             'xptcstubs_asm_sparc_solaris.s',

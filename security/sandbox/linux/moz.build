@@ -83,12 +83,12 @@ if CONFIG['MOZ_GMP_SANDBOX']:
 # consistent.  See also the comment in SandboxLogging.h.
 SOURCES['../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
 
-if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     # Keep clang from warning about intentional 'switch' fallthrough in icu_utf.cc:
     SOURCES['../chromium/base/third_party/icu/icu_utf.cc'].flags += ['-Wno-implicit-fallthrough']
     SOURCES['../chromium/sandbox/linux/seccomp-bpf/trap.cc'].flags += ['-Wno-unreachable-code-return']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow']
     SOURCES['../chromium/sandbox/linux/services/syscall_wrappers.cc'].flags += [
         '-Wno-empty-body',
@@ -97,7 +97,7 @@ if CONFIG['GNU_CXX']:
 # gcc lto likes to put the top level asm in syscall.cc in a different partition
 # from the function using it which breaks the build.  Work around that by
 # forcing there to be only one partition.
-if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
+if '-flto' in CONFIG['OS_CXXFLAGS'] and CONFIG['CC_TYPE'] != 'clang':
     LDFLAGS += ['--param lto-partitions=1']
 
 DEFINES['NS_NO_XPCOM'] = True

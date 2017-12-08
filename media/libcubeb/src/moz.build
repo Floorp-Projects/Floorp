@@ -71,7 +71,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     OS_LIBS += [
       "avrt",
     ]
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         CXXFLAGS += ['-wd4005'] # C4005: '_USE_MATH_DEFINES' : macro redefinition
 
 if CONFIG['OS_TARGET'] == 'Android':

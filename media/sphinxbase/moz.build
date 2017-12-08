@@ -69,14 +69,14 @@ SOURCES += [
 ]
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-sign-compare',
     ]
 
 # Add define required of third party code.
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     DEFINES['HAVE_CONFIG_H'] = True
 
 # We allow warnings for third-party code that can be updated from upstream.

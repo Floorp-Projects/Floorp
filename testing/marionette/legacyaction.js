@@ -27,7 +27,7 @@ this.legacyaction = this.action = {};
 /**
  * Functionality for (single finger) action chains.
  */
-action.Chain = function (checkForInterrupted) {
+action.Chain = function() {
   // for assigning unique ids to all touches
   this.nextTouchId = 1000;
   // keep track of active Touches
@@ -39,12 +39,6 @@ action.Chain = function (checkForInterrupted) {
   // whether to send mouse event
   this.mouseEventsOnly = false;
   this.checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-  if (typeof checkForInterrupted == "function") {
-    this.checkForInterrupted = checkForInterrupted;
-  } else {
-    this.checkForInterrupted = () => {};
-  }
 
   // determines if we create touch events
   this.inputSource = null;
@@ -111,35 +105,33 @@ action.Chain.prototype.emitMouseEvent = function (
     button,
     clickCount,
     modifiers) {
-  if (!this.checkForInterrupted()) {
-    logger.debug(`Emitting ${type} mouse event ` +
-        `at coordinates (${elClientX}, ${elClientY}) ` +
-        `relative to the viewport, ` +
-        `button: ${button}, ` +
-        `clickCount: ${clickCount}`);
+  logger.debug(`Emitting ${type} mouse event ` +
+      `at coordinates (${elClientX}, ${elClientY}) ` +
+      `relative to the viewport, ` +
+      `button: ${button}, ` +
+      `clickCount: ${clickCount}`);
 
-    let win = doc.defaultView;
-    let domUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
+  let win = doc.defaultView;
+  let domUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
 
-    let mods;
-    if (typeof modifiers != "undefined") {
-      mods = event.parseModifiers_(modifiers);
-    } else {
-      mods = 0;
-    }
-
-    domUtils.sendMouseEvent(
-        type,
-        elClientX,
-        elClientY,
-        button || 0,
-        clickCount || 1,
-        mods,
-        false,
-        0,
-        this.inputSource);
+  let mods;
+  if (typeof modifiers != "undefined") {
+    mods = event.parseModifiers_(modifiers);
+  } else {
+    mods = 0;
   }
+
+  domUtils.sendMouseEvent(
+      type,
+      elClientX,
+      elClientY,
+      button || 0,
+      clickCount || 1,
+      mods,
+      false,
+      0,
+      this.inputSource);
 };
 
 /**
@@ -476,7 +468,6 @@ action.Chain.prototype.generateEvents = function (
     default:
       throw new WebDriverError("Unknown event type: " + type);
   }
-  this.checkForInterrupted();
 };
 
 action.Chain.prototype.mouseTap = function (doc, x, y, button, count, mod) {

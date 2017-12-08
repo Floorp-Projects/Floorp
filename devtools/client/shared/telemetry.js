@@ -173,12 +173,6 @@ Telemetry.prototype = {
       histogram: "DEVTOOLS_CUSTOM_OPENED_COUNT",
       timerHistogram: "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS"
     },
-    reloadAddonInstalled: {
-      histogram: "DEVTOOLS_RELOAD_ADDON_INSTALLED_COUNT",
-    },
-    reloadAddonReload: {
-      histogram: "DEVTOOLS_RELOAD_ADDON_RELOAD_COUNT",
-    },
     gridInspectorShowGridAreasOverlayChecked: {
       scalar: "devtools.grid.showGridAreasOverlay.checked",
     },
