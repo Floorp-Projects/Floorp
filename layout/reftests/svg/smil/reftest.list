@@ -142,7 +142,7 @@ random-if(webrender) == anim-marker-orient-02.svg lime.svg
 fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg lime.svg
 == anim-svg-viewBox-02.svg lime.svg
 == anim-svg-viewBox-03.svg lime.svg
-== anim-view-01.svg#view lime.svg
+skip-if(styloVsGecko) == anim-view-01.svg#view lime.svg # bug 1354406
 
 # animate some preserveAspectRatio attributes
 == anim-feImage-preserveAspectRatio-01.svg lime.svg
