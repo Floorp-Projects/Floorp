@@ -198,6 +198,9 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
             return false;
         } finally {
             if (connection != null) {
+                try {
+                    connection.getInputStream().close(); // HttpURLConnection.getResponseCode opens the InputStream.
+                } catch (final IOException e) { } // Whatever.
                 connection.disconnect();
             }
         }
