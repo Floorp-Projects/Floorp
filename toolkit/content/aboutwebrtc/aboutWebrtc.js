@@ -797,7 +797,10 @@ ICEStats.prototype = {
       cand => stats.push({[cand.type]: this.candidateToString(cand)})
     );
 
-    return stats.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    return stats.sort((a, b) => (b.bytesSent ?
+                                 (b.bytesSent || 0) - (a.bytesSent || 0) :
+                                 (b.priority || 0) - (a.priority || 0)
+                                ));
   },
 
   candidateToString(c) {
