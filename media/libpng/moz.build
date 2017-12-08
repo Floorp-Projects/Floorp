@@ -65,5 +65,5 @@ FINAL_LIBRARY = 'gkmedias'
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-std=c89']

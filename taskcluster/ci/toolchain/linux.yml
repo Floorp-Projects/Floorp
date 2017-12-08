@@ -346,30 +346,6 @@ linux64-rust-1.22:
         toolchain-alias: linux64-rust
         toolchain-artifact: public/build/rustc.tar.xz
 
-linux64-rust-1.21:
-    description: "rust repack"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TL(rust-1.21)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        docker-image: {in-tree: desktop-build}
-        max-run-time: 7200
-        env:
-            UPLOAD_DIR: artifacts
-    run:
-        using: toolchain-script
-        script: repack_rust.py
-        arguments: [
-            '--channel', '1.21.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-        ]
-        toolchain-artifact: public/build/rustc.tar.xz
-
 linux64-rust-1.19:
     description: "rust repack"
     treeherder:

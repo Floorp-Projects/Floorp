@@ -70,7 +70,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         LOCAL_INCLUDES += [
             '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
         ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         ASFLAGS += [
             '-no-integrated-as',
         ]
@@ -97,7 +97,7 @@ if CONFIG['OS_TARGET'] == 'Android':
             '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
         ]
 
-if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] != 'msvc':
     for f in SOURCES:
         if f.endswith('sse2.c'):
             SOURCES[f].flags += CONFIG['SSE2_FLAGS']
@@ -110,7 +110,7 @@ if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
         elif f.endswith('avx2.c'):
             SOURCES[f].flags += ['-mavx2']
 
-if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'msvc':
     for f in SOURCES:
         if f.endswith('avx.c'):
             SOURCES[f].flags += ['-arch:AVX']
@@ -118,12 +118,12 @@ if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
             SOURCES[f].flags += ['-arch:AVX2']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CFLAGS += [
         '-Wno-sign-compare',
         '-Wno-unused-function', # so many of these warnings; just ignore them
     ]
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += [
         '-Wno-unreachable-code',
         '-Wno-unneeded-internal-declaration',

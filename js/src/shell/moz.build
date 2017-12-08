@@ -22,7 +22,7 @@ DEFINES['EXPORT_JS_API'] = True
 # Also set in ../moz.build
 DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # unnecessary PGO for js shell.  But gcc cannot turn off pgo because it is
     # necessary to link PGO lib on gcc when a object/static lib are compiled
     # for PGO.
@@ -50,11 +50,11 @@ shellmoduleloader.inputs = [
     'ModuleLoader.js',
 ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow', '-Werror=format']
 
 # This is intended as a temporary workaround to enable VS2015.
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += ['-wd4312']
 
 # Place a GDB Python auto-load file next to the shell executable, both in

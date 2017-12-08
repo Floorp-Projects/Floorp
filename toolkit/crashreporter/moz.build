@@ -113,7 +113,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
 
     include('/toolkit/crashreporter/crashreporter.mozbuild')
 
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         CXXFLAGS += ['-Wno-shadow']
 else:
     UNIFIED_SOURCES += [

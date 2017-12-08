@@ -39,18 +39,18 @@ include('../../warnings.mozbuild')
 
 # GTest uses a variadic macro in a questionable way and it doesn't seem to be
 # possible to selectively disable just that error when -pedantic-errors is set.
-if CONFIG['GNU_CXX'] and not CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'gcc':
   CXXFLAGS.remove('-pedantic-errors')
 
 # These warnings are disabled in order to minimize the amount of boilerplate
 # required to implement tests, and/or because they originate in the GTest
 # framework in a way we cannot otherwise work around.
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
   CXXFLAGS += [
     '-Wno-error=shadow',
     '-Wno-old-style-cast',
   ]
-  if CONFIG['CLANG_CXX']:
+  if CONFIG['CC_TYPE'] == 'clang':
     CXXFLAGS += [
       '-Wno-exit-time-destructors',
       '-Wno-global-constructors',
@@ -58,7 +58,7 @@ if CONFIG['GNU_CXX']:
       '-Wno-used-but-marked-unused',
       '-Wno-zero-as-null-pointer-constant',
     ]
-elif CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
   CXXFLAGS += [
     '-wd4350', # behavior change: 'std::_Wrap_alloc<std::allocator<_Ty>>::...
     '-wd4275', # non dll-interface class used as base for dll-interface class

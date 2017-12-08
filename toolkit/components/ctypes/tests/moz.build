@@ -31,5 +31,5 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.xpcshell.toolkit.components.ctypes.tests.unit += [shared_library]
     TEST_HARNESS_FILES.testing.mochitest.chrome.toolkit.components.ctypes.tests.chrome += [shared_library]
 
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += ['-Wno-varargs']

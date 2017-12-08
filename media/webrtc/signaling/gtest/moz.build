@@ -40,7 +40,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android':
 
     FINAL_LIBRARY = 'xul-gtest'
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # This is intended as a temporary workaround to enable warning free building
     # with VS2015.
     # reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size

@@ -9,7 +9,7 @@
 
 use super::UnknownUnit;
 use length::Length;
-use scale_factor::ScaleFactor;
+use scale::TypedScale;
 use vector::{TypedVector2D, vec2};
 use num::*;
 
@@ -155,18 +155,18 @@ impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedSize2D<T, U> {
     }
 }
 
-impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<ScaleFactor<T, U1, U2>> for TypedSize2D<T, U1> {
+impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedSize2D<T, U1> {
     type Output = TypedSize2D<T, U2>;
     #[inline]
-    fn mul(self, scale: ScaleFactor<T, U1, U2>) -> TypedSize2D<T, U2> {
+    fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedSize2D<T, U2> {
         TypedSize2D::new(self.width * scale.get(), self.height * scale.get())
     }
 }
 
-impl<T: Copy + Div<T, Output=T>, U1, U2> Div<ScaleFactor<T, U1, U2>> for TypedSize2D<T, U2> {
+impl<T: Copy + Div<T, Output=T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedSize2D<T, U2> {
     type Output = TypedSize2D<T, U1>;
     #[inline]
-    fn div(self, scale: ScaleFactor<T, U1, U2>) -> TypedSize2D<T, U1> {
+    fn div(self, scale: TypedScale<T, U1, U2>) -> TypedSize2D<T, U1> {
         TypedSize2D::new(self.width / scale.get(), self.height / scale.get())
     }
 }
@@ -214,6 +214,11 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
 
     /// Cast into an `f32` size.
     pub fn to_f32(&self) -> TypedSize2D<f32, Unit> {
+        self.cast().unwrap()
+    }
+
+    /// Cast into an `f64` size.
+    pub fn to_f64(&self) -> TypedSize2D<f64, Unit> {
         self.cast().unwrap()
     }
 

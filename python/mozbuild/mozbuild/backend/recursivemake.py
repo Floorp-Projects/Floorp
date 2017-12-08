@@ -1566,7 +1566,7 @@ class RecursiveMakeBackend(CommonBackend):
         rule.add_commands(['$(call py_action,buildlist,%s)' % ' '.join(args)])
         fragment.dump(backend_file.fh, removal_guard=False)
 
-        self._no_skip['misc'].add(obj.relativedir)
+        self._no_skip['misc'].add(obj.relsrcdir)
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',

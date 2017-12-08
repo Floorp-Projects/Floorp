@@ -7,7 +7,7 @@
     <meta charset="utf-8">
     <title>Console HTTP test page</title>
     <script type="text/javascript">
-      /* exported testXhrGet, testXhrWarn, testXhrPost */
+      /* exported testXhrGet, testXhrWarn, testXhrPost, testXhrPostSlowResponse */
       "use strict";
 
       function makeXhr(method, url, requestBody, callback) {
@@ -31,6 +31,10 @@
 
       function testXhrPost(callback) {
         makeXhr("post", "test-data.json", "Hello world!", callback);
+      }
+
+      function testXhrPostSlowResponse(callback) {
+        makeXhr("post", "sjs_slow-response-test-server.sjs", "Hello world!", callback);
       }
     </script>
   </head>

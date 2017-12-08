@@ -24,7 +24,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['yuv_convert_sse2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
     # MSVC doesn't support MMX when targeting AMD64.
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         if CONFIG['OS_TEST'] != 'x86_64':
             SOURCES += [
                 'yuv_convert_mmx.cpp',
@@ -33,7 +33,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         SOURCES += ['yuv_convert_mmx.cpp']
         SOURCES['yuv_convert_mmx.cpp'].flags += CONFIG['MMX_FLAGS']
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     if CONFIG['OS_TEST'] == 'x86_64':
         SOURCES += [
             'yuv_row_win64.cpp',

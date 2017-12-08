@@ -220,6 +220,7 @@ dom/fetch/**
 dom/file/**
 dom/filehandle/**
 dom/filesystem/**
+dom/flex/**
 dom/flyweb/**
 dom/gamepad/**
 dom/geolocation/**

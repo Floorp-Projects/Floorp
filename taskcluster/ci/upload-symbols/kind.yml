@@ -6,6 +6,7 @@ loader: taskgraph.loader.single_dep:loader
 
 transforms:
     - taskgraph.transforms.upload_symbols:transforms
+    - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -32,23 +33,23 @@ only-for-build-platforms:
     - win64-devedition-nightly/opt
 
 job-template:
-    label:  # see transforms
     description: Upload Symbols
-    dependencies:  # see transforms
-    expires-after: 7 days
-    deadline-after: 24 hours
-    worker-type: aws-provisioner-v1/gecko-symbol-upload
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
-        os: linux
-        max-run-time: 600
-        command: ["/bin/bash", "bin/upload.sh"]
-        docker-image: taskclusterprivate/upload_symbols:0.0.4
+        docker-image: {in-tree: "lint"}
+        max-run-time: 900
         env:
-            GECKO_HEAD_REPOSITORY:  # see transforms
-            GECKO_HEAD_REV:  # see transforms
             ARTIFACT_TASKID: {"task-reference": "<build>"}
+            # {level} gets replaced in the upload_symbols transform
+            SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
+    run:
+        using: run-task
+        command: >
+            cd /builds/worker/checkouts/gecko &&
+            wget https://queue.taskcluster.net/v1/task/${ARTIFACT_TASKID}/artifacts/public/build/target.crashreporter-symbols-full.zip &&
+            ./mach python toolkit/crashreporter/tools/upload_symbols.py target.crashreporter-symbols-full.zip
+        sparse-profile: upload-symbols
     optimization:
         only-if-dependencies-run: null
     scopes:
-        - docker-worker:image:taskclusterprivate/upload_symbols:0.0.4
+        - secrets:get:project/releng/gecko/build/level-{level}/gecko-symbol-upload

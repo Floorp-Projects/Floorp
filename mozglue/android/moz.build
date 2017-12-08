@@ -54,7 +54,7 @@ LOCAL_INCLUDES += [
 
 DisableStlWrapping()
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 DEFINES['XPCOM_GLUE'] = True

@@ -28,13 +28,13 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         '../ffmpeg57/include',
     ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
   CXXFLAGS += [ '-Wno-deprecated-declarations' ]
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Wno-unknown-attributes',
   ]
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
   CXXFLAGS += [
     '-wd4996', # deprecated declaration
   ]

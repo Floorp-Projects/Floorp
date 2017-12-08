@@ -19,7 +19,7 @@ LOCAL_INCLUDES += [
 
 USE_STATIC_LIBS = True
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     LDFLAGS += ['-Wl,-e,_DummyEntryPoint@12']
 else:
     LDFLAGS += ['-ENTRY:DummyEntryPoint']

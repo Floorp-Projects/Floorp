@@ -157,6 +157,49 @@ ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL)
   return NS_STYLE_ALIGN_FLEX_START;
 }
 
+// Helper-function to find the first non-anonymous-box descendent of aFrame.
+static nsIFrame*
+GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
+{
+  while (aFrame) {
+    nsAtom* pseudoTag = aFrame->StyleContext()->GetPseudo();
+
+    // If aFrame isn't an anonymous container, then it'll do.
+    if (!pseudoTag ||                                 // No pseudotag.
+        !nsCSSAnonBoxes::IsAnonBox(pseudoTag) ||      // Pseudotag isn't anon.
+        nsCSSAnonBoxes::IsNonElement(pseudoTag)) {    // Text, not a container.
+      break;
+    }
+
+    // Otherwise, descend to its first child and repeat.
+
+    // SPECIAL CASE: if we're dealing with an anonymous table, then it might
+    // be wrapping something non-anonymous in its caption or col-group lists
+    // (instead of its principal child list), so we have to look there.
+    // (Note: For anonymous tables that have a non-anon cell *and* a non-anon
+    // column, we'll always return the column. This is fine; we're really just
+    // looking for a handle to *anything* with a meaningful content node inside
+    // the table, for use in DOM comparisons to things outside of the table.)
+    if (MOZ_UNLIKELY(aFrame->IsTableWrapperFrame())) {
+      nsIFrame* captionDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kCaptionList).FirstChild());
+      if (captionDescendant) {
+        return captionDescendant;
+      }
+    } else if (MOZ_UNLIKELY(aFrame->IsTableFrame())) {
+      nsIFrame* colgroupDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kColGroupList).FirstChild());
+      if (colgroupDescendant) {
+        return colgroupDescendant;
+      }
+    }
+
+    // USUAL CASE: Descend to the first child in principal list.
+    aFrame = aFrame->PrincipalChildList().FirstChild();
+  }
+  return aFrame;
+}
+
 // Indicates whether advancing along the given axis is equivalent to
 // increasing our X or Y position (as opposed to decreasing it).
 static inline bool
@@ -948,7 +991,8 @@ public:
 
   // Runs the "Resolving Flexible Lengths" algorithm from section 9.7 of the
   // CSS flexbox spec to distribute aFlexContainerMainSize among our flex items.
-  void ResolveFlexibleLengths(nscoord aFlexContainerMainSize);
+  void ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
+                              ComputedFlexLineInfo* aLineInfo);
 
   void PositionItemsInMainAxis(uint8_t aJustifyContent,
                                nscoord aContentBoxMainSize,
@@ -2380,7 +2424,8 @@ FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
 }
 
 void
-FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
+FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
+                                 ComputedFlexLineInfo* aLineInfo)
 {
   MOZ_LOG(gFlexContainerLog, LogLevel::Debug, ("ResolveFlexibleLengths\n"));
 
@@ -2392,11 +2437,13 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
   // direction we've chosen:
   FreezeItemsEarly(isUsingFlexGrow);
 
-  if (mNumFrozenItems == mNumItems) {
-    // All our items are frozen, so we have no flexible lengths to resolve.
+  if ((mNumFrozenItems == mNumItems) && !aLineInfo) {
+    // All our items are frozen, so we have no flexible lengths to resolve,
+    // and we aren't being asked to generate computed line info.
     return;
   }
-  MOZ_ASSERT(!IsEmpty(), "empty lines should take the early-return above");
+  MOZ_ASSERT(!IsEmpty() || aLineInfo,
+             "empty lines should take the early-return above");
 
   // Subtract space occupied by our items' margins/borders/padding, so we can
   // just be dealing with the space available for our flex items' content
@@ -2428,6 +2475,21 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
         item->SetMainSize(item->GetFlexBaseSize());
       }
       availableFreeSpace -= item->GetMainSize();
+    }
+
+    // If we have an aLineInfo structure to fill out, and this is the
+    // first time through the loop, capture these sizes as mainBaseSizes.
+    // We only care about the first iteration, because additional
+    // iterations will only reset item base sizes to these values.
+    // We also set a 0 mainDeltaSize. This will be modified later if
+    // the item is stretched or shrunk.
+    if (aLineInfo && (iterationCounter == 0)) {
+      uint32_t itemIndex = 0;
+      for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
+                                                     ++itemIndex) {
+        aLineInfo->mItems[itemIndex].mMainBaseSize = item->GetMainSize();
+        aLineInfo->mItems[itemIndex].mMainDeltaSize = 0;
+      }
     }
 
     MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
@@ -2593,6 +2655,45 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
             MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
                    ("  child %p receives %d, for a total of %d\n",
                     item, sizeDelta, item->GetMainSize()));
+          }
+        }
+
+        // If we have an aLineInfo structure to fill out, capture any
+        // size changes that may have occurred in the previous loop.
+        // We don't do this inside the previous loop, because we don't
+        // want to burden layout when aLineInfo is null.
+        if (aLineInfo) {
+          uint32_t itemIndex = 0;
+          for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
+                                                         ++itemIndex) {
+            // Calculate a deltaSize that represents how much the
+            // flex sizing algorithm "wants" to stretch or shrink this
+            // item during this pass through the algorithm. Later
+            // passes through the algorithm may overwrite this value.
+            // Also, this value may not reflect how much the size of
+            // the item is actually changed, since the size of the
+            // item will be clamped to min and max values later in
+            // this pass. That's intentional, since we want to report
+            // the value that the sizing algorithm tried to stretch
+            // or shrink the item.
+            nscoord deltaSize = item->GetMainSize() -
+              aLineInfo->mItems[itemIndex].mMainBaseSize;
+
+            aLineInfo->mItems[itemIndex].mMainDeltaSize = deltaSize;
+            // If any item on the line is growing, mark the aLineInfo
+            // structure; likewise if any item is shrinking. Items in
+            // a line can't be both growing and shrinking.
+            if (deltaSize > 0) {
+              MOZ_ASSERT(aLineInfo->mGrowthState !=
+                         ComputedFlexLineInfo::GrowthState::SHRINKING);
+              aLineInfo->mGrowthState =
+                ComputedFlexLineInfo::GrowthState::GROWING;
+            } else if (deltaSize < 0) {
+              MOZ_ASSERT(aLineInfo->mGrowthState !=
+                         ComputedFlexLineInfo::GrowthState::GROWING);
+              aLineInfo->mGrowthState =
+                ComputedFlexLineInfo::GrowthState::SHRINKING;
+            }
           }
         }
       }
@@ -3974,6 +4075,24 @@ nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   const FlexboxAxisTracker axisTracker(this, aReflowInput.GetWritingMode());
 
+  // Check to see if we need to create a computed info structure, to
+  // be filled out for use by devtools.
+  if (HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)) {
+    // This state bit will never be cleared. That's acceptable because
+    // it's only set in a Chrome API invoked by devtools, and won't
+    // impact normal browsing.
+
+    // Re-use the ComputedFlexContainerInfo, if it exists.
+    ComputedFlexContainerInfo* info = GetProperty(FlexContainerInfo());
+    if (info) {
+      // We can reuse, as long as we clear out old data.
+      info->mLines.Clear();
+    } else {
+      info = new ComputedFlexContainerInfo();
+      SetProperty(FlexContainerInfo(), info);
+    }
+  }
+
   // If we're being fragmented into a constrained BSize, then subtract off
   // borderpadding BStart from that constrained BSize, to get the available
   // BSize for our content box. (No need to subtract the borderpadding BStart
@@ -4117,6 +4236,59 @@ nsFlexContainerFrame::CalculatePackingSpace(uint32_t aNumThingsToPack,
   *aPackingSpaceRemaining -= totalEdgePackingSpace;
 }
 
+nsFlexContainerFrame*
+nsFlexContainerFrame::GetFlexFrameWithComputedInfo(nsIFrame* aFrame)
+{
+  // Prepare a lambda function that we may need to call multiple times.
+  auto GetFlexContainerFrame = [](nsIFrame *aFrame) {
+    // Return the aFrame's content insertion frame, iff it is
+    // a flex container frame.
+    nsFlexContainerFrame* flexFrame = nullptr;
+
+    if (aFrame) {
+      nsIFrame* contentFrame = aFrame->GetContentInsertionFrame();
+      if (contentFrame && (contentFrame->IsFlexContainerFrame())) {
+        flexFrame = static_cast<nsFlexContainerFrame*>(contentFrame);
+      }
+    }
+    return flexFrame;
+  };
+
+  nsFlexContainerFrame* flexFrame = GetFlexContainerFrame(aFrame);
+  if (flexFrame) {
+    // Generate the FlexContainerInfo data, if it's not already there.
+    bool reflowNeeded = !flexFrame->HasProperty(FlexContainerInfo());
+
+    if (reflowNeeded) {
+      // Trigger a reflow that generates additional flex property data.
+      // Hold onto aFrame while we do this, in case reflow destroys it.
+      AutoWeakFrame weakFrameRef(aFrame);
+
+      nsIPresShell* shell = flexFrame->PresContext()->PresShell();
+      flexFrame->AddStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES);
+      shell->FrameNeedsReflow(flexFrame,
+                              nsIPresShell::eResize,
+                              NS_FRAME_IS_DIRTY);
+      shell->FlushPendingNotifications(FlushType::Layout);
+
+      // Since the reflow may have side effects, get the flex frame
+      // again. But if the weakFrameRef is no longer valid, then we
+      // must bail out.
+      if (!weakFrameRef.IsAlive()) {
+        return nullptr;
+      }
+
+      flexFrame = GetFlexContainerFrame(weakFrameRef.GetFrame());
+
+      MOZ_ASSERT(!flexFrame ||
+                  flexFrame->HasProperty(FlexContainerInfo()),
+                  "The state bit should've made our forced-reflow "
+                  "generate a FlexContainerInfo object");
+    }
+  }
+  return flexFrame;
+}
+
 void
 nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    ReflowOutput&     aDesiredSize,
@@ -4147,13 +4319,92 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     RemoveStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE);
   }
 
+  // Construct our computed info if we've been asked to do so. This is
+  // necessary to do now so we can capture some computed values for
+  // FlexItems during layout that would not otherwise be saved (like
+  // size adjustments). We'll later fix up the line properties,
+  // because the correct values aren't available yet.
+  ComputedFlexContainerInfo* containerInfo = nullptr;
+  if (HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)) {
+    containerInfo = GetProperty(FlexContainerInfo());
+    MOZ_ASSERT(containerInfo,
+               "::Reflow() should have created container info.");
+
+    if (!aStruts.IsEmpty()) {
+      // We restarted DoFlexLayout, and may have stale mLines to clear:
+      containerInfo->mLines.Clear();
+    } else {
+      MOZ_ASSERT(containerInfo->mLines.IsEmpty(),
+                 "Shouldn't have lines yet.");
+    }
+
+    for (const FlexLine* line = lines.getFirst(); line;
+         line = line->getNext()) {
+      ComputedFlexLineInfo* lineInfo =
+        containerInfo->mLines.AppendElement();
+      // Most lineInfo properties will be set later, but we set
+      // mGrowthState to UNCHANGED here because it may be later
+      // modified by ResolveFlexibleLengths().
+      lineInfo->mGrowthState =
+        ComputedFlexLineInfo::GrowthState::UNCHANGED;
+
+      // The remaining lineInfo properties will be filled out at the
+      // end of this function, when we have real values. But we still
+      // add all the items here, so we can capture computed data for
+      // each item.
+      for (const FlexItem* item = line->GetFirstItem(); item;
+           item = item->getNext()) {
+        nsIFrame* frame = item->Frame();
+
+        // The frame may be for an element, or it may be for an
+        // anonymous flex item, e.g. wrapping one or more text nodes.
+        // DevTools wants the content node for the actual child in
+        // the DOM tree, so we descend through anonymous boxes.
+        nsIFrame* targetFrame = GetFirstNonAnonBoxDescendant(frame);
+        nsIContent* content = targetFrame->GetContent();
+
+        // Skip over content that is only whitespace, which might
+        // have been broken off from a text node which is our real
+        // target.
+        while (content && content->TextIsOnlyWhitespace()) {
+          // If content is only whitespace, try the frame sibling.
+          targetFrame = targetFrame->GetNextSibling();
+          if (targetFrame) {
+            content = targetFrame->GetContent();
+          } else {
+            content = nullptr;
+          }
+        }
+
+        ComputedFlexItemInfo* itemInfo =
+          lineInfo->mItems.AppendElement();
+
+        itemInfo->mNode = content;
+
+        // mMainBaseSize and itemInfo->mMainDeltaSize will
+        // be filled out in ResolveFlexibleLengths().
+
+        // Other FlexItem properties can be captured now.
+        itemInfo->mMainMinSize = item->GetMainMinSize();
+        itemInfo->mMainMaxSize = item->GetMainMaxSize();
+        itemInfo->mCrossMinSize = item->GetCrossMinSize();
+        itemInfo->mCrossMaxSize = item->GetCrossMaxSize();
+      }
+    }
+  }
+
   aContentBoxMainSize =
     ResolveFlexContainerMainSize(aReflowInput, aAxisTracker,
                                  aContentBoxMainSize, aAvailableBSizeForContent,
                                  lines.getFirst(), aStatus);
 
-  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
-    line->ResolveFlexibleLengths(aContentBoxMainSize);
+  uint32_t lineIndex = 0;
+  for (FlexLine* line = lines.getFirst(); line; line = line->getNext(),
+                                                ++lineIndex) {
+    ComputedFlexLineInfo* lineInfo = containerInfo ?
+                                     &containerInfo->mLines[lineIndex] :
+                                     nullptr;
+    line->ResolveFlexibleLengths(aContentBoxMainSize, lineInfo);
   }
 
   // Cross Size Determination - Flexbox spec section 9.4
@@ -4463,6 +4714,19 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                  aReflowInput, aStatus);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize)
+
+  // Finally update our line sizing values in our containerInfo.
+  if (containerInfo) {
+    uint32_t lineIndex = 0;
+    for (const FlexLine* line = lines.getFirst(); line;
+         line = line->getNext(), ++lineIndex) {
+      ComputedFlexLineInfo* lineInfo = &containerInfo->mLines[lineIndex];
+
+      lineInfo->mCrossSize = line->GetLineCrossSize();
+      lineInfo->mFirstBaselineOffset = line->GetFirstBaselineOffset();
+      lineInfo->mLastBaselineOffset = line->GetLastBaselineOffset();
+    }
+  }
 }
 
 void

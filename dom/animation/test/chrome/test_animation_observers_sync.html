@@ -36,10 +36,10 @@ Test chrome-only MutationObserver animation notifications (sync tests)
  * it will raise an assertion.
  */
 function setupSynchronousObserver(t, target, subtree) {
-   var observer = new MutationObserver(records => {
-     assert_unreached("Any MutationRecords should not be observed in this " +
-                      "callback");
-   });
+  var observer = new MutationObserver(records => {
+    assert_unreached("Any MutationRecords should not be observed in this " +
+                     "callback");
+  });
   t.add_cleanup(() => {
     observer.disconnect();
   });

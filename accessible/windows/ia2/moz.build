@@ -52,7 +52,7 @@ FINAL_LIBRARY = 'xul'
 #   #endif !_MIDL_USE_GUIDDEF_
 #
 # which clang-cl complains about.  MSVC doesn't, so turn this warning off.
-if CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += ['-Wno-extra-tokens']
 
 include('/ipc/chromium/chromium-config.mozbuild')

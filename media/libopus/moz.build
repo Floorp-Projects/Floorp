@@ -45,7 +45,7 @@ if CONFIG['OS_ARCH'] in ('Linux', 'Darwin', 'DragonFly', 'FreeBSD',
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['inline'] = '__inline'
-    if CONFIG['GNU_CC']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         DEFINES['HAVE_LRINTF'] = True
 
 if CONFIG['OS_ARCH'] == 'AIX':
@@ -98,7 +98,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     SOURCES += silk_sources_sse4_1
     if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
         SOURCES += silk_sources_fixed_sse4_1
-    if not CONFIG['_MSC_VER'] or CONFIG['CLANG_CL']:
+    if CONFIG['CC_TYPE'] != 'msvc':
         for f in SOURCES:
             if f in celt_sources_sse:
                 SOURCES[f].flags += CONFIG['SSE_FLAGS']
@@ -130,6 +130,6 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     ASFLAGS += CONFIG['NEON_FLAGS']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
-    if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    if CONFIG['CC_TYPE'] == 'clang':
         CFLAGS += ['-Wno-#pragma-messages']

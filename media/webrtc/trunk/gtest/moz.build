@@ -556,15 +556,15 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
         '../webrtc/voice_engine/voice_engine_fixture.cc',
     ]
 
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         CXXFLAGS += [
             '-Wno-inconsistent-missing-override',
             '-Wno-overloaded-virtual',
         ]
-        if CONFIG['CLANG_CXX']:
+        if CONFIG['CC_TYPE'] == 'clang':
             CXXFLAGS += ['-Wno-comma']
 
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         # This is intended as a temporary workaround to enable warning free building
         # with VS2015.
         # reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size

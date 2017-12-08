@@ -178,7 +178,7 @@ else:
         'GeckoChildProcessHost.cpp',
     ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # This is intended as a temporary hack to support building with VS2015.
     # 'reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
     SOURCES['BackgroundChildImpl.cpp'].flags += ['-wd4312']
@@ -229,5 +229,5 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         '/security/sandbox/win/src/sandboxbroker',
     ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow']

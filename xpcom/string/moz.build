@@ -63,7 +63,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
 # hits the template string code. We need to disable this warning as a
 # workaround. See https://developercommunity.visualstudio.com/
 # content/problem/81223/incorrect-error-c5037-with-permissive.html
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += ['-wd5037']
 
 FINAL_LIBRARY = 'xul'
