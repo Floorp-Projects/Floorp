@@ -2075,7 +2075,6 @@ public:
   explicit GenericReceiveListener(dom::MediaStreamTrack* track)
     : track_(track)
     , played_ticks_(0)
-    , last_log_(0)
     , principal_handle_(PRINCIPAL_HANDLE_NONE)
     , listening_(false)
     , maybe_track_needs_unmute_(true)
@@ -2184,7 +2183,6 @@ public:
 protected:
   RefPtr<dom::MediaStreamTrack> track_;
   TrackTicks played_ticks_;
-  TrackTicks last_log_; // played_ticks_ when we last logged
   PrincipalHandle principal_handle_;
   bool listening_;
   Atomic<bool> maybe_track_needs_unmute_;
@@ -2209,6 +2207,7 @@ public:
                    const RefPtr<MediaSessionConduit>& conduit)
     : GenericReceiveListener(track)
     , conduit_(conduit)
+    , last_log_(0)
   {
   }
 
@@ -2239,11 +2238,13 @@ public:
     }
 
     TrackRate rate = graph->GraphRate();
-    uint32_t samples_per_10ms = rate/100;
+    uint32_t samples_per_10ms = rate / 100;
+    // Determine how many frames we need.
+    // As we get frames from conduit_ at the same rate as the graph's rate,
+    // the number of frames needed straightfully determined.
+    TrackTicks framesNeeded = desired_time - played_ticks_;
 
-    // This comparison is done in total time to avoid accumulated roundoff errors.
-    while (source->TicksToTimeRoundDown(rate,
-                                        played_ticks_) < desired_time) {
+    while (framesNeeded >= 0) {
       int16_t scratch_buffer[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
 
       int samples_length;
@@ -2307,6 +2308,7 @@ public:
 
       // Handle track not actually added yet or removed/finished
       if (source->AppendToTrack(track_->GetInputTrackId(), &segment)) {
+        framesNeeded -= frames;
         played_ticks_ += frames;
         if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
           if (played_ticks_ > last_log_ + rate) { // ~ 1 second
@@ -2332,6 +2334,7 @@ public:
 
 private:
   RefPtr<MediaSessionConduit> conduit_;
+  TrackTicks last_log_; // played_ticks_ when we last logged
 };
 
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(

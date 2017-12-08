@@ -186,12 +186,13 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       // Compute how much stream time we'll need assuming we don't block
       // the stream at all.
       StreamTime t = aStream->GraphTimeToStreamTime(aDesiredUpToTime);
+      StreamTime current = aStream->mTracks.GetEnd();
       LOG(LogLevel::Verbose,
           ("Calling NotifyPull aStream=%p t=%f current end=%f",
            aStream,
            MediaTimeToSeconds(t),
-           MediaTimeToSeconds(aStream->mTracks.GetEnd())));
-      if (t > aStream->mTracks.GetEnd()) {
+           MediaTimeToSeconds(current)));
+      if (t > current) {
         *aEnsureNextIteration = true;
 #ifdef DEBUG
         if (aStream->mListeners.Length() == 0) {
@@ -200,7 +201,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
             ("No listeners in NotifyPull aStream=%p desired=%f current end=%f",
              aStream,
              MediaTimeToSeconds(t),
-             MediaTimeToSeconds(aStream->mTracks.GetEnd())));
+             MediaTimeToSeconds(current)));
           aStream->DumpTrackInfo();
         }
 #endif
