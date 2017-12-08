@@ -36,11 +36,19 @@
 // Classifications for reasons why constexpr was removed in C++14 to C++11
 // conversion. Once we upgrade compilers, we can try defining each of these
 // to constexpr to restore a category of constexprs at a time.
+#if !defined(__clang__) && defined(__GNUC__) && __cpp_constexpr < 201304
 #define MOZ_SPAN_ASSERTION_CONSTEXPR
 #define MOZ_SPAN_GCC_CONSTEXPR
 #define MOZ_SPAN_EXPLICITLY_DEFAULTED_CONSTEXPR
 #define MOZ_SPAN_CONSTEXPR_NOT_JUST_RETURN
 #define MOZ_SPAN_NON_CONST_CONSTEXPR
+#else
+#define MOZ_SPAN_ASSERTION_CONSTEXPR constexpr
+#define MOZ_SPAN_GCC_CONSTEXPR constexpr
+#define MOZ_SPAN_EXPLICITLY_DEFAULTED_CONSTEXPR constexpr
+#define MOZ_SPAN_CONSTEXPR_NOT_JUST_RETURN constexpr
+#define MOZ_SPAN_NON_CONST_CONSTEXPR constexpr
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -191,7 +199,7 @@ public:
     return (*span_)[index_];
   }
 
-  MOZ_SPAN_GCC_CONSTEXPR pointer operator->() const
+  constexpr pointer operator->() const
   {
     MOZ_RELEASE_ASSERT(span_);
     return &((*span_)[index_]);
@@ -204,7 +212,7 @@ public:
     return *this;
   }
 
-  MOZ_SPAN_NON_CONST_CONSTEXPR span_iterator operator++(int)
+  constexpr span_iterator operator++(int)
   {
     auto ret = *this;
     ++(*this);
@@ -218,7 +226,7 @@ public:
     return *this;
   }
 
-  MOZ_SPAN_NON_CONST_CONSTEXPR span_iterator operator--(int)
+  constexpr span_iterator operator--(int)
   {
     auto ret = *this;
     --(*this);
@@ -240,14 +248,14 @@ public:
     return *this;
   }
 
-  MOZ_SPAN_CONSTEXPR_NOT_JUST_RETURN span_iterator
+  constexpr span_iterator
   operator-(difference_type n) const
   {
     auto ret = *this;
     return ret -= n;
   }
 
-  MOZ_SPAN_NON_CONST_CONSTEXPR span_iterator& operator-=(difference_type n)
+  constexpr span_iterator& operator-=(difference_type n)
 
   {
     return *this += -n;
@@ -284,19 +292,19 @@ public:
     return lhs.index_ < rhs.index_;
   }
 
-  MOZ_SPAN_GCC_CONSTEXPR friend bool operator<=(const span_iterator& lhs,
+  constexpr friend bool operator<=(const span_iterator& lhs,
                                                 const span_iterator& rhs)
   {
     return !(rhs < lhs);
   }
 
-  MOZ_SPAN_GCC_CONSTEXPR friend bool operator>(const span_iterator& lhs,
+  constexpr friend bool operator>(const span_iterator& lhs,
                                                const span_iterator& rhs)
   {
     return rhs < lhs;
   }
 
-  MOZ_SPAN_GCC_CONSTEXPR friend bool operator>=(const span_iterator& lhs,
+  constexpr friend bool operator>=(const span_iterator& lhs,
                                                 const span_iterator& rhs)
   {
     return !(rhs > lhs);
@@ -648,7 +656,7 @@ public:
    * Subspan with first N elements with compile-time N.
    */
   template<size_t Count>
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, Count> First() const
+  constexpr Span<element_type, Count> First() const
   {
     MOZ_RELEASE_ASSERT(Count <= size());
     return { data(), Count };
@@ -658,7 +666,7 @@ public:
    * Subspan with last N elements with compile-time N.
    */
   template<size_t Count>
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, Count> Last() const
+  constexpr Span<element_type, Count> Last() const
   {
     const size_t len = size();
     MOZ_RELEASE_ASSERT(Count <= len);
@@ -669,7 +677,7 @@ public:
    * Subspan with compile-time start index and length.
    */
   template<size_t Offset, size_t Count = dynamic_extent>
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, Count> Subspan() const
+  constexpr Span<element_type, Count> Subspan() const
   {
     const size_t len = size();
     MOZ_RELEASE_ASSERT(Offset <= len &&
@@ -681,7 +689,7 @@ public:
   /**
    * Subspan with first N elements with run-time N.
    */
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, dynamic_extent> First(
+  constexpr Span<element_type, dynamic_extent> First(
     index_type aCount) const
   {
     MOZ_RELEASE_ASSERT(aCount <= size());
@@ -691,7 +699,7 @@ public:
   /**
    * Subspan with last N elements with run-time N.
    */
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, dynamic_extent> Last(
+  constexpr Span<element_type, dynamic_extent> Last(
     index_type aCount) const
   {
     const size_t len = size();
@@ -702,7 +710,7 @@ public:
   /**
    * Subspan with run-time start index and length.
    */
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, dynamic_extent> Subspan(
+  constexpr Span<element_type, dynamic_extent> Subspan(
     index_type aStart,
     index_type aLength = dynamic_extent) const
   {
@@ -717,7 +725,7 @@ public:
   /**
    * Subspan with run-time start index. (Rust's &foo[start..])
    */
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, dynamic_extent> From(
+  constexpr Span<element_type, dynamic_extent> From(
     index_type aStart) const
   {
     return Subspan(aStart);
@@ -726,7 +734,7 @@ public:
   /**
    * Subspan with run-time exclusive end index. (Rust's &foo[..end])
    */
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, dynamic_extent> To(
+  constexpr Span<element_type, dynamic_extent> To(
     index_type aEnd) const
   {
     return Subspan(0, aEnd);
@@ -736,7 +744,7 @@ public:
    * Subspan with run-time start index and exclusive end index.
    * (Rust's &foo[start..end])
    */
-  MOZ_SPAN_GCC_CONSTEXPR Span<element_type, dynamic_extent> FromTo(
+  constexpr Span<element_type, dynamic_extent> FromTo(
     index_type aStart,
     index_type aEnd) const
   {
@@ -780,7 +788,7 @@ public:
   constexpr bool empty() const { return size() == 0; }
 
   // [Span.elem], Span element access
-  MOZ_SPAN_GCC_CONSTEXPR reference operator[](index_type idx) const
+  constexpr reference operator[](index_type idx) const
   {
     MOZ_RELEASE_ASSERT(idx < storage_.size());
     return data()[idx];
