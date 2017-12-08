@@ -252,10 +252,11 @@ enum class OpenMode : uint8_t {
   // This is only used in conjunction with OMTP to indicate that the DrawTarget
   // that is being borrowed will be painted asynchronously, and so will outlive
   // the write lock.
-  OPEN_ASYNC_WRITE = 0x04,
+  OPEN_ASYNC = 0x04,
 
   OPEN_READ_WRITE  = OPEN_READ|OPEN_WRITE,
-  OPEN_READ_ASYNC_WRITE  = OPEN_READ|OPEN_WRITE|OPEN_ASYNC_WRITE,
+  OPEN_READ_WRITE_ASYNC  = OPEN_READ|OPEN_WRITE|OPEN_ASYNC,
+  OPEN_READ_ASYNC   = OPEN_READ|OPEN_ASYNC,
   OPEN_READ_ONLY   = OPEN_READ,
   OPEN_WRITE_ONLY  = OPEN_WRITE,
 };

@@ -617,13 +617,14 @@ BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
     aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0]);
   } else {
     MOZ_ASSERT(aImageKeys.length() == 3);
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     aBuilder.PushYCbCrPlanarImage(aBounds,
                                   aClip,
                                   true,
                                   aImageKeys[0],
                                   aImageKeys[1],
                                   aImageKeys[2],
-                                  wr::WrYuvColorSpace::Rec601,
+                                  wr::ToWrYuvColorSpace(desc.yUVColorSpace()),
                                   aFilter);
   }
 }

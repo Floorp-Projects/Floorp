@@ -198,9 +198,9 @@ GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
             const auto& clipSize = subdesc.size();
             const auto& ySize = subdesc.sizeY();
             const auto& uvSize = subdesc.sizeCbCr();
+            const auto& colorSpace = subdesc.yUVColorSpace();
 
             const gfx::IntRect clipRect(0, 0, clipSize.width, clipSize.height);
-            const auto colorSpace = YUVColorSpace::BT601;
 
             const WindowsHandle handles[3] = {
                 subdesc.handleY(),

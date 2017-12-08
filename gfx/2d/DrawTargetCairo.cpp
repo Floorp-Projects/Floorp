@@ -2286,7 +2286,8 @@ BorrowedCairoContext::BorrowCairoContextFromDrawTarget(DrawTarget* aDT)
 {
   if (aDT->GetBackendType() != BackendType::CAIRO ||
       aDT->IsDualDrawTarget() ||
-      aDT->IsTiledDrawTarget()) {
+      aDT->IsTiledDrawTarget() ||
+      aDT->IsCaptureDT()) {
     return nullptr;
   }
   DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);

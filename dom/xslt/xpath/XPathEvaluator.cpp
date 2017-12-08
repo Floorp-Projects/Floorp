@@ -207,7 +207,7 @@ nsresult XPathEvaluatorParseContext::resolveNamespacePrefix
         aPrefix->ToString(prefix);
     }
 
-    nsVoidableString ns;
+    nsAutoString ns;
     if (mResolver) {
         ErrorResult rv;
         mResolver->LookupNamespaceURI(prefix, ns, rv);

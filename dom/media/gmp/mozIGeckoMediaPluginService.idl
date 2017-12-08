@@ -9,7 +9,7 @@
 %{C++
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 class GMPDecryptorProxy;
 class GMPVideoDecoderProxy;
 class GMPVideoEncoderProxy;

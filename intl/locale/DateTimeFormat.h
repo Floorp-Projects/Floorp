@@ -9,7 +9,7 @@
 
 #include <time.h>
 #include "gtest/MozGtestFriend.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "prtime.h"
 #include "unicode/udat.h"
 

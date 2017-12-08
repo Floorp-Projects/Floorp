@@ -3,22 +3,11 @@ const gBaseURL = "https://example.com/browser/testing/mochitest/tests/browser/";
 
 function promiseTabLoadEvent(tab, url)
 {
-  return new Promise(function (resolve, reject) {
-    function handleLoadEvent(event) {
-      if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-          event.target.location.href == "about:blank" ||
-          (url && event.target.location.href != url)) {
-        return;
-      }
-
-      tab.linkedBrowser.removeEventListener("load", handleLoadEvent, true);
-      resolve(event);
-    }
-
-    tab.linkedBrowser.addEventListener("load", handleLoadEvent, true, true);
-    if (url)
-      tab.linkedBrowser.loadURI(url);
-  });
+  let promise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url);
+  if (url) {
+    tab.linkedBrowser.loadURI(url);
+  }
+  return promise;
 }
 
 // Load a new blank tab

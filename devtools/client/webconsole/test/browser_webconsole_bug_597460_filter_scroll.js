@@ -26,7 +26,7 @@ function consoleOpened(hud) {
   let deferred = defer();
 
   for (let i = 0; i < 200; i++) {
-    content.console.log("test message " + i);
+    gBrowser.contentWindowAsCPOW.console.log("test message " + i);
   }
 
   hud.setFilterState("network", false);
@@ -53,7 +53,7 @@ function consoleOpened(hud) {
       }],
     }).then(deferred.resolve);
 
-    content.location.reload();
+    gBrowser.reload();
   });
 
   return deferred.promise;

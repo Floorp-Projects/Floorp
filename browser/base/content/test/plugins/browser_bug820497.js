@@ -23,7 +23,7 @@ add_task(async function() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
-  gTestBrowser.addEventListener("PluginBindingAttached", function() { gNumPluginBindingsAttached++; }, true, true);
+  BrowserTestUtils.addContentEventListener(gTestBrowser, "PluginBindingAttached", function() { gNumPluginBindingsAttached++; }, true, null, true);
 
   await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug820497.html");
 

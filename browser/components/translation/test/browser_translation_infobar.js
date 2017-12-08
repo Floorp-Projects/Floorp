@@ -77,7 +77,7 @@ function test() {
   Services.prefs.setBoolPref(kShowUIPref, true);
   let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", function() {
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     TranslationStub.browser = gBrowser.selectedBrowser;
     registerCleanupFunction(function() {
       gBrowser.removeTab(tab);
@@ -86,9 +86,9 @@ function test() {
     run_tests(() => {
       finish();
     });
-  }, {capture: true, once: true});
+  });
 
-  content.location = "data:text/plain,test page";
+  gBrowser.selectedBrowser.loadURI("data:text/plain,test page");
 }
 
 function checkURLBarIcon(aExpectTranslated = false) {

@@ -34,16 +34,19 @@ async function doTest(parentTabSpec, childTabSpec, testTaskFn, waitForMetaRefres
     await promiseReloaded;
 
     // Wait for the script in the page to update the contents of the test div.
-    let testDiv = content.document.getElementById("mctestdiv");
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    let testDiv = gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv");
     await BrowserTestUtils.waitForCondition(
       () => testDiv.innerHTML == "Mixed Content Blocker disabled");
 
     // Add the link for the child tab to the page.
-    let mainDiv = content.document.createElement("div");
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    let mainDiv = gBrowser.contentDocumentAsCPOW.createElement("div");
     // eslint-disable-next-line no-unsanitized/property
     mainDiv.innerHTML =
       '<p><a id="linkToOpenInNewTab" href="' + childTabSpec + '">Link</a></p>';
-    content.document.body.appendChild(mainDiv);
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    gBrowser.contentDocumentAsCPOW.body.appendChild(mainDiv);
 
     // Execute the test in the child tabs with the two methods to open it.
     for (let openFn of [simulateCtrlClick, simulateContextMenuOpenInTab]) {
@@ -85,14 +88,9 @@ function simulateContextMenuOpenInTab(browser) {
 // from <xul:browser>s without a tab assigned. That are most likely browsers
 // that preload the new tab page.
 function waitForSomeTabToLoad() {
-  return new Promise(resolve => {
-    gBrowser.addEventListener("load", function onLoad(event) {
-      let tab = gBrowser._getTabForContentWindow(event.target.defaultView.top);
-      if (tab) {
-        gBrowser.removeEventListener("load", onLoad, true);
-        resolve();
-      }
-    }, true);
+  return BrowserTestUtils.firstBrowserLoaded(window, true, (browser) => {
+    let tab = gBrowser.getTabForBrowser(browser);
+    return !!tab;
   });
 }
 
@@ -121,7 +119,8 @@ add_task(async function test_same_origin() {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
-    is(content.document.getElementById("mctestdiv").innerHTML,
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker disabled", "OK: Executed mixed script");
   });
 });
@@ -142,7 +141,8 @@ add_task(async function test_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(content.document.getElementById("mctestdiv").innerHTML,
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker enabled", "OK: Blocked mixed script");
   });
 });
@@ -163,7 +163,8 @@ add_task(async function test_same_origin_metarefresh_same_origin() {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
-    is(content.document.getElementById("mctestdiv").innerHTML,
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker disabled", "OK: Executed mixed script");
   }, true);
 });
@@ -183,7 +184,8 @@ add_task(async function test_same_origin_metarefresh_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(content.document.getElementById("mctestdiv").innerHTML,
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker enabled", "OK: Blocked mixed script");
   }, true);
 });
@@ -203,7 +205,8 @@ add_task(async function test_same_origin_302redirect_same_origin() {
     ok(!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
        "OK: Mixed Content is NOT being blocked");
 
-    is(content.document.getElementById("mctestdiv").innerHTML,
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker disabled", "OK: Executed mixed script");
   });
 });
@@ -223,7 +226,8 @@ add_task(async function test_same_origin_302redirect_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(content.document.getElementById("mctestdiv").innerHTML,
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker enabled", "OK: Blocked mixed script");
   });
 });

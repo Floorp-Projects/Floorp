@@ -18,7 +18,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "nsError.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN

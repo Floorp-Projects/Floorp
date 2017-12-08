@@ -218,6 +218,7 @@ RemoteWebProgressManager.prototype = {
 
     if (isTopLevel) {
       this._browser._contentWindow = objects.contentWindow;
+      this._browser._contentDocument = objects.contentDocument;
       // Setting a content-type back to `null` is quite nonsensical for the
       // frontend, especially since we're not expecting it.
       if (json.documentContentType !== null) {

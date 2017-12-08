@@ -2001,6 +2001,7 @@ GetLinkDocument(Link* aLink)
 NS_IMETHODIMP
 History::NotifyVisited(nsIURI* aURI)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aURI);
   // NOTE: This can be run within the SystemGroup, and thus cannot directly
   // interact with webpages.
@@ -2052,6 +2053,7 @@ History::NotifyVisited(nsIURI* aURI)
 void
 History::NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   // Make sure that nothing invalidates our observer array while we're walking
   // over it.
   nsAutoScriptBlocker scriptBlocker;
@@ -2689,6 +2691,7 @@ NS_IMETHODIMP
 History::RegisterVisitedCallback(nsIURI* aURI,
                                  Link* aLink)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aURI, "Must pass a non-null URI!");
   if (XRE_IsContentProcess()) {
     NS_PRECONDITION(aLink, "Must pass a non-null Link!");
@@ -2718,7 +2721,16 @@ History::RegisterVisitedCallback(nsIURI* aURI,
     if (NS_FAILED(rv) || !aLink) {
       // Remove our array from the hashtable so we don't keep it around.
       MOZ_ASSERT(key == mObservers.GetEntry(aURI), "The URIs hash mutated!");
-      mObservers.RemoveEntry(key);
+      // In some case calling RemoveEntry on the key obtained by PutEntry
+      // crashes for currently unknown reasons.  Our suspect is that something
+      // between PutEntry and this call causes a nested loop that either removes
+      // the entry or reallocs the hash.
+      // TODO (Bug 1412647): we must figure the root cause for these issues and
+      // remove this stop-gap crash fix.
+      key = mObservers.GetEntry(aURI);
+      if (key) {
+        mObservers.RemoveEntry(key);
+      }
       return rv;
     }
   }
@@ -2757,6 +2769,7 @@ NS_IMETHODIMP
 History::UnregisterVisitedCallback(nsIURI* aURI,
                                    Link* aLink)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   // TODO: aURI is sometimes null - see bug 548685
   NS_ASSERTION(aURI, "Must pass a non-null URI!");
   NS_ASSERTION(aLink, "Must pass a non-null Link object!");

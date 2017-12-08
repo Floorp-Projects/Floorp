@@ -8,6 +8,7 @@
 #define GFX_WEBRENDERTYPES_H
 
 #include "FrameMetrics.h"
+#include "ImageTypes.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Matrix.h"
@@ -765,6 +766,18 @@ enum class WebRenderError : int8_t {
 
   Sentinel /* this must be last for serialization purposes. */
 };
+
+static inline wr::WrYuvColorSpace ToWrYuvColorSpace(YUVColorSpace aYUVColorSpace) {
+  switch (aYUVColorSpace) {
+    case YUVColorSpace::BT601:
+      return wr::WrYuvColorSpace::Rec601;
+    case YUVColorSpace::BT709:
+      return wr::WrYuvColorSpace::Rec709;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Tried to convert invalid YUVColorSpace.");
+  }
+  return wr::WrYuvColorSpace::Rec601;
+}
 
 } // namespace wr
 } // namespace mozilla

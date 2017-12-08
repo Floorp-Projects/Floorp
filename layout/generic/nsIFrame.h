@@ -37,7 +37,7 @@
 #include "nsITheme.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsStyleContext.h"
 #include "nsStyleStruct.h"
 #include "Visibility.h"

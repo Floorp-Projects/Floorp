@@ -132,7 +132,7 @@ var { helpers, assert } = (function () {
     options.browser = tabbrowser.getBrowserForTab(options.tab);
     options.target = TargetFactory.forTab(options.tab);
 
-    var loaded = helpers.listenOnce(options.browser, "load", true).then(function (ev) {
+    var loaded = BrowserTestUtils.browserLoaded(options.browser).then(function () {
       var reply = callback.call(null, options);
 
       return Promise.resolve(reply).catch(function (error) {
@@ -149,7 +149,7 @@ var { helpers, assert } = (function () {
       });
     });
 
-    options.browser.contentWindow.location = url;
+    options.browser.loadURI(url);
     return loaded;
   };
 

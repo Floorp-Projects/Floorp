@@ -7,11 +7,11 @@ function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
     openScratchpad(runTests);
-  }, {capture: true, once: true});
+  });
 
-  content.location = "data:text/html,test context switch in Scratchpad";
+  gBrowser.loadURI("data:text/html,test context switch in Scratchpad");
 }
 
 function runTests() {
@@ -49,7 +49,7 @@ function runTests() {
       ok(!pageResult, "no content.foobarBug636725");
     },
     then: function* () {
-      is(content.wrappedJSObject.foobarBug636725, "aloha",
+      is(gBrowser.contentWindowAsCPOW.wrappedJSObject.foobarBug636725, "aloha",
          "content.foobarBug636725 has been set");
     }
   }, {

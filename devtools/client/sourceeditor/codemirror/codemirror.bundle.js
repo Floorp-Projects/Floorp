@@ -3516,8 +3516,10 @@ var CodeMirror =
 	// Read and store the height of line widgets associated with the
 	// given line.
 	function updateWidgetHeight(line) {
-	  if (line.widgets) { for (var i = 0; i < line.widgets.length; ++i)
-	    { line.widgets[i].height = line.widgets[i].node.parentNode.offsetHeight } }
+	  if (line.widgets) { for (var i = 0; i < line.widgets.length; ++i) {
+	    var w = line.widgets[i], parent = w.node.parentNode
+	    if (parent) { w.height = parent.offsetHeight }
+	  } }
 	}
 
 	// Compute the lines that are visible in a given viewport (defaults
@@ -7303,18 +7305,26 @@ var CodeMirror =
 	// for bound mouse clicks.
 
 	var stopSeq = new Delayed
+
 	function dispatchKey(cm, name, e, handle) {
 	  var seq = cm.state.keySeq
 	  if (seq) {
 	    if (isModifierKey(name)) { return "handled" }
-	    stopSeq.set(50, function () {
-	      if (cm.state.keySeq == seq) {
-	        cm.state.keySeq = null
-	        cm.display.input.reset()
-	      }
-	    })
-	    name = seq + " " + name
+	    if (/\'$/.test(name))
+	      { cm.state.keySeq = null }
+	    else
+	      { stopSeq.set(50, function () {
+	        if (cm.state.keySeq == seq) {
+	          cm.state.keySeq = null
+	          cm.display.input.reset()
+	        }
+	      }) }
+	    if (dispatchKeyInner(cm, seq + " " + name, e, handle)) { return true }
 	  }
+	  return dispatchKeyInner(cm, name, e, handle)
+	}
+
+	function dispatchKeyInner(cm, name, e, handle) {
 	  var result = lookupKeyForEditor(cm, name, handle)
 
 	  if (result == "multi")
@@ -7327,10 +7337,6 @@ var CodeMirror =
 	    restartBlink(cm)
 	  }
 
-	  if (seq && !result && /\'$/.test(name)) {
-	    e_preventDefault(e)
-	    return true
-	  }
 	  return !!result
 	}
 
@@ -9882,7 +9888,7 @@ var CodeMirror =
 
 	addLegacyProps(CodeMirror)
 
-	CodeMirror.version = "5.31.0"
+	CodeMirror.version = "5.32.0"
 
 	return CodeMirror;
 
@@ -10053,7 +10059,7 @@ var CodeMirror =
 	        for (var i = 1; i < lines.length - 1; i++)
 	          if (fold(doc.getLine(line + i)) != lines[i]) continue search
 	        var end = doc.getLine(line + lines.length - 1), endString = fold(end), lastLine = lines[lines.length - 1]
-	        if (end.slice(0, lastLine.length) != lastLine) continue search
+	        if (endString.slice(0, lastLine.length) != lastLine) continue search
 	        return {from: Pos(line, adjustPos(orig, string, cutFrom, fold) + ch),
 	                to: Pos(line + lines.length - 1, adjustPos(end, endString, lastLine.length, fold))}
 	      }
@@ -10741,7 +10747,8 @@ var CodeMirror =
 	                 (cur.ch <= 2 || cm.getRange(Pos(cur.line, cur.ch - 3), Pos(cur.line, cur.ch - 2)) != ch)) {
 	        curType = "addFour";
 	      } else if (identical) {
-	        if (!CodeMirror.isWordChar(next) && enteringString(cm, cur, ch)) curType = "both";
+	        var prev = cur.ch == 0 ? " " : cm.getRange(Pos(cur.line, cur.ch - 1), cur)
+	        if (!CodeMirror.isWordChar(next) && prev != ch && !CodeMirror.isWordChar(prev)) curType = "both";
 	        else return CodeMirror.Pass;
 	      } else if (opening && (cm.getLine(cur.line).length == cur.ch ||
 	                             isClosingBracket(next, pairs) ||
@@ -10793,25 +10800,10 @@ var CodeMirror =
 	    return str.length == 2 ? str : null;
 	  }
 
-	  // Project the token type that will exists after the given char is
-	  // typed, and use it to determine whether it would cause the start
-	  // of a string token.
-	  function enteringString(cm, pos, ch) {
-	    var line = cm.getLine(pos.line);
-	    var token = cm.getTokenAt(pos);
-	    if (/\bstring2?\b/.test(token.type) || stringStartsAfter(cm, pos)) return false;
-	    var stream = new CodeMirror.StringStream(line.slice(0, pos.ch) + ch + line.slice(pos.ch), 4);
-	    stream.pos = stream.start = token.start;
-	    for (;;) {
-	      var type1 = cm.getMode().token(stream, token.state);
-	      if (stream.pos >= pos.ch + 1) return /\bstring2?\b/.test(type1);
-	      stream.start = stream.pos;
-	    }
-	  }
-
 	  function stringStartsAfter(cm, pos) {
 	    var token = cm.getTokenAt(Pos(pos.line, pos.ch + 1))
-	    return /\bstring/.test(token.type) && token.start == pos.ch
+	    return /\bstring/.test(token.type) && token.start == pos.ch &&
+	      (pos.ch == 0 || !/\bstring/.test(cm.getTokenTypeAt(pos)))
 	  }
 	});
 
@@ -10994,10 +10986,6 @@ var CodeMirror =
 	    if (open == -1) return false
 	    var endLine = end == start ? startLine : self.getLine(end)
 	    var close = endLine.indexOf(endString, end == start ? open + startString.length : 0);
-	    if (close == -1 && start != end) {
-	      endLine = self.getLine(--end);
-	      close = endLine.indexOf(endString);
-	    }
 	    var insideStart = Pos(start, open + 1), insideEnd = Pos(end, close + 1)
 	    if (close == -1 ||
 	        !/comment/.test(self.getTokenTypeAt(insideStart)) ||
@@ -11088,8 +11076,6 @@ var CodeMirror =
 	        "interface": kw("class"),
 	        "implements": C,
 	        "namespace": C,
-	        "module": kw("module"),
-	        "enum": kw("module"),
 
 	        // scope modifiers
 	        "public": kw("modifier"),
@@ -11196,7 +11182,7 @@ var CodeMirror =
 	          var kw = keywords[word]
 	          return ret(kw.type, kw.style, word)
 	        }
-	        if (word == "async" && stream.match(/^\s*[\(\w]/, false))
+	        if (word == "async" && stream.match(/^(\s|\/\*.*?\*\/)*[\(\w]/, false))
 	          return ret("async", "keyword", word)
 	      }
 	      return ret("variable", "variable", word)
@@ -11413,9 +11399,12 @@ var CodeMirror =
 	      if (isTS && value == "type") {
 	        cx.marked = "keyword"
 	        return cont(typeexpr, expect("operator"), typeexpr, expect(";"));
-	      } if (isTS && value == "declare") {
+	      } else if (isTS && value == "declare") {
 	        cx.marked = "keyword"
 	        return cont(statement)
+	      } else if (isTS && (value == "module" || value == "enum") && cx.stream.match(/^\s*\w/, false)) {
+	        cx.marked = "keyword"
+	        return cont(pushlex("form"), pattern, expect("{"), pushlex("}"), block, poplex, poplex)
 	      } else {
 	        return cont(pushlex("stat"), maybelabel);
 	      }
@@ -11429,7 +11418,6 @@ var CodeMirror =
 	    if (type == "class") return cont(pushlex("form"), className, poplex);
 	    if (type == "export") return cont(pushlex("stat"), afterExport, poplex);
 	    if (type == "import") return cont(pushlex("stat"), afterImport, poplex);
-	    if (type == "module") return cont(pushlex("form"), pattern, expect("{"), pushlex("}"), block, poplex, poplex)
 	    if (type == "async") return cont(statement)
 	    if (value == "@") return cont(expression, statement)
 	    return pass(pushlex("stat"), expression, expect(";"), poplex);
@@ -11479,6 +11467,8 @@ var CodeMirror =
 	    if (type == "=>") return cont(pushcontext, noComma ? arrowBodyNoComma : arrowBody, popcontext);
 	    if (type == "operator") {
 	      if (/\+\+|--/.test(value) || isTS && value == "!") return cont(me);
+	      if (isTS && value == "<" && cx.stream.match(/^([^>]|<.*?>)*>\s*\(/, false))
+	        return cont(pushlex(">"), commasep(typeexpr, ">"), poplex, me);
 	      if (value == "?") return cont(expression, expect(":"), expr);
 	      return cont(expr);
 	    }
@@ -11605,6 +11595,18 @@ var CodeMirror =
 	      if (value == "?") return cont(maybetype);
 	    }
 	  }
+	  function mayberettype(type) {
+	    if (isTS && type == ":") {
+	      if (cx.stream.match(/^\s*\w+\s+is\b/, false)) return cont(expression, isKW, typeexpr)
+	      else return cont(typeexpr)
+	    }
+	  }
+	  function isKW(_, value) {
+	    if (value == "is") {
+	      cx.marked = "keyword"
+	      return cont()
+	    }
+	  }
 	  function typeexpr(type, value) {
 	    if (type == "variable" || value == "void") {
 	      if (value == "keyof") {
@@ -11647,6 +11649,12 @@ var CodeMirror =
 	  }
 	  function maybeTypeArgs(_, value) {
 	    if (value == "<") return cont(pushlex(">"), commasep(typeexpr, ">"), poplex, afterType)
+	  }
+	  function typeparam() {
+	    return pass(typeexpr, maybeTypeDefault)
+	  }
+	  function maybeTypeDefault(_, value) {
+	    if (value == "=") return cont(typeexpr)
 	  }
 	  function vardef() {
 	    return pass(pattern, maybetype, maybeAssign, vardefCont);
@@ -11701,8 +11709,8 @@ var CodeMirror =
 	  function functiondef(type, value) {
 	    if (value == "*") {cx.marked = "keyword"; return cont(functiondef);}
 	    if (type == "variable") {register(value); return cont(functiondef);}
-	    if (type == "(") return cont(pushcontext, pushlex(")"), commasep(funarg, ")"), poplex, maybetype, statement, popcontext);
-	    if (isTS && value == "<") return cont(pushlex(">"), commasep(typeexpr, ">"), poplex, functiondef)
+	    if (type == "(") return cont(pushcontext, pushlex(")"), commasep(funarg, ")"), poplex, mayberettype, statement, popcontext);
+	    if (isTS && value == "<") return cont(pushlex(">"), commasep(typeparam, ">"), poplex, functiondef)
 	  }
 	  function funarg(type, value) {
 	    if (value == "@") cont(expression, funarg)
@@ -11718,7 +11726,7 @@ var CodeMirror =
 	    if (type == "variable") {register(value); return cont(classNameAfter);}
 	  }
 	  function classNameAfter(type, value) {
-	    if (value == "<") return cont(pushlex(">"), commasep(typeexpr, ">"), poplex, classNameAfter)
+	    if (value == "<") return cont(pushlex(">"), commasep(typeparam, ">"), poplex, classNameAfter)
 	    if (value == "extends" || value == "implements" || (isTS && type == ","))
 	      return cont(isTS ? typeexpr : expression, classNameAfter);
 	    if (type == "{") return cont(pushlex("}"), classBody, poplex);
@@ -14460,7 +14468,7 @@ var CodeMirror =
 	    types: words("byte short int long float double boolean char void Boolean Byte Character Double Float " +
 	                 "Integer Long Number Object Short String StringBuffer StringBuilder Void"),
 	    blockKeywords: words("catch class do else finally for if switch try while"),
-	    defKeywords: words("class interface package enum @interface"),
+	    defKeywords: words("class interface enum @interface"),
 	    typeFirstDefinitions: true,
 	    atoms: words("true false null"),
 	    number: /^(?:0x[a-f\d_]+|0b[01_]+|(?:[\d_]+\.?\d*|\.\d+)(?:e[-+]?[\d_]+)?)(u|ll?|l|f)?/i,
@@ -15174,16 +15182,16 @@ var CodeMirror =
 
 	  var lastKill = null;
 
-	  function kill(cm, from, to, mayGrow, text) {
+	  function kill(cm, from, to, ring, text) {
 	    if (text == null) text = cm.getRange(from, to);
 
-	    if (mayGrow && lastKill && lastKill.cm == cm && posEq(from, lastKill.pos) && cm.isClean(lastKill.gen))
+	    if (ring == "grow" && lastKill && lastKill.cm == cm && posEq(from, lastKill.pos) && cm.isClean(lastKill.gen))
 	      growRingTop(text);
-	    else
+	    else if (ring !== false)
 	      addToRing(text);
 	    cm.replaceRange("", from, to, "+delete");
 
-	    if (mayGrow) lastKill = {cm: cm, pos: from, gen: cm.changeGeneration()};
+	    if (ring == "grow") lastKill = {cm: cm, pos: from, gen: cm.changeGeneration()};
 	    else lastKill = null;
 	  }
 
@@ -15295,22 +15303,22 @@ var CodeMirror =
 	    return f;
 	  }
 
-	  function killTo(cm, by, dir) {
+	  function killTo(cm, by, dir, ring) {
 	    var selections = cm.listSelections(), cursor;
 	    var i = selections.length;
 	    while (i--) {
 	      cursor = selections[i].head;
-	      kill(cm, cursor, findEnd(cm, cursor, by, dir), true);
+	      kill(cm, cursor, findEnd(cm, cursor, by, dir), ring);
 	    }
 	  }
 
-	  function killRegion(cm) {
+	  function killRegion(cm, ring) {
 	    if (cm.somethingSelected()) {
 	      var selections = cm.listSelections(), selection;
 	      var i = selections.length;
 	      while (i--) {
 	        selection = selections[i];
-	        kill(cm, selection.anchor, selection.head);
+	        kill(cm, selection.anchor, selection.head, ring);
 	      }
 	      return true;
 	    }
@@ -15420,7 +15428,7 @@ var CodeMirror =
 	  // Actual keymap
 
 	  var keyMap = CodeMirror.keyMap.emacs = CodeMirror.normalizeKeyMap({
-	    "Ctrl-W": function(cm) {kill(cm, cm.getCursor("start"), cm.getCursor("end"));},
+	    "Ctrl-W": function(cm) {kill(cm, cm.getCursor("start"), cm.getCursor("end"), true);},
 	    "Ctrl-K": repeated(function(cm) {
 	      var start = cm.getCursor(), end = cm.clipPos(Pos(start.line));
 	      var text = cm.getRange(start, end);
@@ -15428,7 +15436,7 @@ var CodeMirror =
 	        text += "\n";
 	        end = Pos(start.line + 1, 0);
 	      }
-	      kill(cm, start, end, true, text);
+	      kill(cm, start, end, "grow", text);
 	    }),
 	    "Alt-W": function(cm) {
 	      addToRing(cm.getSelection());
@@ -15445,14 +15453,14 @@ var CodeMirror =
 
 	    "Ctrl-F": move(byChar, 1), "Ctrl-B": move(byChar, -1),
 	    "Right": move(byChar, 1), "Left": move(byChar, -1),
-	    "Ctrl-D": function(cm) { killTo(cm, byChar, 1); },
-	    "Delete": function(cm) { killRegion(cm) || killTo(cm, byChar, 1); },
-	    "Ctrl-H": function(cm) { killTo(cm, byChar, -1); },
-	    "Backspace": function(cm) { killRegion(cm) || killTo(cm, byChar, -1); },
+	    "Ctrl-D": function(cm) { killTo(cm, byChar, 1, false); },
+	    "Delete": function(cm) { killRegion(cm, false) || killTo(cm, byChar, 1, false); },
+	    "Ctrl-H": function(cm) { killTo(cm, byChar, -1, false); },
+	    "Backspace": function(cm) { killRegion(cm, false) || killTo(cm, byChar, -1, false); },
 
 	    "Alt-F": move(byWord, 1), "Alt-B": move(byWord, -1),
-	    "Alt-D": function(cm) { killTo(cm, byWord, 1); },
-	    "Alt-Backspace": function(cm) { killTo(cm, byWord, -1); },
+	    "Alt-D": function(cm) { killTo(cm, byWord, 1, "grow"); },
+	    "Alt-Backspace": function(cm) { killTo(cm, byWord, -1, "grow"); },
 
 	    "Ctrl-N": move(byLine, 1), "Ctrl-P": move(byLine, -1),
 	    "Down": move(byLine, 1), "Up": move(byLine, -1),
@@ -15465,11 +15473,11 @@ var CodeMirror =
 	    "Ctrl-Up": move(byParagraph, -1), "Ctrl-Down": move(byParagraph, 1),
 
 	    "Alt-A": move(bySentence, -1), "Alt-E": move(bySentence, 1),
-	    "Alt-K": function(cm) { killTo(cm, bySentence, 1); },
+	    "Alt-K": function(cm) { killTo(cm, bySentence, 1, "grow"); },
 
-	    "Ctrl-Alt-K": function(cm) { killTo(cm, byExpr, 1); },
-	    "Ctrl-Alt-Backspace": function(cm) { killTo(cm, byExpr, -1); },
-	    "Ctrl-Alt-F": move(byExpr, 1), "Ctrl-Alt-B": move(byExpr, -1),
+	    "Ctrl-Alt-K": function(cm) { killTo(cm, byExpr, 1, "grow"); },
+	    "Ctrl-Alt-Backspace": function(cm) { killTo(cm, byExpr, -1, "grow"); },
+	    "Ctrl-Alt-F": move(byExpr, 1), "Ctrl-Alt-B": move(byExpr, -1, "grow"),
 
 	    "Shift-Ctrl-Alt-2": function(cm) {
 	      var cursor = cm.getCursor();
@@ -15542,7 +15550,7 @@ var CodeMirror =
 	    "Ctrl-X F": "open",
 	    "Ctrl-X U": repeated("undo"),
 	    "Ctrl-X K": "close",
-	    "Ctrl-X Delete": function(cm) { kill(cm, cm.getCursor(), bySentence(cm, cm.getCursor(), 1), true); },
+	    "Ctrl-X Delete": function(cm) { kill(cm, cm.getCursor(), bySentence(cm, cm.getCursor(), 1), "grow"); },
 	    "Ctrl-X H": "selectAll",
 
 	    "Ctrl-Q Tab": repeated("insertTab"),

@@ -29,7 +29,7 @@ function test() {
   }
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
-    aWindow.gBrowser.selectedBrowser.addEventListener("load", function() {
+    BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(() => {
       consoleObserver = {
         observe: function(aSubject, aTopic, aData) {
           if (aTopic == "console-api-log-event") {
@@ -48,7 +48,7 @@ function test() {
       aWindow.Services.obs.addObserver(
         consoleObserver, "console-api-log-event");
       aWindow.nativeConsole.log("foo bar baz (private: " + aIsPrivateMode + ")");
-    }, {capture: true, once: true});
+    });
 
     // We expect that console API messages are always stored.
     storageShouldOccur = true;

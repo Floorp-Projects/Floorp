@@ -191,7 +191,7 @@ add_task(async function() {
 });
 
 async function testObtainingManifest(aBrowser, aTest) {
-  const waitForObserver = waitForNetObserver(aTest);
+  const waitForObserver = waitForNetObserver(aBrowser, aTest);
   // Expect an exception (from promise rejection) if there a content policy
   // that is violated.
   try {
@@ -206,19 +206,19 @@ async function testObtainingManifest(aBrowser, aTest) {
 }
 
 // Helper object used to observe policy violations when blocking is expected.
-function waitForNetObserver(aTest) {
-  return new Promise((resolve) => {
-    // We don't need to wait for violation, so just resolve
-    if (!aTest.expected.includes("block")){
-      return resolve();
-    }
-    const observer = {
-      observe(subject, topic) {
-        SpecialPowers.removeObserver(observer, "csp-on-violate-policy");
-        aTest.run(topic);
+function waitForNetObserver(aBrowser, aTest) {
+  // We don't need to wait for violation, so just resolve
+  if (!aTest.expected.includes("block")){
+    return Promise.resolve();
+  }
+
+  return ContentTask.spawn(aBrowser, null, () => {
+    return new Promise(resolve => {
+      function observe(subject, topic) {
+        Services.obs.removeObserver(observe, "csp-on-violate-policy");
         resolve();
-      },
-    };
-    SpecialPowers.addObserver(observer, "csp-on-violate-policy");
-  });
+      };
+      Services.obs.addObserver(observe, "csp-on-violate-policy");
+    });
+  }).then(() => aTest.run("csp-on-violate-policy"));
 }

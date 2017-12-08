@@ -128,10 +128,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// a75573d6-34c8-4485-8fb7-edcb6fc70e12
+// b7b89561-4f03-44b3-9afa-b47e7f313ffb
 #define NS_IPRESSHELL_IID \
-{ 0xa75573d6, 0x34c8, 0x4485, \
-  { 0x8f, 0xb7, 0xed, 0xcb, 0x6f, 0xc7, 0x0e, 0x12 } }
+  { 0xb7b89561, 0x4f03, 0x44b3, \
+    { 0x9a, 0xfa, 0xb4, 0x7e, 0x7f, 0x31, 0x3f, 0xfb } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1576,10 +1576,12 @@ public:
    */
   virtual bool HasHandledUserInput() const = 0;
 
+  virtual void FireResizeEvent() = 0;
+
+protected:
   /**
    * Refresh observer management.
    */
-protected:
   void DoObserveStyleFlushes();
   void DoObserveLayoutFlushes();
 

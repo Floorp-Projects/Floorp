@@ -1151,7 +1151,7 @@ DXGITextureHostD3D11::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                              true,
                              aImageKeys[0],
                              aImageKeys[1],
-                             wr::WrYuvColorSpace::Rec601,
+                             wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
                              aFilter);
       break;
     }
@@ -1374,7 +1374,7 @@ DXGIYCbCrTextureHostD3D11::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                 aImageKeys[0],
                                 aImageKeys[1],
                                 aImageKeys[2],
-                                wr::WrYuvColorSpace::Rec601,
+                                wr::ToWrYuvColorSpace(mYUVColorSpace),
                                 aFilter);
 }
 

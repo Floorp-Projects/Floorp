@@ -28,7 +28,7 @@ function test()
   let keysetMap = { };
 
   addTab(TEST_URL).then(function () {
-    doc = content.document;
+    doc = gBrowser.contentDocumentAsCPOW;
     node = doc.querySelector("h1");
     waitForFocus(setupKeyBindingsTest);
   });

@@ -88,7 +88,7 @@ const ConsoleObserver = {
   observe: function (subject, topic, data) {
     let message = subject.wrappedJSObject.arguments[0];
 
-    if (/Failed propType/.test(message)) {
+    if (message && /Failed propType/.test(message.toString())) {
       ok(false, message);
     }
   }

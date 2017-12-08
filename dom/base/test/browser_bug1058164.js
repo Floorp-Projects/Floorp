@@ -25,13 +25,15 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
   return new Promise((resolve) => {
     let order = [];
 
+    let rmvHide, rmvShow;
+
     let checkSatisfied = () => {
       if (order.length < expectedOrder.length) {
         // We're still waiting...
         return;
       } else {
-        browser.removeEventListener("pagehide", eventListener);
-        browser.removeEventListener("pageshow", eventListener);
+        rmvHide();
+        rmvShow();
 
         for (let i = 0; i < expectedOrder.length; ++i) {
           is(order[i], expectedOrder[i], "Got expected event");
@@ -40,15 +42,19 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
       }
     };
 
-    let eventListener = (e) => {
-      if (e.persisted) {
-        order.push(e.type);
-        checkSatisfied();
-      }
+    let eventListener = (type) => {
+      order.push(type);
+      checkSatisfied();
     };
 
-    browser.addEventListener("pagehide", eventListener);
-    browser.addEventListener("pageshow", eventListener);
+    let checkFn = (e) => e.persisted;
+
+    rmvHide = BrowserTestUtils.addContentEventListener(browser, "pagehide",
+                                                       () => eventListener("pagehide"),
+                                                       false, checkFn, false, false);
+    rmvShow = BrowserTestUtils.addContentEventListener(browser, "pageshow",
+                                                       () => eventListener("pageshow"),
+                                                       false, checkFn, false, false);
   });
 }
 

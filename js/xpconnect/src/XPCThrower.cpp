@@ -11,7 +11,7 @@
 #include "jsprf.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Exceptions.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

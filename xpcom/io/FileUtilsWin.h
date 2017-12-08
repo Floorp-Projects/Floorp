@@ -10,7 +10,7 @@
 #include <windows.h>
 
 #include "mozilla/Scoped.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 namespace mozilla {
 

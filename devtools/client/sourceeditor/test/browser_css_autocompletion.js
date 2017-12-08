@@ -81,7 +81,7 @@ function test() {
   waitForExplicitFinish();
   addTab(TEST_URI).then(function () {
     /* eslint-disable mozilla/no-cpows-in-tests */
-    doc = content.document;
+    doc = gBrowser.contentDocumentAsCPOW;
     /* eslint-enable mozilla/no-cpows-in-tests */
     runTests();
   });

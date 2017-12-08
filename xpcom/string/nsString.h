@@ -150,8 +150,6 @@ private:
 };
 
 // the following are included/declared for backwards compatibility
-typedef nsAutoString nsVoidableString;
-
 #include "nsDependentString.h"
 #include "nsLiteralString.h"
 #include "nsPromiseFlatString.h"

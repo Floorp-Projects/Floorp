@@ -124,10 +124,10 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
     openScratchpad(startTest);
-  }, {capture: true, once: true});
+  });
 
-  content.location = "data:text/html,<p>test reverting to last saved state of" +
-                     " a file </p>";
+  gBrowser.loadURI("data:text/html,<p>test reverting to last saved state of" +
+                   " a file </p>");
 }

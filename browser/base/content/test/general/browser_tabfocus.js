@@ -329,9 +329,7 @@ add_task(async function() {
   gURLBar.focus();
 
   await new Promise((resolve, reject) => {
-    window.addEventListener("pageshow", function(event) {
-      resolve();
-    }, {capture: true, once: true});
+    BrowserTestUtils.waitForContentEvent(window.gBrowser.selectedBrowser, "pageshow", true).then(() => resolve());
     document.getElementById("Browser:Back").doCommand();
   });
 

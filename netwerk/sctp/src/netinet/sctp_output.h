@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 272751 2014-10-08 15:30:59Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 323861 2017-09-21 11:56:31Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_OUTPUT_H_
@@ -83,14 +85,15 @@ void sctp_send_initiate(struct sctp_inpcb *, struct sctp_tcb *, int
     );
 
 void
-sctp_send_initiate_ack(struct sctp_inpcb *, struct sctp_tcb *, struct mbuf *,
+sctp_send_initiate_ack(struct sctp_inpcb *, struct sctp_tcb *,
+                       struct sctp_nets *, struct mbuf *,
                        int, int,
                        struct sockaddr *, struct sockaddr *,
                        struct sctphdr *, struct sctp_init_chunk *,
 #if defined(__FreeBSD__)
                        uint8_t, uint32_t,
 #endif
-                       uint32_t, uint16_t, int);
+                       uint32_t, uint16_t);
 
 struct mbuf *
 sctp_arethere_unrecognized_parameters(struct mbuf *, int, int *,
@@ -122,7 +125,7 @@ void sctp_send_shutdown_complete(struct sctp_tcb *, struct sctp_nets *, int);
 void sctp_send_shutdown_complete2(struct sockaddr *, struct sockaddr *,
                                   struct sctphdr *,
 #if defined(__FreeBSD__)
-                                  uint8_t, uint32_t,
+                                  uint8_t, uint32_t, uint16_t,
 #endif
                                   uint32_t, uint16_t);
 
@@ -139,6 +142,11 @@ void sctp_toss_old_asconf(struct sctp_tcb *);
 void sctp_fix_ecn_echo(struct sctp_association *);
 
 void sctp_move_chunks_from_net(struct sctp_tcb *stcb, struct sctp_nets *net);
+
+
+#define SCTP_DATA_CHUNK_OVERHEAD(stcb) ((stcb)->asoc.idata_supported ? \
+					sizeof(struct sctp_idata_chunk) : \
+					sizeof(struct sctp_data_chunk))
 
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 int
@@ -197,32 +205,35 @@ void sctp_send_cwr(struct sctp_tcb *, struct sctp_nets *, uint32_t, uint8_t);
 
 
 void
-sctp_add_stream_reset_out(struct sctp_tmit_chunk *,
-                          int, uint16_t *, uint32_t, uint32_t, uint32_t);
+sctp_add_stream_reset_result(struct sctp_tmit_chunk *, uint32_t, uint32_t);
 
 void
-sctp_add_stream_reset_result(struct sctp_tmit_chunk *, uint32_t, uint32_t);
+sctp_send_deferred_reset_response(struct sctp_tcb *,
+				  struct sctp_stream_reset_list *,
+				  int);
 
 void
 sctp_add_stream_reset_result_tsn(struct sctp_tmit_chunk *,
                                  uint32_t, uint32_t, uint32_t, uint32_t);
+int
+sctp_send_stream_reset_out_if_possible(struct sctp_tcb *, int);
 
 int
-sctp_send_str_reset_req(struct sctp_tcb *, uint16_t , uint16_t *, uint8_t,
+sctp_send_str_reset_req(struct sctp_tcb *, uint16_t , uint16_t *,
                         uint8_t, uint8_t, uint8_t, uint16_t, uint16_t, uint8_t);
 
 void
 sctp_send_abort(struct mbuf *, int, struct sockaddr *, struct sockaddr *,
                 struct sctphdr *, uint32_t, struct mbuf *,
 #if defined(__FreeBSD__)
-                uint8_t, uint32_t,
+                uint8_t, uint32_t, uint16_t,
 #endif
                 uint32_t, uint16_t);
 
 void sctp_send_operr_to(struct sockaddr *, struct sockaddr *,
                         struct sctphdr *, uint32_t, struct mbuf *,
 #if defined(__FreeBSD__)
-                        uint8_t, uint32_t,
+                        uint8_t, uint32_t, uint16_t,
 #endif
                         uint32_t, uint16_t);
 

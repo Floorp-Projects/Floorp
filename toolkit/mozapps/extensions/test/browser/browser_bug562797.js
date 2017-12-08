@@ -388,6 +388,20 @@ add_test(function() {
   });
 });
 
+function wait_for_page_show(browser) {
+  let promise = new Promise(resolve => {
+    let removeFunc;
+    let listener = () => {
+      removeFunc();
+      resolve();
+    };
+    removeFunc = BrowserTestUtils.addContentEventListener(browser, "pageshow", listener, false,
+                                                          (event) => event.target.location == "http://example.com/",
+                                                          false, false);
+  });
+  return promise;
+}
+
 // Tests than navigating to a website and then going back returns to the
 // previous view
 add_test(function() {
@@ -397,10 +411,7 @@ add_test(function() {
     is_in_list(aManager, "addons://list/plugin", false, false);
 
     gBrowser.loadURI("http://example.com/");
-    gBrowser.addEventListener("pageshow", function listener(event) {
-      if (event.target.location != "http://example.com/")
-        return;
-      gBrowser.removeEventListener("pageshow", listener);
+    wait_for_page_show(gBrowser.selectedBrowser).then(() => {
       info("Part 2");
 
       executeSoon(function() {
@@ -419,10 +430,7 @@ add_test(function() {
             is_in_list(aManager, "addons://list/plugin", false, true);
 
             executeSoon(() => go_forward());
-            gBrowser.addEventListener("pageshow", function listener(event) {
-              if (event.target.location != "http://example.com/")
-                return;
-              gBrowser.removeEventListener("pageshow", listener);
+            wait_for_page_show(gBrowser.selectedBrowser).then(() => {
               info("Part 4");
 
               executeSoon(function() {
@@ -540,11 +548,7 @@ add_test(function() {
         is_in_detail(aManager, "addons://search/", true, false);
 
         gBrowser.loadURI("http://example.com/");
-        gBrowser.addEventListener("pageshow", function listener(event) {
-          if (event.target.location != "http://example.com/")
-            return;
-          gBrowser.removeEventListener("pageshow", listener);
-
+        wait_for_page_show(gBrowser.selectedBrowser).then(() => {
           info("Part 4");
           executeSoon(function() {
             ok(gBrowser.canGoBack, "Should be able to go back");
