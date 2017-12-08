@@ -69,7 +69,7 @@ function configureClients(clients, clientSettings = {}) {
 add_task(async function setup() {
   await Weave.Service.promiseInitialized;
   // Configure Sync with our mock tabs engine and force it to become initialized.
-  Weave.Service.engineManager.unregister("tabs");
+  await Weave.Service.engineManager.unregister("tabs");
   await Weave.Service.engineManager.register(MockTabsEngine);
   Weave.Service.clientsEngine = MockClientsEngine;
   tabsEngine = Weave.Service.engineManager.get("tabs");
