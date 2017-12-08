@@ -7,9 +7,6 @@
 
 #include "nsProxyRelease.h"
 #include "nsURIHashKey.h"
-#include "mozilla/BasePrincipal.h"
-
-using mozilla::BasePrincipal;
 
 gfxFontSrcPrincipal::gfxFontSrcPrincipal(nsIPrincipal* aPrincipal)
 {

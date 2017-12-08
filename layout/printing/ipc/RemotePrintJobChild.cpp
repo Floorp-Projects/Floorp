@@ -71,9 +71,7 @@ RemotePrintJobChild::ProcessPage()
   MOZ_ASSERT(mPagePrintTimer);
 
   mPagePrintTimer->WaitForRemotePrint();
-  if (!mDestroyed) {
-    Unused << SendProcessPage();
-  }
+  Unused << SendProcessPage();
 }
 
 mozilla::ipc::IPCResult
@@ -118,10 +116,7 @@ RemotePrintJobChild::OnStateChange(nsIWebProgress* aProgress,
                                    nsIRequest* aRequest, uint32_t aStateFlags,
                                    nsresult aStatus)
 {
-  if (!mDestroyed) {
-    Unused << SendStateChange(aStateFlags, aStatus);
-  }
-
+  Unused << SendStateChange(aStateFlags, aStatus);
   return NS_OK;
 }
 
@@ -133,11 +128,8 @@ RemotePrintJobChild::OnProgressChange(nsIWebProgress * aProgress,
                                       int32_t aCurTotalProgress,
                                       int32_t aMaxTotalProgress)
 {
-  if (!mDestroyed) {
-    Unused << SendProgressChange(aCurSelfProgress, aMaxSelfProgress,
-                                 aCurTotalProgress, aMaxTotalProgress);
-  }
-
+  Unused << SendProgressChange(aCurSelfProgress, aMaxSelfProgress,
+                               aCurTotalProgress, aMaxTotalProgress);
   return NS_OK;
 }
 
@@ -154,10 +146,7 @@ RemotePrintJobChild::OnStatusChange(nsIWebProgress* aProgress,
                                     nsIRequest* aRequest, nsresult aStatus,
                                     const char16_t* aMessage)
 {
-  if (!mDestroyed) {
-    Unused << SendStatusChange(aStatus);
-  }
-
+  Unused << SendStatusChange(aStatus);
   return NS_OK;
 }
 
@@ -179,8 +168,6 @@ RemotePrintJobChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mPagePrintTimer = nullptr;
   mPrintEngine = nullptr;
-
-  mDestroyed = true;
 }
 
 } // namespace layout
