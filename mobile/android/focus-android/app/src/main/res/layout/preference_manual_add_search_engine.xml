@@ -44,4 +44,13 @@
         android:textColor="@android:color/tertiary_text_dark"
         android:paddingStart="5dp"
         android:paddingLeft="5dp"/>
+
+    <ProgressBar
+            android:id="@+id/progress"
+            style="@style/Widget.AppCompat.ProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone"/>
+
 </LinearLayout>

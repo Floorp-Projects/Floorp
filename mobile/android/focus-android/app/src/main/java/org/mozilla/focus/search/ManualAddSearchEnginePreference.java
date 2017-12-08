@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import android.widget.ProgressBar;
 import org.mozilla.focus.R;
 import org.mozilla.focus.utils.UrlUtils;
 
@@ -24,6 +25,8 @@ public class ManualAddSearchEnginePreference extends Preference {
     private EditText searchQueryEditText;
     private TextInputLayout engineNameErrorLayout;
     private TextInputLayout searchQueryErrorLayout;
+
+    private ProgressBar progressView;
 
     public ManualAddSearchEnginePreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -44,6 +47,8 @@ public class ManualAddSearchEnginePreference extends Preference {
         engineNameEditText.addTextChangedListener(buildTextWatcherForErrorLayout(engineNameErrorLayout));
         searchQueryEditText = view.findViewById(R.id.edit_search_string);
         searchQueryEditText.addTextChangedListener(buildTextWatcherForErrorLayout(searchQueryErrorLayout));
+
+        progressView = view.findViewById(R.id.progress);
         return view;
     }
 
@@ -92,5 +97,9 @@ public class ManualAddSearchEnginePreference extends Preference {
 
     public void setSearchQueryErrorText(final String err) {
         searchQueryErrorLayout.setError(err);
+    }
+
+    public void setProgressViewShown(final boolean isShown) {
+        progressView.setVisibility(isShown ? View.VISIBLE : View.GONE);
     }
 }

@@ -85,13 +85,13 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 final boolean isPartialSuccess = engineValid && searchValid;
 
                 if (isPartialSuccess) {
-                    // TODO: add spinner, disable button until async task completes.
                     // Hide the keyboard because:
                     // - It's awkward to show the keyboard while waiting for a response
                     // - We want it hidden when we return to the previous screen (on success)
                     // - An expanded keyboard hides the success snackbar
                     ViewUtils.hideKeyboard(rootView);
-                    new ValidateSearchEngineAsyncTask(this, engineName, searchQuery).execute();
+                    setUiIsValidatingAsync(true, item);
+                    new ValidateSearchEngineAsyncTask(this, item, engineName, searchQuery).execute();
                 } else {
                     TelemetryWrapper.saveCustomSearchEngineEvent(false);
                 }
@@ -102,14 +102,24 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
         }
     }
 
+    private void setUiIsValidatingAsync(final boolean isValidating, final MenuItem saveMenuItem) {
+        final ManualAddSearchEnginePreference pref =
+                (ManualAddSearchEnginePreference) findPreference(getString(R.string.pref_key_manual_add_search_engine));
+        pref.setProgressViewShown(isValidating);
+
+        saveMenuItem.setEnabled(!isValidating);
+    }
+
     private static class ValidateSearchEngineAsyncTask extends AsyncTask<Void, Void, Boolean> {
         private final WeakReference<ManualAddSearchEngineSettingsFragment> thatWeakReference;
+        private final WeakReference<MenuItem> saveMenuItemWeakReference;
         private final String engineName;
         private final String query;
 
-        private ValidateSearchEngineAsyncTask(final ManualAddSearchEngineSettingsFragment that, final String engineName,
-                final String query) {
+        private ValidateSearchEngineAsyncTask(final ManualAddSearchEngineSettingsFragment that, final MenuItem saveMenuItem,
+                final String engineName, final String query) {
             this.thatWeakReference = new WeakReference<>(that);
+            this.saveMenuItemWeakReference = new WeakReference<>(saveMenuItem); // contains reference to Context.
             this.engineName = engineName;
             this.query = query;
         }
@@ -126,8 +136,9 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
             super.onPostExecute(isValidSearchQuery);
 
             final ManualAddSearchEngineSettingsFragment that = thatWeakReference.get();
-            if (that == null) {
-                Log.d(LOGTAG, "Fragment no longer exists when search query validation async task returned.");
+            final MenuItem saveMenuItem = saveMenuItemWeakReference.get();
+            if (that == null || saveMenuItem == null) {
+                Log.d(LOGTAG, "Fragment or menu item no longer exists when search query validation async task returned.");
                 return;
             }
 
@@ -139,6 +150,8 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
             } else {
                 showServerError(that);
             }
+
+            that.setUiIsValidatingAsync(false, saveMenuItem);
         }
 
         private void showServerError(final ManualAddSearchEngineSettingsFragment that) {
