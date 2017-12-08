@@ -487,16 +487,16 @@ var TPS = {
           addon.install();
           break;
         case ACTION_DELETE:
-          addon.uninstall();
+          await addon.uninstall();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(addon.find(state), "addon " + addon.id + " not found");
+          Logger.AssertTrue((await addon.find(state)), "addon " + addon.id + " not found");
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertFalse(addon.find(state), "addon " + addon.id + " is present, but it shouldn't be");
+          Logger.AssertFalse((await addon.find(state)), "addon " + addon.id + " is present, but it shouldn't be");
           break;
         case ACTION_SET_ENABLED:
-          Logger.AssertTrue(addon.setEnabled(state), "addon " + addon.id + " not found");
+          Logger.AssertTrue((await addon.setEnabled(state)), "addon " + addon.id + " not found");
           break;
         default:
           throw new Error("Unknown action for add-on: " + action);

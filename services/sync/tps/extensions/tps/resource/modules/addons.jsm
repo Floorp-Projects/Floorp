@@ -52,15 +52,15 @@ function Addon(TPS, id) {
 Addon.prototype = {
   addon: null,
 
-  uninstall: function uninstall() {
+  async uninstall() {
     // find our addon locally
-    let addon = Async.promiseSpinningly(AddonManager.getAddonByID(this.id));
+    let addon = await AddonManager.getAddonByID(this.id);
     Logger.AssertTrue(!!addon, "could not find addon " + this.id + " to uninstall");
-    Async.promiseSpinningly(AddonUtils.uninstallAddon(addon));
+    await AddonUtils.uninstallAddon(addon);
   },
 
-  find: function find(state) {
-    let addon = Async.promiseSpinningly(AddonManager.getAddonByID(this.id));
+  async find(state) {
+    let addon = await AddonManager.getAddonByID(this.id);
 
     if (!addon) {
       Logger.logInfo("Could not find add-on with ID: " + this.id);
@@ -98,8 +98,8 @@ Addon.prototype = {
                        "Add-on was installed successfully: " + this.id);
   },
 
-  setEnabled: function setEnabled(flag) {
-    Logger.AssertTrue(this.find(), "Add-on is available.");
+  async setEnabled(flag) {
+    Logger.AssertTrue((await this.find()), "Add-on is available.");
 
     let userDisabled;
     if (flag == STATE_ENABLED) {

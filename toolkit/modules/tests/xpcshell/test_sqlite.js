@@ -11,9 +11,7 @@ ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-// To spin the event loop in test.
-ChromeUtils.import("resource://services-common/async.js");
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -645,9 +643,6 @@ add_task(async function test_in_progress_counts() {
   let expectOne;
   let expectTwo;
 
-  // Please forgive me.
-  let inner = Async.makeSpinningCallback();
-  let outer = Async.makeSpinningCallback();
 
   // We want to make sure that two queries executing simultaneously
   // result in `_pendingStatements.size` reaching 2, then dropping back to 0.
@@ -655,6 +650,7 @@ add_task(async function test_in_progress_counts() {
   // To do so, we kick off a second statement within the row handler
   // of the first, then wait for both to finish.
 
+  let inner = PromiseUtils.defer();
   await c.executeCached("SELECT * from dirs", null, function onRow() {
     // In the onRow handler, we're still an outstanding query.
     // Expect a single in-progress entry.
@@ -662,22 +658,11 @@ add_task(async function test_in_progress_counts() {
 
     // Start another query, checking that after its statement has been created
     // there are two statements in progress.
-    let p = c.executeCached("SELECT 10, path from dirs");
+    c.executeCached("SELECT 10, path from dirs").then(inner.resolve);
     expectTwo = c._connectionData._pendingStatements.size;
-
-    // Now wait for it to be done before we return from the row handler …
-    p.then(function onInner() {
-      inner();
-    });
-  }).then(function onOuter() {
-    // … and wait for the inner to be done before we finish …
-    inner.wait();
-    outer();
   });
 
-  // … and wait for both queries to have finished before we go on and
-  // test postconditions.
-  outer.wait();
+  await inner.promise;
 
   Assert.equal(expectOne, 1);
   Assert.equal(expectTwo, 2);
