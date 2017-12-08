@@ -58,12 +58,10 @@ tasks:
           - "index.gecko.v2.${repository.project}.revision.${push.revision}.firefox.decision"
           - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
           - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
-          - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
           - "notify.email.${ownerEmail}.on-failed"
           - "notify.email.${ownerEmail}.on-exception"
         else:
           - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
-          - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
           - $if: 'tasks_for == "action"'
             then: "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
             else: "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
