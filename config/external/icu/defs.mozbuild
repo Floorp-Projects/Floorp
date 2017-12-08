@@ -47,7 +47,7 @@ if CONFIG['CLANG_CL']:
         '-Wno-microsoft-include',
     ]
 
-if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and not CONFIG['CLANG_CL']:
     CFLAGS += [
         '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
         '-wd4996', # The compiler encountered a deprecated declaration.

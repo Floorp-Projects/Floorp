@@ -24,7 +24,7 @@ header = """
 skia_opt_flags = []
 
 if CONFIG['MOZ_OPTIMIZE']:
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         skia_opt_flags += ['-O2']
     elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         skia_opt_flags += ['-O3']
@@ -85,7 +85,7 @@ if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['CC_TYPE'] in ('clang', 'gcc') or CO
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2']
-elif CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
     # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']

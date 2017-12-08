@@ -16,5 +16,5 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']

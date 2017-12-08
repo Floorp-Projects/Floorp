@@ -41,7 +41,7 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-incompatible-pointer-types-discards-qualifiers',
         '-Wno-logical-op-parentheses',
     ]
-if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and not CONFIG['CLANG_CL']:
     CFLAGS += [
         '-wd4090', # 'return' : different 'const' qualifiers
         '-wd4018', # '>' : signed/unsigned mismatch

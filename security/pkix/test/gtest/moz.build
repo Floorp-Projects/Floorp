@@ -58,7 +58,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
       '-Wno-used-but-marked-unused',
       '-Wno-zero-as-null-pointer-constant',
     ]
-elif CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
   CXXFLAGS += [
     '-wd4350', # behavior change: 'std::_Wrap_alloc<std::allocator<_Ty>>::...
     '-wd4275', # non dll-interface class used as base for dll-interface class
