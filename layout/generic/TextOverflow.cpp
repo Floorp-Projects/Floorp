@@ -298,6 +298,10 @@ nsDisplayTextOverflowMarker::CreateWebRenderCommands(mozilla::wr::DisplayListBui
                                                      layers::WebRenderLayerManager* aManager,
                                                      nsDisplayListBuilder* aDisplayListBuilder)
 {
+  if (!gfxPrefs::LayersAllowTextLayers()) {
+      return false;
+  }
+
   bool snap;
   nsRect bounds = GetBounds(aDisplayListBuilder, &snap);
   if (bounds.IsEmpty()) {
