@@ -120,7 +120,7 @@ ToIntegerCommon(const nsTString<T>& aSrc,
   using char_type = typename nsTString<T>::char_type;
 
   auto cp = aSrc.BeginReading();
-  int_type result = 0;
+  mozilla::CheckedInt<int_type> result;
   bool negate = false;
   char_type theChar = 0;
 
@@ -172,8 +172,6 @@ ToIntegerCommon(const nsTString<T>& aSrc,
       bool haveValue = false;
 
       while(cp<endcp){
-        int_type oldresult = result;
-
         theChar=*cp++;
         if(('0'<=theChar) && (theChar<='9')){
           result = (aRadix * result) + (theChar-'0');
@@ -212,18 +210,17 @@ ToIntegerCommon(const nsTString<T>& aSrc,
           break;
         }
 
-        if (result < oldresult) {
+        if (!result.isValid()) {
           // overflow!
           *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-          result = 0;
-          break;
+          return 0;
         }
       } //while
       if(negate)
         result=-result;
     } //if
   }
-  return result;
+  return result.value();
 }
 
 
