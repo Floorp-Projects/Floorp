@@ -8,12 +8,17 @@
 
 #include "ClientManagerParent.h"
 #include "ClientNavigateOpParent.h"
+#include "ClientOpenWindowOpParent.h"
+#include "ClientOpenWindowUtils.h"
 #include "ClientSourceParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SystemGroup.h"
 #include "nsIAsyncShutdown.h"
+#include "nsIXULRuntime.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace dom {
@@ -549,6 +554,91 @@ ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
   }
 
   return source->StartOp(aArgs);
+}
+
+namespace {
+
+class OpenWindowRunnable final : public Runnable
+{
+  RefPtr<ClientOpPromise::Private> mPromise;
+  const ClientOpenWindowArgs mArgs;
+  RefPtr<ContentParent> mSourceProcess;
+
+  ~OpenWindowRunnable()
+  {
+    NS_ReleaseOnMainThreadSystemGroup(mSourceProcess.forget());
+  }
+
+public:
+  OpenWindowRunnable(ClientOpPromise::Private* aPromise,
+                     const ClientOpenWindowArgs& aArgs,
+                     already_AddRefed<ContentParent> aSourceProcess)
+    : Runnable("ClientManagerService::OpenWindowRunnable")
+    , mPromise(aPromise)
+    , mArgs(aArgs)
+    , mSourceProcess(aSourceProcess)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!BrowserTabsRemoteAutostart()) {
+      RefPtr<ClientOpPromise> p = ClientOpenWindowInCurrentProcess(mArgs);
+      p->ChainTo(mPromise.forget(), __func__);
+      return NS_OK;
+    }
+
+    RefPtr<ContentParent> targetProcess;
+
+    // Possibly try to open the window in the same process that called
+    // openWindow().  This is a temporary compat setting until the
+    // multi-e10s service worker refactor is complete.
+    if (Preferences::GetBool("dom.clients.openwindow_favors_same_process",
+                             false)) {
+      targetProcess = mSourceProcess;
+    }
+
+    // Otherwise, use our normal remote process selection mechanism for
+    // opening the window.  This will start a process if one is not
+    // present.
+    if (!targetProcess) {
+      targetProcess =
+        ContentParent::GetNewOrUsedBrowserProcess(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
+                                                  ContentParent::GetInitialProcessPriority(nullptr),
+                                                  nullptr);
+    }
+
+    ClientOpenWindowOpParent* actor =
+      new ClientOpenWindowOpParent(mArgs, mPromise);
+
+    // If this fails the actor will be automatically destroyed which will
+    // reject the promise.
+    Unused << targetProcess->SendPClientOpenWindowOpConstructor(actor, mArgs);
+
+    return NS_OK;
+  }
+};
+
+} // anonymous namespace
+
+RefPtr<ClientOpPromise>
+ClientManagerService::OpenWindow(const ClientOpenWindowArgs& aArgs,
+                                 already_AddRefed<ContentParent> aSourceProcess)
+{
+  RefPtr<ClientOpPromise::Private> promise =
+    new ClientOpPromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r = new OpenWindowRunnable(promise, aArgs,
+                                                   Move(aSourceProcess));
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other,
+                                            r.forget()));
+
+  RefPtr<ClientOpPromise> ref = promise;
+  return ref.forget();
 }
 
 } // namespace dom
