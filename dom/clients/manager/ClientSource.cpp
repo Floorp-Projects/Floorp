@@ -182,6 +182,10 @@ ClientSource::WorkerExecutionReady(WorkerPrivate* aWorkerPrivate)
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
+  if (IsShutdown()) {
+    return;
+  }
+
   // Its safe to store the WorkerPrivate* here because the ClientSource
   // is explicitly destroyed by WorkerPrivate before exiting its run loop.
   MOZ_DIAGNOSTIC_ASSERT(mOwner.is<Nothing>());
@@ -201,6 +205,10 @@ ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow)
   MOZ_DIAGNOSTIC_ASSERT(aInnerWindow);
   MOZ_DIAGNOSTIC_ASSERT(aInnerWindow->IsCurrentInnerWindow());
   MOZ_DIAGNOSTIC_ASSERT(aInnerWindow->HasActiveDocument());
+
+  if (IsShutdown()) {
+    return NS_OK;
+  }
 
   nsIDocument* doc = aInnerWindow->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
@@ -252,6 +260,10 @@ ClientSource::DocShellExecutionReady(nsIDocShell* aDocShell)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aDocShell);
+
+  if (IsShutdown()) {
+    return NS_OK;
+  }
 
   nsPIDOMWindowOuter* outer = aDocShell->GetWindow();
   if (NS_WARN_IF(!outer)) {
@@ -306,9 +318,15 @@ ClientSource::WorkerSyncPing(WorkerPrivate* aWorkerPrivate)
 {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
+
+  if (IsShutdown()) {
+    return;
+  }
+
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate == mManager->GetWorkerPrivate());
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_DIAGNOSTIC_ASSERT(GetActor());
+
   GetActor()->SendWorkerSyncPing();
 }
 
