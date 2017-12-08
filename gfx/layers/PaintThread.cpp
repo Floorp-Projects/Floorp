@@ -388,7 +388,7 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
     clear.ClearBuffer();
   }
 
-  DrawTarget* target = aState->mTargetTiled;
+  DrawTarget* target = aState->mTarget;
   DrawTargetCapture* capture = aState->mCapture;
 
   // Draw all the things into the actual dest target.
