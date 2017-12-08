@@ -150,6 +150,11 @@
             "optional": true,
             "description": "Only used as a response to the onBeforeRequest and onHeadersReceived events. If set, the original request is prevented from being sent/completed and is instead redirected to the given URL. Redirections to non-HTTP schemes such as data: are allowed. Redirects initiated by a redirect action use the original request method for the redirect, with one exception: If the redirect is initiated at the onHeadersReceived stage, then the redirect will be issued using the GET method."
           },
+          "upgradeToSecure": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Only used as a response to the onBeforeRequest event. If set, the original request is prevented from being sent/completed and is instead upgraded to a secure request.  If any extension returns <code>redirectUrl</code> during onBeforeRequest, <code>upgradeToSecure</code> will have no affect."
+          },
           "requestHeaders": {
             "$ref": "HttpHeaders",
             "optional": true,
