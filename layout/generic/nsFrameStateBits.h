@@ -323,11 +323,8 @@ FRAME_STATE_BIT(FlexContainer, 20, NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORD
 // 'display:-webkit-{inline-}box' container.
 FRAME_STATE_BIT(FlexContainer, 21, NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX)
 
-// True iff computed flex values should be generated on the next reflow
-FRAME_STATE_BIT(FlexContainer, 22, NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)
-
 // True if the container has no flex items; may lie if there is a pending reflow
-FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
+FRAME_STATE_BIT(FlexContainer, 22, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
 
 // == Frame state bits that apply to grid container frames ====================
 

@@ -103,9 +103,6 @@ with Files("DesktopNotification.webidl"):
 with Files("FakePluginTagInit.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
-with Files("Flex.webidl"):
-    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
-
 with Files("FocusEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -527,7 +524,6 @@ WEBIDL_FILES = [
     'FileSystemDirectoryReader.webidl',
     'FileSystemEntry.webidl',
     'FileSystemFileEntry.webidl',
-    'Flex.webidl',
     'FocusEvent.webidl',
     'FontFace.webidl',
     'FontFaceSet.webidl',
