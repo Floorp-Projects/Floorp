@@ -32,7 +32,7 @@ AllowCompilerWarnings()
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [
         '-Wno-implicit-fallthrough',
     ]

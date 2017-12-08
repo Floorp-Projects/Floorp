@@ -70,7 +70,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about important MOZ_EXPORT attributes for
 #    android API types
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CXXFLAGS += [
         '-Wno-error=attributes',
         '-Wno-error=shadow',
@@ -78,7 +78,7 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-wd4275', # non dll-interface class used as base for dll-interface class
         '-wd4312', # This is intended as a temporary hack to support building with VS2015

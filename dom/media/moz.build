@@ -296,7 +296,7 @@ SOURCES += [
 
 # Some codec-related code uses multi-character constants, which GCC and clang
 # warn about. Suppress turning this warning into an error.
-if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
   SOURCES['DecoderTraits.cpp'].flags += ['-Wno-error=multichar']
 
 EXTRA_COMPONENTS += [
@@ -334,7 +334,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 # Suppress some GCC warnings being treated as errors:
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about an important MOZ_EXPORT for android::AString
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-error=attributes',
         '-Wno-error=shadow',

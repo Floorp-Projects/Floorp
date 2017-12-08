@@ -87,7 +87,7 @@ class VisualStudioBackend(CommonBackend):
             path=os.path.join(self._out_dir, 'mozilla.sln'))
 
     def consume_object(self, obj):
-        reldir = getattr(obj, 'relativedir', None)
+        reldir = getattr(obj, 'relsrcdir', None)
 
         if hasattr(obj, 'config') and reldir not in self._paths_to_configs:
             self._paths_to_configs[reldir] = obj.config
@@ -127,7 +127,7 @@ class VisualStudioBackend(CommonBackend):
         s.update(obj.files)
 
     def _process_unified_sources(self, obj):
-        reldir = getattr(obj, 'relativedir', None)
+        reldir = getattr(obj, 'relsrcdir', None)
 
         s = self._paths_to_sources.setdefault(reldir, set())
         s.update(obj.files)

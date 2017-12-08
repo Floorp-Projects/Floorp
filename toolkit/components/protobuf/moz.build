@@ -121,7 +121,7 @@ DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-ignored-qualifiers',
         '-Wno-maybe-uninitialized',
@@ -130,13 +130,13 @@ if CONFIG['GNU_CXX']:
         '-Wno-subobject-linkage',
         '-Wno-unused-function',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         CXXFLAGS += [
             '-Wno-comma',
             '-Wno-null-conversion',
             '-Wno-unused-local-typedef',
         ]
-elif CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-wd4005',  # 'WIN32_LEAN_AND_MEAN' : macro redefinition
         '-wd4018',  # '<' : signed/unsigned mismatch

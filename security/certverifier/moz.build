@@ -63,7 +63,7 @@ TEST_DIRS += [
 ]
 
 CXXFLAGS += ['-Wall']
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # -Wall with Visual C++ enables too many problematic warnings
     CXXFLAGS += [
         '-wd4355', # 'this' used in base member initializer list
@@ -125,7 +125,7 @@ if CONFIG['_MSC_VER']:
         '-wd4946', # reinterpret_cast used between related types
     ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wextra',
         '-Wunreachable-code',

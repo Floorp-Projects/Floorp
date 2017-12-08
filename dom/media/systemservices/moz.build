@@ -40,7 +40,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
   UNIFIED_SOURCES += ['OSXRunLoopSingleton.cpp']
   EXPORTS += ['OSXRunLoopSingleton.h']
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     DEFINES['__PRETTY_FUNCTION__'] = '__FUNCSIG__'
 
     # This is intended as a temporary workaround to enable building with VS2015.
@@ -88,5 +88,5 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

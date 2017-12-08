@@ -493,7 +493,7 @@ DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 # Workaround compiler bug (Bug 795594)
-if CONFIG['_MSC_VER'] and CONFIG['CPU_ARCH'] == 'x86_64':
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['CPU_ARCH'] == 'x86_64':
     for src in [
         'Layers.cpp',
         'LayerTreeInvalidation.cpp',
@@ -564,7 +564,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
     # Suppress warnings in third-party code.
     CXXFLAGS += [

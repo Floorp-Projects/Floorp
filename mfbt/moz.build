@@ -152,7 +152,7 @@ SOURCES += [
 
 DisableStlWrapping()
 
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
     # Suppress warnings from third-party V8 Decimal code.
     SOURCES['decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
 

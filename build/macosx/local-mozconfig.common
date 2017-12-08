@@ -4,7 +4,6 @@
 
 if [ "x$IS_NIGHTLY" = "xyes" ]; then
   # Some nightlies (eg: Mulet) don't want these set.
-  MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}
   MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-1}
 fi
 . "$topsrcdir/build/mozconfig.common"

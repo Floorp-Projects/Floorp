@@ -10,6 +10,8 @@ import sys
 import subprocess
 import tempfile
 import mozpack.path as mozpath
+import buildconfig
+from mozbuild.base import BuildEnvironmentNotFoundException
 
 def archive_exe(pkg_dir, tagfile, sfx_package, package):
     tmpdir = tempfile.mkdtemp(prefix='tmp')
@@ -18,7 +20,12 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package):
             shutil.move(pkg_dir, 'core')
         subprocess.check_call(['upx', '--best', '-o', mozpath.join(tmpdir, '7zSD.sfx'), sfx_package])
 
-        subprocess.check_call(['7z', 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx', '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1', '-mb0s1:2', '-mb0s2:3'])
+        try:
+            sevenz = buildconfig.config.substs['7Z']
+        except BuildEnvironmentNotFoundException:
+            # configure hasn't been run, just use the default
+            sevenz = '7z'
+        subprocess.check_call([sevenz, 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx', '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1', '-mb0s1:2', '-mb0s2:3'])
 
         with open(package, 'wb') as o:
             for i in [mozpath.join(tmpdir, '7zSD.sfx'), tagfile, mozpath.join(tmpdir, 'app.7z')]:

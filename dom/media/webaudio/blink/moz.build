@@ -35,5 +35,5 @@ LOCAL_INCLUDES += [
     '/dom/media/webaudio',
 ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow']

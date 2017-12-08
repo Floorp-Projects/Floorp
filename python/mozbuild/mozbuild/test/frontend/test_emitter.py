@@ -114,7 +114,7 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertTrue(os.path.isabs(o.context_main_path))
             self.assertEqual(len(o.context_all_paths), 1)
 
-        reldirs = [o.relativedir for o in objs]
+        reldirs = [o.relsrcdir for o in objs]
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'bar'])
 
         dirs = [[d.full_path for d in o.dirs] for o in objs]
@@ -134,11 +134,11 @@ class TestEmitterBasic(unittest.TestCase):
         for o in objs:
             self.assertIsInstance(o, DirectoryTraversal)
 
-        reldirs = set([o.relativedir for o in objs])
+        reldirs = set([o.relsrcdir for o in objs])
         self.assertEqual(reldirs, set(['', 'regular']))
 
         for o in objs:
-            reldir = o.relativedir
+            reldir = o.relsrcdir
 
             if reldir == '':
                 self.assertEqual([d.full_path for d in o.dirs], [
@@ -152,11 +152,11 @@ class TestEmitterBasic(unittest.TestCase):
         for o in objs:
             self.assertIsInstance(o, DirectoryTraversal)
 
-        reldirs = set([o.relativedir for o in objs])
+        reldirs = set([o.relsrcdir for o in objs])
         self.assertEqual(reldirs, set(['', 'regular', 'test']))
 
         for o in objs:
-            reldir = o.relativedir
+            reldir = o.relsrcdir
 
             if reldir == '':
                 self.assertEqual([d.full_path for d in o.dirs], [
@@ -947,9 +947,9 @@ class TestEmitterBasic(unittest.TestCase):
         nonstatic_ipdls = []
         for o in objs:
             if isinstance(o, IPDLFile):
-                ipdls.append('%s/%s' % (o.relativedir, o.basename))
+                ipdls.append('%s/%s' % (o.relsrcdir, o.basename))
             elif isinstance(o, PreprocessedIPDLFile):
-                nonstatic_ipdls.append('%s/%s' % (o.relativedir, o.basename))
+                nonstatic_ipdls.append('%s/%s' % (o.relsrcdir, o.basename))
 
         expected = [
             'bar/bar.ipdl',

@@ -69,7 +69,7 @@ public:
      * are mutable and accessed by the resolver worker thread and the
      * nsDNSService2 class.  |addr| doesn't change after it has been
      * assigned a value.  only the resolver worker thread modifies
-     * nsHostRecord (and only in nsHostResolver::OnLookupComplete);
+     * nsHostRecord (and only in nsHostResolver::CompleteLookup);
      * the other threads just read it.  therefore the resolver worker
      * thread doesn't need to lock when reading |addr_info|.
      */
@@ -170,7 +170,7 @@ class NS_NO_VTABLE nsResolveHostCallback : public PRCList
 {
 public:
     /**
-     * OnLookupComplete
+     * OnResolveHostComplete
      *
      * this function is called to complete a host lookup initiated by
      * nsHostResolver::ResolveHost.  it may be invoked recursively from
@@ -186,9 +186,9 @@ public:
      * @param status
      *        if successful, |record| contains non-null results
      */
-    virtual void OnLookupComplete(nsHostResolver *resolver,
-                                  nsHostRecord   *record,
-                                  nsresult        status) = 0;
+    virtual void OnResolveHostComplete(nsHostResolver *resolver,
+                                       nsHostRecord   *record,
+                                       nsresult        status) = 0;
     /**
      * EqualsAsyncListener
      *
@@ -318,7 +318,7 @@ private:
       LOOKUP_RESOLVEAGAIN,
     };
 
-    LookupStatus OnLookupComplete(nsHostRecord *, nsresult, mozilla::net::AddrInfo *);
+    LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *);
     void     DeQueue(PRCList &aQ, nsHostRecord **aResult);
     void     ClearPendingQueue(PRCList *aPendingQueue);
     nsresult ConditionallyCreateThread(nsHostRecord *rec);

@@ -284,16 +284,34 @@ public:
     mStatus = mMutator->SetQueryWithEncoding(query, encoding, nullptr);
     return *this;
   }
-  nsresult Finalize(nsIURI** aURI)
+
+  template <class C>
+  nsresult Finalize(nsCOMPtr<C>& aURI)
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
-    mStatus = mMutator->Finalize(aURI);
+
+    nsCOMPtr<nsIURI> uri;
+    mStatus = mMutator->Finalize(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    aURI = do_QueryInterface(uri, &mStatus);
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    return NS_OK;
+  }
+
+  // Overload for nsIURI to avoid query interface.
+  nsresult Finalize(nsCOMPtr<nsIURI>& aURI)
+  {
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+    mStatus = mMutator->Finalize(getter_AddRefs(aURI));
     return mStatus;
   }
+
   nsresult GetStatus() { return mStatus; }
 private:
   nsresult mStatus;
-  RefPtr<nsIURIMutator> mMutator;
+  nsCOMPtr<nsIURIMutator> mMutator;
 };
 
 %}

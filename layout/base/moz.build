@@ -167,10 +167,10 @@ MARIONETTE_LAYOUT_MANIFESTS += ['tests/marionette/manifest.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # This is intended as a temporary hack to support building with VS2015.
     # 'type cast': conversion from 'unsigned int' to 'void *' of greater size
     CXXFLAGS += ['-wd4312']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

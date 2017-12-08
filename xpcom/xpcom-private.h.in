@@ -10,18 +10,6 @@
 /* Define if getpagesize() is available */
 #undef HAVE_GETPAGESIZE
 
-/* Define if iconv() is available */
-#undef HAVE_ICONV
-
-/* Define if iconv() supports const input */
-#undef HAVE_ICONV_WITH_CONST_INPUT
-
-/* Define if mbrtowc() is available */
-#undef HAVE_MBRTOWC
-
-/* Define if wcrtomb() is available */
-#undef HAVE_WCRTOMB
-
 /* Define if statvfs64() is available */
 #undef HAVE_STATVFS64
 

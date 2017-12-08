@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use heapsize::HeapSizeOf;
 use num_traits::Zero;
-use rustc_serialize::{Encodable, Encoder};
 use serde::de::{Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use std::default::Default;
@@ -23,10 +21,6 @@ pub const AU_PER_PX: i32 = 60;
 /// It is safe to construct invalid Au values, but it may lead to
 /// panics and overflows.
 pub struct Au(pub i32);
-
-impl HeapSizeOf for Au {
-    fn heap_size_of_children(&self) -> usize { 0 }
-}
 
 impl<'de> Deserialize<'de> for Au {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Au, D::Error> {
@@ -63,12 +57,6 @@ impl Zero for Au {
 // after the operation. Gecko uses the same min/max values
 pub const MAX_AU: Au = Au((1 << 30) - 1);
 pub const MIN_AU: Au = Au(- ((1 << 30) - 1));
-
-impl Encodable for Au {
-    fn encode<S: Encoder>(&self, e: &mut S) -> Result<(), S::Error> {
-        e.emit_f64(self.to_f64_px())
-    }
-}
 
 impl fmt::Debug for Au {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -378,11 +366,4 @@ fn convert() {
     assert_eq!(Au::from_f64_px(6.), Au(360));
     assert_eq!(Au::from_f64_px(6.12), Au(367));
     assert_eq!(Au::from_f64_px(6.13), Au(368));
-}
-
-#[test]
-fn heapsize() {
-    use heapsize::HeapSizeOf;
-    fn f<T: HeapSizeOf>(_: T) {}
-    f(Au::new(0));
 }

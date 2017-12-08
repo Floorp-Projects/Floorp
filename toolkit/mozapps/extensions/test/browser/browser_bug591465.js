@@ -10,10 +10,6 @@ Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", te
 var LightweightThemeManager = tempScope.LightweightThemeManager;
 
 
-const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
-const SEARCH_URL = TESTROOT + "browser_bug591465.xml";
-const SEARCH_QUERY = "SEARCH";
-
 var gManagerWindow;
 var gProvider;
 var gContextMenu;
@@ -408,67 +404,6 @@ add_test(function() {
     }, {once: true});
 
     info("Opening context menu with single menu item on enabled theme, in detail view");
-    var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
-    EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
-  });
-});
-
-add_test(function() {
-  info("Searching for remote addons");
-
-  Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, SEARCH_URL);
-  Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
-
-  var searchBox = gManagerWindow.document.getElementById("header-search");
-  searchBox.value = SEARCH_QUERY;
-
-  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
-  EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
-
-  wait_for_view_load(gManagerWindow, function() {
-    var filter = gManagerWindow.document.getElementById("search-filter-remote");
-    EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
-    executeSoon(function() {
-
-      var el = get_addon_element(gManagerWindow, "remote1@tests.mozilla.org");
-
-      gContextMenu.addEventListener("popupshown", function() {
-        check_contextmenu(false, false, true, false, false);
-
-        gContextMenu.hidePopup();
-        run_next_test();
-      }, {once: true});
-
-      info("Opening context menu on remote extension item");
-      el.parentNode.ensureElementIsVisible(el);
-      EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
-      EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
-
-    });
-  });
-});
-
-
-add_test(function() {
-  gManagerWindow.loadView("addons://detail/remote1@tests.mozilla.org");
-  wait_for_view_load(gManagerWindow, function() {
-
-    gContextMenu.addEventListener("popupshown", function() {
-      check_contextmenu(false, false, true, true, false);
-
-      gContextMenu.hidePopup();
-
-      // Delete the created install
-      AddonManager.getAllInstalls(function(aInstalls) {
-        is(aInstalls.length, 1, "Should be one available install");
-        aInstalls[0].cancel();
-
-        run_next_test();
-      });
-    }, {once: true});
-
-    info("Opening context menu on remote extension, in detail view");
     var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
     EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
