@@ -129,94 +129,95 @@ ToIntegerCommon(const nsTString<T>& aSrc,
   //initial value, override if we find an integer
   *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
 
-  if(cp) {
+  //begin by skipping over leading chars that shouldn't be part of the number...
 
-    //begin by skipping over leading chars that shouldn't be part of the number...
+  auto endcp=aSrc.EndReading();
+  bool done=false;
 
-    auto endcp=aSrc.EndReading();
-    bool done=false;
+  // NB: For backwards compatibility I'm not going to change this logic but
+  //     it seems really odd. Previously there was logic to auto-detect the
+  //     radix if kAutoDetect was passed in. In practice this value was never
+  //     used, so it pretended to auto detect and skipped some preceding
+  //     letters (excluding valid hex digits) but never used the result.
+  //
+  //     For example if you pass in "Get the number: 10", aRadix = 10 we'd
+  //     skip the 'G', and then fail to parse "et the number: 10". If aRadix =
+  //     16 we'd skip the 'G', and parse just 'e' returning 14.
+  while((cp<endcp) && (!done)){
+    switch(*cp++) {
+      case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+      case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+        done=true;
+        break;
+      case '0': case '1': case '2': case '3': case '4':
+      case '5': case '6': case '7': case '8': case '9':
+        done=true;
+        break;
+      case '-':
+        negate=true; //fall through...
+        break;
+      default:
+        break;
+    } //switch
+  }
 
-    // NB: For backwards compatibility I'm not going to change this logic but
-    //     it seems really odd. Previously there was logic to auto-detect the
-    //     radix if kAutoDetect was passed in. In practice this value was never
-    //     used, so it pretended to auto detect and skipped some preceding
-    //     letters (excluding valid hex digits) but never used the result.
-    //
-    //     For example if you pass in "Get the number: 10", aRadix = 10 we'd
-    //     skip the 'G', and then fail to parse "et the number: 10". If aRadix =
-    //     16 we'd skip the 'G', and parse just 'e' returning 14.
-    while((cp<endcp) && (!done)){
-      switch(*cp++) {
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-          done=true;
-          break;
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
-          done=true;
-          break;
-        case '-':
-          negate=true; //fall through...
-          break;
-        default:
-          break;
-      } //switch
+  if (!done) {
+    // No base 16 or base 10 digits were found.
+    return 0;
+  }
+
+  // Step back.
+  cp--;
+
+  //integer found
+  *aErrorCode = NS_OK;
+
+  //now iterate the numeric chars and build our result
+  while(cp<endcp){
+    theChar=*cp++;
+    if(('0'<=theChar) && (theChar<='9')){
+      result = (aRadix * result) + (theChar-'0');
+    }
+    else if((theChar>='A') && (theChar<='F')) {
+      if(10==aRadix) {
+        *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+        result=0;
+        break;
+      }
+      else {
+        result = (aRadix * result) + ((theChar-'A')+10);
+      }
+    }
+    else if((theChar>='a') && (theChar<='f')) {
+      if(10==aRadix) {
+        *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+        result=0;
+        break;
+      }
+      else {
+        result = (aRadix * result) + ((theChar-'a')+10);
+      }
+    }
+    else if((('X'==theChar) || ('x'==theChar)) && result == 0) {
+      // For some reason we support a leading 'x' regardless of radix. For
+      // example: "000000x500", aRadix = 10 would be parsed as 500 rather
+      // than 0.
+      continue;
+    }
+    else {
+      //we've encountered a char that's not a legal number or sign
+      break;
     }
 
-    if (done) {
-      // Step back.
-      cp--;
+    if (!result.isValid()) {
+      // overflow!
+      *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+      return 0;
+    }
+  } //while
+  if(negate)
+    result=-result;
 
-      //integer found
-      *aErrorCode = NS_OK;
-
-      //now iterate the numeric chars and build our result
-      while(cp<endcp){
-        theChar=*cp++;
-        if(('0'<=theChar) && (theChar<='9')){
-          result = (aRadix * result) + (theChar-'0');
-        }
-        else if((theChar>='A') && (theChar<='F')) {
-          if(10==aRadix) {
-            *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-            result=0;
-            break;
-          }
-          else {
-            result = (aRadix * result) + ((theChar-'A')+10);
-          }
-        }
-        else if((theChar>='a') && (theChar<='f')) {
-          if(10==aRadix) {
-            *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-            result=0;
-            break;
-          }
-          else {
-            result = (aRadix * result) + ((theChar-'a')+10);
-          }
-        }
-        else if((('X'==theChar) || ('x'==theChar)) && result == 0) {
-          // For some reason we support a leading 'x' regardless of radix. For
-          // example: "000000x500", aRadix = 10 would be parsed as 500 rather
-          // than 0.
-          continue;
-        }
-        else {
-          //we've encountered a char that's not a legal number or sign
-          break;
-        }
-
-        if (!result.isValid()) {
-          // overflow!
-          *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-          return 0;
-        }
-      } //while
-      if(negate)
-        result=-result;
-    } //if
-  }
   return result.value();
 }
 
