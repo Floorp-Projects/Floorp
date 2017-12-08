@@ -112,10 +112,9 @@ nsTString<T>::RFindCharInSet(const char_type* aSet, int32_t aOffset) const
 
 
 // Common logic for nsTString<T>::ToIntger and nsTString<T>::ToInteger64.
-template <typename T, typename int_type>
+template<typename T, typename int_type>
 int_type
-ToIntegerCommon(const nsTString<T>& aSrc,
-                nsresult* aErrorCode, uint32_t aRadix)
+ToIntegerCommon(const nsTString<T>& aSrc, nsresult* aErrorCode, uint32_t aRadix)
 {
   MOZ_ASSERT(aRadix == 10 || aRadix == 16);
 
@@ -126,13 +125,14 @@ ToIntegerCommon(const nsTString<T>& aSrc,
   bool negate = false;
   char_type theChar = 0;
 
-  //initial value, override if we find an integer
-  *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+  // initial value, override if we find an integer
+  *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
 
-  //begin by skipping over leading chars that shouldn't be part of the number...
+  // begin by skipping over leading chars that shouldn't be part of the
+  // number...
 
-  auto endcp=aSrc.EndReading();
-  bool done=false;
+  auto endcp = aSrc.EndReading();
+  bool done = false;
 
   // NB: For backwards compatibility I'm not going to change this logic but
   //     it seems really odd. Previously there was logic to auto-detect the
@@ -143,20 +143,22 @@ ToIntegerCommon(const nsTString<T>& aSrc,
   //     For example if you pass in "Get the number: 10", aRadix = 10 we'd
   //     skip the 'G', and then fail to parse "et the number: 10". If aRadix =
   //     16 we'd skip the 'G', and parse just 'e' returning 14.
-  while((cp<endcp) && (!done)){
-    switch(*cp++) {
+  while ((cp < endcp) && (!done)) {
+    switch (*cp++) {
+      // clang-format off
       case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
       case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':
-        done=true;
+        done = true;
         break;
+      // clang-format on
       case '-':
-        negate=true; //fall through...
+        negate = true; // fall through...
         break;
       default:
         break;
-    } //switch
+    } // switch
   }
 
   if (!done) {
@@ -167,43 +169,37 @@ ToIntegerCommon(const nsTString<T>& aSrc,
   // Step back.
   cp--;
 
-  //integer found
+  // integer found
   *aErrorCode = NS_OK;
 
-  //now iterate the numeric chars and build our result
-  while(cp<endcp){
-    theChar=*cp++;
-    if(('0'<=theChar) && (theChar<='9')){
-      result = (aRadix * result) + (theChar-'0');
-    }
-    else if((theChar>='A') && (theChar<='F')) {
-      if(10==aRadix) {
-        *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-        result=0;
+  // now iterate the numeric chars and build our result
+  while (cp < endcp) {
+    theChar = *cp++;
+    if (('0' <= theChar) && (theChar <= '9')) {
+      result = (aRadix * result) + (theChar - '0');
+    } else if ((theChar >= 'A') && (theChar <= 'F')) {
+      if (10 == aRadix) {
+        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+        result = 0;
         break;
+      } else {
+        result = (aRadix * result) + ((theChar - 'A') + 10);
       }
-      else {
-        result = (aRadix * result) + ((theChar-'A')+10);
-      }
-    }
-    else if((theChar>='a') && (theChar<='f')) {
-      if(10==aRadix) {
-        *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-        result=0;
+    } else if ((theChar >= 'a') && (theChar <= 'f')) {
+      if (10 == aRadix) {
+        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+        result = 0;
         break;
+      } else {
+        result = (aRadix * result) + ((theChar - 'a') + 10);
       }
-      else {
-        result = (aRadix * result) + ((theChar-'a')+10);
-      }
-    }
-    else if((('X'==theChar) || ('x'==theChar)) && result == 0) {
+    } else if ((('X' == theChar) || ('x' == theChar)) && result == 0) {
       // For some reason we support a leading 'x' regardless of radix. For
       // example: "000000x500", aRadix = 10 would be parsed as 500 rather
       // than 0.
       continue;
-    }
-    else {
-      //we've encountered a char that's not a legal number or sign
+    } else {
+      // we've encountered a char that's not a legal number or sign
       break;
     }
 
@@ -212,9 +208,11 @@ ToIntegerCommon(const nsTString<T>& aSrc,
       *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
       return 0;
     }
-  } //while
-  if(negate)
-    result=-result;
+  } // while
+
+  if (negate) {
+    result = -result;
+  }
 
   return result.value();
 }
