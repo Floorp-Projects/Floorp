@@ -6,13 +6,14 @@ https://trac.torproject.org/projects/tor/ticket/1517
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Tor Bug 1517</title>
+  <title>Test for Tor Bug 1517 and Mozilla Bug 1424341</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://trac.torproject.org/projects/tor/ticket/1517">Tor Bug 1517</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1424341">Mozilla Bug 1424341</a>
 
 <!-- Canvas for testing 'currentTime' -->
 <canvas id="test-canvas" width="100" height="100"></canvas>
@@ -40,7 +41,7 @@ https://trac.torproject.org/projects/tor/ticket/1517
 
   const kExpectedResolution = 100;
 
-  function* checkWorker(worker) {
+  function* checkWorker(worker, prefname) {
     // The child worker will send the results back.
     let checkTimeStamps = () => new Promise(function(resolve) {
       let onMessage = function(event) {
@@ -50,6 +51,7 @@ https://trac.torproject.org/projects/tor/ticket/1517
         for (let i = 0; i < timeStampCodes.length; i++) {
           let timeStamp = timeStamps[i];
           is(timeStamp % kExpectedResolution, 0,
+            "pref: " + prefname + " - '" +
              "'" + timeStampCodes[i] +
              "' should be rounded to nearest 100 ms in workers; saw " +
              timeStamp);
@@ -70,22 +72,42 @@ https://trac.torproject.org/projects/tor/ticket/1517
     worker.terminate();
   }
 
-  add_task(async function testWorker() {
+  add_task(async function testWorkerRFP() {
     // Create one worker before setting the pref, and one after, in order to
     // check that the resolution is updated whether or not the worker was
     // already started
     let worker1 = new Worker("worker_child.js");
     await SpecialPowers.pushPrefEnv({
-      "set": [["privacy.resistFingerprinting", true]]});
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false]]});
     let worker2 = new Worker("worker_child.js");
     // Allow ~550 ms to elapse, so we can get non-zero
     // time values for all elements.
     await new Promise(resolve => window.setTimeout(resolve, 550));
-    await checkWorker(worker1);
-    await checkWorker(worker2);
+    await checkWorker(worker1, "privacy.resistFingerprinting");
+    await checkWorker(worker2, "privacy.resistFingerprinting");
   });
 
-  add_task(async function testDOM() {
+  add_task(async function testWorkerRTP() {
+    // Create one worker before setting the pref, and one after, in order to
+    // check that the resolution is updated whether or not the worker was
+    // already started
+    let worker1 = new Worker("worker_child.js");
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", false],
+              ["privacy.reduceTimerPrecision", true]]});
+    let worker2 = new Worker("worker_child.js");
+    // Allow ~550 ms to elapse, so we can get non-zero
+    // time values for all elements.
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1, "privacy.reduceTimerPrecision");
+    await checkWorker(worker2, "privacy.reduceTimerPrecision");
+  });
+
+  add_task(async function testDOMRFP() {
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false]]});
     let timeStampCodesDOM = timeStampCodes.concat([
       "audioContext.currentTime * 1000",
       "canvasStream.currentTime * 1000",
@@ -95,7 +117,28 @@ https://trac.torproject.org/projects/tor/ticket/1517
     for (let timeStampCode of timeStampCodesDOM) {
       let timeStamp = eval(timeStampCode);
       is(timeStamp % kExpectedResolution, 0,
+        "pref: privacy.resistFingerprinting - '" +
          "'" + timeStampCode +
+         "' should be rounded to nearest 100 ms; saw " +
+         timeStamp);
+    }
+  });
+
+  add_task(async function testDOMRTP() {
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", false],
+              ["privacy.reduceTimerPrecision", true]]});
+    let timeStampCodesDOM = timeStampCodes.concat([
+      "audioContext.currentTime * 1000",
+      "canvasStream.currentTime * 1000",
+    ]);
+    // Loop through each timeStampCode, evaluate it,
+    // and check if it is rounded to the nearest 100 ms.
+    for (let timeStampCode of timeStampCodesDOM) {
+      let timeStamp = eval(timeStampCode);
+      is(timeStamp % kExpectedResolution, 0,
+         "pref: privacy.reduceTimerPrecision - '" +
+         timeStampCode +
          "' should be rounded to nearest 100 ms; saw " +
          timeStamp);
     }
