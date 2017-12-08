@@ -13,7 +13,9 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.menu.context.WebContextMenu;
 import org.mozilla.focus.session.Session;
+import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 
@@ -87,7 +89,11 @@ public class InfoFragment extends WebFragment {
             public void onDownloadStart(Download download) {}
 
             @Override
-            public void onLongPress(IWebView.HitTarget hitTarget) {}
+            public void onLongPress(IWebView.HitTarget hitTarget) {
+                if (getArguments().get(ARGUMENT_URL).equals(SupportUtils.getSumoURLForTopic(getContext(), "add-search-engine"))) {
+                    WebContextMenu.show(getActivity(), this, hitTarget);
+                }
+            }
 
             @Override
             public void onURLChanged(String url) {}
