@@ -69,7 +69,7 @@ async function setUp() {
 }
 
 add_task(async function setup() {
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
   validate_all_future_pings();
 
   await Service.engineManager.register(SteamEngine);

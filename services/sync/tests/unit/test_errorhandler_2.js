@@ -73,7 +73,7 @@ async function syncAndReportErrorsAndWait(topic) {
   await promise2;
 }
 add_task(async function setup() {
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
   await Service.engineManager.register(EHTestsCommon.CatapultEngine);
   engine = Service.engineManager.get("catapult");
 });

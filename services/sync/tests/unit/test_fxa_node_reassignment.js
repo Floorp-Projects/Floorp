@@ -21,7 +21,7 @@ ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 add_task(async function setup() {
   // Disables all built-in engines. Important for avoiding errors thrown by the
   // add-ons engine.
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
 
   // Setup the FxA identity manager and cluster manager.
   Status.__authManager = Service.identity = new BrowserIDManager();
@@ -253,7 +253,7 @@ add_task(async function test_momentary_401_engine() {
                                       Service.storageURL + "rotary");
 
   tracker.clearChangedIDs();
-  Service.engineManager.unregister(engine);
+  await Service.engineManager.unregister(engine);
 });
 
 // This test ends up being a failing info fetch *after we're already logged in*.

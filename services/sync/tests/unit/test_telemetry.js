@@ -67,7 +67,7 @@ async function cleanAndGo(engine, server) {
 
 add_task(async function setup() {
   // Avoid addon manager complaining about not being initialized
-  Service.engineManager.unregister("addons");
+  await Service.engineManager.unregister("addons");
 });
 
 add_task(async function test_basic() {
@@ -358,7 +358,7 @@ add_task(async function test_generic_engine_fail() {
     });
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -388,7 +388,7 @@ add_task(async function test_engine_fail_weird_errors() {
 
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -423,7 +423,7 @@ add_task(async function test_engine_fail_ioerror() {
     ok(failureReason.error.includes("[profileDir]"), failureReason.error);
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -454,7 +454,7 @@ add_task(async function test_clean_urls() {
     equal(failureReason.error, "Other error message that includes <URL> in it.");
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -492,7 +492,7 @@ add_task(async function test_initial_sync_engines() {
     }
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -520,7 +520,7 @@ add_task(async function test_nserror() {
     });
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -543,7 +543,7 @@ add_task(async function test_sync_why() {
     equal(ping.why, "user");
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -609,7 +609,7 @@ add_task(async function test_no_foreign_engines_in_error_ping() {
     ok(ping.engines.every(e => e.name !== "bogus"));
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -627,7 +627,7 @@ add_task(async function test_no_foreign_engines_in_success_ping() {
     ok(ping.engines.every(e => e.name !== "bogus"));
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -679,7 +679,7 @@ add_task(async function test_events() {
     equal(ping.events[0].length, 6);
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -722,7 +722,7 @@ add_task(async function test_invalid_events() {
     await checkNotRecorded("object", "method", "value", badextra);
   } finally {
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });
 
@@ -753,6 +753,6 @@ add_task(async function test_no_ping_for_self_hosters() {
   } finally {
     telem.submit = oldSubmit;
     await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
   }
 });

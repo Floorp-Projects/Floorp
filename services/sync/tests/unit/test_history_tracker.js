@@ -15,7 +15,7 @@ let tracker;
 
 add_task(async function setup() {
 
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
   await Service.engineManager.register(HistoryEngine);
   engine = Service.engineManager.get("history");
   tracker = engine._tracker;

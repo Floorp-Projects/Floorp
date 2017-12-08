@@ -46,7 +46,7 @@ let canDecryptEngine;
 let cannotDecryptEngine;
 
 add_task(async function setup() {
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
 
   await Service.engineManager.register(CanDecryptEngine);
   await Service.engineManager.register(CannotDecryptEngine);
