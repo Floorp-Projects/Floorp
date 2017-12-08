@@ -441,7 +441,10 @@ Sync11Service.prototype = {
       case "fxaccounts:device_disconnected":
         data = JSON.parse(data);
         if (!data.isLocalDevice) {
-          Async.promiseSpinningly(this.clientsEngine.updateKnownStaleClients());
+          // Refresh the known stale clients list in the background.
+          this.clientsEngine.updateKnownStaleClients().catch(e => {
+            this._log.error(e);
+          });
         }
         break;
       case "weave:service:setup-complete":
@@ -651,7 +654,7 @@ Sync11Service.prototype = {
       // Make sure we have a cluster to verify against.
       // This is a little weird, if we don't get a node we pretend
       // to succeed, since that probably means we just don't have storage.
-      if (this.clusterURL == "" && !this._clusterManager.setCluster()) {
+      if (this.clusterURL == "" && !(await this._clusterManager.setCluster())) {
         this.status.sync = NO_SYNC_NODE_FOUND;
         return true;
       }
@@ -690,7 +693,7 @@ Sync11Service.prototype = {
 
         case 404:
           // Check that we're verifying with the correct cluster
-          if (allow40XRecovery && this._clusterManager.setCluster()) {
+          if (allow40XRecovery && (await this._clusterManager.setCluster())) {
             return await this.verifyLogin(false);
           }
 
