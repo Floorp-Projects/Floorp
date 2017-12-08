@@ -5614,20 +5614,9 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
         redirectingBackToSameURI)
             mCacheEntry->AsyncDoom(nullptr);
 
-    bool hasRef = false;
-    rv = mRedirectURI->GetHasRef(&hasRef);
-
     // move the reference of the old location to the new one if the new
     // one has none.
-    if (NS_SUCCEEDED(rv) && !hasRef) {
-        nsAutoCString ref;
-        mURI->GetRef(ref);
-        if (!ref.IsEmpty()) {
-            // NOTE: SetRef will fail if mRedirectURI is immutable
-            // (e.g. an about: URI)... Oh well.
-            mRedirectURI->SetRef(ref);
-        }
-    }
+    PropagateReferenceIfNeeded(mURI, mRedirectURI);
 
     bool rewriteToGET = ShouldRewriteRedirectToGET(mRedirectType,
                                                    mRequestHead.ParsedMethod());
