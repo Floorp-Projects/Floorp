@@ -70,17 +70,17 @@ function run_test() {
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org"],
-                              function([a1, a2, a3, a4]) {
+                               function([a1, a2, a3, a4]) {
 
-                                do_check_neq(a1, null);
-                                do_check_in_crash_annotation(addon1.id, addon1.version);
-                                do_check_neq(a2, null);
-                                do_check_in_crash_annotation(addon2.id, addon2.version);
-                                do_check_neq(a3, null);
-                                do_check_in_crash_annotation(addon3.id, addon3.version);
-                                do_check_neq(a4, null);
-                                do_check_in_crash_annotation(addon4.id, addon4.version);
+    do_check_neq(a1, null);
+    do_check_in_crash_annotation(addon1.id, addon1.version);
+    do_check_neq(a2, null);
+    do_check_in_crash_annotation(addon2.id, addon2.version);
+    do_check_neq(a3, null);
+    do_check_in_crash_annotation(addon3.id, addon3.version);
+    do_check_neq(a4, null);
+    do_check_in_crash_annotation(addon4.id, addon4.version);
 
-                                do_execute_soon(do_test_finished);
-                              });
+    do_execute_soon(do_test_finished);
+  });
 }

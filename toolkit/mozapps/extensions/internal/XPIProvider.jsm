@@ -1,4 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+ /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -539,11 +539,9 @@ function writeStringToFile(file, string) {
                   createInstance(Ci.nsIConverterOutputStream);
 
   try {
-    stream.init(file,
-                FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
-                  FileUtils.MODE_TRUNCATE,
-                FileUtils.PERMS_FILE,
-                0);
+    stream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                            FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
+                           0);
     converter.init(stream, "UTF-8");
     converter.writeString(string);
   } finally {
@@ -1620,7 +1618,7 @@ this.XPIStates = {
     changed = changed || oldLocations.size > 0;
 
     logger.debug("getInstallState changed: ${rv}, state: ${state}",
-                 {rv: changed, state: this.db});
+        {rv: changed, state: this.db});
     return changed;
   },
 
@@ -2456,7 +2454,7 @@ this.XPIProvider = {
 
     let forceUpdate = [];
     if (startupChanges.length > 0) {
-      let addons = XPIDatabase.getAddons();
+    let addons = XPIDatabase.getAddons();
       for (let addon of addons) {
         if ((startupChanges.indexOf(addon.id) != -1) &&
             (addon.permissions() & AddonManager.PERM_CAN_UPGRADE) &&
@@ -2979,7 +2977,7 @@ this.XPIProvider = {
           XPIStates.addAddon(addon);
         } catch (e) {
           logger.error("Failed to install staged add-on " + id + " in " + location.name,
-                       e);
+                e);
           // Re-create the staged install
           new StagedAddonInstall(location, stageDirEntry, addon);
           // Make sure not to delete the cached manifest json file
@@ -3450,7 +3448,7 @@ this.XPIProvider = {
    *         A callback to pass the AddonInstall to
    */
   getInstallForURL(aUrl, aHash, aName, aIcons, aVersion, aBrowser,
-                   aCallback) {
+                             aCallback) {
     let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
     let url = Services.io.newURI(aUrl);
 
@@ -3557,7 +3555,7 @@ this.XPIProvider = {
     }
     let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
     let oldAddon = await new Promise(
-      resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
+                   resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
     let callUpdate = false;
 
     let extraParams = {};
@@ -3650,19 +3648,19 @@ this.XPIProvider = {
    * @rejects  Never
    * @throws if the aInstanceID argument is not specified
    */
-  getAddonByInstanceID(aInstanceID) {
-    if (!aInstanceID || typeof aInstanceID != "symbol")
-      throw Components.Exception("aInstanceID must be a Symbol()",
-                                 Cr.NS_ERROR_INVALID_ARG);
+   getAddonByInstanceID(aInstanceID) {
+     if (!aInstanceID || typeof aInstanceID != "symbol")
+       throw Components.Exception("aInstanceID must be a Symbol()",
+                                  Cr.NS_ERROR_INVALID_ARG);
 
-    for (let [id, val] of this.activeAddons) {
-      if (aInstanceID == val.instanceID) {
-        return new Promise(resolve => this.getAddonByID(id, resolve));
-      }
-    }
+     for (let [id, val] of this.activeAddons) {
+       if (aInstanceID == val.instanceID) {
+         return new Promise(resolve => this.getAddonByID(id, resolve));
+       }
+     }
 
-    return Promise.resolve(null);
-  },
+     return Promise.resolve(null);
+   },
 
   /**
    * Removes an AddonInstall from the list of active installs.
@@ -4005,21 +4003,21 @@ this.XPIProvider = {
 
     if (aTopic == "nsPref:changed") {
       switch (aData) {
-        case PREF_EM_MIN_COMPAT_APP_VERSION:
-          this.minCompatibleAppVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_APP_VERSION,
-                                                                      null);
-          this.updateAddonAppDisabledStates();
-          break;
-        case PREF_EM_MIN_COMPAT_PLATFORM_VERSION:
-          this.minCompatiblePlatformVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
-                                                                           null);
-          this.updateAddonAppDisabledStates();
-          break;
-        case PREF_XPI_SIGNATURES_REQUIRED:
-        case PREF_ALLOW_LEGACY:
-        case PREF_ALLOW_NON_MPC:
-          this.updateAddonAppDisabledStates();
-          break;
+      case PREF_EM_MIN_COMPAT_APP_VERSION:
+        this.minCompatibleAppVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                                    null);
+        this.updateAddonAppDisabledStates();
+        break;
+      case PREF_EM_MIN_COMPAT_PLATFORM_VERSION:
+        this.minCompatiblePlatformVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                                         null);
+        this.updateAddonAppDisabledStates();
+        break;
+      case PREF_XPI_SIGNATURES_REQUIRED:
+      case PREF_ALLOW_LEGACY:
+      case PREF_ALLOW_NON_MPC:
+        this.updateAddonAppDisabledStates();
+        break;
       }
     }
   },
@@ -4199,8 +4197,8 @@ this.XPIProvider = {
    * @return a JavaScript scope
    */
   loadBootstrapScope(aId, aFile, aVersion, aType,
-                     aMultiprocessCompatible, aRunInSafeMode,
-                     aDependencies, hasEmbeddedWebExtension) {
+                               aMultiprocessCompatible, aRunInSafeMode,
+                               aDependencies, hasEmbeddedWebExtension) {
     this.activeAddons.set(aId, {
       bootstrapScope: null,
       // a Symbol passed to this add-on, which it can use to identify itself
@@ -5123,7 +5121,7 @@ AddonInternal.prototype = {
       await OS.File.makeDir(parentPath, {ignoreExisting: true});
       await OS.File.makeDir(dirPath, {ignoreExisting: true});
     })().then(() => callback(dirPath, null),
-              e => callback(dirPath, e));
+            e => callback(dirPath, e));
   },
 
   /**
@@ -5302,9 +5300,9 @@ AddonWrapper.prototype = {
 
     if (addon.optionsType) {
       switch (parseInt(addon.optionsType, 10)) {
-        case AddonManager.OPTIONS_TYPE_TAB:
-        case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
-          return hasOptionsURL ? addon.optionsType : null;
+      case AddonManager.OPTIONS_TYPE_TAB:
+      case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
+        return hasOptionsURL ? addon.optionsType : null;
       }
       return null;
     }
@@ -5752,10 +5750,10 @@ function defineAddonWrapperProperty(name, getter) {
  "strictCompatibility", "compatibilityOverrides", "updateURL", "dependencies",
  "getDataDirectory", "multiprocessCompatible", "signedState", "mpcOptedOut",
  "isCorrectlySigned"].forEach(function(aProp) {
-  defineAddonWrapperProperty(aProp, function() {
-    let addon = addonFor(this);
-    return (aProp in addon) ? addon[aProp] : undefined;
-  });
+   defineAddonWrapperProperty(aProp, function() {
+     let addon = addonFor(this);
+     return (aProp in addon) ? addon[aProp] : undefined;
+   });
 });
 
 ["fullDescription", "developerComments", "eula", "supportURL",
@@ -6772,7 +6770,7 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
     }
   }
 
-  /**
+ /**
   * Resumes upgrade of a previously-delayed add-on set.
   */
   async resumeAddonSet(installs) {

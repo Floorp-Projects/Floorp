@@ -13,24 +13,24 @@ Components.utils.import("resource://testing-common/httpd.js");
 var server;
 
 var TESTS = [
-  {
-    query:      "bug554133",
-    maxResults: 2,
-    length:     2,
-    total:      100
-  },
-  {
-    query:      "bug554133",
-    maxResults: 10,
-    length:     10,
-    total:      100
-  },
-  {
-    query:      "bug554133",
-    maxResults: 100,
-    length:     10,
-    total:      100
-  }
+{
+  query:      "bug554133",
+  maxResults: 2,
+  length:     2,
+  total:      100
+},
+{
+  query:      "bug554133",
+  maxResults: 10,
+  length:     10,
+  total:      100
+},
+{
+  query:      "bug554133",
+  maxResults: 100,
+  length:     10,
+  total:      100
+}
 ];
 
 var gCurrentTest = 0;
