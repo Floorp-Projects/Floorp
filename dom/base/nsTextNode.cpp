@@ -21,7 +21,6 @@
 #ifdef DEBUG
 #include "nsRange.h"
 #endif
-#include "nsDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -156,12 +155,6 @@ void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
   ResetDirectionSetByTextNode(this);
 
   nsGenericDOMDataNode::UnbindFromTree(aDeep, aNullParent);
-}
-
-bool
-nsTextNode::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
-{
-  return nsDocument::IsWebComponentsEnabled(aCx, aObject);
 }
 
 #ifdef DEBUG

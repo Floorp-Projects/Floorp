@@ -245,19 +245,19 @@ dictionary ShadowRootInit {
 // https://dom.spec.whatwg.org/#element
 partial interface Element {
   // Shadow DOM v1
-  [Throws, Func="nsDocument::IsWebComponentsEnabled"]
+  [Throws, Pref="dom.webcomponents.enabled"]
   ShadowRoot attachShadow(ShadowRootInit shadowRootInitDict);
-  [BinaryName="shadowRootByMode", Func="nsDocument::IsWebComponentsEnabled"]
+  [BinaryName="shadowRootByMode", Pref="dom.webcomponents.enabled"]
   readonly attribute ShadowRoot? shadowRoot;
-  [BinaryName="assignedSlotByMode", Func="nsDocument::IsWebComponentsEnabled"]
+  [BinaryName="assignedSlotByMode", Pref="dom.webcomponents.enabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
-  [CEReactions, Unscopable, SetterThrows, Func="nsDocument::IsWebComponentsEnabled"]
+  [CEReactions, Unscopable, SetterThrows, Pref="dom.webcomponents.enabled"]
            attribute DOMString slot;
 
   // [deprecated] Shadow DOM v0
-  [Throws, Func="nsDocument::IsWebComponentsEnabled"]
+  [Throws, Pref="dom.webcomponents.enabled"]
   ShadowRoot createShadowRoot();
-  [Func="nsDocument::IsWebComponentsEnabled"]
+  [Pref="dom.webcomponents.enabled"]
   NodeList getDestinationInsertionPoints();
 };
 
