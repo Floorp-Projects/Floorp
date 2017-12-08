@@ -12,7 +12,7 @@
 
 [package]
 name = "euclid"
-version = "0.15.5"
+version = "0.16.0"
 authors = ["The Servo Project Developers"]
 description = "Geometry primitives"
 documentation = "https://docs.rs/euclid/"
@@ -20,23 +20,20 @@ keywords = ["matrix", "vector", "linear-algebra", "geometry"]
 categories = ["science"]
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/euclid"
-[dependencies.heapsize]
-version = "0.4"
+[dependencies.log]
+version = "0.3.1"
 
 [dependencies.num-traits]
 version = "0.1.32"
 default-features = false
 
-[dependencies.log]
-version = "0.3.1"
-
 [dependencies.serde]
 version = "1.0"
-[dev-dependencies.serde_test]
-version = "1.0"
-
 [dev-dependencies.rand]
 version = "0.3.7"
+
+[dev-dependencies.serde_test]
+version = "1.0"
 
 [features]
 unstable = []
