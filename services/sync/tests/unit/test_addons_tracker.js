@@ -57,8 +57,8 @@ add_task(async function test_empty() {
 add_task(async function test_not_tracking() {
   _("Ensures the tracker doesn't do anything when it isn't tracking.");
 
-  let addon = installAddon("test_bootstrap1_1");
-  uninstallAddon(addon);
+  let addon = await installAddon("test_bootstrap1_1");
+  await uninstallAddon(addon);
 
   Assert.equal(0, Object.keys(tracker.changedIDs).length);
   Assert.equal(0, tracker.score);
@@ -74,14 +74,14 @@ add_task(async function test_track_install() {
   Svc.Obs.notify("weave:engine:start-tracking");
 
   Assert.equal(0, tracker.score);
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
   let changed = tracker.changedIDs;
 
   Assert.equal(1, Object.keys(changed).length);
   Assert.ok(addon.syncGUID in changed);
   Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
   await cleanup();
 });
 
@@ -90,13 +90,13 @@ add_task(async function test_track_uninstall() {
 
   reconciler.startListening();
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
   let guid = addon.syncGUID;
   Assert.equal(0, tracker.score);
 
   Svc.Obs.notify("weave:engine:start-tracking");
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
   let changed = tracker.changedIDs;
   Assert.equal(1, Object.keys(changed).length);
   Assert.ok(guid in changed);
@@ -110,7 +110,7 @@ add_task(async function test_track_user_disable() {
 
   reconciler.startListening();
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
   Assert.ok(!addon.userDisabled);
   Assert.ok(!addon.appDisabled);
   Assert.ok(addon.isActive);
@@ -144,7 +144,7 @@ add_task(async function test_track_user_disable() {
   Assert.ok(addon.syncGUID in changed);
   Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
   await cleanup();
 });
 
@@ -153,7 +153,7 @@ add_task(async function test_track_enable() {
 
   reconciler.startListening();
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
   addon.userDisabled = true;
   await Async.promiseYield();
 
@@ -168,6 +168,6 @@ add_task(async function test_track_enable() {
   Assert.ok(addon.syncGUID in changed);
   Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
   await cleanup();
 });
