@@ -305,17 +305,14 @@ AddonsStore.prototype = {
    * Provides core Store API to create/install an add-on from a record.
    */
   async create(record) {
-    let cb = Async.makeSpinningCallback();
-    AddonUtils.installAddons([{
+    // This will throw if there was an error. This will get caught by the sync
+    // engine and the record will try to be applied later.
+    const results = await AddonUtils.installAddons([{
       id:               record.addonID,
       syncGUID:         record.id,
       enabled:          record.enabled,
       requireSecureURI: this._extensionsPrefs.get("install.requireSecureOrigin", true),
-    }], cb);
-
-    // This will throw if there was an error. This will get caught by the sync
-    // engine and the record will try to be applied later.
-    let results = cb.wait();
+    }]);
 
     if (results.skipped.includes(record.addonID)) {
       this._log.info("Add-on skipped: " + record.addonID);
@@ -370,7 +367,7 @@ AddonsStore.prototype = {
     // First, the reconciler could know about an add-on that was uninstalled
     // and no longer present in the add-ons manager.
     if (!addon) {
-      this.create(record);
+      await this.create(record);
       return;
     }
 

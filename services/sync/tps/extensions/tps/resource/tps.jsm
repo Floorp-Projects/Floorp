@@ -484,7 +484,7 @@ var TPS = {
       let addon = new Addon(this, entry);
       switch (action) {
         case ACTION_ADD:
-          addon.install();
+          await addon.install();
           break;
         case ACTION_DELETE:
           await addon.uninstall();
