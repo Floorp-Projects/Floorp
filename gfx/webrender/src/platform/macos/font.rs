@@ -247,7 +247,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
 
             val = val.max(min_val).min(max_val);
             if val != def_val {
-                vals.push((name, CFNumber::from_f64(val)));
+                vals.push((name, CFNumber::from(val)));
             }
         }
         if vals.is_empty() {
