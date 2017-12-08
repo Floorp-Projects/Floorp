@@ -3,10 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This file is included at the top of all native android mozconfigs
-if [ "x$IS_NIGHTLY" = "xyes" ]; then
-  MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}
-fi
-
 if [ -z "$NO_NDK" ]; then
   . "$topsrcdir/build/mozconfig.stylo"
 fi
