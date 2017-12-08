@@ -624,6 +624,14 @@ var gPrivacyPane = {
       null, params);
   },
 
+  /**
+   * Displays the Do Not Track settings dialog.
+   */
+  showDoNotTrackSettings() {
+    gSubDialog.open("chrome://browser/content/preferences/donottrack.xul",
+      "resizable=no");
+  },
+
   // HISTORY
 
   /*
