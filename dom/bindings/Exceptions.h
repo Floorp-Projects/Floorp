@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include "jspubtd.h"
 #include "nsIException.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "jsapi.h"
 
 class nsIStackFrame;

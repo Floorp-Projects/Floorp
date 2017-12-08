@@ -43,7 +43,7 @@ public:
                    const nsIntRegion& aDirtyRegion,
                    LayerManager::DrawPaintedLayerCallback aCallback,
                    void* aCallbackData,
-                   bool aIsProgressive = false) override;
+                   TilePaintFlags aFlags = TilePaintFlags::None) override;
  
   bool SupportsProgressiveUpdate() override { return false; }
   bool ProgressiveUpdate(const nsIntRegion& aValidRegion,
@@ -84,6 +84,8 @@ public:
 
 private:
   TileClient mTile;
+
+  RefPtr<ClientLayerManager> mManager;
 
   nsIntRegion mPaintedRegion;
   nsIntRegion mValidRegion;

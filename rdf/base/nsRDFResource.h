@@ -10,7 +10,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFResource.h"
 #include "nscore.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "rdf.h"
 
 class nsIRDFService;

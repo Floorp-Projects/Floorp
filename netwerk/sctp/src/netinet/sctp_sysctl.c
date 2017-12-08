@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.c 277424 2015-01-20 19:08:55Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.c 323505 2017-09-12 21:08:50Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -72,7 +74,6 @@ sctp_init_sysctls()
 	SCTP_BASE_SYSCTL(sctp_reconfig_enable) = SCTPCTL_RECONFIG_ENABLE_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_nrsack_enable) = SCTPCTL_NRSACK_ENABLE_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_pktdrop_enable) = SCTPCTL_PKTDROP_ENABLE_DEFAULT;
-	SCTP_BASE_SYSCTL(sctp_strict_sacks) = SCTPCTL_STRICT_SACKS_DEFAULT;
 #if !(defined(__FreeBSD__) && __FreeBSD_version >= 800000)
 #if !defined(SCTP_WITH_NO_CSUM)
 	SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) = SCTPCTL_LOOPBACK_NOCSUM_DEFAULT;
@@ -115,7 +116,6 @@ sctp_init_sysctls()
 	SCTP_BASE_SYSCTL(sctp_do_drain) = SCTPCTL_DO_SCTP_DRAIN_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_hb_maxburst) = SCTPCTL_HB_MAX_BURST_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_abort_if_one_2_one_hits_limit) = SCTPCTL_ABORT_AT_LIMIT_DEFAULT;
-	SCTP_BASE_SYSCTL(sctp_strict_data_order) = SCTPCTL_STRICT_DATA_ORDER_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_min_residual) = SCTPCTL_MIN_RESIDUAL_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_max_retran_chunk) = SCTPCTL_MAX_RETRAN_CHUNK_DEFAULT;
 	SCTP_BASE_SYSCTL(sctp_logging_level) = SCTPCTL_LOGGING_LEVEL_DEFAULT;
@@ -330,9 +330,6 @@ sctp_sysctl_copy_out_local_addresses(struct sctp_inpcb *inp, struct sctp_tcb *st
 					if (ipv6_addr_legal) {
 						struct sockaddr_in6 *sin6;
 
-#if defined(SCTP_EMBEDDED_V6_SCOPE) && !defined(SCTP_KAME)
-						struct sockaddr_in6 lsa6;
-#endif
 						sin6 = &sctp_ifa->address.sin6;
 						if (IN6_IS_ADDR_UNSPECIFIED(&sin6->sin6_addr))
 							continue;
@@ -345,21 +342,6 @@ sctp_sysctl_copy_out_local_addresses(struct sctp_inpcb *inp, struct sctp_tcb *st
 						if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr)) {
 							if (local_scope == 0)
 								continue;
-#if defined(SCTP_EMBEDDED_V6_SCOPE)
-							if (sin6->sin6_scope_id == 0) {
-#ifdef SCTP_KAME
-								/* bad link local address */
-								if (sa6_recoverscope(sin6) != 0)
-									continue;
-#else
-								lsa6 = *sin6;
-								/* bad link local address */
-								if (in6_recoverscope(&lsa6, &lsa6.sin6_addr, NULL))
-									continue;
-								sin6 = &lsa6;
-#endif	/* SCTP_KAME */
-							}
-#endif /* SCTP_EMBEDDED_V6_SCOPE */
 						}
 						if ((site_scope == 0) && (IN6_IS_ADDR_SITELOCAL(&sin6->sin6_addr)))
 							continue;
@@ -518,14 +500,44 @@ sctp_sysctl_handle_assoclist(SYSCTL_HANDLER_ARGS)
 		xinpcb.total_recvs = inp->total_recvs;
 		xinpcb.total_nospaces = inp->total_nospaces;
 		xinpcb.fragmentation_point = inp->sctp_frag_point;
+#if !(defined(__FreeBSD__) && (__FreeBSD_version < 1001517))
+		xinpcb.socket = inp->sctp_socket;
+#endif
 		so = inp->sctp_socket;
 		if ((so == NULL) ||
+		    (!SCTP_IS_LISTENING(inp)) ||
 		    (inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_GONE)) {
 			xinpcb.qlen = 0;
 			xinpcb.maxqlen = 0;
 		} else {
+#if defined(__FreeBSD__) && __FreeBSD_version >= 1200034
+			xinpcb.qlen = so->sol_qlen;
+#else
 			xinpcb.qlen = so->so_qlen;
+#endif
+#if defined(__FreeBSD__) && __FreeBSD_version > 1100096
+#if __FreeBSD_version >= 1200034
+			xinpcb.qlen_old = so->sol_qlen > USHRT_MAX ?
+			    USHRT_MAX : (uint16_t) so->sol_qlen;
+#else
+			xinpcb.qlen_old = so->so_qlen > USHRT_MAX ?
+			    USHRT_MAX : (uint16_t) so->so_qlen;
+#endif
+#endif
+#if defined(__FreeBSD__) && __FreeBSD_version >= 1200034
+			xinpcb.maxqlen = so->sol_qlimit;
+#else
 			xinpcb.maxqlen = so->so_qlimit;
+#endif
+#if defined(__FreeBSD__) && __FreeBSD_version > 1100096
+#if __FreeBSD_version >= 1200034
+			xinpcb.maxqlen_old = so->sol_qlimit > USHRT_MAX ?
+			    USHRT_MAX : (uint16_t) so->sol_qlimit;
+#else
+			xinpcb.maxqlen_old = so->so_qlimit > USHRT_MAX ?
+			    USHRT_MAX : (uint16_t) so->so_qlimit;
+#endif
+#endif
 		}
 		SCTP_INP_INCR_REF(inp);
 		SCTP_INP_RUNLOCK(inp);
@@ -552,7 +564,7 @@ sctp_sysctl_handle_assoclist(SYSCTL_HANDLER_ARGS)
 			if (stcb->asoc.primary_destination != NULL)
 				xstcb.primary_addr = stcb->asoc.primary_destination->ro._l_addr;
 			xstcb.heartbeat_interval = stcb->asoc.heart_beat_delay;
-			xstcb.state = SCTP_GET_STATE(&stcb->asoc);	/* FIXME */
+			xstcb.state = (uint32_t)sctp_map_assoc_state(stcb->asoc.state);
 #if defined(__FreeBSD__)
 #if __FreeBSD_version >= 800000
 			/* 7.0 does not support these */
@@ -618,10 +630,28 @@ sctp_sysctl_handle_assoclist(SYSCTL_HANDLER_ARGS)
 #if __FreeBSD_version >= 800000
 				xraddr.rtt = net->rtt / 1000;
 				xraddr.heartbeat_interval = net->heart_beat_delay;
+				xraddr.ssthresh = net->ssthresh;
+				xraddr.encaps_port = net->port;
+				if (net->dest_state & SCTP_ADDR_UNCONFIRMED) {
+					xraddr.state = SCTP_UNCONFIRMED;
+				} else if (net->dest_state & SCTP_ADDR_REACHABLE) {
+					xraddr.state = SCTP_ACTIVE;
+				} else {
+					xraddr.state = SCTP_INACTIVE;
+				}
 #endif
 #else
 				xraddr.rtt = net->rtt / 1000;
 				xraddr.heartbeat_interval = net->heart_beat_delay;
+				xraddr.ssthresh = net->ssthresh;
+				xraddr.encaps_port = net->port;
+				if (net->dest_state & SCTP_ADDR_UNCONFIRMED) {
+					xraddr.state = SCTP_UNCONFIRMED;
+				} else if (net->dest_state & SCTP_ADDR_REACHABLE) {
+					xraddr.state = SCTP_ACTIVE;
+				} else {
+					xraddr.state = SCTP_INACTIVE;
+				}
 #endif
 				xraddr.start_time.tv_sec = (uint32_t)net->start_time.tv_sec;
 				xraddr.start_time.tv_usec = (uint32_t)net->start_time.tv_usec;
@@ -1208,7 +1238,6 @@ SYSCTL_PROC(_net_inet_sctp, OID_AUTO, asconf_enable, CTLFLAG_VNET|CTLTYPE_UINT|C
 SCTP_UINT_SYSCTL(reconfig_enable, sctp_reconfig_enable, SCTPCTL_RECONFIG_ENABLE)
 SCTP_UINT_SYSCTL(nrsack_enable, sctp_nrsack_enable, SCTPCTL_NRSACK_ENABLE)
 SCTP_UINT_SYSCTL(pktdrop_enable, sctp_pktdrop_enable, SCTPCTL_PKTDROP_ENABLE)
-SCTP_UINT_SYSCTL(strict_sacks, sctp_strict_sacks, SCTPCTL_STRICT_SACKS)
 #if defined(__APPLE__)
 #if !defined(SCTP_WITH_NO_CSUM)
 SCTP_UINT_SYSCTL(loopback_nocsum, sctp_no_csum_on_loopback, SCTPCTL_LOOPBACK_NOCSUM)
@@ -1251,7 +1280,6 @@ SCTP_UINT_SYSCTL(max_chained_mbufs, sctp_mbuf_threshold_count, SCTPCTL_MAX_CHAIN
 SCTP_UINT_SYSCTL(do_sctp_drain, sctp_do_drain, SCTPCTL_DO_SCTP_DRAIN)
 SCTP_UINT_SYSCTL(hb_max_burst, sctp_hb_maxburst, SCTPCTL_HB_MAX_BURST)
 SCTP_UINT_SYSCTL(abort_at_limit, sctp_abort_if_one_2_one_hits_limit, SCTPCTL_ABORT_AT_LIMIT)
-SCTP_UINT_SYSCTL(strict_data_order, sctp_strict_data_order, SCTPCTL_STRICT_DATA_ORDER)
 SCTP_UINT_SYSCTL(min_residual, sctp_min_residual, SCTPCTL_MIN_RESIDUAL)
 SCTP_UINT_SYSCTL(max_retran_chunk, sctp_max_retran_chunk, SCTPCTL_MAX_RETRAN_CHUNK)
 SCTP_UINT_SYSCTL(log_level, sctp_logging_level, SCTPCTL_LOGGING_LEVEL)
@@ -1320,7 +1348,6 @@ sctp_sysctl_handle_int(SYSCTL_HANDLER_ARGS)
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_reconfig_enable), SCTPCTL_RECONFIG_ENABLE_MIN, SCTPCTL_RECONFIG_ENABLE_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_nrsack_enable), SCTPCTL_NRSACK_ENABLE_MIN, SCTPCTL_NRSACK_ENABLE_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_pktdrop_enable), SCTPCTL_PKTDROP_ENABLE_MIN, SCTPCTL_PKTDROP_ENABLE_MAX);
-		RANGECHK(SCTP_BASE_SYSCTL(sctp_strict_sacks), SCTPCTL_STRICT_SACKS_MIN, SCTPCTL_STRICT_SACKS_MAX);
 #if !defined(SCTP_WITH_NO_CSUM)
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback), SCTPCTL_LOOPBACK_NOCSUM_MIN, SCTPCTL_LOOPBACK_NOCSUM_MAX);
 #endif
@@ -1361,7 +1388,6 @@ sctp_sysctl_handle_int(SYSCTL_HANDLER_ARGS)
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_do_drain), SCTPCTL_DO_SCTP_DRAIN_MIN, SCTPCTL_DO_SCTP_DRAIN_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_hb_maxburst), SCTPCTL_HB_MAX_BURST_MIN, SCTPCTL_HB_MAX_BURST_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_abort_if_one_2_one_hits_limit), SCTPCTL_ABORT_AT_LIMIT_MIN, SCTPCTL_ABORT_AT_LIMIT_MAX);
-		RANGECHK(SCTP_BASE_SYSCTL(sctp_strict_data_order), SCTPCTL_STRICT_DATA_ORDER_MIN, SCTPCTL_STRICT_DATA_ORDER_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_min_residual), SCTPCTL_MIN_RESIDUAL_MIN, SCTPCTL_MIN_RESIDUAL_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_max_retran_chunk), SCTPCTL_MAX_RETRAN_CHUNK_MIN, SCTPCTL_MAX_RETRAN_CHUNK_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_logging_level), SCTPCTL_LOGGING_LEVEL_MIN, SCTPCTL_LOGGING_LEVEL_MAX);
@@ -1431,10 +1457,6 @@ sysctl_setup_sctp(void)
 	sysctl_add_oid(&sysctl_oid_top, "pktdrop_enable", CTLTYPE_INT|CTLFLAG_RW,
             &SCTP_BASE_SYSCTL(sctp_pktdrop_enable), 0, sctp_sysctl_handle_int,
 	    SCTPCTL_PKTDROP_ENABLE_DESC);
-
-	sysctl_add_oid(&sysctl_oid_top, "strict_sacks", CTLTYPE_INT|CTLFLAG_RW,
-            &SCTP_BASE_SYSCTL(sctp_strict_sacks), 0, sctp_sysctl_handle_int,
-	    SCTPCTL_STRICT_SACKS_DESC);
 
 #if !defined(SCTP_WITH_NO_CSUM)
 	sysctl_add_oid(&sysctl_oid_top, "loopback_nocsum", CTLTYPE_INT|CTLFLAG_RW,
@@ -1589,10 +1611,6 @@ sysctl_setup_sctp(void)
 	sysctl_add_oid(&sysctl_oid_top, "abort_at_limit", CTLTYPE_INT|CTLFLAG_RW,
             &SCTP_BASE_SYSCTL(sctp_abort_if_one_2_one_hits_limit), 0, sctp_sysctl_handle_int,
 	    SCTPCTL_ABORT_AT_LIMIT_DESC);
-
-	sysctl_add_oid(&sysctl_oid_top, "strict_data_order", CTLTYPE_INT|CTLFLAG_RW,
-            &SCTP_BASE_SYSCTL(sctp_strict_data_order), 0, sctp_sysctl_handle_int,
-	    SCTPCTL_STRICT_DATA_ORDER_DESC);
 
 	sysctl_add_oid(&sysctl_oid_top, "min_residual", CTLTYPE_INT|CTLFLAG_RW,
             &SCTP_BASE_SYSCTL(sctp_min_residual), 0, sctp_sysctl_handle_int,

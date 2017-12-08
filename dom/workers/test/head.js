@@ -15,11 +15,7 @@ function addTab(url) {
   gBrowser.selectedTab = tab;
   let linkedBrowser = tab.linkedBrowser;
   linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
-  return new Promise(function (resolve) {
-    linkedBrowser.addEventListener("load", function() {
-      resolve(tab);
-    }, {capture: true, once: true});
-  });
+  return BrowserTestUtils.browserLoaded(linkedBrowser).then(() => tab);
 }
 
 /**

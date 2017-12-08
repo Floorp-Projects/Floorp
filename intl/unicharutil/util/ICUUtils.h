@@ -11,7 +11,7 @@
 #ifdef MOZILLA_INTERNAL_API
 
 #include "mozilla/Scoped.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "unicode/unum.h" // for UNumberFormat
 
 class nsIContent;

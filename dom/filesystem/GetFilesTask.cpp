@@ -15,7 +15,7 @@
 #include "mozilla/dom/PFileSystemParams.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIFile.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {

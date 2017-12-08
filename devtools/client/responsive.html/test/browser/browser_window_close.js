@@ -9,7 +9,7 @@ add_task(function* () {
   let newWindow = yield newWindowPromise;
 
   newWindow.focus();
-  yield once(newWindow.gBrowser, "load", true);
+  yield BrowserTestUtils.browserLoaded(newWindow.gBrowser.selectedBrowser);
 
   let tab = newWindow.gBrowser.selectedTab;
   yield openRDM(tab);

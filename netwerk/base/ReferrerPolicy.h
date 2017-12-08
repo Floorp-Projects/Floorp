@@ -5,7 +5,7 @@
 #ifndef ReferrerPolicy_h__
 #define ReferrerPolicy_h__
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsIHttpChannel.h"
 #include "nsUnicharUtils.h"
 

@@ -150,7 +150,7 @@ D2D1_CHANNEL_SELECTOR D2DChannelSelector(uint32_t aMode)
 
 already_AddRefed<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface *aSurface)
 {
-  if (aDT->IsTiledDrawTarget() || aDT->IsDualDrawTarget()) {
+  if (aDT->IsTiledDrawTarget() || aDT->IsDualDrawTarget() || aDT->IsCaptureDT()) {
     gfxDevCrash(LogReason::FilterNodeD2D1Target) << "Incompatible draw target type! " << (int)aDT->IsTiledDrawTarget() << " " << (int)aDT->IsDualDrawTarget();
     return nullptr;
   }

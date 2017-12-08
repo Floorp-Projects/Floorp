@@ -45,7 +45,7 @@ function test() {
     is(workerClient2.isClosed, false, "worker in tab 2 should not be closed");
 
     executeSoon(() => {
-      tab.linkedBrowser.contentWindow.history.back();
+      tab.linkedBrowser.goBack();
     });
     yield waitForWorkerClose(workerClient2);
     is(workerClient2.isClosed, true, "worker in tab 2 should be closed");

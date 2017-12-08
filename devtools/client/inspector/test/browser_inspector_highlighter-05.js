@@ -50,7 +50,7 @@ add_task(function* () {
   info("Open the inspector to a blank page.");
   let { inspector, tab, testActor } = yield openInspectorForURL("about:blank");
 
-  let pageLoaded = waitForPageLoad(tab);
+  let pageLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("Navigate to the test url and waiting for the page to be loaded.");
   yield navigateTo(inspector, TEST_URL);
@@ -63,8 +63,4 @@ add_task(function* () {
   info("Check the node is highlighted.");
   is(yield testActor.isHighlighting(), true,
     "Box Model highlighter is working as expected.");
-});
-
-const waitForPageLoad = (tab) => new Promise(resolve => {
-  tab.linkedBrowser.addEventListener("load", resolve, {capture: true, once: true});
 });

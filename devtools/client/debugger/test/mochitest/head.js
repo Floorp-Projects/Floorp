@@ -567,7 +567,7 @@ let initDebugger = Task.async(function*(urlOrTab, options) {
   }
   info("Debugee tab added successfully: " + urlOrTab);
 
-  let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
+  let debuggee = tab.linkedBrowser.contentWindowAsCPOW.wrappedJSObject;
   let target = TargetFactory.forTab(tab);
 
   let toolbox = yield gDevTools.showToolbox(target, "jsdebugger");
