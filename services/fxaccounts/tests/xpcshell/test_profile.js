@@ -313,11 +313,19 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
 
-  await profile.getProfile();
+  // first fetch should return null as we don't have data.
+  let p = await profile.getProfile();
+  Assert.equal(p, null);
+  // ensure we kicked off a fetch.
+  Assert.notEqual(profile._currentFetchPromise, null);
+  // wait for that fetch to finish
+  await profile._currentFetchPromise;
   Assert.equal(numFetches, 1);
+  Assert.equal(profile._currentFetchPromise, null);
 
   await profile.getProfile();
   Assert.equal(numFetches, 1);
+  Assert.equal(profile._currentFetchPromise, null);
 
   await new Promise(resolve => {
     do_timeout(1000, resolve);
@@ -347,8 +355,15 @@ add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
 
-  await profile.getProfile();
+  // first fetch should return null as we don't have data.
+  let p = await profile.getProfile();
+  Assert.equal(p, null);
+  // ensure we kicked off a fetch.
+  Assert.notEqual(profile._currentFetchPromise, null);
+  // wait for that fetch to finish
+  await profile._currentFetchPromise;
   Assert.equal(numFetches, 1);
+  Assert.equal(profile._currentFetchPromise, null);
 
   Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION);
 
@@ -376,7 +391,7 @@ add_test(function tearDown_ok() {
   run_next_test();
 });
 
-add_test(function getProfile_ok() {
+add_task(async function getProfile_ok() {
   let cachedUrl = "myurl";
   let didFetch = false;
 
@@ -389,29 +404,25 @@ add_test(function getProfile_ok() {
     return Promise.resolve();
   };
 
-  return profile.getProfile()
-    .then(result => {
-      Assert.equal(result.avatar, cachedUrl);
-      Assert.ok(didFetch);
-      run_next_test();
-    });
+  let result = await profile.getProfile();
+
+  Assert.equal(result.avatar, cachedUrl);
+  Assert.ok(didFetch);
 });
 
-add_test(function getProfile_no_cache() {
+add_task(async function getProfile_no_cache() {
   let fetchedUrl = "newUrl";
   let fxa = mockFxa();
   fxa.profileCache = null;
   let profile = CreateFxAccountsProfile(fxa);
 
-  profile._fetchAndCacheProfile = function() {
+  profile._fetchAndCacheProfileInternal = function() {
     return Promise.resolve({ uid: ACCOUNT_UID, avatar: fetchedUrl });
   };
 
-  return profile.getProfile()
-    .then(result => {
-      Assert.equal(result.avatar, fetchedUrl);
-      run_next_test();
-    });
+  await profile.getProfile(); // returns null.
+  let result = await profile._currentFetchPromise;
+  Assert.equal(result.avatar, fetchedUrl);
 });
 
 add_test(function getProfile_has_cached_fetch_deleted() {
