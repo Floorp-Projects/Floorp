@@ -118,26 +118,26 @@ add_task(async function test_track_user_disable() {
   Svc.Obs.notify("weave:engine:start-tracking");
   Assert.equal(0, tracker.score);
 
-  let cb = Async.makeSyncCallback();
-
-  let listener = {
-    onDisabled(disabled) {
-      _("onDisabled");
-      if (disabled.id == addon.id) {
-        AddonManager.removeAddonListener(listener);
-        cb();
+  let disabledPromise = new Promise(res => {
+    let listener = {
+      onDisabled(disabled) {
+        _("onDisabled");
+        if (disabled.id == addon.id) {
+          AddonManager.removeAddonListener(listener);
+          res();
+        }
+      },
+      onDisabling(disabling) {
+        _("onDisabling add-on");
       }
-    },
-    onDisabling(disabling) {
-      _("onDisabling add-on");
-    }
-  };
-  AddonManager.addAddonListener(listener);
+    };
+    AddonManager.addAddonListener(listener);
+  });
 
   _("Disabling add-on");
   addon.userDisabled = true;
   _("Disabling started...");
-  Async.waitForSyncCallback(cb);
+  await disabledPromise;
 
   let changed = tracker.changedIDs;
   Assert.equal(1, Object.keys(changed).length);

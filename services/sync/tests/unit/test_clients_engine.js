@@ -1745,6 +1745,20 @@ add_task(async function test_other_clients_notified_on_first_sync() {
 
 add_task(async function device_disconnected_notification_updates_known_stale_clients() {
   const spyUpdate = sinon.spy(engine, "updateKnownStaleClients");
+
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: false }));
+  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
+  spyUpdate.reset();
+
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: true }));
+  ok(spyUpdate.notCalled, "updateKnownStaleClients should not be called");
+
+  spyUpdate.restore();
+});
+
+add_task(async function update_known_stale_clients() {
   const makeFakeClient = (id) => ({ id, fxaDeviceId: `fxa-${id}` });
   const clients = [makeFakeClient("one"), makeFakeClient("two"), makeFakeClient("three")];
   const stubRemoteClients = sinon.stub(engine._store, "_remoteClients").get(() => {
@@ -1755,26 +1769,12 @@ add_task(async function device_disconnected_notification_updates_known_stale_cli
   });
 
   engine._knownStaleFxADeviceIds = null;
-  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
-                               JSON.stringify({ isLocalDevice: false }));
-  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
+  await engine.updateKnownStaleClients();
   ok(clients[0].stale);
   ok(clients[1].stale);
   ok(!clients[2].stale);
-  spyUpdate.reset();
-
-  ok(engine._knownStaleFxADeviceIds);
-  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
-                               JSON.stringify({ isLocalDevice: false }));
-  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
-  spyUpdate.reset();
-
-  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
-                               JSON.stringify({ isLocalDevice: true }));
-  ok(spyUpdate.notCalled, "updateKnownStaleClients should not be called");
 
   stubRemoteClients.restore();
-  spyUpdate.restore();
   stubRefresh.restore();
 });
 

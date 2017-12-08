@@ -430,7 +430,7 @@ add_task(async function test_engine_fail_ioerror() {
 add_task(async function test_clean_urls() {
   enableValidationPrefs();
 
-  Service.engineManager.register(SteamEngine);
+  await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   let server = await serverForFoo(engine);
