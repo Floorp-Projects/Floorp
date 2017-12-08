@@ -117,6 +117,8 @@ int_type
 ToIntegerCommon(const nsTString<T>& aSrc,
                 nsresult* aErrorCode, uint32_t aRadix)
 {
+  MOZ_ASSERT(aRadix == 10 || aRadix == 16);
+
   using char_type = typename nsTString<T>::char_type;
 
   auto cp = aSrc.BeginReading();
