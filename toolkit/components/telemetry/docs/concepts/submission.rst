@@ -11,7 +11,7 @@ send it until the maximum ping age is exceeded (14 days).
 
 .. note::
 
-  The :doc:`main pings <../data/main-ping>` are kept locally even after successful submission to enable the HealthReport and SelfSupport features. They will be deleted after their retention period of 180 days.
+  The :doc:`main pings <../data/main-ping>` are kept locally even after successful submission to enable the HealthReport feature. They will be deleted after their retention period of 180 days.
 
 Submission logic
 ================

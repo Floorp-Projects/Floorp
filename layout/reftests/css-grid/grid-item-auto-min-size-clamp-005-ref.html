@@ -74,30 +74,11 @@ span {
 .span2 {
   grid-area: 1 / 1 / span 2 / span 2;
 }
-.larger .grid .span2 {
-  font-size: 32px;
-}
 
-.larger .grid span {
-  align-self:center;
-  justify-self:center;
-}
 .larger .grid .span2 {
-  font-size: 32px;
+  font-size: 16px;
   width: 20px;
   height: 32px;
-}
-.stretch.larger .grid .span2 {
-  align-self:center;
-  justify-self:center;
-}
-.stretch.larger .grid.sz .span2 {
-  align-self:center;
-  justify-self:center;
-}
-.stretch.larger .grid.definite .span2 {
-  align-self:center;
-  justify-self:center;
 }
 
 x {
@@ -117,6 +98,14 @@ c {
 br {
   clear: both;
 }
+
+.larger .center > span {
+  justify-self: center;
+  align-self: center;
+}
+.larger .ml4 > span {
+  margin-left: 4px;
+}
   </style>
 </head>
 <body>
@@ -124,25 +113,25 @@ br {
 <div id="tests">
 <div class="grid"><x></x><span><c>X</c></span></div>
 <div class="grid definite"><x></x><span><c>X</c></span></div>
-<div class="grid"><x></x><span class="span2"><c>X</c></span></div>
-<div class="grid definite"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid center"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid center definite"><x></x><span class="span2"><c>X</c></span></div>
 
 <div class="grid sz"><x></x><span><c>X</c></span></div>
 <div class="grid sz definite"><x></x><span><c>X</c></span></div>
-<div class="grid sz"><x></x><span class="span2"><c>X</c></span></div>
-<div class="grid sz definite"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid ml4 sz"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid center sz definite"><x></x><span class="span2"><c>X</c></span></div>
 
 <br>
 
 <div class="grid min"><x></x><span><c>X</c></span></div>
-<div class="grid min"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid center min"><x></x><span class="span2"><c>X</c></span></div>
 <div class="grid sz min"><x></x><span><c>X</c></span></div>
-<div class="grid sz min"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid ml4 sz min"><x></x><span class="span2"><c>X</c></span></div>
 
 <div class="grid max"><x></x><span><c>X</c></span></div>
-<div class="grid max"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid center max"><x></x><span class="span2"><c>X</c></span></div>
 <div class="grid sz max"><x></x><span><c>X</c></span></div>
-<div class="grid sz max"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid ml4 sz max"><x></x><span class="span2"><c>X</c></span></div>
 
 <br>
 
@@ -157,6 +146,7 @@ wrap.className = 'larger';
 wrap.appendChild(n);
 document.body.appendChild(wrap);
 
+/* TODO: sort out https://bugs.chromium.org/p/chromium/issues/detail?id=789927 first
 var n = tests.cloneNode(true);
 var wrap = document.createElement('div');
 wrap.className = 'stretch';
@@ -168,6 +158,7 @@ var wrap = document.createElement('div');
 wrap.className = 'stretch larger';
 wrap.appendChild(n);
 document.body.appendChild(wrap);
+*/
 
 </script>
 

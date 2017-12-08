@@ -4053,9 +4053,9 @@ CodeGenerator::visitCallNative(LCallNative* call)
     masm.passABIArg(argUintNReg);
     masm.passABIArg(argVpReg);
     JSNative native = target->native();
-    if (call->ignoresReturnValue()) {
+    if (call->ignoresReturnValue() && target->hasJitInfo()) {
         const JSJitInfo* jitInfo = target->jitInfo();
-        if (jitInfo && jitInfo->type() == JSJitInfo::IgnoresReturnValueNative)
+        if (jitInfo->type() == JSJitInfo::IgnoresReturnValueNative)
             native = jitInfo->ignoresReturnValueMethod;
     }
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, native), MoveOp::GENERAL,
@@ -4110,7 +4110,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
     WrappedFunction* target = call->getSingleTarget();
     MOZ_ASSERT(target);
     MOZ_ASSERT(target->isNative());
-    MOZ_ASSERT(target->jitInfo());
+    MOZ_ASSERT(target->hasJitInfo());
     MOZ_ASSERT(call->mir()->isCallDOMNative());
 
     int callargslot = call->argslot();

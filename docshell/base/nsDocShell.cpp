@@ -3442,9 +3442,7 @@ nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
     ClientManager::CreateSource(ClientType::Window,
                                 win->EventTargetFor(TaskCategory::Other),
                                 principal);
-  if (NS_WARN_IF(!mInitialClientSource)) {
-    return;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mInitialClientSource);
 
   // Mark the initial client as execution ready, but owned by the docshell.
   // If the client is actually used this will cause ClientSource to force

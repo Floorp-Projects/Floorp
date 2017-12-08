@@ -55,7 +55,7 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return InliningStatus_NotInlined;
     }
 
-    if (!target->jitInfo() || target->jitInfo()->type() != JSJitInfo::InlinableNative) {
+    if (!target->hasJitInfo() || target->jitInfo()->type() != JSJitInfo::InlinableNative) {
         // Reaching here means we tried to inline a native for which there is no
         // Ion specialization.
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
@@ -846,7 +846,7 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
 
         // Restore the stack, such that resume points are created with the stack
         // as it was before the call.
-        MOZ_TRY(callInfo.pushFormals(this, current));
+        MOZ_TRY(callInfo.pushPriorCallStack(this, current));
     }
 
     MInstruction* ins = nullptr;
@@ -879,7 +879,7 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
 
     if (callInfo.argc() > 1) {
         // Fix the stack to represent the state after the call execution.
-        callInfo.popFormals(current);
+        callInfo.popPriorCallStack(current);
     }
     current->push(ins);
 
