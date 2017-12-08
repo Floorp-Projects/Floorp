@@ -48,7 +48,7 @@ if CONFIG['WRAP_STL_INCLUDES']:
     stl_compiler = None
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         stl_compiler = 'gcc'
-    elif CONFIG['_MSC_VER']:
+    elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         stl_compiler = 'msvc'
 
     if stl_compiler:

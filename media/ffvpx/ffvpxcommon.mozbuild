@@ -76,7 +76,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         ]
     # Force visibility of cpu and av_log symbols.
     CFLAGS += ['-include', 'libavutil_visibility.h']
-elif CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CFLAGS += [
         '-wd4090', # 'return' : different 'const' qualifiers
         '-wd4018', # '>' : signed/unsigned mismatch

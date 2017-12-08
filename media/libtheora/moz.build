@@ -59,7 +59,7 @@ if '86' in CONFIG['OS_TEST']:
             DEFINES['OC_X86_ASM'] = True
             if '64' in CONFIG['OS_TEST']:
                 DEFINES['OC_X86_64_ASM'] = True
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         if CONFIG['CLANG_CL']:
             # clang-cl can't handle libtheora's inline asm.
             pass

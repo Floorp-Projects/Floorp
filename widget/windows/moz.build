@@ -144,6 +144,6 @@ OS_LIBS += [
     'rpcrt4',
 ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # C5038: Suppress initializer list order warnings from wrl.h
     SOURCES['WindowsUIUtils.cpp'].flags += ['-wd5038']
