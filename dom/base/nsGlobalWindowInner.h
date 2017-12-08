@@ -112,7 +112,6 @@ class IncrementalRunnable;
 class IntlUtils;
 class Location;
 class MediaQueryList;
-class MozSelfSupport;
 class Navigator;
 class OwningExternalOrWindowProxy;
 class Promise;
@@ -889,8 +888,6 @@ public:
 
   bool ShouldResistFingerprinting();
 
-  mozilla::dom::MozSelfSupport* GetMozSelfSupport(mozilla::ErrorResult& aError);
-
   already_AddRefed<nsPIDOMWindowOuter>
   OpenDialog(JSContext* aCx,
              const nsAString& aUrl,
@@ -1325,8 +1322,6 @@ protected:
   // forward declared here means that ~nsGlobalWindow wouldn't compile because
   // it wouldn't see the ~External function's declaration.
   nsCOMPtr<nsISupports>         mExternal;
-
-  RefPtr<mozilla::dom::MozSelfSupport> mMozSelfSupport;
 
   RefPtr<mozilla::dom::Storage> mLocalStorage;
   RefPtr<mozilla::dom::Storage> mSessionStorage;

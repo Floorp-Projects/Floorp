@@ -211,10 +211,13 @@ nsHttpHandler::nsHttpHandler()
     , mMaxPersistentConnectionsPerServer(2)
     , mMaxPersistentConnectionsPerProxy(4)
     , mThrottleEnabled(true)
+    , mThrottleVersion(2)
     , mThrottleSuspendFor(3000)
     , mThrottleResumeFor(200)
-    , mThrottleResumeIn(400)
-    , mThrottleTimeWindow(3000)
+    , mThrottleReadLimit(8000)
+    , mThrottleReadInterval(500)
+    , mThrottleHoldTime(600)
+    , mThrottleMaxTime(3000)
     , mUrgentStartEnabled(true)
     , mTailBlockingEnabled(true)
     , mTailDelayQuantum(600)
@@ -613,10 +616,13 @@ nsHttpHandler::InitConnectionMgr()
                         mMaxPersistentConnectionsPerProxy,
                         mMaxRequestDelay,
                         mThrottleEnabled,
+                        mThrottleVersion,
                         mThrottleSuspendFor,
                         mThrottleResumeFor,
-                        mThrottleResumeIn,
-                        mThrottleTimeWindow);
+                        mThrottleReadLimit,
+                        mThrottleReadInterval,
+                        mThrottleHoldTime,
+                        mThrottleMaxTime);
     return rv;
 }
 
@@ -1639,6 +1645,11 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
 
+    if (PREF_CHANGED(HTTP_PREF("throttle.version"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("throttle.version"), &val);
+        mThrottleVersion = (uint32_t)clamped(val, 1, 2);
+    }
+
     if (PREF_CHANGED(HTTP_PREF("throttle.suspend-for"))) {
         rv = prefs->GetIntPref(HTTP_PREF("throttle.suspend-for"), &val);
         mThrottleSuspendFor = (uint32_t)clamped(val, 0, 120000);
@@ -1657,21 +1668,39 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
 
-    if (PREF_CHANGED(HTTP_PREF("throttle.resume-background-in"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("throttle.resume-background-in"), &val);
-        mThrottleResumeIn = (uint32_t)clamped(val, 0, 120000);
+    if (PREF_CHANGED(HTTP_PREF("throttle.read-limit-bytes"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("throttle.read-limit-bytes"), &val);
+        mThrottleReadLimit = (uint32_t)clamped(val, 0, 500000);
         if (NS_SUCCEEDED(rv) && mConnMgr) {
-            Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_RESUME_IN,
-                                            mThrottleResumeIn);
+            Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_READ_LIMIT,
+                                            mThrottleReadLimit);
         }
     }
 
-    if (PREF_CHANGED(HTTP_PREF("throttle.time-window"))) {
-      rv = prefs->GetIntPref(HTTP_PREF("throttle.time-window"), &val);
-      mThrottleTimeWindow = (uint32_t)clamped(val, 0, 120000);
+    if (PREF_CHANGED(HTTP_PREF("throttle.read-interval-ms"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("throttle.read-interval-ms"), &val);
+        mThrottleReadInterval = (uint32_t)clamped(val, 0, 120000);
+        if (NS_SUCCEEDED(rv) && mConnMgr) {
+            Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_READ_INTERVAL,
+                                            mThrottleReadInterval);
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("throttle.hold-time-ms"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("throttle.hold-time-ms"), &val);
+        mThrottleHoldTime = (uint32_t)clamped(val, 0, 120000);
+        if (NS_SUCCEEDED(rv) && mConnMgr) {
+            Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_HOLD_TIME,
+                                            mThrottleHoldTime);
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("throttle.max-time-ms"))) {
+      rv = prefs->GetIntPref(HTTP_PREF("throttle.max-time-ms"), &val);
+      mThrottleMaxTime = (uint32_t)clamped(val, 0, 120000);
       if (NS_SUCCEEDED(rv) && mConnMgr) {
-        Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_TIME_WINDOW,
-                                        mThrottleTimeWindow);
+        Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_MAX_TIME,
+                                        mThrottleMaxTime);
       }
     }
 

@@ -2376,9 +2376,7 @@ ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* a
       RefPtr<ClientHandle> clientHandle =
         ClientManager::CreateHandle(clientInfo.ref(),
                                     SystemGroup::EventTargetFor(TaskCategory::Other));
-      if (clientHandle) {
-        ref = Move(clientHandle->Control(activeWorker->Descriptor()));
-      }
+      ref = Move(clientHandle->Control(activeWorker->Descriptor()));
     }
   }
 
@@ -2724,9 +2722,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
         RefPtr<ClientHandle> clientHandle =
           ClientManager::CreateHandle(clientInfo.ref(),
                                       SystemGroup::EventTargetFor(TaskCategory::Other));
-        if (clientHandle) {
-          clientHandle->Control(serviceWorker->Descriptor());
-        }
+        clientHandle->Control(serviceWorker->Descriptor());
       }
 
       // But we also note the reserved state on the LoadInfo.  This allows the

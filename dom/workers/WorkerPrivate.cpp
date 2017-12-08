@@ -5332,9 +5332,7 @@ WorkerPrivate::EnsureClientSource()
 
   mClientSource = ClientManager::CreateSource(type, mWorkerHybridEventTarget,
                                               GetPrincipalInfo());
-  if (!mClientSource) {
-    return false;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mClientSource);
 
   if (mFrozen) {
     mClientSource->Freeze();

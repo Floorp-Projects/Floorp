@@ -229,7 +229,7 @@ private:
 
     // Called from WriteSegments.  Checks for conditions whether to throttle reading
     // the content.  When this returns true, WriteSegments returns WOULD_BLOCK.
-    bool ShouldStopReading();
+    bool ShouldThrottle();
 
 private:
     class UpdateSecurityCallbacks : public Runnable
@@ -310,6 +310,19 @@ private:
     uint16_t                        mHttpResponseCode;
 
     uint32_t                        mCurrentHttpResponseHeaderSize;
+
+    int32_t const THROTTLE_NO_LIMIT = -1;
+    // This can have 3 possible values:
+    // * THROTTLE_NO_LIMIT - this means the transaction is not in any way limited
+    //                       to read the response, this is the default
+    // * a positive number - a limit is set because the transaction is obligated
+    //                       to throttle the response read, this is decresed with
+    //                       every piece of data the transaction receives
+    // * zero - when the transaction depletes the limit for reading, this makes it
+    //          stop reading and return WOULD_BLOCK from WriteSegments; transaction
+    //          then waits for a call of ResumeReading that resets this member back
+    //          to THROTTLE_NO_LIMIT
+    int32_t                         mThrottlingReadAllowance;
 
     // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset
     // NS_HTTP_REFRESH_DNS when DNS refresh request has completed to avoid

@@ -391,10 +391,7 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
 
   // Draw all the things into the actual dest target.
   target->DrawCapturedDT(capture, Matrix());
-
-  if (!mDrawTargetsToFlush.Contains(target)) {
-    mDrawTargetsToFlush.AppendElement(target);
-  }
+  target->Flush();
 
   if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
     // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,
