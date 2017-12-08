@@ -37,14 +37,14 @@
       () => animation.currentTime > 100,
         () => {
           opener.ok(isRounded(animation.startTime),
-             "animation.startTime is rounded");
+             "pref: " + opener.currentPref + " - animation.startTime is not rounded");
           opener.ok(isRounded(animation.currentTime),
-             "animation.currentTime is rounded");
+             "pref: " + opener.currentPref + " - animation.currentTime is not rounded");
           opener.ok(isRounded(animation.timeline.currentTime),
-             "animation.timeline.currentTime is rounded");
+             "pref: " + opener.currentPref + " - animation.timeline.currentTime is not rounded");
           if (document.timeline) {
             opener.ok(isRounded(document.timeline.currentTime),
-               "document.timeline.currentTime is rounded");
+               "pref: " + opener.currentPref + " - document.timeline.currentTime is not rounded");
           }
           opener.done();
           window.close();
