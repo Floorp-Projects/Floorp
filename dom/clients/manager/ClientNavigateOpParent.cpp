@@ -14,6 +14,10 @@ using mozilla::ipc::IPCResult;
 void
 ClientNavigateOpParent::ActorDestroy(ActorDestroyReason aReason)
 {
+  if (mPromise) {
+    mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+    mPromise = nullptr;
+  }
 }
 
 IPCResult
