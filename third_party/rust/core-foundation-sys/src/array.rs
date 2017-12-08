@@ -9,19 +9,13 @@
 
 use libc::c_void;
 
-use base::{CFRange, CFIndex, CFAllocatorRef, CFTypeID};
+use base::{CFRange, CFIndex, CFAllocatorRef, CFTypeID, Boolean};
+use string::CFStringRef;
 
-/// FIXME(pcwalton): This is wrong.
-pub type CFArrayRetainCallBack = *const u8;
-
-/// FIXME(pcwalton): This is wrong.
-pub type CFArrayReleaseCallBack = *const u8;
-
-/// FIXME(pcwalton): This is wrong.
-pub type CFArrayCopyDescriptionCallBack = *const u8;
-
-/// FIXME(pcwalton): This is wrong.
-pub type CFArrayEqualCallBack = *const u8;
+pub type CFArrayRetainCallBack = extern "C" fn(allocator: CFAllocatorRef, value: *const c_void) -> *const c_void;
+pub type CFArrayReleaseCallBack = extern "C" fn(allocator: CFAllocatorRef, value: *const c_void);
+pub type CFArrayCopyDescriptionCallBack = extern "C" fn(value: *const c_void) -> CFStringRef;
+pub type CFArrayEqualCallBack = extern "C" fn(value1: *const c_void, value2: *const c_void) -> Boolean;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
