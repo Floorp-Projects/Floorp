@@ -42,6 +42,13 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
     // Set so the user doesn't have to wait *too* long. It's used twice: once for connecting and once for reading.
     private static int SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS = 4000;
 
+    /**
+     * A reference to an active async task, if applicable, used to manage the task for lifecycle changes.
+     * See {@link #onPause()} for details.
+     */
+    private @Nullable AsyncTask activeAsyncTask;
+    private @Nullable MenuItem menuItemForActiveAsyncTask;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +62,28 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
         // We've checked that this cast is legal in super.onAttach.
         ((ActionBarUpdater) getActivity()).updateIcon(R.drawable.ic_close);
    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        // This is a last minute change and we want to keep the async task management simple: onPause is the
+        // first required callback for various lifecycle changes: a dialog is shown, the user
+        // leaves the app, the app rotates, etc. To keep things simple, we do our AsyncTask management here,
+        // before it gets more complex (e.g. reattaching the AsyncTask to a new fragment).
+        //
+        // We cancel the AsyncTask also to keep things simple: if the task is cancelled, it will:
+        // - Likely end immediately and we don't need to handle it returning after the lifecycle changes
+        // - Get onPostExecute scheduled on the UI thread, which must run after onPause (since it also runs on
+        // the UI thread), and we check if the AsyncTask is cancelled there before we perform any other actions.
+        if (activeAsyncTask != null) {
+            activeAsyncTask.cancel(true);
+            setUiIsValidatingAsync(false, menuItemForActiveAsyncTask);
+
+            activeAsyncTask = null;
+            menuItemForActiveAsyncTask = null;
+        }
+    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -92,7 +121,8 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                     // - An expanded keyboard hides the success snackbar
                     ViewUtils.hideKeyboard(rootView);
                     setUiIsValidatingAsync(true, item);
-                    new ValidateSearchEngineAsyncTask(this, item, engineName, searchQuery).execute();
+                    activeAsyncTask = new ValidateSearchEngineAsyncTask(this, engineName, searchQuery).execute();
+                    menuItemForActiveAsyncTask = item;
                 } else {
                     TelemetryWrapper.saveCustomSearchEngineEvent(false);
                 }
@@ -113,14 +143,12 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
 
     private static class ValidateSearchEngineAsyncTask extends AsyncTask<Void, Void, Boolean> {
         private final WeakReference<ManualAddSearchEngineSettingsFragment> thatWeakReference;
-        private final WeakReference<MenuItem> saveMenuItemWeakReference;
         private final String engineName;
         private final String query;
 
-        private ValidateSearchEngineAsyncTask(final ManualAddSearchEngineSettingsFragment that, final MenuItem saveMenuItem,
-                final String engineName, final String query) {
+        private ValidateSearchEngineAsyncTask(final ManualAddSearchEngineSettingsFragment that, final String engineName,
+                final String query) {
             this.thatWeakReference = new WeakReference<>(that);
-            this.saveMenuItemWeakReference = new WeakReference<>(saveMenuItem); // contains reference to Context.
             this.engineName = engineName;
             this.query = query;
         }
@@ -136,9 +164,13 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
         protected void onPostExecute(final Boolean isValidSearchQuery) {
             super.onPostExecute(isValidSearchQuery);
 
+            if (isCancelled()) {
+                Log.d(LOGTAG, "ValidateSearchEngineAsyncTask has been cancelled");
+                return;
+            }
+
             final ManualAddSearchEngineSettingsFragment that = thatWeakReference.get();
-            final MenuItem saveMenuItem = saveMenuItemWeakReference.get();
-            if (that == null || saveMenuItem == null) {
+            if (that == null) {
                 Log.d(LOGTAG, "Fragment or menu item no longer exists when search query validation async task returned.");
                 return;
             }
@@ -152,7 +184,9 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
                 showServerError(that);
             }
 
-            that.setUiIsValidatingAsync(false, saveMenuItem);
+            that.setUiIsValidatingAsync(false, that.menuItemForActiveAsyncTask);
+            that.activeAsyncTask = null;
+            that.menuItemForActiveAsyncTask = null;
         }
 
         private void showServerError(final ManualAddSearchEngineSettingsFragment that) {
