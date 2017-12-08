@@ -1,1 +1,1 @@
-loadRelativeToScript("../../tests/js1_8_5/reflect-parse/Match.js");
+loadRelativeToScript("../../tests/non262/reflect-parse/Match.js");
