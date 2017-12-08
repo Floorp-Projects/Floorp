@@ -27,52 +27,6 @@ ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
   mSupportsLangAttr = aElement->SupportsLangAttr();
 }
 
-ServoElementSnapshot::~ServoElementSnapshot()
-{
-  MOZ_COUNT_DTOR(ServoElementSnapshot);
-}
-
-void
-ServoElementSnapshot::AddAttrs(Element* aElement,
-                               int32_t aNameSpaceID,
-                               nsAtom* aAttribute)
-{
-  MOZ_ASSERT(aElement);
-
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::_class) {
-      mClassAttributeChanged = true;
-    } else if (aAttribute == nsGkAtoms::id) {
-      mIdAttributeChanged = true;
-    } else {
-      mOtherAttributeChanged = true;
-    }
-  } else {
-    mOtherAttributeChanged = true;
-  }
-
-  if (HasAttrs()) {
-    return;
-  }
-
-  uint32_t attrCount = aElement->GetAttrCount();
-  const nsAttrName* attrName;
-  for (uint32_t i = 0; i < attrCount; ++i) {
-    attrName = aElement->GetAttrNameAt(i);
-    const nsAttrValue* attrValue =
-      aElement->GetParsedAttr(attrName->LocalName(), attrName->NamespaceID());
-    mAttrs.AppendElement(ServoAttrSnapshot(*attrName, *attrValue));
-  }
-  mContains |= Flags::Attributes;
-  if (aElement->HasID()) {
-    mContains |= Flags::Id;
-  }
-  if (const nsAttrValue* classValue = aElement->GetClasses()) {
-    mClass = *classValue;
-    mContains |= Flags::MaybeClass;
-  }
-}
-
 void
 ServoElementSnapshot::AddOtherPseudoClassState(Element* aElement)
 {

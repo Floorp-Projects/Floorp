@@ -34,6 +34,7 @@ DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 
   mFormat = aFormat;
+  SetPermitSubpixelAA(IsOpaque(mFormat));
   if (aBackend == screenRefDT->GetBackendType()) {
     mRefDT = screenRefDT;
   } else {
@@ -66,6 +67,7 @@ DrawTargetCaptureImpl::Init(const IntSize& aSize, DrawTarget* aRefDT)
 
   mSize = aSize;
   mFormat = aRefDT->GetFormat();
+  SetPermitSubpixelAA(IsOpaque(mFormat));
   return true;
 }
 

@@ -23,7 +23,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/NameSpaceConstants.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "nsAtom.h"
 

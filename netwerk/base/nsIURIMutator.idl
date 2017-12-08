@@ -9,7 +9,7 @@ interface nsIObjectInputStream;
 interface nsIURIMutator;
 
 %{C++
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 #undef SetPort  // XXX Windows!

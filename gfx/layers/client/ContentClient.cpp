@@ -157,7 +157,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
   bool asyncPaint = (aFlags & PAINT_ASYNC);
 
   IntRect drawBounds = result.mRegionToDraw.GetBounds();
-  OpenMode lockMode = asyncPaint ? OpenMode::OPEN_READ_ASYNC_WRITE
+  OpenMode lockMode = asyncPaint ? OpenMode::OPEN_READ_WRITE_ASYNC
                                  : OpenMode::OPEN_READ_WRITE;
 
   if (asyncPaint) {

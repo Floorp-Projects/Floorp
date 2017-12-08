@@ -60,7 +60,7 @@ function test() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URI);
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     /* eslint-disable mozilla/no-cpows-in-tests */
-    doc = content.document;
+    doc = gBrowser.contentDocumentAsCPOW;
     /* eslint-enable mozilla/no-cpows-in-tests */
     runTests();
   });

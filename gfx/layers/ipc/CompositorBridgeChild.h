@@ -14,6 +14,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h" // for TextureForwarder
+#include "mozilla/layers/PaintThread.h" // for PaintThread
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsClassHashtable.h"           // for nsClassHashtable
 #include "nsRefPtrHashtable.h"
@@ -45,8 +46,6 @@ class CompositorManagerChild;
 class CompositorOptions;
 class TextureClient;
 class TextureClientPool;
-class CapturedBufferState;
-class CapturedPaintState;
 struct FrameMetrics;
 
 class CompositorBridgeChild final : public PCompositorBridgeChild,
@@ -225,20 +224,44 @@ public:
   void FlushAsyncPaints();
 
   // Must only be called from the main thread. Notifies the CompositorBridge
-  // that the paint thread is going to begin preparing a buffer asynchronously.
-  void NotifyBeginAsyncPrepareBuffer(CapturedBufferState* aState);
-
-  // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished an asynchronous buffer prepare.
-  void NotifyFinishedAsyncPrepareBuffer(CapturedBufferState* aState);
-
-  // Must only be called from the main thread. Notifies the CompositorBridge
   // that the paint thread is going to begin painting asynchronously.
-  void NotifyBeginAsyncPaint(CapturedPaintState* aState);
+  template<typename CapturedState>
+  void NotifyBeginAsyncPaint(CapturedState& aState)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    MonitorAutoLock lock(mPaintLock);
+
+    // We must not be waiting for paints or buffer copying to complete yet. This
+    // would imply we started a new paint without waiting for a previous one, which
+    // could lead to incorrect rendering or IPDL deadlocks.
+    MOZ_ASSERT(!mIsDelayingForAsyncPaints);
+
+    mOutstandingAsyncPaints++;
+
+    // Mark texture clients that they are being used for async painting, and
+    // make sure we hold them alive on the main thread.
+    aState->ForEachTextureClient([this] (auto aClient) {
+      aClient->AddPaintThreadRef();
+      mTextureClientsForAsyncPaint.AppendElement(aClient);
+    });
+  }
 
   // Must only be called from the paint thread. Notifies the CompositorBridge
   // that the paint thread has finished an asynchronous paint request.
-  void NotifyFinishedAsyncPaint(CapturedPaintState* aState);
+  template<typename CapturedState>
+  void NotifyFinishedAsyncPaint(CapturedState& aState)
+  {
+    MOZ_ASSERT(PaintThread::IsOnPaintThread());
+
+    MonitorAutoLock lock(mPaintLock);
+    mOutstandingAsyncPaints--;
+
+    aState->ForEachTextureClient([] (auto aClient) {
+      aClient->DropPaintThreadRef();
+    });
+    aState->DropTextureClients();
+  }
 
   // Must only be called from the main thread. Notifies the CompositorBridge
   // that the paint thread is going to perform texture synchronization at the

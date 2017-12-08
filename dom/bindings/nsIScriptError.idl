@@ -14,7 +14,7 @@
 interface nsIURI;
 
 %{C++
-#include "nsStringGlue.h" // for nsDependentCString
+#include "nsString.h" // for nsDependentCString
 %}
 
 [scriptable, uuid(e8933fc9-c302-4e12-a55b-4f88611d9c6c)]

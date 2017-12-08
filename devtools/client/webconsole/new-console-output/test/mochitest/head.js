@@ -211,10 +211,8 @@ function hideContextMenu(hud) {
 }
 
 function loadDocument(url, browser = gBrowser.selectedBrowser) {
-  return new Promise(resolve => {
-    browser.addEventListener("load", resolve, {capture: true, once: true});
-    BrowserTestUtils.loadURI(browser, url);
-  });
+  BrowserTestUtils.loadURI(browser, url);
+  return BrowserTestUtils.browserLoaded(browser);
 }
 
 /**

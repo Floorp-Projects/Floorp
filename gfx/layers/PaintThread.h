@@ -44,6 +44,21 @@ public:
   , mContentType(aContentType)
   {}
 
+  template<typename F>
+  void ForEachTextureClient(F aClosure) const
+  {
+    aClosure(mTextureClient);
+    if (mTextureClientOnWhite) {
+      aClosure(mTextureClientOnWhite);
+    }
+  }
+
+  void DropTextureClients()
+  {
+    mTextureClient = nullptr;
+    mTextureClientOnWhite = nullptr;
+  }
+
   nsIntRegion mRegionToDraw;
   RefPtr<TextureClient> mTextureClient;
   RefPtr<TextureClient> mTextureClientOnWhite;
@@ -100,7 +115,56 @@ public:
    * for the frame.
    */
   bool PrepareBuffer();
-  void GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients);
+
+  template<typename F>
+  void ForEachTextureClient(F aClosure) const
+  {
+    if (mBufferFinalize) {
+      if (TextureClient* source = mBufferFinalize->mSource->GetClient()) {
+        aClosure(source);
+      }
+      if (TextureClient* sourceOnWhite = mBufferFinalize->mSource->GetClientOnWhite()) {
+        aClosure(sourceOnWhite);
+      }
+      if (TextureClient* destination = mBufferFinalize->mDestination->GetClient()) {
+        aClosure(destination);
+      }
+      if (TextureClient* destinationOnWhite = mBufferFinalize->mDestination->GetClientOnWhite()) {
+        aClosure(destinationOnWhite);
+      }
+    }
+
+    if (mBufferUnrotate) {
+      if (TextureClient* client = mBufferUnrotate->mBuffer->GetClient()) {
+        aClosure(client);
+      }
+      if (TextureClient* clientOnWhite = mBufferUnrotate->mBuffer->GetClientOnWhite()) {
+        aClosure(clientOnWhite);
+      }
+    }
+
+    if (mBufferInitialize) {
+      if (TextureClient* source = mBufferInitialize->mSource->GetClient()) {
+        aClosure(source);
+      }
+      if (TextureClient* sourceOnWhite = mBufferInitialize->mSource->GetClientOnWhite()) {
+        aClosure(sourceOnWhite);
+      }
+      if (TextureClient* destination = mBufferInitialize->mDestination->GetClient()) {
+        aClosure(destination);
+      }
+      if (TextureClient* destinationOnWhite = mBufferInitialize->mDestination->GetClientOnWhite()) {
+        aClosure(destinationOnWhite);
+      }
+    }
+  }
+
+  void DropTextureClients()
+  {
+    mBufferFinalize = Nothing();
+    mBufferUnrotate = Nothing();
+    mBufferInitialize = Nothing();
+  }
 
   Maybe<Copy> mBufferFinalize;
   Maybe<Unrotate> mBufferUnrotate;
@@ -111,6 +175,76 @@ protected:
 };
 
 typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintState);
+
+// Holds the key operations needed to update a tiled content client on the
+// paint thread.
+class CapturedTiledPaintState {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
+public:
+  struct Copy {
+    Copy(RefPtr<gfx::DrawTarget> aSource,
+         RefPtr<gfx::DrawTarget> aDestination,
+         gfx::IntRect aSourceBounds,
+         gfx::IntPoint aDestinationPoint)
+      : mSource(aSource)
+      , mDestination(aDestination)
+      , mSourceBounds(aSourceBounds)
+      , mDestinationPoint(aDestinationPoint)
+    {}
+
+    bool CopyBuffer();
+
+    RefPtr<gfx::DrawTarget> mSource;
+    RefPtr<gfx::DrawTarget> mDestination;
+    gfx::IntRect mSourceBounds;
+    gfx::IntPoint mDestinationPoint;
+  };
+
+  struct Clear {
+    Clear(RefPtr<gfx::DrawTarget> aTarget,
+            RefPtr<gfx::DrawTarget> aTargetOnWhite,
+            nsIntRegion aDirtyRegion)
+      : mTarget(aTarget)
+      , mTargetOnWhite(aTargetOnWhite)
+      , mDirtyRegion(aDirtyRegion)
+    {}
+
+    void ClearBuffer();
+
+    RefPtr<gfx::DrawTarget> mTarget;
+    RefPtr<gfx::DrawTarget> mTargetOnWhite;
+    nsIntRegion mDirtyRegion;
+  };
+
+  CapturedTiledPaintState(gfx::DrawTarget* aTargetTiled,
+                          gfx::DrawTargetCapture* aCapture)
+  : mTargetTiled(aTargetTiled)
+  , mCapture(aCapture)
+  {}
+
+  template<typename F>
+  void ForEachTextureClient(F aClosure) const
+  {
+    for (auto client : mClients) {
+      aClosure(client);
+    }
+  }
+
+  void DropTextureClients()
+  {
+    mClients.clear();
+  }
+
+  RefPtr<gfx::DrawTarget> mTargetTiled;
+  RefPtr<gfx::DrawTargetCapture> mCapture;
+  std::vector<Copy> mCopies;
+  std::vector<Clear> mClears;
+
+  std::vector<RefPtr<TextureClient>> mClients;
+
+protected:
+  virtual ~CapturedTiledPaintState() {}
+};
 
 class CompositorBridgeChild;
 
@@ -136,6 +270,8 @@ public:
 
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
+
+  void PaintTiledContents(CapturedTiledPaintState* aState);
 
   // Must be called on the main thread. Signifies that the current
   // batch of CapturedPaintStates* for PaintContents have been recorded
@@ -172,6 +308,8 @@ private:
   void AsyncPaintContents(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
+  void AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
+                               CapturedTiledPaintState* aState);
   void AsyncEndLayer();
   void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
                                 SyncObjectClient* aSyncObject);

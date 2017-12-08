@@ -3275,7 +3275,7 @@ GCRuntime::triggerZoneGC(Zone* zone, JS::gcreason::Reason reason, size_t used, s
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
     /* GC is already running. */
-    if (JS::CurrentThreadIsHeapCollecting())
+    if (JS::CurrentThreadIsHeapBusy())
         return false;
 
 #ifdef JS_GC_ZEAL

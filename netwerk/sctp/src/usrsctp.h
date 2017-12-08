@@ -67,6 +67,7 @@ extern "C" {
 #define uint8_t   unsigned __int8
 #define uint16_t  unsigned __int16
 #define uint32_t  unsigned __int32
+#define uint64_t  unsigned __int64
 #define int16_t   __int16
 #define int32_t   __int32
 #endif
@@ -85,6 +86,25 @@ extern "C" {
 #endif
 
 typedef uint32_t sctp_assoc_t;
+
+#if defined(_WIN32) && defined(_MSC_VER)
+#pragma pack (push, 1)
+#define SCTP_PACKED
+#else
+#define SCTP_PACKED __attribute__((packed))
+#endif
+
+struct sctp_common_header {
+	uint16_t source_port;
+	uint16_t destination_port;
+	uint32_t verification_tag;
+	uint32_t crc32c;
+} SCTP_PACKED;
+
+#if defined(_WIN32) && defined(_MSC_VER)
+#pragma pack(pop)
+#endif
+#undef SCTP_PACKED
 
 #define AF_CONN 123
 /* The definition of struct sockaddr_conn MUST be in
@@ -523,6 +543,10 @@ struct sctp_event_subscribe {
 
 #define SCTP_ENABLE_STREAM_RESET        0x00000900 /* struct sctp_assoc_value */
 
+/* Pluggable Stream Scheduling Socket option */
+#define SCTP_PLUGGABLE_SS               0x00001203
+#define SCTP_SS_VALUE                   0x00001204
+
 /*
  * read-only options
  */
@@ -533,6 +557,9 @@ struct sctp_event_subscribe {
 #define SCTP_LOCAL_AUTH_CHUNKS          0x00000103
 #define SCTP_GET_ASSOC_NUMBER           0x00000104
 #define SCTP_GET_ASSOC_ID_LIST          0x00000105
+#define SCTP_TIMEOUTS                   0x00000106
+#define SCTP_PR_STREAM_STATUS           0x00000107
+#define SCTP_PR_ASSOC_STATUS            0x00000108
 
 /*
  * write-only options
@@ -778,6 +805,12 @@ struct sctp_cc_option {
 	struct sctp_assoc_value aid_value;
 };
 
+struct sctp_stream_value {
+	sctp_assoc_t assoc_id;
+	uint16_t stream_id;
+	uint16_t stream_value;
+};
+
 struct sctp_timeouts {
 	sctp_assoc_t stimo_assoc_id;
 	uint32_t stimo_init;
@@ -789,6 +822,13 @@ struct sctp_timeouts {
 	uint32_t stimo_shutdownack;
 };
 
+struct sctp_prstatus {
+	sctp_assoc_t sprstat_assoc_id;
+	uint16_t sprstat_sid;
+	uint16_t sprstat_policy;
+	uint64_t sprstat_abandoned_unsent;
+	uint64_t sprstat_abandoned_sent;
+};
 
 /* Standard TCP Congestion Control */
 #define SCTP_CC_RFC2581         0x00000000
@@ -856,6 +896,13 @@ usrsctp_getsockopt(struct socket *so,
                    int option_name,
                    void *option_value,
                    socklen_t *option_len);
+
+int
+usrsctp_opt_info(struct socket *so,
+                 sctp_assoc_t id,
+                 int opt,
+                 void *arg,
+                 socklen_t *size);
 
 int
 usrsctp_getpaddrs(struct socket *so,
@@ -934,6 +981,9 @@ usrsctp_connectx(struct socket *so,
 void
 usrsctp_close(struct socket *so);
 
+sctp_assoc_t
+usrsctp_getassocid(struct socket *, struct sockaddr *);
+
 int
 usrsctp_finish(void);
 
@@ -962,10 +1012,19 @@ usrsctp_set_ulpinfo(struct socket *, void *);
 #define SCTP_DUMP_INBOUND  0
 
 char *
-usrsctp_dumppacket(void *, size_t, int);
+usrsctp_dumppacket(const void *, size_t, int);
 
 void
 usrsctp_freedumpbuffer(char *);
+
+void
+usrsctp_enable_crc32c_offload(void);
+
+void
+usrsctp_disable_crc32c_offload(void);
+
+uint32_t
+usrsctp_crc32c(void *, size_t);
 
 #define USRSCTP_SYSCTL_DECL(__field)                \
 void usrsctp_sysctl_set_ ## __field(uint32_t value);\
@@ -982,7 +1041,6 @@ USRSCTP_SYSCTL_DECL(sctp_asconf_enable)
 USRSCTP_SYSCTL_DECL(sctp_reconfig_enable)
 USRSCTP_SYSCTL_DECL(sctp_nrsack_enable)
 USRSCTP_SYSCTL_DECL(sctp_pktdrop_enable)
-USRSCTP_SYSCTL_DECL(sctp_strict_sacks)
 #if !defined(SCTP_WITH_NO_CSUM)
 USRSCTP_SYSCTL_DECL(sctp_no_csum_on_loopback)
 #endif
@@ -1021,7 +1079,6 @@ USRSCTP_SYSCTL_DECL(sctp_mbuf_threshold_count)
 USRSCTP_SYSCTL_DECL(sctp_do_drain)
 USRSCTP_SYSCTL_DECL(sctp_hb_maxburst)
 USRSCTP_SYSCTL_DECL(sctp_abort_if_one_2_one_hits_limit)
-USRSCTP_SYSCTL_DECL(sctp_strict_data_order)
 USRSCTP_SYSCTL_DECL(sctp_min_residual)
 USRSCTP_SYSCTL_DECL(sctp_max_retran_chunk)
 USRSCTP_SYSCTL_DECL(sctp_logging_level)

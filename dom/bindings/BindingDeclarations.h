@@ -23,7 +23,7 @@
 #include "mozilla/dom/DOMString.h"
 
 #include "nsCOMPtr.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 class nsIPrincipal;

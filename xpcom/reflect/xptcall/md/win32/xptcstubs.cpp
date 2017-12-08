@@ -14,7 +14,7 @@
 
 extern "C" {
 
-#if !defined(__GNUC__) && !defined(__clang__)
+#if !defined(__GNUC__)
 static
 #endif
 nsresult __stdcall
@@ -92,8 +92,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
 
 } // extern "C"
 
-// declspec(naked) is broken in gcc and clang-cl
-#if !defined(__GNUC__) && !defined(__clang__)
+// declspec(naked) is broken in gcc
+#if !defined(__GNUC__)
 static
 __declspec(naked)
 void SharedStub(void)
@@ -125,7 +125,7 @@ void SharedStub(void)
 __declspec(naked) nsresult __stdcall nsXPTCStubBase::Stub##n() \
 { __asm mov ecx, n __asm jmp SharedStub }
 
-#else
+#else /* __GNUC__ */
 
 asm(".text\n\t"
     ".align     4\n\t"
@@ -149,25 +149,6 @@ asm(".text\n\t"
     "add        %ecx, %esp\n\t"
     "jmp        *%edx"
 );
-
-// The clang-cl specific code below is required because mingw uses the gcc name
-// mangling, but clang-cl implements the MSVC name mangling.
-
-#ifdef __clang__
-
-#define STUB_ENTRY(n) \
-asm(".text\n\t" \
-    ".align     4\n\t" \
-    ".globl     \"?Stub" #n "@nsXPTCStubBase@@UAG?AW4nsresult@@XZ\"\n\t" \
-    ".def       \"?Stub" #n "@nsXPTCStubBase@@UAG?AW4nsresult@@XZ\"; \n\t" \
-    ".scl       2\n\t" \
-    ".type      46\n\t" \
-    ".endef\n\t" \
-    "\"?Stub" #n "@nsXPTCStubBase@@UAG?AW4nsresult@@XZ\":\n\t" \
-    "mov $" #n ", %ecx\n\t" \
-    "jmp SharedStub");
-
-#else
 
 #define STUB_ENTRY(n) \
 asm(".text\n\t" \
@@ -199,9 +180,7 @@ asm(".text\n\t" \
     "mov $" #n ", %ecx\n\t" \
     "jmp SharedStub");
 
-#endif
-
-#endif /* __GNUC__ || __clang__ */
+#endif /* __GNUC__ */
 
 #define SENTINEL_ENTRY(n) \
 nsresult __stdcall nsXPTCStubBase::Sentinel##n() \
@@ -211,11 +190,12 @@ nsresult __stdcall nsXPTCStubBase::Sentinel##n() \
 }
 
 #ifdef _MSC_VER
+#pragma warning(push)
 #pragma warning(disable : 4035) // OK to have no return value
 #endif
 #include "xptcstubsdef.inc"
 #ifdef _MSC_VER
-#pragma warning(default : 4035) // restore default
+#pragma warning(pop)
 #endif
 
 void
