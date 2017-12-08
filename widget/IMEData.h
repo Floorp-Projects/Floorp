@@ -8,7 +8,7 @@
 
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsXULAppAPI.h"
 #include "Units.h"
 

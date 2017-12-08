@@ -51,47 +51,47 @@ CapturedBufferState::PrepareBuffer()
          (!mBufferInitialize || mBufferInitialize->CopyBuffer());
 }
 
-void
-CapturedBufferState::GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients)
+bool
+CapturedTiledPaintState::Copy::CopyBuffer()
 {
-  if (mBufferFinalize) {
-    if (TextureClient* source = mBufferFinalize->mSource->GetClient()) {
-      aTextureClients.AppendElement(source);
+  RefPtr<gfx::SourceSurface> source = mSource->Snapshot();
+
+  // This operation requires the destination draw target to be untranslated,
+  // but the destination will have a transform from being part of a tiled draw
+  // target. However in this case, CopySurface ignores transforms so we don't
+  // need to do anything.
+  mDestination->CopySurface(source,
+                            mSourceBounds,
+                            mDestinationPoint);
+  return true;
+}
+
+void
+CapturedTiledPaintState::Clear::ClearBuffer()
+{
+  // See the comment in CopyBuffer for why we need to temporarily reset
+  // the transform of the draw target.
+  Matrix oldTransform = mTarget->GetTransform();
+  mTarget->SetTransform(Matrix());
+
+  if (mTargetOnWhite) {
+    mTargetOnWhite->SetTransform(Matrix());
+    for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::Rect drawRect(iter.Get().x, iter.Get().y,
+                               iter.Get().width, iter.Get().height);
+      mTarget->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
+      mTargetOnWhite->FillRect(drawRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     }
-    if (TextureClient* sourceOnWhite = mBufferFinalize->mSource->GetClientOnWhite()) {
-      aTextureClients.AppendElement(sourceOnWhite);
-    }
-    if (TextureClient* destination = mBufferFinalize->mDestination->GetClient()) {
-      aTextureClients.AppendElement(destination);
-    }
-    if (TextureClient* destinationOnWhite = mBufferFinalize->mDestination->GetClientOnWhite()) {
-      aTextureClients.AppendElement(destinationOnWhite);
+    mTargetOnWhite->SetTransform(oldTransform);
+  } else {
+    for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::Rect drawRect(iter.Get().x, iter.Get().y,
+                               iter.Get().width, iter.Get().height);
+      mTarget->ClearRect(drawRect);
     }
   }
 
-  if (mBufferUnrotate) {
-    if (TextureClient* client = mBufferUnrotate->mBuffer->GetClient()) {
-      aTextureClients.AppendElement(client);
-    }
-    if (TextureClient* clientOnWhite = mBufferUnrotate->mBuffer->GetClientOnWhite()) {
-      aTextureClients.AppendElement(clientOnWhite);
-    }
-  }
-
-  if (mBufferInitialize) {
-    if (TextureClient* source = mBufferInitialize->mSource->GetClient()) {
-      aTextureClients.AppendElement(source);
-    }
-    if (TextureClient* sourceOnWhite = mBufferInitialize->mSource->GetClientOnWhite()) {
-      aTextureClients.AppendElement(sourceOnWhite);
-    }
-    if (TextureClient* destination = mBufferInitialize->mDestination->GetClient()) {
-      aTextureClients.AppendElement(destination);
-    }
-    if (TextureClient* destinationOnWhite = mBufferInitialize->mDestination->GetClientOnWhite()) {
-      aTextureClients.AppendElement(destinationOnWhite);
-    }
-  }
+  mTarget->SetTransform(oldTransform);
 }
 
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
@@ -240,7 +240,7 @@ PaintThread::PrepareBuffer(CapturedBufferState* aState)
   RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
   RefPtr<CapturedBufferState> state(aState);
 
-  cbc->NotifyBeginAsyncPrepareBuffer(state);
+  cbc->NotifyBeginAsyncPaint(state);
 
   RefPtr<PaintThread> self = this;
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PrepareBuffer",
@@ -273,7 +273,7 @@ PaintThread::AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
     gfxCriticalNote << "Failed to prepare buffers on the paint thread.";
   }
 
-  aBridge->NotifyFinishedAsyncPrepareBuffer(aState);
+  aBridge->NotifyFinishedAsyncPaint(aState);
 }
 
 void
@@ -338,6 +338,72 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
     // DrawTargets do not themselves hold on to UnscaledFonts.
     NS_ReleaseOnMainThreadSystemGroup("CapturePaintState::DrawTargetCapture", aState->mCapture.forget());
   }
+}
+
+void
+PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aState);
+
+  RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
+  RefPtr<CapturedTiledPaintState> state(aState);
+
+  cbc->NotifyBeginAsyncPaint(state);
+
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintTiledContents",
+    [self, cbc, state]() -> void
+  {
+    self->AsyncPaintTiledContents(cbc,
+                                  state);
+  });
+
+#ifndef OMTP_FORCE_SYNC
+  sThread->Dispatch(task.forget());
+#else
+  SyncRunnable::DispatchToThread(sThread, task);
+#endif
+}
+
+void
+PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
+                                     CapturedTiledPaintState* aState)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(aState);
+
+  if (!mInAsyncPaintGroup) {
+    mInAsyncPaintGroup = true;
+    PROFILER_TRACING("Paint", "Rasterize", TRACING_INTERVAL_START);
+  }
+
+  for (auto& copy : aState->mCopies) {
+    copy.CopyBuffer();
+  }
+
+  for (auto& clear : aState->mClears) {
+    clear.ClearBuffer();
+  }
+
+  DrawTarget* target = aState->mTargetTiled;
+  DrawTargetCapture* capture = aState->mCapture;
+
+  // Draw all the things into the actual dest target.
+  target->DrawCapturedDT(capture, Matrix());
+
+  if (!mDrawTargetsToFlush.Contains(target)) {
+    mDrawTargetsToFlush.AppendElement(target);
+  }
+
+  if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
+    // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,
+    // gets destroyed on the main thread (See bug 1404742). This assumes (unflushed) target
+    // DrawTargets do not themselves hold on to UnscaledFonts.
+    NS_ReleaseOnMainThreadSystemGroup("CapturePaintState::DrawTargetCapture", aState->mCapture.forget());
+  }
+
+  aBridge->NotifyFinishedAsyncPaint(aState);
 }
 
 void

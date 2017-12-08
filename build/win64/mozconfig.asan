@@ -1,5 +1,4 @@
-ac_add_options --target=x86_64-pc-mingw32
-ac_add_options --host=x86_64-pc-mingw32
+. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 
 if [ -d "$topsrcdir/clang" ]; then
     CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"

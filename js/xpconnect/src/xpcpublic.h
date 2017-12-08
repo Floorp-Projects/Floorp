@@ -18,7 +18,7 @@
 #include "nsIGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/dom/JSSlots.h"
 #include "mozilla/fallible.h"

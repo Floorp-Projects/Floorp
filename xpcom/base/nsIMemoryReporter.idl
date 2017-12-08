@@ -453,7 +453,7 @@ interface nsIMemoryReporterManager : nsISupports
 %{C++
 
 #include "js/TypeDecls.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 class nsPIDOMWindowOuter;

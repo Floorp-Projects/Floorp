@@ -222,7 +222,7 @@ MacIOSurfaceTextureHostOGL::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                          aClip,
                                          true,
                                          aImageKeys[0],
-                                         wr::WrYuvColorSpace::Rec601,
+                                         wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
                                          aFilter);
       break;
     }
@@ -234,7 +234,7 @@ MacIOSurfaceTextureHostOGL::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                              true,
                              aImageKeys[0],
                              aImageKeys[1],
-                             wr::WrYuvColorSpace::Rec601,
+                             wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
                              aFilter);
       break;
     }

@@ -8,11 +8,11 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
     openScratchpad(runTests);
-  }, {capture: true, once: true});
+  });
 
-  content.location = "data:text/html,<p>test the 'Jump to line' feature in Scratchpad";
+  gBrowser.loadURI("data:text/html,<p>test the 'Jump to line' feature in Scratchpad");
 }
 
 function runTests(aWindow, aScratchpad)

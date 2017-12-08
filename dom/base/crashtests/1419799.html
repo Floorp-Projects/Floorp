@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <script>
+      try { o1 = document.createElement('textarea') } catch(e) { }
+      try { o2 = document.createElement('div') } catch(e) { }
+      try { o3 = document.createElement('map') } catch(e) { }
+      try { document.documentElement.appendChild(o2) } catch(e) { }
+      try { o2.appendChild(o1) } catch(e) { }
+      try { document.documentElement.getClientRects() } catch(e) { }
+      try { o4 = o2.attachShadow({ mode: "open" }); } catch(e) { }
+      try { o1.appendChild(o3) } catch(e) { }
+      try { o5 = o3.parentElement } catch(e) { }
+      try { o3.outerHTML = "\n" } catch(e) { }
+      try { o4.prepend("", o5, "") } catch(e) { }
+    </script>
+  </head>
+</html>

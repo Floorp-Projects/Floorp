@@ -39,7 +39,7 @@ add_task(async function() {
 
   // Run tests once again.
   let promise = promiseTestsDone(win2);
-  win2.content.test_panels();
+  win2.gBrowser.contentWindowAsCPOW.test_panels();
   await promise;
   ok(true, "tests succeeded a second time");
 

@@ -36,7 +36,7 @@
  */
 
 %{C++
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!

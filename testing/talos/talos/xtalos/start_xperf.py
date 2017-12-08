@@ -9,7 +9,7 @@ import os
 import subprocess
 import sys
 
-from . import xtalos
+import xtalos
 
 
 def start(xperf_path, xperf_providers, xperf_stackwalk, xperf_user_providers,
