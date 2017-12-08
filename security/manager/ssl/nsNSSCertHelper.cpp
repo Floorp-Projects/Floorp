@@ -109,7 +109,7 @@ GetPIPNSSBundleString(const char* stringName, nsAString& result)
   return pipnssBundle->GetStringFromName(stringName, result);
 }
 
-static nsresult
+nsresult
 PIPBundleFormatStringFromName(const char* stringName, const char16_t** params,
                               uint32_t numParams, nsAString& result)
 {
