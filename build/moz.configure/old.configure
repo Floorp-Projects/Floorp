@@ -170,6 +170,7 @@ def old_configure_options(*options):
     '--cache-file',
     '--datadir',
     '--enable-accessibility',
+    '--enable-address-sanitizer',
     '--enable-alsa',
     '--enable-bundled-fonts',
     '--enable-content-sandbox',
