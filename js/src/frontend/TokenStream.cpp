@@ -2368,14 +2368,14 @@ template class frontend::TokenStreamChars<char16_t, frontend::TokenStreamAnyChar
 template class frontend::TokenStreamSpecific<char16_t, frontend::TokenStreamAnyCharsAccess>;
 
 template class
-frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::FullParseHandler, char16_t>>>;
+frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::FullParseHandler, char16_t>>>;
 template class
-frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::SyntaxParseHandler, char16_t>>>;
+frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::SyntaxParseHandler, char16_t>>>;
 
 template class
-frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::FullParseHandler, char16_t>>>;
+frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::FullParseHandler, char16_t>>>;
 template class
-frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::Parser<frontend::SyntaxParseHandler, char16_t>>>;
+frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::SyntaxParseHandler, char16_t>>>;
 
 } // namespace frontend
 
