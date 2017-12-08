@@ -22,7 +22,7 @@ use frame::FrameId;
 use glyph_rasterizer::FontInstance;
 use gpu_cache::GpuCache;
 use gpu_types::ClipScrollNodeData;
-use internal_types::{FastHashMap, FastHashSet};
+use internal_types::{FastHashMap, FastHashSet, RenderPassIndex};
 use picture::{PictureCompositeMode, PictureKind, PicturePrimitive, RasterizationSpace};
 use prim_store::{BrushAntiAliasMode, BrushKind, BrushPrimitive, TexelRect, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
@@ -35,7 +35,7 @@ use resource_cache::ResourceCache;
 use scene::{ScenePipeline, SceneProperties};
 use std::{mem, usize, f32};
 use tiling::{CompositeOps, Frame};
-use tiling::{RenderPass, RenderPassKind, RenderTargetKind};
+use tiling::{RenderPass, RenderTargetKind};
 use tiling::{RenderTargetContext, ScrollbarPrimitive};
 use util::{self, MaxRect, pack_as_float, RectHelpers, recycle_vec};
 
@@ -1761,7 +1761,7 @@ impl FrameBuilder {
 
         let mut deferred_resolves = vec![];
 
-        for pass in &mut passes {
+        for (pass_index, pass) in passes.iter_mut().enumerate() {
             let ctx = RenderTargetContext {
                 device_pixel_ratio,
                 prim_store: &self.prim_store,
@@ -1776,23 +1776,8 @@ impl FrameBuilder {
                 &mut render_tasks,
                 &mut deferred_resolves,
                 &self.clip_store,
+                RenderPassIndex(pass_index),
             );
-
-            profile_counters.passes.inc();
-
-            match pass.kind {
-                RenderPassKind::MainFramebuffer(_) => {
-                    profile_counters.color_targets.add(1);
-                }
-                RenderPassKind::OffScreen { ref color, ref alpha } => {
-                    profile_counters
-                        .color_targets
-                        .add(color.targets.len());
-                    profile_counters
-                        .alpha_targets
-                        .add(alpha.targets.len());
-                }
-            }
         }
 
         let gpu_cache_updates = gpu_cache.end_frame(gpu_cache_profile);

@@ -329,6 +329,7 @@ impl ClipScrollNode {
     pub fn update(
         &mut self,
         state: &mut TransformUpdateState,
+        next_coordinate_system_id: &mut CoordinateSystemId,
         device_pixel_ratio: f32,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
@@ -352,7 +353,7 @@ impl ClipScrollNode {
             }
         }
 
-        self.update_transform(state, scene_properties);
+        self.update_transform(state, next_coordinate_system_id, scene_properties);
         self.update_clip_work_item(
             state,
             device_pixel_ratio,
@@ -441,10 +442,15 @@ impl ClipScrollNode {
     pub fn update_transform(
         &mut self,
         state: &mut TransformUpdateState,
+        next_coordinate_system_id: &mut CoordinateSystemId,
         scene_properties: &SceneProperties,
     ) {
         if self.node_type.is_reference_frame() {
-            self.update_transform_for_reference_frame(state, scene_properties);
+            self.update_transform_for_reference_frame(
+                state,
+                next_coordinate_system_id,
+                scene_properties
+            );
             return;
         }
 
@@ -484,6 +490,7 @@ impl ClipScrollNode {
     pub fn update_transform_for_reference_frame(
         &mut self,
         state: &mut TransformUpdateState,
+        next_coordinate_system_id: &mut CoordinateSystemId,
         scene_properties: &SceneProperties,
     ) {
         let info = match self.node_type {
@@ -502,10 +509,10 @@ impl ClipScrollNode {
 
         if !info.resolved_transform.preserves_2d_axis_alignment() ||
            info.resolved_transform.has_perspective_component() {
-            state.current_coordinate_system_id = state.next_coordinate_system_id;
-            state.next_coordinate_system_id = state.next_coordinate_system_id.next();
-            self.coordinate_system_id = state.current_coordinate_system_id;
+            state.current_coordinate_system_id = *next_coordinate_system_id;
+            next_coordinate_system_id.advance();
         }
+        self.coordinate_system_id = state.current_coordinate_system_id;
 
         // The transformation for this viewport in world coordinates is the transformation for
         // our parent reference frame, plus any accumulated scrolling offsets from nodes
