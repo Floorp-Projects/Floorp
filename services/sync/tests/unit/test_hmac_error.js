@@ -93,7 +93,7 @@ add_task(async function hmac_error_during_404() {
     Assert.equal(hmacErrorCount, 0);
   } finally {
     tracker.clearChangedIDs();
-    Service.engineManager.unregister(engine);
+    await Service.engineManager.unregister(engine);
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await promiseStopServer(server);
@@ -220,11 +220,13 @@ add_task(async function hmac_error_during_node_reassignment() {
             Svc.Obs.remove("weave:service:sync:finish", obs);
             Svc.Obs.remove("weave:service:sync:error", obs);
 
-            tracker.clearChangedIDs();
-            Service.engineManager.unregister(engine);
-            Svc.Prefs.resetBranch("");
-            Service.recordManager.clearCache();
-            server.stop(resolve);
+            (async () => {
+              tracker.clearChangedIDs();
+              await Service.engineManager.unregister(engine);
+              Svc.Prefs.resetBranch("");
+              Service.recordManager.clearCache();
+              server.stop(resolve);
+            })();
           };
 
           Async.promiseSpinningly(Service.sync());
