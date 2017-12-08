@@ -964,7 +964,7 @@ wasm::MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig, JSContext* cx)
 {
     MOZ_ASSERT(builtinThunks);
 
-    if (!f->isNative() || !f->jitInfo() || f->jitInfo()->type() != JSJitInfo::InlinableNative)
+    if (!f->isNative() || !f->hasJitInfo() || f->jitInfo()->type() != JSJitInfo::InlinableNative)
         return nullptr;
 
     Maybe<ABIFunctionType> abiType = ToBuiltinABIFunctionType(sig);

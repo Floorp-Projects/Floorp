@@ -120,6 +120,7 @@ class ClientChannelHelper final : public nsIInterfaceRequestor
       reservedClient.reset();
       reservedClient = ClientManager::CreateSource(ClientType::Window,
                                                    mEventTarget, principal);
+      MOZ_DIAGNOSTIC_ASSERT(reservedClient);
 
       newLoadInfo->GiveReservedClientSource(Move(reservedClient));
     }
@@ -228,7 +229,7 @@ AddClientChannelHelper(nsIChannel* aChannel,
     reservedClient = ClientManager::CreateSource(ClientType::Window,
                                                  aEventTarget,
                                                  channelPrincipal);
-    NS_ENSURE_TRUE(reservedClient, NS_ERROR_FAILURE);
+    MOZ_DIAGNOSTIC_ASSERT(reservedClient);
   }
 
   RefPtr<ClientChannelHelper> helper =

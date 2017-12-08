@@ -26,11 +26,15 @@ iframe {
   background: lightgrey;
 }
 
-.w20 { width: 20px min-width: 0px; }
+.w20 { width: 20px; min-width: 0px; }
+.w22 { width: 22px; }
 .mw20 { min-width: 20px }
 .mw0 { min-width: 0px }
+.wi { width:302px }
 
 .h20 { height: 20px; min-height: 0px; }
+.h22 { height: 22px; min-height: 0px; }
+.h32 { height: 32px; min-height: 0px; }
 .mh20 { min-height: 20px }
 .mh0 { min-height: 0px }
 
@@ -38,63 +42,63 @@ iframe {
 </head>
 <body>
 
-<div class="grid r"><iframe></iframe></div>
-<div class="grid r"><iframe class="start"></iframe></div>
-<div class="grid r"><iframe class="sa"></iframe></div>
+<div class="grid r wi"><iframe></iframe></div>
+<div class="grid r wi"><iframe class="start"></iframe></div>
+<div class="grid r wi"><iframe class="sa"></iframe></div>
 <div class="grid r"><iframe class="sa mxw10"></iframe></div>
-<div class="grid r"><iframe class="na"></iframe></div>
+<div class="grid r wi"><iframe class="na"></iframe></div>
 <div class="grid r"><iframe class="na mxw2"></iframe></div>
 
 <pre><!--min-height:20px--></pre>
-<div class="grid r" style="margin-right:0"><iframe class="mh20"></iframe></div>
-<div class="grid r"><iframe class="mh20 mxw10"></iframe></div>
-<div class="grid r"><iframe class="start mh20"></iframe></div>
-<div class="grid r"><iframe class="start mh20 mxw10"></iframe></div>
-<div class="grid r"><iframe class="sa mh20"></iframe></div>
-<div class="grid r"><iframe class="sa mh20 mxw10"></iframe></div>
-<div class="grid r"><iframe class="na mh20"></iframe></div>
-<div class="grid r"><iframe class="na mh20 mxw10"></iframe></div>
+<div class="grid h22 r wi" style="margin-right:0"><iframe class="h20"></iframe></div>
+<div class="grid h22 r"><iframe class="mh20 mxw10"></iframe></div>
+<div class="grid h22 r wi"><iframe class="start mh20"></iframe></div>
+<div class="grid h22 r"><iframe class="start mh20 mxw10"></iframe></div>
+<div class="grid h22 r wi"><iframe class="sa mh20"></iframe></div>
+<div class="grid h22 r"><iframe class="sa mh20 mxw10"></iframe></div>
+<div class="grid h22 r wi"><iframe class="na mh20"></iframe></div>
+<div class="grid h22 r"><iframe class="na mh20 mxw10"></iframe></div>
 
 <pre><!--min-height:0--></pre>
-<div class="grid r"><iframe class="mh0"></iframe></div>
+<div class="grid r wi"><iframe class="mh0"></iframe></div>
 <div class="grid r"><iframe class="mh0 mxw10"></iframe></div>
-<div class="grid r"><iframe class="start mh0"></iframe></div>
+<div class="grid r wi"><iframe class="start mh0"></iframe></div>
 <div class="grid r"><iframe class="start mh0 mxw10"></iframe></div>
-<div class="grid r"><iframe class="sa mh0"></iframe></div>
+<div class="grid r wi"><iframe class="sa mh0"></iframe></div>
 <div class="grid r"><iframe class="sa mh0 mxw10"></iframe></div>
-<div class="grid r"><iframe class="na mh0"></iframe></div>
+<div class="grid r wi"><iframe class="na mh0"></iframe></div>
 <div class="grid r"><iframe class="na mh0 mxw2"></iframe></div>
 
 <pre><!----></pre>
 
-<div class="grid"><iframe></iframe></div>
+<div class="grid wi"><iframe></iframe></div>
 <div class="grid"><iframe class="mxw2"></iframe></div>
-<div class="grid"><iframe class="start"></iframe></div>
+<div class="grid wi"><iframe class="start"></iframe></div>
 <div class="grid"><iframe class="start mxw2"></iframe></div>
-<div class="grid"><iframe class="sa"></iframe></div>
+<div class="grid wi"><iframe class="sa"></iframe></div>
 <div class="grid"><iframe class="sa mxw2"></iframe></div>
-<div class="grid"><iframe class="na"></iframe></div>
+<div class="grid wi"><iframe class="na"></iframe></div>
 <div class="grid"><iframe class="na mxw2"></iframe></div>
 
 <pre><!--min-width:20px--></pre>
-<div class="grid"><iframe class="mw20"></iframe></div>
-<div class="grid"><iframe class="mw20 mxh10"></iframe></div>
-<div class="grid"><iframe class="start mw20"></iframe></div>
-<div class="grid" style="margin-top:5px"><iframe class="start mw20 mxh10"></iframe></div>
-<div class="grid" style="margin-top:10px"><iframe class="sa mw20"></iframe></div>
-<div class="grid" style="margin-top:25px"><iframe class="sa mw20 mxh10"></iframe></div>
-<div class="grid"><iframe class="na mw20"></iframe></div>
-<div class="grid" style="margin-top:5px"><iframe class="na mw20 mxh10 mxw10"></iframe></div>
+<div class="grid wi"><iframe class="mw20"></iframe></div>
+<div class="grid wi"><iframe class="mw20 mxh10"></iframe></div>
+<div class="grid wi"><iframe class="start mw20"></iframe></div>
+<div class="grid wi" style="margin-top:5px"><iframe class="start mw20 mxh10"></iframe></div>
+<div class="grid wi" style="margin-top:10px"><iframe class="sa mw20"></iframe></div>
+<div class="grid wi" style="margin-top:25px"><iframe class="sa mw20 mxh10"></iframe></div>
+<div class="grid wi"><iframe class="na mw20"></iframe></div>
+<div class="grid w22" style="margin-top:5px"><iframe class="na mw20 mxh10 mxw10"></iframe></div>
 
 <pre><!--min-width:0--></pre>
-<div class="grid"><iframe class="mw0"></iframe></div>
-<div class="grid"><iframe class="mw0 mxh10"></iframe></div>
-<div class="grid"><iframe class="start mw0"></iframe></div>
-<div class="grid" style="margin-top:5px"><iframe class="start mw0 mxh10"></iframe></div>
-<div class="grid" style="margin-top:10px"><iframe class="sa mw0"></iframe></div>
-<div class="grid" style="margin-top:25px"><iframe class="sa mw0 mxh10 mxw10"></iframe></div>
-<div class="grid"><iframe class="na mw0 mxw10"></iframe></div>
-<div class="grid" style="margin-top:5px"><iframe class="na mw0 mxh10"></iframe></div>
+<div class="grid wi"><iframe class="mw0"></iframe></div>
+<div class="grid wi"><iframe class="mw0 mxh10"></iframe></div>
+<div class="grid wi"><iframe class="start mw0"></iframe></div>
+<div class="grid wi" style="margin-top:5px"><iframe class="start mw0 mxh10"></iframe></div>
+<div class="grid wi" style="margin-top:10px"><iframe class="sa mw0"></iframe></div>
+<div class="grid " style="margin-top:25px; width:12px"><iframe class="sa mw0 mxh10 mxw10"></iframe></div>
+<div class="grid " style="width:12px"><iframe class="na mw0 mxw10"></iframe></div>
+<div class="grid wi" style="margin-top:5px"><iframe class="na mw0 mxh10"></iframe></div>
 
 <pre><!--width:20px--></pre>
 
@@ -109,36 +113,36 @@ iframe {
 
 <pre><!--width:20px--></pre>
 
-<div class="grid"><iframe class="start w20"></iframe></div>
-<div class="grid"><iframe class="start w20 mxh10"></iframe></div>
-<div class="grid"><iframe class="start w20"></iframe></div>
-<div class="grid"><iframe class="start w20 mxh10"></iframe></div>
-<div class="grid"><iframe class="sa w20"></iframe></div>
-<div class="grid"><iframe class="sa w20 mxh10"></iframe></div>
-<div class="grid"><iframe class="na w20"></iframe></div>
-<div class="grid"><iframe class="na w20 mxh10"></iframe></div>
+<div class="grid w22"><iframe class="start w20"></iframe></div>
+<div class="grid w22"><iframe class="start w20 mxh10"></iframe></div>
+<div class="grid w22"><iframe class="start w20"></iframe></div>
+<div class="grid w22"><iframe class="start w20 mxh10"></iframe></div>
+<div class="grid w22"><iframe class="sa w20"></iframe></div>
+<div class="grid w22"><iframe class="sa w20 mxh10"></iframe></div>
+<div class="grid w22"><iframe class="na w20"></iframe></div>
+<div class="grid w22"><iframe class="na w20 mxh10"></iframe></div>
 
 <pre><!--height:20px--></pre>
 
-<div class="grid r"><iframe class="h20"></iframe></div>
-<div class="grid r"><iframe class="h20 mxw10"></iframe></div>
-<div class="grid r"><iframe class="start h20"></iframe></div>
-<div class="grid r"><iframe class="start h20 mxw10"></iframe></div>
-<div class="grid r"><iframe class="as h20"></iframe></div>
-<div class="grid r"><iframe class="as h20 mxw10"></iframe></div>
-<div class="grid r"><iframe class="an h20"></iframe></div>
-<div class="grid r"><iframe class="an h20 mxw10"></iframe></div>
+<div class="grid h22 r wi"><iframe class="h20"></iframe></div>
+<div class="grid h22 r"><iframe class="h20 mxw10"></iframe></div>
+<div class="grid h22 r wi"><iframe class="start h20"></iframe></div>
+<div class="grid h22 r"><iframe class="start h20 mxw10"></iframe></div>
+<div class="grid h22 r wi"><iframe class="as h20"></iframe></div>
+<div class="grid h22 r"><iframe class="as h20 mxw10"></iframe></div>
+<div class="grid h22 r wi"><iframe class="an h20"></iframe></div>
+<div class="grid h22 r"><iframe class="an h20 mxw10"></iframe></div>
 
 <pre><!--height:20px--></pre>
 
-<div class="grid"><iframe class="h20"></iframe></div>
-<div class="grid"><iframe class="h20 mxw2"></iframe></div>
-<div class="grid"><iframe class="start h20"></iframe></div>
-<div class="grid"><iframe class="start h20 mxw10"></iframe></div>
-<div class="grid"><iframe class="as h20"></iframe></div>
-<div class="grid"><iframe class="as h20 mxw2"></iframe></div>
-<div class="grid"><iframe class="an h20"></iframe></div>
-<div class="grid"><iframe class="an h20 mxw10"></iframe></div>
+<div class="grid h32 wi"><iframe class="h20"></iframe></div>
+<div class="grid h32"><iframe class="h20 mxw2"></iframe></div>
+<div class="grid h32 wi"><iframe class="start h20"></iframe></div>
+<div class="grid h32" style="width:12px"><iframe class="start h20 mxw10"></iframe></div>
+<div class="grid h32 wi"><iframe class="as h20"></iframe></div>
+<div class="grid h32"><iframe class="as h20 mxw2"></iframe></div>
+<div class="grid h32 wi"><iframe class="an h20"></iframe></div>
+<div class="grid h32" style="width:12px"><iframe class="an h20 mxw10"></iframe></div>
 
 <script>
 var iframeSizes =

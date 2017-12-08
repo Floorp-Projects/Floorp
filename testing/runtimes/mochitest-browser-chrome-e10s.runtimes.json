@@ -815,7 +815,6 @@
     "browser/modules/test/browser_ContentSearch.js": 6354,
     "browser/modules/test/browser_NetworkPrioritizer.js": 7917,
     "browser/modules/test/browser_PermissionUI.js": 5119,
-    "browser/modules/test/browser_SelfSupportBackend.js": 5739,
     "browser/modules/test/browser_UnsubmittedCrashHandler.js": 2991,
     "browser/modules/test/browser_UsageTelemetry.js": 12884,
     "browser/modules/test/browser_UsageTelemetry_content.js": 3978,

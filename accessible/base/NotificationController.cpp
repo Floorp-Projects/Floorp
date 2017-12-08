@@ -646,19 +646,21 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     nsIContent* textNode = entry->GetKey();
     Accessible* textAcc = mDocument->GetAccessible(textNode);
 
-    // If the text node is not in tree or doesn't have frame then this case should
-    // have been handled already by content removal notifications.
+    // If the text node is not in tree or doesn't have a frame, or placed in
+    // another document, then this case should have been handled already by
+    // content removal notifications.
     nsINode* containerNode = textNode->GetParentNode();
-    if (!containerNode) {
-      NS_ASSERTION(!textAcc,
-                   "Text node was removed but accessible is kept alive!");
+    if (!containerNode ||
+        textNode->GetOwnerDocument() != mDocument->DocumentNode()) {
+      MOZ_ASSERT(!textAcc,
+                 "Text node was removed but accessible is kept alive!");
       continue;
     }
 
     nsIFrame* textFrame = textNode->GetPrimaryFrame();
     if (!textFrame) {
-      NS_ASSERTION(!textAcc,
-                   "Text node isn't rendered but accessible is kept alive!");
+      MOZ_ASSERT(!textAcc,
+                 "Text node isn't rendered but accessible is kept alive!");
       continue;
     }
 
