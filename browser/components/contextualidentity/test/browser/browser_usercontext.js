@@ -70,7 +70,7 @@ add_task(async function test() {
 
     // get the title
     // eslint-disable-next-line mozilla/no-cpows-in-tests
-    let title = browser.contentDocument.title.trim().split("|");
+    let title = browser.contentDocumentAsCPOW.title.trim().split("|");
 
     // check each item in the title and validate it meets expectatations
     for (let part of title) {

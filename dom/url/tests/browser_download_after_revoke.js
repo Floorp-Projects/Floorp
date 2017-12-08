@@ -4,7 +4,6 @@ function test () {
 
   function onLoad() {
     info("Page loaded.");
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
 
     var listener = {
       onOpenWindow: function(aXULWindow) {
@@ -46,8 +45,8 @@ function test () {
     });
   }
 
-  gBrowser.selectedBrowser.addEventListener("load", onLoad, true);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onLoad);
 
   info("Loading download page...");
-  content.location = "http://example.com/browser/dom/url/tests/empty.html";
+  gBrowser.loadURI("http://example.com/browser/dom/url/tests/empty.html");
 }

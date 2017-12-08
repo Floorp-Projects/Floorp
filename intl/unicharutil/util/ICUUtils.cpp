@@ -9,7 +9,7 @@
 #include "mozilla/intl/LocaleService.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "unicode/uloc.h"
 #include "unicode/unum.h"
 

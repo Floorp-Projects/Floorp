@@ -6,7 +6,7 @@
 #ifndef nsUnicharUtils_h__
 #define nsUnicharUtils_h__
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 /* (0x3131u <= (u) && (u) <= 0x318eu) => Hangul Compatibility Jamo */
 /* (0xac00u <= (u) && (u) <= 0xd7a3u) => Hangul Syllables          */

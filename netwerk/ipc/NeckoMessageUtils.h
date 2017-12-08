@@ -11,7 +11,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "prio.h"
 #include "mozilla/net/DNS.h"
 #include "TimingStruct.h"

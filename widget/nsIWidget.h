@@ -10,7 +10,7 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsRect.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #include "nsCOMPtr.h"
 #include "nsWidgetInitData.h"

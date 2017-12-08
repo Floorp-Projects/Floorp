@@ -8,7 +8,7 @@
 #define nsIScriptContext_h__
 
 #include "nscore.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "jspubtd.h"

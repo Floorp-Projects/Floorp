@@ -6,7 +6,7 @@
 #ifndef nsBidiUtils_h__
 #define nsBidiUtils_h__
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 
    /**
     *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt

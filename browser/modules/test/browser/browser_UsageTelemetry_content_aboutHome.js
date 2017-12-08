@@ -53,12 +53,7 @@ add_task(async function test_abouthome_simpleQuery() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Setup waiting for AboutHomeLoadSnippetsCompleted.");
-  let promiseAboutHomeLoaded = new Promise(resolve => {
-    tab.linkedBrowser.addEventListener("AboutHomeLoadSnippetsCompleted", function loadListener(event) {
-      tab.linkedBrowser.removeEventListener("AboutHomeLoadSnippetsCompleted", loadListener, true);
-      resolve();
-    }, true, true);
-  });
+  let promiseAboutHomeLoaded = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "AboutHomeLoadSnippetsCompleted", true, null, true);
 
   info("Load about:home.");
   tab.linkedBrowser.loadURI("about:home");
@@ -105,12 +100,7 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Setup waiting for search input to initialise.");
-  let promiseAboutHomeSearchLoaded = new Promise(resolve => {
-    tab.linkedBrowser.addEventListener("ContentSearchClient", function loadListener(event) {
-      tab.linkedBrowser.removeEventListener("ContentSearchClient", loadListener, true);
-      executeSoon(resolve);
-    }, true, true);
-  });
+  let promiseAboutHomeSearchLoaded = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "ContentSearchClient", true, null, true).then(() => false);
 
   info("Load about:home.");
   tab.linkedBrowser.loadURI("about:home");
