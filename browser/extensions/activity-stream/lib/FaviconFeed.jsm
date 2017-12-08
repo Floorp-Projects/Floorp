@@ -10,7 +10,6 @@ Cu.importGlobalProperties(["fetch", "URL"]);
 
 const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {PersistentCache} = Cu.import("resource://activity-stream/lib/PersistentCache.jsm", {});
-const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {getDomain} = Cu.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -27,9 +26,12 @@ this.FaviconFeed = class FaviconFeed {
   constructor() {
     this.tippyTopNextUpdate = 0;
     this.cache = new PersistentCache("tippytop", true);
-    this.prefs = new Prefs();
     this._sitesByDomain = null;
     this.numRetries = 0;
+  }
+
+  get endpoint() {
+    return this.store.getState().Prefs.values["tippyTop.service.endpoint"];
   }
 
   async loadCachedData() {
@@ -51,7 +53,7 @@ this.FaviconFeed = class FaviconFeed {
     if (this._sitesByDomain && this._sitesByDomain._etag) {
       headers.set("If-None-Match", this._sitesByDomain._etag);
     }
-    let {data, etag, status} = await this.loadFromURL(this.prefs.get("tippyTop.service.endpoint"), headers);
+    let {data, etag, status} = await this.loadFromURL(this.endpoint, headers);
     let failedUpdate = false;
     if (status === 200) {
       this._sitesByDomain = this._sitesArrayToObjectByDomain(data);
@@ -113,6 +115,11 @@ this.FaviconFeed = class FaviconFeed {
   }
 
   async fetchIcon(url) {
+    // Avoid initializing and fetching icons if prefs are turned off
+    if (!this.shouldFetchIcons) {
+      return;
+    }
+
     const sitesByDomain = await this.getSitesByDomain();
     const domain = getDomain(url);
     if (domain in sitesByDomain) {
@@ -128,6 +135,13 @@ this.FaviconFeed = class FaviconFeed {
         Services.scriptSecurityManager.getSystemPrincipal()
       );
     }
+  }
+
+  /**
+   * Determine if we should be fetching and saving icons.
+   */
+  get shouldFetchIcons() {
+    return this.endpoint && Services.prefs.getBoolPref("browser.chrome.site_icons");
   }
 
   onAction(action) {
