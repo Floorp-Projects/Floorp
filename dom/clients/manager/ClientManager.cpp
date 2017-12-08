@@ -103,18 +103,28 @@ ClientManager::CreateSourceInternal(ClientType aType,
 {
   NS_ASSERT_OWNINGTHREAD(ClientManager);
 
-  if (IsShutdown()) {
-    return nullptr;
-  }
-
   nsID id;
   nsresult rv = nsContentUtils::GenerateUUIDInPlace(id);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
+    // If we can't even get a UUID, at least make sure not to use a garbage
+    // value.  Instead return a shutdown ClientSource with a zero'd id.
+    // This should be exceptionally rare, if it happens at all.
+    id.Clear();
+    ClientSourceConstructorArgs args(id, aType, aPrincipal, TimeStamp::Now());
+    UniquePtr<ClientSource> source(new ClientSource(this, aEventTarget, args));
+    source->Shutdown();
+    return Move(source);
   }
 
   ClientSourceConstructorArgs args(id, aType, aPrincipal, TimeStamp::Now());
   UniquePtr<ClientSource> source(new ClientSource(this, aEventTarget, args));
+
+  if (IsShutdown()) {
+    source->Shutdown();
+    return Move(source);
+  }
+
   source->Activate(GetActor());
 
   return Move(source);
@@ -127,12 +137,14 @@ ClientManager::CreateHandleInternal(const ClientInfo& aClientInfo,
   NS_ASSERT_OWNINGTHREAD(ClientManager);
   MOZ_DIAGNOSTIC_ASSERT(aSerialEventTarget);
 
-  if (IsShutdown()) {
-    return nullptr;
-  }
-
   RefPtr<ClientHandle> handle = new ClientHandle(this, aSerialEventTarget,
                                                  aClientInfo);
+
+  if (IsShutdown()) {
+    handle->Shutdown();
+    return handle.forget();
+  }
+
   handle->Activate(GetActor());
 
   return handle.forget();
@@ -220,7 +232,7 @@ ClientManager::CreateSource(ClientType aType, nsISerialEventTarget* aEventTarget
   PrincipalInfo principalInfo;
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
+    MOZ_CRASH("ClientManager::CreateSource() cannot serialize bad principal");
   }
 
   RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
