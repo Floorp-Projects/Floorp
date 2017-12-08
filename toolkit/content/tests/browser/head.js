@@ -143,7 +143,10 @@ class DateTimeTestHelper {
   async openPicker(pageUrl) {
     this.tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
     await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, gBrowser.selectedBrowser);
-    // If dateTimePopupFrame doesn't exist yet, wait for the binding to be attached
+    // If dateTimePopupFrame doesn't exist yet, wait for the binding to be
+    // attached.
+    // FIXME: This has a race condition and we may miss the following events.
+    //        (bug 1423498)
     if (!this.panel.dateTimePopupFrame) {
       await BrowserTestUtils.waitForEvent(this.panel, "DateTimePickerBindingReady");
     }
@@ -152,9 +155,19 @@ class DateTimeTestHelper {
   }
 
   async waitForPickerReady() {
-    await BrowserTestUtils.waitForEvent(this.frame, "load", true);
+    let readyPromise;
+    let loadPromise = new Promise(resolve => {
+      this.frame.addEventListener("load", () => {
+       // Add the PickerReady event listener directly inside the load event
+        // listener to avoid missing the event.
+        readyPromise = BrowserTestUtils.waitForEvent(this.frame.contentDocument, "PickerReady");
+        resolve();
+      }, { capture: true, once: true });
+    });
+
+    await loadPromise;
     // Wait for picker elements to be ready
-    await BrowserTestUtils.waitForEvent(this.frame.contentDocument, "PickerReady");
+    await readyPromise;
   }
 
   /**
