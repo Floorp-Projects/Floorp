@@ -21,6 +21,12 @@ USE_LIBS += [
     'xul-gtest',
 ]
 
+if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
+    GENERATED_FILES += ['symverscript']
+    GENERATED_FILES['symverscript'].script = '../gen_symverscript.py'
+    GENERATED_FILES['symverscript'].inputs = ['../symverscript.in']
+    SYMBOLS_FILE = '!symverscript'
+
 # This needs to come after static:xul to avoid things like libfallible coming
 # before StaticXULComponentStart.
 Libxul('xul-gtest-real')

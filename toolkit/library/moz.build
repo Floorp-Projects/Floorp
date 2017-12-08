@@ -56,9 +56,6 @@ def Libxul(name):
         # and config/version.mk would lift the $(srcdir)
         RCINCLUDE = '$(DEPTH)/toolkit/library/xulrunner.rc'
 
-    if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
-        LDFLAGS += ['-Wl,-version-script,symverscript']
-
     # BFD ld doesn't create multiple PT_LOADs as usual when an unknown section
     # exists. Using an implicit linker script to make it fold that section in
     # .data.rel.ro makes it create multiple PT_LOADs. That implicit linker
@@ -351,6 +348,12 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         '!%s' % full_libname,
     ]
     FINAL_TARGET_FILES += ['!dependentlibs.list', '!dependentlibs.list.gtest']
+
+    if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
+        GENERATED_FILES += ['symverscript']
+        GENERATED_FILES['symverscript'].script = 'gen_symverscript.py'
+        GENERATED_FILES['symverscript'].inputs = ['symverscript.in']
+        SYMBOLS_FILE = '!symverscript'
 
 # This library needs to be last to make XPCOM module registration work.
 USE_LIBS += ['StaticXULComponentsEnd']
