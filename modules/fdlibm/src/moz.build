@@ -21,7 +21,7 @@ if CONFIG['CLANG_CXX']:
         '-Wno-dangling-else',
     ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-wd4018', # signed/unsigned mismatch
         '-wd4146', # unary minus operator applied to unsigned type

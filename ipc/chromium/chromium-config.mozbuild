@@ -31,7 +31,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'WIN32_LEAN_AND_MEAN': True,
     })
 
-    if CONFIG['_MSC_VER']:
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         DEFINES['COMPILER_MSVC'] = True
 
 else:

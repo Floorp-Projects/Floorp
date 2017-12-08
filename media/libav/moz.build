@@ -53,7 +53,7 @@ UNIFIED_SOURCES += [
 ]
 
 # Dummy functions are required for windows NoOpt/PGO builds.
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     UNIFIED_SOURCES += [
         'avfft_dummy_funcs.c'
     ]

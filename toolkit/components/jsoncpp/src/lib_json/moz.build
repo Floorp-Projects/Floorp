@@ -21,7 +21,7 @@ if CONFIG['CLANG_CL']:
         '-Xclang',
         '-fcxx-exceptions',
     ]
-elif not CONFIG['_MSC_VER']:
+elif CONFIG['CC_TYPE'] not in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-fexceptions',
     ]
@@ -32,7 +32,7 @@ DisableStlWrapping()
 Library('jsoncpp')
 
 # Suppress warnings in third-party code.
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-wd4005', # macro redefinition
     ]

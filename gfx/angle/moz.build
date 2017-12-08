@@ -160,7 +160,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             '-Wno-shadow-local',
         ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += ['-wd5038'] # C5038: initializer list order warnings
 
 if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
