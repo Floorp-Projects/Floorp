@@ -12,26 +12,7 @@ TEST_FILES = \
   browser.js \
   js-test-driver-end.js \
   user.js \
-  ecma/ \
-  ecma_2/ \
-  ecma_3/ \
-  ecma_3_1/ \
-  ecma_5/ \
-  ecma_6/ \
-  ecma_7/ \
-  ecma_2017/ \
-  ecma_2018/ \
-  Intl/ \
-  js1_1/ \
-  js1_2/ \
-  js1_3/ \
-  js1_4/ \
-  js1_5/ \
-  js1_6/ \
-  js1_7/ \
-  js1_8/ \
-  js1_8_1/ \
-  js1_8_5/ \
+  non262/ \
   shell/ \
   test/ \
   test262/ \
