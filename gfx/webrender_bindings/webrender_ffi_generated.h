@@ -987,6 +987,8 @@ extern bool gfx_use_wrench();
 
 extern const char *gfx_wr_resource_path_override();
 
+extern bool is_glcontext_angle(void *aGlcontextPtr);
+
 extern bool is_glcontext_egl(void *aGlcontextPtr);
 
 extern bool is_in_compositor_thread();
