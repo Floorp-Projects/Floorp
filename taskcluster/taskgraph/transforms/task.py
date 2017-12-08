@@ -133,9 +133,6 @@ task_description_schema = Schema({
         # treeherder.machine.platform and treeherder.collection or
         # treeherder.labels
         'platform': basestring,
-
-        # treeherder environments (defaults to both staging and production)
-        Required('environments', default=['production', 'staging']): ['production', 'staging'],
     },
 
     # information for indexing this build so its artifacts can be discovered;
@@ -618,11 +615,8 @@ V2_L10N_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.latest.{product}-l10n.{job-name}.{locale}",
 ]
 
-# the roots of the treeherder routes, keyed by treeherder environment
-TREEHERDER_ROUTE_ROOTS = {
-    'production': 'tc-treeherder',
-    'staging': 'tc-treeherder-stage',
-}
+# the roots of the treeherder routes
+TREEHERDER_ROUTE_ROOT = 'tc-treeherder'
 
 # Which repository repository revision to use when reporting results to treeherder.
 DEFAULT_BRANCH_REV_PARAM = 'head_rev'
@@ -1097,7 +1091,6 @@ def build_macosx_engine_payload(config, task, task_def):
 @payload_builder('buildbot-bridge')
 def build_buildbot_bridge_payload(config, task, task_def):
     task['extra'].pop('treeherder', None)
-    task['extra'].pop('treeherderEnv', None)
     worker = task['worker']
 
     if worker['properties'].get('tuxedo_server_url'):
@@ -1349,8 +1342,6 @@ def build_task(config, tasks):
         extra['parent'] = os.environ.get('TASK_ID', '')
         task_th = task.get('treeherder')
         if task_th:
-            extra['treeherderEnv'] = task_th['environments']
-
             treeherder = extra.setdefault('treeherder', {})
 
             machine_platform, collection = task_th['platform'].split('/', 1)
@@ -1379,13 +1370,12 @@ def build_task(config, tasks):
                     config.params['project'],
                     DEFAULT_BRANCH_REV_PARAM)]
 
-            routes.extend([
-                '{}.v2.{}.{}.{}'.format(TREEHERDER_ROUTE_ROOTS[env],
+            routes.append(
+                '{}.v2.{}.{}.{}'.format(TREEHERDER_ROUTE_ROOT,
                                         config.params['project'],
                                         treeherder_rev,
                                         config.params['pushlog_id'])
-                for env in task_th['environments']
-            ])
+            )
 
         if 'expires-after' not in task:
             task['expires-after'] = '28 days' if config.params['project'] == 'try' else '1 year'
