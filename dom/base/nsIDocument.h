@@ -3256,6 +3256,16 @@ public:
   virtual bool AllowPaymentRequest() const = 0;
   virtual void SetAllowPaymentRequest(bool aAllowPaymentRequest) = 0;
 
+  bool IsWebComponentsEnabled() const
+  {
+    return mIsWebComponentsEnabled;
+  }
+
+  void SetWebComponentsEnabled(bool aEnabled)
+  {
+    mIsWebComponentsEnabled = aEnabled;
+  }
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3611,6 +3621,10 @@ protected:
 
   // True if the encoding menu should be disabled.
   bool mEncodingMenuDisabled : 1;
+
+  // True if dom.webcomponents.enabled pref is set. It can not be unset once
+  // set to true.
+  bool mIsWebComponentsEnabled : 1;
 
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
