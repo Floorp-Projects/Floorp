@@ -1796,9 +1796,7 @@ nsGlobalWindowInner::EnsureClientSource()
     mClientSource = ClientManager::CreateSource(ClientType::Window,
                                                 EventTargetFor(TaskCategory::Other),
                                                 mDoc->NodePrincipal());
-    if (NS_WARN_IF(!mClientSource)) {
-      return NS_ERROR_FAILURE;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(mClientSource);
     newClientSource = true;
   }
 
@@ -1828,9 +1826,7 @@ nsGlobalWindowInner::EnsureClientSource()
         ClientManager::CreateSource(ClientType::Window,
                                     EventTargetFor(TaskCategory::Other),
                                     mDoc->NodePrincipal());
-      if (NS_WARN_IF(!mClientSource)) {
-        return NS_ERROR_FAILURE;
-      }
+      MOZ_DIAGNOSTIC_ASSERT(mClientSource);
       newClientSource = true;
     }
   }
