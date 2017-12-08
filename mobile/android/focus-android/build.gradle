@@ -28,6 +28,7 @@ plugins {
     // other methods involve using undocumented APIs
     // https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations
     id "io.gitlab.arturbosch.detekt" version "1.0.0.RC5-6"
+    id "org.jetbrains.kotlin.kapt" version "1.2.0"
 }
 
 detekt {
