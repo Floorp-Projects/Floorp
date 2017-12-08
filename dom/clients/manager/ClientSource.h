@@ -21,6 +21,7 @@ namespace dom {
 
 class ClientClaimArgs;
 class ClientControlledArgs;
+class ClientFocusArgs;
 class ClientManager;
 class ClientSourceChild;
 class ClientSourceConstructorArgs;
@@ -131,6 +132,9 @@ public:
   // been set.
   const Maybe<ServiceWorkerDescriptor>&
   GetController() const;
+
+  RefPtr<ClientOpPromise>
+  Focus(const ClientFocusArgs& aArgs);
 
   RefPtr<ClientOpPromise>
   Claim(const ClientClaimArgs& aArgs);

@@ -13,6 +13,7 @@
 #include "ClientValidation.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
 
@@ -359,6 +360,55 @@ const Maybe<ServiceWorkerDescriptor>&
 ClientSource::GetController() const
 {
   return mController;
+}
+
+RefPtr<ClientOpPromise>
+ClientSource::Focus(const ClientFocusArgs& aArgs)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+
+  RefPtr<ClientOpPromise> ref;
+
+  if (mClientInfo.Type() != ClientType::Window) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                           __func__);
+    return ref.forget();
+  }
+  nsPIDOMWindowOuter* outer = nullptr;
+
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  if (inner) {
+    outer = inner->GetOuterWindow();
+  } else {
+    nsIDocShell* docshell = GetDocShell();
+    if (docshell) {
+      outer = docshell->GetWindow();
+    }
+  }
+
+  if (!outer) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
+    return ref.forget();
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = nsContentUtils::DispatchFocusChromeEvent(outer);
+  if (NS_FAILED(rv)) {
+    ref = ClientOpPromise::CreateAndReject(rv, __func__);
+    return ref.forget();
+  }
+
+  ClientState state;
+  rv = SnapshotState(&state);
+  if (NS_FAILED(rv)) {
+    ref = ClientOpPromise::CreateAndReject(rv, __func__);
+    return ref.forget();
+  }
+
+  ref = ClientOpPromise::CreateAndResolve(state.ToIPC(), __func__);
+  return ref.forget();
 }
 
 RefPtr<ClientOpPromise>
