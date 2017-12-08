@@ -30,18 +30,25 @@ add_task(async function testAddOnBeforeCreatedWidget() {
   let viewNode = document.getElementById(kWidgetId + "idontexistyet");
   ok(widgetNode, "Widget should exist");
   ok(viewNode, "Panelview should exist");
+
+  let widgetPanel;
+  let panelShownPromise;
+  let viewShownPromise = new Promise(resolve => {
+    viewNode.addEventListener("ViewShown", () => {
+      widgetPanel = document.getElementById("customizationui-widget-panel");
+      ok(widgetPanel, "Widget panel should exist");
+      // Add the popupshown event listener directly inside the ViewShown event
+      // listener to avoid missing the event.
+      panelShownPromise = promisePanelElementShown(window, widgetPanel);
+      resolve();
+    }, { once: true });
+  });
   widgetNode.click();
+  await viewShownPromise;
+  await panelShownPromise;
 
-  let tempPanel = document.getElementById("customizationui-widget-panel");
-  let panelShownPromise = promisePanelElementShown(window, tempPanel);
-
-  await Promise.all([
-    BrowserTestUtils.waitForEvent(viewNode, "ViewShown"),
-    panelShownPromise
-  ]);
-
-  let panelHiddenPromise = promisePanelElementHidden(window, tempPanel);
-  tempPanel.hidePopup();
+  let panelHiddenPromise = promisePanelElementHidden(window, widgetPanel);
+  widgetPanel.hidePopup();
   await panelHiddenPromise;
 
   CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
