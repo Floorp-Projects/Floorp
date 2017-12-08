@@ -331,6 +331,8 @@ class TupOnly(CommonBackend, PartialBackend):
         if obj.script and obj.method and obj.relobjdir not in skip_directories:
             backend_file.export_shell()
             cmd = self._py_action('file_generate')
+            if obj.localized:
+                cmd.append('--locale=en-US')
             cmd.extend([
                 obj.script,
                 obj.method,
