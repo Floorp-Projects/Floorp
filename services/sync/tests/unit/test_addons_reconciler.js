@@ -52,7 +52,7 @@ add_task(async function test_install_detection() {
   reconciler.startListening();
 
   let before = new Date();
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
   let after = new Date();
 
   Assert.equal(1, Object.keys(reconciler.addons).length);
@@ -80,7 +80,7 @@ add_task(async function test_install_detection() {
   Assert.equal(CHANGE_INSTALLED, change[1]);
   Assert.equal(addon.id, change[2]);
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
 });
 
 add_task(async function test_uninstall_detection() {
@@ -93,11 +93,11 @@ add_task(async function test_uninstall_detection() {
   reconciler._addons = {};
   reconciler._changes = [];
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
   let id = addon.id;
 
   reconciler._changes = [];
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
 
   Assert.equal(1, Object.keys(reconciler.addons).length);
   Assert.ok(id in reconciler.addons);

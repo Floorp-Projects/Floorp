@@ -53,7 +53,7 @@ add_task(async function setup() {
 add_task(async function test_addon_install() {
   _("Ensure basic add-on APIs work as expected.");
 
-  let install = getAddonInstall("test_bootstrap1_1");
+  let install = await getAddonInstall("test_bootstrap1_1");
   Assert.notEqual(install, null);
   Assert.equal(install.type, "extension");
   Assert.equal(install.name, "Test Bootstrap 1");
@@ -68,7 +68,7 @@ add_task(async function test_find_dupe() {
   // test, so we do it manually.
   await engine._refreshReconcilerState();
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
 
   let record = {
     id:            Utils.makeGUID(),
@@ -85,7 +85,7 @@ add_task(async function test_find_dupe() {
   dupe = await engine._findDupe(record);
   Assert.equal(null, dupe);
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
   await resetReconciler();
 });
 
@@ -112,7 +112,7 @@ add_task(async function test_get_changed_ids() {
   tracker.clearChangedIDs();
 
   _("Ensure reconciler changes are populated.");
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1");
   tracker.clearChangedIDs(); // Just in case.
   changes = await engine.getChangedIDs();
   Assert.equal("object", typeof(changes));
@@ -123,7 +123,7 @@ add_task(async function test_get_changed_ids() {
 
   let oldTime = changes[addon.syncGUID];
   let guid2 = addon.syncGUID;
-  uninstallAddon(addon);
+  await uninstallAddon(addon);
   changes = await engine.getChangedIDs();
   Assert.equal(1, Object.keys(changes).length);
   Assert.ok(guid2 in changes);
