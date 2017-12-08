@@ -9,6 +9,7 @@
 #include "ClientHandleChild.h"
 #include "ClientHandleOpChild.h"
 #include "ClientManager.h"
+#include "ClientState.h"
 #include "mozilla/dom/PClientManagerChild.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 
@@ -120,6 +121,25 @@ ClientHandle::Control(const ServiceWorkerDescriptor& aServiceWorker)
     });
 
   return outerPromise.forget();
+}
+
+RefPtr<ClientStatePromise>
+ClientHandle::Focus()
+{
+  RefPtr<ClientStatePromise::Private> outerPromise =
+    new ClientStatePromise::Private(__func__);
+
+  RefPtr<ClientOpPromise> innerPromise = StartOp(ClientFocusArgs());
+
+  innerPromise->Then(mSerialEventTarget, __func__,
+    [outerPromise](const ClientOpResult& aResult) {
+      outerPromise->Resolve(ClientState::FromIPC(aResult.get_IPCClientState()), __func__);
+    }, [outerPromise](const ClientOpResult& aResult) {
+      outerPromise->Reject(aResult.get_nsresult(), __func__);
+    });
+
+  RefPtr<ClientStatePromise> ref = outerPromise.get();
+  return ref.forget();
 }
 
 } // namespace dom
