@@ -189,7 +189,6 @@ class Link;
 class DOMRect;
 class DOMRectList;
 class DestinationInsertionPointList;
-class Flex;
 class Grid;
 
 // IID for the dom::Element interface
@@ -1309,7 +1308,6 @@ public:
            0;
   }
 
-  already_AddRefed<Flex> GetAsFlexContainer();
   void GetGridFragments(nsTArray<RefPtr<Grid>>& aResult);
 
   already_AddRefed<DOMMatrixReadOnly> GetTransformToAncestor(Element& aAncestor);
