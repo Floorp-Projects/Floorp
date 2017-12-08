@@ -63,6 +63,9 @@ public:
   MatchAll(const ClientMatchAllArgs& aArgs);
 
   RefPtr<ClientOpPromise>
+  Claim(const ClientClaimArgs& aArgs);
+
+  RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManagerService)

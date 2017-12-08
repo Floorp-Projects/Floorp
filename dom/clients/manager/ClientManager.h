@@ -18,6 +18,7 @@ class PrincipalInfo;
 } // namespace ipc
 namespace dom {
 
+class ClientClaimArgs;
 class ClientGetInfoAndStateArgs;
 class ClientHandle;
 class ClientInfo;
@@ -97,6 +98,9 @@ public:
 
   static RefPtr<ClientOpPromise>
   MatchAll(const ClientMatchAllArgs& aArgs, nsISerialEventTarget* aTarget);
+
+  static RefPtr<ClientOpPromise>
+  Claim(const ClientClaimArgs& aArgs, nsISerialEventTarget* aSerialEventTarget);
 
   static RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs,
