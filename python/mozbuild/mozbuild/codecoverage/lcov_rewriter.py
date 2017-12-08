@@ -733,7 +733,14 @@ def main():
     rewriter = LcovFileRewriter(args.app_dir, args.gre_dir,
                                 args.extra_chrome_manifests)
 
+    files = []
     for f in args.files:
+        if os.path.isdir(f):
+            files += [os.path.join(f, e) for e in os.listdir(f)]
+        else:
+            files.append(f)
+
+    for f in files:
         rewriter.rewrite_file(f, args.output_suffix)
 
 if __name__ == '__main__':
