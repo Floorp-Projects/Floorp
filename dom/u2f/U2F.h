@@ -31,16 +31,40 @@ struct RegisteredKey;
 
 class U2FTransaction
 {
+  typedef Variant<nsMainThreadPtrHandle<U2FRegisterCallback>,
+                  nsMainThreadPtrHandle<U2FSignCallback>> U2FCallback;
+
 public:
-  explicit U2FTransaction(const nsCString& aClientData)
+  explicit U2FTransaction(const nsCString& aClientData,
+                          const U2FCallback&& aCallback)
     : mClientData(aClientData)
+    , mCallback(Move(aCallback))
     , mId(NextId())
   {
     MOZ_ASSERT(mId > 0);
   }
 
+  bool HasRegisterCallback() {
+    return mCallback.is<nsMainThreadPtrHandle<U2FRegisterCallback>>();
+  }
+
+  auto& GetRegisterCallback() {
+    return mCallback.as<nsMainThreadPtrHandle<U2FRegisterCallback>>();
+  }
+
+  bool HasSignCallback() {
+    return mCallback.is<nsMainThreadPtrHandle<U2FSignCallback>>();
+  }
+
+  auto& GetSignCallback() {
+    return mCallback.as<nsMainThreadPtrHandle<U2FSignCallback>>();
+  }
+
   // Client data used to assemble reply objects.
   nsCString mClientData;
+
+  // The callback passed to the API.
+  U2FCallback mCallback;
 
   // Unique transaction id.
   uint64_t mId;
@@ -117,16 +141,15 @@ protected:
 private:
   ~U2F();
 
+  template<typename T, typename C>
+  void ExecuteCallback(T& aResp, nsMainThreadPtrHandle<C>& aCb);
+
   // Clears all information we have about the current transaction.
   void ClearTransaction();
-  // Rejects the current transaction and calls ClearTransaction().
+  // Rejects the current transaction and clears it.
   void RejectTransaction(const nsresult& aError);
 
   nsString mOrigin;
-
-  // U2F API callbacks.
-  Maybe<nsMainThreadPtrHandle<U2FRegisterCallback>> mRegisterCallback;
-  Maybe<nsMainThreadPtrHandle<U2FSignCallback>> mSignCallback;
 
   // The current transaction, if any.
   Maybe<U2FTransaction> mTransaction;
