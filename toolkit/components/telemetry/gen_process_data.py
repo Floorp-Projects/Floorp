@@ -46,7 +46,8 @@ def write_processes_data(processes, output):
         p("  /* %d: ProcessID::%s = */ %s," % (i, to_enum_label(name), value['gecko_enum']))
     p("};")
     p("")
-    p("static const char* const ProcessIDToString[%d] = {" % len(processes))
+    p("#ifdef XP_WIN\nstatic const char* const ProcessIDToString[%d] = {\n#else\n\
+static constexpr char* const ProcessIDToString[%d] = {\n#endif\n" % (len(processes), len(processes)))
     for i, (name, value) in enumerate(processes.iteritems()):
         p("  /* %d: ProcessID::%s = */ \"%s\"," % (i, to_enum_label(name), name))
     p("};")
