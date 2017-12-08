@@ -230,6 +230,9 @@
      "[keyword const] [def async] [operator =] {[property a]: [number 1]};",
      "[keyword const] [def foo] [operator =] [string-2 `bar ${][variable async].[property a][string-2 }`];")
 
+  MT("async_comment",
+     "[keyword async] [comment /**/] [keyword function] [def foo]([def args]) { [keyword return] [atom true]; }");
+
   MT("indent_switch",
      "[keyword switch] ([variable x]) {",
      "  [keyword default]:",
@@ -367,6 +370,18 @@
 
   TS("arrow prop",
      "({[property a]: [def p] [operator =>] [variable-2 p]})")
+
+  TS("generic in function call",
+     "[keyword this].[property a][operator <][type Type][operator >]([variable foo]);",
+     "[keyword this].[property a][operator <][variable Type][operator >][variable foo];")
+
+  TS("type guard",
+     "[keyword class] [def Appler] {",
+     "  [keyword static] [property assertApple]([def fruit]: [type Fruit]): [variable-2 fruit] [keyword is] [type Apple] {",
+     "    [keyword if] ([operator !]([variable-2 fruit] [keyword instanceof] [variable Apple]))",
+     "      [keyword throw] [keyword new] [variable Error]();",
+     "  }",
+     "}")
 
   var jsonld_mode = CodeMirror.getMode(
     {indentUnit: 2},
