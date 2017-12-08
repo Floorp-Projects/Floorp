@@ -10,11 +10,105 @@
 use approxeq::ApproxEq;
 use num_traits::{Float, One, Zero};
 use std::fmt;
-use std::ops::{Add, Neg, Mul, Sub, Div};
+use std::ops::{Add, Neg, Mul, Sub, Div, AddAssign, SubAssign, MulAssign, DivAssign};
 use std::marker::PhantomData;
 use trig::Trig;
 use {TypedPoint2D, TypedPoint3D, TypedVector2D, TypedVector3D, Vector3D, point2, point3, vec3};
-use {TypedTransform3D, TypedTransform2D, UnknownUnit, Radians};
+use {TypedTransform3D, TypedTransform2D, UnknownUnit};
+
+/// An angle in radians
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Hash)]
+pub struct Angle<T> {
+    pub radians: T,
+}
+
+impl<T> Angle<T> {
+    #[inline]
+    pub fn radians(radians: T) -> Self {
+        Angle { radians }
+    }
+
+    #[inline]
+    pub fn get(self) -> T {
+        self.radians
+    }
+}
+
+impl<T> Angle<T>
+    where T: Trig
+{
+    #[inline]
+    pub fn degrees(deg: T) -> Self {
+        Angle { radians: T::degrees_to_radians(deg) }
+    }
+
+    #[inline]
+    pub fn to_degrees(self) -> T {
+        T::radians_to_degrees(self.radians)
+    }
+}
+
+impl<T: Clone + Add<T, Output=T>> Add for Angle<T> {
+    type Output = Angle<T>;
+    fn add(self, other: Angle<T>) -> Angle<T> {
+        Angle::radians(self.radians + other.radians)
+    }
+}
+
+impl<T: Clone + AddAssign<T>> AddAssign for Angle<T> {
+    fn add_assign(&mut self, other: Angle<T>) {
+        self.radians += other.radians;
+    }
+}
+
+impl<T: Clone + Sub<T, Output=T>> Sub<Angle<T>> for Angle<T> {
+    type Output = Angle<T>;
+    fn sub(self, other: Angle<T>) -> <Self as Sub>::Output {
+        Angle::radians(self.radians - other.radians)
+    }
+}
+
+impl<T: Clone + SubAssign<T>> SubAssign for Angle<T> {
+    fn sub_assign(&mut self, other: Angle<T>) {
+        self.radians -= other.radians;
+    }
+}
+
+impl<T: Clone + Div<T, Output=T>> Div<Angle<T>> for Angle<T> {
+    type Output = T;
+    #[inline]
+    fn div(self, other: Angle<T>) -> T {
+        self.radians / other.radians
+    }
+}
+
+impl<T: Clone + Div<T, Output=T>> Div<T> for Angle<T> {
+    type Output = Angle<T>;
+    #[inline]
+    fn div(self, factor: T) -> Angle<T> {
+        Angle::radians(self.radians / factor)
+    }
+}
+
+impl<T: Clone + DivAssign<T>> DivAssign<T> for Angle<T> {
+    fn div_assign(&mut self, factor: T) {
+        self.radians /= factor;
+    }
+}
+
+impl<T: Clone + Mul<T, Output=T>> Mul<T> for Angle<T> {
+    type Output = Angle<T>;
+    #[inline]
+    fn mul(self, factor: T) -> Angle<T> {
+        Angle::radians(self.radians * factor)
+    }
+}
+
+impl<T: Clone + MulAssign<T>> MulAssign<T> for Angle<T> {
+    fn mul_assign(&mut self, factor: T) {
+        self.radians *= factor;
+    }
+}
 
 
 define_matrix! {
@@ -30,15 +124,15 @@ pub type Rotation2D<T> = TypedRotation2D<T, UnknownUnit, UnknownUnit>;
 impl<T, Src, Dst> TypedRotation2D<T, Src, Dst> {
     #[inline]
     /// Creates a rotation from an angle in radians.
-    pub fn new(angle: Radians<T>) -> Self {
+    pub fn new(angle: Angle<T>) -> Self {
         TypedRotation2D {
-            angle: angle.0,
+            angle: angle.radians,
             _unit: PhantomData,
         }
     }
 
     pub fn radians(angle: T) -> Self {
-        Self::new(Radians::new(angle))
+        Self::new(Angle::radians(angle))
     }
 
     /// Creates the identity rotation.
@@ -50,9 +144,9 @@ impl<T, Src, Dst> TypedRotation2D<T, Src, Dst> {
 
 impl<T, Src, Dst> TypedRotation2D<T, Src, Dst> where T: Clone
 {
-    /// Returns self.angle as a strongly typed `Radians<T>`.
-    pub fn get_angle(&self) -> Radians<T> {
-        Radians::new(self.angle.clone())
+    /// Returns self.angle as a strongly typed `Angle<T>`.
+    pub fn get_angle(&self) -> Angle<T> {
+        Angle::radians(self.angle.clone())
     }
 }
 
@@ -208,34 +302,34 @@ where T: Copy + Clone +
     }
 
     /// Creates a rotation around a given axis.
-    pub fn around_axis(axis: TypedVector3D<T, Src>, angle: Radians<T>) -> Self {
+    pub fn around_axis(axis: TypedVector3D<T, Src>, angle: Angle<T>) -> Self {
         let axis = axis.normalize();
         let two = T::one() + T::one();
-        let (sin, cos) = Float::sin_cos(angle.get() / two);
+        let (sin, cos) = Float::sin_cos(angle.radians / two);
         Self::quaternion(axis.x * sin, axis.y * sin, axis.z * sin, cos)
     }
 
     /// Creates a rotation around the x axis.
-    pub fn around_x(angle: Radians<T>) -> Self {
+    pub fn around_x(angle: Angle<T>) -> Self {
         let zero = Zero::zero();
         let two = T::one() + T::one();
-        let (sin, cos) = Float::sin_cos(angle.get() / two);
+        let (sin, cos) = Float::sin_cos(angle.radians / two);
         Self::quaternion(sin, zero, zero, cos)
     }
 
     /// Creates a rotation around the y axis.
-    pub fn around_y(angle: Radians<T>) -> Self {
+    pub fn around_y(angle: Angle<T>) -> Self {
         let zero = Zero::zero();
         let two = T::one() + T::one();
-        let (sin, cos) = Float::sin_cos(angle.get() / two);
+        let (sin, cos) = Float::sin_cos(angle.radians / two);
         Self::quaternion(zero, sin, zero, cos)
     }
 
     /// Creates a rotation around the z axis.
-    pub fn around_z(angle: Radians<T>) -> Self {
+    pub fn around_z(angle: Angle<T>) -> Self {
         let zero = Zero::zero();
         let two = T::one() + T::one();
-        let (sin, cos) = Float::sin_cos(angle.get() / two);
+        let (sin, cos) = Float::sin_cos(angle.radians / two);
         Self::quaternion(zero, zero, sin, cos)
     }
 
@@ -246,7 +340,7 @@ where T: Copy + Clone +
     ///  - Roll (also calld bank) is a rotation around the x axis.
     ///  - Pitch (also calld bearing) is a rotation around the y axis.
     ///  - Yaw (also calld heading) is a rotation around the z axis.
-    pub fn euler(roll: Radians<T>, pitch: Radians<T>, yaw: Radians<T>) -> Self {
+    pub fn euler(roll: Angle<T>, pitch: Angle<T>, yaw: Angle<T>) -> Self {
         let half = T::one() / (T::one() + T::one());
 
 	    let (sy, cy) = Float::sin_cos(half * yaw.get());
@@ -533,9 +627,9 @@ fn simple_rotation_2d() {
 fn simple_rotation_3d_in_2d() {
     use std::f32::consts::{PI, FRAC_PI_2};
     let ri = Rotation3D::identity();
-    let r90 = Rotation3D::around_z(Radians::new(FRAC_PI_2));
-    let rm90 = Rotation3D::around_z(Radians::new(-FRAC_PI_2));
-    let r180 = Rotation3D::around_z(Radians::new(PI));
+    let r90 = Rotation3D::around_z(Angle::radians(FRAC_PI_2));
+    let rm90 = Rotation3D::around_z(Angle::radians(-FRAC_PI_2));
+    let r180 = Rotation3D::around_z(Angle::radians(PI));
 
     assert!(ri.rotate_point2d(&point2(1.0, 2.0)).approx_eq(&point2(1.0, 2.0)));
     assert!(r90.rotate_point2d(&point2(1.0, 2.0)).approx_eq(&point2(-2.0, 1.0)));
@@ -552,9 +646,9 @@ fn simple_rotation_3d_in_2d() {
 #[test]
 fn pre_post() {
     use std::f32::consts::{FRAC_PI_2};
-    let r1 = Rotation3D::around_x(Radians::new(FRAC_PI_2));
-    let r2 = Rotation3D::around_y(Radians::new(FRAC_PI_2));
-    let r3 = Rotation3D::around_z(Radians::new(FRAC_PI_2));
+    let r1 = Rotation3D::around_x(Angle::radians(FRAC_PI_2));
+    let r2 = Rotation3D::around_y(Angle::radians(FRAC_PI_2));
+    let r3 = Rotation3D::around_z(Angle::radians(FRAC_PI_2));
 
     let t1 = r1.to_transform();
     let t2 = r2.to_transform();
@@ -579,15 +673,15 @@ fn to_transform3d() {
     use std::f32::consts::{PI, FRAC_PI_2};
     let rotations = [
         Rotation3D::identity(),
-        Rotation3D::around_x(Radians::new(FRAC_PI_2)),
-        Rotation3D::around_x(Radians::new(-FRAC_PI_2)),
-        Rotation3D::around_x(Radians::new(PI)),
-        Rotation3D::around_y(Radians::new(FRAC_PI_2)),
-        Rotation3D::around_y(Radians::new(-FRAC_PI_2)),
-        Rotation3D::around_y(Radians::new(PI)),
-        Rotation3D::around_z(Radians::new(FRAC_PI_2)),
-        Rotation3D::around_z(Radians::new(-FRAC_PI_2)),
-        Rotation3D::around_z(Radians::new(PI)),
+        Rotation3D::around_x(Angle::radians(FRAC_PI_2)),
+        Rotation3D::around_x(Angle::radians(-FRAC_PI_2)),
+        Rotation3D::around_x(Angle::radians(PI)),
+        Rotation3D::around_y(Angle::radians(FRAC_PI_2)),
+        Rotation3D::around_y(Angle::radians(-FRAC_PI_2)),
+        Rotation3D::around_y(Angle::radians(PI)),
+        Rotation3D::around_z(Angle::radians(FRAC_PI_2)),
+        Rotation3D::around_z(Angle::radians(-FRAC_PI_2)),
+        Rotation3D::around_z(Angle::radians(PI)),
     ];
 
     let points = [
@@ -639,13 +733,13 @@ fn around_axis() {
     use std::f32::consts::{PI, FRAC_PI_2};
 
     // Two sort of trivial cases:
-    let r1 = Rotation3D::around_axis(vec3(1.0, 1.0, 0.0), Radians::new(PI));
-    let r2 = Rotation3D::around_axis(vec3(1.0, 1.0, 0.0), Radians::new(FRAC_PI_2));
+    let r1 = Rotation3D::around_axis(vec3(1.0, 1.0, 0.0), Angle::radians(PI));
+    let r2 = Rotation3D::around_axis(vec3(1.0, 1.0, 0.0), Angle::radians(FRAC_PI_2));
     assert!(r1.rotate_point3d(&point3(1.0, 2.0, 0.0)).approx_eq(&point3(2.0, 1.0, 0.0)));
     assert!(r2.rotate_point3d(&point3(1.0, 0.0, 0.0)).approx_eq(&point3(0.5, 0.5, -0.5.sqrt())));
 
     // A more arbitray test (made up with numpy):
-    let r3 = Rotation3D::around_axis(vec3(0.5, 1.0, 2.0), Radians::new(2.291288));
+    let r3 = Rotation3D::around_axis(vec3(0.5, 1.0, 2.0), Angle::radians(2.291288));
     assert!(r3.rotate_point3d(&point3(1.0, 0.0, 0.0)).approx_eq(&point3(-0.58071821,  0.81401868, -0.01182979)));
 }
 
@@ -659,8 +753,8 @@ fn from_euler() {
     // of transforming a point rather than the values of each qauetrnions.
     let p = point3(1.0, 2.0, 3.0);
 
-    let angle = Radians::new(FRAC_PI_2);
-    let zero = Radians::new(0.0);
+    let angle = Angle::radians(FRAC_PI_2);
+    let zero = Angle::radians(0.0);
 
     // roll
     let roll_re = Rotation3D::euler(angle, zero, zero);

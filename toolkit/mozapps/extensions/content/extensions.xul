@@ -134,10 +134,6 @@
     <vbox id="category-box">
       <!-- category list -->
       <richlistbox id="categories" flex="1">
-        <richlistitem id="category-search" value="addons://search/"
-                      class="category"
-                      name="&view.search.label;" priority="0"
-                      tooltiptext="&view.search.label;" disabled="true"/>
         <richlistitem id="category-discover" value="addons://discover/"
                       class="category"
                       name="&view.discover.label;" priority="1000"
@@ -256,87 +252,10 @@
             </toolbarbutton>
             <textbox id="header-search" type="search" searchbutton="true"
                      searchbuttonlabel="&search.buttonlabel;"
-                     placeholder="&search.placeholder;"/>
+                     placeholder="&search.placeholder2;"/>
           </hbox>
 
           <deck id="headered-views-content" flex="1" selectedIndex="0">
-            <!-- search view -->
-            <vbox id="search-view" flex="1" class="view-pane" tabindex="0">
-              <hbox class="view-header global-warning-container" align="center">
-                <!-- global warnings -->
-                <hbox class="global-warning" flex="1">
-                  <hbox class="global-warning-safemode" flex="1" align="center"
-                        tooltiptext="&warning.safemode.label;">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.safemode.label;"/>
-                  </hbox>
-                  <hbox class="global-warning-checkcompatibility" flex="1" align="center"
-                        tooltiptext="&warning.checkcompatibility.label;">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.checkcompatibility.label;"/>
-                  </hbox>
-                  <button class="button-link global-warning-checkcompatibility"
-                          label="&warning.checkcompatibility.enable.label;"
-                          tooltiptext="&warning.checkcompatibility.enable.tooltip;"
-                          command="cmd_enableCheckCompatibility"/>
-                  <hbox class="global-warning-updatesecurity" flex="1" align="center"
-                        tooltiptext="&warning.updatesecurity.label;">
-                    <image class="warning-icon"/>
-                    <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.updatesecurity.label;"/>
-                  </hbox>
-                  <button class="button-link global-warning-updatesecurity"
-                          label="&warning.updatesecurity.enable.label;"
-                          tooltiptext="&warning.updatesecurity.enable.tooltip;"
-                          command="cmd_enableUpdateSecurity"/>
-                  <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
-                </hbox>
-                <spacer flex="1"/>
-                <hbox id="search-sorters" class="sort-controls"
-                      showrelevance="true" sortby="relevancescore" ascending="false"/>
-              </hbox>
-              <hbox id="search-filter" align="center">
-                <label id="search-filter-label" value="&search.filter2.label;"/>
-                <radiogroup id="search-filter-radiogroup" orient="horizontal"
-                            align="center" persist="value" value="remote">
-                  <radio id="search-filter-local" class="search-filter-radio"
-                         label="&search.filter2.installed.label;" value="local"
-                         tooltiptext="&search.filter2.installed.tooltip;"/>
-                  <radio id="search-filter-remote" class="search-filter-radio"
-                         label="&search.filter2.available.label;" value="remote"
-                         tooltiptext="&search.filter2.available.tooltip;"/>
-                </radiogroup>
-              </hbox>
-              <vbox id="search-loading" class="alert-container"
-                    flex="1" hidden="true">
-                <spacer class="alert-spacer-before"/>
-                <hbox class="alert loading" align="center">
-                  <image/>
-                  <label value="&loading.label;"/>
-                </hbox>
-                <spacer class="alert-spacer-after"/>
-              </vbox>
-              <vbox id="search-list-empty" class="alert-container"
-                    flex="1" hidden="true">
-                <spacer class="alert-spacer-before"/>
-                <vbox class="alert">
-                  <label value="&listEmpty.search.label;"/>
-                  <button class="discover-button"
-                          id="discover-button-search"
-                          label="&listEmpty.button.label;"
-                          command="cmd_goToDiscoverPane"/>
-                </vbox>
-                <spacer class="alert-spacer-after"/>
-              </vbox>
-              <richlistbox id="search-list" class="list" flex="1">
-                <hbox pack="center">
-                  <label id="search-allresults-link" class="text-link"/>
-                </hbox>
-              </richlistbox>
-            </vbox>
-
             <!-- list view -->
             <vbox id="list-view" flex="1" class="view-pane" align="stretch" tabindex="0">
               <!-- info UI for add-ons that have been disabled for being unsigned -->

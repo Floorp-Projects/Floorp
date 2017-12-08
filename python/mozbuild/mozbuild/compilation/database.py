@@ -49,7 +49,7 @@ class CompileDBBackend(CommonBackend):
 
     def consume_object(self, obj):
         # Those are difficult directories, that will be handled later.
-        if obj.relativedir in (
+        if obj.relsrcdir in (
                 'build/unix/elfhack',
                 'build/unix/elfhack/inject',
                 'build/clang-plugin',
@@ -67,7 +67,7 @@ class CompileDBBackend(CommonBackend):
         elif isinstance(obj, (Sources, GeneratedSources)):
             # For other sources, include each source file.
             for f in obj.files:
-                self._build_db_line(obj.objdir, obj.relativedir, obj.config, f,
+                self._build_db_line(obj.objdir, obj.relsrcdir, obj.config, f,
                                     obj.canonical_suffix)
 
         elif isinstance(obj, VariablePassthru):
@@ -132,10 +132,10 @@ class CompileDBBackend(CommonBackend):
         # For unified sources, only include the unified source file.
         # Note that unified sources are never used for host sources.
         for f in obj.unified_source_mapping:
-            self._build_db_line(obj.objdir, obj.relativedir, obj.config, f[0],
+            self._build_db_line(obj.objdir, obj.relsrcdir, obj.config, f[0],
                                 obj.canonical_suffix)
             for entry in f[1]:
-                self._build_db_line(obj.objdir, obj.relativedir, obj.config,
+                self._build_db_line(obj.objdir, obj.relsrcdir, obj.config,
                                     entry, obj.canonical_suffix, unified=f[0])
 
     def _handle_idl_manager(self, idl_manager):

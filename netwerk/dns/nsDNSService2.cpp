@@ -316,7 +316,7 @@ public:
         , mAF(af)
         , mNetworkInterface(netInterface) {}
 
-    void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult) override;
+    void OnResolveHostComplete(nsHostResolver *, nsHostRecord *, nsresult) override;
     // Returns TRUE if the DNS listener arg is the same as the member listener
     // Used in Cancellations to remove DNS requests associated with a
     // particular hostname and nsIDNSListener
@@ -334,9 +334,9 @@ public:
 };
 
 void
-nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
-                                    nsHostRecord   *hostRecord,
-                                    nsresult        status)
+nsDNSAsyncRequest::OnResolveHostComplete(nsHostResolver *resolver,
+                                         nsHostRecord   *hostRecord,
+                                         nsresult        status)
 {
     // need to have an owning ref when we issue the callback to enable
     // the caller to be able to addref/release multiple times without
@@ -402,7 +402,7 @@ public:
         , mMonitor(mon) {}
     virtual ~nsDNSSyncRequest() = default;
 
-    void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult) override;
+    void OnResolveHostComplete(nsHostResolver *, nsHostRecord *, nsresult) override;
     bool EqualsAsyncListener(nsIDNSListener *aListener) override;
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const override;
 
@@ -415,9 +415,9 @@ private:
 };
 
 void
-nsDNSSyncRequest::OnLookupComplete(nsHostResolver *resolver,
-                                   nsHostRecord   *hostRecord,
-                                   nsresult        status)
+nsDNSSyncRequest::OnResolveHostComplete(nsHostResolver *resolver,
+                                        nsHostRecord   *hostRecord,
+                                        nsresult        status)
 {
     // store results, and wake up nsDNSService::Resolve to process results.
     PR_EnterMonitor(mMonitor);
@@ -857,7 +857,7 @@ nsDNSService::AsyncResolveExtendedNative(const nsACString        &aHostname,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = req);
 
-    // addref for resolver; will be released when OnLookupComplete is called.
+    // addref for resolver; will be released when OnResolveHostComplete is called.
     NS_ADDREF(req);
     rv = res->ResolveHost(req->mHost.get(), req->mOriginAttributes, flags, af,
                           req->mNetworkInterface.get(), req);

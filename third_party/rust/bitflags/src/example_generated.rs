@@ -6,11 +6,9 @@ bitflags! {
     /// Note that this struct is just for documentation purposes only, it must not be used outside
     /// this crate.
     pub struct Flags: u32 {
-        const FLAG_A       = 0b00000001;
-        const FLAG_B       = 0b00000010;
-        const FLAG_C       = 0b00000100;
-        const FLAG_ABC     = Self::FLAG_A.bits
-                           | Self::FLAG_B.bits
-                           | Self::FLAG_C.bits;
+        const FLAG_A = 0b00000001;
+        const FLAG_B = 0b00000010;
+        const FLAG_C = 0b00000100;
+        const FLAG_ABC = Self::FLAG_A.bits | Self::FLAG_B.bits | Self::FLAG_C.bits;
     }
 }

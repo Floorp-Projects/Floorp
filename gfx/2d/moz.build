@@ -120,7 +120,7 @@ if CONFIG['MOZ_ENABLE_SKIA']:
         'PathSkia.cpp',
         'SourceSurfaceSkia.cpp',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         # Suppress warnings from Skia header files.
         SOURCES['DrawTargetSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
         SOURCES['PathSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
@@ -196,10 +196,10 @@ SOURCES += [
     'InlineTranslator.cpp',
 ]
 
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
     SOURCES['Factory.cpp'].flags += ['-Wno-implicit-fallthrough']
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

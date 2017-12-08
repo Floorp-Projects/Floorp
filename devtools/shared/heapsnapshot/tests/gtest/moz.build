@@ -23,12 +23,12 @@ UNIFIED_SOURCES = [
     'SerializesTypeNames.cpp',
 ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 # THE MOCK_METHOD2 macro from gtest triggers this clang warning and it's hard
 # to work around, so we just ignore it.
-if CONFIG['CLANG_CXX']:
+if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += ['-Wno-inconsistent-missing-override']
   # Workaround bug 1142396. Suppress the warning from gmock library for clang.
   CXXFLAGS += ['-Wno-null-dereference']

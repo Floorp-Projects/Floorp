@@ -1279,8 +1279,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULLabeledControlElement", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "XULPopupElement", xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULTemplateBuilder", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULTreeBuilder", xbl: true},

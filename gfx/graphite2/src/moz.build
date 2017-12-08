@@ -12,7 +12,7 @@ EXPORTS.graphite2 += [
     '../include/graphite2/Types.h',
 ]
 
-if CONFIG['GNU_CC']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     UNIFIED_SOURCES += [
         'direct_machine.cpp'
     ]

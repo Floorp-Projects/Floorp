@@ -12,7 +12,9 @@ use approxeq::ApproxEq;
 use length::Length;
 use point::{TypedPoint2D, TypedPoint3D, point2, point3};
 use size::{TypedSize2D, size2};
-use scale_factor::ScaleFactor;
+use scale::TypedScale;
+use trig::Trig;
+use Angle;
 use num::*;
 use num_traits::{Float, NumCast, Signed};
 use std::fmt;
@@ -123,6 +125,14 @@ impl<T: Copy, U> TypedVector2D<T, U> {
     #[inline]
     pub fn to_array(&self) -> [T; 2] {
         [self.x, self.y]
+    }
+}
+
+impl<T, U> TypedVector2D<T, U>
+where T: Trig + Copy + Sub<T, Output = T> {
+    /// Returns the angle between this vector and the x axis between -PI and PI.
+    pub fn angle_from_x_axis(&self) -> Angle<T> {
+        Angle::radians(Trig::fast_atan2(self.y, self.x))
     }
 }
 
@@ -252,18 +262,18 @@ impl<T: Copy + Div<T, Output=T>, U> DivAssign<T> for TypedVector2D<T, U> {
     }
 }
 
-impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<ScaleFactor<T, U1, U2>> for TypedVector2D<T, U1> {
+impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedVector2D<T, U1> {
     type Output = TypedVector2D<T, U2>;
     #[inline]
-    fn mul(self, scale: ScaleFactor<T, U1, U2>) -> TypedVector2D<T, U2> {
+    fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedVector2D<T, U2> {
         vec2(self.x * scale.get(), self.y * scale.get())
     }
 }
 
-impl<T: Copy + Div<T, Output=T>, U1, U2> Div<ScaleFactor<T, U1, U2>> for TypedVector2D<T, U2> {
+impl<T: Copy + Div<T, Output=T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedVector2D<T, U2> {
     type Output = TypedVector2D<T, U1>;
     #[inline]
-    fn div(self, scale: ScaleFactor<T, U1, U2>) -> TypedVector2D<T, U1> {
+    fn div(self, scale: TypedScale<T, U1, U2>) -> TypedVector2D<T, U1> {
         vec2(self.x / scale.get(), self.y / scale.get())
     }
 }
@@ -323,6 +333,12 @@ impl<T: NumCast + Copy, U> TypedVector2D<T, U> {
     /// Cast into an `f32` vector.
     #[inline]
     pub fn to_f32(&self) -> TypedVector2D<f32, U> {
+        self.cast().unwrap()
+    }
+
+    /// Cast into an `f64` vector.
+    #[inline]
+    pub fn to_f64(&self) -> TypedVector2D<f64, U> {
         self.cast().unwrap()
     }
 
@@ -700,6 +716,12 @@ impl<T: NumCast + Copy, U> TypedVector3D<T, U> {
         self.cast().unwrap()
     }
 
+    /// Cast into an `f64` vector.
+    #[inline]
+    pub fn to_f64(&self) -> TypedVector3D<f64, U> {
+        self.cast().unwrap()
+    }
+
     /// Cast into an `usize` vector, truncating decimals if any.
     ///
     /// When casting from floating vector vectors, it is worth considering whether
@@ -841,12 +863,26 @@ mod vector2d {
 
         assert_eq!(result, vec2(2.0, 3.0));
     }
+
+    #[test]
+    pub fn test_angle_from_x_axis() {
+        use std::f32::consts::FRAC_PI_2;
+        use approxeq::ApproxEq;
+
+        let right: Vec2 = vec2(10.0, 0.0);
+        let down: Vec2 = vec2(0.0, 4.0);
+        let up: Vec2 = vec2(0.0, -1.0);
+
+        assert!(right.angle_from_x_axis().get().approx_eq(&0.0));
+        assert!(down.angle_from_x_axis().get().approx_eq(&FRAC_PI_2));
+        assert!(up.angle_from_x_axis().get().approx_eq(&-FRAC_PI_2));
+    }
 }
 
 #[cfg(test)]
 mod typedvector2d {
     use super::{TypedVector2D, Vector2D, vec2};
-    use scale_factor::ScaleFactor;
+    use scale::TypedScale;
 
     pub enum Mm {}
     pub enum Cm {}
@@ -875,7 +911,7 @@ mod typedvector2d {
     #[test]
     pub fn test_scalar_mul() {
         let p1 = Vector2DMm::new(1.0, 2.0);
-        let cm_per_mm: ScaleFactor<f32, Mm, Cm> = ScaleFactor::new(0.1);
+        let cm_per_mm: TypedScale<f32, Mm, Cm> = TypedScale::new(0.1);
 
         let result: Vector2DCm<f32> = p1 * cm_per_mm;
 

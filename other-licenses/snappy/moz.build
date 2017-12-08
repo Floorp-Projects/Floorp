@@ -23,7 +23,7 @@ AllowCompilerWarnings()
 FINAL_LIBRARY = 'xul'
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-sign-compare',
         '-Wno-unused-function'

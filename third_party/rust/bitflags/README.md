@@ -26,6 +26,4 @@ extern crate bitflags;
 
 ## Rust Version Support
 
-The minimum supported* Rust version is 1.20 due to use of associated constants.
-
-_* As of the current master branch (unreleased)_
+The minimum supported Rust version is 1.20 due to use of associated constants.

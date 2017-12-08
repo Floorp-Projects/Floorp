@@ -35,7 +35,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     'tests/python.ini',
 ]
 
-if CONFIG['GNU_CC'] and CONFIG['MOZ_OPTIMIZE']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') and CONFIG['MOZ_OPTIMIZE']:
     CFLAGS += ['-O3']
 
 HOST_DEFINES = {
@@ -46,9 +46,9 @@ HOST_DEFINES = {
 include('stl-headers.mozbuild')
 if CONFIG['WRAP_STL_INCLUDES']:
     stl_compiler = None
-    if CONFIG['GNU_CXX']:
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         stl_compiler = 'gcc'
-    elif CONFIG['_MSC_VER']:
+    elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         stl_compiler = 'msvc'
 
     if stl_compiler:

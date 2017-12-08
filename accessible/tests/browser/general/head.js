@@ -4,13 +4,25 @@
 
 "use strict";
 
-/* exported initAccessibilityService, shutdownAccessibilityService */
+/* exported initAccessibilityService, openNewTab, shutdownAccessibilityService */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js",
   this);
+
+const nsIAccessibleRole = Ci.nsIAccessibleRole; // eslint-disable-line no-unused-vars
+
+/* import-globals-from ../../mochitest/role.js */
+loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
+
+async function openNewTab(url) {
+  const forceNewProcess = true;
+
+  return BrowserTestUtils.openNewForegroundTab(
+    { gBrowser, url, forceNewProcess });
+}
 
 async function initAccessibilityService() {
   info("Create accessibility service.");

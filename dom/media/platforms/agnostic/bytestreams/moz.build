@@ -26,7 +26,7 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = 'xul'
 
 # Suppress warnings in third-party code.
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CFLAGS += [
         '-wd4013', # 'function' undefined; assuming extern returning int
         '-wd4101', # unreferenced local variable
@@ -40,7 +40,7 @@ if CONFIG['_MSC_VER']:
         '-wd4804', # '>' : unsafe use of type 'bool' in operation
         '-wd4099', # mismatched class/struct tags
     ]
-elif CONFIG['GNU_CXX']:
+elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-Wno-comment',
         '-Wno-sign-compare',
@@ -52,7 +52,7 @@ elif CONFIG['GNU_CXX']:
         '-Wno-sign-compare',
         '-Wno-unused',
     ]
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CC_TYPE'] == 'clang':
         CXXFLAGS += [
             '-Wno-mismatched-tags',
             '-Wno-tautological-constant-out-of-range-compare',

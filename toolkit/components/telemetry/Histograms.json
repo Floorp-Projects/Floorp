@@ -9797,22 +9797,6 @@
     "description": "Number of times a custom developer tool has been opened.",
     "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_RELOAD_ADDON_INSTALLED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Number of times the reload addon has been installed.",
-    "bug_numbers": [1248435]
-  },
-  "DEVTOOLS_RELOAD_ADDON_RELOAD_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Number of times the tools have been reloaded by the reload addon.",
-    "bug_numbers": [1248435]
-  },
   "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

@@ -91,5 +91,5 @@ RCINCLUDE = 'IA2Marshal.rc'
 #   #endif !_MIDL_USE_GUIDDEF_
 #
 # which clang-cl complains about.  MSVC doesn't, so turn this warning off.
-if CONFIG['CLANG_CL']:
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += ['-Wno-extra-tokens']

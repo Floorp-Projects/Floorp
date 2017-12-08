@@ -188,7 +188,7 @@ if not CONFIG['MOZ_SYSTEM_NSS']:
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wextra',
         # -Wextra enables this warning, but it's too noisy to be useful.

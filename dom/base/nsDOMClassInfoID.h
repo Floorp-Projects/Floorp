@@ -28,7 +28,6 @@ enum nsDOMClassInfoID
   eDOMClassInfo_XULLabeledControlElement_id,
   eDOMClassInfo_XULButtonElement_id,
   eDOMClassInfo_XULCheckboxElement_id,
-  eDOMClassInfo_XULPopupElement_id,
 
   // This one better be the last one in this list
   eDOMClassInfoIDCount

@@ -93,6 +93,7 @@ namespace CrashReporter {
   extern std::string  gEventsPath;
   extern int          gArgc;
   extern char**       gArgv;
+  extern bool         gAutoSubmit;
 
   void UIError(const std::string& message);
 

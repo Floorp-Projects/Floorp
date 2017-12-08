@@ -37,7 +37,7 @@ TransceiverImpl::TransceiverImpl(
     JsepTransceiver* aJsepTransceiver,
     nsIEventTarget* aMainThread,
     nsIEventTarget* aStsThread,
-    DOMMediaStream& aReceiveStream,
+    dom::MediaStreamTrack* aReceiveTrack,
     dom::MediaStreamTrack* aSendTrack,
     WebRtcCallWrapper* aCallWrapper) :
   mPCHandle(aPCHandle),
@@ -46,7 +46,7 @@ TransceiverImpl::TransceiverImpl(
   mHaveSetupTransport(false),
   mMainThread(aMainThread),
   mStsThread(aStsThread),
-  mReceiveStream(&aReceiveStream),
+  mReceiveTrack(aReceiveTrack),
   mSendTrack(aSendTrack),
   mCallWrapper(aCallWrapper)
 {
@@ -95,7 +95,7 @@ TransceiverImpl::InitAudio()
       mMainThread.get(),
       mStsThread.get(),
       static_cast<AudioSessionConduit*>(mConduit.get()),
-      mReceiveStream->GetInputStream()->AsSourceStream());
+      mReceiveTrack);
 }
 
 void
@@ -116,7 +116,7 @@ TransceiverImpl::InitVideo()
       mMainThread.get(),
       mStsThread.get(),
       static_cast<VideoSessionConduit*>(mConduit.get()),
-      mReceiveStream->GetInputStream()->AsSourceStream());
+      mReceiveTrack);
 }
 
 nsresult
@@ -252,7 +252,7 @@ TransceiverImpl::UpdateConduit()
   }
 
   if (mJsepTransceiver->mRecvTrack.GetActive()) {
-    MOZ_ASSERT(mReceiveStream);
+    MOZ_ASSERT(mReceiveTrack);
     mReceivePipeline->Start();
     mHaveStartedReceiving = true;
   }
@@ -275,22 +275,11 @@ TransceiverImpl::UpdatePrincipal(nsIPrincipal* aPrincipal)
     return NS_OK;
   }
 
-  nsTArray<RefPtr<dom::MediaStreamTrack>> receiveTracks;
-  mReceiveStream->GetTracks(receiveTracks);
-  if (receiveTracks.Length() != 1) {
-    MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
-                        " mReceiveStream doesn't have exactly one track "
-                        "(it has " << receiveTracks.Length() << ")");
-    MOZ_CRASH();
-    return NS_ERROR_FAILURE;
-  }
-
   // This blasts away the existing principal.
-  // We only do this when we become certain that the all tracks are safe to make
+  // We only do this when we become certain that all tracks are safe to make
   // accessible to the script principal.
-  RemoteTrackSource& source =
-    static_cast<RemoteTrackSource&>(receiveTracks[0]->GetSource());
-  source.SetPrincipal(aPrincipal);
+  static_cast<RemoteTrackSource&>(mReceiveTrack->GetSource()).SetPrincipal(
+      aPrincipal);
 
   mReceivePipeline->SetPrincipalHandle_m(MakePrincipalHandle(aPrincipal));
   return NS_OK;
@@ -514,24 +503,31 @@ TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
 
   // currentDirection from JSEP, but not if "this transceiver has never been
   // represented in an offer/answer exchange"
-  if (mJsepTransceiver->HasLevel()) {
-    dom::RTCRtpTransceiverDirection currentDirection;
-    if (mJsepTransceiver->mSendTrack.GetActive()) {
-      if (mJsepTransceiver->mRecvTrack.GetActive()) {
-        currentDirection = dom::RTCRtpTransceiverDirection::Sendrecv;
+  if (mJsepTransceiver->HasLevel() && mJsepTransceiver->IsNegotiated()) {
+    if (mJsepTransceiver->mRecvTrack.GetActive()) {
+      if (mJsepTransceiver->mSendTrack.GetActive()) {
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Sendrecv, aRv);
       } else {
-        currentDirection = dom::RTCRtpTransceiverDirection::Sendonly;
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Recvonly, aRv);
       }
     } else {
-      if (mJsepTransceiver->mRecvTrack.GetActive()) {
-        currentDirection = dom::RTCRtpTransceiverDirection::Recvonly;
+      if (mJsepTransceiver->mSendTrack.GetActive()) {
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Sendonly, aRv);
       } else {
-        currentDirection = dom::RTCRtpTransceiverDirection::Inactive;
+        aJsTransceiver.SetCurrentDirection(
+            dom::RTCRtpTransceiverDirection::Inactive, aRv);
       }
-    }
 
-    if (mJsepTransceiver->IsNegotiated()) {
-      aJsTransceiver.SetCurrentDirection(currentDirection, aRv);
+      // If negotiation stops a track from receiving (ie; m-section is
+      // negotiated "sendonly" or "inactive"), we mark the track muted.  We do
+      // _not_ do the reverse; we need to wait for RTP to unmute according to
+      // the spec. That happens in MediaPipeline.
+      if (!mReceiveTrack->Muted()) {
+        mReceiveTrack->MutedChanged(true);
+      }
     }
 
     if (aRv.Failed()) {
@@ -580,7 +576,7 @@ TransceiverImpl::HasReceiveTrack(const dom::MediaStreamTrack* aRecvTrack) const
     return true;
   }
 
-  return mReceiveStream->HasTrack(*aRecvTrack);
+  return mReceiveTrack == aRecvTrack;
 }
 
 bool
@@ -593,13 +589,7 @@ TransceiverImpl::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
 already_AddRefed<dom::MediaStreamTrack>
 TransceiverImpl::GetReceiveTrack()
 {
-  nsTArray<RefPtr<dom::MediaStreamTrack>> receiveTracks;
-  mReceiveStream->GetTracks(receiveTracks);
-  if (receiveTracks.Length() != 1) {
-    return nullptr;
-  }
-
-  return receiveTracks[0].forget();
+  return do_AddRef(mReceiveTrack);
 }
 
 RefPtr<MediaPipeline>
@@ -1075,10 +1065,7 @@ void
 TransceiverImpl::StartReceiveStream()
 {
   MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__);
-  // TODO: Can this be simplified? There's an awful lot of moving pieces here.
-  SourceMediaStream* source(mReceiveStream->GetInputStream()->AsSourceStream());
-  mReceiveStream->SetLogicalStreamStartTime(
-      mReceiveStream->GetPlaybackStream()->GetCurrentTime());
+  SourceMediaStream* source(mReceiveTrack->GetInputStream()->AsSourceStream());
 
   nsAutoPtr<MediaSegment> segment;
   if (IsVideo()) {

@@ -46,7 +46,7 @@ if CONFIG['OS_TARGET'] == 'Android' and CONFIG['CC_TYPE'] == 'clang':
 if CONFIG['MOZ_BUILD_APP'] != 'memory':
     FINAL_LIBRARY = 'mozglue'
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
 
 if CONFIG['MOZ_REPLACE_MALLOC_STATIC']:

@@ -27,7 +27,7 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CFLAGS += ['-Zl']
 
 # Code with FINAL_LIBRARY = 'xul' shouldn't do this, but the code

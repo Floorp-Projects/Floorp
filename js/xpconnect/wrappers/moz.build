@@ -23,7 +23,7 @@ SOURCES += [
 ]
 
 # warning C4661 for FilteringWrapper
-if CONFIG['_MSC_VER']:
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += [
         '-wd4661', # no suitable definition provided for explicit template instantiation request
     ]
@@ -38,5 +38,5 @@ LOCAL_INCLUDES += [
     '/caps',
 ]
 
-if CONFIG['GNU_CXX']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow']
