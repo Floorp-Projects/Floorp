@@ -1,0 +1,10 @@
+[
+  {
+    "size": 445624230,
+    "visibility": "public",
+    "digest": "fb951185e21ba6124d8c8ba42202613312401c65e56d52480cc08c87816936b9dd00024f4fc00183ee0e199c91ed5b9209867983c1d13daf5b34bcdc14ee9fb6",
+    "algorithm": "sha512",
+    "filename": "AVDs-x86-android-7.0-build-2017-12-08.tar.gz",
+    "unpack": true
+  }
+]

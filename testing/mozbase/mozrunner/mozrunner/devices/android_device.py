@@ -73,7 +73,6 @@ AVD_DICT = {
                    'testing/config/tooltool-manifests/androidarm_7_0/mach-emulator.manifest',
                    ['-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
-                    '-ranchu',
                     '-qemu', '-m', '2048'],
                    False),
     'x86': AvdInfo('Android 4.2 x86',
@@ -90,6 +89,12 @@ AVD_DICT = {
                         'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
                         '-ranchu',
                         '-qemu', '-m', '2048'],
+                       True),
+    'x86-7.0': AvdInfo('Android 7.0 x86',
+                       'mozemulator-x86-7.0',
+                       'testing/config/tooltool-manifests/androidx86_7_0/mach-emulator.manifest',
+                       ['-show-kernel', '-verbose',
+                        '-qemu', '-enable-kvm'],
                        True)
 }
 
