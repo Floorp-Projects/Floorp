@@ -39,7 +39,7 @@ public class WebAppManifest {
     private String mDisplayMode;
     private String mOrientation;
 
-    public static WebAppManifest fromFile(final String url, final String path) {
+    public static WebAppManifest fromFile(final String url, final String path) throws IOException, JSONException, IllegalArgumentException {
         if (url == null || TextUtils.isEmpty(url)) {
             throw new IllegalArgumentException("Must pass a non-empty manifest URL");
         }
@@ -53,19 +53,14 @@ public class WebAppManifest {
             throw new IllegalArgumentException("Must pass a valid manifest URL");
         }
 
-        try {
-            final File manifestFile = new File(path);
+        final File manifestFile = new File(path);
 
-            // Gecko adds some add some additional data, such as cached_icon, in
-            // the toplevel object. The actual webapp manifest is in the "manifest" field.
-            final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
-            final JSONObject manifestField = manifest.getJSONObject("manifest");
+        // Gecko adds some add some additional data, such as cached_icon, in
+        // the toplevel object. The actual webapp manifest is in the "manifest" field.
+        final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
+        final JSONObject manifestField = manifest.getJSONObject("manifest");
 
-            return new WebAppManifest(manifestUri, manifest, manifestField);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Failed to read webapp manifest", e);
-            return null;
-        }
+        return new WebAppManifest(manifestUri, manifest, manifestField);
     }
 
     public static WebAppManifest fromString(final String url, final String input) {
