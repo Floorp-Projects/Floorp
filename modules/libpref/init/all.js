@@ -5925,3 +5925,4 @@ pref("layers.omtp.enabled", true);
 pref("layers.omtp.enabled", false);
 #endif
 pref("layers.omtp.release-capture-on-main-thread", false);
+pref("layers.omtp.paint-workers", 1);
