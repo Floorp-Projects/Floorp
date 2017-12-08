@@ -499,7 +499,7 @@ Utils.getDefaultDeviceName = function() {
 async function registerRotaryEngine() {
   let {RotaryEngine} =
     ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js", {});
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
 
   await Service.engineManager.register(RotaryEngine);
   let engine = Service.engineManager.get("rotary");
