@@ -1,17 +1,18 @@
 "use strict";
-const injector = require("inject!lib/FaviconFeed.jsm");
-const {FakePrefs, GlobalOverrider} = require("test/unit/utils");
+const {FaviconFeed} = require("lib/FaviconFeed.jsm");
+const {GlobalOverrider} = require("test/unit/utils");
 const {actionTypes: at} = require("common/Actions.jsm");
 
+const FAKE_ENDPOINT = "https://foo.com/";
+
 describe("FaviconFeed", () => {
-  let FaviconFeed;
   let feed;
   let globals;
   let sandbox;
   let clock;
+  let siteIconsPref;
 
   beforeEach(() => {
-    FakePrefs.prototype.prefs["tippyTop.service.endpoint"] = "https://foo.com/";
     clock = sinon.useFakeTimers();
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
@@ -21,6 +22,9 @@ describe("FaviconFeed", () => {
         FAVICON_LOAD_NON_PRIVATE: 1
       }
     });
+    siteIconsPref = true;
+    sandbox.stub(global.Services.prefs, "getBoolPref")
+      .withArgs("browser.chrome.site_icons").callsFake(() => siteIconsPref);
     let fetchStub = globals.sandbox.stub();
     globals.set("fetch", fetchStub);
     fetchStub.resolves({
@@ -35,15 +39,11 @@ describe("FaviconFeed", () => {
       }])
     });
 
-    ({FaviconFeed} = injector({"lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs}}));
     feed = new FaviconFeed();
     feed.store = {
       dispatch: sinon.spy(),
       getState() { return this.state; },
-      state: {
-        Prefs: {},
-        TippyTop: {initialized: false, sitesByDomain: {}}
-      }
+      state: {Prefs: {values: {"tippyTop.service.endpoint": FAKE_ENDPOINT}}}
     };
   });
   afterEach(() => {
@@ -122,7 +122,7 @@ describe("FaviconFeed", () => {
       feed.loadFromURL = sinon.spy(() => ({data: []}));
       await feed.refresh();
       assert.calledOnce(feed.loadFromURL);
-      assert.calledWith(feed.loadFromURL, FakePrefs.prototype.prefs["tippyTop.service.endpoint"]);
+      assert.calledWith(feed.loadFromURL, FAKE_ENDPOINT);
     });
     it("should set _sitesByDomain if new sites are returned from loadFromURL", async () => {
       const data = {
@@ -194,10 +194,17 @@ describe("FaviconFeed", () => {
   });
 
   describe("#fetchIcon", () => {
+    let domain;
+    let url;
+    beforeEach(() => {
+      domain = "mozilla.org";
+      url = `https://${domain}/`;
+      feed._sitesByDomain = {[domain]: {url, image_url: `${url}/icon.png`}};
+    });
+
     it("should setAndFetchFaviconForPage if the url is in the TippyTop data", async () => {
-      let url = "https://mozilla.org";
-      feed._sitesByDomain = {"mozilla.org": {url, image_url: `${url}/icon.png`}};
       await feed.fetchIcon(url);
+
       assert.calledOnce(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
       assert.calledWith(global.PlacesUtils.favicons.setAndFetchFaviconForPage,
         {spec: url},
@@ -207,11 +214,31 @@ describe("FaviconFeed", () => {
         null,
         undefined);
     });
-    it("should NOT setAndFetchFaviconForPage if the url is NOT in the TippyTop data", async () => {
-      let url = "https://mozilla.org";
-      feed.store.state.TippyTop.sitesByDomain["mozilla.org"] = {url, image_url: `${url}/icon.png`};
-      await feed.fetchIcon("https://example.com");
+    it("should NOT setAndFetchFaviconForPage if site_icons pref is false", async () => {
+      siteIconsPref = false;
+
+      await feed.fetchIcon(url);
+
       assert.notCalled(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
+    });
+    it("should NOT setAndFetchFaviconForPage if the endpoint is empty", async () => {
+      feed.store.state.Prefs.values["tippyTop.service.endpoint"] = "";
+
+      await feed.fetchIcon(url);
+
+      assert.notCalled(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
+    });
+    it("should NOT setAndFetchFaviconForPage if the url is NOT in the TippyTop data", async () => {
+      await feed.fetchIcon("https://example.com");
+
+      assert.notCalled(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
+    });
+    it("should cause sites to initialize with fetched sites if no sites", async () => {
+      delete feed._sitesByDomain;
+
+      await feed.fetchIcon(url);
+
+      assert.containsAllKeys(feed._sitesByDomain, ["facebook.com", "gmail.com", "mail.google.com"]);
     });
   });
 
