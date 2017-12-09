@@ -8,6 +8,7 @@ import unittest
 import shutil
 from StringIO import StringIO
 import json
+from tempfile import NamedTemporaryFile
 
 from mozbuild.codecoverage import lcov_rewriter
 import buildconfig
@@ -101,12 +102,11 @@ end_of_record
 
 class TestLcovParser(unittest.TestCase):
 
-    def get_lcov(self, lcov_string):
-        fh = StringIO(lcov_string)
-        return lcov_rewriter.LcovFile(fh)
-
     def parser_roundtrip(self, lcov_string):
-        file_obj = self.get_lcov(lcov_string)
+        f = NamedTemporaryFile()
+        f.write(lcov_string)
+        f.flush()
+        file_obj = lcov_rewriter.LcovFile([f.name])
         out = StringIO()
         file_obj.print_file(out, lambda s: (s, False), lambda x: x)
         return out.getvalue()
@@ -203,36 +203,36 @@ class TestLineRemapping(unittest.TestCase):
         fpath = os.path.join(here, 'sample_lcov.info')
 
         # Read original records
-        with open(fpath) as fh:
-            lcov_file = lcov_rewriter.LcovFile(fh)
-            records = [lcov_file.parse_record(r) for _, _, r in lcov_file.iterate_records()]
+        lcov_file = lcov_rewriter.LcovFile([fpath])
+        records = [lcov_file.parse_record(r) for _, _, r in lcov_file.iterate_records()]
 
-            # This summarization changes values due multiple reports per line coming
-            # from the JS engine (bug 1198356).
-            for r in records:
-                r.resummarize()
-                original_line_count = r.line_count
-                original_covered_line_count = r.covered_line_count
-                original_function_count = r.function_count
-                original_covered_function_count = r.covered_function_count
+        # This summarization changes values due multiple reports per line coming
+        # from the JS engine (bug 1198356).
+        for r in records:
+            r.resummarize()
+            original_line_count = r.line_count
+            original_covered_line_count = r.covered_line_count
+            original_function_count = r.function_count
+            original_covered_function_count = r.covered_function_count
 
-            self.assertEqual(len(records), 1)
+        self.assertEqual(len(records), 1)
 
         # Rewrite preprocessed entries.
-        with open(fpath) as fh:
-            lcov_file = lcov_rewriter.LcovFile(fh)
-            r_num = []
-            def rewrite_source(s):
-                r_num.append(1)
-                return s, self.pp_rewriter.has_pp_info(s)
+        lcov_file = lcov_rewriter.LcovFile([fpath])
+        r_num = []
+        def rewrite_source(s):
+            r_num.append(1)
+            return s, self.pp_rewriter.has_pp_info(s)
 
-            out = StringIO()
-            lcov_file.print_file(out, rewrite_source, self.pp_rewriter.rewrite_record)
-            self.assertEqual(len(r_num), 1)
+        out = StringIO()
+        lcov_file.print_file(out, rewrite_source, self.pp_rewriter.rewrite_record)
+        self.assertEqual(len(r_num), 1)
 
         # Read rewritten lcov.
-        fh = StringIO(out.getvalue())
-        lcov_file = lcov_rewriter.LcovFile(fh)
+        f = NamedTemporaryFile()
+        f.write(out.getvalue())
+        f.flush()
+        lcov_file = lcov_rewriter.LcovFile([f.name])
 
         records = [lcov_file.parse_record(r) for _, _, r in lcov_file.iterate_records()]
 
