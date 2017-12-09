@@ -7534,7 +7534,7 @@ nsContentUtils::IsContentInsertionPoint(nsIContent* aContent)
 bool
 nsContentUtils::HasDistributedChildren(nsIContent* aContent)
 {
-  if (!IsWebComponentsEnabled() || !aContent) {
+  if (!aContent || !nsDocument::IsWebComponentsEnabled(aContent)) {
     return false;
   }
 
