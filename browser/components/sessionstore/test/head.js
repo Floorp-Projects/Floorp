@@ -471,12 +471,20 @@ function promiseDelayedStartupFinished(aWindow) {
   return new Promise(resolve => whenDelayedStartupFinished(aWindow, resolve));
 }
 
+function promiseEvent(element, eventType, isCapturing = false) {
+  return new Promise(resolve => {
+    element.addEventListener(eventType, function(event) {
+      resolve(event);
+    }, {capture: isCapturing, once: true});
+  });
+}
+
 function promiseTabRestored(tab) {
-  return BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
+  return promiseEvent(tab, "SSTabRestored");
 }
 
 function promiseTabRestoring(tab) {
-  return BrowserTestUtils.waitForEvent(tab, "SSTabRestoring");
+  return promiseEvent(tab, "SSTabRestoring");
 }
 
 function sendMessage(browser, name, data = {}) {
