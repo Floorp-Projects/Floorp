@@ -142,7 +142,7 @@ Object.defineProperty(this, "gUseRealCertChecks", {
     return AddonTestUtils.useRealCertChecks;
   },
   set(val) {
-    return AddonTestUtils.useRealCertChecks = val;
+   return AddonTestUtils.useRealCertChecks = val;
   },
 });
 
@@ -151,7 +151,7 @@ Object.defineProperty(this, "TEST_UNPACKED", {
     return AddonTestUtils.testUnpacked;
   },
   set(val) {
-    return AddonTestUtils.testUnpacked = val;
+   return AddonTestUtils.testUnpacked = val;
   },
 });
 

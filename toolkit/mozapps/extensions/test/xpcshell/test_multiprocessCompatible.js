@@ -125,8 +125,8 @@ add_task(async function test_disable() {
     multiprocessCompatible: true,
   }, addonData));
   let xpi2 = createTempXPIFile(Object.assign({
-    id: ID_NON_MPC,
-    multiprocessCompatible: false,
+      id: ID_NON_MPC,
+      multiprocessCompatible: false,
   }, addonData));
   let xpi3 = createTempXPIFile({
     id: ID_DICTIONARY,

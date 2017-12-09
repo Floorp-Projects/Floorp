@@ -288,7 +288,7 @@ function run_test_invalidarg() {
                "string",
                "chrome://global/content/",
                function() {}
-  ];
+               ];
   for (var test of tests) {
     try {
       AddonManager.mapURIToAddonID(test);

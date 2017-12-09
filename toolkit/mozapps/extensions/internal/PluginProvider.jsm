@@ -52,32 +52,32 @@ var PluginProvider = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case AddonManager.OPTIONS_NOTIFICATION_DISPLAYED:
-        this.getAddonByID(aData, function(plugin) {
-          if (!plugin)
-            return;
+    case AddonManager.OPTIONS_NOTIFICATION_DISPLAYED:
+      this.getAddonByID(aData, function(plugin) {
+        if (!plugin)
+          return;
 
-          let document = aSubject.getElementById("addon-options").contentDocument;
+        let document = aSubject.getElementById("addon-options").contentDocument;
 
-          let libLabel = document.getElementById("pluginLibraries");
-          libLabel.textContent = plugin.pluginLibraries.join(", ");
+        let libLabel = document.getElementById("pluginLibraries");
+        libLabel.textContent = plugin.pluginLibraries.join(", ");
 
-          let typeLabel = document.getElementById("pluginMimeTypes"), types = [];
-          for (let type of plugin.pluginMimeTypes) {
-            let extras = [type.description.trim(), type.suffixes]
-              .filter(x => x).join(": ");
-            types.push(type.type + (extras ? " (" + extras + ")" : ""));
-          }
-          typeLabel.textContent = types.join(",\n");
-          let showProtectedModePref = canDisableFlashProtectedMode(plugin);
-          document.getElementById("pluginEnableProtectedMode")
-            .setAttribute("collapsed", showProtectedModePref ? "" : "true");
-        });
-        break;
-      case LIST_UPDATED_TOPIC:
-        if (this.plugins)
-          this.updatePluginList();
-        break;
+        let typeLabel = document.getElementById("pluginMimeTypes"), types = [];
+        for (let type of plugin.pluginMimeTypes) {
+          let extras = [type.description.trim(), type.suffixes].
+                       filter(x => x).join(": ");
+          types.push(type.type + (extras ? " (" + extras + ")" : ""));
+        }
+        typeLabel.textContent = types.join(",\n");
+        let showProtectedModePref = canDisableFlashProtectedMode(plugin);
+        document.getElementById("pluginEnableProtectedMode")
+          .setAttribute("collapsed", showProtectedModePref ? "" : "true");
+      });
+      break;
+    case LIST_UPDATED_TOPIC:
+      if (this.plugins)
+        this.updatePluginList();
+      break;
     }
   },
 

@@ -17,10 +17,10 @@ var gMockAddons = [];
 
 for (let plugin of GMPScope.GMP_PLUGINS) {
   let mockAddon = Object.freeze({
-    id: plugin.id,
-    isValid: true,
-    isInstalled: false,
-    isEME: !!(plugin.id == "gmp-widevinecdm" || plugin.id.indexOf("gmp-eme-") == 0),
+      id: plugin.id,
+      isValid: true,
+      isInstalled: false,
+      isEME: !!(plugin.id == "gmp-widevinecdm" || plugin.id.indexOf("gmp-eme-") == 0),
   });
   gMockAddons.push(mockAddon);
 }

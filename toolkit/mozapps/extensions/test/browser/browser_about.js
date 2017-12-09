@@ -20,19 +20,17 @@ function test() {
   waitForExplicitFinish();
 
   var gProvider = new MockProvider();
-  gProvider.createAddons([
-    {
-      id: "test1@tests.mozilla.org",
-      name: "Test add-on 1",
-      description: "foo"
-    },
-    {
-      id: "test2@tests.mozilla.org",
-      name: "Test add-on 2",
-      description: "bar",
-      aboutURL: URI_ABOUT_CUSTOM
-    },
-  ]);
+  gProvider.createAddons([{
+    id: "test1@tests.mozilla.org",
+    name: "Test add-on 1",
+    description: "foo"
+  },
+  {
+    id: "test2@tests.mozilla.org",
+    name: "Test add-on 2",
+    description: "bar",
+    aboutURL: URI_ABOUT_CUSTOM
+  }]);
 
   open_manager("addons://list/extension", function(aManager) {
     gManagerWindow = aManager;

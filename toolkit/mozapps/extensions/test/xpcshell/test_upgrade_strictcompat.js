@@ -106,23 +106,23 @@ async function run_test_1() {
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org"],
-                              function([a1, a2, a3, a4]) {
+                               function([a1, a2, a3, a4]) {
 
-                                do_check_neq(a1, null);
-                                do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_neq(a1, null);
+    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
 
-                                do_check_neq(a2, null);
-                                do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_neq(a2, null);
+    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
 
-                                do_check_neq(a3, null);
-                                do_check_false(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_neq(a3, null);
+    do_check_false(isExtensionInAddonsList(profileDir, a3.id));
 
-                                do_check_neq(a4, null);
-                                do_check_true(isExtensionInAddonsList(globalDir, a4.id));
-                                do_check_eq(a4.version, "1.0");
+    do_check_neq(a4, null);
+    do_check_true(isExtensionInAddonsList(globalDir, a4.id));
+    do_check_eq(a4.version, "1.0");
 
-                                do_execute_soon(run_test_2);
-                              });
+    do_execute_soon(run_test_2);
+  });
 }
 
 // Test that upgrading the application disables now incompatible add-ons
@@ -146,23 +146,23 @@ async function run_test_2() {
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org"],
-                              function([a1, a2, a3, a4]) {
+                               function([a1, a2, a3, a4]) {
 
-                                do_check_neq(a1, null);
-                                do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_neq(a1, null);
+    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
 
-                                do_check_neq(a2, null);
-                                do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_neq(a2, null);
+    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
 
-                                do_check_neq(a3, null);
-                                do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_neq(a3, null);
+    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
 
-                                do_check_neq(a4, null);
-                                do_check_true(isExtensionInAddonsList(globalDir, a4.id));
-                                do_check_eq(a4.version, "2.0");
+    do_check_neq(a4, null);
+    do_check_true(isExtensionInAddonsList(globalDir, a4.id));
+    do_check_eq(a4.version, "2.0");
 
-                                do_execute_soon(run_test_3);
-                              });
+    do_execute_soon(run_test_3);
+  });
 }
 
 // Test that nothing changes when only the build ID changes.
@@ -189,21 +189,21 @@ function run_test_3() {
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org"],
-                              function([a1, a2, a3, a4]) {
+                               function([a1, a2, a3, a4]) {
 
-                                do_check_neq(a1, null);
-                                do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_neq(a1, null);
+    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
 
-                                do_check_neq(a2, null);
-                                do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_neq(a2, null);
+    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
 
-                                do_check_neq(a3, null);
-                                do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_neq(a3, null);
+    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
 
-                                do_check_neq(a4, null);
-                                do_check_true(isExtensionInAddonsList(globalDir, a4.id));
-                                do_check_eq(a4.version, "2.0");
+    do_check_neq(a4, null);
+    do_check_true(isExtensionInAddonsList(globalDir, a4.id));
+    do_check_eq(a4.version, "2.0");
 
-                                end_test();
-                              });
+    end_test();
+  });
 }

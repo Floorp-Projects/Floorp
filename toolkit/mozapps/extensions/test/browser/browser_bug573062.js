@@ -9,30 +9,28 @@ function test() {
   let perms = AddonManager.PERM_CAN_UNINSTALL |
               AddonManager.PERM_CAN_ENABLE | AddonManager.PERM_CAN_DISABLE;
 
-  gProvider.createAddons([
-    {
-      id: "restart-enable-disable@tests.mozilla.org",
-      name: "restart-enable-disable",
-      description: "foo",
-      permissions: perms,
-      operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_ENABLE |
-                                  AddonManager.OP_NEEDS_RESTART_DISABLE
-    },
-    {
-      id: "restart-uninstall@tests.mozilla.org",
-      name: "restart-uninstall",
-      description: "foo",
-      permissions: perms,
-      operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_UNINSTALL
-    },
-    {
-      id: "no-restart-required@tests.mozilla.org",
-      name: "no-restart-required",
-      description: "bar",
-      permissions: perms,
-      operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
-    },
-  ]);
+  gProvider.createAddons([{
+    id: "restart-enable-disable@tests.mozilla.org",
+    name: "restart-enable-disable",
+    description: "foo",
+    permissions: perms,
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_ENABLE |
+                                AddonManager.OP_NEEDS_RESTART_DISABLE
+  },
+  {
+    id: "restart-uninstall@tests.mozilla.org",
+    name: "restart-uninstall",
+    description: "foo",
+    permissions: perms,
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_UNINSTALL
+  },
+  {
+    id: "no-restart-required@tests.mozilla.org",
+    name: "no-restart-required",
+    description: "bar",
+    permissions: perms,
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+  }]);
 
   open_manager("addons://list/extension", function(aWindow) {
     let addonList = aWindow.document.getElementById("addon-list");
@@ -83,9 +81,9 @@ function test() {
 
     // Check the buttons in the details view.
     function checkTooltips2(aItem, aEnable, aDisable, aRemove) {
-      let detailEnable = aWindow.document.getElementById("detail-enable-btn");
-      let detailDisable = aWindow.document.getElementById("detail-disable-btn");
-      let detailUninstall = aWindow.document.getElementById("detail-uninstall-btn");
+        let detailEnable = aWindow.document.getElementById("detail-enable-btn");
+    let detailDisable = aWindow.document.getElementById("detail-disable-btn");
+    let detailUninstall = aWindow.document.getElementById("detail-uninstall-btn");
       ok(detailEnable.getAttribute("tooltiptext") == aEnable);
       ok(detailDisable.getAttribute("tooltiptext") == aDisable);
       ok(detailUninstall.getAttribute("tooltiptext") == aRemove);
