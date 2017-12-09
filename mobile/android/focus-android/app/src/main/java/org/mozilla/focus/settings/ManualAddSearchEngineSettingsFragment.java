@@ -202,7 +202,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
     @WorkerThread // makes network request.
     @VisibleForTesting static boolean isValidSearchQueryURL(final String query) {
         // TODO: we should share the code to substitute and normalize the search string (see SearchEngine.buildSearchUrl).
-        final String encodedTestQuery = Uri.encode("test");
+        final String encodedTestQuery = Uri.encode("F0cu5Ru1e5");
 
         final String normalizedHttpsSearchURLStr = UrlUtils.normalize(query);
         final String searchURLStr = normalizedHttpsSearchURLStr.replaceAll("%s", encodedTestQuery);
