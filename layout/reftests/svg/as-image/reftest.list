@@ -189,17 +189,6 @@ HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
 == svg-stylesheet-external-1.html      blue100x100.svg
 HTTP == svg-stylesheet-external-1.html blue100x100.svg
 
-# test that :visited status is ignored in image documents
-# We load the images directly first, to be sure history is populated.
-# It's also good to verify that the helper images don't match lime100x100.svg
-# in non-image contexts, but for that to work, we have to reliably count on
-# :visited styles loading (asynchronously), so we test that in
-# layout/style/test/test_visited_reftests.html instead of the reftest harness.
-!= svg-image-visited-1-helper.svg about:blank
-== svg-image-visited-1.html       lime100x100.svg
-!= svg-image-visited-2-helper.svg about:blank
-== svg-image-visited-2.html       lime100x100.svg
-
 # tests for SVG <image> that should have a synthetic viewBox
 == svg-image-synthetic-viewBox-01.svg svg-image-synthetic-viewBox-01-ref.svg
 
