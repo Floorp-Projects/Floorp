@@ -6830,6 +6830,50 @@ PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const
   return rv;
 }
 
+/* static */ PresShell*
+PresShell::GetShellForTouchEvent(WidgetGUIEvent* aEvent)
+{
+  PresShell* shell = nullptr;
+  switch (aEvent->mMessage) {
+  case eTouchMove:
+  case eTouchCancel:
+  case eTouchEnd: {
+    // get the correct shell to dispatch to
+    WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
+    for (dom::Touch* touch : touchEvent->mTouches) {
+      if (!touch) {
+        break;
+      }
+
+      RefPtr<dom::Touch> oldTouch =
+        TouchManager::GetCapturedTouch(touch->Identifier());
+      if (!oldTouch) {
+        break;
+      }
+
+      nsCOMPtr<nsIContent> content = do_QueryInterface(oldTouch->GetTarget());
+      if (!content) {
+        break;
+      }
+
+      nsIFrame* contentFrame = content->GetPrimaryFrame();
+      if (!contentFrame) {
+        break;
+      }
+
+      shell = static_cast<PresShell*>(contentFrame->PresContext()->PresShell());
+      if (shell) {
+        break;
+      }
+    }
+    break;
+  }
+  default:
+    break;
+  }
+  return shell;
+}
+
 nsresult
 PresShell::HandleEvent(nsIFrame* aFrame,
                        WidgetGUIEvent* aEvent,
@@ -7217,43 +7261,10 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     }
 
     PresShell* shell = static_cast<PresShell*>(frame->PresShell());
-    switch (aEvent->mMessage) {
-      case eTouchMove:
-      case eTouchCancel:
-      case eTouchEnd: {
-        // get the correct shell to dispatch to
-        WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
-        for (dom::Touch* touch : touchEvent->mTouches) {
-          if (!touch) {
-            break;
-          }
-
-          RefPtr<dom::Touch> oldTouch =
-            TouchManager::GetCapturedTouch(touch->Identifier());
-          if (!oldTouch) {
-            break;
-          }
-
-          nsCOMPtr<nsIContent> content =
-            do_QueryInterface(oldTouch->GetTarget());
-          if (!content) {
-            break;
-          }
-
-          nsIFrame* contentFrame = content->GetPrimaryFrame();
-          if (!contentFrame) {
-            break;
-          }
-
-          shell = static_cast<PresShell*>(contentFrame->PresShell());
-          if (shell) {
-            break;
-          }
-        }
-        break;
+    if (aEvent->mClass == eTouchEventClass) {
+      if (PresShell* newShell = GetShellForTouchEvent(aEvent)) {
+        shell = newShell;
       }
-    default:
-      break;
     }
 
     // Check if we have an active EventStateManager which isn't the
