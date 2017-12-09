@@ -45,7 +45,7 @@
       </xul:vbox>
     </content>
     <implementation>
-      <field name="_checkbox">/* eslint-disable indent */
+      <field name="_checkbox">
         document.getAnonymousElementByAttribute(this, "class", "disableCheckbox")
       </field>
       <property name="checked" readonly="true">

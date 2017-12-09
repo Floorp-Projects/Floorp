@@ -256,7 +256,7 @@ function Blocklist() {
   gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
   gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
   gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
-                             MAX_BLOCK_LEVEL);
+                                     MAX_BLOCK_LEVEL);
   Services.prefs.addObserver("extensions.blocklist.", this);
   Services.prefs.addObserver(PREF_EM_LOGGING_ENABLED, this);
   this.wrappedJSObject = this;
@@ -295,30 +295,30 @@ Blocklist.prototype = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "xpcom-shutdown":
-        this.shutdown();
-        break;
-      case "nsPref:changed":
-        switch (aData) {
-          case PREF_EM_LOGGING_ENABLED:
-            gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
-            break;
-          case PREF_BLOCKLIST_ENABLED:
-            gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
-            this._loadBlocklist();
-            this._blocklistUpdated(null, null);
-            break;
-          case PREF_BLOCKLIST_LEVEL:
-            gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
-                                       MAX_BLOCK_LEVEL);
-            this._blocklistUpdated(null, null);
-            break;
-        }
-        break;
-      case "sessionstore-windows-restored":
-        Services.obs.removeObserver(this, "sessionstore-windows-restored");
-        this._preloadBlocklist();
-        break;
+    case "xpcom-shutdown":
+      this.shutdown();
+      break;
+    case "nsPref:changed":
+      switch (aData) {
+        case PREF_EM_LOGGING_ENABLED:
+          gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
+          break;
+        case PREF_BLOCKLIST_ENABLED:
+          gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
+          this._loadBlocklist();
+          this._blocklistUpdated(null, null);
+          break;
+        case PREF_BLOCKLIST_LEVEL:
+          gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
+                                     MAX_BLOCK_LEVEL);
+          this._blocklistUpdated(null, null);
+          break;
+      }
+      break;
+    case "sessionstore-windows-restored":
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+      this._preloadBlocklist();
+      break;
     }
   },
 
@@ -478,10 +478,10 @@ Blocklist.prototype = {
       params.creator = params.creator.name;
     for (let entry of aAddonEntries) {
       if (checkEntry(entry.attributes, params)) {
-        return entry;
-      }
-    }
-    return null;
+         return entry;
+       }
+     }
+     return null;
   },
 
   /* See nsIBlocklistService */
@@ -554,9 +554,9 @@ Blocklist.prototype = {
     dsURI = dsURI.replace(/%CHANNEL%/g, UpdateUtils.UpdateChannel);
     dsURI = dsURI.replace(/%PLATFORM_VERSION%/g, gApp.platformVersion);
     dsURI = dsURI.replace(/%DISTRIBUTION%/g,
-                          getDistributionPrefValue(PREF_APP_DISTRIBUTION));
+                      getDistributionPrefValue(PREF_APP_DISTRIBUTION));
     dsURI = dsURI.replace(/%DISTRIBUTION_VERSION%/g,
-                          getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
+                      getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
     dsURI = dsURI.replace(/%PING_COUNT%/g, pingCountVersion);
     dsURI = dsURI.replace(/%TOTAL_PING_COUNT%/g, pingCountTotal);
     dsURI = dsURI.replace(/%DAYS_SINCE_LAST_PING%/g, daysSinceLastPing);
@@ -813,7 +813,7 @@ Blocklist.prototype = {
     }
 
     if (text)
-      this._loadBlocklistFromString(text);
+        this._loadBlocklistFromString(text);
   },
 
   _isBlocklistLoaded() {
@@ -888,21 +888,21 @@ Blocklist.prototype = {
         if (!(element instanceof Ci.nsIDOMElement))
           continue;
         switch (element.localName) {
-          case "emItems":
-            this._addonEntries = this._processItemNodes(element.childNodes, "emItem",
-                                                        this._handleEmItemNode);
-            break;
-          case "pluginItems":
-            this._pluginEntries = this._processItemNodes(element.childNodes, "pluginItem",
-                                                         this._handlePluginItemNode);
-            break;
-          case "gfxItems":
+        case "emItems":
+          this._addonEntries = this._processItemNodes(element.childNodes, "emItem",
+                                                      this._handleEmItemNode);
+          break;
+        case "pluginItems":
+          this._pluginEntries = this._processItemNodes(element.childNodes, "pluginItem",
+                                                       this._handlePluginItemNode);
+          break;
+        case "gfxItems":
           // Parse as simple list of objects.
-            this._gfxEntries = this._processItemNodes(element.childNodes, "gfxBlacklistEntry",
-                                                      this._handleGfxBlacklistNode);
-            break;
-          default:
-            LOG("Blocklist::_loadBlocklistFromString: ignored entries " + element.localName);
+          this._gfxEntries = this._processItemNodes(element.childNodes, "gfxBlacklistEntry",
+                                                    this._handleGfxBlacklistNode);
+          break;
+        default:
+          LOG("Blocklist::_loadBlocklistFromString: ignored entries " + element.localName);
         }
       }
       if (this._gfxEntries.length > 0) {
@@ -1429,7 +1429,7 @@ Blocklist.prototype = {
       }
 
       let blocklistWindow = Services.ww.openWindow(null, URI_BLOCKLIST_DIALOG, "",
-                                                   "chrome,centerscreen,dialog,titlebar", args);
+                              "chrome,centerscreen,dialog,titlebar", args);
       if (blocklistWindow)
         blocklistWindow.addEventListener("unload", blocklistUnloadHandler);
     });

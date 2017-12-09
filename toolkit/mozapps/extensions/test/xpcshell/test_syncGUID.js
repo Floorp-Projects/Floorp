@@ -28,31 +28,31 @@ add_test(function test_getter_and_setter() {
   // Our test add-on requires a restart.
   let listener = {
     onInstallEnded: function onInstallEnded() {
-      AddonManager.removeInstallListener(listener);
-      // never restart directly inside an onInstallEnded handler!
-      do_execute_soon(function getter_setter_install_ended() {
-        restartManager();
+     AddonManager.removeInstallListener(listener);
+     // never restart directly inside an onInstallEnded handler!
+     do_execute_soon(function getter_setter_install_ended() {
+      restartManager();
 
-        AddonManager.getAddonByID(addonId, function(addon) {
+      AddonManager.getAddonByID(addonId, function(addon) {
 
-          do_check_neq(addon, null);
-          do_check_neq(addon.syncGUID, null);
-          do_check_true(UUID_PATTERN.test(addon.syncGUID));
+        do_check_neq(addon, null);
+        do_check_neq(addon.syncGUID, null);
+        do_check_true(UUID_PATTERN.test(addon.syncGUID));
 
-          let newGUID = "foo";
+        let newGUID = "foo";
 
-          addon.syncGUID = newGUID;
-          do_check_eq(newGUID, addon.syncGUID);
+        addon.syncGUID = newGUID;
+        do_check_eq(newGUID, addon.syncGUID);
 
-          // Verify change made it to DB.
-          AddonManager.getAddonByID(addonId, function(newAddon) {
-            do_check_neq(newAddon, null);
-            do_check_eq(newGUID, newAddon.syncGUID);
-          });
-
-          run_next_test();
+        // Verify change made it to DB.
+        AddonManager.getAddonByID(addonId, function(newAddon) {
+          do_check_neq(newAddon, null);
+          do_check_eq(newGUID, newAddon.syncGUID);
         });
+
+        run_next_test();
       });
+     });
     }
   };
 
@@ -60,8 +60,8 @@ add_test(function test_getter_and_setter() {
 
   AddonManager.getInstallForFile(do_get_addon("test_install1"),
                                  function(install) {
-                                   install.install();
-                                 });
+    install.install();
+  });
 });
 
 add_test(function test_fetch_by_guid_unknown_guid() {
@@ -83,27 +83,27 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
       installCount++;
 
       if (installCount == installNames.length) {
-        AddonManager.removeInstallListener(listener);
-        do_execute_soon(function duplicate_syncguid_install_ended() {
-          restartManager();
+       AddonManager.removeInstallListener(listener);
+       do_execute_soon(function duplicate_syncguid_install_ended() {
+        restartManager();
 
-          AddonManager.getAddonsByIDs(installIDs, callback_soon(function(addons) {
-            let initialGUID = addons[1].syncGUID;
+        AddonManager.getAddonsByIDs(installIDs, callback_soon(function(addons) {
+          let initialGUID = addons[1].syncGUID;
 
-            try {
-              addons[1].syncGUID = addons[0].syncGUID;
-              do_throw("Should not get here.");
-            } catch (e) {
-              do_check_true(e.message.startsWith("Addon sync GUID conflict"));
-              restartManager();
+          try {
+            addons[1].syncGUID = addons[0].syncGUID;
+            do_throw("Should not get here.");
+          } catch (e) {
+            do_check_true(e.message.startsWith("Addon sync GUID conflict"));
+            restartManager();
 
-              AddonManager.getAddonByID(installIDs[1], function(addon) {
-                do_check_eq(initialGUID, addon.syncGUID);
-                run_next_test();
-              });
-            }
-          }));
-        });
+            AddonManager.getAddonByID(installIDs[1], function(addon) {
+              do_check_eq(initialGUID, addon.syncGUID);
+              run_next_test();
+            });
+          }
+        }));
+       });
       }
     }
   };

@@ -996,7 +996,7 @@ MockProvider.prototype = {
    *         A callback to pass the AddonInstall to
    */
   getInstallForURL: function MP_getInstallForURL(aUrl, aHash, aName, aIconURL,
-                                                 aVersion, aLoadGroup, aCallback) {
+                                                  aVersion, aLoadGroup, aCallback) {
     // Not yet implemented
   },
 

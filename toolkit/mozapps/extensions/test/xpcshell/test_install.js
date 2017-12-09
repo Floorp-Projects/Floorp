@@ -843,36 +843,36 @@ function run_test_16() {
       },
 
       onInstallEnded() {
-        do_execute_soon(function install2_1_ended() {
-          restartManager();
+       do_execute_soon(function install2_1_ended() {
+        restartManager();
 
-          AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-            do_check_true(a2.userDisabled);
-            do_check_false(a2.isActive);
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_true(a2.userDisabled);
+          do_check_false(a2.isActive);
 
-            let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-            AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-              aInstall_2.addListener({
-                onInstallEnded() {
-                  do_execute_soon(function install2_2_ended() {
-                    do_check_true(aInstall_2.addon.userDisabled);
+          let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
+          AddonManager.getInstallForURL(url_2, function(aInstall_2) {
+            aInstall_2.addListener({
+              onInstallEnded() {
+               do_execute_soon(function install2_2_ended() {
+                do_check_true(aInstall_2.addon.userDisabled);
 
-                    restartManager();
+                restartManager();
 
-                    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
-                      do_check_true(a2_2.userDisabled);
-                      do_check_false(a2_2.isActive);
+                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
+                  do_check_true(a2_2.userDisabled);
+                  do_check_false(a2_2.isActive);
 
-                      a2_2.uninstall();
-                      do_execute_soon(run_test_17);
-                    });
-                  });
-                }
-              });
-              aInstall_2.install();
-            }, "application/x-xpinstall");
-          });
+                  a2_2.uninstall();
+                  do_execute_soon(run_test_17);
+                });
+               });
+              }
+            });
+            aInstall_2.install();
+          }, "application/x-xpinstall");
         });
+       });
       }
     });
     aInstall.install();
@@ -887,41 +887,41 @@ function run_test_17() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded() {
-        do_execute_soon(function install2_1_ended2() {
-          do_check_false(aInstall.addon.userDisabled);
+       do_execute_soon(function install2_1_ended2() {
+        do_check_false(aInstall.addon.userDisabled);
 
-          restartManager();
+        restartManager();
 
-          AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-            do_check_false(a2.userDisabled);
-            do_check_true(a2.isActive);
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_false(a2.userDisabled);
+          do_check_true(a2.isActive);
 
-            let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-            AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-              aInstall_2.addListener({
-                onInstallStarted() {
-                  do_check_false(aInstall_2.addon.userDisabled);
-                  aInstall_2.addon.userDisabled = true;
-                },
+          let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
+          AddonManager.getInstallForURL(url_2, function(aInstall_2) {
+            aInstall_2.addListener({
+              onInstallStarted() {
+                do_check_false(aInstall_2.addon.userDisabled);
+                aInstall_2.addon.userDisabled = true;
+              },
 
-                onInstallEnded() {
-                  do_execute_soon(function install2_2_ended2() {
-                    restartManager();
+              onInstallEnded() {
+               do_execute_soon(function install2_2_ended2() {
+                restartManager();
 
-                    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
-                      do_check_true(a2_2.userDisabled);
-                      do_check_false(a2_2.isActive);
+                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
+                  do_check_true(a2_2.userDisabled);
+                  do_check_false(a2_2.isActive);
 
-                      a2_2.uninstall();
-                      do_execute_soon(run_test_18);
-                    });
-                  });
-                }
-              });
-              aInstall_2.install();
-            }, "application/x-xpinstall");
-          });
+                  a2_2.uninstall();
+                  do_execute_soon(run_test_18);
+                });
+               });
+              }
+            });
+            aInstall_2.install();
+          }, "application/x-xpinstall");
         });
+       });
       }
     });
     aInstall.install();
@@ -941,39 +941,39 @@ function run_test_18() {
       },
 
       onInstallEnded() {
-        do_execute_soon(function install_2_1_ended3() {
-          restartManager();
+       do_execute_soon(function install_2_1_ended3() {
+        restartManager();
 
-          AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-            do_check_true(a2.userDisabled);
-            do_check_false(a2.isActive);
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_true(a2.userDisabled);
+          do_check_false(a2.isActive);
 
-            let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-            AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-              aInstall_2.addListener({
-                onInstallStarted() {
-                  do_check_true(aInstall_2.addon.userDisabled);
-                  aInstall_2.addon.userDisabled = false;
-                },
+          let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
+          AddonManager.getInstallForURL(url_2, function(aInstall_2) {
+            aInstall_2.addListener({
+              onInstallStarted() {
+                do_check_true(aInstall_2.addon.userDisabled);
+                aInstall_2.addon.userDisabled = false;
+              },
 
-                onInstallEnded() {
-                  do_execute_soon(function install_2_2_ended3() {
-                    restartManager();
+              onInstallEnded() {
+               do_execute_soon(function install_2_2_ended3() {
+                restartManager();
 
-                    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
-                      do_check_false(a2_2.userDisabled);
-                      do_check_true(a2_2.isActive);
+                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
+                  do_check_false(a2_2.userDisabled);
+                  do_check_true(a2_2.isActive);
 
-                      a2_2.uninstall();
-                      do_execute_soon(run_test_18_1);
-                    });
-                  });
-                }
-              });
-              aInstall_2.install();
-            }, "application/x-xpinstall");
-          });
+                  a2_2.uninstall();
+                  do_execute_soon(run_test_18_1);
+                });
+               });
+              }
+            });
+            aInstall_2.install();
+          }, "application/x-xpinstall");
         });
+       });
       }
     });
     aInstall.install();
@@ -995,18 +995,18 @@ function run_test_18_1() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-        do_execute_soon(function test18_1_install_ended() {
-          do_check_neq(aAddon.fullDescription, "Repository description");
+       do_execute_soon(function test18_1_install_ended() {
+        do_check_neq(aAddon.fullDescription, "Repository description");
 
-          restartManager();
+        restartManager();
 
-          AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-            do_check_neq(a2.fullDescription, "Repository description");
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_neq(a2.fullDescription, "Repository description");
 
-            a2.uninstall();
-            do_execute_soon(run_test_19);
-          });
+          a2.uninstall();
+          do_execute_soon(run_test_19);
         });
+       });
       }
     });
     aInstall.install();
@@ -1023,18 +1023,18 @@ function run_test_19() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-        do_execute_soon(function test19_install_ended() {
-          do_check_eq(aAddon.fullDescription, "Repository description");
+       do_execute_soon(function test19_install_ended() {
+        do_check_eq(aAddon.fullDescription, "Repository description");
 
-          restartManager();
+        restartManager();
 
-          AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-            do_check_eq(a2.fullDescription, "Repository description");
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_eq(a2.fullDescription, "Repository description");
 
-            a2.uninstall();
-            do_execute_soon(run_test_20);
-          });
+          a2.uninstall();
+          do_execute_soon(run_test_20);
         });
+       });
       }
     });
     aInstall.install();
@@ -1049,18 +1049,18 @@ function run_test_20() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-        do_execute_soon(function test20_install_ended() {
-          do_check_eq(aAddon.fullDescription, "Repository description");
+       do_execute_soon(function test20_install_ended() {
+        do_check_eq(aAddon.fullDescription, "Repository description");
 
-          restartManager();
+        restartManager();
 
-          AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-            do_check_eq(a2.fullDescription, "Repository description");
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_eq(a2.fullDescription, "Repository description");
 
-            a2.uninstall();
-            do_execute_soon(run_test_21);
-          });
+          a2.uninstall();
+          do_execute_soon(run_test_21);
         });
+       });
       }
     });
     aInstall.install();
@@ -1315,7 +1315,7 @@ function run_test_26() {
                         getService(AM_Ci.nsIHttpActivityDistributor);
   observerService.addObserver({
     observeActivity(aChannel, aType, aSubtype, aTimestamp, aSizeData,
-                    aStringData) {
+                              aStringData) {
       aChannel.QueryInterface(AM_Ci.nsIChannel);
       // Wait for the final event for the redirected URL
       if (aChannel.URI.spec != "http://localhost:" + gPort + "/addons/test_install1.xpi" ||

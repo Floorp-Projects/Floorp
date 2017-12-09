@@ -40,9 +40,9 @@ const PERSIST_FILES = {
 };
 
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
-                                  "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
+  "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
-                                  "resource://gre/modules/ServiceRequest.jsm");
+  "resource://gre/modules/ServiceRequest.jsm");
 
 
 XPCOMUtils.defineLazyGetter(this, "_prefs", () => {
@@ -434,7 +434,7 @@ this.LightweightThemeManager = {
     if (!id) {
       aCallback(null);
       return;
-    }
+     }
 
     let theme = this.getUsedTheme(id);
     if (!theme) {
@@ -769,8 +769,8 @@ function _sanitizeTheme(aData, aBaseURI, aLocal) {
 
 function _usedThemesExceptId(aId) {
   return LightweightThemeManager.usedThemes.filter(function(t) {
-    return "id" in t && t.id != aId;
-  });
+      return "id" in t && t.id != aId;
+    });
 }
 
 function _version(aThemeData) {

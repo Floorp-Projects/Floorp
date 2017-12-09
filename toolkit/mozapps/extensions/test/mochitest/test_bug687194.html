@@ -31,11 +31,11 @@
         let result;
         let threw = false;
         try {
-          let uri = Services.io.newURI(message.data.URI);
-          result = cr.convertChromeURL(uri).spec;
+            let uri = Services.io.newURI(message.data.URI);
+            result = cr.convertChromeURL(uri).spec;
         } catch (e) {
-          threw = true;
-          result = "EXCEPTION: " + e;
+            threw = true;
+            result = "EXCEPTION: " + e;
         }
 
         message.target.sendAsyncMessage("test687194:resolveChromeURI:Answer",

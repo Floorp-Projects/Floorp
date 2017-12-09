@@ -42,9 +42,9 @@ Blocklist.prototype = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "xpcom-shutdown":
-        this.uninit();
-        break;
+    case "xpcom-shutdown":
+      this.uninit();
+      break;
     }
   },
 
