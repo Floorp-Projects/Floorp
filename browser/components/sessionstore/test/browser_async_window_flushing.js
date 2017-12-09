@@ -42,28 +42,30 @@ add_task(async function test_add_interesting_window() {
   // it's really not worth restoring.
   browser.userTypedValue = null;
 
-  // Once the domWindowClosed Promise resolves, the window should
-  // have closed, and SessionStore's onClose handler should have just
-  // run.
-  let domWindowClosed = BrowserTestUtils.domWindowClosed(newWin);
-
   // Once this windowClosed Promise resolves, we should have finished
   // the flush and revisited our decision to put this window into
   // the closed windows array.
   let windowClosed = BrowserTestUtils.windowClosed(newWin);
 
+  let handled = false;
+  whenDomWindowClosedHandled(() => {
+    // SessionStore's onClose handler should have just run.
+    let currentClosedWindows = ss.getClosedWindowCount();
+    is(currentClosedWindows, initialClosedWindows,
+       "We should not have added the window to the closed windows array");
+
+    handled = true;
+  });
+
   // Ok, let's close the window.
   newWin.close();
 
-  await domWindowClosed;
-  // OnClose has just finished running.
-  let currentClosedWindows = ss.getClosedWindowCount();
-  is(currentClosedWindows, initialClosedWindows,
-     "We should not have added the window to the closed windows array");
-
   await windowClosed;
+
+  ok(handled, "domwindowclosed should already be handled here");
+
   // The window flush has finished
-  currentClosedWindows = ss.getClosedWindowCount();
+  let currentClosedWindows = ss.getClosedWindowCount();
   is(currentClosedWindows,
      initialClosedWindows + 1,
      "We should have added the window to the closed windows array");
@@ -110,28 +112,30 @@ add_task(async function test_remove_uninteresting_window() {
     sessionHistory.PurgeHistory(sessionHistory.count);
   });
 
-  // Once the domWindowClosed Promise resolves, the window should
-  // have closed, and SessionStore's onClose handler should have just
-  // run.
-  let domWindowClosed = BrowserTestUtils.domWindowClosed(newWin);
-
   // Once this windowClosed Promise resolves, we should have finished
   // the flush and revisited our decision to put this window into
   // the closed windows array.
   let windowClosed = BrowserTestUtils.windowClosed(newWin);
 
+  let handled = false;
+  whenDomWindowClosedHandled(() => {
+    // SessionStore's onClose handler should have just run.
+    let currentClosedWindows = ss.getClosedWindowCount();
+    is(currentClosedWindows, initialClosedWindows + 1,
+       "We should have added the window to the closed windows array");
+
+    handled = true;
+  });
+
   // Ok, let's close the window.
   newWin.close();
 
-  await domWindowClosed;
-  // OnClose has just finished running.
-  let currentClosedWindows = ss.getClosedWindowCount();
-  is(currentClosedWindows, initialClosedWindows + 1,
-     "We should have added the window to the closed windows array");
-
   await windowClosed;
+
+  ok(handled, "domwindowclosed should already be handled here");
+
   // The window flush has finished
-  currentClosedWindows = ss.getClosedWindowCount();
+  let currentClosedWindows = ss.getClosedWindowCount();
   is(currentClosedWindows,
      initialClosedWindows,
      "We should have removed the window from the closed windows array");
