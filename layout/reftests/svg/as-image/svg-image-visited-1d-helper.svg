@@ -1,0 +1,32 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     height="100" width="100">
+  <style>
+  <![CDATA[
+      a:link    > rect  { fill: lime; }
+      a:visited > rect  { fill: purple;  }
+  ]]>
+  </style>
+
+  <!-- Note: our mochitest runner visits "visited-page.html" early on.
+       Nonetheless, as an image, we should ignore visitedness. -->
+  <a xlink:href="visited-page.html" id="foo">
+    <rect x="0" y="0"  width="100" height="100" fill="orange"/>
+  </a>
+
+  <!-- This trivial SMIL animation ensures that we *won't* get repainted via
+       imagelib's SurfaceCache optimization.  Specifically, we want to bypass
+       the SurfaceCache so that we can ensure that repaints of this file (as an
+       image) will *actually repaint the SVG content*, rather than painting a
+       previously-rasterized snapshot (which may've been rasterized before we
+       had any chance to consider :visited styles). -->
+  <rect x="0" y="0"  width="100" height="100" fill="teal">
+    <set attributeName="fill" to="transparent"
+         begin="0s" duration="indefinite"/>
+  </rect>
+</svg>
