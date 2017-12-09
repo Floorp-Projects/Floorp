@@ -84,20 +84,25 @@ let forgetWinHelper = async function(forgetFn) {
 
   // Now close the window and immediately choose to forget it.
   let windowClosed = BrowserTestUtils.windowClosed(newWin);
-  let domWindowClosed = BrowserTestUtils.domWindowClosed(newWin);
+
+  let handled = false;
+  whenDomWindowClosedHandled(() => {
+    // At this point, the window will have closed and the onClose handler
+    // has run, but the final update  to SessionStore hasn't come up yet.
+    // Now do the oepration that should cause us to forget the window.
+    forgetFn();
+
+    is(ss.getClosedWindowCount(), 0, "Should have forgotten the closed window");
+
+    handled = true;
+  });
 
   newWin.close();
-  await domWindowClosed;
-
-  // At this point, the window will have closed and the onClose handler
-  // has run, but the final update  to SessionStore hasn't come up yet.
-  // Now do the oepration that should cause us to forget the window.
-  forgetFn();
-
-  is(ss.getClosedWindowCount(), 0, "Should have forgotten the closed window");
 
   // Now wait for the final update to come up.
   await windowClosed;
+
+  ok(handled, "domwindowclosed should already be handled here");
 
   is(ss.getClosedWindowCount(), 0, "Should not have stored the closed window");
 };
