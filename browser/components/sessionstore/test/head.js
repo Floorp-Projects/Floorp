@@ -556,3 +556,10 @@ async function checkScroll(tab, expected, msg) {
   let scroll = JSON.parse(ss.getTabState(tab)).scroll || null;
   is(JSON.stringify(scroll), JSON.stringify(expected), msg);
 }
+
+function whenDomWindowClosedHandled(aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    Services.obs.removeObserver(observer, aTopic);
+    aCallback();
+  }, "sessionstore-debug-domwindowclosed-handled");
+}
