@@ -49,7 +49,7 @@ add_task(async function test_legacy_extension_context_contentscript_connection()
   function contentScript() {
     browser.runtime.sendMessage("webextension -> legacy_extension message", (reply) => {
       browser.test.assertEq("legacy_extension -> webextension reply", reply,
-                           "Got the expected reply from the LegacyExtensionContext");
+                            "Got the expected reply from the LegacyExtensionContext");
       browser.test.sendMessage("got-reply-message");
     });
 

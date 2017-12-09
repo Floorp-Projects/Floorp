@@ -1,7 +1,8 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["ProxyScriptContext"];
@@ -140,12 +141,16 @@ const ProxyInfoData = {
     // TODO When Bug 1360404 is fixed use ProxyService.newProxyInfoWithAuth() for all types.
     if (type === PROXY_TYPES.SOCKS || type === PROXY_TYPES.SOCKS4) {
       return ProxyService.newProxyInfoWithAuth(
-              type, host, port, username, password, proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
-              failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC, failoverProxy);
+        type, host, port, username, password,
+        proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
+        failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC,
+        failoverProxy);
     }
     return ProxyService.newProxyInfo(
-            type, host, port, proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
-            failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC, failoverProxy);
+      type, host, port,
+      proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
+      failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC,
+      failoverProxy);
   },
 
   /**
@@ -325,8 +330,8 @@ class ProxyScriptAPIManager extends SchemaAPIManager {
 
   lazyInit() {
     if (!this.initialized) {
-      for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(
-          CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
+      let entries = XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT);
+      for (let [/* name */, value] of entries) {
         this.loadScript(value);
       }
       this.initialized = true;

@@ -22,7 +22,7 @@ function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
   if (isLWT) {
     Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
     Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-      "LWT text color attribute should be set");
+                 "LWT text color attribute should be set");
   }
 
   Assert.ok(style.backgroundImage.includes(backgroundImage), "Expected correct background image");

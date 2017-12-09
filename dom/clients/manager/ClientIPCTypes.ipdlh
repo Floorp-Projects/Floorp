@@ -67,6 +67,35 @@ struct ClientControlledArgs
   IPCServiceWorkerDescriptor serviceWorker;
 };
 
+struct ClientFocusArgs
+{
+};
+
+struct ClientNavigateArgs
+{
+  IPCClientInfo target;
+  nsCString url;
+  nsCString baseURL;
+};
+
+struct ClientPostMessageArgs
+{
+  ClonedMessageData clonedData;
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
+struct ClientMatchAllArgs
+{
+  IPCServiceWorkerDescriptor serviceWorker;
+  ClientType type;
+  bool includeUncontrolled;
+};
+
+struct ClientClaimArgs
+{
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
 struct ClientGetInfoAndStateArgs
 {
   nsID id;
@@ -75,22 +104,41 @@ struct ClientGetInfoAndStateArgs
 
 struct ClientOpenWindowArgs
 {
+  PrincipalInfo principalInfo;
+  nsCString url;
+  nsCString baseURL;
 };
 
 union ClientOpConstructorArgs
 {
   ClientControlledArgs;
+  ClientFocusArgs;
+  ClientNavigateArgs;
+  ClientPostMessageArgs;
+  ClientMatchAllArgs;
+  ClientClaimArgs;
   ClientGetInfoAndStateArgs;
+  ClientOpenWindowArgs;
+};
+
+struct ClientList
+{
+  ClientInfoAndState[] values;
 };
 
 struct ClientNavigateOpConstructorArgs
 {
+  PClientSource target;
+  nsCString url;
+  nsCString baseURL;
 };
 
 union ClientOpResult
 {
   nsresult;
+  IPCClientState;
   ClientInfoAndState;
+  ClientList;
 };
 
 } // namespace dom

@@ -44,7 +44,7 @@ add_task(async function test_contentscript_create_iframe() {
       let {applications: {gecko: {id: testGetManifestGeckoId}}} = testGetManifest;
 
       browser.test.assertEq(testGetManifestGeckoId, expectedManifestGeckoId,
-                              "GET_MANIFEST() returns manifest data before extension unload"
+                            "GET_MANIFEST() returns manifest data before extension unload"
       );
 
       browser.test.sendMessage(name);

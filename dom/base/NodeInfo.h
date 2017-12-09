@@ -26,6 +26,7 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "nsAtom.h"
+#include "plhash.h"
 
 class nsIDocument;
 class nsNodeInfoManager;

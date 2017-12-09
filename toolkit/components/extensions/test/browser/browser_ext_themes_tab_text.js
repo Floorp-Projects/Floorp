@@ -34,7 +34,8 @@ add_task(async function test_support_tab_text_property_css_color() {
   info("Checking selected tab colors");
   let selectedTab = document.querySelector(".tabbrowser-tab[selected]");
   Assert.equal(window.getComputedStyle(selectedTab).color,
-    "rgb(" + hexToRGB(TAB_TEXT_COLOR).join(", ") + ")", "Selected tab text color should be set.");
+               "rgb(" + hexToRGB(TAB_TEXT_COLOR).join(", ") + ")",
+               "Selected tab text color should be set.");
 
   await extension.unload();
 });
@@ -64,7 +65,8 @@ add_task(async function test_support_tab_text_chrome_array() {
   info("Checking selected tab colors");
   let selectedTab = document.querySelector(".tabbrowser-tab[selected]");
   Assert.equal(window.getComputedStyle(selectedTab).color,
-    "rgb(" + TAB_TEXT_COLOR.join(", ") + ")", "Selected tab text color should be set.");
+               "rgb(" + TAB_TEXT_COLOR.join(", ") + ")",
+               "Selected tab text color should be set.");
 
   await extension.unload();
 });

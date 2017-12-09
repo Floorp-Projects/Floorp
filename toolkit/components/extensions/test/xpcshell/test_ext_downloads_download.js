@@ -299,7 +299,8 @@ add_task(async function test_download_post() {
     }
 
     if (body) {
-      const str = NetUtil.readInputStreamToString(received.bodyInputStream,
+      const str = NetUtil.readInputStreamToString(
+        received.bodyInputStream,
         received.bodyInputStream.available());
       equal(str, body, "body is correct");
     }

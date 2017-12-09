@@ -22,6 +22,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
+#include "nsMemory.h"
 #include "nsNativeCharsetUtils.h"
 #include "mozilla/Telemetry.h"
 

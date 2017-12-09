@@ -7,12 +7,18 @@
 #define _mozilla_dom_ClientOpenWindowOpChild_h
 
 #include "mozilla/dom/PClientOpenWindowOpChild.h"
+#include "ClientOpPromise.h"
 
 namespace mozilla {
 namespace dom {
 
 class ClientOpenWindowOpChild final : public PClientOpenWindowOpChild
 {
+  MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
+
+  already_AddRefed<ClientOpPromise>
+  DoOpenWindow(const ClientOpenWindowArgs& aArgs);
+
   // PClientOpenWindowOpChild interface
   void
   ActorDestroy(ActorDestroyReason aReason) override;
