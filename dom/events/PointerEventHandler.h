@@ -87,16 +87,14 @@ public:
    * GetPointerCapturingFrame returns a target frame of aEvent. If the event is
    * a mouse or pointer event (except mousedown and pointerdown), the pointer
    * may be captured by a content. This method returns the capturing content's
-   * primary frame. Otherwise, aFrameUnderCursor.
+   * primary frame. Otherwise, nullptr.
    *
-   * @param aFrameUnderCursor    A frame under cursor.
    * @param aEvent               A mouse event or pointer event which may be
    *                             captured.
    *
    * @return                     Target frame for aEvent.
    */
-  static nsIFrame* GetPointerCapturingFrame(nsIFrame* aFrameUnderCursor,
-                                            WidgetGUIEvent* aEvent);
+  static nsIFrame* GetPointerCapturingFrame(WidgetGUIEvent* aEvent);
 
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
 
