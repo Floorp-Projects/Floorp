@@ -16,7 +16,7 @@ NS_NewHTMLSlotElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                       mozilla::dom::FromParser aFromParser)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
-  if (nsContentUtils::IsWebComponentsEnabled()) {
+  if (nsDocument::IsWebComponentsEnabled(nodeInfo->GetDocument())) {
     already_AddRefed<mozilla::dom::NodeInfo> nodeInfoArg(nodeInfo.forget());
     return new mozilla::dom::HTMLSlotElement(nodeInfoArg);
   }

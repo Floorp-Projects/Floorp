@@ -140,21 +140,20 @@ this.browserSettings = class extends ExtensionAPI {
     let {extension} = context;
     return {
       browserSettings: {
-        allowPopupsForUserEvents: getSettingsAPI(extension,
-          "allowPopupsForUserEvents",
+        allowPopupsForUserEvents: getSettingsAPI(
+          extension, "allowPopupsForUserEvents",
           () => {
             return Services.prefs.getCharPref("dom.popup_allowed_events") != "";
           }),
-        cacheEnabled: getSettingsAPI(extension,
-          "cacheEnabled",
+        cacheEnabled: getSettingsAPI(
+          extension, "cacheEnabled",
           () => {
             return Services.prefs.getBoolPref("browser.cache.disk.enable") &&
               Services.prefs.getBoolPref("browser.cache.memory.enable");
           }),
         contextMenuShowEvent: Object.assign(
           getSettingsAPI(
-            extension,
-            "contextMenuShowEvent",
+            extension, "contextMenuShowEvent",
             () => {
               if (AppConstants.platform === "win") {
                 return "mouseup";
@@ -180,34 +179,34 @@ this.browserSettings = class extends ExtensionAPI {
             },
           }
         ),
-        homepageOverride: getSettingsAPI(extension,
-          HOMEPAGE_OVERRIDE_SETTING,
+        homepageOverride: getSettingsAPI(
+          extension, HOMEPAGE_OVERRIDE_SETTING,
           () => {
             return Services.prefs.getComplexValue(
               HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
           }, undefined, true),
-        imageAnimationBehavior: getSettingsAPI(extension,
-          "imageAnimationBehavior",
+        imageAnimationBehavior: getSettingsAPI(
+          extension, "imageAnimationBehavior",
           () => {
             return Services.prefs.getCharPref("image.animation_mode");
           }),
-        newTabPageOverride: getSettingsAPI(extension,
-          NEW_TAB_OVERRIDE_SETTING,
+        newTabPageOverride: getSettingsAPI(
+          extension, NEW_TAB_OVERRIDE_SETTING,
           () => {
             return aboutNewTabService.newTabURL;
           }, URL_STORE_TYPE, true),
-        openBookmarksInNewTabs: getSettingsAPI(extension,
-          "openBookmarksInNewTabs",
+        openBookmarksInNewTabs: getSettingsAPI(
+          extension, "openBookmarksInNewTabs",
           () => {
             return Services.prefs.getBoolPref("browser.tabs.loadBookmarksInTabs");
           }),
-        openSearchResultsInNewTabs: getSettingsAPI(extension,
-          "openSearchResultsInNewTabs",
+        openSearchResultsInNewTabs: getSettingsAPI(
+          extension, "openSearchResultsInNewTabs",
           () => {
             return Services.prefs.getBoolPref("browser.search.openintab");
           }),
-        webNotificationsDisabled: getSettingsAPI(extension,
-          "webNotificationsDisabled",
+        webNotificationsDisabled: getSettingsAPI(
+          extension, "webNotificationsDisabled",
           () => {
             let prefValue =
               Services.prefs.getIntPref(

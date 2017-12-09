@@ -2,16 +2,16 @@
 
 const ENCODED_IMAGE_DATA = "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgNjQgNjQiPjxwYXRoIGQ9Im01NS45IDMyLjFsLTIyLjctMTQuOWMwIDAgMTIuOS0xNy40IDE5LjQtMTQuOSAzLjEgMS4xIDUuNCAyNS4xIDMuMyAyOS44IiBmaWxsPSIjM2U0MzQ3Ii8+PHBhdGggZD0ibTU0LjkgMzMuOWwtOS00LjFjMCAwLTUuMy0xNCA2LjEtMjQuMSAyLjQgMiA1LjEgMjUgMi45IDI4LjIiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJtOC4xIDMyLjFsMjIuNi0xNC45YzAgMC0xMi45LTE3LjQtMTkuNC0xNC45LTMgMS4xLTUuMyAyNS4xLTMuMiAyOS44IiBmaWxsPSIjM2U0MzQ3Ii8+PHBhdGggZD0ibTkuMSAzMy45bDktNC4xYzAgMCA1LjMtMTQtNi4xLTI0LjEtMi40IDItNS4xIDI1LTIuOSAyOC4yIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTMyLDEzQzE4LjksMTMsMiwzMy42LDIsNDUuNEMyMC41LDQ1LjQsMTkuNyw2MiwzMiw2MnMxMS41LTE2LjYsMzAtMTYuNkM2MiwzMy42LDQ1LjEsMTMsMzIsMTN6IiBmaWxsPSIjZmY4NzM2Ii8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTMyLDU2LjJjMCw1LjEsOS42LDQuMiw5LjUtMi45YzYuNy05LjQsMTkuOS04LjcsMTkuOS04LjdDMzkuNiwzMi40LDMyLDU2LjIsMzIsNTYuMnoiLz48cGF0aCBkPSJNMzIsNTYuMmMwLDUuMS05LjYsNC4yLTkuNS0yLjlDMTUuOCw0NCwyLjYsNDQuNywyLjYsNDQuN0MyNC40LDMyLjQsMzIsNTYuMiwzMiw1Ni4yeiIvPjwvZz48ZyBmaWxsPSIjZmY4NzM2Ij48cGF0aCBkPSJtNTMuNCAxOC41Yy00IC43LTQuOSA2LjMtNC45IDYuM2w2IDUuM2MtMi4zLTUuOS0xLjEtMTEuNi0xLjEtMTEuNiIvPjxwYXRoIGQ9Im01MS4xIDEzLjVjLTQuNCAzLjktNS4xIDguNy01LjEgOC43bDYgNS4zYy0yLjQtNS44LS45LTE0LS45LTE0Ii8+PHBhdGggZD0ibTEwLjYgMTguNWM0IC43IDQuOSA2LjMgNC45IDYuM2wtNiA1LjNjMi4zLTUuOSAxLjEtMTEuNiAxLjEtMTEuNiIvPjxwYXRoIGQ9Im0xMi45IDEzLjVjNC40IDMuOSA1LjEgOC43IDUuMSA4LjdsLTYgNS4zYzIuNC01LjguOS0xNCAuOS0xNCIvPjwvZz48cGF0aCBkPSJtNTIuOCAzMS4xYy01LjctMS44LTEwLjktMy40LTEzLjguOS0yLjQgMy43LjcgOS40LjcgOS40IDExLjIgMS4yIDEzLjEtMTAuMyAxMy4xLTEwLjMiIGZpbGw9IiMzZTQzNDciLz48ZWxsaXBzZSBjeD0iNDMiIGN5PSIzNi4zIiByeD0iNC4yIiByeT0iNC4xIiBmaWxsPSIjZDVmZjgzIi8+PGcgZmlsbD0iIzNlNDM0NyI+PGVsbGlwc2UgY3g9IjQzIiBjeT0iMzYuMyIgcng9IjIuNyIgcnk9IjIuNyIvPjxwYXRoIGQ9Im0xMS4yIDMxLjFjNS43LTEuOCAxMC45LTMuNCAxMy43LjkgMi40IDMuNy0uNyA5LjQtLjcgOS40LTExLjEgMS4yLTEzLTEwLjMtMTMtMTAuMyIvPjwvZz48ZWxsaXBzZSBjeD0iMjEiIGN5PSIzNi4zIiByeD0iNC4yIiByeT0iNC4xIiBmaWxsPSIjZDVmZjgzIi8+PGcgZmlsbD0iIzNlNDM0NyI+PGVsbGlwc2UgY3g9IjIxIiBjeT0iMzYuMyIgcng9IjIuNyIgcnk9IjIuNyIvPjxwYXRoIGQ9Im00MS4yIDQ3LjljLS43LTIuMy0xLjgtNC40LTMtNi41IDEuMSAyLjEgMiA0LjMgMi41IDYuNi41IDIuMy43IDQuNyAwIDYuOC0uNCAxLTEgMi0xLjggMi42LS44LjYtMS44IDEtMi43IDEtLjkgMC0xLjktLjMtMi41LTEtLjYtLjctLjktMS42LS44LTIuNmwtLjkuMmgtLjljMCAxLS4yIDEuOS0uOCAyLjYtLjYuNy0xLjUgMS0yLjUgMS0uOSAwLTEuOS0uNC0yLjctMS0uOC0uNi0xLjQtMS42LTEuOC0yLjYtLjgtMi4xLS42LTQuNiAwLTYuOC41LTIuMyAxLjUtNC41IDIuNS02LjYtMS4yIDItMi4zIDQuMS0zIDYuNS0uNyAyLjMtMS4xIDQuOC0uNCA3LjMuMyAxLjIgMSAyLjQgMS45IDMuMy45LjkgMi4xIDEuNCAzLjQgMS41IDEuMi4xIDIuNi0uMiAzLjctMS4yLjMtLjIuNS0uNS43LS44LjIuMy40LjYuNy44IDEgMSAyLjQgMS4zIDMuNyAxLjIgMS4zLS4xIDIuNC0uNyAzLjQtMS41LjktLjkgMS42LTIgMS45LTMuMy41LTIuNi4xLTUuMi0uNi03LjUiLz48cGF0aCBkPSJtMzcuNiA1MC4zYy0xLjEtMS4xLTQuNS0xLjItNS42LTEuMi0xIDAtNC41LjEtNS42IDEuMi0uOC44LS4yIDIuOCAxLjkgNC41IDEuMyAxLjEgMi42IDEuNCAzLjYgMS40IDEgMCAyLjMtLjMgMy42LTEuNCAyLjMtMS43IDIuOS0zLjcgMi4xLTQuNSIvPjwvZz48L3N2Zz4=";
 
-  /**
-   * Verifies that the button uses the expected icon.
-   *
-   * @param {string} selector The CSS selector used to find the button
-   *   within the DOM.
-   * @param {boolean} shouldHaveCustomStyling True if the button should
-   *   have custom styling, False otherwise.
-   * @param {string} message The message that is printed to the console
-   *   by the verifyFn.
-   */
+/**
+ * Verifies that the button uses the expected icon.
+ *
+ * @param {string} selector The CSS selector used to find the button
+ *   within the DOM.
+ * @param {boolean} shouldHaveCustomStyling True if the button should
+ *   have custom styling, False otherwise.
+ * @param {string} message The message that is printed to the console
+ *   by the verifyFn.
+ */
 function verifyButtonProperties(selector, shouldHaveCustomStyling, message) {
   try {
     let element = document.querySelector(selector);
@@ -23,48 +23,50 @@ function verifyButtonProperties(selector, shouldHaveCustomStyling, message) {
   }
 }
 
-  /**
-   * Verifies that the button uses default styling.
-   *
-   * @param {string} selector The CSS selector used to find the button
-   *   within the DOM.
-   * @param {string} message The message that is printed to the console
-   *   by the verifyFn.
-   */
+/**
+ * Verifies that the button uses default styling.
+ *
+ * @param {string} selector The CSS selector used to find the button
+ *   within the DOM.
+ * @param {string} message The message that is printed to the console
+ *   by the verifyFn.
+ */
 function verifyButtonWithoutCustomStyling(selector, message) {
   verifyButtonProperties(selector, false, message);
 }
 
-  /**
-   * Verifies that the button uses non-default styling.
-   *
-   * @param {string} selector The CSS selector used to find the button
-   *   within the DOM.
-   * @param {string} message The message that is printed to the console
-   *   by the verifyFn.
-   */
+/**
+ * Verifies that the button uses non-default styling.
+ *
+ * @param {string} selector The CSS selector used to find the button
+ *   within the DOM.
+ * @param {string} message The message that is printed to the console
+ *   by the verifyFn.
+ */
 function verifyButtonWithCustomStyling(selector, message) {
   verifyButtonProperties(selector, true, message);
 }
 
-  /**
-   * Loops through all of the buttons to confirm that they are styled
-   * as expected (either with or without custom styling).
-   *
-   * @param {object} icons Array of an array that specifies which buttons should
-   *   have custom icons.
-   * @param {object} iconInfo An array of arrays that maps API names to
-   *   CSS selectors.
-   * @param {string} area The name of the area that the button resides in.
-   */
+/**
+ * Loops through all of the buttons to confirm that they are styled
+ * as expected (either with or without custom styling).
+ *
+ * @param {object} icons Array of an array that specifies which buttons should
+ *   have custom icons.
+ * @param {object} iconInfo An array of arrays that maps API names to
+ *   CSS selectors.
+ * @param {string} area The name of the area that the button resides in.
+ */
 function checkButtons(icons, iconInfo, area) {
   for (let button of iconInfo) {
     let iconInfo = icons.find(arr => arr[0] == button[0]);
     if (iconInfo[1]) {
-      verifyButtonWithCustomStyling(button[1],
+      verifyButtonWithCustomStyling(
+        button[1],
         `The ${button[1]} should have its icon customized in the ${area}`);
     } else {
-      verifyButtonWithoutCustomStyling(button[1],
+      verifyButtonWithoutCustomStyling(
+        button[1],
         `The ${button[1]} should not have its icon customized in the ${area}`);
     }
   }
@@ -135,7 +137,8 @@ async function runTestWithIcons(icons) {
       CustomizableUI.addWidgetToArea(button[2], CustomizableUI.AREA_NAVBAR);
     }
 
-    verifyButtonWithoutCustomStyling(button[1],
+    verifyButtonWithoutCustomStyling(
+      button[1],
       `The ${button[1]} should not have its icon customized when the test starts`);
 
     let iconInfo = icons.find(arr => arr[0] == button[0]);
@@ -151,7 +154,8 @@ async function runTestWithIcons(icons) {
   await extension.unload();
 
   for (let button of ICON_INFO) {
-    verifyButtonWithoutCustomStyling(button[1],
+    verifyButtonWithoutCustomStyling(
+      button[1],
       `The ${button[1]} should not have its icon customized when the theme is unloaded`);
   }
 }

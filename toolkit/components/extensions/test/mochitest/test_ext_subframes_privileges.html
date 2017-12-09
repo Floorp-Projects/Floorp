@@ -132,7 +132,7 @@ add_task(async function test_webext_contentscript_iframe_subframe_privileges() {
         browser.test.assertFalse(hasTabsAPI,
                                  "Subframe of a content script privileged iframes has no access to privileged APIs");
         browser.test.assertTrue(hasStorageAPI,
-                                 "Subframe of a content script privileged iframes has access to content script APIs");
+                                "Subframe of a content script privileged iframes has access to content script APIs");
 
         browser.test.notifyPass("webext-contentscript-subframe-privileges");
       }

@@ -48,7 +48,7 @@ add_task(async function testExtensionDebuggingUtilsCleanup() {
 
   const addonDebugBrowser = await waitFirstBrowser;
   equal(addonDebugBrowser.isRemoteBrowser, extension.extension.remote,
-       "The addon debugging browser has the expected remote type");
+        "The addon debugging browser has the expected remote type");
 
   equal((await waitSecondBrowser), addonDebugBrowser,
         "Two addon debugging actors related to the same addon get the same browser element ");
@@ -62,7 +62,7 @@ add_task(async function testExtensionDebuggingUtilsCleanup() {
   const waitRejection = ExtensionParent.DebugUtils.getExtensionProcessBrowser(nonExistentAddonActor);
 
   Assert.rejects(waitRejection, /Extension not found/,
-                "Reject with the expected message for non existent addons");
+                 "Reject with the expected message for non existent addons");
 
   equal(debugBrowserPromises.size, 1, "No additional debugging resources has been allocated");
 
@@ -142,7 +142,7 @@ add_task(async function testExtensionDebuggingUtilsAddonReloaded() {
                                                     .getExtensionProcessBrowser(fakeAddonActor);
 
   equal(addonDebugBrowser, newAddonDebugBrowser,
-           "The existent debugging browser has been reused");
+        "The existent debugging browser has been reused");
 
   equal(newAddonDebugBrowser.isRemoteBrowser, extension.extension.remote,
         "The addon debugging browser has the expected remote type");

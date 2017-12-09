@@ -32,13 +32,13 @@ add_task(async function testBrowserActionPopupResize() {
     Assert.lessOrEqual(Math.abs(dims.window.innerHeight - expected), 1,
                        `Panel window should be ${expected}px tall (was ${dims.window.innerHeight})`);
     is(dims.body.clientHeight, dims.body.scrollHeight,
-      "Panel body should be tall enough to fit its contents");
+       "Panel body should be tall enough to fit its contents");
 
     // Tolerate if it is 1px too wide, as that may happen with the current resizing method.
     Assert.lessOrEqual(Math.abs(dims.window.innerWidth - expected), 1,
                        `Panel window should be ${expected}px wide`);
     is(dims.body.clientWidth, dims.body.scrollWidth,
-      "Panel body should be wide enough to fit its contents");
+       "Panel body should be wide enough to fit its contents");
   }
 
   /* eslint-disable mozilla/no-cpows-in-tests */
@@ -162,7 +162,7 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   // The 'ViewShown' event is the only way to correctly determine when the extensions'
   // panelview has finished transitioning and is fully in view.
   let shownPromise = BrowserTestUtils.waitForEvent(panelMultiView, "ViewShown",
-    e => (e.originalTarget.id || "").includes(widgetId));
+                                                   e => (e.originalTarget.id || "").includes(widgetId));
   let browser = await openPanel(extension, browserWin);
   let origPanelRect = panel.getBoundingClientRect();
 

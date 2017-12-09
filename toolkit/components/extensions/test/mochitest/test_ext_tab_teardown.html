@@ -16,7 +16,7 @@
 // Test for tabs opened using tabs.create and window.open
 async function runTabReloadAndCloseTest(extension) {
   let chromeScript = SpecialPowers.loadChromeScript(
-      SimpleTest.getTestFileURL("file_teardown_test.js"));
+    SimpleTest.getTestFileURL("file_teardown_test.js"));
   await chromeScript.promiseOneMessage("chromescript-startup");
   async function getContextEvents() {
     chromeScript.sendAsyncMessage("get-context-events");
@@ -32,22 +32,22 @@ async function runTabReloadAndCloseTest(extension) {
   is(contextEvents.length, 1, "ExtensionContext change for opening a tab");
   is(contextEvents[0].eventType, "load", "create ExtensionContext for tab");
   is(contextEvents[0].url, extensionPageUrl,
-      "ExtensionContext URL after tab creation should be tab URL");
+     "ExtensionContext URL after tab creation should be tab URL");
 
   extension.sendMessage("reload extension page");
   let extensionPageUrl2 = await extension.awaitMessage("extension page loaded");
 
   is(extensionPageUrl, extensionPageUrl2,
-      "The tab's URL is expected to not change after a page reload");
+     "The tab's URL is expected to not change after a page reload");
 
   contextEvents = await getContextEvents();
   is(contextEvents.length, 2, "ExtensionContext change after tab reload");
   is(contextEvents[0].eventType, "unload", "unload old ExtensionContext");
   is(contextEvents[0].url, extensionPageUrl,
-      "ExtensionContext URL before reload should be tab URL");
+     "ExtensionContext URL before reload should be tab URL");
   is(contextEvents[1].eventType, "load", "create new ExtensionContext for tab");
   is(contextEvents[1].url, extensionPageUrl2,
-      "ExtensionContext URL after reload should be tab URL");
+     "ExtensionContext URL after reload should be tab URL");
 
   extension.sendMessage("close extension page");
   await extension.awaitMessage("closed extension page");
@@ -56,7 +56,7 @@ async function runTabReloadAndCloseTest(extension) {
   is(contextEvents.length, 1, "ExtensionContext after closing tab");
   is(contextEvents[0].eventType, "unload", "unload tab's ExtensionContext");
   is(contextEvents[0].url, extensionPageUrl2,
-      "ExtensionContext URL at closing tab should be tab URL");
+     "ExtensionContext URL at closing tab should be tab URL");
 
   chromeScript.sendAsyncMessage("cleanup");
   chromeScript.destroy();

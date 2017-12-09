@@ -22,8 +22,9 @@ add_task(async function test_sessions_forget_closed_window() {
             browser.test.sendMessage("forgot-window");
           },
           error => {
-            browser.test.assertEq(error.message,
-                  `Could not find closed window using sessionId ${sessionId}.`);
+            browser.test.assertEq(
+              error.message,
+              `Could not find closed window using sessionId ${sessionId}.`);
             browser.test.sendMessage("forget-reject");
           }
         );

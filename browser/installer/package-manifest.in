@@ -192,6 +192,9 @@
 @RESPATH@/components/dom.xpt
 @RESPATH@/components/dom_base.xpt
 @RESPATH@/components/dom_bindings.xpt
+#ifdef MOZ_DEBUG
+@RESPATH@/components/dom_bindings_test.xpt
+#endif
 @RESPATH@/components/dom_file.xpt
 @RESPATH@/components/dom_system.xpt
 @RESPATH@/components/dom_canvas.xpt

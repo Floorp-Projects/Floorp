@@ -9,347 +9,348 @@ let {LocalAPIImplementation, SchemaAPIInterface} = ExtensionCommon;
 const global = this;
 
 let json = [
-  {namespace: "testing",
+  {
+    namespace: "testing",
 
-   properties: {
-     PROP1: {value: 20},
-     prop2: {type: "string"},
-     prop3: {
-       $ref: "submodule",
-     },
-     prop4: {
-       $ref: "submodule",
-       unsupported: true,
-     },
-   },
+    properties: {
+      PROP1: {value: 20},
+      prop2: {type: "string"},
+      prop3: {
+        $ref: "submodule",
+      },
+      prop4: {
+        $ref: "submodule",
+        unsupported: true,
+      },
+    },
 
-   types: [
-     {
-       id: "type1",
-       type: "string",
-       "enum": ["value1", "value2", "value3"],
-     },
+    types: [
+      {
+        id: "type1",
+        type: "string",
+        "enum": ["value1", "value2", "value3"],
+      },
 
-     {
-       id: "type2",
-       type: "object",
-       properties: {
-         prop1: {type: "integer"},
-         prop2: {type: "array", items: {"$ref": "type1"}},
-       },
-     },
+      {
+        id: "type2",
+        type: "object",
+        properties: {
+          prop1: {type: "integer"},
+          prop2: {type: "array", items: {"$ref": "type1"}},
+        },
+      },
 
-     {
-       id: "basetype1",
-       type: "object",
-       properties: {
-         prop1: {type: "string"},
-       },
-     },
+      {
+        id: "basetype1",
+        type: "object",
+        properties: {
+          prop1: {type: "string"},
+        },
+      },
 
-     {
-       id: "basetype2",
-       choices: [
-         {type: "integer"},
-       ],
-     },
+      {
+        id: "basetype2",
+        choices: [
+          {type: "integer"},
+        ],
+      },
 
-     {
-       $extend: "basetype1",
-       properties: {
-         prop2: {type: "string"},
-       },
-     },
+      {
+        $extend: "basetype1",
+        properties: {
+          prop2: {type: "string"},
+        },
+      },
 
-     {
-       $extend: "basetype2",
-       choices: [
-         {type: "string"},
-       ],
-     },
+      {
+        $extend: "basetype2",
+        choices: [
+          {type: "string"},
+        ],
+      },
 
-     {
-       id: "submodule",
-       type: "object",
-       functions: [
-         {
-           name: "sub_foo",
-           type: "function",
-           parameters: [],
-           returns: {type: "integer"},
-         },
-       ],
-     },
-   ],
+      {
+        id: "submodule",
+        type: "object",
+        functions: [
+          {
+            name: "sub_foo",
+            type: "function",
+            parameters: [],
+            returns: {type: "integer"},
+          },
+        ],
+      },
+    ],
 
-   functions: [
-     {
-       name: "foo",
-       type: "function",
-       parameters: [
-         {name: "arg1", type: "integer", optional: true, default: 99},
-         {name: "arg2", type: "boolean", optional: true},
-       ],
-     },
+    functions: [
+      {
+        name: "foo",
+        type: "function",
+        parameters: [
+          {name: "arg1", type: "integer", optional: true, default: 99},
+          {name: "arg2", type: "boolean", optional: true},
+        ],
+      },
 
-     {
-       name: "bar",
-       type: "function",
-       parameters: [
-         {name: "arg1", type: "integer", optional: true},
-         {name: "arg2", type: "boolean"},
-       ],
-     },
+      {
+        name: "bar",
+        type: "function",
+        parameters: [
+          {name: "arg1", type: "integer", optional: true},
+          {name: "arg2", type: "boolean"},
+        ],
+      },
 
-     {
-       name: "baz",
-       type: "function",
-       parameters: [
-         {name: "arg1", type: "object", properties: {
-           prop1: {type: "string"},
-           prop2: {type: "integer", optional: true},
-           prop3: {type: "integer", unsupported: true},
-         }},
-       ],
-     },
+      {
+        name: "baz",
+        type: "function",
+        parameters: [
+          {name: "arg1", type: "object", properties: {
+            prop1: {type: "string"},
+            prop2: {type: "integer", optional: true},
+            prop3: {type: "integer", unsupported: true},
+          }},
+        ],
+      },
 
-     {
-       name: "qux",
-       type: "function",
-       parameters: [
-         {name: "arg1", "$ref": "type1"},
-       ],
-     },
+      {
+        name: "qux",
+        type: "function",
+        parameters: [
+          {name: "arg1", "$ref": "type1"},
+        ],
+      },
 
-     {
-       name: "quack",
-       type: "function",
-       parameters: [
-         {name: "arg1", "$ref": "type2"},
-       ],
-     },
+      {
+        name: "quack",
+        type: "function",
+        parameters: [
+          {name: "arg1", "$ref": "type2"},
+        ],
+      },
 
-     {
-       name: "quora",
-       type: "function",
-       parameters: [
-         {name: "arg1", type: "function"},
-       ],
-     },
+      {
+        name: "quora",
+        type: "function",
+        parameters: [
+          {name: "arg1", type: "function"},
+        ],
+      },
 
-     {
-       name: "quileute",
-       type: "function",
-       parameters: [
-         {name: "arg1", type: "integer", optional: true},
-         {name: "arg2", type: "integer"},
-       ],
-     },
+      {
+        name: "quileute",
+        type: "function",
+        parameters: [
+          {name: "arg1", type: "integer", optional: true},
+          {name: "arg2", type: "integer"},
+        ],
+      },
 
-     {
-       name: "queets",
-       type: "function",
-       unsupported: true,
-       parameters: [],
-     },
+      {
+        name: "queets",
+        type: "function",
+        unsupported: true,
+        parameters: [],
+      },
 
-     {
-       name: "quintuplets",
-       type: "function",
-       parameters: [
-         {name: "obj", type: "object", properties: [], additionalProperties: {type: "integer"}},
-       ],
-     },
+      {
+        name: "quintuplets",
+        type: "function",
+        parameters: [
+          {name: "obj", type: "object", properties: [], additionalProperties: {type: "integer"}},
+        ],
+      },
 
-     {
-       name: "quasar",
-       type: "function",
-       parameters: [
-         {name: "abc", type: "object", properties: {
-           func: {type: "function", parameters: [
-             {name: "x", type: "integer"},
-           ]},
-         }},
-       ],
-     },
+      {
+        name: "quasar",
+        type: "function",
+        parameters: [
+          {name: "abc", type: "object", properties: {
+            func: {type: "function", parameters: [
+              {name: "x", type: "integer"},
+            ]},
+          }},
+        ],
+      },
 
-     {
-       name: "quosimodo",
-       type: "function",
-       parameters: [
-         {name: "xyz", type: "object", additionalProperties: {type: "any"}},
-       ],
-     },
+      {
+        name: "quosimodo",
+        type: "function",
+        parameters: [
+          {name: "xyz", type: "object", additionalProperties: {type: "any"}},
+        ],
+      },
 
-     {
-       name: "patternprop",
-       type: "function",
-       parameters: [
-         {
-           name: "obj",
-           type: "object",
-           properties: {"prop1": {type: "string", pattern: "^\\d+$"}},
-           patternProperties: {
-             "(?i)^prop\\d+$": {type: "string"},
-             "^foo\\d+$": {type: "string"},
-           },
-         },
-       ],
-     },
+      {
+        name: "patternprop",
+        type: "function",
+        parameters: [
+          {
+            name: "obj",
+            type: "object",
+            properties: {"prop1": {type: "string", pattern: "^\\d+$"}},
+            patternProperties: {
+              "(?i)^prop\\d+$": {type: "string"},
+              "^foo\\d+$": {type: "string"},
+            },
+          },
+        ],
+      },
 
-     {
-       name: "pattern",
-       type: "function",
-       parameters: [
-         {name: "arg", type: "string", pattern: "(?i)^[0-9a-f]+$"},
-       ],
-     },
+      {
+        name: "pattern",
+        type: "function",
+        parameters: [
+          {name: "arg", type: "string", pattern: "(?i)^[0-9a-f]+$"},
+        ],
+      },
 
-     {
-       name: "format",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           type: "object",
-           properties: {
-             hostname: {type: "string", "format": "hostname", "optional": true},
-             url: {type: "string", "format": "url", "optional": true},
-             relativeUrl: {type: "string", "format": "relativeUrl", "optional": true},
-             strictRelativeUrl: {type: "string", "format": "strictRelativeUrl", "optional": true},
-             imageDataOrStrictRelativeUrl: {type: "string", "format": "imageDataOrStrictRelativeUrl", "optional": true},
-           },
-         },
-       ],
-     },
+      {
+        name: "format",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            type: "object",
+            properties: {
+              hostname: {type: "string", "format": "hostname", "optional": true},
+              url: {type: "string", "format": "url", "optional": true},
+              relativeUrl: {type: "string", "format": "relativeUrl", "optional": true},
+              strictRelativeUrl: {type: "string", "format": "strictRelativeUrl", "optional": true},
+              imageDataOrStrictRelativeUrl: {type: "string", "format": "imageDataOrStrictRelativeUrl", "optional": true},
+            },
+          },
+        ],
+      },
 
-     {
-       name: "formatDate",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           type: "object",
-           properties: {
-             date: {type: "string", format: "date", optional: true},
-           },
-         },
-       ],
-     },
+      {
+        name: "formatDate",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            type: "object",
+            properties: {
+              date: {type: "string", format: "date", optional: true},
+            },
+          },
+        ],
+      },
 
-     {
-       name: "deep",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           type: "object",
-           properties: {
-             foo: {
-               type: "object",
-               properties: {
-                 bar: {
-                   type: "array",
-                   items: {
-                     type: "object",
-                     properties: {
-                       baz: {
-                         type: "object",
-                         properties: {
-                           required: {type: "integer"},
-                           optional: {type: "string", optional: true},
-                         },
-                       },
-                     },
-                   },
-                 },
-               },
-             },
-           },
-         },
-       ],
-     },
+      {
+        name: "deep",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            type: "object",
+            properties: {
+              foo: {
+                type: "object",
+                properties: {
+                  bar: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        baz: {
+                          type: "object",
+                          properties: {
+                            required: {type: "integer"},
+                            optional: {type: "string", optional: true},
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
 
-     {
-       name: "errors",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           type: "object",
-           properties: {
-             warn: {
-               type: "string",
-               pattern: "^\\d+$",
-               optional: true,
-               onError: "warn",
-             },
-             ignore: {
-               type: "string",
-               pattern: "^\\d+$",
-               optional: true,
-               onError: "ignore",
-             },
-             default: {
-               type: "string",
-               pattern: "^\\d+$",
-               optional: true,
-             },
-           },
-         },
-       ],
-     },
+      {
+        name: "errors",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            type: "object",
+            properties: {
+              warn: {
+                type: "string",
+                pattern: "^\\d+$",
+                optional: true,
+                onError: "warn",
+              },
+              ignore: {
+                type: "string",
+                pattern: "^\\d+$",
+                optional: true,
+                onError: "ignore",
+              },
+              default: {
+                type: "string",
+                pattern: "^\\d+$",
+                optional: true,
+              },
+            },
+          },
+        ],
+      },
 
-     {
-       name: "localize",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           type: "object",
-           properties: {
-             foo: {type: "string", "preprocess": "localize", "optional": true},
-             bar: {type: "string", "optional": true},
-             url: {type: "string", "preprocess": "localize", "format": "url", "optional": true},
-           },
-         },
-       ],
-     },
+      {
+        name: "localize",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            type: "object",
+            properties: {
+              foo: {type: "string", "preprocess": "localize", "optional": true},
+              bar: {type: "string", "optional": true},
+              url: {type: "string", "preprocess": "localize", "format": "url", "optional": true},
+            },
+          },
+        ],
+      },
 
-     {
-       name: "extended1",
-       type: "function",
-       parameters: [
-         {name: "val", $ref: "basetype1"},
-       ],
-     },
+      {
+        name: "extended1",
+        type: "function",
+        parameters: [
+          {name: "val", $ref: "basetype1"},
+        ],
+      },
 
-     {
-       name: "extended2",
-       type: "function",
-       parameters: [
-         {name: "val", $ref: "basetype2"},
-       ],
-     },
-   ],
+      {
+        name: "extended2",
+        type: "function",
+        parameters: [
+          {name: "val", $ref: "basetype2"},
+        ],
+      },
+    ],
 
-   events: [
-     {
-       name: "onFoo",
-       type: "function",
-     },
+    events: [
+      {
+        name: "onFoo",
+        type: "function",
+      },
 
-     {
-       name: "onBar",
-       type: "function",
-       extraParameters: [{
-         name: "filter",
-         type: "integer",
-         optional: true,
-         default: 1,
-       }],
-     },
-   ],
+      {
+        name: "onBar",
+        type: "function",
+        extraParameters: [{
+          name: "filter",
+          type: "integer",
+          optional: true,
+          default: 1,
+        }],
+      },
+    ],
   },
   {
     namespace: "foreign",
@@ -696,8 +697,8 @@ add_task(async function() {
   }
 
   Assert.throws(() => root.testing.format({imageDataOrStrictRelativeUrl: "data:image/svg+xml;utf8,A"}),
-                  /must be a relative or PNG or JPG data:image URL/,
-                  "should throw for non-relative or non PNG/JPG data URL");
+                /must be a relative or PNG or JPG data:image URL/,
+                "should throw for non-relative or non PNG/JPG data URL");
 
   const dates = [
     "2016-03-04",
@@ -871,111 +872,112 @@ add_task(async function() {
 });
 
 let deprecatedJson = [
-  {namespace: "deprecated",
+  {
+    namespace: "deprecated",
 
-   properties: {
-     accessor: {
-       type: "string",
-       writable: true,
-       deprecated: "This is not the property you are looking for",
-     },
-   },
+    properties: {
+      accessor: {
+        type: "string",
+        writable: true,
+        deprecated: "This is not the property you are looking for",
+      },
+    },
 
-   types: [
-     {
-       "id": "Type",
-       "type": "string",
-     },
-   ],
+    types: [
+      {
+        "id": "Type",
+        "type": "string",
+      },
+    ],
 
-   functions: [
-     {
-       name: "property",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           type: "object",
-           properties: {
-             foo: {
-               type: "string",
-             },
-           },
-           additionalProperties: {
-             type: "any",
-             deprecated: "Unknown property",
-           },
-         },
-       ],
-     },
+    functions: [
+      {
+        name: "property",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            type: "object",
+            properties: {
+              foo: {
+                type: "string",
+              },
+            },
+            additionalProperties: {
+              type: "any",
+              deprecated: "Unknown property",
+            },
+          },
+        ],
+      },
 
-     {
-       name: "value",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           choices: [
-             {
-               type: "integer",
-             },
-             {
-               type: "string",
-               deprecated: "Please use an integer, not ${value}",
-             },
-           ],
-         },
-       ],
-     },
+      {
+        name: "value",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            choices: [
+              {
+                type: "integer",
+              },
+              {
+                type: "string",
+                deprecated: "Please use an integer, not ${value}",
+              },
+            ],
+          },
+        ],
+      },
 
-     {
-       name: "choices",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           deprecated: "You have no choices",
-           choices: [
-             {
-               type: "integer",
-             },
-           ],
-         },
-       ],
-     },
+      {
+        name: "choices",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            deprecated: "You have no choices",
+            choices: [
+              {
+                type: "integer",
+              },
+            ],
+          },
+        ],
+      },
 
-     {
-       name: "ref",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           choices: [
-             {
-               $ref: "Type",
-               deprecated: "Deprecated alias",
-             },
-           ],
-         },
-       ],
-     },
+      {
+        name: "ref",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            choices: [
+              {
+                $ref: "Type",
+                deprecated: "Deprecated alias",
+              },
+            ],
+          },
+        ],
+      },
 
-     {
-       name: "method",
-       type: "function",
-       deprecated: "Do not call this method",
-       parameters: [
-       ],
-     },
-   ],
+      {
+        name: "method",
+        type: "function",
+        deprecated: "Do not call this method",
+        parameters: [
+        ],
+      },
+    ],
 
-   events: [
-     {
-       name: "onDeprecated",
-       type: "function",
-       deprecated: "This event does not work",
-     },
-   ],
+    events: [
+      {
+        name: "onDeprecated",
+        type: "function",
+        deprecated: "This event does not work",
+      },
+    ],
   },
 ];
 
@@ -1038,99 +1040,101 @@ add_task(async function testDeprecation() {
 
 
 let choicesJson = [
-  {namespace: "choices",
+  {
+    namespace: "choices",
 
-   types: [
-   ],
+    types: [
+    ],
 
-   functions: [
-     {
-       name: "meh",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           choices: [
-             {
-               type: "string",
-               enum: ["foo", "bar", "baz"],
-             },
-             {
-               type: "string",
-               pattern: "florg.*meh",
-             },
-             {
-               type: "integer",
-               minimum: 12,
-               maximum: 42,
-             },
-           ],
-         },
-       ],
-     },
+    functions: [
+      {
+        name: "meh",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            choices: [
+              {
+                type: "string",
+                enum: ["foo", "bar", "baz"],
+              },
+              {
+                type: "string",
+                pattern: "florg.*meh",
+              },
+              {
+                type: "integer",
+                minimum: 12,
+                maximum: 42,
+              },
+            ],
+          },
+        ],
+      },
 
-     {
-       name: "foo",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           choices: [
-             {
-               type: "object",
-               properties: {
-                 blurg: {
-                   type: "string",
-                   unsupported: true,
-                   optional: true,
-                 },
-               },
-               additionalProperties: {
-                 type: "string",
-               },
-             },
-             {
-               type: "string",
-             },
-             {
-               type: "array",
-               minItems: 2,
-               maxItems: 3,
-               items: {
-                 type: "integer",
-               },
-             },
-           ],
-         },
-       ],
-     },
+      {
+        name: "foo",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            choices: [
+              {
+                type: "object",
+                properties: {
+                  blurg: {
+                    type: "string",
+                    unsupported: true,
+                    optional: true,
+                  },
+                },
+                additionalProperties: {
+                  type: "string",
+                },
+              },
+              {
+                type: "string",
+              },
+              {
+                type: "array",
+                minItems: 2,
+                maxItems: 3,
+                items: {
+                  type: "integer",
+                },
+              },
+            ],
+          },
+        ],
+      },
 
-     {
-       name: "bar",
-       type: "function",
-       parameters: [
-         {
-           name: "arg",
-           choices: [
-             {
-               type: "object",
-               properties: {
-                 baz: {
-                   type: "string",
-                 },
-               },
-             },
-             {
-               type: "array",
-               items: {
-                 type: "integer",
-               },
-             },
-           ],
-         },
-       ],
-     },
-   ]},
+      {
+        name: "bar",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            choices: [
+              {
+                type: "object",
+                properties: {
+                  baz: {
+                    type: "string",
+                  },
+                },
+              },
+              {
+                type: "array",
+                items: {
+                  type: "integer",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 add_task(async function testChoices() {
@@ -1177,45 +1181,49 @@ add_task(async function testChoices() {
 
 
 let permissionsJson = [
-  {namespace: "noPerms",
+  {
+    namespace: "noPerms",
 
-   types: [],
+    types: [],
 
-   functions: [
-     {
-       name: "noPerms",
-       type: "function",
-       parameters: [],
-     },
+    functions: [
+      {
+        name: "noPerms",
+        type: "function",
+        parameters: [],
+      },
 
-     {
-       name: "fooPerm",
-       type: "function",
-       permissions: ["foo"],
-       parameters: [],
-     },
-   ]},
+      {
+        name: "fooPerm",
+        type: "function",
+        permissions: ["foo"],
+        parameters: [],
+      },
+    ],
+  },
 
-  {namespace: "fooPerm",
+  {
+    namespace: "fooPerm",
 
-   permissions: ["foo"],
+    permissions: ["foo"],
 
-   types: [],
+    types: [],
 
-   functions: [
-     {
-       name: "noPerms",
-       type: "function",
-       parameters: [],
-     },
+    functions: [
+      {
+        name: "noPerms",
+        type: "function",
+        parameters: [],
+      },
 
-     {
-       name: "fooBarPerm",
-       type: "function",
-       permissions: ["foo.bar"],
-       parameters: [],
-     },
-   ]},
+      {
+        name: "fooBarPerm",
+        type: "function",
+        permissions: ["foo.bar"],
+        parameters: [],
+      },
+    ],
+  },
 ];
 
 add_task(async function testPermissions() {
@@ -1330,8 +1338,8 @@ add_task(async function testNestedNamespace() {
   ok(root.nested.namespace, "The first level object contains the second namespace level");
 
   ok(root.nested.namespace.create, "Got the expected function in the nested namespace");
-  do_check_eq(typeof root.nested.namespace.create, "function",
-     "The property is a function as expected");
+  equal(typeof root.nested.namespace.create, "function",
+        "The property is a function as expected");
 
   let {instanceOfCustomType} = root.nested.namespace;
 
@@ -1521,25 +1529,27 @@ add_task(async function testLocalAPIImplementation() {
 
 
 let defaultsJson = [
-  {namespace: "defaultsJson",
+  {
+    namespace: "defaultsJson",
 
-   types: [],
+    types: [],
 
-   functions: [
-     {
-       name: "defaultFoo",
-       type: "function",
-       parameters: [
-         {name: "arg", type: "object", optional: true, properties: {
-           prop1: {type: "integer", optional: true},
-         }, default: {prop1: 1}},
-       ],
-       returns: {
-         type: "object",
-         additionalProperties: true,
-       },
-     },
-   ]},
+    functions: [
+      {
+        name: "defaultFoo",
+        type: "function",
+        parameters: [
+          {name: "arg", type: "object", optional: true, properties: {
+            prop1: {type: "integer", optional: true},
+          }, default: {prop1: 1}},
+        ],
+        returns: {
+          type: "object",
+          additionalProperties: true,
+        },
+      },
+    ],
+  },
 ];
 
 add_task(async function testDefaults() {

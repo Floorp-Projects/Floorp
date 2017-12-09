@@ -38,6 +38,7 @@ UNIFIED_SOURCES += [
   'ClientOpenWindowOpActors.cpp',
   'ClientOpenWindowOpChild.cpp',
   'ClientOpenWindowOpParent.cpp',
+  'ClientOpenWindowUtils.cpp',
   'ClientPrefs.cpp',
   'ClientSource.cpp',
   'ClientSourceChild.cpp',

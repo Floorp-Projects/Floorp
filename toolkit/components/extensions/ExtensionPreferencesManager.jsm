@@ -1,6 +1,9 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 /**
  * @fileOverview
@@ -16,8 +19,6 @@
  * setCallback: A function that returns an object containing properties and
  *              values that correspond to the prefs to be set.
  */
-
-"use strict";
 
 this.EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
 
@@ -128,8 +129,9 @@ async function processSetting(id, name, action) {
     let setting = settingsMap.get(name);
     let expectedPrefs = expectedItem.initialValue
       || setting.setCallback(expectedItem.value);
-    if (Object.keys(expectedPrefs).some(
-        pref => expectedPrefs[pref] && Preferences.get(pref) != expectedPrefs[pref])) {
+    if (Object.keys(expectedPrefs)
+              .some(pref => (expectedPrefs[pref] &&
+                             Preferences.get(pref) != expectedPrefs[pref]))) {
       return false;
     }
     setPrefs(setting, item);

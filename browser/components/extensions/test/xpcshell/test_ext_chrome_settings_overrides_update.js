@@ -73,9 +73,10 @@ add_task(async function test_overrides_update_removal() {
 
   equal(extension.version, "1.0", "The installed addon has the expected version.");
   ok(getHomePageURL().endsWith(HOMEPAGE_URI),
-    "Home page url is overriden by the extension.");
-  equal(Services.search.currentEngine.name, "DuckDuckGo",
-    "Default engine is overriden by the extension");
+     "Home page url is overriden by the extension.");
+  equal(Services.search.currentEngine.name,
+        "DuckDuckGo",
+        "Default engine is overriden by the extension");
 
   extensionInfo.manifest = {
     "version": "2.0",
@@ -91,10 +92,12 @@ add_task(async function test_overrides_update_removal() {
   await prefPromise;
 
   equal(extension.version, "2.0", "The updated addon has the expected version.");
-  equal(getHomePageURL(), defaultHomepageURL,
-    "Home page url reverted to the default after update.");
-  equal(Services.search.currentEngine.name, defaultEngineName,
-    "Default engine reverted to the default after update.");
+  equal(getHomePageURL(),
+        defaultHomepageURL,
+        "Home page url reverted to the default after update.");
+  equal(Services.search.currentEngine.name,
+        defaultEngineName,
+        "Default engine reverted to the default after update.");
 
   await extension.unload();
 

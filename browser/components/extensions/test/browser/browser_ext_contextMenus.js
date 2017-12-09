@@ -486,7 +486,8 @@ add_task(async function test_bookmark_contextmenu() {
   });
   await extension.startup();
   await extension.awaitMessage("bookmark-created");
-  let menu = await openChromeContextMenu("placesContext",
+  let menu = await openChromeContextMenu(
+    "placesContext",
     "#PersonalToolbar .bookmark-item:last-child");
 
   let menuItem = menu.getElementsByAttribute("label", "Get bookmark")[0];
@@ -515,11 +516,12 @@ add_task(async function test_bookmark_context_requires_permission() {
   });
   await extension.startup();
   await extension.awaitMessage("bookmark-created");
-  let menu = await openChromeContextMenu("placesContext",
+  let menu = await openChromeContextMenu(
+    "placesContext",
     "#PersonalToolbar .bookmark-item:last-child");
 
   Assert.equal(menu.getElementsByAttribute("label", "Get bookmark").length, 0,
-    "bookmark context menu not created with `bookmarks` permission.");
+               "bookmark context menu not created with `bookmarks` permission.");
 
   closeChromeContextMenu("placesContext");
 

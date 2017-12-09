@@ -1,5 +1,5 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
-   TEXT_COLOR, BACKGROUND_TAB_TEXT_COLOR, imageBufferFromDataURI, hexToRGB */
+   TEXT_COLOR, BACKGROUND_TAB_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB */
 
 "use strict";
 
@@ -39,6 +39,14 @@ const BACKGROUND_TAB_TEXT_COLOR = [207, 221, 192, .9];
 function hexToRGB(hex) {
   hex = parseInt((hex.indexOf("#") > -1 ? hex.substring(1) : hex), 16);
   return [hex >> 16, (hex & 0x00FF00) >> 8, (hex & 0x0000FF)];
+}
+
+function rgbToCSS(rgb) {
+  return `rgb(${rgb.join(", ")})`;
+}
+
+function hexToCSS(hex) {
+  return rgbToCSS(hexToRGB(hex));
 }
 
 function imageBufferFromDataURI(encodedImageData) {

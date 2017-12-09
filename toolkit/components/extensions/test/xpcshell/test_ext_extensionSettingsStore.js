@@ -78,10 +78,9 @@ add_task(async function test_settings_store() {
   let expectedCallbackCount = 0;
 
   await Assert.rejects(
-  ExtensionSettingsStore.getLevelOfControl(
-    1, TEST_TYPE, "key"),
-  /The ExtensionSettingsStore was accessed before the initialize promise resolved/,
-  "Accessing the SettingsStore before it is initialized throws an error.");
+    ExtensionSettingsStore.getLevelOfControl(1, TEST_TYPE, "key"),
+    /The ExtensionSettingsStore was accessed before the initialize promise resolved/,
+    "Accessing the SettingsStore before it is initialized throws an error.");
 
   // Initialize the SettingsStore.
   await ExtensionSettingsStore.initialize();
@@ -98,9 +97,8 @@ add_task(async function test_settings_store() {
     let item = await ExtensionSettingsStore.addSetting(
       extensions[extensionIndex].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
     expectedCallbackCount++;
-    equal(callbackCount,
-      expectedCallbackCount,
-      "initialValueCallback called the expected number of times.");
+    equal(callbackCount, expectedCallbackCount,
+          "initialValueCallback called the expected number of times.");
     deepEqual(item, itemToAdd, "Adding initial item for a key returns that item.");
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
@@ -127,9 +125,8 @@ add_task(async function test_settings_store() {
     let itemToAdd = ITEMS[key][extensionIndex];
     let item = await ExtensionSettingsStore.addSetting(
       extensions[extensionIndex].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
-    equal(callbackCount,
-      expectedCallbackCount,
-      "initialValueCallback called the expected number of times.");
+    equal(callbackCount, expectedCallbackCount,
+          "initialValueCallback called the expected number of times.");
     equal(item, null, "An older extension adding a setting for a key returns null");
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
@@ -162,9 +159,8 @@ add_task(async function test_settings_store() {
       "getLevelOfControl returns correct levelOfControl for a more recent extension.");
     let item = await ExtensionSettingsStore.addSetting(
       extensions[extensionIndex].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
-    equal(callbackCount,
-      expectedCallbackCount,
-      "initialValueCallback called the expected number of times.");
+    equal(callbackCount, expectedCallbackCount,
+          "initialValueCallback called the expected number of times.");
     deepEqual(item, itemToAdd, "Adding item for most recent extension returns that item.");
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
@@ -208,9 +204,8 @@ add_task(async function test_settings_store() {
     let extensionIndex = 0;
     let item = await ExtensionSettingsStore.addSetting(
       extensions[extensionIndex].id, TEST_TYPE, key, "new value", initialValue);
-    equal(callbackCount,
-      expectedCallbackCount,
-      "initialValueCallback called the expected number of times.");
+    equal(callbackCount, expectedCallbackCount,
+          "initialValueCallback called the expected number of times.");
     equal(item, null, "Updating non-top item for a key returns null");
     item = await ExtensionSettingsStore.disable(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(item, null, "Disabling non-top item for a key returns null.");
@@ -325,9 +320,8 @@ add_task(async function test_settings_store() {
     let itemToAdd = {key, value: `new-${key}`, id: "@second"};
     item = await ExtensionSettingsStore.addSetting(
       extensions[1].id, TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
-    equal(callbackCount,
-      expectedCallbackCount,
-      "initialValueCallback called the expected number of times.");
+    equal(callbackCount, expectedCallbackCount,
+          "initialValueCallback called the expected number of times.");
     deepEqual(
       item,
       itemToAdd,
@@ -411,9 +405,8 @@ add_task(async function test_settings_store() {
   let item = await ExtensionSettingsStore.addSetting(
     extensions[extensionIndex].id, TEST_TYPE, testKey, 1, initialValue, callbackArgumentValue);
   expectedCallbackCount++;
-  equal(callbackCount,
-    expectedCallbackCount,
-    "initialValueCallback called the expected number of times.");
+  equal(callbackCount, expectedCallbackCount,
+        "initialValueCallback called the expected number of times.");
   // Remove the setting which should return the initial value.
   let expectedItem = {key: testKey, initialValue: initialValue(callbackArgumentValue)};
   // We're using the callback to set the expected value, so we need to increment the
