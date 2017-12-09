@@ -5,7 +5,6 @@
 
 #include "nsAuth.h"
 #include "nsAuthSambaNTLM.h"
-#include "nsMemory.h"
 #include "prenv.h"
 #include "plbase64.h"
 #include "prerror.h"
