@@ -56,13 +56,13 @@ add_task(async function testBrowserActionTelemetryTiming() {
   histogram.clear();
 
   is(histogram.snapshot().sum, 0,
-        `No data recorded for histogram: ${TIMING_HISTOGRAM}.`);
+     `No data recorded for histogram: ${TIMING_HISTOGRAM}.`);
 
   await extension1.startup();
   await extension2.startup();
 
   is(histogram.snapshot().sum, 0,
-        `No data recorded for histogram after startup: ${TIMING_HISTOGRAM}.`);
+     `No data recorded for histogram after startup: ${TIMING_HISTOGRAM}.`);
 
   clickBrowserAction(extension1);
   await awaitExtensionPanel(extension1);
@@ -117,7 +117,7 @@ add_task(async function testBrowserActionTelemetryResults() {
   histogram.clear();
 
   is(histogram.snapshot().sum, 0,
-        `No data recorded for histogram: ${TIMING_HISTOGRAM}.`);
+     `No data recorded for histogram: ${TIMING_HISTOGRAM}.`);
 
   await extension.startup();
 

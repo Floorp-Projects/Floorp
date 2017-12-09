@@ -60,7 +60,20 @@ public:
   RemoveManager(ClientManagerParent* aManager);
 
   RefPtr<ClientOpPromise>
+  Navigate(const ClientNavigateArgs& aArgs);
+
+  RefPtr<ClientOpPromise>
+  MatchAll(const ClientMatchAllArgs& aArgs);
+
+  RefPtr<ClientOpPromise>
+  Claim(const ClientClaimArgs& aArgs);
+
+  RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs);
+
+  RefPtr<ClientOpPromise>
+  OpenWindow(const ClientOpenWindowArgs& aArgs,
+             already_AddRefed<ContentParent> aSourceProcess);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManagerService)
 };

@@ -5966,24 +5966,26 @@ nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller)
 
   // Don't allow scripts from content to close non-neterror windows that
   // were not opened by script.
-  nsAutoString url;
-  nsresult rv = mDoc->GetURL(url);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if (mDoc) {
+    nsAutoString url;
+    nsresult rv = mDoc->GetURL(url);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
-  if (!StringBeginsWith(url, NS_LITERAL_STRING("about:neterror")) &&
-      !mHadOriginalOpener && !aTrustedCaller) {
-    bool allowClose = mAllowScriptsToClose ||
-      Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
-    if (!allowClose) {
-      // We're blocking the close operation
-      // report localized error msg in JS console
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag,
-          NS_LITERAL_CSTRING("DOM Window"), mDoc,  // Better name for the category?
-          nsContentUtils::eDOM_PROPERTIES,
-          "WindowCloseBlockedWarning");
+    if (!StringBeginsWith(url, NS_LITERAL_STRING("about:neterror")) &&
+        !mHadOriginalOpener && !aTrustedCaller) {
+      bool allowClose = mAllowScriptsToClose ||
+        Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
+      if (!allowClose) {
+        // We're blocking the close operation
+        // report localized error msg in JS console
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::warningFlag,
+            NS_LITERAL_CSTRING("DOM Window"), mDoc,  // Better name for the category?
+            nsContentUtils::eDOM_PROPERTIES,
+            "WindowCloseBlockedWarning");
 
-      return;
+        return;
+      }
     }
   }
 

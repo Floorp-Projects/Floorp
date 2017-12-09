@@ -25,6 +25,7 @@ class nsIWidget;
 namespace mozilla {
 
 class CancelableRunnable;
+class Runnable;
 
 namespace gfx {
 class DrawTarget;
@@ -84,7 +85,6 @@ private:
   void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
   void DispatchVREvents(TimeStamp aVsyncTimestamp);
   void CancelCurrentSetNeedsCompositeTask();
-  void CancelCurrentVRTask();
 
   class Observer final : public VsyncObserver
   {
@@ -121,7 +121,7 @@ private:
   RefPtr<CancelableRunnable> mSetNeedsCompositeTask;
 
   mozilla::Monitor mCurrentVRListenerTaskMonitor;
-  RefPtr<CancelableRunnable> mCurrentVRListenerTask;
+  RefPtr<Runnable> mCurrentVRListenerTask;
 };
 
 } // namespace layers

@@ -8,6 +8,7 @@
 #include "nsDependentString.h"
 #include "nsAtom.h"
 #include "nsIInterfaceInfoManager.h"
+#include "nsMemory.h"
 #include "nsServiceManagerUtils.h"
 #include "txExpr.h"
 #include "txIFunctionEvaluationContext.h"

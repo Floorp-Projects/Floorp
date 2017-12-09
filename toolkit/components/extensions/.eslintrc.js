@@ -56,7 +56,19 @@ module.exports = {
     "curly": ["error", "all"],
 
     // Two space indent
-    "indent-legacy": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
+    "indent": [
+      "error", 2,
+      {
+        "ArrayExpression": "first",
+        "CallExpression": {"arguments": "first"},
+        "FunctionDeclaration": {"parameters": "first"},
+        "FunctionExpression": {"parameters": "first"},
+        "MemberExpression": "off",
+        "ObjectExpression": "first",
+        "SwitchCase": 1,
+        "ignoredNodes": ["ConditionalExpression"],
+      },
+    ],
 
     // Always require parenthesis for new calls
     "new-parens": "error",

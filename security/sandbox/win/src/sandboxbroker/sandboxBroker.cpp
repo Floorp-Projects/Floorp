@@ -487,11 +487,12 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   }
 
   if (aSandboxLevel > 3) {
-    mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
     // If we're running from a network drive then we can't block loading from
-    // remote locations.
+    // remote locations. Strangely using MITIGATION_IMAGE_LOAD_NO_LOW_LABEL in
+    // this situation also means the process fails to start (bug 1423296).
     if (!sRunningFromNetworkDrive) {
-      mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE;
+      mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
+                     sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
     }
   }
 

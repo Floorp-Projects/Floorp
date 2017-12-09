@@ -31,13 +31,13 @@ add_task(async function test_support_LWT_properties() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-    "LWT text color attribute should be set");
+               "LWT text color attribute should be set");
 
   Assert.ok(style.backgroundImage.includes("image1.png"), "Expected background image");
   Assert.equal(style.backgroundColor, "rgb(" + hexToRGB(ACCENT_COLOR).join(", ") + ")",
-    "Expected correct background color");
+               "Expected correct background color");
   Assert.equal(style.color, "rgb(" + hexToRGB(TEXT_COLOR).join(", ") + ")",
-    "Expected correct text color");
+               "Expected correct text color");
 
   await extension.unload();
 

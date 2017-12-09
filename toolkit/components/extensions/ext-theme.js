@@ -98,8 +98,8 @@ class Theme {
 
       LightweightThemeManager.fallbackThemeData = this.lwtStyles;
       Services.obs.notifyObservers(null,
-        "lightweight-theme-styling-update",
-        JSON.stringify(this.lwtStyles));
+                                   "lightweight-theme-styling-update",
+                                   JSON.stringify(this.lwtStyles));
     } else {
       this.logger.warn("Your theme doesn't include one of the following required " +
         "properties: 'headerURL', 'accentcolor' or 'textcolor'");
@@ -295,8 +295,8 @@ class Theme {
     }
     LightweightThemeManager.fallbackThemeData = null;
     Services.obs.notifyObservers(null,
-      "lightweight-theme-styling-update",
-      JSON.stringify(lwtStyles));
+                                 "lightweight-theme-styling-update",
+                                 JSON.stringify(lwtStyles));
   }
 }
 

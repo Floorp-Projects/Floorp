@@ -34,18 +34,18 @@ add_task(async function test_support_backgrounds_position() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-    "LWT text color attribute should be set");
+               "LWT text color attribute should be set");
 
   let style = window.getComputedStyle(docEl);
   let bgImage = style.backgroundImage.split(",")[0].trim();
   Assert.ok(bgImage.includes("face.png"),
-    `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
+            `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
   Assert.equal(Array(4).fill(bgImage).join(", "), style.backgroundImage,
-    "The backgroundImage should use face.png four times.");
+               "The backgroundImage should use face.png four times.");
   Assert.equal(style.backgroundPosition, "100% 0%, 0% 0%, 50% 0%, 100% 100%",
-    "The backgroundPosition should use the four values provided.");
+               "The backgroundPosition should use the four values provided.");
   Assert.equal(style.backgroundRepeat, "no-repeat",
-    "The backgroundPosition should use the default value.");
+               "The backgroundPosition should use the default value.");
 
   await extension.unload();
 
@@ -88,18 +88,18 @@ add_task(async function test_support_backgrounds_repeat() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-    "LWT text color attribute should be set");
+               "LWT text color attribute should be set");
 
   let style = window.getComputedStyle(docEl);
   let bgImage = style.backgroundImage.split(",")[0].trim();
   Assert.ok(bgImage.includes("face0.png"),
-    `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
+            `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
   Assert.equal([0, 1, 2, 3].map(num => bgImage.replace(/face[\d]*/, `face${num}`)).join(", "),
-    style.backgroundImage, "The backgroundImage should use face.png four times.");
+               style.backgroundImage, "The backgroundImage should use face.png four times.");
   Assert.equal(style.backgroundPosition, "100% 0%",
-    "The backgroundPosition should use the default value.");
+               "The backgroundPosition should use the default value.");
   Assert.equal(style.backgroundRepeat, "no-repeat, repeat-x, repeat-y, repeat",
-    "The backgroundPosition should use the four values provided.");
+               "The backgroundPosition should use the four values provided.");
 
   await extension.unload();
 
@@ -133,18 +133,18 @@ add_task(async function test_additional_images_check() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-    "LWT text color attribute should be set");
+               "LWT text color attribute should be set");
 
   let style = window.getComputedStyle(docEl);
   let bgImage = style.backgroundImage.split(",")[0];
   Assert.ok(bgImage.includes("face.png"),
-    `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
+            `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
   Assert.equal(bgImage + ", none", style.backgroundImage,
-    "The backgroundImage should use face.png only once.");
+               "The backgroundImage should use face.png only once.");
   Assert.equal(style.backgroundPosition, "100% 0%",
-    "The backgroundPosition should use the default value.");
+               "The backgroundPosition should use the default value.");
   Assert.equal(style.backgroundRepeat, "no-repeat",
-    "The backgroundPosition should use only one (default) value.");
+               "The backgroundPosition should use only one (default) value.");
 
   await extension.unload();
 

@@ -647,6 +647,8 @@ public:
   virtual bool
   DeallocPClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor) override;
 
+  static hal::ProcessPriority GetInitialProcessPriority(Element* aFrameElement);
+
   // Control the priority of the IPC messages for input events.
   void SetInputPriorityEventEnabled(bool aEnabled);
   bool IsInputPriorityEventEnabled()
@@ -679,8 +681,6 @@ private:
   static nsTArray<ContentParent*>* sPrivateContent;
   static nsDataHashtable<nsUint32HashKey, ContentParent*> *sJSPluginContentParents;
   static StaticAutoPtr<LinkedList<ContentParent> > sContentParents;
-
-  static hal::ProcessPriority GetInitialProcessPriority(Element* aFrameElement);
 
   static ContentBridgeParent* CreateContentBridgeParent(const TabContext& aContext,
                                                         const hal::ProcessPriority& aPriority,
