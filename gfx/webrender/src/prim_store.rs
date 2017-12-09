@@ -19,8 +19,8 @@ use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuData
 use gpu_types::ClipScrollNodeData;
 use picture::{PictureKind, PicturePrimitive, RasterizationSpace};
 use profiler::FrameProfileCounters;
-use render_task::{ClipChainNode, ClipChainNodeIter, ClipWorkItem, RenderTask, RenderTaskId};
-use render_task::RenderTaskTree;
+use render_task::{ClipChain, ClipChainNode, ClipChainNodeIter, ClipWorkItem, RenderTask};
+use render_task::{RenderTaskId, RenderTaskTree};
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use resource_cache::{ImageProperties, ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
@@ -207,6 +207,15 @@ pub enum BrushKind {
         color: ColorF,
     },
     Clear,
+}
+
+impl BrushKind {
+    fn is_solid(&self) -> bool {
+        match *self {
+            BrushKind::Solid { .. } => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -1367,6 +1376,154 @@ impl PrimitiveStore {
         }
     }
 
+    fn write_brush_nine_patch_segment_description(
+        &mut self,
+        prim_index: PrimitiveIndex,
+        prim_context: &PrimitiveContext,
+        clip_store: &mut ClipStore,
+        node_data: &[ClipScrollNodeData],
+        clips: &Vec<ClipWorkItem>,
+    ) {
+        debug_assert!(self.cpu_metadata[prim_index.0].prim_kind == PrimitiveKind::Brush);
+
+        if clips.len() != 1 {
+            return;
+        }
+
+        let clip_item = clips.first().unwrap();
+        if clip_item.coordinate_system_id != prim_context.scroll_node.coordinate_system_id {
+            return;
+        }
+
+        let metadata = &self.cpu_metadata[prim_index.0];
+        let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
+        if brush.segment_desc.is_some() {
+            return;
+        }
+        if !brush.kind.is_solid() {
+            return;
+        }
+        if metadata.local_rect.size.area() <= MIN_BRUSH_SPLIT_AREA {
+            return;
+        }
+
+        let local_clips = clip_store.get_opt(&clip_item.clip_sources).expect("bug");
+        let mut selected_clip = None;
+        for &(ref clip, _) in &local_clips.clips {
+            match *clip {
+                ClipSource::RoundedRectangle(rect, radii, ClipMode::Clip) => {
+                    if selected_clip.is_some() {
+                        selected_clip = None;
+                        break;
+                    }
+                    selected_clip = Some((rect, radii, clip_item.scroll_node_data_index));
+                }
+                ClipSource::Rectangle(..) => {}
+                ClipSource::RoundedRectangle(_, _, ClipMode::ClipOut) |
+                ClipSource::BorderCorner(..) |
+                ClipSource::Image(..) => {
+                    selected_clip = None;
+                    break;
+                }
+            }
+        }
+
+        if let Some((rect, radii, clip_scroll_node_data_index)) = selected_clip {
+            // If the scroll node transforms are different between the clip
+            // node and the primitive, we need to get the clip rect in the
+            // local space of the primitive, in order to generate correct
+            // local segments.
+            let local_clip_rect = if clip_scroll_node_data_index == prim_context.scroll_node.node_data_index {
+                rect
+            } else {
+                let clip_transform_data = &node_data[clip_scroll_node_data_index.0 as usize];
+                let prim_transform = &prim_context.scroll_node.world_content_transform;
+
+                let relative_transform = prim_transform
+                    .inverse()
+                    .unwrap_or(WorldToLayerTransform::identity())
+                    .pre_mul(&clip_transform_data.transform);
+
+                relative_transform.transform_rect(&rect)
+            };
+            brush.segment_desc = create_nine_patch(
+                &metadata.local_rect,
+                &local_clip_rect,
+                &radii
+            );
+        }
+    }
+
+    fn update_nine_patch_clip_task_for_brush(
+        &mut self,
+        prim_context: &PrimitiveContext,
+        prim_index: PrimitiveIndex,
+        render_tasks: &mut RenderTaskTree,
+        clip_store: &mut ClipStore,
+        tasks: &mut Vec<RenderTaskId>,
+        node_data: &[ClipScrollNodeData],
+        clips: &Vec<ClipWorkItem>,
+        combined_outer_rect: &DeviceIntRect,
+    ) -> bool {
+        if self.cpu_metadata[prim_index.0].prim_kind != PrimitiveKind::Brush {
+            return false;
+        }
+
+        self.write_brush_nine_patch_segment_description(
+            prim_index,
+            prim_context,
+            clip_store,
+            node_data,
+            clips
+        );
+
+        let metadata = &self.cpu_metadata[prim_index.0];
+        let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
+        let segment_desc = match brush.segment_desc {
+            Some(ref mut description) => description,
+            None => return false,
+        };
+
+        let enabled_segments = segment_desc.enabled_segments;
+        let can_optimize_clip_mask = segment_desc.can_optimize_clip_mask;
+
+        for (i, segment) in segment_desc.segments.iter_mut().enumerate() {
+            // We only build clips for the corners. The ordering of the
+            // BrushSegmentKind enum is such that corners come first, then
+            // edges, then inner.
+            let segment_enabled = ((1 << i) & enabled_segments) != 0;
+            let create_clip_task =
+               segment_enabled &&
+               (!can_optimize_clip_mask || i <= BrushSegmentKind::BottomLeft as usize);
+
+            segment.clip_task_id = if create_clip_task {
+                let segment_screen_rect = calculate_screen_bounding_rect(
+                    &prim_context.scroll_node.world_content_transform,
+                    &segment.local_rect,
+                    prim_context.device_pixel_ratio
+                );
+
+                combined_outer_rect.intersection(&segment_screen_rect).map(|bounds| {
+                    let clip_task = RenderTask::new_mask(
+                        None,
+                        bounds,
+                        clips.clone(),
+                        prim_context.scroll_node.coordinate_system_id,
+                    );
+
+                    let clip_task_id = render_tasks.add(clip_task);
+                    tasks.push(clip_task_id);
+
+                    clip_task_id
+                })
+            } else {
+                None
+            };
+        }
+
+        true
+    }
+
     fn update_clip_task(
         &mut self,
         prim_index: PrimitiveIndex,
@@ -1380,13 +1537,12 @@ impl PrimitiveStore {
         tasks: &mut Vec<RenderTaskId>,
         node_data: &[ClipScrollNodeData],
     ) -> bool {
-        let metadata = &mut self.cpu_metadata[prim_index.0];
-        metadata.clip_task_id = None;
+        self.cpu_metadata[prim_index.0].clip_task_id = None;
 
         let prim_screen_rect = match prim_screen_rect.intersection(screen_rect) {
             Some(rect) => rect,
             None => {
-                metadata.screen_rect = None;
+                self.cpu_metadata[prim_index.0].screen_rect = None;
                 return false;
             }
         };
@@ -1400,6 +1556,7 @@ impl PrimitiveStore {
         let prim_coordinate_system_id = prim_context.scroll_node.coordinate_system_id;
         let transform = &prim_context.scroll_node.world_content_transform;
         let extra_clip =  {
+            let metadata = &self.cpu_metadata[prim_index.0];
             let prim_clips = clip_store.get_mut(&metadata.clip_sources);
             if prim_clips.has_clips() {
                 prim_clips.update(gpu_cache, resource_cache);
@@ -1431,34 +1588,18 @@ impl PrimitiveStore {
         let combined_outer_rect = match combined_outer_rect {
             Some(rect) if !rect.is_empty() => rect,
             _ => {
-                metadata.screen_rect = None;
+                self.cpu_metadata[prim_index.0].screen_rect = None;
                 return false;
             }
         };
 
-        // Filter out all the clip instances that don't contribute to the result.
         let mut combined_inner_rect = *screen_rect;
-        let clips: Vec<_> = ClipChainNodeIter { current: extra_clip }
-            .chain(ClipChainNodeIter { current: clip_chain })
-            .take_while(|node| {
-                !node.combined_inner_screen_rect.contains_rect(&combined_outer_rect)
-            })
-            .filter_map(|node| {
-                combined_inner_rect = if !node.screen_inner_rect.is_empty() {
-                    // If this clip's inner area contains the area of the primitive clipped
-                    // by previous clips, then it's not going to affect rendering in any way.
-                    if node.screen_inner_rect.contains_rect(&combined_outer_rect) {
-                        return None;
-                    }
-                    combined_inner_rect.intersection(&node.screen_inner_rect)
-                        .unwrap_or_else(DeviceIntRect::zero)
-                } else {
-                    DeviceIntRect::zero()
-                };
-
-                Some(node.work_item.clone())
-            })
-            .collect();
+        let clips = convert_clip_chain_to_clip_vector(
+            clip_chain,
+            extra_clip,
+            &combined_outer_rect,
+            &mut combined_inner_rect
+        );
 
         if clips.is_empty() {
             // If this item is in the root coordinate system, then
@@ -1483,116 +1624,30 @@ impl PrimitiveStore {
            return true;
         }
 
-        let mut needs_prim_clip_task = true;
-
-        if metadata.prim_kind == PrimitiveKind::Brush {
-            let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
-            if brush.segment_desc.is_none() && metadata.local_rect.size.area() > MIN_BRUSH_SPLIT_AREA {
-                if let BrushKind::Solid { .. } = brush.kind {
-                    if clips.len() == 1 {
-                        let clip_item = clips.first().unwrap();
-                        if clip_item.coordinate_system_id == prim_coordinate_system_id {
-                            let local_clips = clip_store.get_opt(&clip_item.clip_sources).expect("bug");
-                            let mut selected_clip = None;
-                            for &(ref clip, _) in &local_clips.clips {
-                                match *clip {
-                                    ClipSource::RoundedRectangle(rect, radii, ClipMode::Clip) => {
-                                        if selected_clip.is_some() {
-                                            selected_clip = None;
-                                            break;
-                                        }
-                                        selected_clip = Some((rect, radii, clip_item.scroll_node_data_index));
-                                    }
-                                    ClipSource::Rectangle(..) => {}
-                                    ClipSource::RoundedRectangle(_, _, ClipMode::ClipOut) |
-                                    ClipSource::BorderCorner(..) |
-                                    ClipSource::Image(..) => {
-                                        selected_clip = None;
-                                        break;
-                                    }
-                                }
-                            }
-                            if let Some((rect, radii, clip_scroll_node_data_index)) = selected_clip {
-                                // If the scroll node transforms are different between the clip
-                                // node and the primitive, we need to get the clip rect in the
-                                // local space of the primitive, in order to generate correct
-                                // local segments.
-                                let local_clip_rect = if clip_scroll_node_data_index == prim_context.scroll_node.node_data_index {
-                                    rect
-                                } else {
-                                    let clip_transform_data = &node_data[clip_scroll_node_data_index.0 as usize];
-                                    let prim_transform = &prim_context.scroll_node.world_content_transform;
-
-                                    let relative_transform = prim_transform
-                                        .inverse()
-                                        .unwrap_or(WorldToLayerTransform::identity())
-                                        .pre_mul(&clip_transform_data.transform);
-
-                                    relative_transform.transform_rect(&rect)
-                                };
-                                brush.segment_desc = create_nine_patch(
-                                    &metadata.local_rect,
-                                    &local_clip_rect,
-                                    &radii
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-
-            if let Some(ref mut segment_desc) = brush.segment_desc {
-                let enabled_segments = segment_desc.enabled_segments;
-                let can_optimize_clip_mask = segment_desc.can_optimize_clip_mask;
-
-                for (i, segment) in segment_desc.segments.iter_mut().enumerate() {
-                    // We only build clips for the corners. The ordering of the
-                    // BrushSegmentKind enum is such that corners come first, then
-                    // edges, then inner.
-                    let segment_enabled = ((1 << i) & enabled_segments) != 0;
-                    let create_clip_task = segment_enabled &&
-                                           (!can_optimize_clip_mask || i <= BrushSegmentKind::BottomLeft as usize);
-                    segment.clip_task_id = if create_clip_task {
-                        let segment_screen_rect = calculate_screen_bounding_rect(
-                            &prim_context.scroll_node.world_content_transform,
-                            &segment.local_rect,
-                            prim_context.device_pixel_ratio
-                        );
-
-                        combined_outer_rect.intersection(&segment_screen_rect).map(|bounds| {
-                            let clip_task = RenderTask::new_mask(
-                                None,
-                                bounds,
-                                clips.clone(),
-                                prim_coordinate_system_id,
-                            );
-
-                            let clip_task_id = render_tasks.add(clip_task);
-                            tasks.push(clip_task_id);
-
-                            clip_task_id
-                        })
-                    } else {
-                        None
-                    };
-                }
-
-                needs_prim_clip_task = false;
-            }
+        // First try to  render this primitive's mask using optimized nine-patch brush rendering.
+        if self.update_nine_patch_clip_task_for_brush(
+            prim_context,
+            prim_index,
+            render_tasks,
+            clip_store,
+            tasks,
+            node_data,
+            &clips,
+            &combined_outer_rect,
+        ) {
+            return true;
         }
 
-        if needs_prim_clip_task {
-            let clip_task = RenderTask::new_mask(
-                None,
-                combined_outer_rect,
-                clips,
-                prim_coordinate_system_id,
-            );
+        let clip_task = RenderTask::new_mask(
+            None,
+            combined_outer_rect,
+            clips,
+            prim_coordinate_system_id,
+        );
 
-            let clip_task_id = render_tasks.add(clip_task);
-            metadata.clip_task_id = Some(clip_task_id);
-            tasks.push(clip_task_id);
-        }
+        let clip_task_id = render_tasks.add(clip_task);
+        self.cpu_metadata[prim_index.0].clip_task_id = Some(clip_task_id);
+        tasks.push(clip_task_id);
 
         true
     }
@@ -1912,4 +1967,34 @@ fn create_nine_patch(
 
         Box::new(desc)
     })
+}
+
+fn convert_clip_chain_to_clip_vector(
+    clip_chain: ClipChain,
+    extra_clip: ClipChain,
+    combined_outer_rect: &DeviceIntRect,
+    combined_inner_rect: &mut DeviceIntRect,
+) -> Vec<ClipWorkItem> {
+    // Filter out all the clip instances that don't contribute to the result.
+    ClipChainNodeIter { current: extra_clip }
+        .chain(ClipChainNodeIter { current: clip_chain })
+        .take_while(|node| {
+            !node.combined_inner_screen_rect.contains_rect(&combined_outer_rect)
+        })
+        .filter_map(|node| {
+            *combined_inner_rect = if !node.screen_inner_rect.is_empty() {
+                // If this clip's inner area contains the area of the primitive clipped
+                // by previous clips, then it's not going to affect rendering in any way.
+                if node.screen_inner_rect.contains_rect(&combined_outer_rect) {
+                    return None;
+                }
+                combined_inner_rect.intersection(&node.screen_inner_rect)
+                    .unwrap_or_else(DeviceIntRect::zero)
+            } else {
+                DeviceIntRect::zero()
+            };
+
+            Some(node.work_item.clone())
+        })
+        .collect()
 }

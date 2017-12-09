@@ -6374,7 +6374,7 @@ class BuiltInInstallLocation extends DirectoryInstallLocation {
     let manifest;
     try {
       let url = Services.io.newURI(BUILT_IN_ADDONS_URI);
-      let data = Cu.readURI(url);
+      let data = Cu.readUTF8URI(url);
       manifest = JSON.parse(data);
     } catch (e) {
       logger.warn("List of valid built-in add-ons could not be parsed.", e);

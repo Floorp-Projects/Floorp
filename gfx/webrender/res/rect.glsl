@@ -27,3 +27,22 @@ RectWithSize to_rect_with_size(RectWithEndpoint rect) {
 
     return result;
 }
+
+RectWithSize transform_rect(RectWithSize rect, mat2 transform) {
+    vec2 center = transform * (rect.p0 + rect.size * 0.5);
+    vec2 radius = mat2(abs(transform[0]), abs(transform[1])) * (rect.size * 0.5);
+    return RectWithSize(center - radius, radius * 2.0);
+}
+
+RectWithSize intersect_rects(RectWithSize a, RectWithSize b) {
+    RectWithSize result;
+    result.p0 = max(a.p0, b.p0);
+    result.size = min(a.p0 + a.size, b.p0 + b.size) - result.p0;
+
+    return result;
+}
+
+bool rect_inside_rect(RectWithSize little, RectWithSize big) {
+    return all(lessThanEqual(vec4(big.p0, little.p0 + little.size),
+                             vec4(little.p0, big.p0 + big.size)));
+}

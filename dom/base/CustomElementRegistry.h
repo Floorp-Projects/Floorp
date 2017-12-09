@@ -217,6 +217,8 @@ public:
 
   CustomElementReactionsStack()
     : mIsBackupQueueProcessing(false)
+    , mRecursionDepth(0)
+    , mIsElementQueuePushedForCurrentRecursionDepth(false)
   {
   }
 
@@ -241,17 +243,66 @@ public:
   void EnqueueCallbackReaction(Element* aElement,
                                UniquePtr<CustomElementCallback> aCustomElementCallback);
 
-  // [CEReactions] Before executing the algorithm's steps
-  // Push a new element queue onto the custom element reactions stack.
-  void CreateAndPushElementQueue();
+  /**
+   * [CEReactions] Before executing the algorithm's steps.
+   * Increase the current recursion depth, and the element queue is pushed
+   * lazily when we really enqueue reactions.
+   *
+   * @return true if the element queue is pushed for "previous" recursion depth.
+   */
+  bool EnterCEReactions()
+  {
+    bool temp = mIsElementQueuePushedForCurrentRecursionDepth;
+    mRecursionDepth++;
+    // The is-element-queue-pushed flag is initially false when entering a new
+    // recursion level. The original value will be cached in AutoCEReaction
+    // and restored after leaving this recursion level.
+    mIsElementQueuePushedForCurrentRecursionDepth = false;
+    return temp;
+  }
 
-  // [CEReactions] After executing the algorithm's steps
-  // Pop the element queue from the custom element reactions stack,
-  // and invoke custom element reactions in that queue.
-  void PopAndInvokeElementQueue();
+  /**
+   * [CEReactions] After executing the algorithm's steps.
+   * Pop and invoke the element queue if it is created and pushed for current
+   * recursion depth, then decrease the current recursion depth.
+   *
+   * @param aCx JSContext used for handling exception thrown by algorithm's
+   *            steps, this could be a nullptr.
+   *        aWasElementQueuePushed used for restoring status after leaving
+   *                               current recursion.
+   */
+  void LeaveCEReactions(JSContext* aCx, bool aWasElementQueuePushed)
+  {
+    MOZ_ASSERT(mRecursionDepth);
+
+    if (mIsElementQueuePushedForCurrentRecursionDepth) {
+      Maybe<JS::AutoSaveExceptionState> ases;
+      if (aCx) {
+        ases.emplace(aCx);
+      }
+      PopAndInvokeElementQueue();
+    }
+    mRecursionDepth--;
+    // Restore the is-element-queue-pushed flag cached in AutoCEReaction when
+    // leaving the recursion level.
+    mIsElementQueuePushedForCurrentRecursionDepth = aWasElementQueuePushed;
+
+    MOZ_ASSERT_IF(!mRecursionDepth, mReactionsStack.IsEmpty());
+  }
 
 private:
   ~CustomElementReactionsStack() {};
+
+  /**
+   * Push a new element queue onto the custom element reactions stack.
+   */
+  void CreateAndPushElementQueue();
+
+  /**
+   * Pop the element queue from the custom element reactions stack, and invoke
+   * custom element reactions in that queue.
+   */
+  void PopAndInvokeElementQueue();
 
   // The choice of 8 for the auto size here is based on gut feeling.
   AutoTArray<UniquePtr<ElementQueue>, 8> mReactionsStack;
@@ -268,6 +319,13 @@ private:
   void InvokeReactions(ElementQueue* aElementQueue, nsIGlobalObject* aGlobal);
 
   void Enqueue(Element* aElement, CustomElementReaction* aReaction);
+
+  // Current [CEReactions] recursion depth.
+  uint32_t mRecursionDepth;
+  // True if the element queue is pushed into reaction stack for current
+  // recursion depth. This will be cached in AutoCEReaction when entering a new
+  // CEReaction recursion and restored after leaving the recursion.
+  bool mIsElementQueuePushedForCurrentRecursionDepth;
 
 private:
   class BackupQueueMicroTask final : public mozilla::MicroTaskRunnable {
@@ -436,19 +494,22 @@ class MOZ_RAII AutoCEReaction final {
     // exception during the lifetime of the AutoCEReaction.
     AutoCEReaction(CustomElementReactionsStack* aReactionsStack, JSContext* aCx)
       : mReactionsStack(aReactionsStack)
-      , mCx(aCx) {
-      mReactionsStack->CreateAndPushElementQueue();
+      , mCx(aCx)
+    {
+      mIsElementQueuePushedForPreviousRecursionDepth =
+        mReactionsStack->EnterCEReactions();
     }
-    ~AutoCEReaction() {
-      Maybe<JS::AutoSaveExceptionState> ases;
-      if (mCx) {
-        ases.emplace(mCx);
-      }
-      mReactionsStack->PopAndInvokeElementQueue();
+
+    ~AutoCEReaction()
+    {
+      mReactionsStack->LeaveCEReactions(
+        mCx, mIsElementQueuePushedForPreviousRecursionDepth);
     }
+
   private:
     RefPtr<CustomElementReactionsStack> mReactionsStack;
     JSContext* mCx;
+    bool mIsElementQueuePushedForPreviousRecursionDepth;
 };
 
 } // namespace dom

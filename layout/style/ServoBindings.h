@@ -715,6 +715,10 @@ const nsTArray<mozilla::dom::Element*>* Gecko_GetElementsWithId(
     const nsIDocument* aDocument,
     nsAtom* aId);
 
+// Check the value of the given bool preference. The pref name needs to
+// be null-terminated.
+bool Gecko_GetBoolPrefValue(const char* pref_name);
+
 } // extern "C"
 
 #endif // mozilla_ServoBindings_h

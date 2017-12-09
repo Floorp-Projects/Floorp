@@ -29,6 +29,7 @@ impl Drop for CFData {
 }
 
 impl_TCFType!(CFData, CFDataRef, CFDataGetTypeID);
+impl_CFTypeDescription!(CFData);
 
 impl CFData {
     pub fn from_buffer(buffer: &[u8]) -> CFData {
