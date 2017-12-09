@@ -42,7 +42,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
     private static String LOGTAG = "ManualAddSearchEngine";
 
     // Set so the user doesn't have to wait *too* long. It's used twice: once for connecting and once for reading.
-    private static int SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS = 4000;
+    private static final int SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS = 4000;
 
     /**
      * A reference to an active async task, if applicable, used to manage the task for lifecycle changes.
