@@ -5,6 +5,9 @@
 const ADDON_ID = "test-devtools@mozilla.org";
 const ADDON_NAME = "test-devtools";
 
+const PACKAGED_ADDON_ID = "bug1273184@tests";
+const PACKAGED_ADDON_NAME = "bug 1273184";
+
 function getReloadButton(document, addonName) {
   const names = getInstalledAddonNames(document);
   const name = names.filter(element => element.textContent === addonName)[0];
@@ -107,31 +110,28 @@ add_task(function* reloadButtonRefreshesMetadata() {
   const tempExt = new TempWebExt(ADDON_ID);
   tempExt.writeManifest(manifestBase);
 
-  const onAddonListUpdated = waitForMutation(getTemporaryAddonList(document),
-                                             { childList: true });
   const onInstalled = promiseAddonEvent("onInstalled");
   yield AddonManager.installTemporaryAddon(tempExt.sourceDir);
-  const [addon] = yield onInstalled;
-  info(`addon installed: ${addon.id}`);
-  yield onAddonListUpdated;
+
+  info("Wait until addon onInstalled event is received");
+  yield onInstalled;
+
+  info("Wait until addon appears in about:debugging#addons");
+  yield waitUntilAddonContainer("Temporary web extension", document);
 
   const newName = "Temporary web extension (updated)";
   tempExt.writeManifest(Object.assign({}, manifestBase, {name: newName}));
 
   // Wait for the add-on list to be updated with the reloaded name.
   const onReInstall = promiseAddonEvent("onInstalled");
-  const onAddonReloaded = waitForContentMutation(getTemporaryAddonList(document));
-
   const reloadButton = getReloadButton(document, manifestBase.name);
   reloadButton.click();
 
-  yield onAddonReloaded;
+  info("Wait until addon onInstalled event is received again");
   const [reloadedAddon] = yield onReInstall;
-  // Make sure the name was updated correctly.
-  const allAddons = getInstalledAddonNames(document)
-    .map(element => element.textContent);
-  const nameWasUpdated = allAddons.some(name => name === newName);
-  ok(nameWasUpdated, `New name appeared in reloaded add-ons: ${allAddons}`);
+
+  info("Wait until addon name is updated in about:debugging#addons");
+  yield waitUntilAddonContainer(newName, document);
 
   yield tearDownAddon(reloadedAddon);
   tempExt.remove();
@@ -141,11 +141,14 @@ add_task(function* reloadButtonRefreshesMetadata() {
 add_task(function* onlyTempInstalledAddonsCanBeReloaded() {
   const { tab, document } = yield openAboutDebugging("addons");
   yield waitForInitialAddonList(document);
-  const onAddonListUpdated = waitForMutation(getAddonList(document),
-                                             { childList: true });
   yield installAddonWithManager(getSupportsFile("addons/bug1273184.xpi").file);
-  yield onAddonListUpdated;
-  const addon = yield getAddonByID("bug1273184@tests");
+
+  info("Wait until addon appears in about:debugging#addons");
+  yield waitUntilAddonContainer(PACKAGED_ADDON_NAME, document);
+
+  info("Retrieved the installed addon from the addon manager");
+  const addon = yield getAddonByID(PACKAGED_ADDON_ID);
+  is(addon.name, PACKAGED_ADDON_NAME, "Addon name is correct");
 
   const reloadButton = getReloadButton(document, addon.name);
   ok(!reloadButton, "There should not be a reload button");

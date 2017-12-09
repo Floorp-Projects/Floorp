@@ -836,6 +836,14 @@ HttpObserverManager = {
           }
         }
 
+        if (result.upgradeToSecure && kind === "opening") {
+          try {
+            channel.upgradeToSecure();
+          } catch (e) {
+            Cu.reportError(e);
+          }
+        }
+
         if (opts.requestHeaders && result.requestHeaders && requestHeaders) {
           requestHeaders.applyChanges(result.requestHeaders);
         }

@@ -209,8 +209,7 @@ extern {
                                    bytes: *const u8,
                                    numBytes: CFIndex,
                                    encoding: CFStringEncoding,
-                                   isExternalRepresentation: Boolean,
-                                   contentsDeallocator: CFAllocatorRef)
+                                   isExternalRepresentation: Boolean)
                                    -> CFStringRef;
     pub fn CFStringCreateWithBytesNoCopy(alloc: CFAllocatorRef,
                                          bytes: *const u8,

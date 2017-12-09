@@ -6,4 +6,7 @@
 == at-rule-error-handling-media-1.html at-rule-error-handling-ref.html
 == invalid-font-face-descriptor-1.html invalid-font-face-descriptor-1-ref.html
 == two-dash-identifiers.html two-dash-identifiers-ref.html
-== supports-moz-bool-pref.html supports-moz-bool-pref-ref.html
+
+test-pref(testing.supports.moz-bool-pref,true) == supports-moz-bool-pref-1.html green-ref.html
+test-pref(testing.supports.moz-bool-pref,false) == supports-moz-bool-pref-2.html green-ref.html
+test-pref(testing.supports.moz-bool-pref,true) == supports-moz-bool-pref-3.html green-ref.html

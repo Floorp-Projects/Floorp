@@ -12,15 +12,40 @@
 pub use core_foundation_sys::array::*;
 pub use core_foundation_sys::base::{CFIndex, CFRelease};
 use core_foundation_sys::base::{CFTypeRef, kCFAllocatorDefault};
+use base::CFType;
 use libc::c_void;
 use std::mem;
+use std::marker::PhantomData;
 
 use base::{CFIndexConvertible, TCFType, CFRange};
 
 /// A heterogeneous immutable array.
-pub struct CFArray(CFArrayRef);
+pub struct CFArray<T = *const c_void>(CFArrayRef, PhantomData<T>);
 
-impl Drop for CFArray {
+/// A trait describing how to convert from the stored *const c_void to the desired T
+pub unsafe trait FromVoid {
+    unsafe fn from_void(x: *const c_void) -> Self;
+}
+
+unsafe impl FromVoid for u32 {
+    unsafe fn from_void(x: *const c_void) -> u32 {
+        x as usize as u32
+    }
+}
+
+unsafe impl FromVoid for *const c_void {
+    unsafe fn from_void(x: *const c_void) -> *const c_void {
+        x
+    }
+}
+
+unsafe impl FromVoid for CFType {
+    unsafe fn from_void(x: *const c_void) -> CFType {
+        TCFType::wrap_under_get_rule(mem::transmute(x))
+    }
+}
+
+impl<T> Drop for CFArray<T> {
     fn drop(&mut self) {
         unsafe {
             CFRelease(self.as_CFTypeRef())
@@ -28,15 +53,15 @@ impl Drop for CFArray {
     }
 }
 
-pub struct CFArrayIterator<'a> {
-    array: &'a CFArray,
+pub struct CFArrayIterator<'a, T: 'a> {
+    array: &'a CFArray<T>,
     index: CFIndex,
 }
 
-impl<'a> Iterator for CFArrayIterator<'a> {
-    type Item = *const c_void;
+impl<'a, T: FromVoid> Iterator for CFArrayIterator<'a, T> {
+    type Item = T;
 
-    fn next(&mut self) -> Option<*const c_void> {
+    fn next(&mut self) -> Option<T> {
         if self.index >= self.array.len() {
             None
         } else {
@@ -47,11 +72,18 @@ impl<'a> Iterator for CFArrayIterator<'a> {
     }
 }
 
-impl_TCFType!(CFArray, CFArrayRef, CFArrayGetTypeID);
+impl<'a, T: FromVoid> ExactSizeIterator for CFArrayIterator<'a, T> {
+    fn len(&self) -> usize {
+        (self.array.len() - self.index) as usize
+    }
+}
 
-impl CFArray {
+impl_TCFTypeGeneric!(CFArray, CFArrayRef, CFArrayGetTypeID);
+impl_CFTypeDescriptionGeneric!(CFArray);
+
+impl<T> CFArray<T> {
     /// Creates a new `CFArray` with the given elements, which must be `CFType` objects.
-    pub fn from_CFTypes<R, T>(elems: &[T]) -> CFArray where T: TCFType<R> {
+    pub fn from_CFTypes<R>(elems: &[T]) -> CFArray<T> where T: TCFType<R> {
         unsafe {
             let elems: Vec<CFTypeRef> = elems.iter().map(|elem| elem.as_CFTypeRef()).collect();
             let array_ref = CFArrayCreate(kCFAllocatorDefault,
@@ -62,13 +94,22 @@ impl CFArray {
         }
     }
 
+    #[deprecated(note = "please use `as_untyped` instead")]
+    pub fn to_untyped(self) -> CFArray {
+        unsafe { CFArray::wrap_under_get_rule(self.0) }
+    }
+
+    pub fn as_untyped(&self) -> CFArray {
+        unsafe { CFArray::wrap_under_get_rule(self.0) }
+    }
+
     /// Iterates over the elements of this `CFArray`.
     ///
     /// Careful; the loop body must wrap the reference properly. Generally, when array elements are
     /// Core Foundation objects (not always true), they need to be wrapped with
     /// `TCFType::wrap_under_get_rule()`.
     #[inline]
-    pub fn iter<'a>(&'a self) -> CFArrayIterator<'a> {
+    pub fn iter<'a>(&'a self) -> CFArrayIterator<'a, T> {
         CFArrayIterator {
             array: self,
             index: 0
@@ -83,11 +124,9 @@ impl CFArray {
     }
 
     #[inline]
-    pub fn get(&self, index: CFIndex) -> *const c_void {
+    pub fn get(&self, index: CFIndex) -> T where T: FromVoid {
         assert!(index < self.len());
-        unsafe {
-            CFArrayGetValueAtIndex(self.0, index)
-        }
+        unsafe { T::from_void(CFArrayGetValueAtIndex(self.0, index)) }
     }
 
     pub fn get_values(&self, range: CFRange) -> Vec<*const c_void> {
@@ -107,54 +146,90 @@ impl CFArray {
     }
 }
 
-impl<'a> IntoIterator for &'a CFArray {
-    type Item = *const c_void;
-    type IntoIter = CFArrayIterator<'a>;
+impl<'a, T: FromVoid> IntoIterator for &'a CFArray<T> {
+    type Item = T;
+    type IntoIter = CFArrayIterator<'a, T>;
 
-    fn into_iter(self) -> CFArrayIterator<'a> {
+    fn into_iter(self) -> CFArrayIterator<'a, T> {
         self.iter()
     }
 }
 
-#[test]
-fn should_box_and_unbox() {
-    use number::{CFNumber, number};
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::mem;
 
-    let n1 = number(1);
-    let n2 = number(2);
-    let n3 = number(3);
-    let n4 = number(4);
-    let n5 = number(5);
+    #[test]
+    fn to_untyped_correct_retain_count() {
+        let array = CFArray::<CFType>::from_CFTypes(&[]);
+        assert_eq!(array.retain_count(), 1);
 
-    let arr = CFArray::from_CFTypes(&[
-        n1.as_CFType(),
-        n2.as_CFType(),
-        n3.as_CFType(),
-        n4.as_CFType(),
-        n5.as_CFType(),
-    ]);
+        let untyped_array = array.to_untyped();
+        assert_eq!(untyped_array.retain_count(), 1);
+    }
 
-    assert!(arr.get_all_values() == &[n1.as_CFTypeRef(),
-                                      n2.as_CFTypeRef(),
-                                      n3.as_CFTypeRef(),
-                                      n4.as_CFTypeRef(),
-                                      n5.as_CFTypeRef()]);
+    #[test]
+    fn as_untyped_correct_retain_count() {
+        let array = CFArray::<CFType>::from_CFTypes(&[]);
+        assert_eq!(array.retain_count(), 1);
 
-    unsafe {
-        let mut sum = 0;
+        let untyped_array = array.as_untyped();
+        assert_eq!(array.retain_count(), 2);
+        assert_eq!(untyped_array.retain_count(), 2);
 
-        for elem in arr.iter() {
-            let number: CFNumber = TCFType::wrap_under_get_rule(mem::transmute(elem));
-            sum += number.to_i64().unwrap()
+        mem::drop(array);
+        assert_eq!(untyped_array.retain_count(), 1);
+    }
+
+    #[test]
+    fn should_box_and_unbox() {
+        use number::CFNumber;
+
+        let n0 = CFNumber::from(0);
+        let n1 = CFNumber::from(1);
+        let n2 = CFNumber::from(2);
+        let n3 = CFNumber::from(3);
+        let n4 = CFNumber::from(4);
+        let n5 = CFNumber::from(5);
+
+        let arr = CFArray::from_CFTypes(&[
+            n0.as_CFType(),
+            n1.as_CFType(),
+            n2.as_CFType(),
+            n3.as_CFType(),
+            n4.as_CFType(),
+            n5.as_CFType(),
+        ]);
+
+        assert!(arr.get_all_values() == &[n0.as_CFTypeRef(),
+                                        n1.as_CFTypeRef(),
+                                        n2.as_CFTypeRef(),
+                                        n3.as_CFTypeRef(),
+                                        n4.as_CFTypeRef(),
+                                        n5.as_CFTypeRef()]);
+
+        unsafe {
+            let mut sum = 0;
+
+            let mut iter = arr.iter();
+            assert_eq!(iter.len(), 6);
+            assert!(iter.next().is_some());
+            assert_eq!(iter.len(), 5);
+
+            for elem in iter {
+                let number: CFNumber = TCFType::wrap_under_get_rule(mem::transmute(elem));
+                sum += number.to_i64().unwrap()
+            }
+
+            assert!(sum == 15);
+
+            for elem in arr.iter() {
+                let number: CFNumber = TCFType::wrap_under_get_rule(mem::transmute(elem));
+                sum += number.to_i64().unwrap()
+            }
+
+            assert!(sum == 30);
         }
-
-        assert!(sum == 15);
-
-        for elem in arr.iter() {
-            let number: CFNumber = TCFType::wrap_under_get_rule(mem::transmute(elem));
-            sum += number.to_i64().unwrap()
-        }
-
-        assert!(sum == 30);
     }
 }

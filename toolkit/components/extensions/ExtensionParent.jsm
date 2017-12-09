@@ -1260,7 +1260,7 @@ let IconDetails = {
   // If no context is specified, instead of throwing an error, this
   // function simply logs a warning message.
   normalize(details, extension, context = null) {
-    if (!details.imageData && details.path) {
+    if (!details.imageData && details.path != null) {
       // Pick a cache key for the icon paths. If the path is a string,
       // use it directly. Otherwise, stringify the path object.
       let key = details.path;
@@ -1301,7 +1301,7 @@ let IconDetails = {
 
       let baseURI = context ? context.uri : extension.baseURI;
 
-      if (path) {
+      if (path != null) {
         if (typeof path != "object") {
           path = {"19": path};
         }

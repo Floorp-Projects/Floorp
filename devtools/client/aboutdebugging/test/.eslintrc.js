@@ -9,18 +9,15 @@ module.exports = {
     "addTab": true,
     "assertHasTarget": true,
     "CHROME_ROOT": true,
-    "changeAboutDebuggingHash": true,
     "closeAboutDebugging": true,
     "getServiceWorkerList": true,
     "getSupportsFile": true,
     "installAddon": true,
     "openAboutDebugging": true,
-    "openPanel": true,
     "removeTab": true,
     "uninstallAddon": true,
     "unregisterServiceWorker": true,
     "waitForInitialAddonList": true,
-    "waitForMutation": true,
     "waitForServiceWorkerRegistered": true
   }
 };

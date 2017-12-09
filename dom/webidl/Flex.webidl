@@ -25,6 +25,7 @@ enum FlexLineGrowthState { "unchanged", "shrinking", "growing" };
 interface FlexLine
 {
   readonly attribute FlexLineGrowthState growthState;
+  readonly attribute double crossStart;
   readonly attribute double crossSize;
 
   // firstBaselineOffset measures from flex-start edge.

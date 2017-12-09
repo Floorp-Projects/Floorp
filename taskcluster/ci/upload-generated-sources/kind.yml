@@ -31,6 +31,7 @@ job-template:
         command: >
             cd /builds/worker/checkouts/gecko &&
             ./mach python build/upload_generated_sources.py ${ARTIFACT_URL}
+        sparse-profile: upload-generated-sources
     optimization:
         only-if-dependencies-run: null
     scopes:

@@ -34,6 +34,10 @@ impl CoordinateSystemId {
         let CoordinateSystemId(id) = *self;
         CoordinateSystemId(id + 1)
     }
+
+    pub fn advance(&mut self) {
+        self.0 += 1;
+    }
 }
 
 pub struct ClipScrollTree {
@@ -78,7 +82,6 @@ pub struct TransformUpdateState {
     /// display list item, since optimizations can usually only be done among
     /// coordinate systems which are relatively axis aligned.
     pub current_coordinate_system_id: CoordinateSystemId,
-    pub next_coordinate_system_id: CoordinateSystemId,
 }
 
 impl ClipScrollTree {
@@ -362,12 +365,13 @@ impl ClipScrollTree {
             parent_clip_chain: None,
             combined_outer_clip_bounds: *screen_rect,
             combined_inner_clip_bounds: DeviceIntRect::max_rect(),
-            current_coordinate_system_id: CoordinateSystemId(0),
-            next_coordinate_system_id: CoordinateSystemId(0).next(),
+            current_coordinate_system_id: CoordinateSystemId::root(),
         };
+        let mut next_coordinate_system_id = state.current_coordinate_system_id.next();
         self.update_node(
             root_reference_frame_id,
             &mut state,
+            &mut next_coordinate_system_id,
             device_pixel_ratio,
             clip_store,
             resource_cache,
@@ -381,6 +385,7 @@ impl ClipScrollTree {
         &mut self,
         layer_id: ClipId,
         state: &mut TransformUpdateState,
+        next_coordinate_system_id: &mut CoordinateSystemId,
         device_pixel_ratio: f32,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
@@ -402,6 +407,7 @@ impl ClipScrollTree {
 
             node.update(
                 &mut state,
+                next_coordinate_system_id,
                 device_pixel_ratio,
                 clip_store,
                 resource_cache,
@@ -411,10 +417,11 @@ impl ClipScrollTree {
 
             node.push_gpu_node_data(&state, gpu_node_data);
 
-            if !node.children.is_empty() {
-                node.prepare_state_for_children(&mut state, gpu_node_data);
+            if node.children.is_empty() {
+                return;
             }
 
+            node.prepare_state_for_children(&mut state, gpu_node_data);
             node.children.clone()
         };
 
@@ -422,6 +429,7 @@ impl ClipScrollTree {
             self.update_node(
                 child_layer_id,
                 &mut state,
+                next_coordinate_system_id,
                 device_pixel_ratio,
                 clip_store,
                 resource_cache,

@@ -94,7 +94,7 @@ XULStore.prototype = {
 
   readFile() {
     try {
-      this._data = JSON.parse(Cu.readFile(this._storeFile));
+      this._data = JSON.parse(Cu.readUTF8File(this._storeFile));
     } catch (e) {
       this.log("Error reading JSON: " + e);
       // This exception could mean that the file didn't exist.

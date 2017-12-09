@@ -20,27 +20,17 @@ add_task(function* () {
 
   // Listen for mutations in the service-workers list.
   let serviceWorkersElement = getServiceWorkerList(document);
-  let onMutation = waitForMutation(serviceWorkersElement, { childList: true });
 
   let swTab = yield addTab(TAB_URL);
 
-  info("Make the test page notify us when the service worker sends a message.");
-
-  // Wait for the service-workers list to update.
-  yield onMutation;
-
-  // Check that the service worker appears in the UI
-  let names = [...document.querySelectorAll("#service-workers .target-name")];
-  let name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
-  ok(name, "Found the service worker in the list");
-
-  let targetElement = name.parentNode.parentNode;
-  let status = targetElement.querySelector(".target-status");
+  info("Wait until the service worker appears in about:debugging");
+  let container = yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   // We should ideally check that the service worker registration goes through the
   // "registering" and "running" steps, but it is difficult to workaround race conditions
   // for a test running on a wide variety of platforms. Due to intermittent failures, we
   // simply check that the registration transitions to "stopped".
+  let status = container.querySelector(".target-status");
   yield waitUntil(() => status.textContent == "Stopped", 100);
   is(status.textContent, "Stopped", "Service worker is currently stopped");
 
@@ -52,7 +42,7 @@ add_task(function* () {
   }
 
   // Check that the service worker disappeared from the UI
-  names = [...document.querySelectorAll("#service-workers .target-name")];
+  let names = [...document.querySelectorAll("#service-workers .target-name")];
   names = names.map(element => element.textContent);
   ok(!names.includes(SERVICE_WORKER),
     "The service worker url is no longer in the list: " + names);

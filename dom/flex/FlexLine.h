@@ -40,6 +40,7 @@ public:
   }
 
   FlexLineGrowthState GrowthState() const;
+  double CrossStart() const;
   double CrossSize() const;
   double FirstBaselineOffset() const;
   double LastBaselineOffset() const;
@@ -50,6 +51,7 @@ protected:
   RefPtr<Flex> mParent;
 
   FlexLineGrowthState mGrowthState;
+  double mCrossStart;
   double mCrossSize;
   double mFirstBaselineOffset;
   double mLastBaselineOffset;

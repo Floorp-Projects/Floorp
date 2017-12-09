@@ -709,14 +709,17 @@ interface nsIXPCComponents_Utils : nsISupports
      * Reads the given file and returns its contents. If called during early
      * startup, the file will be pre-read on a background thread during profile
      * startup so its contents will be available the next time they're read.
+     *
+     * The file must be a text file encoded in UTF-8. Otherwise the result is
+     * undefined.
      */
-    ACString readFile(in nsIFile file);
+    AUTF8String readUTF8File(in nsIFile file);
 
     /*
      * Reads the given local file URL and returns its contents. This has the
-     * same semantics of readFile.
+     * same semantics of readUTF8File.
      */
-    ACString readURI(in nsIURI url);
+    AUTF8String readUTF8URI(in nsIURI url);
 
     /**
      * If the main thread is using any kind of fancy cooperative

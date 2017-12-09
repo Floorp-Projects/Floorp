@@ -1447,6 +1447,16 @@ class StringType extends Type {
   }
 }
 
+class NullType extends Type {
+  normalize(value, context) {
+    return this.normalizeBase("null", value, context);
+  }
+
+  checkBaseType(baseType) {
+    return baseType == "null";
+  }
+}
+
 let FunctionEntry;
 let Event;
 let SubModuleType;
@@ -2361,6 +2371,7 @@ const TYPES = Object.freeze(Object.assign(Object.create(null), {
   boolean: BooleanType,
   function: FunctionType,
   integer: IntegerType,
+  null: NullType,
   number: NumberType,
   object: ObjectType,
   string: StringType,

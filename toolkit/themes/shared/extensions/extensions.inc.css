@@ -634,7 +634,7 @@ button.warning {
 
 /*** detail view ***/
 
-#detail-view .scrollbox-innerbox {
+#detail-view > .scrollbox-innerbox {
   margin-right: 48px;
   margin-left: 48px;
 }

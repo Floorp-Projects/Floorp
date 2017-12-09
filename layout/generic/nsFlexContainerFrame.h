@@ -54,6 +54,7 @@ struct ComputedFlexItemInfo
 struct ComputedFlexLineInfo
 {
   nsTArray<ComputedFlexItemInfo> mItems;
+  nscoord mCrossStart;
   nscoord mCrossSize;
   nscoord mFirstBaselineOffset;
   nscoord mLastBaselineOffset;
