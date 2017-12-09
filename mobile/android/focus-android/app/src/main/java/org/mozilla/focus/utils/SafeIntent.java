@@ -206,7 +206,7 @@ public class SafeIntent {
 
     public boolean isLauncherIntent() {
         final Set<String> intentCategories = intent.getCategories();
-        return (intentCategories != null && intentCategories.contains(Intent.CATEGORY_LAUNCHER) && intent.getAction().equals(Intent.ACTION_MAIN));
+        return (intentCategories != null && intentCategories.contains(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN.equals(intent.getAction()));
     }
 
     public Intent getUnsafe() {
