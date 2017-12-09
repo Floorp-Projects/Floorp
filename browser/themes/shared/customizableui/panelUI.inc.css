@@ -223,8 +223,8 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
 
-#wrapper-edit-controls:-moz-any([place="palette"],[place="panel"]) > #edit-controls,
-#wrapper-zoom-controls:-moz-any([place="palette"],[place="panel"]) > #zoom-controls {
+#wrapper-edit-controls:-moz-any([place="palette"],[place="menu-panel"]) > #edit-controls,
+#wrapper-zoom-controls:-moz-any([place="palette"],[place="menu-panel"]) > #zoom-controls {
   margin-inline-start: 0;
 }
 
@@ -402,7 +402,7 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   }
 }
 
-toolbarpaletteitem[place=panel] > .toolbarbutton-1 {
+toolbarpaletteitem[place="menu-panel"] > .toolbarbutton-1 {
   -moz-box-flex: 1;
 }
 
@@ -1166,7 +1166,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 }
 
 /* In customize mode, extend the buttons *only* in the panel, just to make them not look stupid */
-toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton {
+toolbarpaletteitem[place="menu-panel"] > .toolbaritem-combined-buttons > toolbarbutton {
   min-width: calc(@menuPanelButtonWidth@ - 1px);
   max-width: calc(@menuPanelButtonWidth@ - 1px);
 }
@@ -1260,7 +1260,7 @@ toolbaritem[overflowedItem=true],
     float: right;
 }
 
-toolbarpaletteitem[place=panel] > .subviewbutton-nav::after {
+toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   opacity: 0.5;
 }
 
