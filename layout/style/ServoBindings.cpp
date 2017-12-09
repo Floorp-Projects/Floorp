@@ -58,6 +58,7 @@
 #include "mozilla/GeckoStyleContext.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/SizeOfState.h"
@@ -2831,4 +2832,11 @@ Gecko_GetElementsWithId(const nsIDocument* aDocument, nsAtom* aId)
   MOZ_ASSERT(aId);
 
   return aDocument->GetAllElementsForId(nsDependentAtomString(aId));
+}
+
+bool
+Gecko_GetBoolPrefValue(const char* aPrefName)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return Preferences::GetBool(aPrefName);
 }

@@ -67,7 +67,10 @@ pub enum PictureKind {
         // If a mix-blend-mode, contains the render task for
         // the readback of the framebuffer that we use to sample
         // from in the mix-blend-mode shader.
-        readback_render_task_id: Option<RenderTaskId>,
+        // For drop-shadow filter, this will store the original
+        // picture task which would be rendered on screen after
+        // blur pass.
+        secondary_render_task_id: Option<RenderTaskId>,
         /// How this picture should be composited.
         /// If None, don't composite - just draw directly on parent surface.
         composite_mode: Option<PictureCompositeMode>,
@@ -186,7 +189,7 @@ impl PicturePrimitive {
             runs: Vec::new(),
             render_task_id: None,
             kind: PictureKind::Image {
-                readback_render_task_id: None,
+                secondary_render_task_id: None,
                 composite_mode,
                 is_in_3d_context,
                 frame_output_pipeline_id,
@@ -235,6 +238,11 @@ impl PicturePrimitive {
                     Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
                         let inflate_size = blur_radius * BLUR_SAMPLE_SCALE;
                         local_content_rect.inflate(inflate_size, inflate_size)
+                    }
+                    Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, _))) => {
+                        let inflate_size = blur_radius * BLUR_SAMPLE_SCALE;
+                        local_content_rect.inflate(inflate_size, inflate_size)
+                                          .translate(&offset)
                     }
                     _ => {
                         local_content_rect
@@ -304,7 +312,7 @@ impl PicturePrimitive {
     ) {
         match self.kind {
             PictureKind::Image {
-                ref mut readback_render_task_id,
+                ref mut secondary_render_task_id,
                 composite_mode,
                 ..
             } => {
@@ -341,6 +349,37 @@ impl PicturePrimitive {
                         let blur_render_task_id = render_tasks.add(blur_render_task);
                         self.render_task_id = Some(blur_render_task_id);
                     }
+                    Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color))) => {
+                        let picture_task = RenderTask::new_picture(
+                            Some(prim_screen_rect.size),
+                            prim_index,
+                            RenderTargetKind::Color,
+                            prim_screen_rect.origin.x as f32 - offset.x,
+                            prim_screen_rect.origin.y as f32 - offset.y,
+                            PremultipliedColorF::TRANSPARENT,
+                            ClearMode::Transparent,
+                            self.rasterization_kind,
+                            child_tasks,
+                            None,
+                        );
+
+                        let blur_std_deviation = blur_radius * prim_context.device_pixel_ratio;
+                        let picture_task_id = render_tasks.add(picture_task);
+
+                        let blur_render_task = RenderTask::new_blur(
+                            blur_std_deviation,
+                            picture_task_id,
+                            render_tasks,
+                            RenderTargetKind::Color,
+                            &[],
+                            ClearMode::Transparent,
+                            color.premultiplied(),
+                            None,
+                        );
+
+                        *secondary_render_task_id = Some(picture_task_id);
+                        self.render_task_id = Some(render_tasks.add(blur_render_task));
+                    }
                     Some(PictureCompositeMode::MixBlend(..)) => {
                         let picture_task = RenderTask::new_picture(
                             Some(prim_screen_rect.size),
@@ -357,7 +396,7 @@ impl PicturePrimitive {
 
                         let readback_task_id = render_tasks.add(RenderTask::new_readback(*prim_screen_rect));
 
-                        *readback_render_task_id = Some(readback_task_id);
+                        *secondary_render_task_id = Some(readback_task_id);
                         parent_tasks.push(readback_task_id);
 
                         self.render_task_id = Some(render_tasks.add(picture_task));

@@ -133,6 +133,7 @@ public:
   void Cancel(uint32_t result, ErrorResult& aRv);
 
   void RedirectTo(nsIURI* uri, ErrorResult& aRv);
+  void UpgradeToSecure(ErrorResult& aRv);
 
 
   bool Suspended() const { return mSuspended; }

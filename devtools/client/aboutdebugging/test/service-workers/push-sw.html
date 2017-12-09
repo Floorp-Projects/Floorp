@@ -6,27 +6,38 @@
 </head>
 <body>
 <script type="text/javascript">
+/* exported sw */
+
 "use strict";
-SpecialPowers.addPermission("desktop-notification", true, document);
-var sw = navigator.serviceWorker.register("push-sw.js");
+// The subscription is expected as a global by browser_service_workers_push_service.js
 var sub = null;
-sw.then(
-  function (registration) {
+
+// The registration promise is expected as a global by head.js's unregisterServiceWorker.
+var sw = (async function () {
+  await new Promise(resolve => {
+    let perm = { type: "desktop-notification", allow: true, context: document };
+    SpecialPowers.pushPermissions([perm], resolve);
+  });
+
+  let registrationPromise = navigator.serviceWorker.register("push-sw.js");
+
+  try {
+    let registration = await registrationPromise;
     dump("SW registered\n");
-    registration.pushManager.subscribe().then(
-      function (subscription) {
-        sub = subscription;
-        dump("SW subscribed to push: " + sub.endpoint + "\n");
-      },
-      function (error) {
-        dump("SW not subscribed to push: " + error + "\n");
-      }
-    );
-  },
-  function (error) {
-    dump("SW not registered: " + error + "\n");
+
+    try {
+      sub = await registration.pushManager.subscribe();
+      dump("SW subscribed to push: " + sub.endpoint + "\n");
+    } catch (e) {
+      dump("SW not subscribed to push: " + e + "\n");
+    }
+  } catch (e) {
+    dump("SW not registered: " + e + "\n");
   }
-);
+
+  return registrationPromise;
+})();
+
 </script>
 </body>
 </html>

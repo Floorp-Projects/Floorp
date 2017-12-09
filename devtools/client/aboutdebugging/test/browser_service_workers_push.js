@@ -20,7 +20,6 @@ add_task(function* () {
 
   // Listen for mutations in the service-workers list.
   let serviceWorkersElement = getServiceWorkerList(document);
-  let onMutation = waitForMutation(serviceWorkersElement, { childList: true });
 
   // Open a tab that registers a push service worker.
   let swTab = yield addTab(TAB_URL);
@@ -35,19 +34,10 @@ add_task(function* () {
   });
 
   // Expect the service worker to claim the test window when activating.
-  let mm = swTab.linkedBrowser.messageManager;
-  let onClaimed = new Promise(done => {
-    mm.addMessageListener("sw-claimed", function listener() {
-      mm.removeMessageListener("sw-claimed", listener);
-      done();
-    });
-  });
+  let onClaimed = onTabMessage(swTab, "sw-claimed");
 
-  // Wait for the service-workers list to update.
-  yield onMutation;
-
-  // Check that the service worker appears in the UI.
-  assertHasTarget(true, document, "service-workers", SERVICE_WORKER);
+  info("Wait until the service worker appears in the UI");
+  yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   info("Ensure that the registration resolved before trying to interact with " +
     "the service worker.");
@@ -66,18 +56,13 @@ add_task(function* () {
   let pushBtn = targetElement.querySelector(".push-button");
   ok(pushBtn, "Found its push button");
 
-  info("Wait for the service worker to claim the test window before " +
-    "proceeding.");
+  info("Wait for the service worker to claim the test window before proceeding.");
   yield onClaimed;
 
   info("Click on the Push button and wait for the service worker to receive " +
     "a push notification");
-  let onPushNotification = new Promise(done => {
-    mm.addMessageListener("sw-pushed", function listener() {
-      mm.removeMessageListener("sw-pushed", listener);
-      done();
-    });
-  });
+  let onPushNotification = onTabMessage(swTab, "sw-pushed");
+
   pushBtn.click();
   yield onPushNotification;
   ok(true, "Service worker received a push notification");
@@ -93,3 +78,16 @@ add_task(function* () {
   yield removeTab(swTab);
   yield closeAboutDebugging(tab);
 });
+
+/**
+ * Helper to listen once on a message sent using postMessage from the provided tab.
+ */
+function onTabMessage(tab, message) {
+  let mm = tab.linkedBrowser.messageManager;
+  return new Promise(done => {
+    mm.addMessageListener(message, function listener() {
+      mm.removeMessageListener(message, listener);
+      done();
+    });
+  });
+}

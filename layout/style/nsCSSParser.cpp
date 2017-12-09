@@ -4526,7 +4526,7 @@ CSSParserImpl::ParseSupportsConditionInParens(bool& aConditionMet)
     return true;
   }
 
-  if (AgentRulesEnabled() &&
+  if ((AgentRulesEnabled() || ChromeRulesEnabled()) &&
       mToken.mType == eCSSToken_Function &&
       mToken.mIdent.LowerCaseEqualsLiteral("-moz-bool-pref")) {
     return ParseSupportsMozBoolPrefName(aConditionMet);

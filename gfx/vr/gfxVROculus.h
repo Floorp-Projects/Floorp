@@ -78,7 +78,7 @@ private:
   bool mIsMounted;
 
   ~VROculusSession();
-  void Uninitialize(bool aUnloadLib);
+  void Uninitialize();
   bool Initialize(ovrInitFlags aFlags);
   bool LoadOvrLib();
   void UnloadOvrLib();

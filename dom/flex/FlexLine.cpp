@@ -44,6 +44,8 @@ FlexLine::FlexLine(Flex* aParent,
   };
 
   // Convert all the app unit values into css pixels.
+  mCrossStart = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aLine->mCrossStart);
   mCrossSize = nsPresContext::AppUnitsToDoubleCSSPixels(
     aLine->mCrossSize);
   mFirstBaselineOffset = nsPresContext::AppUnitsToDoubleCSSPixels(
@@ -70,6 +72,12 @@ FlexLineGrowthState
 FlexLine::GrowthState() const
 {
   return mGrowthState;
+}
+
+double
+FlexLine::CrossStart() const
+{
+  return mCrossStart;
 }
 
 double

@@ -10,44 +10,30 @@ add_task(function* () {
 
   // Wait for initial tabs list which may be empty
   let tabsElement = getTabList(document);
-  if (tabsElement.querySelectorAll(".target-name").length == 0) {
-    yield waitForMutation(tabsElement, { childList: true });
-  }
+  yield waitUntilElement(".target-name", tabsElement);
+
   // Refresh tabsElement to get the .target-list element
   tabsElement = getTabList(document);
 
   let names = [...tabsElement.querySelectorAll(".target-name")];
   let initialTabCount = names.length;
 
-  // Open a new tab in background and wait for its addition in the UI
-  let onNewTab = waitForMutation(tabsElement, { childList: true });
+  info("Open a new background tab");
   let newTab = yield addTab(TAB_URL, { background: true });
-  yield onNewTab;
 
-  // Check that the new tab appears in the UI, but with an empty name
-  let newNames = [...tabsElement.querySelectorAll(".target-name")];
-  newNames = newNames.filter(node => !names.includes(node));
-  is(newNames.length, 1, "A new tab appeared in the list");
-  let newTabTarget = newNames[0];
+  info("Wait for the tab to appear in the list with the correct name");
+  let container = yield waitUntilTabContainer("foo", document);
 
-  // Then wait for title update, but on slow test runner, the title may already
-  // be set to the expected value
-  if (newTabTarget.textContent != "foo") {
-    yield waitForContentMutation(newTabTarget);
-  }
-
-  // Then wait for title update, but on slow test runner, the title may already
-  // be set to the expected value
-  yield waitUntil(() => newTabTarget.title === TAB_URL);
-
-  // Check that the new tab appears in the UI
-  is(newTabTarget.textContent, "foo", "The tab title got updated");
-  is(newTabTarget.title, TAB_URL, "The tab tooltip is the url");
+  info("Wait until the title to update");
+  yield waitUntil(() => {
+    return container.querySelector(".target-name").title === TAB_URL;
+  }, 100);
 
   // Finally, close the tab
-  let onTabsUpdate = waitForMutation(tabsElement, { childList: true });
   yield removeTab(newTab);
-  yield onTabsUpdate;
+
+  info("Wait until the tab container is removed");
+  yield waitUntil(() => !getTabContainer("foo", document), 100);
 
   // Check that the tab disappeared from the UI
   names = [...tabsElement.querySelectorAll("#tabs .target-name")];
@@ -55,3 +41,20 @@ add_task(function* () {
 
   yield closeAboutDebugging(tab);
 });
+
+function getTabContainer(name, document) {
+  let nameElements = [...document.querySelectorAll("#tabs .target-name")];
+  let nameElement = nameElements.filter(element => element.textContent === name)[0];
+  if (nameElement) {
+    return nameElement.closest(".target-container");
+  }
+
+  return null;
+}
+
+function* waitUntilTabContainer(name, document) {
+  yield waitUntil(() => {
+    return getTabContainer(name, document);
+  });
+  return getTabContainer(name, document);
+}

@@ -22,24 +22,23 @@ add_task(function* () {
   ok(img, "warning message is rendered");
 
   let serviceWorkersElement = getServiceWorkerList(document);
-  let onMutation = waitForMutation(serviceWorkersElement, { childList: true });
 
   let swTab = yield addTab(TAB_URL, { background: true });
 
   info("Wait for service worker to appear in the list");
-  yield onMutation;
+  // Check that the service worker appears in the UI
+  let serviceWorkerContainer =
+    yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   info("Check that service worker buttons are disabled.");
-  // Check that the service worker appears in the UI
-  let serviceWorkerContainer = getServiceWorkerContainer(SERVICE_WORKER, document);
-  let debugButton = serviceWorkerContainer.querySelector(".debug-button");
+  let debugButton = getDebugButton(serviceWorkerContainer);
   ok(debugButton.disabled, "Start/Debug button is disabled");
 
   info("Update the preference to 1");
   let onWarningCleared = waitUntil(() => {
     let hasWarning = document.querySelector(".service-worker-multi-process");
     return !hasWarning && !debugButton.disabled;
-  });
+  }, 100);
   yield pushPref("dom.ipc.processCount", 1);
   yield onWarningCleared;
   ok(!debugButton.disabled, "Debug button is enabled.");
@@ -47,10 +46,14 @@ add_task(function* () {
   info("Update the preference back to 2");
   let onWarningRestored = waitUntil(() => {
     let hasWarning = document.querySelector(".service-worker-multi-process");
-    return hasWarning && debugButton.disabled;
-  });
+    return hasWarning && getDebugButton(serviceWorkerContainer).disabled;
+  }, 100);
   yield pushPref("dom.ipc.processCount", 2);
   yield onWarningRestored;
+
+  // Update the reference to the debugButton, as the previous DOM element might have been
+  // deleted.
+  debugButton = getDebugButton(serviceWorkerContainer);
   ok(debugButton.disabled, "Debug button is disabled again.");
 
   info("Unregister service worker");
@@ -64,3 +67,7 @@ add_task(function* () {
   yield removeTab(swTab);
   yield closeAboutDebugging(tab);
 });
+
+function getDebugButton(serviceWorkerContainer) {
+  return serviceWorkerContainer.querySelector(".debug-button");
+}

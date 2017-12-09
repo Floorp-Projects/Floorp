@@ -179,8 +179,10 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
     return NS_ERROR_FAILURE;
   }
 
-  mImageContainer =
-    layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
+  if (!mImageContainer) {
+    mImageContainer =
+      layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
+  }
 
   {
     MonitorAutoLock lock(mMonitor);

@@ -7,11 +7,3 @@
 EXPORTS.mozilla += [
     'fallible.h',
 ]
-
-if CONFIG['OS_TARGET'] == 'Android':
-    # Keep a dummy library until bug 1423802 is fixed.
-    Library('fallible')
-
-    SOURCES += [
-        'fallible.cpp',
-    ]
