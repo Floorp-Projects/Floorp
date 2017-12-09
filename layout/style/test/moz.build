@@ -123,6 +123,10 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
     '/layout/reftests/svg/as-image/svg-image-visited-1a.html',
     '/layout/reftests/svg/as-image/svg-image-visited-1b-helper.svg',
     '/layout/reftests/svg/as-image/svg-image-visited-1b.html',
+    '/layout/reftests/svg/as-image/svg-image-visited-1c-helper.svg',
+    '/layout/reftests/svg/as-image/svg-image-visited-1c.html',
+    '/layout/reftests/svg/as-image/svg-image-visited-1d-helper.svg',
+    '/layout/reftests/svg/as-image/svg-image-visited-1d.html',
     '/layout/reftests/svg/pseudo-classes-02-ref.svg',
     '/layout/reftests/svg/pseudo-classes-02.svg',
 ]
