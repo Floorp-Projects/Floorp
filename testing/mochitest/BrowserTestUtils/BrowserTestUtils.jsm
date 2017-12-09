@@ -741,28 +741,8 @@ this.BrowserTestUtils = {
    *    let promiseEvent = BrowserTestUtils.waitForEvent(element, "eventName");
    *    // Do some processing here that will cause the event to be fired
    *    // ...
-   *    // Now wait until the Promise is fulfilled
-   *    let receivedEvent = await promiseEvent;
-   *
-   * The promise resolution/rejection handler for the returned promise is
-   * guaranteed not to be called until the next event tick after the event
-   * listener gets called, so that all other event listeners for the element
-   * are executed before the handler is executed.
-   *
-   *    let promiseEvent = BrowserTestUtils.waitForEvent(element, "eventName");
-   *    // Same event tick here.
-   *    await promiseEvent;
-   *    // Next event tick here.
-   *
-   * If some code, such like adding yet another event listener, needs to be
-   * executed in the same event tick, use raw addEventListener instead and
-   * place the code inside the event listener.
-   *
-   *    element.addEventListener("load", () => {
-   *      // Add yet another event listener in the same event tick as the load
-   *      // event listener.
-   *      p = BrowserTestUtils.waitForEvent(element, "ready");
-   *    }, { once: true });
+   *    // Now yield until the Promise is fulfilled
+   *    let receivedEvent = yield promiseEvent;
    *
    * @param {Element} subject
    *        The element that should receive the event.
@@ -793,14 +773,14 @@ this.BrowserTestUtils = {
             return;
           }
           subject.removeEventListener(eventName, listener, capture);
-          TestUtils.executeSoon(() => resolve(event));
+          resolve(event);
         } catch (ex) {
           try {
             subject.removeEventListener(eventName, listener, capture);
           } catch (ex2) {
             // Maybe the provided object does not support removeEventListener.
           }
-          TestUtils.executeSoon(() => reject(ex));
+          reject(ex);
         }
       }, capture, wantsUntrusted);
     });
