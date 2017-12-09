@@ -245,41 +245,43 @@ class LcovFile(object):
       'LF': 0,
     }
 
-    def __init__(self, lcov_fh):
-        self.lcov_fh = lcov_fh
+    def __init__(self, lcov_paths):
+        self.lcov_paths = lcov_paths
 
     def iterate_records(self, rewrite_source=None):
         current_source_file = None
         current_preprocessed = False
         current_lines = []
-        for line in self.lcov_fh:
-            line = line.rstrip()
-            if not line:
-                continue
+        for lcov_path in self.lcov_paths:
+            with open(lcov_path) as lcov_fh:
+                for line in lcov_fh:
+                    line = line.rstrip()
+                    if not line:
+                        continue
 
-            if line == 'end_of_record':
-                # We skip records that we couldn't rewrite, that is records for which
-                # rewrite_url returns None.
-                if current_source_file != None:
-                    yield (current_source_file, current_preprocessed, current_lines)
-                current_source_file = None
-                current_preprocessed = False
-                current_lines = []
-                continue
+                    if line == 'end_of_record':
+                        # We skip records that we couldn't rewrite, that is records for which
+                        # rewrite_url returns None.
+                        if current_source_file != None:
+                            yield (current_source_file, current_preprocessed, current_lines)
+                        current_source_file = None
+                        current_preprocessed = False
+                        current_lines = []
+                        continue
 
-            colon = line.find(':')
-            prefix = line[:colon]
+                    colon = line.find(':')
+                    prefix = line[:colon]
 
-            if prefix == 'SF':
-                sf = line[(colon + 1):]
-                res = rewrite_source(sf) if rewrite_source is not None else (sf, False)
-                if res is None:
-                    current_lines.append(line)
-                else:
-                    current_source_file, current_preprocessed = res
-                    current_lines.append('SF:' + current_source_file)
-            else:
-                current_lines.append(line)
+                    if prefix == 'SF':
+                        sf = line[(colon + 1):]
+                        res = rewrite_source(sf) if rewrite_source is not None else (sf, False)
+                        if res is None:
+                            current_lines.append(line)
+                        else:
+                            current_source_file, current_preprocessed = res
+                            current_lines.append('SF:' + current_source_file)
+                    else:
+                        current_lines.append(line)
 
     def parse_record(self, record_content):
         self.current_record = LcovRecord()
@@ -664,10 +666,7 @@ class LcovFileRewriter(object):
         self.url_finder = UrlFinder(appdir, gredir, extra_chrome_manifests)
         self.pp_rewriter = RecordRewriter()
 
-    def rewrite_file(self, in_path, output_suffix):
-        in_path = os.path.abspath(in_path)
-        out_path = in_path + output_suffix
-
+    def rewrite_files(self, in_paths, output_file, output_suffix):
         unknowns = set()
         found_valid = False
 
@@ -694,9 +693,17 @@ class LcovFileRewriter(object):
 
             return source_file, preprocessed
 
-        with open(in_path) as fh, open(out_path, 'w+') as out_fh:
-            lcov_file = LcovFile(fh)
-            lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
+        in_paths = [os.path.abspath(in_path) for in_path in in_paths]
+
+        if output_file:
+            lcov_file = LcovFile(in_paths)
+            with open(output_file, 'w+') as out_fh:
+                lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
+        else:
+            for in_path in in_paths:
+                lcov_file = LcovFile([in_path])
+                with open(in_path + output_suffix, 'w+') as out_fh:
+                    lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
 
         if not found_valid:
             print("WARNING: No valid records found in %s" % in_path)
@@ -720,6 +727,8 @@ def main():
                         help="The suffix to append to output files.")
     parser.add_argument("--extra-chrome-manifests", nargs='+',
                         help="Paths to files containing extra chrome registration.")
+    parser.add_argument("--output-file", default="",
+                        help="The output file where the results are merged. Leave empty to make the rewriter not merge files.")
     parser.add_argument("files", nargs='+',
                         help="The set of files to process.")
 
@@ -740,8 +749,7 @@ def main():
         else:
             files.append(f)
 
-    for f in files:
-        rewriter.rewrite_file(f, args.output_suffix)
+    rewriter.rewrite_files(files, args.output_file, args.output_suffix)
 
 if __name__ == '__main__':
     main()
