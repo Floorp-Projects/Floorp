@@ -60,9 +60,6 @@ else:
         else:
             DEFINES['EH_FRAME_FLAGS'] = '"a"'
 
-    if CONFIG['CC_TYPE'] == 'clang-cl':
-        ASFLAGS += ['-clang-cl']
-
     # Common source files.
     SOURCES += [
         '/js/src/ctypes/libffi/src/closures.c',
