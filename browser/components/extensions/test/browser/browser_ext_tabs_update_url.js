@@ -154,7 +154,7 @@ add_task(async function test_update_reload() {
   is(history.entries.length, 1,
      "Tab history contains the expected number of entries.");
   is(history.entries[0].url, URL,
-    `Tab history contains the expected entry: URL.`);
+     `Tab history contains the expected entry: URL.`);
 
   extension.sendMessage("update", tabId, {url: `${URL}1/`});
   await Promise.all([
@@ -166,7 +166,7 @@ add_task(async function test_update_reload() {
   is(history.entries.length, 2,
      "Tab history contains the expected number of entries.");
   is(history.entries[1].url, `${URL}1/`,
-    `Tab history contains the expected entry: ${URL}1/.`);
+     `Tab history contains the expected entry: ${URL}1/.`);
 
   extension.sendMessage("update", tabId, {url: `${URL}2/`, loadReplace: true});
   await Promise.all([
@@ -178,7 +178,7 @@ add_task(async function test_update_reload() {
   is(history.entries.length, 2,
      "Tab history contains the expected number of entries.");
   is(history.entries[1].url, `${URL}2/`,
-    `Tab history contains the expected entry: ${URL}2/.`);
+     `Tab history contains the expected entry: ${URL}2/.`);
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);

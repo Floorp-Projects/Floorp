@@ -173,7 +173,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
       const objectPreviewProperties = options.objectActor.preview.ownProperties;
       is(objectType, "object", "The inspected object has the expected type");
       Assert.deepEqual(Object.keys(objectPreviewProperties), ["testkey"],
-                        "The inspected object has the expected preview properties");
+                       "The inspected object has the expected preview properties");
     }
   })();
 

@@ -123,7 +123,7 @@ add_task(async function test_without_clipboard_permission() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.assertEq(undefined, browser.clipboard,
-        "clipboard API requires the clipboardWrite permission.");
+                            "clipboard API requires the clipboardWrite permission.");
       browser.test.notifyPass();
     },
     manifest: {

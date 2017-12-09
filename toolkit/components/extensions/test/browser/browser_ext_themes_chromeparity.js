@@ -32,15 +32,15 @@ add_task(async function test_support_theme_frame() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-    "LWT text color attribute should be set");
+               "LWT text color attribute should be set");
 
   let style = window.getComputedStyle(docEl);
   Assert.ok(style.backgroundImage.includes("face.png"),
-    `The backgroundImage should use face.png. Actual value is: ${style.backgroundImage}`);
+            `The backgroundImage should use face.png. Actual value is: ${style.backgroundImage}`);
   Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR.join(", ") + ")",
-    "Expected correct background color");
+               "Expected correct background color");
   Assert.equal(style.color, "rgba(" + TAB_TEXT_COLOR.join(", ") + ")",
-    "Expected correct text color");
+               "Expected correct text color");
 
   await extension.unload();
 

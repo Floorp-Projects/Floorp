@@ -236,4 +236,5 @@ load 1406109-1.html
 pref(dom.webcomponents.enabled,true) load 1324463.html
 pref(dom.webcomponents.customelements.enabled,true) load 1413815.html
 load 1411473.html
+pref(dom.webcomponents.enabled,false) load 1422931.html
 pref(dom.webcomponents.enabled,true) load 1419799.html

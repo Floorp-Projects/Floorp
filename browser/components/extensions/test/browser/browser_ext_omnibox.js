@@ -76,11 +76,11 @@ add_task(async function() {
     let actual = await extension.awaitMessage(event);
     if (expected.text) {
       is(actual.text, expected.text,
-        `Expected "${event}" to have fired with text: "${expected.text}".`);
+         `Expected "${event}" to have fired with text: "${expected.text}".`);
     }
     if (expected.disposition) {
       is(actual.disposition, expected.disposition,
-        `Expected "${event}" to have fired with disposition: "${expected.disposition}".`);
+         `Expected "${event}" to have fired with disposition: "${expected.disposition}".`);
     }
   }
 
@@ -205,10 +205,10 @@ add_task(async function() {
     let item = gURLBar.popup.richlistbox.children[0];
 
     is(item.getAttribute("title"), expectedText,
-      `Expected heuristic result to have title: "${expectedText}".`);
+       `Expected heuristic result to have title: "${expectedText}".`);
 
     is(item.getAttribute("displayurl"), `${keyword} ${text}`,
-      `Expected heuristic result to have displayurl: "${keyword} ${text}".`);
+       `Expected heuristic result to have displayurl: "${keyword} ${text}".`);
 
     let promiseEvent = expectEvent("on-input-entered-fired", {
       text,
@@ -250,10 +250,10 @@ add_task(async function() {
 
       ok(!!item, "Expected item to exist");
       is(item.getAttribute("title"), description,
-        `Expected suggestion to have title: "${description}".`);
+         `Expected suggestion to have title: "${description}".`);
 
       is(item.getAttribute("displayurl"), `${keyword} ${content}`,
-        `Expected suggestion to have displayurl: "${keyword} ${content}".`);
+         `Expected suggestion to have displayurl: "${keyword} ${content}".`);
     }
 
     let text = await startInputSession(info.suggestions.length - 1);

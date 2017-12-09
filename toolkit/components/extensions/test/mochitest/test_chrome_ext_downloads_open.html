@@ -15,7 +15,7 @@
 add_task(async function test_downloads_open_permission() {
   function backgroundScript() {
     browser.test.assertEq(browser.downloads.open, undefined,
-                             "`downloads.open` permission is required.");
+                          "`downloads.open` permission is required.");
     browser.test.notifyPass("downloads tests");
   }
 

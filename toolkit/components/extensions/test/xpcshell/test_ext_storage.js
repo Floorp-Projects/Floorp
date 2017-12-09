@@ -189,7 +189,7 @@ add_task(async function test_backgroundScript() {
 
     browser.storage.onChanged.addListener((changes, areaName) => {
       browser.test.assertEq(expectedAreaName, areaName,
-        "Expected area name received by listener");
+                            "Expected area name received by listener");
       gResolve(changes);
     });
 
@@ -220,7 +220,8 @@ add_task(async function test_backgroundScript() {
       // Set some data and then test getters.
       try {
         await storage.set({"test-prop1": "value1", "test-prop2": "value2"});
-        await checkChanges(areaName,
+        await checkChanges(
+          areaName,
           {"test-prop1": {newValue: "value1"}, "test-prop2": {newValue: "value2"}},
           "set (a)");
 
@@ -253,7 +254,8 @@ add_task(async function test_backgroundScript() {
         browser.test.assertEq(data["test-prop2"], "value2", "prop2 correct (c)");
 
         await storage.remove(["test-prop1", "test-prop2"]);
-        await checkChanges(areaName,
+        await checkChanges(
+          areaName,
           {"test-prop1": {oldValue: "value1"}, "test-prop2": {oldValue: "value2"}},
           "remove array");
 
@@ -270,7 +272,8 @@ add_task(async function test_backgroundScript() {
         clearGlobalChanges();
         await storage.clear();
 
-        await checkChanges(areaName,
+        await checkChanges(
+          areaName,
           {"test-prop1": {oldValue: "value1"}, "test-prop2": {oldValue: "value2"}},
           "clear");
         data = await storage.get(["test-prop1", "test-prop2"]);

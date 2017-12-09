@@ -41,18 +41,18 @@ add_task(async function test_getcurrent() {
   await theme.startup();
   let receivedTheme = await updatedPromise;
   Assert.ok(receivedTheme.images.headerURL.includes("image1.png"),
-    "getCurrent returns correct headerURL");
+            "getCurrent returns correct headerURL");
   Assert.equal(receivedTheme.colors.accentcolor, ACCENT_COLOR,
-    "getCurrent returns correct accentcolor");
+               "getCurrent returns correct accentcolor");
   Assert.equal(receivedTheme.colors.textcolor, TEXT_COLOR,
-    "getCurrent returns correct textcolor");
+               "getCurrent returns correct textcolor");
 
   info("Testing getCurrent after static theme unload");
   updatedPromise = extension.awaitMessage("theme-updated");
   await theme.unload();
   receivedTheme = await updatedPromise;
   Assert.equal(Object.keys(receivedTheme), 0,
-    "getCurrent returns empty theme");
+               "getCurrent returns empty theme");
 
   await extension.unload();
 });

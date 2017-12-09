@@ -79,6 +79,21 @@ ClientSourceOpChild::Init(const ClientOpConstructorArgs& aArgs)
       DoSourceOp(&ClientSource::Control, aArgs.get_ClientControlledArgs());
       break;
     }
+    case ClientOpConstructorArgs::TClientFocusArgs:
+    {
+      DoSourceOp(&ClientSource::Focus, aArgs.get_ClientFocusArgs());
+      break;
+    }
+    case ClientOpConstructorArgs::TClientPostMessageArgs:
+    {
+      DoSourceOp(&ClientSource::PostMessage, aArgs.get_ClientPostMessageArgs());
+      break;
+    }
+    case ClientOpConstructorArgs::TClientClaimArgs:
+    {
+      DoSourceOp(&ClientSource::Claim, aArgs.get_ClientClaimArgs());
+      break;
+    }
     case ClientOpConstructorArgs::TClientGetInfoAndStateArgs:
     {
       DoSourceOp(&ClientSource::GetInfoAndState,

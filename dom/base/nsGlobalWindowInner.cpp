@@ -259,6 +259,7 @@
 
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
+#include "mozilla/dom/ClientState.h"
 
 // Apple system headers seem to have a check() macro.  <sigh>
 #ifdef check
@@ -2315,6 +2316,12 @@ Maybe<ClientInfo>
 nsPIDOMWindowInner::GetClientInfo() const
 {
   return Move(nsGlobalWindowInner::Cast(this)->GetClientInfo());
+}
+
+Maybe<ClientState>
+nsPIDOMWindowInner::GetClientState() const
+{
+  return Move(nsGlobalWindowInner::Cast(this)->GetClientState());
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -6155,6 +6162,21 @@ nsGlobalWindowInner::GetClientInfo() const
     clientInfo.emplace(mClientSource->Info());
   }
   return Move(clientInfo);
+}
+
+Maybe<ClientState>
+nsGlobalWindowInner::GetClientState() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  Maybe<ClientState> clientState;
+  if (mClientSource) {
+    ClientState state;
+    nsresult rv = mClientSource->SnapshotState(&state);
+    if (NS_SUCCEEDED(rv)) {
+      clientState.emplace(state);
+    }
+  }
+  return Move(clientState);
 }
 
 Maybe<ServiceWorkerDescriptor>

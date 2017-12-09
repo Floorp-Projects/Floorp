@@ -52,7 +52,8 @@ add_task(async function test_private_download() {
       }
       let startTestPromise = promiseEvent(browser.test.onMessage);
       let onCreatedPromise = promiseEvent(browser.downloads.onCreated);
-      let onDonePromise = promiseEvent(browser.downloads.onChanged,
+      let onDonePromise = promiseEvent(
+        browser.downloads.onChanged,
         delta => delta.state && delta.state.current === "complete");
 
       browser.test.sendMessage("ready");
@@ -79,9 +80,9 @@ add_task(async function test_private_download() {
       browser.test.assertEq(url, createdItem.url, "onCreated url should match");
       browser.test.assertEq(url, downloadItem.url, "download url should match");
       browser.test.assertTrue(createdItem.incognito,
-        "created download should be private");
+                              "created download should be private");
       browser.test.assertTrue(downloadItem.incognito,
-        "stored download should be private");
+                              "stored download should be private");
 
       browser.test.log("Removing downloaded file");
       browser.test.assertTrue(downloadItem.exists, "downloaded file exists");
@@ -95,7 +96,7 @@ add_task(async function test_private_download() {
       let erasePromise = promiseEvent(browser.downloads.onErased);
       await browser.downloads.erase({id: downloadId});
       browser.test.assertEq(downloadId, await erasePromise,
-        "onErased should be fired for the erased private download");
+                            "onErased should be fired for the erased private download");
 
       browser.test.notifyPass("private download test done");
     },

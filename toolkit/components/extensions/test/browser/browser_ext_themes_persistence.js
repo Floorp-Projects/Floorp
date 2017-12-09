@@ -34,7 +34,7 @@ add_task(async function test_multiple_windows() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-    "LWT text color attribute should be set");
+               "LWT text color attribute should be set");
   Assert.ok(style.backgroundImage.includes("image1.png"), "Expected background image");
 
   // Now we'll open a new window to see if the theme is also applied there.
@@ -44,7 +44,7 @@ add_task(async function test_multiple_windows() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-    "LWT text color attribute should be set");
+               "LWT text color attribute should be set");
   Assert.ok(style.backgroundImage.includes("image1.png"), "Expected background image");
 
   await BrowserTestUtils.closeWindow(window2);

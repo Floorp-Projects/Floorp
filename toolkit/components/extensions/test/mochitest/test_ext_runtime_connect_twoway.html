@@ -20,7 +20,7 @@ add_task(async function test_connect_bidirectionally_and_postMessage() {
       // 3. onConnect by connect() from CS.
       browser.test.assertEq("from-cs", port.name);
       browser.test.assertEq(1, ++onConnectCount,
-          "BG onConnect should be called once");
+                            "BG onConnect should be called once");
 
       let tabId = port.sender.tab.id;
       browser.test.assertTrue(tabId, "content script must have a tab ID");
@@ -31,7 +31,7 @@ add_task(async function test_connect_bidirectionally_and_postMessage() {
         // 11. port.onMessage by port.postMessage in CS.
         browser.test.assertEq("from CS to port", msg);
         browser.test.assertEq(1, ++postMessageCount1,
-          "BG port.onMessage should be called once");
+                              "BG port.onMessage should be called once");
 
         // 12. should trigger port2.onMessage in CS.
         port2.postMessage("from BG to port2");
@@ -44,7 +44,7 @@ add_task(async function test_connect_bidirectionally_and_postMessage() {
         // 7. onMessage by port2.postMessage in CS.
         browser.test.assertEq("from CS to port2", msg);
         browser.test.assertEq(1, ++postMessageCount2,
-          "BG port2.onMessage should be called once");
+                              "BG port2.onMessage should be called once");
 
         // 8. Should trigger port.onMessage in CS.
         port.postMessage("from BG to port");
@@ -62,14 +62,14 @@ add_task(async function test_connect_bidirectionally_and_postMessage() {
       // 5. onConnect by connect() from BG.
       browser.test.assertEq("from-bg", port2.name);
       browser.test.assertEq(1, ++onConnectCount,
-        "CS onConnect should be called once");
+                            "CS onConnect should be called once");
 
       let postMessageCount2 = 0;
       port2.onMessage.addListener(msg => {
         // 12. port2.onMessage by port2.postMessage in BG.
         browser.test.assertEq("from BG to port2", msg);
         browser.test.assertEq(1, ++postMessageCount2,
-          "CS port2.onMessage should be called once");
+                              "CS port2.onMessage should be called once");
 
         // TODO(robwu): Do not explicitly disconnect, it should not be a problem
         // if we keep the ports open. However, not closing the ports causes the
@@ -90,7 +90,7 @@ add_task(async function test_connect_bidirectionally_and_postMessage() {
       // 9. onMessage by port.postMessage in BG.
       browser.test.assertEq("from BG to port", msg);
       browser.test.assertEq(1, ++postMessageCount1,
-        "CS port.onMessage should be called once");
+                            "CS port.onMessage should be called once");
 
       // 10. should trigger port.onMessage in BG.
       port.postMessage("from CS to port");

@@ -1,0 +1,21 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * An interface to allow testing of binding interactions with JS-implemented
+ * XPCOM components.  The actual implementation is TestInterfaceJS, just like
+ * for TestInteraceJS.webidl.
+ */
+
+[scriptable, uuid(9eeb2c12-ddd9-4734-8cfb-c0cdfb136e07)]
+interface mozITestInterfaceJS : nsISupports {
+  // Test throwing Components.results.NS_BINDING_ABORTED.
+  void testThrowNsresult();
+  // Test calling a C++ component which throws an nsresult exception.
+  void testThrowNsresultFromNative();
+};

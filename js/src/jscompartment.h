@@ -624,7 +624,6 @@ struct JSCompartment
     bool                         isSelfHosting;
     bool                         marked;
     bool                         warnedAboutExprClosure : 1;
-    bool                         warnedAboutForEach : 1;
     uint32_t                     warnedAboutStringGenericsMethods;
 
 #ifdef DEBUG

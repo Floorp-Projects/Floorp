@@ -38,20 +38,26 @@ add_task(async function test_on_updated() {
       };
 
       function testTheme1(returnedTheme) {
-        browser.test.assertTrue(returnedTheme.images.headerURL.includes("image1.png"),
+        browser.test.assertTrue(
+          returnedTheme.images.headerURL.includes("image1.png"),
           "Theme 1 header URL should be applied");
-        browser.test.assertEq(ACCENT_COLOR_1, returnedTheme.colors.accentcolor,
+        browser.test.assertEq(
+          ACCENT_COLOR_1, returnedTheme.colors.accentcolor,
           "Theme 1 accent color should be applied");
-        browser.test.assertEq(TEXT_COLOR_1, returnedTheme.colors.textcolor,
+        browser.test.assertEq(
+          TEXT_COLOR_1, returnedTheme.colors.textcolor,
           "Theme 1 text color should be applied");
       }
 
       function testTheme2(returnedTheme) {
-        browser.test.assertTrue(returnedTheme.images.headerURL.includes("image2.png"),
+        browser.test.assertTrue(
+          returnedTheme.images.headerURL.includes("image2.png"),
           "Theme 2 header URL should be applied");
-        browser.test.assertEq(ACCENT_COLOR_2, returnedTheme.colors.accentcolor,
+        browser.test.assertEq(
+          ACCENT_COLOR_2, returnedTheme.colors.accentcolor,
           "Theme 2 accent color should be applied");
-        browser.test.assertEq(TEXT_COLOR_2, returnedTheme.colors.textcolor,
+        browser.test.assertEq(
+          TEXT_COLOR_2, returnedTheme.colors.textcolor,
           "Theme 2 text color should be applied");
       }
 
@@ -79,16 +85,16 @@ add_task(async function test_on_updated() {
       updateInfo2 = await updateInfo2;
       testTheme2(updateInfo2.theme);
       browser.test.assertEq(secondWin.id, updateInfo2.windowId,
-        "window id on second update");
+                            "window id on second update");
 
       browser.test.log("Testing reset with windowId parameter");
       let updateInfo3 = onceThemeUpdated();
       await browser.theme.reset(firstWin.id);
       updateInfo3 = await updateInfo3;
       browser.test.assertEq(0, Object.keys(updateInfo3.theme).length,
-        "Empty theme given on reset");
+                            "Empty theme given on reset");
       browser.test.assertEq(firstWin.id, updateInfo3.windowId,
-        "window id on third update");
+                            "window id on third update");
 
       browser.test.log("Testing reset with no windowId parameter");
       let updateInfo4 = onceThemeUpdated();

@@ -79,6 +79,7 @@ function isDefaultHandler() {
 }
 
 function initializeDefaultPreferences() {
+  /* eslint-disable semi */
   var DEFAULT_PREFERENCES =
 {
   "showPreviousViewOnLoad": true,
@@ -101,8 +102,9 @@ function initializeDefaultPreferences() {
   "enablePrintAutoRotate": false,
   "disablePageMode": false,
   "disablePageLabels": false
-};
+}
 
+  /* eslint-enable semi */
 
   var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
   var defaultValue;
