@@ -19,27 +19,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
 </pre>
   <script type="application/javascript">
 
-  /** Test for Bug 1295322 **/
-  iframe = document.createElement('iframe');
-  iframe.name = "eWin";
-  document.body.appendChild(iframe);
+    SimpleTest.waitForExplicitFinish();
+    async function runTests() {
+      await SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]});
 
-  try{
-    // NOTE: The idea here is to call something that will end up throwing an
-    // exception in a JS component and then propagate back to C++ code before
-    // returning to us.  If opening a feed: URI stops doing that, we will need a
-    // new guinea pig here.
-    open('feed://java:script:codeshouldgohere','eWin');
-    ok(false, "Should have thrown!");
-  } catch(e){
-    try {
-      is(e.name, "SyntaxError", "Should have the right exception");
-      is(e.filename, location.href,
-         "Should not be seeing where the exception really came from");
-    } catch (e2) {
-      ok(false, "Should be able to work with the exception");
+      var t = new TestFunctions();
+
+      try {
+	t.testThrowNsresult();
+      } catch (e) {
+	try {
+	  is(e.name, "NS_BINDING_ABORTED",
+	     "Should have the right exception");
+	  is(e.filename, location.href,
+             "Should not be seeing where the exception really came from");
+	} catch (e2) {
+	  ok(false, "Should be able to work with the exception");
+	}
+      }
+
+      try {
+	t.testThrowNsresultFromNative();
+      } catch (e) {
+        try {
+	  is(e.name, "NS_ERROR_UNEXPECTED",
+	     "Should have the right exception");
+	  is(e.filename, location.href,
+             "Should not be seeing where the exception really came from");
+	} catch (e2) {
+	  ok(false, "Should be able to work with the exception");
+	}
+      }
+
+      SimpleTest.finish();
     }
-  }
+
+    runTests();
   </script>
 </body>
 </html>

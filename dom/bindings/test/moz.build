@@ -56,3 +56,10 @@ LOCAL_INCLUDES += [
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['MOZ_DEBUG']:
+    XPIDL_SOURCES += [
+        'mozITestInterfaceJS.idl',
+    ]
+
+    XPIDL_MODULE = 'dom_bindings_test'
