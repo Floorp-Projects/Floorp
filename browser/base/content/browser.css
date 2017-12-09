@@ -409,7 +409,7 @@ toolbarpaletteitem[removable="false"] {
 
 %ifndef XP_MACOSX
 toolbarpaletteitem[place="palette"],
-toolbarpaletteitem[place="panel"],
+toolbarpaletteitem[place="menu-panel"],
 toolbarpaletteitem[place="toolbar"] {
   -moz-user-focus: normal;
 }
