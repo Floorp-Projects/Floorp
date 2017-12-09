@@ -41,37 +41,33 @@ var GET_RESULTS = [{
   id:                     "test1@tests.mozilla.org",
   type:                   "extension",
   version:                "1.1",
-  creator: {
-    name: "Test Creator 1",
-    url:  BASE_URL + "/creator1.html"
-  },
-  developers: [
-    {
-      name: "Test Developer 1",
-      url:  BASE_URL + "/developer1.html"
-    },
-  ],
+  creator:                {
+                            name: "Test Creator 1",
+                            url:  BASE_URL + "/creator1.html"
+                          },
+  developers:             [{
+                            name: "Test Developer 1",
+                            url:  BASE_URL + "/developer1.html"
+                          }],
   description:            "Test Summary 1",
   fullDescription:        "Test Description 1",
   developerComments:      "Test Developer Comments 1",
   eula:                   "Test EULA 1",
   iconURL:                BASE_URL + "/icon1.png",
   icons:                  { "32": BASE_URL + "/icon1.png" },
-  screenshots: [
-    {
-      url:             BASE_URL + "/full1-1.png",
-      width:           400,
-      height:          300,
-      thumbnailURL:    BASE_URL + "/thumbnail1-1.png",
-      thumbnailWidth:  200,
-      thumbnailHeight: 150,
-      caption:         "Caption 1 - 1"
-    }, {
-      url:          BASE_URL + "/full2-1.png",
-      thumbnailURL: BASE_URL + "/thumbnail2-1.png",
-      caption:      "Caption 2 - 1"
-    },
-  ],
+  screenshots:            [{
+                            url:             BASE_URL + "/full1-1.png",
+                            width:           400,
+                            height:          300,
+                            thumbnailURL:    BASE_URL + "/thumbnail1-1.png",
+                            thumbnailWidth:  200,
+                            thumbnailHeight: 150,
+                            caption:         "Caption 1 - 1"
+                          }, {
+                            url:          BASE_URL + "/full2-1.png",
+                            thumbnailURL: BASE_URL + "/thumbnail2-1.png",
+                            caption:      "Caption 2 - 1"
+                          }],
   homepageURL:            BASE_URL + "/learnmore1.html",
   learnmoreURL:           BASE_URL + "/learnmore1.html",
   supportURL:             BASE_URL + "/support1.html",
@@ -87,23 +83,21 @@ var GET_RESULTS = [{
   repositoryStatus:       8,
   size:                   5555,
   updateDate:             new Date(1265033045000),
-  compatibilityOverrides: [
-    {
-      type: "incompatible",
-      minVersion: 0.1,
-      maxVersion: 0.2,
-      appID: "xpcshell@tests.mozilla.org",
-      appMinVersion: 3.0,
-      appMaxVersion: 4.0
-    }, {
-      type: "incompatible",
-      minVersion: 0.2,
-      maxVersion: 0.3,
-      appID: "xpcshell@tests.mozilla.org",
-      appMinVersion: 5.0,
-      appMaxVersion: 6.0
-    },
-  ]
+  compatibilityOverrides: [{
+                            type: "incompatible",
+                            minVersion: 0.1,
+                            maxVersion: 0.2,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 3.0,
+                            appMaxVersion: 4.0
+                          }, {
+                            type: "incompatible",
+                            minVersion: 0.2,
+                            maxVersion: 0.3,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 5.0,
+                            appMaxVersion: 6.0
+                          }]
 }, {
   id:                     "test_AddonRepository_1@tests.mozilla.org",
   type:                   "theme",
@@ -120,8 +114,8 @@ var GET_TEST = {
   failedIDs:      ["test1@tests.mozilla.org"],
   failedURL:        "/XPCShell/1/1.5/1.5/test1%40tests.mozilla.org",
   successfulIDs:  ["test1@tests.mozilla.org",
-                   "{00000000-1111-2222-3333-444444444444}",
-                   "test_AddonRepository_1@tests.mozilla.org"],
+                     "{00000000-1111-2222-3333-444444444444}",
+                     "test_AddonRepository_1@tests.mozilla.org"],
   successfulURL:    "/XPCShell/1/1.5/1.5/test1%40tests.mozilla.org," +
                     "%7B00000000-1111-2222-3333-444444444444%7D," +
                     "test_AddonRepository_1%40tests.mozilla.org"
@@ -205,9 +199,9 @@ function run_test() {
 
     // Register other add-on XPI files
     gServer.registerFile(INSTALL_URL2,
-                         do_get_addon("test_AddonRepository_2"));
+                        do_get_addon("test_AddonRepository_2"));
     gServer.registerFile(INSTALL_URL3,
-                         do_get_addon("test_AddonRepository_3"));
+                        do_get_addon("test_AddonRepository_3"));
 
     // Register files used to test search failure
     mapUrlToFile(GET_TEST.failedURL,
@@ -295,10 +289,10 @@ function run_test_1() {
     preference:         PREF_GETADDONS_BROWSESEARCHRESULTS,
     urlTests:           urlTests.concat(searchURLTests),
     getURL:             function getSearchURL(aTest) {
-      var searchTerms = aTest && aTest.searchTerms ? aTest.searchTerms
+                          var searchTerms = aTest && aTest.searchTerms ? aTest.searchTerms
                                                                        : "unused terms";
-      return AddonRepository.getSearchURL(searchTerms);
-    }
+                          return AddonRepository.getSearchURL(searchTerms);
+                        }
   }];
 
   tests.forEach(function url_test(aTest) {

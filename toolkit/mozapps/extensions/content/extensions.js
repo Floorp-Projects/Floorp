@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Experiments",
-                                  "resource:///modules/experiments/Experiments.jsm");
+  "resource:///modules/experiments/Experiments.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
@@ -512,7 +512,7 @@ var gEventManager = {
         }
         if (child.nodeName == "menuitem" &&
           gViewController.isCommandEnabled(child.command)) {
-          countMenuItemsBeforeSep++;
+            countMenuItemsBeforeSep++;
         }
       }
 
@@ -732,8 +732,8 @@ var gViewController = {
     window.controllers.appendController(this);
 
     window.addEventListener("popstate", function(e) {
-      gViewController.updateState(e.state);
-    });
+                              gViewController.updateState(e.state);
+                            });
   },
 
   shutdown() {
@@ -2455,15 +2455,15 @@ var gListView = {
 
     let findSignedAddonsLink = document.getElementById("find-alternative-addons");
     try {
-      findSignedAddonsLink.setAttribute(
-        "href", Services.urlFormatter.formatURLPref("extensions.getAddons.link.url"));
+      findSignedAddonsLink.setAttribute("href",
+        Services.urlFormatter.formatURLPref("extensions.getAddons.link.url"));
     } catch (e) {
       findSignedAddonsLink.classList.remove("text-link");
     }
 
     try {
-      document.getElementById("signing-dev-manual-link").setAttribute(
-        "href", Services.prefs.getCharPref("xpinstall.signatures.devInfoURL"));
+      document.getElementById("signing-dev-manual-link").setAttribute("href",
+        Services.prefs.getCharPref("xpinstall.signatures.devInfoURL"));
     } catch (e) {
       document.getElementById("signing-dev-info").hidden = true;
     }

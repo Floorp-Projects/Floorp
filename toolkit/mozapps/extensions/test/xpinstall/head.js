@@ -207,34 +207,34 @@ var Harness = {
         window.document.documentElement.acceptDialog();
       }
     } else if (window.document.location.href == PROMPT_URL) {
-      var promptType = window.args.promptType;
-      switch (promptType) {
-        case "alert":
-        case "alertCheck":
-        case "confirmCheck":
-        case "confirm":
-        case "confirmEx":
-          window.document.documentElement.acceptDialog();
-          break;
-        case "promptUserAndPass":
-          // This is a login dialog, hopefully an authentication prompt
-          // for the xpi.
-          if (this.authenticationCallback) {
-            var auth = this.authenticationCallback();
-            if (auth && auth.length == 2) {
-              window.document.getElementById("loginTextbox").value = auth[0];
-              window.document.getElementById("password1Textbox").value = auth[1];
-              window.document.documentElement.acceptDialog();
-            } else {
-              window.document.documentElement.cancelDialog();
-            }
-          } else {
-            window.document.documentElement.cancelDialog();
-          }
-          break;
-        default:
-          ok(false, "prompt type " + promptType + " not handled in test.");
-          break;
+        var promptType = window.args.promptType;
+        switch (promptType) {
+          case "alert":
+          case "alertCheck":
+          case "confirmCheck":
+          case "confirm":
+          case "confirmEx":
+                window.document.documentElement.acceptDialog();
+                break;
+          case "promptUserAndPass":
+                  // This is a login dialog, hopefully an authentication prompt
+                  // for the xpi.
+                  if (this.authenticationCallback) {
+                    var auth = this.authenticationCallback();
+                    if (auth && auth.length == 2) {
+                      window.document.getElementById("loginTextbox").value = auth[0];
+                      window.document.getElementById("password1Textbox").value = auth[1];
+                      window.document.documentElement.acceptDialog();
+                    } else {
+                      window.document.documentElement.cancelDialog();
+                    }
+                  } else {
+                    window.document.documentElement.cancelDialog();
+                  }
+                break;
+          default:
+                ok(false, "prompt type " + promptType + " not handled in test.");
+                break;
       }
     }
   },
@@ -397,50 +397,50 @@ var Harness = {
   observe(subject, topic, data) {
     var installInfo = subject.wrappedJSObject;
     switch (topic) {
-      case "addon-install-started":
-        is(this.runningInstalls.length, installInfo.installs.length,
-           "Should have seen the expected number of installs started");
-        break;
-      case "addon-install-disabled":
-        this.installDisabled(installInfo);
-        break;
-      case "addon-install-cancelled":
-        this.installCancelled(installInfo);
-        break;
-      case "addon-install-origin-blocked":
-        this.installOriginBlocked(installInfo);
-        break;
-      case "addon-install-blocked":
-        this.installBlocked(installInfo);
-        break;
-      case "addon-install-failed":
-        installInfo.installs.forEach(function(aInstall) {
-          isnot(this.runningInstalls.indexOf(aInstall), -1,
-                "Should only see failures for started installs");
+    case "addon-install-started":
+      is(this.runningInstalls.length, installInfo.installs.length,
+         "Should have seen the expected number of installs started");
+      break;
+    case "addon-install-disabled":
+      this.installDisabled(installInfo);
+      break;
+    case "addon-install-cancelled":
+      this.installCancelled(installInfo);
+      break;
+    case "addon-install-origin-blocked":
+      this.installOriginBlocked(installInfo);
+      break;
+    case "addon-install-blocked":
+      this.installBlocked(installInfo);
+      break;
+    case "addon-install-failed":
+      installInfo.installs.forEach(function(aInstall) {
+        isnot(this.runningInstalls.indexOf(aInstall), -1,
+              "Should only see failures for started installs");
 
-          ok(aInstall.error != 0 || aInstall.addon.appDisabled,
-             "Failed installs should have an error or be appDisabled");
+        ok(aInstall.error != 0 || aInstall.addon.appDisabled,
+           "Failed installs should have an error or be appDisabled");
 
-          this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
-        }, this);
-        break;
-      case "addon-install-complete":
-        installInfo.installs.forEach(function(aInstall) {
-          isnot(this.runningInstalls.indexOf(aInstall), -1,
-                "Should only see completed events for started installs");
+        this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
+      }, this);
+      break;
+    case "addon-install-complete":
+      installInfo.installs.forEach(function(aInstall) {
+        isnot(this.runningInstalls.indexOf(aInstall), -1,
+              "Should only see completed events for started installs");
 
-          is(aInstall.error, 0, "Completed installs should have no error");
-          ok(!aInstall.appDisabled, "Completed installs should not be appDisabled");
+        is(aInstall.error, 0, "Completed installs should have no error");
+        ok(!aInstall.appDisabled, "Completed installs should not be appDisabled");
 
-          // Complete installs are either in the INSTALLED or CANCELLED state
-          // since the test may cancel installs the moment they complete.
-          ok(aInstall.state == AddonManager.STATE_INSTALLED ||
+        // Complete installs are either in the INSTALLED or CANCELLED state
+        // since the test may cancel installs the moment they complete.
+        ok(aInstall.state == AddonManager.STATE_INSTALLED ||
            aInstall.state == AddonManager.STATE_CANCELLED,
-             "Completed installs should be in the right state");
+           "Completed installs should be in the right state");
 
-          this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
-        }, this);
-        break;
+        this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
+      }, this);
+      break;
     }
   },
 

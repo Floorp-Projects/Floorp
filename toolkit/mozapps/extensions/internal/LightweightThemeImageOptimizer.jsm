@@ -13,10 +13,10 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
+  "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
+  "resource://gre/modules/FileUtils.jsm");
 
 const ORIGIN_TOP_RIGHT = 1;
 const ORIGIN_BOTTOM_LEFT = 2;
@@ -121,13 +121,13 @@ var ImageFile = {
       loadUsingSystemPrincipal: true,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
     }, function(aInputStream, aStatus, aRequest) {
-      if (Components.isSuccessCode(aStatus) && aRequest instanceof Ci.nsIChannel) {
-        let channel = aRequest.QueryInterface(Ci.nsIChannel);
-        aCallback(aInputStream, channel.contentType);
-      } else {
-        aCallback();
-      }
-    });
+        if (Components.isSuccessCode(aStatus) && aRequest instanceof Ci.nsIChannel) {
+          let channel = aRequest.QueryInterface(Ci.nsIChannel);
+          aCallback(aInputStream, channel.contentType);
+        } else {
+          aCallback();
+        }
+      });
   },
 
   write(aFile, aInputStream, aCallback) {
@@ -148,7 +148,7 @@ var ImageFile = {
 };
 
 XPCOMUtils.defineLazyModuleGetter(ImageFile, "_netUtil",
-                                  "resource://gre/modules/NetUtil.jsm", "NetUtil");
+  "resource://gre/modules/NetUtil.jsm", "NetUtil");
 
 var ImageTools = {
   decode(aInputStream, aContentType, aCallback) {
@@ -183,5 +183,5 @@ var ImageTools = {
 };
 
 XPCOMUtils.defineLazyServiceGetter(ImageTools, "_imgTools",
-                                   "@mozilla.org/image/tools;1", "imgITools");
+  "@mozilla.org/image/tools;1", "imgITools");
 

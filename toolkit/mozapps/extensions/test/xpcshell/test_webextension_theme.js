@@ -126,11 +126,11 @@ async function setDisabledStateAndCheck(which, disabled = false) {
   for (theme of await promiseAddonsByIDs(THEME_IDS)) {
     isDisabled = (theme.id in expectedStates) ? expectedStates[theme.id] : true;
     Assert.equal(theme.userDisabled, isDisabled,
-                 `Theme '${theme.id}' should be ${isDisabled ? "dis" : "en"}abled`);
+      `Theme '${theme.id}' should be ${isDisabled ? "dis" : "en"}abled`);
     Assert.equal(theme.pendingOperations, AddonManager.PENDING_NONE,
-                 "There should be no pending operations when no restart is expected");
+      "There should be no pending operations when no restart is expected");
     Assert.equal(theme.isActive, !isDisabled,
-                 `Theme '${theme.id} should be ${isDisabled ? "in" : ""}active`);
+      `Theme '${theme.id} should be ${isDisabled ? "in" : ""}active`);
   }
 
   await promiseRestartManager();
@@ -139,11 +139,11 @@ async function setDisabledStateAndCheck(which, disabled = false) {
   for (theme of await promiseAddonsByIDs(THEME_IDS)) {
     isDisabled = (theme.id in expectedStates) ? expectedStates[theme.id] : true;
     Assert.equal(theme.userDisabled, isDisabled,
-                 `Theme '${theme.id}' should be ${isDisabled ? "dis" : "en"}abled`);
+      `Theme '${theme.id}' should be ${isDisabled ? "dis" : "en"}abled`);
     Assert.equal(theme.isActive, !isDisabled,
-                 `Theme '${theme.id}' should be ${isDisabled ? "in" : ""}active`);
+      `Theme '${theme.id}' should be ${isDisabled ? "in" : ""}active`);
     Assert.equal(theme.pendingOperations, AddonManager.PENDING_NONE,
-                 "There should be no pending operations left");
+      "There should be no pending operations left");
     if (!isDisabled)
       gActiveTheme = theme.id;
   }

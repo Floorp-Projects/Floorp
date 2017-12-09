@@ -62,20 +62,17 @@ const REPOSITORY_ADDONS = [{
   type:                   "extension",
   name:                   "Repo Add-on 1",
   version:                "2.1",
-  creator: {
-    name: "Repo Add-on 1 - Creator",
-    url:  BASE_URL + "/repo/1/creator.html"
-  },
-  developers: [
-    {
-      name: "Repo Add-on 1 - First Developer",
-      url:  BASE_URL + "/repo/1/firstDeveloper.html"
-    },
-    {
-      name: "Repo Add-on 1 - Second Developer",
-      url:  BASE_URL + "/repo/1/secondDeveloper.html"
-    },
-  ],
+  creator:                {
+                            name: "Repo Add-on 1 - Creator",
+                            url:  BASE_URL + "/repo/1/creator.html"
+                          },
+  developers:             [{
+                            name: "Repo Add-on 1 - First Developer",
+                            url:  BASE_URL + "/repo/1/firstDeveloper.html"
+                          }, {
+                            name: "Repo Add-on 1 - Second Developer",
+                            url:  BASE_URL + "/repo/1/secondDeveloper.html"
+                          }],
   description:            "Repo Add-on 1 - Description\nSecond line",
   fullDescription:        "Repo Add-on 1 - Full Description & some extra",
   developerComments:      "Repo Add-on 1\nDeveloper Comments",
@@ -95,57 +92,51 @@ const REPOSITORY_ADDONS = [{
   sourceURI:              BASE_URL + "/repo/1/install.xpi",
   repositoryStatus:       4,
   compatibilityOverrides: [{
-    type: "incompatible",
-    minVersion: 0.1,
-    maxVersion: 0.2,
-    appID: "xpcshell@tests.mozilla.org",
-    appMinVersion: 3.0,
-    appMaxVersion: 4.0
-  }, {
-    type: "incompatible",
-    minVersion: 0.2,
-    maxVersion: 0.3,
-    appID: "xpcshell@tests.mozilla.org",
-    appMinVersion: 5.0,
-    appMaxVersion: 6.0
-  }]
+                            type: "incompatible",
+                            minVersion: 0.1,
+                            maxVersion: 0.2,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 3.0,
+                            appMaxVersion: 4.0
+                          }, {
+                            type: "incompatible",
+                            minVersion: 0.2,
+                            maxVersion: 0.3,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 5.0,
+                            appMaxVersion: 6.0
+                          }]
 }, {
   id:                     ADDON_IDS[1],
   type:                   "theme",
   name:                   "Repo Add-on 2",
   version:                "2.2",
-  creator: {
-    name: "Repo Add-on 2 - Creator",
-    url:  BASE_URL + "/repo/2/creator.html"
-  },
-  developers: [
-    {
-      name: "Repo Add-on 2 - First Developer",
-      url:  BASE_URL + "/repo/2/firstDeveloper.html"
-    },
-    {
-      name: "Repo Add-on 2 - Second Developer",
-      url:  BASE_URL + "/repo/2/secondDeveloper.html"
-    },
-  ],
+  creator:                {
+                            name: "Repo Add-on 2 - Creator",
+                            url:  BASE_URL + "/repo/2/creator.html"
+                          },
+  developers:             [{
+                            name: "Repo Add-on 2 - First Developer",
+                            url:  BASE_URL + "/repo/2/firstDeveloper.html"
+                          }, {
+                            name: "Repo Add-on 2 - Second Developer",
+                            url:  BASE_URL + "/repo/2/secondDeveloper.html"
+                          }],
   description:            "Repo Add-on 2 - Description",
   fullDescription:        "Repo Add-on 2 - Full Description",
   developerComments:      "Repo Add-on 2 - Developer Comments",
   eula:                   "Repo Add-on 2 - EULA",
   iconURL:                BASE_URL + "/repo/2/icon.png",
   icons:                  { "32": BASE_URL + "/repo/2/icon.png" },
-  screenshots: [
-    {
-      url:          BASE_URL + "/repo/2/firstFull.png",
-      thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
-      caption:      "Repo Add-on 2 - First Caption"
-    },
-    {
-      url:          BASE_URL + "/repo/2/secondFull.png",
-      thumbnailURL: BASE_URL + "/repo/2/secondThumbnail.png",
-      caption:      "Repo Add-on 2 - Second Caption"
-    },
-  ],
+  screenshots:            [{
+                            url:          BASE_URL + "/repo/2/firstFull.png",
+                            thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
+                            caption:      "Repo Add-on 2 - First Caption"
+                          }, {
+                            url:          BASE_URL + "/repo/2/secondFull.png",
+                            thumbnailURL: BASE_URL + "/repo/2/secondThumbnail.png",
+                            caption:      "Repo Add-on 2 - Second Caption"
+                          }],
   homepageURL:            BASE_URL + "/repo/2/homepage.html",
   supportURL:             BASE_URL + "/repo/2/support.html",
   contributionURL:        BASE_URL + "/repo/2/meetDevelopers.html",
@@ -165,18 +156,15 @@ const REPOSITORY_ADDONS = [{
   version:                "2.3",
   iconURL:                BASE_URL + "/repo/3/icon.png",
   icons:                  { "32": BASE_URL + "/repo/3/icon.png" },
-  screenshots: [
-    {
-      url:          BASE_URL + "/repo/3/firstFull.png",
-      thumbnailURL: BASE_URL + "/repo/3/firstThumbnail.png",
-      caption:      "Repo Add-on 3 - First Caption"
-    },
-    {
-      url:          BASE_URL + "/repo/3/secondFull.png",
-      thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
-      caption:      "Repo Add-on 3 - Second Caption"
-    },
-  ]
+  screenshots:            [{
+                            url:          BASE_URL + "/repo/3/firstFull.png",
+                            thumbnailURL: BASE_URL + "/repo/3/firstThumbnail.png",
+                            caption:      "Repo Add-on 3 - First Caption"
+                          }, {
+                            url:          BASE_URL + "/repo/3/secondFull.png",
+                            thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
+                            caption:      "Repo Add-on 3 - Second Caption"
+                          }]
 }];
 
 
@@ -229,10 +217,10 @@ const WITH_CACHE = [{
   type:                   "extension",
   name:                   "XPI Add-on 1",
   version:                "1.1",
-  creator: {
-    name: "Repo Add-on 1 - Creator",
-    url:  BASE_URL + "/repo/1/creator.html"
-  },
+  creator:                {
+                            name: "Repo Add-on 1 - Creator",
+                            url:  BASE_URL + "/repo/1/creator.html"
+                          },
   developers:             [{ name: "XPI Add-on 1 - First Developer" },
                            { name: "XPI Add-on 1 - Second Developer" }],
   translators:            [{ name: "XPI Add-on 1 - First Translator" },
@@ -260,57 +248,51 @@ const WITH_CACHE = [{
   sourceURI:              NetUtil.newURI(ADDON_FILES[0]).spec,
   repositoryStatus:       4,
   compatibilityOverrides: [{
-    type: "incompatible",
-    minVersion: 0.1,
-    maxVersion: 0.2,
-    appID: "xpcshell@tests.mozilla.org",
-    appMinVersion: 3.0,
-    appMaxVersion: 4.0
-  }, {
-    type: "incompatible",
-    minVersion: 0.2,
-    maxVersion: 0.3,
-    appID: "xpcshell@tests.mozilla.org",
-    appMinVersion: 5.0,
-    appMaxVersion: 6.0
-  }]
+                            type: "incompatible",
+                            minVersion: 0.1,
+                            maxVersion: 0.2,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 3.0,
+                            appMaxVersion: 4.0
+                          }, {
+                            type: "incompatible",
+                            minVersion: 0.2,
+                            maxVersion: 0.3,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 5.0,
+                            appMaxVersion: 6.0
+                          }]
 }, {
   id:                     ADDON_IDS[1],
   type:                   "theme",
   name:                   "XPI Add-on 2",
   version:                "1.2",
-  creator: {
-    name: "Repo Add-on 2 - Creator",
-    url:  BASE_URL + "/repo/2/creator.html"
-  },
-  developers: [
-    {
-      name: "Repo Add-on 2 - First Developer",
-      url:  BASE_URL + "/repo/2/firstDeveloper.html"
-    },
-    {
-      name: "Repo Add-on 2 - Second Developer",
-      url:  BASE_URL + "/repo/2/secondDeveloper.html"
-    },
-  ],
+  creator:                {
+                            name: "Repo Add-on 2 - Creator",
+                            url:  BASE_URL + "/repo/2/creator.html"
+                          },
+  developers:             [{
+                            name: "Repo Add-on 2 - First Developer",
+                            url:  BASE_URL + "/repo/2/firstDeveloper.html"
+                          }, {
+                            name: "Repo Add-on 2 - Second Developer",
+                            url:  BASE_URL + "/repo/2/secondDeveloper.html"
+                          }],
   description:            "Repo Add-on 2 - Description",
   fullDescription:        "Repo Add-on 2 - Full Description",
   developerComments:      "Repo Add-on 2 - Developer Comments",
   eula:                   "Repo Add-on 2 - EULA",
   iconURL:                BASE_URL + "/repo/2/icon.png",
   icons:                  { "32": BASE_URL + "/repo/2/icon.png" },
-  screenshots: [
-    {
-      url:          BASE_URL + "/repo/2/firstFull.png",
-      thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
-      caption:      "Repo Add-on 2 - First Caption"
-    },
-    {
-      url:          BASE_URL + "/repo/2/secondFull.png",
-      thumbnailURL: BASE_URL + "/repo/2/secondThumbnail.png",
-      caption:      "Repo Add-on 2 - Second Caption"
-    },
-  ],
+  screenshots:            [{
+                            url:          BASE_URL + "/repo/2/firstFull.png",
+                            thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
+                            caption:      "Repo Add-on 2 - First Caption"
+                          }, {
+                            url:          BASE_URL + "/repo/2/secondFull.png",
+                            thumbnailURL: BASE_URL + "/repo/2/secondThumbnail.png",
+                            caption:      "Repo Add-on 2 - Second Caption"
+                          }],
   homepageURL:            BASE_URL + "/repo/2/homepage.html",
   supportURL:             BASE_URL + "/repo/2/support.html",
   contributionURL:        BASE_URL + "/repo/2/meetDevelopers.html",
@@ -334,18 +316,15 @@ const WITH_CACHE = [{
   get icons() {
     return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
   },
-  screenshots: [
-    {
-      url:          BASE_URL + "/repo/3/firstFull.png",
-      thumbnailURL: BASE_URL + "/repo/3/firstThumbnail.png",
-      caption:      "Repo Add-on 3 - First Caption"
-    },
-    {
-      url:          BASE_URL + "/repo/3/secondFull.png",
-      thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
-      caption:      "Repo Add-on 3 - Second Caption"
-    },
-  ],
+  screenshots:            [{
+                            url:          BASE_URL + "/repo/3/firstFull.png",
+                            thumbnailURL: BASE_URL + "/repo/3/firstThumbnail.png",
+                            caption:      "Repo Add-on 3 - First Caption"
+                          }, {
+                            url:          BASE_URL + "/repo/3/secondFull.png",
+                            thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
+                            caption:      "Repo Add-on 3 - Second Caption"
+                          }],
   sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
 }];
 
@@ -355,10 +334,10 @@ const WITH_EXTENSION_CACHE = [{
   type:                   "extension",
   name:                   "XPI Add-on 1",
   version:                "1.1",
-  creator: {
-    name: "Repo Add-on 1 - Creator",
-    url:  BASE_URL + "/repo/1/creator.html"
-  },
+  creator:                {
+                            name: "Repo Add-on 1 - Creator",
+                            url:  BASE_URL + "/repo/1/creator.html"
+                          },
   developers:             [{ name: "XPI Add-on 1 - First Developer" },
                            { name: "XPI Add-on 1 - Second Developer" }],
   translators:            [{ name: "XPI Add-on 1 - First Translator" },
@@ -386,20 +365,20 @@ const WITH_EXTENSION_CACHE = [{
   sourceURI:              NetUtil.newURI(ADDON_FILES[0]).spec,
   repositoryStatus:       4,
   compatibilityOverrides: [{
-    type: "incompatible",
-    minVersion: 0.1,
-    maxVersion: 0.2,
-    appID: "xpcshell@tests.mozilla.org",
-    appMinVersion: 3.0,
-    appMaxVersion: 4.0
-  }, {
-    type: "incompatible",
-    minVersion: 0.2,
-    maxVersion: 0.3,
-    appID: "xpcshell@tests.mozilla.org",
-    appMinVersion: 5.0,
-    appMaxVersion: 6.0
-  }]
+                            type: "incompatible",
+                            minVersion: 0.1,
+                            maxVersion: 0.2,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 3.0,
+                            appMaxVersion: 4.0
+                          }, {
+                            type: "incompatible",
+                            minVersion: 0.2,
+                            maxVersion: 0.3,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 5.0,
+                            appMaxVersion: 6.0
+                          }]
 }, {
   id:                     ADDON_IDS[1],
   type:                   "theme",

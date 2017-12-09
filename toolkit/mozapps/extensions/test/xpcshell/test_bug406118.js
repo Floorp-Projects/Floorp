@@ -137,16 +137,16 @@ function run_test_1() {
     restartManager();
 
     AddonManager.getAddonsByIDs(addonIDs,
-                                function([a1, a2, a3, a4]) {
-                                  // No info in blocklist, shouldn't be blocked
-                                  do_check_false(Services.blocklist.isAddonBlocklisted(a1, null, null));
+                               function([a1, a2, a3, a4]) {
+      // No info in blocklist, shouldn't be blocked
+      do_check_false(Services.blocklist.isAddonBlocklisted(a1, null, null));
 
-                                  // All these should be blocklisted for the current app.
-                                  do_check_true(Services.blocklist.isAddonBlocklisted(a2, null, null));
-                                  do_check_true(Services.blocklist.isAddonBlocklisted(a3, null, null));
-                                  do_check_true(Services.blocklist.isAddonBlocklisted(a4, null, null));
+      // All these should be blocklisted for the current app.
+      do_check_true(Services.blocklist.isAddonBlocklisted(a2, null, null));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a3, null, null));
+      do_check_true(Services.blocklist.isAddonBlocklisted(a4, null, null));
 
-                                  end_test();
-                                });
+      end_test();
+    });
   });
 }

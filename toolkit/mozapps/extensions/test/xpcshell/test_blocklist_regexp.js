@@ -65,7 +65,7 @@ function load_blocklist(aFile, aCallback) {
   var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                   getService(Ci.nsITimerCallback);
   ok(Services.prefs.getBoolPref("services.blocklist.update_enabled"),
-     "Kinto update should be enabled");
+                                "Kinto update should be enabled");
   blocklist.notify(null);
 }
 

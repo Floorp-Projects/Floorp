@@ -29,12 +29,12 @@ function run_test() {
 
   AddonManager.getAddonsByIDs(["bug740612_1@tests.mozilla.org",
                                "bug740612_2@tests.mozilla.org"],
-                              function([a1, a2]) {
-                                do_check_neq(a1, null);
-                                do_check_neq(a2, null);
-                                do_check_eq(getInstalledVersion(), "1.0");
-                                do_check_eq(getActiveVersion(), "1.0");
+                               function([a1, a2]) {
+    do_check_neq(a1, null);
+    do_check_neq(a2, null);
+    do_check_eq(getInstalledVersion(), "1.0");
+    do_check_eq(getActiveVersion(), "1.0");
 
-                                do_execute_soon(do_test_finished);
-                              });
+    do_execute_soon(do_test_finished);
+  });
 }
