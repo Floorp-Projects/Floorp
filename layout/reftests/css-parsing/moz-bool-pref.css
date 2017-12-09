@@ -1,0 +1,22 @@
+#test {
+  width: 100px;
+  height: 100px;
+}
+
+.enabled {
+  background: red;
+}
+
+.disabled {
+  background: green;
+}
+
+@supports -moz-bool-pref("testing.supports.moz-bool-pref") {
+  .enabled {
+    background: green;
+  }
+
+  .disabled {
+    background: red;
+  }
+}
