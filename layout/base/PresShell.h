@@ -413,6 +413,8 @@ public:
 
   virtual void FireResizeEvent() override;
 
+  static PresShell* GetShellForTouchEvent(WidgetGUIEvent* aEvent);
+
 protected:
   virtual ~PresShell();
 
