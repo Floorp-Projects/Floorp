@@ -4,17 +4,6 @@
 
 EXTRA_DEPS += $(topsrcdir)/toolkit/library/libxul.mk
 
-ifeq (Linux,$(OS_ARCH))
-ifneq (Android,$(OS_TARGET))
-
-symverscript: $(topsrcdir)/toolkit/library/symverscript.in
-	$(call py_action,preprocessor, \
-		-DVERSION='xul$(MOZILLA_SYMBOLVERSION)' $< -o $@)
-
-EXTRA_DEPS += symverscript
-endif
-endif
-
 # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
 # too old to support Python pretty-printers; if this changes, we could make
 # this 'ifdef GNU_CC'.

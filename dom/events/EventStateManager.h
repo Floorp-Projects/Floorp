@@ -26,7 +26,6 @@ class nsIDocument;
 class nsIDocShell;
 class nsIDocShellTreeItem;
 class imgIContainer;
-class EnterLeaveDispatcher;
 class nsIContentViewer;
 class nsIScrollableFrame;
 class nsITimer;

@@ -9,18 +9,6 @@ def Binary():
     '''Generic template for target binaries. Meant to be used by other
     templates.'''
 
-    if CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']:
-        USE_LIBS += ['stdc++compat']
-
-    # Ideally, we'd support not adding this to the LIB_IS_C_ONLY case,
-    # but that variable is actually only set in db/sqlite/src, which
-    # doesn't build a shared library on the relevant platforms anyways.
-    # Eventually, though, we should detect LIB_IS_C_ONLY based on the
-    # associated SOURCES (and there might actually be places where we
-    # haven't set it but should have).
-    if CONFIG['STLPORT_LIBS']:
-        OS_LIBS += [CONFIG['STLPORT_LIBS']]
-
     # Add -llog by default, since we use it all over the place.
     if CONFIG['OS_TARGET'] == 'Android':
         OS_LIBS += ['log']
@@ -99,25 +87,9 @@ def Framework(name):
 
 
 @template
-def HostStdCppCompat():
-    '''Template for libstdc++ compatibility for host binaries.'''
-
-    if CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']:
-        HOST_USE_LIBS += ['host_stdc++compat']
-
-
-@template
-def HostProgram(name, c_only=False):
+def HostProgram(name):
     '''Template for build tools executables.'''
     HOST_PROGRAM = name
-
-    # With context-based templates, this won't be needed anymore, and will
-    # work better than relying on the caller setting it, but at the moment,
-    # this is the best we have. And it doesn't matter /that/ much, so there's
-    # really only one place using this, where it does matter to avoid the
-    # extra dependency (because it creates a circular one).
-    if not c_only:
-        HostStdCppCompat()
 
 
 @template
@@ -129,8 +101,6 @@ def HostSimplePrograms(names, ext='.cpp'):
     HOST_SIMPLE_PROGRAMS += names
     HOST_SOURCES += ['%s%s' % (name.replace('host_', ''), ext)
         for name in names]
-
-    HostStdCppCompat()
 
 
 @template

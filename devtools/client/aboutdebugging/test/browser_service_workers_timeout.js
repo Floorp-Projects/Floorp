@@ -18,12 +18,12 @@ add_task(function* () {
 
   let { tab, document } = yield openAboutDebugging("workers");
 
+  let serviceWorkersElement = getServiceWorkerList(document);
+
   let swTab = yield addTab(TAB_URL);
 
-  let serviceWorkersElement = getServiceWorkerList(document);
-  yield waitForMutation(serviceWorkersElement, { childList: true });
-
-  assertHasTarget(true, document, "service-workers", SERVICE_WORKER);
+  info("Wait until the service worker appears in about:debugging");
+  yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   // Ensure that the registration resolved before trying to connect to the sw
   yield waitForServiceWorkerRegistered(swTab);
@@ -64,9 +64,10 @@ add_task(function* () {
   // Now ensure that the worker is correctly destroyed
   // after we destroy the toolbox.
   // The DEBUG button should disappear once the worker is destroyed.
-  yield waitForMutation(targetElement, { childList: true });
-  ok(!targetElement.querySelector(".debug-button"),
-    "The debug button was removed when the worker was killed");
+  info("Wait until the debug button disappears");
+  yield waitUntil(() => {
+    return !targetElement.querySelector(".debug-button");
+  });
 
   // Finally, unregister the service worker itself.
   try {

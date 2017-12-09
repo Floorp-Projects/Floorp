@@ -71,11 +71,22 @@ interface ChannelWrapper : EventTarget {
   /**
    * Redirects the wrapped HTTP channel to the given URI. For other channel
    * types, this method will throw. The redirect is an internal redirect, and
-   * the  behavior is the same as nsIHttpChannel.redirectTo.
+   * the behavior is the same as nsIHttpChannel.redirectTo.
    */
   [Throws]
   void redirectTo(URI url);
 
+  /**
+   * Requests an upgrade of the HTTP channel to a secure request. For other channel
+   * types, this method will throw. The redirect is an internal redirect, and
+   * the behavior is the same as nsIHttpChannel.upgradeToSecure. Setting this
+   * flag is only effective during the WebRequest.onBeforeRequest in
+   * Web Extensions, calling this at any other point during the request will
+   * have no effect. Setting this flag in addition to calling redirectTo
+   * results in the redirect happening rather than the upgrade request.
+   */
+  [Throws]
+  void upgradeToSecure();
 
   /**
    * The content type of the request, usually as read from the Content-Type
