@@ -37,29 +37,33 @@ add_task(function* () {
   ok(debugButtons.every(b => b.disabled), "Debug buttons should be disabled");
 
   info("Click on 'Enable addons debugging' checkbox.");
-  let addonsContainer = document.getElementById("addons");
-  let onAddonsMutation = waitForMutation(addonsContainer,
-    { subtree: true, attributes: true });
   addonDebugCheckbox.click();
-  yield onAddonsMutation;
 
-  info("Check all debug buttons are enabled.");
-  ok(addonDebugCheckbox.checked, "Addons debugging should be enabled.");
-  debugButtons = [...document.querySelectorAll("#addons .debug-button")];
-  ok(debugButtons.every(b => !b.disabled), "Debug buttons should be enabled");
+  info("Wait until all debug buttons are enabled.");
+  waitUntil(() => addonDebugCheckbox.checked && areDebugButtonsEnabled(document), 100);
+  info("Addons debugging should be enabled and debug buttons are enabled");
 
   info("Click again on 'Enable addons debugging' checkbox.");
-  onAddonsMutation = waitForMutation(addonsContainer,
-    { subtree: true, attributes: true });
   addonDebugCheckbox.click();
-  yield onAddonsMutation;
 
-  info("Check all debug buttons are disabled again.");
-  debugButtons = [...document.querySelectorAll("#addons .debug-button")];
-  ok(debugButtons.every(b => b.disabled), "Debug buttons should be disabled");
+  info("Wait until all debug buttons are enabled.");
+  waitUntil(() => areDebugButtonsDisabled(document), 100);
+  info("All debug buttons are disabled again.");
 
   info("Uninstall addon installed earlier.");
   yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
 
   yield closeAboutDebugging(tab);
 });
+
+function getDebugButtons(document) {
+  return [...document.querySelectorAll("#addons .debug-button")];
+}
+
+function areDebugButtonsEnabled(document) {
+  return getDebugButtons(document).every(b => !b.disabled);
+}
+
+function areDebugButtonsDisabled(document) {
+  return getDebugButtons(document).every(b => b.disabled);
+}

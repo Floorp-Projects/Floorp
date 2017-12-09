@@ -445,6 +445,18 @@ interface nsIHttpChannel : nsIChannel
     [must_use] void redirectTo(in nsIURI aTargetURI);
 
     /**
+     * Flags a channel to be upgraded to HTTPS.
+     *
+     * Upgrading to a secure channel must happen before or during
+     * "http-on-modify-request". If redirectTo is called early as well, it
+     * will win and upgradeToSecure will be a no-op.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if called after the channel has already
+     *         started to deliver the content to its listener.
+     */
+    [must_use] void upgradeToSecure();
+
+    /**
      * Identifies the request context for this load.
      */
     [noscript, must_use] attribute uint64_t requestContextID;

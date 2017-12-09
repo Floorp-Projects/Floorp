@@ -19,15 +19,12 @@ flat varying vec4 vUvBorder;
 #define MODE_SUBPX_BG_PASS2     6
 #define MODE_COLOR_BITMAP       7
 
-VertexInfo write_text_vertex(vec2 local_pos,
+VertexInfo write_text_vertex(vec2 clamped_local_pos,
                              RectWithSize local_clip_rect,
                              float z,
                              Layer layer,
                              PictureTask task,
                              RectWithSize snap_rect) {
-    // Clamp to the two local clip rects.
-    vec2 clamped_local_pos = clamp_rect(clamp_rect(local_pos, local_clip_rect), layer.local_clip_rect);
-
     // Transform the current vertex to world space.
     vec4 world_pos = layer.transform * vec4(clamped_local_pos, 0.0, 1.0);
 
@@ -75,9 +72,22 @@ void main(void) {
     RectWithSize glyph_rect = RectWithSize(res.offset + transform * (text.offset + glyph.offset),
                                            res.uv_rect.zw - res.uv_rect.xy);
 
-    // Select the corner of the glyph rect that we are processing.
-    // Transform it from glyph space into local space.
-    vec2 local_pos = inverse(transform) * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
+    // Transform the glyph rect back to local space.
+    mat2 inv = inverse(transform);
+    RectWithSize local_rect = transform_rect(glyph_rect, inv);
+
+    // Select the corner of the glyph's local space rect that we are processing.
+    vec2 local_pos = local_rect.p0 + local_rect.size * aPosition.xy;
+
+    // Calculate a combined local clip rect.
+    RectWithSize local_clip_rect = intersect_rects(prim.local_clip_rect, prim.layer.local_clip_rect);
+
+    // If the glyph's local rect would fit inside the local clip rect, then select a corner from
+    // the device space glyph rect to reduce overdraw of clipped pixels in the fragment shader.
+    // Otherwise, fall back to clamping the glyph's local rect to the local clip rect.
+    local_pos = rect_inside_rect(local_rect, local_clip_rect) ?
+                    inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy) :
+                    clamp_rect(local_pos, local_clip_rect);
 #else
     // Scale from glyph space to local space.
     float scale = res.scale / uDevicePixelRatio;
@@ -88,6 +98,9 @@ void main(void) {
 
     // Select the corner of the glyph rect that we are processing.
     vec2 local_pos = glyph_rect.p0 + glyph_rect.size * aPosition.xy;
+
+    // Clamp to the two local clip rects.
+    local_pos = clamp_rect(clamp_rect(local_pos, prim.local_clip_rect), prim.layer.local_clip_rect);
 #endif
 
     VertexInfo vi = write_text_vertex(local_pos,
@@ -131,16 +144,16 @@ void main(void) {
     vec2 st1 = res.uv_rect.zw / texture_size;
 
     vUv = vec3(mix(st0, st1, f), res.layer);
-    vUvBorder = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
+    vUvBorder = (res.uv_rect + vec4(0.499, 0.499, -0.499, -0.499)) / texture_size.xyxy;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    vec3 tc = vec3(clamp(vUv.xy, vUvBorder.xy, vUvBorder.zw), vUv.z);
-    vec4 mask = texture(sColor0, tc);
+    vec4 mask = texture(sColor0, vUv);
 
-    float alpha = do_clip();
+    float alpha = float(all(lessThanEqual(vec4(vUvBorder.xy, vUv.xy), vec4(vUv.xy, vUvBorder.zw))));
+    alpha *= do_clip();
 
 #ifdef WR_FEATURE_SUBPX_BG_PASS1
     mask.rgb = vec3(mask.a) - mask.rgb;

@@ -55,22 +55,13 @@ add_task(function* testWebextensionInstallError() {
   let { tab, document, window } = yield openAboutDebugging("addons");
   yield waitForInitialAddonList(document);
 
-  // Start an observer that looks for the install error before
-  // actually doing the install
-  let top = document.querySelector(".addons-top");
-  let promise = waitForMutation(top, { childList: true });
-
-  mockFilePicker(window, getSupportsFile("addons/bad/manifest.json").file);
-
   // Trigger the file picker by clicking on the button
+  mockFilePicker(window, getSupportsFile("addons/bad/manifest.json").file);
   document.getElementById("load-addon-from-file").click();
 
-  // Now wait for the install error to appear.
-  yield promise;
-
-  // And check that it really is there.
-  let err = document.querySelector(".addons-install-error");
-  isnot(err, null, "Addon install error message appeared");
+  info("wait for the install error to appear");
+  let top = document.querySelector(".addons-top");
+  yield waitUntilElement(".addons-install-error", top);
 
   yield closeAboutDebugging(tab);
 });
@@ -96,11 +87,6 @@ add_task(function* testWebextensionInstallErrorRetry() {
 
   yield promiseWriteWebManifestForExtension(manifest, tempdir);
 
-  // Start an observer that looks for the install error before
-  // actually doing the install.
-  let top = document.querySelector(".addons-top");
-  let contentUpdated = waitForMutation(top, { childList: true });
-
   // Mock the file picker to select a test addon.
   let manifestFile = tempdir.clone();
   manifestFile.append(addonId, "manifest.json");
@@ -109,12 +95,10 @@ add_task(function* testWebextensionInstallErrorRetry() {
   // Trigger the file picker by clicking on the button.
   document.getElementById("load-addon-from-file").click();
 
-  // Now wait for the install error to appear.
-  yield contentUpdated;
+  info("wait for the install error to appear");
+  let top = document.querySelector(".addons-top");
+  yield waitUntilElement(".addons-install-error", top);
 
-  // Check that the error is shown.
-  let err = document.querySelector(".addons-install-error");
-  isnot(err, null, "Addon install error message appeared");
   let retryButton = document.querySelector("button.addons-install-retry");
   is(retryButton.textContent, "Retry", "Retry button has a good label");
 
@@ -126,23 +110,16 @@ add_task(function* testWebextensionInstallErrorRetry() {
   }];
   yield promiseWriteWebManifestForExtension(manifest, tempdir);
 
-  let getAddonEl = () => document.querySelector(`[data-addon-id="${addonId}"]`);
-
+  let addonEl = document.querySelector(`[data-addon-id="${addonId}"]`);
   // Verify this add-on isn't installed yet.
-  ok(!getAddonEl(), "Addon is not installed yet");
-
-  // Prepare to wait for the add-on to be added to the temporary list.
-  let addonAdded = waitForMutation(
-    getTemporaryAddonList(document), { childList: true });
+  ok(!addonEl, "Addon is not installed yet");
 
   // Retry the install.
   retryButton.click();
 
-  // Wait for the add-on to be shown.
-  yield addonAdded;
-
-  // Verify the add-on is installed.
-  ok(getAddonEl(), "Addon is installed");
+  info("Wait for the add-on to be shown");
+  yield waitUntilElement(`[data-addon-id="${addonId}"]`, document);
+  info("Addon is installed");
 
   // Install the add-on, and verify that it disappears in the about:debugging UI
   yield uninstallAddon({document, id: addonId, name: addonName});

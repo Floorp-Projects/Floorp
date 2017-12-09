@@ -28,6 +28,7 @@ impl Drop for CFBoolean {
 }
 
 impl_TCFType!(CFBoolean, CFBooleanRef, CFBooleanGetTypeID);
+impl_CFTypeDescription!(CFBoolean);
 
 impl CFBoolean {
     pub fn true_value() -> CFBoolean {
@@ -40,5 +41,37 @@ impl CFBoolean {
         unsafe {
             TCFType::wrap_under_get_rule(kCFBooleanFalse)
         }
+    }
+}
+
+impl From<bool> for CFBoolean {
+    fn from(value: bool) -> CFBoolean {
+        if value {
+            CFBoolean::true_value()
+        } else {
+            CFBoolean::false_value()
+        }
+    }
+}
+
+impl From<CFBoolean> for bool {
+    fn from(value: CFBoolean) -> bool {
+        value.0 == unsafe { kCFBooleanTrue }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_and_from_bool() {
+        let b_false = CFBoolean::from(false);
+        let b_true = CFBoolean::from(true);
+        assert_ne!(b_false, b_true);
+        assert_eq!(b_false, CFBoolean::false_value());
+        assert_eq!(b_true, CFBoolean::true_value());
+        assert!(!bool::from(b_false));
+        assert!(bool::from(b_true));
     }
 }

@@ -124,13 +124,14 @@ extern {
     //fn CFURLCreateStringByAddingPercentEscapes
     //fn CFURLCreateStringByReplacingPercentEscapes
     //fn CFURLCreateStringByReplacingPercentEscapesUsingEncoding
-    //fn CFURLGetFileSystemRepresentation
+    pub fn CFURLGetFileSystemRepresentation(anURL: CFURLRef, resolveAgainstBase: Boolean, buffer: *mut u8, maxBufLen: CFIndex) -> Boolean;
+
     //fn CFURLGetFSRef
     pub fn CFURLGetString(anURL: CFURLRef) -> CFStringRef;
 
     /* Getting URL Properties */
     //fn CFURLGetBaseURL(anURL: CFURLRef) -> CFURLRef;
-    //fn CFURLGetBytes
+    pub fn CFURLGetBytes(anURL: CFURLRef, buffer: *mut u8, bufferLength: CFIndex) -> CFIndex;
     //fn CFURLGetByteRangeForComponent
     pub fn CFURLGetTypeID() -> CFTypeID;
     //fn CFURLResourceIsReachable
