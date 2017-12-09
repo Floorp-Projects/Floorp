@@ -910,7 +910,7 @@ var CustomizableUIInternal = {
     let currentContextMenu = aNode.getAttribute("context") ||
                              aNode.getAttribute("contextmenu");
     let contextMenuForPlace =
-      (forcePanel || "panel" == CustomizableUI.getPlaceForItem(aAreaNode)) ?
+      (forcePanel || "menu-panel" == CustomizableUI.getPlaceForItem(aAreaNode)) ?
       kPanelItemContextMenu :
       null;
     if (contextMenuForPlace && !currentContextMenu) {
@@ -3882,7 +3882,7 @@ this.CustomizableUI = {
       if (node.localName == "toolbar")
         place = "toolbar";
       else if (node.id == CustomizableUI.AREA_FIXED_OVERFLOW_PANEL)
-        place = "panel";
+        place = "menu-panel";
       else if (node.id == "customization-palette")
         place = "palette";
 
