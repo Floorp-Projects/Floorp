@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<!-- The query part here is necessary because chrome stylesheets are
+     cached after first parse, so the -moz-bool-pref() wouldn't be
+     re-evaluated if we use the same url as the other test. -->
+<link rel="stylesheet" href="chrome://reftest/content/moz-bool-pref.css?1">
+<!-- testing.supports.moz-bool-pref = true -->
+<div id="test" class="enabled"></div>

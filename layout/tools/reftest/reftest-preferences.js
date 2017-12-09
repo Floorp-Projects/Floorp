@@ -130,7 +130,7 @@ user_pref("media.gmp-manager.url.override", "http://localhost/dummy-gmp-manager.
 user_pref("media.gmp-manager.updateEnabled", false);
 
 // A fake bool pref for "@supports -moz-bool-pref" sanify test.
-user_pref("testing.supports.moz-bool-pref", true);
+user_pref("testing.supports.moz-bool-pref", false);
 
 // Reftests load a lot of URLs very quickly. This puts avoidable and
 // unnecessary I/O pressure on the Places DB (measured to be in the
