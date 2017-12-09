@@ -100,15 +100,27 @@ LH:2
 end_of_record
 """
 
+class TempFile():
+    def __init__(self, content):
+        self.file = NamedTemporaryFile(delete=False)
+        self.file.write(content)
+        self.file.close()
+
+    def __enter__(self):
+        return self.file.name
+
+    def __exit__(self, *args):
+        os.remove(self.file.name)
+
+
 class TestLcovParser(unittest.TestCase):
 
     def parser_roundtrip(self, lcov_string):
-        f = NamedTemporaryFile()
-        f.write(lcov_string)
-        f.flush()
-        file_obj = lcov_rewriter.LcovFile([f.name])
-        out = StringIO()
-        file_obj.print_file(out, lambda s: (s, False), lambda x: x)
+        with TempFile(lcov_string) as fname:
+            file_obj = lcov_rewriter.LcovFile([fname])
+            out = StringIO()
+            file_obj.print_file(out, lambda s: (s, False), lambda x: x)
+
         return out.getvalue()
 
     def test_basic_parse(self):
@@ -229,12 +241,9 @@ class TestLineRemapping(unittest.TestCase):
         self.assertEqual(len(r_num), 1)
 
         # Read rewritten lcov.
-        f = NamedTemporaryFile()
-        f.write(out.getvalue())
-        f.flush()
-        lcov_file = lcov_rewriter.LcovFile([f.name])
-
-        records = [lcov_file.parse_record(r) for _, _, r in lcov_file.iterate_records()]
+        with TempFile(out.getvalue()) as fname:
+            lcov_file = lcov_rewriter.LcovFile([fname])
+            records = [lcov_file.parse_record(r) for _, _, r in lcov_file.iterate_records()]
 
         self.assertEqual(len(records), 17)
 
