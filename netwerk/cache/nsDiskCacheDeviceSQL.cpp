@@ -36,7 +36,6 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsSerializationHelper.h"
-#include "nsMemory.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"

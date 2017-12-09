@@ -18,7 +18,6 @@
 #include "nsILoadGroup.h"
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
-#include "nsMemory.h"
 #include "XPathResult.h"
 #include "txExecutionState.h"
 #include "txMozillaTextOutput.h"
