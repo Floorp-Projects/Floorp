@@ -11,7 +11,6 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "nsIPrefetchService.h"
 #include "nsCPrefetchService.h"
-#include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"

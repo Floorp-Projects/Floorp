@@ -18,7 +18,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
-#include "nsMemory.h"
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
 #include "nsICryptoHash.h"
