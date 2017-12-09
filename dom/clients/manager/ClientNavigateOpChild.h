@@ -7,12 +7,19 @@
 #define _mozilla_dom_ClientNavigateOpChild_h
 
 #include "mozilla/dom/PClientNavigateOpChild.h"
+#include "ClientOpPromise.h"
 
 namespace mozilla {
 namespace dom {
 
 class ClientNavigateOpChild final : public PClientNavigateOpChild
 {
+  MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
+  nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
+
+  already_AddRefed<ClientOpPromise>
+  DoNavigate(const ClientNavigateOpConstructorArgs& aArgs);
+
   // PClientNavigateOpChild interface
   void
   ActorDestroy(ActorDestroyReason aReason) override;

@@ -5,18 +5,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientOpenWindowOpChild.h"
+#include "ClientOpenWindowUtils.h"
+#include "mozilla/SystemGroup.h"
 
 namespace mozilla {
 namespace dom {
 
+already_AddRefed<ClientOpPromise>
+ClientOpenWindowOpChild::DoOpenWindow(const ClientOpenWindowArgs& aArgs)
+{
+  RefPtr<ClientOpPromise> ref =
+    ClientOpenWindowInCurrentProcess(aArgs);
+  return ref.forget();
+}
+
 void
 ClientOpenWindowOpChild::ActorDestroy(ActorDestroyReason aReason)
 {
+  mPromiseRequestHolder.DisconnectIfExists();
 }
 
 void
 ClientOpenWindowOpChild::Init(const ClientOpenWindowArgs& aArgs)
 {
+  RefPtr<ClientOpPromise> promise = DoOpenWindow(aArgs);
+  promise->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+    [this] (const ClientOpResult& aResult) {
+      mPromiseRequestHolder.Complete();
+      PClientOpenWindowOpChild::Send__delete__(this, aResult);
+    }, [this] (nsresult aResult) {
+      mPromiseRequestHolder.Complete();
+      PClientOpenWindowOpChild::Send__delete__(this, aResult);
+  })->Track(mPromiseRequestHolder);
 }
 
 } // namespace dom

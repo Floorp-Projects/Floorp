@@ -256,13 +256,6 @@ public:
     template<typename Functor>
     static void OnNativeCall(Functor&& aCall)
     {
-        if (aCall.IsTarget(&Open) && NS_IsMainThread()) {
-            // Gecko state probably just switched to PROFILE_READY, and the
-            // event loop is not running yet. Skip the event loop here so we
-            // can get a head start on opening our window.
-            return aCall();
-        }
-
         NS_DispatchToMainThread(new WindowEvent<Functor>(mozilla::Move(aCall)));
     }
 

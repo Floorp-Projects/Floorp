@@ -7,9 +7,12 @@
 #include "ClientManagerOpParent.h"
 
 #include "ClientManagerService.h"
+#include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla {
 namespace dom {
+
+using mozilla::ipc::BackgroundParent;
 
 template <typename Method, typename... Args>
 void
@@ -48,10 +51,35 @@ void
 ClientManagerOpParent::Init(const ClientOpConstructorArgs& aArgs)
 {
   switch (aArgs.type()) {
+    case ClientOpConstructorArgs::TClientNavigateArgs:
+    {
+      DoServiceOp(&ClientManagerService::Navigate,
+                  aArgs.get_ClientNavigateArgs());
+      break;
+    }
+    case ClientOpConstructorArgs::TClientMatchAllArgs:
+    {
+      DoServiceOp(&ClientManagerService::MatchAll,
+                  aArgs.get_ClientMatchAllArgs());
+      break;
+    }
+    case ClientOpConstructorArgs::TClientClaimArgs:
+    {
+      DoServiceOp(&ClientManagerService::Claim, aArgs.get_ClientClaimArgs());
+      break;
+    }
     case ClientOpConstructorArgs::TClientGetInfoAndStateArgs:
     {
       DoServiceOp(&ClientManagerService::GetInfoAndState,
                   aArgs.get_ClientGetInfoAndStateArgs());
+      break;
+    }
+    case ClientOpConstructorArgs::TClientOpenWindowArgs:
+    {
+      RefPtr<ContentParent> contentParent =
+        BackgroundParent::GetContentParent(Manager()->Manager());
+      DoServiceOp(&ClientManagerService::OpenWindow,
+                  aArgs.get_ClientOpenWindowArgs(), contentParent.forget());
       break;
     }
     default:

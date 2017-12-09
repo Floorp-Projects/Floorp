@@ -348,6 +348,7 @@ public:
   void SyncStateFromParentWindow();
 
   mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
+  mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
   virtual nsresult FireDelayedDOMEvents() override;

@@ -18,11 +18,15 @@ class PrincipalInfo;
 } // namespace ipc
 namespace dom {
 
+class ClientClaimArgs;
 class ClientGetInfoAndStateArgs;
 class ClientHandle;
 class ClientInfo;
 class ClientManagerChild;
+class ClientMatchAllArgs;
+class ClientNavigateArgs;
 class ClientOpConstructorArgs;
+class ClientOpenWindowArgs;
 class ClientSource;
 enum class ClientType : uint8_t;
 
@@ -95,8 +99,22 @@ public:
                nsISerialEventTarget* aSerialEventTarget);
 
   static RefPtr<ClientOpPromise>
+  MatchAll(const ClientMatchAllArgs& aArgs, nsISerialEventTarget* aTarget);
+
+  static RefPtr<ClientOpPromise>
+  Claim(const ClientClaimArgs& aArgs, nsISerialEventTarget* aSerialEventTarget);
+
+  static RefPtr<ClientOpPromise>
   GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs,
                   nsISerialEventTarget* aSerialEventTarget);
+
+  static RefPtr<ClientOpPromise>
+  Navigate(const ClientNavigateArgs& aArgs,
+           nsISerialEventTarget* aSerialEventTarget);
+
+  static RefPtr<ClientOpPromise>
+  OpenWindow(const ClientOpenWindowArgs& aArgs,
+             nsISerialEventTarget* aSerialEventTarget);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManager)
 };
