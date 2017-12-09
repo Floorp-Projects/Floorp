@@ -193,8 +193,7 @@ var gMenuBuilder = {
     }
 
     if (item.id && item.extension && item.extension.id) {
-      element.setAttribute("id",
-        `${makeWidgetId(item.extension.id)}_${item.id}`);
+      element.setAttribute("id", `${makeWidgetId(item.extension.id)}_${item.id}`);
     }
 
     if (item.icons) {

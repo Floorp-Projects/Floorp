@@ -17,7 +17,7 @@ enum ShadowRootMode {
 };
 
 // https://dom.spec.whatwg.org/#shadowroot
-[Pref="dom.webcomponents.enabled"]
+[Func="nsDocument::IsWebComponentsEnabled"]
 interface ShadowRoot : DocumentFragment
 {
   // Shadow DOM v1

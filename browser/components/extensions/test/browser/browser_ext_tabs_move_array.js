@@ -28,9 +28,8 @@ add_task(async function moveMultiple() {
       async function reset() {
         let tabs = await browser.tabs.query({url: "http://example.com/*"});
         await browser.tabs.move(
-            tabs.sort((a, b) => (num(a.url) - num(b.url))).map(tab => tab.id),
-            {index: 0}
-        );
+          tabs.sort((a, b) => (num(a.url) - num(b.url))).map(tab => tab.id),
+          {index: 0});
       }
 
       async function move(moveIndexes, moveTo) {

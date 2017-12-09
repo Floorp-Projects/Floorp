@@ -31,11 +31,11 @@ async function testThemeSwitching(extension, locations = ["page"]) {
     await switchTheme(newTheme);
     for (let location of locations) {
       is(await extension.awaitMessage(`devtools_theme_changed_${location}`),
-        newTheme,
-        `The onThemeChanged event listener fired for the ${location}.`);
+         newTheme,
+         `The onThemeChanged event listener fired for the ${location}.`);
       is(await extension.awaitMessage(`current_theme_${location}`),
-        newTheme,
-        `The current theme is reported as expected for the ${location}.`);
+         newTheme,
+         `The current theme is reported as expected for the ${location}.`);
     }
   }
 }
@@ -80,8 +80,8 @@ add_task(async function test_theme_name_no_panel() {
   info("developer toolbox opened");
 
   is(await extension.awaitMessage("initial_theme"),
-    "light",
-    "The initial theme is reported as expected.");
+     "light",
+     "The initial theme is reported as expected.");
 
   await testThemeSwitching(extension);
 
@@ -201,8 +201,8 @@ add_task(async function test_devtools_page_panels_create() {
 
   await extension.awaitMessage("devtools_panel_created");
   is(await extension.awaitMessage("initial_theme_page"),
-    "light",
-    "The initial theme is reported as expected from a devtools page.");
+     "light",
+     "The initial theme is reported as expected from a devtools page.");
 
   const toolboxAdditionalTools = toolbox.getAdditionalTools();
 
@@ -220,8 +220,8 @@ add_task(async function test_devtools_page_panels_create() {
   is(devtoolsPanelTabId, devtoolsPageTabId,
      "Got the same devtools.inspectedWindow.tabId from devtools page and panel");
   is(await extension.awaitMessage("initial_theme_panel"),
-    "light",
-    "The initial theme is reported as expected from a devtools panel.");
+     "light",
+     "The initial theme is reported as expected from a devtools panel.");
   info("Addon Devtools Panel shown");
 
   await testThemeSwitching(extension, ["page", "panel"]);
@@ -282,8 +282,8 @@ add_task(async function test_devtools_page_panels_create() {
   await gDevTools.showToolbox(target, panelId);
   await extension.awaitMessage("devtools_panel_shown");
   is(await extension.awaitMessage("initial_theme_panel"),
-    "light",
-    "The initial theme is reported as expected from a devtools panel.");
+     "light",
+     "The initial theme is reported as expected from a devtools panel.");
   info("Addon Devtools Panel shown - after visibilityswitch toggled");
 
   info("Wait until the Addon Devtools Panel has been loaded - after visibilityswitch toggled");

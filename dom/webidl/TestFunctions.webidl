@@ -38,4 +38,10 @@ interface TestFunctions {
   // DOMString argument on the C++ side and trying to hand it
   // stringbuffers.  If length not passed, use our full length.
   DOMString getStringDataAsDOMString(optional unsigned long length);
+
+  // Functions that just punch through to mozITestInterfaceJS.idl
+  [Throws]
+  void testThrowNsresult();
+  [Throws]
+  void testThrowNsresultFromNative();
 };

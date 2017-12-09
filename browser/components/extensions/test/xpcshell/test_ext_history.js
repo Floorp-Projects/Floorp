@@ -309,8 +309,8 @@ add_task(async function test_add_url() {
     equal(results.result.title, results.details.title, "URL was added with the correct title");
     if (results.details.visitTime) {
       equal(results.result.lastVisitTime,
-         Number(ExtensionUtils.normalizeTime(results.details.visitTime)),
-         "URL was added with the correct date");
+            Number(ExtensionUtils.normalizeTime(results.details.visitTime)),
+            "URL was added with the correct date");
     }
   }
 
