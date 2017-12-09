@@ -116,7 +116,6 @@
     <command id="cmd_enableItem"/>
     <command id="cmd_disableItem"/>
     <command id="cmd_installItem"/>
-    <command id="cmd_purchaseItem"/>
     <command id="cmd_uninstallItem"/>
     <command id="cmd_cancelUninstallItem"/>
     <command id="cmd_cancelOperation"/>
@@ -620,8 +619,6 @@
                                 label="&cmd.uninstallAddon.label;"
                                 accesskey="&cmd.uninstallAddon.accesskey;"
                                 command="cmd_uninstallItem"/>
-                        <button id="detail-purchase-btn" class="addon-control purchase"
-                                command="cmd_purchaseItem"/>
                         <button id="detail-install-btn" class="addon-control install"
                                 label="&cmd.installAddon.label;"
                                 accesskey="&cmd.installAddon.accesskey;"
