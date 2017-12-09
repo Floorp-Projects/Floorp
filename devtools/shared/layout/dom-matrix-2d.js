@@ -45,6 +45,20 @@ const translate = (tx = 0, ty = tx) => [
 exports.translate = translate;
 
 /**
+ * Returns a matrix that reflects about the Y axis.  For example, the point (x1, y1) would
+ * become (-x1, y1).
+ *
+ * @return {Array}
+ *         The new matrix.
+ */
+const reflectAboutY = () => [
+  -1, 0, 0,
+  0,  1, 0,
+  0,  0, 1,
+];
+exports.reflectAboutY = reflectAboutY;
+
+/**
  * Returns a matrix for the rotation given.
  * Calling `rotate()` or `rotate(0)` returns a new identity matrix.
  *
