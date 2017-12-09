@@ -323,7 +323,7 @@
         <![CDATA[
           let {tabParent} = this.frameLoader;
 
-          if (!tabParent.hasBeforeUnload) {
+          if (!tabParent || !tabParent.hasBeforeUnload) {
             return { permitUnload: true, timedOut: false };
           }
 
