@@ -54,7 +54,7 @@ function promiseWindow(url) {
         }
 
         Services.obs.removeObserver(obs, "domwindowopened");
-        executeSoon(() => resolve(win));
+        resolve(win);
       }, {once: true});
     }, "domwindowopened");
   });
@@ -120,7 +120,7 @@ async function assertWebRTCIndicatorStatus(expected) {
           win.addEventListener("unload", function listener(e) {
             if (e.target == win.document) {
               win.removeEventListener("unload", listener);
-              executeSoon(resolve);
+              resolve();
             }
           });
         });
@@ -141,7 +141,7 @@ async function assertWebRTCIndicatorStatus(expected) {
             if (document.readyState != "complete")
               return;
             document.removeEventListener("readystatechange", onReadyStateChange);
-            executeSoon(resolve);
+            resolve();
           });
         });
       }
@@ -166,7 +166,7 @@ function promisePopupEvent(popup, eventSuffix) {
   let eventType = "popup" + eventSuffix;
   return new Promise(resolve => {
     popup.addEventListener(eventType, function(event) {
-      executeSoon(resolve);
+      resolve();
     }, {once: true});
 
   });
@@ -297,7 +297,7 @@ function promisePopupNotificationShown(aName, aAction) {
       ok(PopupNotifications.isPanelOpen, "notification panel open");
       ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
 
-      executeSoon(resolve);
+      resolve();
     }, {once: true});
 
     if (aAction)
