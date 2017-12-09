@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Dodaj wyszukiwarkę</string>
   <string name="search_add_confirmation">Dodano nową wyszukiwarkę.</string>
   <string name="search_add_error_empty_name">Wpisz nazwę wyszukiwarki</string>
+  <string name="search_add_error_duplicate_name">Zainstalowana wyszukiwarka już używa tej nazwy.</string>
   <string name="search_add_error_empty_search">Wpisz ciąg wyszukiwania</string>
   <string name="search_add_error_format">Upewnij się, że ciąg wyszukiwania zgadza się z formatem przykładu</string>
   <string name="content_description_clear_input">Usuń tekst</string>

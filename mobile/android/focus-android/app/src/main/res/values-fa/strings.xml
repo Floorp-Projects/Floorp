@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">اضافه کردن موتور جست‌وجو</string>
   <string name="search_add_confirmation">موتور جست‌وجو جدید اضافه شد.</string>
   <string name="search_add_error_empty_name">نام موتور جست‌وجو را وارد کنید</string>
+  <string name="search_add_error_duplicate_name">پیش از این یک موتور جستجوی نصب شده از این نام استفاده می‌کند.</string>
   <string name="search_add_error_empty_search">رشتهٔ جست‌وجو را وارد کنید</string>
   <string name="search_add_error_format">بررسی کنید که رشته جست‌وجو با شکل و قالب نمونهٔ ارائه شده مطابقت دارد</string>
   <string name="content_description_clear_input">پاک کردن وروردی</string>

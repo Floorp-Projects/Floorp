@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Tambah enjin carian</string>
   <string name="search_add_confirmation">Enjin carian baru sudah ditambah.</string>
   <string name="search_add_error_empty_name">Masukkan nama enjin carian</string>
+  <string name="search_add_error_duplicate_name">Enjin carian yang dipasang sudah menggunakan nama itu.</string>
   <string name="search_add_error_empty_search">Masukkan string carian</string>
   <string name="search_add_error_format">Pastikan string carian sepadan format contoh</string>
   <string name="content_description_clear_input">Hapuskan input</string>

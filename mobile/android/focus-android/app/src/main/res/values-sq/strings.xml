@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Shtoni motor kërkimesh</string>
   <string name="search_add_confirmation">Motori i ri i kërkimeve u shtua.</string>
   <string name="search_add_error_empty_name">Jepni emër motori kërkimesh</string>
+  <string name="search_add_error_duplicate_name">Atë emër e përdor tashmë një motor i instaluar kërkimesh.</string>
   <string name="search_add_error_empty_search">Jepni varg kërkimi</string>
   <string name="search_add_error_format">Kontrolloni që vargu i kërkimit të përputhet me formatin Shembull</string>
   <string name="content_description_clear_input">Pastro ç’është dhënë</string>

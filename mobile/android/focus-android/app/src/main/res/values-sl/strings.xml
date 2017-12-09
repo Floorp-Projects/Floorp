@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Dodaj iskalnik</string>
   <string name="search_add_confirmation">Nov iskalnik dodan.</string>
   <string name="search_add_error_empty_name">Vnesite ime iskalnika</string>
+  <string name="search_add_error_duplicate_name">Nameščeni iskalnik že uporablja to ime.</string>
   <string name="search_add_error_empty_search">Vnesite iskalni niz</string>
   <string name="search_add_error_format">Prepričajte se, da se iskalni niz ujema z obliko primera</string>
   <string name="content_description_clear_input">Počisti vnos</string>

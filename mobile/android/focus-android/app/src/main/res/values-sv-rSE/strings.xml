@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Lägg till sökmotor</string>
   <string name="search_add_confirmation">Ny sökmotor tillagd.</string>
   <string name="search_add_error_empty_name">Ange sökmotorns namn</string>
+  <string name="search_add_error_duplicate_name">En installerad sökmotor använder redan det namnet.</string>
   <string name="search_add_error_empty_search">Ange söksträng</string>
   <string name="search_add_error_format">Kontrollera att söksträngen matchar exempelformat</string>
   <string name="content_description_clear_input">Rensa inmatning</string>

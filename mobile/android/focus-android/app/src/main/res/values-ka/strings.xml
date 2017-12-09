@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">საძიებო სისტემის დამატება</string>
   <string name="search_add_confirmation">ახალი საძიებო სისტემა დამატებულია.</string>
   <string name="search_add_error_empty_name">მიუთითეთ საძიებო სისტემის სახელი</string>
+  <string name="search_add_error_duplicate_name">ამ სახელს, უკვე იყენებს ერთ-ერთი დაყენებული საძიებო სისტემა.</string>
   <string name="search_add_error_empty_search">შეიყვანეთ საძიებო ფრაზა</string>
   <string name="search_add_error_format">შეამოწმეთ, შეესაბამება თუ არა საძიებო ფრაზა მოცემულ ფორმატს</string>
   <string name="content_description_clear_input">შეტანილის გასუფთავება</string>

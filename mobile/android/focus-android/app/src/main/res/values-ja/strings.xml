@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">検索エンジンを追加</string>
   <string name="search_add_confirmation">新しい検索エンジンが追加されました。</string>
   <string name="search_add_error_empty_name">検索エンジン名を入力</string>
+  <string name="search_add_error_duplicate_name">インストールされている検索エンジンの中に同名のものが存在します。</string>
   <string name="search_add_error_empty_search">検索語を入力</string>
   <string name="search_add_error_format">検索語が入力例の書式とマッチしているか確認してください</string>
   <string name="content_description_clear_input">入力内容を消去</string>

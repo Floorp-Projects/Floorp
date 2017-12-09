@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">أضف محرك بحث</string>
   <string name="search_add_confirmation">أُضيف محرك البحث الجديد.</string>
   <string name="search_add_error_empty_name">أدخِل اسم محرك البحث</string>
+  <string name="search_add_error_duplicate_name">هناك محرك بحث مثبّت يحمل نفس الاسم بالفعل.</string>
   <string name="search_add_error_empty_search">أدخِل نص البحث</string>
   <string name="search_add_error_format">تحقق من أن نص البحث يطابق تنسيق المثال</string>
   <string name="content_description_clear_input">امسح الإدخال</string>

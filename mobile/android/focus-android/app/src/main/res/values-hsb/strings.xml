@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Pytawu přidać</string>
   <string name="search_add_confirmation">Nowa pytawa je so přidała.</string>
   <string name="search_add_error_empty_name">Mjeno pytawy zapodać</string>
+  <string name="search_add_error_duplicate_name">Je hižo pytawa instalowana, kotraž tute mjeno wužiwa.</string>
   <string name="search_add_error_empty_search">Pytanski wuraz zapodać</string>
   <string name="search_add_error_format">Přepruwujće, hač pytanski wuraz přikładowemu formatej wotpowěduje</string>
   <string name="content_description_clear_input">Zapodaće wuprózdnić</string>

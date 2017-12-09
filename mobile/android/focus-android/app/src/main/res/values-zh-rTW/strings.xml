@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">新增搜尋引擎</string>
   <string name="search_add_confirmation">已加入新搜尋引擎。</string>
   <string name="search_add_error_empty_name">輸入搜尋引擎名稱</string>
+  <string name="search_add_error_duplicate_name">已有安裝的搜尋引擎使用該名稱。</string>
   <string name="search_add_error_empty_search">輸入搜尋字串</string>
   <string name="search_add_error_format">請確認搜尋字串是否符合範例格式</string>
   <string name="content_description_clear_input">清除輸入內容</string>

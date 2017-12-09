@@ -29,6 +29,25 @@
   <string name="preference_search_engine_default">Výchozí</string>
   <string name="preference_state_on">Zapnuto</string>
   <string name="preference_state_off">Vypnuto</string>
+  <string name="preference_subitem_autocomplete">Automatické doplňování URL adresy</string>
+  <string name="preference_switch_autocomplete">Automatické doplňování</string>
+  <string name="preference_category_autocomplete_preinstalled">Výchozí seznam URL adres</string>
+  <string name="preference_autocomplete_preinstalled_summary">Povolením této možnosti umožníte aplikaci %1$s automaticky doplňovat více než 450 populárních URL adres.</string>
+  <string name="preference_category_autocomplete_custom">Vlastní URL adresa</string>
+  <string name="preference_autocomplete_subitem_customlist">Vlastní URL adresy</string>
+  <string name="preference_autocomplete_action_add">+ Přidat vlastní URL adresu</string>
+  <string name="preference_autocomplete_title_add">Přidat vlastní URL adresu</string>
+  <string name="preference_autocomplete_title_remove">Odebrat vlastní URL adresy</string>
+  <string name="preference_autocomplete_learn_more">Zjistit více</string>
+  <string name="preference_autocomplete_custom_summary">Přidání a správa vlastních URL adres pro automatické doplňování.</string>
+  <string name="preference_autocomplete_add_title">URL adresa k přidání</string>
+  <string name="preference_autocomplete_add_hint">Vložte nebo zadejte URL adresu</string>
+  <string name="preference_autocomplete_add_example">Příklad: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Vlastní URL adresa přidána.</string>
+  <string name="preference_autocomplete_menu_remove">Odebrat</string>
+  <string name="preference_autocomplete_action_remove_content_description">Odebrat</string>
+  <string name="preference_autocomplete_add_error">Zkontrolujte zadanou URL adresu.</string>
   <string name="preference_language">Jazyk</string>
   <string name="preference_language_systemdefault">Systémové nastavení</string>
   <string name="preference_dialog_title_search_engine">Výchozí vyhledávač</string>
@@ -79,6 +98,9 @@
   <string name="search_add_manually_example">Příklad: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Přidat vyhledávací modul</string>
   <string name="search_add_confirmation">Nový vyhledávací modul byl přidán.</string>
+  <string name="search_add_error_empty_name">Zadejte název vyhledávače</string>
+  <string name="search_add_error_empty_search">Zadejte hledaný řetězec</string>
+  <string name="search_add_error_format">Zkontrolujte, zda vyhledávací řetězec odpovídá formátu příkladu</string>
   <string name="content_description_clear_input">Vymazat pole</string>
   <string name="content_description_dismiss_input">Zavřít</string>
   <string name="content_description_erase">Vymazat historii prohlížení</string>

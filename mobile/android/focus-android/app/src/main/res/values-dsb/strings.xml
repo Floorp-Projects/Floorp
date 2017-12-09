@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Pytnicu pśidaś</string>
   <string name="search_add_confirmation">Nowa pytnica jo se pśidała.</string>
   <string name="search_add_error_empty_name">Mě pytnice zapódaś</string>
+  <string name="search_add_error_duplicate_name">Jo južo pytnica zainstalěrowana, kótaraž toś to mě wužywa.</string>
   <string name="search_add_error_empty_search">Pytański wuraz zapódaś</string>
   <string name="search_add_error_format">Pśeglědajśo, lěc pytański wuraz pśikładowemu formatoju wótpowědujo</string>
   <string name="content_description_clear_input">Zapódaśe wuprozniś</string>

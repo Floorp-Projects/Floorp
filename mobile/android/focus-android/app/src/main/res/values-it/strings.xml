@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Aggiungi motore di ricerca</string>
   <string name="search_add_confirmation">Aggiunto nuovo motore di ricerca.</string>
   <string name="search_add_error_empty_name">Inserire il nome del motore di ricerca</string>
+  <string name="search_add_error_duplicate_name">È già presente un motore di ricerca con questo nome.</string>
   <string name="search_add_error_empty_search">Inserire la stringa di ricerca</string>
   <string name="search_add_error_format">Verifica che la stringa di ricerca corrisponda al formato di esempio</string>
   <string name="content_description_clear_input">Cancella testo</string>

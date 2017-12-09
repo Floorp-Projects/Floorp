@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Suchmaschine hinzufügen</string>
   <string name="search_add_confirmation">Neue Suchmaschine hinzugefügt.</string>
   <string name="search_add_error_empty_name">Name der Suchmaschine eingeben</string>
+  <string name="search_add_error_duplicate_name">Es ist bereits eine Suchmaschine installiert, die diesen Namen verwendet.</string>
   <string name="search_add_error_empty_search">Such-String eingeben</string>
   <string name="search_add_error_format">Überprüfen Sie, ob der Such-String dem Beispielformat entspricht</string>
   <string name="content_description_clear_input">Eingabefeld leeren</string>

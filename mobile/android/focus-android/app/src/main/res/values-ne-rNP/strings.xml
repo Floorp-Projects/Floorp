@@ -127,6 +127,8 @@
   <string name="contextmenu_image_copy">तस्बिर ठेगाना प्रतिलिपि गर्नुहोस्</string>
   <string name="contextmenu_image_save">तस्विर सङ्ग्रह गर्नुहोस्</string>
   <string name="contextmenu_open_in_new_tab">लिङ्कलाई नयाँ ट्याबमा खोल्नुहोस्</string>
+  <string name="firstrun_defaultbrowser_title">आफ्नो गोपनीयताको बलियो बनाउनुहोस्</string>
+  <string name="firstrun_search_title">तपाईंको खोजी, तपाईंको बाटो</string>
   <string name="firstrun_close_button">ठीक छ, थाहा पाएँ</string>
   <string name="firstrun_skip_button">छोड्नुहोस्</string>
   <string name="firstrun_next_button">अर्को</string>
