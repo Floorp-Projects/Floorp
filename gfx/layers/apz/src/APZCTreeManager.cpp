@@ -16,6 +16,7 @@
 #include "InputData.h"                  // for InputData, etc
 #include "Layers.h"                     // for Layer, etc
 #include "mozilla/dom/Touch.h"          // for Touch
+#include "mozilla/gfx/gfxVars.h"        // for gfxVars
 #include "mozilla/gfx/GPUParent.h"      // for GPUParent
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Point.h"          // for Point
@@ -2219,7 +2220,7 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
   CompositorHitTestInfo hitResult = CompositorHitTestInfo::eInvisibleToHitTest;
   HitTestingTreeNode* scrollbarNode = nullptr;
   RefPtr<AsyncPanZoomController> target;
-  if (gfxPrefs::WebRenderHitTest()) {
+  if (gfx::gfxVars::UseWebRender() && gfxPrefs::WebRenderHitTest()) {
     target = GetAPZCAtPointWR(aPoint, &hitResult, &scrollbarNode);
   } else {
     target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);

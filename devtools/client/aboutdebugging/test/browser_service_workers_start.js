@@ -23,16 +23,13 @@ add_task(function* () {
 
   // Listen for mutations in the service-workers list.
   let serviceWorkersElement = getServiceWorkerList(document);
-  let onMutation = waitForMutation(serviceWorkersElement, { childList: true });
 
   // Open a tab that registers an empty service worker.
   let swTab = yield addTab(TAB_URL);
 
   // Wait for the service-workers list to update.
-  yield onMutation;
-
-  // Check that the service worker appears in the UI.
-  assertHasTarget(true, document, "service-workers", SERVICE_WORKER);
+  info("Wait until the service worker appears in about:debugging");
+  yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   info("Ensure that the registration resolved before trying to interact with " +
     "the service worker.");
@@ -47,18 +44,12 @@ add_task(function* () {
   ok(name, "Found the service worker in the list");
   let targetElement = name.parentNode.parentNode;
 
-  // The service worker may already be killed with the low 1s timeout
-  if (!targetElement.querySelector(".start-button")) {
-    // Check that there is a Debug button but not a Start button.
-    ok(targetElement.querySelector(".debug-button"), "Found its debug button");
-
-    // Wait for the service worker to be killed due to inactivity.
-    yield waitForMutation(targetElement, { childList: true });
-  } else {
-    // Check that there is no Debug button when the SW is already shut down.
-    ok(!targetElement.querySelector(".debug-button"), "No debug button when " +
-      "the worker is already killed");
-  }
+  // The service worker may already be killed with the low 1s timeout.
+  // At this stage, either the SW is started and the Debug button is visible or was
+  // already stopped and the start button is visible. Wait until the service worker is
+  // stopped.
+  info("Wait until the start button is visible");
+  yield waitUntilElement(".start-button", targetElement);
 
   // We should now have a Start button but no Debug button.
   let startBtn = targetElement.querySelector(".start-button");
@@ -66,12 +57,13 @@ add_task(function* () {
   ok(!targetElement.querySelector(".debug-button"), "No debug button");
 
   // Click on the Start button and wait for the service worker to be back.
-  let onStarted = waitForMutation(targetElement, { childList: true });
   startBtn.click();
-  yield onStarted;
+
+  info("Wait until the service worker starts and the debug button appears");
+  yield waitUntilElement(".debug-button", targetElement);
+  info("Found the debug button");
 
   // Check that we have a Debug button but not a Start button again.
-  ok(targetElement.querySelector(".debug-button"), "Found its debug button");
   ok(!targetElement.querySelector(".start-button"), "No start button");
 
   // Finally, unregister the service worker itself.

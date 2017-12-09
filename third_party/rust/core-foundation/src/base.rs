@@ -7,7 +7,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::fmt;
+
 pub use core_foundation_sys::base::*;
+
+use string::CFString;
 
 pub trait CFIndexConvertible {
     /// Always use this method to construct a `CFIndex` value. It performs bounds checking to
@@ -29,6 +33,15 @@ impl CFIndexConvertible for usize {
 /// Superclass of all Core Foundation objects.
 pub struct CFType(CFTypeRef);
 
+impl fmt::Debug for CFType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let desc = unsafe {
+            CFString::wrap_under_create_rule(CFCopyDescription(self.0))
+        };
+        desc.fmt(f)
+    }
+}
+
 impl Clone for CFType {
     #[inline]
     fn clone(&self) -> CFType {
@@ -38,10 +51,42 @@ impl Clone for CFType {
     }
 }
 
+impl PartialEq for CFType {
+    #[inline]
+    fn eq(&self, other: &CFType) -> bool {
+        unsafe {
+            CFEqual(self.as_CFTypeRef(), other.as_CFTypeRef()) != 0
+        }
+    }
+}
+
 impl Drop for CFType {
     fn drop(&mut self) {
         unsafe {
             CFRelease(self.0)
+        }
+    }
+}
+
+/// An allocator for Core Foundation objects.
+pub struct CFAllocator(CFAllocatorRef);
+
+impl Drop for CFAllocator {
+    fn drop(&mut self) {
+        unsafe {
+            CFRelease(self.as_CFTypeRef())
+        }
+    }
+}
+
+impl_TCFType!(CFAllocator, CFAllocatorRef, CFAllocatorGetTypeID);
+
+impl CFAllocator {
+    #[inline]
+    pub fn new(mut context: CFAllocatorContext) -> CFAllocator {
+        unsafe {
+            let allocator_ref = CFAllocatorCreate(kCFAllocatorDefault, &mut context);
+            TCFType::wrap_under_create_rule(allocator_ref)
         }
     }
 }
@@ -133,10 +178,20 @@ impl TCFType<CFTypeRef> for CFType {
         // FIXME(pcwalton): Is this right?
         0
     }
+}
 
-    #[inline]
-    fn instance_of<OtherConcreteTypeRef,OtherCFType:TCFType<OtherConcreteTypeRef>>(&self) -> bool {
-        // Since this is the root of the type hierarchy, we always answer yes.
-        true
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use boolean::CFBoolean;
+
+    #[test]
+    fn cftype_instance_of() {
+        let string = CFString::from_static_string("foo");
+        let cftype = string.as_CFType();
+
+        assert!(cftype.instance_of::<_, CFString>());
+        assert!(!cftype.instance_of::<_, CFBoolean>());
     }
 }

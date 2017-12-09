@@ -162,7 +162,8 @@ impl FilterOpHelpers for FilterOp {
             FilterOp::HueRotate(..) |
             FilterOp::Invert(..) |
             FilterOp::Saturate(..) |
-            FilterOp::Sepia(..) => true,
+            FilterOp::Sepia(..) |
+            FilterOp::DropShadow(..) => true,
             FilterOp::Opacity(_, amount) => {
                 amount > OPACITY_EPSILON
             }
@@ -180,6 +181,9 @@ impl FilterOpHelpers for FilterOp {
             FilterOp::Opacity(_, amount) => amount >= 1.0,
             FilterOp::Saturate(amount) => amount == 1.0,
             FilterOp::Sepia(amount) => amount == 0.0,
+            FilterOp::DropShadow(offset, blur, _) => {
+                offset.x == 0.0 && offset.y == 0.0 && blur == 0.0
+            }
         }
     }
 }

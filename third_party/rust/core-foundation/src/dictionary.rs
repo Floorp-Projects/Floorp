@@ -30,6 +30,7 @@ impl Drop for CFDictionary {
 }
 
 impl_TCFType!(CFDictionary, CFDictionaryRef, CFDictionaryGetTypeID);
+impl_CFTypeDescription!(CFDictionary);
 
 impl CFDictionary {
     pub fn from_CFType_pairs<R1, R2, K, V>(pairs: &[(K, V)]) -> CFDictionary
@@ -69,6 +70,13 @@ impl CFDictionary {
         }
     }
 
+    /// Similar to `contains_key` but acts on a higher level, automatically converting from any
+    /// `TCFType` to the raw pointer of its concrete TypeRef.
+    #[inline]
+    pub fn contains_key2<X, K: TCFType<*const X>>(&self, key: &K) -> bool {
+        self.contains_key(key.as_concrete_TypeRef() as *const c_void)
+    }
+
     #[inline]
     pub fn find(&self, key: *const c_void) -> Option<*const c_void> {
         unsafe {
@@ -81,13 +89,20 @@ impl CFDictionary {
         }
     }
 
+    /// Similar to `find` but acts on a higher level, automatically converting from any `TCFType`
+    /// to the raw pointer of its concrete TypeRef.
+    #[inline]
+    pub fn find2<X, K: TCFType<*const X>>(&self, key: &K) -> Option<*const c_void> {
+        self.find(key.as_concrete_TypeRef() as *const c_void)
+    }
+
+    /// # Panics
+    ///
+    /// Panics if the key is not present in the dictionary. Use `find` to get an `Option` instead
+    /// of panicking.
     #[inline]
     pub fn get(&self, key: *const c_void) -> *const c_void {
-        let value = self.find(key);
-        if value.is_none() {
-            panic!("No entry found for key {:p}", key);
-        }
-        value.unwrap()
+        self.find(key).expect(&format!("No entry found for key {:p}", key))
     }
 
     /// A convenience function to retrieve `CFType` instances.

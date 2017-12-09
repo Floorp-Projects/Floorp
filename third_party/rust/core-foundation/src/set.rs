@@ -29,6 +29,7 @@ impl Drop for CFSet {
 }
 
 impl_TCFType!(CFSet, CFSetRef, CFSetGetTypeID);
+impl_CFTypeDescription!(CFSet);
 
 impl CFSet {
     /// Creates a new set from a list of `CFType` instances.
