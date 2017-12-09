@@ -129,6 +129,52 @@ TouchManager::SetupTarget(WidgetTouchEvent* aEvent, nsIFrame* aFrame)
   if (gfxPrefs::APZAllowZooming()) {
     flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
   }
+
+  nsIFrame* target = aFrame;
+  for (int32_t i = aEvent->mTouches.Length(); i; ) {
+    --i;
+    dom::Touch* touch = aEvent->mTouches[i];
+
+    int32_t id = touch->Identifier();
+    if (!TouchManager::HasCapturedTouch(id)) {
+      // find the target for this touch
+      nsPoint eventPoint =
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, touch->mRefPoint,
+                                                     aFrame);
+      target = FindFrameTargetedByInputEvent(aEvent, aFrame, eventPoint, flags);
+      if (target) {
+        nsCOMPtr<nsIContent> targetContent;
+        target->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
+        while (targetContent && !targetContent->IsElement()) {
+          targetContent = targetContent->GetParent();
+        }
+        touch->SetTarget(targetContent);
+      } else {
+        aEvent->mTouches.RemoveElementAt(i);
+      }
+    } else {
+      // This touch is an old touch, we need to ensure that is not
+      // marked as changed and set its target correctly
+      touch->mChanged = false;
+      RefPtr<dom::Touch> oldTouch = TouchManager::GetCapturedTouch(id);
+      if (oldTouch) {
+        touch->SetTarget(oldTouch->mTarget);
+      }
+    }
+  }
+  return target;
+}
+
+/* static */ nsIFrame*
+TouchManager::SuppressInvalidPointsAndGetTargetedFrame(WidgetTouchEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent);
+
+  if (!aEvent || aEvent->mMessage != eTouchStart) {
+    // All touch events except for touchstart use a captured target.
+    return nullptr;
+  }
+
   // if this is a continuing session, ensure that all these events are
   // in the same document by taking the target of the events already in
   // the capture list
@@ -137,73 +183,52 @@ TouchManager::SetupTarget(WidgetTouchEvent* aEvent, nsIFrame* aFrame)
     anyTarget = TouchManager::GetAnyCapturedTouchTarget();
   }
 
-  nsPoint eventPoint;
-  nsIFrame* frame = aFrame;
+  nsIFrame* frame = nullptr;
   for (int32_t i = aEvent->mTouches.Length(); i; ) {
     --i;
     dom::Touch* touch = aEvent->mTouches[i];
+    if (TouchManager::HasCapturedTouch(touch->Identifier())) {
+      continue;
+    }
 
-    int32_t id = touch->Identifier();
-    if (!TouchManager::HasCapturedTouch(id)) {
-      // find the target for this touch
-      eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
-                                                        touch->mRefPoint,
-                                                        aFrame);
-      nsIFrame* target = FindFrameTargetedByInputEvent(aEvent,
-                                                       aFrame,
-                                                       eventPoint,
-                                                       flags);
-      if (target && !anyTarget) {
-        target->GetContentForEvent(aEvent, getter_AddRefs(anyTarget));
-        while (anyTarget && !anyTarget->IsElement()) {
-          anyTarget = anyTarget->GetParent();
-        }
-        touch->SetTarget(anyTarget);
-      } else {
-        nsIFrame* newTargetFrame = nullptr;
-        for (nsIFrame* f = target; f;
-             f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
-          if (f->PresContext()->Document() == anyTarget->OwnerDoc()) {
-            newTargetFrame = f;
-            break;
-          }
-          // We must be in a subdocument so jump directly to the root frame.
-          // GetParentOrPlaceholderForCrossDoc gets called immediately to
-          // jump up to the containing document.
-          f = f->PresShell()->GetRootFrame();
-        }
-
-        // if we couldn't find a target frame in the same document as
-        // anyTarget, remove the touch from the capture touch list, as
-        // well as the event->mTouches array. touchmove events that aren't
-        // in the captured touch list will be discarded
-        if (!newTargetFrame) {
-          aEvent->mTouches.RemoveElementAt(i);
-        } else {
-          target = newTargetFrame;
-          nsCOMPtr<nsIContent> targetContent;
-          target->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
-          while (targetContent && !targetContent->IsElement()) {
-            targetContent = targetContent->GetParent();
-          }
-          touch->SetTarget(targetContent);
-        }
-      }
-      if (target) {
-        frame = target;
-      }
+    MOZ_ASSERT(touch->mTarget);
+    nsCOMPtr<nsIContent> targetContent = do_QueryInterface(touch->GetTarget());
+    nsIFrame* targetFrame = targetContent->GetPrimaryFrame();
+    if (targetFrame && !anyTarget) {
+      anyTarget = targetContent;
     } else {
-      // This touch is an old touch, we need to ensure that is not
-      // marked as changed and set its target correctly
-      touch->mChanged = false;
-
-      RefPtr<dom::Touch> oldTouch = TouchManager::GetCapturedTouch(id);
-      if (oldTouch) {
-        touch->SetTarget(oldTouch->mTarget);
+      nsIFrame* newTargetFrame = nullptr;
+      for (nsIFrame* f = targetFrame; f;
+           f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+        if (f->PresContext()->Document() == anyTarget->OwnerDoc()) {
+          newTargetFrame = f;
+          break;
+        }
+        // We must be in a subdocument so jump directly to the root frame.
+        // GetParentOrPlaceholderForCrossDoc gets called immediately to
+        // jump up to the containing document.
+        f = f->PresShell()->GetRootFrame();
       }
+      // if we couldn't find a target frame in the same document as
+      // anyTarget, remove the touch from the capture touch list, as
+      // well as the event->mTouches array. touchmove events that aren't
+      // in the captured touch list will be discarded
+      if (!newTargetFrame) {
+        touch->mIsTouchEventSuppressed = true;
+      } else {
+        targetFrame = newTargetFrame;
+      }
+      targetFrame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
+      while (targetContent && !targetContent->IsElement()) {
+        targetContent = targetContent->GetParent();
+      }
+      touch->SetTarget(targetContent);
+    }
+    if (targetFrame) {
+      frame = targetFrame;
     }
   }
-  return FindFrameTargetedByInputEvent(aEvent, frame, eventPoint, flags);
+  return frame;
 }
 
 bool
@@ -228,8 +253,10 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         }
       }
       // Add any new touches to the queue
-      for (uint32_t i = 0; i < touchEvent->mTouches.Length(); ++i) {
-        Touch* touch = touchEvent->mTouches[i];
+      WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+      for (int32_t i = touches.Length(); i; ) {
+        --i;
+        Touch* touch = touches[i];
         int32_t id = touch->Identifier();
         if (!sCaptureTouchList->Get(id, nullptr)) {
           // If it is not already in the queue, it is a new touch
@@ -239,6 +266,12 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         TouchInfo info = { touch, GetNonAnonymousAncestor(touch->mTarget),
                            true };
         sCaptureTouchList->Put(id, info);
+        if (touch->mIsTouchEventSuppressed) {
+          // We're going to dispatch touch event. Remove this touch instance if
+          // it is suppressed.
+          touches.RemoveElementAt(i);
+          continue;
+        }
       }
       break;
     }
@@ -286,6 +319,11 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         if (oldTouch->mMessage != touch->mMessage) {
           aTouchIsNew = true;
         }
+        if (oldTouch->mIsTouchEventSuppressed) {
+          touch->mIsTouchEventSuppressed = true;
+          touches.RemoveElementAt(i);
+          continue;
+        }
       }
       // is nothing has changed, we should just return
       if (!haveChanged) {
@@ -317,7 +355,8 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       // need to make sure we only remove touches that are ending here
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
-      for (uint32_t i = 0; i < touches.Length(); ++i) {
+      for (int32_t i = touches.Length(); i; ) {
+        --i;
         Touch* touch = touches[i];
         if (!touch) {
           continue;
@@ -339,6 +378,10 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         aCurrentEventContent = do_QueryInterface(targetPtr);
         touch->SetTarget(targetPtr);
         sCaptureTouchList->Remove(id);
+        if (info.mTouch->mIsTouchEventSuppressed) {
+          touches.RemoveElementAt(i);
+          continue;
+        }
       }
       // add any touches left in the touch list, but ensure changed=false
       AppendToTouchList(&touches);

@@ -7184,6 +7184,11 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     if (!captureRetarget && !isWindowLevelMouseExit) {
       if (aEvent->mClass == eTouchEventClass) {
         frame = TouchManager::SetupTarget(aEvent->AsTouchEvent(), frame);
+        if (nsIFrame* newFrame =
+            TouchManager::SuppressInvalidPointsAndGetTargetedFrame(
+              aEvent->AsTouchEvent())) {
+          frame = newFrame;
+        }
       } else {
         uint32_t flags = 0;
         nsPoint eventPoint =
@@ -7944,6 +7949,10 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
 
   // loop over all touches and dispatch events on any that have changed
   for (dom::Touch* touch : touchEvent->mTouches) {
+    // We should remove all suppressed touch instances in
+    // TouchManager::PreHandleEvent.
+    MOZ_ASSERT(!touch->mIsTouchEventSuppressed);
+
     if (!touch || !touch->mChanged) {
       continue;
     }
