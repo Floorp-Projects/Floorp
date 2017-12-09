@@ -35,6 +35,21 @@ public:
   // events are dispatched to the same target as touchstart.
   static nsIFrame* SetupTarget(WidgetTouchEvent* aEvent, nsIFrame* aFrame);
 
+  /**
+   * This function checks whether all touch points hit elements in the same
+   * document. If not, we try to find its cross document parent which is in the
+   * same document of the existing target as the event target. We mark the
+   * touch point as suppressed if can't find it. The suppressed touch points are
+   * removed in TouchManager::PreHandleEvent so that we don't dispatch them to
+   * content.
+   *
+   * @param aEvent    A touch event to be checked.
+   *
+   * @return          The targeted frame of aEvent.
+   */
+  static nsIFrame* SuppressInvalidPointsAndGetTargetedFrame(
+    WidgetTouchEvent* aEvent);
+
   bool PreHandleEvent(mozilla::WidgetEvent* aEvent,
                       nsEventStatus* aStatus,
                       bool& aTouchIsNew,
