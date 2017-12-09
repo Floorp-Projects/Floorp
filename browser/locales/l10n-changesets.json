@@ -147,7 +147,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ce3b0747b5f3"
+        "revision": "38330c018b4a"
     }, 
     "bn-IN": {
         "platforms": [
@@ -372,7 +372,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "5ded65c56891"
+        "revision": "a08bac8259ba"
     }, 
     "es-CL": {
         "platforms": [
@@ -597,7 +597,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "66e225c179ab"
+        "revision": "28daa2e538bd"
     }, 
     "he": {
         "platforms": [
@@ -642,7 +642,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "27c8dd4c6e41"
+        "revision": "5ee21a76f943"
     }, 
     "hsb": {
         "platforms": [
@@ -732,7 +732,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "cfc72e64a611"
+        "revision": "e910b9fa5e98"
     }, 
     "ja": {
         "platforms": [
@@ -767,7 +767,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ec0daafbdaab"
+        "revision": "cbf9546915a9"
     }, 
     "kab": {
         "platforms": [
@@ -782,7 +782,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "214c81b6715e"
+        "revision": "c68354bcbc5b"
     }, 
     "kk": {
         "platforms": [
@@ -1097,7 +1097,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "bd75c070aa1b"
+        "revision": "7ee0fd1e1f7a"
     }, 
     "pt-PT": {
         "platforms": [
@@ -1232,7 +1232,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "2c8666ad1413"
+        "revision": "27947bed707f"
     }, 
     "sr": {
         "platforms": [
@@ -1247,7 +1247,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "4d03365e8649"
+        "revision": "82107301a797"
     }, 
     "sv-SE": {
         "platforms": [
