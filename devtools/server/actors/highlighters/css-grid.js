@@ -1465,8 +1465,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.clearGridCell();
 
     // Update the current matrix used in our canvas' rendering.
-    let { currentMatrix, hasNodeTransformations } = getCurrentMatrix(this.currentNode,
-      this.win);
+    let { currentMatrix, hasNodeTransformations } =
+      getCurrentMatrix(this.currentNode, this.win);
     this.currentMatrix = currentMatrix;
     this.hasNodeTransformations = hasNodeTransformations;
 
