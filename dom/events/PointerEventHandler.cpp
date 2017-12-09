@@ -207,24 +207,25 @@ PointerEventHandler::CheckPointerCaptureState(WidgetPointerEvent* aEvent)
 
   PointerCaptureInfo* captureInfo = GetPointerCaptureInfo(aEvent->pointerId);
 
-  if (captureInfo &&
-      captureInfo->mPendingContent != captureInfo->mOverrideContent) {
-    // cache captureInfo->mPendingContent since it may be changed in the pointer
-    // event listener
-    nsIContent* pendingContent = captureInfo->mPendingContent.get();
-    if (captureInfo->mOverrideContent) {
-      DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ false, aEvent,
-                                           captureInfo->mOverrideContent);
-    }
-    if (pendingContent) {
-      DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ true, aEvent,
-                                           pendingContent);
-    }
+  if (!captureInfo ||
+      captureInfo->mPendingContent == captureInfo->mOverrideContent) {
+    return;
+  }
+  // cache captureInfo->mPendingContent since it may be changed in the pointer
+  // event listener
+  nsIContent* pendingContent = captureInfo->mPendingContent.get();
+  if (captureInfo->mOverrideContent) {
+    DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ false, aEvent,
+                                         captureInfo->mOverrideContent);
+  }
+  if (pendingContent) {
+    DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ true, aEvent,
+                                         pendingContent);
+  }
 
-    captureInfo->mOverrideContent = pendingContent;
-    if (captureInfo->Empty()) {
-      sPointerCaptureList->Remove(aEvent->pointerId);
-    }
+  captureInfo->mOverrideContent = pendingContent;
+  if (captureInfo->Empty()) {
+    sPointerCaptureList->Remove(aEvent->pointerId);
   }
 }
 
@@ -278,20 +279,19 @@ PointerEventHandler::GetPointerCapturingContent(uint32_t aPointerId)
 }
 
 /* static */ nsIFrame*
-PointerEventHandler::GetPointerCapturingFrame(nsIFrame* aFrameUnderCursor,
-                                              WidgetGUIEvent* aEvent)
+PointerEventHandler::GetPointerCapturingFrame(WidgetGUIEvent* aEvent)
 {
   if (!IsPointerEventEnabled() || (aEvent->mClass != ePointerEventClass &&
                                    aEvent->mClass != eMouseEventClass) ||
       aEvent->mMessage == ePointerDown || aEvent->mMessage == eMouseDown) {
     // Pointer capture should only be applied to all pointer events and mouse
     // events except ePointerDown and eMouseDown;
-    return aFrameUnderCursor;
+    return nullptr;
   }
 
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (!mouseEvent) {
-    return aFrameUnderCursor;
+    return nullptr;
   }
 
   // Find the content which captures the pointer.
@@ -299,11 +299,11 @@ PointerEventHandler::GetPointerCapturingFrame(nsIFrame* aFrameUnderCursor,
     GetPointerCapturingContent(mouseEvent->pointerId);
 
   if (!capturingContent) {
-    return aFrameUnderCursor;
+    return nullptr;
   }
   // Return the content's primary frame as the target frame.
   nsIFrame* capturingFrame = capturingContent->GetPrimaryFrame();
-  return capturingFrame ? capturingFrame : aFrameUnderCursor;
+  return capturingFrame ? capturingFrame : nullptr;
 }
 
 /* static */ void
