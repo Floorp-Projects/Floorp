@@ -39,7 +39,8 @@ class VideoSegment;
  * callback to notify of the initial blocking state. Also, if a listener is
  * attached to a stream that has already finished, we'll call NotifyFinished.
  */
-class MediaStreamListener {
+class MediaStreamListener
+{
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~MediaStreamListener() {}
@@ -60,6 +61,14 @@ public:
    * some reason, then data before aDesiredTime may not be played immediately.
    */
   virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) {}
+  virtual RefPtr<SourceMediaStream::NotifyPullPromise> AsyncNotifyPull(
+    MediaStreamGraph* aGraph,
+    StreamTime aDesiredTime)
+  {
+    NotifyPull(aGraph, aDesiredTime);
+    return SourceMediaStream::NotifyPullPromise::CreateAndResolve(true,
+                                                                  __func__);
+  }
 
   enum Blocking {
     BLOCKED,
