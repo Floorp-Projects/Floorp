@@ -16,8 +16,8 @@ use freetype::freetype::{FT_Fixed, FT_Matrix, FT_Set_Transform};
 use freetype::freetype::{FT_LOAD_COLOR, FT_LOAD_DEFAULT, FT_LOAD_FORCE_AUTOHINT};
 use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHINT};
 use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL_LAYOUT};
-use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES, FT_Err_Cannot_Render_Glyph};
-use glyph_rasterizer::{FontInstance, RasterizedGlyph};
+use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
+use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::{cmp, mem, ptr, slice};
 use std::cmp::max;
@@ -134,7 +134,7 @@ impl FontContext {
                     },
                 );
             } else {
-                println!("WARN: webrender failed to load font {:?}", font_key);
+                println!("WARN: webrender failed to load font {:?} from path {:?}", font_key, pathname);
             }
         }
     }
@@ -185,16 +185,15 @@ impl FontContext {
         load_flags |= FT_LOAD_COLOR;
         load_flags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
 
+        let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let req_size = font.size.to_f64_px();
-        let mut result = if font.render_mode == FontRenderMode::Bitmap {
-            if (load_flags & FT_LOAD_NO_BITMAP) != 0 {
-                FT_Error(FT_Err_Cannot_Render_Glyph as i32)
-            } else {
-                unsafe { FT_Set_Transform(face.face, ptr::null_mut(), ptr::null_mut()) };
-                self.choose_bitmap_size(face.face, req_size)
-            }
+        let face_flags = unsafe { (*face.face).face_flags };
+        let mut result = if (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 &&
+                            (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0 &&
+                            (load_flags & FT_LOAD_NO_BITMAP) == 0 {
+            unsafe { FT_Set_Transform(face.face, ptr::null_mut(), ptr::null_mut()) };
+            self.choose_bitmap_size(face.face, req_size * y_scale)
         } else {
-            let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
             let shape = font.transform.pre_scale(x_scale.recip() as f32, y_scale.recip() as f32);
             let mut ft_shape = FT_Matrix {
                 xx: (shape.scale_x * 65536.0) as FT_Fixed,
@@ -273,8 +272,7 @@ impl FontContext {
         let padding = match font.render_mode {
             FontRenderMode::Subpixel => (self.lcd_extra_pixels * 64) as FT_Pos,
             FontRenderMode::Alpha |
-            FontRenderMode::Mono |
-            FontRenderMode::Bitmap => 0 as FT_Pos,
+            FontRenderMode::Mono => 0 as FT_Pos,
         };
 
         // Offset the bounding box by subpixel positioning.
@@ -377,17 +375,6 @@ impl FontContext {
         slot.and_then(|slot| self.get_glyph_dimensions_impl(slot, font, key, true))
     }
 
-    pub fn is_bitmap_font(&mut self, font: &FontInstance) -> bool {
-        debug_assert!(self.faces.contains_key(&font.font_key));
-        let face = self.faces.get(&font.font_key).unwrap();
-        let face_flags = unsafe { (*face.face).face_flags };
-        // If the face has embedded bitmaps, they should only be used if either
-        // embedded bitmaps are explicitly requested or if the face has no outline.
-        (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 &&
-            (font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS) ||
-                (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0)
-    }
-
     fn choose_bitmap_size(&self, face: FT_Face, requested_size: f64) -> FT_Error {
         let mut best_dist = unsafe { *(*face).available_sizes.offset(0) }.y_ppem as f64 / 64.0 - requested_size;
         let mut best_size = 0;
@@ -407,10 +394,10 @@ impl FontContext {
 
     pub fn prepare_font(font: &mut FontInstance) {
         match font.render_mode {
-            FontRenderMode::Mono | FontRenderMode::Bitmap => {
-                // In mono/bitmap modes the color of the font is irrelevant.
+            FontRenderMode::Mono => {
+                // In mono mode the color of the font is irrelevant.
                 font.color = ColorU::new(0xFF, 0xFF, 0xFF, 0xFF);
-                // Subpixel positioning is disabled in mono and bitmap modes.
+                // Subpixel positioning is disabled in mono mode.
                 font.subpx_dir = SubpixelDirection::None;
             }
             FontRenderMode::Alpha | FontRenderMode::Subpixel => {
@@ -460,7 +447,7 @@ impl FontContext {
         }
         let render_mode = match (font.render_mode, font.subpx_dir) {
             (FontRenderMode::Mono, _) => FT_Render_Mode::FT_RENDER_MODE_MONO,
-            (FontRenderMode::Alpha, _) | (FontRenderMode::Bitmap, _) => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
+            (FontRenderMode::Alpha, _) => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
             (FontRenderMode::Subpixel, SubpixelDirection::Vertical) => FT_Render_Mode::FT_RENDER_MODE_LCD_V,
             (FontRenderMode::Subpixel, _) => FT_Render_Mode::FT_RENDER_MODE_LCD,
         };
@@ -545,7 +532,7 @@ impl FontContext {
         };
         let mut final_buffer = vec![0; (actual_width * actual_height * 4) as usize];
 
-        // Extract the final glyph from FT format into RGBA8 format, which is
+        // Extract the final glyph from FT format into BGRA8 format, which is
         // what WR expects.
         let subpixel_bgr = font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR);
         let mut src_row = bitmap.buffer;
@@ -635,13 +622,21 @@ impl FontContext {
             _ => {}
         }
 
+        let glyph_format = match (pixel_mode, format) {
+            (FT_Pixel_Mode::FT_PIXEL_MODE_LCD, _) |
+            (FT_Pixel_Mode::FT_PIXEL_MODE_LCD_V, _) => font.get_subpixel_glyph_format(),
+            (FT_Pixel_Mode::FT_PIXEL_MODE_BGRA, _) => GlyphFormat::ColorBitmap,
+            (_, FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP) => GlyphFormat::Bitmap,
+            _ => font.get_alpha_glyph_format(),
+        };
+
         Some(RasterizedGlyph {
             left: left as f32,
             top: top as f32,
             width: actual_width as u32,
             height: actual_height as u32,
             scale,
-            format: font.get_glyph_format(pixel_mode == FT_Pixel_Mode::FT_PIXEL_MODE_BGRA),
+            format: glyph_format,
             bytes: final_buffer,
         })
     }

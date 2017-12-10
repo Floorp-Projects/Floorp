@@ -4,11 +4,10 @@
 
 use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect};
 use api::{DeviceSize, LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, WorldRect};
-use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D};
-use euclid::TypedTransform3D;
+use euclid::{Point2D, Rect, TypedScale, Size2D, TypedPoint2D, TypedRect, TypedSize2D};
+use euclid::{TypedTransform2D, TypedTransform3D};
 use num_traits::Zero;
-use std::i32;
-use std::f32;
+use std::{i32, f32};
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
 const NEARLY_ZERO: f32 = 1.0 / 4096.0;
@@ -143,20 +142,22 @@ pub fn calculate_screen_bounding_rect(
     rect: &LayerRect,
     device_pixel_ratio: f32
 ) -> DeviceIntRect {
-    let rect = WorldRect::from_points(&[
+    let points = [
         transform.transform_point2d(&rect.origin),
         transform.transform_point2d(&rect.top_right()),
         transform.transform_point2d(&rect.bottom_left()),
         transform.transform_point2d(&rect.bottom_right()),
-    ]) * device_pixel_ratio;
+    ];
 
-    let rect = DeviceRect::new(
-        DevicePoint::new(rect.origin.x, rect.origin.y),
-        DeviceSize::new(rect.size.width, rect.size.height),
-    );
+    let scale = TypedScale::new(device_pixel_ratio);
+    let rect: DeviceRect = WorldRect::from_points(&points) * scale;
 
     let max_rect = DeviceRect::max_rect();
-    rect.round_out().intersection(&max_rect).unwrap_or(max_rect).to_i32()
+    rect
+        .round_out()
+        .intersection(&max_rect)
+        .unwrap_or(max_rect)
+        .to_i32()
 }
 
 pub fn _subtract_rect<U>(
@@ -270,7 +271,7 @@ pub fn recycle_vec<T>(mut old_vec: Vec<T>) -> Vec<T> {
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use euclid::{Point2D, Radians, Transform3D};
+    use euclid::{Point2D, Angle, Transform3D};
     use std::f32::consts::PI;
 
     #[test]
@@ -279,7 +280,7 @@ pub mod test {
         let p0 = Point2D::new(1.0, 2.0);
         // an identical transform doesn't need any inverse projection
         assert_eq!(m0.inverse_project(&p0), Some(p0));
-        let m1 = Transform3D::create_rotation(0.0, 1.0, 0.0, Radians::new(PI / 3.0));
+        let m1 = Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(PI / 3.0));
         // rotation by 60 degrees would imply scaling of X component by a factor of 2
         assert_eq!(m1.inverse_project(&p0), Some(Point2D::new(2.0, 2.0)));
     }

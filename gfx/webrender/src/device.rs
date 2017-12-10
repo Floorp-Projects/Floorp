@@ -4,7 +4,7 @@
 
 use super::shader_source;
 use api::{ColorF, ImageFormat};
-use api::{DeviceIntRect, DeviceUintRect, DeviceUintSize};
+use api::{DeviceIntPoint, DeviceIntRect, DeviceUintRect, DeviceUintSize};
 use euclid::Transform3D;
 use gleam::gl;
 use internal_types::{FastHashMap, RenderTargetInfo};
@@ -96,6 +96,7 @@ pub enum TextureFilter {
 pub enum VertexAttributeKind {
     F32,
     U8Norm,
+    U16Norm,
     I32,
     U16,
 }
@@ -249,6 +250,7 @@ impl VertexAttributeKind {
         match *self {
             VertexAttributeKind::F32 => 4,
             VertexAttributeKind::U8Norm => 1,
+            VertexAttributeKind::U16Norm => 2,
             VertexAttributeKind::I32 => 4,
             VertexAttributeKind::U16 => 2,
         }
@@ -292,6 +294,16 @@ impl VertexAttribute {
                     offset,
                 );
             }
+            VertexAttributeKind::U16Norm => {
+                gl.vertex_attrib_pointer(
+                    attr_index,
+                    self.count as gl::GLint,
+                    gl::UNSIGNED_SHORT,
+                    true,
+                    stride,
+                    offset,
+                );
+            }
             VertexAttributeKind::I32 => {
                 gl.vertex_attrib_i_pointer(
                     attr_index,
@@ -322,39 +334,37 @@ impl VertexDescriptor {
             .sum()
     }
 
-    fn bind(&self, gl: &gl::Gl, main: VBOId, instance: VBOId) {
-        main.bind(gl);
+    fn bind_attributes(
+        attributes: &[VertexAttribute],
+        start_index: usize,
+        divisor: u32,
+        gl: &gl::Gl,
+        vbo: VBOId,
+    ) {
+        vbo.bind(gl);
 
-        let vertex_stride: u32 = self.vertex_attributes
+        let stride: u32 = attributes
             .iter()
             .map(|attr| attr.size_in_bytes())
             .sum();
-        let mut vertex_offset = 0;
 
-        for (i, attr) in self.vertex_attributes.iter().enumerate() {
-            let attr_index = i as gl::GLuint;
-            attr.bind_to_vao(attr_index, 0, vertex_stride as gl::GLint, vertex_offset, gl);
-            vertex_offset += attr.size_in_bytes();
+        let mut offset = 0;
+        for (i, attr) in attributes.iter().enumerate() {
+            let attr_index = (start_index + i) as gl::GLuint;
+            attr.bind_to_vao(attr_index, divisor, stride as _, offset, gl);
+            offset += attr.size_in_bytes();
         }
+    }
+
+    fn bind(&self, gl: &gl::Gl, main: VBOId, instance: VBOId) {
+        Self::bind_attributes(&self.vertex_attributes, 0, 0, gl, main);
 
         if !self.instance_attributes.is_empty() {
-            instance.bind(gl);
-            let instance_stride = self.instance_stride();
-            let mut instance_offset = 0;
-
-            let base_attr = self.vertex_attributes.len() as u32;
-
-            for (i, attr) in self.instance_attributes.iter().enumerate() {
-                let attr_index = base_attr + i as u32;
-                attr.bind_to_vao(
-                    attr_index,
-                    1,
-                    instance_stride as gl::GLint,
-                    instance_offset,
-                    gl,
-                );
-                instance_offset += attr.size_in_bytes();
-            }
+            Self::bind_attributes(
+                &self.instance_attributes,
+                self.vertex_attributes.len(),
+                1, gl, instance,
+            );
         }
     }
 }
@@ -378,6 +388,41 @@ impl FBOId {
             FBOTarget::Draw => gl::DRAW_FRAMEBUFFER,
         };
         gl.bind_framebuffer(target, self.0);
+    }
+}
+
+pub struct Stream<'a> {
+    attributes: &'a [VertexAttribute],
+    vbo: VBOId,
+}
+
+pub struct VBO<V> {
+    id: gl::GLuint,
+    target: gl::GLenum,
+    allocated_count: usize,
+    marker: PhantomData<V>,
+}
+
+impl<V> VBO<V> {
+    pub fn allocated_count(&self) -> usize {
+        self.allocated_count
+    }
+
+    pub fn stream_with<'a>(&self, attributes: &'a [VertexAttribute]) -> Stream<'a> {
+        debug_assert_eq!(
+            mem::size_of::<V>(),
+            attributes.iter().map(|a| a.size_in_bytes() as usize).sum::<usize>()
+        );
+        Stream {
+            attributes,
+            vbo: VBOId(self.id),
+        }
+    }
+}
+
+impl<T> Drop for VBO<T> {
+    fn drop(&mut self) {
+        debug_assert!(thread::panicking() || self.id == 0);
     }
 }
 
@@ -455,6 +500,19 @@ pub struct Program {
 }
 
 impl Drop for Program {
+    fn drop(&mut self) {
+        debug_assert!(
+            thread::panicking() || self.id == 0,
+            "renderer::deinit not called"
+        );
+    }
+}
+
+pub struct CustomVAO {
+    id: gl::GLuint,
+}
+
+impl Drop for CustomVAO {
     fn drop(&mut self) {
         debug_assert!(
             thread::panicking() || self.id == 0,
@@ -750,49 +808,54 @@ impl Device {
         self.frame_id
     }
 
+    fn bind_texture_impl(&mut self, slot: TextureSlot, id: gl::GLuint, target: gl::GLenum) {
+        debug_assert!(self.inside_frame);
+
+        if self.bound_textures[slot.0] != id {
+            self.bound_textures[slot.0] = id;
+            self.gl.active_texture(gl::TEXTURE0 + slot.0 as gl::GLuint);
+            self.gl.bind_texture(target, id);
+            self.gl.active_texture(gl::TEXTURE0);
+        }
+    }
+
     pub fn bind_texture<S>(&mut self, sampler: S, texture: &Texture)
     where
         S: Into<TextureSlot>,
     {
-        debug_assert!(self.inside_frame);
-
-        let sampler_index = sampler.into().0;
-        if self.bound_textures[sampler_index] != texture.id {
-            self.bound_textures[sampler_index] = texture.id;
-            self.gl
-                .active_texture(gl::TEXTURE0 + sampler_index as gl::GLuint);
-            self.gl.bind_texture(texture.target, texture.id);
-            self.gl.active_texture(gl::TEXTURE0);
-        }
+        self.bind_texture_impl(sampler.into(), texture.id, texture.target);
     }
 
     pub fn bind_external_texture<S>(&mut self, sampler: S, external_texture: &ExternalTexture)
     where
         S: Into<TextureSlot>,
     {
-        debug_assert!(self.inside_frame);
-
-        let sampler_index = sampler.into().0;
-        if self.bound_textures[sampler_index] != external_texture.id {
-            self.bound_textures[sampler_index] = external_texture.id;
-            self.gl
-                .active_texture(gl::TEXTURE0 + sampler_index as gl::GLuint);
-            self.gl
-                .bind_texture(external_texture.target, external_texture.id);
-            self.gl.active_texture(gl::TEXTURE0);
-        }
+        self.bind_texture_impl(sampler.into(), external_texture.id, external_texture.target);
     }
 
-    pub fn bind_read_target(&mut self, texture_and_layer: Option<(&Texture, i32)>) {
+    fn bind_read_target_impl(&mut self, fbo_id: FBOId) {
         debug_assert!(self.inside_frame);
-
-        let fbo_id = texture_and_layer.map_or(FBOId(self.default_read_fbo), |texture_and_layer| {
-            texture_and_layer.0.fbo_ids[texture_and_layer.1 as usize]
-        });
 
         if self.bound_read_fbo != fbo_id {
             self.bound_read_fbo = fbo_id;
             fbo_id.bind(self.gl(), FBOTarget::Read);
+        }
+    }
+
+    pub fn bind_read_target(&mut self, texture_and_layer: Option<(&Texture, i32)>) {
+        let fbo_id = texture_and_layer.map_or(FBOId(self.default_read_fbo), |texture_and_layer| {
+            texture_and_layer.0.fbo_ids[texture_and_layer.1 as usize]
+        });
+
+        self.bind_read_target_impl(fbo_id)
+    }
+
+    fn bind_draw_target_impl(&mut self, fbo_id: FBOId) {
+        debug_assert!(self.inside_frame);
+
+        if self.bound_draw_fbo != fbo_id {
+            self.bound_draw_fbo = fbo_id;
+            fbo_id.bind(self.gl(), FBOTarget::Draw);
         }
     }
 
@@ -801,16 +864,11 @@ impl Device {
         texture_and_layer: Option<(&Texture, i32)>,
         dimensions: Option<DeviceUintSize>,
     ) {
-        debug_assert!(self.inside_frame);
-
         let fbo_id = texture_and_layer.map_or(FBOId(self.default_draw_fbo), |texture_and_layer| {
             texture_and_layer.0.fbo_ids[texture_and_layer.1 as usize]
         });
 
-        if self.bound_draw_fbo != fbo_id {
-            self.bound_draw_fbo = fbo_id;
-            fbo_id.bind(self.gl(), FBOTarget::Draw);
-        }
+        self.bind_draw_target_impl(fbo_id);
 
         if let Some(dimensions) = dimensions {
             self.gl.viewport(
@@ -887,6 +945,40 @@ impl Device {
             .tex_parameter_i(target, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as gl::GLint);
         self.gl
             .tex_parameter_i(target, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as gl::GLint);
+    }
+
+    /// Resizes a texture with enabled render target views,
+    /// preserves the data by blitting the old texture contents over.
+    pub fn resize_renderable_texture(
+        &mut self,
+        texture: &mut Texture,
+        new_size: DeviceUintSize,
+    ) {
+        debug_assert!(self.inside_frame);
+
+        let old_size = texture.get_dimensions();
+        let old_fbos = mem::replace(&mut texture.fbo_ids, Vec::new());
+        let old_texture_id = mem::replace(&mut texture.id, self.gl.gen_textures(1)[0]);
+
+        texture.width = new_size.width;
+        texture.height = new_size.height;
+        let rt_info = texture.render_target
+            .clone()
+            .expect("Only renderable textures are expected for resize here");
+
+        self.bind_texture(DEFAULT_TEXTURE, texture);
+        self.set_texture_parameters(texture.target, texture.filter);
+        self.update_texture_storage(texture, &rt_info, true);
+
+        let rect = DeviceIntRect::new(DeviceIntPoint::zero(), old_size.to_i32());
+        for (read_fbo, &draw_fbo) in old_fbos.into_iter().zip(&texture.fbo_ids) {
+            self.bind_read_target_impl(read_fbo);
+            self.bind_draw_target_impl(draw_fbo);
+            self.blit_render_target(rect, rect);
+            self.delete_fbo(read_fbo);
+        }
+        self.gl.delete_textures(&[old_texture_id]);
+        self.bind_read_target(None);
     }
 
     pub fn init_texture(
@@ -981,7 +1073,6 @@ impl Device {
         is_resized: bool,
     ) {
         assert!(texture.layer_count > 0);
-        assert_eq!(texture.target, gl::TEXTURE_2D_ARRAY);
 
         let needed_layer_count = texture.layer_count - texture.fbo_ids.len() as i32;
         let allocate_color = needed_layer_count != 0 || is_resized;
@@ -991,18 +1082,36 @@ impl Device {
                 gl_texture_formats_for_image_format(&*self.gl, texture.format);
             let type_ = gl_type_for_texture_format(texture.format);
 
-            self.gl.tex_image_3d(
-                texture.target,
-                0,
-                internal_format as gl::GLint,
-                texture.width as gl::GLint,
-                texture.height as gl::GLint,
-                texture.layer_count,
-                0,
-                gl_format,
-                type_,
-                None,
-            );
+            match texture.target {
+                gl::TEXTURE_2D_ARRAY => {
+                    self.gl.tex_image_3d(
+                        texture.target,
+                        0,
+                        internal_format as _,
+                        texture.width as _,
+                        texture.height as _,
+                        texture.layer_count,
+                        0,
+                        gl_format,
+                        type_,
+                        None,
+                    )
+                }
+                _ => {
+                    assert_eq!(texture.layer_count, 1);
+                    self.gl.tex_image_2d(
+                        texture.target,
+                        0,
+                        internal_format as _,
+                        texture.width as _,
+                        texture.height as _,
+                        0,
+                        gl_format,
+                        type_,
+                        None,
+                    )
+                }
+            }
         }
 
         if needed_layer_count > 0 {
@@ -1048,13 +1157,28 @@ impl Device {
         if allocate_color || allocate_depth {
             for (fbo_index, &fbo_id) in texture.fbo_ids.iter().enumerate() {
                 self.bind_external_draw_target(fbo_id);
-                self.gl.framebuffer_texture_layer(
-                    gl::DRAW_FRAMEBUFFER,
-                    gl::COLOR_ATTACHMENT0,
-                    texture.id,
-                    0,
-                    fbo_index as gl::GLint,
-                );
+                match texture.target {
+                    gl::TEXTURE_2D_ARRAY => {
+                        self.gl.framebuffer_texture_layer(
+                            gl::DRAW_FRAMEBUFFER,
+                            gl::COLOR_ATTACHMENT0,
+                            texture.id,
+                            0,
+                            fbo_index as gl::GLint,
+                        )
+                    }
+                    _ => {
+                        assert_eq!(fbo_index, 0);
+                        self.gl.framebuffer_texture_2d(
+                            gl::DRAW_FRAMEBUFFER,
+                            gl::COLOR_ATTACHMENT0,
+                            texture.target,
+                            texture.id,
+                            0,
+                        )
+                    }
+                }
+
                 self.gl.framebuffer_renderbuffer(
                     gl::DRAW_FRAMEBUFFER,
                     gl::DEPTH_ATTACHMENT,
@@ -1380,13 +1504,21 @@ impl Device {
         )
     }
 
-    pub fn bind_vao(&mut self, vao: &VAO) {
+    fn bind_vao_impl(&mut self, id: gl::GLuint) {
         debug_assert!(self.inside_frame);
 
-        if self.bound_vao != vao.id {
-            self.bound_vao = vao.id;
-            self.gl.bind_vertex_array(vao.id);
+        if self.bound_vao != id {
+            self.bound_vao = id;
+            self.gl.bind_vertex_array(id);
         }
+    }
+
+    pub fn bind_vao(&mut self, vao: &VAO) {
+        self.bind_vao_impl(vao.id)
+    }
+
+    pub fn bind_custom_vao(&mut self, vao: &CustomVAO) {
+        self.bind_vao_impl(vao.id)
     }
 
     fn create_vao_with_vbos(
@@ -1399,7 +1531,7 @@ impl Device {
     ) -> VAO {
         debug_assert!(self.inside_frame);
 
-        let instance_stride = descriptor.instance_stride();
+        let instance_stride = descriptor.instance_stride() as usize;
         let vao_id = self.gl.gen_vertex_arrays(1)[0];
 
         self.gl.bind_vertex_array(vao_id);
@@ -1407,18 +1539,64 @@ impl Device {
         descriptor.bind(self.gl(), main_vbo_id, instance_vbo_id);
         ibo_id.bind(self.gl()); // force it to be a part of VAO
 
-        let vao = VAO {
+        self.gl.bind_vertex_array(0);
+
+        VAO {
             id: vao_id,
             ibo_id,
             main_vbo_id,
             instance_vbo_id,
-            instance_stride: instance_stride as usize,
+            instance_stride,
             owns_vertices_and_indices,
-        };
+        }
+    }
+
+    pub fn create_custom_vao(
+        &mut self,
+        streams: &[Stream],
+    ) -> CustomVAO {
+        debug_assert!(self.inside_frame);
+
+        let vao_id = self.gl.gen_vertex_arrays(1)[0];
+        self.gl.bind_vertex_array(vao_id);
+
+        let mut attrib_index = 0;
+        for stream in streams {
+            VertexDescriptor::bind_attributes(
+                stream.attributes,
+                attrib_index,
+                0,
+                self.gl(),
+                stream.vbo,
+            );
+            attrib_index += stream.attributes.len();
+        }
 
         self.gl.bind_vertex_array(0);
 
-        vao
+        CustomVAO {
+            id: vao_id,
+        }
+    }
+
+    pub fn delete_custom_vao(&mut self, mut vao: CustomVAO) {
+        self.gl.delete_vertex_arrays(&[vao.id]);
+        vao.id = 0;
+    }
+
+    pub fn create_vbo<T>(&mut self) -> VBO<T> {
+        let ids = self.gl.gen_buffers(1);
+        VBO {
+            id: ids[0],
+            target: gl::ARRAY_BUFFER,
+            allocated_count: 0,
+            marker: PhantomData,
+        }
+    }
+
+    pub fn delete_vbo<T>(&mut self, mut vbo: VBO<T>) {
+        self.gl.delete_buffers(&[vbo.id]);
+        vbo.id = 0;
     }
 
     pub fn create_vao(&mut self, descriptor: &VertexDescriptor) -> VAO {
@@ -1442,6 +1620,55 @@ impl Device {
         }
 
         self.gl.delete_buffers(&[vao.instance_vbo_id.0])
+    }
+
+    pub fn allocate_vbo<V>(
+        &mut self,
+        vbo: &mut VBO<V>,
+        count: usize,
+        usage_hint: VertexUsageHint,
+    ) {
+        debug_assert!(self.inside_frame);
+        vbo.allocated_count = count;
+
+        self.gl.bind_buffer(vbo.target, vbo.id);
+        self.gl.buffer_data_untyped(
+            vbo.target,
+            (count * mem::size_of::<V>()) as _,
+            ptr::null(),
+            usage_hint.to_gl(),
+        );
+    }
+
+    pub fn fill_vbo<V>(
+        &mut self,
+        vbo: &VBO<V>,
+        data: &[V],
+        offset: usize,
+    ) {
+        debug_assert!(self.inside_frame);
+        assert!(offset + data.len() <= vbo.allocated_count);
+        let stride = mem::size_of::<V>();
+
+        self.gl.bind_buffer(vbo.target, vbo.id);
+        self.gl.buffer_sub_data_untyped(
+            vbo.target,
+            (offset * stride) as _,
+            (data.len() * stride) as _,
+            data.as_ptr() as _,
+        );
+    }
+
+    fn update_vbo_data<V>(
+        &mut self,
+        vbo: VBOId,
+        vertices: &[V],
+        usage_hint: VertexUsageHint,
+    ) {
+        debug_assert!(self.inside_frame);
+
+        vbo.bind(self.gl());
+        gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, vertices, usage_hint.to_gl());
     }
 
     pub fn create_vao_with_new_instances(
@@ -1469,11 +1696,8 @@ impl Device {
         vertices: &[V],
         usage_hint: VertexUsageHint,
     ) {
-        debug_assert!(self.inside_frame);
         debug_assert_eq!(self.bound_vao, vao.id);
-
-        vao.main_vbo_id.bind(self.gl());
-        gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, vertices, usage_hint.to_gl());
+        self.update_vbo_data(vao.main_vbo_id, vertices, usage_hint)
     }
 
     pub fn update_vao_instances<V>(
@@ -1482,12 +1706,10 @@ impl Device {
         instances: &[V],
         usage_hint: VertexUsageHint,
     ) {
-        debug_assert!(self.inside_frame);
         debug_assert_eq!(self.bound_vao, vao.id);
         debug_assert_eq!(vao.instance_stride as usize, mem::size_of::<V>());
 
-        vao.instance_vbo_id.bind(self.gl());
-        gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, instances, usage_hint.to_gl());
+        self.update_vbo_data(vao.instance_vbo_id, instances, usage_hint)
     }
 
     pub fn update_vao_indices<I>(&mut self, vao: &VAO, indices: &[I], usage_hint: VertexUsageHint) {
@@ -1521,6 +1743,11 @@ impl Device {
             gl::UNSIGNED_INT,
             first_vertex as u32 * 4,
         );
+    }
+
+    pub fn draw_nonindexed_points(&mut self, first_vertex: i32, vertex_count: i32) {
+        debug_assert!(self.inside_frame);
+        self.gl.draw_arrays(gl::POINTS, first_vertex, vertex_count);
     }
 
     pub fn draw_nonindexed_lines(&mut self, first_vertex: i32, vertex_count: i32) {

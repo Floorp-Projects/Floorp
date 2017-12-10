@@ -18,10 +18,11 @@ void main(void) {
 
     int glyph_index = prim.user_data0;
     int resource_address = prim.user_data1;
+    int subpx_dir = prim.user_data2;
 
     Glyph glyph = fetch_glyph(prim.specific_prim_address,
                               glyph_index,
-                              text.subpx_dir);
+                              subpx_dir);
 
     GlyphResource res = fetch_glyph_resource(resource_address);
 
