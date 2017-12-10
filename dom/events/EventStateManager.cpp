@@ -4136,33 +4136,36 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
     return nullptr;
   }
 
+  nsCOMPtr<nsIContent> targetContent = aTargetContent;
+  nsCOMPtr<nsIContent> relatedContent = aRelatedContent;
+
   nsAutoPtr<WidgetMouseEvent> dispatchEvent;
   CreateMouseOrPointerWidgetEvent(aMouseEvent, aMessage,
-                                  aRelatedContent, dispatchEvent);
+                                  relatedContent, dispatchEvent);
 
   AutoWeakFrame previousTarget = mCurrentTarget;
-  mCurrentTargetContent = aTargetContent;
+  mCurrentTargetContent = targetContent;
 
   nsIFrame* targetFrame = nullptr;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  ESMEventCB callback(aTargetContent);
-  EventDispatcher::Dispatch(aTargetContent, mPresContext, dispatchEvent, nullptr,
+  ESMEventCB callback(targetContent);
+  EventDispatcher::Dispatch(targetContent, mPresContext, dispatchEvent, nullptr,
                             &status, &callback);
 
   if (mPresContext) {
     // Although the primary frame was checked in event callback, it may not be
     // the same object after event dispatch and handling, so refetch it.
-    targetFrame = mPresContext->GetPrimaryFrameFor(aTargetContent);
+    targetFrame = mPresContext->GetPrimaryFrameFor(targetContent);
 
     // If we are entering/leaving remote content, dispatch a mouse enter/exit
     // event to the remote frame.
-    if (IsRemoteTarget(aTargetContent)) {
+    if (IsRemoteTarget(targetContent)) {
       if (aMessage == eMouseOut) {
         // For remote content, send a "top-level" widget mouse exit event.
         nsAutoPtr<WidgetMouseEvent> remoteEvent;
         CreateMouseOrPointerWidgetEvent(aMouseEvent, eMouseExitFromWidget,
-                                        aRelatedContent, remoteEvent);
+                                        relatedContent, remoteEvent);
         remoteEvent->mExitFrom = WidgetMouseEvent::eTopLevel;
 
         // mCurrentTarget is set to the new target, so we must reset it to the
@@ -4174,7 +4177,7 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
       } else if (aMessage == eMouseOver) {
         nsAutoPtr<WidgetMouseEvent> remoteEvent;
         CreateMouseOrPointerWidgetEvent(aMouseEvent, eMouseEnterIntoWidget,
-                                        aRelatedContent, remoteEvent);
+                                        relatedContent, remoteEvent);
         HandleCrossProcessEvent(remoteEvent, &status);
       }
     }
