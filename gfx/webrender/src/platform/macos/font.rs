@@ -22,7 +22,7 @@ use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
@@ -259,6 +259,11 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
     }
 }
 
+fn is_bitmap_font(ct_font: &CTFont) -> bool {
+    let traits = ct_font.symbolic_traits();
+    (traits & kCTFontColorGlyphsTrait) != 0
+}
+
 impl FontContext {
     pub fn new() -> FontContext {
         debug!("Test for subpixel AA support: {}", supports_subpixel_aa());
@@ -351,7 +356,8 @@ impl FontContext {
         self.get_ct_font(font.font_key, font.size, &font.variations)
             .and_then(|ref ct_font| {
                 let glyph = key.index as CGGlyph;
-                let (x_offset, y_offset) = font.get_subpx_offset(key);
+                let bitmap = is_bitmap_font(ct_font);
+                let (x_offset, y_offset) = if bitmap { (0.0, 0.0) } else { font.get_subpx_offset(key) };
                 let metrics = get_glyph_metrics(ct_font, None, glyph, x_offset, y_offset, 0.0);
                 if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
                     None
@@ -404,22 +410,12 @@ impl FontContext {
         }
     }
 
-    pub fn is_bitmap_font(&mut self, font: &FontInstance) -> bool {
-        match self.get_ct_font(font.font_key, font.size, &font.variations) {
-            Some(ref ct_font) => {
-                let traits = ct_font.symbolic_traits();
-                (traits & kCTFontColorGlyphsTrait) != 0
-            }
-            None => false,
-        }
-    }
-
     pub fn prepare_font(font: &mut FontInstance) {
         match font.render_mode {
-            FontRenderMode::Mono | FontRenderMode::Bitmap => {
-                // In mono/bitmap modes the color of the font is irrelevant.
+            FontRenderMode::Mono => {
+                // In mono mode the color of the font is irrelevant.
                 font.color = ColorU::new(255, 255, 255, 255);
-                // Subpixel positioning is disabled in mono and bitmap modes.
+                // Subpixel positioning is disabled in mono mode.
                 font.subpx_dir = SubpixelDirection::None;
             }
             FontRenderMode::Alpha => {
@@ -457,8 +453,9 @@ impl FontContext {
             None => return None,
         };
 
+        let bitmap = is_bitmap_font(&ct_font);
         let shape = font.transform.pre_scale(y_scale.recip() as f32, y_scale.recip() as f32);
-        let transform = if shape.is_identity() {
+        let transform = if bitmap || shape.is_identity() {
             None
         } else {
             Some(CGAffineTransform {
@@ -470,16 +467,18 @@ impl FontContext {
                 ty: 0.0
             })
         };
+
         let glyph = key.index as CGGlyph;
-        let (x_offset, y_offset) = font.get_subpx_offset(key);
-        let extra_strikes = font.get_extra_strikes(x_scale);
+        let (x_offset, y_offset) = if bitmap { (0.0, 0.0) } else { font.get_subpx_offset(key) };
+        let (strike_scale, pixel_step) = if bitmap { (y_scale, 1.0) } else { (x_scale, y_scale / x_scale) };
+        let extra_strikes = font.get_extra_strikes(strike_scale);
         let metrics = get_glyph_metrics(
             &ct_font,
             transform.as_ref(),
             glyph,
             x_offset,
             y_offset,
-            extra_strikes as f64 * y_scale / x_scale,
+            extra_strikes as f64 * pixel_step,
         );
         if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
             return None;
@@ -507,14 +506,10 @@ impl FontContext {
         // subpixel AA at all (which we need it to do in both Subpixel and
         // Alpha+smoothing mode). But little-endian is what we want anyway, so
         // this works out nicely.
-        let context_flags = match font.render_mode {
-            FontRenderMode::Subpixel | FontRenderMode::Alpha |
-            FontRenderMode::Mono => {
-                kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst
-            }
-            FontRenderMode::Bitmap => {
-                kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst
-            }
+        let context_flags = if bitmap {
+            kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst
+        } else {
+            kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst
         };
 
         let mut cg_context = CGContext::create_bitmap_context(
@@ -552,7 +547,9 @@ impl FontContext {
         // the "Alpha without smoothing" and Mono modes.
         let use_white_on_black = should_use_white_on_black(font.color);
         let use_font_smoothing = font.flags.contains(FontInstanceFlags::FONT_SMOOTHING);
-        let (antialias, smooth, text_color, bg_color, bg_alpha, invert) =
+        let (antialias, smooth, text_color, bg_color, bg_alpha, invert) = if bitmap {
+            (true, false, 0.0, 0.0, 0.0, false)
+        } else {
             match (font.render_mode, use_font_smoothing) {
                 (FontRenderMode::Subpixel, _) |
                 (FontRenderMode::Alpha, true) => if use_white_on_black {
@@ -562,8 +559,8 @@ impl FontContext {
                 },
                 (FontRenderMode::Alpha, false) => (true, false, 0.0, 1.0, 1.0, true),
                 (FontRenderMode::Mono, _) => (false, false, 0.0, 1.0, 1.0, true),
-                (FontRenderMode::Bitmap, _) => (true, false, 0.0, 0.0, 0.0, false),
-            };
+            }
+        };
 
         // These are always true in Gecko, even for non-AA fonts
         cg_context.set_allows_font_subpixel_positioning(true);
@@ -606,7 +603,6 @@ impl FontContext {
 
         if extra_strikes > 0 {
             let strikes = 1 + extra_strikes;
-            let pixel_step = y_scale / x_scale;
             let glyphs = vec![glyph; strikes];
             let origins = (0..strikes)
                 .map(|i| CGPoint { x: draw_origin.x + i as f64 * pixel_step, y: draw_origin.y })
@@ -618,7 +614,7 @@ impl FontContext {
 
         let mut rasterized_pixels = cg_context.data().to_vec();
 
-        if font.render_mode != FontRenderMode::Bitmap {
+        if !bitmap {
             // We rendered text into an opaque surface. The code below needs to
             // ignore the current value of each pixel's alpha channel. But it's
             // allowed to write to the alpha channel, because we're done calling
@@ -670,8 +666,8 @@ impl FontContext {
             top: metrics.rasterized_ascent as f32,
             width: metrics.rasterized_width,
             height: metrics.rasterized_height,
-            scale: 1.0,
-            format: font.get_glyph_format(true),
+            scale: if bitmap { y_scale.recip() as f32 } else { 1.0 },
+            format: if bitmap { GlyphFormat::ColorBitmap } else { font.get_glyph_format() },
             bytes: rasterized_pixels,
         })
     }

@@ -56,7 +56,7 @@ impl Serialize for str {
     }
 }
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 impl Serialize for String {
     #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -177,6 +177,7 @@ where
     }
 }
 
+#[cfg(any(feature = "std", feature = "alloc"))]
 macro_rules! seq_impl {
     ($ty:ident < T $(: $tbound1:ident $(+ $tbound2:ident)*)* $(, $typaram:ident : $bound:ident)* >) => {
         impl<T $(, $typaram)*> Serialize for $ty<T $(, $typaram)*>
@@ -195,22 +196,22 @@ macro_rules! seq_impl {
     }
 }
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(BinaryHeap<T: Ord>);
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(BTreeSet<T: Ord>);
 
 #[cfg(feature = "std")]
 seq_impl!(HashSet<T: Eq + Hash, H: BuildHasher>);
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(LinkedList<T>);
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(Vec<T>);
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(VecDeque<T>);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -290,6 +291,7 @@ tuple_impls! {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#[cfg(any(feature = "std", feature = "alloc"))]
 macro_rules! map_impl {
     ($ty:ident < K $(: $kbound1:ident $(+ $kbound2:ident)*)*, V $(, $typaram:ident : $bound:ident)* >) => {
         impl<K, V $(, $typaram)*> Serialize for $ty<K, V $(, $typaram)*>
@@ -309,7 +311,7 @@ macro_rules! map_impl {
     }
 }
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 map_impl!(BTreeMap<K: Ord, V>);
 
 #[cfg(feature = "std")]
@@ -338,12 +340,12 @@ deref_impl!(<'a, T: ?Sized> Serialize for &'a mut T where T: Serialize);
 deref_impl!(<T: ?Sized> Serialize for Box<T> where T: Serialize);
 
 #[cfg(all(feature = "rc", any(feature = "std", feature = "alloc")))]
-deref_impl!(<T> Serialize for Rc<T> where T: Serialize);
+deref_impl!(<T: ?Sized> Serialize for Rc<T> where T: Serialize);
 
 #[cfg(all(feature = "rc", any(feature = "std", feature = "alloc")))]
-deref_impl!(<T> Serialize for Arc<T> where T: Serialize);
+deref_impl!(<T: ?Sized> Serialize for Arc<T> where T: Serialize);
 
-#[cfg(any(feature = "std", feature = "collections"))]
+#[cfg(any(feature = "std", feature = "alloc"))]
 deref_impl!(<'a, T: ?Sized> Serialize for Cow<'a, T> where T: Serialize + ToOwned);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -455,6 +457,23 @@ impl Serialize for Duration {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#[cfg(feature = "std")]
+impl Serialize for SystemTime {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use super::SerializeStruct;
+        let duration_since_epoch = self.duration_since(UNIX_EPOCH).expect("SystemTime must be later than UNIX_EPOCH");
+        let mut state = try!(serializer.serialize_struct("SystemTime", 2));
+        try!(state.serialize_field("secs_since_epoch", &duration_since_epoch.as_secs()));
+        try!(state.serialize_field("nanos_since_epoch", &duration_since_epoch.subsec_nanos()));
+        state.end()
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 /// Serialize a value that implements `Display` as a string, when that string is
 /// statically known to never have more than a constant `MAX_LEN` bytes.
 ///
@@ -487,9 +506,18 @@ impl Serialize for net::IpAddr {
     where
         S: Serializer,
     {
-        match *self {
-            net::IpAddr::V4(ref a) => a.serialize(serializer),
-            net::IpAddr::V6(ref a) => a.serialize(serializer),
+        if serializer.is_human_readable() {
+            match *self {
+                net::IpAddr::V4(ref a) => a.serialize(serializer),
+                net::IpAddr::V6(ref a) => a.serialize(serializer),
+            }
+        } else {
+            match *self {
+                net::IpAddr::V4(ref a) =>
+                    serializer.serialize_newtype_variant("IpAddr", 0, "V4", a),
+                net::IpAddr::V6(ref a) =>
+                    serializer.serialize_newtype_variant("IpAddr", 1, "V6", a),
+            }
         }
     }
 }
@@ -500,9 +528,13 @@ impl Serialize for net::Ipv4Addr {
     where
         S: Serializer,
     {
-        /// "101.102.103.104".len()
-        const MAX_LEN: usize = 15;
-        serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        if serializer.is_human_readable() {
+            const MAX_LEN: usize = 15;
+            debug_assert_eq!(MAX_LEN, "101.102.103.104".len());
+            serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        } else {
+            self.octets().serialize(serializer)
+        }
     }
 }
 
@@ -512,9 +544,13 @@ impl Serialize for net::Ipv6Addr {
     where
         S: Serializer,
     {
-        /// "1000:1002:1003:1004:1005:1006:1007:1008".len()
-        const MAX_LEN: usize = 39;
-        serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        if serializer.is_human_readable() {
+            const MAX_LEN: usize = 39;
+            debug_assert_eq!(MAX_LEN, "1001:1002:1003:1004:1005:1006:1007:1008".len());
+            serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        } else {
+            self.octets().serialize(serializer)
+        }
     }
 }
 
@@ -524,9 +560,18 @@ impl Serialize for net::SocketAddr {
     where
         S: Serializer,
     {
-        match *self {
-            net::SocketAddr::V4(ref addr) => addr.serialize(serializer),
-            net::SocketAddr::V6(ref addr) => addr.serialize(serializer),
+        if serializer.is_human_readable() {
+            match *self {
+                net::SocketAddr::V4(ref addr) => addr.serialize(serializer),
+                net::SocketAddr::V6(ref addr) => addr.serialize(serializer),
+            }
+        } else {
+            match *self {
+                net::SocketAddr::V4(ref addr) =>
+                    serializer.serialize_newtype_variant("SocketAddr", 0, "V4", addr),
+                net::SocketAddr::V6(ref addr) =>
+                    serializer.serialize_newtype_variant("SocketAddr", 1, "V6", addr),
+            }
         }
     }
 }
@@ -537,9 +582,13 @@ impl Serialize for net::SocketAddrV4 {
     where
         S: Serializer,
     {
-        /// "101.102.103.104:65000".len()
-        const MAX_LEN: usize = 21;
-        serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        if serializer.is_human_readable() {
+            const MAX_LEN: usize = 21;
+            debug_assert_eq!(MAX_LEN, "101.102.103.104:65000".len());
+            serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        } else {
+            (self.ip(), self.port()).serialize(serializer)
+        }
     }
 }
 
@@ -549,9 +598,13 @@ impl Serialize for net::SocketAddrV6 {
     where
         S: Serializer,
     {
-        /// "[1000:1002:1003:1004:1005:1006:1007:1008]:65000".len()
-        const MAX_LEN: usize = 47;
-        serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        if serializer.is_human_readable() {
+            const MAX_LEN: usize = 47;
+            debug_assert_eq!(MAX_LEN, "[1001:1002:1003:1004:1005:1006:1007:1008]:65000".len());
+            serialize_display_bounded_length!(self, MAX_LEN, serializer)
+        } else {
+            (self.ip(), self.port()).serialize(serializer)
+        }
     }
 }
 
@@ -609,5 +662,21 @@ impl Serialize for OsString {
         S: Serializer,
     {
         self.as_os_str().serialize(serializer)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#[cfg(feature = "std")]
+impl<T> Serialize for Wrapping<T>
+where
+    T: Serialize,
+{
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
     }
 }
