@@ -632,9 +632,8 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
 MediaPipeline::~MediaPipeline()
 {
   CSFLogInfo(LOGTAG, "Destroying MediaPipeline: %s", mDescription.c_str());
-  // MediaSessionConduit insists that it be released on main.
-  RUN_ON_THREAD(
-    mMainThread, WrapRelease(mConduit.forget()), NS_DISPATCH_NORMAL);
+  NS_ReleaseOnMainThreadSystemGroup("MediaPipeline::mConduit",
+                                    mConduit.forget());
 }
 
 void
@@ -1335,17 +1334,8 @@ public:
 
   ~PipelineListener()
   {
-    if (!NS_IsMainThread()) {
-      // release conduit on mainthread.  Must use forget()!
-      nsresult rv =
-        NS_DispatchToMainThread(new ConduitDeleteEvent(mConduit.forget()));
-      MOZ_ASSERT(!NS_FAILED(rv), "Could not dispatch conduit shutdown to main");
-      if (NS_FAILED(rv)) {
-        MOZ_CRASH();
-      }
-    } else {
-      mConduit = nullptr;
-    }
+    NS_ReleaseOnMainThreadSystemGroup("MediaPipeline::mConduit",
+                                      mConduit.forget());
     if (mConverter) {
       mConverter->Shutdown();
     }
@@ -2218,14 +2208,8 @@ public:
 private:
   ~PipelineListener()
   {
-    if (!NS_IsMainThread()) {
-      // release conduit on mainthread.  Must use forget()!
-      nsresult rv =
-        NS_DispatchToMainThread(new ConduitDeleteEvent(mConduit.forget()));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    } else {
-      mConduit = nullptr;
-    }
+    NS_ReleaseOnMainThreadSystemGroup("MediaPipeline::mConduit",
+                                      mConduit.forget());
   }
 
   void NotifyPullImpl(StreamTime aDesiredTime)
