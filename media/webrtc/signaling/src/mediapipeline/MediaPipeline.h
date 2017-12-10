@@ -314,22 +314,6 @@ private:
   void DetachTransport_s();
 };
 
-class ConduitDeleteEvent : public Runnable
-{
-public:
-  explicit ConduitDeleteEvent(already_AddRefed<MediaSessionConduit> aConduit)
-    : Runnable("ConduitDeleteEvent")
-    , mConduit(aConduit)
-  {
-  }
-
-  /* we exist solely to proxy release of the conduit */
-  NS_IMETHOD Run() override { return NS_OK; }
-
-private:
-  const RefPtr<MediaSessionConduit> mConduit;
-};
-
 // A specialization of pipeline for reading from an input device
 // and transmitting to the network.
 class MediaPipelineTransmit : public MediaPipeline
