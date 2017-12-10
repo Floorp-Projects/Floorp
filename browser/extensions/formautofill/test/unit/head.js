@@ -118,7 +118,10 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
 
       forms.forEach((form, formIndex) => {
         let sections = FormAutofillHeuristics.getFormInfo(form);
-        verifySectionFieldDetails(sections, testPattern.expectedResult[formIndex]);
+        verifySectionFieldDetails(
+          sections.map(section => section.fieldDetails),
+          testPattern.expectedResult[formIndex],
+        );
       });
     });
   });
