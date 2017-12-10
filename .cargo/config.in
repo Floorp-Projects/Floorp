@@ -2,5 +2,10 @@
 registry = 'https://github.com/rust-lang/crates.io-index'
 replace-with = 'vendored-sources'
 
+[source."https://github.com/gankro/serde"]
+git = "https://github.com/gankro/serde"
+branch = "deserialize_from_enums3"
+replace-with = "vendored-sources"
+
 [source.vendored-sources]
 directory = '@top_srcdir@/third_party/rust'

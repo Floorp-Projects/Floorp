@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.55.0"
+version = "0.56.1"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -13,10 +13,10 @@ profiler = ["thread_profiler/thread_profiler"]
 debugger = ["ws", "serde_json", "serde", "serde_derive", "image", "base64"]
 
 [dependencies]
-app_units = "0.5.6"
+app_units = "0.6"
 bincode = "0.9"
 byteorder = "1.0"
-euclid = "0.15.5"
+euclid = "0.16"
 fxhash = "0.2.1"
 gleam = "0.4.15"
 lazy_static = "1"
@@ -27,8 +27,8 @@ rayon = "0.8"
 webrender_api = {path = "../webrender_api"}
 bitflags = "1.0"
 thread_profiler = "0.1.1"
-plane-split = "0.6"
-smallvec = "0.5"
+plane-split = "0.7"
+smallvec = "0.6"
 ws = { optional = true, version = "0.7.3" }
 serde_json = { optional = true, version = "1.0" }
 serde = { optional = true, version = "1.0" }

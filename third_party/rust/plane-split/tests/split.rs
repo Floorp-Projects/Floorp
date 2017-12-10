@@ -2,7 +2,7 @@ extern crate euclid;
 extern crate plane_split;
 
 use std::f32::consts::FRAC_PI_4;
-use euclid::{Radians, TypedTransform3D, TypedRect, vec3};
+use euclid::{Angle, TypedTransform3D, TypedRect, vec3};
 use plane_split::{BspSplitter, NaiveSplitter, Polygon, Splitter, _make_grid};
 
 
@@ -25,11 +25,11 @@ fn grid_bsp() {
 
 fn sort_rotation(splitter: &mut Splitter<f32, ()>) {
     let transform0: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Radians::new(-FRAC_PI_4));
+        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
     let transform1: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Radians::new(0.0));
+        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(0.0));
     let transform2: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Radians::new(FRAC_PI_4));
+        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(FRAC_PI_4));
 
     let rect: TypedRect<f32, ()> = euclid::rect(-10.0, -10.0, 20.0, 20.0);
     let polys = [

@@ -4,7 +4,7 @@
 
 use api::{AddFont, BlobImageData, BlobImageResources, ResourceUpdate, ResourceUpdates};
 use api::{BlobImageDescriptor, BlobImageError, BlobImageRenderer, BlobImageRequest};
-use api::{ColorF, FontRenderMode};
+use api::ColorF;
 use api::{DevicePoint, DeviceUintRect, DeviceUintSize};
 use api::{Epoch, FontInstanceKey, FontKey, FontTemplate};
 use api::{ExternalImageData, ExternalImageType};
@@ -354,8 +354,7 @@ impl ResourceCache {
             bg_color,
             ..
         } = options.unwrap_or_default();
-        assert!(render_mode != FontRenderMode::Bitmap);
-        let mut instance = FontInstance::new(
+        let instance = FontInstance::new(
             font_key,
             glyph_size,
             ColorF::new(0.0, 0.0, 0.0, 1.0),
@@ -366,9 +365,6 @@ impl ResourceCache {
             platform_options,
             variations,
         );
-        if self.glyph_rasterizer.is_bitmap_font(&instance) {
-            instance.render_mode = instance.render_mode.limit_by(FontRenderMode::Bitmap);
-        }
         self.resources.font_instances
             .write()
             .unwrap()
