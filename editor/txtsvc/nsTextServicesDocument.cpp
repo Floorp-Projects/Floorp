@@ -1499,10 +1499,8 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidInsertNode(nsIDOMNode *aNode,
-                                      nsIDOMNode *aParent,
-                                      int32_t     aPosition,
-                                      nsresult    aResult)
+nsTextServicesDocument::DidInsertNode(nsIDOMNode* aNode,
+                                      nsresult aResult)
 {
   return NS_OK;
 }
@@ -3241,9 +3239,8 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillInsertNode(nsIDOMNode *aNode,
-                              nsIDOMNode *aParent,
-                              int32_t     aPosition)
+nsTextServicesDocument::WillInsertNode(nsIDOMNode* aNode,
+                                       nsIDOMNode* aNextSiblingOfNewNode)
 {
   return NS_OK;
 }

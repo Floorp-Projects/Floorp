@@ -440,17 +440,17 @@ TextEditor::CreateBRImpl(Selection& aSelection,
 
   // We need to insert a <br> node.
   RefPtr<Element> newBRElement;
-  if (IsTextNode(aPointToInsert.Container())) {
+  if (aPointToInsert.IsInTextNode()) {
     EditorDOMPoint pointInContainer;
     if (aPointToInsert.IsStartOfContainer()) {
       // Insert before the text node.
-      pointInContainer.Set(aPointToInsert.Container());
+      pointInContainer.Set(aPointToInsert.GetContainer());
       if (NS_WARN_IF(!pointInContainer.IsSet())) {
         return nullptr;
       }
     } else if (aPointToInsert.IsEndOfContainer()) {
       // Insert after the text node.
-      pointInContainer.Set(aPointToInsert.Container());
+      pointInContainer.Set(aPointToInsert.GetContainer());
       if (NS_WARN_IF(!pointInContainer.IsSet())) {
         return nullptr;
       }
@@ -468,7 +468,7 @@ TextEditor::CreateBRImpl(Selection& aSelection,
       }
       Unused << newLeftNode;
       // Insert new <br> before the right node.
-      pointInContainer.Set(aPointToInsert.Container());
+      pointInContainer.Set(aPointToInsert.GetContainer());
     }
     // Create a <br> node.
     newBRElement = CreateNode(nsGkAtoms::br, pointInContainer.AsRaw());
@@ -584,9 +584,9 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
         EditorRawDOMPoint insertionPoint =
           FindBetterInsertionPoint(atStartOfSelection);
 
-        if (IsTextNode(insertionPoint.Container())) {
+        if (insertionPoint.IsInTextNode()) {
           const nsTextFragment* data =
-            insertionPoint.Container()->GetAsText()->GetText();
+            insertionPoint.GetContainerAsText()->GetText();
           uint32_t offset = insertionPoint.Offset();
           if ((offset > 1 &&
                NS_IS_LOW_SURROGATE(data->CharAt(offset - 1)) &&
@@ -763,8 +763,9 @@ TextEditor::InsertLineBreak()
     MOZ_ASSERT(pointToInsert.IsSetAndValid());
 
     // don't put text in places that can't have it
-    if (!IsTextNode(pointToInsert.Container()) &&
-        !CanContainTag(*pointToInsert.Container(), *nsGkAtoms::textTagName)) {
+    if (!pointToInsert.IsInTextNode() &&
+        !CanContainTag(*pointToInsert.GetContainer(),
+                       *nsGkAtoms::textTagName)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -784,9 +785,9 @@ TextEditor::InsertLineBreak()
     }
     if (NS_SUCCEEDED(rv)) {
       // set the selection to the correct location
-      MOZ_ASSERT(!pointAfterInsertedLineBreak.GetChildAtOffset(),
+      MOZ_ASSERT(!pointAfterInsertedLineBreak.GetChild(),
         "After inserting text into a text node, pointAfterInsertedLineBreak."
-        "GetChildAtOffset() should be nullptr");
+        "GetChild() should be nullptr");
       rv = selection->Collapse(pointAfterInsertedLineBreak);
       if (NS_SUCCEEDED(rv)) {
         // see if we're at the end of the editor range

@@ -225,8 +225,8 @@ public:
     , mPoint(aPoint)
   {
     mRangeItem = new RangeItem();
-    mRangeItem->mStartContainer = mPoint->Container();
-    mRangeItem->mEndContainer = mPoint->Container();
+    mRangeItem->mStartContainer = mPoint->GetContainer();
+    mRangeItem->mEndContainer = mPoint->GetContainer();
     mRangeItem->mStartOffset = mPoint->Offset();
     mRangeItem->mEndOffset = mPoint->Offset();
     mRangeUpdater.RegisterRangeItem(mRangeItem);

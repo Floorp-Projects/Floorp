@@ -37,11 +37,12 @@ add_task(function* () {
   let actualResponseHeaders = [];
   let actualRequestHeaders = [];
 
-  for (let i = 1; i < 11; i++) {
+  let responseHeadersLength = expectedResponseHeaders.length;
+  for (let i = 1; i < responseHeadersLength + 1; i++) {
     actualResponseHeaders.push(labelCells[i].innerText);
   }
 
-  for (let i = 12; i < labelCells.length; i++) {
+  for (let i = responseHeadersLength + 2; i < labelCells.length; i++) {
     actualRequestHeaders.push(labelCells[i].innerText);
   }
 

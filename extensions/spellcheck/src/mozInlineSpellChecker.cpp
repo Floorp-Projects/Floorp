@@ -1054,16 +1054,17 @@ mozInlineSpellChecker::DidCreateNode(const nsAString& aTag,
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent,
-                                                    int32_t aPosition)
+NS_IMETHODIMP
+mozInlineSpellChecker::WillInsertNode(nsIDOMNode* aNode,
+                                      nsIDOMNode* aNextSiblingOfNewNode)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent,
-                                                   int32_t aPosition, nsresult aResult)
+NS_IMETHODIMP
+mozInlineSpellChecker::DidInsertNode(nsIDOMNode* aNode,
+                                     nsresult aResult)
 {
-
   return NS_OK;
 }
 

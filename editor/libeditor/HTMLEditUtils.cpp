@@ -224,6 +224,12 @@ HTMLEditUtils::IsTableRow(nsIDOMNode* aNode)
   return EditorBase::NodeIsType(aNode, nsGkAtoms::tr);
 }
 
+bool
+HTMLEditUtils::IsTableRow(nsINode* aNode)
+{
+  return aNode && aNode->IsHTMLElement(nsGkAtoms::tr);
+}
+
 /**
  * IsTableCell() returns true if aNode is an html td or th.
  */
@@ -307,6 +313,12 @@ bool
 HTMLEditUtils::IsPre(nsIDOMNode* aNode)
 {
   return EditorBase::NodeIsType(aNode, nsGkAtoms::pre);
+}
+
+bool
+HTMLEditUtils::IsPre(nsINode* aNode)
+{
+  return aNode && aNode->IsHTMLElement(nsGkAtoms::pre);
 }
 
 /**
