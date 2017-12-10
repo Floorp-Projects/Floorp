@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=573588
+-->
+<head>
+  <title>Basic functional test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=573588">Basic property tests</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<script type="text/javascript">
+  if (is_feature_enabled()) {
+    SimpleTest.waitForExplicitFinish();
+
+    function showNotifications() {
+      ok(navigator.mozNotification, "test for notification.");
+
+      var notification = navigator.mozNotification.createNotification("test", "test");
+      ok(notification, "test to ensure we can create a notification");
+
+      notification.onclose = function() {
+        ok(true, "notification was display and is now closing");
+        reset_notifications();
+        SimpleTest.finish();
+      };
+
+      notification.onclick = function() {
+        ok(false, "Click should not have been called.");
+        reset_notifications();
+        SimpleTest.finish();
+      };
+
+      notification.show();
+    }
+
+    setup_notifications(true, false, showNotifications);
+  } else {
+    ok(true, "Desktop notifications not enabled.");
+  }
+</script>
+</body>
+</html>

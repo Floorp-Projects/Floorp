@@ -17,11 +17,13 @@ EXTRA_JS_MODULES += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'DesktopNotification.h',
     'Notification.h',
     'NotificationEvent.h',
 ]
 
 UNIFIED_SOURCES += [
+    'DesktopNotification.cpp',
     'Notification.cpp',
     'NotificationEvent.cpp',
 ]
@@ -37,7 +39,6 @@ LOCAL_INCLUDES += [
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
-MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
