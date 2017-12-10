@@ -13,19 +13,19 @@ add_task(async function() {
     SpecialPowers.pushPrefEnv({"set": [["ui.tooltipDelay", 0]]}, resolve);
   });
 
-  // Send a mousemove at a known position to start the test.
-  await BrowserTestUtils.synthesizeMouseAtCenter("#p2", { type: "mousemove" }, browser);
   let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown", false, event => {
     is(event.originalTarget.localName, "tooltip", "tooltip is showing");
     return true;
   });
-  await BrowserTestUtils.synthesizeMouseAtCenter("#p1", { type: "mousemove" }, browser);
-  await popupShownPromise;
-
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(document, "popuphidden", false, event => {
     is(event.originalTarget.localName, "tooltip", "tooltip is hidden");
     return true;
   });
+
+  // Send a mousemove at a known position to start the test.
+  await BrowserTestUtils.synthesizeMouseAtCenter("#p2", { type: "mousemove" }, browser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#p1", { type: "mousemove" }, browser);
+  await popupShownPromise;
   await BrowserTestUtils.synthesizeMouseAtCenter("#p2", { type: "mousemove" }, browser);
   await popupHiddenPromise;
 
