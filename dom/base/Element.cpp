@@ -4332,7 +4332,7 @@ IntersectionObserverPropertyDtor(void* aObject, nsAtom* aPropertyName,
     static_cast<IntersectionObserverList*>(aPropertyValue);
   for (auto iter = observers->Iter(); !iter.Done(); iter.Next()) {
     DOMIntersectionObserver* observer = iter.Key();
-    observer->UnlinkElement(*element);
+    observer->UnlinkTarget(*element);
   }
   delete observers;
 }
@@ -4354,7 +4354,7 @@ Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
   }
 
   observers->LookupForAdd(aObserver).OrInsert([]() {
-    // If element is being observed, value can be:
+    // Value can be:
     //   -2:   Makes sure next calculated threshold always differs, leading to a
     //         notification task being scheduled.
     //   -1:   Non-intersecting.
@@ -4387,7 +4387,7 @@ Element::UnlinkIntersectionObservers()
   }
   for (auto iter = observers->Iter(); !iter.Done(); iter.Next()) {
     DOMIntersectionObserver* observer = iter.Key();
-    observer->UnlinkElement(*this);
+    observer->UnlinkTarget(*this);
   }
   observers->Clear();
 }
