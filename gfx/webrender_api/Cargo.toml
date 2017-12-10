@@ -1,6 +1,6 @@
 [package]
 name = "webrender_api"
-version = "0.55.0"
+version = "0.56.1"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -10,13 +10,14 @@ nightly = ["euclid/unstable", "serde/unstable"]
 ipc = ["ipc-channel"]
 
 [dependencies]
-app_units = "0.5.6"
+app_units = "0.6"
 bitflags = "1.0"
 bincode = "0.9"
 byteorder = "1.2.1"
-euclid = "0.15"
+euclid = "0.16"
 ipc-channel = {version = "0.9", optional = true}
-serde = { version = "1.0", features = ["rc", "derive"] }
+serde = { version = "=1.0.23", features = ["rc", "derive"] }
+serde_derive = { version = "=1.0.23", features = ["deserialize_from"] }
 time = "0.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]

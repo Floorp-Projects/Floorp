@@ -47,3 +47,5 @@ panic = "abort"
 
 [patch.crates-io]
 libudev-sys = { path = "../../../../dom/webauthn/libudev-sys" }
+serde = { git = "https://github.com/gankro/serde", branch = "deserialize_from_enums3" }
+serde_derive = { git = "https://github.com/gankro/serde", branch = "deserialize_from_enums3", feature = "deserialize_from" }
