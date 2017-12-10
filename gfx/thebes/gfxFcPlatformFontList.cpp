@@ -229,7 +229,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
           mIgnoreFcCharmap(aIgnoreFcCharmap),
-          mAspect(0.0), mFontData(nullptr)
+          mAspect(0.0), mFontData(nullptr), mLength(0)
 {
     // italic
     int slant;
@@ -269,11 +269,12 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                int16_t aStretch,
                                                uint8_t aStyle,
                                                const uint8_t *aData,
+                                               uint32_t aLength,
                                                FT_Face aFace)
     : gfxFontEntry(aFaceName),
       mFTFace(aFace), mFTFaceInitialized(true),
       mIgnoreFcCharmap(true),
-      mAspect(0.0), mFontData(aData)
+      mAspect(0.0), mFontData(aData), mLength(aLength)
 {
     mWeight = aWeight;
     mStyle = aStyle;
@@ -312,7 +313,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                uint8_t aStyle)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
-          mAspect(0.0), mFontData(nullptr)
+          mAspect(0.0), mFontData(nullptr), mLength(0)
 {
     mWeight = aWeight;
     mStyle = aStyle;
@@ -898,9 +899,33 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     double size = ChooseFontSize(this, *aFontStyle);
     FcPatternAddDouble(pattern, FC_PIXEL_SIZE, size);
 
+    FT_Face face = mFTFace; // may be null, if it's not a user font
+    FcPattern* fontPattern = mFontPattern;
+    if (mFontData) {
+        MOZ_ASSERT(face, "face should not be null for user font");
+        if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+            // For variation fonts, we create a new FT_Face and FcPattern
+            // so that variation coordinates from the style can be applied
+            // without affecting other font instances created from the same
+            // entry (font resource).
+            face = Factory::NewFTFaceFromData(nullptr, mFontData, mLength, 0);
+            fontPattern = FcFreeTypeQueryFace(face, ToFcChar8Ptr(""), 0, nullptr);
+            if (!fontPattern) {
+                fontPattern = FcPatternCreate();
+            }
+            FcPatternDel(fontPattern, FC_FILE);
+            FcPatternDel(fontPattern, FC_INDEX);
+            FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
+        }
+    }
+
     PreparePattern(pattern, aFontStyle->printerFont);
     nsAutoRef<FcPattern> renderPattern
-        (FcFontRenderPrepare(nullptr, pattern, mFontPattern));
+        (FcFontRenderPrepare(nullptr, pattern, fontPattern));
+    if (fontPattern != mFontPattern) {
+        // Discard temporary pattern used for variation support
+        FcPatternDestroy(fontPattern);
+    }
     if (!renderPattern) {
         NS_WARNING("Failed to prepare Fontconfig pattern for font instance");
         return nullptr;
@@ -925,7 +950,7 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     if (!unscaledFont) {
         unscaledFont =
             mFontData ?
-                new UnscaledFontFontconfig(mFTFace) :
+                new UnscaledFontFontconfig(face) :
                 new UnscaledFontFontconfig(ToCharPtr(file), index);
         mUnscaledFontCache.Add(unscaledFont);
     }
@@ -1705,7 +1730,7 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
     }
 
     return new gfxFontconfigFontEntry(aFontName, aWeight, aStretch,
-                                      aStyle, aFontData, face);
+                                      aStyle, aFontData, aLength, face);
 }
 
 bool
