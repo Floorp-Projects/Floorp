@@ -1097,6 +1097,15 @@ StorageUI.prototype = {
       this._tablePopupAddItem.hidden = true;
     }
 
+    let showDeleteAllSessionCookies = false;
+    if (this.actorSupportsRemoveAllSessionCookies) {
+      if (type === "cookies" && selectedItem.length === 2) {
+        showDeleteAllSessionCookies = true;
+      }
+    }
+
+    this._tablePopupDeleteAllSessionCookies.hidden = !showDeleteAllSessionCookies;
+
     if (type === "cookies") {
       let host = addEllipsis(data.host);
 
