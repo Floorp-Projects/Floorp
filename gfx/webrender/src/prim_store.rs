@@ -751,8 +751,7 @@ impl TextRunPrimitiveCpu {
     ) -> FontInstance {
         let mut font = self.font.clone();
         font.size = font.size.scale_by(device_pixel_ratio);
-        if font.render_mode != FontRenderMode::Bitmap &&
-           rasterization_kind == RasterizationSpace::Screen {
+        if rasterization_kind == RasterizationSpace::Screen {
             if transform.has_perspective_component() || !transform.has_2d_inverse() {
                 font.render_mode = font.render_mode.limit_by(FontRenderMode::Alpha);
             } else {
@@ -821,7 +820,7 @@ impl TextRunPrimitiveCpu {
         request.push([
             self.offset.x,
             self.offset.y,
-            self.font.subpx_dir.limit_by(self.font.render_mode) as u32 as f32,
+            0.0,
             0.0,
         ]);
         request.extend_from_slice(&self.glyph_gpu_blocks);

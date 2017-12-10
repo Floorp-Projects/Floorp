@@ -1,7 +1,7 @@
 extern crate euclid;
 extern crate plane_split;
 
-use euclid::{Radians, TypedRect, TypedSize2D, TypedTransform3D, point2, point3, vec3};
+use euclid::{Angle, TypedRect, TypedSize2D, TypedTransform3D, point2, point3, vec3};
 use euclid::approxeq::ApproxEq;
 use plane_split::{Intersection, Line, LineProjection, Polygon};
 
@@ -56,7 +56,7 @@ fn valid() {
 fn from_transformed_rect() {
     let rect: TypedRect<f32, ()> = TypedRect::new(point2(10.0, 10.0), TypedSize2D::new(20.0, 30.0));
     let transform: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Radians::new(5.0))
+        TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
         .pre_translate(vec3(0.0, 0.0, 10.0));
     let poly = Polygon::from_transformed_rect(rect, transform, 0);
     assert!(poly.is_valid());
