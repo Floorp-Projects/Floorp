@@ -50,29 +50,21 @@ interface nsIEditActionListener : nsISupports{
 
   /**
    * Called before the editor inserts a node.
-   * @param aNode     The DOM Node to insert.
-   * @param aParent   The node to insert the new object into
-   * @param aPosition The place in aParent to insert the new node
-   *                  0=first child, 1=second child, etc.
-   *                  any number > number of current children = last child
+   * @param aNode                   The DOM Node to insert.
+   * @param aNextSiblingOfNewNode   The node which will be next sibling of
+   *                                new node.  If the new node will be appended,
+   *                                this is null.
    */
   void WillInsertNode(in nsIDOMNode aNode,
-                            in nsIDOMNode aParent,
-                            in long      aPosition);
+                      in nsIDOMNode aNextSiblingOfNewNode);
 
   /**
    * Called after the editor inserts a node.
    * @param aNode     The DOM Node to insert.
-   * @param aParent   The node to insert the new object into
-   * @param aPosition The place in aParent to insert the new node
-   *                  0=first child, 1=second child, etc.
-   *                  any number > number of current children = last child
    * @param aResult   The result of the insert node operation.
    */
   void DidInsertNode(in nsIDOMNode aNode,
-                           in nsIDOMNode aParent,
-                           in long      aPosition,
-                           in nsresult    aResult);
+                     in nsresult aResult);
 
   /**
    * Called before the editor deletes a node.

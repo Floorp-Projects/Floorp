@@ -567,7 +567,7 @@ HTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
         "Failed to split the node");
 
       EditorRawDOMPoint atRightNode(splitNodeResult.SplitPoint());
-      *aNode = atRightNode.Container();
+      *aNode = atRightNode.GetContainer();
       *aOffset = atRightNode.Offset();
       if (aOutLeftNode) {
         NS_IF_ADDREF(*aOutLeftNode = splitNodeResult.GetPreviousNode());

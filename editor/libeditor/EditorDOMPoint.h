@@ -10,8 +10,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/Text.h"
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsIDOMNode.h"
 #include "nsINode.h"
 
 namespace mozilla {
@@ -35,9 +39,9 @@ class EditorDOMPointBase;
  * starts to refer the child node or offset in the container.  In this case,
  * the other information hasn't been initialized due to performance reason.
  * When you retrieve the other information with calling Offset() or
- * GetChildAtOffset(), the other information is computed with the current
- * DOM tree.  Therefore, e.g., in the following case, the other information
- * may be different:
+ * GetChild(), the other information is computed with the current DOM tree.
+ * Therefore, e.g., in the following case, the other information may be
+ * different:
  *
  * EditorDOMPoint pointA(container1, childNode1);
  * EditorDOMPoint pointB(container1, childNode1);
@@ -49,11 +53,10 @@ class EditorDOMPointBase;
  *
  * EditorDOMPoint pointA(container1, 5);
  * EditorDOMPoint pointB(container1, 5);
- * Unused << pointA.GetChildAtOffset(); // The child is computed now.
+ * Unused << pointA.GetChild(); // The child is computed now.
  * container1->RemoveChild(childNode1->GetFirstChild());
- * Unused << pointB.GetChildAtOffset(); // Now, pointB.GetChildAtOffset() equals
- *                                      // pointA.GetChildAtOffset()->
- *                                      //          GetPreviousSibling().
+ * Unused << pointB.GetChild(); // Now, pointB.GetChild() equals
+ *                              // pointA.GetChild()->GetPreviousSibling().
  *
  * So, when you initialize an instance only with one information, you need to
  * be careful when you access the other information after changing the DOM tree.
@@ -119,6 +122,16 @@ public:
       "Initializing RangeBoundary with invalid value");
   }
 
+  explicit EditorDOMPointBase(nsIDOMNode* aDOMPointedNode)
+    : mIsChildInitialized(false)
+  {
+    nsCOMPtr<nsIContent> child = do_QueryInterface(aDOMPointedNode);
+    if (NS_WARN_IF(!child)) {
+      return;
+    }
+    this->Set(child);
+  }
+
   EditorDOMPointBase(nsINode* aContainer,
                      nsIContent* aPointedNode,
                      int32_t aOffset)
@@ -148,7 +161,7 @@ public:
   }
 
   template<typename PT, typename CT>
-  explicit EditorDOMPointBase(const EditorDOMPointBase<PT, CT>& aOther)
+  MOZ_IMPLICIT EditorDOMPointBase(const EditorDOMPointBase<PT, CT>& aOther)
     : mParent(aOther.mParent)
     , mChild(aOther.mChild)
     , mOffset(aOther.mOffset)
@@ -156,16 +169,98 @@ public:
   {
   }
 
-  // Following methods are just copy of same methods of RangeBoudnaryBase.
-
+  /**
+   * GetContainer() returns the container node at the point.
+   * GetContainerAs*() returns the container node as specific type.
+   */
   nsINode*
-  Container() const
+  GetContainer() const
   {
     return mParent;
   }
 
   nsIContent*
-  GetChildAtOffset() const
+  GetContainerAsContent() const
+  {
+    return mParent && mParent->IsContent() ? mParent->AsContent() : nullptr;
+  }
+
+  dom::Element*
+  GetContainerAsElement() const
+  {
+    return mParent && mParent->IsElement() ? mParent->AsElement() : nullptr;
+  }
+
+  dom::Text*
+  GetContainerAsText() const
+  {
+    return mParent ? mParent->GetAsText() : nullptr;
+  }
+
+  nsIDOMNode*
+  GetContainerAsDOMNode() const
+  {
+    return mParent ? mParent->AsDOMNode() : nullptr;
+  }
+
+  /**
+   * CanContainerHaveChildren() returns true if the container node can have
+   * child nodes.  Otherwise, e.g., when the container is a text node, returns
+   * false.
+   */
+  bool
+  CanContainerHaveChildren() const
+  {
+    return mParent && mParent->IsContainerNode();
+  }
+
+  /**
+   * IsInDataNode() returns true if the container node is a data node including
+   * text node.
+   */
+  bool
+  IsInDataNode() const
+  {
+    return mParent && mParent->IsNodeOfType(nsINode::eDATA_NODE);
+  }
+
+  /**
+   * IsInTextNode() returns true if the container node is a text node.
+   */
+  bool
+  IsInTextNode() const
+  {
+    return mParent && mParent->IsNodeOfType(nsINode::eTEXT);
+  }
+
+  /**
+   * IsContainerHTMLElement() returns true if the container node is an HTML
+   * element node and its node name is aTag.
+   */
+  bool
+  IsContainerHTMLElement(nsAtom* aTag) const
+  {
+    return mParent && mParent->IsHTMLElement(aTag);
+  }
+
+  /**
+   * IsContainerAnyOfHTMLElements() returns true if the container node is an
+   * HTML element node and its node name is one of the arguments.
+   */
+  template<typename First, typename... Args>
+  bool
+  IsContainerAnyOfHTMLElements(First aFirst, Args... aArgs) const
+  {
+    return mParent && mParent->IsAnyOfHTMLElements(aFirst, aArgs...);
+  }
+
+  /**
+   * GetChild() returns a child node which is pointed by the instance.
+   * If mChild hasn't been initialized yet, this computes the child node
+   * from mParent and mOffset with *current* DOM tree.
+   */
+  nsIContent*
+  GetChild() const
   {
     if (!mParent || !mParent->IsContainerNode()) {
       return nullptr;
@@ -179,12 +274,14 @@ public:
   }
 
   /**
-   * GetNextSiblingOfChildOffset() returns next sibling of a child at offset.
+   * GetNextSiblingOfChild() returns next sibling of the child node.
    * If this refers after the last child or the container cannot have children,
    * this returns nullptr with warning.
+   * If mChild hasn't been initialized yet, this computes the child node
+   * from mParent and mOffset with *current* DOM tree.
    */
   nsIContent*
-  GetNextSiblingOfChildAtOffset() const
+  GetNextSiblingOfChild() const
   {
     if (NS_WARN_IF(!mParent) || NS_WARN_IF(!mParent->IsContainerNode())) {
       return nullptr;
@@ -204,12 +301,14 @@ public:
   }
 
   /**
-   * GetPreviousSiblingOfChildAtOffset() returns previous sibling of a child
+   * GetPreviousSiblingOfChild() returns previous sibling of a child
    * at offset.  If this refers the first child or the container cannot have
    * children, this returns nullptr with warning.
+   * If mChild hasn't been initialized yet, this computes the child node
+   * from mParent and mOffset with *current* DOM tree.
    */
   nsIContent*
-  GetPreviousSiblingOfChildAtOffset() const
+  GetPreviousSiblingOfChild() const
   {
     if (NS_WARN_IF(!mParent) || NS_WARN_IF(!mParent->IsContainerNode())) {
       return nullptr;
@@ -283,6 +382,20 @@ public:
     mParent = aChild->GetParentNode();
     mChild = const_cast<nsIContent*>(aChild->AsContent());
     mOffset.reset();
+    mIsChildInitialized = true;
+  }
+
+  /**
+   * SetToEndOf() sets this to the end of aContainer.  Then, mChild is always
+   * nullptr but marked as initialized and mOffset is always set.
+   */
+  void
+  SetToEndOf(const nsINode* aContainer)
+  {
+    MOZ_ASSERT(aContainer);
+    mParent = const_cast<nsINode*>(aContainer);
+    mChild = nullptr;
+    mOffset = mozilla::Some(mParent->Length());
     mIsChildInitialized = true;
   }
 
@@ -679,8 +792,8 @@ public:
     : mPoint(aPoint)
   {
     MOZ_ASSERT(aPoint.IsSetAndValid());
-    MOZ_ASSERT(mPoint.Container()->IsContainerNode());
-    mChild = mPoint.GetChildAtOffset();
+    MOZ_ASSERT(mPoint.CanContainerHaveChildren());
+    mChild = mPoint.GetChild();
   }
 
   ~AutoEditorDOMPointOffsetInvalidator()
@@ -698,7 +811,7 @@ public:
     } else {
       // If the point referred after the last child, let's keep referring
       // after current last node of the old container.
-      mPoint.Set(mPoint.Container(), mPoint.Container()->Length());
+      mPoint.SetToEndOf(mPoint.GetContainer());
     }
   }
 
@@ -746,7 +859,7 @@ public:
    */
   void InvalidateChild()
   {
-    mPoint.Set(mPoint.Container(), mPoint.Offset());
+    mPoint.Set(mPoint.GetContainer(), mPoint.Offset());
   }
 
 private:
