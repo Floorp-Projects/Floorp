@@ -1149,12 +1149,25 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
   bool ensureNextIteration = false;
 
   // Grab pending stream input and compute blocking time
+  // TODO: Ensure that heap memory allocations isn't going to be a problem.
+  // Maybe modify code to use nsAutoTArray as out parameters.
+  nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>> promises;
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
-      is->PullNewData(aEndBlockingDecisions, &ensureNextIteration);
+      promises.AppendElements(
+        is->PullNewData(aEndBlockingDecisions, &ensureNextIteration));
+    }
+  }
+
+  // Wait until all PullEnabled stream's listeners have completed.
+  if (!promises.IsEmpty()) {
+    AwaitAll(promises);
+  }
+
+  for (MediaStream* stream : mStreams) {
+    if (SourceMediaStream* is = stream->AsSourceStream()) {
       is->ExtractPendingInput();
     }
-
     if (stream->mFinished) {
       // The stream's not suspended, and since it's finished, underruns won't
       // stop it playing out. So there's no blocking other than what we impose
@@ -2694,43 +2707,48 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
   }
 }
 
-void
+nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>>
 SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime,
                                bool* aEnsureNextIteration)
 {
+  // 2 is the average number of listeners per SourceMediaStream.
+  nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>> promises(2);
   MutexAutoLock lock(mMutex);
-  if (mPullEnabled && !mFinished && !mListeners.IsEmpty()) {
-    // Compute how much stream time we'll need assuming we don't block
-    // the stream at all.
-    StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
-    StreamTime current = mTracks.GetEnd();
-    LOG(LogLevel::Verbose,
-        ("Calling NotifyPull aStream=%p t=%f current end=%f",
-          this,
-          GraphImpl()->MediaTimeToSeconds(t),
-          GraphImpl()->MediaTimeToSeconds(current)));
-    if (t > current) {
-      *aEnsureNextIteration = true;
+  if (!mPullEnabled || mFinished) {
+    return promises;
+  }
+  // Compute how much stream time we'll need assuming we don't block
+  // the stream at all.
+  StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
+  StreamTime current = mTracks.GetEnd();
+  LOG(LogLevel::Verbose,
+      ("Calling NotifyPull aStream=%p t=%f current end=%f",
+        this,
+        GraphImpl()->MediaTimeToSeconds(t),
+        GraphImpl()->MediaTimeToSeconds(current)));
+  if (t <= current) {
+    return promises;
+  }
+  *aEnsureNextIteration = true;
 #ifdef DEBUG
-      if (mListeners.Length() == 0) {
-        LOG(
-          LogLevel::Error,
-          ("No listeners in NotifyPull aStream=%p desired=%f current end=%f",
-            this,
-            GraphImpl()->MediaTimeToSeconds(t),
-            GraphImpl()->MediaTimeToSeconds(current)));
-        DumpTrackInfo();
-      }
+  if (mListeners.Length() == 0) {
+    LOG(
+      LogLevel::Error,
+      ("No listeners in NotifyPull aStream=%p desired=%f current end=%f",
+        this,
+        GraphImpl()->MediaTimeToSeconds(t),
+        GraphImpl()->MediaTimeToSeconds(current)));
+    DumpTrackInfo();
+  }
 #endif
-      for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-        MediaStreamListener* l = mListeners[j];
-        {
-          MutexAutoUnlock unlock(mMutex);
-          l->NotifyPull(GraphImpl(), t);
-        }
-      }
+  for (uint32_t j = 0; j < mListeners.Length(); ++j) {
+    MediaStreamListener* l = mListeners[j];
+    {
+      MutexAutoUnlock unlock(mMutex);
+      promises.AppendElement(l->AsyncNotifyPull(GraphImpl(), t));
     }
   }
+  return promises;
 }
 
 void
