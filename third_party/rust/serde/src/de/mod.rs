@@ -94,6 +94,7 @@
 //!    - OsString
 //!  - **Miscellaneous standard library types**:
 //!    - Duration
+//!    - SystemTime
 //!    - Path
 //!    - PathBuf
 //!    - Range\<T\>
@@ -503,6 +504,35 @@ pub trait Deserialize<'de>: Sized {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>;
+
+    /// Deserializes a value into `self` from the given Deserializer.
+    ///
+    /// The purpose of this method is to allow the deserializer to reuse
+    /// resources and avoid copies. As such, if this method returns an error,
+    /// `self` will be in an indeterminate state where some parts of the struct
+    /// have been overwritten. Although whatever state that is will be
+    /// memory-safe.
+    ///
+    /// This is generally useful when repeateadly deserializing values that
+    /// are processed one at a time, where the value of `self` doesn't matter
+    /// when the next deserialization occurs.
+    ///
+    /// If you manually implement this, your recursive deserializations should
+    /// use `deserialize_from`.
+    ///
+    /// TODO: example
+    ///
+    /// ```
+    /// // Something with a loop that returns on error.
+    ///
+    /// ```
+    fn deserialize_from<D>(&mut self, deserializer: D) -> Result<(), D::Error>
+        where D: Deserializer<'de>
+    {
+        // Default implementation just delegates to `deserialize` impl.
+        *self = Deserialize::deserialize(deserializer)?;
+        Ok(())
+    }
 }
 
 /// A data structure that can be deserialized without borrowing any data from
@@ -1010,6 +1040,74 @@ pub trait Deserializer<'de>: Sized {
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>;
+
+    /// Determine whether `Deserialize` implementations should expect to
+    /// deserialize their human-readable form.
+    ///
+    /// Some types have a human-readable form that may be somewhat expensive to
+    /// construct, as well as a binary form that is compact and efficient.
+    /// Generally text-based formats like JSON and YAML will prefer to use the
+    /// human-readable one and binary formats like Bincode will prefer the
+    /// compact one.
+    ///
+    /// ```
+    /// # use std::ops::Add;
+    /// # use std::str::FromStr;
+    /// #
+    /// # struct Timestamp;
+    /// #
+    /// # impl Timestamp {
+    /// #     const EPOCH: Timestamp = Timestamp;
+    /// # }
+    /// #
+    /// # impl FromStr for Timestamp {
+    /// #     type Err = String;
+    /// #     fn from_str(_: &str) -> Result<Self, Self::Err> {
+    /// #         unimplemented!()
+    /// #     }
+    /// # }
+    /// #
+    /// # struct Duration;
+    /// #
+    /// # impl Duration {
+    /// #     fn seconds(_: u64) -> Self { unimplemented!() }
+    /// # }
+    /// #
+    /// # impl Add<Duration> for Timestamp {
+    /// #     type Output = Timestamp;
+    /// #     fn add(self, _: Duration) -> Self::Output {
+    /// #         unimplemented!()
+    /// #     }
+    /// # }
+    /// #
+    /// use serde::de::{self, Deserialize, Deserializer};
+    ///
+    /// impl<'de> Deserialize<'de> for Timestamp {
+    ///     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    ///         where D: Deserializer<'de>
+    ///     {
+    ///         if deserializer.is_human_readable() {
+    ///             // Deserialize from a human-readable string like "2015-05-15T17:01:00Z".
+    ///             let s = String::deserialize(deserializer)?;
+    ///             Timestamp::from_str(&s).map_err(de::Error::custom)
+    ///         } else {
+    ///             // Deserialize from a compact binary representation, seconds since
+    ///             // the Unix epoch.
+    ///             let n = u64::deserialize(deserializer)?;
+    ///             Ok(Timestamp::EPOCH + Duration::seconds(n))
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// The default implementation of this method returns `true`. Data formats
+    /// may override this to `false` to request a compact form for types that
+    /// support one. Note that modifying this method to change a format from
+    /// human-readable to compact or vice versa should be regarded as a breaking
+    /// change, as a value serialized in human-readable mode is not required to
+    /// deserialize from the same data in compact mode.
+    #[inline]
+    fn is_human_readable(&self) -> bool { true }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1119,7 +1217,7 @@ pub trait Visitor<'de>: Sized {
         self.visit_i64(v as i64)
     }
 
-    /// The input contains an `i32`.
+    /// The input contains an `i64`.
     ///
     /// The default implementation fails with a type error.
     fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
@@ -1262,7 +1360,7 @@ pub trait Visitor<'de>: Sized {
     /// The default implementation forwards to `visit_str` and then drops the
     /// `String`.
     #[inline]
-    #[cfg(any(feature = "std", feature = "collections"))]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
     where
         E: Error,
@@ -1321,7 +1419,7 @@ pub trait Visitor<'de>: Sized {
     ///
     /// The default implementation forwards to `visit_bytes` and then drops the
     /// `Vec<u8>`.
-    #[cfg(any(feature = "std", feature = "collections"))]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
     where
         E: Error,
@@ -1423,7 +1521,7 @@ pub trait SeqAccess<'de> {
     /// `Ok(None)` if there are no more remaining items.
     ///
     /// `Deserialize` implementations should typically use
-    /// `SeqAcccess::next_element` instead.
+    /// `SeqAccess::next_element` instead.
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
     where
         T: DeserializeSeed<'de>;
