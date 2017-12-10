@@ -1057,7 +1057,7 @@ impl TextureUpdate {
         let update_op = match dirty_rect {
             Some(dirty) => {
                 let stride = descriptor.compute_stride();
-                let offset = descriptor.offset + dirty.origin.y * stride + dirty.origin.x;
+                let offset = descriptor.offset + dirty.origin.y * stride + dirty.origin.x * descriptor.format.bytes_per_pixel();
                 let origin =
                     DeviceUintPoint::new(origin.x + dirty.origin.x, origin.y + dirty.origin.y);
                 TextureUpdateOp::Update {

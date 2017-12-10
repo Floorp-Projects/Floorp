@@ -180,17 +180,19 @@ impl FontInstance {
         }
     }
 
-    pub fn get_glyph_format(&self, color_bitmaps: bool) -> GlyphFormat {
+    pub fn get_alpha_glyph_format(&self) -> GlyphFormat {
+        if self.transform.is_identity() { GlyphFormat::Alpha } else { GlyphFormat::TransformedAlpha }
+    }
+
+    pub fn get_subpixel_glyph_format(&self) -> GlyphFormat {
+        if self.transform.is_identity() { GlyphFormat::Subpixel } else { GlyphFormat::TransformedSubpixel }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_glyph_format(&self) -> GlyphFormat {
         match self.render_mode {
-            FontRenderMode::Mono | FontRenderMode::Alpha => {
-                if self.transform.is_identity() { GlyphFormat::Alpha } else { GlyphFormat::TransformedAlpha }
-            }
-            FontRenderMode::Subpixel => {
-                if self.transform.is_identity() { GlyphFormat::Subpixel } else { GlyphFormat::TransformedSubpixel }
-            }
-            FontRenderMode::Bitmap => {
-                if color_bitmaps { GlyphFormat::ColorBitmap } else { GlyphFormat::Alpha }
-            }
+            FontRenderMode::Mono | FontRenderMode::Alpha => self.get_alpha_glyph_format(),
+            FontRenderMode::Subpixel => self.get_subpixel_glyph_format(),
         }
     }
 
@@ -209,11 +211,13 @@ impl FontInstance {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[allow(dead_code)]
 pub enum GlyphFormat {
     Alpha,
     TransformedAlpha,
     Subpixel,
     TransformedSubpixel,
+    Bitmap,
     ColorBitmap,
 }
 
@@ -451,12 +455,6 @@ impl GlyphRasterizer {
         self.font_contexts
             .lock_shared_context()
             .get_glyph_dimensions(font, glyph_key)
-    }
-
-    pub fn is_bitmap_font(&self, font: &FontInstance) -> bool {
-        self.font_contexts
-            .lock_shared_context()
-            .is_bitmap_font(font)
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {

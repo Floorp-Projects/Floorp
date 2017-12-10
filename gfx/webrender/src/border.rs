@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF};
+use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF};
 use api::{LayerPoint, LayerRect};
 use api::{LayerPrimitiveInfo, LayerSize, NormalBorder, RepeatMode};
 use clip::ClipSource;
@@ -227,6 +227,48 @@ impl NormalBorderHelpers for NormalBorder {
     }
 }
 
+fn ensure_no_corner_overlap(radius: &mut BorderRadius, info: &LayerPrimitiveInfo) {
+    let mut ratio = 1.0;
+    let top_left_radius = &mut radius.top_left;
+    let top_right_radius = &mut radius.top_right;
+    let bottom_right_radius = &mut radius.bottom_right;
+    let bottom_left_radius = &mut radius.bottom_left;
+
+    let sum = top_left_radius.width + bottom_left_radius.width;
+    if info.rect.size.width < sum {
+        ratio = f32::min(ratio, info.rect.size.width / sum);
+    }
+
+    let sum = top_right_radius.width + bottom_right_radius.width;
+    if info.rect.size.width < sum {
+        ratio = f32::min(ratio, info.rect.size.width / sum);
+    }
+
+    let sum = top_left_radius.height + bottom_left_radius.height;
+    if info.rect.size.height < sum {
+        ratio = f32::min(ratio, info.rect.size.height / sum);
+    }
+
+    let sum = top_right_radius.height + bottom_right_radius.height;
+    if info.rect.size.height < sum {
+        ratio = f32::min(ratio, info.rect.size.height / sum);
+    }
+
+    if ratio < 1. {
+        top_left_radius.width *= ratio;
+        top_left_radius.height *= ratio;
+
+        top_right_radius.width *= ratio;
+        top_right_radius.height *= ratio;
+
+        bottom_left_radius.width *= ratio;
+        bottom_left_radius.height *= ratio;
+
+        bottom_right_radius.width *= ratio;
+        bottom_right_radius.height *= ratio;
+    }
+}
+
 impl FrameBuilder {
     fn add_normal_border_primitive(
         &mut self,
@@ -309,6 +351,9 @@ impl FrameBuilder {
         // rectangle shader. This has the effect of making some of our tests time
         // out more often on CI (the actual cause is simply too many Servo processes and
         // threads being run on CI at once).
+
+        let mut border = *border;
+        ensure_no_corner_overlap(&mut border.radius, &info);
 
         let radius = &border.radius;
         let left = &border.left;
@@ -478,7 +523,7 @@ impl FrameBuilder {
 
             self.add_normal_border_primitive(
                 info,
-                border,
+                &border,
                 widths,
                 clip_and_scroll,
                 corner_instances,

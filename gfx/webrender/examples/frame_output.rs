@@ -13,7 +13,7 @@ mod boilerplate;
 use boilerplate::{Example, HandyDandyRectBuilder};
 use gleam::gl;
 use webrender::api::*;
-use euclid::ScaleFactor;
+use euclid::TypedScale;
 
 // This example demonstrates using the frame output feature to copy
 // the output of a WR framebuffer to a custom texture.
@@ -93,7 +93,7 @@ impl App {
         let document = Document {
             id: document_id,
             pipeline_id,
-            content_rect: bounds.to_f32() / ScaleFactor::new(device_pixel_ratio),
+            content_rect: bounds.to_f32() / TypedScale::new(device_pixel_ratio),
             color,
         };
 

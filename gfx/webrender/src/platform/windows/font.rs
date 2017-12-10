@@ -6,7 +6,7 @@ use api::{FontInstanceFlags, FontKey, FontRenderMode};
 use api::{ColorU, GlyphDimensions, GlyphKey, SubpixelDirection};
 use dwrote;
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
@@ -34,7 +34,6 @@ unsafe impl Send for FontContext {}
 fn dwrite_texture_type(render_mode: FontRenderMode) -> dwrote::DWRITE_TEXTURE_TYPE {
     match render_mode {
         FontRenderMode::Mono => dwrote::DWRITE_TEXTURE_ALIASED_1x1,
-        FontRenderMode::Bitmap |
         FontRenderMode::Alpha |
         FontRenderMode::Subpixel => dwrote::DWRITE_TEXTURE_CLEARTYPE_3x1,
     }
@@ -42,12 +41,13 @@ fn dwrite_texture_type(render_mode: FontRenderMode) -> dwrote::DWRITE_TEXTURE_TY
 
 fn dwrite_measure_mode(
     font: &FontInstance,
+    bitmaps: bool,
 ) -> dwrote::DWRITE_MEASURING_MODE {
-    if font.flags.contains(FontInstanceFlags::FORCE_GDI) {
+    if bitmaps || font.flags.contains(FontInstanceFlags::FORCE_GDI) {
         dwrote::DWRITE_MEASURING_MODE_GDI_CLASSIC
     } else {
       match font.render_mode {
-          FontRenderMode::Mono | FontRenderMode::Bitmap => dwrote::DWRITE_MEASURING_MODE_GDI_CLASSIC,
+          FontRenderMode::Mono => dwrote::DWRITE_MEASURING_MODE_GDI_CLASSIC,
           FontRenderMode::Alpha | FontRenderMode::Subpixel => dwrote::DWRITE_MEASURING_MODE_NATURAL,
       }
     }
@@ -58,12 +58,12 @@ fn dwrite_render_mode(
     font: &FontInstance,
     em_size: f32,
     measure_mode: dwrote::DWRITE_MEASURING_MODE,
+    bitmaps: bool,
 ) -> dwrote::DWRITE_RENDERING_MODE {
     let dwrite_render_mode = match font.render_mode {
-        FontRenderMode::Bitmap => dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC,
         FontRenderMode::Mono => dwrote::DWRITE_RENDERING_MODE_ALIASED,
         FontRenderMode::Alpha | FontRenderMode::Subpixel => {
-            if font.flags.contains(FontInstanceFlags::FORCE_GDI) {
+            if bitmaps || font.flags.contains(FontInstanceFlags::FORCE_GDI) {
                 dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC
             } else {
                 font_face.get_recommended_rendering_mode_default_params(em_size, 1.0, measure_mode)
@@ -77,6 +77,13 @@ fn dwrite_render_mode(
     }
 
     dwrite_render_mode
+}
+
+fn is_bitmap_font(font: &FontInstance) -> bool {
+    // If bitmaps are requested, then treat as a bitmap font to disable transforms.
+    // If mono AA is requested, let that take priority over using bitmaps.
+    font.render_mode != FontRenderMode::Mono &&
+        font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS)
 }
 
 impl FontContext {
@@ -176,6 +183,9 @@ impl FontContext {
         &mut self,
         font: &FontInstance,
         key: &GlyphKey,
+        size: f32,
+        transform: Option<dwrote::DWRITE_MATRIX>,
+        bitmaps: bool,
     ) -> dwrote::GlyphRunAnalysis {
         let face = self.get_font_face(font);
         let glyph = key.index as u16;
@@ -184,9 +194,6 @@ impl FontContext {
             advanceOffset: 0.0,
             ascenderOffset: 0.0,
         };
-
-        let (.., y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-        let size = (font.size.to_f64_px() * y_scale) as f32;
 
         let glyph_run = dwrote::DWRITE_GLYPH_RUN {
             fontFace: unsafe { face.as_ptr() },
@@ -199,29 +206,19 @@ impl FontContext {
             bidiLevel: 0,
         };
 
-        let dwrite_measure_mode = dwrite_measure_mode(font);
+        let dwrite_measure_mode = dwrite_measure_mode(font, bitmaps);
         let dwrite_render_mode = dwrite_render_mode(
             face,
             font,
             size,
             dwrite_measure_mode,
+            bitmaps,
         );
-
-        let (x_offset, y_offset) = font.get_subpx_offset(key);
-        let shape = font.transform.pre_scale(y_scale.recip() as f32, y_scale.recip() as f32);
-        let transform = dwrote::DWRITE_MATRIX {
-            m11: shape.scale_x,
-            m12: shape.skew_y,
-            m21: shape.skew_x,
-            m22: shape.scale_y,
-            dx: x_offset as f32,
-            dy: y_offset as f32,
-        };
 
         dwrote::GlyphRunAnalysis::create(
             &glyph_run,
             1.0,
-            Some(transform),
+            transform,
             dwrite_render_mode,
             dwrite_measure_mode,
             0.0,
@@ -235,17 +232,16 @@ impl FontContext {
         indices.first().map(|idx| *idx as u32)
     }
 
-    // TODO: Pipe GlyphOptions into glyph_dimensions too
     pub fn get_glyph_dimensions(
         &mut self,
         font: &FontInstance,
         key: &GlyphKey,
     ) -> Option<GlyphDimensions> {
-        // Probably have to default to something else here.
-        let render_mode = FontRenderMode::Subpixel;
-        let analysis = self.create_glyph_analysis(font, key);
+        let size = font.size.to_f32_px();
+        let bitmaps = is_bitmap_font(font);
+        let analysis = self.create_glyph_analysis(font, key, size, None, bitmaps);
 
-        let texture_type = dwrite_texture_type(render_mode);
+        let texture_type = dwrite_texture_type(font.render_mode);
 
         let bounds = analysis.get_alpha_texture_bounds(texture_type);
 
@@ -262,7 +258,7 @@ impl FontContext {
         face.get_design_glyph_metrics(&[key.index as u16], false)
             .first()
             .map(|metrics| {
-                let em_size = font.size.to_f32_px() / 16.;
+                let em_size = size / 16.;
                 let design_units_per_pixel = face.metrics().designUnitsPerEm as f32 / 16. as f32;
                 let scaled_design_units_to_pixels = em_size / design_units_per_pixel;
                 let advance = metrics.advanceWidth as f32 * scaled_design_units_to_pixels;
@@ -278,9 +274,14 @@ impl FontContext {
     }
 
     // DWrite ClearType gives us values in RGB, but WR expects BGRA.
-    fn convert_to_bgra(&self, pixels: &[u8], render_mode: FontRenderMode) -> Vec<u8> {
-        match render_mode {
-            FontRenderMode::Mono => {
+    fn convert_to_bgra(
+        &self,
+        pixels: &[u8],
+        render_mode: FontRenderMode,
+        bitmaps: bool,
+    ) -> Vec<u8> {
+        match (render_mode, bitmaps) {
+            (FontRenderMode::Mono, _) => {
                 let mut bgra_pixels: Vec<u8> = vec![0; pixels.len() * 4];
                 for i in 0 .. pixels.len() {
                     let alpha = pixels[i];
@@ -291,7 +292,7 @@ impl FontContext {
                 }
                 bgra_pixels
             }
-            FontRenderMode::Alpha | FontRenderMode::Bitmap => {
+            (FontRenderMode::Alpha, _) | (_, true) => {
                 let length = pixels.len() / 3;
                 let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0 .. length {
@@ -304,7 +305,7 @@ impl FontContext {
                 }
                 bgra_pixels
             }
-            FontRenderMode::Subpixel => {
+            (FontRenderMode::Subpixel, false) => {
                 let length = pixels.len() / 3;
                 let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0 .. length {
@@ -318,19 +319,12 @@ impl FontContext {
         }
     }
 
-    pub fn is_bitmap_font(&mut self, font: &FontInstance) -> bool {
-        // If bitmaps are requested, then treat as a bitmap font to disable transforms.
-        // If mono AA is requested, let that take priority over using bitmaps.
-        font.render_mode != FontRenderMode::Mono &&
-            font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS)
-    }
-
     pub fn prepare_font(font: &mut FontInstance) {
         match font.render_mode {
-            FontRenderMode::Mono | FontRenderMode::Bitmap => {
-                // In mono/bitmap modes the color of the font is irrelevant.
+            FontRenderMode::Mono => {
+                // In mono mode the color of the font is irrelevant.
                 font.color = ColorU::new(255, 255, 255, 255);
-                // Subpixel positioning is disabled in mono and bitmap modes.
+                // Subpixel positioning is disabled in mono mode.
                 font.subpx_dir = SubpixelDirection::None;
             }
             FontRenderMode::Alpha => {
@@ -347,7 +341,25 @@ impl FontContext {
         font: &FontInstance,
         key: &GlyphKey,
     ) -> Option<RasterizedGlyph> {
-        let analysis = self.create_glyph_analysis(font, key);
+        let (.., y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+        let size = (font.size.to_f64_px() * y_scale) as f32;
+        let bitmaps = is_bitmap_font(font);
+        let transform = if bitmaps {
+            None
+        } else {
+            let (x_offset, y_offset) = font.get_subpx_offset(key);
+            let shape = font.transform.pre_scale(y_scale.recip() as f32, y_scale.recip() as f32);
+            Some(dwrote::DWRITE_MATRIX {
+                m11: shape.scale_x,
+                m12: shape.skew_y,
+                m21: shape.skew_x,
+                m22: shape.scale_y,
+                dx: x_offset as f32,
+                dy: y_offset as f32,
+            })
+        };
+
+        let analysis = self.create_glyph_analysis(font, key, size, transform, bitmaps);
         let texture_type = dwrite_texture_type(font.render_mode);
 
         let bounds = analysis.get_alpha_texture_bounds(texture_type);
@@ -361,12 +373,12 @@ impl FontContext {
         }
 
         let pixels = analysis.create_alpha_texture(texture_type, bounds);
-        let mut bgra_pixels = self.convert_to_bgra(&pixels, font.render_mode);
+        let mut bgra_pixels = self.convert_to_bgra(&pixels, font.render_mode, bitmaps);
 
         let lut_correction = match font.render_mode {
-            FontRenderMode::Mono | FontRenderMode::Bitmap => &self.gdi_gamma_lut,
+            FontRenderMode::Mono => &self.gdi_gamma_lut,
             FontRenderMode::Alpha | FontRenderMode::Subpixel => {
-                if font.flags.contains(FontInstanceFlags::FORCE_GDI) {
+                if bitmaps || font.flags.contains(FontInstanceFlags::FORCE_GDI) {
                     &self.gdi_gamma_lut
                 } else {
                     &self.gamma_lut
@@ -380,8 +392,8 @@ impl FontContext {
             top: -bounds.top as f32,
             width,
             height,
-            scale: 1.0,
-            format: font.get_glyph_format(false),
+            scale: if bitmaps { y_scale.recip() as f32 } else { 1.0 },
+            format: if bitmaps { GlyphFormat::Bitmap } else { font.get_glyph_format() },
             bytes: bgra_pixels,
         })
     }

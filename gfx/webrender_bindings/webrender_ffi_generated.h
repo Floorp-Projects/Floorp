@@ -92,7 +92,6 @@ enum class FontRenderMode : uint32_t {
   Mono = 0,
   Alpha = 1,
   Subpixel = 2,
-  Bitmap = 3,
 
   Sentinel /* this must be last for serialization purposes. */
 };

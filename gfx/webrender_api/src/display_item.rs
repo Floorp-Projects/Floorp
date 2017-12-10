@@ -88,6 +88,7 @@ impl LayerPrimitiveInfo {
 pub type LayoutPrimitiveInfo = PrimitiveInfo<LayoutPixel>;
 pub type LayerPrimitiveInfo = PrimitiveInfo<LayerPixel>;
 
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum SpecificDisplayItem {
     Clip(ClipDisplayItem),
