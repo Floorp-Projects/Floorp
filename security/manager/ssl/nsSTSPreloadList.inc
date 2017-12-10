@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1523819940920000);
+const PRTime gPreloadListExpirationTime = INT64_C(1523822318117000);
 %%
 0-1.party, 1
 0.me.uk, 1
@@ -1535,6 +1535,7 @@ amv-crm.ru, 1
 amyharrisonline.com, 1
 amyrussellhair.com, 1
 amyyeung.com, 1
+amzn.rocks, 1
 anacreon.de, 1
 anadoluefessk.org, 1
 anaethelion.fr, 1
@@ -5621,7 +5622,7 @@ cirugiasplasticas.com.mx, 1
 cirujanooral.com, 1
 cirurgicagervasio.com.br, 1
 cirurgicalucena.com.br, 1
-ciscodude.net, 1
+ciscodude.net, 0
 cisoaid.com, 1
 ciss.ltd, 1
 cisy.me, 1
@@ -7641,7 +7642,6 @@ devyn.ca, 1
 devzero.io, 1
 dewalch.net, 1
 dewapress.com, 1
-dewebwerf.nl, 1
 dexalo.de, 1
 dezeregio.nl, 1
 dezet-ev.de, 1
@@ -7721,6 +7721,7 @@ dicionarioetimologico.com.br, 1
 dick.red, 1
 dickieslife.com, 1
 dickpics.ru, 1
+dicoding.com, 1
 didacte.com, 1
 didche.net, 1
 diddens.de, 1
@@ -7807,7 +7808,6 @@ digitalhurricane.io, 1
 digitalimpostor.co.uk, 1
 digitallocker.com, 0
 digitalmarketingindallas.com, 1
-digitalrights.center, 1
 digitalrights.fund, 1
 digitalrxcloud.com, 1
 digitalsurge.io, 1
@@ -7893,7 +7893,7 @@ disconformity.net, 1
 discord-chan.net, 1
 discordapp.com, 1
 discordghost.space, 1
-discotek.club, 1
+discotek.club, 0
 discount24.de, 1
 discountmania.eu, 1
 discountmetaux.fr, 1
@@ -8511,7 +8511,6 @@ dustygroove.com, 1
 dustyspokesbnb.ca, 1
 dutch.desi, 1
 dutch1.nl, 1
-dutchessuganda.com, 1
 dutchrank.nl, 1
 dutchwanderers.nl, 1
 dutchweballiance.nl, 1
@@ -17243,7 +17242,6 @@ liul.in, 1
 liushuyu.tk, 1
 liv3ly.com, 1
 livebetterwith.com, 1
-livecards.co.uk, 1
 livedesign.at, 1
 livedesign24.de, 1
 liveflightapp.com, 1
@@ -18244,6 +18242,7 @@ mastodon.fun, 1
 mastodon.host, 1
 mastodon.my, 1
 mastodon.org.uk, 1
+mastodon.rocks, 1
 mastodon.top, 1
 mat99.dk, 1
 matanz.de, 1
@@ -18452,7 +18451,6 @@ mdek.at, 1
 mdewendt.de, 1
 mdf-bis.com, 1
 mdiv.pl, 1
-mdkr.nl, 1
 mdma.net, 1
 mdmed.clinic, 1
 mdoering.de, 1
@@ -21309,7 +21307,6 @@ onlinelegalmarketing.com, 1
 onlinelegalmedia.com, 1
 onlinelighting.com.au, 1
 onlinemarketingtraining.co.uk, 1
-onlinepokerspelen.be, 1
 onlinerollout.de, 1
 onlinestoreninjas.com, 1
 onlineth.com, 0
@@ -27430,7 +27427,6 @@ stonewuu.com, 1
 stony.com, 1
 stonystratford.org, 1
 stopakwardhandshakes.org, 1
-stopbreakupnow.org, 1
 stopbullying.gov, 1
 stopfraud.gov, 1
 stopthethyroidmadness.com, 1
@@ -28068,6 +28064,7 @@ tattvaayoga.com, 1
 tavolaquadrada.com.br, 1
 tavsys.net, 1
 taxaroo.com, 1
+taxi-24std.de, 1
 taxi-chamonix.fr, 1
 taxi-collectif.ch, 1
 taxicollectif.ch, 1
@@ -28786,6 +28783,7 @@ thorbis.com, 1
 thorbiswebsitedesign.com, 1
 thorsten-schaefer.com, 1
 thorstenschaefer.name, 1
+thosci.com, 1
 thot.space, 1
 thotpublicidad.com, 1
 thoughtlessleaders.online, 1
@@ -30099,7 +30097,6 @@ urbanietz-immobilien.de, 1
 urbanmelbourne.info, 1
 urbannewsservice.com, 1
 urbansparrow.in, 1
-urbanstylestaging.com, 1
 urbanwildlifealliance.org, 1
 urbexdk.nl, 1
 urcentral.com, 1
@@ -30374,7 +30371,6 @@ vdrpro.com, 1
 ve.search.yahoo.com, 0
 ve3oat.ca, 1
 vea.re, 1
-veblr.com, 0
 vecerkaracing.cz, 1
 vecozo.nl, 1
 vectorwish.com, 1
@@ -31970,6 +31966,7 @@ www.theguardian.com, 1
 www.therapynotes.com, 1
 www.tinfoilsecurity.com, 0
 www.torproject.org, 0
+www.tumblr.com, 0
 www.twitter.com, 0
 www.united.com, 1
 www.usaa.com, 0
@@ -32494,6 +32491,7 @@ youcruit.com, 1
 youdamom.com, 0
 youdowell.com, 1
 youdungoofd.com, 1
+youftp.tk, 1
 yougee.ml, 1
 youhacked.me, 1
 youhavewords.com, 1
@@ -32853,7 +32851,6 @@ zoki.art, 1
 zokster.net, 1
 zollihood.ch, 1
 zolokar.xyz, 1
-zolotoy-standart.com.ua, 1
 zombiesecured.com, 1
 zomerschoen.nl, 1
 zonadebolsa.es, 1
