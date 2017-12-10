@@ -48,6 +48,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMIntersectionObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mQueuedEntries)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -55,6 +56,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMIntersectionObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mQueuedEntries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -80,10 +82,7 @@ DOMIntersectionObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
   RefPtr<DOMIntersectionObserver> observer =
     new DOMIntersectionObserver(window.forget(), aCb);
 
-  if (aOptions.mRoot) {
-    observer->mRoot = aOptions.mRoot;
-    observer->mRoot->RegisterIntersectionObserver(observer);
-  }
+  observer->mRoot = aOptions.mRoot;
 
   if (!observer->SetRootMargin(aOptions.mRootMargin)) {
     aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
@@ -182,13 +181,8 @@ DOMIntersectionObserver::Unobserve(Element& aTarget)
 }
 
 void
-DOMIntersectionObserver::UnlinkElement(Element& aTarget)
+DOMIntersectionObserver::UnlinkTarget(Element& aTarget)
 {
-  if (mRoot && mRoot == &aTarget) {
-    mRoot = nullptr;
-    Disconnect();
-    return;
-  }
   mObservationTargets.RemoveElement(&aTarget);
   if (mObservationTargets.Length() == 0) {
     Disconnect();
