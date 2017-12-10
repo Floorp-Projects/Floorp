@@ -8,6 +8,10 @@ flat varying vec4 vColor;
 varying vec3 vUv;
 flat varying vec4 vUvBorder;
 
+#ifdef WR_FEATURE_GLYPH_TRANSFORM
+varying vec4 vUvClip;
+#endif
+
 #ifdef WR_VERTEX_SHADER
 
 #define MODE_ALPHA              0
@@ -17,7 +21,8 @@ flat varying vec4 vUvBorder;
 #define MODE_SUBPX_BG_PASS0     4
 #define MODE_SUBPX_BG_PASS1     5
 #define MODE_SUBPX_BG_PASS2     6
-#define MODE_COLOR_BITMAP       7
+#define MODE_BITMAP             7
+#define MODE_COLOR_BITMAP       8
 
 VertexInfo write_text_vertex(vec2 clamped_local_pos,
                              RectWithSize local_clip_rect,
@@ -58,10 +63,11 @@ void main(void) {
 
     int glyph_index = prim.user_data0;
     int resource_address = prim.user_data1;
+    int subpx_dir = prim.user_data2;
 
     Glyph glyph = fetch_glyph(prim.specific_prim_address,
                               glyph_index,
-                              text.subpx_dir);
+                              subpx_dir);
     GlyphResource res = fetch_glyph_resource(resource_address);
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
@@ -112,6 +118,7 @@ void main(void) {
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     vec2 f = (transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
+    vUvClip = vec4(f, 1.0 - f);
 #else
     vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
@@ -125,6 +132,7 @@ void main(void) {
         case MODE_ALPHA:
         case MODE_SUBPX_PASS1:
         case MODE_SUBPX_BG_PASS2:
+        case MODE_BITMAP:
             vColor = text.color;
             break;
         case MODE_SUBPX_CONST_COLOR:
@@ -144,16 +152,19 @@ void main(void) {
     vec2 st1 = res.uv_rect.zw / texture_size;
 
     vUv = vec3(mix(st0, st1, f), res.layer);
-    vUvBorder = (res.uv_rect + vec4(0.499, 0.499, -0.499, -0.499)) / texture_size.xyxy;
+    vUvBorder = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    vec4 mask = texture(sColor0, vUv);
+    vec3 tc = vec3(clamp(vUv.xy, vUvBorder.xy, vUvBorder.zw), vUv.z);
+    vec4 mask = texture(sColor0, tc);
 
-    float alpha = float(all(lessThanEqual(vec4(vUvBorder.xy, vUv.xy), vec4(vUv.xy, vUvBorder.zw))));
-    alpha *= do_clip();
+    float alpha = do_clip();
+#ifdef WR_FEATURE_GLYPH_TRANSFORM
+    alpha *= float(all(greaterThanEqual(vUvClip, vec4(0.0))));
+#endif
 
 #ifdef WR_FEATURE_SUBPX_BG_PASS1
     mask.rgb = vec3(mask.a) - mask.rgb;

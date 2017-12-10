@@ -93,7 +93,6 @@ pub enum FontRenderMode {
     Mono = 0,
     Alpha,
     Subpixel,
-    Bitmap,
 }
 
 #[repr(u32)]
@@ -130,7 +129,6 @@ impl FontRenderMode {
     // Combine two font render modes such that the lesser amount of AA limits the AA of the result.
     pub fn limit_by(self, other: FontRenderMode) -> FontRenderMode {
         match (self, other) {
-            (FontRenderMode::Bitmap, _) | (_, FontRenderMode::Bitmap) => FontRenderMode::Bitmap,
             (FontRenderMode::Subpixel, _) | (_, FontRenderMode::Mono) => other,
             _ => self,
         }
@@ -141,7 +139,7 @@ impl SubpixelDirection {
     // Limit the subpixel direction to what is supported by the render mode.
     pub fn limit_by(self, render_mode: FontRenderMode) -> SubpixelDirection {
         match render_mode {
-            FontRenderMode::Mono | FontRenderMode::Bitmap => SubpixelDirection::None,
+            FontRenderMode::Mono => SubpixelDirection::None,
             FontRenderMode::Alpha | FontRenderMode::Subpixel => self,
         }
     }
