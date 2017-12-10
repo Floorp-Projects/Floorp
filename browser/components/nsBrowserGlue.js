@@ -2235,7 +2235,11 @@ BrowserGlue.prototype = {
         let currentEngine = Services.search.currentEngine.wrappedJSObject;
         // Only reset the current engine if it wasn't set by a WebExtension
         // and it is not one of the default engines.
-        if (currentEngine._extensionID || currentEngine._isDefault)
+        // If the original default is not a default, the user has a weird
+        // configuration probably involving langpacks, it's not worth
+        // attempting to reset their settings.
+        if (currentEngine._extensionID || currentEngine._isDefault ||
+            !Services.search.originalDefaultEngine.wrappedJSObject._isDefault)
           return;
 
         if (currentEngine._loadPath.startsWith("[https]")) {
