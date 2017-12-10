@@ -592,6 +592,7 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
 {
   if (aEvent->mOriginalTarget != mTextField) {
     // Move focus to our text field
+    nsCOMPtr<Element> kungFuDeathGrip(mTextField);
     IgnoredErrorResult ignored;
     HTMLInputElement::FromContent(mTextField)->Focus(ignored);
   }
@@ -600,6 +601,7 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
 void
 nsNumberControlFrame::HandleSelectCall()
 {
+  nsCOMPtr<Element> kungFuDeathGrip(mTextField);
   HTMLInputElement::FromContent(mTextField)->Select();
 }
 
@@ -607,7 +609,6 @@ nsNumberControlFrame::HandleSelectCall()
   NS_AUTHOR_SPECIFIED_BACKGROUND | \
   NS_AUTHOR_SPECIFIED_PADDING | \
   NS_AUTHOR_SPECIFIED_BORDER
-
 bool
 nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const
 {
