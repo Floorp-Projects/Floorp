@@ -733,12 +733,11 @@ struct TextRun {
     vec4 color;
     vec4 bg_color;
     vec2 offset;
-    int subpx_dir;
 };
 
 TextRun fetch_text_run(int address) {
     vec4 data[3] = fetch_from_resource_cache_3(address);
-    return TextRun(data[0], data[1], data[2].xy, int(data[2].z));
+    return TextRun(data[0], data[1], data[2].xy);
 }
 
 struct Image {

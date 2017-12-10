@@ -19,7 +19,7 @@ extern crate webrender;
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
-use euclid::Radians;
+use euclid::Angle;
 use webrender::api::*;
 
 struct App {
@@ -90,7 +90,7 @@ impl Example for App {
                 // the updated transform.
                 self.opacity += delta_opacity;
                 let new_transform = self.transform
-                    .pre_rotate(0.0, 0.0, 1.0, Radians::new(angle))
+                    .pre_rotate(0.0, 0.0, 1.0, Angle::radians(angle))
                     .post_translate(LayoutVector3D::new(offset_x, offset_y, 0.0));
                 api.generate_frame(
                     document_id,

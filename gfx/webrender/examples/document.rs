@@ -11,7 +11,7 @@ extern crate webrender;
 mod boilerplate;
 
 use boilerplate::Example;
-use euclid::ScaleFactor;
+use euclid::TypedScale;
 use webrender::api::*;
 
 // This example creates multiple documents overlapping each other with
@@ -77,7 +77,7 @@ impl App {
             self.documents.push(Document {
                 id: document_id,
                 pipeline_id,
-                content_rect: bounds.to_f32() / ScaleFactor::new(device_pixel_ratio),
+                content_rect: bounds.to_f32() / TypedScale::new(device_pixel_ratio),
                 color,
             });
         }
