@@ -293,7 +293,7 @@ WSRunObject::InsertText(nsIDocument& aDocument,
     } else if (afterRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      nsresult rv = CheckLeadingNBSP(afterRun, pointToInsert.Container(),
+      nsresult rv = CheckLeadingNBSP(afterRun, pointToInsert.GetContainer(),
                                      pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -695,7 +695,7 @@ WSRunObject::GetWSNodes()
     nsCOMPtr<nsIContent> priorNode = GetPreviousWSNode(start, wsBoundingParent);
     if (priorNode) {
       if (IsBlockNode(priorNode)) {
-        mStartNode = start.Container();
+        mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
         mStartReason = WSType::otherBlock;
         mStartReasonNode = priorNode;
@@ -744,7 +744,7 @@ WSRunObject::GetWSNodes()
       } else {
         // it's a break or a special node, like <img>, that is not a block and not
         // a break but still serves as a terminator to ws runs.
-        mStartNode = start.Container();
+        mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
         if (TextEditUtils::IsBreak(priorNode)) {
           mStartReason = WSType::br;
@@ -755,7 +755,7 @@ WSRunObject::GetWSNodes()
       }
     } else {
       // no prior node means we exhausted wsBoundingParent
-      mStartNode = start.Container();
+      mStartNode = start.GetContainer();
       mStartOffset = start.Offset();
       mStartReason = WSType::thisBlock;
       mStartReasonNode = wsBoundingParent;
@@ -804,7 +804,7 @@ WSRunObject::GetWSNodes()
     if (nextNode) {
       if (IsBlockNode(nextNode)) {
         // we encountered a new block.  therefore no more ws.
-        mEndNode = end.Container();
+        mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
         mEndReason = WSType::otherBlock;
         mEndReasonNode = nextNode;
@@ -854,7 +854,7 @@ WSRunObject::GetWSNodes()
         // we encountered a break or a special node, like <img>,
         // that is not a block and not a break but still
         // serves as a terminator to ws runs.
-        mEndNode = end.Container();
+        mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
         if (TextEditUtils::IsBreak(nextNode)) {
           mEndReason = WSType::br;
@@ -865,7 +865,7 @@ WSRunObject::GetWSNodes()
       }
     } else {
       // no next node means we exhausted wsBoundingParent
-      mEndNode = end.Container();
+      mEndNode = end.GetContainer();
       mEndOffset = end.Offset();
       mEndReason = WSType::thisBlock;
       mEndReasonNode = wsBoundingParent;
@@ -1075,28 +1075,28 @@ WSRunObject::GetPreviousWSNode(const EditorDOMPoint& aPoint,
   // not block containers.
   MOZ_ASSERT(aPoint.IsSet() && aBlockParent);
 
-  if (aPoint.Container()->NodeType() == nsIDOMNode::TEXT_NODE) {
-    return GetPreviousWSNodeInner(aPoint.Container(), aBlockParent);
+  if (aPoint.IsInTextNode()) {
+    return GetPreviousWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
-  if (!mHTMLEditor->IsContainer(aPoint.Container())) {
-    return GetPreviousWSNodeInner(aPoint.Container(), aBlockParent);
+  if (!mHTMLEditor->IsContainer(aPoint.GetContainer())) {
+    return GetPreviousWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
 
   if (!aPoint.Offset()) {
-    if (aPoint.Container() == aBlockParent) {
+    if (aPoint.GetContainer() == aBlockParent) {
       // We are at start of the block.
       return nullptr;
     }
 
     // We are at start of non-block container
-    return GetPreviousWSNodeInner(aPoint.Container(), aBlockParent);
+    return GetPreviousWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
 
-  if (NS_WARN_IF(!aPoint.Container()->IsContent())) {
+  if (NS_WARN_IF(!aPoint.GetContainerAsContent())) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> priorNode = aPoint.GetPreviousSiblingOfChildAtOffset();
+  nsCOMPtr<nsIContent> priorNode = aPoint.GetPreviousSiblingOfChild();
   if (NS_WARN_IF(!priorNode)) {
     return nullptr;
   }
@@ -1164,26 +1164,26 @@ WSRunObject::GetNextWSNode(const EditorDOMPoint& aPoint,
   // containers.
   MOZ_ASSERT(aPoint.IsSet() && aBlockParent);
 
-  if (aPoint.Container()->NodeType() == nsIDOMNode::TEXT_NODE) {
-    return GetNextWSNodeInner(aPoint.Container(), aBlockParent);
+  if (aPoint.IsInTextNode()) {
+    return GetNextWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
-  if (!mHTMLEditor->IsContainer(aPoint.Container())) {
-    return GetNextWSNodeInner(aPoint.Container(), aBlockParent);
+  if (!mHTMLEditor->IsContainer(aPoint.GetContainer())) {
+    return GetNextWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
 
-  if (NS_WARN_IF(!aPoint.Container()->IsContent())) {
+  if (NS_WARN_IF(!aPoint.GetContainerAsContent())) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> nextNode = aPoint.GetChildAtOffset();
+  nsCOMPtr<nsIContent> nextNode = aPoint.GetChild();
   if (!nextNode) {
-    if (aPoint.Container() == aBlockParent) {
+    if (aPoint.GetContainer() == aBlockParent) {
       // We are at end of the block.
       return nullptr;
     }
 
     // We are at end of non-block container
-    return GetNextWSNodeInner(aPoint.Container(), aBlockParent);
+    return GetNextWSNodeInner(aPoint.GetContainer(), aBlockParent);
   }
 
   // We have a next node.  If it's a block, return it.
@@ -1325,16 +1325,16 @@ WSRunObject::DeleteRange(const EditorRawDOMPoint& aStartPoint,
     return NS_OK;
   }
 
-  if (aStartPoint.Container() == aEndPoint.Container() &&
-      aStartPoint.Container()->GetAsText()) {
-    return mHTMLEditor->DeleteText(*aStartPoint.Container()->GetAsText(),
+  if (aStartPoint.GetContainer() == aEndPoint.GetContainer() &&
+      aStartPoint.IsInTextNode()) {
+    return mHTMLEditor->DeleteText(*aStartPoint.GetContainerAsText(),
                                    aStartPoint.Offset(),
                                    aEndPoint.Offset() - aStartPoint.Offset());
   }
 
   RefPtr<nsRange> range;
   int32_t count = mNodeArray.Length();
-  int32_t idx = mNodeArray.IndexOf(aStartPoint.Container());
+  int32_t idx = mNodeArray.IndexOf(aStartPoint.GetContainer());
   if (idx == -1) {
     // If our starting point wasn't one of our ws text nodes, then just go
     // through them from the beginning.
@@ -1346,17 +1346,17 @@ WSRunObject::DeleteRange(const EditorRawDOMPoint& aStartPoint,
       // We ran out of ws nodes; must have been deleting to end
       return NS_OK;
     }
-    if (node == aStartPoint.Container()) {
+    if (node == aStartPoint.GetContainer()) {
       if (!aStartPoint.IsEndOfContainer()) {
         nsresult rv =
           mHTMLEditor->DeleteText(*node, aStartPoint.Offset(),
-                                  aStartPoint.Container()->Length() -
+                                  aStartPoint.GetContainer()->Length() -
                                     aStartPoint.Offset());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
-    } else if (node == aEndPoint.Container()) {
+    } else if (node == aEndPoint.GetContainer()) {
       if (!aEndPoint.IsStartOfContainer()) {
         nsresult rv = mHTMLEditor->DeleteText(*node, 0, aEndPoint.Offset());
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1366,7 +1366,7 @@ WSRunObject::DeleteRange(const EditorRawDOMPoint& aStartPoint,
       break;
     } else {
       if (!range) {
-        range = new nsRange(aStartPoint.Container());
+        range = new nsRange(aStartPoint.GetContainer());
         nsresult rv = range->SetStartAndEnd(aStartPoint, aEndPoint);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -1400,7 +1400,7 @@ WSRunObject::GetNextCharPoint(const EditorRawDOMPoint& aPoint)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  int32_t idx = mNodeArray.IndexOf(aPoint.Container());
+  int32_t idx = mNodeArray.IndexOf(aPoint.GetContainer());
   if (idx == -1) {
     // Use range comparisons to get next text node which is in mNodeArray.
     return GetNextCharPointInternal(aPoint);
@@ -1414,7 +1414,7 @@ WSRunObject::GetPreviousCharPoint(const EditorRawDOMPoint& aPoint)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  int32_t idx = mNodeArray.IndexOf(aPoint.Container());
+  int32_t idx = mNodeArray.IndexOf(aPoint.GetContainer());
   if (idx == -1) {
     // Use range comparisons to get previous text node which is in mNodeArray.
     return GetPreviousCharPointInternal(aPoint);
@@ -1641,7 +1641,7 @@ WSRunObject::GetCharAt(Text* aTextNode,
 WSRunObject::WSPoint
 WSRunObject::GetNextCharPointInternal(const EditorRawDOMPoint& aPoint)
 {
-  // Note: only to be called if aPoint.Container() is not a ws node.
+  // Note: only to be called if aPoint.GetContainer() is not a ws node.
 
   // Binary search on wsnodes
   uint32_t numNodes = mNodeArray.Length();

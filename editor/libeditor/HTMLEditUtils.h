@@ -29,6 +29,7 @@ public:
   static bool IsTable(nsIDOMNode* aNode);
   static bool IsTable(nsINode* aNode);
   static bool IsTableRow(nsIDOMNode* aNode);
+  static bool IsTableRow(nsINode* aNode);
   static bool IsTableElement(nsINode* aNode);
   static bool IsTableElement(nsIDOMNode* aNode);
   static bool IsTableElementButNotTable(nsINode* aNode);
@@ -42,6 +43,7 @@ public:
   static bool IsUnorderedList(nsIDOMNode* aNode);
   static bool IsBlockquote(nsIDOMNode* aNode);
   static bool IsPre(nsIDOMNode* aNode);
+  static bool IsPre(nsINode* aNode);
   static bool IsAnchor(nsIDOMNode* aNode);
   static bool IsImage(nsINode* aNode);
   static bool IsImage(nsIDOMNode* aNode);

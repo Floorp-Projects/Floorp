@@ -736,8 +736,8 @@ TextEditRules::WillInsertText(EditAction aAction,
 
   // don't put text in places that can't have it
   NS_ENSURE_STATE(mTextEditor);
-  if (!EditorBase::IsTextNode(atStartOfSelection.Container()) &&
-      !mTextEditor->CanContainTag(*atStartOfSelection.Container(),
+  if (!atStartOfSelection.IsInTextNode() &&
+      !mTextEditor->CanContainTag(*atStartOfSelection.GetContainer(),
                                   *nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
@@ -756,9 +756,9 @@ TextEditRules::WillInsertText(EditAction aAction,
     // the insertion point.
     int32_t IMESelectionOffset =
       mTextEditor->GetIMESelectionStartOffsetIn(
-                     betterInsertionPoint.Container());
+                     betterInsertionPoint.GetContainer());
     if (IMESelectionOffset >= 0) {
-      betterInsertionPoint.Set(betterInsertionPoint.Container(),
+      betterInsertionPoint.Set(betterInsertionPoint.GetContainer(),
                                IMESelectionOffset);
     }
     rv = mTextEditor->InsertTextImpl(*doc, *outString, betterInsertionPoint);
@@ -782,9 +782,9 @@ TextEditRules::WillInsertText(EditAction aAction,
         !outString->IsEmpty() && outString->Last() == nsCRT::LF;
       aSelection->SetInterlinePosition(endsWithLF);
 
-      MOZ_ASSERT(!pointAfterStringInserted.GetChildAtOffset(),
+      MOZ_ASSERT(!pointAfterStringInserted.GetChild(),
         "After inserting text into a text node, pointAfterStringInserted."
-        "GetChildAtOffset() should be nullptr");
+        "GetChild() should be nullptr");
       IgnoredErrorResult error;
       aSelection->Collapse(pointAfterStringInserted, error);
       if (error.Failed()) {
@@ -871,7 +871,8 @@ TextEditRules::WillSetText(Selection& aSelection,
     if (NS_WARN_IF(!newNode)) {
       return NS_OK;
     }
-    nsresult rv = textEditor->InsertNode(*newNode, *rootElement, 0);
+    nsresult rv =
+      textEditor->InsertNode(*newNode, EditorRawDOMPoint(rootElement, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1448,11 +1449,18 @@ TextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
                       kMOZEditorBogusNodeValue, false);
 
   // Put the node in the document.
-  nsresult rv = mTextEditor->InsertNode(*mBogusNode, *body, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv =
+    mTextEditor->InsertNode(*mBogusNode, EditorRawDOMPoint(body, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Set selection.
-  aSelection->Collapse(body, 0);
+  ErrorResult error;
+  aSelection->Collapse(EditorRawDOMPoint(body, 0), error);
+  if (NS_WARN_IF(error.Failed())) {
+    error.SuppressException();
+  }
   return NS_OK;
 }
 

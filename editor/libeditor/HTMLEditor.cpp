@@ -1167,8 +1167,11 @@ HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 
   // Loop over the contents of the fragment and move into the document
   while (nsCOMPtr<nsIContent> child = docfrag->GetFirstChild()) {
-    nsresult rv = InsertNode(*child, *headNode, offsetOfNewNode++);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+      InsertNode(*child, EditorRawDOMPoint(headNode, offsetOfNewNode++));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -1353,80 +1356,65 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   return BeginningOfDocument();
 }
 
-void
-HTMLEditor::NormalizeEOLInsertPosition(nsINode* firstNodeToInsert,
-                                       nsCOMPtr<nsIDOMNode>* insertParentNode,
-                                       int32_t* insertOffset)
+EditorRawDOMPoint
+HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
+                                       const EditorRawDOMPoint& aPointToInsert)
 {
-  /*
-    This function will either correct the position passed in,
-    or leave the position unchanged.
-
-    When the (first) item to insert is a block level element,
-    and our insertion position is after the last visible item in a line,
-    i.e. the insertion position is just before a visible line break <br>,
-    we want to skip to the position just after the line break (see bug 68767)
-
-    However, our logic to detect whether we should skip or not
-    needs to be more clever.
-    We must not skip when the caret appears to be positioned at the beginning
-    of a block, in that case skipping the <br> would not insert the <br>
-    at the caret position, but after the current empty line.
-
-    So we have several cases to test:
-
-    1) We only ever want to skip, if the next visible thing after the current position is a break
-
-    2) We do not want to skip if there is no previous visible thing at all
-       That is detected if the call to PriorVisibleNode gives us an offset of zero.
-       Because PriorVisibleNode always positions after the prior node, we would
-       see an offset > 0, if there were a prior node.
-
-    3) We do not want to skip, if both the next and the previous visible things are breaks.
-
-    4) We do not want to skip if the previous visible thing is in a different block
-       than the insertion position.
-  */
-
-  if (!IsBlockNode(firstNodeToInsert)) {
-    return;
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return aPointToInsert;
   }
 
-  WSRunObject wsObj(this, *insertParentNode, *insertOffset);
-  nsCOMPtr<nsINode> nextVisNode, prevVisNode;
-  int32_t nextVisOffset=0;
-  WSType nextVisType;
-  int32_t prevVisOffset=0;
-  WSType prevVisType;
-
-  nsCOMPtr<nsINode> parent(do_QueryInterface(*insertParentNode));
-  wsObj.NextVisibleNode(parent, *insertOffset, address_of(nextVisNode), &nextVisOffset, &nextVisType);
-  if (!nextVisNode) {
-    return;
+  // If the node to insert is not a block level element, we can insert it
+  // at any point.
+  if (!IsBlockNode(&aNodeToInsert)) {
+    return aPointToInsert;
   }
 
-  if (!(nextVisType & WSType::br)) {
-    return;
+  WSRunObject wsObj(this, aPointToInsert.GetContainer(),
+                    aPointToInsert.Offset());
+
+  // If the insertion position is after the last visible item in a line,
+  // i.e., the insertion position is just before a visible line break <br>,
+  // we want to skip to the position just after the line break (see bug 68767).
+  nsCOMPtr<nsINode> nextVisibleNode;
+  int32_t nextVisibleOffset = 0;
+  WSType nextVisibleType;
+  wsObj.NextVisibleNode(aPointToInsert.GetContainer(), aPointToInsert.Offset(),
+                        address_of(nextVisibleNode),
+                        &nextVisibleOffset, &nextVisibleType);
+  // So, if the next visible node isn't a <br> element, we can insert the block
+  // level element to the point.
+  if (!nextVisibleNode ||
+      !(nextVisibleType & WSType::br)) {
+    return aPointToInsert;
   }
 
-  wsObj.PriorVisibleNode(parent, *insertOffset, address_of(prevVisNode), &prevVisOffset, &prevVisType);
-  if (!prevVisNode) {
-    return;
+  // However, we must not skip next <br> element when the caret appears to be
+  // positioned at the beginning of a block, in that case skipping the <br>
+  // would not insert the <br> at the caret position, but after the current
+  // empty line.
+  nsCOMPtr<nsINode> previousVisibleNode;
+  int32_t previousVisibleOffset = 0;
+  WSType previousVisibleType;
+  wsObj.PriorVisibleNode(aPointToInsert.GetContainer(), aPointToInsert.Offset(),
+                         address_of(previousVisibleNode),
+                         &previousVisibleOffset, &previousVisibleType);
+  // So, if there is no previous visible node,
+  // or, if both nodes of the insertion point is <br> elements,
+  // or, if the previous visible node is different block,
+  // we need to skip the following <br>.  So, otherwise, we can insert the
+  // block at the insertion point.
+  if (!previousVisibleNode ||
+      (previousVisibleType & WSType::br) ||
+      (previousVisibleType & WSType::thisBlock)) {
+    return aPointToInsert;
   }
 
-  if (prevVisType & WSType::br) {
-    return;
-  }
-
-  if (prevVisType & WSType::thisBlock) {
-    return;
-  }
-
-  int32_t brOffset=0;
-  nsCOMPtr<nsIDOMNode> brNode = GetNodeLocation(GetAsDOMNode(nextVisNode), &brOffset);
-
-  *insertParentNode = brNode;
-  *insertOffset = brOffset + 1;
+  EditorRawDOMPoint afterBRNode(nextVisibleNode);
+  DebugOnly<bool> advanced = afterBRNode.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced,
+    "Failed to advance offset to after the <br> node");
+  return afterBRNode;
 }
 
 NS_IMETHODIMP
@@ -1487,19 +1475,21 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       }
     }
 
-    nsINode* parentSelectedNode = selection->GetAnchorNode();
-    if (parentSelectedNode) {
-      int32_t offsetForInsert = selection->AnchorOffset();
+    if (selection->GetAnchorNode()) {
+      EditorRawDOMPoint atAnchor(selection->AnchorRef());
       // Adjust position based on the node we are going to insert.
-      nsCOMPtr<nsIDOMNode> parentSelectedDOMNode =
-        GetAsDOMNode(parentSelectedNode);
-      NormalizeEOLInsertPosition(element, address_of(parentSelectedDOMNode),
-                                 &offsetForInsert);
+      EditorRawDOMPoint pointToInsert =
+        GetBetterInsertionPointFor(*element, atAnchor);
+      if (NS_WARN_IF(!pointToInsert.IsSet())) {
+        return NS_ERROR_FAILURE;
+      }
 
-      rv = InsertNodeAtPoint(node, address_of(parentSelectedDOMNode),
-                             &offsetForInsert,
-                             SplitAtEdges::eAllowToCreateEmptyContainer);
-      NS_ENSURE_SUCCESS(rv, rv);
+      EditorDOMPoint insertedPoint =
+        InsertNodeIntoProperAncestor(
+          *element, pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
+      if (NS_WARN_IF(!insertedPoint.IsSet())) {
+        return NS_ERROR_FAILURE;
+      }
       // Set caret after element, but check for special case
       //  of inserting table-related elements: set in first cell instead
       if (!SetCaretInTableCell(aElement)) {
@@ -1510,12 +1500,12 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       // a br after it.
       if (HTMLEditUtils::IsTable(node) &&
           IsLastEditableChild(element)) {
+        DebugOnly<bool> advanced = insertedPoint.AdvanceOffset();
+        NS_WARNING_ASSERTION(advanced,
+          "Failed to advance offset from inserted point");
         // Collapse selection to the new <br> element node after creating it.
         RefPtr<Element> newBRElement =
-          CreateBRImpl(*selection,
-                       EditorRawDOMPoint(parentSelectedDOMNode,
-                                         offsetForInsert + 1),
-                       ePrevious);
+          CreateBRImpl(*selection, insertedPoint.AsRaw(), ePrevious);
         if (NS_WARN_IF(!newBRElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -1526,97 +1516,71 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
   return rv;
 }
 
-
-/**
- * InsertNodeAtPoint() attempts to insert aNode into the document, at a point
- * specified by {*ioParent,*ioOffset}.  Checks with strict dtd to see if
- * containment is allowed.  If not allowed, will attempt to find a parent in
- * the parent hierarchy of *ioParent that will accept aNode as a child.  If
- * such a parent is found, will split the document tree from
- * {*ioParent,*ioOffset} up to parent, and then insert aNode.
- * ioParent & ioOffset are then adjusted to point to the actual location that
- * aNode was inserted at.  aNoEmptyNodes specifies if the splitting process
- * is allowed to reslt in empty nodes.  ioChildAtOffset, if provided, is the
- * child node at offset if ioParent is non-null, and the function will update
- * *ioChildAtOffset upon returning.
- *
- * @param aNode             Node to insert.
- * @param ioParent          Insertion parent.
- * @param ioOffset          Insertion offset.
- * @param aSplitAtEdges     Splitting can result in empty nodes?
- * @param ioChildAtOffset   Child node at insertion offset (optional).
- */
-nsresult
-HTMLEditor::InsertNodeAtPoint(nsIDOMNode* aNode,
-                              nsCOMPtr<nsIDOMNode>* ioParent,
-                              int32_t* ioOffset,
-                              SplitAtEdges aSplitAtEdges,
-                              nsCOMPtr<nsIDOMNode>* ioChildAtOffset)
+EditorDOMPoint
+HTMLEditor::InsertNodeIntoProperAncestor(
+              nsIContent& aNode,
+              const EditorRawDOMPoint& aPointToInsert,
+              SplitAtEdges aSplitAtEdges)
 {
-  nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(ioParent, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(*ioParent, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(ioOffset, NS_ERROR_NULL_POINTER);
-  bool isDocumentFragment = false;
-  if (ioChildAtOffset) {
-    *ioChildAtOffset = aNode;
-    uint16_t nodeType = 0;
-    if (NS_SUCCEEDED(aNode->GetNodeType(&nodeType)) &&
-        nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
-      // For document fragments, we can't return aNode itself in
-      // *ioChildAtOffset, so we have to find out the inserted child after
-      // the insertion is successfully finished.
-      isDocumentFragment = true;
-    }
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return EditorDOMPoint();
   }
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  nsCOMPtr<nsIContent> parent = do_QueryInterface(*ioParent);
-  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIContent> topChild = parent;
-  nsCOMPtr<nsIContent> origParent = parent;
-
-  // Search up the parent chain to find a suitable container
-  while (!CanContain(*parent, *node)) {
+  // Search up the parent chain to find a suitable container.
+  EditorDOMPoint pointToInsert(aPointToInsert);
+  MOZ_ASSERT(pointToInsert.IsSet());
+  while (!CanContain(*pointToInsert.GetContainer(), aNode)) {
     // If the current parent is a root (body or table element)
-    // then go no further - we can't insert
-    if (parent->IsHTMLElement(nsGkAtoms::body) ||
-        HTMLEditUtils::IsTableElement(parent)) {
-      return NS_ERROR_FAILURE;
+    // then go no further - we can't insert.
+    if (pointToInsert.IsContainerHTMLElement(nsGkAtoms::body) ||
+        HTMLEditUtils::IsTableElement(pointToInsert.GetContainer())) {
+      return EditorDOMPoint();
     }
-    // Get the next parent
-    NS_ENSURE_TRUE(parent->GetParentNode(), NS_ERROR_FAILURE);
-    if (!IsEditable(parent->GetParentNode())) {
+
+    // Get the next point.
+    pointToInsert.Set(pointToInsert.GetContainer());
+    if (NS_WARN_IF(!pointToInsert.IsSet())) {
+      return EditorDOMPoint();
+    }
+
+    if (!IsEditable(pointToInsert.GetContainer())) {
       // There's no suitable place to put the node in this editing host.  Maybe
       // someone is trying to put block content in a span.  So just put it
       // where we were originally asked.
-      parent = topChild = origParent;
+      pointToInsert = aPointToInsert;
       break;
     }
-    topChild = parent;
-    parent = parent->GetParent();
   }
-  if (parent != topChild) {
+
+  if (pointToInsert != aPointToInsert) {
     // We need to split some levels above the original selection parent.
+    MOZ_ASSERT(pointToInsert.GetChild());
     SplitNodeResult splitNodeResult =
-      SplitNodeDeep(*topChild, EditorRawDOMPoint(origParent, *ioOffset),
-                    aSplitAtEdges);
+      SplitNodeDeep(*pointToInsert.GetChild(),
+                    aPointToInsert, aSplitAtEdges);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
-      return splitNodeResult.Rv();
+      return EditorDOMPoint();
     }
-    EditorRawDOMPoint splitPoint(splitNodeResult.SplitPoint());
-    *ioParent = GetAsDOMNode(splitPoint.Container());
-    *ioOffset = splitPoint.Offset();
-    if (ioChildAtOffset) {
-      *ioChildAtOffset = GetAsDOMNode(splitPoint.GetChildAtOffset());
+    pointToInsert = splitNodeResult.SplitPoint();
+    MOZ_ASSERT(pointToInsert.IsSet());
+  }
+
+  {
+    // After inserting a node, pointToInsert will refer next sibling of
+    // the new node but keep referring the new node's offset.
+    // This method's result should be the point at insertion, it's useful
+    // even if the new node is moved by mutation observer immediately.
+    // So, let's lock only the offset and child node should be recomputed
+    // when it's necessary.
+    AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
+    // Now we can insert the new node.
+    nsresult rv = InsertNode(aNode, pointToInsert.AsRaw());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorDOMPoint();
     }
   }
-  // Now we can insert the new node
-  nsresult rv = InsertNode(*node, *parent, *ioOffset);
-  if (isDocumentFragment) {
-    *ioChildAtOffset = do_QueryInterface(parent->GetChildAt(*ioOffset));
-  }
-  return rv;
+  return pointToInsert;
 }
 
 NS_IMETHODIMP
@@ -1960,7 +1924,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
 
     EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
     if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.Container()->IsContent())) {
+        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
       return NS_ERROR_FAILURE;
     }
 
@@ -1968,18 +1932,18 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     EditorDOMPoint pointToInsertList(atStartOfSelection);
 
     RefPtr<nsAtom> listAtom = NS_Atomize(aListType);
-    while (!CanContainTag(*pointToInsertList.Container(), *listAtom)) {
-      pointToInsertList.Set(pointToInsertList.Container());
+    while (!CanContainTag(*pointToInsertList.GetContainer(), *listAtom)) {
+      pointToInsertList.Set(pointToInsertList.GetContainer());
       if (NS_WARN_IF(!pointToInsertList.IsSet()) ||
-          NS_WARN_IF(!pointToInsertList.Container()->IsContent())) {
+          NS_WARN_IF(!pointToInsertList.GetContainerAsContent())) {
         return NS_ERROR_FAILURE;
       }
     }
 
-    if (pointToInsertList.Container() != atStartOfSelection.Container()) {
+    if (pointToInsertList.GetContainer() != atStartOfSelection.GetContainer()) {
       // We need to split up to the child of parent.
       SplitNodeResult splitNodeResult =
-        SplitNodeDeep(*pointToInsertList.GetChildAtOffset(),
+        SplitNodeDeep(*pointToInsertList.GetChild(),
                       atStartOfSelection,
                       SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
@@ -2109,7 +2073,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 
     EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
     if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.Container()->IsContent())) {
+        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
       return NS_ERROR_FAILURE;
     }
 
@@ -2117,18 +2081,19 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     EditorDOMPoint pointToInsertBlock(atStartOfSelection);
 
     RefPtr<nsAtom> blockAtom = NS_Atomize(aBlockType);
-    while (!CanContainTag(*pointToInsertBlock.Container(), *blockAtom)) {
-      pointToInsertBlock.Set(pointToInsertBlock.Container());
+    while (!CanContainTag(*pointToInsertBlock.GetContainer(), *blockAtom)) {
+      pointToInsertBlock.Set(pointToInsertBlock.GetContainer());
       if (NS_WARN_IF(!pointToInsertBlock.IsSet()) ||
-          NS_WARN_IF(!pointToInsertBlock.Container()->IsContent())) {
+          NS_WARN_IF(!pointToInsertBlock.GetContainerAsContent())) {
         return NS_ERROR_FAILURE;
       }
     }
 
-    if (pointToInsertBlock.Container() != atStartOfSelection.Container()) {
+    if (pointToInsertBlock.GetContainer() !=
+          atStartOfSelection.GetContainer()) {
       // We need to split up to the child of the point to insert a block.
       SplitNodeResult splitBlockResult =
-        SplitNodeDeep(*pointToInsertBlock.GetChildAtOffset(),
+        SplitNodeDeep(*pointToInsertBlock.GetChild(),
                       atStartOfSelection,
                       SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitBlockResult.Failed())) {
@@ -2191,27 +2156,27 @@ HTMLEditor::Indent(const nsAString& aIndent)
 
     EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
     if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.Container()->IsContent())) {
+        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
       return NS_ERROR_FAILURE;
     }
 
     // Have to find a place to put the blockquote.
     EditorDOMPoint pointToInsertBlockquote(atStartOfSelection);
 
-    while (!CanContainTag(*pointToInsertBlockquote.Container(),
+    while (!CanContainTag(*pointToInsertBlockquote.GetContainer(),
                           *nsGkAtoms::blockquote)) {
-      pointToInsertBlockquote.Set(pointToInsertBlockquote.Container());
+      pointToInsertBlockquote.Set(pointToInsertBlockquote.GetContainer());
       if (NS_WARN_IF(!pointToInsertBlockquote.IsSet()) ||
-          NS_WARN_IF(!pointToInsertBlockquote.Container()->IsContent())) {
+          NS_WARN_IF(!pointToInsertBlockquote.GetContainerAsContent())) {
         return NS_ERROR_FAILURE;
       }
     }
 
-    if (pointToInsertBlockquote.Container() !=
-          atStartOfSelection.Container()) {
+    if (pointToInsertBlockquote.GetContainer() !=
+          atStartOfSelection.GetContainer()) {
       // We need to split up to the child of parent.
       SplitNodeResult splitBlockquoteResult =
-        SplitNodeDeep(*pointToInsertBlockquote.GetChildAtOffset(),
+        SplitNodeDeep(*pointToInsertBlockquote.GetChild(),
                       atStartOfSelection,
                       SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitBlockquoteResult.Failed())) {
@@ -2279,18 +2244,23 @@ HTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
   if (!node) {
     // If no node supplied, get it from anchor node of current selection
     RefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_TRUE(selection, nullptr);
+    if (NS_WARN_IF(!selection)) {
+      return nullptr;
+    }
 
-    nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
-    NS_ENSURE_TRUE(anchorNode, nullptr);
+    const EditorDOMPoint atAnchor(selection->AnchorRef());
+    if (NS_WARN_IF(!atAnchor.IsSet())) {
+      return nullptr;
+    }
 
     // Try to get the actual selected node
-    if (anchorNode->HasChildNodes() && anchorNode->IsContent()) {
-      node = selection->GetChildAtAnchorOffset();
+    if (atAnchor.GetContainer()->HasChildNodes() &&
+        atAnchor.GetContainerAsContent()) {
+      node = atAnchor.GetChild();
     }
     // Anchor node is probably a text node - just use that
     if (!node) {
-      node = anchorNode;
+      node = atAnchor.GetContainer();
     }
   }
 
@@ -2427,29 +2397,25 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       // Link tag is a special case - we return the anchor node
       //  found for any selection that is totally within a link,
       //  included a collapsed selection (just a caret in a link)
-      nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
-      nsIContent* anchorChild = selection->GetChildAtAnchorOffset();
-
-      nsCOMPtr<nsINode> focusNode = selection->GetFocusNode();
-      nsIContent* focusChild = selection->GetChildAtFocusOffset();
-
+      const RangeBoundary& anchor = selection->AnchorRef();
+      const RangeBoundary& focus = selection->FocusRef();
       // Link node must be the same for both ends of selection
-      if (anchorNode) {
+      if (anchor.IsSet()) {
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
         nsresult rv =
           GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                      GetAsDOMNode(anchorNode),
+                                      anchor.Container()->AsDOMNode(),
                                       getter_AddRefs(parentLinkOfAnchor));
         // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
         if (NS_SUCCEEDED(rv) && parentLinkOfAnchor) {
           if (isCollapsed) {
             // We have just a caret in the link
             bNodeFound = true;
-          } else if (focusNode) {
+          } else if (focus.IsSet()) {
             // Link node must be the same for both ends of selection.
             nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
             rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                             GetAsDOMNode(focusNode),
+                                             focus.Container()->AsDOMNode(),
                                              getter_AddRefs(parentLinkOfFocus));
             if (NS_SUCCEEDED(rv) && parentLinkOfFocus == parentLinkOfAnchor) {
               bNodeFound = true;
@@ -2462,12 +2428,13 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
             parentLinkOfAnchor.forget(aReturn);
             return NS_OK;
           }
-        } else if (anchorChild && focusChild) {
+        } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
           // Check if link node is the only thing selected
-          if (HTMLEditUtils::IsLink(anchorChild) &&
-              anchorNode == focusNode &&
-              focusChild == anchorChild->GetNextSibling()) {
-            selectedElement = do_QueryInterface(anchorChild);
+          if (HTMLEditUtils::IsLink(anchor.GetChildAtOffset()) &&
+              anchor.Container() == focus.Container() &&
+              focus.GetChildAtOffset() ==
+                anchor.GetChildAtOffset()->GetNextSibling()) {
+            selectedElement = do_QueryInterface(anchor.GetChildAtOffset());
             bNodeFound = true;
           }
         }
@@ -3176,7 +3143,7 @@ HTMLEditor::InsertTextImpl(nsIDocument& aDocument,
   }
 
   // Do nothing if the node is read-only
-  if (!IsModifiableNode(aPointToInsert.Container())) {
+  if (!IsModifiableNode(aPointToInsert.GetContainer())) {
     return NS_ERROR_FAILURE;
   }
 

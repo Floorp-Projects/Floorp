@@ -87,62 +87,70 @@ public:
 };
 
 NS_IMETHODIMP
-HTMLEditor::InsertCell(nsIDOMElement* aCell,
+HTMLEditor::InsertCell(nsIDOMElement* aDOMCell,
                        int32_t aRowSpan,
                        int32_t aColSpan,
                        bool aAfter,
                        bool aIsHeader,
-                       nsIDOMElement** aNewCell)
+                       nsIDOMElement** aNewDOMCell)
 {
-  NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
-  if (aNewCell) {
-    *aNewCell = nullptr;
+  if (aNewDOMCell) {
+    *aNewDOMCell = nullptr;
+  }
+
+  if (NS_WARN_IF(!aDOMCell)) {
+    return NS_ERROR_NULL_POINTER;
   }
 
   // And the parent and offsets needed to do an insert
-  nsCOMPtr<nsIDOMNode> cellParent;
-  nsresult rv = aCell->GetParentNode(getter_AddRefs(cellParent));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cellParent, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIContent> cell = do_QueryInterface(aDOMCell);
+  if (NS_WARN_IF(!cell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  EditorDOMPoint pointToInsert(cell);
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  int32_t cellOffset = GetChildOffset(aCell, cellParent);
-
-  nsCOMPtr<nsIDOMElement> newCell;
-  rv = CreateElementWithDefaults(aIsHeader ? NS_LITERAL_STRING("th") :
-                                             NS_LITERAL_STRING("tb"),
-                                 getter_AddRefs(newCell));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsIDOMElement> newDOMCell;
+  nsresult rv =
+    CreateElementWithDefaults(aIsHeader ? NS_LITERAL_STRING("th") :
+                                          NS_LITERAL_STRING("tb"),
+                              getter_AddRefs(newDOMCell));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (!newCell) {
+  nsCOMPtr<Element> newCell = do_QueryInterface(newDOMCell);
+  if (NS_WARN_IF(!newCell)) {
     return NS_ERROR_FAILURE;
   }
 
   //Optional: return new cell created
-  if (aNewCell) {
-    *aNewCell = newCell.get();
-    NS_ADDREF(*aNewCell);
+  if (aNewDOMCell) {
+    newDOMCell.forget(aNewDOMCell);
   }
 
   if (aRowSpan > 1) {
     // Note: Do NOT use editor transaction for this
     nsAutoString newRowSpan;
     newRowSpan.AppendInt(aRowSpan, 10);
-    newCell->SetAttribute(NS_LITERAL_STRING("rowspan"), newRowSpan);
+    newCell->SetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, newRowSpan, true);
   }
   if (aColSpan > 1) {
     // Note: Do NOT use editor transaction for this
     nsAutoString newColSpan;
     newColSpan.AppendInt(aColSpan, 10);
-    newCell->SetAttribute(NS_LITERAL_STRING("colspan"), newColSpan);
+    newCell->SetAttr(kNameSpaceID_None, nsGkAtoms::colspan, newColSpan, true);
   }
   if (aAfter) {
-    cellOffset++;
+    DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+      "Failed to advance offset to after the old cell");
   }
 
-  //Don't let Rules System change the selection
+  // Don't let Rules System change the selection.
   AutoTransactionsConserveSelection dontChangeSelection(this);
-  return InsertNode(newCell, cellParent, cellOffset);
+  return InsertNode(*newCell, pointToInsert.AsRaw());
 }
 
 NS_IMETHODIMP
@@ -207,7 +215,11 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
       if (aAfter) {
         cellOffset++;
       }
-      rv = InsertNode(newCell, cellParent, cellOffset);
+      nsCOMPtr<nsIContent> cell = do_QueryInterface(newCell);
+      if (NS_WARN_IF(!cell)) {
+        return NS_ERROR_FAILURE;
+      }
+      rv = InsertNode(*cell, EditorRawDOMPoint(cellParent, cellOffset));
       if (NS_FAILED(rv)) {
         break;
       }
@@ -687,7 +699,7 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
 
       // Use transaction system to insert the entire row+cells
       // (Note that rows are inserted at same childoffset each time)
-      rv = InsertNode(*newRow, *parentOfRow, newRowOffset);
+      rv = InsertNode(*newRow, EditorRawDOMPoint(parentOfRow, newRowOffset));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -2328,11 +2340,12 @@ HTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
 
     // Move the contents
     while (cellToMerge->HasChildren()) {
-      nsCOMPtr<nsIDOMNode> cellChild = cellToMerge->GetLastChild()->AsDOMNode();
-      nsresult rv = DeleteNode(cellChild);
+      nsCOMPtr<nsIContent> cellChild = cellToMerge->GetLastChild();
+      // XXX We need HTMLEditor::DeleteNode(nsINode&).
+      nsresult rv = DeleteNode(cellChild->AsDOMNode());
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = InsertNode(cellChild, aTargetCell, insertIndex);
+      rv = InsertNode(*cellChild, EditorRawDOMPoint(aTargetCell, insertIndex));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

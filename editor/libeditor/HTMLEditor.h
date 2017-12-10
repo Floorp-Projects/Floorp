@@ -338,11 +338,28 @@ public:
   // Utility Routines, not part of public API
   NS_IMETHOD TypedText(const nsAString& aString,
                        ETypingAction aAction) override;
-  nsresult InsertNodeAtPoint(nsIDOMNode* aNode,
-                             nsCOMPtr<nsIDOMNode>* ioParent,
-                             int32_t* ioOffset,
-                             SplitAtEdges aSplitAtEdges,
-                             nsCOMPtr<nsIDOMNode>* ioChildAtOffset = nullptr);
+
+  /**
+   * InsertNodeIntoProperAncestor() attempts to insert aNode into the document,
+   * at aPointToInsert.  Checks with strict dtd to see if containment is
+   * allowed.  If not allowed, will attempt to find a parent in the parent
+   * hierarchy of aPointToInsert.GetContainer() that will accept aNode as a
+   * child.  If such a parent is found, will split the document tree from
+   * aPointToInsert up to parent, and then insert aNode. aPointToInsert is then
+   * adjusted to point to the actual location that aNode was inserted at.
+   * aSplitAtEdges specifies if the splitting process is allowed to result in
+   * empty nodes.
+   *
+   * @param aNode             Node to insert.
+   * @param aPointToInsert    Insertion point.
+   * @param aSplitAtEdges     Splitting can result in empty nodes?
+   * @return                  Returns inserted point if succeeded.
+   *                          Otherwise, the result is not set.
+   */
+  EditorDOMPoint
+  InsertNodeIntoProperAncestor(nsIContent& aNode,
+                               const EditorRawDOMPoint& aPointToInsert,
+                               SplitAtEdges aSplitAtEdges);
 
   /**
    * Use this to assure that selection is set after attribute nodes when
@@ -692,12 +709,19 @@ protected:
   bool IsVisibleBRElement(nsINode* aNode);
 
   /**
-   * Utility routine to possibly adjust the insertion position when
-   * inserting a block level element.
+   * GetBetterInsertionPointFor() returns better insertion point to insert
+   * aNodeToInsert.
+   *
+   * @param aNodeToInsert       The node to insert.
+   * @param aPointToInsert      A candidate point to insert the node.
+   * @return                    Better insertion point if next visible node
+   *                            is a <br> element and previous visible node
+   *                            is neither none, another <br> element nor
+   *                            different block level element.
    */
-  void NormalizeEOLInsertPosition(nsINode* firstNodeToInsert,
-                                  nsCOMPtr<nsIDOMNode>* insertParentNode,
-                                  int32_t* insertOffset);
+  EditorRawDOMPoint
+  GetBetterInsertionPointFor(nsINode& aNodeToInsert,
+                             const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * Helpers for block transformations.

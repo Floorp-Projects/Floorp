@@ -35,6 +35,13 @@ TextEditUtils::IsBody(nsIDOMNode* aNode)
   return EditorBase::NodeIsType(aNode, nsGkAtoms::body);
 }
 
+bool
+TextEditUtils::IsBody(nsINode* aNode)
+{
+  MOZ_ASSERT(aNode);
+  return aNode->IsHTMLElement(nsGkAtoms::body);
+}
+
 /**
  * IsBreak() returns true if aNode is an html break node.
  */
