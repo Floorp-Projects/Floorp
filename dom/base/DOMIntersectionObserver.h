@@ -116,11 +116,7 @@ class DOMIntersectionObserver final : public nsISupports,
 public:
   DOMIntersectionObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
                           mozilla::dom::IntersectionCallback& aCb)
-  : mOwner(aOwner),
-    mDocument(mOwner->GetExtantDoc()),
-    mCallback(&aCb),
-    mRoot(nullptr),
-    mConnected(false)
+  : mOwner(aOwner), mDocument(mOwner->GetExtantDoc()), mCallback(&aCb), mConnected(false)
   {
   }
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -156,7 +152,7 @@ public:
   void Observe(Element& aTarget);
   void Unobserve(Element& aTarget);
 
-  void UnlinkElement(Element& aTarget);
+  void UnlinkTarget(Element& aTarget);
   void Disconnect();
 
   void TakeRecords(nsTArray<RefPtr<DOMIntersectionObserverEntry>>& aRetVal);
@@ -180,12 +176,11 @@ protected:
   nsCOMPtr<nsPIDOMWindowInner>                    mOwner;
   RefPtr<nsIDocument>                             mDocument;
   RefPtr<mozilla::dom::IntersectionCallback>      mCallback;
-  // Raw pointer which is explicitly cleared by UnlinkElement().
-  Element*                                        mRoot;
+  RefPtr<Element>                                 mRoot;
   nsCSSRect                                       mRootMargin;
   nsTArray<double>                                mThresholds;
 
-  // Holds raw pointers which are explicitly cleared by UnlinkElement().
+  // Holds raw pointers which are explicitly cleared by UnlinkTarget().
   nsTArray<Element*>                              mObservationTargets;
 
   nsTArray<RefPtr<DOMIntersectionObserverEntry>>  mQueuedEntries;
