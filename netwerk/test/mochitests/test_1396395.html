@@ -7,7 +7,7 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-  <iframe id="f" src="http://example.com"></iframe>
+  <iframe id="f" src="about:blank"></iframe>
   <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
@@ -36,6 +36,7 @@ script.addMessageListener('start-test', () => {
   const iframe = document.getElementById('f');
 
   iframe.contentWindow.onunload = function () {
+    info('initiate sync XHR during the page loading');
     xhr = new XMLHttpRequest();
     xhr.open('GET', window.location, false);
     xhr.send(null);
