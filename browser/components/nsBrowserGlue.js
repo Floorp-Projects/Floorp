@@ -1873,17 +1873,6 @@ BrowserGlue.prototype = {
       xulStore.removeValue(BROWSER_DOCURL, "TabsToolbar", "collapsed");
     }
 
-    if (currentUIVersion < 23) {
-      const kSelectedEnginePref = "browser.search.selectedEngine";
-      if (Services.prefs.prefHasUserValue(kSelectedEnginePref)) {
-        try {
-          let name = Services.prefs.getComplexValue(kSelectedEnginePref,
-                                                    Ci.nsIPrefLocalizedString).data;
-          Services.search.currentEngine = Services.search.getEngineByName(name);
-        } catch (ex) {}
-      }
-    }
-
     if (currentUIVersion < 24) {
       // Reset homepage pref for users who have it set to start.mozilla.org
       // or google.com/firefox.
