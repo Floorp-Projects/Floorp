@@ -4385,7 +4385,7 @@ public:
 private:
   mozilla::gfx::CompositorHitTestInfo mHitTestInfo;
   mozilla::Maybe<mozilla::layers::FrameMetrics::ViewID> mScrollTarget;
-  nsRect mArea;
+  mozilla::LayoutDeviceRect mArea;
   uint32_t mIndex;
   mozilla::Maybe<int32_t> mOverrideZIndex;
 };
