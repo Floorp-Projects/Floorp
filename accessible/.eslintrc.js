@@ -9,7 +9,6 @@ module.exports = {
     // disabled here due to failures when initially implemented. They should be
     // removed (and hence enabled) at some stage.
     "consistent-return": "off",
-    "object-shorthand": "off",
     "no-unexpected-multiline": "off",
     "no-unsafe-finally": "off",
     "no-useless-call": "off",

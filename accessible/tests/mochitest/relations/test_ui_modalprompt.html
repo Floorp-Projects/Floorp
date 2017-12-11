@@ -34,7 +34,7 @@
       this.eventSeq = [
         {
           type: EVENT_SHOW,
-          match: function(aEvent) {
+          match(aEvent) {
             return aEvent.accessible.role == ROLE_DIALOG;
           }
         }

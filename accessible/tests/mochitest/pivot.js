@@ -23,14 +23,14 @@ const NS_ERROR_INVALID_ARG = 0x80070057;
  */
 var HeadersTraversalRule =
 {
-  getMatchRoles: function(aRules) {
+  getMatchRoles(aRules) {
     aRules.value = [ROLE_HEADING];
     return aRules.value.length;
   },
 
   preFilter: PREFILTER_INVISIBLE,
 
-  match: function(aAccessible) {
+  match(aAccessible) {
     return FILTER_MATCH;
   },
 
@@ -42,14 +42,14 @@ var HeadersTraversalRule =
  */
 var ObjectTraversalRule =
 {
-  getMatchRoles: function(aRules) {
+  getMatchRoles(aRules) {
     aRules.value = [];
     return 0;
   },
 
   preFilter: PREFILTER_INVISIBLE | PREFILTER_ARIA_HIDDEN | PREFILTER_TRANSPARENT,
 
-  match: function(aAccessible) {
+  match(aAccessible) {
     var rv = FILTER_IGNORE;
     var role = aAccessible.role;
     if (hasState(aAccessible, STATE_FOCUSABLE) &&
