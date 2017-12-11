@@ -145,6 +145,7 @@ async function openRequestBeforeUpdates(target, hud, tab) {
 // Panel testing helpers
 
 async function testNetworkMessage(toolbox, messageNode) {
+  await testStatusInfo(messageNode);
   await testHeaders(messageNode);
   await testCookies(messageNode);
   await testParams(messageNode);
@@ -152,6 +153,13 @@ async function testNetworkMessage(toolbox, messageNode) {
   await testTimings(messageNode);
   await testStackTrace(messageNode);
   await waitForLazyRequests(toolbox);
+}
+
+// Status Info
+
+function testStatusInfo(messageNode) {
+  let statusInfo = messageNode.querySelector(".status-info");
+  ok(statusInfo, "Status info is not empty");
 }
 
 // Headers
