@@ -352,7 +352,7 @@ function evaluateXPath(aNode, aExpr, aResolver) {
   var result = xpe.evaluate(aExpr, aNode, resolver, 0, null);
   var found = [];
   var res;
-  while (res = result.iterateNext())
+  while ((res = result.iterateNext()))
     found.push(res);
 
   return found;
