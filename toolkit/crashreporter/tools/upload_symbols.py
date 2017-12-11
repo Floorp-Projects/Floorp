@@ -7,9 +7,12 @@
 # This script uploads a symbol zip file passed on the commandline
 # to the Tecken symbol upload API at https://symbols.mozilla.org/ .
 #
+# Using this script requires you to have generated an authentication
 # token in the Tecken web interface. You must store the token in a Taskcluster
 # secret as the JSON blob `{"token": "<token>"}` and set the `SYMBOL_SECRET`
-# environment variable to the name of the Taskcluster secret.
+# environment variable to the name of the Taskcluster secret. Alternatively,
+# you can pu the token in a file and set SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE
+# environment variable to the path to the file.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
