@@ -3,10 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-
 function run_test() {
     var s = Cc["@mozilla.org/io/string-input-stream;1"]
               .createInstance(Ci.nsIStringInputStream);

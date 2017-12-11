@@ -5,12 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cr = Components.results;
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const CC = Components.Constructor;
-
 const nsIWindowsRegKey = Ci.nsIWindowsRegKey;
 let regKeyComponent = Cc["@mozilla.org/windows-registry-key;1"];
 

@@ -1,5 +1,3 @@
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {

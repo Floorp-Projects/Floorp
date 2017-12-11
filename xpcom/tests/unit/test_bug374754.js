@@ -1,6 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 var addedTopic = "xpcom-category-entry-added";
 var removedTopic = "xpcom-category-entry-removed";
 var testCategory = "bug-test-category";
