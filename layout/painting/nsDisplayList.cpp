@@ -4977,8 +4977,9 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
     mScrollTarget = Some(aBuilder->GetCurrentScrollbarTarget());
   }
 
+  nsRect area;
   if (aArea.isSome()) {
-    mArea = *aArea;
+    area = *aArea;
   } else {
     nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(mFrame);
     if (scrollFrame) {
@@ -4987,9 +4988,9 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
       // the overflow that are not occupied by descendants get skipped and the
       // APZ code sends touch events to the content underneath instead.
       // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
-      mArea = mFrame->GetScrollableOverflowRect();
+      area = mFrame->GetScrollableOverflowRect();
     } else {
-      mArea = nsRect(nsPoint(0, 0), mFrame->GetSize());
+      area = nsRect(nsPoint(0, 0), mFrame->GetSize());
     }
 
     // Note that it's important to do this call to ToReferenceFrame here in the
@@ -4997,7 +4998,11 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
     // fast path (because aBuilder will already have the info we want cached).
     // This is as opposed to, say, calling it in CreateWebRenderCommands where
     // we would not hit the fast path.
-    mArea += aBuilder->ToReferenceFrame(mFrame);
+    area += aBuilder->ToReferenceFrame(mFrame);
+  }
+
+  if (!area.IsEmpty()) {
+    mArea = LayoutDeviceRect::FromAppUnits(area, mFrame->PresContext()->AppUnitsPerDevPixel());
   }
 }
 
@@ -5011,11 +5016,6 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
   if (mArea.IsEmpty()) {
     return true;
   }
-
-  wr::LayoutRect rect = aSc.ToRelativeLayoutRect(
-      LayoutDeviceRect::FromAppUnits(
-          mArea,
-          mFrame->PresContext()->AppUnitsPerDevPixel()));
 
   // XXX: eventually this scrollId computation and the SetHitTestInfo
   // call will get moved out into the WR display item iteration code so that
@@ -5032,6 +5032,7 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
 
   // Insert a transparent rectangle with the hit-test info
   aBuilder.SetHitTestInfo(scrollId, mHitTestInfo);
+  wr::LayoutRect rect = aSc.ToRelativeLayoutRect(mArea);
   aBuilder.PushRect(rect, rect, true, wr::ToColorF(gfx::Color()));
   aBuilder.ClearHitTestInfo();
 
