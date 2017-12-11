@@ -169,7 +169,7 @@ VisualPresenter.prototype.viewportChanged =
         type: this.type,
         details: {
           eventType: "viewport-change",
-          bounds: bounds,
+          bounds,
           padding: this.BORDER_PADDING
         }
       };
@@ -198,7 +198,7 @@ VisualPresenter.prototype.pivotChanged =
         type: this.type,
         details: {
           eventType: "vc-change",
-          bounds: bounds,
+          bounds,
           padding: this.BORDER_PADDING
         }
       };
@@ -297,7 +297,7 @@ AndroidPresenter.prototype.pivotChanged =
                          clickable: aContext.accessible.actionCount > 0,
                          checkable: state.contains(States.CHECKABLE),
                          checked: state.contains(States.CHECKED),
-                         brailleOutput: brailleOutput});
+                         brailleOutput});
     }
 
 
@@ -323,7 +323,7 @@ AndroidPresenter.prototype.actionInvoked =
       type: this.type,
       details: [{
         eventType: this.ANDROID_VIEW_CLICKED,
-        text: text,
+        text,
         checked: state.contains(States.CHECKED)
       }]
     };
@@ -382,7 +382,7 @@ AndroidPresenter.prototype.textSelectionChanged =
         fromIndex: aStart,
         toIndex: aEnd,
         itemCount: aText.length,
-        brailleOutput: brailleOutput
+        brailleOutput
       });
     }
 

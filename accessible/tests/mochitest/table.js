@@ -138,9 +138,7 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
       }
 
       if (role != ROLE_NOTHING) {
-        var cellObj = {
-          role: role
-        };
+        var cellObj = { role };
         rowObj.children.push(cellObj);
       }
     }
