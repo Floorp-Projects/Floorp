@@ -88,12 +88,13 @@ TESTCASES.forEach(testcase => {
     for (let i in testcase.targetInput) {
       let input = doc.getElementById(testcase.targetInput[i]);
       FormAutofillContent.identifyAutofillFields(input);
+      FormAutofillContent.updateActiveInput(input);
 
       // Put the input element reference to `element` to make sure the result of
-      // `getInputDetails` contains the same input element.
+      // `activeFieldDetail` contains the same input element.
       testcase.expectedResult[i].input.elementWeakRef = Cu.getWeakReference(input);
 
-      inputDetailAssertion(FormAutofillContent.getInputDetails(input),
+      inputDetailAssertion(FormAutofillContent.activeFieldDetail,
                            testcase.expectedResult[i].input);
 
       let formDetails = testcase.expectedResult[i].form;
@@ -104,7 +105,7 @@ TESTCASES.forEach(testcase => {
         formDetail.elementWeakRef = Cu.getWeakReference(doc.querySelector(queryString));
       }
 
-      FormAutofillContent.getFormDetails(input).forEach((detail, index) => {
+      FormAutofillContent.activeFormDetails.forEach((detail, index) => {
         inputDetailAssertion(detail, formDetails[index]);
       });
     }
