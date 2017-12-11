@@ -585,7 +585,7 @@ RasterImage::GetFrameAtSize(const IntSize& aSize,
   return surf.forget();
 }
 
-Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
+Tuple<ImgDrawResult, IntSize, RefPtr<SourceSurface>>
 RasterImage::GetFrameInternal(const IntSize& aSize,
                               const Maybe<SVGImageContext>& aSVGContext,
                               uint32_t aWhichFrame,
@@ -594,12 +594,12 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
 
   if (aSize.IsEmpty() || aWhichFrame > FRAME_MAX_VALUE) {
-    return MakeTuple(DrawResult::BAD_ARGS, aSize,
+    return MakeTuple(ImgDrawResult::BAD_ARGS, aSize,
                      RefPtr<SourceSurface>());
   }
 
   if (mError) {
-    return MakeTuple(DrawResult::BAD_IMAGE, aSize,
+    return MakeTuple(ImgDrawResult::BAD_IMAGE, aSize,
                      RefPtr<SourceSurface>());
   }
 
@@ -619,16 +619,16 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
 
   if (!result) {
     // The OS threw this frame away and we couldn't redecode it.
-    return MakeTuple(DrawResult::TEMPORARY_ERROR, suggestedSize,
+    return MakeTuple(ImgDrawResult::TEMPORARY_ERROR, suggestedSize,
                      RefPtr<SourceSurface>());
   }
 
   RefPtr<SourceSurface> surface = result.Surface()->GetSourceSurface();
   if (!result.Surface()->IsFinished()) {
-    return MakeTuple(DrawResult::INCOMPLETE, suggestedSize, Move(surface));
+    return MakeTuple(ImgDrawResult::INCOMPLETE, suggestedSize, Move(surface));
   }
 
-  return MakeTuple(DrawResult::SUCCESS, suggestedSize, Move(surface));
+  return MakeTuple(ImgDrawResult::SUCCESS, suggestedSize, Move(surface));
 }
 
 IntSize
@@ -1376,7 +1376,7 @@ RasterImage::CanDownscaleDuringDecode(const IntSize& aSize, uint32_t aFlags)
   return true;
 }
 
-DrawResult
+ImgDrawResult
 RasterImage::DrawInternal(DrawableSurface&& aSurface,
                           gfxContext* aContext,
                           const IntSize& aSize,
@@ -1408,19 +1408,19 @@ RasterImage::DrawInternal(DrawableSurface&& aSurface,
 
   if (!aSurface->Draw(aContext, region, aSamplingFilter, aFlags, aOpacity)) {
     RecoverFromInvalidFrames(aSize, aFlags);
-    return DrawResult::TEMPORARY_ERROR;
+    return ImgDrawResult::TEMPORARY_ERROR;
   }
   if (!frameIsFinished) {
-    return DrawResult::INCOMPLETE;
+    return ImgDrawResult::INCOMPLETE;
   }
   if (couldRedecodeForBetterFrame) {
-    return DrawResult::WRONG_SIZE;
+    return ImgDrawResult::WRONG_SIZE;
   }
-  return DrawResult::SUCCESS;
+  return ImgDrawResult::SUCCESS;
 }
 
 //******************************************************************************
-NS_IMETHODIMP_(DrawResult)
+NS_IMETHODIMP_(ImgDrawResult)
 RasterImage::Draw(gfxContext* aContext,
                   const IntSize& aSize,
                   const ImageRegion& aRegion,
@@ -1431,22 +1431,22 @@ RasterImage::Draw(gfxContext* aContext,
                   float aOpacity)
 {
   if (aWhichFrame > FRAME_MAX_VALUE) {
-    return DrawResult::BAD_ARGS;
+    return ImgDrawResult::BAD_ARGS;
   }
 
   if (mError) {
-    return DrawResult::BAD_IMAGE;
+    return ImgDrawResult::BAD_IMAGE;
   }
 
   // Illegal -- you can't draw with non-default decode flags.
   // (Disabling colorspace conversion might make sense to allow, but
   // we don't currently.)
   if (ToSurfaceFlags(aFlags) != DefaultSurfaceFlags()) {
-    return DrawResult::BAD_ARGS;
+    return ImgDrawResult::BAD_ARGS;
   }
 
   if (!aContext) {
-    return DrawResult::BAD_ARGS;
+    return ImgDrawResult::BAD_ARGS;
   }
 
   if (mAnimationConsumers == 0) {
@@ -1467,7 +1467,7 @@ RasterImage::Draw(gfxContext* aContext,
     if (mDrawStartTime.IsNull()) {
       mDrawStartTime = TimeStamp::Now();
     }
-    return DrawResult::NOT_READY;
+    return ImgDrawResult::NOT_READY;
   }
 
   bool shouldRecordTelemetry = !mDrawStartTime.IsNull() &&
