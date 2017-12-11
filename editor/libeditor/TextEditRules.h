@@ -218,32 +218,42 @@ protected:
   void RemoveIMETextFromPWBuf(uint32_t& aStart, nsAString* aIMEString);
 
   /**
-   * Create a normal <br> element and insert it to aOffset at aParent.
+   * Create a normal <br> element and insert it to aPointToInsert.
    *
-   * @param aParent     The parent node which will have new <br> element.
-   * @param aOffset     The offset in aParent where the new <br> element will
-   *                    be inserted.
-   * @param aOutBRNode  Returns created <br> element.
+   * @param aPointToInsert  The point where the new <br> element will be
+   *                        inserted.
+   * @return                Returns created <br> element.
    */
-  nsresult CreateBR(nsINode& aParent, int32_t aOffset,
-                    Element** aOutBRNode = nullptr)
+  already_AddRefed<Element> CreateBR(const EditorRawDOMPoint& aPointToInsert)
   {
-    return CreateBRInternal(aParent, aOffset, false, aOutBRNode);
+    return CreateBRInternal(aPointToInsert, false);
   }
 
   /**
-   * Create a moz-<br> element and insert it to aOffset at aParent.
+   * Create a moz-<br> element and insert it to aPointToInsert.
    *
-   * @param aParent     The parent node which will have new <br> element.
-   * @param aOffset     The offset in aParent where the new <br> element will
-   *                    be inserted.
-   * @param aOutBRNode  Returns created <br> element.
+   * @param aPointToInsert  The point where the new moz-<br> element will be
+   *                        inserted.
+   * @return                Returns created moz-<br> element.
    */
-  nsresult CreateMozBR(nsINode& aParent, int32_t aOffset,
-                       Element** aOutBRNode = nullptr)
+  already_AddRefed<Element> CreateMozBR(const EditorRawDOMPoint& aPointToInsert)
   {
-    return CreateBRInternal(aParent, aOffset, true, aOutBRNode);
+    return CreateBRInternal(aPointToInsert, true);
   }
+
+  /**
+   * Create a normal <br> element or a moz-<br> element and insert it to
+   * aPointToInsert.
+   *
+   * @param aParentToInsert     The point where the new <br> element will be
+   *                            inserted.
+   * @param aCreateMozBR        true if the caller wants to create a moz-<br>
+   *                            element.  Otherwise, false.
+   * @return                    Returns created <br> element.
+   */
+  already_AddRefed<Element>
+  CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
+                   bool aCreateMozBR);
 
   void UndefineCaretBidiLevel(Selection* aSelection);
 
@@ -268,23 +278,6 @@ protected:
 private:
   // Note that we do not refcount the editor.
   TextEditor* mTextEditor;
-
-  /**
-   * Create a normal <br> element or a moz-<br> element and insert it to
-   * aOffset at aParent.
-   *
-   * @param aParent     The parent node which will have new <br> element.
-   * @param aOffset     The offset in aParent where the new <br> element will
-   *                    be inserted.
-   * @param aMozBR      true if the caller wants to create a moz-<br> element.
-   *                    Otherwise, false.
-   * @param aOutBRNode  Returns created <br> element.
-   */
-  nsresult CreateBRInternal(nsINode& aParent,
-                            int32_t aOffset,
-                            bool aMozBR,
-                            Element** aOutBRNode = nullptr);
-
 
 protected:
   // A buffer we use to store the real value of password editors.
