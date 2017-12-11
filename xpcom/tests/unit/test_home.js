@@ -1,6 +1,3 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 const CWD = do_get_cwd();
 function checkOS(os) {
   const nsILocalFile_ = "nsILocalFile" + os;
