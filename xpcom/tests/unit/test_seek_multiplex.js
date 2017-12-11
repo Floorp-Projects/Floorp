@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Ci = Components.interfaces;
-var Cr = Components.results;
-var CC = Components.Constructor;
-var Cc = Components.classes;
-
 // The string we use as data.
 const data = "0123456789";
 // Number of streams in the multiplex stream.
@@ -160,4 +155,3 @@ function run_test() {
   test_multiplex_streams();
   test_multiplex_bug797871();
 }
-

@@ -1,5 +1,3 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
 const NS_OS_TEMP_DIR = "TmpD";
 
 const CWD = do_get_cwd();
@@ -25,4 +23,3 @@ function run_test() {
   do_check_true(createUNIXHiddenFile());
   do_check_true(hiddenUnixFile.isHidden());
 }
-

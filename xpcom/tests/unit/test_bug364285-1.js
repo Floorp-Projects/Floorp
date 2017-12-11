@@ -1,6 +1,3 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 var nameArray = [
  "ascii",                                           // ASCII
  "fran\u00E7ais",                                   // Latin-1
