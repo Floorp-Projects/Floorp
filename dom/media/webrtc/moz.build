@@ -39,12 +39,11 @@ if CONFIG['MOZ_WEBRTC']:
         'MediaEngineWebRTC.cpp',
     ]
     LOCAL_INCLUDES += [
-        '..',
         '/dom/base',
         '/media/libyuv/libyuv/include',
         '/media/webrtc/signaling/src/common',
         '/media/webrtc/signaling/src/common/browser_logging',
-        '/media/webrtc/trunk'
+        '/media/webrtc/trunk',
     ]
 
 XPIDL_SOURCES += [

@@ -680,6 +680,11 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   rv = printData->mPrintDC->InitForPrinting(devspec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (XRE_IsParentProcess() && !printData->mPrintDC->IsSyncPagePrinting()) {
+    RefPtr<nsPrintEngine> self(this);
+    printData->mPrintDC->RegisterPageDoneCallback([self](nsresult aResult) { self->PageDone(aResult); });
+  }
+
   if (aIsPrintPreview) {
     printData->mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
 
@@ -2839,6 +2844,10 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
     return true;
   }
 
+  if (XRE_IsParentProcess() && !printData->mPrintDC->IsSyncPagePrinting()) {
+    mPagePrintTimer->WaitForRemotePrint();
+  }
+
   // Print the Page
   // if a print job was cancelled externally, an EndPage or BeginPage may
   // fail and the failure is passed back here.
@@ -2860,6 +2869,16 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
   return donePrinting;
 }
 
+void
+nsPrintEngine::PageDone(nsresult aResult)
+{
+  MOZ_ASSERT(mIsDoingPrinting);
+
+  // mPagePrintTimer might be released during RemotePrintFinished, keep a
+  // reference here to make sure it lives long enough.
+  RefPtr<nsPagePrintTimer> timer = mPagePrintTimer;
+  timer->RemotePrintFinished();
+}
 
 //-----------------------------------------------------------------
 //-- Done: Printing Methods
@@ -3016,6 +3035,8 @@ nsPrintEngine::DonePrintingPages(nsPrintObject* aPO, nsresult aResult)
       return false;
     }
   }
+
+  printData->mPrintDC->UnregisterPageDoneCallback();
 
   if (NS_SUCCEEDED(aResult)) {
     FirePrintCompletionEvent();
