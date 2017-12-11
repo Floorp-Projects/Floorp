@@ -39,12 +39,23 @@ def print_error(r):
         body=r.text
         ))
 
+def get_taskcluster_secret(secret_name):
+    import redo
+    import requests
+
+    secrets_url = 'http://taskcluster/secrets/v1/secret/{}'.format(secret_name)
+    log.info(
+        'Using symbol upload token from the secrets service: "{}"'.format(secrets_url))
+    res = requests.get(secrets_url)
+    res.raise_for_status()
+    secret = res.json()
+    auth_token = secret['secret']['token']
+
+    return auth_token
+
 def main():
     config = MozbuildObject.from_environment()
     config._activate_virtualenv()
-
-    import redo
-    import requests
 
     logging.basicConfig()
     parser = argparse.ArgumentParser(
@@ -62,13 +73,7 @@ def main():
     if secret_name is None:
         log.error('You must set the SYMBOL_SECRET environment variable!')
         return 1
-    secrets_url = 'http://taskcluster/secrets/v1/secret/{}'.format(secret_name)
-    log.info(
-        'Using symbol upload token from the secrets service: "{}"'.format(secrets_url))
-    res = requests.get(secrets_url)
-    res.raise_for_status()
-    secret = res.json()
-    auth_token = secret['secret']['token']
+    auth_token = get_taskcluster_secret(secret_name)
 
     if os.environ.get('MOZ_SCM_LEVEL', '1') == '1':
         # Use the Tecken staging server for try uploads for now.
