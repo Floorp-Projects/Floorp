@@ -1649,7 +1649,8 @@ TextEditRules::CreateBRInternal(nsINode& inParent,
   }
   RefPtr<TextEditor> textEditor = mTextEditor;
 
-  RefPtr<Element> brElem = textEditor->CreateBR(&inParent, inOffset);
+  RefPtr<Element> brElem =
+    textEditor->CreateBR(EditorRawDOMPoint(&inParent, inOffset));
   if (NS_WARN_IF(!brElem)) {
     return NS_ERROR_FAILURE;
   }

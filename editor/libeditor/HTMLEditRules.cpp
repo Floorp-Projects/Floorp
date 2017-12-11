@@ -1784,8 +1784,9 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   bool isEmpty;
   IsEmptyBlock(*blockParent, &isEmpty);
   if (isEmpty) {
-    nsCOMPtr<Element> br = htmlEditor->CreateBR(blockParent,
-                                                blockParent->Length());
+    EditorRawDOMPoint endOfBlockParent;
+    endOfBlockParent.SetToEndOf(blockParent);
+    RefPtr<Element> br = htmlEditor->CreateBR(endOfBlockParent);
     NS_ENSURE_STATE(br);
   }
 
@@ -1843,13 +1844,13 @@ HTMLEditRules::StandardBreakImpl(nsINode& aNode,
   NS_ENSURE_STATE(mHTMLEditor);
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
-  nsCOMPtr<Element> brNode;
+  RefPtr<Element> brNode;
   bool bAfterBlock = false;
   bool bBeforeBlock = false;
   nsCOMPtr<nsINode> node = &aNode;
 
   if (IsPlaintextEditor()) {
-    brNode = htmlEditor->CreateBR(node, aOffset);
+    brNode = htmlEditor->CreateBR(EditorRawDOMPoint(node, aOffset));
     NS_ENSURE_STATE(brNode);
   } else {
     WSRunObject wsObj(htmlEditor, node, aOffset);
@@ -1951,7 +1952,15 @@ nsresult
 HTMLEditRules::SplitMailCites(Selection* aSelection,
                               bool* aHandled)
 {
-  NS_ENSURE_TRUE(aSelection && aHandled, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
   nsCOMPtr<nsIContent> leftCite, rightCite;
   nsCOMPtr<nsINode> selNode;
   nsCOMPtr<Element> citeNode;
@@ -1970,8 +1979,7 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     // mailquote (in either inline or block case).
     // The latter can confuse a user if they click there and start typing,
     // because being in the mailquote may affect wrapping behavior, or font color, etc.
-    NS_ENSURE_STATE(mHTMLEditor);
-    WSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+    WSRunObject wsObj(htmlEditor, selNode, selOffset);
     nsCOMPtr<nsINode> visNode;
     int32_t visOffset=0;
     WSType wsType;
@@ -1981,18 +1989,16 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
       // ok, we are just before a break.  is it inside the mailquote?
       if (visNode != citeNode && citeNode->Contains(visNode)) {
         // it is.  so lets reset our selection to be just after it.
-        NS_ENSURE_STATE(mHTMLEditor);
-        selNode = mHTMLEditor->GetNodeLocation(visNode, &selOffset);
+        selNode = EditorBase::GetNodeLocation(visNode, &selOffset);
         ++selOffset;
       }
     }
 
-    NS_ENSURE_STATE(mHTMLEditor);
     NS_ENSURE_STATE(selNode->IsContent());
     SplitNodeResult splitCiteNodeResult =
-      mHTMLEditor->SplitNodeDeep(*citeNode,
-                                 EditorRawDOMPoint(selNode, selOffset),
-                                 SplitAtEdges::eDoNotCreateEmptyContainer);
+      htmlEditor->SplitNodeDeep(*citeNode,
+                                EditorRawDOMPoint(selNode, selOffset),
+                                SplitAtEdges::eDoNotCreateEmptyContainer);
     if (NS_WARN_IF(splitCiteNodeResult.Failed())) {
       return splitCiteNodeResult.Rv();
     }
@@ -2003,19 +2009,20 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     // important, since when serializing the cite to plain text, the span which
     // caused the visual break is discarded.  So the added <br> will guarantee
     // that the serializer will insert a break where the user saw one.
-    nsIContent* preveiousNodeOfSplitPoint =
+    nsIContent* previousNodeOfSplitPoint =
       splitCiteNodeResult.GetPreviousNode();
-    if (preveiousNodeOfSplitPoint &&
-        preveiousNodeOfSplitPoint->IsHTMLElement(nsGkAtoms::span) &&
-        preveiousNodeOfSplitPoint->GetPrimaryFrame()->
-                                     IsFrameOfType(nsIFrame::eBlockFrame)) {
+    if (previousNodeOfSplitPoint &&
+        previousNodeOfSplitPoint->IsHTMLElement(nsGkAtoms::span) &&
+        previousNodeOfSplitPoint->GetPrimaryFrame()->
+                                    IsFrameOfType(nsIFrame::eBlockFrame)) {
       nsCOMPtr<nsINode> lastChild =
-        preveiousNodeOfSplitPoint->GetLastChild();
+        previousNodeOfSplitPoint->GetLastChild();
       if (lastChild && !lastChild->IsHTMLElement(nsGkAtoms::br)) {
         // We ignore the result here.
-        nsCOMPtr<Element> invisBR =
-          mHTMLEditor->CreateBR(preveiousNodeOfSplitPoint,
-                                preveiousNodeOfSplitPoint->Length());
+        EditorRawDOMPoint endOfPreviousNodeOfSplitPoint;
+        endOfPreviousNodeOfSplitPoint.SetToEndOf(previousNodeOfSplitPoint);
+        RefPtr<Element> invisBR =
+          htmlEditor->CreateBR(endOfPreviousNodeOfSplitPoint);
       }
     }
 
@@ -2023,11 +2030,10 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     // left cite hasn't been created because the split point was start of the
     // cite node, <br> should be inserted before the current cite.
     EditorRawDOMPoint pointToInsertBrNode(splitCiteNodeResult.SplitPoint());
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<Element> brNode =
-      mHTMLEditor->CreateBR(pointToInsertBrNode.GetContainer(),
-                            pointToInsertBrNode.Offset());
-    NS_ENSURE_STATE(brNode);
+    RefPtr<Element> brNode = htmlEditor->CreateBR(pointToInsertBrNode);
+    if (NS_WARN_IF(!brNode)) {
+      return NS_ERROR_FAILURE;
+    }
     // Now, offset of pointToInsertBrNode is invalid.  Let's clear it.
     pointToInsertBrNode.Clear();
 
@@ -2048,8 +2054,7 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     // just after it.  If we don't have another br or block boundary adjacent,
     // then we will need a 2nd br added to achieve blank line that user expects.
     if (IsInlineNode(*citeNode)) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      WSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+      WSRunObject wsObj(htmlEditor, selNode, selOffset);
       nsCOMPtr<nsINode> visNode;
       int32_t visOffset=0;
       WSType wsType;
@@ -2057,16 +2062,14 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
                              &visOffset, &wsType);
       if (wsType == WSType::normalWS || wsType == WSType::text ||
           wsType == WSType::special) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        WSRunObject wsObjAfterBR(mHTMLEditor, selNode, selOffset + 1);
+        WSRunObject wsObjAfterBR(htmlEditor, selNode, selOffset + 1);
         wsObjAfterBR.NextVisibleNode(selNode, selOffset + 1,
                                      address_of(visNode), &visOffset, &wsType);
         if (wsType == WSType::normalWS || wsType == WSType::text ||
             wsType == WSType::special ||
             // In case we're at the very end.
             wsType == WSType::thisBlock) {
-          NS_ENSURE_STATE(mHTMLEditor);
-          brNode = mHTMLEditor->CreateBR(selNode, selOffset);
+          brNode = htmlEditor->CreateBR(EditorRawDOMPoint(selNode, selOffset));
           NS_ENSURE_STATE(brNode);
         }
       }
@@ -2075,14 +2078,12 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     // delete any empty cites
     bool bEmptyCite = false;
     if (leftCite) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      rv = mHTMLEditor->IsEmptyNode(leftCite, &bEmptyCite, true, false);
+      rv = htmlEditor->IsEmptyNode(leftCite, &bEmptyCite, true, false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       if (bEmptyCite) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        rv = mHTMLEditor->DeleteNode(leftCite);
+        rv = htmlEditor->DeleteNode(leftCite);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2090,14 +2091,12 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     }
 
     if (citeNode) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      rv = mHTMLEditor->IsEmptyNode(citeNode, &bEmptyCite, true, false);
+      rv = htmlEditor->IsEmptyNode(citeNode, &bEmptyCite, true, false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       if (bEmptyCite) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        rv = mHTMLEditor->DeleteNode(citeNode);
+        rv = htmlEditor->DeleteNode(citeNode);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2831,36 +2830,41 @@ HTMLEditRules::DeleteNodeIfCollapsedText(nsINode& aNode)
 nsresult
 HTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
 {
-  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aSelection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  // get selection
-  nsCOMPtr<nsINode> node;
-  int32_t offset;
-  nsresult rv =
-    EditorBase::GetStartNodeAndOffset(aSelection,
-                                      getter_AddRefs(node), &offset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
+  EditorRawDOMPoint atStartOfSelection(EditorBase::GetStartPoint(aSelection));
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
 
   // inline elements don't need any br
-  if (!IsBlockNode(*node)) {
+  if (!IsBlockNode(*atStartOfSelection.GetContainer())) {
     return NS_OK;
   }
 
   // examine selection
-  NS_ENSURE_STATE(mHTMLEditor);
-  WSRunObject wsObj(mHTMLEditor, node, offset);
+  WSRunObject wsObj(htmlEditor, atStartOfSelection.GetContainer(),
+                    atStartOfSelection.Offset());
   if (((wsObj.mStartReason & WSType::block) ||
        (wsObj.mStartReason & WSType::br)) &&
       (wsObj.mEndReason & WSType::block)) {
     // if we are tucked between block boundaries then insert a br
     // first check that we are allowed to
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (mHTMLEditor->CanContainTag(*node, *nsGkAtoms::br)) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsCOMPtr<Element> br =
-        mHTMLEditor->CreateBR(node, offset, nsIEditor::ePrevious);
-      return br ? NS_OK : NS_ERROR_FAILURE;
+    if (htmlEditor->CanContainTag(*atStartOfSelection.GetContainer(),
+                                  *nsGkAtoms::br)) {
+      RefPtr<Element> br =
+        htmlEditor->CreateBR(atStartOfSelection, nsIEditor::ePrevious);
+      if (NS_WARN_IF(!br)) {
+        return NS_ERROR_FAILURE;
+      }
+      return NS_OK;
     }
   }
   return NS_OK;
@@ -3383,33 +3387,42 @@ HTMLEditRules::DidDeleteSelection(Selection* aSelection,
     return NS_ERROR_NULL_POINTER;
   }
 
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
   // find where we are
-  nsCOMPtr<nsINode> startNode;
-  int32_t startOffset;
-  nsresult rv = EditorBase::GetStartNodeAndOffset(aSelection,
-                                                  getter_AddRefs(startNode),
-                                                  &startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
+  EditorDOMPoint atStartOfSelection(EditorBase::GetStartPoint(aSelection));
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
 
   // find any enclosing mailcite
-  nsCOMPtr<Element> citeNode = GetTopEnclosingMailCite(*startNode);
+  nsCOMPtr<Element> citeNode =
+    GetTopEnclosingMailCite(*atStartOfSelection.GetContainer());
   if (citeNode) {
     bool isEmpty = true, seenBR = false;
-    NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->IsEmptyNodeImpl(citeNode, &isEmpty, true, true, false,
-                                 &seenBR);
+    htmlEditor->IsEmptyNodeImpl(citeNode, &isEmpty, true, true, false,
+                                &seenBR);
     if (isEmpty) {
-      int32_t offset;
-      nsCOMPtr<nsINode> parent = EditorBase::GetNodeLocation(citeNode, &offset);
-      NS_ENSURE_STATE(mHTMLEditor);
-      rv = mHTMLEditor->DeleteNode(citeNode);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (parent && seenBR) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        nsCOMPtr<Element> brNode = mHTMLEditor->CreateBR(parent, offset);
-        NS_ENSURE_STATE(brNode);
-        aSelection->Collapse(parent, offset);
+      EditorDOMPoint atCiteNode(citeNode);
+      {
+        AutoEditorDOMPointChildInvalidator lockOffset(atCiteNode);
+        nsresult rv = htmlEditor->DeleteNode(citeNode);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+      if (atCiteNode.IsSet() && seenBR) {
+        RefPtr<Element> brNode = htmlEditor->CreateBR(atCiteNode.AsRaw());
+        if (NS_WARN_IF(!brNode)) {
+          return NS_ERROR_FAILURE;
+        }
+        IgnoredErrorResult error;
+        aSelection->Collapse(EditorRawDOMPoint(brNode), error);
+        NS_WARNING_ASSERTION(!error.Failed(),
+          "Failed to collapse selection at the new <br> element");
       }
     }
   }
@@ -3881,8 +3894,7 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
       }
       EditorRawDOMPoint pointToInsertBrNode(splitNodeResult.SplitPoint());
       // Put a br at the split point
-      brNode = htmlEditor->CreateBR(pointToInsertBrNode.GetContainer(),
-                                    pointToInsertBrNode.Offset());
+      brNode = htmlEditor->CreateBR(pointToInsertBrNode);
       NS_ENSURE_STATE(brNode);
       // Put selection at the split point
       EditorRawDOMPoint atBrNode(brNode);
@@ -5292,7 +5304,10 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
   if (aBodyNode && IsInlineNode(*aBodyNode)) {
     return NS_OK;
   }
-  NS_ENSURE_STATE(mHTMLEditor);
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
   // If we are inside an empty block, delete it.  Note: do NOT delete table
@@ -5321,22 +5336,24 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
 
     if (HTMLEditUtils::IsListItem(emptyBlock)) {
       // Are we the first list item in the list?
-      NS_ENSURE_STATE(htmlEditor);
       if (htmlEditor->IsFirstEditableChild(emptyBlock)) {
-        nsCOMPtr<nsINode> listParent = blockParent->GetParentNode();
-        NS_ENSURE_TRUE(listParent, NS_ERROR_FAILURE);
+        EditorDOMPoint atBlockParent(blockParent);
+        if (NS_WARN_IF(!atBlockParent.IsSet())) {
+          return NS_ERROR_FAILURE;
+        }
         // If we are a sublist, skip the br creation
-        if (!HTMLEditUtils::IsList(listParent)) {
-          int32_t listOffset = listParent->IndexOf(blockParent);
-
+        if (!HTMLEditUtils::IsList(atBlockParent.GetContainer())) {
           // Create a br before list
-          NS_ENSURE_STATE(htmlEditor);
-          nsCOMPtr<Element> br =
-            htmlEditor->CreateBR(listParent, listOffset);
-          NS_ENSURE_STATE(br);
+          RefPtr<Element> br = htmlEditor->CreateBR(atBlockParent.AsRaw());
+          if (NS_WARN_IF(!br)) {
+            return NS_ERROR_FAILURE;
+          }
           // Adjust selection to be right before it
-          nsresult rv = aSelection->Collapse(listParent, listOffset);
-          NS_ENSURE_SUCCESS(rv, rv);
+          ErrorResult error;
+          aSelection->Collapse(EditorRawDOMPoint(br), error);
+          if (NS_WARN_IF(error.Failed())) {
+            return error.StealNSResult();
+          }
         }
         // Else just let selection percolate up.  We'll adjust it in
         // AfterEdit()
@@ -5387,7 +5404,6 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
         MOZ_CRASH("CheckForEmptyBlock doesn't support this action yet");
       }
     }
-    NS_ENSURE_STATE(htmlEditor);
     *aHandled = true;
     nsresult rv = htmlEditor->DeleteNode(emptyBlock);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -6801,12 +6817,18 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
       NS_ENSURE_STATE(pNode);
 
       // Append a <br> to it
-      nsCOMPtr<Element> brNode = htmlEditor->CreateBR(pNode, 0);
-      NS_ENSURE_STATE(brNode);
+      RefPtr<Element> brNode =
+        htmlEditor->CreateBR(EditorRawDOMPoint(pNode, 0));
+      if (NS_WARN_IF(!brNode)) {
+        return NS_ERROR_FAILURE;
+      }
 
       // Set selection to before the break
-      rv = aSelection.Collapse(pNode, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult error;
+      aSelection.Collapse(EditorRawDOMPoint(pNode, 0), error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
     } else {
       EditorRawDOMPoint afterSibling(sibling);
       if (NS_WARN_IF(!afterSibling.AdvanceOffset())) {
@@ -6933,8 +6955,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
       return EditActionResult(NS_OK);
     }
 
-    brNode = htmlEditor->CreateBR(pointToInsertBR.GetContainer(),
-                                  pointToInsertBR.Offset());
+    brNode = htmlEditor->CreateBR(pointToInsertBR);
     if (splitAfterNewBR) {
       // We split the parent after the br we've just inserted.
       pointToSplitParentDivOrP.Set(brNode);
@@ -7097,12 +7118,18 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       NS_ENSURE_STATE(pNode);
 
       // Append a <br> to it
-      nsCOMPtr<Element> brNode = htmlEditor->CreateBR(pNode, 0);
-      NS_ENSURE_STATE(brNode);
+      RefPtr<Element> brNode =
+        htmlEditor->CreateBR(EditorRawDOMPoint(pNode, 0));
+      if (NS_WARN_IF(!brNode)) {
+        return NS_ERROR_FAILURE;
+      }
 
       // Set selection to before the break
-      rv = aSelection.Collapse(pNode, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult error;
+      aSelection.Collapse(EditorRawDOMPoint(pNode, 0), error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
     }
     return NS_OK;
   }
@@ -8345,7 +8372,7 @@ HTMLEditRules::RemoveEmptyNodes()
   }
 
   // now delete the empty nodes
-  for (auto& delNode : arrayOfEmptyNodes) {
+  for (OwningNonNull<nsINode>& delNode : arrayOfEmptyNodes) {
     if (htmlEditor->IsModifiableNode(delNode)) {
       rv = htmlEditor->DeleteNode(delNode);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -8354,17 +8381,17 @@ HTMLEditRules::RemoveEmptyNodes()
 
   // Now delete the empty mailcites.  This is a separate step because we want
   // to pull out any br's and preserve them.
-  for (auto& delNode : arrayOfEmptyCites) {
+  for (OwningNonNull<nsINode>& delNode : arrayOfEmptyCites) {
     bool bIsEmptyNode;
     rv = htmlEditor->IsEmptyNode(delNode, &bIsEmptyNode, false, true);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!bIsEmptyNode) {
       // We are deleting a cite that has just a br.  We want to delete cite,
       // but preserve br.
-      nsCOMPtr<nsINode> parent = delNode->GetParentNode();
-      int32_t offset = parent ? parent->IndexOf(delNode) : -1;
-      nsCOMPtr<Element> br = htmlEditor->CreateBR(parent, offset);
-      NS_ENSURE_STATE(br);
+      RefPtr<Element> br = htmlEditor->CreateBR(EditorRawDOMPoint(delNode));
+      if (NS_WARN_IF(!br)) {
+        return NS_ERROR_FAILURE;
+      }
     }
     rv = htmlEditor->DeleteNode(delNode);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -9036,27 +9063,24 @@ nsresult
 HTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
                                             bool aStarts)
 {
-  nsCOMPtr<nsINode> child;
-  if (aStarts) {
-    NS_ENSURE_STATE(mHTMLEditor);
-    child = mHTMLEditor->GetFirstEditableChild(aNode);
-  } else {
-    NS_ENSURE_STATE(mHTMLEditor);
-    child = mHTMLEditor->GetLastEditableChild(aNode);
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
-  NS_ENSURE_TRUE(child, NS_OK);
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
+  nsINode* child = aStarts ? htmlEditor->GetFirstEditableChild(aNode) :
+                             htmlEditor->GetLastEditableChild(aNode);
+  if (NS_WARN_IF(!child)) {
+    return NS_OK;
+  }
+
   bool foundCR = false;
   if (IsBlockNode(*child) || child->IsHTMLElement(nsGkAtoms::br)) {
     foundCR = true;
   } else {
-    nsCOMPtr<nsINode> sibling;
-    if (aStarts) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      sibling = mHTMLEditor->GetPriorHTMLSibling(&aNode);
-    } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      sibling = mHTMLEditor->GetNextHTMLSibling(&aNode);
-    }
+    nsINode* sibling =
+      aStarts ? htmlEditor->GetPriorHTMLSibling(&aNode) :
+                htmlEditor->GetNextHTMLSibling(&aNode);
     if (sibling) {
       if (IsBlockNode(*sibling) || sibling->IsHTMLElement(nsGkAtoms::br)) {
         foundCR = true;
@@ -9066,12 +9090,13 @@ HTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
     }
   }
   if (!foundCR) {
-    int32_t offset = 0;
+    EditorRawDOMPoint pointToInsert;
     if (!aStarts) {
-      offset = aNode.GetChildCount();
+      pointToInsert.SetToEndOf(&aNode);
+    } else {
+      pointToInsert.Set(&aNode, 0);
     }
-    NS_ENSURE_STATE(mHTMLEditor);
-    RefPtr<Element> brNode = mHTMLEditor->CreateBR(&aNode, offset);
+    RefPtr<Element> brNode = htmlEditor->CreateBR(pointToInsert);
     if (NS_WARN_IF(!brNode)) {
       return NS_ERROR_FAILURE;
     }

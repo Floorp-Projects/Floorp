@@ -3733,8 +3733,10 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
     if (sibling && !IsBlockNode(sibling) &&
         !sibling->IsHTMLElement(nsGkAtoms::br) && !IsBlockNode(child)) {
       // Insert br node
-      nsCOMPtr<Element> br = CreateBR(&aNode, 0);
-      NS_ENSURE_STATE(br);
+      RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aNode, 0));
+      if (NS_WARN_IF(!brElement)) {
+        return NS_ERROR_FAILURE;
+      }
     }
 
     // We need a br at end unless:
@@ -3749,8 +3751,12 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
       MOZ_ASSERT(child, "aNode has first editable child but not last?");
       if (!IsBlockNode(child) && !child->IsHTMLElement(nsGkAtoms::br)) {
         // Insert br node
-        nsCOMPtr<Element> br = CreateBR(&aNode, aNode.Length());
-        NS_ENSURE_STATE(br);
+        EditorRawDOMPoint endOfNode;
+        endOfNode.SetToEndOf(&aNode);
+        RefPtr<Element> brElement = CreateBR(endOfNode);
+        if (NS_WARN_IF(!brElement)) {
+          return NS_ERROR_FAILURE;
+        }
       }
     }
   } else {
@@ -3767,8 +3773,10 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
       if (sibling && !IsBlockNode(sibling) &&
           !sibling->IsHTMLElement(nsGkAtoms::br)) {
         // Insert br node
-        nsCOMPtr<Element> br = CreateBR(&aNode, 0);
-        NS_ENSURE_STATE(br);
+        RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aNode, 0));
+        if (NS_WARN_IF(!brElement)) {
+          return NS_ERROR_FAILURE;
+        }
       }
     }
   }
@@ -4469,7 +4477,7 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
     childElement = childElement->GetParentElement();
   }
   if (deepestStyle) {
-    RefPtr<Element> retVal = CreateBR(deepestStyle, 0);
+    RefPtr<Element> retVal = CreateBR(EditorRawDOMPoint(deepestStyle, 0));
     retVal.forget(aOutBrNode);
     NS_ENSURE_STATE(*aOutBrNode);
   }
