@@ -152,7 +152,7 @@ TEST(TestEMFConversion, CompareEMFWithReference)
   ASSERT_TRUE(NS_SUCCEEDED(GetFilePathViaSpecialDirectory(NS_OS_TEMP_DIR,
                                                         "gtest.emf",
                                                         emfPath)));
-  ASSERT_TRUE(PDFHelper->DrawPageToFile(emfPath.get(), 0,
+  ASSERT_TRUE(PDFHelper->SavePageToFile(emfPath.get(), 0,
                                         pageWidth, pageHeight));
   PDFHelper->CloseDocument();
 #ifdef _WIN64
@@ -166,7 +166,7 @@ TEST(TestEMFConversion, CompareEMFWithReference)
                                                           "gtestRef.emf",
                                                           emfPathRef)));
 
-  ASSERT_TRUE(ExtHelper->DrawPageToFile(emfPathRef.get(), 0,
+  ASSERT_TRUE(ExtHelper->SavePageToFile(emfPathRef.get(), 0,
                                         pageWidth, pageHeight));
   ExtHelper->CloseDocument();
 
@@ -194,8 +194,8 @@ TEST(TestEMFConversion, TestInsufficientWidthAndHeight)
                                                          "gtest.emf",
                                                           emfPath)));
 
-  ASSERT_FALSE(PDFHelper->DrawPageToFile(emfPath.get(), 0, 0, 0));
-  ASSERT_FALSE(PDFHelper->DrawPageToFile(emfPath.get(), 0, 100, -1));
+  ASSERT_FALSE(PDFHelper->SavePageToFile(emfPath.get(), 0, 0, 0));
+  ASSERT_FALSE(PDFHelper->SavePageToFile(emfPath.get(), 0, 100, -1));
 
   PDFHelper->CloseDocument();
 }

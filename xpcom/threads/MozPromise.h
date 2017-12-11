@@ -341,13 +341,14 @@ public:
     }
 
     RefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
+    RefPtr<AllPromiseType> promise = holder->Promise();
     for (size_t i = 0; i < aPromises.Length(); ++i) {
       aPromises[i]->Then(aProcessingTarget, __func__,
         [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, Move(aResolveValue)); },
         [holder] (RejectValueType aRejectValue) -> void { holder->Reject(Move(aRejectValue)); }
       );
     }
-    return holder->Promise();
+    return promise;
   }
 
   class Request : public MozPromiseRefcountable

@@ -23,9 +23,14 @@ EXPORTS.mozilla.widget += [
     'CompositorWidgetChild.h',
     'CompositorWidgetParent.h',
     'InProcessWinCompositorWidget.h',
+    'PDFiumChild.h',
     'PDFiumEngineShim.h',
+    'PDFiumParent.h',
+    'PDFiumProcessChild.h',
+    'PDFiumProcessParent.h',
     'PDFViaEMFPrintHelper.h',
     'WinCompositorWidget.h',
+    'WindowsEMF.h',
     'WinMessages.h',
     'WinModifierKeyState.h',
     'WinNativeEventData.h',
@@ -96,10 +101,18 @@ if CONFIG['NS_PRINTING']:
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
     ]
+
 if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     DIRS += ['/modules/pdfium']
+    IPDL_SOURCES += [
+        'PPDFium.ipdl',
+    ]
     UNIFIED_SOURCES += [
+        'PDFiumChild.cpp',
         'PDFiumEngineShim.cpp',
+        'PDFiumParent.cpp',
+        'PDFiumProcessChild.cpp',
+        'PDFiumProcessParent.cpp',
         'PDFViaEMFPrintHelper.cpp',
         'WindowsEMF.cpp',
     ]

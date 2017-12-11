@@ -9,6 +9,7 @@ UNIFIED_SOURCES = [
 ]
 
 LOCAL_INCLUDES += [
+    '/ipc/chromium/src',
     '/modules/pdfium/pdfium/public',
     '/widget/windows',
 ]

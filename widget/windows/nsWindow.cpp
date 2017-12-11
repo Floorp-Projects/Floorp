@@ -211,6 +211,7 @@
 
 #include "mozilla/Telemetry.h"
 #include "mozilla/plugins/PluginProcessParent.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

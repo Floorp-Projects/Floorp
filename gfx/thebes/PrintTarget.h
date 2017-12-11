@@ -6,6 +6,8 @@
 #ifndef MOZILLA_GFX_PRINTTARGET_H
 #define MOZILLA_GFX_PRINTTARGET_H
 
+#include <functional>
+
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "nsISupportsImpl.h"
@@ -26,6 +28,7 @@ class DrawEventRecorder;
  */
 class PrintTarget {
 public:
+  typedef std::function<void(nsresult)> PageDoneCallback;
 
   NS_INLINE_DECL_REFCOUNTING(PrintTarget);
 
@@ -136,6 +139,17 @@ public:
    */
   virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget(DrawEventRecorder* aRecorder);
 
+  /**
+   * If IsSyncPagePrinting returns true, then a user can assume the content of
+   * a page was already printed after EndPage().
+   * If IsSyncPagePrinting returns false, then a user should register a
+   * callback function using RegisterPageDoneCallback to receive page print
+   * done notifications.
+   */
+  virtual bool IsSyncPagePrinting() const { return true; }
+  void RegisterPageDoneCallback(PageDoneCallback&& aCallback);
+  void UnregisterPageDoneCallback();
+
   static void AdjustPrintJobNameForIPP(const nsAString& aJobName,
                                        nsCString& aAdjustedJobName);
   static void AdjustPrintJobNameForIPP(const nsAString& aJobName,
@@ -169,6 +183,8 @@ protected:
   // owned by mRecordingRefDT, so kept alive for our entire lifetime if set:
   DrawEventRecorder* mRecorder;
 #endif
+
+  PageDoneCallback mPageDoneCallback;
 };
 
 } // namespace gfx
