@@ -489,13 +489,13 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
     MOZ_ASSERT(context);
 
-    mozilla::image::DrawResult res =
+    mozilla::image::ImgDrawResult res =
       aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
                    aWhichFrame, SamplingFilter::POINT,
                    /* no SVGImageContext */ Nothing(),
                    imgIContainer::FLAG_SYNC_DECODE, 1.0);
 
-    if (res != mozilla::image::DrawResult::SUCCESS) {
+    if (res != mozilla::image::ImgDrawResult::SUCCESS) {
       return NS_ERROR_FAILURE;
     }
 

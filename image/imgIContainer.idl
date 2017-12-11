@@ -7,7 +7,7 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "DrawResult.h"
+#include "ImgDrawResult.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
@@ -45,7 +45,7 @@ struct Orientation;
 
 %}
 
-native DrawResult(mozilla::image::DrawResult);
+native ImgDrawResult(mozilla::image::ImgDrawResult);
 [ptr] native gfxContext(gfxContext);
 [ref] native gfxMatrix(gfxMatrix);
 [ref] native gfxRect(gfxRect);
@@ -432,10 +432,10 @@ interface imgIContainer : nsISupports
    *                    node, and the size of the viewport that the full image
    *                    would occupy. Ignored for raster images.
    * @param aFlags Flags of the FLAG_* variety
-   * @return A DrawResult value indicating whether and to what degree the
+   * @return A ImgDrawResult value indicating whether and to what degree the
    *         drawing operation was successful.
    */
-  [noscript, notxpcom] DrawResult
+  [noscript, notxpcom] ImgDrawResult
   draw(in gfxContext aContext,
        [const] in nsIntSize aSize,
        [const] in ImageRegion aRegion,

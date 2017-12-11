@@ -123,7 +123,7 @@ enum nsTableColType {
   */
 class nsTableFrame : public nsContainerFrame
 {
-  typedef mozilla::image::DrawResult DrawResult;
+  typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalMargin LogicalMargin;
   typedef mozilla::TableReflowInput TableReflowInput;

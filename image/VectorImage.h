@@ -81,7 +81,7 @@ protected:
   virtual bool     ShouldAnimate() override;
 
 private:
-  Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
+  Tuple<ImgDrawResult, IntSize, RefPtr<SourceSurface>>
     GetFrameInternal(const IntSize& aSize,
                      const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,
