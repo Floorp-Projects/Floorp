@@ -384,8 +384,8 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence) {
 
   aQueue.push(new setVCPosInvoker(aDocAcc, "moveFirst", aRule, aSequence[0]));
 
-  for (var i = 1; i < aSequence.length; i++) {
-    var invoker =
+  for (let i = 1; i < aSequence.length; i++) {
+    let invoker =
       new setVCPosInvoker(aDocAcc, "moveNext", aRule, aSequence[i]);
     aQueue.push(invoker);
   }
@@ -393,8 +393,8 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence) {
   // No further more matches for given rule, expect no virtual cursor changes.
   aQueue.push(new setVCPosInvoker(aDocAcc, "moveNext", aRule, false));
 
-  for (var i = aSequence.length - 2; i >= 0; i--) {
-    var invoker =
+  for (let i = aSequence.length - 2; i >= 0; i--) {
+    let invoker =
       new setVCPosInvoker(aDocAcc, "movePrevious", aRule, aSequence[i]);
     aQueue.push(invoker);
   }

@@ -259,14 +259,14 @@ function editableTextTest(aID) {
     };
 
     if (aRemoveTriple) {
-      var checker = new textChangeChecker(aID, aRemoveTriple[0],
+      let checker = new textChangeChecker(aID, aRemoveTriple[0],
                                           aRemoveTriple[1], aRemoveTriple[2],
                                           false);
       invoker.eventSeq.push(checker);
     }
 
     if (aInsertTriple) {
-      var checker = new textChangeChecker(aID, aInsertTriple[0],
+      let checker = new textChangeChecker(aID, aInsertTriple[0],
                                           aInsertTriple[1], aInsertTriple[2],
                                           true);
       invoker.eventSeq.push(checker);
