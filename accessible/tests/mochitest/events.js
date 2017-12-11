@@ -336,12 +336,10 @@ function eventQueue(aEventType) {
 
                 if (checker.unexpected) {
                   ok(true, msg + `There's no unexpected '${typeStr}' event.`);
+                } else if (checker.todo) {
+                  todo(false, `Todo event '${typeStr}' was caught`);
                 } else {
-                  if (checker.todo) {
-                    todo(false, `Todo event '${typeStr}' was caught`);
-                  } else {
-                    ok(true, `${msg} Event '${typeStr}' was handled.`);
-                  }
+                  ok(true, `${msg} Event '${typeStr}' was handled.`);
                 }
               }
             }
@@ -2001,6 +1999,7 @@ function listenA11yEvents(aStartToListen) {
   } else {
     // Remove observer when there are no more applicants only.
     // '< 0' case should not happen, but just in case: removeObserver() will throw.
+    // eslint-disable-next-line no-lonely-if
     if (--gA11yEventApplicantsCount <= 0)
       Services.obs.removeObserver(gA11yEventObserver, "accessible-event");
   }
