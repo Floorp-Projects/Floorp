@@ -500,13 +500,11 @@ ExpectedMessage.prototype.lazyCompare = function(aReceived, aExpected, aInfo) {
         delta.push(attr + " [ " + childDelta + " ]");
         matches = false;
       }
-    } else {
-      if (received !== expected) {
-        delta.push(
-          attr + " [ expected " + JSON.stringify(expected) +
-          " got " + JSON.stringify(received) + " ]");
-        matches = false;
-      }
+    } else if (received !== expected) {
+      delta.push(
+        attr + " [ expected " + JSON.stringify(expected) +
+        " got " + JSON.stringify(received) + " ]");
+      matches = false;
     }
   }
 
