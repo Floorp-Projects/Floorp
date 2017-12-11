@@ -48,6 +48,13 @@ enum class IsRemoveNotification
   No,
 };
 
+#ifdef DEBUG
+#define COMPOSED_DOC_DECL \
+  const bool wasInComposedDoc = !!node->GetComposedDoc();
+#else
+#define COMPOSED_DOC_DECL
+#endif
+
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_, remove_)       \
@@ -57,6 +64,7 @@ enum class IsRemoveNotification
     nsDOMMutationObserver::EnterMutationHandling();                         \
   }                                                                         \
   nsINode* node = content_;                                                 \
+  COMPOSED_DOC_DECL                                                         \
   NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");                  \
   if (remove_ == IsRemoveNotification::Yes && node->GetComposedDoc()) {     \
     if (nsIPresShell* shell = doc->GetObservingShell()) {                   \
@@ -79,6 +87,12 @@ enum class IsRemoveNotification
       node = node->GetParentNode();                                         \
     }                                                                       \
   } while (node);                                                           \
+  /* Whitelist NativeAnonymousChildListChange removal notifications from    \
+   * the assertion since it runs from UnbindFromTree, and thus we don't     \
+   * reach the document, but doesn't matter. */                             \
+  MOZ_ASSERT((last == doc) == wasInComposedDoc ||                           \
+             (remove_ == IsRemoveNotification::Yes &&                       \
+              !strcmp(#func_, "NativeAnonymousChildListChange")));          \
   if (remove_ == IsRemoveNotification::No && last == doc) {                 \
     if (nsIPresShell* shell = doc->GetObservingShell()) {                   \
       shell->func_ params_;                                                 \
@@ -186,9 +200,11 @@ nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
                                             bool aIsRemove)
 {
   nsIDocument* doc = aContent->OwnerDoc();
+  auto isRemove = aIsRemove
+    ? IsRemoveNotification::Yes : IsRemoveNotification::No;
   IMPL_MUTATION_NOTIFICATION(NativeAnonymousChildListChange, aContent,
                             (doc, aContent, aIsRemove),
-                            IsRemoveNotification::No);
+                            isRemove);
 }
 
 void
