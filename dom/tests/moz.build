@@ -85,9 +85,6 @@ with Files("mochitest/geolocation/**"):
 with Files("mochitest/localstorage/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("mochitest/notification/**"):
-    BUG_COMPONENT = ("Core", "DOM")
-
 with Files("mochitest/orientation/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
@@ -169,7 +166,6 @@ MOCHITEST_MANIFESTS += [
     'mochitest/general/mochitest.ini',
     'mochitest/geolocation/mochitest.ini',
     'mochitest/localstorage/mochitest.ini',
-    'mochitest/notification/mochitest.ini',
     'mochitest/orientation/mochitest.ini',
     'mochitest/pointerlock/mochitest.ini',
     'mochitest/script/mochitest.ini',

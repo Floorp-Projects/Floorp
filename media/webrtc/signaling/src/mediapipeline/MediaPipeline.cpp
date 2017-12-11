@@ -62,7 +62,7 @@
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
 // 48KHz)
 #define AUDIO_SAMPLE_BUFFER_MAX_BYTES 480*2*2
-static_assert((WEBRTC_MAX_SAMPLE_RATE/100)*sizeof(uint16_t) * 2
+static_assert((WEBRTC_DEFAULT_SAMPLE_RATE/100)*sizeof(uint16_t) * 2
                <= AUDIO_SAMPLE_BUFFER_MAX_BYTES,
                "AUDIO_SAMPLE_BUFFER_MAX_BYTES is not large enough");
 
@@ -2059,11 +2059,9 @@ public:
       return;
     }
 
-    TrackRate rate = graph->GraphRate();
-    uint32_t samples_per_10ms = rate/100;
-
     // This comparison is done in total time to avoid accumulated roundoff errors.
-    while (source->TicksToTimeRoundDown(rate, played_ticks_) < desired_time) {
+    while (source->TicksToTimeRoundDown(WEBRTC_DEFAULT_SAMPLE_RATE,
+                                        played_ticks_) < desired_time) {
       int16_t scratch_buffer[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
 
       int samples_length;
@@ -2072,7 +2070,7 @@ public:
       MediaConduitErrorCode err =
           static_cast<AudioSessionConduit*>(conduit_.get())->GetAudioFrame(
               scratch_buffer,
-              rate,
+              WEBRTC_DEFAULT_SAMPLE_RATE,
               0,  // TODO(ekr@rtfm.com): better estimate of "capture" (really playout) delay
               samples_length);
 
@@ -2082,11 +2080,11 @@ public:
                     err, played_ticks_, desired_time,
                     source->StreamTimeToSeconds(desired_time));
         // if this is not enough we'll loop and provide more
-        samples_length = samples_per_10ms;
+        samples_length = WEBRTC_DEFAULT_SAMPLE_RATE/100;
         PodArrayZero(scratch_buffer);
       }
 
-      MOZ_ASSERT(samples_length * sizeof(uint16_t) <= AUDIO_SAMPLE_BUFFER_MAX_BYTES);
+      MOZ_ASSERT(samples_length * sizeof(uint16_t) < AUDIO_SAMPLE_BUFFER_MAX_BYTES);
 
       CSFLogDebug(LOGTAG, "Audio conduit returned buffer of length %u",
                   samples_length);
@@ -2097,7 +2095,7 @@ public:
       // We derive the number of channels of the stream from the number of samples
       // the AudioConduit gives us, considering it gives us packets of 10ms and we
       // know the rate.
-      uint32_t channelCount = samples_length / samples_per_10ms;
+      uint32_t channelCount = samples_length / (WEBRTC_DEFAULT_SAMPLE_RATE / 100);
       AutoTArray<int16_t*,2> channels;
       AutoTArray<const int16_t*,2> outputChannels;
       size_t frames = samples_length / channelCount;
@@ -2124,7 +2122,7 @@ public:
       if (source->AppendToTrack(track_->GetInputTrackId(), &segment)) {
         played_ticks_ += frames;
         if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
-          if (played_ticks_ > last_log_ + rate) { // ~ 1 second
+          if (played_ticks_ > last_log_ + WEBRTC_DEFAULT_SAMPLE_RATE) { // ~ 1 second
             MOZ_LOG(AudioLogModule(), LogLevel::Debug,
                     ("%p: Inserting %zu samples into track %d, total = %" PRIu64,
                      (void*) this, frames, track_->GetInputTrackId(),
