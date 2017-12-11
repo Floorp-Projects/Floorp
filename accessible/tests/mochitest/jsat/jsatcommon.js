@@ -188,7 +188,7 @@ AccessFuContentTest.prototype = {
   currentAction: null,
   actionNum: -1,
 
-  start: function(aFinishedCallback) {
+  start(aFinishedCallback) {
     Logger.logLevel = Logger.DEBUG;
     this.finishedCallback = aFinishedCallback;
     var self = this;
@@ -220,7 +220,7 @@ AccessFuContentTest.prototype = {
     });
   },
 
-  finish: function() {
+  finish() {
     Logger.logLevel = Logger.INFO;
     for (var mm of this.mms) {
         mm.sendAsyncMessage("AccessFu:Stop");
@@ -237,7 +237,7 @@ AccessFuContentTest.prototype = {
     }
   },
 
-  setupMessageManager:  function(aMessageManager, aCallback) {
+  setupMessageManager(aMessageManager, aCallback) {
     function contentScript() {
       addMessageListener("AccessFuTest:Focus", function(aMessage) {
         var elem = content.document.querySelector(aMessage.json.selector);
@@ -271,7 +271,7 @@ AccessFuContentTest.prototype = {
       "data:,(" + contentScript.toString() + ")();", false);
   },
 
-  pump: function() {
+  pump() {
     this.expected.shift();
     if (this.expected.length) {
       return;
@@ -299,7 +299,7 @@ AccessFuContentTest.prototype = {
     }
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     var expected = this.expected[0];
 
     if (!expected) {

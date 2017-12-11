@@ -20,7 +20,7 @@
     SimpleTest.expectAssertions(0, 1);
 
     var gFocusHandler = {
-      handleEvent: function(aEvent) {
+      handleEvent(aEvent) {
         switch (this.count) {
           case 0:
             is(aEvent.DOMNode, getNode("input1"),
