@@ -81,8 +81,11 @@ nsPagePrintTimer::Run()
   // if the printing was cancelled
   donePrinting = !mPrintEngine || mPrintEngine->PrintPage(mPrintObj, inRange);
   if (donePrinting) {
-    // now clean up print or print the next webshell
-    if (!mPrintEngine || mPrintEngine->DonePrintingPages(mPrintObj, NS_OK)) {
+
+    if (mWaitingForRemotePrint ||
+        // If we are not waiting for the remote printing, it is the time to
+        // end printing task by calling DonePrintingPages.
+        (!mPrintEngine || mPrintEngine->DonePrintingPages(mPrintObj, NS_OK))) {
       initNewTimer = false;
       mDone = true;
     }
@@ -179,6 +182,11 @@ nsPagePrintTimer::RemotePrintFinished()
 {
   if (!mWaitingForRemotePrint) {
     return;
+  }
+
+  // now clean up print or print the next webshell
+  if (mDone && mPrintEngine) {
+    mDone = mPrintEngine->DonePrintingPages(mPrintObj, NS_OK);
   }
 
   mWaitingForRemotePrint->SetTarget(

@@ -8,6 +8,27 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+// In some cases it is desirable to use an audio source or sink which may
+// not be available to the VoiceEngine, such as a DV camera. This sub-API
+// contains functions that allow for the use of such external recording
+// sources and playout sinks. It also describes how recorded data, or data
+// to be played out, can be modified outside the VoiceEngine.
+//
+// Usage example, omitting error checking:
+//
+//  using namespace webrtc;
+//  VoiceEngine* voe = VoiceEngine::Create();
+//  VoEBase* base = VoEBase::GetInterface(voe);
+//  VoEMediaProcess media = VoEMediaProcess::GetInterface(voe);
+//  base->Init();
+//  ...
+//  media->SetExternalRecordingStatus(true);
+//  ...
+//  base->Terminate();
+//  base->Release();
+//  media->Release();
+//  VoiceEngine::Delete(voe);
+//
 #ifndef WEBRTC_VOICE_ENGINE_VOE_EXTERNAL_MEDIA_H
 #define WEBRTC_VOICE_ENGINE_VOE_EXTERNAL_MEDIA_H
 
@@ -64,6 +85,38 @@ class WEBRTC_DLLEXPORT VoEExternalMedia {
   // media for the specified |channel| and |type|.
   virtual int DeRegisterExternalMediaProcessing(int channel,
                                                 ProcessingTypes type) = 0;
+
+  // Toogles state of external recording.
+  virtual int SetExternalRecordingStatus(bool enable) = 0;
+
+  // Toogles state of external playout.
+  virtual int SetExternalPlayoutStatus(bool enable) = 0;
+
+  // This function accepts externally recorded audio. During transmission,
+  // this method should be called at as regular an interval as possible
+  // with frames of corresponding size.
+  virtual int ExternalRecordingInsertData(
+                                          const int16_t speechData10ms[], int lengthSamples,
+                                          int samplingFreqHz, int current_delay_ms) = 0;
+
+
+  // This function inserts audio written to the OS audio drivers for use
+  // as the far-end signal for AEC processing.  The length of the block
+  // must be 160, 320, 441 or 480 samples (for 16000, 32000, 44100 or
+  // 48000 kHz sampling rates respectively).
+  virtual int ExternalPlayoutData(
+                                  int16_t speechData10ms[], int samplingFreqHz, int num_channels,
+                                  int& lengthSamples) = 0;
+
+  // This function gets audio for an external playout sink.
+  // During transmission, this function should be called every ~10 ms
+  // to obtain a new 10 ms frame of audio. The length of the block will
+  // be 160, 320, 441 or 480 samples (for 16000, 32000, 44100 or
+  // 48000 kHz sampling rates respectively).
+  virtual int ExternalPlayoutGetData(
+                                     int16_t speechData10ms[], int samplingFreqHz,
+                                     int current_delay_ms, int& lengthSamples) = 0;
+
   // Pulls an audio frame from the specified |channel| for external mixing.
   // If the |desired_sample_rate_hz| is 0, the signal will be returned with
   // its native frequency, otherwise it will be resampled. Valid frequencies

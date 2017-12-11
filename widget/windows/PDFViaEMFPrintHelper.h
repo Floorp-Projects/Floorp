@@ -9,6 +9,8 @@
 #include "nsCOMPtr.h"
 #include "PDFiumEngineShim.h"
 #include "mozilla/Vector.h"
+#include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/ipc/Shmem.h"
 
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
@@ -17,6 +19,11 @@ class nsIFile;
 class nsFileInputStream;
 
 namespace mozilla {
+
+namespace ipc {
+  class IShmemAllocator;
+}
+
 namespace widget {
 
 /**
@@ -28,25 +35,36 @@ namespace widget {
 class PDFViaEMFPrintHelper
 {
 public:
+  typedef mozilla::ipc::FileDescriptor FileDescriptor;
+
   PDFViaEMFPrintHelper();
   virtual ~PDFViaEMFPrintHelper();
 
   /** Loads the specified PDF file. */
-  NS_IMETHOD OpenDocument(nsIFile *aFile);
+  NS_IMETHOD OpenDocument(nsIFile* aFile);
   NS_IMETHOD OpenDocument(const char* aFileName);
+  NS_IMETHOD OpenDocument(const FileDescriptor& aFD);
 
   /** Releases document buffer. */
   void CloseDocument();
 
   int GetPageCount() const { return mPDFiumEngine->GetPageCount(mPDFDoc); }
 
-  /** Convert specified PDF page to EMF and draw the EMF onto the given DC. */
+  /**
+   * Convert the specified PDF page to EMF and draw the EMF onto the
+   * given DC.
+   */
   bool DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
                 int aPageWidth, int aPageHeight);
 
-  /** Convert specified PDF page to EMF and save it to file. */
-  bool DrawPageToFile(const wchar_t* aFilePath, unsigned int aPageIndex,
+  /** Convert the specified PDF page to EMF and save it to file. */
+  bool SavePageToFile(const wchar_t* aFilePath, unsigned int aPageIndex,
                       int aPageWidth, int aPageHeight);
+
+  /** Create a share memory and serialize the EMF content into it. */
+  bool SavePageToBuffer(unsigned int aPageIndex, int aPageWidth,
+                        int aPageHeight, ipc::Shmem& aMem,
+                        mozilla::ipc::IShmemAllocator* aAllocator);
 
 protected:
   virtual bool CreatePDFiumEngineIfNeed();
@@ -55,6 +73,7 @@ protected:
 
   RefPtr<PDFiumEngineShim>    mPDFiumEngine;
   FPDF_DOCUMENT               mPDFDoc;
+  PRFileDesc*                 mPrfile;
 };
 
 } // namespace widget
