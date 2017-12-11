@@ -23,9 +23,9 @@
       // Bug 509696, 607219.
       testStates(document, STATE_READONLY, 0); // role=""
 
-      document.body.setAttribute("role","banner"); // no platform mapping
+      document.body.setAttribute("role", "banner"); // no platform mapping
       testStates(document, STATE_READONLY);
-      document.body.setAttribute("role","foo"); // bogus role
+      document.body.setAttribute("role", "foo"); // bogus role
       testStates(document, STATE_READONLY);
       document.body.removeAttribute("role");
       testStates(document, STATE_READONLY);

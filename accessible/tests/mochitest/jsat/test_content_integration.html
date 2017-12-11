@@ -211,7 +211,7 @@
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [doc.defaultView.ariaHideBack,
            new ExpectedCursorChange(
-            ["such app", "wow", {"string": "headingLevel","args": [1]}])],
+            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
           // Changing aria-hidden attribute twice and making sure that the event
           // is fired only once when the actual change happens.
           [doc.defaultView.ariaHideBack],
@@ -239,7 +239,7 @@
           [ContentMessages.focusSelector("button#back", false),
             // Must not speak Back button as it is aria-hidden
            new ExpectedCursorChange(
-             ["such app", "wow", {"string": "headingLevel","args": [1]}])],
+             ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
           [doc.defaultView.ariaShowBack],
           [ContentMessages.focusSelector("button#back", true), null],
           [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
