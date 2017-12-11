@@ -106,10 +106,9 @@
       gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
       if (SEAMONKEY) {
         todo(false, "shift tab from editable document fails on (Windows) SeaMonkey! (Bug 718235)");
-      } else {
-      if (LINUX || MAC)
+      } else if (LINUX || MAC) {
         todo(false, "shift tab from editable document fails on linux and Mac, bug 746519!");
-      else
+      } else {
         gQueue.push(new synthShiftTab("link", new focusChecker("link")));
       } // ! SEAMONKEY
 
