@@ -241,6 +241,7 @@ dom/network/**
 dom/notification/Notification*.*
 dom/notification/test/browser/**
 dom/notification/test/unit/**
+dom/notification/test/mochitest/**
 dom/offline/**
 dom/payments/**
 dom/performance/**
