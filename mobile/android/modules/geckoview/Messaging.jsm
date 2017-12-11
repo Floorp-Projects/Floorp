@@ -202,7 +202,7 @@ DispatcherDelegate.prototype = {
         return yield self.listeners[event](data.data);
       }).then(response => {
         callback.onSuccess(response);
-      }, error => {
+      }, e => {
         Cu.reportError("Error in Messaging handler for " + event + ": " + e);
         callback.onError({
           message: e.message || (e && e.toString()),
