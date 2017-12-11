@@ -373,10 +373,6 @@ ServoStyleSet::PreTraverseSync()
 
   LookAndFeel::NativeInit();
 
-  // This is lazily computed and pseudo matching needs to access
-  // it so force computation early.
-  mPresContext->Document()->GetDocumentState();
-
   if (gfxUserFontSet* userFontSet = mPresContext->Document()->GetUserFontSet()) {
     // Ensure that the @font-face data is not stale
     uint64_t generation = userFontSet->GetGeneration();
