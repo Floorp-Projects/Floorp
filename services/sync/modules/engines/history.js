@@ -217,7 +217,19 @@ HistoryStore.prototype = {
 
     if (records.length) {
       for (let chunk of this._generateChunks(records)) {
-        await PlacesUtils.history.insertMany(chunk);
+        // Per bug 1415560, we ignore any exceptions returned by insertMany
+        // as they are likely to be spurious. We do supply an onError handler
+        // and log the exceptions seen there as they are likely to be
+        // informative, but we still never abort the sync based on them.
+        try {
+          await PlacesUtils.history.insertMany(chunk, null, failedVisit => {
+            this._log.info("Failed to insert a history record", failedVisit.guid);
+            this._log.trace("The record that failed", failedVisit);
+            failed.push(failedVisit.guid);
+          });
+        } catch (ex) {
+          this._log.info("Failed to insert history records", ex);
+        }
       }
     }
 
@@ -257,6 +269,13 @@ HistoryStore.prototype = {
     }
   },
 
+  /* An internal helper to determine if we can add an entry to places.
+     Exists primarily so tests can override it.
+   */
+  _canAddURI(uri) {
+    return PlacesUtils.history.canAddURI(uri);
+  },
+
   /**
    * Converts a Sync history record to a mozIPlaceInfo.
    *
@@ -275,7 +294,7 @@ HistoryStore.prototype = {
     }
     record.guid = record.id;
 
-    if (!PlacesUtils.history.canAddURI(record.uri)) {
+    if (!this._canAddURI(record.uri)) {
       this._log.trace("Ignoring record " + record.id + " with URI "
                       + record.uri.spec + ": can't add this URI.");
       return false;
