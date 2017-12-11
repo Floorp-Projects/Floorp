@@ -6,7 +6,6 @@
 
 use ac::AutoCompartment;
 use libc::c_uint;
-use heapsize::HeapSizeOf;
 use std::cell::{Cell, UnsafeCell};
 use std::char;
 use std::ffi;
@@ -257,13 +256,6 @@ impl Drop for Runtime {
                 JS_ShutDown();
             }
         }
-    }
-}
-
-// This is measured through `glue::CollectServoSizes`.
-impl HeapSizeOf for Runtime {
-    fn heap_size_of_children(&self) -> usize {
-        0
     }
 }
 
