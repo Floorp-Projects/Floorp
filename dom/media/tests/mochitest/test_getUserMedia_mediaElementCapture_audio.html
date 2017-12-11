@@ -16,7 +16,7 @@ createHTML({
 var audioContext;
 var gUMAudioElement;
 var analyser;
-runTest(() => getUserMedia({audio: { echoCancellation: false }})
+runTest(() => getUserMedia({audio: true})
   .then(stream => {
     gUMAudioElement = createMediaElement("audio", "gUMAudio");
     gUMAudioElement.srcObject = stream;
