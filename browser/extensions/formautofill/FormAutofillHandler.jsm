@@ -138,7 +138,7 @@ class FormAutofillSection {
     return this._cacheValue.allFieldNames;
   }
 
-  getFieldDetailByName(fieldName) {
+  _getFieldDetailByName(fieldName) {
     return this._validDetails.find(detail => detail.fieldName == fieldName);
   }
 
@@ -181,7 +181,7 @@ class FormAutofillSection {
       // "-moz-street-address-one-line" is used by the labels in
       // ProfileAutoCompleteResult.
       profile["-moz-street-address-one-line"] = this._getOneLineStreetAddress(profile["street-address"]);
-      let streetAddressDetail = this.getFieldDetailByName("street-address");
+      let streetAddressDetail = this._getFieldDetailByName("street-address");
       if (streetAddressDetail &&
           (streetAddressDetail.elementWeakRef.get() instanceof Ci.nsIDOMHTMLInputElement)) {
         profile["street-address"] = profile["-moz-street-address-one-line"];
@@ -190,7 +190,7 @@ class FormAutofillSection {
       let waitForConcat = [];
       for (let f of ["address-line3", "address-line2", "address-line1"]) {
         waitForConcat.unshift(profile[f]);
-        if (this.getFieldDetailByName(f)) {
+        if (this._getFieldDetailByName(f)) {
           if (waitForConcat.length > 1) {
             profile[f] = FormAutofillUtils.toOneLineAddress(waitForConcat);
           }
@@ -211,7 +211,7 @@ class FormAutofillSection {
       return;
     }
 
-    let detail = this.getFieldDetailByName("tel");
+    let detail = this._getFieldDetailByName("tel");
     if (!detail) {
       return;
     }
@@ -260,7 +260,7 @@ class FormAutofillSection {
     }
 
     for (let fieldName in profile) {
-      let fieldDetail = this.getFieldDetailByName(fieldName);
+      let fieldDetail = this._getFieldDetailByName(fieldName);
       if (!fieldDetail) {
         continue;
       }
@@ -297,7 +297,7 @@ class FormAutofillSection {
       return;
     }
 
-    let detail = this.getFieldDetailByName("cc-exp");
+    let detail = this._getFieldDetailByName("cc-exp");
     if (!detail) {
       return;
     }
@@ -330,7 +330,7 @@ class FormAutofillSection {
 
   _adaptFieldMaxLength(profile) {
     for (let key in profile) {
-      let detail = this.getFieldDetailByName(key);
+      let detail = this._getFieldDetailByName(key);
       if (!detail) {
         continue;
       }
@@ -420,7 +420,7 @@ class FormAutofillSection {
         if (element == focusedInput ||
             (element != focusedInput && !element.value)) {
           element.setUserInput(value);
-          this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
+          this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
       } else if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
         let cache = this._cacheValue.matchingSelectOption.get(element) || {};
@@ -436,7 +436,7 @@ class FormAutofillSection {
           element.dispatchEvent(new element.ownerGlobal.Event("change", {bubbles: true}));
         }
         // Autofill highlight appears regardless if value is changed or not
-        this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
+        this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
       }
       if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
         element.addEventListener("input", this, {mozSystemGroup: true});
@@ -486,7 +486,7 @@ class FormAutofillSection {
         continue;
       }
       element.previewValue = value;
-      this.changeFieldState(fieldDetail, value ? FIELD_STATES.PREVIEW : FIELD_STATES.NORMAL);
+      this._changeFieldState(fieldDetail, value ? FIELD_STATES.PREVIEW : FIELD_STATES.NORMAL);
     }
   }
 
@@ -512,7 +512,7 @@ class FormAutofillSection {
         continue;
       }
 
-      this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+      this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
   }
 
@@ -545,7 +545,7 @@ class FormAutofillSection {
    * @param {string} nextState
    *        Used to determine the next state
    */
-  changeFieldState(fieldDetail, nextState) {
+  _changeFieldState(fieldDetail, nextState) {
     let element = fieldDetail.elementWeakRef.get();
 
     if (!element) {
@@ -578,7 +578,7 @@ class FormAutofillSection {
     for (let fieldDetail of this._validDetails) {
       const element = fieldDetail.elementWeakRef.get();
       element.removeEventListener("input", this, {mozSystemGroup: true});
-      this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+      this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
     this.address.filledRecordGUID = null;
     this.creditCard.filledRecordGUID = null;
@@ -709,7 +709,7 @@ class FormAutofillSection {
 
     // Normalize Country
     if (address.record.country) {
-      let detail = this.getFieldDetailByName("country");
+      let detail = this._getFieldDetailByName("country");
       // Try identifying country field aggressively if it doesn't come from
       // @autocomplete.
       if (detail._reason != "autocomplete") {
@@ -765,7 +765,7 @@ class FormAutofillSection {
         const target = event.target;
         const fieldDetail = this.getFieldDetailByElement(target);
         const targetSet = this._getTargetSet(target);
-        this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+        this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
 
         if (!targetSet.fieldDetails.some(detail => detail.state == FIELD_STATES.AUTO_FILLED)) {
           targetSet.filledRecordGUID = null;
@@ -923,7 +923,7 @@ class FormAutofillHandler {
     return allValidDetails;
   }
 
-  hasFilledSection() {
+  _hasFilledSection() {
     return this.sections.some(section => section.isFilled());
   }
 
@@ -935,7 +935,7 @@ class FormAutofillHandler {
    *        A profile to be filled in.
    */
   async autofillFormFields(profile) {
-    let noFilledSectionsPreviously = !this.hasFilledSection();
+    let noFilledSectionsPreviously = !this._hasFilledSection();
     await this.activeSection.autofillFields(profile);
 
     const onChangeHandler = e => {
@@ -948,7 +948,7 @@ class FormAutofillHandler {
         }
       }
       // Unregister listeners once no field is in AUTO_FILLED state.
-      if (!this.hasFilledSection()) {
+      if (!this._hasFilledSection()) {
         this.form.rootElement.removeEventListener("input", onChangeHandler, {mozSystemGroup: true});
         this.form.rootElement.removeEventListener("reset", onChangeHandler, {mozSystemGroup: true});
       }
