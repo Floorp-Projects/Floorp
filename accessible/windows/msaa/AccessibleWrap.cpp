@@ -1436,6 +1436,19 @@ GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc,
   return disp.forget();
 }
 
+bool
+AccessibleWrap::IsRootForHWND()
+{
+  if (IsRoot()) {
+    return true;
+  }
+  HWND thisHwnd = GetHWNDFor(this);
+  AccessibleWrap* parent = static_cast<AccessibleWrap*>(Parent());
+  MOZ_ASSERT(parent);
+  HWND parentHwnd = GetHWNDFor(parent);
+  return thisHwnd != parentHwnd;
+}
+
 already_AddRefed<IAccessible>
 AccessibleWrap::GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct)
 {
@@ -1484,8 +1497,9 @@ AccessibleWrap::GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct)
   // Child indices (> 0) are handled below for both local and remote children.
   if (XRE_IsParentProcess() && !IsProxy() &&
       varChild.lVal < 0 && !sIDGen.IsChromeID(varChild.lVal)) {
-    if (!IsRoot()) {
-      // Bug 1422201: accChild with a remote id is only valid on the root accessible.
+    if (!IsRootForHWND()) {
+      // Bug 1422201, 1424657: accChild with a remote id is only valid on the
+      // root accessible for an HWND.
       // Otherwise, we might return remote accessibles which aren't descendants
       // of this accessible. This would confuse clients which use accChild to
       // check whether something is a descendant of a document.
