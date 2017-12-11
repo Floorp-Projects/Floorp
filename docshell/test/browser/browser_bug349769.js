@@ -17,6 +17,7 @@ add_task(async function test() {
 
   for (var uri of uris) {
     await BrowserTestUtils.withNewTab({ gBrowser }, async function(newBrowser) {
+      let loadedPromise = BrowserTestUtils.browserLoaded(newBrowser);
       await BrowserTestUtils.loadURI(newBrowser, uri);
 
       var prin = newBrowser.contentPrincipal;
@@ -30,7 +31,7 @@ add_task(async function test() {
       // true in the content process.
       await checkContentProcess(newBrowser, uri);
 
-      await BrowserTestUtils.browserLoaded(newBrowser);
+      await loadedPromise;
 
       prin = newBrowser.contentPrincipal;
       isnot(prin, null, "Loaded principal must not be null when adding " + uri);

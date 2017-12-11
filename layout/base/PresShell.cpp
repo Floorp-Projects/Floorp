@@ -7118,6 +7118,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
           anyTarget = TouchManager::GetAnyCapturedTouchTarget();
         }
 
+        // When handling pointerstart with multiple touch points, frame is
+        // overwritten. Keep the original root frame for hit test.
+        nsIFrame* rootFrame = frame;
         for (int32_t i = touchEvent->mTouches.Length(); i; ) {
           --i;
           dom::Touch* touch = touchEvent->mTouches[i];
@@ -7127,9 +7130,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
             // find the target for this touch
             eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                               touch->mRefPoint,
-                                                              frame);
+                                                              rootFrame);
             nsIFrame* target = FindFrameTargetedByInputEvent(aEvent,
-                                                             frame,
+                                                             rootFrame,
                                                              eventPoint,
                                                              flags);
             if (target && !anyTarget) {

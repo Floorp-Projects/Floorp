@@ -372,12 +372,16 @@ TraverseArcAbs(const float* aArgs, SVGPathTraversalState& aState)
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     float dist = 0;
     Point radii(aArgs[0], aArgs[1]);
-    Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
-    nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
-                                aArgs[3] != 0, aArgs[4] != 0);
-    while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
-      dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
-      bez[0] = bez[3];
+    if (radii.x == 0.0f || radii.y == 0.0f) {
+      dist = CalcDistanceBetweenPoints(aState.pos, to);
+    } else {
+      Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
+      nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
+                                  aArgs[3] != 0, aArgs[4] != 0);
+      while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
+        dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
+        bez[0] = bez[3];
+      }
     }
     aState.length += dist;
     aState.cp1 = aState.cp2 = to;
@@ -392,12 +396,16 @@ TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState)
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     float dist = 0;
     Point radii(aArgs[0], aArgs[1]);
-    Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
-    nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
-                                aArgs[3] != 0, aArgs[4] != 0);
-    while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
-      dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
-      bez[0] = bez[3];
+    if (radii.x == 0.0f || radii.y == 0.0f) {
+      dist = CalcDistanceBetweenPoints(aState.pos, to);
+    } else {
+      Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
+      nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
+                                  aArgs[3] != 0, aArgs[4] != 0);
+      while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
+        dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
+        bez[0] = bez[3];
+      }
     }
     aState.length += dist;
     aState.cp1 = aState.cp2 = to;
