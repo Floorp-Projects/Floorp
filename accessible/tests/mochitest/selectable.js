@@ -68,7 +68,7 @@ function testIsItemSelected(aSelectAcc, aTraversedAcc, aIndexObj, aSelectedChild
 
       // selected state
       testStates(child, isSelected ? STATE_SELECTED : 0, 0,
-                 !isSelected ? STATE_SELECTED : 0 , 0);
+                 !isSelected ? STATE_SELECTED : 0, 0);
 
       continue;
     }
