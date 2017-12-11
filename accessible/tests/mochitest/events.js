@@ -2119,7 +2119,7 @@ var gLogger =
    */
   hasFeature: function logger_hasFeature(aFeature) {
     var startIdx = gA11yEventDumpFeature.indexOf(aFeature);
-    if (startIdx == - 1)
+    if (startIdx == -1)
       return false;
 
     var endIdx = startIdx + aFeature.length;

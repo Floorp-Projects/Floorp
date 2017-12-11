@@ -237,7 +237,7 @@ function testTableIndexes(aIdentifier, aIdxes) {
       ok(idx != -1 && cellAcc || idx == -1 && !cellAcc,
          id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
 
-      if (idx != - 1) {
+      if (idx != -1) {
 
         // getRowIndexAt
         var origRowIdx = rowIdx;
