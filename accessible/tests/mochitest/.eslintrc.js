@@ -13,7 +13,6 @@ module.exports = {
     // removed (and hence enabled) at some stage.
     "no-nested-ternary": "off",
     "no-redeclare": "off",
-    "no-shadow": "off",
     "no-undef": "off",
   }
 };
