@@ -29,6 +29,4 @@ fi
 # PKG_CONFIG_LIBDIR is appropriately overridden in mozconfig.linux32
 export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
 
-export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
-
 . "$topsrcdir/build/unix/mozconfig.gtk"
