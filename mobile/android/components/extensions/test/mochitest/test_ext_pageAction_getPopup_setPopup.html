@@ -102,7 +102,7 @@ add_task(async function test_setPopup_and_getPopup() {
         if (data.popup == "") {
           expectingOnClicked[data.tabId] = true;
         } else {
-          delete expectingOnClicked[tabId];
+          delete expectingOnClicked[data.tabId];
         }
         await browser.pageAction.setPopup({tabId: data.tabId, popup: data.popup});
         browser.test.sendMessage("page-action-popup-set");
