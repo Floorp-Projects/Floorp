@@ -1888,11 +1888,11 @@ Function ShouldInstall64Bit
 
   ; Lenovo OneKey Theater can theoretically be in a directory other than this
   ; one, because some installer versions let you change it, but it's unlikely.
-  ${If} ${FileExists} "C:\Program Files (x86)\Lenovo\Onekey Theater\windowsapihookdll64.dll"
+  ${If} ${FileExists} "$PROGRAMFILES32\Lenovo\Onekey Theater\windowsapihookdll64.dll"
     Return
   ${EndIf}
 
-  ${If} ${FileExists} "C:\Program Files (x86)\Lenovo\Energy Management\Energy Management.exe"
+  ${If} ${FileExists} "$PROGRAMFILES32\Lenovo\Energy Management\Energy Management.exe"
     Return
   ${EndIf}
 
