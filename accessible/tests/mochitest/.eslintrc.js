@@ -15,6 +15,5 @@ module.exports = {
     "no-redeclare": "off",
     "no-shadow": "off",
     "no-undef": "off",
-    "space-unary-ops": "off",
   }
 };
