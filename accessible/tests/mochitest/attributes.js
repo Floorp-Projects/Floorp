@@ -199,7 +199,7 @@ function testTextAttrsWrongOffset(aID, aOffset) {
   var s = {}, e = {};
   var acc = getAccessible(ID, [nsIAccessibleText]);
     acc.getTextAttributes(false, 157, s, e);
-  } catch (e) {
+  } catch (ex) {
     res = true;
   }
 
