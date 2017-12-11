@@ -246,7 +246,7 @@ public:
                           mozilla::layers::WebRenderLayerManager* aManager,
                           nsDisplayListBuilder* aDisplayListBuilder);
 
-  DrawResult
+  ImgDrawResult
   Paint(gfxContext& aRenderingContext, nsPoint aPt,
         const nsRect& aDirtyRect, uint32_t aFlags,
         bool aDisableSubpixelAA, nsIFrame* aFrame);
@@ -370,7 +370,7 @@ BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
   }
 }
 
-DrawResult
+ImgDrawResult
 BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
                       const nsRect& aDirtyRect, uint32_t aFlags,
                       bool aDisableSubpixelAA, nsIFrame* aFrame)
@@ -422,7 +422,7 @@ BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
     PaintTextToContext(aFrame, &aRenderingContext, aDisableSubpixelAA);
   }
 
-  return DrawResult::SUCCESS;
+  return ImgDrawResult::SUCCESS;
 }
 
 bool
@@ -770,7 +770,7 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
 
-  DrawResult result = static_cast<nsBulletFrame*>(mFrame)->
+  ImgDrawResult result = static_cast<nsBulletFrame*>(mFrame)->
     PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect, flags,
                 mDisableSubpixelAA);
 
@@ -939,7 +939,7 @@ nsBulletFrame::CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt)
   return Nothing();
 }
 
-DrawResult
+ImgDrawResult
 nsBulletFrame::PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
                            const nsRect& aDirtyRect, uint32_t aFlags,
                            bool aDisableSubpixelAA)
@@ -947,7 +947,7 @@ nsBulletFrame::PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
   Maybe<BulletRenderer> br = CreateBulletRenderer(aRenderingContext, aPt);
 
   if (!br) {
-    return DrawResult::SUCCESS;
+    return ImgDrawResult::SUCCESS;
   }
 
   return br->Paint(aRenderingContext, aPt, aDirtyRect,

@@ -53,7 +53,7 @@ class nsTreeBodyFrame final
   , public nsIReflowCallback
 {
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
-  typedef mozilla::image::DrawResult DrawResult;
+  typedef mozilla::image::ImgDrawResult ImgDrawResult;
 
 public:
   explicit nsTreeBodyFrame(nsStyleContext* aContext);
@@ -190,7 +190,7 @@ public:
     nsIScrollableFrame*  mColumnsScrollFrame;
   };
 
-  DrawResult PaintTreeBody(gfxContext& aRenderingContext,
+  ImgDrawResult PaintTreeBody(gfxContext& aRenderingContext,
                            const nsRect& aDirtyRect, nsPoint aPt,
                            nsDisplayListBuilder* aBuilder);
 
@@ -206,14 +206,14 @@ protected:
   friend class nsOverflowChecker;
 
   // This method paints a specific column background of the tree.
-  DrawResult PaintColumn(nsTreeColumn*        aColumn,
+  ImgDrawResult PaintColumn(nsTreeColumn*        aColumn,
                          const nsRect&        aColumnRect,
                          nsPresContext*       aPresContext,
                          gfxContext&          aRenderingContext,
                          const nsRect&        aDirtyRect);
 
   // This method paints a single row in the tree.
-  DrawResult PaintRow(int32_t               aRowIndex,
+  ImgDrawResult PaintRow(int32_t               aRowIndex,
                       const nsRect&         aRowRect,
                       nsPresContext*        aPresContext,
                       gfxContext&           aRenderingContext,
@@ -222,14 +222,14 @@ protected:
                       nsDisplayListBuilder* aBuilder);
 
   // This method paints a single separator in the tree.
-  DrawResult PaintSeparator(int32_t              aRowIndex,
+  ImgDrawResult PaintSeparator(int32_t              aRowIndex,
                             const nsRect&        aSeparatorRect,
                             nsPresContext*       aPresContext,
                             gfxContext&          aRenderingContext,
                             const nsRect&        aDirtyRect);
 
   // This method paints a specific cell in a given row of the tree.
-  DrawResult PaintCell(int32_t               aRowIndex,
+  ImgDrawResult PaintCell(int32_t               aRowIndex,
                        nsTreeColumn*         aColumn,
                        const nsRect&         aCellRect,
                        nsPresContext*        aPresContext,
@@ -240,7 +240,7 @@ protected:
                        nsDisplayListBuilder* aBuilder);
 
   // This method paints the twisty inside a cell in the primary column of an tree.
-  DrawResult PaintTwisty(int32_t              aRowIndex,
+  ImgDrawResult PaintTwisty(int32_t              aRowIndex,
                          nsTreeColumn*        aColumn,
                          const nsRect&        aTwistyRect,
                          nsPresContext*       aPresContext,
@@ -250,7 +250,7 @@ protected:
                          nscoord&             aCurrX);
 
   // This method paints the image inside the cell of an tree.
-  DrawResult PaintImage(int32_t               aRowIndex,
+  ImgDrawResult PaintImage(int32_t               aRowIndex,
                         nsTreeColumn*         aColumn,
                         const nsRect&         aImageRect,
                         nsPresContext*        aPresContext,
@@ -261,7 +261,7 @@ protected:
                         nsDisplayListBuilder* aBuilder);
 
   // This method paints the text string inside a particular cell of the tree.
-  DrawResult PaintText(int32_t             aRowIndex,
+  ImgDrawResult PaintText(int32_t             aRowIndex,
                        nsTreeColumn*       aColumn,
                        const nsRect&       aTextRect,
                        nsPresContext*      aPresContext,
@@ -270,7 +270,7 @@ protected:
                        nscoord&            aCurrX);
 
   // This method paints the checkbox inside a particular cell of the tree.
-  DrawResult PaintCheckbox(int32_t              aRowIndex,
+  ImgDrawResult PaintCheckbox(int32_t              aRowIndex,
                            nsTreeColumn*        aColumn,
                            const nsRect&        aCheckboxRect,
                            nsPresContext*       aPresContext,
@@ -278,7 +278,7 @@ protected:
                            const nsRect&        aDirtyRect);
 
   // This method paints the progress meter inside a particular cell of the tree.
-  DrawResult PaintProgressMeter(int32_t               aRowIndex,
+  ImgDrawResult PaintProgressMeter(int32_t               aRowIndex,
                                 nsTreeColumn*         aColumn,
                                 const nsRect&         aProgressMeterRect,
                                 nsPresContext*        aPresContext,
@@ -287,7 +287,7 @@ protected:
                                 nsDisplayListBuilder* aBuilder);
 
   // This method paints a drop feedback of the tree.
-  DrawResult PaintDropFeedback(const nsRect&        aDropFeedbackRect,
+  ImgDrawResult PaintDropFeedback(const nsRect&        aDropFeedbackRect,
                                nsPresContext*       aPresContext,
                                gfxContext&          aRenderingContext,
                                const nsRect&        aDirtyRect,
@@ -295,7 +295,7 @@ protected:
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
-  DrawResult PaintBackgroundLayer(nsStyleContext*      aStyleContext,
+  ImgDrawResult PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                   nsPresContext*       aPresContext,
                                   gfxContext&          aRenderingContext,
                                   const nsRect&        aRect,

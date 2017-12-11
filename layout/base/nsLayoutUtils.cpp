@@ -6930,7 +6930,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
                                                   svgViewportSize.height));
 }
 
-static DrawResult
+static ImgDrawResult
 DrawImageInternal(gfxContext&            aContext,
                   nsPresContext*         aPresContext,
                   imgIContainer*         aImage,
@@ -6944,7 +6944,7 @@ DrawImageInternal(gfxContext&            aContext,
                   ExtendMode             aExtendMode = ExtendMode::CLAMP,
                   float                  aOpacity = 1.0)
 {
-  DrawResult result = DrawResult::SUCCESS;
+  ImgDrawResult result = ImgDrawResult::SUCCESS;
 
   aImageFlags |= imgIContainer::FLAG_ASYNC_NOTIFY;
 
@@ -6989,7 +6989,7 @@ DrawImageInternal(gfxContext&            aContext,
   return result;
 }
 
-/* static */ DrawResult
+/* static */ ImgDrawResult
 nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                                        nsPresContext*       aPresContext,
                                        imgIContainer*       aImage,
@@ -7004,7 +7004,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
   aImage->GetHeight(&imageSize.height);
   if (imageSize.width < 1 || imageSize.height < 1) {
     NS_WARNING("Image width or height is non-positive");
-    return DrawResult::TEMPORARY_ERROR;
+    return ImgDrawResult::TEMPORARY_ERROR;
   }
 
   nsSize size(CSSPixel::ToAppUnits(imageSize));
@@ -7027,7 +7027,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                            /* no SVGImageContext */ Nothing(), aImageFlags);
 }
 
-/* static */ DrawResult
+/* static */ ImgDrawResult
 nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
                                nsPresContext*         aPresContext,
                                imgIContainer*         aImage,
@@ -7044,7 +7044,7 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
   if (pixelImageSize.width < 1 || pixelImageSize.height < 1) {
     NS_ASSERTION(pixelImageSize.width >= 0 && pixelImageSize.height >= 0,
                  "Image width or height is negative");
-    return DrawResult::SUCCESS;  // no point in drawing a zero size image
+    return ImgDrawResult::SUCCESS;  // no point in drawing a zero size image
   }
 
   nsSize imageSize(CSSPixel::ToAppUnits(pixelImageSize));
@@ -7234,7 +7234,7 @@ nsLayoutUtils::GetBackgroundFirstTilePos(const nsPoint& aDest,
          aDest;
 }
 
-/* static */ DrawResult
+/* static */ ImgDrawResult
 nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    nsIFrame*           aForFrame,
                                    nsPresContext*      aPresContext,
@@ -7267,20 +7267,20 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
   for (int32_t i = firstTilePos.x; i < aFill.XMost(); i += aRepeatSize.width) {
     for (int32_t j = firstTilePos.y; j < aFill.YMost(); j += aRepeatSize.height) {
       nsRect dest(i, j, aDest.width, aDest.height);
-      DrawResult result = DrawImageInternal(aContext, aPresContext, aImage, aSamplingFilter,
+      ImgDrawResult result = DrawImageInternal(aContext, aPresContext, aImage, aSamplingFilter,
                                             dest, dest, aAnchor, aDirty, svgContext,
                                             aImageFlags, ExtendMode::CLAMP,
                                             aOpacity);
-      if (result != DrawResult::SUCCESS) {
+      if (result != ImgDrawResult::SUCCESS) {
         return result;
       }
     }
   }
 
-  return DrawResult::SUCCESS;
+  return ImgDrawResult::SUCCESS;
 }
 
-/* static */ DrawResult
+/* static */ ImgDrawResult
 nsLayoutUtils::DrawImage(gfxContext&         aContext,
                          nsStyleContext*     aStyleContext,
                          nsPresContext*      aPresContext,
