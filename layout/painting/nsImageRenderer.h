@@ -101,7 +101,7 @@ struct CSSSizeOrRatio
  */
 class nsImageRenderer {
 public:
-  typedef mozilla::image::DrawResult DrawResult;
+  typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ImageContainer ImageContainer;
 
@@ -195,7 +195,7 @@ public:
    * {background|mask}-specific arguments.
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
-  DrawResult DrawLayer(nsPresContext*       aPresContext,
+  ImgDrawResult DrawLayer(nsPresContext*       aPresContext,
                        gfxContext&          aRenderingContext,
                        const nsRect&        aDest,
                        const nsRect&        aFill,
@@ -209,7 +209,7 @@ public:
    * {background|mask}-specific arguments.
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
-  DrawResult BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
+  ImgDrawResult BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                 mozilla::wr::DisplayListBuilder& aBuilder,
                                                 mozilla::wr::IpcResourceUpdateQueue& aResource,
                                                 const mozilla::layers::StackingContextHelper& aSc,
@@ -241,7 +241,7 @@ public:
    * aHasIntrinsicRatio is used to record if the source image has fixed
    * intrinsic ratio.
    */
-  DrawResult
+  ImgDrawResult
   DrawBorderImageComponent(nsPresContext*       aPresContext,
                            gfxContext&          aRenderingContext,
                            const nsRect&        aDirtyRect,
@@ -261,8 +261,8 @@ public:
   already_AddRefed<imgIContainer> GetImage();
 
   bool IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags);
-  bool IsReady() const { return mPrepareResult == DrawResult::SUCCESS; }
-  DrawResult PrepareResult() const { return mPrepareResult; }
+  bool IsReady() const { return mPrepareResult == ImgDrawResult::SUCCESS; }
+  ImgDrawResult PrepareResult() const { return mPrepareResult; }
   void SetExtendMode(mozilla::gfx::ExtendMode aMode) { mExtendMode = aMode; }
   void SetMaskOp(uint8_t aMaskOp) { mMaskOp = aMaskOp; }
   void PurgeCacheForViewportChange(const mozilla::Maybe<nsSize>& aSVGViewportSize,
@@ -278,7 +278,7 @@ private:
    *
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
-  DrawResult Draw(nsPresContext*       aPresContext,
+  ImgDrawResult Draw(nsPresContext*       aPresContext,
                   gfxContext&          aRenderingContext,
                   const nsRect&        aDirtyRect,
                   const nsRect&        aDest,
@@ -295,7 +295,7 @@ private:
    *
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
-  DrawResult BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
+  ImgDrawResult BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                         mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const mozilla::layers::StackingContextHelper& aSc,
@@ -325,7 +325,7 @@ private:
   RefPtr<nsStyleGradient> mGradientData;
   nsIFrame*                 mPaintServerFrame;
   nsLayoutUtils::SurfaceFromElementResult mImageElementSurface;
-  DrawResult                mPrepareResult;
+  ImgDrawResult                mPrepareResult;
   nsSize                    mSize; // unscaled size of the image, in app units
   uint32_t                  mFlags;
   mozilla::gfx::ExtendMode  mExtendMode;

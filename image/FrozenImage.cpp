@@ -93,7 +93,7 @@ FrozenImage::GetImageContainerAtSize(layers::LayerManager* aManager,
   return nullptr;
 }
 
-NS_IMETHODIMP_(DrawResult)
+NS_IMETHODIMP_(ImgDrawResult)
 FrozenImage::Draw(gfxContext* aContext,
                   const nsIntSize& aSize,
                   const ImageRegion& aRegion,
