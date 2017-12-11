@@ -70,12 +70,23 @@ def main():
         return 1
 
     secret_name = os.environ.get('SYMBOL_SECRET')
-    if secret_name is None:
-        log.error('You must set the SYMBOL_SECRET environment variable!')
-        return 1
-    auth_token = get_taskcluster_secret(secret_name)
+    if secret_name is not None:
+        auth_token = get_taskcluster_secret(secret_name)
+    elif 'SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE' not in os.environ:
+        token_file = os.environ['SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE']
 
-    if os.environ.get('MOZ_SCM_LEVEL', '1') == '1':
+        if not os.path.isfile(token_file):
+            log.error('SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE "{0}" does not exist!'.format(token_file), file=sys.stderr)
+            return 1
+        auth_token = open(token_file, 'r').read().strip()
+    else:
+        log.error('You must set the SYMBOL_SECRET or SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE environment variables!')
+        return 1
+
+    # Allow overwriting of the upload url with an environmental variable
+    if 'SOCORRO_SYMBOL_UPLOAD_URL' in os.environ:
+        url = os.environ['SOCORRO_SYMBOL_UPLOAD_URL']
+    elif os.environ.get('MOZ_SCM_LEVEL', '1') == '1':
         # Use the Tecken staging server for try uploads for now.
         # This will eventually be changed in bug 1138617.
         url = 'https://symbols.stage.mozaws.net/upload/'
