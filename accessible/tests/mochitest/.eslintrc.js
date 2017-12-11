@@ -12,7 +12,6 @@ module.exports = {
     // disabled here due to failures when initially implemented. They should be
     // removed (and hence enabled) at some stage.
     "no-nested-ternary": "off",
-    "no-new-object": "off",
     "no-redeclare": "off",
     "no-shadow": "off",
     "no-undef": "off",

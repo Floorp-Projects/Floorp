@@ -724,8 +724,8 @@ function getTextFromClipboard() {
   trans.addDataFlavor("text/unicode");
   clip.getData(trans, clip.kGlobalClipboard);
 
-  var str = new Object();
-  var strLength = new Object();
+  var str = {};
+  var strLength = {};
   trans.getTransferData("text/unicode", str, strLength);
 
   if (str)
