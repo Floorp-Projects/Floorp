@@ -2,10 +2,11 @@ const NS_OS_TEMP_DIR = "TmpD";
 
 const CWD = do_get_cwd();
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 var hiddenUnixFile;
 function createUNIXHiddenFile() {
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-  var tmpDir = dirSvc.get(NS_OS_TEMP_DIR, Ci.nsIFile);
+  var tmpDir = Services.dirsvc.get(NS_OS_TEMP_DIR, Ci.nsIFile);
   hiddenUnixFile = tmpDir.clone();
   hiddenUnixFile.append(".foo");
   // we don't care if this already exists because we don't care

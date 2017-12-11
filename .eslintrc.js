@@ -41,7 +41,6 @@ module.exports = {
       "security/**",
       "testing/**",
       "tools/profiler/**",
-      "xpcom/**"
     ],
     "rules": {
       "mozilla/use-services": "off",
