@@ -7566,9 +7566,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     iter.Seek(insertion.mContainer->GetLastChild());
     StyleDisplay unused = UNSET_DISPLAY;
     nextSibling = FindNextSibling(iter, unused);
-    if (nextSibling) {
-      parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
-    }
+  }
+
+  if (nextSibling) {
+    parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
   } else {
     parentFrame =
       ::ContinuationToAppendTo(parentFrame);
