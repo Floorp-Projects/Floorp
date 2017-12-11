@@ -35,19 +35,19 @@
       testTableSelection("table", cellsArray);
 
       var rowCount = 4;
-      for (var rowIdx = 0; rowIdx < rowCount; rowIdx++)
+      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++)
         testSelectTableRow("table", rowIdx, cellsArray);
 
-      for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
         testSelectTableRow("table", rowIdx, cellsArray);
         testUnselectTableRow("table", rowIdx, cellsArray);
       }
 
       var columsCount = 8;
-      for (var colIdx = 0; colIdx < columsCount; colIdx++)
+      for (let colIdx = 0; colIdx < columsCount; colIdx++)
         testSelectTableColumn("table", colIdx, cellsArray);
 
-      for (var colIdx = 0; colIdx < columsCount; colIdx++) {
+      for (let colIdx = 0; colIdx < columsCount; colIdx++) {
         testSelectTableColumn("table", colIdx, cellsArray);
         testUnselectTableColumn("table", colIdx, cellsArray);
       }

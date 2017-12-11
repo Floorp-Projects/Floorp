@@ -1,3 +1,6 @@
+// XXX Bug 1425371 - enable no-redeclare and fix the issues with the tests.
+/* eslint-disable no-redeclare */
+
 // //////////////////////////////////////////////////////////////////////////////
 // Constants
 
