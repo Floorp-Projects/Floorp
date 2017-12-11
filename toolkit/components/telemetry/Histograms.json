@@ -32,6 +32,17 @@
     "description": "Flag indicating the IAccessibleTable accessibility interface has been used.",
     "alert_emails": ["accessibility@mozilla.com"]
   },
+  "A11Y_UIA_DETECTION_TIMING_MS" : {
+    "record_in_processes": ["main"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 20,
+    "keyed": false,
+    "description": "The amount of time the parent process blocked while detecting a UIA client.",
+    "bug_numbers": [1423989],
+    "alert_emails": ["dbolter@mozilla.com"]
+  },
   "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "58",
