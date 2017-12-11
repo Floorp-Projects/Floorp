@@ -24,7 +24,7 @@
       var newDocTabPanelAcc = tabPanelsAcc.firstChild;
       var nextAcc = newDocTabPanelAcc;
 
-      while (nextAcc = nextAcc.nextSibling) {
+      while ((nextAcc = nextAcc.nextSibling)) {
         // Find the last accessible for a browser with about:mozilla loaded.
         if (nextAcc.firstChild.DOMNode.currentURI.spec == "about:mozilla") {
           newDocTabPanelAcc = nextAcc;
