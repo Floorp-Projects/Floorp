@@ -13,9 +13,6 @@ var manifestFile = do_get_file("../unit/data/test_resolve_uris.manifest");
 var manifests = [ manifestFile ];
 registerManifests(manifests);
 
-var ios = Cc["@mozilla.org/network/io-service;1"].
-          getService(Ci.nsIIOService);
-
 function do_run_test() {
   let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
            getService(Ci.nsIChromeRegistry);
@@ -24,6 +21,7 @@ function do_run_test() {
   // we don't need to worry about checking for new chrome.
   var appInfo = Cc["@mozilla.org/xre/app-info;1"];
   if (!appInfo ||
+      // eslint-disable-next-line mozilla/use-services
       (appInfo.getService(Ci.nsIXULRuntime).processType ==
        Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)) {
     cr.checkForNewChrome();
@@ -58,16 +56,16 @@ function do_run_test() {
         expectedURI += "override-me.xul";
         break;
       case "resource":
-        expectedURI = ios.newFileURI(manifestFile.parent).spec;
+        expectedURI = Services.io.newFileURI(manifestFile.parent).spec;
         sourceURI = "resource://foo/";
         break;
     }
     try {
-      sourceURI = ios.newURI(sourceURI);
+      sourceURI = Services.io.newURI(sourceURI);
       let uri;
       if (type == "resource") {
         // resources go about a slightly different way than everything else
-        let rph = ios.getProtocolHandler("resource").
+        let rph = Services.io.getProtocolHandler("resource").
             QueryInterface(Ci.nsIResProtocolHandler);
         uri = rph.resolveURI(sourceURI);
       } else {

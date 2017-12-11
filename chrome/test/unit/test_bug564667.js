@@ -6,9 +6,6 @@
 const UNPACKAGED_ADDON = do_get_file("data/test_bug564667");
 const PACKAGED_ADDON = do_get_file("data/test_bug564667.xpi");
 
-var gIOS = Cc["@mozilla.org/network/io-service;1"].
-           getService(Ci.nsIIOService);
-
 var gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].
           getService(Ci.nsIChromeRegistry).
           QueryInterface(Ci.nsIXULOverlayProvider);
@@ -17,7 +14,7 @@ var gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].
  * Checks that a mapping was added
  */
 function test_mapping(chromeURL, target) {
-  var uri = gIOS.newURI(chromeURL);
+  var uri = Services.io.newURI(chromeURL);
 
   try {
     var result = gCR.convertChromeURL(uri);
@@ -31,7 +28,7 @@ function test_mapping(chromeURL, target) {
  * Checks that a mapping was removed
  */
 function test_removed_mapping(chromeURL, target) {
-  var uri = gIOS.newURI(chromeURL);
+  var uri = Services.io.newURI(chromeURL);
   try {
     gCR.convertChromeURL(uri);
     do_throw(chromeURL + " not removed");
@@ -47,7 +44,7 @@ function test_removed_mapping(chromeURL, target) {
  * @param type The type of overlay: overlay|style
  */
 function test_no_overlays(chromeURL, target, type = "overlay") {
-  var uri = gIOS.newURI(chromeURL);
+  var uri = Services.io.newURI(chromeURL);
   var overlays = (type == "overlay") ?
       gCR.getXULOverlays(uri) : gCR.getStyleOverlays(uri);
 
@@ -109,8 +106,8 @@ function testManifest(manifestPath, baseURI) {
 
 function run_test() {
   // Test an unpackaged addon
-  testManifest(UNPACKAGED_ADDON, gIOS.newFileURI(UNPACKAGED_ADDON).spec);
+  testManifest(UNPACKAGED_ADDON, Services.io.newFileURI(UNPACKAGED_ADDON).spec);
 
   // Test a packaged addon
-  testManifest(PACKAGED_ADDON, "jar:" + gIOS.newFileURI(PACKAGED_ADDON).spec + "!/");
+  testManifest(PACKAGED_ADDON, "jar:" + Services.io.newFileURI(PACKAGED_ADDON).spec + "!/");
 }
