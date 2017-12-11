@@ -17,19 +17,17 @@ updateAppInfo({
   platformVersion: "1.9",
 });
 
-var gIOS = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
 var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry);
 chromeReg.checkForNewChrome();
 
-var rph = gIOS.getProtocolHandler("resource")
+var rph = Services.io.getProtocolHandler("resource")
               .QueryInterface(Ci.nsIResProtocolHandler);
 
 function test_succeeded_mapping(namespace, target) {
   try {
     do_check_true(rph.hasSubstitution(namespace));
-    var uri = gIOS.newURI("resource://" + namespace);
+    var uri = Services.io.newURI("resource://" + namespace);
     dump("### checking for " + target + ", getting " + rph.resolveURI(uri) + "\n");
     do_check_eq(rph.resolveURI(uri), target);
   } catch (ex) {
@@ -43,7 +41,7 @@ function test_failed_mapping(namespace) {
 }
 
 function run_test() {
-  var data = gIOS.newFileURI(do_get_file("data")).spec;
+  var data = Services.io.newFileURI(do_get_file("data")).spec;
   test_succeeded_mapping("test1", data + "test1/");
   test_succeeded_mapping("test3", "jar:" + data + "test3.jar!/resources/");
   test_failed_mapping("test4");
