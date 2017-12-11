@@ -18,10 +18,6 @@ var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
                 .QueryInterface(Ci.nsIToolkitChromeRegistry);
 chromeReg.checkForNewChrome();
 
-var prefService = Cc["@mozilla.org/preferences-service;1"]
-                  .getService(Ci.nsIPrefService)
-                  .QueryInterface(Ci.nsIPrefBranch);
-
 function enum_to_array(strings) {
   let rv = [];
   while (strings.hasMore()) {
@@ -41,7 +37,7 @@ function run_test() {
                    ["en-US", "fr"]);
 
   // with override
-  prefService.setCharPref("chrome.override_package.basepack", "overpack");
+  Services.prefs.setCharPref("chrome.override_package.basepack", "overpack");
   do_check_eq(chromeReg.getSelectedLocale("basepack"), "de");
   do_check_matches(enum_to_array(chromeReg.getLocalesForPackage("basepack")),
                    ["de", "en-US"]);
