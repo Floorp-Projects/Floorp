@@ -2581,9 +2581,9 @@ Parser<FullParseHandler, CharT>::standaloneFunction(HandleFunction fun,
     return fn;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 bool
-GeneralParser<ParseHandler, CharT>::declareFunctionArgumentsObject()
+PerHandlerParser<ParseHandler>::declareFunctionArgumentsObject()
 {
     FunctionBox* funbox = pc->functionBox();
     ParseContext::Scope& funScope = pc->functionScope();
