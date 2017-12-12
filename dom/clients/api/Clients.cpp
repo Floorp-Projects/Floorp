@@ -44,11 +44,7 @@ Clients::Clients(nsIGlobalObject* aGlobal)
 JSObject*
 Clients::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  // TODO: Enable when bindings are updated to point to this class.
-#if 0
   return ClientsBinding::Wrap(aCx, this, aGivenProto);
-#endif
-  return nullptr;
 }
 
 nsIGlobalObject*

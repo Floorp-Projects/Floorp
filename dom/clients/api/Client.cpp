@@ -76,14 +76,10 @@ Client::GetStorageAccess() const
 JSObject*
 Client::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-#if 0
-  // TODO: Enable when bindings are updated to point to this class.
   if (mData->info().type() == ClientType::Window) {
     return WindowClientBinding::Wrap(aCx, this, aGivenProto);
   }
   return ClientBinding::Wrap(aCx, this, aGivenProto);
-#endif
-  return nullptr;
 }
 
 nsIGlobalObject*
