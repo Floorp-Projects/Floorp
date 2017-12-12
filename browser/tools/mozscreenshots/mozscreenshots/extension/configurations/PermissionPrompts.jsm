@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = ["PermissionPrompts"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/E10SUtils.jsm");
+Cu.import("resource://gre/modules/E10SUtils.jsm");
 Cu.import("resource://testing-common/ContentTask.jsm");
 Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 

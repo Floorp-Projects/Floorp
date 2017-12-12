@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
-                                  "resource:///modules/E10SUtils.jsm");
+                                  "resource://gre/modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
