@@ -1359,43 +1359,6 @@ NS_NewBufferedInputStream(nsIInputStream** aResult,
     return rv;
 }
 
-nsresult
-NS_NewPostDataStream(nsIInputStream  **result,
-                     bool              isFile,
-                     const nsACString &data)
-{
-    nsresult rv;
-
-    if (isFile) {
-        nsCOMPtr<nsIFile> file;
-        nsCOMPtr<nsIInputStream> fileStream;
-
-        rv = NS_NewNativeLocalFile(data, false, getter_AddRefs(file));
-        if (NS_SUCCEEDED(rv)) {
-            rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
-            if (NS_SUCCEEDED(rv)) {
-                // wrap the file stream with a buffered input stream
-                rv = NS_NewBufferedInputStream(result, fileStream.forget(),
-                                               8192);
-            }
-        }
-        return rv;
-    }
-
-    // otherwise, create a string stream for the data (copies)
-    nsCOMPtr<nsIStringInputStream> stream
-        (do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = stream->SetData(data.BeginReading(), data.Length());
-    if (NS_FAILED(rv))
-        return rv;
-
-    stream.forget(result);
-    return NS_OK;
-}
-
 namespace {
 
 #define BUFFER_SIZE 4096
