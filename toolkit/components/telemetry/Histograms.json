@@ -2910,7 +2910,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1341128],
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
     "releaseChannelCollection": "opt-out",

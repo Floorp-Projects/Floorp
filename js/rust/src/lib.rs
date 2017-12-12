@@ -12,8 +12,6 @@
 #[cfg(feature = "nonzero")]
 extern crate core;
 #[macro_use]
-extern crate heapsize;
-#[macro_use]
 extern crate lazy_static;
 extern crate libc;
 #[macro_use]
@@ -42,8 +40,6 @@ use self::jsapi::root::*;
 pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JS::Value) -> *mut JS::Value {
     vp.offset(2)
 }
-
-known_heap_size!(0, JS::Value);
 
 impl JS::ObjectOpResult {
     /// Set this ObjectOpResult to true and return true.
