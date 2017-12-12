@@ -41,12 +41,17 @@ SourceSurfaceD2D1::IsValid() const
 already_AddRefed<DataSourceSurface>
 SourceSurfaceD2D1::GetDataSurface()
 {
-  HRESULT hr;
+  Maybe<MutexAutoLock> lock;
+  if (mSnapshotLock) {
+    lock.emplace(*mSnapshotLock);
+  }
 
   if (!EnsureRealizedBitmap()) {
     gfxCriticalError() << "Failed to realize a bitmap, device " << hexa(mDevice);
     return nullptr;
   }
+
+  HRESULT hr;
 
   RefPtr<ID2D1Bitmap1> softwareBitmap;
   D2D1_BITMAP_PROPERTIES1 props;
