@@ -104,20 +104,7 @@ enum class PropertyType {
     DerivedConstructor
 };
 
-// Specify a value for an ES6 grammar parametrization.  We have no enum for
-// [Return] because its behavior is exactly equivalent to checking whether
-// we're in a function box -- easier and simpler than passing an extra
-// parameter everywhere.
-enum YieldHandling { YieldIsName, YieldIsKeyword };
 enum AwaitHandling : uint8_t { AwaitIsName, AwaitIsKeyword, AwaitIsModuleKeyword };
-enum InHandling { InAllowed, InProhibited };
-enum DefaultHandling { NameRequired, AllowDefaultName };
-enum TripledotHandling { TripledotAllowed, TripledotProhibited };
-
-enum FunctionCallBehavior {
-    PermitAssignmentToFunctionCalls,
-    ForbidAssignmentToFunctionCalls
-};
 
 template <class ParseHandler, typename CharT>
 class AutoAwaitIsKeyword;
@@ -271,6 +258,35 @@ ParseContext::VarScope::VarScope(ParserBase* parser)
     useAsVarScope(parser->pc);
 }
 
+enum FunctionCallBehavior {
+    PermitAssignmentToFunctionCalls,
+    ForbidAssignmentToFunctionCalls
+};
+
+template <class ParseHandler>
+class PerHandlerParser
+  : public ParserBase
+{
+  private:
+    using Node = typename ParseHandler::Node;
+
+  protected:
+    PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+                     const char16_t* chars, size_t length, bool foldConstants,
+                     UsedNameTracker& usedNames, LazyScript* lazyOuterFunction);
+
+    /* State specific to the kind of parse being performed. */
+    ParseHandler handler;
+
+    const char* nameIsArgumentsOrEval(Node node);
+
+  public:
+    bool isValidSimpleAssignmentTarget(Node node,
+                                       FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
+
+
+};
+
 enum class ExpressionClosure { Allowed, Forbidden };
 
 template<class Parser>
@@ -284,21 +300,62 @@ class ParserAnyCharsAccess
     static inline const TokenStreamAnyChars& anyChars(const TokenStreamChars* ts);
 };
 
+// Specify a value for an ES6 grammar parametrization.  We have no enum for
+// [Return] because its behavior is exactly equivalent to checking whether
+// we're in a function box -- easier and simpler than passing an extra
+// parameter everywhere.
+enum YieldHandling { YieldIsName, YieldIsKeyword };
+enum InHandling { InAllowed, InProhibited };
+enum DefaultHandling { NameRequired, AllowDefaultName };
+enum TripledotHandling { TripledotAllowed, TripledotProhibited };
+
 template <class ParseHandler, typename CharT>
 class Parser;
 
 template <class ParseHandler, typename CharT>
 class GeneralParser
-  : public ParserBase,
+  : public PerHandlerParser<ParseHandler>,
     private JS::AutoGCRooter
 {
+  private:
+    using Base = PerHandlerParser<ParseHandler>;
+    using FinalParser = Parser<ParseHandler, CharT>;
+    using Node = typename ParseHandler::Node;
+    using typename Base::InvokedPrediction;
+
   protected:
     using Modifier = TokenStreamShared::Modifier;
 
-  private:
-    using FinalParser = Parser<ParseHandler, CharT>;
-    using Node = typename ParseHandler::Node;
+    using Base::PredictUninvoked;
+    using Base::PredictInvoked;
 
+    using Base::alloc;
+    using Base::awaitIsKeyword;
+#if DEBUG
+    using Base::checkOptionsCalled;
+#endif
+    using Base::foldConstants;
+    using Base::getFilename;
+    using Base::hasValidSimpleStrictParameterNames;
+    using Base::isUnexpectedEOF_;
+    using Base::keepAtoms;
+    using Base::nameIsArgumentsOrEval;
+    using Base::newFunction;
+    using Base::options;
+    using Base::pos;
+    using Base::setLocalStrictMode;
+    using Base::traceListHead;
+    using Base::yieldExpressionsSupported;
+
+  public:
+    using Base::anyChars;
+    using Base::context;
+    using Base::handler;
+    using Base::isValidSimpleAssignmentTarget;
+    using Base::pc;
+    using Base::usedNames;
+
+  private:
     inline FinalParser* asFinalParser();
     inline const FinalParser* asFinalParser() const;
 
@@ -449,9 +506,6 @@ class GeneralParser
   public:
     using TokenStream = TokenStreamSpecific<CharT, ParserAnyCharsAccess<GeneralParser>>;
     TokenStream tokenStream;
-
-    /* State specific to the kind of parse being performed. */
-    ParseHandler handler;
 
     void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
     void freeTree(Node node) { handler.freeTree(node); }
@@ -800,12 +854,7 @@ class GeneralParser
 
     bool leaveInnerFunction(ParseContext* outerpc);
 
-  public:
-    bool isValidSimpleAssignmentTarget(Node node,
-                                       FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
-
   private:
-    const char* nameIsArgumentsOrEval(Node node);
     bool checkIncDecOperand(Node operand, uint32_t operandOffset);
     bool checkStrictAssignment(Node lhs);
 
