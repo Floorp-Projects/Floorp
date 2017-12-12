@@ -2781,7 +2781,7 @@ EmitOldAtomicsLoad(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarBeforeLoad, MembarAfterLoad);
+                            /*numSimdExprs=*/ 0, Synchronization::Load());
 
     auto* ins = f.load(addr.base, &access, ValType::I32);
     if (!f.inDeadCode() && !ins)
@@ -2801,7 +2801,7 @@ EmitOldAtomicsStore(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarBeforeStore, MembarAfterStore);
+                            /*numSimdExprs=*/ 0, Synchronization::Store());
 
     f.store(addr.base, &access, value);
     f.iter().setResult(value);
@@ -2819,7 +2819,7 @@ EmitOldAtomicsBinOp(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
 
     auto* ins = f.atomicBinopHeap(op, addr.base, &access, ValType::I32, value);
     if (!f.inDeadCode() && !ins)
@@ -2840,7 +2840,7 @@ EmitOldAtomicsCompareExchange(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
 
     auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, ValType::I32, oldValue, newValue);
     if (!f.inDeadCode() && !ins)
@@ -2860,7 +2860,7 @@ EmitOldAtomicsExchange(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
 
     auto* ins = f.atomicExchangeHeap(addr.base, &access, ValType::I32, value);
     if (!f.inDeadCode() && !ins)
@@ -3416,7 +3416,7 @@ EmitAtomicCmpXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
     auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, type, oldValue, newValue);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -3433,7 +3433,7 @@ EmitAtomicLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarBeforeLoad, MembarAfterLoad);
+                            /*numSimdExprs=*/ 0, Synchronization::Load());
     auto* ins = f.load(addr.base, &access, type);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -3451,7 +3451,7 @@ EmitAtomicRMW(FunctionCompiler& f, ValType type, Scalar::Type viewType, jit::Ato
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
     auto* ins = f.atomicBinopHeap(op, addr.base, &access, type, value);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -3469,7 +3469,7 @@ EmitAtomicStore(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarBeforeStore, MembarAfterStore);
+                            /*numSimdExprs=*/ 0, Synchronization::Store());
     f.store(addr.base, &access, value);
     return true;
 }
@@ -3573,7 +3573,7 @@ EmitAtomicXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
     MDefinition* ins = f.atomicExchangeHeap(addr.base, &access, type, value);
     if (!f.inDeadCode() && !ins)
         return false;
