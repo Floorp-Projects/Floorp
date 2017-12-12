@@ -342,73 +342,6 @@ interface nsIDOMWindowUtils : nsISupports {
                          [optional] in long aButtons,
                          [optional] in unsigned long aIdentifier);
 
-
-  /** Synthesize a pointer event. The event types supported are:
-   *    pointerdown, pointerup, pointermove, pointerover, pointerout
-   *
-   * Events are sent in coordinates offset by aX and aY from the window.
-   *
-   * Note that additional events may be fired as a result of this call. For
-   * instance, typically a click event will be fired as a result of a
-   * mousedown and mouseup in sequence.
-   *
-   * Normally at this level of events, the pointerover and pointerout events are
-   * only fired when the window is entered or exited. For inter-element
-   * pointerover and pointerout events, a movemove event fired on the new element
-   * should be sufficient to generate the correct over and out events as well.
-   *
-   * Cannot be accessed from unprivileged context (not content-accessible)
-   * Will throw a DOM security error if called without chrome privileges.
-   *
-   * The event is dispatched via the toplevel window, so it could go to any
-   * window under the toplevel window, in some cases it could never reach this
-   * window at all.
-   *
-   * @param aType event type
-   * @param aX x offset in CSS pixels
-   * @param aY y offset in CSS pixels
-   * @param aButton button to synthesize
-   * @param aClickCount number of clicks that have been performed
-   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
-   * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
-   *                           during dispatch
-   * @param aPressure touch input pressure: 0.0 -> 1.0
-   * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
-   *        defaults to mouse input.
-   * @param aPointerId A unique identifier for the pointer causing the event,
-   *                   defaulting to nsIDOMWindowUtils::DEFAULT_MOUSE_POINTER_ID.
-   * @param aWidth The width (magnitude on the X axis), default is 0
-   * @param aHeight The height (magnitude on the Y axis), default is 0
-   * @param aTilt The plane angle between the Y-Z plane
-   *        and the plane containing both the transducer (e.g. pen stylus) axis and the Y axis. default is 0
-   * @param aTiltX The plane angle between the X-Z plane
-   *        and the plane containing both the transducer (e.g. pen stylus) axis and the X axis. default is 0
-   * @param aIsPrimary  Indicates if the pointer represents the primary pointer of this pointer type.
-   * @param aIsSynthesized controls nsIDOMEvent.isSynthesized value
-   *                       that helps identifying test related events,
-   *                       defaults to true
-   *
-   * returns true if the page called prevent default on this event
-   */
-
-  [optional_argc]
-  boolean sendPointerEvent(in AString aType,
-                           in float aX,
-                           in float aY,
-                           in long aButton,
-                           in long aClickCount,
-                           in long aModifiers,
-                           [optional] in boolean aIgnoreRootScrollFrame,
-                           [optional] in float aPressure,
-                           [optional] in unsigned short aInputSourceArg,
-                           [optional] in long aPointerId,
-                           [optional] in long aWidth,
-                           [optional] in long aHeight,
-                           [optional] in long aTiltX,
-                           [optional] in long aTiltY,
-                           [optional] in boolean aIsPrimary,
-                           [optional] in boolean aIsSynthesized);
-
   /** Synthesize a touch event. The event types supported are:
    *    touchstart, touchend, touchmove, and touchcancel
    *
@@ -464,27 +397,6 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in boolean aIsWidgetEventSynthesized,
                               [optional] in long aButtons,
                               [optional] in unsigned long aIdentifier);
-
-  /** The same as sendPointerEvent but ensures that the event
-   *  is dispatched to this DOM window or one of its children.
-   */
-  [optional_argc]
-  void sendPointerEventToWindow(in AString aType,
-                                in float aX,
-                                in float aY,
-                                in long aButton,
-                                in long aClickCount,
-                                in long aModifiers,
-                                [optional] in boolean aIgnoreRootScrollFrame,
-                                [optional] in float aPressure,
-                                [optional] in unsigned short aInputSourceArg,
-                                [optional] in long aPointerId,
-                                [optional] in long aWidth,
-                                [optional] in long aHeight,
-                                [optional] in long aTiltX,
-                                [optional] in long aTiltY,
-                                [optional] in boolean aIsPrimary,
-                                [optional] in boolean aIsSynthesized);
 
   /** The same as sendTouchEvent but ensures that the event is dispatched to
    *  this DOM window or one of its children.
