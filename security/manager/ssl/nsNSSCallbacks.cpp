@@ -30,6 +30,7 @@
 #include "nsNetUtil.h"
 #include "nsProtectedAuthThread.h"
 #include "nsProxyRelease.h"
+#include "nsStringStream.h"
 #include "pkix/pkixtypes.h"
 #include "ssl.h"
 #include "sslproto.h"
@@ -140,9 +141,8 @@ nsHTTPDownloadEvent::Run()
   if (mRequestSession->mHasPostData)
   {
     nsCOMPtr<nsIInputStream> uploadStream;
-    rv = NS_NewPostDataStream(getter_AddRefs(uploadStream),
-                              false,
-                              mRequestSession->mPostData);
+    rv = NS_NewCStringInputStream(getter_AddRefs(uploadStream),
+                                  mRequestSession->mPostData);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(chan));
