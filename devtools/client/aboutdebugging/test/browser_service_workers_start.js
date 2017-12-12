@@ -25,7 +25,7 @@ add_task(function* () {
   let serviceWorkersElement = getServiceWorkerList(document);
 
   // Open a tab that registers an empty service worker.
-  let swTab = yield addTab(TAB_URL);
+  let swTab = yield addTab(TAB_URL, { background: true });
 
   // Wait for the service-workers list to update.
   info("Wait until the service worker appears in about:debugging");
