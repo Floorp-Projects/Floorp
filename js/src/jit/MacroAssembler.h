@@ -1520,6 +1520,218 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void clampIntToUint8(Register reg) PER_SHARED_ARCH;
 
+  public:
+    // ========================================================================
+    // Primitive atomic operations.
+    //
+    // If the access is from JS and the eventual destination of the result is a
+    // js::Value, it's probably best to use the JS-specific versions of these,
+    // see further below.
+    //
+    // Temp registers must be defined unless otherwise noted in the per-function
+    // constraints.
+
+    // 8-bit, 16-bit, and 32-bit wide operations.
+    //
+    // The 8-bit and 16-bit operations zero-extend or sign-extend the result to
+    // 32 bits, according to `type`.  On 64-bit systems, the upper 32 bits of
+    // the result will be zero.
+
+    // CompareExchange with memory.  Return the value that was in memory,
+    // whether we wrote or not.
+    //
+    // x86-shared: `output` must be eax.
+
+    void compareExchange(Scalar::Type type, const Synchronization& sync, const Address& mem,
+                         Register expected, Register replacement, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void compareExchange(Scalar::Type type, const Synchronization& sync, const BaseIndex& mem,
+                         Register expected, Register replacement, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    // Exchange with memory.  Return the value initially in memory.
+
+    void atomicExchange(Scalar::Type type, const Synchronization& sync, const Address& mem,
+                        Register value, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void atomicExchange(Scalar::Type type, const Synchronization& sync, const BaseIndex& mem,
+                        Register value, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    // Read-modify-write with memory.  Return the value in memory before the
+    // operation.
+    //
+    // x86-shared:
+    //   For 8-bit operations, `value` and `output` must have a byte subregister.
+    //   For Add and Sub, `temp` must be invalid.
+    //   For And, Or, and Xor, `output` must be eax and `temp` must have a byte subregister.
+    //
+    // ARM: Registers `value` and `output` must differ.
+
+    void atomicFetchOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
+                       Register value, const Address& mem, Register temp, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void atomicFetchOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
+                       Imm32 value, const Address& mem, Register temp, Register output)
+        DEFINED_ON(x86_shared);
+
+    void atomicFetchOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
+                       Register value, const BaseIndex& mem, Register temp, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void atomicFetchOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
+                       Imm32 value, const BaseIndex& mem, Register temp, Register output)
+        DEFINED_ON(x86_shared);
+
+    // Read-modify-write with memory.  Return no value.
+
+    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Register value,
+                        const Address& mem, Register temp)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Imm32 value,
+                        const Address& mem, Register temp)
+        DEFINED_ON(x86_shared);
+
+    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Register value,
+                        const BaseIndex& mem, Register temp)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Imm32 value,
+                        const BaseIndex& mem, Register temp)
+        DEFINED_ON(x86_shared);
+
+    // 64-bit wide operations.
+
+    // 64-bit atomic load.  On 64-bit systems, use regular wasm load with
+    // Synchronization::Load, not this method.
+    //
+    // x86: `temp` must be ecx:ebx; `output` must be edx:eax.
+    // ARM: `temp` should be invalid; `output` must be (even,odd) pair.
+
+    void atomicLoad64(const Synchronization& sync, const Address& mem, Register64 temp,
+                      Register64 output)
+        DEFINED_ON(arm, x86);
+
+    void atomicLoad64(const Synchronization& sync, const BaseIndex& mem, Register64 temp,
+                      Register64 output)
+        DEFINED_ON(arm, x86);
+
+    // x86: `expected` must be the same as `output`, and must be edx:eax
+    // x86: `replacement` must be ecx:ebx
+    // x64: `output` must be rax.
+    // ARM: Registers must be distinct; `replacement` and `output` must be (even,odd) pairs.
+
+    void compareExchange64(const Synchronization& sync, const Address& mem, Register64 expected,
+                           Register64 replacement, Register64 output)
+        DEFINED_ON(arm, arm64, x64, x86);
+
+    void compareExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 expected,
+                           Register64 replacement, Register64 output)
+        DEFINED_ON(arm, arm64, x64, x86);
+
+    // x86: `value` must be ecx:ebx; `output` must be edx:eax.
+    // ARM: Registers must be distinct; `value` and `output` must be (even,odd) pairs.
+
+    void atomicExchange64(const Synchronization& sync, const Address& mem, Register64 value,
+                          Register64 output)
+        DEFINED_ON(arm, arm64, x64, x86);
+
+    void atomicExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 value,
+                          Register64 output)
+        DEFINED_ON(arm, arm64, x64, x86);
+
+    // x86: `output` must be edx:eax, `temp` must be ecx:ebx.
+    // x64: For And, Or, and Xor `output` must be rax.
+    // ARM: Registers must be distinct; `temp` and `output` must be (even,odd) pairs.
+
+    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
+                         const Address& mem, Register64 temp, Register64 output)
+        DEFINED_ON(arm, arm64, x64);
+
+    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
+                         const BaseIndex& mem, Register64 temp, Register64 output)
+        DEFINED_ON(arm, arm64, x64);
+
+    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, const Address& value,
+                         const Address& mem, Register64 temp, Register64 output)
+        DEFINED_ON(x86);
+
+    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, const Address& value,
+                         const BaseIndex& mem, Register64 temp, Register64 output)
+        DEFINED_ON(x86);
+
+    void atomicEffectOp64(const Synchronization& sync, AtomicOp op, Register64 value,
+                          const BaseIndex& mem)
+        DEFINED_ON(x64);
+
+    // ========================================================================
+    // JS atomic operations.
+    //
+    // Here the arrayType must be a type that is valid for JS.  As of 2017 that
+    // is an 8-bit, 16-bit, or 32-bit integer type.
+    //
+    // If arrayType is Scalar::Uint32 then:
+    //
+    //   - `output` must be a float register (this is bug 1077305)
+    //   - if the operation takes one temp register then `temp` must be defined
+    //   - if the operation takes two temp registers then `temp2` must be defined.
+    //
+    // Otherwise `output` must be a GPR and `temp`/`temp2` should be InvalidReg.
+    // (`temp1` must always be valid.)
+    //
+    // For additional register constraints, see the primitive 32-bit operations
+    // above.
+
+    void compareExchangeJS(Scalar::Type arrayType, const Synchronization& sync, const Address& mem,
+                           Register expected, Register replacement, Register temp,
+                           AnyRegister output);
+
+    void compareExchangeJS(Scalar::Type arrayType, const Synchronization& sync,
+                           const BaseIndex& mem, Register expected, Register replacement,
+                           Register temp, AnyRegister output);
+
+    void atomicExchangeJS(Scalar::Type arrayType, const Synchronization& sync, const Address& mem,
+                          Register value, Register temp, AnyRegister output);
+
+    void atomicExchangeJS(Scalar::Type arrayType, const Synchronization& sync, const BaseIndex& mem,
+                          Register value, Register temp, AnyRegister output);
+
+    void atomicFetchOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                         Register value, const Address& mem, Register temp1, Register temp2,
+                         AnyRegister output);
+
+    void atomicFetchOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                         Register value, const BaseIndex& mem, Register temp1, Register temp2,
+                         AnyRegister output);
+
+    void atomicFetchOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                         Imm32 value, const Address& mem, Register temp1, Register temp2,
+                         AnyRegister output)
+        DEFINED_ON(x86_shared);
+
+    void atomicFetchOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                         Imm32 value, const BaseIndex& mem, Register temp1, Register temp2,
+                         AnyRegister output)
+        DEFINED_ON(x86_shared);
+
+    void atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                          Register value, const Address& mem, Register temp);
+
+    void atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                          Register value, const BaseIndex& mem, Register temp);
+
+    void atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                          Imm32 value, const Address& mem, Register temp)
+        DEFINED_ON(x86_shared);
+
+    void atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                          Imm32 value, const BaseIndex& mem, Register temp)
+        DEFINED_ON(x86_shared);
+
     //}}} check_macroassembler_style
   public:
 
@@ -1735,6 +1947,9 @@ class MacroAssembler : public MacroAssemblerSpecific
                                 unsigned numElems = 0);
     void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address& dest,
                                 unsigned numElems = 0);
+
+    void memoryBarrierBefore(const Synchronization& sync);
+    void memoryBarrierAfter(const Synchronization& sync);
 
     // Load a property from an UnboxedPlainObject or UnboxedArrayObject.
     template <typename T>
