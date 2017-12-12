@@ -609,13 +609,6 @@ GeneralParser<ParseHandler, CharT>::asFinalParser() const
     return static_cast<const FinalParser*>(this);
 }
 
-template<class ParseHandler, typename CharT>
-inline bool
-GeneralParser<ParseHandler, CharT>::abortIfSyntaxParser()
-{
-    return asFinalParser()->abortIfSyntaxParser();
-}
-
 template <class ParseHandler, typename CharT>
 void
 GeneralParser<ParseHandler, CharT>::error(unsigned errorNumber, ...)
@@ -872,9 +865,16 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
                                                   SyntaxParser* syntaxParser,
                                                   LazyScript* lazyOuterFunction)
   : Base(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
-    syntaxParser_(syntaxParser),
     tokenStream(cx, options, chars, length)
-{}
+{
+    // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
+    // which are not generated if functions are parsed lazily. Note that the
+    // standard "use strict" does not inhibit lazy parsing.
+    if (options.extraWarningsOption)
+        disableSyntaxParser();
+    else
+        setSyntaxParser(syntaxParser);
+}
 
 template <typename CharT>
 void
@@ -888,8 +888,8 @@ void
 Parser<FullParseHandler, CharT>::setAwaitHandling(AwaitHandling awaitHandling)
 {
     this->awaitHandling_ = awaitHandling;
-    if (syntaxParser_)
-        syntaxParser_->setAwaitHandling(awaitHandling);
+    if (SyntaxParser* syntaxParser = getSyntaxParser())
+        syntaxParser->setAwaitHandling(awaitHandling);
 }
 
 template <class ParseHandler, typename CharT>
@@ -3436,7 +3436,8 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* funcNode
             break;
         }
 
-        if (!syntaxParser_)
+        SyntaxParser* syntaxParser = getSyntaxParser();
+        if (!syntaxParser)
             break;
 
         UsedNameTracker::RewindToken token = usedNames.getRewindToken();
@@ -3444,7 +3445,7 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* funcNode
         // Move the syntax parser to the current position in the stream.
         typename TokenStream::Position position(keepAtoms);
         tokenStream.tell(&position);
-        if (!syntaxParser_->tokenStream.seek(position, anyChars))
+        if (!syntaxParser->tokenStream.seek(position, anyChars))
             return false;
 
         // Make a FunctionBox before we enter the syntax parser, because |pn|
@@ -3456,26 +3457,26 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* funcNode
             return false;
         funbox->initWithEnclosingParseContext(pc, kind);
 
-        if (!syntaxParser_->innerFunctionForFunctionBox(SyntaxParseHandler::NodeGeneric,
-                                                        pc, funbox, inHandling, yieldHandling,
-                                                        kind, newDirectives))
+        if (!syntaxParser->innerFunctionForFunctionBox(SyntaxParseHandler::NodeGeneric,
+                                                       pc, funbox, inHandling, yieldHandling,
+                                                       kind, newDirectives))
         {
-            if (syntaxParser_->hadAbortedSyntaxParse()) {
+            if (syntaxParser->hadAbortedSyntaxParse()) {
                 // Try again with a full parse. UsedNameTracker needs to be
                 // rewound to just before we tried the syntax parse for
                 // correctness.
-                syntaxParser_->clearAbortedSyntaxParse();
+                syntaxParser->clearAbortedSyntaxParse();
                 usedNames.rewind(token);
-                MOZ_ASSERT_IF(!syntaxParser_->context->helperThread(),
-                              !syntaxParser_->context->isExceptionPending());
+                MOZ_ASSERT_IF(!syntaxParser->context->helperThread(),
+                              !syntaxParser->context->isExceptionPending());
                 break;
             }
             return false;
         }
 
         // Advance this parser over tokens processed by the syntax parser.
-        syntaxParser_->tokenStream.tell(&position);
-        if (!tokenStream.seek(position, syntaxParser_->anyChars))
+        syntaxParser->tokenStream.tell(&position);
+        if (!tokenStream.seek(position, syntaxParser->anyChars))
             return false;
 
         // Update the end position of the parse node.
