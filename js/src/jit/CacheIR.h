@@ -148,6 +148,7 @@ class TypedOperandId : public OperandId
     _(In)                   \
     _(HasOwn)               \
     _(TypeOf)               \
+    _(InstanceOf)           \
     _(GetIterator)          \
     _(Compare)              \
     _(Call)
@@ -195,6 +196,7 @@ extern const char* CacheKindNames[];
     _(GuardGroupHasUnanalyzedNewScript)   \
     _(GuardIndexIsNonNegative)            \
     _(GuardXrayExpandoShapeAndDefaultProto) \
+    _(GuardFunctionPrototype)             \
     _(LoadStackValue)                     \
     _(LoadObject)                         \
     _(LoadProto)                          \
@@ -264,6 +266,7 @@ extern const char* CacheKindNames[];
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadStringResult)                   \
+    _(LoadInstanceOfObjectResult)         \
     _(LoadTypeOfObjectResult)             \
                                           \
     _(CallStringSplitResult)              \
@@ -532,6 +535,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardXrayExpandoShapeAndDefaultProto(ObjOperandId obj, JSObject* shapeWrapper) {
         writeOpWithOperandId(CacheOp::GuardXrayExpandoShapeAndDefaultProto, obj);
         buffer_.writeByte(uint32_t(!!shapeWrapper));        addStubField(uintptr_t(shapeWrapper), StubField::Type::JSObject);
+    }
+    // Guard rhs[slot] == prototypeObject
+    void guardFunctionPrototype(ObjOperandId rhs, uint32_t slot, ObjOperandId protoId) {
+        writeOpWithOperandId(CacheOp::GuardFunctionPrototype, rhs);
+        writeOperandId(protoId);
+        addStubField(slot, StubField::Type::RawWord);
     }
     void guardGroup(ObjOperandId obj, ObjectGroup* group) {
         writeOpWithOperandId(CacheOp::GuardGroup, obj);
@@ -992,10 +1001,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadObjectResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
     }
+    void loadInstanceOfObjectResult(ValOperandId lhs, ObjOperandId protoId, uint32_t slot) {
+        writeOp(CacheOp::LoadInstanceOfObjectResult);
+        writeOperandId(lhs);
+        writeOperandId(protoId);
+    }
     void loadTypeOfObjectResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadTypeOfObjectResult, obj);
     }
-
     void callStringSplitResult(StringOperandId str, StringOperandId sep, ObjectGroup* group) {
         writeOp(CacheOp::CallStringSplitResult);
         writeOperandId(str);
@@ -1062,6 +1075,9 @@ class MOZ_RAII CacheIRReader
     CacheOp readOp() {
         return CacheOp(buffer_.readByte());
     }
+
+    // Skip data not currently used.
+    void skip() { buffer_.readByte(); }
 
     ValOperandId valOperandId() { return ValOperandId(buffer_.readByte()); }
     ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
@@ -1481,6 +1497,20 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
     // NOTE: Argument order is PROPERTY, OBJECT
     HasPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                        ICState::Mode mode, HandleValue idVal, HandleValue val);
+
+    bool tryAttachStub();
+};
+
+class MOZ_RAII InstanceOfIRGenerator : public IRGenerator
+{
+    HandleValue lhsVal_;
+    HandleValue rhsVal_;
+
+    void trackAttached(const char* name);
+    void trackNotAttached();
+  public:
+    InstanceOfIRGenerator(JSContext*, HandleScript, jsbytecode*, ICState::Mode,
+                          HandleValue, HandleValue);
 
     bool tryAttachStub();
 };

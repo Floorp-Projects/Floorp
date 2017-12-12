@@ -1383,27 +1383,49 @@ BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot,
                                   JSObject** prototypeObject)
 {
     MOZ_ASSERT(*pc == JSOP_INSTANCEOF);
-
     if (!hasBaselineScript())
         return false;
 
     const ICEntry& entry = icEntryFromPC(pc);
+    ICStub* firstStub = entry.firstStub();
 
-    ICStub* stub = entry.firstStub();
-    if (!stub->isInstanceOf_Function() ||
-        !stub->next()->isInstanceOf_Fallback() ||
-        stub->next()->toInstanceOf_Fallback()->hadUnoptimizableAccess())
-    {
+    // Ensure singleton instanceof stub
+    if (!firstStub->next() ||
+        !firstStub->isCacheIR_Regular() ||
+        !firstStub->next()->isInstanceOf_Fallback() ||
+         firstStub->next()->toInstanceOf_Fallback()->hadUnoptimizableAccess())
+         {
+             return false;
+         }
+
+    ICCacheIR_Regular* stub = entry.firstStub()->toCacheIR_Regular();
+    CacheIRReader reader(stub->stubInfo());
+
+    ObjOperandId rhsId = ObjOperandId(1);
+    ObjOperandId resId = ObjOperandId(2);
+
+    if (!reader.matchOp(CacheOp::GuardIsObject, rhsId))
         return false;
-    }
 
-    ICInstanceOf_Function* optStub = stub->toInstanceOf_Function();
-    *shape = optStub->shape();
-    *prototypeObject = optStub->prototypeObject();
-    *slot = optStub->slot();
+    if (!reader.matchOp(CacheOp::GuardShape, rhsId))
+        return false;
+
+    *shape = stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
+
+    if (!reader.matchOp(CacheOp::LoadObject, resId))
+        return false;
+
+    *prototypeObject = stub->stubInfo()->getStubField<JSObject*>(stub, reader.stubOffset()).get();
 
     if (IsInsideNursery(*prototypeObject))
         return false;
+
+    if (!reader.matchOp(CacheOp::GuardFunctionPrototype, rhsId))
+        return false;
+
+    reader.skip(); // Skip over the protoID;
+
+    *slot = stub->stubInfo()->getStubRawWord(stub, reader.stubOffset());
 
     return true;
 }

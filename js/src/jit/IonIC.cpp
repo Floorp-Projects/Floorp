@@ -61,6 +61,7 @@ IonIC::scratchRegisterForEntryJump()
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
+      case CacheKind::InstanceOf:
         MOZ_CRASH("Unsupported IC");
     }
 
