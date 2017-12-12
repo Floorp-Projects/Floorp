@@ -29,7 +29,7 @@ Cc["@mozilla.org/globalmessagemanager;1"]
     "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js", true);
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
-  "resource:///modules/E10SUtils.jsm");
+  "resource://gre/modules/E10SUtils.jsm");
 
 const PROCESSSELECTOR_CONTRACTID = "@mozilla.org/ipc/processselector;1";
 const OUR_PROCESSSELECTOR_CID =

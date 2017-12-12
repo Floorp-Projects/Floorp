@@ -9,7 +9,7 @@
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
-                                  "resource:///modules/E10SUtils.jsm");
+                                  "resource://gre/modules/E10SUtils.jsm");
 
 var {
   IconDetails,
