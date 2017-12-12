@@ -838,6 +838,18 @@ ParserBase::~ParserBase()
     context->frontendCollectionPool().removeActiveCompilation();
 }
 
+template <class ParseHandler>
+PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx, LifoAlloc& alloc,
+                                                 const ReadOnlyCompileOptions& options,
+                                                 const char16_t* chars, size_t length,
+                                                 bool foldConstants, UsedNameTracker& usedNames,
+                                                 LazyScript* lazyOuterFunction)
+  : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames),
+    handler(cx, alloc, lazyOuterFunction)
+{
+
+}
+
 template <class ParseHandler, typename CharT>
 GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& alloc,
                                                   const ReadOnlyCompileOptions& options,
@@ -846,11 +858,10 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
                                                   UsedNameTracker& usedNames,
                                                   SyntaxParser* syntaxParser,
                                                   LazyScript* lazyOuterFunction)
-  : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames),
+  : Base(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
     AutoGCRooter(cx, PARSER),
     syntaxParser_(syntaxParser),
-    tokenStream(cx, options, chars, length),
-    handler(cx, alloc, lazyOuterFunction)
+    tokenStream(cx, options, chars, length)
 {}
 
 template<class ParseHandler, typename CharT>
@@ -906,7 +917,7 @@ ParserBase::newObjectBox(JSObject* obj)
      * function.
      */
 
-    ObjectBox* objbox = alloc.new_<ObjectBox>(obj, traceListHead);
+    ObjectBox* objbox = alloc.template new_<ObjectBox>(obj, traceListHead);
     if (!objbox) {
         ReportOutOfMemory(context);
         return nullptr;
@@ -935,9 +946,9 @@ GeneralParser<ParseHandler, CharT>::newFunctionBox(Node fn, JSFunction* fun,
      * function.
      */
     FunctionBox* funbox =
-        alloc.new_<FunctionBox>(context, traceListHead, fun, toStringStart,
-                                inheritedDirectives, options().extraWarningsOption,
-                                generatorKind, asyncKind);
+        alloc.template new_<FunctionBox>(context, traceListHead, fun, toStringStart,
+                                         inheritedDirectives, options().extraWarningsOption,
+                                         generatorKind, asyncKind);
     if (!funbox) {
         ReportOutOfMemory(context);
         return nullptr;
@@ -6614,7 +6625,7 @@ GeneralParser<ParseHandler, CharT>::breakStatement(YieldHandling yieldHandling)
             return stmt->label() == label;
         };
 
-        if (!pc->findInnermostStatement<ParseContext::LabelStatement>(hasSameLabel)) {
+        if (!pc->template findInnermostStatement<ParseContext::LabelStatement>(hasSameLabel)) {
             error(JSMSG_LABEL_NOT_FOUND);
             return null();
         }
@@ -6810,7 +6821,7 @@ GeneralParser<ParseHandler, CharT>::labeledStatement(YieldHandling yieldHandling
 
     uint32_t begin = pos().begin;
 
-    if (pc->findInnermostStatement<ParseContext::LabelStatement>(hasSameLabel)) {
+    if (pc->template findInnermostStatement<ParseContext::LabelStatement>(hasSameLabel)) {
         errorAt(begin, JSMSG_DUPLICATE_LABEL);
         return null();
     }
@@ -8247,10 +8258,10 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
     return handler.newAssignment(kind, lhs, rhs);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 bool
-GeneralParser<ParseHandler, CharT>::isValidSimpleAssignmentTarget(Node node,
-                                                                  FunctionCallBehavior behavior /* = ForbidAssignmentToFunctionCalls */)
+PerHandlerParser<ParseHandler>::isValidSimpleAssignmentTarget(Node node,
+                                                              FunctionCallBehavior behavior /* = ForbidAssignmentToFunctionCalls */)
 {
     // Note that this method implements *only* a boolean test.  Reporting an
     // error for the various syntaxes that fail this, and warning for the
@@ -8274,9 +8285,9 @@ GeneralParser<ParseHandler, CharT>::isValidSimpleAssignmentTarget(Node node,
     return false;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 const char*
-GeneralParser<ParseHandler, CharT>::nameIsArgumentsOrEval(Node node)
+PerHandlerParser<ParseHandler>::nameIsArgumentsOrEval(Node node)
 {
     MOZ_ASSERT(handler.isName(node), "must only call this function on known names");
 
@@ -9990,6 +10001,8 @@ GeneralParser<ParseHandler, CharT>::warnOnceAboutExprClosure()
     return true;
 }
 
+template class PerHandlerParser<FullParseHandler>;
+template class PerHandlerParser<SyntaxParseHandler>;
 template class GeneralParser<FullParseHandler, char16_t>;
 template class GeneralParser<SyntaxParseHandler, char16_t>;
 template class Parser<FullParseHandler, char16_t>;
