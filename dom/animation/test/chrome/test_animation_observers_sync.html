@@ -1224,7 +1224,7 @@ function runTest() {
       // Finish and pause.
       animations[0].finish();
       animations[0].pause();
-      assert_equals(animations[0].playState, "paused",
+      assert_true(animations[0].pending && animations[0].playState === "paused",
         "playState after finishing and calling pause()");
 
       // Call finish() again to abort the pause
@@ -1580,7 +1580,8 @@ function runTest() {
 
 setup({explicit_done: true});
 SpecialPowers.pushPrefEnv(
-  { set: [["dom.animations-api.core.enabled", true]] },
+  { set: [["dom.animations-api.core.enabled", true],
+          ["dom.animations-api.pending-member.enabled", true]] },
   function() {
     runTest();
     done();

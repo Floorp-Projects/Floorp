@@ -101,8 +101,6 @@ else
     ac_add_options --with-pocket-api-keyfile="$topsrcdir/mobile/android/base/pocket-api-sandbox.token"
 fi
 
-export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
-
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
