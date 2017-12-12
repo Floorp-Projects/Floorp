@@ -617,10 +617,15 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    var markers = await observeStyling(5);
+    var markers = await observeStyling(1);
+    todo_is(markers.length, 1,
+            'Animations running on the compositor should restyle once after ' +
+            'Animation.pause() was called');
+
+    markers = await observeStyling(5);
     is(markers.length, 0,
-       'Bug 1232563: Paused animations running on the compositor should ' +
-       'never cause restyles once after pause() is called');
+       'Paused animations running on the compositor should never cause ' +
+       'restyles');
     await ensureElementRemoval(div);
   });
 
@@ -634,10 +639,15 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    var markers = await observeStyling(5);
+    var markers = await observeStyling(1);
+    todo_is(markers.length, 1,
+            'Animations running on the main-thread should restyle once after ' +
+            'Animation.pause() was called');
+
+    markers = await observeStyling(5);
     is(markers.length, 0,
-       'Bug 1232563: Paused animations running on the main-thread should ' +
-       'never cause restyles after pause() is called');
+       'Paused animations running on the main-thread should never cause ' +
+       'restyles');
     await ensureElementRemoval(div);
   });
 
