@@ -65,6 +65,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ServoMediaList.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/RWLock.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -120,6 +121,30 @@ void
 AssertIsMainThreadOrServoLangFontPrefsCacheLocked()
 {
   MOZ_ASSERT(NS_IsMainThread() || sServoFFILock->LockedForWritingByCurrentThread());
+}
+
+
+void
+Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel,
+                                uint32_t total_t, uint32_t parallel_t,
+                                uint32_t total_s, uint32_t parallel_s)
+{
+
+#ifdef NIGHTLY_BUILD
+  // we ignore cases where a page just didn't restyle a lot
+  if (total > 30) {
+    uint32_t percent = parallel * 100 / total;
+    Telemetry::Accumulate(Telemetry::STYLO_PARALLEL_RESTYLE_FRACTION, percent);
+  }
+  if (total_t > 0) {
+    uint32_t percent = parallel_t * 100 / total_t;
+    Telemetry::Accumulate(Telemetry::STYLO_PARALLEL_RESTYLE_FRACTION_WEIGHTED_TRAVERSED, percent);
+  }
+  if (total_s > 0) {
+    uint32_t percent = parallel_s * 100 / total_s;
+    Telemetry::Accumulate(Telemetry::STYLO_PARALLEL_RESTYLE_FRACTION_WEIGHTED_STYLED, percent);
+  }
+#endif
 }
 
 bool

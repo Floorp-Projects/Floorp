@@ -2,9 +2,9 @@
 
 set -xe
 
-test $TASK_ID
-test $SHA1_SIGNING_CERT
-test $SHA384_SIGNING_CERT
+test "$TASK_ID"
+test "$SHA1_SIGNING_CERT"
+test "$SHA384_SIGNING_CERT"
 
 ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
@@ -15,7 +15,7 @@ curl --location --retry 10 --retry-delay 10 -o /home/worker/task.json \
 # enable locale cache
 export MBSDIFF_HOOK="/home/worker/bin/mbsdiff_hook.sh -c /tmp/fs-cache"
 
-if [ ! -z $FILENAME_TEMPLATE ]; then
+if [ ! -z "$FILENAME_TEMPLATE" ]; then
     EXTRA_PARAMS="--filename-template $FILENAME_TEMPLATE $EXTRA_PARAMS"
 fi
 

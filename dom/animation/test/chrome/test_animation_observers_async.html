@@ -318,7 +318,8 @@ function runTest() {
         // Wait for the pause to complete.
         return animations[0].ready;
       }).then(() => {
-        assert_equals(animations[0].playState, "paused",
+        assert_true(
+          !animations[0].pending && animations[0].playState === "paused",
           "playState after finishing and pausing");
 
         // We should have two MutationRecords for the Animation changes:

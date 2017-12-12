@@ -211,6 +211,7 @@ whitelist-vars = [
     "kGenericFont_.*",
     "kPresContext_.*",
     "nsContentUtils_.*",
+    "GECKO_IS_NIGHTLY",
 ]
 whitelist-types = [
     "RawGecko.*",
