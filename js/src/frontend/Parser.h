@@ -289,6 +289,8 @@ class PerHandlerParser
 
     const char* nameIsArgumentsOrEval(Node node);
 
+    bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
+
   public:
     bool isValidSimpleAssignmentTarget(Node node,
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
@@ -365,6 +367,9 @@ class GeneralParser
     using Base::isValidSimpleAssignmentTarget;
     using Base::pc;
     using Base::usedNames;
+
+  private:
+    using Base::noteDestructuredPositionalFormalParameter;
 
   private:
     inline FinalParser* asFinalParser();
@@ -864,7 +869,6 @@ class GeneralParser
                              uint32_t prevPos);
     bool notePositionalFormalParameter(Node fn, HandlePropertyName name, uint32_t beginPos,
                                        bool disallowDuplicateParams, bool* duplicatedParam);
-    bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
 
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
