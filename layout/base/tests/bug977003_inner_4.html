@@ -69,10 +69,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       listener.addEventListener("gotpointercapture",  ListenerGotHandler);
       listener.addEventListener("lostpointercapture", ListenerLostHandler);
       var rect = target.getBoundingClientRect();
-      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousedown"});
-      synthesizeMouse(target, rect.width/3, rect.height/3, {type: "mousemove"});
-      synthesizeMouse(target, rect.width/4, rect.height/4, {type: "mousemove"});
-      synthesizeMouse(target, rect.width/4, rect.height/4, {type: "mouseup"});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
+      synthesizePointer(target, rect.width/3, rect.height/3, {type: "pointermove"});
+      synthesizePointer(target, rect.width/4, rect.height/4, {type: "pointermove"});
+      synthesizePointer(target, rect.width/4, rect.height/4, {type: "pointerup"});
       finishTest();
     }
     function finishTest() {
