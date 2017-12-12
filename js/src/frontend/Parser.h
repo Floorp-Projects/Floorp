@@ -357,6 +357,8 @@ class PerHandlerParser
     Node newThisName();
     Node newDotGeneratorName();
 
+    Node identifierReference(Handle<PropertyName*> name);
+
     inline bool processExport(Node node);
     inline bool processExportFrom(Node node);
 
@@ -546,6 +548,7 @@ class GeneralParser
     using Base::declareFunctionThis;
     using Base::finishFunction;
     using Base::hasUsedName;
+    using Base::identifierReference;
     using Base::leaveInnerFunction;
     using Base::newDotGeneratorName;
     using Base::newInternalDotName;
@@ -1013,8 +1016,6 @@ class GeneralParser
     PropertyName* identifierReference(YieldHandling yieldHandling) {
         return labelOrIdentifierReference(yieldHandling);
     }
-
-    Node identifierReference(Handle<PropertyName*> name);
 
     bool matchLabel(YieldHandling yieldHandling, MutableHandle<PropertyName*> label);
 
