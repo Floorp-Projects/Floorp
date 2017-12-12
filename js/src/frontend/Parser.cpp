@@ -7283,17 +7283,13 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
                             TokenPos(classStartOffset, classEndOffset));
 }
 
-template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::nextTokenContinuesLetDeclaration(TokenKind next)
+ParserBase::nextTokenContinuesLetDeclaration(TokenKind next)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LET));
+    MOZ_ASSERT(anyChars.nextToken().type == next);
 
-#ifdef DEBUG
-    TokenKind verify;
-    MOZ_ALWAYS_TRUE(tokenStream.peekToken(&verify));
-    MOZ_ASSERT(next == verify);
-#endif
+    TokenStreamShared::verifyConsistentModifier(TokenStreamShared::None, anyChars.nextToken());
 
     // Destructuring continues a let declaration.
     if (next == TOK_LB || next == TOK_LC)
