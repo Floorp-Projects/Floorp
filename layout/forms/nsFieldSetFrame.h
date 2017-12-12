@@ -8,12 +8,12 @@
 #define nsFieldSetFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "ImgDrawResult.h"
+#include "DrawResult.h"
 #include "nsContainerFrame.h"
 
 class nsFieldSetFrame final : public nsContainerFrame
 {
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
 
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsFieldSetFrame)
@@ -47,7 +47,7 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  ImgDrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
+  DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
                          gfxContext& aRenderingContext,
                          nsPoint aPt, const nsRect& aDirtyRect);
 

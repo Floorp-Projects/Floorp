@@ -9,7 +9,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "AutoReferenceChainGuard.h"
-#include "ImgDrawResult.h"
+#include "DrawResult.h"
 #include "gfxContext.h"
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "nsGkAtoms.h"

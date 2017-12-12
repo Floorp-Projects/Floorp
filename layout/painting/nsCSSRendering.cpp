@@ -626,7 +626,7 @@ nsCSSRendering::ComputePixelRadii(const nscoord *aAppUnitsRadii,
                                radii[eCornerBottomLeftY]);
 }
 
-ImgDrawResult
+DrawResult
 nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             gfxContext& aRenderingContext,
                             nsIFrame* aForFrame,
@@ -762,7 +762,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
     flags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
   }
 
-  image::ImgDrawResult result;
+  image::DrawResult result;
   Maybe<nsCSSBorderImageRenderer> bir =
     nsCSSBorderImageRenderer::CreateBorderImageRenderer(aForFrame->PresContext(),
                                                         aForFrame,
@@ -886,7 +886,7 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
 }
 
 
-ImgDrawResult
+DrawResult
 nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                                            gfxContext& aRenderingContext,
                                            nsIFrame* aForFrame,
@@ -910,12 +910,12 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     if (theme &&
         theme->ThemeSupportsWidget(aPresContext, aForFrame,
                                    displayData->mAppearance)) {
-      return ImgDrawResult::SUCCESS; // Let the theme handle it.
+      return DrawResult::SUCCESS; // Let the theme handle it.
     }
   }
 
   if (!aStyleBorder.mBorderImageSource.IsEmpty()) {
-    ImgDrawResult result = ImgDrawResult::SUCCESS;
+    DrawResult result = DrawResult::SUCCESS;
 
     uint32_t irFlags = 0;
     if (aFlags & PaintBorderFlags::SYNC_DECODE_IMAGES) {
@@ -931,19 +931,19 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     // renderer was created successfully, which means border image is ready to
     // be used.
     if (renderer) {
-      MOZ_ASSERT(result == ImgDrawResult::SUCCESS);
+      MOZ_ASSERT(result == DrawResult::SUCCESS);
       return renderer->DrawBorderImage(aPresContext, aRenderingContext,
                                        aForFrame, aDirtyRect);
     }
   }
 
-  ImgDrawResult result = ImgDrawResult::SUCCESS;
+  DrawResult result = DrawResult::SUCCESS;
 
   // If we had a border-image, but it wasn't loaded, then we should return
-  // ImgDrawResult::NOT_READY; we'll want to try again if we do a paint with sync
+  // DrawResult::NOT_READY; we'll want to try again if we do a paint with sync
   // decoding enabled.
   if (aStyleBorder.mBorderImageSource.GetType() != eStyleImageType_Null) {
-    result = ImgDrawResult::NOT_READY;
+    result = DrawResult::NOT_READY;
   }
 
   nsMargin border = aStyleBorder.GetComputedBorder();
@@ -2018,7 +2018,7 @@ nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
   return result;
 }
 
-ImgDrawResult
+DrawResult
 nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
                                      gfxContext& aRenderingCtx)
 {
@@ -2035,12 +2035,12 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
     if (!aParams.frame->StyleDisplay()->mAppearance) {
-      return ImgDrawResult::SUCCESS;
+      return DrawResult::SUCCESS;
     }
 
     nsIContent* content = aParams.frame->GetContent();
     if (!content || content->GetParent()) {
-      return ImgDrawResult::SUCCESS;
+      return DrawResult::SUCCESS;
     }
 
     sc = aParams.frame->StyleContext();
@@ -2103,7 +2103,7 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aM
   return false;
 }
 
-ImgDrawResult
+DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                              mozilla::wr::DisplayListBuilder& aBuilder,
                                                              mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -2122,12 +2122,12 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
     if (!aParams.frame->StyleDisplay()->mAppearance) {
-      return ImgDrawResult::SUCCESS;
+      return DrawResult::SUCCESS;
     }
 
     nsIContent* content = aParams.frame->GetContent();
     if (!content || content->GetParent()) {
-      return ImgDrawResult::SUCCESS;
+      return DrawResult::SUCCESS;
     }
 
     sc = aParams.frame->StyleContext();
@@ -2612,7 +2612,7 @@ DetermineCompositionOp(const nsCSSRendering::PaintBGParams& aParams,
   return nsCSSRendering::GetGFXBlendMode(layer.mBlendMode);
 }
 
-ImgDrawResult
+DrawResult
 nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                            gfxContext& aRenderingCtx,
                                            nsStyleContext *aBackgroundSC,
@@ -2643,7 +2643,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
       theme->DrawWidgetBackground(&aRenderingCtx, aParams.frame,
                                   displayData->mAppearance, aParams.borderArea,
                                   drawing);
-      return ImgDrawResult::SUCCESS;
+      return DrawResult::SUCCESS;
     }
   }
 
@@ -2681,7 +2681,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   // true if and only if we are actually supposed to paint an image or
   // color into aDirtyRect, respectively.
   if (!drawBackgroundImage && !drawBackgroundColor)
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
 
   // The 'bgClipArea' (used only by the image tiling logic, far below)
   // is the caller-provided aParams.bgClipRect if any, or else the area
@@ -2719,13 +2719,13 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
     if (!isCanvasFrame) {
       DrawBackgroundColor(clipState, &aRenderingCtx, appUnitsPerPixel);
     }
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   if (layers.mImageCount < 1) {
     // Return if there are no background layers, all work from this point
     // onwards happens iteratively on these.
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   MOZ_ASSERT((aParams.layer < 0) ||
@@ -2762,7 +2762,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
     ::BoxDecorationRectForBorder(aParams.frame, aParams.borderArea,
                                  skipSides, &aBorder);
 
-  ImgDrawResult result = ImgDrawResult::SUCCESS;
+  DrawResult result = DrawResult::SUCCESS;
   StyleGeometryBox currentBackgroundClip = StyleGeometryBox::BorderBox;
   uint32_t count = drawAllLayers
     ? layers.mImageCount                  // iterate all image layers.
@@ -2849,7 +2849,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   return result;
 }
 
-ImgDrawResult
+DrawResult
 nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                    mozilla::wr::DisplayListBuilder& aBuilder,
                                                                    mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -2884,10 +2884,10 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
   // Skip the following layer painting code if we found the dirty region is
   // empty or the current layer is not selected for drawing.
   if (clipState.mDirtyRectInDevPx.IsEmpty()) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
-  ImgDrawResult result = ImgDrawResult::SUCCESS;
+  DrawResult result = DrawResult::SUCCESS;
   nsBackgroundLayerState state =
     PrepareImageLayer(&aParams.presCtx, aParams.frame,
                       aParams.paintFlags, paintBorderArea,

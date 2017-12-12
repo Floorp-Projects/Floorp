@@ -37,7 +37,7 @@ private:
 class nsImageBoxFrame final : public nsLeafBoxFrame
 {
 public:
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::LayerManager LayerManager;
 
@@ -88,15 +88,15 @@ public:
   virtual ~nsImageBoxFrame();
 
   already_AddRefed<imgIContainer> GetImageContainerForPainting(const nsPoint& aPt,
-                                                               ImgDrawResult& aDrawResult,
+                                                               DrawResult& aDrawResult,
                                                                Maybe<nsPoint>& aAnchorPoint,
                                                                nsRect& aDest);
 
-  ImgDrawResult PaintImage(gfxContext& aRenderingContext,
+  DrawResult PaintImage(gfxContext& aRenderingContext,
                         const nsRect& aDirtyRect,
                         nsPoint aPt, uint32_t aFlags);
 
-  ImgDrawResult CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+  DrawResult CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                      mozilla::wr::IpcResourceUpdateQueue& aResources,
                                      const mozilla::layers::StackingContextHelper& aSc,
                                      mozilla::layers::WebRenderLayerManager* aManager,

@@ -35,7 +35,7 @@ class nsTableCellFrame : public nsContainerFrame,
                          public nsIPercentBSizeObserver
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
 
   friend nsTableCellFrame* NS_NewTableCellFrame(nsIPresShell*   aPresShell,
                                                 nsStyleContext* aContext,
@@ -229,7 +229,7 @@ public:
 
   virtual LogicalMargin GetBorderWidth(WritingMode aWM) const;
 
-  virtual ImgDrawResult PaintBackground(gfxContext&          aRenderingContext,
+  virtual DrawResult PaintBackground(gfxContext&          aRenderingContext,
                                      const nsRect&        aDirtyRect,
                                      nsPoint              aPt,
                                      uint32_t             aFlags);
@@ -322,7 +322,7 @@ inline void nsTableCellFrame::SetHasPctOverBSize(bool aValue)
 // nsBCTableCellFrame
 class nsBCTableCellFrame final : public nsTableCellFrame
 {
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 
@@ -347,7 +347,7 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual ImgDrawResult PaintBackground(gfxContext&          aRenderingContext,
+  virtual DrawResult PaintBackground(gfxContext&          aRenderingContext,
                                      const nsRect&        aDirtyRect,
                                      nsPoint              aPt,
                                      uint32_t             aFlags) override;

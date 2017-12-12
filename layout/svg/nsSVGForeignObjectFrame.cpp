@@ -8,7 +8,7 @@
 #include "nsSVGForeignObjectFrame.h"
 
 // Keep others in (case-insensitive) order:
-#include "ImgDrawResult.h"
+#include "DrawResult.h"
 #include "gfxContext.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"

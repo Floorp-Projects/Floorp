@@ -65,7 +65,7 @@ public:
   using Nothing = mozilla::Nothing;
   using Visibility = mozilla::Visibility;
 
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::ImageLayer ImageLayer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -147,7 +147,7 @@ public:
   static bool ShouldCreateImageFrameFor(mozilla::dom::Element* aElement,
                                           nsStyleContext* aStyleContext);
 
-  ImgDrawResult DisplayAltFeedback(gfxContext& aRenderingContext,
+  DrawResult DisplayAltFeedback(gfxContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsPoint aPt,
                                 uint32_t aFlags);
@@ -225,7 +225,7 @@ protected:
                       const nsString&      aAltText,
                       const nsRect&        aRect);
 
-  ImgDrawResult PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
+  DrawResult PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
                         const nsRect& aDirtyRect, imgIContainer* aImage,
                         uint32_t aFlags);
 
