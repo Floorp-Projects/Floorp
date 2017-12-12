@@ -176,6 +176,21 @@ function waitForAnimationFramesWithDelay(minDelay) {
   });
 }
 
+
+// Waits for a requestAnimationFrame callback in the next refresh driver tick.
+function waitForNextFrame() {
+  const timeAtStart = document.timeline.currentTime;
+  return new Promise(resolve => {
+    window.requestAnimationFrame(() => {
+      if (timeAtStart === document.timeline.currentTime) {
+        window.requestAnimationFrame(resolve);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 // Returns 'matrix()' or 'matrix3d()' function string generated from an array.
 function createMatrixFromArray(array) {
   return (array.length == 16 ? 'matrix3d' : 'matrix') + `(${array.join()})`;
