@@ -41,7 +41,7 @@ promise_test(t => {
   const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   return anim.ready.then(() => {
     anim.currentTime = 200 * MS_PER_SEC;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_equals(anim.currentTime, 200 * MS_PER_SEC,
                   'Hold time is set so current time should NOT change');
@@ -63,7 +63,7 @@ promise_test(t => {
   const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
   return anim.ready.then(() => {
     anim.currentTime = 100 * MS_PER_SEC;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_equals(anim.currentTime, 100 * MS_PER_SEC,
                   'Hold time is set so current time should NOT change');
@@ -96,7 +96,7 @@ promise_test(t => {
   anim.play();
   return anim.ready.then(() => {
     anim.currentTime = -100 * MS_PER_SEC;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_equals(anim.currentTime, -100 * MS_PER_SEC,
                   'Hold time is set so current time should NOT change');
@@ -113,7 +113,7 @@ promise_test(t => {
   anim.play();
   return anim.ready.then(() => {
     anim.currentTime = 0;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_equals(anim.currentTime, 0 * MS_PER_SEC,
                   'Hold time is set so current time should NOT change');
@@ -138,7 +138,7 @@ promise_test(t => {
     // Then extend the duration so that the hold time is cleared and on
     // the next tick the current time will increase.
     anim.effect.timing.duration *= 2;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_greater_than(anim.currentTime, 100 * MS_PER_SEC,
                         'Hold time is not set so current time should increase');
@@ -156,7 +156,7 @@ promise_test(t => {
     // We can test both by checking that the currentTime is initially
     // updated and then increases.
     assert_equals(anim.currentTime, 50 * MS_PER_SEC, 'Start time is updated');
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_greater_than(anim.currentTime, 50 * MS_PER_SEC,
                         'Hold time is not set so current time should increase');
@@ -183,7 +183,7 @@ promise_test(t => {
   return anim.ready.then(() => {
     anim.currentTime = 50 * MS_PER_SEC;
     assert_equals(anim.currentTime, 50 * MS_PER_SEC, 'Start time is updated');
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_less_than(anim.currentTime, 50 * MS_PER_SEC,
                      'Hold time is not set so current time should decrease');
@@ -198,7 +198,7 @@ promise_test(t => {
   anim.playbackRate = 0;
   return anim.ready.then(() => {
     anim.currentTime = -100 * MS_PER_SEC;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_equals(anim.currentTime, -100 * MS_PER_SEC,
                   'Hold time should not be cleared so current time should'
@@ -213,7 +213,7 @@ promise_test(t => {
   anim.playbackRate = 0;
   return anim.ready.then(() => {
     anim.currentTime = 50 * MS_PER_SEC;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_equals(anim.currentTime, 50 * MS_PER_SEC,
                   'Hold time should not be cleared so current time should'
@@ -228,7 +228,7 @@ promise_test(t => {
   anim.playbackRate = 0;
   return anim.ready.then(() => {
     anim.currentTime = 200 * MS_PER_SEC;
-    return waitForAnimationFrames(1);
+    return waitForNextFrame();
   }).then(() => {
     assert_equals(anim.currentTime, 200 * MS_PER_SEC,
                   'Hold time should not be cleared so current time should'
