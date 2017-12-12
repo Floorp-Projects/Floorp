@@ -239,13 +239,12 @@ waitForAllPaints(() => {
     animation.finish();
 
     var markers = await observeStyling(1);
-    // FIXME: Once we perform a micro task checkpoint between animation tick
-    // and requestAnimationFrame callback and we have the conformant Promise
-    // handling, we will see two restyle markers in two different frames
-    // for the finish() due to bug 1415457.
-    is(markers.length, 1,
-       'Bug 1415457: Animations running on the compositor should only ' +
-       'update style once after finish() is called');
+    // FIXME: Once we have the conformant Promise handling, we will see two
+    // restyle markers in two different frames for the finish() due to bug
+    // 1415457.
+    todo_is(markers.length, 1,
+            'Bug 1415457: Animations running on the compositor should only ' +
+            'update style once after finish() is called');
 
     markers = await observeStyling(5);
     is(markers.length, 0,
@@ -265,9 +264,9 @@ waitForAllPaints(() => {
 
     await animation.finished;
     var markers = await observeStyling(1);
-    todo_is(markers.length, 1,
-            'Finished transitions should restyle once after ' +
-            'Animation.finished was fulfilled');
+    is(markers.length, 1,
+       'Finished transitions should restyle once after Animation.finished ' +
+       'was fulfilled');
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
@@ -292,9 +291,9 @@ waitForAllPaints(() => {
 
     await animation.finished;
     var markers = await observeStyling(1);
-    todo_is(markers.length, 1,
-            'Finished animations should restyle once after ' +
-            'Animation.finished was fulfilled');
+    is(markers.length, 1,
+       'Finished animations should restyle once after Animation.finished ' +
+       'was fulfilled');
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
@@ -628,9 +627,9 @@ waitForAllPaints(() => {
     await animation.ready;
 
     var markers = await observeStyling(1);
-    todo_is(markers.length, 1,
-            'Animations running on the compositor should restyle once after ' +
-            'Animation.pause() was called');
+    is(markers.length, 1,
+       'Animations running on the compositor should restyle once after ' +
+       'Animation.pause() was called');
 
     markers = await observeStyling(5);
     is(markers.length, 0,
@@ -650,9 +649,9 @@ waitForAllPaints(() => {
     await animation.ready;
 
     var markers = await observeStyling(1);
-    todo_is(markers.length, 1,
-            'Animations running on the main-thread should restyle once after ' +
-            'Animation.pause() was called');
+    is(markers.length, 1,
+       'Animations running on the main-thread should restyle once after ' +
+       'Animation.pause() was called');
 
     markers = await observeStyling(5);
     is(markers.length, 0,
@@ -897,9 +896,9 @@ waitForAllPaints(() => {
       // Bug 1417354: There will be an additional superfluos restyle request
       // whichi results when we detach an element from the document between
       // the Animation tick and styling, and then re-attach it.
-      todo_is(markers.length, 2,
-              'We should observe one restyle in the first frame right after ' +
-              're-attaching to the document');
+      is(markers.length, 2,
+         'We should observe one restyle in the first frame right after ' +
+         're-attaching to the document');
     } else {
       // Bug 1388557: We should call RequestRestyle(Layer) when an element which
       // has running script animations is attached to a document.
