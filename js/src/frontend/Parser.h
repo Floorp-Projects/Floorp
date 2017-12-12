@@ -286,7 +286,9 @@ class PerHandlerParser
     bool isValidSimpleAssignmentTarget(Node node,
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 
-
+    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
+                                Directives directives, GeneratorKind generatorKind,
+                                FunctionAsyncKind asyncKind);
 };
 
 enum class ExpressionClosure { Allowed, Forbidden };
@@ -343,6 +345,7 @@ class GeneralParser
     using Base::keepAtoms;
     using Base::nameIsArgumentsOrEval;
     using Base::newFunction;
+    using Base::newFunctionBox;
     using Base::options;
     using Base::pos;
     using Base::setLocalStrictMode;
@@ -526,10 +529,6 @@ class GeneralParser
      * Parse a top-level JS script.
      */
     Node parse();
-
-    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
-                                Directives directives,
-                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     void trace(JSTracer* trc);
 
