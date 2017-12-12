@@ -3345,6 +3345,23 @@ HttpBaseChannel::IsReferrerSchemeAllowed(nsIURI *aReferrer)
   return false;
 }
 
+/* static */
+void
+HttpBaseChannel::PropagateReferenceIfNeeded(nsIURI* aURI, nsIURI* aRedirectURI)
+{
+  bool hasRef = false;
+  nsresult rv = aRedirectURI->GetHasRef(&hasRef);
+  if (NS_SUCCEEDED(rv) && !hasRef) {
+    nsAutoCString ref;
+    aURI->GetRef(ref);
+    if (!ref.IsEmpty()) {
+      // NOTE: SetRef will fail if mRedirectURI is immutable
+      // (e.g. an about: URI)... Oh well.
+      aRedirectURI->SetRef(ref);
+    }
+  }
+}
+
 bool
 HttpBaseChannel::ShouldRewriteRedirectToGET(uint32_t httpStatus,
                                             nsHttpRequestHead::ParsedMethodType method)
