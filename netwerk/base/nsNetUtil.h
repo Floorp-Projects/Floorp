@@ -510,11 +510,6 @@ nsresult NS_NewBufferedOutputStream(nsIOutputStream** aResult,
                                     already_AddRefed<nsIOutputStream> aOutputStream,
                                     uint32_t aBufferSize);
 
-// returns an input stream compatible with nsIUploadChannel::SetUploadStream()
-nsresult NS_NewPostDataStream(nsIInputStream  **result,
-                              bool              isFile,
-                              const nsACString &data);
-
 /**
  * This function reads an inputStream and stores its content into a buffer. In
  * general, you should avoid using this function because, it blocks the current
