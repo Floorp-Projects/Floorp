@@ -286,12 +286,32 @@ class PerHandlerParser
     using Node = typename ParseHandler::Node;
 
   protected:
+    /* State specific to the kind of parse being performed. */
+    ParseHandler handler;
+
+    // When ParseHandler is FullParseHandler:
+    //
+    //   If non-null, this field holds the syntax parser used to attempt lazy
+    //   parsing of inner functions. If null, then lazy parsing is disabled.
+    //
+    // When ParseHandler is SyntaxParseHandler:
+    //
+    //   If non-null, this field must be a sentinel value signaling that the
+    //   syntax parse was aborted. If null, then lazy parsing was aborted due
+    //   to encountering unsupported language constructs.
+    //
+    // |internalSyntaxParser_| is really a |Parser<SyntaxParseHandler, CharT>*|
+    // where |CharT| varies per |Parser<ParseHandler, CharT>|.  But this
+    // template class doesn't have access to |CharT|, so we store a |void*|
+    // here, then intermediate all access to this field through accessors in
+    // |GeneralParser<ParseHandler, CharT>| that impose the real type on this
+    // field.
+    void* internalSyntaxParser_;
+
+  protected:
     PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                      const char16_t* chars, size_t length, bool foldConstants,
                      UsedNameTracker& usedNames, LazyScript* lazyOuterFunction);
-
-    /* State specific to the kind of parse being performed. */
-    ParseHandler handler;
 
     static Node null() { return ParseHandler::null(); }
 
@@ -324,6 +344,34 @@ class PerHandlerParser
     Node newThisName();
     Node newDotGeneratorName();
 
+    // If ParseHandler is SyntaxParseHandler:
+    //   Do nothing.
+    // If ParseHandler is FullParseHandler:
+    //   Disable syntax parsing of all future inner functions during this
+    //   full-parse.
+    inline void disableSyntaxParser();
+
+    // If ParseHandler is SyntaxParseHandler:
+    //   Flag the current syntax parse as aborted due to unsupported language
+    //   constructs and return false.  Aborting the current syntax parse does
+    //   not disable attempts to syntax-parse future inner functions.
+    // If ParseHandler is FullParseHandler:
+    //    Disable syntax parsing of all future inner functions and return true.
+    inline bool abortIfSyntaxParser();
+
+    // If ParseHandler is SyntaxParseHandler:
+    //   Return whether the last syntax parse was aborted due to unsupported
+    //   language constructs.
+    // If ParseHandler is FullParseHandler:
+    //   Return false.
+    inline bool hadAbortedSyntaxParse();
+
+    // If ParseHandler is SyntaxParseHandler:
+    //   Clear whether the last syntax parse was aborted.
+    // If ParseHandler is FullParseHandler:
+    //   Do nothing.
+    inline void clearAbortedSyntaxParse();
+
   public:
     bool isValidSimpleAssignmentTarget(Node node,
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
@@ -332,6 +380,68 @@ class PerHandlerParser
                                 Directives directives, GeneratorKind generatorKind,
                                 FunctionAsyncKind asyncKind);
 };
+
+#define ABORTED_SYNTAX_PARSE_SENTINEL reinterpret_cast<void*>(0x1)
+
+template<>
+inline void
+PerHandlerParser<SyntaxParseHandler>::disableSyntaxParser()
+{
+}
+
+template<>
+inline bool
+PerHandlerParser<SyntaxParseHandler>::abortIfSyntaxParser()
+{
+    internalSyntaxParser_ = ABORTED_SYNTAX_PARSE_SENTINEL;
+    return false;
+}
+
+template<>
+inline bool
+PerHandlerParser<SyntaxParseHandler>::hadAbortedSyntaxParse()
+{
+    return internalSyntaxParser_ == ABORTED_SYNTAX_PARSE_SENTINEL;
+}
+
+template<>
+inline void
+PerHandlerParser<SyntaxParseHandler>::clearAbortedSyntaxParse()
+{
+    internalSyntaxParser_ = nullptr;
+}
+
+#undef ABORTED_SYNTAX_PARSE_SENTINEL
+
+// Disable syntax parsing of all future inner functions during this
+// full-parse.
+template<>
+inline void
+PerHandlerParser<FullParseHandler>::disableSyntaxParser()
+{
+    internalSyntaxParser_ = nullptr;
+}
+
+template<>
+inline bool
+PerHandlerParser<FullParseHandler>::abortIfSyntaxParser()
+{
+    disableSyntaxParser();
+    return true;
+}
+
+template<>
+inline bool
+PerHandlerParser<FullParseHandler>::hadAbortedSyntaxParse()
+{
+    return false;
+}
+
+template<>
+inline void
+PerHandlerParser<FullParseHandler>::clearAbortedSyntaxParse()
+{
+}
 
 enum class ExpressionClosure { Allowed, Forbidden };
 
@@ -367,6 +477,7 @@ class GeneralParser
     using FinalParser = Parser<ParseHandler, CharT>;
     using Node = typename ParseHandler::Node;
     using typename Base::InvokedPrediction;
+    using SyntaxParser = Parser<SyntaxParseHandler, CharT>;
 
   protected:
     using Modifier = TokenStreamShared::Modifier;
@@ -398,6 +509,11 @@ class GeneralParser
     using Base::setLocalStrictMode;
     using Base::traceListHead;
     using Base::yieldExpressionsSupported;
+
+    using Base::disableSyntaxParser;
+    using Base::abortIfSyntaxParser;
+    using Base::hadAbortedSyntaxParse;
+    using Base::clearAbortedSyntaxParse;
 
   public:
     using Base::anyChars;
@@ -548,22 +664,19 @@ class GeneralParser
         void transferErrorsTo(PossibleError* other);
     };
 
-  protected:
-    // When ParseHandler is FullParseHandler:
-    //
-    //   If non-null, this field holds the syntax parser used to attempt lazy
-    //   parsing of inner functions. If null, then lazy parsing is disabled.
-    //
-    // When ParseHandler is SyntaxParseHandler:
-    //
-    //   If non-null, this field must be a sentinel value signaling that the
-    //   syntax parse was aborted. If null, then lazy parsing was aborted due
-    //   to encountering unsupported language constructs.
-    using SyntaxParser = Parser<SyntaxParseHandler, CharT>;
-    SyntaxParser* syntaxParser_;
-
   private:
-    inline bool abortIfSyntaxParser();
+    // DO NOT USE THE syntaxParser_ FIELD DIRECTLY.  Use the accessors defined
+    // below to access this field per its actual type.
+    using Base::internalSyntaxParser_;
+
+  protected:
+    SyntaxParser* getSyntaxParser() const {
+        return reinterpret_cast<SyntaxParser*>(internalSyntaxParser_);
+    }
+
+    void setSyntaxParser(SyntaxParser* syntaxParser) {
+        internalSyntaxParser_ = syntaxParser;
+    }
 
   public:
     using TokenStream = TokenStreamSpecific<CharT, ParserAnyCharsAccess<GeneralParser>>;
@@ -1004,7 +1117,9 @@ class Parser<SyntaxParseHandler, CharT> final
 
   public:
     using Base::anyChars;
+    using Base::clearAbortedSyntaxParse;
     using Base::context;
+    using Base::hadAbortedSyntaxParse;
     using Base::innerFunctionForFunctionBox;
     using Base::tokenStream;
 
@@ -1034,8 +1149,11 @@ class Parser<SyntaxParseHandler, CharT> final
     using Base::ss;
     using Base::statementList;
     using Base::stringLiteral;
-    using Base::syntaxParser_;
     using Base::usedNames;
+
+  private:
+    using Base::abortIfSyntaxParser;
+    using Base::disableSyntaxParser;
 
   public:
     // Functions with multiple overloads of different visibility.  We can't
@@ -1076,33 +1194,6 @@ class Parser<SyntaxParseHandler, CharT> final
 
     bool finishFunction(bool isStandaloneFunction = false);
 
-#define ABORTED_SYNTAX_PARSE_SENTINEL reinterpret_cast<SyntaxParser*>(0x1)
-
-    // Flag the current syntax parse as aborted due to unsupported language
-    // constructs and return false.  Aborting the current syntax parse does not
-    // disable attempts to syntax parse future inner functions.
-    bool abortIfSyntaxParser() {
-        syntaxParser_ = ABORTED_SYNTAX_PARSE_SENTINEL;
-        return false;
-    }
-
-    // Return whether the last syntax parse was aborted due to unsupported
-    // language constructs.
-    bool hadAbortedSyntaxParse() {
-        return syntaxParser_ == ABORTED_SYNTAX_PARSE_SENTINEL;
-    }
-
-    // Clear whether the last syntax parse was aborted.
-    void clearAbortedSyntaxParse() {
-        syntaxParser_ = nullptr;
-    }
-
-    // Disable syntax parsing of all future inner functions during this
-    // full-parse.
-    void disableSyntaxParser() {}
-
-#undef ABORTED_SYNTAX_PARSE_SENTINEL
-
     bool asmJS(Node list);
 
     // Functions present only in Parser<SyntaxParseHandler, CharT>.
@@ -1126,19 +1217,6 @@ class Parser<FullParseHandler, CharT> final
     friend class GeneralParser<FullParseHandler, CharT>;
 
   public:
-    Parser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
-           const CharT* chars, size_t length, bool foldConstants, UsedNameTracker& usedNames,
-           SyntaxParser* syntaxParser, LazyScript* lazyOuterFunction)
-      : Base(cx, alloc, options, chars, length, foldConstants, usedNames, syntaxParser,
-             lazyOuterFunction)
-    {
-        // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
-        // which are not generated if functions are parsed lazily. Note that the
-        // standard "use strict" does not inhibit lazy parsing.
-        if (options.extraWarningsOption)
-            disableSyntaxParser();
-    }
-
     using Base::Base;
 
     // Inherited types, listed here to have non-dependent names.
@@ -1148,7 +1226,9 @@ class Parser<FullParseHandler, CharT> final
 
   public:
     using Base::anyChars;
+    using Base::clearAbortedSyntaxParse;
     using Base::functionFormalParametersAndBody;
+    using Base::hadAbortedSyntaxParse;
     using Base::handler;
     using Base::newFunctionBox;
     using Base::options;
@@ -1184,8 +1264,12 @@ class Parser<FullParseHandler, CharT> final
     using Base::propagateFreeNamesAndMarkClosedOverBindings;
     using Base::statementList;
     using Base::stringLiteral;
-    using Base::syntaxParser_;
     using Base::usedNames;
+
+    using Base::abortIfSyntaxParser;
+    using Base::disableSyntaxParser;
+    using Base::getSyntaxParser;
+    using Base::setSyntaxParser;
 
   public:
     // Functions with multiple overloads of different visibility.  We can't
@@ -1247,26 +1331,6 @@ class Parser<FullParseHandler, CharT> final
                             const mozilla::Maybe<uint32_t>& parameterListEnd,
                             GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                             Directives inheritedDirectives, Directives* newDirectives);
-
-    bool abortIfSyntaxParser() {
-        disableSyntaxParser();
-        return true;
-    }
-
-    // Return whether the last syntax parse was aborted due to unsupported
-    // language constructs.
-    bool hadAbortedSyntaxParse() {
-        return false;
-    }
-
-    // Clear whether the last syntax parse was aborted.
-    void clearAbortedSyntaxParse() {}
-
-    // Disable syntax parsing of all future inner functions during this
-    // full-parse.
-    void disableSyntaxParser() {
-        syntaxParser_ = nullptr;
-    }
 
     bool checkStatementsEOF();
 
