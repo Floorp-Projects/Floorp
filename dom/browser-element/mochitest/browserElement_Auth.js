@@ -237,4 +237,8 @@ function testFinish() {
   SimpleTest.finish();
 }
 
-addEventListener('testready', runTest);
+addEventListener('testready', function() {
+  // Enable http authentiication.
+  SpecialPowers.pushPrefEnv({'set': [['network.auth.non-web-content-triggered-resources-http-auth-allow', true]]}, runTest);
+});
+

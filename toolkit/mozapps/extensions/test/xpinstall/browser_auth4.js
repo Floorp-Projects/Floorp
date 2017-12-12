@@ -2,6 +2,9 @@
 var gNewTab;
 
 function test() {
+  // Turn off the authentication dialog blocking for this test.
+  Services.prefs.setBoolPref("network.auth.non-web-content-triggered-resources-http-auth-allow", true);
+
   Harness.authenticationCallback = get_auth_info;
   Harness.downloadFailedCallback = download_failed;
   Harness.installEndedCallback = install_ended;
@@ -38,6 +41,8 @@ function finish_test(count) {
   authMgr.clearAll();
 
   Services.perms.remove(makeURI("http://example.com"), "install");
+
+  Services.prefs.clearUserPref("network.auth.non-web-content-triggered-resources-http-auth-allow");
 
   gBrowser.removeTab(gNewTab);
   Harness.finish();
