@@ -671,9 +671,9 @@ class FullParseHandler
                !node->pn_funbox->isArrow();
     }
 
-    void setFunctionFormalParametersAndBody(ParseNode* pn, ParseNode* kid) {
+    void setFunctionFormalParametersAndBody(ParseNode* funcNode, ParseNode* kid) {
         MOZ_ASSERT_IF(kid, kid->isKind(PNK_PARAMSBODY));
-        pn->pn_body = kid;
+        funcNode->pn_body = kid;
     }
     void setFunctionBox(ParseNode* pn, FunctionBox* funbox) {
         MOZ_ASSERT(pn->isKind(PNK_FUNCTION));

@@ -3215,7 +3215,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
 
 template <typename CharT>
 bool
-Parser<FullParseHandler, CharT>::skipLazyInnerFunction(ParseNode* pn, uint32_t toStringStart,
+Parser<FullParseHandler, CharT>::skipLazyInnerFunction(ParseNode* funcNode, uint32_t toStringStart,
                                                        FunctionSyntaxKind kind, bool tryAnnexB)
 {
     // When a lazily-parsed function is called, we only fully parse (and emit)
@@ -3224,8 +3224,9 @@ Parser<FullParseHandler, CharT>::skipLazyInnerFunction(ParseNode* pn, uint32_t t
     // so we can skip over them after accounting for their free variables.
 
     RootedFunction fun(context, handler.nextLazyInnerFunction());
-    FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, Directives(/* strict = */ false),
-                                         fun->generatorKind(), fun->asyncKind());
+    FunctionBox* funbox =
+        newFunctionBox(funcNode, fun, toStringStart, Directives(/* strict = */ false),
+                       fun->generatorKind(), fun->asyncKind());
     if (!funbox)
         return false;
 
@@ -3259,7 +3260,7 @@ Parser<FullParseHandler, CharT>::skipLazyInnerFunction(ParseNode* pn, uint32_t t
 
 template <typename CharT>
 bool
-Parser<SyntaxParseHandler, CharT>::skipLazyInnerFunction(Node pn, uint32_t toStringStart,
+Parser<SyntaxParseHandler, CharT>::skipLazyInnerFunction(Node funcNode, uint32_t toStringStart,
                                                          FunctionSyntaxKind kind,
                                                          bool tryAnnexB)
 {
@@ -3268,11 +3269,11 @@ Parser<SyntaxParseHandler, CharT>::skipLazyInnerFunction(Node pn, uint32_t toStr
 
 template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::skipLazyInnerFunction(Node node, uint32_t toStringStart,
+GeneralParser<ParseHandler, CharT>::skipLazyInnerFunction(Node funcNode, uint32_t toStringStart,
                                                           FunctionSyntaxKind kind,
                                                           bool tryAnnexB)
 {
-    return asFinalParser()->skipLazyInnerFunction(node, toStringStart, kind, tryAnnexB);
+    return asFinalParser()->skipLazyInnerFunction(funcNode, toStringStart, kind, tryAnnexB);
 }
 
 template <class ParseHandler, typename CharT>
@@ -3348,7 +3349,7 @@ GeneralParser<ParseHandler, CharT>::templateLiteral(YieldHandling yieldHandling)
 
 template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::functionDefinition(Node pn, uint32_t toStringStart,
+GeneralParser<ParseHandler, CharT>::functionDefinition(Node funcNode, uint32_t toStringStart,
                                                        InHandling inHandling, YieldHandling yieldHandling,
                                                        HandleAtom funName, FunctionSyntaxKind kind,
                                                        GeneratorKind generatorKind,
@@ -3361,9 +3362,10 @@ GeneralParser<ParseHandler, CharT>::functionDefinition(Node pn, uint32_t toStrin
     // functions, which are also lazy. Instead, their free variables and
     // source extents are recorded and may be skipped.
     if (handler.canSkipLazyInnerFunctions()) {
-        if (!skipLazyInnerFunction(pn, toStringStart, kind, tryAnnexB))
+        if (!skipLazyInnerFunction(funcNode, toStringStart, kind, tryAnnexB))
             return null();
-        return pn;
+
+        return funcNode;
     }
 
     RootedObject proto(context);
@@ -3396,8 +3398,8 @@ GeneralParser<ParseHandler, CharT>::functionDefinition(Node pn, uint32_t toStrin
     // reparse a function due to failed syntax parsing and encountering new
     // "use foo" directives.
     while (true) {
-        if (trySyntaxParseInnerFunction(pn, fun, toStringStart, inHandling, yieldHandling, kind,
-                                        generatorKind, asyncKind, tryAnnexB, directives,
+        if (trySyntaxParseInnerFunction(funcNode, fun, toStringStart, inHandling, yieldHandling,
+                                        kind, generatorKind, asyncKind, tryAnnexB, directives,
                                         &newDirectives))
         {
             break;
@@ -3416,15 +3418,16 @@ GeneralParser<ParseHandler, CharT>::functionDefinition(Node pn, uint32_t toStrin
         tokenStream.seek(start);
 
         // functionFormalParametersAndBody may have already set pn->pn_body before failing.
-        handler.setFunctionFormalParametersAndBody(pn, null());
+        handler.setFunctionFormalParametersAndBody(funcNode, null());
     }
 
-    return pn;
+    return funcNode;
 }
 
 template <typename CharT>
 bool
-Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunction fun,
+Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* funcNode,
+                                                             HandleFunction fun,
                                                              uint32_t toStringStart,
                                                              InHandling inHandling,
                                                              YieldHandling yieldHandling,
@@ -3441,7 +3444,7 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* pn, Hand
         // parse to avoid the overhead of a lazy syntax-only parse. Although
         // the prediction may be incorrect, IIFEs are common enough that it
         // pays off for lots of code.
-        if (pn->isLikelyIIFE() &&
+        if (funcNode->isLikelyIIFE() &&
             generatorKind == GeneratorKind::NotGenerator &&
             asyncKind == FunctionAsyncKind::SyncFunction)
         {
@@ -3462,7 +3465,7 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* pn, Hand
         // Make a FunctionBox before we enter the syntax parser, because |pn|
         // still expects a FunctionBox to be attached to it during BCE, and
         // the syntax parser cannot attach one to it.
-        FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, inheritedDirectives,
+        FunctionBox* funbox = newFunctionBox(funcNode, fun, toStringStart, inheritedDirectives,
                                              generatorKind, asyncKind);
         if (!funbox)
             return false;
@@ -3491,23 +3494,25 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* pn, Hand
             return false;
 
         // Update the end position of the parse node.
-        pn->pn_pos.end = anyChars.currentToken().pos.end;
+        funcNode->pn_pos.end = anyChars.currentToken().pos.end;
 
         // Append possible Annex B function box only upon successfully parsing.
-        if (tryAnnexB && !pc->innermostScope()->addPossibleAnnexBFunctionBox(pc, funbox))
-            return false;
+        if (tryAnnexB) {
+            if (!pc->innermostScope()->addPossibleAnnexBFunctionBox(pc, funbox))
+                return false;
+        }
 
         return true;
     } while (false);
 
     // We failed to do a syntax parse above, so do the full parse.
-    return innerFunction(pn, pc, fun, toStringStart, inHandling, yieldHandling, kind,
+    return innerFunction(funcNode, pc, fun, toStringStart, inHandling, yieldHandling, kind,
                          generatorKind, asyncKind, tryAnnexB, inheritedDirectives, newDirectives);
 }
 
 template <typename CharT>
 bool
-Parser<SyntaxParseHandler, CharT>::trySyntaxParseInnerFunction(Node pn, HandleFunction fun,
+Parser<SyntaxParseHandler, CharT>::trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun,
                                                                uint32_t toStringStart,
                                                                InHandling inHandling,
                                                                YieldHandling yieldHandling,
@@ -3519,13 +3524,13 @@ Parser<SyntaxParseHandler, CharT>::trySyntaxParseInnerFunction(Node pn, HandleFu
                                                                Directives* newDirectives)
 {
     // This is already a syntax parser, so just parse the inner function.
-    return innerFunction(pn, pc, fun, toStringStart, inHandling, yieldHandling, kind,
+    return innerFunction(funcNode, pc, fun, toStringStart, inHandling, yieldHandling, kind,
                          generatorKind, asyncKind, tryAnnexB, inheritedDirectives, newDirectives);
 }
 
 template <class ParseHandler, typename CharT>
 inline bool
-GeneralParser<ParseHandler, CharT>::trySyntaxParseInnerFunction(Node node, HandleFunction fun,
+GeneralParser<ParseHandler, CharT>::trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun,
                                                                 uint32_t toStringStart,
                                                                 InHandling inHandling,
                                                                 YieldHandling yieldHandling,
@@ -3536,7 +3541,7 @@ GeneralParser<ParseHandler, CharT>::trySyntaxParseInnerFunction(Node node, Handl
                                                                 Directives inheritedDirectives,
                                                                 Directives* newDirectives)
 {
-    return asFinalParser()->trySyntaxParseInnerFunction(node, fun, toStringStart, inHandling,
+    return asFinalParser()->trySyntaxParseInnerFunction(funcNode, fun, toStringStart, inHandling,
                                                         yieldHandling, kind, generatorKind,
                                                         asyncKind, tryAnnexB, inheritedDirectives,
                                                         newDirectives);
@@ -3544,7 +3549,8 @@ GeneralParser<ParseHandler, CharT>::trySyntaxParseInnerFunction(Node node, Handl
 
 template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::innerFunctionForFunctionBox(Node pn, ParseContext* outerpc,
+GeneralParser<ParseHandler, CharT>::innerFunctionForFunctionBox(Node funcNode,
+                                                                ParseContext* outerpc,
                                                                 FunctionBox* funbox,
                                                                 InHandling inHandling,
                                                                 YieldHandling yieldHandling,
@@ -3561,7 +3567,7 @@ GeneralParser<ParseHandler, CharT>::innerFunctionForFunctionBox(Node pn, ParseCo
     if (!funpc.init())
         return false;
 
-    if (!functionFormalParametersAndBody(inHandling, yieldHandling, pn, kind))
+    if (!functionFormalParametersAndBody(inHandling, yieldHandling, funcNode, kind))
         return false;
 
     return leaveInnerFunction(outerpc);
@@ -3569,7 +3575,7 @@ GeneralParser<ParseHandler, CharT>::innerFunctionForFunctionBox(Node pn, ParseCo
 
 template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::innerFunction(Node pn, ParseContext* outerpc,
+GeneralParser<ParseHandler, CharT>::innerFunction(Node funcNode, ParseContext* outerpc,
                                                   HandleFunction fun, uint32_t toStringStart,
                                                   InHandling inHandling,
                                                   YieldHandling yieldHandling,
@@ -3584,18 +3590,23 @@ GeneralParser<ParseHandler, CharT>::innerFunction(Node pn, ParseContext* outerpc
     // parser. In that case, outerpc is a SourceParseContext from the full parser
     // instead of the current top of the stack of the syntax parser.
 
-    FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, inheritedDirectives,
+    FunctionBox* funbox = newFunctionBox(funcNode, fun, toStringStart, inheritedDirectives,
                                          generatorKind, asyncKind);
     if (!funbox)
         return false;
     funbox->initWithEnclosingParseContext(outerpc, kind);
 
-    if (!innerFunctionForFunctionBox(pn, outerpc, funbox, inHandling, yieldHandling, kind, newDirectives))
+    if (!innerFunctionForFunctionBox(funcNode, outerpc, funbox, inHandling, yieldHandling, kind,
+                                     newDirectives))
+    {
         return false;
+    }
 
     // Append possible Annex B function box only upon successfully parsing.
-    if (tryAnnexB && !pc->innermostScope()->addPossibleAnnexBFunctionBox(pc, funbox))
-        return false;
+    if (tryAnnexB) {
+        if (!pc->innermostScope()->addPossibleAnnexBFunctionBox(pc, funbox))
+            return false;
+    }
 
     return true;
 }
