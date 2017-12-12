@@ -91,7 +91,7 @@ def make_task_description(config, jobs):
             get_taskcluster_artifact_prefix(signing_task_ref, locale=locale),
             'target.complete.mar'
         )
-        for build in builds:
+        for build in sorted(builds):
             extra['funsize']['partials'].append({
                 'locale': build_locale,
                 'from_mar': builds[build]['mar_url'],
@@ -113,6 +113,7 @@ def make_task_description(config, jobs):
             'os': 'linux',
             'max-run-time': 3600,
             'chain-of-trust': True,
+            'taskcluster-proxy': True,
             'env': {
                 'SHA1_SIGNING_CERT': 'nightly_sha1',
                 'SHA384_SIGNING_CERT': 'nightly_sha384'
@@ -127,6 +128,7 @@ def make_task_description(config, jobs):
                 dep_job.task["metadata"]["description"]),
             'worker-type': 'aws-provisioner-v1/gecko-%s-b-linux' % level,
             'dependencies': dependencies,
+            'scopes': ['secrets:get:project/releng/gecko/build/level-%s/datadog-api-key' % level],
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
