@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import "chrome://devtools/skin/widgets.css";
 @import "resource://devtools/client/themes/light-theme.css";
 @import "resource://devtools/client/shared/components/splitter/SplitBox.css";
 @import "resource://devtools/client/shared/components/tree/TreeView.css";
