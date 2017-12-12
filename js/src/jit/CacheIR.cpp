@@ -4001,6 +4001,113 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
     return true;
 }
 
+InstanceOfIRGenerator::InstanceOfIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                            ICState::Mode mode, HandleValue lhs, HandleValue rhs)
+  : IRGenerator(cx, script, pc, CacheKind::InstanceOf, mode),
+    lhsVal_(lhs),
+    rhsVal_(rhs)
+{ }
+
+bool
+InstanceOfIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::InstanceOf);
+    AutoAssertNoPendingException aanpe(cx_);
+    RootedFunction fun(cx_, &rhsVal_.toObject().as<JSFunction>());
+
+    if (fun->isBoundFunction()) {
+        trackNotAttached();
+        return false;
+    }
+
+    // If the user has supplied their own @@hasInstance method we shouldn't
+    // clobber it.
+    if (!js::FunctionHasDefaultHasInstance(fun, cx_->wellKnownSymbols())) {
+        trackNotAttached();
+        return false;
+    }
+
+    // Refuse to optimize any function whose [[Prototype]] isn't
+    // Function.prototype.
+    if (!fun->hasStaticPrototype() || fun->hasUncacheableProto()) {
+        trackNotAttached();
+        return false;
+    }
+
+    Value funProto = cx_->global()->getPrototype(JSProto_Function);
+    if (!funProto.isObject() || fun->staticPrototype() != &funProto.toObject()) {
+        trackNotAttached();
+        return false;
+    }
+
+    // Ensure that the function's prototype slot is the same.
+    Shape* shape = fun->lookupPure(cx_->names().prototype);
+    if (!shape || !shape->isDataProperty()) {
+        trackNotAttached();
+        return false;
+    }
+
+    uint32_t slot = shape->slot();
+
+    MOZ_ASSERT(fun->numFixedSlots() == 0, "Stub code relies on this");
+    if (!fun->getSlot(slot).isObject()) {
+        trackNotAttached();
+        return false;
+    }
+
+    JSObject* prototypeObject = &fun->getSlot(slot).toObject();
+
+    // Abstract Objects
+    ValOperandId lhs(writer.setInputOperandId(0));
+    ValOperandId rhs(writer.setInputOperandId(1));
+
+    ObjOperandId rhsId = writer.guardIsObject(rhs);
+    writer.guardShape(rhsId, fun->lastProperty());
+
+    // Load prototypeObject into the cache -- consumed twice in the IC
+    ObjOperandId protoId = writer.loadObject(prototypeObject);
+    // Ensure that rhs[slot] == prototypeObject.
+    writer.guardFunctionPrototype(rhsId, slot, protoId);
+
+    // Needn't guard LHS is object, because the actual stub can handle that
+    // and correctly return false.
+    writer.loadInstanceOfObjectResult(lhs, protoId, slot);
+    writer.returnFromIC();
+    trackAttached("InstanceOf");
+    return true;
+}
+
+void
+InstanceOfIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "lhs", lhsVal_);
+        sp.valueProperty(guard, "rhs", rhsVal_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+InstanceOfIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "lhs", lhsVal_);
+        sp.valueProperty(guard, "rhs", rhsVal_);
+        sp.endCache(guard);
+    }
+#endif
+}
+
 TypeOfIRGenerator::TypeOfIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                                      ICState::Mode mode, HandleValue value)
   : IRGenerator(cx, script, pc, CacheKind::TypeOf, mode),
