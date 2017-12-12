@@ -498,10 +498,8 @@ nsMultiplexInputStream::IsNonBlocking(bool* aNonBlocking)
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    // If one is non-blocking the entire stream becomes non-blocking
-    // (except that we don't implement nsIAsyncInputStream, so there's
-    //  not much for the caller to do if Read returns "would block")
-    if (*aNonBlocking) {
+    // If one is blocking the entire stream becomes blocking.
+    if (!*aNonBlocking) {
       return NS_OK;
     }
   }
