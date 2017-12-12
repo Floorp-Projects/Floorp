@@ -824,8 +824,20 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
     tempPoolMark = alloc.mark();
 }
 
+bool
+ParserBase::checkOptions()
+{
+#ifdef DEBUG
+    checkOptionsCalled = true;
+#endif
+
+    return anyChars.checkOptions();
+}
+
 ParserBase::~ParserBase()
 {
+    MOZ_ASSERT(checkOptionsCalled);
+
     alloc.release(tempPoolMark);
 
     /*
@@ -863,23 +875,6 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
     syntaxParser_(syntaxParser),
     tokenStream(cx, options, chars, length)
 {}
-
-template<class ParseHandler, typename CharT>
-bool
-GeneralParser<ParseHandler, CharT>::checkOptions()
-{
-#ifdef DEBUG
-    checkOptionsCalled = true;
-#endif
-
-    return anyChars.checkOptions();
-}
-
-template <class ParseHandler, typename CharT>
-GeneralParser<ParseHandler, CharT>::~GeneralParser()
-{
-    MOZ_ASSERT(checkOptionsCalled);
-}
 
 template <typename CharT>
 void
