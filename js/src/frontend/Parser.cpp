@@ -2389,9 +2389,9 @@ PerHandlerParser<ParseHandler>::finishFunctionScopes(bool isStandaloneFunction)
     return true;
 }
 
-template <typename CharT>
+template <>
 bool
-Parser<FullParseHandler, CharT>::finishFunction(bool isStandaloneFunction /* = false */)
+PerHandlerParser<FullParseHandler>::finishFunction(bool isStandaloneFunction /* = false */)
 {
     if (!finishFunctionScopes(isStandaloneFunction))
         return false;
@@ -2424,9 +2424,9 @@ Parser<FullParseHandler, CharT>::finishFunction(bool isStandaloneFunction /* = f
     return true;
 }
 
-template <typename CharT>
+template <>
 bool
-Parser<SyntaxParseHandler, CharT>::finishFunction(bool isStandaloneFunction /* = false */)
+PerHandlerParser<SyntaxParseHandler>::finishFunction(bool isStandaloneFunction /* = false */)
 {
     // The LazyScript for a lazily parsed function needs to know its set of
     // free variables and inner functions so that when it is fully parsed, we
@@ -2482,13 +2482,6 @@ Parser<SyntaxParseHandler, CharT>::finishFunction(bool isStandaloneFunction /* =
 
     fun->initLazyScript(lazy);
     return true;
-}
-
-template <class ParseHandler, typename CharT>
-inline bool
-GeneralParser<ParseHandler, CharT>::finishFunction(bool isStandaloneFunction /* = false */)
-{
-    return asFinalParser()->finishFunction(isStandaloneFunction);
 }
 
 static YieldHandling
