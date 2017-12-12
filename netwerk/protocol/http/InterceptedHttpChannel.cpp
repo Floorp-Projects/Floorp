@@ -199,6 +199,8 @@ InterceptedHttpChannel::FollowSyntheticRedirect()
     redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
   }
 
+  PropagateReferenceIfNeeded(mURI, redirectURI);
+
   bool rewriteToGET = ShouldRewriteRedirectToGET(mResponseHead->Status(),
                                                  mRequestHead.ParsedMethod());
 
