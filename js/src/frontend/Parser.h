@@ -248,6 +248,8 @@ class ParserBase
     bool hasUsedFunctionSpecialName(HandlePropertyName name);
 
     bool declareDotGeneratorName();
+
+    bool leaveInnerFunction(ParseContext* outerpc);
 };
 
 inline
@@ -531,6 +533,7 @@ class GeneralParser
     using Base::declareFunctionThis;
     using Base::finishFunction;
     using Base::hasUsedName;
+    using Base::leaveInnerFunction;
     using Base::newDotGeneratorName;
     using Base::newInternalDotName;
     using Base::newThisName;
@@ -1009,8 +1012,6 @@ class GeneralParser
     // Indicate if the next token (tokenized as Operand) is |in| or |of|.  If
     // so, consume it.
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
-
-    bool leaveInnerFunction(ParseContext* outerpc);
 
   private:
     bool checkIncDecOperand(Node operand, uint32_t operandOffset);

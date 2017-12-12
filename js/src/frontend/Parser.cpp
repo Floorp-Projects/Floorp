@@ -2861,9 +2861,8 @@ GeneralParser<ParseHandler, CharT>::matchOrInsertSemicolon()
     return tokenStream.matchToken(&matched, TOK_SEMI, TokenStream::Operand);
 }
 
-template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::leaveInnerFunction(ParseContext* outerpc)
+ParserBase::leaveInnerFunction(ParseContext* outerpc)
 {
     MOZ_ASSERT(pc != outerpc);
 
