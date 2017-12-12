@@ -5399,26 +5399,19 @@ PerHandlerParser<SyntaxParseHandler>::processExport(Node node)
     return false;
 }
 
-template<typename CharT>
-bool
-Parser<FullParseHandler, CharT>::processExportFrom(ParseNode* node)
+template<>
+inline bool
+PerHandlerParser<FullParseHandler>::processExportFrom(ParseNode* node)
 {
     return pc->sc()->asModuleContext()->builder.processExportFrom(node);
 }
 
-template<typename CharT>
+template<>
 inline bool
-Parser<SyntaxParseHandler, CharT>::processExportFrom(Node node)
+PerHandlerParser<SyntaxParseHandler>::processExportFrom(Node node)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
-}
-
-template<class ParseHandler, typename CharT>
-inline bool
-GeneralParser<ParseHandler, CharT>::processExportFrom(Node node)
-{
-    return asFinalParser()->processExportFrom(node);
 }
 
 template <class ParseHandler, typename CharT>
