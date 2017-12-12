@@ -146,7 +146,7 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                              MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
   MOZ_RELEASE_ASSERT(GetErrorArgCount(errorNumber) <= 2);
   JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
-                         static_cast<const unsigned>(errorNumber),
+                         static_cast<unsigned>(errorNumber),
                          funcNameStr.get(), ifaceName.get());
   return false;
 }
@@ -253,7 +253,7 @@ TErrorResult<CleanupPolicy>::SetPendingExceptionWithMessage(JSContext* aCx)
   args[argCount] = nullptr;
 
   JS_ReportErrorNumberUCArray(aCx, dom::GetErrorMessage, nullptr,
-                              static_cast<const unsigned>(message->mErrorNumber),
+                              static_cast<unsigned>(message->mErrorNumber),
                               argCount > 0 ? args : nullptr);
 
   ClearMessage();
