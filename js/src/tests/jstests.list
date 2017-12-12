@@ -116,6 +116,7 @@ skip script test262/built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffe
 skip script test262/built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer-realm.js
 skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer.js
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
 skip script test262/built-ins/TypedArrays/internals/Get/detached-buffer-realm.js
 skip script test262/built-ins/TypedArrays/internals/Get/detached-buffer.js
 skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/detached-buffer-realm.js
@@ -124,6 +125,7 @@ skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer-
 skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer.js
 skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer-realm.js
 skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer.js
+skip script test262/built-ins/TypedArrays/internals/Set/tonumber-value-detached-buffer.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1129202
 skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-greater-than-last-index.js
@@ -250,7 +252,6 @@ skip script test262/built-ins/Proxy/set/trap-is-not-callable-realm.js
 skip script test262/built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js
 
 # Erros thrown from wrong realm, similar to 1225839, 1288457, and 1297179.
-skip script test262/language/expressions/new/non-ctor-err-realm.js
 skip script test262/built-ins/Array/length/define-own-prop-length-overflow-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
@@ -436,9 +437,6 @@ skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-cir
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1339123
 skip script test262/annexB/language/function-code/block-decl-func-skip-arguments.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1386146
-skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1407587
 skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
 skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
@@ -475,5 +473,7 @@ skip script test262/harness/detachArrayBuffer.js
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
-# https://github.com/tc39/test262/issues/1312
-skip script test262/built-ins/BigInt/prototype/toString/string-is-code-units-of-decimal-digits-only.js
+# https://github.com/tc39/test262/issues/1370
+skip script test262/language/expressions/bitwise-or/bigint-non-primitive.js
+skip script test262/language/expressions/bitwise-and/bigint-non-primitive.js
+skip script test262/language/expressions/bitwise-xor/bigint-non-primitive.js
