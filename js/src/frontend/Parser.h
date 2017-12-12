@@ -252,6 +252,8 @@ class ParserBase
     bool hasUsedName(HandlePropertyName name);
     bool hasUsedFunctionSpecialName(HandlePropertyName name);
 
+    bool checkAndMarkSuperScope();
+
     bool declareDotGeneratorName();
 
     bool leaveInnerFunction(ParseContext* outerpc);
@@ -538,6 +540,7 @@ class GeneralParser
     using Base::usedNames;
 
   private:
+    using Base::checkAndMarkSuperScope;
     using Base::declareDotGeneratorName;
     using Base::declareFunctionArgumentsObject;
     using Base::declareFunctionThis;
@@ -955,7 +958,6 @@ class GeneralParser
                       TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr);
 
     bool tryNewTarget(Node& newTarget);
-    bool checkAndMarkSuperScope();
 
     Node methodDefinition(uint32_t toStringStart, PropertyType propType, HandleAtom funName);
 
