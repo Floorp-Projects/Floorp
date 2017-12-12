@@ -104,7 +104,7 @@ struct SafebrowsingHash
 
     aStr.SetCapacity(2 * len);
     for (size_t i = 0; i < len; ++i) {
-      const char c = static_cast<const char>(buf[i]);
+      const char c = static_cast<char>(buf[i]);
       aStr.Append(lut[(c >> 4) & 0x0F]);
       aStr.Append(lut[c & 15]);
     }
