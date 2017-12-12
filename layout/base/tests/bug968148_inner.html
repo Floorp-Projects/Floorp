@@ -56,57 +56,57 @@ var test2d1pointergotcapture = 0;
 var test2d2pointergotcapture = 0;
 var test1PointerId = 1;
 var test2PointerId = 2;
-var rx = 1;
-var ry = 1;
-var angle = 0;
-var force = 1;
-var modifiers = 0;
-var utils = SpecialPowers.getDOMWindowUtils(window);
+
+function sendPointerMove(el, id) {
+  var rect = el.getBoundingClientRect();
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendPointerEvent('pointermove', rect.left + 5, rect.top + 5, 0, 0, 0, false, 0, SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH, id);
+}
+
+function sendPointerDown(el, id) {
+  var rect = el.getBoundingClientRect();
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendPointerEvent('pointerdown', rect.left + 5, rect.top + 5, 0, 1, 0, false, 0, SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH, id);
+}
+
+function sendPointerUp(el, id) {
+  var rect = el.getBoundingClientRect();
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendPointerEvent('pointerup', rect.left + 5, rect.top + 5, 0, 1, 0, false, 0, SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH, id);
+}
 
 function log(s) {
   document.getElementById("l").textContent += s + "\n";
 }
 
-function test1d1IncreasePointerMoveCount(e) {
+function test1d2Listener(e) {
   log(e.type + ", " + e.target.id);
-  is(e.target, test1d1, "check target is 1d1.");
-  ++test1d1pointermovecount;
-}
-
-function test1d2IncreasePointerMoveCount(e) {
-  log(e.type + ", " + e.target.id);
-  is(e.target, test1d2, "check target is 1d2.");
+  is(e.target, test1d2, "test1d2 should have got pointermove.");
   ++test1d2pointermovecount;
 }
 
-function test2d1IncreasePointerMoveCount(e) {
+function test2d2Listener(e) {
   log(e.type + ", " + e.target.id);
-  is(e.target, test2d1, "check target is 2d1.");
-  ++test2d1pointermovecount;
-}
-
-function test2d2IncreasePointerMoveCount(e) {
-  log(e.type + ", " + e.target.id);
-  is(e.target, test2d2, "check target is 2d2.");
+  is(e.target, test2d2, "test2d2 should have got pointermove.");
   ++test2d2pointermovecount;
 }
 
-function test1d1CapturePointer(e) {
+function test1d1DownListener(e) {
   log(e.type + ", " + e.target.id);
   test1d1.setPointerCapture(e.pointerId);
 }
 
-function test1d2CapturePointer(e) {
+function test1d1MoveListener(e) {
   log(e.type + ", " + e.target.id);
   test1d2.setPointerCapture(e.pointerId);
 }
 
-function test2d1CapturePointer(e) {
+function test2d1DownListener(e) {
   log(e.type + ", " + e.target.id);
   test2d1.setPointerCapture(e.pointerId);
 }
 
-function test2d2CapturePointer(e) {
+function test2d1MoveListener(e) {
   log(e.type + ", " + e.target.id);
   test2d2.setPointerCapture(e.pointerId);
 }
@@ -151,30 +151,24 @@ function test2d2PointerLostCapture(e) {
   ++test2d2pointerlostcapture;
 }
 
+function test1d1PointerMoveListener(e) {
+  log(e.type + ", " + e.target.id);
+  ++test1d1pointermovecount;
+}
+
+function test2d1PointerMoveListener(e) {
+  log(e.type + ", " + e.target.id);
+  ++test2d1pointermovecount;
+}
+
 function runTests() {
   test1d1 = document.getElementById("test1d1");
   test1d2 = document.getElementById("test1d2");
   test2d1 = document.getElementById("test2d1");
   test2d2 = document.getElementById("test2d2");
 
-  var rect1d1 = test1d1.getBoundingClientRect();
-  var rect1d2 = test1d2.getBoundingClientRect();
-  var rect2d1 = test2d1.getBoundingClientRect();
-  var rect2d2 = test2d2.getBoundingClientRect();
-
-  var left1d1 = rect1d1.left + 5;
-  var top1d1 = rect1d1.top + 5;
-  var left1d2 = rect1d2.left + 5;
-  var top1d2 = rect1d2.top + 5;
-  var left2d1 = rect2d1.left + 5;
-  var top2d1 = rect2d1.top + 5;
-  var left2d2 = rect2d2.left + 5;
-  var top2d2 = rect2d2.top + 5;
-
-  test1d1.addEventListener("pointermove", test1d1IncreasePointerMoveCount, true);
-  test1d2.addEventListener("pointermove", test1d2IncreasePointerMoveCount, true);
-  test2d1.addEventListener("pointermove", test2d1IncreasePointerMoveCount, true);
-  test2d2.addEventListener("pointermove", test2d2IncreasePointerMoveCount, true);
+  test1d2.addEventListener("pointermove", test1d2Listener, true);
+  test2d2.addEventListener("pointermove", test2d2Listener, true);
 
   test1d1.addEventListener("gotpointercapture", test1d1PointerGotCapture, true);
   test1d1.addEventListener("lostpointercapture", test1d1PointerLostCapture, true);
@@ -189,91 +183,86 @@ function runTests() {
   test2d2.addEventListener("lostpointercapture", test2d2PointerLostCapture, true);
 
   document.body.offsetLeft;
+  sendPointerMove(test1d2, test1PointerId);
+  sendPointerMove(test2d2, test2PointerId);
+  is(test1d2pointermovecount, 1, "Should have got pointermove");
+  is(test2d2pointermovecount, 1, "Should have got pointermove");
 
   // This shouldn't enable capturing, since we're not in a right kind of 
   // event listener.
-  utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  sendPointerDown(test1d1, test1PointerId);
+  sendPointerDown(test2d1, test2PointerId);
 
-  utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
-                       [left1d2, left2d2], [top1d2, top2d2], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  sendPointerMove(test1d2, test1PointerId);
+  sendPointerMove(test2d2, test2PointerId);
 
-  utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  sendPointerUp(test1d1, test1PointerId);
+  sendPointerUp(test2d1, test2PointerId);
 
-  // No implicitly / explicitly pointer capture. pointermove should be
-  // dispatched to 1d2, 2d2
-  is(test1d1pointermovecount, 0, "1d1 shouldn't have got pointermove");
-  is(test2d1pointermovecount, 0, "2d1 shouldn't have got pointermove");
-  is(test1d2pointermovecount, 1, "1d2 should have got pointermove");
-  is(test2d2pointermovecount, 1, "2d2 should have got pointermove");
+  is(test1d2pointermovecount, 2, "Should have got pointermove");
+  is(test2d2pointermovecount, 2, "Should have got pointermove");
 
-  // Explicitly capture pointer to 1d1, 2d1
-  test1d1.addEventListener("pointerdown", test1d1CapturePointer, {capture: true, once: true});
-  test2d1.addEventListener("pointerdown", test2d1CapturePointer, {capture: true, once: true});
+  test1d1.addEventListener("pointerdown", test1d1DownListener, true);
+  test1d1.addEventListener("pointermove", test1d1PointerMoveListener, true);
+  test2d1.addEventListener("pointerdown", test2d1DownListener, true);
+  test2d1.addEventListener("pointermove", test2d1PointerMoveListener, true);
 
-  utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  sendPointerDown(test1d1, test1PointerId);
+  sendPointerDown(test2d1, test2PointerId);
+  sendPointerMove(test1d2, test1PointerId);
+  sendPointerMove(test2d2, test2PointerId);
+  is(test1d2pointermovecount, 2, "Shouldn't have got pointermove");
+  is(test1d1pointermovecount, 1, "Should have got pointermove");
+  is(test1d1pointergotcapture, 1, "Should have got pointergotcapture");
 
-  utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
-                       [left1d2, left2d2], [top1d2, top2d2], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  is(test2d2pointermovecount, 2, "Shouldn't have got pointermove");
+  is(test2d1pointermovecount, 1, "Should have got pointermove");
+  is(test2d1pointergotcapture, 1, "Should have got pointergotcapture");
 
-  // Explicitly capture pointer to 1d1, 2d1. pointermove, gotpointercapture
-  // should be dispatched to 1d1, 2d1
-  is(test1d1pointermovecount, 1, "1d1 should have got pointermove");
-  is(test1d1pointergotcapture, 1, "1d1 should have got pointergotcapture");
-  is(test1d2pointermovecount, 1, "1d2 shouldn't have got pointermove");
-  is(test1d2pointergotcapture, 0, "1d2 shouldn't have got pointergotcapture");
+  sendPointerUp(test1d1, test1PointerId);
+  sendPointerUp(test2d1, test2PointerId);
+  test1d1.removeEventListener("pointerdown", test1d1DownListener, true);
+  test1d1.removeEventListener("pointermove", test1d1PointerMoveListener, true);
+  test2d1.removeEventListener("pointerdown", test2d1DownListener, true);
+  test2d1.removeEventListener("pointermove", test2d1PointerMoveListener, true);
 
-  is(test2d1pointermovecount, 1, "2d1 should have got pointermove");
-  is(test2d1pointergotcapture, 1, "2d1 should have got pointergotcapture");
-  is(test2d2pointermovecount, 1, "2d2 shouldn't have got pointermove");
-  is(test2d2pointergotcapture, 0, "2d2 shouldn't have got pointergotcapture");
+  // Nothing should be capturing the event.
+  sendPointerMove(test1d2, test1PointerId);
+  sendPointerMove(test2d2, test2PointerId);
 
-  utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  is(test1d2pointermovecount, 3, "Should have got pointermove");
+  is(test1d1pointerlostcapture, 1, "Should have got pointerlostcapture");
+  is(test2d2pointermovecount, 3, "Should have got pointermove");
+  is(test2d1pointerlostcapture, 1, "Should have got pointerlostcapture");
 
-  // Explicitly capture pointer to 1d1, 2d1 when pointerdown
-  test1d1.addEventListener("pointerdown", test1d1CapturePointer, {capture: true, once: true});
-  test2d1.addEventListener("pointerdown", test2d1CapturePointer, {capture: true, once: true});
+  test1d1.addEventListener("pointermove", test1d1MoveListener, true);
+  test2d1.addEventListener("pointermove", test2d1MoveListener, true);
 
-  // Explicitly capture pointer to 1d2, 2d2 when pointermove
-  test1d1.addEventListener("pointermove", test1d2CapturePointer, {capture: true, once: true});
-  test2d1.addEventListener("pointermove", test2d2CapturePointer, {capture: true, once: true});
+  sendPointerDown(test1d1, test1PointerId);
+  sendPointerDown(test2d1, test2PointerId);
 
-  utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  sendPointerMove(test1d1, test1PointerId); // This should call setPointerCapture to test1d2!
+  sendPointerMove(test2d1, test2PointerId); // This should call setPointerCapture to test2d2!
 
-  // This should send pointer event to test1d1, test2d1.
-  utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  test1d1.removeEventListener("pointermove", test1d1MoveListener, true);
+  test1d1.addEventListener("pointermove", test1d1PointerMoveListener, true);
 
-  // This should send pointer event to test1d2, test2d2.
-  utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  test2d1.removeEventListener("pointermove", test2d1MoveListener, true);
+  test2d1.addEventListener("pointermove", test2d1PointerMoveListener, true);
 
-  is(test1d1pointermovecount, 2, "1d1 should have got pointermove");
-  is(test1d1pointergotcapture, 2, "1d1 should have got pointergotcapture");
-  is(test1d2pointermovecount, 2, "1d2 should have got pointermove");
-  is(test1d2pointergotcapture, 1, "1d2 should have got pointergotcapture");
+  sendPointerMove(test1d1, test1PointerId); // This should send pointer event to test1d2.
+  sendPointerMove(test2d1, test2PointerId); // This should send pointer event to test2d2.
 
-  is(test2d1pointermovecount, 2, "2d1 should have got pointermove");
-  is(test2d1pointergotcapture, 2, "2d1 should have got pointergotcapture");
-  is(test2d2pointermovecount, 2, "2d2 should have got pointermove");
-  is(test2d2pointergotcapture, 1, "2d2 should have got pointergotcapture");
+  is(test1d1pointermovecount, 1, "Shouldn't have got pointermove");
+  is(test1d2pointermovecount, 4, "Should have got pointermove");
+  is(test1d2pointergotcapture, 1, "Should have got pointergotcapture");
 
-  utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+  is(test2d1pointermovecount, 1, "Shouldn't have got pointermove");
+  is(test2d2pointermovecount, 4, "Should have got pointermove");
+  is(test2d2pointergotcapture, 1, "Should have got pointergotcapture");
+
+  sendPointerUp(test1d1, test1PointerId);
+  sendPointerUp(test2d1, test2PointerId);
 
   finishTest();
 }
@@ -282,7 +271,7 @@ function finishTest() {
   // Let window.onerror have a chance to fire
   setTimeout(function() {
     setTimeout(function() {
-      window.parent.postMessage("run next", "*");
+      window.parent.postMessage("SimpleTest.finish();", "*");
     }, 0);
   }, 0);
 }
@@ -291,7 +280,6 @@ window.onload = function () {
   SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.w3c_pointer_events.enabled", true],
-      ["dom.w3c_pointer_events.implicit_capture", false]
     ]
   }, runTests);
 }
