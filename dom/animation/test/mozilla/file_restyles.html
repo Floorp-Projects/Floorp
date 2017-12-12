@@ -883,9 +883,13 @@ waitForAllPaints(() => {
       // compute_style() so that it no longer dispatches a needless standard
       // restyle (bug 1388560), we should add a test case that fails if we
       // continue to unnecessarily request a standard restyle.
-      is(markers.length, 1,
-         'We should observe one restyle in the first frame right after ' +
-         're-attaching to the document');
+      //
+      // Bug 1417354: There will be an additional superfluos restyle request
+      // whichi results when we detach an element from the document between
+      // the Animation tick and styling, and then re-attach it.
+      todo_is(markers.length, 2,
+              'We should observe one restyle in the first frame right after ' +
+              're-attaching to the document');
     } else {
       // Bug 1388557: We should call RequestRestyle(Layer) when an element which
       // has running script animations is attached to a document.
