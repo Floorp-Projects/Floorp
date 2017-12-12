@@ -7,39 +7,81 @@
 #include "nsIVariant.idl"
 #include "nsIPaymentAddress.idl"
 
+/**
+ *  The base interface of response data for the specified payment method.
+ *  The response data is the content of the PaymentResponse's detail attribute.
+ */
 [builtinclass, scriptable, uuid(2a338575-c688-40ee-a157-7488ab292ef2)]
 interface nsIPaymentResponseData: nsISupports
 {
+  /**
+   *  The consts for representing the response data type.
+   *  GENERAL_RESPONSE is the general purpose response data type. Except basic
+   *  card response data, all response data should belong to this type.
+   *  BASICCARD_RESPONSE is a special response data type for basic card response.
+   */
   const uint32_t GENERAL_RESPONSE = 0;
   const uint32_t BASICCARD_RESPONSE = 1;
 
+  /**
+   *  The response data type.
+   *  Using the above defined consts(GENERAL_RESPONSE or BASICCARD_RESPONSE).
+   */
   readonly attribute uint32_t type;
+
+  /**
+   *  The initial method.
+   *  @param aType - the response data type.
+   */
   void init(in uint32_t aType);
 };
 
+/**
+ * The general purpose response data.
+ */
 [builtinclass, scriptable, uuid(b986773e-2b30-4ed2-b8fe-6a96631c8000)]
 interface nsIGeneralResponseData : nsIPaymentResponseData
 {
+  /**
+   *  The stringified response data.
+   */
   readonly attribute AString data;
 
+  /**
+   *  The initial method for nsIGeneralResponseData.
+   *  @param aData - the javascript object of the content.
+   */
   [implicit_jscontext]
   void initData(in jsval aData);
 };
 
-/*
-  Since PaymentAddress is an no constructor interface type, UI code can not
-  easy create PaymentAddress by calling new PaymentAddress().
-  Unfortunately, BasicCardResponse has a PaymentAddress attribute, billingAddress
-  , it means UI can not create BsaicCardResponse by calling the init() with a
-  given JSObject directly, because PaymentAddress creation in JS code is hard.
-  To let UI code can create BasicCardResponse easier, nsIBasicCardResponse is
-  provided for UI by passing the raw data of BasicCardResponse,
-*/
+/**
+ *  The basic card response data.
+ *  Since PaymentAddress is an no constructor interface type, UI code can not
+ *  easy create PaymentAddress by calling new PaymentAddress().
+ *  Unfortunately, BasicCardResponse has a PaymentAddress attribute, billingAddress
+ *  , it means UI can not create BsaicCardResponse by calling the init() with a
+ *  given JSObject directly, because PaymentAddress creation in JS code is hard.
+ *  To let UI code can create BasicCardResponse easier, nsIBasicCardResponse is
+ *  provided for UI by passing the raw data of BasicCardResponse,
+ */
 [builtinclass, scriptable, uuid(0d55a5e6-d185-44f0-b992-a8e1321e4bce)]
 interface nsIBasicCardResponseData : nsIPaymentResponseData
 {
+  /**
+   *  The stringified response data.
+   */
   readonly attribute AString data;
 
+  /**
+   *  The initial method for nsIBasicCardResponseData.
+   *  @param aCardholderName   - the cardholder name.
+   *  @param aCardNumber       - the card number.
+   *  @param aExpiryMonth      - the expiry month.
+   *  @param aExpiryYear       - the expiry year.
+   *  @param aCardSecurityCode - the card security code.
+   *  @param aBillingAddreess  - the billing address.
+   */
   void initData(in AString aCardholderName,
                 in AString aCardNumber,
                 in AString aExpiryMonth,
@@ -48,10 +90,17 @@ interface nsIBasicCardResponseData : nsIPaymentResponseData
                 in nsIPaymentAddress billingAddress);
 };
 
+/**
+ *  The base interface of user's response.
+ *  Payment UI should create different sub-interface of nsIPaymentActionResponse
+ *  according to user's action, and call nsIPaymentRequestService::respondPayment
+ *  with the created action to inform the merchant.
+ */
 [builtinclass, scriptable, uuid(a607c095-ef60-4a9b-a3d0-0506c60728b3)]
 interface nsIPaymentActionResponse : nsISupports
 {
-  /*
+  /**
+   *  The response type.
    *  Align type to nsIPaymentActionRequest types,
    *  where 1 is for payment request creation.
    *  the action expects no response from UI module.
@@ -63,13 +112,22 @@ interface nsIPaymentActionResponse : nsISupports
   const uint32_t ABORT_ACTION = 4;
   const uint32_t COMPLETE_ACTION = 5;
 
+  /**
+   *  The abort status.
+   */
   const uint32_t ABORT_SUCCEEDED = 1;
   const uint32_t ABORT_FAILED = 0;
 
+  /**
+   *  The payment status.
+   */
   const uint32_t PAYMENT_REJECTED = 0;
   const uint32_t PAYMENT_ACCEPTED = 1;
   const uint32_t PAYMENT_NOTSUPPORTED = 2;
 
+  /**
+   *  The complete status.
+   */
   const uint32_t COMPLETE_SUCCEEDED = 1;
   const uint32_t COMPLETE_FAILED = 0;
 
@@ -84,55 +142,73 @@ interface nsIPaymentActionResponse : nsISupports
   readonly attribute uint32_t type;
 };
 
+/**
+ *  The response for canMakePayment action.
+ */
 [builtinclass, scriptable, uuid(52fc3f9f-c0cb-4874-b3d4-ee4b6e9cbe9c)]
 interface nsIPaymentCanMakeActionResponse : nsIPaymentActionResponse
 {
-  /*
-   *  The result of CanMake task.
+  /**
+   *  The result of canMakePayment action.
    */
   readonly attribute bool result;
 
-  /*
-   *  Initialize function of this response.
+  /**
+   *  The initial method.
+   *  @param aRequestId - the request identifier of the payment request.
+   *  @param aResult - the canMakePayment result.
    */
   void init(in AString aRequestId, in bool aResult);
 };
 
+/**
+ *  The response for show action.
+ *  Notice that to represent user's cancel, we should use nsIPaymentShowActionResponse
+ *  with PAYMENT_REJECTED status, not nsIPaymentAbortActionResponse.
+ */
 [builtinclass, scriptable, uuid(184385cb-2d35-4b99-a9a3-7c780bf66b9b)]
 interface nsIPaymentShowActionResponse : nsIPaymentActionResponse
 {
-  /*
-   *  Accpet status of the payment.
+  /**
+   *  Accept status of the payment.
+   *  Using the defined consts(PAYMENT_XXX) in nsIPaymentActionResponse.
    */
   readonly attribute uint32_t acceptStatus;
 
-  /*
-   *  The decided payment method name.
+  /**
+   *  The decided payment method name. i.e. "basic-card".
    */
   readonly attribute AString methodName;
 
-  /*
+  /**
    *  The data needed by the payment method. (it must be serializable)
    */
   readonly attribute AString data;
 
-  /*
+  /**
    *  The payer name information.
    */
   readonly attribute AString payerName;
 
-  /*
+  /**
    *  The payer email information.
    */
   readonly attribute AString payerEmail;
 
-  /*
+  /**
    *  The payer phone information.
    */
   readonly attribute AString payerPhone;
 
-  /*
-   *  Initialize function for this response.
+  /**
+   *  The initial method.
+   *  @param aRequestId - the request identifier of the payment request.
+   *  @param aAcceptStatus - the payment status.
+   *  @param aMethodName - the decided method name.
+   *  @param aData - the response data for the decided payment method.
+   *  @param aPayerName - the payer's name.
+   *  @param aPayerEmail - the payer's email.
+   *  @param aPayerPhone - the payer's phone.
    */
   void init(in AString aRequestId,
             in uint32_t aAcceptStatus,
@@ -143,21 +219,27 @@ interface nsIPaymentShowActionResponse : nsIPaymentActionResponse
             in AString aPayerPhone);
 };
 
+/**
+ *  The response for abort action.
+ */
 [builtinclass, scriptable, uuid(8c72bcdb-0c37-4786-a9e5-510afa2f8ede)]
 interface nsIPaymentAbortActionResponse : nsIPaymentActionResponse
 {
-  /*
-   *  The abort task status.
+  /**
+   *  The abort action status.
+   *  Using the defined consts(ABORT_XXX) in nsIPaymentActionResponse.
    */
   readonly attribute uint32_t abortStatus;
 
-  /*
-   *  Initialize function of this response.
+  /**
+   *  The Initial method.
+   *  @param aRequestId - the request identifier of payment request.
+   *  @param aAbortStatus - the abort action result.
    */
   void init(in AString aRequestId, in uint32_t aAbortStatus);
 
-  /*
-   *  Check if the abort task is succeeded
+  /**
+   *  Check if the abort action is succeeded
    */
   bool isSucceeded();
 };
@@ -165,16 +247,22 @@ interface nsIPaymentAbortActionResponse : nsIPaymentActionResponse
 [builtinclass, scriptable, uuid(62c01e69-9ca4-4060-99e4-b95f628c8e6d)]
 interface nsIPaymentCompleteActionResponse : nsIPaymentActionResponse
 {
-  /*
-   *  The UI status after calling complete().
+  /**
+   *  The complete action status.
+   *  Using the defined consts(COMPLETE_XXX) in nsIPaymentActionResponse.
    */
   readonly attribute uint32_t completeStatus;
 
+  /**
+   *  The Initial method.
+   *  @param aRequestId - the request identifier of payment request.
+   *  @param aCompleteStatus - the complete action result.
+   */
   void init(in AString aRequestId,
             in uint32_t aCompleteStatus);
 
-  /*
-   *  Check if the UI is finished.
+  /**
+   *  Check if the complete action is succeeded.
    */
   bool isCompleted();
 };
