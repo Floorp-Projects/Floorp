@@ -361,6 +361,23 @@ ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
 
   mController.reset();
   mController.emplace(aServiceWorker);
+
+  RefPtr<ServiceWorkerContainer> swc;
+  nsPIDOMWindowInner* window = GetInnerWindow();
+  if (window) {
+    RefPtr<Navigator> navigator =
+      static_cast<Navigator*>(window->GetNavigator());
+    if (navigator) {
+      swc = navigator->ServiceWorker();
+    }
+  }
+
+  // TODO: Also self.navigator.serviceWorker on workers when its exposed there
+
+  if (swc && nsContentUtils::IsSafeToRunScript()) {
+    IgnoredErrorResult ignored;
+    swc->ControllerChanged(ignored);
+  }
 }
 
 RefPtr<ClientOpPromise>
@@ -555,11 +572,39 @@ ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
 RefPtr<ClientOpPromise>
 ClientSource::Claim(const ClientClaimArgs& aArgs)
 {
-  SetController(ServiceWorkerDescriptor(aArgs.serviceWorker()));
+  RefPtr<ClientOpPromise> ref;
 
-  RefPtr<ClientOpPromise> ref =
-    ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+  ServiceWorkerDescriptor swd(aArgs.serviceWorker());
 
+  // Today the ServiceWorkerManager maintains its own list of
+  // nsIDocument objects controlled by each service worker.  We
+  // need to try to update that data structure for now.  If we
+  // can't, however, then simply mark the Client as controlled.
+  // In the future this will be enough for the SWM as well since
+  // it will eventually hold ClientHandle objects instead of
+  // nsIDocuments.
+  nsPIDOMWindowInner* innerWindow = GetInnerWindow();
+  nsIDocument* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
+  RefPtr<ServiceWorkerManager> swm = doc ? ServiceWorkerManager::GetInstance()
+                                         : nullptr;
+  if (!swm || !doc) {
+    SetController(swd);
+    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+    return ref.forget();
+  }
+
+  RefPtr<ClientOpPromise::Private> outerPromise =
+    new ClientOpPromise::Private(__func__);
+
+  RefPtr<GenericPromise> p = swm->MaybeClaimClient(doc, swd);
+  p->Then(mEventTarget, __func__,
+    [outerPromise] (bool aResult) {
+      outerPromise->Resolve(NS_OK, __func__);
+    }, [outerPromise] (nsresult aResult) {
+      outerPromise->Reject(aResult, __func__);
+    });
+
+  ref = outerPromise;
   return ref.forget();
 }
 
