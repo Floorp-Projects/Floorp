@@ -105,7 +105,6 @@ var isAndroid = !!navigator.userAgent.includes("Android");
 var isServo = isStyledByServo();
 var offscreenThrottlingEnabled =
   SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
-var hasMicroTaskCheckpointForAnimation;
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -118,38 +117,6 @@ function add_task_if_omta_enabled(test) {
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
 waitForAllPaints(() => {
-  // Drop this once we have the micro task checkpoint for animations
-  // (bug 1416966).
-  add_task(async function check_micro_task_checkpoint_for_animations() {
-    const div = addDiv(null);
-
-    async function checkMicroTaskCheckpoint() {
-      return new Promise(resolve => {
-        let didRequestAnimationFrame = false;
-
-        requestAnimationFrame(() => {
-          const animation = div.animate({ }, 100 * MS_PER_SEC);
-
-          requestAnimationFrame(() => {
-            didRequestAnimationFrame = true;
-          });
-
-          animation.ready.then(() => {
-            // If the animation.ready.then callback is called before the next
-            // requestAnimationFrame callback, that means that there is a
-            // micro task checkpoint between animation tick and
-            // requestAnimationFrame callbacks.
-            resolve(!didRequestAnimationFrame);
-          });
-        });
-      });
-    }
-
-    hasMicroTaskCheckpointForAnimation = await checkMicroTaskCheckpoint();
-
-    await ensureElementRemoval(div);
-  });
-
   add_task(async function restyling_for_main_thread_animations() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
@@ -162,19 +129,14 @@ waitForAllPaints(() => {
     // 1193394.  However, we won't observe that initial restyling unless BOTH of
     // the following two conditions hold:
     //
-    // 1. We are running *before* restyling happens.  This only happens if we
-    //    perform a micro task checkpoint after resolving the 'ready' promise
-    //    above (bug 1416966).
+    // 1. We are running *before* restyling happens.
     // 2. The animation actually needs a restyle because it started prior to
     //    this frame.  Even if (1) is true, in some cases due to aligning with
     //    the refresh driver, the animation fame in which the ready promise is
     //    resolved happens to coincide perfectly with the start time of the
     //    animation.  In this case no restyling is needed so we won't observe
     //    an additional restyle.
-    const expectedRestyleCount =
-      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
-        ? 6
-        : 5;
+    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
     var markers = await observeStyling(5);
     is(markers.length, expectedRestyleCount,
        'CSS animations running on the main-thread should update style ' +
@@ -238,10 +200,19 @@ waitForAllPaints(() => {
 
     animation.finish();
 
-    var markers = await observeStyling(5);
-    is(markers.length, 1,
-       'Animations running on the compositor should only update style ' +
-       'once after finish() is called');
+    var markers = await observeStyling(1);
+    // FIXME: Once we have the conformant Promise handling, we will see two
+    // restyle markers in two different frames for the finish() due to bug
+    // 1415457.
+    todo_is(markers.length, 1,
+            'Bug 1415457: Animations running on the compositor should only ' +
+            'update style once after finish() is called');
+
+    markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Finished animations should never update style after one ' +
+       'restyle happened for finish()');
+
     await ensureElementRemoval(div);
   });
 
@@ -254,10 +225,14 @@ waitForAllPaints(() => {
     var initialRect = div.getBoundingClientRect();
 
     await animation.finished;
+    var markers = await observeStyling(1);
+    is(markers.length, 1,
+       'Finished transitions should restyle once after Animation.finished ' +
+       'was fulfilled');
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
-    var markers = await observeStyling(5, () => {
+    markers = await observeStyling(5, () => {
       // We can't use synthesizeMouse here since synthesizeMouse causes
       // layout flush.
       synthesizeMouseAtPoint(mouseX++, mouseY++,
@@ -265,8 +240,8 @@ waitForAllPaints(() => {
     });
 
     is(markers.length, 0,
-       'Bug 1219236: Finished transitions should never cause restyles ' +
-       'when mouse is moved on the animations');
+       'Finished transitions should never cause restyles when mouse is moved ' +
+       'on the transitions');
     await ensureElementRemoval(div);
   });
 
@@ -277,10 +252,14 @@ waitForAllPaints(() => {
     var initialRect = div.getBoundingClientRect();
 
     await animation.finished;
+    var markers = await observeStyling(1);
+    is(markers.length, 1,
+       'Finished animations should restyle once after Animation.finished ' +
+       'was fulfilled');
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
-    var markers = await observeStyling(5, () => {
+    markers = await observeStyling(5, () => {
       // We can't use synthesizeMouse here since synthesizeMouse causes
       // layout flush.
       synthesizeMouseAtPoint(mouseX++, mouseY++,
@@ -288,8 +267,8 @@ waitForAllPaints(() => {
     });
 
     is(markers.length, 0,
-       'Bug 1219236: Finished animations should never cause restyles ' +
-       'when mouse is moved on the animations');
+       'Finished animations should never cause restyles when mouse is moved ' +
+       'on the animations');
     await ensureElementRemoval(div);
   });
 
@@ -609,10 +588,15 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    var markers = await observeStyling(5);
+    var markers = await observeStyling(1);
+    is(markers.length, 1,
+       'Animations running on the compositor should restyle once after ' +
+       'Animation.pause() was called');
+
+    markers = await observeStyling(5);
     is(markers.length, 0,
-       'Bug 1232563: Paused animations running on the compositor should ' +
-       'never cause restyles once after pause() is called');
+       'Paused animations running on the compositor should never cause ' +
+       'restyles');
     await ensureElementRemoval(div);
   });
 
@@ -626,10 +610,15 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    var markers = await observeStyling(5);
+    var markers = await observeStyling(1);
+    is(markers.length, 1,
+       'Animations running on the main-thread should restyle once after ' +
+       'Animation.pause() was called');
+
+    markers = await observeStyling(5);
     is(markers.length, 0,
-       'Bug 1232563: Paused animations running on the main-thread should ' +
-       'never cause restyles after pause() is called');
+       'Paused animations running on the main-thread should never cause ' +
+       'restyles');
     await ensureElementRemoval(div);
   });
 
@@ -865,7 +854,11 @@ waitForAllPaints(() => {
       // compute_style() so that it no longer dispatches a needless standard
       // restyle (bug 1388560), we should add a test case that fails if we
       // continue to unnecessarily request a standard restyle.
-      is(markers.length, 1,
+      //
+      // Bug 1417354: There will be an additional superfluos restyle request
+      // whichi results when we detach an element from the document between
+      // the Animation tick and styling, and then re-attach it.
+      is(markers.length, 2,
          'We should observe one restyle in the first frame right after ' +
          're-attaching to the document');
     } else {
@@ -933,10 +926,7 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    const expectedRestyleCount =
-      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
-        ? 6
-        : 5;
+    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
     var markers = await observeStyling(5);
 
     is(markers.length, expectedRestyleCount,
@@ -1004,10 +994,7 @@ waitForAllPaints(() => {
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
     await animation.ready;
 
-    const expectedRestyleCount =
-      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
-        ? 6
-        : 5;
+    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
     var markers = await observeStyling(5);
     is(markers.length, expectedRestyleCount,
        'CSS animations on an in-view svg element with post-transform should ' +
@@ -1068,10 +1055,7 @@ waitForAllPaints(() => {
     var animation = targetDiv.getAnimations()[0];
     await animation.ready;
 
-    const expectedRestyleCount =
-      hasMicroTaskCheckpointForAnimation && !startsRightNow(animation)
-        ? 6
-        : 5;
+    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
     var markers = await observeStyling(5);
     is(markers.length, expectedRestyleCount,
        'CSS animation on an in-view element with pre-transform should not ' +
