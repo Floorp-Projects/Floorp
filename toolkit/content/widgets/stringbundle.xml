@@ -8,8 +8,6 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="stringbundleset" extends="xul:box"/>
-
   <binding id="stringbundle" extends="xul:spacer">
     <implementation name="XStringBundle">
 
