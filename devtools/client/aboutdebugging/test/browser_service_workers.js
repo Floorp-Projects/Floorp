@@ -13,7 +13,7 @@ add_task(function* () {
 
   let { tab, document } = yield openAboutDebugging("workers");
 
-  let swTab = yield addTab(TAB_URL);
+  let swTab = yield addTab(TAB_URL, { background: true });
 
   let serviceWorkersElement = getServiceWorkerList(document);
 
