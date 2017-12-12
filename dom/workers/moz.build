@@ -37,9 +37,6 @@ EXPORTS.mozilla.dom.workers += [
 # Stuff needed for the bindings, not really public though.
 EXPORTS.mozilla.dom.workers.bindings += [
     'ServiceWorker.h',
-    'ServiceWorkerClient.h',
-    'ServiceWorkerClients.h',
-    'ServiceWorkerWindowClient.h',
     'SharedWorker.h',
     'WorkerHolder.h',
     'WorkerHolderToken.h',
@@ -60,8 +57,6 @@ UNIFIED_SOURCES += [
     'RuntimeService.cpp',
     'ScriptLoader.cpp',
     'ServiceWorker.cpp',
-    'ServiceWorkerClient.cpp',
-    'ServiceWorkerClients.cpp',
     'ServiceWorkerContainer.cpp',
     'ServiceWorkerDescriptor.cpp',
     'ServiceWorkerEvents.cpp',
@@ -82,7 +77,6 @@ UNIFIED_SOURCES += [
     'ServiceWorkerUpdateJob.cpp',
     'ServiceWorkerUpdaterChild.cpp',
     'ServiceWorkerUpdaterParent.cpp',
-    'ServiceWorkerWindowClient.cpp',
     'SharedWorker.cpp',
     'WorkerDebuggerManager.cpp',
     'WorkerHolder.cpp',

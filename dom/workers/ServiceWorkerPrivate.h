@@ -18,6 +18,9 @@ class nsIInterceptedChannel;
 
 namespace mozilla {
 namespace dom {
+
+class ClientInfoAndState;
+
 namespace workers {
 
 class ServiceWorkerInfo;
@@ -85,7 +88,7 @@ public:
   nsresult
   SendMessageEvent(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                    const Sequence<JSObject*>& aTransferable,
-                   UniquePtr<ServiceWorkerClientInfo>&& aClientInfo);
+                   const ClientInfoAndState& aClientInfoAndState);
 
   // This is used to validate the worker script and continue the installation
   // process.
