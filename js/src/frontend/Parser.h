@@ -119,7 +119,7 @@ enum FunctionCallBehavior {
     ForbidAssignmentToFunctionCalls
 };
 
-template <class Parser>
+template <class ParseHandler, typename CharT>
 class AutoAwaitIsKeyword;
 
 class ParserBase : public StrictModeGetter
@@ -168,7 +168,7 @@ class ParserBase : public StrictModeGetter
       return awaitHandling_ != AwaitIsName;
     }
 
-    template<class> friend class AutoAwaitIsKeyword;
+    template<class, typename> friend class AutoAwaitIsKeyword;
 
     ParserBase(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                const char16_t* chars, size_t length, bool foldConstants,
@@ -1120,7 +1120,7 @@ class Parser<FullParseHandler, CharT> final
 
     // Functions present in both Parser<ParseHandler, CharT> specializations.
 
-    friend class AutoAwaitIsKeyword<GeneralParser<SyntaxParseHandler, CharT>>;
+    friend class AutoAwaitIsKeyword<SyntaxParseHandler, CharT>;
     inline void setAwaitHandling(AwaitHandling awaitHandling);
 
     Node newRegExp();
@@ -1264,15 +1264,17 @@ ParserAnyCharsAccess<Parser>::anyChars(const typename Parser::TokenStream::Chars
     return reinterpret_cast<const Parser*>(parserAddr)->anyChars;
 }
 
-template <class Parser>
+template <class ParseHandler, typename CharT>
 class MOZ_STACK_CLASS AutoAwaitIsKeyword
 {
+    using GeneralParser = frontend::GeneralParser<ParseHandler, CharT>;
+
   private:
-    Parser* parser_;
+    GeneralParser* parser_;
     AwaitHandling oldAwaitHandling_;
 
   public:
-    AutoAwaitIsKeyword(Parser* parser, AwaitHandling awaitHandling) {
+    AutoAwaitIsKeyword(GeneralParser* parser, AwaitHandling awaitHandling) {
         parser_ = parser;
         oldAwaitHandling_ = static_cast<AwaitHandling>(parser_->awaitHandling_);
 
