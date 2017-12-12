@@ -6,12 +6,21 @@
 
 <!-- U+2024 is ONE DOT LEADER -->
 <p>abcdef&#x2024;&#x2024;&#x2024;abcdef</p>
+<p>abcdef&#x2024;abcdef</p>
+<p>abcdef&#x2024; abcdef</p>
+<p>abcdef &#x2024;abcdef</p> <!-- no break after the leader in this case -->
 
 <!-- U+2025 is TWO DOT LEADER -->
 <p>abcdef&#x2025;&#x2025;&#x2025;abcdef</p>
+<p>abcdef&#x2025;abcdef</p>
+<p>abcdef&#x2025; abcdef</p>
+<p>abcdef &#x2025;abcdef</p> <!-- no break after the leader in this case -->
 
 <!-- U+2026 is HORIZONTAL ELLIPSIS -->
 <p>abcdef&#x2026;&#x2026;&#x2026;abcdef</p>
+<p>abcdef&#x2026;abcdef</p>
+<p>abcdef&#x2026; abcdef</p>
+<p>abcdef &#x2026;abcdef</p> <!-- no break after the ellipsis in this case -->
 
 </body>
 </html>
