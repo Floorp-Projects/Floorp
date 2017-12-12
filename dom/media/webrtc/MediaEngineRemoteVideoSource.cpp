@@ -190,7 +190,7 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
     mPrincipalHandles.AppendElement(aPrincipalHandle);
     mTargetCapabilities.AppendElement(mTargetCapability);
     mHandleIds.AppendElement(mHandleId);
-    mImages.AppendElement(mImageContainer->CreatePlanarYCbCrImage());
+    mImages.AppendElement(nullptr);
 
     MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
     MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
