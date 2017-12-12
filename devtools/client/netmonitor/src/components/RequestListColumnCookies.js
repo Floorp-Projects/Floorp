@@ -7,6 +7,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
 const { div } = dom;
 
@@ -19,11 +20,13 @@ class RequestListColumnCookies extends Component {
   }
 
   componentDidMount() {
-    this.maybeFetchRequestCookies(this.props);
+    let { item, connector } = this.props;
+    fetchNetworkUpdatePacket(connector.requestData, item, ["requestCookies"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.maybeFetchRequestCookies(nextProps);
+    let { item, connector } = nextProps;
+    fetchNetworkUpdatePacket(connector.requestData, item, ["requestCookies"]);
   }
 
   shouldComponentUpdate(nextProps) {
@@ -32,15 +35,6 @@ class RequestListColumnCookies extends Component {
     currRequestCookies = currRequestCookies.cookies || currRequestCookies;
     nextRequestCookies = nextRequestCookies.cookies || nextRequestCookies;
     return currRequestCookies !== nextRequestCookies;
-  }
-
-  /**
-   * Lazily fetch request cookies from the backend.
-   */
-  maybeFetchRequestCookies(props) {
-    if (props.item.requestCookiesAvailable && !props.requestCookies) {
-      props.connector.requestData(props.item.id, "requestCookies");
-    }
   }
 
   render() {

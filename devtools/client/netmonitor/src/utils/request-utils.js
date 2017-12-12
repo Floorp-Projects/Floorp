@@ -70,6 +70,30 @@ async function fetchHeaders(headers, getLongString) {
 }
 
 /**
+ * Fetch network event update packets from actor server
+ * Expect to fetch a couple of network update packets from a given request.
+ *
+ * @param {function} requestData - requestData function for lazily fetch data
+ * @param {object} request - request object
+ * @param {array} updateTypes - a list of network event update types
+ */
+function fetchNetworkUpdatePacket(requestData, request, updateTypes) {
+  updateTypes.forEach((updateType) => {
+    // Only stackTrace will be handled differently
+    if (updateType === "stackTrace") {
+      if (request.cause.stacktraceAvailable && !request.stacktrace) {
+        requestData(request.id, updateType);
+      }
+      return;
+    }
+
+    if (request[`${updateType}Available`] && !request[updateType]) {
+      requestData(request.id, updateType);
+    }
+  });
+}
+
+/**
  * Form a data: URI given a mime type, encoding, and some text.
  *
  * @param {string} mimeType - mime type
@@ -460,6 +484,7 @@ module.exports = {
   decodeUnicodeBase64,
   getFormDataSections,
   fetchHeaders,
+  fetchNetworkUpdatePacket,
   formDataURI,
   writeHeaderText,
   decodeUnicodeUrl,
