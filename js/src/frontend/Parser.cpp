@@ -1182,10 +1182,9 @@ GeneralParser<ParseHandler, CharT>::notePositionalFormalParameter(Node fn, Handl
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 bool
-GeneralParser<ParseHandler, CharT>::noteDestructuredPositionalFormalParameter(Node fn,
-                                                                              Node destruct)
+PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(Node fn, Node destruct)
 {
     // Append an empty name to the positional formals vector to keep track of
     // argument slots when making FunctionScope::Data.
