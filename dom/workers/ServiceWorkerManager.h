@@ -150,7 +150,6 @@ public:
   void
   DispatchFetchEvent(const OriginAttributes& aOriginAttributes,
                      nsIDocument* aDoc,
-                     const nsAString& aDocumentIdForTopLevelNavigation,
                      nsIInterceptedChannel* aChannel,
                      bool aIsReload,
                      bool aIsSubresourceLoad,
@@ -377,8 +376,7 @@ private:
 
   RefPtr<GenericPromise>
   StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
-                            nsIDocument* aDoc,
-                            const nsAString& aDocumentId);
+                            nsIDocument* aDoc);
 
   void
   StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration);
