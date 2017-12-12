@@ -337,13 +337,13 @@ protected:
   bool                          mAnimating:1;   // Are we currently animating?
   bool                          mError:1;       // Error handling
 
-  virtual Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
+  virtual Tuple<DrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
                      const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,
                      uint32_t aFlags)
   {
-    return MakeTuple(ImgDrawResult::BAD_IMAGE, aSize,
+    return MakeTuple(DrawResult::BAD_IMAGE, aSize,
                      RefPtr<gfx::SourceSurface>());
   }
 
@@ -383,7 +383,7 @@ private:
       : mSize(aSize)
       , mSVGContext(aSVGContext)
       , mContainer(aContainer)
-      , mLastDrawResult(ImgDrawResult::NOT_READY)
+      , mLastDrawResult(DrawResult::NOT_READY)
       , mFlags(aFlags)
     { }
 
@@ -392,9 +392,9 @@ private:
     // A weak pointer to our ImageContainer, which stays alive only as long as
     // the layer system needs it.
     WeakPtr<layers::ImageContainer>     mContainer;
-    // If mContainer is non-null, this contains the ImgDrawResult we obtained
+    // If mContainer is non-null, this contains the DrawResult we obtained
     // the last time we updated it.
-    ImgDrawResult                          mLastDrawResult;
+    DrawResult                          mLastDrawResult;
     // Cached flags to use for decoding. FLAG_ASYNC_NOTIFY should always be set
     // but FLAG_HIGH_QUALITY_SCALING may vary.
     uint32_t                            mFlags;

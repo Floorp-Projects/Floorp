@@ -759,12 +759,12 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     if (!ctx)
       return NS_ERROR_FAILURE;
 
-    ImgDrawResult res =
+    DrawResult res =
       imgContainer->Draw(ctx, destSize, ImageRegion::Create(destSize),
                          imgIContainer::FRAME_CURRENT,
                          SamplingFilter::GOOD, /* no SVGImageContext */ Nothing(),
                          imgIContainer::FLAG_SYNC_DECODE, 1.0);
-    if (res == ImgDrawResult::BAD_IMAGE || res == ImgDrawResult::BAD_ARGS) {
+    if (res == DrawResult::BAD_IMAGE || res == DrawResult::BAD_ARGS) {
       return NS_ERROR_FAILURE;
     }
     *aSurface = dt->Snapshot();

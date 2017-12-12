@@ -18,7 +18,7 @@
 #include "nsColor.h"
 #include "nsStyleStruct.h"
 #include "nsTArray.h"
-#include "ImgDrawResult.h"
+#include "DrawResult.h"
 
 class gfxContext;
 class nsIDocument;

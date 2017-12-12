@@ -280,7 +280,7 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
                 (const nsRect& aLineRect)
                 {
                   // Assert that we're not drawing a border-image here; if we were, we
-                  // couldn't ignore the ImgDrawResult that PaintBorderWithStyleBorder returns.
+                  // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
                   MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
 
                   gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;

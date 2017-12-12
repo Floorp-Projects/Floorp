@@ -355,13 +355,13 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 already_AddRefed<imgIContainer>
 nsImageBoxFrame::GetImageContainerForPainting(const nsPoint& aPt,
-                                              ImgDrawResult& aDrawResult,
+                                              DrawResult& aDrawResult,
                                               Maybe<nsPoint>& aAnchorPoint,
                                               nsRect& aDest)
 {
   if (!mImageRequest) {
     // This probably means we're drawn by a native theme.
-    aDrawResult = ImgDrawResult::SUCCESS;
+    aDrawResult = DrawResult::SUCCESS;
     return nullptr;
   }
 
@@ -369,7 +369,7 @@ nsImageBoxFrame::GetImageContainerForPainting(const nsPoint& aPt,
   uint32_t imgStatus;
   if (!NS_SUCCEEDED(mImageRequest->GetImageStatus(&imgStatus)) ||
       !(imgStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-    aDrawResult = ImgDrawResult::NOT_READY;
+    aDrawResult = DrawResult::NOT_READY;
     return nullptr;
   }
 
@@ -377,21 +377,21 @@ nsImageBoxFrame::GetImageContainerForPainting(const nsPoint& aPt,
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
   if (!imgCon) {
-    aDrawResult = ImgDrawResult::NOT_READY;
+    aDrawResult = DrawResult::NOT_READY;
     return nullptr;
   }
 
   aDest = GetDestRect(aPt, aAnchorPoint);
-  aDrawResult = ImgDrawResult::SUCCESS;
+  aDrawResult = DrawResult::SUCCESS;
   return imgCon.forget();
 }
 
-ImgDrawResult
+DrawResult
 nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
                             const nsRect& aDirtyRect, nsPoint aPt,
                             uint32_t aFlags)
 {
-  ImgDrawResult result;
+  DrawResult result;
   Maybe<nsPoint> anchorPoint;
   nsRect dest;
   nsCOMPtr<imgIContainer> imgCon = GetImageContainerForPainting(aPt, result,
@@ -405,7 +405,7 @@ nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
   // XXX(seth): Can this actually happen anymore?
   nsRect dirty;
   if (!dirty.IntersectRect(aDirtyRect, dest)) {
-    return ImgDrawResult::TEMPORARY_ERROR;
+    return DrawResult::TEMPORARY_ERROR;
   }
 
   bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
@@ -422,7 +422,7 @@ nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
            hasSubRect ? &mSubRect : nullptr);
 }
 
-ImgDrawResult
+DrawResult
 nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                          mozilla::wr::IpcResourceUpdateQueue& aResources,
                                          const StackingContextHelper& aSc,
@@ -431,7 +431,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                          nsPoint aPt,
                                          uint32_t aFlags)
 {
-  ImgDrawResult result;
+  DrawResult result;
   Maybe<nsPoint> anchorPoint;
   nsRect dest;
   nsCOMPtr<imgIContainer> imgCon = GetImageContainerForPainting(aPt, result,
@@ -460,7 +460,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
     imgCon->GetImageContainerAtSize(aManager, decodeSize, svgContext, containerFlags);
   if (!container) {
     NS_WARNING("Failed to get image container");
-    return ImgDrawResult::NOT_READY;
+    return DrawResult::NOT_READY;
   }
 
   gfx::IntSize size;
@@ -468,7 +468,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                                                       aBuilder, aResources,
                                                                       aSc, size, Nothing());
   if (key.isNothing()) {
-    return ImgDrawResult::BAD_IMAGE;
+    return DrawResult::BAD_IMAGE;
   }
   wr::LayoutRect fill = aSc.ToRelativeLayoutRect(fillRect);
 
@@ -478,7 +478,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                      wr::ToLayoutSize(fillRect.Size()), wr::ToLayoutSize(gapSize),
                      wr::ToImageRendering(sampleFilter), key.value());
 
-  return ImgDrawResult::SUCCESS;
+  return DrawResult::SUCCESS;
 }
 
 nsRect
@@ -539,7 +539,7 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
   if (aBuilder->IsPaintingToWindow())
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
 
-  ImgDrawResult result = static_cast<nsImageBoxFrame*>(mFrame)->
+  DrawResult result = static_cast<nsImageBoxFrame*>(mFrame)->
     PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(), flags);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
@@ -589,7 +589,7 @@ nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 
-  ImgDrawResult result = imageFrame->
+  DrawResult result = imageFrame->
     CreateWebRenderCommands(aBuilder, aResources, aSc, aManager, this, ToReferenceFrame(), flags);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);

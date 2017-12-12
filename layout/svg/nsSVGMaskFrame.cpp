@@ -73,7 +73,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     nsSVGUtils::ConvertToSurfaceSize(maskSurfaceRect.Size(), &resultOverflows);
 
   if (resultOverflows || maskSurfaceSize.IsEmpty()) {
-    // Return value other then ImgDrawResult::SUCCESS, so the caller can skip
+    // Return value other then DrawResult::SUCCESS, so the caller can skip
     // painting the masked frame(aParams.maskedFrame).
     return nullptr;
   }

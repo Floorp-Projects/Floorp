@@ -107,7 +107,7 @@ struct nsCSSRendering {
   typedef mozilla::gfx::Size Size;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::layers::LayerManager LayerManager;
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
   typedef nsIFrame::Sides Sides;
 
   /**
@@ -162,7 +162,7 @@ struct nsCSSRendering {
    * for borders. aSkipSides says which sides to skip
    * when rendering, the default is to skip none.
    */
-  static ImgDrawResult PaintBorder(nsPresContext* aPresContext,
+  static DrawResult PaintBorder(nsPresContext* aPresContext,
                                 gfxContext& aRenderingContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
@@ -176,7 +176,7 @@ struct nsCSSRendering {
    * getting it from aStyleContext. aSkipSides says which sides to skip
    * when rendering, the default is to skip none.
    */
-  static ImgDrawResult PaintBorderWithStyleBorder(nsPresContext* aPresContext,
+  static DrawResult PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                                                gfxContext& aRenderingContext,
                                                nsIFrame* aForFrame,
                                                const nsRect& aDirtyRect,
@@ -494,7 +494,7 @@ struct nsCSSRendering {
        opacity(aOpacity) {}
   };
 
-  static ImgDrawResult PaintStyleImageLayer(const PaintBGParams& aParams,
+  static DrawResult PaintStyleImageLayer(const PaintBGParams& aParams,
                                          gfxContext& aRenderingCtx);
 
   /**
@@ -510,7 +510,7 @@ struct nsCSSRendering {
    * If all layers are painted, the image layer's blend mode (or the mask
    * layer's composition mode) will be used.
    */
-  static ImgDrawResult PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
+  static DrawResult PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                gfxContext& aRenderingCtx,
                                                nsStyleContext *mBackgroundSC,
                                                const nsStyleBorder& aBorder);
@@ -520,14 +520,14 @@ struct nsCSSRendering {
                                                               nsIFrame *aFrame,
                                                               const nsStyleBackground* aBackgroundStyle,
                                                               int32_t aLayer);
-  static ImgDrawResult BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
+  static DrawResult BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                                  mozilla::wr::DisplayListBuilder& aBuilder,
                                                                  mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                                  const mozilla::layers::StackingContextHelper& aSc,
                                                                  mozilla::layers::WebRenderLayerManager* aManager,
                                                                  nsDisplayItem* aItem);
 
-  static ImgDrawResult BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
+  static DrawResult BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                        mozilla::wr::DisplayListBuilder& aBuilder,
                                                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                                        const mozilla::layers::StackingContextHelper& aSc,

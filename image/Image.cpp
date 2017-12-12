@@ -136,19 +136,19 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
 
   if (container) {
     switch (entry->mLastDrawResult) {
-      case ImgDrawResult::SUCCESS:
-      case ImgDrawResult::BAD_IMAGE:
-      case ImgDrawResult::BAD_ARGS:
+      case DrawResult::SUCCESS:
+      case DrawResult::BAD_IMAGE:
+      case DrawResult::BAD_ARGS:
         return container.forget();
-      case ImgDrawResult::NOT_READY:
-      case ImgDrawResult::INCOMPLETE:
-      case ImgDrawResult::TEMPORARY_ERROR:
+      case DrawResult::NOT_READY:
+      case DrawResult::INCOMPLETE:
+      case DrawResult::TEMPORARY_ERROR:
         // Temporary conditions where we need to rerequest the frame to recover.
         break;
-      case ImgDrawResult::WRONG_SIZE:
+      case DrawResult::WRONG_SIZE:
         // Unused by GetFrameInternal
       default:
-        MOZ_ASSERT_UNREACHABLE("Unhandled ImgDrawResult type!");
+        MOZ_ASSERT_UNREACHABLE("Unhandled DrawResult type!");
         return container.forget();
     }
   }
@@ -157,7 +157,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
   NotifyDrawingObservers();
 #endif
 
-  ImgDrawResult drawResult;
+  DrawResult drawResult;
   IntSize bestSize;
   RefPtr<SourceSurface> surface;
   Tie(drawResult, bestSize, surface) =
@@ -193,17 +193,17 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
         container = entry->mContainer.get();
         if (container) {
           switch (entry->mLastDrawResult) {
-            case ImgDrawResult::SUCCESS:
-            case ImgDrawResult::BAD_IMAGE:
-            case ImgDrawResult::BAD_ARGS:
+            case DrawResult::SUCCESS:
+            case DrawResult::BAD_IMAGE:
+            case DrawResult::BAD_ARGS:
               return container.forget();
-            case ImgDrawResult::NOT_READY:
-            case ImgDrawResult::INCOMPLETE:
-            case ImgDrawResult::TEMPORARY_ERROR:
+            case DrawResult::NOT_READY:
+            case DrawResult::INCOMPLETE:
+            case DrawResult::TEMPORARY_ERROR:
               // Temporary conditions where we need to rerequest the frame to
               // recover. We have already done so!
               break;
-           case ImgDrawResult::WRONG_SIZE:
+           case DrawResult::WRONG_SIZE:
               // Unused by GetFrameInternal
             default:
               MOZ_ASSERT_UNREACHABLE("Unhandled DrawResult type!");
