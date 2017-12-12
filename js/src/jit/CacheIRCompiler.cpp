@@ -863,6 +863,13 @@ AsGCPtr(uintptr_t* ptr)
     return reinterpret_cast<GCPtr<T>*>(ptr);
 }
 
+uintptr_t
+CacheIRStubInfo::getStubRawWord(ICStub* stub, uint32_t offset) const {
+    uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
+    MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
+    return *(uintptr_t*)(stubData + offset);
+}
+
 template<class Stub, class T>
 GCPtr<T>&
 CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const
@@ -2629,5 +2636,52 @@ CacheIRCompiler::emitCallObjectHasSparseElementResult()
     masm.setFramePushed(framePushed);
     masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
     masm.adjustStack(sizeof(Value));
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadInstanceOfObjectResult()
+{
+    AutoOutputRegister output(*this);
+    ValueOperand lhs = allocator.useValueRegister(masm, reader.valOperandId());
+    Register proto = allocator.useRegister(masm, reader.objOperandId());
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label returnFalse, returnTrue, done;
+    masm.branchTestObject(Assembler::NotEqual, lhs, &returnFalse);
+
+    // LHS is an object. Load its proto.
+    masm.unboxObject(lhs, scratch);
+    masm.loadObjProto(scratch, scratch);
+    {
+        // Walk the proto chain until we either reach the target object,
+        // nullptr or LazyProto.
+        Label loop;
+        masm.bind(&loop);
+
+        masm.branchPtr(Assembler::Equal, scratch, proto, &returnTrue);
+        masm.branchTestPtr(Assembler::Zero, scratch, scratch, &returnFalse);
+
+        MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
+        masm.branchPtr(Assembler::Equal, scratch, ImmWord(1), failure->label());
+
+        masm.loadObjProto(scratch, scratch);
+        masm.jump(&loop);
+    }
+
+
+    masm.bind(&returnFalse);
+    EmitStoreBoolean(masm, false, output);
+    masm.jump(&done);
+
+    masm.bind(&returnTrue);
+    EmitStoreBoolean(masm, true, output);
+    //fallthrough
+    masm.bind(&done);
     return true;
 }
