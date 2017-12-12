@@ -534,15 +534,16 @@ class GeneralParser
     bool addExprAndGetNextTemplStrToken(YieldHandling yieldHandling, Node nodeList,
                                         TokenKind* ttp);
 
-    inline bool trySyntaxParseInnerFunction(Node node, HandleFunction fun, uint32_t toStringStart,
-                                            InHandling inHandling, YieldHandling yieldHandling,
-                                            FunctionSyntaxKind kind, GeneratorKind generatorKind,
+    inline bool trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun,
+                                            uint32_t toStringStart, InHandling inHandling,
+                                            YieldHandling yieldHandling, FunctionSyntaxKind kind,
+                                            GeneratorKind generatorKind,
                                             FunctionAsyncKind asyncKind, bool tryAnnexB,
                                             Directives inheritedDirectives,
                                             Directives* newDirectives);
 
-    inline bool skipLazyInnerFunction(Node node, uint32_t toStringStart, FunctionSyntaxKind kind,
-                                      bool tryAnnexB);
+    inline bool skipLazyInnerFunction(Node funcNode, uint32_t toStringStart,
+                                      FunctionSyntaxKind kind, bool tryAnnexB);
 
   public:
     /* Public entry points for parsing. */
@@ -550,7 +551,7 @@ class GeneralParser
 
     // Parse an inner function given an enclosing ParseContext and a
     // FunctionBox for the inner function.
-    bool innerFunctionForFunctionBox(Node pn, ParseContext* outerpc, FunctionBox* funbox,
+    bool innerFunctionForFunctionBox(Node funcNode, ParseContext* outerpc, FunctionBox* funbox,
                                      InHandling inHandling, YieldHandling yieldHandling,
                                      FunctionSyntaxKind kind, Directives* newDirectives);
 
@@ -732,7 +733,7 @@ class GeneralParser
     bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind,
                            Node funcpn);
 
-    Node functionDefinition(Node func, uint32_t toStringStart, InHandling inHandling,
+    Node functionDefinition(Node funcNode, uint32_t toStringStart, InHandling inHandling,
                             YieldHandling yieldHandling, HandleAtom name, FunctionSyntaxKind kind,
                             GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                             bool tryAnnexB = false);
@@ -876,10 +877,11 @@ class GeneralParser
 
     Node statementList(YieldHandling yieldHandling);
 
-    bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun, uint32_t toStringStart,
-                       InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
-                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
-                       Directives inheritedDirectives, Directives* newDirectives);
+    bool innerFunction(Node funcNode, ParseContext* outerpc, HandleFunction fun,
+                       uint32_t toStringStart, InHandling inHandling, YieldHandling yieldHandling,
+                       FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                       FunctionAsyncKind asyncKind, bool tryAnnexB, Directives inheritedDirectives,
+                       Directives* newDirectives);
 
     bool finishFunctionScopes(bool isStandaloneFunction);
 
@@ -984,13 +986,13 @@ class Parser<SyntaxParseHandler, CharT> final
     inline bool checkExportedNameForClass(Node node);
     inline bool checkExportedNameForClause(Node node);
 
-    bool trySyntaxParseInnerFunction(Node node, HandleFunction fun, uint32_t toStringStart,
+    bool trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun, uint32_t toStringStart,
                                      InHandling inHandling, YieldHandling yieldHandling,
                                      FunctionSyntaxKind kind, GeneratorKind generatorKind,
                                      FunctionAsyncKind asyncKind, bool tryAnnexB,
                                      Directives inheritedDirectives, Directives* newDirectives);
 
-    bool skipLazyInnerFunction(Node node, uint32_t toStringStart, FunctionSyntaxKind kind,
+    bool skipLazyInnerFunction(Node funcNode, uint32_t toStringStart, FunctionSyntaxKind kind,
                                bool tryAnnexB);
 
     Node finishLexicalScope(ParseContext::Scope& scope, Node body);
@@ -1136,13 +1138,13 @@ class Parser<FullParseHandler, CharT> final
     bool checkExportedNameForClass(Node node);
     inline bool checkExportedNameForClause(Node node);
 
-    bool trySyntaxParseInnerFunction(Node pn, HandleFunction fun, uint32_t toStringStart,
+    bool trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun, uint32_t toStringStart,
                                      InHandling inHandling, YieldHandling yieldHandling,
                                      FunctionSyntaxKind kind, GeneratorKind generatorKind,
                                      FunctionAsyncKind asyncKind, bool tryAnnexB,
                                      Directives inheritedDirectives, Directives* newDirectives);
 
-    bool skipLazyInnerFunction(Node node, uint32_t toStringStart, FunctionSyntaxKind kind,
+    bool skipLazyInnerFunction(Node funcNode, uint32_t toStringStart, FunctionSyntaxKind kind,
                                bool tryAnnexB);
 
     Node finishLexicalScope(ParseContext::Scope& scope, Node body);
