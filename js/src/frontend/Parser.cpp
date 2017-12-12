@@ -8886,9 +8886,9 @@ PerHandlerParser<ParseHandler>::identifierReference(Handle<PropertyName*> name)
     return pn;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::stringLiteral()
+PerHandlerParser<ParseHandler>::stringLiteral()
 {
     return handler.newStringLiteral(anyChars.currentToken().atom(), pos());
 }
