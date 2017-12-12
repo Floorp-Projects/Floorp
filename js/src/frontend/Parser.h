@@ -242,6 +242,9 @@ class ParserBase
   protected:
     enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
     enum ForInitLocation { InForInit, NotInForInit };
+
+    bool noteUsedNameInternal(HandlePropertyName name);
+    bool hasUsedName(HandlePropertyName name);
 };
 
 inline
@@ -290,6 +293,16 @@ class PerHandlerParser
     const char* nameIsArgumentsOrEval(Node node);
 
     bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
+
+    bool noteUsedName(HandlePropertyName name) {
+        // If the we are delazifying, the LazyScript already has all the
+        // closed-over info for bindings and there's no need to track used
+        // names.
+        if (handler.canSkipLazyClosedOverBindings())
+            return true;
+
+        return ParserBase::noteUsedNameInternal(name);
+    }
 
   public:
     bool isValidSimpleAssignmentTarget(Node node,
@@ -369,7 +382,9 @@ class GeneralParser
     using Base::usedNames;
 
   private:
+    using Base::hasUsedName;
     using Base::noteDestructuredPositionalFormalParameter;
+    using Base::noteUsedName;
 
   private:
     inline FinalParser* asFinalParser();
@@ -872,8 +887,6 @@ class GeneralParser
 
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
-    bool noteUsedName(HandlePropertyName name);
-    bool hasUsedName(HandlePropertyName name);
 
     inline Node finishLexicalScope(ParseContext::Scope& scope, Node body);
 
