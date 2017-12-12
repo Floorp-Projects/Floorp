@@ -2370,9 +2370,9 @@ ParserBase::declareDotGeneratorName()
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 bool
-GeneralParser<ParseHandler, CharT>::finishFunctionScopes(bool isStandaloneFunction)
+PerHandlerParser<ParseHandler>::finishFunctionScopes(bool isStandaloneFunction)
 {
     FunctionBox* funbox = pc->functionBox();
 
