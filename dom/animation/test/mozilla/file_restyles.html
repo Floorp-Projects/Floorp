@@ -254,10 +254,14 @@ waitForAllPaints(() => {
     var initialRect = div.getBoundingClientRect();
 
     await animation.finished;
+    var markers = await observeStyling(1);
+    todo_is(markers.length, 1,
+            'Finished transitions should restyle once after ' +
+            'Animation.finished was fulfilled');
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
-    var markers = await observeStyling(5, () => {
+    markers = await observeStyling(5, () => {
       // We can't use synthesizeMouse here since synthesizeMouse causes
       // layout flush.
       synthesizeMouseAtPoint(mouseX++, mouseY++,
@@ -265,8 +269,8 @@ waitForAllPaints(() => {
     });
 
     is(markers.length, 0,
-       'Bug 1219236: Finished transitions should never cause restyles ' +
-       'when mouse is moved on the animations');
+       'Finished transitions should never cause restyles when mouse is moved ' +
+       'on the transitions');
     await ensureElementRemoval(div);
   });
 
@@ -277,10 +281,14 @@ waitForAllPaints(() => {
     var initialRect = div.getBoundingClientRect();
 
     await animation.finished;
+    var markers = await observeStyling(1);
+    todo_is(markers.length, 1,
+            'Finished animations should restyle once after ' +
+            'Animation.finished was fulfilled');
 
     var mouseX = initialRect.left + initialRect.width / 2;
     var mouseY = initialRect.top + initialRect.height / 2;
-    var markers = await observeStyling(5, () => {
+    markers = await observeStyling(5, () => {
       // We can't use synthesizeMouse here since synthesizeMouse causes
       // layout flush.
       synthesizeMouseAtPoint(mouseX++, mouseY++,
@@ -288,8 +296,8 @@ waitForAllPaints(() => {
     });
 
     is(markers.length, 0,
-       'Bug 1219236: Finished animations should never cause restyles ' +
-       'when mouse is moved on the animations');
+       'Finished animations should never cause restyles when mouse is moved ' +
+       'on the animations');
     await ensureElementRemoval(div);
   });
 
