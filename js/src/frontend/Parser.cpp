@@ -923,13 +923,12 @@ ParserBase::newObjectBox(JSObject* obj)
     return objbox;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 FunctionBox*
-GeneralParser<ParseHandler, CharT>::newFunctionBox(Node fn, JSFunction* fun,
-                                                   uint32_t toStringStart,
-                                                   Directives inheritedDirectives,
-                                                   GeneratorKind generatorKind,
-                                                   FunctionAsyncKind asyncKind)
+PerHandlerParser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
+                                               Directives inheritedDirectives,
+                                               GeneratorKind generatorKind,
+                                               FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(fun);
 
@@ -941,9 +940,8 @@ GeneralParser<ParseHandler, CharT>::newFunctionBox(Node fn, JSFunction* fun,
      * function.
      */
     FunctionBox* funbox =
-        alloc.template new_<FunctionBox>(context, traceListHead, fun, toStringStart,
-                                         inheritedDirectives, options().extraWarningsOption,
-                                         generatorKind, asyncKind);
+        alloc.new_<FunctionBox>(context, traceListHead, fun, toStringStart, inheritedDirectives,
+                                options().extraWarningsOption, generatorKind, asyncKind);
     if (!funbox) {
         ReportOutOfMemory(context);
         return nullptr;
