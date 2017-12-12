@@ -13,11 +13,35 @@
 
 // Defines regarding spoofed values of Navigator object. These spoofed values
 // are returned when 'privacy.resistFingerprinting' is true.
-#define SPOOFED_APPNAME    "Netscape"
+// We decided to give different spoofed values according to the platform. The
+// reason is that it is easy to detect the real platform. So there is no benefit
+// for hiding the platform: it only brings breakages, like keyboard shortcuts won't
+// work in MAC OS if we spoof it as a window platform.
+#ifdef XP_WIN
+#define SPOOFED_UA_OS      "Windows NT 6.1; Win64; x64"
 #define SPOOFED_APPVERSION "5.0 (Windows)"
 #define SPOOFED_OSCPU      "Windows NT 6.1; Win64; x64"
 #define SPOOFED_PLATFORM   "Win64"
+#elif defined(XP_MACOSX)
+#define SPOOFED_UA_OS      "Macintosh; Intel Mac OS X 10.13"
+#define SPOOFED_APPVERSION "5.0 (Macintosh)"
+#define SPOOFED_OSCPU      "Intel Mac OS X 10.13"
+#define SPOOFED_PLATFORM   "MacIntel"
+#elif defined(MOZ_WIDGET_ANDROID)
+#define SPOOFED_UA_OS      "Android 6.0; Mobile"
+#define SPOOFED_APPVERSION "5.0 (Android 6.0)"
+#define SPOOFED_OSCPU      "Linux armv7l"
+#define SPOOFED_PLATFORM   "Linux armv7l"
+#else
+// For Linux and other platforms, like BSDs, SunOS and etc, we will use Linux
+// platform.
+#define SPOOFED_UA_OS      "X11; Linux x86_64"
+#define SPOOFED_APPVERSION "5.0 (X11)"
+#define SPOOFED_OSCPU      "Linux x86_64"
+#define SPOOFED_PLATFORM   "Linux x86_64"
+#endif
 
+#define SPOOFED_APPNAME    "Netscape"
 #define LEGACY_BUILD_ID    "20100101"
 
 namespace mozilla {
