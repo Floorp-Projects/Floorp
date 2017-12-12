@@ -36,7 +36,7 @@ class SplitBox extends Component {
       // True if the right/bottom panel should be controlled.
       endPanelControl: PropTypes.bool,
       // Size of the splitter handle bar.
-      splitterSize: PropTypes.string,
+      splitterSize: PropTypes.number,
       // True if the splitter bar is vertical (default is vertical).
       vert: PropTypes.bool,
       // Style object.

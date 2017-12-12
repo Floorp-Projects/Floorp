@@ -50,8 +50,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       listener.addEventListener("gotpointercapture",  ListenerHandler);
       listener.addEventListener("lostpointercapture", ListenerHandler);
       var rect = target.getBoundingClientRect();
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup"});
+      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousedown"});
+      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mouseup"});
       finishTest();
     }
     function finishTest() {
