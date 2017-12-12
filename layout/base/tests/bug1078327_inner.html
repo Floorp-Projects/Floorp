@@ -74,14 +74,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1078327
       var rect_t = target.getBoundingClientRect();
       var rect_m = mediator.getBoundingClientRect();
       var rect_l = listener.getBoundingClientRect();
-      synthesizeMouse(target,   rect_t.width/2, rect_t.height/20, {type: "mousedown"});
-      synthesizeMouse(target,   rect_t.width/2, rect_t.height/20, {type: "mousemove"});
-      synthesizeMouse(mediator, rect_m.width/2, rect_m.height/20, {type: "mousemove"});
-      synthesizeMouse(listener, rect_l.width/2, rect_l.height/20, {type: "mousemove"});
-      synthesizeMouse(mediator, rect_m.width/2, rect_m.height/20, {type: "mousemove"});
-      synthesizeMouse(target,   rect_t.width/2, rect_t.height/20, {type: "mousemove"});
-      synthesizeMouse(target,   rect_t.width/2, rect_t.height/20, {type: "mouseup"});
-      synthesizeMouse(target,   rect_t.width/2, rect_t.height/20, {type: "mousemove"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointerdown"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointermove"});
+      synthesizePointer(mediator, rect_m.width/2, rect_m.height/20, {type: "pointermove"});
+      synthesizePointer(listener, rect_l.width/2, rect_l.height/20, {type: "pointermove"});
+      synthesizePointer(mediator, rect_m.width/2, rect_m.height/20, {type: "pointermove"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointermove"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointerup"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointermove"});
       finishTest();
     }
     function finishTest() {

@@ -84,9 +84,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
       listener.addEventListener("pointerup",          ListenerHandler);
       listener.addEventListener("pointerout",         ListenerHandler);
       var rect = target.getBoundingClientRect();
-      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousedown", isPrimary: true, inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
-      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousemove", isPrimary: true, inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
-      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mouseup",   isPrimary: true, inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown", isPrimary: true, inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointermove", isPrimary: true, inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup",   isPrimary: true, inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
       finishTest();
     }
     function finishTest() {
