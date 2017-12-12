@@ -2191,6 +2191,11 @@ pref("network.auth.subresource-http-auth-allow", 2);
 // have any effect.
 pref("network.auth.subresource-img-cross-origin-http-auth-allow", false);
 
+// Resources that are triggered by some non-web-content:
+// true - they are allow to present http auth. dialog
+// false - they are not allow to present http auth. dialog.
+pref("network.auth.non-web-content-triggered-resources-http-auth-allow", false);
+
 // This preference controls whether to allow sending default credentials (SSO) to
 // NTLM/Negotiate servers allowed in the "trusted uri" list when navigating them
 // in a Private Browsing window.
