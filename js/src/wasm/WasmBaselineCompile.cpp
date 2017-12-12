@@ -4181,6 +4181,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void
     atomicRMW32(T srcAddr, Scalar::Type viewType, AtomicOp op, RegI32 rv, RegI32 rd, RegI32 temp)
     {
+        Synchronization sync = Synchronization::Full();
         switch (viewType) {
           case Scalar::Uint8: {
 #ifdef JS_CODEGEN_X86
@@ -4190,39 +4191,14 @@ class BaseCompiler final : public BaseCompilerInterface
             if (op != AtomicFetchAddOp && op != AtomicFetchSubOp)
                 temp = scratch;
 #endif
-            switch (op) {
-              case AtomicFetchAddOp: masm.atomicFetchAdd8ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchSubOp: masm.atomicFetchSub8ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchAndOp: masm.atomicFetchAnd8ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchOrOp:  masm.atomicFetchOr8ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchXorOp: masm.atomicFetchXor8ZeroExtend(rv, srcAddr, temp, rd); break;
-              default: MOZ_CRASH("No such op");
-            }
+            masm.atomicFetchOp(viewType, sync, op, rv, srcAddr, temp, rd);
             break;
           }
-          case Scalar::Uint16: {
-            switch (op) {
-              case AtomicFetchAddOp: masm.atomicFetchAdd16ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchSubOp: masm.atomicFetchSub16ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchAndOp: masm.atomicFetchAnd16ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchOrOp:  masm.atomicFetchOr16ZeroExtend(rv, srcAddr, temp, rd); break;
-              case AtomicFetchXorOp: masm.atomicFetchXor16ZeroExtend(rv, srcAddr, temp, rd); break;
-              default: MOZ_CRASH("No such op");
-            }
-            break;
-          }
+          case Scalar::Uint16:
           case Scalar::Int32:
-          case Scalar::Uint32: {
-            switch (op) {
-              case AtomicFetchAddOp: masm.atomicFetchAdd32(rv, srcAddr, temp, rd); break;
-              case AtomicFetchSubOp: masm.atomicFetchSub32(rv, srcAddr, temp, rd); break;
-              case AtomicFetchAndOp: masm.atomicFetchAnd32(rv, srcAddr, temp, rd); break;
-              case AtomicFetchOrOp:  masm.atomicFetchOr32(rv, srcAddr, temp, rd); break;
-              case AtomicFetchXorOp: masm.atomicFetchXor32(rv, srcAddr, temp, rd); break;
-              default: MOZ_CRASH("No such op");
-            }
+          case Scalar::Uint32:
+            masm.atomicFetchOp(viewType, sync, op, rv, srcAddr, temp, rd);
             break;
-          }
           default: {
             MOZ_CRASH("Bad type for atomic operation");
           }
@@ -4234,20 +4210,14 @@ class BaseCompiler final : public BaseCompilerInterface
     template <typename T, typename V>
     void
     atomicRMW64(const T& srcAddr, AtomicOp op, V value, Register64 temp, Register64 rd) {
-        switch (op) {
-          case AtomicFetchAddOp: masm.atomicFetchAdd64(value, srcAddr, temp, rd); break;
-          case AtomicFetchSubOp: masm.atomicFetchSub64(value, srcAddr, temp, rd); break;
-          case AtomicFetchAndOp: masm.atomicFetchAnd64(value, srcAddr, temp, rd); break;
-          case AtomicFetchOrOp:  masm.atomicFetchOr64(value, srcAddr, temp, rd); break;
-          case AtomicFetchXorOp: masm.atomicFetchXor64(value, srcAddr, temp, rd); break;
-          default: MOZ_CRASH("No such op");
-        }
+        masm.atomicFetchOp64(Synchronization::Full(), op, value, srcAddr, temp, rd);
     }
 
     template<typename T>
     void
     atomicCmpXchg32(T srcAddr, Scalar::Type viewType, RegI32 rexpect, RegI32 rnew, RegI32 rd)
     {
+        Synchronization sync = Synchronization::Full();
         switch (viewType) {
           case Scalar::Uint8: {
 #if defined(JS_CODEGEN_X86)
@@ -4259,15 +4229,13 @@ class BaseCompiler final : public BaseCompilerInterface
                 rnew = scratch;
             }
 #endif
-            masm.compareExchange8ZeroExtend(srcAddr, rexpect, rnew, rd);
+            masm.compareExchange(viewType, sync, srcAddr, rexpect, rnew, rd);
             break;
           }
           case Scalar::Uint16:
-            masm.compareExchange16ZeroExtend(srcAddr, rexpect, rnew, rd);
-            break;
           case Scalar::Int32:
           case Scalar::Uint32:
-            masm.compareExchange32(srcAddr, rexpect, rnew, rd);
+            masm.compareExchange(viewType, sync, srcAddr, rexpect, rnew, rd);
             break;
           default:
             MOZ_CRASH("Bad type for atomic operation");
@@ -4278,28 +4246,26 @@ class BaseCompiler final : public BaseCompilerInterface
     void
     atomicXchg32(T srcAddr, Scalar::Type viewType, RegI32 rv, RegI32 rd)
     {
+        Synchronization sync = Synchronization::Full();
         switch (viewType) {
-          case Scalar::Uint8: {
+          case Scalar::Uint8:
 #if defined(JS_CODEGEN_X86)
+          {
             if (!ra.isSingleByteI32(rd)) {
                 ScratchI8 scratch(*this);
                 // The output register must have a byte persona.
-                masm.atomicExchange8ZeroExtend(srcAddr, rv, scratch);
+                masm.atomicExchange(viewType, sync, srcAddr, rv, scratch);
                 masm.movl(scratch, rd);
             } else {
-                masm.atomicExchange8ZeroExtend(srcAddr, rv, rd);
+                masm.atomicExchange(viewType, sync, srcAddr, rv, rd);
             }
-#else
-            masm.atomicExchange8ZeroExtend(srcAddr, rv, rd);
-#endif
             break;
           }
+#endif
           case Scalar::Uint16:
-            masm.atomicExchange16ZeroExtend(srcAddr, rv, rd);
-            break;
           case Scalar::Int32:
           case Scalar::Uint32:
-            masm.atomicExchange32(srcAddr, rv, rd);
+            masm.atomicExchange(viewType, sync, srcAddr, rv, rd);
             break;
           default:
             MOZ_CRASH("Bad type for atomic operation");
@@ -4557,13 +4523,14 @@ class BaseCompiler final : public BaseCompilerInterface
         atomicCmpXchg64(T srcAddr, RegI32 ebx) {
             MOZ_ASSERT(ebx == js::jit::ebx);
             bc->masm.move32(rnew.low, ebx);
-            bc->masm.compareExchange64(srcAddr, rexpect, bc->specific.ecx_ebx, getRd());
+            bc->masm.compareExchange64(Synchronization::Full(), srcAddr, rexpect,
+                                       bc->specific.ecx_ebx, getRd());
         }
 #else
         template<typename T>
         void
         atomicCmpXchg64(T srcAddr) {
-            bc->masm.compareExchange64(srcAddr, rexpect, rnew, getRd());
+            bc->masm.compareExchange64(Synchronization::Full(), srcAddr, rexpect, rnew, getRd());
         }
 #endif
     };
@@ -4601,13 +4568,13 @@ class BaseCompiler final : public BaseCompilerInterface
         void
         atomicLoad64(T srcAddr, RegI32 ebx) {
             MOZ_ASSERT(ebx == js::jit::ebx);
-            bc->masm.atomicLoad64(srcAddr, bc->specific.ecx_ebx, getRd());
+            bc->masm.atomicLoad64(Synchronization::Full(), srcAddr, bc->specific.ecx_ebx, getRd());
         }
 # else
         template<typename T>
         void
         atomicLoad64(T srcAddr) {
-            bc->masm.atomicLoad64(srcAddr, RegI64::Invalid(), getRd());
+            bc->masm.atomicLoad64(Synchronization::Full(), srcAddr, RegI64::Invalid(), getRd());
         }
 # endif
     };
@@ -4850,12 +4817,12 @@ class BaseCompiler final : public BaseCompilerInterface
         void atomicXchg64(T srcAddr, RegI32 ebx) const {
             MOZ_ASSERT(ebx == js::jit::ebx);
             bc->masm.move32(rv.low, ebx);
-            bc->masm.atomicExchange64(srcAddr, bc->specific.ecx_ebx, getRd());
+            bc->masm.atomicExchange64(Synchronization::Full(), srcAddr, bc->specific.ecx_ebx, getRd());
         }
 #else
         template<typename T>
         void atomicXchg64(T srcAddr) const {
-            bc->masm.atomicExchange64(srcAddr, rv, getRd());
+            bc->masm.atomicExchange64(Synchronization::Full(), srcAddr, rv, getRd());
         }
 #endif
     };
@@ -8175,7 +8142,7 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
-                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
         PopAtomicCmpXchg32Regs regs(this, type);
@@ -8231,7 +8198,7 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
-                            /*numSimdElems=*/ 0, MembarBeforeLoad, MembarAfterLoad);
+                            /*numSimdElems=*/ 0, Synchronization::Load());
 
     if (Scalar::byteSize(viewType) <= sizeof(void*))
         return loadCommon(&access, type);
@@ -8275,7 +8242,7 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
-                            /*numSimdElems=*/ 0, MembarFull, MembarFull);
+                            /*numSimdElems=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
         PopAtomicRMW32Regs regs(this, type, viewType, op);
@@ -8338,7 +8305,7 @@ BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
-                            /*numSimdElems=*/ 0, MembarBeforeStore, MembarAfterStore);
+                            /*numSimdElems=*/ 0, Synchronization::Store());
 
     if (Scalar::byteSize(viewType) <= sizeof(void*))
         return storeCommon(&access, type);
@@ -8366,7 +8333,7 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
 
     AccessCheck check;
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
-                            /*numSimdElems=*/ 0, MembarFull, MembarFull);
+                            /*numSimdElems=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
         PopAtomicXchg32Regs regs(this, type);

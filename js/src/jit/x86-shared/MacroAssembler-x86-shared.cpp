@@ -144,89 +144,6 @@ MacroAssemblerX86Shared::asMasm() const
     return *static_cast<const MacroAssembler*>(this);
 }
 
-template<typename T>
-void
-MacroAssemblerX86Shared::compareExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem,
-                                                        Register oldval, Register newval,
-                                                        Register temp, AnyRegister output)
-{
-    switch (arrayType) {
-      case Scalar::Int8:
-        compareExchange8SignExtend(mem, oldval, newval, output.gpr());
-        break;
-      case Scalar::Uint8:
-        compareExchange8ZeroExtend(mem, oldval, newval, output.gpr());
-        break;
-      case Scalar::Int16:
-        compareExchange16SignExtend(mem, oldval, newval, output.gpr());
-        break;
-      case Scalar::Uint16:
-        compareExchange16ZeroExtend(mem, oldval, newval, output.gpr());
-        break;
-      case Scalar::Int32:
-        compareExchange32(mem, oldval, newval, output.gpr());
-        break;
-      case Scalar::Uint32:
-        // At the moment, the code in MCallOptimize.cpp requires the output
-        // type to be double for uint32 arrays.  See bug 1077305.
-        MOZ_ASSERT(output.isFloat());
-        compareExchange32(mem, oldval, newval, temp);
-        asMasm().convertUInt32ToDouble(temp, output.fpu());
-        break;
-      default:
-        MOZ_CRASH("Invalid typed array type");
-    }
-}
-
-template void
-MacroAssemblerX86Shared::compareExchangeToTypedIntArray(Scalar::Type arrayType, const Address& mem,
-                                                        Register oldval, Register newval, Register temp,
-                                                        AnyRegister output);
-template void
-MacroAssemblerX86Shared::compareExchangeToTypedIntArray(Scalar::Type arrayType, const BaseIndex& mem,
-                                                        Register oldval, Register newval, Register temp,
-                                                        AnyRegister output);
-
-template<typename T>
-void
-MacroAssemblerX86Shared::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem,
-                                                       Register value, Register temp, AnyRegister output)
-{
-    switch (arrayType) {
-      case Scalar::Int8:
-        atomicExchange8SignExtend(mem, value, output.gpr());
-        break;
-      case Scalar::Uint8:
-        atomicExchange8ZeroExtend(mem, value, output.gpr());
-        break;
-      case Scalar::Int16:
-        atomicExchange16SignExtend(mem, value, output.gpr());
-        break;
-      case Scalar::Uint16:
-        atomicExchange16ZeroExtend(mem, value, output.gpr());
-        break;
-      case Scalar::Int32:
-        atomicExchange32(mem, value, output.gpr());
-        break;
-      case Scalar::Uint32:
-        // At the moment, the code in MCallOptimize.cpp requires the output
-        // type to be double for uint32 arrays.  See bug 1077305.
-        MOZ_ASSERT(output.isFloat());
-        atomicExchange32(mem, value, temp);
-        asMasm().convertUInt32ToDouble(temp, output.fpu());
-        break;
-      default:
-        MOZ_CRASH("Invalid typed array type");
-    }
-}
-
-template void
-MacroAssemblerX86Shared::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const Address& mem,
-                                                       Register value, Register temp, AnyRegister output);
-template void
-MacroAssemblerX86Shared::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const BaseIndex& mem,
-                                                       Register value, Register temp, AnyRegister output);
-
 template<class T, class Map>
 T*
 MacroAssemblerX86Shared::getConstant(const typename T::Pod& value, Map& map,
@@ -886,6 +803,383 @@ MacroAssembler::outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool is
     loadConstantFloat32(float(int64_t(INT64_MIN)), ScratchFloat32Reg);
     branchFloat(Assembler::DoubleNotEqual, input, ScratchFloat32Reg, &traps.fail);
     jump(rejoin);
+}
+
+// ========================================================================
+// Primitive atomic operations.
+
+static void
+ExtendTo32(MacroAssembler& masm, Scalar::Type type, Register r)
+{
+    switch (Scalar::byteSize(type)) {
+      case 1:
+        if (Scalar::isSignedIntType(type))
+            masm.movsbl(r, r);
+        else
+            masm.movzbl(r, r);
+        break;
+      case 2:
+        if (Scalar::isSignedIntType(type))
+            masm.movswl(r, r);
+        else
+            masm.movzwl(r, r);
+        break;
+      default:
+        break;
+    }
+}
+
+static inline void
+CheckBytereg(Register r) {
+#ifdef DEBUG
+    AllocatableGeneralRegisterSet byteRegs(Registers::SingleByteRegs);
+    MOZ_ASSERT(byteRegs.has(r));
+#endif
+}
+
+static inline void
+CheckBytereg(Imm32 r) {
+    // Nothing
+}
+
+template<typename T>
+static void
+CompareExchange(MacroAssembler& masm, Scalar::Type type, const T& mem, Register oldval,
+                Register newval, Register output)
+{
+    MOZ_ASSERT(output == eax);
+
+    if (oldval != output)
+        masm.movl(oldval, output);
+
+    switch (Scalar::byteSize(type)) {
+      case 1:
+        CheckBytereg(newval);
+        masm.lock_cmpxchgb(newval, Operand(mem));
+        break;
+      case 2:
+        masm.lock_cmpxchgw(newval, Operand(mem));
+        break;
+      case 4:
+        masm.lock_cmpxchgl(newval, Operand(mem));
+        break;
+    }
+
+    ExtendTo32(masm, type, output);
+}
+
+void
+MacroAssembler::compareExchange(Scalar::Type type, const Synchronization&, const Address& mem,
+                                Register oldval, Register newval, Register output)
+{
+    CompareExchange(*this, type, mem, oldval, newval, output);
+}
+
+void
+MacroAssembler::compareExchange(Scalar::Type type, const Synchronization&, const BaseIndex& mem,
+                                Register oldval, Register newval, Register output)
+{
+    CompareExchange(*this, type, mem, oldval, newval, output);
+}
+
+template<typename T>
+static void
+AtomicExchange(MacroAssembler& masm, Scalar::Type type, const T& mem, Register value,
+               Register output)
+
+{
+    if (value != output)
+        masm.movl(value, output);
+
+    switch (Scalar::byteSize(type)) {
+      case 1:
+        CheckBytereg(output);
+        masm.xchgb(output, Operand(mem));
+        break;
+      case 2:
+        masm.xchgw(output, Operand(mem));
+        break;
+      case 4:
+        masm.xchgl(output, Operand(mem));
+        break;
+      default:
+        MOZ_CRASH("Invalid");
+    }
+    ExtendTo32(masm, type, output);
+}
+
+void
+MacroAssembler::atomicExchange(Scalar::Type type, const Synchronization&, const Address& mem,
+                                 Register value, Register output)
+{
+    AtomicExchange(*this, type, mem, value, output);
+}
+
+void
+MacroAssembler::atomicExchange(Scalar::Type type, const Synchronization&, const BaseIndex& mem,
+                               Register value, Register output)
+{
+    AtomicExchange(*this, type, mem, value, output);
+}
+
+static void
+SetupValue(MacroAssembler& masm, AtomicOp op, Imm32 src, Register output) {
+    if (op == AtomicFetchSubOp)
+        masm.movl(Imm32(-src.value), output);
+    else
+        masm.movl(src, output);
+}
+
+static void
+SetupValue(MacroAssembler& masm, AtomicOp op, Register src, Register output) {
+    if (src != output)
+        masm.movl(src, output);
+    if (op == AtomicFetchSubOp)
+        masm.negl(output);
+}
+
+template<typename T, typename V>
+static void
+AtomicFetchOp(MacroAssembler& masm, Scalar::Type arrayType, AtomicOp op, V value,
+              const T& mem, Register temp, Register output)
+{
+// Note value can be an Imm or a Register.
+
+#define ATOMIC_BITOP_BODY(LOAD, OP, LOCK_CMPXCHG)                       \
+    do {                                                                \
+        MOZ_ASSERT(output != temp);                                     \
+        MOZ_ASSERT(output == eax);                                      \
+        masm.LOAD(Operand(mem), eax);                                   \
+        Label again;                                                    \
+        masm.bind(&again);                                              \
+        masm.movl(eax, temp);                                           \
+        masm.OP(value, temp);                                           \
+        masm.LOCK_CMPXCHG(temp, Operand(mem));                          \
+        masm.j(MacroAssembler::NonZero, &again);                        \
+    } while (0)
+
+    MOZ_ASSERT_IF(op == AtomicFetchAddOp || op == AtomicFetchSubOp, temp == InvalidReg);
+
+    switch (Scalar::byteSize(arrayType)) {
+      case 1:
+        CheckBytereg(value);
+        CheckBytereg(output);
+        switch (op) {
+          case AtomicFetchAddOp:
+          case AtomicFetchSubOp:
+            SetupValue(masm, op, value, output);
+            masm.lock_xaddb(output, Operand(mem));
+            break;
+          case AtomicFetchAndOp:
+            CheckBytereg(temp);
+            ATOMIC_BITOP_BODY(movb, andl, lock_cmpxchgb);
+            break;
+          case AtomicFetchOrOp:
+            CheckBytereg(temp);
+            ATOMIC_BITOP_BODY(movb, orl, lock_cmpxchgb);
+            break;
+          case AtomicFetchXorOp:
+            CheckBytereg(temp);
+            ATOMIC_BITOP_BODY(movb, xorl, lock_cmpxchgb);
+            break;
+          default:
+            MOZ_CRASH();
+        }
+        break;
+      case 2:
+        switch (op) {
+          case AtomicFetchAddOp:
+          case AtomicFetchSubOp:
+            SetupValue(masm, op, value, output);
+            masm.lock_xaddw(output, Operand(mem));
+            break;
+          case AtomicFetchAndOp:
+            ATOMIC_BITOP_BODY(movw, andl, lock_cmpxchgw);
+            break;
+          case AtomicFetchOrOp:
+            ATOMIC_BITOP_BODY(movw, orl, lock_cmpxchgw);
+            break;
+          case AtomicFetchXorOp:
+            ATOMIC_BITOP_BODY(movw, xorl, lock_cmpxchgw);
+            break;
+          default:
+            MOZ_CRASH();
+        }
+        break;
+      case 4:
+        switch (op) {
+          case AtomicFetchAddOp:
+          case AtomicFetchSubOp:
+            SetupValue(masm, op, value, output);
+            masm.lock_xaddl(output, Operand(mem));
+            break;
+          case AtomicFetchAndOp:
+            ATOMIC_BITOP_BODY(movl, andl, lock_cmpxchgl);
+            break;
+          case AtomicFetchOrOp:
+            ATOMIC_BITOP_BODY(movl, orl, lock_cmpxchgl);
+            break;
+          case AtomicFetchXorOp:
+            ATOMIC_BITOP_BODY(movl, xorl, lock_cmpxchgl);
+            break;
+          default:
+            MOZ_CRASH();
+        }
+        break;
+    }
+    ExtendTo32(masm, arrayType, output);
+
+#undef ATOMIC_BITOP_BODY
+}
+
+void
+MacroAssembler::atomicFetchOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                                Register value, const BaseIndex& mem, Register temp, Register output)
+{
+    AtomicFetchOp(*this, arrayType, op, value, mem, temp, output);
+}
+
+void
+MacroAssembler::atomicFetchOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                                Register value, const Address& mem, Register temp, Register output)
+{
+    AtomicFetchOp(*this, arrayType, op, value, mem, temp, output);
+}
+
+void
+MacroAssembler::atomicFetchOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                                Imm32 value, const BaseIndex& mem, Register temp, Register output)
+{
+    AtomicFetchOp(*this, arrayType, op, value, mem, temp, output);
+}
+
+void
+MacroAssembler::atomicFetchOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                                Imm32 value, const Address& mem, Register temp, Register output)
+{
+    AtomicFetchOp(*this, arrayType, op, value, mem, temp, output);
+}
+
+template<typename T, typename V>
+static void
+AtomicEffectOp(MacroAssembler& masm, Scalar::Type arrayType, AtomicOp op, V value, const T& mem)
+{
+    switch (Scalar::byteSize(arrayType)) {
+      case 1:
+        switch (op) {
+          case AtomicFetchAddOp: masm.lock_addb(value, Operand(mem)); break;
+          case AtomicFetchSubOp: masm.lock_subb(value, Operand(mem)); break;
+          case AtomicFetchAndOp: masm.lock_andb(value, Operand(mem)); break;
+          case AtomicFetchOrOp:  masm.lock_orb(value, Operand(mem)); break;
+          case AtomicFetchXorOp: masm.lock_xorb(value, Operand(mem)); break;
+          default:
+            MOZ_CRASH();
+        }
+        break;
+      case 2:
+        switch (op) {
+          case AtomicFetchAddOp: masm.lock_addw(value, Operand(mem)); break;
+          case AtomicFetchSubOp: masm.lock_subw(value, Operand(mem)); break;
+          case AtomicFetchAndOp: masm.lock_andw(value, Operand(mem)); break;
+          case AtomicFetchOrOp:  masm.lock_orw(value, Operand(mem)); break;
+          case AtomicFetchXorOp: masm.lock_xorw(value, Operand(mem)); break;
+          default:
+            MOZ_CRASH();
+        }
+        break;
+      case 4:
+        switch (op) {
+          case AtomicFetchAddOp: masm.lock_addl(value, Operand(mem)); break;
+          case AtomicFetchSubOp: masm.lock_subl(value, Operand(mem)); break;
+          case AtomicFetchAndOp: masm.lock_andl(value, Operand(mem)); break;
+          case AtomicFetchOrOp:  masm.lock_orl(value, Operand(mem)); break;
+          case AtomicFetchXorOp: masm.lock_xorl(value, Operand(mem)); break;
+          default:
+            MOZ_CRASH();
+        }
+        break;
+      default:
+        MOZ_CRASH();
+    }
+}
+
+void
+MacroAssembler::atomicEffectOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                               Register value, const BaseIndex& mem, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    AtomicEffectOp(*this, arrayType, op, value, mem);
+}
+
+void
+MacroAssembler::atomicEffectOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                               Register value, const Address& mem, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    AtomicEffectOp(*this, arrayType, op, value, mem);
+}
+
+void
+MacroAssembler::atomicEffectOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                               Imm32 value, const BaseIndex& mem, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    AtomicEffectOp(*this, arrayType, op, value, mem);
+}
+
+void
+MacroAssembler::atomicEffectOp(Scalar::Type arrayType, const Synchronization&, AtomicOp op,
+                               Imm32 value, const Address& mem, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    AtomicEffectOp(*this, arrayType, op, value, mem);
+}
+
+// ========================================================================
+// JS atomic operations.
+
+template<typename T>
+static void
+AtomicFetchOpJS(MacroAssembler& masm, Scalar::Type arrayType, const Synchronization& sync,
+                AtomicOp op, Imm32 value, const T& mem, Register temp1, Register temp2,
+                AnyRegister output)
+{
+    if (arrayType == Scalar::Uint32) {
+        masm.atomicFetchOp(arrayType, sync, op, value, mem, temp2, temp1);
+        masm.convertUInt32ToDouble(temp1, output.fpu());
+    } else {
+        masm.atomicFetchOp(arrayType, sync, op, value, mem, temp1, output.gpr());
+    }
+}
+
+void
+MacroAssembler::atomicFetchOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                                Imm32 value, const Address& mem, Register temp1, Register temp2,
+                                AnyRegister output)
+{
+    AtomicFetchOpJS(*this, arrayType, sync, op, value, mem, temp1, temp2, output);
+}
+
+void
+MacroAssembler::atomicFetchOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                                Imm32 value, const BaseIndex& mem, Register temp1, Register temp2,
+                                AnyRegister output)
+{
+    AtomicFetchOpJS(*this, arrayType, sync, op, value, mem, temp1, temp2, output);
+}
+
+void
+MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                                 Imm32 value, const Address& mem, Register temp)
+{
+    atomicEffectOp(arrayType, sync, op, value, mem, temp);
+}
+
+void
+MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& sync, AtomicOp op,
+                                 Imm32 value, const BaseIndex& mem, Register temp)
+{
+    atomicEffectOp(arrayType, sync, op, value, mem, temp);
 }
 
 //}}} check_macroassembler_style
