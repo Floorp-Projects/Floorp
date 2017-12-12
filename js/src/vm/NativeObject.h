@@ -550,6 +550,10 @@ class NativeObject : public ShapedObject
     static inline JS::Result<NativeObject*, JS::OOM&>
     createWithTemplate(JSContext* cx, js::gc::InitialHeap heap, HandleObject templateObject);
 
+#ifdef DEBUG
+    static void enableShapeConsistencyChecks();
+#endif
+
   protected:
 #ifdef DEBUG
     friend class js::AutoCheckShapeConsistency;

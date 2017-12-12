@@ -3101,6 +3101,17 @@ HelperThreadCount(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+EnableShapeConsistencyChecks(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef DEBUG
+    NativeObject::enableShapeConsistencyChecks();
+#endif
+    args.rval().setUndefined();
+    return true;
+}
+
 #ifdef JS_TRACE_LOGGING
 static bool
 EnableTraceLogger(JSContext* cx, unsigned argc, Value* vp)
@@ -5352,6 +5363,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("helperThreadCount", HelperThreadCount, 0, 0,
 "helperThreadCount()",
 "  Returns the number of helper threads available for off-thread tasks."),
+
+    JS_FN_HELP("enableShapeConsistencyChecks", EnableShapeConsistencyChecks, 0, 0,
+"enableShapeConsistencyChecks()",
+"  Enable some slow Shape assertions.\n"),
 
 #ifdef JS_TRACE_LOGGING
     JS_FN_HELP("startTraceLogger", EnableTraceLogger, 0, 0,
