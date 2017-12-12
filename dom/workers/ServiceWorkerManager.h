@@ -46,7 +46,6 @@ class ServiceWorkerRegistrationListener;
 
 namespace workers {
 
-class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
@@ -273,24 +272,9 @@ public:
               uint32_t aFlags,
               JSExnType aExnType);
 
-  UniquePtr<ServiceWorkerClientInfo>
-  GetClient(nsIPrincipal* aPrincipal,
-            const nsAString& aClientId,
-            ErrorResult& aRv);
-
-  void
-  GetAllClients(nsIPrincipal* aPrincipal,
-                const nsCString& aScope,
-                uint64_t aServiceWorkerID,
-                bool aIncludeUncontrolled,
-                nsTArray<ServiceWorkerClientInfo>& aDocuments);
-
   void
   MaybeClaimClient(nsIDocument* aDocument,
                    ServiceWorkerRegistrationInfo* aWorkerRegistration);
-
-  nsresult
-  ClaimClients(nsIPrincipal* aPrincipal, const nsCString& aScope, uint64_t aId);
 
   void
   SetSkipWaitingFlag(nsIPrincipal* aPrincipal, const nsCString& aScope,
