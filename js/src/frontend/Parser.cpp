@@ -805,7 +805,8 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const char16_t* chars, size_t length,
                        bool foldConstants,
                        UsedNameTracker& usedNames)
-  : context(cx),
+  : AutoGCRooter(cx, PARSER),
+    context(cx),
     alloc(alloc),
     anyChars(cx, options, thisForCtor()),
     traceListHead(nullptr),
@@ -871,7 +872,6 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
                                                   SyntaxParser* syntaxParser,
                                                   LazyScript* lazyOuterFunction)
   : Base(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
-    AutoGCRooter(cx, PARSER),
     syntaxParser_(syntaxParser),
     tokenStream(cx, options, chars, length)
 {}
@@ -965,9 +965,8 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
     thisBinding_ = ThisBinding::Module;
 }
 
-template <class ParseHandler, typename CharT>
 void
-GeneralParser<ParseHandler, CharT>::trace(JSTracer* trc)
+ParserBase::trace(JSTracer* trc)
 {
     ObjectBox::TraceList(trc, traceListHead);
 }
@@ -975,7 +974,7 @@ GeneralParser<ParseHandler, CharT>::trace(JSTracer* trc)
 void
 TraceParser(JSTracer* trc, AutoGCRooter* parser)
 {
-    static_cast<GeneralParser<FullParseHandler, char16_t>*>(parser)->trace(trc);
+    static_cast<ParserBase*>(parser)->trace(trc);
 }
 
 /*
