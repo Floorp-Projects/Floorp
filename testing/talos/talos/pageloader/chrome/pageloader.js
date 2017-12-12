@@ -13,7 +13,7 @@ try {
 } catch (ex) {}
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource:///modules/E10SUtils.jsm");
+Components.utils.import("resource://gre/modules/E10SUtils.jsm");
 
 var NUM_CYCLES = 5;
 var numPageCycles = 1;
