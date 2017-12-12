@@ -2293,9 +2293,8 @@ Parser<SyntaxParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
     return SyntaxParseHandler::NodeFailure;
 }
 
-template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::hasUsedFunctionSpecialName(HandlePropertyName name)
+ParserBase::hasUsedFunctionSpecialName(HandlePropertyName name)
 {
     MOZ_ASSERT(name == context->names().arguments || name == context->names().dotThis);
     return hasUsedName(name) || pc->functionBox()->bindingsAccessedDynamically();
