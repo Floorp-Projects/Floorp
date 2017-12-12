@@ -12,8 +12,6 @@ srcs = [
 
 have_progressui = 0
 
-USE_LIBS += [ 'zlib' ]
-
 if CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
     USE_LIBS += [
         'verifymar',
@@ -56,6 +54,13 @@ USE_LIBS += [
     'xz-embedded',
 ]
 
+if CONFIG['MOZ_SYSTEM_BZ2']:
+    OS_LIBS += CONFIG['MOZ_BZ2_LIBS']
+else:
+    USE_LIBS += [
+        'bz2',
+    ]
+
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     have_progressui = 1
     srcs += [
@@ -96,12 +101,6 @@ LOCAL_INCLUDES += [
     '/toolkit/mozapps/update/common',
     '/xpcom/base', # for nsVersionComparator.cpp
 ]
-
-if CONFIG['MOZ_SYSTEM_ZLIB']:
-    CXXFLAGS += CONFIG['MOZ_ZLIB_CFLAGS']
-    OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
-else:
-    LOCAL_INCLUDES += ['/modules/zlib/src']
 
 DELAYLOAD_DLLS += [
     'crypt32.dll',
