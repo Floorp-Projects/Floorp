@@ -68,8 +68,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
       target.addEventListener("gotpointercapture",  GotPCHandler);
       target.addEventListener("lostpointercapture", LostPCHandler);
       var rect = target.getBoundingClientRect();
-      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousedown"});
-      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mouseup"});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup"});
       finishTest();
     }
     function finishTest() {
