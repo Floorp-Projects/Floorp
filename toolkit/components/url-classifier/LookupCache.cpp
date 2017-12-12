@@ -59,7 +59,7 @@ void CStringToHexString(const nsACString& aIn, nsACString& aOut)
 
   aOut.SetCapacity(2 * len);
   for (size_t i = 0; i < aIn.Length(); ++i) {
-    const char c = static_cast<const char>(aIn[i]);
+    const char c = static_cast<char>(aIn[i]);
     aOut.Append(lut[(c >> 4) & 0x0F]);
     aOut.Append(lut[c & 15]);
   }
