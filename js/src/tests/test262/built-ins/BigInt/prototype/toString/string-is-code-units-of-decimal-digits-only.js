@@ -1,3 +1,4 @@
+// |reftest| skip -- BigInt is not supported
 // Copyright 2017 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -5,7 +6,6 @@
 esid: sec-tostring-applied-to-the-bigint-type
 description: BigInt .toString() returns only decimal digits, does not include BigIntLiteralSuffix
 info: |
-
   ToString Applied to the BigInt Type
 
     The abstract operation ToString converts a BigInt i to String format as follows:

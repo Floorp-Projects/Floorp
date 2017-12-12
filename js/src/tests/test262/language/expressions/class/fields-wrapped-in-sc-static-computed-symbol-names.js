@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/static-computed-symbol-names.case
-// - src/class-fields/default/cls-expr-wrapped-in-sc.template
+// - src/class-fields/productions/cls-expr-wrapped-in-sc.template
 /*---
 description: Static computed property symbol names (fields definition wrapped in semicolons)
 esid: prod-FieldDefinition
-features: [Symbol, computed-property-names, class-fields]
+features: [Symbol, computed-property-names, class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -27,16 +27,17 @@ var y = Symbol();
 
 var C = class {
   ;;;;
-  ;;;;;;[x]; [y] = 42;;;;;;;
+  ;;;;;;static [x]; static [y] = 42;;;;;;;
   ;;;;
+
 }
 
 var c = new C();
 
 assert.sameValue(Object.hasOwnProperty.call(C.prototype, x), false);
-assert.sameValue(Object.hasOwnProperty.call(C, x), false);
+assert.sameValue(Object.hasOwnProperty.call(c, x), false);
 
-verifyProperty(c, x, {
+verifyProperty(C, x, {
   value: undefined,
   enumerable: true,
   writable: true,
@@ -44,9 +45,9 @@ verifyProperty(c, x, {
 });
 
 assert.sameValue(Object.hasOwnProperty.call(C.prototype, y), false);
-assert.sameValue(Object.hasOwnProperty.call(C, y), false);
+assert.sameValue(Object.hasOwnProperty.call(c, y), false);
 
-verifyProperty(c, y, {
+verifyProperty(C, y, {
   value: 42,
   enumerable: true,
   writable: true,
