@@ -1925,6 +1925,10 @@ int
 Simulator::loadLinkedW(uint32_t addr, SimInstruction* instr)
 {
     if ((addr & kPointerAlignmentMask) == 0) {
+
+        if (handleWasmFault(addr, 1))
+            return -1;
+
         volatile int32_t* ptr = reinterpret_cast<volatile int32_t*>(addr);
         int32_t value = *ptr;
         lastLLValue_ = value;
@@ -2023,6 +2027,10 @@ typedef int64_t (*Prototype_General7)(int32_t arg0, int32_t arg1, int32_t arg2, 
                                       int32_t arg4, int32_t arg5, int32_t arg6);
 typedef int64_t (*Prototype_General8)(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3,
                                       int32_t arg4, int32_t arg5, int32_t arg6, int32_t arg7);
+typedef int64_t (*Prototype_GeneralGeneralGeneralInt64)(int32_t arg0, int32_t arg1, int32_t arg2,
+                                                        int64_t arg3);
+typedef int64_t (*Prototype_GeneralGeneralInt64Int64)(int32_t arg0, int32_t arg1, int64_t arg2,
+                                                      int64_t arg3);
 
 typedef double (*Prototype_Double_None)();
 typedef double (*Prototype_Double_Double)(double arg0);
@@ -2045,6 +2053,13 @@ typedef int32_t (*Prototype_Int_IntDouble)(int32_t arg0, double arg1);
 typedef double (*Prototype_Double_DoubleDoubleDouble)(double arg0, double arg1, double arg2);
 typedef double (*Prototype_Double_DoubleDoubleDoubleDouble)(double arg0, double arg1,
                                                             double arg2, double arg3);
+
+static int64_t
+MakeInt64(int32_t first, int32_t second)
+{
+    // Little-endian order.
+    return ((int64_t)second << 32) | (uint32_t)first;
+}
 
 // Software interrupt instructions are used by the simulator to call into C++.
 void
@@ -2152,6 +2167,21 @@ Simulator::softwareInterrupt(SimInstruction* instr)
             Prototype_Int_Double target = reinterpret_cast<Prototype_Int_Double>(external);
             int32_t res = target(dval0);
             setRegister(v0, res);
+            break;
+          }
+          case Args_Int_GeneralGeneralGeneralInt64: {
+            Prototype_GeneralGeneralGeneralInt64 target =
+                reinterpret_cast<Prototype_GeneralGeneralGeneralInt64>(external);
+            // The int64 arg is not split across register and stack
+            int64_t result = target(arg0, arg1, arg2, MakeInt64(arg4, arg5));
+            setCallResult(result);
+            break;
+          }
+          case Args_Int_GeneralGeneralInt64Int64: {
+            Prototype_GeneralGeneralInt64Int64 target =
+                reinterpret_cast<Prototype_GeneralGeneralInt64Int64>(external);
+            int64_t result = target(arg0, arg1, MakeInt64(arg2, arg3), MakeInt64(arg4, arg5));
+            setCallResult(result);
             break;
           }
           case Args_Int64_Double: {
