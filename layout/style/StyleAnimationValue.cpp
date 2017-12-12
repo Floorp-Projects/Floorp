@@ -4636,10 +4636,11 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           const nsStyleDisplay *display =
             static_cast<const nsStyleDisplay*>(styleStruct);
           nsAutoPtr<nsCSSValueList> result;
-          if (display->mSpecifiedTransform) {
+          RefPtr<nsCSSValueSharedList> transformList = display->GetCombinedTransform();
+          if (transformList) {
             // Clone, and convert all lengths (not percents) to pixels.
             nsCSSValueList **resultTail = getter_Transfers(result);
-            for (const nsCSSValueList *l = display->mSpecifiedTransform->mHead;
+            for (const nsCSSValueList *l = transformList->mHead;
                  l; l = l->mNext) {
               nsCSSValueList *clone = new nsCSSValueList;
               *resultTail = clone;
