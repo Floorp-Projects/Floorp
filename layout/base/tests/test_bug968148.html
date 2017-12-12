@@ -8,37 +8,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=968148
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript">
-    function testWithoutImplicitPointerCapture() {
+    function setRemoteFrame() {
       var iframe = document.getElementById("testFrame");
       iframe.src = "bug968148_inner.html";
-    }
 
-    function testWithImplicitPointerCapture() {
-      var iframe = document.getElementById("testFrame");
-      iframe.src = "bug968148_inner2.html";
+      function messageListener(event) {
+        eval(event.data);
+      }
+
+      window.addEventListener("message", messageListener);
     }
 
     function runTest() {
       SimpleTest.waitForExplicitFinish();
-      window.addEventListener("message", (event) => {
-        if (event.data == "finishTest") {
-          SimpleTest.finish();
-        } else if (event.data == "run next") {
-          SpecialPowers.pushPrefEnv({
-            "set": [
-              ["dom.w3c_pointer_events.enabled", true],
-              ["dom.w3c_pointer_events.implicit_capture", true]
-            ]
-          }, testWithImplicitPointerCapture);
-        }
-      });
 
       SpecialPowers.pushPrefEnv({
         "set": [
-          ["dom.w3c_pointer_events.enabled", true],
-          ["dom.w3c_pointer_events.implicit_capture", false]
+          ["dom.w3c_pointer_events.enabled", true]
         ]
-      }, testWithoutImplicitPointerCapture);
+      }, setRemoteFrame);
     }
   </script>
 </head>
