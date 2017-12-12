@@ -249,6 +249,11 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
   if (!sApplicationASN) {
     sApplicationASN = ::CFBundleGetFunctionPointerForName(launchServices, 
                                             CFSTR("_LSGetCurrentApplicationASN"));
+    if (!sApplicationASN) {
+      NS_WARNING("Failed to set process name: Could not get function pointer "
+                 "for LaunchServices");
+      return false;
+    }
   }
 
   LSGetASNType getASNFunc = reinterpret_cast<LSGetASNType>
