@@ -312,6 +312,8 @@ class PerHandlerParser
     // Required on Scope exit.
     bool propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope);
 
+    Node finishLexicalScope(ParseContext::Scope& scope, Node body);
+
     bool declareFunctionThis();
 
     inline Node newName(PropertyName* name);
@@ -376,6 +378,7 @@ class GeneralParser
 #if DEBUG
     using Base::checkOptionsCalled;
 #endif
+    using Base::finishLexicalScope;
     using Base::foldConstants;
     using Base::getFilename;
     using Base::hasUsedFunctionSpecialName;
@@ -908,8 +911,6 @@ class GeneralParser
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
 
-    inline Node finishLexicalScope(ParseContext::Scope& scope, Node body);
-
     Node propertyName(YieldHandling yieldHandling,
                       const mozilla::Maybe<DeclarationKind>& maybeDecl, Node propList,
                       PropertyType* propType, MutableHandleAtom propAtom);
@@ -1073,8 +1074,6 @@ class Parser<SyntaxParseHandler, CharT> final
     bool skipLazyInnerFunction(Node funcNode, uint32_t toStringStart, FunctionSyntaxKind kind,
                                bool tryAnnexB);
 
-    Node finishLexicalScope(ParseContext::Scope& scope, Node body);
-
     bool finishFunction(bool isStandaloneFunction = false);
 
 #define ABORTED_SYNTAX_PARSE_SENTINEL reinterpret_cast<SyntaxParser*>(0x1)
@@ -1168,6 +1167,7 @@ class Parser<FullParseHandler, CharT> final
     using Base::error;
     using Base::errorAt;
     using Base::finishFunctionScopes;
+    using Base::finishLexicalScope;
     using Base::innerFunction;
     using Base::innerFunctionForFunctionBox;
     using Base::keepAtoms;
@@ -1224,8 +1224,6 @@ class Parser<FullParseHandler, CharT> final
 
     bool skipLazyInnerFunction(Node funcNode, uint32_t toStringStart, FunctionSyntaxKind kind,
                                bool tryAnnexB);
-
-    Node finishLexicalScope(ParseContext::Scope& scope, Node body);
 
     bool finishFunction(bool isStandaloneFunction = false);
 

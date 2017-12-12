@@ -2079,9 +2079,9 @@ ParserBase::newLexicalScopeData(ParseContext::Scope& scope)
     return Some(bindings);
 }
 
-template <typename CharT>
+template <>
 SyntaxParseHandler::Node
-Parser<SyntaxParseHandler, CharT>::finishLexicalScope(ParseContext::Scope& scope, Node body)
+PerHandlerParser<SyntaxParseHandler>::finishLexicalScope(ParseContext::Scope& scope, Node body)
 {
     if (!propagateFreeNamesAndMarkClosedOverBindings(scope))
         return null();
@@ -2089,9 +2089,9 @@ Parser<SyntaxParseHandler, CharT>::finishLexicalScope(ParseContext::Scope& scope
     return body;
 }
 
-template <typename CharT>
+template <>
 ParseNode*
-Parser<FullParseHandler, CharT>::finishLexicalScope(ParseContext::Scope& scope, ParseNode* body)
+PerHandlerParser<FullParseHandler>::finishLexicalScope(ParseContext::Scope& scope, ParseNode* body)
 {
     if (!propagateFreeNamesAndMarkClosedOverBindings(scope))
         return nullptr;
@@ -2101,13 +2101,6 @@ Parser<FullParseHandler, CharT>::finishLexicalScope(ParseContext::Scope& scope, 
         return nullptr;
 
     return handler.newLexicalScope(*bindings, body);
-}
-
-template <class ParseHandler, typename CharT>
-inline typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::finishLexicalScope(ParseContext::Scope& scope, Node body)
-{
-    return asFinalParser()->finishLexicalScope(scope, body);
 }
 
 template <typename CharT>
