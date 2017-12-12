@@ -78,7 +78,9 @@ ClientSource::SnapshotWindowState(ClientState* aStateOut)
   if (!window || !window->IsCurrentInnerWindow() ||
       !window->HasActiveDocument()) {
     *aStateOut = ClientState(ClientWindowState(VisibilityState::Hidden,
-                                               TimeStamp(), false));
+                                               TimeStamp(),
+                                               nsContentUtils::StorageAccess::eDeny,
+                                               false));
     return NS_OK;
   }
 
@@ -94,8 +96,12 @@ ClientSource::SnapshotWindowState(ClientState* aStateOut)
     return rv.StealNSResult();
   }
 
+  nsContentUtils::StorageAccess storage =
+    nsContentUtils::StorageAllowedForDocument(doc);
+
   *aStateOut = ClientState(ClientWindowState(doc->VisibilityState(),
-                                             doc->LastFocusTime(), focused));
+                                             doc->LastFocusTime(), storage,
+                                             focused));
 
   return NS_OK;
 }
@@ -589,7 +595,18 @@ ClientSource::SnapshotState(ClientState* aStateOut)
     return NS_OK;
   }
 
-  *aStateOut = ClientState(ClientWorkerState());
+  WorkerPrivate* workerPrivate = GetWorkerPrivate();
+  if (!workerPrivate) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  // Workers only keep a boolean for storage access at the moment.
+  // Map this back to eAllow or eDeny for now.
+  nsContentUtils::StorageAccess storage =
+    workerPrivate->IsStorageAllowed() ? nsContentUtils::StorageAccess::eAllow
+                                      : nsContentUtils::StorageAccess::eDeny;
+
+  *aStateOut = ClientState(ClientWorkerState(storage));
   return NS_OK;
 }
 
