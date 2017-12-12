@@ -218,7 +218,10 @@ nsMozIconURI::SetSpec(const nsACString& aSpec)
 
   nsAutoCString iconSpec(aSpec);
   if (!Substring(iconSpec, 0,
-                 MOZICON_SCHEME_LEN).EqualsLiteral(MOZICON_SCHEME)) {
+                 MOZICON_SCHEME_LEN).EqualsLiteral(MOZICON_SCHEME) ||
+      (!Substring(iconSpec, MOZICON_SCHEME_LEN, 7).EqualsLiteral("file://") &&
+       // Checking for the leading '//' will match both the '//stock/' and '//.foo' cases:
+       !Substring(iconSpec, MOZICON_SCHEME_LEN, 2).EqualsLiteral("//"))) {
     return NS_ERROR_MALFORMED_URI;
   }
 
@@ -298,6 +301,11 @@ nsMozIconURI::SetSpec(const nsACString& aSpec)
   ioService->NewURI(iconPath, nullptr, nullptr, getter_AddRefs(uri));
   mIconURL = do_QueryInterface(uri);
   if (mIconURL) {
+    // The inner URI should be a 'file:' one. If not, bail.
+    bool isFile = false;
+    if (!NS_SUCCEEDED(mIconURL->SchemeIs("file", &isFile)) || !isFile) {
+      return NS_ERROR_MALFORMED_URI;
+    }
     mFileName.Truncate();
   } else if (mFileName.IsEmpty()) {
     return NS_ERROR_MALFORMED_URI;
