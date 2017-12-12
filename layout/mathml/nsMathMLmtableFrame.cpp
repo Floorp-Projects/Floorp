@@ -320,7 +320,7 @@ public:
                            ? PaintBorderFlags::SYNC_DECODE_IMAGES
                            : PaintBorderFlags();
 
-    ImgDrawResult result =
+    DrawResult result =
       nsCSSRendering::PaintBorderWithStyleBorder(mFrame->PresContext(), *aCtx,
                                                  mFrame, mVisibleRect,
                                                  bounds,

@@ -299,7 +299,7 @@ private:
                                    uint32_t aFlags,
                                    PlaybackType aPlaybackType);
 
-  ImgDrawResult DrawInternal(DrawableSurface&& aFrameRef,
+  DrawResult DrawInternal(DrawableSurface&& aFrameRef,
                           gfxContext* aContext,
                           const nsIntSize& aSize,
                           const ImageRegion& aRegion,
@@ -307,7 +307,7 @@ private:
                           uint32_t aFlags,
                           float aOpacity);
 
-  Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
+  Tuple<DrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
                      const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,

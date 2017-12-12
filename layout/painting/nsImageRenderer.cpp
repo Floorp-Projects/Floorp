@@ -60,7 +60,7 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame,
   , mImageContainer(nullptr)
   , mGradientData(nullptr)
   , mPaintServerFrame(nullptr)
-  , mPrepareResult(ImgDrawResult::NOT_READY)
+  , mPrepareResult(DrawResult::NOT_READY)
   , mSize(0, 0)
   , mFlags(aFlags)
   , mExtendMode(ExtendMode::CLAMP)
@@ -115,7 +115,7 @@ bool
 nsImageRenderer::PrepareImage()
 {
   if (mImage->IsEmpty()) {
-    mPrepareResult = ImgDrawResult::BAD_IMAGE;
+    mPrepareResult = DrawResult::BAD_IMAGE;
     return false;
   }
 
@@ -129,7 +129,7 @@ nsImageRenderer::PrepareImage()
     // on through because the Draw() will do a sync decode then.
     if (!(frameComplete || mImage->IsComplete()) &&
         !ShouldTreatAsCompleteDueToSyncDecode(mImage, mFlags)) {
-      mPrepareResult = ImgDrawResult::NOT_READY;
+      mPrepareResult = DrawResult::NOT_READY;
       return false;
     }
   }
@@ -154,7 +154,7 @@ nsImageRenderer::PrepareImage()
           mImage->ComputeActualCropRect(actualCropRect, &isEntireImage);
         if (!success || actualCropRect.IsEmpty()) {
           // The cropped image has zero size
-          mPrepareResult = ImgDrawResult::BAD_IMAGE;
+          mPrepareResult = DrawResult::BAD_IMAGE;
           return false;
         }
         if (isEntireImage) {
@@ -167,12 +167,12 @@ nsImageRenderer::PrepareImage()
           mImageContainer.swap(subImage);
         }
       }
-      mPrepareResult = ImgDrawResult::SUCCESS;
+      mPrepareResult = DrawResult::SUCCESS;
       break;
     }
     case eStyleImageType_Gradient:
       mGradientData = mImage->GetGradientData();
-      mPrepareResult = ImgDrawResult::SUCCESS;
+      mPrepareResult = DrawResult::SUCCESS;
       break;
     case eStyleImageType_Element:
     {
@@ -186,7 +186,7 @@ nsImageRenderer::PrepareImage()
           targetURI, mForFrame->FirstContinuation(),
           SVGObserverUtils::BackgroundImageProperty());
       if (!property) {
-        mPrepareResult = ImgDrawResult::BAD_IMAGE;
+        mPrepareResult = DrawResult::BAD_IMAGE;
         return false;
       }
 
@@ -202,13 +202,13 @@ nsImageRenderer::PrepareImage()
             (paintServerFrame->IsFrameOfType(nsIFrame::eSVG) &&
              !paintServerFrame->IsFrameOfType(nsIFrame::eSVGPaintServer) &&
              !static_cast<nsSVGDisplayableFrame*>(do_QueryFrame(paintServerFrame)))) {
-          mPrepareResult = ImgDrawResult::BAD_IMAGE;
+          mPrepareResult = DrawResult::BAD_IMAGE;
           return false;
         }
         mPaintServerFrame = paintServerFrame;
       }
 
-      mPrepareResult = ImgDrawResult::SUCCESS;
+      mPrepareResult = DrawResult::SUCCESS;
       break;
     }
     case eStyleImageType_Null:
@@ -441,7 +441,7 @@ ConvertImageRendererToDrawFlags(uint32_t aImageRendererFlags)
   return drawFlags;
 }
 
-ImgDrawResult
+DrawResult
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       gfxContext&          aRenderingContext,
                       const nsRect&        aDirtyRect,
@@ -454,15 +454,15 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
-    return ImgDrawResult::TEMPORARY_ERROR;
+    return DrawResult::TEMPORARY_ERROR;
   }
   if (aDest.IsEmpty() || aFill.IsEmpty() ||
       mSize.width <= 0 || mSize.height <= 0) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
-  ImgDrawResult result = ImgDrawResult::SUCCESS;
+  DrawResult result = DrawResult::SUCCESS;
   RefPtr<gfxContext> ctx = &aRenderingContext;
   IntRect tmpDTRect;
 
@@ -470,7 +470,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     gfxRect clipRect = ctx->GetClipExtents(gfxContext::eDeviceSpace);
     tmpDTRect = RoundedOut(ToRect(clipRect));
     if (tmpDTRect.IsEmpty()) {
-      return ImgDrawResult::SUCCESS;
+      return DrawResult::SUCCESS;
     }
     RefPtr<DrawTarget> tempDT =
       gfxPlatform::GetPlatform()->CreateSimilarSoftwareDrawTarget(ctx->GetDrawTarget(),
@@ -478,13 +478,13 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                                                                   SurfaceFormat::B8G8R8A8);
     if (!tempDT || !tempDT->IsValid()) {
       gfxDevCrash(LogReason::InvalidContext) << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
-      return ImgDrawResult::TEMPORARY_ERROR;
+      return DrawResult::TEMPORARY_ERROR;
     }
     tempDT->SetTransform(ctx->GetDrawTarget()->GetTransform() * Matrix::Translation(-tmpDTRect.TopLeft()));
     ctx = gfxContext::CreatePreservingTransformOrNull(tempDT);
     if (!ctx) {
       gfxDevCrash(LogReason::InvalidContext) << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
-      return ImgDrawResult::TEMPORARY_ERROR;
+      return DrawResult::TEMPORARY_ERROR;
     }
   }
 
@@ -517,7 +517,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
       RefPtr<gfxDrawable> drawable = DrawableForElement(aDest, *ctx);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
-        return ImgDrawResult::TEMPORARY_ERROR;
+        return DrawResult::TEMPORARY_ERROR;
       }
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
@@ -556,7 +556,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   return result;
 }
 
-ImgDrawResult
+DrawResult
 nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
                                             mozilla::wr::DisplayListBuilder& aBuilder,
                                             mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -573,11 +573,11 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
-    return ImgDrawResult::NOT_READY;
+    return DrawResult::NOT_READY;
   }
   if (aDest.IsEmpty() || aFill.IsEmpty() ||
       mSize.width <= 0 || mSize.height <= 0) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   switch (mType) {
@@ -611,7 +611,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
         mImageContainer->GetImageContainerAtSize(aManager, decodeSize, svgContext, containerFlags);
       if (!container) {
         NS_WARNING("Failed to get image container");
-        return ImgDrawResult::NOT_READY;
+        return DrawResult::NOT_READY;
       }
 
       gfx::IntSize size;
@@ -619,7 +619,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
                                                                           aResources, aSc, size, Nothing());
 
       if (key.isNothing()) {
-        return ImgDrawResult::BAD_IMAGE;
+        return DrawResult::BAD_IMAGE;
       }
 
       nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(aDest.TopLeft(),
@@ -646,7 +646,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
       break;
   }
 
-  return ImgDrawResult::SUCCESS;
+  return DrawResult::SUCCESS;
 }
 
 already_AddRefed<gfxDrawable>
@@ -657,7 +657,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
                "DrawableForElement only makes sense if backed by an element");
   if (mPaintServerFrame) {
     // XXX(seth): In order to not pass FLAG_SYNC_DECODE_IMAGES here,
-    // DrawableFromPaintServer would have to return a ImgDrawResult indicating
+    // DrawableFromPaintServer would have to return a DrawResult indicating
     // whether any images could not be painted because they weren't fully
     // decoded. Even always passing FLAG_SYNC_DECODE_IMAGES won't eliminate all
     // problems, as it won't help if there are image which haven't finished
@@ -682,7 +682,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
   return drawable.forget();
 }
 
-ImgDrawResult
+DrawResult
 nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
                            gfxContext&          aRenderingContext,
                            const nsRect&        aDest,
@@ -694,11 +694,11 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
-    return ImgDrawResult::TEMPORARY_ERROR;
+    return DrawResult::TEMPORARY_ERROR;
   }
   if (aDest.IsEmpty() || aFill.IsEmpty() ||
       mSize.width <= 0 || mSize.height <= 0) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   return Draw(aPresContext, aRenderingContext,
@@ -709,7 +709,7 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
               aOpacity);
 }
 
-ImgDrawResult
+DrawResult
 nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                     mozilla::wr::DisplayListBuilder& aBuilder,
                                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -729,7 +729,7 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
   }
   if (aDest.IsEmpty() || aFill.IsEmpty() ||
       mSize.width <= 0 || mSize.height <= 0) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
   return BuildWebRenderDisplayItems(aPresContext, aBuilder, aResources, aSc,
                                     aManager, aItem,
@@ -844,7 +844,7 @@ RequiresScaling(const nsRect&        aFill,
           aUnitSize.height != aFill.height);
 }
 
-ImgDrawResult
+DrawResult
 nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                           gfxContext&          aRenderingContext,
                                           const nsRect&        aDirtyRect,
@@ -859,10 +859,10 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
-    return ImgDrawResult::BAD_ARGS;
+    return DrawResult::BAD_ARGS;
   }
   if (aFill.IsEmpty() || aSrc.IsEmpty()) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   if (mType == eStyleImageType_Image || mType == eStyleImageType_Element) {
@@ -903,7 +903,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                            aRenderingContext);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
-        return ImgDrawResult::TEMPORARY_ERROR;
+        return DrawResult::TEMPORARY_ERROR;
       }
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));

@@ -42,7 +42,7 @@ private:
  * This class also supports the CSS list-style properties.
  */
 class nsBulletFrame final : public nsFrame {
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
 
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsBulletFrame)
@@ -101,7 +101,7 @@ public:
 
   Maybe<BulletRenderer>
   CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt);
-  ImgDrawResult PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
+  DrawResult PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, uint32_t aFlags,
                          bool aDisableSubpixelAA);
 

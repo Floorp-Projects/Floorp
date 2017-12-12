@@ -1342,7 +1342,7 @@ public:
     uint32_t flags = imgIContainer::FLAG_SYNC_DECODE;
 
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
-    ImgDrawResult result =
+    DrawResult result =
       f->DisplayAltFeedback(*aCtx,
                             mVisibleRect,
                             ToReferenceFrame(),
@@ -1354,7 +1354,7 @@ public:
   NS_DISPLAY_DECL_NAME("AltFeedback", TYPE_ALT_FEEDBACK)
 };
 
-ImgDrawResult
+DrawResult
 nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
                                  const nsRect& aDirtyRect,
                                  nsPoint aPt,
@@ -1381,7 +1381,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   // Make sure we have enough room to actually render the border within
   // our frame bounds
   if ((inner.width < 2 * borderEdgeWidth) || (inner.height < 2 * borderEdgeWidth)) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   // Paint the border
@@ -1389,7 +1389,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
     nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
 
     // Assert that we're not drawing a border-image here; if we were, we
-    // couldn't ignore the ImgDrawResult that PaintBorderWithStyleBorder returns.
+    // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
     MOZ_ASSERT(recessedBorder.mBorderImageSource.GetType() == eStyleImageType_Null);
 
     Unused <<
@@ -1404,7 +1404,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   inner.Deflate(nsPresContext::CSSPixelsToAppUnits(ICON_PADDING+ALT_BORDER_WIDTH),
                 nsPresContext::CSSPixelsToAppUnits(ICON_PADDING+ALT_BORDER_WIDTH));
   if (inner.IsEmpty()) {
-    return ImgDrawResult::SUCCESS;
+    return DrawResult::SUCCESS;
   }
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
@@ -1414,12 +1414,12 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   aRenderingContext.Clip(
     NSRectToSnappedRect(inner, PresContext()->AppUnitsPerDevPixel(), *drawTarget));
 
-  ImgDrawResult result = ImgDrawResult::NOT_READY;
+  DrawResult result = DrawResult::NOT_READY;
 
   // Check if we should display image placeholders
   if (!gIconLoad->mPrefShowPlaceholders ||
       (isLoading && !gIconLoad->mPrefShowLoadingPlaceholder)) {
-    result = ImgDrawResult::SUCCESS;
+    result = DrawResult::SUCCESS;
   } else {
     nscoord size = nsPresContext::CSSPixelsToAppUnits(ICON_SIZE);
 
@@ -1456,7 +1456,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
     }
 
     // If we could not draw the icon, just draw some graffiti in the mean time.
-    if (result == ImgDrawResult::NOT_READY) {
+    if (result == DrawResult::NOT_READY) {
       ColorPattern color(ToDeviceColor(Color(1.f, 0.f, 0.f, 1.f)));
 
       nscoord iconXPos = flushRight ? inner.XMost() - size : inner.x;
@@ -1540,12 +1540,12 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 
-  ImgDrawResult result = static_cast<nsImageFrame*>(mFrame)->
+  DrawResult result = static_cast<nsImageFrame*>(mFrame)->
     PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage, flags);
 
-  if (result == ImgDrawResult::NOT_READY ||
-      result == ImgDrawResult::INCOMPLETE ||
-      result == ImgDrawResult::TEMPORARY_ERROR) {
+  if (result == DrawResult::NOT_READY ||
+      result == DrawResult::INCOMPLETE ||
+      result == DrawResult::TEMPORARY_ERROR) {
     // If the current image failed to paint because it's still loading or
     // decoding, try painting the previous image.
     if (mPrevImage) {
@@ -1742,7 +1742,7 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   return aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, destRect);
 }
 
-ImgDrawResult
+DrawResult
 nsImageFrame::PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, imgIContainer* aImage,
                          uint32_t aFlags)
@@ -1775,7 +1775,7 @@ nsImageFrame::PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
   Maybe<SVGImageContext> svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
-  ImgDrawResult result =
+  DrawResult result =
     nsLayoutUtils::DrawSingleImage(aRenderingContext,
       PresContext(), aImage,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
@@ -1800,9 +1800,9 @@ nsImageFrame::PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
     map->Draw(this, *drawTarget, black, strokeOptions);
   }
 
-  if (result == ImgDrawResult::SUCCESS) {
+  if (result == DrawResult::SUCCESS) {
     mPrevImage = aImage;
-  } else if (result == ImgDrawResult::BAD_IMAGE) {
+  } else if (result == DrawResult::BAD_IMAGE) {
     mPrevImage = nullptr;
   }
 

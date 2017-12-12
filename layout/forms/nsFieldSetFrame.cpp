@@ -111,7 +111,7 @@ void
 nsDisplayFieldSetBorder::Paint(nsDisplayListBuilder* aBuilder,
                                gfxContext* aCtx)
 {
-  image::ImgDrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
+  image::DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
     PaintBorder(aBuilder, *aCtx, ToReferenceFrame(), mVisibleRect);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
@@ -240,7 +240,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   contentDisplayItems.MoveTo(aLists);
 }
 
-image::ImgDrawResult
+image::DrawResult
 nsFieldSetFrame::PaintBorder(
   nsDisplayListBuilder* aBuilder,
   gfxContext& aRenderingContext,
@@ -259,7 +259,7 @@ nsFieldSetFrame::PaintBorder(
                                ? PaintBorderFlags::SYNC_DECODE_IMAGES
                                : PaintBorderFlags();
 
-  ImgDrawResult result = ImgDrawResult::SUCCESS;
+  DrawResult result = DrawResult::SUCCESS;
 
   nsCSSRendering::PaintBoxShadowInner(presContext, aRenderingContext,
                                       this, rect);

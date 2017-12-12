@@ -303,9 +303,9 @@ public:
                             const nsRect& aDirtyRect,
                             nsIFrame::Sides aSkipSides,
                             uint32_t aFlags,
-                            mozilla::image::ImgDrawResult* aDrawResult);
+                            mozilla::image::DrawResult* aDrawResult);
 
-  mozilla::image::ImgDrawResult
+  mozilla::image::DrawResult
   DrawBorderImage(nsPresContext* aPresContext,
                   gfxContext& aRenderingContext,
                   nsIFrame* aForFrame,

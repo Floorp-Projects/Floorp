@@ -25,7 +25,7 @@ class nsStyleContext;
 #define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX   NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX
 
 class nsButtonFrameRenderer {
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::image::DrawResult DrawResult;
 
 public:
 
@@ -39,7 +39,7 @@ public:
                          nsDisplayList* aBackground, nsDisplayList* aForeground);
 
 
-  ImgDrawResult PaintInnerFocusBorder(nsDisplayListBuilder* aBuilder,
+  DrawResult PaintInnerFocusBorder(nsDisplayListBuilder* aBuilder,
                                    nsPresContext* aPresContext,
                                    gfxContext& aRenderingContext,
                                    const nsRect& aDirtyRect,
@@ -52,7 +52,7 @@ public:
                                                                      const nsRect& aRect,
                                                                      bool* aBorderIsEmpty);
 
-  ImgDrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
+  DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
                          nsPresContext* aPresContext,
                          gfxContext& aRenderingContext,
                          const nsRect& aDirtyRect,
