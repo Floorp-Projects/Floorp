@@ -1,8 +1,5 @@
-commit a456b0a390bb0f70b4cb8d38cb5ab0ecb557a851
-Merge: db05f2f 297502b
-Author: Rick Waldron <waldron.rick@gmail.com>
-Date:   Mon Oct 23 11:02:44 2017 -0400
+commit 8311965251953d4745aeb68c98fb71fab2eac1d0
+Author: André Bargull <andre.bargull@gmail.com>
+Date:   Fri Dec 1 11:16:43 2017 -0800
 
-    Merge pull request #1310 from bocoup/contributing
-    
-    CONTRIBUTING.md Fix mistake in test generation section
+    Fix copy-paste bugs in BigInt tests (#1361)

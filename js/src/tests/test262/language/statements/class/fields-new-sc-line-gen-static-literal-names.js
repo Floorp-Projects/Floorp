@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/static-literal-names.case
-// - src/class-fields/default/cls-decl-new-sc-line-generator.template
+// - src/class-fields/productions/cls-decl-new-sc-line-generator.template
 /*---
 description: Static literal property names (field definitions followed by a method in a new line with a semicolon)
 esid: prod-FieldDefinition
-features: [class-fields, generators]
+features: [class, class-fields-public, generators]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -28,6 +28,7 @@ class C {
   static a; b = 42;
   static c = fn;
   *m() { return 42; }
+
 }
 
 var c = new C();

@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/computed-symbol-names.case
-// - src/class-fields/default/cls-decl-after-same-line-static-async-gen.template
+// - src/class-fields/productions/cls-decl-after-same-line-static-async-gen.template
 /*---
 description: Computed property symbol names (field definitions after a static async generator in the same line)
 esid: prod-FieldDefinition
-features: [Symbol, computed-property-names, class-fields, async-iteration]
+features: [Symbol, computed-property-names, class, class-fields-public, async-iteration]
 flags: [generated, async]
 includes: [propertyHelper.js]
 info: |
@@ -27,6 +27,7 @@ var y = Symbol();
 
 class C {
   static async *m() { return 42; } [x]; [y] = 42;
+
 }
 
 var c = new C();
