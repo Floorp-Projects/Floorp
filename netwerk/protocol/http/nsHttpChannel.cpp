@@ -720,54 +720,6 @@ nsHttpChannel::OnInputAvailableComplete(uint64_t size, nsresult status)
     return NS_OK;
 }
 
-// nsIFileStream needs to be sent to a worker thread
-// to do Available() as it may cause disk/IO. Unfortunately
-// we have to look at the streams wrapped by a few other
-// abstractions to be sure.
-static
-bool isFileStream(nsIInputStream *stream)
-{
-    if (!stream) {
-        return false;
-    }
-
-    nsCOMPtr<nsIFileInputStream> fileStream = do_QueryInterface(stream);
-    if (fileStream) {
-        return true;
-    }
-
-    nsCOMPtr<nsIBufferedInputStream> bufferedStream = do_QueryInterface(stream);
-    if (bufferedStream) {
-        nsCOMPtr<nsIInputStream> innerStream;
-        if (NS_SUCCEEDED(bufferedStream->GetData(getter_AddRefs(innerStream)))) {
-            return isFileStream(innerStream);
-        }
-    }
-
-    nsCOMPtr<nsIMIMEInputStream> mimeStream = do_QueryInterface(stream);
-    if (mimeStream) {
-        nsCOMPtr<nsIInputStream> innerStream;
-        if (NS_SUCCEEDED(mimeStream->GetData(getter_AddRefs(innerStream)))) {
-            return isFileStream(innerStream);
-        }
-    }
-
-    nsCOMPtr<nsIMultiplexInputStream> muxStream = do_QueryInterface(stream);
-    uint32_t muxCount = 0;
-    if (muxStream) {
-        muxStream->GetCount(&muxCount);
-        for (uint32_t i = 0; i < muxCount; ++i) {
-            nsCOMPtr<nsIInputStream> subStream;
-            if (NS_SUCCEEDED(muxStream->GetStream(i, getter_AddRefs(subStream))) &&
-                isFileStream(subStream)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 void
 nsHttpChannel::DetermineContentLength()
 {
@@ -780,7 +732,10 @@ nsHttpChannel::DetermineContentLength()
         return;
     }
 
-    if (!isFileStream(mUploadStream)) {
+    // If this is a stream is blocking, it needs to be sent to a worker thread
+    // to do Available() as it may cause disk/IO.
+    bool nonBlocking = false;
+    if (NS_FAILED(mUploadStream->IsNonBlocking(&nonBlocking)) || nonBlocking) {
         mUploadStream->Available(&mReqContentLength);
         LOG(("nsHttpChannel::DetermineContentLength %p from mem\n", this));
         mReqContentLengthDetermined = 1;
