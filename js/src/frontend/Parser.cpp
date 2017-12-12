@@ -2335,9 +2335,9 @@ PerHandlerParser<ParseHandler>::declareFunctionThis()
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::newInternalDotName(HandlePropertyName name)
+PerHandlerParser<ParseHandler>::newInternalDotName(HandlePropertyName name)
 {
     Node nameNode = newName(name);
     if (!nameNode)
@@ -2347,16 +2347,16 @@ GeneralParser<ParseHandler, CharT>::newInternalDotName(HandlePropertyName name)
     return nameNode;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::newThisName()
+PerHandlerParser<ParseHandler>::newThisName()
 {
     return newInternalDotName(context->names().dotThis);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::newDotGeneratorName()
+PerHandlerParser<ParseHandler>::newDotGeneratorName()
 {
     return newInternalDotName(context->names().dotGenerator);
 }
@@ -8764,16 +8764,16 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
     return lhs;
 }
 
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::newName(PropertyName* name)
+template <class ParseHandler>
+inline typename ParseHandler::Node
+PerHandlerParser<ParseHandler>::newName(PropertyName* name)
 {
     return newName(name, pos());
 }
 
-template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::newName(PropertyName* name, TokenPos pos)
+template <class ParseHandler>
+inline typename ParseHandler::Node
+PerHandlerParser<ParseHandler>::newName(PropertyName* name, TokenPos pos)
 {
     return handler.newName(name, pos, context);
 }
