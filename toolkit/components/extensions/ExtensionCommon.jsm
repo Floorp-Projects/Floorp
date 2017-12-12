@@ -1279,7 +1279,23 @@ class SchemaAPIManager extends EventEmitter {
       sandboxName: `Namespace of ext-*.js scripts for ${this.processType} (from: resource://gre/modules/ExtensionCommon.jsm)`,
     });
 
-    Object.assign(global, {global, Cc, Ci, Cu, Cr, XPCOMUtils, ChromeUtils, ChromeWorker, ExtensionAPI, ExtensionCommon, MatchPattern, MatchPatternSet, MatchGlob, StructuredCloneHolder, extensions: this});
+    Object.assign(global, {
+      Cc,
+      ChromeUtils,
+      ChromeWorker,
+      Ci,
+      Cr,
+      Cu,
+      ExtensionAPI,
+      ExtensionCommon,
+      MatchGlob,
+      MatchPattern,
+      MatchPatternSet,
+      StructuredCloneHolder,
+      XPCOMUtils,
+      extensions: this,
+      global,
+    });
 
     Cu.import("resource://gre/modules/AppConstants.jsm", global);
 
