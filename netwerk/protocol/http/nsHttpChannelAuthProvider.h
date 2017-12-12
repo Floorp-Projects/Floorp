@@ -187,6 +187,7 @@ private:
     // sub-resources.
     static uint32_t                   sAuthAllowPref;
     static bool                       sImgCrossOriginAuthAllowPref;
+    static bool                       sNonWebContentTriggeredAuthAllow;
     nsCOMPtr<nsICancelable>           mGenerateCredentialsCancelable;
 };
 
