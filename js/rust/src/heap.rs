@@ -1,5 +1,4 @@
 use glue;
-use heapsize::HeapSizeOf;
 use jsapi::root::*;
 use rust::GCMethods;
 use std::cell::UnsafeCell;
@@ -160,13 +159,5 @@ unsafe impl Trace for Heap<JS::Value> {
 unsafe impl Trace for Heap<jsid> {
     unsafe fn trace(&self, trc: *mut JSTracer) {
         glue::CallIdTracer(trc, self as *const _ as *mut Self, c_str!("id"));
-    }
-}
-
-// This is measured properly by the heap measurement implemented in
-// SpiderMonkey.
-impl<T: Copy + GCMethods> HeapSizeOf for Heap<T> {
-    fn heap_size_of_children(&self) -> usize {
-        0
     }
 }
