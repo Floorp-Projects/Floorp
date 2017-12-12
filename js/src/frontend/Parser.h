@@ -361,6 +361,8 @@ class PerHandlerParser
 
     Node identifierReference(Handle<PropertyName*> name);
 
+    Node noSubstitutionTaggedTemplate();
+
     inline bool processExport(Node node);
     inline bool processExportFrom(Node node);
 
@@ -557,6 +559,7 @@ class GeneralParser
     using Base::newInternalDotName;
     using Base::newThisName;
     using Base::nextTokenContinuesLetDeclaration;
+    using Base::noSubstitutionTaggedTemplate;
     using Base::noteDestructuredPositionalFormalParameter;
     using Base::noteUsedName;
     using Base::prefixAccessorName;
@@ -774,7 +777,6 @@ class GeneralParser
   private:
     GeneralParser* thisForCtor() { return this; }
 
-    Node noSubstitutionTaggedTemplate();
     Node noSubstitutionUntaggedTemplate();
     Node templateLiteral(YieldHandling yieldHandling);
     bool taggedTemplate(YieldHandling yieldHandling, Node nodeList, TokenKind tt);
