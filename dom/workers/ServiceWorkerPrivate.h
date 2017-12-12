@@ -122,10 +122,8 @@ public:
                         const nsAString& aScope);
 
   nsresult
-  SendFetchEvent(nsIInterceptedChannel* aChannel,
-                 nsILoadGroup* aLoadGroup,
-                 const nsAString& aDocumentId,
-                 bool aIsReload);
+  SendFetchEvent(nsIInterceptedChannel* aChannel, nsILoadGroup* aLoadGroup,
+                 const nsAString& aClientId, bool aIsReload);
 
   void
   StoreISupports(nsISupports* aSupports);
