@@ -38,6 +38,26 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsII
   , mPos(0)
   , mClosed(false)
 {
+  Init();
+}
+
+PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsIInputStream> aClonedBaseStream,
+                                                           PartiallySeekableInputStream* aClonedFrom)
+  : mInputStream(Move(aClonedBaseStream))
+  , mWeakCloneableInputStream(nullptr)
+  , mWeakIPCSerializableInputStream(nullptr)
+  , mWeakAsyncInputStream(nullptr)
+  , mCachedBuffer(aClonedFrom->mCachedBuffer)
+  , mBufferSize(aClonedFrom->mBufferSize)
+  , mPos(aClonedFrom->mPos)
+  , mClosed(aClonedFrom->mClosed)
+{
+  Init();
+}
+
+void
+PartiallySeekableInputStream::Init()
+{
   MOZ_ASSERT(mInputStream);
 
 #ifdef DEBUG
@@ -64,9 +84,6 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsII
     mWeakAsyncInputStream = asyncInputStream;
   }
 }
-
-PartiallySeekableInputStream::~PartiallySeekableInputStream()
-{}
 
 NS_IMETHODIMP
 PartiallySeekableInputStream::Close()
@@ -167,8 +184,7 @@ PartiallySeekableInputStream::GetCloneable(bool* aCloneable)
 {
   NS_ENSURE_STATE(mWeakCloneableInputStream);
 
-  *aCloneable = true;
-  return NS_OK;
+  return mWeakCloneableInputStream->GetCloneable(aCloneable);
 }
 
 NS_IMETHODIMP
@@ -183,7 +199,7 @@ PartiallySeekableInputStream::Clone(nsIInputStream** aResult)
   }
 
   nsCOMPtr<nsIInputStream> stream =
-    new PartiallySeekableInputStream(clonedStream.forget(), mBufferSize);
+    new PartiallySeekableInputStream(clonedStream.forget(), this);
 
   stream.forget(aResult);
   return NS_OK;
@@ -252,6 +268,7 @@ PartiallySeekableInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams
                                         FileDescriptorArray& aFileDescriptors)
 {
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
+  MOZ_DIAGNOSTIC_ASSERT(mCachedBuffer.IsEmpty());
   mozilla::ipc::InputStreamHelper::SerializeInputStream(mInputStream, aParams,
                                                         aFileDescriptors);
 }
