@@ -995,8 +995,10 @@ HttpBaseChannel::EnsureUploadStreamIsCloneableComplete(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::CloneUploadStream(nsIInputStream** aClonedStream)
+HttpBaseChannel::CloneUploadStream(int64_t* aContentLength,
+                                   nsIInputStream** aClonedStream)
 {
+  NS_ENSURE_ARG_POINTER(aContentLength);
   NS_ENSURE_ARG_POINTER(aClonedStream);
   *aClonedStream = nullptr;
 
@@ -1009,6 +1011,12 @@ HttpBaseChannel::CloneUploadStream(nsIInputStream** aClonedStream)
   NS_ENSURE_SUCCESS(rv, rv);
 
   clonedStream.forget(aClonedStream);
+
+  if (mReqContentLengthDetermined) {
+    *aContentLength = mReqContentLength;
+  } else {
+    *aContentLength = -1;
+  }
 
   return NS_OK;
 }

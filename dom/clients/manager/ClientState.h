@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -29,6 +30,7 @@ class ClientWindowState final
 public:
   ClientWindowState(mozilla::dom::VisibilityState aVisibilityState,
                     const TimeStamp& aLastFocusTime,
+                    nsContentUtils::StorageAccess aStorageAccess,
                     bool aFocused);
 
   explicit ClientWindowState(const IPCClientWindowState& aData);
@@ -53,6 +55,9 @@ public:
   bool
   Focused() const;
 
+  nsContentUtils::StorageAccess
+  GetStorageAccess() const;
+
   const IPCClientWindowState&
   ToIPC() const;
 };
@@ -68,7 +73,7 @@ class ClientWorkerState final
   UniquePtr<IPCClientWorkerState> mData;
 
 public:
-  ClientWorkerState();
+  explicit ClientWorkerState(nsContentUtils::StorageAccess aStorageAccess);
 
   explicit ClientWorkerState(const IPCClientWorkerState& aData);
 
@@ -82,6 +87,9 @@ public:
   operator=(ClientWorkerState&& aRight);
 
   ~ClientWorkerState();
+
+  nsContentUtils::StorageAccess
+  GetStorageAccess() const;
 
   const IPCClientWorkerState&
   ToIPC() const;
@@ -127,6 +135,9 @@ public:
 
   const ClientWorkerState&
   AsWorkerState() const;
+
+  nsContentUtils::StorageAccess
+  GetStorageAccess() const;
 
   const IPCClientState
   ToIPC() const;
