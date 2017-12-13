@@ -51,6 +51,10 @@ public:
 
   // Returns true if the dom.serviceWorkers.testing.enabled pref is set.
   static bool ServiceWorkersTestingEnabled();
+
+  // Returns true if the dom.storageManager.enabled pref is set.
+  static bool StorageManagerEnabled();
+  static bool StorageManagerEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
