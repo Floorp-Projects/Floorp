@@ -2221,9 +2221,11 @@ private:
     TrackTicks framesNeeded = aDesiredTime - mPlayedTicks;
 
     while (framesNeeded >= 0) {
-      int16_t scratchBuffer[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
+      const int scratchBufferLength =
+        AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t);
+      int16_t scratchBuffer[scratchBufferLength];
 
-      int samplesLength;
+      int samplesLength = scratchBufferLength;
 
       // This fetches 10ms of data, either mono or stereo
       MediaConduitErrorCode err =
@@ -2248,8 +2250,7 @@ private:
         PodArrayZero(scratchBuffer);
       }
 
-      MOZ_ASSERT(samplesLength * sizeof(uint16_t) <=
-                 AUDIO_SAMPLE_BUFFER_MAX_BYTES);
+      MOZ_RELEASE_ASSERT(samplesLength <= scratchBufferLength);
 
       CSFLogDebug(
         LOGTAG, "Audio conduit returned buffer of length %u", samplesLength);
