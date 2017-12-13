@@ -1335,6 +1335,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable
   RequestCredentials mRequestCredentials;
   nsContentPolicyType mContentPolicyType;
   nsCOMPtr<nsIInputStream> mUploadStream;
+  int64_t mUploadStreamContentLength;
   nsCString mReferrer;
   ReferrerPolicy mReferrerPolicy;
   nsString mIntegrity;
@@ -1363,6 +1364,7 @@ public:
     // send credentials to same-origin websites unless explicitly forbidden.
     , mRequestCredentials(RequestCredentials::Same_origin)
     , mContentPolicyType(nsIContentPolicy::TYPE_INVALID)
+    , mUploadStreamContentLength(-1)
     , mReferrer(kFETCH_CLIENT_REFERRER_STR)
     , mReferrerPolicy(ReferrerPolicy::_empty)
   {
@@ -1496,7 +1498,8 @@ public:
     if (uploadChannel) {
       MOZ_ASSERT(!mUploadStream);
       nsCOMPtr<nsIInputStream> uploadStream;
-      rv = uploadChannel->CloneUploadStream(getter_AddRefs(uploadStream));
+      rv = uploadChannel->CloneUploadStream(&mUploadStreamContentLength,
+                                            getter_AddRefs(uploadStream));
       NS_ENSURE_SUCCESS(rv, rv);
       mUploadStream = uploadStream;
     }
@@ -1606,7 +1609,7 @@ private:
                                                               mReferrerPolicy,
                                                               mContentPolicyType,
                                                               mIntegrity);
-    internalReq->SetBody(mUploadStream, -1);
+    internalReq->SetBody(mUploadStream, mUploadStreamContentLength);
     // For Telemetry, note that this Request object was created by a Fetch event.
     internalReq->SetCreatedByFetchEvent();
 
