@@ -846,7 +846,8 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
   {
     MutexAutoLock lock(mLock);
 
-    if (NS_FAILED(mStatus)) {
+    // We must execute the callback also when the stream is closed.
+    if (NS_FAILED(mStatus) && mStatus != NS_BASE_STREAM_CLOSED) {
       return mStatus;
     }
 
@@ -860,12 +861,18 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
         return NS_OK;
     }
 
-    if (mCurrentStream < mStreams.Length() &&
-        mStreams[mCurrentStream].mAsyncStream) {
+    // Let's take the current async stream if we are not already closed, and if
+    // the currentStream value is still valid.
+    if (mStatus != NS_BASE_STREAM_CLOSED &&
+        mCurrentStream < mStreams.Length()) {
       stream = mStreams[mCurrentStream].mAsyncStream;
     }
   }
 
+  MOZ_ASSERT_IF(stream, NS_SUCCEEDED(mStatus));
+
+  // If we are here it's because we are already closed, or if the current stream
+  // is not async. In both case we have to execute the callback.
   if (!stream) {
     AsyncWaitRunnable::Create(this, aEventTarget);
     return NS_OK;
