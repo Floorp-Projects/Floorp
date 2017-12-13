@@ -445,13 +445,6 @@ CacheStorage::Keys(ErrorResult& aRv)
 }
 
 // static
-bool
-CacheStorage::PrefEnabled(JSContext* aCx, JSObject* aObj)
-{
-  return Cache::PrefEnabled(aCx, aObj);
-}
-
-// static
 already_AddRefed<CacheStorage>
 CacheStorage::Constructor(const GlobalObject& aGlobal,
                           CacheStorageNamespace aNamespace,
