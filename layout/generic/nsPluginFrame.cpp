@@ -1192,7 +1192,7 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // determine if we are printing
   if (type == nsPresContext::eContext_Print) {
-    aLists.Content()->AppendNewToTop(new (aBuilder)
+    aLists.Content()->AppendToTop(new (aBuilder)
       nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
                        DisplayItemType::TYPE_PRINT_PLUGIN));
   } else {
@@ -1204,11 +1204,11 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (aBuilder->IsPaintingToWindow() &&
         state == LAYER_ACTIVE &&
         IsTransparentMode()) {
-      aLists.Content()->AppendNewToTop(new (aBuilder)
+      aLists.Content()->AppendToTop(new (aBuilder)
         nsDisplayPluginReadback(aBuilder, this));
     }
 
-    aLists.Content()->AppendNewToTop(new (aBuilder)
+    aLists.Content()->AppendToTop(new (aBuilder)
       nsDisplayPlugin(aBuilder, this));
   }
 }

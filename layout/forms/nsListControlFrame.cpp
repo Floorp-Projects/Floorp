@@ -178,7 +178,7 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // XXX Because we have an opaque widget and we get called to paint with
     // this frame as the root of a stacking context we need make sure to draw
     // some opaque color over the whole widget. (Bug 511323)
-    aLists.BorderBackground()->AppendNewToBottom(
+    aLists.BorderBackground()->AppendToBottom(
       new (aBuilder) nsDisplaySolidColor(aBuilder,
         this, nsRect(aBuilder->ToReferenceFrame(this), GetSize()),
         mLastDropdownBackstopColor));

@@ -508,11 +508,11 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         dependentFrame = nullptr;
       }
     }
-    aLists.BorderBackground()->AppendNewToTop(
+    aLists.BorderBackground()->AppendToTop(
         new (aBuilder) nsDisplayCanvasBackgroundColor(aBuilder, this));
 
     if (isThemed) {
-      aLists.BorderBackground()->AppendNewToTop(
+      aLists.BorderBackground()->AppendToTop(
         new (aBuilder) nsDisplayCanvasThemedBackground(aBuilder, this));
       return;
     }
@@ -571,18 +571,18 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
           bgItem = new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
           bgItem->SetDependentFrame(aBuilder, dependentFrame);
         }
-        thisItemList.AppendNewToTop(
+        thisItemList.AppendToTop(
           nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
 
       } else {
         nsDisplayCanvasBackgroundImage* bgItem = new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
         bgItem->SetDependentFrame(aBuilder, dependentFrame);
-        thisItemList.AppendNewToTop(bgItem);
+        thisItemList.AppendToTop(bgItem);
       }
 
       if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
         DisplayListClipState::AutoSaveRestore blendClip(aBuilder);
-        thisItemList.AppendNewToTop(
+        thisItemList.AppendToTop(
           new (aBuilder) nsDisplayBlendMode(aBuilder, this, &thisItemList,
                                             layers.mLayers[i].mBlendMode,
                                             thisItemASR, i + 1));
@@ -593,7 +593,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (needBlendContainer) {
       const ActiveScrolledRoot* containerASR = contASRTracker.GetContainerASR();
       DisplayListClipState::AutoSaveRestore blendContainerClip(aBuilder);
-      aLists.BorderBackground()->AppendNewToTop(
+      aLists.BorderBackground()->AppendToTop(
         nsDisplayBlendContainer::CreateForBackgroundBlendMode(aBuilder, this,
                                                               aLists.BorderBackground(),
                                                               containerASR));
@@ -631,7 +631,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!StyleVisibility()->IsVisible())
     return;
 
-  aLists.Outlines()->AppendNewToTop(new (aBuilder)
+  aLists.Outlines()->AppendToTop(new (aBuilder)
     nsDisplayCanvasFocus(aBuilder, this));
 }
 

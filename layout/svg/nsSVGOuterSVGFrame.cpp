@@ -787,9 +787,9 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsDisplayListSet set(&newList, &newList, &newList,
                          &newList, &newList, &newList);
     BuildDisplayListForNonBlockChildren(aBuilder, set);
-    aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplaySVGWrapper(aBuilder, this, &newList));
+    aLists.Content()->AppendToTop(new (aBuilder) nsDisplaySVGWrapper(aBuilder, this, &newList));
   } else if (IsVisibleForPainting(aBuilder) || !aBuilder->IsForPainting()) {
-    aLists.Content()->AppendNewToTop(
+    aLists.Content()->AppendToTop(
       new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
   }
 }
