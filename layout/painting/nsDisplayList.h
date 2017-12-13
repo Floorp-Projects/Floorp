@@ -1983,9 +1983,6 @@ public:
 #endif
   {
     MOZ_COUNT_CTOR(nsDisplayItem);
-    if (aBuilder->IsRetainingDisplayList()) {
-      mFrame->AddDisplayItem(this);
-    }
   }
 
 
