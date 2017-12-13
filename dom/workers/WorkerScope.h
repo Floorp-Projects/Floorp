@@ -19,6 +19,7 @@ namespace dom {
 
 class AnyCallback;
 struct ChannelPixelLayout;
+class Clients;
 class Console;
 class Crypto;
 class Function;
@@ -40,7 +41,6 @@ class CacheStorage;
 
 namespace workers {
 
-class ServiceWorkerClients;
 class WorkerPrivate;
 
 } // namespace workers
@@ -282,7 +282,7 @@ public:
 class ServiceWorkerGlobalScope final : public WorkerGlobalScope
 {
   const nsString mScope;
-  RefPtr<workers::ServiceWorkerClients> mClients;
+  RefPtr<Clients> mClients;
   RefPtr<ServiceWorkerRegistration> mRegistration;
 
   ~ServiceWorkerGlobalScope();
@@ -300,17 +300,14 @@ public:
   WrapGlobalObject(JSContext* aCx,
                    JS::MutableHandle<JSObject*> aReflector) override;
 
-  static bool
-  OpenWindowEnabled(JSContext* aCx, JSObject* aObj);
-
   void
   GetScope(nsString& aScope) const
   {
     aScope = mScope;
   }
 
-  workers::ServiceWorkerClients*
-  Clients();
+  already_AddRefed<Clients>
+  GetClients();
 
   ServiceWorkerRegistration*
   Registration();
