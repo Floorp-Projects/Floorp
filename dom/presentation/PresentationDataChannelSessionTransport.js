@@ -290,7 +290,7 @@ PresentationTransport.prototype = {
 
   // nsIPresentationTransport
   get selfAddress() {
-    throw NS_ERROR_NOT_AVAILABLE;
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
   },
 
   get callback() {
@@ -330,7 +330,7 @@ PresentationTransport.prototype = {
     }
 
     if (!this._callback) {
-      throw NS_ERROR_NOT_AVAILABLE;
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
 
     this._enableDataNotification = true;
@@ -359,7 +359,7 @@ PresentationTransport.prototype = {
 
   _doNotifyData: function(aData) {
     if (!this._callback) {
-      throw NS_ERROR_NOT_AVAILABLE;
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
 
     if (aData instanceof this._window.Blob) {

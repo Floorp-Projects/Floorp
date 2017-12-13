@@ -37,7 +37,7 @@ interface nsIEditorSpellCheck : nsISupports
    *
    * @see nsISpellChecker::GetNextMisspelledWord
    */
-  wstring       GetNextMisspelledWord();
+  AString       GetNextMisspelledWord();
 
   /**
    * Used to get suggestions for the last word that was checked and found to
@@ -48,7 +48,7 @@ interface nsIEditorSpellCheck : nsISupports
    *
    * @see nsISpellChecker::GetSuggestedWord
    */
-  wstring       GetSuggestedWord();
+  AString       GetSuggestedWord();
 
   /**
    * Check a given word. In spite of the name, this function checks the word
@@ -58,19 +58,19 @@ interface nsIEditorSpellCheck : nsISupports
    *
    * @see nsISpellChecker::CheckCurrentWord
    */
-  boolean       CheckCurrentWord(in wstring suggestedWord);
+  boolean       CheckCurrentWord(in AString suggestedWord);
 
   /**
    * Use when modally checking the document to replace a word.
    *
    * @see nsISpellChecker::CheckCurrentWord
    */
-  void          ReplaceWord(in wstring misspelledWord, in wstring replaceWord, in boolean allOccurrences);
+  void          ReplaceWord(in AString misspelledWord, in AString replaceWord, in boolean allOccurrences);
 
   /**
    * @see nsISpellChecker::IgnoreAll
    */
-  void          IgnoreWordAllOccurrences(in wstring word);
+  void          IgnoreWordAllOccurrences(in AString word);
 
   /**
    * Fills an internal list of words added to the personal dictionary. These
@@ -86,21 +86,21 @@ interface nsIEditorSpellCheck : nsISupports
    * words added to the personal dictionary. Will return the empty string when
    * there are no more words.
    */
-  wstring       GetPersonalDictionaryWord();
+  AString       GetPersonalDictionaryWord();
 
   /**
    * Adds a word to the current personal dictionary.
    *
    * @see nsISpellChecker::AddWordToDictionary
    */
-  void          AddWordToDictionary(in wstring word);
+  void          AddWordToDictionary(in AString word);
 
   /**
    * Removes a word from the current personal dictionary.
    *
    * @see nsISpellChecker::RemoveWordFromPersonalDictionary
    */
-  void          RemoveWordFromDictionary(in wstring word);
+  void          RemoveWordFromDictionary(in AString word);
 
   /**
    * Retrieves a list of the currently available dictionaries. The strings will
@@ -148,7 +148,7 @@ interface nsIEditorSpellCheck : nsISupports
    * calls to CheckCurrentWord, so there may be suggestions, but they will be
    * invalid.
    */
-  boolean       CheckCurrentWordNoSuggest(in wstring suggestedWord);
+  boolean       CheckCurrentWordNoSuggest(in AString suggestedWord);
 
   /**
    * Update the dictionary in use to be sure it corresponds to what the editor
