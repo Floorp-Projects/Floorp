@@ -594,7 +594,7 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
         *abiType = Args_Int_GeneralGeneralInt64Int64;
         return FuncCast(Instance::wait_i64, *abiType);
       case SymbolicAddress::Wake:
-        *abiType = Args_General2;
+        *abiType = Args_General3;
         return FuncCast(Instance::wake, *abiType);
 #if defined(JS_CODEGEN_MIPS32)
       case SymbolicAddress::js_jit_gAtomic64Lock:
