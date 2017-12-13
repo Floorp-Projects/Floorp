@@ -8578,14 +8578,6 @@
     "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
     "bug_numbers": [1262659]
   },
-  "MEDIA_ANDROID_VIDEO_TUNNELING_SUPPORT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["bwu@mozilla.com", "jolin@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "boolean",
-    "description": "Records whether tunneled playback is supported by a video decoder when creating it.",
-    "bug_numbers": [1403849]
-  },
   "MEDIA_EME_SECURE_CONTEXT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpearce@mozilla.com"],
