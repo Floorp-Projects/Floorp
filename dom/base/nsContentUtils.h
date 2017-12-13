@@ -2691,11 +2691,6 @@ public:
   static mozilla::HTMLEditor* GetHTMLEditor(nsPresContext* aPresContext);
 
   /**
-   * Returns true if the browser.dom.window.dump.enabled pref is set.
-   */
-  static bool DOMWindowDumpEnabled();
-
-  /**
    * Returns true if the privacy.donottrackheader.enabled pref is set.
    */
   static bool DoNotTrackEnabled();
@@ -3474,9 +3469,6 @@ private:
   // bytecode out of the nsCacheInfoChannel.
   static nsCString* sJSBytecodeMimeType;
 
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  static bool sDOMWindowDumpEnabled;
-#endif
   static bool sDoNotTrackEnabled;
   static mozilla::LazyLogModule sDOMDumpLog;
 
