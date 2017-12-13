@@ -1,14 +1,10 @@
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"].
-            getService(Components.interfaces.nsIIOService);
-
   var dataFile = do_get_file("data/bug121341.properties");
   var channel = NetUtil.newChannel({
-    uri: ios.newFileURI(dataFile, null, null),
+    uri: Services.io.newFileURI(dataFile, null, null),
     loadUsingSystemPrincipal: true
   });
   var inp = channel.open2();
@@ -55,7 +51,7 @@ function run_test() {
   dataFile = do_get_file("data/bug121341-2.properties");
 
   var channel2 = NetUtil.newChannel({
-    uri: ios.newFileURI(dataFile, null, null),
+    uri: Services.io.newFileURI(dataFile, null, null),
     loadUsingSystemPrincipal: true
   });
   inp = channel2.open2();

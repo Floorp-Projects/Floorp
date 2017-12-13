@@ -73,7 +73,9 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
       iconURL: this.addon.iconURL,
       debuggable: this.addon.isDebuggable,
       temporarilyInstalled: this.addon.temporarilyInstalled,
-      isWebExtension: true,
+      type: this.addon.type,
+      isWebExtension: this.addon.isWebExtension,
+      isAPIExtension: this.addon.isAPIExtension,
       manifestURL: policy && policy.getURL("manifest.json"),
       warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(this.id),
     };

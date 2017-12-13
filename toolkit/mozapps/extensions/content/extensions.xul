@@ -251,7 +251,7 @@
             </toolbarbutton>
             <textbox id="header-search" type="search" searchbutton="true"
                      searchbuttonlabel="&search.buttonlabel;"
-                     placeholder="&search.placeholder2;"/>
+                     placeholder="&search.placeholder2;" maxlength="100"/>
           </hbox>
 
           <deck id="headered-views-content" flex="1" selectedIndex="0">

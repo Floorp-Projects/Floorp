@@ -3,11 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const kCID = Components.ID("{1f9f7181-e6c5-4f4c-8f71-08005cec8468}");
@@ -80,4 +75,3 @@ function run_test() {
   }
   strictEqual(xpcomObject.method3, undefined);
 }
-

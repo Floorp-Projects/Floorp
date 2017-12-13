@@ -545,6 +545,7 @@ nsHttpHandler::Init()
         obsService->AddObserver(this, "net:prune-dead-connections", true);
         // Sent by the TorButton add-on in the Tor Browser
         obsService->AddObserver(this, "net:prune-all-connections", true);
+        obsService->AddObserver(this, "net:cancel-all-connections", true);
         obsService->AddObserver(this, "last-pb-context-exited", true);
         obsService->AddObserver(this, "browser:purge-session-history", true);
         obsService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
@@ -2277,6 +2278,10 @@ nsHttpHandler::Observe(nsISupports *subject,
     } else if (!strcmp(topic, "net:clear-active-logins")) {
         Unused << mAuthCache.ClearAll();
         Unused << mPrivateAuthCache.ClearAll();
+    } else if (!strcmp(topic, "net:cancel-all-connections")) {
+        if (mConnMgr) {
+            mConnMgr->AbortAndCloseAllConnections(0, nullptr);
+        }
     } else if (!strcmp(topic, "net:prune-dead-connections")) {
         if (mConnMgr) {
             rv = mConnMgr->PruneDeadConnections();

@@ -901,13 +901,14 @@ void undo_file(const char *name, bool backup = false)
         fprintf(stderr, "Not elfhacked. Skipping\n");
         return;
     }
-    if (data != text->getNext()) {
-        fprintf(stderr, elfhack_data " section not following " elfhack_text ". Skipping\n");
+
+    ElfSegment *first = data->getSegmentByType(PT_LOAD);
+    ElfSegment *second = text->getSegmentByType(PT_LOAD);
+    if (first != second) {
+        fprintf(stderr, elfhack_data " and " elfhack_text " not in the same segment. Skipping\n");
         return;
     }
-
-    ElfSegment *first = elf.getSegmentByType(PT_LOAD);
-    ElfSegment *second = elf.getSegmentByType(PT_LOAD, first);
+    second = elf.getSegmentByType(PT_LOAD, first);
     ElfSegment *filler = nullptr;
     // If the second PT_LOAD is a filler from elfhack --fill, check the third.
     if (second->isElfHackFillerSegment()) {
