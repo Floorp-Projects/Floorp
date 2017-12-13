@@ -241,13 +241,6 @@ class GCSchedulingTunables
     ActiveThreadData<bool> dynamicMarkSliceEnabled_;
 
     /*
-     * JSGC_REFRESH_FRAME_SLICES_ENABLED
-     *
-     * Controls whether painting can trigger IGC slices.
-     */
-    ActiveThreadData<bool> refreshFrameSlicesEnabled_;
-
-    /*
      * JSGC_MIN_EMPTY_CHUNK_COUNT
      * JSGC_MAX_EMPTY_CHUNK_COUNT
      *
@@ -274,7 +267,6 @@ class GCSchedulingTunables
     double highFrequencyHeapGrowthMin() const { return highFrequencyHeapGrowthMin_; }
     double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
     bool isDynamicMarkSliceEnabled() const { return dynamicMarkSliceEnabled_; }
-    bool areRefreshFrameSlicesEnabled() const { return refreshFrameSlicesEnabled_; }
     unsigned minEmptyChunkCount(const AutoLockGC&) const { return minEmptyChunkCount_; }
     unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
 
@@ -804,7 +796,6 @@ class GCRuntime
     void traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock);
     void traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
 
-    void notifyDidPaint();
     void shrinkBuffers();
     void onOutOfMallocMemory();
     void onOutOfMallocMemory(const AutoLockGC& lock);
@@ -1386,13 +1377,6 @@ class GCRuntime
 #ifdef JS_GC_ZEAL
     ActiveThreadData<MarkingValidator*> markingValidator;
 #endif
-
-    /*
-     * Indicates that a GC slice has taken place in the middle of an animation
-     * frame, rather than at the beginning. In this case, the next slice will be
-     * delayed so that we don't get back-to-back slices.
-     */
-    ActiveThreadData<bool> interFrameGC;
 
     /*
      * Default budget for incremental GC slice. See js/SliceBudget.h.
