@@ -64,10 +64,6 @@ public:
   static bool
   Visible(JSContext* aCx, JSObject* aObj);
 
-  static bool
-  NotificationAPIVisible(JSContext* aCx, JSObject* aObj);
-
-
   static already_AddRefed<ServiceWorkerRegistration>
   CreateForMainThread(nsPIDOMWindowInner* aWindow,
                       const nsAString& aScope);

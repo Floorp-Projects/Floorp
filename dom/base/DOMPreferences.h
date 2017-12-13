@@ -29,6 +29,16 @@ public:
 
   // Returns true if the dom.performance.enable_user_timing_logging pref is set.
   static bool PerformanceLoggingEnabled();
+
+  // Returns true if the dom.webnotifications.enabled pref is set.
+  // Note that you should use NotificationEnabledInServiceWorkers if you need to
+  // enable Notification API for ServiceWorkers
+  static bool NotificationEnabled();
+
+  // Returns true if the dom.webnotifications.serviceworker.enabled pref is set.
+  static bool NotificationEnabledInServiceWorkers();
+  static bool NotificationEnabledInServiceWorkers(JSContext* aCx,
+                                                  JSObject* aObj);
 };
 
 } // dom namespace
