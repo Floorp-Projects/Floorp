@@ -730,6 +730,8 @@ static inline wr::WrFilterOpType ToWrFilterOpType(uint32_t type) {
       return wr::WrFilterOpType::Saturate;
     case NS_STYLE_FILTER_SEPIA:
       return wr::WrFilterOpType::Sepia;
+    case NS_STYLE_FILTER_DROP_SHADOW:
+      return wr::WrFilterOpType::DropShadow;
   }
   MOZ_ASSERT_UNREACHABLE("Tried to convert unknown filter type.");
   return wr::WrFilterOpType::Grayscale;
