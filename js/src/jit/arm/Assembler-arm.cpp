@@ -3164,13 +3164,11 @@ Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
     Register dest;
     Assembler::RelocStyle rs;
 
-#ifdef DEBUG
     {
         InstructionIterator iter(ptr);
-        const uint32_t* val = GetPtr32Target(iter, &dest, &rs);
+        DebugOnly<const uint32_t*> val = GetPtr32Target(iter, &dest, &rs);
         MOZ_ASSERT(uint32_t((const uint32_t*)val) == uint32_t(expectedValue.value));
     }
-#endif
 
     // Patch over actual instructions.
     {
