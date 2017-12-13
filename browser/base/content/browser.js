@@ -1346,6 +1346,8 @@ var gBrowserInit = {
     this._uriToLoadPromise.then(uriToLoad => {
       if (uriToLoad == "about:home") {
         gBrowser.setIcon(gBrowser.selectedTab, "chrome://branding/content/icon32.png");
+      } else if (uriToLoad == "about:privatebrowsing") {
+        gBrowser.setIcon(gBrowser.selectedTab, "chrome://browser/skin/privatebrowsing/favicon.svg");
       }
     });
 
