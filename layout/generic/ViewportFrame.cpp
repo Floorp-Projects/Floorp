@@ -75,7 +75,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       new (aBuilder) nsDisplayWrapList(aBuilder, this, &topLayerList);
     wrapList->SetOverrideZIndex(
       std::numeric_limits<decltype(wrapList->ZIndex())>::max());
-    aLists.PositionedDescendants()->AppendNewToTop(wrapList);
+    aLists.PositionedDescendants()->AppendToTop(wrapList);
   }
 }
 

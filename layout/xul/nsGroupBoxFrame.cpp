@@ -153,7 +153,7 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
       aBuilder, this, GetBackgroundRectRelativeToSelf(),
       aLists.BorderBackground());
-    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+    aLists.BorderBackground()->AppendToTop(new (aBuilder)
       nsDisplayXULGroupBorder(aBuilder, this));
 
     DisplayOutline(aBuilder, aLists);
