@@ -245,14 +245,6 @@ typedef enum JSGCParamKey {
     JSGC_COMPACTING_ENABLED = 23,
 
     /**
-     * If true, painting can trigger IGC slices.
-     *
-     * Pref: javascript.options.mem.gc_refresh_frame_slices_enabled
-     * Default: RefreshFrameSlicesEnabled
-     */
-    JSGC_REFRESH_FRAME_SLICES_ENABLED = 24,
-
-    /**
      * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD
      *
      * Default: ZoneAllocThresholdFactorDefault
@@ -390,7 +382,7 @@ struct Zone;
     D(DOM_IPC)                                  \
     D(DOM_WORKER)                               \
     D(INTER_SLICE_GC)                           \
-    D(REFRESH_FRAME)                            \
+    D(UNUSED1)                                  \
     D(FULL_GC_TIMER)                            \
     D(SHUTDOWN_CC)                              \
     D(UNUSED2)                                  \

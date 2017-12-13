@@ -325,9 +325,6 @@ namespace TuningDefaults {
     /* JSGC_DYNAMIC_MARK_SLICE */
     static const bool DynamicMarkSliceEnabled = false;
 
-    /* JSGC_REFRESH_FRAME_SLICES_ENABLED */
-    static const bool RefreshFrameSlicesEnabled = true;
-
     /* JSGC_MIN_EMPTY_CHUNK_COUNT */
     static const uint32_t MinEmptyChunkCount = 1;
 
@@ -942,7 +939,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
 #ifdef JS_GC_ZEAL
     markingValidator(nullptr),
 #endif
-    interFrameGC(false),
     defaultTimeBudget_(TuningDefaults::DefaultTimeBudget),
     incrementalAllowed(true),
     compactingEnabled(TuningDefaults::CompactingEnabled),
@@ -990,9 +986,7 @@ const char* gc::ZealModeHelpText =
     "    0: (None) Normal amount of collection (resets all modes)\n"
     "    1: (RootsChange) Collect when roots are added or removed\n"
     "    2: (Alloc) Collect when every N allocations (default: 100)\n"
-    "    3: (FrameGC) Collect when the window paints (browser only)\n"
     "    4: (VerifierPre) Verify pre write barriers between instructions\n"
-    "    5: (FrameVerifierPre) Verify pre write barriers between paints\n"
     "    7: (GenerationalGC) Collect the nursery every N nursery allocations\n"
     "    8: (IncrementalRootsThenFinish) Incremental GC in two slices: 1) mark roots 2) finish collection\n"
     "    9: (IncrementalMarkAllThenFinish) Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
@@ -1378,9 +1372,6 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         setMaxEmptyChunkCount(value);
         break;
-      case JSGC_REFRESH_FRAME_SLICES_ENABLED:
-        refreshFrameSlicesEnabled_ = value != 0;
-        break;
       default:
         MOZ_CRASH("Unknown GC parameter.");
     }
@@ -1446,7 +1437,6 @@ GCSchedulingTunables::GCSchedulingTunables()
     highFrequencyHeapGrowthMin_(TuningDefaults::HighFrequencyHeapGrowthMin),
     lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
     dynamicMarkSliceEnabled_(TuningDefaults::DynamicMarkSliceEnabled),
-    refreshFrameSlicesEnabled_(TuningDefaults::RefreshFrameSlicesEnabled),
     minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
     maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount)
 {}
@@ -1534,9 +1524,6 @@ GCSchedulingTunables::resetParameter(JSGCParamKey key, const AutoLockGC& lock)
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         setMaxEmptyChunkCount(TuningDefaults::MaxEmptyChunkCount);
         break;
-      case JSGC_REFRESH_FRAME_SLICES_ENABLED:
-        refreshFrameSlicesEnabled_ = TuningDefaults::RefreshFrameSlicesEnabled;
-        break;
       default:
         MOZ_CRASH("Unknown GC parameter.");
     }
@@ -1598,8 +1585,6 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
         return tunables.maxEmptyChunkCount();
       case JSGC_COMPACTING_ENABLED:
         return compactingEnabled;
-      case JSGC_REFRESH_FRAME_SLICES_ENABLED:
-        return tunables.areRefreshFrameSlicesEnabled();
       default:
         MOZ_ASSERT(key == JSGC_NUMBER);
         return uint32_t(number);
@@ -7286,7 +7271,6 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
     AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
 
     majorGCTriggerReason = JS::gcreason::NO_REASON;
-    interFrameGC = true;
 
     number++;
     if (!isIncrementalGCInProgress())
@@ -7593,30 +7577,6 @@ GCRuntime::abortGC()
     MOZ_ASSERT(!TlsContext.get()->suppressGC);
 
     collect(false, SliceBudget::unlimited(), JS::gcreason::ABORT_GC);
-}
-
-void
-GCRuntime::notifyDidPaint()
-{
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-
-#ifdef JS_GC_ZEAL
-    if (hasZealMode(ZealMode::FrameVerifierPre))
-        verifyPreBarriers();
-
-    if (hasZealMode(ZealMode::FrameGC)) {
-        JS::PrepareForFullGC(rt->activeContextFromOwnThread());
-        gc(GC_NORMAL, JS::gcreason::REFRESH_FRAME);
-        return;
-    }
-#endif
-
-    if (isIncrementalGCInProgress() && !interFrameGC && tunables.areRefreshFrameSlicesEnabled()) {
-        JS::PrepareForIncrementalGC(rt->activeContextFromOwnThread());
-        gcSlice(JS::gcreason::REFRESH_FRAME);
-    }
-
-    interFrameGC = false;
 }
 
 static bool
