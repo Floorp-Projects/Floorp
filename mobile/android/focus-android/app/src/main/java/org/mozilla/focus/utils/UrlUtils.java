@@ -123,7 +123,16 @@ public class UrlUtils {
         return "data:text/html;charset=utf-8;base64,".equals(url);
     }
 
-    public static boolean urlsMatchExceptForTrailingSlash(final @NonNull String url1, final @NonNull String url2) {
+    /**
+     * Checks that urls are non-null and are the same aside from a trailing slash.
+     *
+     * @return true if urls are the same except for trailing slash, or if either url is null.
+     */
+    public static boolean urlsMatchExceptForTrailingSlash(final String url1, final String url2) {
+        // This is a hack to catch a NPE in issue #26.
+        if (url1 == null || url2 == null) {
+            return false;
+        }
         int lengthDifference = url1.length() - url2.length();
 
         if (lengthDifference == 0) {
