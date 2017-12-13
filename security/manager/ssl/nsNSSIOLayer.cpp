@@ -364,7 +364,7 @@ nsNSSSocketInfo::GetAlpnEarlySelection(nsACString& aAlpnSelected)
   aAlpnSelected.Truncate();
 
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown() || isPK11LoggedOut()) {
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -409,7 +409,7 @@ NS_IMETHODIMP
 nsNSSSocketInfo::DriveHandshake()
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown() || isPK11LoggedOut()) {
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (!mFd) {
@@ -767,7 +767,7 @@ getSocketInfoIfRunning(PRFileDesc* fd, Operation op,
 
   nsNSSSocketInfo* socketInfo = (nsNSSSocketInfo*) fd->secret;
 
-  if (socketInfo->isAlreadyShutDown() || socketInfo->isPK11LoggedOut()) {
+  if (socketInfo->isAlreadyShutDown()) {
     PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, 0);
     return nullptr;
   }
