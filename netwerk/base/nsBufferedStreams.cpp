@@ -293,6 +293,7 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream, IsIPCSerializable())
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream, IsAsyncInputStream())
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback, IsAsyncInputStream())
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream, IsCloneableInputStream())
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
@@ -641,6 +642,13 @@ nsBufferedInputStream::IsAsyncInputStream() const
     return !!stream;
 }
 
+bool
+nsBufferedInputStream::IsCloneableInputStream() const
+{
+    nsCOMPtr<nsICloneableInputStream> stream = do_QueryInterface(mStream);
+    return !!stream;
+}
+
 NS_IMETHODIMP
 nsBufferedInputStream::CloseWithStatus(nsresult aStatus)
 {
@@ -693,6 +701,50 @@ nsBufferedInputStream::GetData(nsIInputStream **aResult)
     nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(stream);
     *aResult = inputStream.forget().take();
     return NS_OK;
+}
+
+// nsICloneableInputStream interface
+
+NS_IMETHODIMP
+nsBufferedInputStream::GetCloneable(bool* aCloneable)
+{
+  *aCloneable = false;
+
+  // If we don't have the buffer, the inputStream has been already closed.
+  // If mBufferStartOffset is not 0, the stream has been seeked or read.
+  // In both case the cloning is not supported.
+  if (!mBuffer || mBufferStartOffset) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsICloneableInputStream> stream = do_QueryInterface(mStream);
+
+  // GetCloneable is infallible.
+  NS_ENSURE_TRUE(stream, NS_OK);
+
+  return stream->GetCloneable(aCloneable);
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::Clone(nsIInputStream** aResult)
+{
+  if (!mBuffer || mBufferStartOffset) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsICloneableInputStream> stream = do_QueryInterface(mStream);
+  NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIInputStream> clonedStream;
+  nsresult rv = stream->Clone(getter_AddRefs(clonedStream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIBufferedInputStream> bis = new nsBufferedInputStream();
+  rv = bis->Init(clonedStream, mBufferSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bis.forget(aResult);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
