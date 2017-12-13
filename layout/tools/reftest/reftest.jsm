@@ -451,7 +451,8 @@ function StartTests()
             var ids = g.urls.map(function(obj) {
                 return obj.identifier;
             });
-            logger.suiteStart(ids, {"skipped": g.urls.length - numActiveTests});
+            var suite = prefs.getCharPref('reftest.suite', 'reftest');
+            logger.suiteStart(ids, suite, {"skipped": g.urls.length - numActiveTests});
             g.suiteStarted = true
         }
 

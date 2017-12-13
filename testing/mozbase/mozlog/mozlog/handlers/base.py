@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from threading import Lock
 import codecs
 
-from ..structuredlog import log_levels
+from mozlog.structuredlog import log_levels
 
 
 class BaseHandler(object):

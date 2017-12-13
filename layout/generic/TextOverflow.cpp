@@ -858,7 +858,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
                                   aLine->GetLogicalAscent(), mIStart.mStyle, aLineNumber, 0);
-    mMarkerList.AppendNewToTop(marker);
+    mMarkerList.AppendToTop(marker);
   }
 
   if (aCreateIEnd) {
@@ -875,7 +875,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
                                   aLine->GetLogicalAscent(), mIEnd.mStyle, aLineNumber, 1);
-    mMarkerList.AppendNewToTop(marker);
+    mMarkerList.AppendToTop(marker);
   }
 }
 

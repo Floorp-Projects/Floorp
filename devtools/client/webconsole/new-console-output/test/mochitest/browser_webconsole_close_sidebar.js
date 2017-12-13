@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test that the sidebar is hidden when the console is cleared.
+// Test that the sidebar is hidden for all methods of closing it.
 
 "use strict";
 
@@ -49,6 +49,17 @@ add_task(async function () {
   await waitFor(() => findMessages(hud, "").length == 0);
   sidebar = hud.ui.document.querySelector(".sidebar");
   ok(!sidebar, "Sidebar hidden after console.clear()");
+
+  await showSidebar(hud);
+
+  info("Click the close button");
+  let closeButton = hud.ui.document.querySelector(".sidebar-close-button");
+  let wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
+  let onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
+  closeButton.click();
+  await onSidebarShown;
+  sidebar = hud.ui.document.querySelector(".sidebar");
+  ok(!sidebar, "Sidebar hidden after clicking on close button");
 });
 
 async function showSidebar(hud) {

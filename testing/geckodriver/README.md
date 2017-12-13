@@ -578,6 +578,12 @@ ensure you put this in your [mozconfig]:
 The _geckodriver_ binary will appear in `${objdir}/dist/bin/geckodriver`
 alongside _firefox-bin_.
 
+The following self-explanatory targets are available through mach:
+
+  * `./mach geckodriver build`
+  * `./mach geckodriver test`
+  * `./mach geckodriver run`
+
 [Rust]: https://www.rust-lang.org/
 [Mozilla]: https://www.mozilla.org/en-US/
 [webdriver crate]: https://github.com/mozilla/webdriver-rust
