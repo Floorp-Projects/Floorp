@@ -353,9 +353,14 @@ private:
   RefPtr<AudioDestinationNode> mDestination;
   RefPtr<AudioListener> mListener;
   nsTArray<UniquePtr<WebAudioDecodeJob> > mDecodeJobs;
-  // This array is used to keep the suspend/resume/close promises alive until
+  // This array is used to keep the suspend/close promises alive until
   // they are resolved, so we can safely pass them accross threads.
   nsTArray<RefPtr<Promise>> mPromiseGripArray;
+  // This array is used to onlly keep the resume promises alive until they are
+  // resolved, so we can safely pass them accross threads. If the audio context
+  // is not allowed to play, the promise would be pending in this array and be
+  // resolved until audio context has been allowed and user call resume() again.
+  nsTArray<RefPtr<Promise>> mPendingResumePromises;
   // See RegisterActiveNode.  These will keep the AudioContext alive while it
   // is rendering and the window remains alive.
   nsTHashtable<nsRefPtrHashKey<AudioNode> > mActiveNodes;
