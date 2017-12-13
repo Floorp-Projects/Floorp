@@ -52,13 +52,10 @@ public:
   }
 
   class AutoSaveRestore;
-  friend class AutoSaveRestore;
 
   class AutoClipContainingBlockDescendantsToContentBox;
-  friend class AutoClipContainingBlockDescendantsToContentBox;
 
   class AutoClipMultiple;
-  friend class AutoClipMultiple;
 
   enum {
     ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT = 0x01
