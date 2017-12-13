@@ -72,8 +72,7 @@ def main(output, *filenames):
 
         print("};\n", file=output)
 
-    print("#ifdef XP_WIN\nconst uint32_t EventCount = %d;\n#else\n\
-constexpr uint32_t EventCount = %d;\n#endif" % (index, index), file=output)
+    print("const uint32_t EventCount = %d;\n" % index, file=output)
 
     print(file_footer, file=output)
 
