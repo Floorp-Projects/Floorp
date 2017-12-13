@@ -35,7 +35,7 @@ Response implements Body;
 // This should be part of Body but we don't want to expose body to request yet.
 // See bug 1387483.
 partial interface Response {
-  [GetterThrows, Func="mozilla::dom::DOMPreferences::StreamsEnabled"]
+  [GetterThrows, Func="nsContentUtils::StreamsEnabled"]
   readonly attribute ReadableStream? body;
 };
 

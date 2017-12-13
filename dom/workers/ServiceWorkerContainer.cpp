@@ -12,12 +12,12 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsServiceManagerUtils.h"
 
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerContainerBinding.h"
@@ -53,7 +53,7 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  return DOMPreferences::ServiceWorkersEnabled();
+  return Preferences::GetBool("dom.serviceWorkers.enabled", false);
 }
 
 ServiceWorkerContainer::ServiceWorkerContainer(nsPIDOMWindowInner* aWindow)
