@@ -277,6 +277,7 @@ public:
 private:
   ~Connection();
   nsresult initializeInternal();
+  void initializeFailed();
 
   /**
    * Sets the database into a closed state so no further actions can be
