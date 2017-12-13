@@ -142,14 +142,7 @@ task_description_schema = Schema({
     # if omitted, the build will not be indexed.
     Optional('index'): {
         # the name of the product this build produces
-        'product': Any(
-            'firefox',
-            'fennec',
-            'mobile',
-            'static-analysis',
-            'devedition',
-            'source',
-        ),
+        'product': basestring,
 
         # the names to use for this job in the TaskCluster index
         'job-name': basestring,
@@ -727,12 +720,21 @@ Buildbot and TaskCluster, then add the job name to the whitelist.  If this is a
 new job, there is nothing to check -- just add the job to the whitelist.
 """
 
+UNSUPPORTED_PRODUCT_ERROR = """\
+The gecko-v2 product {product} is not in the list of configured products in
+`taskcluster/ci/config.yml'.
+"""
+
 
 def verify_index(config, index):
     if 'job-names' in config.graph_config['index']:
         job_name = index['job-name']
         if job_name not in config.graph_config['index']['job-names']:
             raise Exception(JOB_NAME_WHITELIST_ERROR.format(job_name=job_name))
+
+    product = index['product']
+    if product not in config.graph_config['index']['products']:
+        raise Exception(UNSUPPORTED_PRODUCT_ERROR.format(product=product))
 
 
 @payload_builder('docker-worker')
