@@ -1,0 +1,30 @@
+<!doctype html>
+<title>Test for bug 1424633: clicking on an oof descendant focus its focusable ancestor</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  #focusable {
+    width: 100px;
+    height: 100px;
+    background-color: blue;
+  }
+  #oof {
+    background-color: green;
+    position: absolute;
+    top: 25px;
+  }
+</style>
+<div tabindex="0" id="focusable">
+  <span id="oof">Absolute</span>
+</div>
+<script>
+async_test(function(t) {
+  document.body.offsetTop;
+  setTimeout(t.step_func_done(function() {
+    let span = document.querySelector("#oof");
+    synthesizeMouseAtCenter(span, {type: "mousedown"});
+    assert_equals(document.activeElement, document.querySelector("#focusable"));
+  }), 0);
+}, "Clicking on an abspos descendant focus its focusable ancestor");
+</script>
