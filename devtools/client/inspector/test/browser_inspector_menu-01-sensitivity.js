@@ -91,7 +91,8 @@ const TEST_CASES = [
       "node-menu-pastelastchild",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
+      "node-menu-delete"
     ],
   },
   {
@@ -258,8 +259,9 @@ add_task(function* () {
     for (let id of ALL_MENU_ITEMS) {
       let menuItem = allMenuItems.find(item => item.id === id);
       let shouldBeDisabled = disabled.indexOf(id) !== -1;
+      let shouldBeDisabledText = shouldBeDisabled ? "disabled" : "enabled";
       is(menuItem.disabled, shouldBeDisabled,
-        `#${id} should be ${shouldBeDisabled ? "disabled" : "enabled"}`);
+        `#${id} should be ${shouldBeDisabledText} for test case ${desc}`);
     }
   }
 });

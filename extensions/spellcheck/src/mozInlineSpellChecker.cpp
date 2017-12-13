@@ -977,8 +977,7 @@ mozInlineSpellChecker::AddWordToDictionary(const nsAString &word)
 {
   NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
 
-  nsAutoString wordstr(word);
-  nsresult rv = mSpellCheck->AddWordToDictionary(wordstr.get());
+  nsresult rv = mSpellCheck->AddWordToDictionary(word);
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
@@ -994,8 +993,7 @@ mozInlineSpellChecker::RemoveWordFromDictionary(const nsAString &word)
 {
   NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
 
-  nsAutoString wordstr(word);
-  nsresult rv = mSpellCheck->RemoveWordFromDictionary(wordstr.get());
+  nsresult rv = mSpellCheck->RemoveWordFromDictionary(word);
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
@@ -1011,8 +1009,7 @@ mozInlineSpellChecker::IgnoreWord(const nsAString &word)
 {
   NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
 
-  nsAutoString wordstr(word);
-  nsresult rv = mSpellCheck->IgnoreWordAllOccurrences(wordstr.get());
+  nsresult rv = mSpellCheck->IgnoreWordAllOccurrences(word);
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
@@ -1031,7 +1028,8 @@ mozInlineSpellChecker::IgnoreWords(const char16_t **aWordsToIgnore,
 
   // add each word to the ignore list and then recheck the document
   for (uint32_t index = 0; index < aCount; index++)
-    mSpellCheck->IgnoreWordAllOccurrences(aWordsToIgnore[index]);
+    mSpellCheck->IgnoreWordAllOccurrences(
+                   nsDependentString(aWordsToIgnore[index]));
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   nsresult rv = status->InitForSelection();
@@ -1578,7 +1576,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     // check spelling and add to selection if misspelled
     bool isMisspelled;
     aWordUtil.NormalizeWord(wordText);
-    nsresult rv = mSpellCheck->CheckCurrentWordNoSuggest(wordText.get(), &isMisspelled);
+    nsresult rv = mSpellCheck->CheckCurrentWordNoSuggest(wordText,
+                                                         &isMisspelled);
     if (NS_FAILED(rv))
       continue;
 
