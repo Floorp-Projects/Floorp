@@ -5,13 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { saveAs } = require("devtools/client/shared/file-saver");
-const { copyString } = require("devtools/shared/platform/clipboard");
-const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
-const { openRequestInTab } = require("devtools/client/netmonitor/src/utils/firefox/open-request-in-tab");
-const { HarExporter } = require("../har/har-exporter");
 const { L10N } = require("../utils/l10n");
 const {
   formDataURI,
@@ -19,6 +13,13 @@ const {
   getUrlBaseName,
   parseQueryString,
 } = require("../utils/request-utils");
+
+loader.lazyRequireGetter(this, "Curl", "devtools/client/shared/curl", true);
+loader.lazyRequireGetter(this, "saveAs", "devtools/client/shared/file-saver", true);
+loader.lazyRequireGetter(this, "copyString", "devtools/shared/platform/clipboard", true);
+loader.lazyRequireGetter(this, "showMenu", "devtools/client/netmonitor/src/utils/menu", true);
+loader.lazyRequireGetter(this, "openRequestInTab", "devtools/client/netmonitor/src/utils/firefox/open-request-in-tab", true);
+loader.lazyRequireGetter(this, "HarExporter", "devtools/client/netmonitor/src/har/har-exporter", true);
 
 class RequestListContextMenu {
   constructor(props) {
