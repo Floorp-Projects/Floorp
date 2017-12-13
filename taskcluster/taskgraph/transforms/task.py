@@ -593,7 +593,7 @@ TC_TREEHERDER_SCHEMA_URL = 'https://github.com/taskcluster/taskcluster-treeherde
                            'blob/master/schemas/task-treeherder-config.yml'
 
 
-UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
+UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to taskcluster/ci/config.yml"
 
 V2_ROUTE_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.latest.{product}.{job-name}",
