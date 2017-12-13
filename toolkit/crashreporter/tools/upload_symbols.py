@@ -74,7 +74,6 @@ def main():
         log.error('Error: zip file "{0}" does not exist!'.format(args.zip))
         return 1
 
-
     secret_name = os.environ.get('SYMBOL_SECRET')
     if secret_name is not None:
         auth_token = get_taskcluster_secret(secret_name)
@@ -86,7 +85,8 @@ def main():
             return 1
         auth_token = open(token_file, 'r').read().strip()
     else:
-        log.error('You must set the SYMBOL_SECRET or SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE environment variables!')
+        log.error('You must set the SYMBOL_SECRET or SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE '
+                  'environment variables!')
         return 1
 
     # Allow overwriting of the upload url with an environmental variable
@@ -135,6 +135,7 @@ def main():
 
     print_error(r)
     return 1
+
 
 if __name__ == '__main__':
     sys.exit(main())
