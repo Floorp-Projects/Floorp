@@ -4330,6 +4330,7 @@ public:
   nsDisplayEventReceiver(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayEventReceiver);
+    MOZ_ASSERT(aBuilder->IsForEventDelivery());
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayEventReceiver() {

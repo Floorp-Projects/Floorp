@@ -133,10 +133,6 @@ protected:
   // then the request is added back to the load group.
   void ModifyLoadFlags(nsLoadFlags aFlags);
 
-  // Dispatches an event to call MediaDecoder::NotifyBytesConsumed(aNumBytes, aOffset)
-  // on the main thread. This is called automatically after every read.
-  void DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset);
-
   RefPtr<MediaResourceCallback> mCallback;
 
   // Channel used to download the media data. Must be accessed

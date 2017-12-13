@@ -2436,7 +2436,7 @@ MediaCacheStream::GetNextCachedData(int64_t aOffset)
 int64_t
 MediaCacheStream::GetCachedDataEnd(int64_t aOffset)
 {
-  // TODO: Assert non-main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   return GetCachedDataEndInternal(lock, aOffset);
 }
@@ -2542,18 +2542,14 @@ MediaCacheStream::SetReadMode(ReadMode aMode)
 void
 MediaCacheStream::SetPlaybackRate(uint32_t aBytesPerSecond)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aBytesPerSecond > 0, "Zero playback rate not allowed");
 
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "MediaCacheStream::SetPlaybackRate",
-    [ =, client = RefPtr<ChannelMediaResource>(mClient) ]() {
-      AutoLock lock(mMediaCache->Monitor());
-      if (!mClosed && mPlaybackBytesPerSecond != aBytesPerSecond) {
-        mPlaybackBytesPerSecond = aBytesPerSecond;
-        mMediaCache->QueueUpdate(lock);
-      }
-    });
-  OwnerThread()->Dispatch(r.forget());
+  AutoLock lock(mMediaCache->Monitor());
+  if (!mClosed && mPlaybackBytesPerSecond != aBytesPerSecond) {
+    mPlaybackBytesPerSecond = aBytesPerSecond;
+    mMediaCache->QueueUpdate(lock);
+  }
 }
 
 nsresult
@@ -2947,7 +2943,7 @@ nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
 double
 MediaCacheStream::GetDownloadRate(bool* aIsReliable)
 {
-  // TODO: Assert non-main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   return mDownloadStatistics.GetRate(aIsReliable);
 }

@@ -1,5 +1,4 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+Cu.import("resource://gre/modules/Services.jsm");
 
 var addedTopic = "xpcom-category-entry-added";
 var removedTopic = "xpcom-category-entry-removed";
@@ -23,9 +22,8 @@ var observer = {
     if (topic == "timer-callback") {
       do_check_eq(result, expected);
 
-      var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-      observerService.removeObserver(this, addedTopic);
-      observerService.removeObserver(this, removedTopic);
+      Services.obs.removeObserver(this, addedTopic);
+      Services.obs.removeObserver(this, removedTopic);
 
       do_test_finished();
 
@@ -45,9 +43,8 @@ var observer = {
 function run_test() {
   do_test_pending();
 
-  var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  observerService.addObserver(observer, addedTopic);
-  observerService.addObserver(observer, removedTopic);
+  Services.obs.addObserver(observer, addedTopic);
+  Services.obs.addObserver(observer, removedTopic);
 
   var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
   categoryManager.addCategoryEntry(testCategory, testEntry, testValue, false, true);

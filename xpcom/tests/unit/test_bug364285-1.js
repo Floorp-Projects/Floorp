@@ -1,5 +1,4 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
+Cu.import("resource://gre/modules/Services.jsm");
 
 var nameArray = [
  "ascii",                                           // ASCII
@@ -12,9 +11,7 @@ var nameArray = [
 ];
 
 function getTempDir() {
-    var dirService = Cc["@mozilla.org/file/directory_service;1"]
-        .getService(Ci.nsIProperties);
-    return dirService.get("TmpD", Ci.nsIFile);
+    return Services.dirsvc.get("TmpD", Ci.nsIFile);
 }
 
 function create_file(fileName) {

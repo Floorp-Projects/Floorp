@@ -1,6 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 // 5 seconds.
 const kExpectedDelay1 = 5;
 // 1 second.

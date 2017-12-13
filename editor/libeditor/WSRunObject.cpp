@@ -1754,6 +1754,11 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
     return NS_ERROR_FAILURE;
   }
 
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
   // first check for trailing nbsp
   WSPoint thePoint = GetPreviousCharPoint(aRun->EndPoint());
   if (thePoint.mTextNode && thePoint.mChar == nbsp) {
@@ -1800,9 +1805,10 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         // beginning of soft wrapped lines, and lets the user see 2 spaces when
         // they type 2 spaces.
 
-        nsCOMPtr<Element> brNode =
-          mHTMLEditor->CreateBR(aRun->mEndNode, aRun->mEndOffset);
-        NS_ENSURE_TRUE(brNode, NS_ERROR_FAILURE);
+        RefPtr<Element> brNode = htmlEditor->CreateBR(aRun->EndPoint());
+        if (NS_WARN_IF(!brNode)) {
+          return NS_ERROR_FAILURE;
+        }
 
         // Refresh thePoint, prevPoint
         thePoint = GetPreviousCharPoint(aRun->EndPoint());
@@ -1812,11 +1818,11 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
     }
     if (leftCheck && rightCheck) {
       // Now replace nbsp with space.  First, insert a space
-      AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+      AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
       nsAutoString spaceStr(char16_t(32));
       nsresult rv =
-        mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, *thePoint.mTextNode,
-                                                thePoint.mOffset, true);
+        htmlEditor->InsertTextIntoTextNodeImpl(spaceStr, *thePoint.mTextNode,
+                                               thePoint.mOffset, true);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Finally, delete that nbsp
@@ -1851,10 +1857,10 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       }
 
       // Finally, insert that nbsp before the ASCII ws run
-      AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+      AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
       nsAutoString nbspStr(nbsp);
-      rv = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, *startNode,
-                                                   startOffset, true);
+      rv = htmlEditor->InsertTextIntoTextNodeImpl(nbspStr, *startNode,
+                                                  startOffset, true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

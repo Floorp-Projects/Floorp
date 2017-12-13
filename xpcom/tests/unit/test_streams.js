@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Ci = Components.interfaces;
-var Cr = Components.results;
-var CC = Components.Constructor;
-
 var Pipe = CC("@mozilla.org/pipe;1",
               "nsIPipe",
               "init");

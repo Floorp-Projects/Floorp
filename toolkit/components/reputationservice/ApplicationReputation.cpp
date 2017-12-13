@@ -1015,7 +1015,7 @@ PendingLookup::GetSpecHash(nsACString& aSpec, nsACString& hexEncodedHash)
   static const char* const hex = "0123456789ABCDEF";
   hexEncodedHash.SetCapacity(2 * binaryHash.Length());
   for (size_t i = 0; i < binaryHash.Length(); ++i) {
-    auto c = static_cast<const unsigned char>(binaryHash[i]);
+    auto c = static_cast<unsigned char>(binaryHash[i]);
     hexEncodedHash.Append(hex[(c >> 4) & 0x0F]);
     hexEncodedHash.Append(hex[c & 0x0F]);
   }
