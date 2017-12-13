@@ -155,15 +155,6 @@ static const char contentSandboxRules[] = R"(
   (define (profile-subpath profile-relative-subpath)
     (subpath (string-append profileDir profile-relative-subpath)))
 
-  (define (allow-shared-preferences-read domain)
-        (begin
-          (if (defined? `user-preference-read)
-            (allow user-preference-read (preference-domain domain)))
-          (allow file-read*
-                 (home-literal (string-append "/Library/Preferences/" domain ".plist"))
-                 (home-regex (string-append "/Library/Preferences/ByHost/" (regex-quote domain) "\..*\.plist$")))
-          ))
-
   (define (allow-shared-list domain)
     (allow file-read*
            (home-regex (string-append "/Library/Preferences/" (regex-quote domain)))))
@@ -196,10 +187,10 @@ static const char contentSandboxRules[] = R"(
      (iokit-user-client-class "IOAudioEngineUserClient"))
 
 ; depending on systems, the 1st, 2nd or both rules are necessary
-  (allow-shared-preferences-read "com.apple.HIToolbox")
+  (allow user-preference-read (preference-domain "com.apple.HIToolbox"))
   (allow file-read-data (literal "/Library/Preferences/com.apple.HIToolbox.plist"))
 
-  (allow-shared-preferences-read "com.apple.ATS")
+  (allow user-preference-read (preference-domain "com.apple.ATS"))
   (allow file-read-data (literal "/Library/Preferences/.GlobalPreferences.plist"))
 
   (allow file-read*
@@ -300,8 +291,8 @@ static const char contentSandboxRules[] = R"(
       (profile-subpath "/chrome")))
 
 ; accelerated graphics
-  (allow-shared-preferences-read "com.apple.opengl")
-  (allow-shared-preferences-read "com.nvidia.OpenGL")
+  (allow user-preference-read (preference-domain "com.apple.opengl"))
+  (allow user-preference-read (preference-domain "com.nvidia.OpenGL"))
   (allow mach-lookup
       (global-name "com.apple.cvmsServ"))
   (allow iokit-open

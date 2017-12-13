@@ -9,6 +9,7 @@ from collections import deque
 
 from .base import BaseFormatter
 from .process import strstatus
+from ..handlers import SummaryHandler
 
 
 def output_subtests(func):
@@ -26,12 +27,21 @@ class TbplFormatter(BaseFormatter):
     This is intended to be used to preserve backward compatibility with existing tools
     hand-parsing this format.
     """
-    def __init__(self, compact=False):
+    def __init__(self, compact=False, summary_on_shutdown=False, **kwargs):
+        super(TbplFormatter, self).__init__(**kwargs)
         self.suite_start_time = None
         self.test_start_times = {}
         self.buffer = None
         self.compact = compact
         self.subtests_count = 0
+
+        self.summary = SummaryHandler()
+        self.summary_on_shutdown = summary_on_shutdown
+
+    def __call__(self, data):
+        if self.summary_on_shutdown:
+            self.summary(data)
+        return super(TbplFormatter, self).__call__(data)
 
     @property
     def compact(self):
@@ -264,3 +274,27 @@ class TbplFormatter(BaseFormatter):
         data["column"] = ":%s" % data["column"] if data["column"] else ""
         data['rule'] = data['rule'] or data['linter'] or ""
         return fmt.append(fmt.format(**data))
+
+    def _format_suite_summary(self, suite, summary):
+        counts = summary['counts']
+        logs = summary['unexpected_logs']
+
+        total = sum(self.summary.aggregate('count', counts).values())
+        expected = sum(self.summary.aggregate('expected', counts).values())
+        status_str = "{}/{}".format(expected, total)
+        rv = ["{}: {}".format(suite, status_str)]
+
+        for results in logs.values():
+            for data in results:
+                rv.append("  {}".format(self._format_status(data)))
+        return "\n".join(rv)
+
+    def shutdown(self, data):
+        if not self.summary_on_shutdown:
+            return
+
+        rv = ["", "Overall Summary"]
+        for suite, summary in self.summary:
+            rv.append(self._format_suite_summary(suite, summary))
+        rv.append("")
+        return "\n".join(rv)
