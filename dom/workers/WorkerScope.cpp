@@ -480,7 +480,7 @@ WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
                                      const Sequence<ChannelPixelLayout>& aLayout,
                                      ErrorResult& aRv)
 {
-  if (!ImageBitmap::ExtensionsEnabled(aCx)) {
+  if (!DOMPreferences::ImageBitmapExtensionsEnabled()) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
     return nullptr;
   }
