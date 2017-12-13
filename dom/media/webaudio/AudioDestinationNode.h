@@ -27,7 +27,8 @@ public:
                        bool aIsOffline,
                        uint32_t aNumberOfChannels = 0,
                        uint32_t aLength = 0,
-                       float aSampleRate = 0.0f);
+                       float aSampleRate = 0.0f,
+                       bool aAllowToStart = true);
 
   void DestroyMediaStream() override;
 
