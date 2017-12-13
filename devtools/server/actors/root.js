@@ -168,9 +168,6 @@ RootActor.prototype = {
     // Trait added in Gecko 38, indicating that all features necessary for
     // grabbing allocations from the MemoryActor are available for the performance tool
     memoryActorAllocations: true,
-    // Added in Gecko 40, indicating that the backend isn't stupid about
-    // sending resumption packets on tab navigation.
-    noNeedToFakeResumptionOnNavigation: true,
     // Added in Firefox 40. Indicates that the backend supports registering custom
     // commands through the WebConsoleCommands API.
     webConsoleCommands: true,
