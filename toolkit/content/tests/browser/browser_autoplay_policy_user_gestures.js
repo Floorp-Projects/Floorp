@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
+
 const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
 
 var UserGestures = {
@@ -96,10 +98,100 @@ async function test_play_with_user_gesture(gesture) {
       ok(video.paused, "video can not start playing.");
     }
   }
+
   await ContentTask.spawn(tab.linkedBrowser, gesture, play_video);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);
+}
+
+async function test_webaudio_with_user_gesture(gesture) {
+  function createAudioContext() {
+    content.ac = new content.AudioContext();
+    let ac = content.ac;
+    ac.resumePromises = [];
+    ac.stateChangePromise = new Promise(resolve => {
+      ac.addEventListener("statechange", function() {
+        resolve();
+      }, {once: true});
+    });
+  }
+
+  function checking_audio_context_running_state() {
+    let ac = content.ac;
+    return new Promise(resolve => {
+      setTimeout(() => {
+        ok(ac.state == "suspended", "audio context is still suspended");
+        resolve();
+      }, 4000);
+    });
+  }
+
+  function resume_without_supported_user_gestures() {
+    let ac = content.ac;
+    let promise = ac.resume();
+    ac.resumePromises.push(promise);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (ac.state == "suspended") {
+          ok(true, "audio context is still suspended");
+          resolve();
+        } else {
+          reject("audio context should not be allowed to start");
+        }
+      }, 4000);
+    });
+  }
+
+  function resume_with_supported_user_gestures() {
+    let ac = content.ac;
+    ac.resumePromises.push(ac.resume());
+    return Promise.all(ac.resumePromises).then(() => {
+      ok(ac.state == "running", "audio context starts running");
+    });
+  }
+
+  info("- open new tab -");
+  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
+                                                        "about:blank");
+  info("- create audio context -");
+  // We want the same audio context could be used between different content
+  // tasks, so it *must* need to be loaded by frame script.
+  let frameScript = createAudioContext;
+  let mm = tab.linkedBrowser.messageManager;
+  mm.loadFrameScript("data:,(" + frameScript.toString() + ")();", false);
+
+  info("- check whether audio context starts running -");
+  try {
+    await ContentTask.spawn(tab.linkedBrowser, null,
+                            checking_audio_context_running_state);
+  } catch (error) {
+    ok(false, error.toString());
+  }
+
+  info("- calling resume() -");
+  try {
+    await ContentTask.spawn(tab.linkedBrowser, null,
+                            resume_without_supported_user_gestures);
+  } catch (error) {
+    ok(false, error.toString());
+  }
+
+  info("- simulate user gesture -");
+  await simulateUserGesture(gesture, tab.linkedBrowser);
+
+  info("- calling resume() again");
+  try {
+    let resumeFunc = gesture.isActivationGesture ?
+      resume_with_supported_user_gestures :
+      resume_without_supported_user_gestures;
+    await ContentTask.spawn(tab.linkedBrowser, null, resumeFunc);
+  } catch (error) {
+    ok(false, error.toString());
+  }
+
+  info("- remove tab -");
+  await BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function start_test() {
@@ -111,6 +203,10 @@ add_task(async function start_test() {
 
   info("- test play after page got user gesture -");
   for (let idx = 0; idx < UserGestureTests.length; idx++) {
+    info("- test play after page got user gesture -");
     await test_play_with_user_gesture(UserGestureTests[idx]);
+
+    info("- test web audio with user gesture -");
+    await test_webaudio_with_user_gesture(UserGestureTests[idx]);
   }
 });
