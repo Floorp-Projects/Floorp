@@ -107,8 +107,12 @@ function() {
     is(aAssertion.id, bytesToBase64UrlSafe(new Uint8Array(aAssertion.rawId)), "Encoded Key ID and Raw Key ID match");
 
     ok(aAssertion.response.authenticatorData === aAssertion.response.authenticatorData, "AuthenticatorAssertionResponse.AuthenticatorData is SameObject");
+    ok(aAssertion.response.authenticatorData instanceof ArrayBuffer, "AuthenticatorAssertionResponse.AuthenticatorData is an ArrayBuffer");
     ok(aAssertion.response.signature === aAssertion.response.signature, "AuthenticatorAssertionResponse.Signature is SameObject");
-    isnot(aAssertion.response.userId, undefined, "AuthenticatorAssertionResponse.UserId is defined")
+    ok(aAssertion.response.signature instanceof ArrayBuffer, "AuthenticatorAssertionResponse.Signature is an ArrayBuffer");
+    ok(aAssertion.response.userHandle === aAssertion.response.userHandle, "AuthenticatorAssertionResponse.UserHandle is SameObject");
+    ok(aAssertion.response.userHandle instanceof ArrayBuffer, "AuthenticatorAssertionResponse.UserHandle is an ArrayBuffer");
+    is(aAssertion.response.userHandle.byteLength, 0, "AuthenticatorAssertionResponse.UserHandle is emtpy");
 
     ok(aAssertion.response.authenticatorData.byteLength > 0, "Authenticator data exists");
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
@@ -137,7 +141,7 @@ function() {
 
   function testMakeCredential() {
     let rp = {id: document.domain, name: "none", icon: "none"};
-    let user = {name: "none", icon: "none", displayName: "none"};
+    let user = {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"};
     let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
     let makeCredentialOptions = {
       rp: rp,
@@ -156,7 +160,7 @@ function() {
 
   function testMakeDuplicate(aCredInfo) {
     let rp = {id: document.domain, name: "none", icon: "none"};
-    let user = {name: "none", icon: "none", displayName: "none"};
+    let user = {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"};
     let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
     let makeCredentialOptions = {
       rp: rp,

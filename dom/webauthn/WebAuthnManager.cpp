@@ -225,12 +225,12 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
     return promise.forget();
   }
 
-  // Enforce 4.4.3 User Account Parameters for Credential Generation
-  if (aOptions.mUser.mId.WasPassed()) {
-    // When we add UX, we'll want to do more with this value, but for now
-    // we just have to verify its correctness.
+  // Enforce 5.4.3 User Account Parameters for Credential Generation
+  // When we add UX, we'll want to do more with this value, but for now
+  // we just have to verify its correctness.
+  {
     CryptoBuffer userId;
-    userId.Assign(aOptions.mUser.mId.Value());
+    userId.Assign(aOptions.mUser.mId);
     if (userId.Length() > 64) {
       promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
       return promise.forget();
