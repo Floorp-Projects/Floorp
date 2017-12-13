@@ -24,7 +24,6 @@
 #include "gfxContext.h"
 #include "nsStyleStructInlines.h"
 #include "nsCSSProps.h"
-#include "mozilla/Telemetry.h"
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
 
@@ -661,7 +660,6 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
                              float aOpacity)
 {
   AUTO_PROFILER_LABEL("nsCSSGradientRenderer::Paint", GRAPHICS);
-  Telemetry::AutoTimer<Telemetry::GRADIENT_DURATION, Telemetry::Microsecond> gradientTimer;
 
   if (aDest.IsEmpty() || aFillArea.IsEmpty()) {
     return;

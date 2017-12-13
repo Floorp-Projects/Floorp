@@ -1625,22 +1625,6 @@
     "n_values": 110,
     "description": "System font fallback script"
   },
-  "GRADIENT_DURATION": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 50000000,
-    "n_buckets": 20,
-    "description": "Gradient generation time (us)"
-  },
-  "GRADIENT_RETENTION_TIME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "Maximum retention time for the gradient cache. (ms)"
-  },
   "FONT_CACHE_HIT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
