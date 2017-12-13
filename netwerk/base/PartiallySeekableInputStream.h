@@ -38,7 +38,13 @@ public:
                                         uint64_t aBufferSize = 4096);
 
 private:
-  ~PartiallySeekableInputStream();
+  PartiallySeekableInputStream(already_AddRefed<nsIInputStream> aClonedBaseStream,
+                               PartiallySeekableInputStream* aClonedFrom);
+
+  ~PartiallySeekableInputStream() = default;
+
+  void
+  Init();
 
   nsCOMPtr<nsIInputStream> mInputStream;
 

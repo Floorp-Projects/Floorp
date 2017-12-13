@@ -623,12 +623,12 @@ const kTests = [
     todoMismatch: [],
   },
   { description: "PointerEvent (pointerdown)",
-    targetID: "pointer-target", eventType: "pointerdown",
+    targetID: "pointer-target", eventType: "mousedown",
     dispatchEvent: function () {
       var elem = document.getElementById(this.targetID);
       var rect = elem.getBoundingClientRect();
-      synthesizePointer(elem, rect.width/2, rect.height/2,
-                        { type: this.eventType, button: 1, clickCount: 1, inputSource: 2, pressure: 0.25, isPrimary: true });
+      synthesizeMouse(elem, rect.width/2, rect.height/2,
+                      { type: this.eventType, button: 1, clickCount: 1, inputSource: 2, pressure: 0.25, isPrimary: true });
     },
     canRun: function () {
       return true;
@@ -636,12 +636,12 @@ const kTests = [
     todoMismatch: [],
   },
   { description: "PointerEvent (pointerup)",
-    targetID: "pointer-target", eventType: "pointerup",
+    targetID: "pointer-target", eventType: "mouseup",
     dispatchEvent: function () {
       var elem = document.getElementById(this.targetID);
       var rect = elem.getBoundingClientRect();
-      synthesizePointer(elem, rect.width/2, rect.height/2,
-                        { type: this.eventType, button: -1, ctrlKey: true, shiftKey: true, altKey: true, isSynthesized: false });
+      synthesizeMouse(elem, rect.width/2, rect.height/2,
+                      { type: this.eventType, button: -1, ctrlKey: true, shiftKey: true, altKey: true, isSynthesized: false });
     },
     canRun: function () {
       return true;

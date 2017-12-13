@@ -15,6 +15,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AuthenticatorAssertionResponse,
                                                 AuthenticatorResponse)
   tmp->mAuthenticatorDataCachedObj = nullptr;
   tmp->mSignatureCachedObj = nullptr;
+  tmp->mUserHandleCachedObj = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(AuthenticatorAssertionResponse,
@@ -22,6 +23,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(AuthenticatorAssertionResponse,
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAuthenticatorDataCachedObj)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mSignatureCachedObj)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mUserHandleCachedObj)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AuthenticatorAssertionResponse,
@@ -38,6 +40,7 @@ AuthenticatorAssertionResponse::AuthenticatorAssertionResponse(nsPIDOMWindowInne
   : AuthenticatorResponse(aParent)
   , mAuthenticatorDataCachedObj(nullptr)
   , mSignatureCachedObj(nullptr)
+  , mUserHandleCachedObj(nullptr)
 {
   mozilla::HoldJSObjects(this);
 }
@@ -93,17 +96,21 @@ AuthenticatorAssertionResponse::SetSignature(CryptoBuffer& aBuffer)
 }
 
 void
-AuthenticatorAssertionResponse::GetUserId(DOMString& aRetVal)
+AuthenticatorAssertionResponse::GetUserHandle(JSContext* aCx,
+                                              JS::MutableHandle<JSObject*> aRetVal)
 {
-  // This requires mUserId to not be re-set for the life of the caller's in-var.
-  aRetVal.SetOwnedString(mUserId);
+  if (!mUserHandleCachedObj) {
+    mUserHandleCachedObj = mUserHandle.ToArrayBuffer(aCx);
+  }
+  aRetVal.set(mUserHandleCachedObj);
 }
 
 nsresult
-AuthenticatorAssertionResponse::SetUserId(const nsAString& aUserId)
+AuthenticatorAssertionResponse::SetUserHandle(CryptoBuffer& aBuffer)
 {
-  MOZ_ASSERT(mUserId.IsEmpty(), "We already have a UserID?");
-  mUserId.Assign(aUserId);
+  if (NS_WARN_IF(!mUserHandle.Assign(aBuffer))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   return NS_OK;
 }
 

@@ -83,9 +83,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
       target.addEventListener("pointerup",            TargetUpHandler);
       listener.addEventListener("gotpointercapture",  ListenerHandler);
       var rect = target.getBoundingClientRect();
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointermove"});
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup"});
+      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousedown"});
+      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousemove"});
+      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mouseup"});
       finishTest();
     }
     function finishTest() {
