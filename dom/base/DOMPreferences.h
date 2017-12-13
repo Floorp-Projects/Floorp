@@ -59,6 +59,10 @@ public:
   // Returns true if the dom.promise_rejection_events.enabled pref is set.
   static bool PromiseRejectionEventsEnabled();
   static bool PromiseRejectionEventsEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.push.enabled pref is set.
+  static bool PushEnabled();
+  static bool PushEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
