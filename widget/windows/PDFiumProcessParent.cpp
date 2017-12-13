@@ -26,10 +26,6 @@ PDFiumProcessParent::PDFiumProcessParent()
 PDFiumProcessParent::~PDFiumProcessParent()
 {
   MOZ_COUNT_DTOR(PDFiumProcessParent);
-
-  if (mPDFiumParentActor) {
-    mPDFiumParentActor->Close();
-  }
 }
 
 bool
@@ -49,33 +45,23 @@ PDFiumProcessParent::Launch(PrintTargetEMF* aTarget)
 }
 
 void
-PDFiumProcessParent::Delete(bool aWaitingForEMFConversion)
+PDFiumProcessParent::Delete()
 {
-  if (aWaitingForEMFConversion) {
-    // Can not kill the PDFium process yet since we are still waiting for a
-    // EMF conversion response.
-    mPDFiumParentActor->AbortConversion([this]() { Delete(false); });
-    mPDFiumParentActor->Close();
-    return;
-  }
+  // Make sure we do close the IPC channel on the same thread with the one
+  // that we create the channel.
+  if (!mLaunchThread || mLaunchThread == NS_GetCurrentThread()) {
+    if (mPDFiumParentActor) {
+      mPDFiumParentActor->EndConversion();
+      mPDFiumParentActor->Close();
+    }
 
-  // PDFiumProcessParent::Launch is not called, protocol is not created.
-  // It is safe to destroy this object on any thread.
-  if (!mLaunchThread) {
-    delete this;
-    return;
-  }
-
-  if (mLaunchThread == NS_GetCurrentThread()) {
     delete this;
     return;
   }
 
   mLaunchThread->Dispatch(
-    NewNonOwningRunnableMethod<bool>("PDFiumProcessParent::Delete",
-                                     this,
-                                     &PDFiumProcessParent::Delete,
-                                     false));
+    NewNonOwningRunnableMethod("PDFiumProcessParent::Delete", this,
+                               &PDFiumProcessParent::Delete));
 }
 
 } // namespace widget
