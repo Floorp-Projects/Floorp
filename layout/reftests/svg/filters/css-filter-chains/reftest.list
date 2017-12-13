@@ -4,6 +4,6 @@
 default-preferences pref(layout.css.filters.enabled,true)
 
 # Some platforms render this complex filter chain a little differently, and that's ok.
-fuzzy(5,13000) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&layersGPUAccelerated,35,13057) == long-chain.html long-chain-ref.html # Win10: Bug 1258241
+fuzzy(5,13000) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&layersGPUAccelerated,35,13057) fails-if(webrender) == long-chain.html long-chain-ref.html # Win10: Bug 1258241
 == moz-element.html moz-element-ref.html
 fuzzy-if(webrender,15-15,8262-8262) == same-filter.html same-filter-ref.html
