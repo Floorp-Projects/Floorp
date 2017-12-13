@@ -3289,26 +3289,21 @@ Instruction::maybeSkipAutomaticInstructions()
     return this;
 }
 
-void
+Instruction*
 BufferInstructionIterator::maybeSkipAutomaticInstructions()
 {
+    const PoolHeader* ph;
     // If this is a guard, and the next instruction is a header, always work
     // around the pool. If it isn't a guard, then start looking ahead.
-
-    const PoolHeader* ph;
     if (InstIsGuard(*this, &ph)) {
         // Don't skip a natural guard.
         if (ph->isNatural())
-            return;
-        advance(sizeof(Instruction) * (1 + ph->size()));
-        maybeSkipAutomaticInstructions();
-        return;
+            return cur();
+        return next();
     }
-
-    if (InstIsBNop(cur())) {
-        next();
-        maybeSkipAutomaticInstructions();
-    }
+    if (InstIsBNop(cur()))
+        return next();
+    return cur();
 }
 
 // Cases to be handled:
