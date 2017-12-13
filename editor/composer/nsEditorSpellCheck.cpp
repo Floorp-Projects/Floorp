@@ -448,75 +448,69 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::GetNextMisspelledWord(char16_t **aNextMisspelledWord)
+nsEditorSpellCheck::GetNextMisspelledWord(nsAString& aNextMisspelledWord)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
-
-  nsAutoString nextMisspelledWord;
 
   DeleteSuggestedWordList();
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  nsresult rv = mSpellChecker->NextMisspelledWord(nextMisspelledWord,
-                                                  &mSuggestedWordList);
-
-  *aNextMisspelledWord = ToNewUnicode(nextMisspelledWord);
-  return rv;
+  return mSpellChecker->NextMisspelledWord(aNextMisspelledWord,
+                                           &mSuggestedWordList);
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::GetSuggestedWord(char16_t **aSuggestedWord)
+nsEditorSpellCheck::GetSuggestedWord(nsAString& aSuggestedWord)
 {
-  nsAutoString word;
   // XXX This is buggy if mSuggestedWordList.Length() is over INT32_MAX.
   if (mSuggestedWordIndex < static_cast<int32_t>(mSuggestedWordList.Length())) {
-    *aSuggestedWord = ToNewUnicode(mSuggestedWordList[mSuggestedWordIndex]);
+    aSuggestedWord = mSuggestedWordList[mSuggestedWordIndex];
     mSuggestedWordIndex++;
   } else {
     // A blank string signals that there are no more strings
-    *aSuggestedWord = ToNewUnicode(EmptyString());
+    aSuggestedWord.Truncate();
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::CheckCurrentWord(const char16_t *aSuggestedWord,
+nsEditorSpellCheck::CheckCurrentWord(const nsAString& aSuggestedWord,
                                      bool *aIsMisspelled)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
   DeleteSuggestedWordList();
-  return mSpellChecker->CheckWord(nsDependentString(aSuggestedWord),
+  return mSpellChecker->CheckWord(aSuggestedWord,
                                   aIsMisspelled, &mSuggestedWordList);
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::CheckCurrentWordNoSuggest(const char16_t *aSuggestedWord,
+nsEditorSpellCheck::CheckCurrentWordNoSuggest(const nsAString& aSuggestedWord,
                                               bool *aIsMisspelled)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  return mSpellChecker->CheckWord(nsDependentString(aSuggestedWord),
+  return mSpellChecker->CheckWord(aSuggestedWord,
                                   aIsMisspelled, nullptr);
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::ReplaceWord(const char16_t *aMisspelledWord,
-                                const char16_t *aReplaceWord,
+nsEditorSpellCheck::ReplaceWord(const nsAString& aMisspelledWord,
+                                const nsAString& aReplaceWord,
                                 bool             allOccurrences)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  return mSpellChecker->Replace(nsDependentString(aMisspelledWord),
-                                nsDependentString(aReplaceWord), allOccurrences);
+  return mSpellChecker->Replace(aMisspelledWord,
+                                aReplaceWord, allOccurrences);
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::IgnoreWordAllOccurrences(const char16_t *aWord)
+nsEditorSpellCheck::IgnoreWordAllOccurrences(const nsAString& aWord)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  return mSpellChecker->IgnoreAll(nsDependentString(aWord));
+  return mSpellChecker->IgnoreAll(aWord);
 }
 
 NS_IMETHODIMP
@@ -531,34 +525,34 @@ nsEditorSpellCheck::GetPersonalDictionary()
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::GetPersonalDictionaryWord(char16_t **aDictionaryWord)
+nsEditorSpellCheck::GetPersonalDictionaryWord(nsAString& aDictionaryWord)
 {
   // XXX This is buggy if mDictionaryList.Length() is over INT32_MAX.
   if (mDictionaryIndex < static_cast<int32_t>(mDictionaryList.Length())) {
-    *aDictionaryWord = ToNewUnicode(mDictionaryList[mDictionaryIndex]);
+    aDictionaryWord = mDictionaryList[mDictionaryIndex];
     mDictionaryIndex++;
   } else {
     // A blank string signals that there are no more strings
-    *aDictionaryWord = ToNewUnicode(EmptyString());
+    aDictionaryWord.Truncate();
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::AddWordToDictionary(const char16_t *aWord)
+nsEditorSpellCheck::AddWordToDictionary(const nsAString& aWord)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  return mSpellChecker->AddWordToPersonalDictionary(nsDependentString(aWord));
+  return mSpellChecker->AddWordToPersonalDictionary(aWord);
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::RemoveWordFromDictionary(const char16_t *aWord)
+nsEditorSpellCheck::RemoveWordFromDictionary(const nsAString& aWord)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  return mSpellChecker->RemoveWordFromPersonalDictionary(nsDependentString(aWord));
+  return mSpellChecker->RemoveWordFromPersonalDictionary(aWord);
 }
 
 NS_IMETHODIMP
