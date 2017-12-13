@@ -229,6 +229,10 @@ PushApk publishes Android packages onto Google Play Store. Jobs of this kind tak
 all the signed multi-locales (aka "multi") APKs for a given release and upload them
 all at once. They also depend on the breakpoint.
 
+release-balrog-publishing
+----------------------
+Schedule a release to go live in Balrog.
+
 release-binary-transparency
 ---------------------------
 Binary transparency creates a publicly verifiable log of binary shas for downstream

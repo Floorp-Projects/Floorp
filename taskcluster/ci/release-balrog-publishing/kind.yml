@@ -10,13 +10,10 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - push-apk
-   - release-balrog-publishing
-   - release-bouncer-aliases
-   - release-version-bump
+   - release-uptake-monitoring
 
 job-defaults:
-   description: mark release as shipped in Ship-It
+   description: Schedule publishing in balrog
    worker-type: buildbot-bridge/buildbot-bridge
    run-on-projects: []
    shipping-phase: ship
@@ -67,31 +64,23 @@ job-defaults:
                maple: ["release+tcstaging@mozilla.com"]
                default: []
    routes:
-      - index.releases.v1.{branch}.latest.{product}.latest.mark_as_shipped
-      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.mark_as_shipped
+      - index.releases.v1.{branch}.latest.{product}.latest.schedule_publishing_in_balrog
+      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.schedule_publishing_in_balrog
 
 jobs:
-   fennec:
-      name: release-fennec_mark_as_shipped
-      shipping-product: fennec
-      run:
-         product: fennec
-         buildername: release-{branch}-fennec_mark_as_shipped
-      index:
-         product: fennec
    firefox:
-      name: release-firefox_mark_as_shipped
+      name: release-firefox_schedule_publishing_in_balrog
       shipping-product: firefox
       run:
          product: firefox
-         buildername: release-{branch}-firefox_mark_as_shipped
+         buildername: release-{branch}-firefox_schedule_publishing_in_balrog
       index:
          product: firefox
    devedition:
-      name: release-devedition_mark_as_shipped
+      name: release-devedition_schedule_publishing_in_balrog
       shipping-product: devedition
       run:
          product: devedition
-         buildername: release-{branch}-devedition_mark_as_shipped
+         buildername: release-{branch}-devedition_schedule_publishing_in_balrog
       index:
          product: devedition
