@@ -784,7 +784,7 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
   return surf.forget();
 }
 
-Tuple<DrawResult, IntSize, RefPtr<SourceSurface>>
+Tuple<ImgDrawResult, IntSize, RefPtr<SourceSurface>>
 VectorImage::GetFrameInternal(const IntSize& aSize,
                               const Maybe<SVGImageContext>& aSVGContext,
                               uint32_t aWhichFrame,
@@ -793,29 +793,29 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
 
   if (aSize.IsEmpty() || aWhichFrame > FRAME_MAX_VALUE) {
-    return MakeTuple(DrawResult::BAD_ARGS, aSize,
+    return MakeTuple(ImgDrawResult::BAD_ARGS, aSize,
                      RefPtr<SourceSurface>());
   }
 
   if (mError) {
-    return MakeTuple(DrawResult::BAD_IMAGE, aSize,
+    return MakeTuple(ImgDrawResult::BAD_IMAGE, aSize,
                      RefPtr<SourceSurface>());
   }
 
   if (!mIsFullyLoaded) {
-    return MakeTuple(DrawResult::NOT_READY, aSize,
+    return MakeTuple(ImgDrawResult::NOT_READY, aSize,
                      RefPtr<SourceSurface>());
   }
 
   RefPtr<SourceSurface> sourceSurface =
     LookupCachedSurface(aSize, aSVGContext, aFlags);
   if (sourceSurface) {
-    return MakeTuple(DrawResult::SUCCESS, aSize, Move(sourceSurface));
+    return MakeTuple(ImgDrawResult::SUCCESS, aSize, Move(sourceSurface));
   }
 
   if (mIsDrawing) {
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
-    return MakeTuple(DrawResult::TEMPORARY_ERROR, aSize,
+    return MakeTuple(ImgDrawResult::TEMPORARY_ERROR, aSize,
                      RefPtr<SourceSurface>());
   }
 
@@ -840,12 +840,12 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
     CreateSurface(params, svgDrawable, didCache);
   if (!surface) {
     MOZ_ASSERT(!didCache);
-    return MakeTuple(DrawResult::TEMPORARY_ERROR, aSize,
+    return MakeTuple(ImgDrawResult::TEMPORARY_ERROR, aSize,
                      RefPtr<SourceSurface>());
   }
 
   SendFrameComplete(didCache, params.flags);
-  return MakeTuple(DrawResult::SUCCESS, aSize, Move(surface));
+  return MakeTuple(ImgDrawResult::SUCCESS, aSize, Move(surface));
 }
 
 //******************************************************************************
@@ -955,7 +955,7 @@ VectorImage::MaybeRestrictSVGContext(Maybe<SVGImageContext>& aNewSVGContext,
 }
 
 //******************************************************************************
-NS_IMETHODIMP_(DrawResult)
+NS_IMETHODIMP_(ImgDrawResult)
 VectorImage::Draw(gfxContext* aContext,
                   const nsIntSize& aSize,
                   const ImageRegion& aRegion,
@@ -966,19 +966,19 @@ VectorImage::Draw(gfxContext* aContext,
                   float aOpacity)
 {
   if (aWhichFrame > FRAME_MAX_VALUE) {
-    return DrawResult::BAD_ARGS;
+    return ImgDrawResult::BAD_ARGS;
   }
 
   if (!aContext) {
-    return DrawResult::BAD_ARGS;
+    return ImgDrawResult::BAD_ARGS;
   }
 
   if (mError) {
-    return DrawResult::BAD_IMAGE;
+    return ImgDrawResult::BAD_IMAGE;
   }
 
   if (!mIsFullyLoaded) {
-    return DrawResult::NOT_READY;
+    return ImgDrawResult::NOT_READY;
   }
 
   if (mAnimationConsumers == 0) {
@@ -1016,14 +1016,14 @@ VectorImage::Draw(gfxContext* aContext,
     RefPtr<gfxDrawable> svgDrawable =
       new gfxSurfaceDrawable(sourceSurface, sourceSurface->GetSize());
     Show(svgDrawable, params);
-    return DrawResult::SUCCESS;
+    return ImgDrawResult::SUCCESS;
   }
 
   // else, we need to paint the image:
 
   if (mIsDrawing) {
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
-    return DrawResult::TEMPORARY_ERROR;
+    return ImgDrawResult::TEMPORARY_ERROR;
   }
 
   AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper,
@@ -1035,7 +1035,7 @@ VectorImage::Draw(gfxContext* aContext,
   if (!sourceSurface) {
     MOZ_ASSERT(!didCache);
     Show(svgDrawable, params);
-    return DrawResult::SUCCESS;
+    return ImgDrawResult::SUCCESS;
   }
 
   RefPtr<gfxDrawable> drawable =
@@ -1046,7 +1046,7 @@ VectorImage::Draw(gfxContext* aContext,
   // Image got put into a painted layer, it will not be shared with another
   // process.
   MarkSurfaceShared(sourceSurface);
-  return DrawResult::SUCCESS;
+  return ImgDrawResult::SUCCESS;
 }
 
 already_AddRefed<gfxDrawable>

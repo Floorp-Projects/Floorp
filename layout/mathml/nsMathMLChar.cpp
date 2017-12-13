@@ -1953,7 +1953,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
                          : PaintBorderFlags();
 
   // Since this is used only for debugging, we don't need to worry about
-  // tracking the DrawResult.
+  // tracking the ImgDrawResult.
   Unused <<
     nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame, mVisibleRect,
                                 rect, styleContext, flags, skipSides);

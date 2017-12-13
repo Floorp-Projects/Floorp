@@ -116,7 +116,8 @@ def make_task_description(config, jobs):
             'taskcluster-proxy': True,
             'env': {
                 'SHA1_SIGNING_CERT': 'nightly_sha1',
-                'SHA384_SIGNING_CERT': 'nightly_sha384'
+                'SHA384_SIGNING_CERT': 'nightly_sha384',
+                'DATADOG_API_SECRET': 'project/releng/gecko/build/level-3/datadog-api-key'
             }
         }
 

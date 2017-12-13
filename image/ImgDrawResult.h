@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_image_DrawResult_h
-#define mozilla_image_DrawResult_h
+#ifndef mozilla_image_ImgDrawResult_h
+#define mozilla_image_ImgDrawResult_h
 
 #include <cstdint> // for uint8_t
 #include "mozilla/Attributes.h"
@@ -16,7 +16,7 @@ namespace image {
 /**
  * An enumeration representing the result of a drawing operation.
  *
- * Most users of DrawResult will only be interested in whether the value is
+ * Most users of ImgDrawResult will only be interested in whether the value is
  * SUCCESS or not. The other values are primarily useful for debugging and error
  * handling.
  *
@@ -46,7 +46,7 @@ namespace image {
  *
  * BAD_ARGS: We failed to draw because bad arguments were passed to draw().
  */
-enum class MOZ_MUST_USE_TYPE DrawResult : uint8_t
+enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t
 {
   SUCCESS,
   INCOMPLETE,
@@ -58,27 +58,27 @@ enum class MOZ_MUST_USE_TYPE DrawResult : uint8_t
 };
 
 /**
- * You can combine DrawResults with &. By analogy to bitwise-&, the result is
- * DrawResult::SUCCESS only if both operands are DrawResult::SUCCESS. Otherwise,
- * a failing DrawResult is returned; we favor the left operand's failure when
+ * You can combine ImgDrawResults with &. By analogy to bitwise-&, the result is
+ * ImgDrawResult::SUCCESS only if both operands are ImgDrawResult::SUCCESS. Otherwise,
+ * a failing ImgDrawResult is returned; we favor the left operand's failure when
  * deciding which failure to return, with the exception that we always prefer
- * any other kind of failure over DrawResult::BAD_IMAGE, since other failures
+ * any other kind of failure over ImgDrawResult::BAD_IMAGE, since other failures
  * are recoverable and we want to know if any recoverable failures occurred.
  */
-inline DrawResult
-operator&(const DrawResult aLeft, const DrawResult aRight)
+inline ImgDrawResult
+operator&(const ImgDrawResult aLeft, const ImgDrawResult aRight)
 {
-  if (MOZ_LIKELY(aLeft == DrawResult::SUCCESS)) {
+  if (MOZ_LIKELY(aLeft == ImgDrawResult::SUCCESS)) {
     return aRight;
   }
-  if (aLeft == DrawResult::BAD_IMAGE && aRight != DrawResult::SUCCESS) {
+  if (aLeft == ImgDrawResult::BAD_IMAGE && aRight != ImgDrawResult::SUCCESS) {
     return aRight;
   }
   return aLeft;
 }
 
-inline DrawResult&
-operator&=(DrawResult& aLeft, const DrawResult aRight)
+inline ImgDrawResult&
+operator&=(ImgDrawResult& aLeft, const ImgDrawResult aRight)
 {
   aLeft = aLeft & aRight;
   return aLeft;
@@ -86,21 +86,21 @@ operator&=(DrawResult& aLeft, const DrawResult aRight)
 
 /**
  * A struct used during painting to provide input flags to determine how
- * imagelib draw calls should behave and an output DrawResult to return
+ * imagelib draw calls should behave and an output ImgDrawResult to return
  * information about the result of any imagelib draw calls that may have
  * occurred.
  */
 struct imgDrawingParams {
   explicit imgDrawingParams(uint32_t aImageFlags = 0)
-    : imageFlags(aImageFlags), result(DrawResult::SUCCESS)
+    : imageFlags(aImageFlags), result(ImgDrawResult::SUCCESS)
   {}
 
   const uint32_t imageFlags; // imgIContainer::FLAG_* image flags to pass to
                              // image lib draw calls.
-  DrawResult result;         // To return results from image lib painting.
+  ImgDrawResult result;         // To return results from image lib painting.
 };
 
 } // namespace image
 } // namespace mozilla
 
-#endif // mozilla_image_DrawResult_h
+#endif // mozilla_image_ImgDrawResult_h
