@@ -113,6 +113,7 @@ TASKS = [
         'attributes': {},
         'task': {
             'extra': {
+                'suite': {'name': 'talos'},
                 'treeherder': {
                     'group': 'tc',
                     'symbol': 't'
@@ -132,15 +133,13 @@ TASKS = [
 
 
 @pytest.fixture
-def taskgraph(make_taskgraph):
-    return make_taskgraph({
-        t['label']: Task(**t) for t in TASKS[:]
-    })
+def get_morphed(make_taskgraph):
+    def inner(try_task_config, tasks=None):
+        tasks = tasks or TASKS
+        taskgraph = make_taskgraph({
+            t['label']: Task(**t) for t in tasks[:]
+        })
 
-
-@pytest.fixture
-def get_morphed(taskgraph):
-    def inner(try_task_config):
         fn = morph.apply_jsone_templates(try_task_config)
         return fn(*taskgraph)[0]
     return inner
@@ -214,6 +213,35 @@ def test_template_rebuild(get_morphed):
         elif t.label == 'b':
             assert 'task_duplicates' in t.attributes
             assert t.attributes['task_duplicates'] == 4
+
+
+@pytest.mark.parametrize('command', (
+    ['foo --bar'],
+    ['foo', '--bar'],
+    [['foo']],
+    [['foo', '--bar']],
+))
+def test_template_talos_profile(get_morphed, command):
+    tasks = TASKS[:]
+    for t in tasks:
+        t['task']['payload']['command'] = command
+
+    morphed = get_morphed({
+        'templates': {
+            'talos-profile': True,
+        }
+    }, tasks)
+
+    for t in morphed.tasks.values():
+        command = t.task['payload']['command']
+        if isinstance(command[0], list):
+            command = command[0]
+        command = ' '.join(command)
+
+        if t.label == 'a':
+            assert not command.endswith('--geckoProfile')
+        elif t.label == 'b':
+            assert command.endswith('--geckoProfile')
 
 
 if __name__ == '__main__':

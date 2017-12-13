@@ -1,0 +1,36 @@
+---
+$if: input && task["extra"]
+then:
+    $if: task.extra["suite"]
+    then:
+        $if: task.extra.suite["name"] == "talos"
+        then:
+            task:
+                # We can't use mergeDeep as that will append the command below
+                # instead of overwriting the original command.
+                $merge:
+                    - $eval: task
+                    - payload:
+                          $merge:
+                              - $eval: task.payload
+                              - command:
+                                    $if: typeof(task.payload.command[0]) == 'array'
+                                    then:
+                                        # Command is an array of arrays. Assumes the command we want
+                                        # to append --geckoProfile to is the first one. Also assumes
+                                        # that we can't have a space delimited string here (which is
+                                        # the case for now at least).
+                                        - $flatten:
+                                              - $eval: task.payload.command[0]
+                                              - ["--geckoProfile"]
+                                    else:
+                                        $if: len(task.payload.command) == 1
+                                        then:
+                                            # Command is an array with a single space delimited string.
+                                            # This only happens on Windows.
+                                            - "${task.payload.command[0]} --geckoProfile"
+                                        else:
+                                            # Command is an array of strings.
+                                            $flatten:
+                                                - $eval: task.payload.command
+                                                - ["--geckoProfile"]

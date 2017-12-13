@@ -19,6 +19,10 @@ TEMPLATE_TESTS = {
         (['--no-artifact'], None),
         (['--artifact'], {'artifact': {'enabled': '1'}}),
     ],
+    'chemspill-prio': [
+        ([], None),
+        (['--chemspill-prio'], {'chemspill-prio': {}}),
+    ],
     'env': [
         ([], None),
         (['--env', 'foo=bar', '--env', 'num=10'], {'env': {'foo': 'bar', 'num': '10'}}),
@@ -35,6 +39,11 @@ TEMPLATE_TESTS = {
         (['--rebuild', '10'], {'rebuild': 10}),
         (['--rebuild', '1'], SystemExit),
         (['--rebuild', '21'], SystemExit),
+    ],
+    'talos-profile': [
+        ([], None),
+        (['--talos-profile'], {'talos-profile': True}),
+        (['--geckoProfile'], {'talos-profile': True}),
     ],
 }
 
