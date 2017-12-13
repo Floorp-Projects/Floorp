@@ -36,7 +36,7 @@ interface AuthenticatorAttestationResponse : AuthenticatorResponse {
 interface AuthenticatorAssertionResponse : AuthenticatorResponse {
     [SameObject] readonly attribute ArrayBuffer      authenticatorData;
     [SameObject] readonly attribute ArrayBuffer      signature;
-    readonly attribute DOMString                     userId;
+    [SameObject] readonly attribute ArrayBuffer      userHandle;
 };
 
 dictionary PublicKeyCredentialParameters {
@@ -59,8 +59,8 @@ dictionary MakePublicKeyCredentialOptions {
 };
 
 dictionary PublicKeyCredentialEntity {
-    DOMString      name;
-    USVString      icon;
+    required DOMString    name;
+    USVString             icon;
 };
 
 dictionary PublicKeyCredentialRpEntity : PublicKeyCredentialEntity {
@@ -68,8 +68,8 @@ dictionary PublicKeyCredentialRpEntity : PublicKeyCredentialEntity {
 };
 
 dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
-    BufferSource   id;
-    DOMString      displayName;
+    required BufferSource   id;
+    required DOMString      displayName;
 };
 
 dictionary AuthenticatorSelectionCriteria {
@@ -115,9 +115,9 @@ enum PublicKeyCredentialType {
 };
 
 dictionary PublicKeyCredentialDescriptor {
-    required PublicKeyCredentialType type;
-    required BufferSource id;
-    sequence<AuthenticatorTransport>   transports;
+    required PublicKeyCredentialType      type;
+    required BufferSource                 id;
+    sequence<AuthenticatorTransport>      transports;
 };
 
 enum AuthenticatorTransport {
