@@ -48,6 +48,9 @@ public:
   // Returns true if the dom.serviceWorkers.enabled pref is set.
   static bool ServiceWorkersEnabled();
   static bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.serviceWorkers.testing.enabled pref is set.
+  static bool ServiceWorkersTestingEnabled();
 };
 
 } // dom namespace
