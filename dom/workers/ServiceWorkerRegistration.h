@@ -61,9 +61,6 @@ public:
 
   IMPL_EVENT_HANDLER(updatefound)
 
-  static bool
-  Visible(JSContext* aCx, JSObject* aObj);
-
   static already_AddRefed<ServiceWorkerRegistration>
   CreateForMainThread(nsPIDOMWindowInner* aWindow,
                       const nsAString& aScope);
