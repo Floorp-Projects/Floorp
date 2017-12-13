@@ -14,6 +14,7 @@
   * [Creating and sending patches](./contributing/making-prs.md)
   * [Code reviews](./contributing/code-reviews.md)
   * [Filing good bugs](./contributing/filing-good-bugs.md)
+  * [Investigating performance issues](./contributing/performance.md)
 * [Bugs and issue trackers](bugs-issues.md)
 * [Files and directories](files/README.md)
   * [Adding New Files](files/adding-files.md)
