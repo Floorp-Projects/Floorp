@@ -37,6 +37,7 @@ DOMPreferences::DumpEnabled()
 
 PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
 PREF(DOMCachesEnabled, "dom.caches.enabled")
+PREF(DOMCachesTestingEnabled, "dom.caches.testing.enabled")
 
 #undef PREF
 
