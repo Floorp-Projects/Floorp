@@ -9,7 +9,6 @@ Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const FAVICON_QUESTION = "chrome://global/skin/icons/question-32.png";
-const FAVICON_PRIVACY = "chrome://browser/skin/privatebrowsing/favicon.svg";
 
 var stringBundle = Services.strings.createBundle(
                     "chrome://browser/locale/aboutPrivateBrowsing.properties");
@@ -38,10 +37,6 @@ var prefObserver = {
 prefBranch.addObserver("pbmode.enabled", prefObserver, true);
 prefBranch.addObserver("enabled", prefObserver, true);
 
-function setFavIcon(url) {
- document.getElementById("favicon").setAttribute("href", url);
-}
-
 document.addEventListener("DOMContentLoaded", function() {
  if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
    document.documentElement.classList.remove("private");
@@ -60,8 +55,6 @@ document.addEventListener("DOMContentLoaded", function() {
  });
 
  document.title = stringBundle.GetStringFromName("title.head");
- document.getElementById("favicon")
-         .setAttribute("href", FAVICON_PRIVACY);
  tpToggle.addEventListener("change", toggleTrackingProtection);
  document.getElementById("startTour")
          .addEventListener("click", dontShowIntroPanelAgain);
