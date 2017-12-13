@@ -9972,34 +9972,6 @@ nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
         wrFilters.AppendElement(filterOp);
         break;
       }
-      case NS_STYLE_FILTER_DROP_SHADOW: {
-        float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-        nsCSSShadowArray* shadows = filter.GetDropShadow();
-        if (!shadows || shadows->Length() != 1) {
-          NS_NOTREACHED("Exactly one drop shadow should have been parsed.");
-          return false;
-        }
-
-        nsCSSShadowItem* shadow = shadows->ShadowAt(0);
-        nscolor color = shadow->mColor;
-        if (!shadow->mHasColor) {
-          color = mFrame->StyleColor()->mColor;
-        }
-
-        mozilla::wr::WrFilterOp filterOp = {
-          wr::ToWrFilterOpType(filter.GetType()),
-          NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel),
-          NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
-          NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel),
-          NS_GET_R(color) / 255.0f,
-          NS_GET_G(color) / 255.0f,
-          NS_GET_B(color) / 255.0f,
-          NS_GET_A(color) / 255.0f,
-        };
-
-        wrFilters.AppendElement(filterOp);
-        break;
-      }
       default:
         return false;
     }
