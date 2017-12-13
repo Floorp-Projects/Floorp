@@ -2006,12 +2006,14 @@ class Instruction
         MOZ_ASSERT(data >> 28 != 0xf, "The instruction does not have condition code");
         return (Assembler::Condition)(data & 0xf0000000);
     }
-    // Get the next instruction in the instruction stream.
-    // This does neat things like ignoreconstant pools and their guards.
+
+    // Get the next intentionally-placed instruction in the instruction stream.
+    // Artificial pool guards and automatically-placed NOP instructions are skipped.
     Instruction* next();
 
-    // Skipping pools with artificial guards.
-    Instruction* skipPool();
+    // If the current instruction was automatically-inserted (pool guards and NOPs),
+    // advance to the next instruction that was inserted intentionally.
+    Instruction* maybeSkipAutomaticInstructions();
 
     // Sometimes, an api wants a uint32_t (or a pointer to it) rather than an
     // instruction. raw() just coerces this into a pointer to a uint32_t.
@@ -2266,17 +2268,23 @@ class InstructionIterator
 {
   private:
     Instruction* inst_;
+
   public:
-    explicit InstructionIterator(Instruction* inst) : inst_(inst) {
-        skipPool();
+    explicit InstructionIterator(Instruction* inst)
+      : inst_(inst)
+    {
+        maybeSkipAutomaticInstructions();
     }
-    void skipPool() {
-        inst_ = inst_->skipPool();
+
+    void maybeSkipAutomaticInstructions() {
+        inst_ = inst_->maybeSkipAutomaticInstructions();
     }
+
     Instruction* next() {
         inst_ = inst_->next();
-        return cur();
+        return inst_;
     }
+
     Instruction* cur() const {
         return inst_;
     }
@@ -2288,7 +2296,7 @@ class BufferInstructionIterator : public ARMBuffer::AssemblerBufferInstIterator
     BufferInstructionIterator(BufferOffset bo, ARMBuffer* buffer)
       : ARMBuffer::AssemblerBufferInstIterator(bo, buffer)
     {}
-    void skipPool();
+    void maybeSkipAutomaticInstructions();
 };
 
 static const uint32_t NumIntArgRegs = 4;
