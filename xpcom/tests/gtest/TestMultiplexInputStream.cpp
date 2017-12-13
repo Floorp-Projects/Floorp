@@ -142,10 +142,6 @@ TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget) {
     new testing::InputStreamCallback();
 
   ASSERT_EQ(NS_OK, ais->AsyncWait(cb, 0, 0, nullptr));
-  ASSERT_FALSE(cb->Called());
-
-  // Eventually it is called.
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }
 
@@ -184,10 +180,6 @@ TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget_closureOnly) {
   ASSERT_FALSE(cb->Called());
 
   ais->CloseWithStatus(NS_ERROR_FAILURE);
-  ASSERT_FALSE(cb->Called());
-
-  // Eventually it is called.
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }
 

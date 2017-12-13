@@ -25,17 +25,18 @@
 
     function arrivingHereIsGood(aResult) {
       ok(true, "Good result! Received a: " + aResult);
-      return Promise.resolve();
     }
 
     function arrivingHereIsBad(aResult) {
       ok(false, "Bad result! Received a: " + aResult);
-      return Promise.resolve();
     }
 
     function expectSecurityError(aResult) {
       ok(aResult.toString().startsWith("SecurityError"), "Expecting a SecurityError");
-      return Promise.resolve();
+    }
+
+    function expectTypeError(aResult) {
+      ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
     }
 
     function keepThisPublicKeyCredential(aIdentifier) {
@@ -66,7 +67,7 @@
       var testFuncs = [
         function() {
           // Test basic good call
-          let rp = {id: document.domain};
+          let rp = {id: document.domain, name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
@@ -78,15 +79,24 @@
         function() {
           // Test rp.id being unset
           let makeCredentialOptions = {
-            rp: {}, user: user, challenge: chall, pubKeyCredParams: [param]
+            rp: {name: "none"}, user: user, challenge: chall, pubKeyCredParams: [param]
           };
           return credm.create({publicKey: makeCredentialOptions})
                       .then(arrivingHereIsGood)
                       .catch(arrivingHereIsBad);
         },
         function() {
+          // Test rp.name being unset
+          let makeCredentialOptions = {
+            rp: {id: document.domain}, user: user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectTypeError);
+        },
+        function() {
           // Test this origin with optional fields
-          let rp = {id: "user:pass@" + document.domain + ":8888"};
+          let rp = {id: "user:pass@" + document.domain + ":8888", name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
@@ -96,7 +106,7 @@
         },
         function() {
           // Test blank rp.id
-          let rp = {id: ""};
+          let rp = {id: "", name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
@@ -106,7 +116,7 @@
         },
         function() {
           // Test subdomain of this origin
-          let rp = {id: "subdomain." + document.domain};
+          let rp = {id: "subdomain." + document.domain, name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
@@ -116,7 +126,7 @@
         },
         function() {
           // Test the same origin
-          let rp = {id: "example.com"};
+          let rp = {id: "example.com", name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
@@ -126,7 +136,7 @@
         },
         function() {
           // Test the eTLD
-          let rp = {id: "com"};
+          let rp = {id: "com", name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
@@ -136,7 +146,7 @@
         },
         function () {
           // Test a different domain within the same TLD
-          let rp = {id: "alt.test"};
+          let rp = {id: "alt.test", name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
@@ -233,7 +243,7 @@
         },
         function () {
           // Test basic good Create call but using an origin (Bug 1380421)
-          let rp = {id: window.origin};
+          let rp = {id: window.origin, name: "none"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, pubKeyCredParams: [param]
           };
