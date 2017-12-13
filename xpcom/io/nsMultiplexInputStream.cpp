@@ -41,6 +41,7 @@ class nsMultiplexInputStream final
   , public nsIIPCSerializableInputStream
   , public nsICloneableInputStream
   , public nsIAsyncInputStream
+  , public nsIInputStreamCallback
 {
 public:
   nsMultiplexInputStream();
@@ -52,6 +53,7 @@ public:
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
+  NS_DECL_NSIINPUTSTREAMCALLBACK
 
   void AsyncWaitCompleted();
 
@@ -129,6 +131,8 @@ NS_INTERFACE_MAP_BEGIN(nsMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
                                      IsCloneable())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream,
+                                     IsAsyncInputStream())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback,
                                      IsAsyncInputStream())
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMultiplexInputStream)
   NS_IMPL_QUERY_CLASSINFO(nsMultiplexInputStream)
@@ -281,14 +285,25 @@ nsMultiplexInputStream::GetStream(uint32_t aIndex, nsIInputStream** aResult)
 NS_IMETHODIMP
 nsMultiplexInputStream::Close()
 {
-  MutexAutoLock lock(mLock);
-  mStatus = NS_BASE_STREAM_CLOSED;
+  nsTArray<nsCOMPtr<nsIInputStream>> streams;
+
+  // Let's take a copy of the streams becuase, calling close() it could trigger
+  // a nsIInputStreamCallback immediately and we don't want to create a deadlock
+  // with mutex.
+  {
+    MutexAutoLock lock(mLock);
+    uint32_t len = mStreams.Length();
+    for (uint32_t i = 0; i < len; ++i) {
+      streams.AppendElement(mStreams[i].mStream);
+    }
+    mStatus = NS_BASE_STREAM_CLOSED;
+  }
 
   nsresult rv = NS_OK;
 
-  uint32_t len = mStreams.Length();
+  uint32_t len = streams.Length();
   for (uint32_t i = 0; i < len; ++i) {
-    nsresult rv2 = mStreams[i].mStream->Close();
+    nsresult rv2 = streams[i]->Close();
     // We still want to close all streams, but we should return an error
     if (NS_FAILED(rv2)) {
       rv = rv2;
@@ -792,11 +807,15 @@ class AsyncWaitRunnable final : public CancelableRunnable
   RefPtr<nsMultiplexInputStream> mStream;
 
 public:
-  explicit AsyncWaitRunnable(nsMultiplexInputStream* aStream)
-    : CancelableRunnable("AsyncWaitRunnable")
-    , mStream(aStream)
+  static void
+  Create(nsMultiplexInputStream* aStream, nsIEventTarget* aEventTarget)
   {
-    MOZ_ASSERT(aStream);
+    RefPtr<AsyncWaitRunnable> runnable = new AsyncWaitRunnable(aStream);
+    if (aEventTarget) {
+      aEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+    } else {
+      runnable->Run();
+    }
   }
 
   NS_IMETHOD
@@ -805,96 +824,16 @@ public:
     mStream->AsyncWaitCompleted();
     return NS_OK;
   }
-};
-
-// This helper class processes an array of nsIAsyncInputStreams, calling
-// AsyncWait() for each one of them. When all of them have answered, this helper
-// dispatches a AsyncWaitRunnable object. If there is an error calling
-// AsyncWait(), AsyncWaitRunnable is not dispatched.
-class AsyncStreamHelper final : public nsIInputStreamCallback
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  static nsresult
-  Process(nsMultiplexInputStream* aStream,
-          nsTArray<nsCOMPtr<nsIAsyncInputStream>>& aAsyncStreams,
-          uint32_t aFlags, uint32_t aRequestedCount,
-          nsIEventTarget* aEventTarget)
-  {
-    MOZ_ASSERT(aStream);
-    MOZ_ASSERT(!aAsyncStreams.IsEmpty());
-    MOZ_ASSERT(aEventTarget);
-
-    RefPtr<AsyncStreamHelper> helper =
-      new AsyncStreamHelper(aStream, aAsyncStreams, aEventTarget);
-    return helper->Run(aFlags, aRequestedCount);
-  }
 
 private:
-  AsyncStreamHelper(nsMultiplexInputStream* aStream,
-                    nsTArray<nsCOMPtr<nsIAsyncInputStream>>& aAsyncStreams,
-                    nsIEventTarget* aEventTarget)
-    : mMutex("AsyncStreamHelper::mMutex")
+  explicit AsyncWaitRunnable(nsMultiplexInputStream* aStream)
+    : CancelableRunnable("AsyncWaitRunnable")
     , mStream(aStream)
-    , mEventTarget(aEventTarget)
-    , mValid(true)
   {
-    mPendingStreams.SwapElements(aAsyncStreams);
+    MOZ_ASSERT(aStream);
   }
 
-  ~AsyncStreamHelper() = default;
-
-  nsresult
-  Run(uint32_t aFlags, uint32_t aRequestedCount)
-  {
-    MutexAutoLock lock(mMutex);
-
-    for (uint32_t i = 0; i < mPendingStreams.Length(); ++i) {
-      nsresult rv =
-        mPendingStreams[i]->AsyncWait(this, aFlags, aRequestedCount,
-                                      mEventTarget);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mValid = false;
-        return rv;
-      }
-    }
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  OnInputStreamReady(nsIAsyncInputStream* aStream) override
-  {
-    MOZ_ASSERT(aStream, "This cannot be one of ours.");
-
-    MutexAutoLock lock(mMutex);
-
-    // We failed during the Run().
-    if (!mValid) {
-      return NS_OK;
-    }
-
-    MOZ_ASSERT(mPendingStreams.Contains(aStream));
-    mPendingStreams.RemoveElement(aStream);
-
-    // The last asyncStream answered. We can inform nsMultiplexInputStream.
-    if (mPendingStreams.IsEmpty()) {
-      RefPtr<AsyncWaitRunnable> runnable = new AsyncWaitRunnable(mStream);
-      return mEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-    }
-
-    return NS_OK;
-  }
-
-  Mutex mMutex;
-  RefPtr<nsMultiplexInputStream> mStream;
-  nsTArray<nsCOMPtr<nsIAsyncInputStream>> mPendingStreams;
-  nsCOMPtr<nsIEventTarget> mEventTarget;
-  bool mValid;
 };
-
-NS_IMPL_ISUPPORTS(AsyncStreamHelper, nsIInputStreamCallback)
 
 NS_IMETHODIMP
 nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
@@ -902,44 +841,44 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
                                   uint32_t aRequestedCount,
                                   nsIEventTarget* aEventTarget)
 {
-  // When AsyncWait() is called, it's better to call AsyncWait() to any sub
-  // stream if they are valid nsIAsyncInputStream instances. In this way, when
-  // they all call OnInputStreamReady(), we can proceed with the Read().
+  nsCOMPtr<nsIAsyncInputStream> stream;
 
-  MutexAutoLock lock(mLock);
+  {
+    MutexAutoLock lock(mLock);
 
-  if (NS_FAILED(mStatus)) {
-    return mStatus;
-  }
+    if (NS_FAILED(mStatus)) {
+      return mStatus;
+    }
 
-  if (mAsyncWaitCallback && aCallback) {
-    return NS_ERROR_FAILURE;
-  }
+    if (mAsyncWaitCallback && aCallback) {
+      return NS_ERROR_FAILURE;
+    }
 
-  mAsyncWaitCallback = aCallback;
+    mAsyncWaitCallback = aCallback;
 
-  if (!mAsyncWaitCallback) {
-      return NS_OK;
-  }
+    if (!mAsyncWaitCallback) {
+        return NS_OK;
+    }
 
-  nsTArray<nsCOMPtr<nsIAsyncInputStream>> asyncStreams;
-  for (uint32_t i = mCurrentStream; i < mStreams.Length(); ++i) {
-    if (mStreams[i].mAsyncStream) {
-      asyncStreams.AppendElement(mStreams[i].mAsyncStream);
+    if (mCurrentStream < mStreams.Length() &&
+        mStreams[mCurrentStream].mAsyncStream) {
+      stream = mStreams[mCurrentStream].mAsyncStream;
     }
   }
 
-  if (!aEventTarget) {
-    aEventTarget = SystemGroup::EventTargetFor(TaskCategory::Other);
+  if (!stream) {
+    AsyncWaitRunnable::Create(this, aEventTarget);
+    return NS_OK;
   }
 
-  if (asyncStreams.IsEmpty()) {
-    RefPtr<AsyncWaitRunnable> runnable = new AsyncWaitRunnable(this);
-    return aEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-  }
+  return stream->AsyncWait(this, aFlags, aRequestedCount, aEventTarget);
+}
 
-  return AsyncStreamHelper::Process(this, asyncStreams, aFlags, aRequestedCount,
-                                    aEventTarget);
+NS_IMETHODIMP
+nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+  AsyncWaitCompleted();
+  return NS_OK;
 }
 
 void
