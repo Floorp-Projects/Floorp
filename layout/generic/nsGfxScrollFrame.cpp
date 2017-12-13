@@ -3031,9 +3031,9 @@ AppendInternalItemToTop(const nsDisplayListSet& aLists,
 {
   if (aZIndex >= 0) {
     aItem->SetOverrideZIndex(aZIndex);
-    aLists.PositionedDescendants()->AppendNewToTop(aItem);
+    aLists.PositionedDescendants()->AppendToTop(aItem);
   } else {
-    aLists.Content()->AppendNewToTop(aItem);
+    aLists.Content()->AppendToTop(aItem);
   }
 }
 
@@ -3077,7 +3077,7 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
     int32_t zIndex = MaxZIndexInList(aLists.PositionedDescendants(), aBuilder);
     AppendInternalItemToTop(aLists, newItem, zIndex);
   } else {
-    aLists.BorderBackground()->AppendNewToTop(newItem);
+    aLists.BorderBackground()->AppendToTop(newItem);
   }
 }
 
@@ -3615,7 +3615,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                              dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
                                              NS_RGBA(0, 0, 255, 64), false);
         color->SetOverrideZIndex(INT32_MAX);
-        scrolledContent.PositionedDescendants()->AppendNewToTop(color);
+        scrolledContent.PositionedDescendants()->AppendToTop(color);
       }
     }
 

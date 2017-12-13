@@ -304,7 +304,7 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return; // the native theme displays its own visual indication of focus
   }
 
-  aLists.Content()->AppendNewToTop(
+  aLists.Content()->AppendToTop(
     new (aBuilder) nsDisplayRangeFocusRing(aBuilder, this));
 }
 
