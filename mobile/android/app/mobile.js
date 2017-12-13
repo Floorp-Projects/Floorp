@@ -904,6 +904,4 @@ pref("javascript.options.native_regexp", false);
 // Ask for permission when enumerating WebRTC devices.
 pref("media.navigator.permission.device", true);
 
-#ifdef NIGHTLY_BUILD
 pref("media.videocontrols.lock-video-orientation", true);
-#endif
