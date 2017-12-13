@@ -90,6 +90,9 @@ public:
 
   // Returns true if the privacy.resistFingerprinting pref is set.
   static bool ResistFingerprintingEnabled();
+
+  // Returns true if the devtools.enabled pref is set.
+  static bool DevToolsEnabled();
 };
 
 } // dom namespace
