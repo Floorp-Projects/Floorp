@@ -35,6 +35,8 @@ DOMPreferences::DumpEnabled()
 }
 #endif
 
+PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
+
 #undef PREF
 
 #define PREF_WEBIDL(name)                              \
@@ -44,7 +46,7 @@ DOMPreferences::DumpEnabled()
     return DOMPreferences::name();                     \
   }
 
-// It will be useful, eventually.
+PREF_WEBIDL(ImageBitmapExtensionsEnabled)
 
 #undef PREF_WEBIDL
 
