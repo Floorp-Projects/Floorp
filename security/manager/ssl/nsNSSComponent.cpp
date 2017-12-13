@@ -2348,7 +2348,12 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11()
 
   nsClientAuthRememberService::ClearAllRememberedDecisions();
 
-  return nsNSSShutDownList::doPK11Logout();
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(nullptr, "net:cancel-all-connections", nullptr);
+  }
+
+  return NS_OK;
 }
 
 nsresult

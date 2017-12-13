@@ -30,14 +30,13 @@ enum class SSLErrorMessageType {
   Plain = 2,           // all other errors (or "no error")
 };
 
-class TransportSecurityInfo : public nsITransportSecurityInfo,
-                              public nsIInterfaceRequestor,
-                              public nsISSLStatusProvider,
-                              public nsIAssociatedContentSecurity,
-                              public nsISerializable,
-                              public nsIClassInfo,
-                              public nsNSSShutDownObject,
-                              public nsOnPK11LogoutCancelObject
+class TransportSecurityInfo : public nsITransportSecurityInfo
+                            , public nsIInterfaceRequestor
+                            , public nsISSLStatusProvider
+                            , public nsIAssociatedContentSecurity
+                            , public nsISerializable
+                            , public nsIClassInfo
+                            , public nsNSSShutDownObject
 {
 protected:
   virtual ~TransportSecurityInfo();
