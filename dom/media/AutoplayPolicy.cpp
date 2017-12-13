@@ -8,6 +8,7 @@
 
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "nsContentUtils.h"
@@ -62,6 +63,43 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
 
   // Activated by user gesture.
   if (aElement->OwnerDoc()->HasBeenUserActivated()) {
+    return true;
+  }
+
+  return false;
+}
+
+/* static */ bool
+AutoplayPolicy::IsAudioContextAllowedToPlay(NotNull<AudioContext*> aContext)
+{
+  if (Preferences::GetBool("media.autoplay.enabled")) {
+    return true;
+  }
+
+  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed", false)) {
+    return true;
+  }
+
+  // Offline context won't directly output sound to audio devices.
+  if (aContext->IsOffline()) {
+    return true;
+  }
+
+  nsPIDOMWindowInner* window = aContext->GetOwner();
+  if (!window) {
+    return false;
+  }
+
+   nsCOMPtr<nsIPrincipal> principal = aContext->GetParentObject()->AsGlobal()->PrincipalOrNull();
+
+  // Whitelisted.
+  if (principal &&
+      nsContentUtils::IsExactSitePermAllow(principal, "autoplay-media")) {
+    return true;
+  }
+
+  // Activated by user gesture.
+  if (window->GetExtantDoc()->HasBeenUserActivated()) {
     return true;
   }
 

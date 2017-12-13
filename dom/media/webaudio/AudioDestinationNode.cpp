@@ -324,7 +324,9 @@ NS_IMPL_RELEASE_INHERITED(AudioDestinationNode, AudioNode)
 AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                            bool aIsOffline,
                                            uint32_t aNumberOfChannels,
-                                           uint32_t aLength, float aSampleRate)
+                                           uint32_t aLength,
+                                           float aSampleRate,
+                                           bool aAllowToStart)
   : AudioNode(aContext, aNumberOfChannels,
               ChannelCountMode::Explicit, ChannelInterpretation::Speakers)
   , mFramesToProduce(aLength)
@@ -352,7 +354,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream->AddMainThreadListener(this);
   mStream->AddAudioOutput(&gWebAudioOutputKey);
 
-  if (!aIsOffline) {
+  if (!aIsOffline && aAllowToStart) {
     graph->NotifyWhenGraphStarted(mStream);
   }
 }
