@@ -71,6 +71,10 @@ public:
   // Returns true if the dom.requestcontext.enabled pref is set.
   static bool RequestContextEnabled();
   static bool RequestContextEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the gfx.offscreencanvas.enabled pref is set.
+  static bool OffscreenCanvasEnabled();
+  static bool OffscreenCanvasEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
