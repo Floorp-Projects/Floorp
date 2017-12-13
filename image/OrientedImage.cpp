@@ -303,7 +303,7 @@ OrientedImage::OrientationMatrix(const nsIntSize& aSize,
   return builder.Build();
 }
 
-NS_IMETHODIMP_(DrawResult)
+NS_IMETHODIMP_(ImgDrawResult)
 OrientedImage::Draw(gfxContext* aContext,
                     const nsIntSize& aSize,
                     const ImageRegion& aRegion,

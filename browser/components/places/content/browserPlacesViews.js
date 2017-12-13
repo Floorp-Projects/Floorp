@@ -238,8 +238,13 @@ PlacesViewBase.prototype = {
   },
 
   clearAllContents(aPopup) {
-    while (aPopup.firstChild) {
-      aPopup.firstChild.remove();
+    let kid = aPopup.firstChild;
+    while (kid) {
+      let next = kid.nextSibling;
+      if (!kid.classList.contains("panel-header")) {
+        kid.remove();
+      }
+      kid = next;
     }
     aPopup._emptyMenuitem = aPopup._startMarker = aPopup._endMarker = null;
   },
