@@ -50,6 +50,7 @@ PREF(PushEnabled, "dom.push.enabled")
 PREF(StreamsEnabled, "dom.streams.enabled")
 PREF(RequestContextEnabled, "dom.requestcontext.enabled")
 PREF(OffscreenCanvasEnabled, "gfx.offscreencanvas.enabled")
+PREF(WebkitBlinkDirectoryPickerEnabled, "dom.webkitBlink.dirPicker.enabled")
 
 #undef PREF
 
@@ -71,6 +72,7 @@ PREF_WEBIDL(PushEnabled)
 PREF_WEBIDL(StreamsEnabled)
 PREF_WEBIDL(RequestContextEnabled)
 PREF_WEBIDL(OffscreenCanvasEnabled)
+PREF_WEBIDL(WebkitBlinkDirectoryPickerEnabled)
 
 #undef PREF_WEBIDL
 

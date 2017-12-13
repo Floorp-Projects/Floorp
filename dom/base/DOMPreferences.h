@@ -75,6 +75,10 @@ public:
   // Returns true if the gfx.offscreencanvas.enabled pref is set.
   static bool OffscreenCanvasEnabled();
   static bool OffscreenCanvasEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.webkitBlink.dirPicker.enabled pref is set.
+  static bool WebkitBlinkDirectoryPickerEnabled();
+  static bool WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
