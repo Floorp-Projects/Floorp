@@ -9,6 +9,161 @@
 #ifndef frontend_Parser_h
 #define frontend_Parser_h
 
+/*
+ * JS parsers capable of generating ASTs from source text.
+ *
+ * A parser embeds token stream information, then gets and matches tokens to
+ * generate a syntax tree that, if desired, BytecodeEmitter will use to compile
+ * bytecode.
+ *
+ * Like token streams (see the comment near the top of TokenStream.h), parser
+ * classes are heavily templatized -- along the token stream's character-type
+ * axis, and also along a full-parse/syntax-parse axis.  Certain limitations of
+ * C++ (primarily the inability to partially specialize function templates),
+ * plus the desire to minimize compiled code size in duplicate function
+ * template instantiations wherever possible, mean that Parser exhibits much of
+ * the same unholy template/inheritance complexity as token streams.
+ *
+ * == ParserBase → JS::AutoGCRooter, StrictModeGetter ==
+ *
+ * ParserBase is the base parser class, shared by all parsers of all character
+ * types and parse-handling behavior.  It stores everything character- and
+ * handler-agnostic.
+ *
+ * ParserBase's most important field is the parser's token stream's
+ * |TokenStreamAnyChars| component, for all tokenizing aspects that are
+ * character-type-agnostic.  The character-type-sensitive components residing
+ * in |TokenStreamSpecific| (see the comment near the top of TokenStream.h)
+ * live elsewhere in this hierarchy.  These separate locations are the reason
+ * for the |AnyCharsAccess| template parameter to |TokenStreamChars| and
+ * |TokenStreamSpecific|.
+ *
+ * Of particular note: making ParserBase inherit JS::AutoGCRooter (rather than
+ * placing it under one of the more-derived parser classes) means that all
+ * parsers can be traced using the same AutoGCRooter mechanism: it's not
+ * necessary to have separate tracing functionality for syntax/full parsers or
+ * parsers of different character types.
+ *
+ * == PerHandlerParser<ParseHandler> → ParserBase ==
+ *
+ * Certain parsing behavior varies between full parsing and syntax-only parsing
+ * but does not vary across source-text character types.  For example, the work
+ * to "create an arguments object for a function" obviously varies between
+ * syntax and full parsing but (because no source characters are examined) does
+ * not vary by source text character type.  Such functionality is implemented
+ * through functions in PerHandlerParser.
+ *
+ * Functionality only used by syntax parsing or full parsing doesn't live here:
+ * it should be implemented in the appropriate Parser<ParseHandler> (described
+ * further below).
+ *
+ * == GeneralParser<ParseHandler, CharT> → PerHandlerParser<ParseHandler> ==
+ *
+ * Most parsing behavior varies across the character-type axis (and possibly
+ * along the full/syntax axis).  For example:
+ *
+ *   * Parsing ECMAScript's Expression production, implemented by
+ *     GeneralParser::expr, varies in this manner: different types are used to
+ *     represent nodes in full and syntax parsing (ParseNode* versus an enum),
+ *     and reading the tokens comprising the expression requires inspecting
+ *     individual characters (necessarily dependent upon character type).
+ *   * Reporting an error or warning does not depend on the full/syntax parsing
+ *     distinction.  But error reports and warnings include a line of context
+ *     (or a slice of one), for pointing out where a mistake was made.
+ *     Computing such line of context requires inspecting the source text to
+ *     make that line/slice of context, which requires knowing the source text
+ *     character type.
+ *
+ * Such functionality, implemented using identical function code across these
+ * axes, should live in GeneralParser.
+ *
+ * GeneralParser's most important field is the parser's token stream's
+ * |TokenStreamSpecific| component, for all aspects of tokenizing that (contra
+ * |TokenStreamAnyChars| in ParserBase above) are character-type-sensitive.  As
+ * noted above, this field's existence separate from that in ParserBase
+ * motivates the |AnyCharsAccess| template parameters on various token stream
+ * classes.
+ *
+ * Everything in PerHandlerParser *could* be folded into GeneralParser (below)
+ * if desired.  We don't fold in this manner because all such functions would
+ * be instantiated once per CharT -- but if exactly equivalent code would be
+ * generated (because PerHandlerParser functions have no awareness of CharT),
+ * it's risky to *depend* upon the compiler coalescing the instantiations into
+ * one in the final binary.  PerHandlerParser guarantees no duplication.
+ *
+ * == Parser<ParseHandler, CharT> final → GeneralParser<ParseHandler, CharT> ==
+ *
+ * The final (pun intended) axis of complexity lies in Parser.
+ *
+ * Some functionality depends on character type, yet also is defined in
+ * significantly different form in full and syntax parsing.  For example,
+ * attempting to parse the source text of a module will do so in full parsing
+ * but immediately fail in syntax parsing -- so the former is a mess'o'code
+ * while the latter is effectively |return null();|.  Such functionality is
+ * defined in Parser<SyntaxParseHandler or FullParseHandler, CharT> as
+ * appropriate.
+ *
+ * There's a crucial distinction between GeneralParser and Parser, that
+ * explains why both must exist (despite taking exactly the same template
+ * parameters, and despite GeneralParser and Parser existing in a one-to-one
+ * relationship).  GeneralParser is one unspecialized template class:
+ *
+ *   template<class ParseHandler, typename CharT>
+ *   class GeneralParser : ...
+ *   {
+ *     ...parsing functions...
+ *   };
+ *
+ * but Parser is one undefined template class with two separate
+ * specializations:
+ *
+ *   // Declare, but do not define.
+ *   template<class ParseHandler, typename CharT> class Parser;
+ *
+ *   // Define a syntax-parsing specialization.
+ *   template<typename CharT>
+ *   class Parser<SyntaxParseHandler, CharT> final
+ *     : public GeneralParser<SyntaxParseHandler, CharT>
+ *   {
+ *     ...parsing functions...
+ *   };
+ *
+ *   // Define a full-parsing specialization.
+ *   template<typename CharT>
+ *   class Parser<SyntaxParseHandler, CharT> final
+ *     : public GeneralParser<SyntaxParseHandler, CharT>
+ *   {
+ *     ...parsing functions...
+ *   };
+ *
+ * This odd distinction is necessary because C++ unfortunately doesn't allow
+ * partial function specialization:
+ *
+ *   // BAD: You can only specialize a template function if you specify *every*
+ *   //      template parameter, i.e. ParseHandler *and* CharT.
+ *   template<typename CharT>
+ *   void
+ *   GeneralParser<SyntaxParseHandler, CharT>::foo() {}
+ *
+ * But if you specialize Parser *as a class*, then this is allowed:
+ *
+ *   template<typename CharT>
+ *   void
+ *   Parser<SyntaxParseHandler, CharT>::foo() {}
+ *
+ *   template<typename CharT>
+ *   void
+ *   Parser<FullParseHandler, CharT>::foo() {}
+ *
+ * because the only template parameter on the function is CharT -- and so all
+ * template parameters *are* varying, not a strict subset of them.
+ *
+ * So -- any parsing functionality that is differently defined for different
+ * ParseHandlers, *but* is defined textually identically for different CharT
+ * (even if different code ends up generated for them by the compiler), should
+ * reside in Parser.
+ */
+
 #include "mozilla/Array.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
