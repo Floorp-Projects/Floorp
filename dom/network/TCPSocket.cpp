@@ -1014,10 +1014,10 @@ TCPSocket::OnTransportStatus(nsITransport* aTransport, nsresult aStatus,
   }
 
   mReadyState = TCPReadyState::Open;
-  FireEvent(NS_LITERAL_STRING("open"));
-
   nsresult rv = CreateInputStreamPump();
   NS_ENSURE_SUCCESS(rv, rv);
+  FireEvent(NS_LITERAL_STRING("open"));
+
   return NS_OK;
 }
 
