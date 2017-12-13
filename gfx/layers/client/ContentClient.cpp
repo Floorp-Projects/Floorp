@@ -243,18 +243,20 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
       bufferFlags |= BUFFER_COMPONENT_ALPHA;
     }
 
-    RefPtr<RotatedBuffer> newBuffer = CreateBuffer(result.mContentType,
-                                                   dest.mBufferRect,
-                                                   bufferFlags);
+    RefPtr<RotatedBuffer> newBuffer;
+    if (Factory::ReasonableSurfaceSize(IntSize(dest.mBufferRect.Width(), dest.mBufferRect.Height()))) {
+      newBuffer = CreateBuffer(result.mContentType, dest.mBufferRect, bufferFlags);
 
-    if (!newBuffer) {
-      if (Factory::ReasonableSurfaceSize(IntSize(dest.mBufferRect.Width(), dest.mBufferRect.Height()))) {
+      if (!newBuffer) {
         gfxCriticalNote << "Failed buffer for "
                         << dest.mBufferRect.x << ", "
                         << dest.mBufferRect.y << ", "
                         << dest.mBufferRect.Width() << ", "
                         << dest.mBufferRect.Height();
       }
+    }
+
+    if (!newBuffer) {
       Clear();
       return result;
     }
