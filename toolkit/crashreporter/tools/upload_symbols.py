@@ -27,15 +27,14 @@ log.setLevel(logging.INFO)
 DEFAULT_URL = 'https://symbols.mozilla.org/upload/'
 MAX_RETRIES = 5
 
+
 def print_error(r):
     if r.status_code < 400:
         log.error('Error: bad auth token? ({0}: {1})'.format(r.status_code,
-                                                         r.reason),
-                  file=sys.stderr)
+                                                             r.reason))
     else:
         log.error('Error: got HTTP response {0}: {1}'.format(r.status_code,
-                                                         r.reason),
-                  file=sys.stderr)
+                                                             r.reason))
 
     log.error('Response body:\n{sep}\n{body}\n{sep}\n'.format(
         sep='=' * 20,
@@ -72,8 +71,7 @@ def main():
     args = parser.parse_args()
 
     if not args.zip.startswith('http') and not os.path.isfile(args.zip):
-        log.error('Error: zip file "{0}" does not exist!'.format(args.zip),
-                  file=sys.stderr)
+        log.error('Error: zip file "{0}" does not exist!'.format(args.zip))
         return 1
 
 
@@ -84,7 +82,7 @@ def main():
         token_file = os.environ['SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE']
 
         if not os.path.isfile(token_file):
-            log.error('SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE "{0}" does not exist!'.format(token_file), file=sys.stderr)
+            log.error('SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE "{0}" does not exist!'.format(token_file))
             return 1
         auth_token = open(token_file, 'r').read().strip()
     else:
