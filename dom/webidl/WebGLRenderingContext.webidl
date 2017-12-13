@@ -803,7 +803,7 @@ WebGLRenderingContext implements WebGLRenderingContextBase;
 // Reference: https://wiki.whatwg.org/wiki/OffscreenCanvas
 [Exposed=(Window,Worker)]
 partial interface WebGLRenderingContext {
-    [Func="mozilla::dom::DOMPreferences::OffscreenCanvasEnabled"]
+    [Func="mozilla::dom::OffscreenCanvas::PrefEnabled"]
     void commit();
 };
 
